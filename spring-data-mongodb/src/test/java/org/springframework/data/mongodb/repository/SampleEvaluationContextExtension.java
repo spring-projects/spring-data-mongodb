@@ -18,15 +18,14 @@ package org.springframework.data.mongodb.repository;
 import java.util.Collections;
 import java.util.Map;
 
-import org.springframework.data.repository.query.spi.EvaluationContextExtension;
-import org.springframework.data.repository.query.spi.EvaluationContextExtensionSupport;
+import org.springframework.data.spel.spi.EvaluationContextExtension;
 
 /**
  * A sample implementation of a custom {@link EvaluationContextExtension}.
  *
  * @author Thomas Darimont
  */
-public class SampleEvaluationContextExtension extends EvaluationContextExtensionSupport {
+public class SampleEvaluationContextExtension implements EvaluationContextExtension {
 
 	@Override
 	public String getExtensionId() {
@@ -45,6 +44,7 @@ public class SampleEvaluationContextExtension extends EvaluationContextExtension
 
 		private static ThreadLocal<SampleAuthentication> auth = new ThreadLocal<SampleAuthentication>() {
 
+			@Override
 			protected SampleAuthentication initialValue() {
 				return new SampleAuthentication(new SampleUser(-1, "anonymous"));
 			}

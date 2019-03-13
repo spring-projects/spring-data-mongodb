@@ -24,6 +24,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.SpecialDoc;
 
@@ -197,11 +198,10 @@ public class QueryTests {
 	public void rejectsOrderWithIgnoreCase() {
 
 		assertThatExceptionOfType(IllegalArgumentException.class)
-				.isThrownBy(() -> new Query().with(Sort.by(new Sort.Order("foo").ignoreCase())));
+				.isThrownBy(() -> new Query().with(Sort.by(Order.asc("foo").ignoreCase())));
 	}
 
 	@Test // DATAMONGO-709, DATAMONGO-1735, // DATAMONGO-2198
-	@SuppressWarnings("unchecked")
 	public void shouldReturnClassHierarchyOfRestrictedTypes() {
 
 		Query query = new Query(where("name").is("foo")).restrict(SpecialDoc.class);

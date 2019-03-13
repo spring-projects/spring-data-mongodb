@@ -21,6 +21,7 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
+import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
@@ -38,7 +39,7 @@ import org.springframework.data.repository.query.ParameterAccessor;
 class StubParameterAccessor implements MongoParameterAccessor {
 
 	private final Object[] values;
-	private Range<Distance> range = new Range<Distance>(null, null);
+	private Range<Distance> range = Range.unbounded();
 
 	/**
 	 * Creates a new {@link ConvertingParameterAccessor} backed by a {@link StubParameterAccessor} simply returning the
@@ -61,7 +62,7 @@ class StubParameterAccessor implements MongoParameterAccessor {
 			if (value instanceof Range) {
 				this.range = (Range<Distance>) value;
 			} else if (value instanceof Distance) {
-				this.range = new Range<Distance>(null, (Distance) value);
+				this.range = Range.from(Bound.<Distance> unbounded()).to(Bound.inclusive((Distance) value));
 			}
 		}
 	}

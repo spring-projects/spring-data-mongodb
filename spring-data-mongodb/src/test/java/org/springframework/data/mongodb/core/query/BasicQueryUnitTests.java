@@ -20,12 +20,13 @@ import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
-import org.bson.Document;
-import org.junit.Test;
-import org.springframework.data.domain.Sort.Direction;
-
 import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
+
+import org.bson.Document;
+import org.junit.Test;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 
 /**
  * Unit tests for {@link BasicQuery}.
@@ -56,7 +57,7 @@ public class BasicQueryUnitTests {
 
 		BasicQuery query = new BasicQuery("{}");
 		query.setSortObject(new Document("name", -1));
-		query.with(new org.springframework.data.domain.Sort(Direction.ASC, "lastname"));
+		query.with(Sort.by(Direction.ASC, "lastname"));
 
 		Document sortReference = new Document("name", -1);
 		sortReference.put("lastname", 1);
@@ -160,5 +161,4 @@ public class BasicQueryUnitTests {
 
 		assertThat(query1.getFieldsObject(), isBsonObject().containing("name").containing("age").containing("gender"));
 	}
-
 }

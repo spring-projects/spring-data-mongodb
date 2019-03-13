@@ -16,18 +16,14 @@
 package org.springframework.data.mongodb.config;
 
 import static org.junit.Assert.*;
-import static org.junit.Assume.*;
-import static org.springframework.data.mongodb.util.MongoClientVersion.*;
 import static org.springframework.test.util.ReflectionTestUtils.*;
 
 import javax.net.ssl.SSLSocketFactory;
 
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.data.authentication.UserCredentials;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoClientFactoryBean;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -38,7 +34,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
-import com.mongodb.MongoOptions;
 import com.mongodb.WriteConcern;
 
 /**
@@ -232,8 +227,8 @@ public class MongoNamespaceTests {
 		assertEquals(4, mongoOpts.getThreadsAllowedToBlockForConnectionMultiplier());
 
 		// TODO: check the damned defaults
-//		assertEquals("w", mongoOpts.getWriteConcern().getW());
-//		assertEquals(0, mongoOpts.getWriteConcern().getWtimeout());
-//		assertEquals(true, mongoOpts.getWriteConcern().fsync());
+		// assertEquals("w", mongoOpts.getWriteConcern().getW());
+		// assertEquals(0, mongoOpts.getWriteConcern().getWtimeout());
+		// assertEquals(true, mongoOpts.getWriteConcern().fsync());
 	}
 }

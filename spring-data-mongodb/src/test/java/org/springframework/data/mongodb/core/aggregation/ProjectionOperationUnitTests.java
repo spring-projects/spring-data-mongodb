@@ -15,11 +15,12 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.aggregation.AggregationFunctionExpressions.*;
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 import static org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable.*;
-import static org.springframework.data.mongodb.test.util.Assertions.*;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
 import lombok.Data;
 
@@ -29,6 +30,7 @@ import java.util.List;
 import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.domain.Range;
+import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Reduce;
 import org.springframework.data.mongodb.core.aggregation.ArrayOperators.Reduce.PropertyExpression;
@@ -70,7 +72,7 @@ public class ProjectionOperationUnitTests {
 
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
-		assertThat(projectClause.get("prop")).isEqualTo((Object) Fields.UNDERSCORE_ID_REF);
+		assertThat(projectClause.get("prop")).isEqualTo(Fields.UNDERSCORE_ID_REF);
 	}
 
 	@Test // DATAMONGO-586
@@ -81,8 +83,8 @@ public class ProjectionOperationUnitTests {
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 
-		assertThat(projectClause.get("foo")).isEqualTo((Object) 1);
-		assertThat(projectClause.get("bar")).isEqualTo((Object) "$foobar");
+		assertThat(projectClause.get("foo")).isEqualTo(1);
+		assertThat(projectClause.get("bar")).isEqualTo("$foobar");
 	}
 
 	@Test // DATAMONGO-586
@@ -93,7 +95,7 @@ public class ProjectionOperationUnitTests {
 		Document document = operation.and("foo").as("bar").toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 
-		assertThat(projectClause.get("bar")).isEqualTo((Object) "$foo");
+		assertThat(projectClause.get("bar")).isEqualTo("$foo");
 	}
 
 	@Test // DATAMONGO-586
@@ -107,8 +109,8 @@ public class ProjectionOperationUnitTests {
 		List<Object> addClause = (List<Object>) barClause.get("$add");
 
 		assertThat(addClause).hasSize(2);
-		assertThat(addClause.get(0)).isEqualTo((Object) "$foo");
-		assertThat(addClause.get(1)).isEqualTo((Object) 41);
+		assertThat(addClause.get(0)).isEqualTo("$foo");
+		assertThat(addClause.get(1)).isEqualTo(41);
 	}
 
 	@Test // DATAMONGO-586
@@ -121,7 +123,7 @@ public class ProjectionOperationUnitTests {
 		Document oper = exctractOperation(fieldName, projectClause);
 
 		assertThat(oper.containsKey(ADD)).isTrue();
-		assertThat(oper.get(ADD)).isEqualTo((Object) Arrays.<Object> asList("$a", 1));
+		assertThat(oper.get(ADD)).isEqualTo(Arrays.<Object> asList("$a", 1));
 	}
 
 	@Test // DATAMONGO-586
@@ -135,7 +137,7 @@ public class ProjectionOperationUnitTests {
 
 		Document oper = exctractOperation(fieldAlias, projectClause);
 		assertThat(oper.containsKey(ADD)).isTrue();
-		assertThat(oper.get(ADD)).isEqualTo((Object) Arrays.<Object> asList("$a", 1));
+		assertThat(oper.get(ADD)).isEqualTo(Arrays.<Object> asList("$a", 1));
 	}
 
 	@Test // DATAMONGO-586
@@ -149,7 +151,7 @@ public class ProjectionOperationUnitTests {
 		Document oper = exctractOperation(fieldAlias, projectClause);
 
 		assertThat(oper.containsKey(SUBTRACT)).isTrue();
-		assertThat(oper.get(SUBTRACT)).isEqualTo((Object) Arrays.<Object> asList("$a", 1));
+		assertThat(oper.get(SUBTRACT)).isEqualTo(Arrays.<Object> asList("$a", 1));
 	}
 
 	@Test // DATAMONGO-586
@@ -163,7 +165,7 @@ public class ProjectionOperationUnitTests {
 		Document oper = exctractOperation(fieldAlias, projectClause);
 
 		assertThat(oper.containsKey(MULTIPLY)).isTrue();
-		assertThat(oper.get(MULTIPLY)).isEqualTo((Object) Arrays.<Object> asList("$a", 1));
+		assertThat(oper.get(MULTIPLY)).isEqualTo(Arrays.<Object> asList("$a", 1));
 	}
 
 	@Test // DATAMONGO-586
@@ -177,7 +179,7 @@ public class ProjectionOperationUnitTests {
 		Document oper = exctractOperation(fieldAlias, projectClause);
 
 		assertThat(oper.containsKey(DIVIDE)).isTrue();
-		assertThat(oper.get(DIVIDE)).isEqualTo((Object) Arrays.<Object> asList("$a", 1));
+		assertThat(oper.get(DIVIDE)).isEqualTo(Arrays.<Object> asList("$a", 1));
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-586
@@ -197,7 +199,7 @@ public class ProjectionOperationUnitTests {
 		Document oper = exctractOperation(fieldAlias, projectClause);
 
 		assertThat(oper.containsKey(MOD)).isTrue();
-		assertThat(oper.get(MOD)).isEqualTo((Object) Arrays.<Object> asList("$a", 3));
+		assertThat(oper.get(MOD)).isEqualTo(Arrays.<Object> asList("$a", 3));
 	}
 
 	@Test // DATAMONGO-758, DATAMONGO-1893
@@ -252,11 +254,11 @@ public class ProjectionOperationUnitTests {
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 
-		assertThat(projectClause.get("foo")).isEqualTo((Object) 1); // implicit
-		assertThat(projectClause.get("bar")).isEqualTo((Object) "$foobar"); // explicit
-		assertThat(projectClause.get("inc1")).isEqualTo((Object) 1); // include shortcut
-		assertThat(projectClause.get("inc2")).isEqualTo((Object) 1);
-		assertThat(projectClause.get("_id")).isEqualTo((Object) 0);
+		assertThat(projectClause.get("foo")).isEqualTo(1); // implicit
+		assertThat(projectClause.get("bar")).isEqualTo("$foobar"); // explicit
+		assertThat(projectClause.get("inc1")).isEqualTo(1); // include shortcut
+		assertThat(projectClause.get("inc2")).isEqualTo(1);
+		assertThat(projectClause.get("_id")).isEqualTo(0);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -323,16 +325,16 @@ public class ProjectionOperationUnitTests {
 
 		Document projected = exctractOperation("$project", document);
 
-		assertThat(projected.get("hour")).isEqualTo((Object) new Document("$hour", Arrays.asList("$date")));
-		assertThat(projected.get("min")).isEqualTo((Object) new Document("$minute", Arrays.asList("$date")));
-		assertThat(projected.get("second")).isEqualTo((Object) new Document("$second", Arrays.asList("$date")));
-		assertThat(projected.get("millis")).isEqualTo((Object) new Document("$millisecond", Arrays.asList("$date")));
-		assertThat(projected.get("year")).isEqualTo((Object) new Document("$year", Arrays.asList("$date")));
-		assertThat(projected.get("month")).isEqualTo((Object) new Document("$month", Arrays.asList("$date")));
-		assertThat(projected.get("week")).isEqualTo((Object) new Document("$week", Arrays.asList("$date")));
-		assertThat(projected.get("dayOfYear")).isEqualTo((Object) new Document("$dayOfYear", Arrays.asList("$date")));
-		assertThat(projected.get("dayOfMonth")).isEqualTo((Object) new Document("$dayOfMonth", Arrays.asList("$date")));
-		assertThat(projected.get("dayOfWeek")).isEqualTo((Object) new Document("$dayOfWeek", Arrays.asList("$date")));
+		assertThat(projected.get("hour")).isEqualTo(new Document("$hour", Arrays.asList("$date")));
+		assertThat(projected.get("min")).isEqualTo(new Document("$minute", Arrays.asList("$date")));
+		assertThat(projected.get("second")).isEqualTo(new Document("$second", Arrays.asList("$date")));
+		assertThat(projected.get("millis")).isEqualTo(new Document("$millisecond", Arrays.asList("$date")));
+		assertThat(projected.get("year")).isEqualTo(new Document("$year", Arrays.asList("$date")));
+		assertThat(projected.get("month")).isEqualTo(new Document("$month", Arrays.asList("$date")));
+		assertThat(projected.get("week")).isEqualTo(new Document("$week", Arrays.asList("$date")));
+		assertThat(projected.get("dayOfYear")).isEqualTo(new Document("$dayOfYear", Arrays.asList("$date")));
+		assertThat(projected.get("dayOfMonth")).isEqualTo(new Document("$dayOfMonth", Arrays.asList("$date")));
+		assertThat(projected.get("dayOfWeek")).isEqualTo(new Document("$dayOfWeek", Arrays.asList("$date")));
 	}
 
 	@Test // DATAMONGO-975
@@ -364,7 +366,7 @@ public class ProjectionOperationUnitTests {
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		Document projected = exctractOperation("$project", document);
-		assertThat(projected.get("tags_count")).isEqualTo((Object) new Document("$size", Arrays.asList("$tags")));
+		assertThat(projected.get("tags_count")).isEqualTo(new Document("$size", Arrays.asList("$tags")));
 	}
 
 	@Test // DATAMONGO-979
@@ -378,7 +380,7 @@ public class ProjectionOperationUnitTests {
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		Document projected = exctractOperation("$project", document);
-		assertThat(projected.get("tags_count")).isEqualTo((Object) new Document("$size", Arrays.asList("$tags")));
+		assertThat(projected.get("tags_count")).isEqualTo(new Document("$size", Arrays.asList("$tags")));
 	}
 
 	@Test // DATAMONGO-1457
@@ -389,8 +391,7 @@ public class ProjectionOperationUnitTests {
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projected = exctractOperation("$project", document);
 
-		assertThat(projected.get("renamed"))
-				.isEqualTo((Object) new Document("$slice", Arrays.<Object> asList("$field", 10)));
+		assertThat(projected.get("renamed")).isEqualTo(new Document("$slice", Arrays.<Object> asList("$field", 10)));
 	}
 
 	@Test // DATAMONGO-1457
@@ -401,8 +402,7 @@ public class ProjectionOperationUnitTests {
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projected = exctractOperation("$project", document);
 
-		assertThat(projected.get("renamed"))
-				.isEqualTo((Object) new Document("$slice", Arrays.<Object> asList("$field", 5, 10)));
+		assertThat(projected.get("renamed")).isEqualTo(new Document("$slice", Arrays.<Object> asList("$field", 5, 10)));
 	}
 
 	@Test // DATAMONGO-784
@@ -1111,12 +1111,11 @@ public class ProjectionOperationUnitTests {
 	@Test // DATAMONGO-1834
 	public void shouldRenderTimeZoneFromField() {
 
-		Document agg = project()
-				.and(DateOperators.dateOf("date").withTimezone(Timezone.ofField("tz")).dayOfYear()).as("dayOfYear")
-				.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document agg = project().and(DateOperators.dateOf("date").withTimezone(Timezone.ofField("tz")).dayOfYear())
+				.as("dayOfYear").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg).isEqualTo(Document.parse(
-				"{ $project: { dayOfYear: { $dayOfYear: { \"date\" : \"$date\", \"timezone\" : \"$tz\" } } } }"));
+		assertThat(agg).isEqualTo(Document
+				.parse("{ $project: { dayOfYear: { $dayOfYear: { \"date\" : \"$date\", \"timezone\" : \"$tz\" } } } }"));
 	}
 
 	@Test // DATAMONGO-1834
@@ -1687,7 +1686,9 @@ public class ProjectionOperationUnitTests {
 	@Test // DATAMONGO-1548
 	public void shouldRenderIndexOfBytesWithRangeCorrectly() {
 
-		Document agg = project().and(StringOperators.valueOf("item").indexOf("foo").within(new Range<Long>(5L, 9L)))
+		Document agg = project()
+				.and(StringOperators.valueOf("item").indexOf("foo")
+						.within(Range.from(Bound.inclusive(5L)).to(Bound.exclusive(9L))))
 				.as("byteLocation").toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg).containsEntry("$project.byteLocation.$indexOfBytes.[2]", 5L)
@@ -1706,7 +1707,9 @@ public class ProjectionOperationUnitTests {
 	@Test // DATAMONGO-1548
 	public void shouldRenderIndexOfCPWithRangeCorrectly() {
 
-		Document agg = project().and(StringOperators.valueOf("item").indexOfCP("foo").within(new Range<Long>(5L, 9L)))
+		Document agg = project()
+				.and(StringOperators.valueOf("item").indexOfCP("foo")
+						.within(Range.from(Bound.inclusive(5L)).to(Bound.exclusive(9L))))
 				.as("cpLocation").toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg).containsEntry("$project.cpLocation.$indexOfCP.[2]", 5L)

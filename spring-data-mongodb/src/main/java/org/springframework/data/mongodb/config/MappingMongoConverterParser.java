@@ -51,7 +51,6 @@ import org.springframework.core.type.filter.AssignableTypeFilter;
 import org.springframework.core.type.filter.TypeFilter;
 import org.springframework.data.annotation.Persistent;
 import org.springframework.data.config.BeanComponentDefinitionBuilder;
-import org.springframework.data.mapping.context.MappingContextIsNewStrategyFactory;
 import org.springframework.data.mapping.model.CamelCaseAbbreviatingFieldNamingStrategy;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
@@ -101,8 +100,6 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 
 		BeanDefinition conversionsDefinition = getCustomConversions(element, parserContext);
 		String ctxRef = potentiallyCreateMappingContext(element, parserContext, conversionsDefinition, id);
-
-		createIsNewStrategyFactoryBeanDefinition(ctxRef, parserContext, element);
 
 		// Need a reference to a Mongo instance
 		String dbFactoryRef = element.getAttribute("db-factory-ref");
@@ -346,20 +343,6 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		parserContext.getReaderContext()
 				.error("Element <converter> must specify 'ref' or contain a bean definition for the converter", element);
 		return null;
-	}
-
-	public static String createIsNewStrategyFactoryBeanDefinition(String mappingContextRef, ParserContext context,
-			Element element) {
-
-		BeanDefinitionBuilder mappingContextStrategyFactoryBuilder = BeanDefinitionBuilder
-				.rootBeanDefinition(MappingContextIsNewStrategyFactory.class);
-		mappingContextStrategyFactoryBuilder.addConstructorArgReference(mappingContextRef);
-
-		BeanComponentDefinitionBuilder builder = new BeanComponentDefinitionBuilder(element, context);
-		context.registerBeanComponent(
-				builder.getComponent(mappingContextStrategyFactoryBuilder, IS_NEW_STRATEGY_FACTORY_BEAN_NAME));
-
-		return IS_NEW_STRATEGY_FACTORY_BEAN_NAME;
 	}
 
 	/**
