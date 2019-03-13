@@ -15,17 +15,11 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
+import com.querydsl.core.types.Ops;
+import com.querydsl.core.types.PredicateOperation;
+import com.querydsl.core.types.dsl.*;
 import org.bson.Document;
 import org.bson.types.ObjectId;
-import org.hamcrest.collection.IsIterableContainingInOrder;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,11 +37,13 @@ import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.mongodb.repository.QAddress;
 import org.springframework.data.mongodb.repository.QPerson;
 
-import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.BooleanOperation;
-import com.querydsl.core.types.dsl.PathBuilder;
-import com.querydsl.core.types.dsl.SimplePath;
-import com.querydsl.core.types.dsl.StringPath;
+import java.util.Collections;
+
+import static com.querydsl.core.types.ExpressionUtils.path;
+import static com.querydsl.core.types.ExpressionUtils.predicate;
+import static com.querydsl.core.types.dsl.Expressions.constant;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertThat;
 
 /**
  * Unit tests for {@link SpringDataMongodbSerializer}.
@@ -55,6 +51,7 @@ import com.querydsl.core.types.dsl.StringPath;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Mikhail Kaduchka
  */
 @RunWith(MockitoJUnitRunner.class)
 public class SpringDataMongodbSerializerUnitTests {
@@ -162,6 +159,23 @@ public class SpringDataMongodbSerializerUnitTests {
 				is(equalTo(Document.parse("{ \"$or\" : [ { \"lastname\" : { \"$not\" : { "
 						+ "\"$ne\" : \"\"}}} , { \"firstname\" : { \"$not\" : { \"$regex\" : \".*\\\\Qfoo\\\\E.*\" , \"$options\" : \"i\"}}}]}"))));
 	}
+
+    @Test // DATAMONGO-2228
+    public void retainsOpsInAndExpression() {
+
+        PredicateOperation testExpression = predicate(Ops.AND,
+                predicate(Ops.OR,
+					predicate(Ops.EQ, path(Object.class, "firstname"), constant("John")),
+					predicate(Ops.EQ, path(Object.class, "firstname"), constant("Sarah"))),
+				predicate(Ops.OR,
+					predicate(Ops.EQ, path(Object.class, "lastname"), constant("Smith")),
+					predicate(Ops.EQ, path(Object.class, "lastname"), constant("Connor")))
+        );
+
+        Document result = (Document) serializer.visit(testExpression, null);
+
+        assertThat(result.toJson(), is("{\"$and\": [{\"$or\": [{\"firstname\": \"John\"}, {\"firstname\": \"Sarah\"}]}, {\"$or\": [{\"lastname\": \"Smith\"}, {\"lastname\": \"Connor\"}]}]}"));
+    }
 
 	class Address {
 		String id;

@@ -49,6 +49,7 @@ import com.querydsl.mongodb.MongodbOps;
  * @author laimw
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Mikhail Kaduchka
  * @since 2.1
  */
 abstract class MongodbDocumentSerializer implements Visitor<Object, Void> {
@@ -184,8 +185,8 @@ abstract class MongodbDocumentSerializer implements Visitor<Object, Void> {
 			Map<Object, Object> lhs = (Map<Object, Object>) handle(expr.getArg(0));
 			Map<Object, Object> rhs = (Map<Object, Object>) handle(expr.getArg(1));
 
-			LinkedHashSet<Entry<Object, Object>> lhs2 = new LinkedHashSet<>(lhs.entrySet());
-			lhs2.retainAll(rhs.entrySet());
+			LinkedHashSet<Object> lhs2 = new LinkedHashSet<>(lhs.keySet());
+			lhs2.retainAll(rhs.keySet());
 
 			if (lhs2.isEmpty()) {
 				lhs.putAll(rhs);
