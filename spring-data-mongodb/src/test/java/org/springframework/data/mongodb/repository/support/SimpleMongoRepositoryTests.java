@@ -42,6 +42,7 @@ import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.repository.Address;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.Person.Sex;
@@ -484,6 +485,11 @@ public class SimpleMongoRepositoryTests {
 		@Override
 		public String getIdAttribute() {
 			return "id";
+		}
+
+		@Override
+		public Collation getCollation() {
+			return null;
 		}
 	}
 

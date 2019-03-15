@@ -403,6 +403,26 @@ public class Collation {
 		return toDocument().toJson();
 	}
 
+	@Override
+	public boolean equals(Object o) {
+
+		if (this == o) {
+			return true;
+		}
+
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+
+		Collation that = (Collation) o;
+		return this.toDocument().equals(that.toDocument());
+	}
+
+	@Override
+	public int hashCode() {
+		return toDocument().hashCode();
+	}
+
 	private Collation copy() {
 
 		Collation collation = new Collation(locale);

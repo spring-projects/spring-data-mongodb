@@ -33,6 +33,31 @@ public class FindAndModifyOptions {
 
 	private @Nullable Collation collation;
 
+	private static final FindAndModifyOptions NONE = new FindAndModifyOptions() {
+
+		private static final String ERROR_MSG = "FindAndModifyOptions.none() cannot be changed. Please use FindAndModifyOptions.options() instead.";
+
+		@Override
+		public FindAndModifyOptions returnNew(boolean returnNew) {
+			throw new UnsupportedOperationException(ERROR_MSG);
+		}
+
+		@Override
+		public FindAndModifyOptions upsert(boolean upsert) {
+			throw new UnsupportedOperationException(ERROR_MSG);
+		}
+
+		@Override
+		public FindAndModifyOptions remove(boolean remove) {
+			throw new UnsupportedOperationException(ERROR_MSG);
+		}
+
+		@Override
+		public FindAndModifyOptions collation(Collation collation) {
+			throw new UnsupportedOperationException(ERROR_MSG);
+		}
+	};
+
 	/**
 	 * Static factory method to create a FindAndModifyOptions instance
 	 *
@@ -40,6 +65,16 @@ public class FindAndModifyOptions {
 	 */
 	public static FindAndModifyOptions options() {
 		return new FindAndModifyOptions();
+	}
+
+	/**
+	 * Static factory method returning an unmodifiable {@link FindAndModifyOptions} instance.
+	 *
+	 * @return unmodifiable {@link FindAndModifyOptions} instance.
+	 * @since 2.2
+	 */
+	public static FindAndModifyOptions none() {
+		return NONE;
 	}
 
 	/**

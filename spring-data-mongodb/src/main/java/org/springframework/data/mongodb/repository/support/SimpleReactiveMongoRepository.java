@@ -91,10 +91,11 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		Assert.notNull(example, "Sample must not be null!");
 
-		Query q = new Query(new Criteria().alike(example));
-		q.limit(2);
+		Query query = new Query(new Criteria().alike(example)) //
+				.collation(entityInformation.getCollation()) //
+				.limit(2);
 
-		return mongoOperations.find(q, example.getProbeType(), entityInformation.getCollectionName()).buffer(2)
+		return mongoOperations.find(query, example.getProbeType(), entityInformation.getCollectionName()).buffer(2)
 				.map(vals -> {
 
 					if (vals.size() > 1) {
@@ -140,8 +141,10 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		Assert.notNull(example, "Sample must not be null!");
 
-		Query q = new Query(new Criteria().alike(example));
-		return mongoOperations.exists(q, example.getProbeType(), entityInformation.getCollectionName());
+		Query query = new Query(new Criteria().alike(example)) //
+				.collation(entityInformation.getCollation());
+
+		return mongoOperations.exists(query, example.getProbeType(), entityInformation.getCollectionName());
 	}
 
 	/*
@@ -200,7 +203,9 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		Assert.notNull(example, "Sample must not be null!");
 		Assert.notNull(sort, "Sort must not be null!");
 
-		Query query = new Query(new Criteria().alike(example)).with(sort);
+		Query query = new Query(new Criteria().alike(example)) //
+				.collation(entityInformation.getCollation()) //
+				.with(sort);
 
 		return mongoOperations.find(query, example.getProbeType(), entityInformation.getCollectionName());
 	}
@@ -235,8 +240,10 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		Assert.notNull(example, "Sample must not be null!");
 
-		Query q = new Query(new Criteria().alike(example));
-		return mongoOperations.count(q, example.getProbeType(), entityInformation.getCollectionName());
+		Query query = new Query(new Criteria().alike(example)) //
+				.collation(entityInformation.getCollation());
+
+		return mongoOperations.count(query, example.getProbeType(), entityInformation.getCollectionName());
 	}
 
 	/*

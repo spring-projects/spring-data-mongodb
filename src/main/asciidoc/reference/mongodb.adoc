@@ -1687,7 +1687,15 @@ Collation collation = Collation.of("fr")         <1>
 <6> Specify whether to check whether text requires normalization and whether to perform normalization.
 ====
 
-Collations can be used to create collections and indexes. If you create a collection that specifies a collation, the collation is applied to index creation and queries unless you specify a different collation. A collation is valid for a whole operation and cannot be specified on a per-field basis, as the following example shows:
+Collations can be used to create collections and indexes. If you create a collection that specifies a collation, the
+collation is applied to index creation and queries unless you specify a different collation. A collation is valid for a
+whole operation and cannot be specified on a per-field basis.
+
+Like other metadata, collations can be be derived from the domain type via the `@Collation` annotation and will be applied
+directly when executing queries, creating collections or indexes.
+
+NOTE: Annotated collations will not be used when a collection is auto created by MongoDB on first interaction. This would
+require additional store interaction delaying the entire process. Please use `MongoOperations.createCollection` for those cases.
 
 [source,java]
 ----
@@ -1736,7 +1744,7 @@ AggregationResults<TagCount> results = template.aggregate(aggregation, "tags", T
 
 WARNING: Indexes are only used if the collation used for the operation matches the index collation.
 
-<<mongo.repositories>> support `Collations` via the `@org.springframework.data.mongodb.repository.Query` annotation.
+<<mongo.repositories>> support `Collations` via the `@org.springframework.data.mongodb.mapping.Collation` annotation.
 
 .Collation support for Repositories
 ====
@@ -1744,21 +1752,21 @@ WARNING: Indexes are only used if the collation used for the operation matches t
 ----
 public interface PersonRepository extends MongoRepository<Person, String> {
 
-  @Query(collation = "en_US")  <1>
+  @Collation("en_US")  <1>
   List<Person> findByFirstname(String firstname);
 
-  @Query(collation = "{ 'locale' : 'en_US' }") <2>
+  @Collation("{ 'locale' : 'en_US' }") <2>
   List<Person> findPersonByFirstname(String firstname);
 
-  @Query(collation = "?1") <3>
+  @Collation("?1") <3>
   List<Person> findByFirstname(String firstname, Object collation);
 
-  @Query(collation = "{ 'locale' : '?1' }") <4>
+  @Collation("{ 'locale' : '?1' }") <4>
   List<Person> findByFirstname(String firstname, String collation);
 
   List<Person> findByFirstname(String firstname, Collation collation); <5>
 
-  @Query(collation = "{ 'locale' : 'en_US' }")
+  @Collation("{ 'locale' : 'en_US' }")
   List<Person> findByFirstname(String firstname, @Nullable Collation collation); <6>
 }
 ----
@@ -1772,6 +1780,8 @@ and `Document` (eg. new Document("locale", "en_US"))
 
 NOTE: In case you enabled the automatic index creation for repository finder methods a potential static collation definition,
 as shown in (1) and (2), will be included when creating the index.
+
+TIP: The most specifc `Collation` outroules potentially defined others. Which means Method argument over query method annotation over doamin type annotation.
 ====
 
 [[mongo.jsonSchema]]

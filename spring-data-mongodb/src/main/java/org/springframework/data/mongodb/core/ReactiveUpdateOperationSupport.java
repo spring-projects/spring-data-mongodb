@@ -123,7 +123,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 
 			String collectionName = getCollectionName();
 
-			return template.findAndModify(query, update, findAndModifyOptions, targetType, collectionName);
+			return template.findAndModify(query, update, findAndModifyOptions != null ? findAndModifyOptions : FindAndModifyOptions.none(), targetType, collectionName);
 		}
 
 		/* 
@@ -133,7 +133,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 		@Override
 		public Mono<T> findAndReplace() {
 			return template.findAndReplace(query, replacement,
-					findAndReplaceOptions != null ? findAndReplaceOptions : new FindAndReplaceOptions(), (Class) domainType,
+					findAndReplaceOptions != null ? findAndReplaceOptions : FindAndReplaceOptions.none(), (Class) domainType,
 					getCollectionName(), targetType);
 		}
 

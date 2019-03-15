@@ -120,19 +120,14 @@ public class DefaultIndexOperations implements IndexOperations {
 
 		return execute(collection -> {
 
-			Document indexOptions = indexDefinition.getIndexOptions();
+			MongoPersistentEntity<?> entity = lookupPersistentEntity(type, collectionName);
 
-			IndexOptions ops = IndexConverters.indexDefinitionToIndexOptionsConverter().convert(indexDefinition);
+			IndexOptions indexOptions = IndexConverters.indexDefinitionToIndexOptionsConverter().convert(indexDefinition);
 
-			if (indexOptions.containsKey(PARTIAL_FILTER_EXPRESSION_KEY)) {
+			indexOptions = addPartialFilterIfPresent(indexOptions, indexDefinition.getIndexOptions(), entity);
+			indexOptions = addDefaultCollationIfRequired(indexOptions, entity);
 
-				Assert.isInstanceOf(Document.class, indexOptions.get(PARTIAL_FILTER_EXPRESSION_KEY));
-
-				ops.partialFilterExpression(mapper.getMappedObject((Document) indexOptions.get(PARTIAL_FILTER_EXPRESSION_KEY),
-						lookupPersistentEntity(type, collectionName)));
-			}
-
-			return collection.createIndex(indexDefinition.getIndexKeys(), ops);
+			return collection.createIndex(indexDefinition.getIndexKeys(), indexOptions);
 		});
 	}
 
@@ -192,7 +187,7 @@ public class DefaultIndexOperations implements IndexOperations {
 
 			private List<IndexInfo> getIndexData(MongoCursor<Document> cursor) {
 
-				List<IndexInfo> indexInfoList = new ArrayList<IndexInfo>();
+				List<IndexInfo> indexInfoList = new ArrayList<>();
 
 				while (cursor.hasNext()) {
 
@@ -216,5 +211,26 @@ public class DefaultIndexOperations implements IndexOperations {
 		}
 
 		return mongoOperations.execute(collectionName, callback);
+	}
+
+	private IndexOptions addPartialFilterIfPresent(IndexOptions ops, Document sourceOptions,
+			@Nullable MongoPersistentEntity<?> entity) {
+
+		if (!sourceOptions.containsKey(PARTIAL_FILTER_EXPRESSION_KEY)) {
+			return ops;
+		}
+
+		Assert.isInstanceOf(Document.class, sourceOptions.get(PARTIAL_FILTER_EXPRESSION_KEY));
+		return ops.partialFilterExpression(
+				mapper.getMappedObject((Document) sourceOptions.get(PARTIAL_FILTER_EXPRESSION_KEY), entity));
+	}
+
+	private static IndexOptions addDefaultCollationIfRequired(IndexOptions ops, MongoPersistentEntity<?> entity) {
+
+		if (ops.getCollation() != null || entity == null || !entity.hasCollation()) {
+			return ops;
+		}
+
+		return ops.collation(entity.getCollation().toMongoCollation());
 	}
 }

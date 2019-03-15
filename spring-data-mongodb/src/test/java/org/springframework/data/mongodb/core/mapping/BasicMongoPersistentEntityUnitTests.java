@@ -23,7 +23,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.junit.Test;
@@ -237,6 +237,24 @@ public class BasicMongoPersistentEntityUnitTests {
 		assertThat(entity.getCollection()).isEqualTo("collectionName");
 	}
 
+	@Test // DATAMONGO-1854
+	public void readsSimpleCollation() {
+
+		BasicMongoPersistentEntity<WithSimpleCollation> entity = new BasicMongoPersistentEntity<>(
+				ClassTypeInformation.from(WithSimpleCollation.class));
+
+		assertThat(entity.getCollation()).isEqualTo(org.springframework.data.mongodb.core.query.Collation.of("en_US"));
+	}
+
+	@Test // DATAMONGO-1854
+	public void readsDocumentCollation() {
+
+		BasicMongoPersistentEntity<WithDocumentCollation> entity = new BasicMongoPersistentEntity<>(
+				ClassTypeInformation.from(WithDocumentCollation.class));
+
+		assertThat(entity.getCollation()).isEqualTo(org.springframework.data.mongodb.core.query.Collation.of("en_US"));
+	}
+
 	@Document("contacts")
 	class Contact {}
 
@@ -283,9 +301,17 @@ public class BasicMongoPersistentEntityUnitTests {
 	}
 
 	// DATAMONGO-1874
-
 	@Document("#{myProperty}")
 	class MappedWithExtension {}
+
+	@Collation("#{myCollation}")
+	class WithCollationFromSpEL {}
+
+	@Collation("en_US")
+	class WithSimpleCollation {}
+
+	@Collation("{ 'locale' : 'en_US' }")
+	class WithDocumentCollation {}
 
 	static class SampleExtension implements EvaluationContextExtension {
 
@@ -304,7 +330,11 @@ public class BasicMongoPersistentEntityUnitTests {
 		 */
 		@Override
 		public Map<String, Object> getProperties() {
-			return Collections.singletonMap("myProperty", "collectionName");
+
+			Map<String, Object> properties = new LinkedHashMap<>();
+			properties.put("myProperty", "collectionName");
+			properties.put("myCollation", "en_US");
+			return properties;
 		}
 	}
 }

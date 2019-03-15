@@ -227,7 +227,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		Long count = count();
 		List<T> list = findAll(new Query().with(pageable));
 
-		return new PageImpl<T>(list, pageable, count);
+		return new PageImpl<>(list, pageable, count);
 	}
 
 	/*
@@ -282,7 +282,9 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		Assert.notNull(example, "Sample must not be null!");
 		Assert.notNull(pageable, "Pageable must not be null!");
 
-		Query q = new Query(new Criteria().alike(example)).with(pageable);
+		Query q = new Query(new Criteria().alike(example)) //
+				.collation(entityInformation.getCollation()).with(pageable); //
+
 		List<S> list = mongoOperations.find(q, example.getProbeType(), entityInformation.getCollectionName());
 
 		return PageableExecutionUtils.getPage(list, pageable,
@@ -299,9 +301,11 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		Assert.notNull(example, "Sample must not be null!");
 		Assert.notNull(sort, "Sort must not be null!");
 
-		Query q = new Query(new Criteria().alike(example)).with(sort);
+		Query query = new Query(new Criteria().alike(example)) //
+				.collation(entityInformation.getCollation()) //
+				.with(sort);
 
-		return mongoOperations.find(q, example.getProbeType(), entityInformation.getCollectionName());
+		return mongoOperations.find(query, example.getProbeType(), entityInformation.getCollectionName());
 	}
 
 	/*
@@ -322,9 +326,11 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Assert.notNull(example, "Sample must not be null!");
 
-		Query q = new Query(new Criteria().alike(example));
+		Query query = new Query(new Criteria().alike(example)) //
+				.collation(entityInformation.getCollation());
+
 		return Optional
-				.ofNullable(mongoOperations.findOne(q, example.getProbeType(), entityInformation.getCollectionName()));
+				.ofNullable(mongoOperations.findOne(query, example.getProbeType(), entityInformation.getCollectionName()));
 	}
 
 	/*
@@ -336,8 +342,10 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Assert.notNull(example, "Sample must not be null!");
 
-		Query q = new Query(new Criteria().alike(example));
-		return mongoOperations.count(q, example.getProbeType(), entityInformation.getCollectionName());
+		Query query = new Query(new Criteria().alike(example)) //
+				.collation(entityInformation.getCollation());
+
+		return mongoOperations.count(query, example.getProbeType(), entityInformation.getCollectionName());
 	}
 
 	/*
@@ -349,8 +357,10 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Assert.notNull(example, "Sample must not be null!");
 
-		Query q = new Query(new Criteria().alike(example));
-		return mongoOperations.exists(q, example.getProbeType(), entityInformation.getCollectionName());
+		Query query = new Query(new Criteria().alike(example)) //
+				.collation(entityInformation.getCollation());
+
+		return mongoOperations.exists(query, example.getProbeType(), entityInformation.getCollectionName());
 	}
 
 	private Query getIdQuery(Object id) {
