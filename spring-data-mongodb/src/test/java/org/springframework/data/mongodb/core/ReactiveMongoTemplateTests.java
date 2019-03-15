@@ -514,7 +514,7 @@ public class ReactiveMongoTemplateTests {
 		p = template.findAndModify(query, update, new FindAndModifyOptions().returnNew(true), Person.class).block();
 		assertThat(p.getAge()).isEqualTo(26);
 
-		p = template.findAndModify(query, update, null, Person.class, "person").block();
+		p = template.findAndModify(query, update, FindAndModifyOptions.none(), Person.class, "person").block();
 		assertThat(p.getAge()).isEqualTo(26);
 		p = template.findOne(query, Person.class).block();
 		assertThat(p.getAge()).isEqualTo(27);

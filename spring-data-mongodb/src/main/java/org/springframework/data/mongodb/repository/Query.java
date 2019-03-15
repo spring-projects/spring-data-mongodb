@@ -121,6 +121,7 @@ public @interface Query {
 	 * List<Entry> findAllByDynamicSpElCollation(String collation);
 	 * </pre>
 	 *
+	 * @return an empty {@link String} by default.
 	 * @since 2.2
 	 */
 	String collation() default "";

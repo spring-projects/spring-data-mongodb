@@ -19,6 +19,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.any;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 import lombok.Data;
 import reactor.core.publisher.Mono;
@@ -39,6 +40,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.reactivestreams.Publisher;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.MongoTemplateUnitTests.AutogenerateableId;
@@ -56,12 +58,15 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.client.model.CountOptions;
+import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.model.FindOneAndDeleteOptions;
+import com.mongodb.client.model.FindOneAndReplaceOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.reactivestreams.client.AggregatePublisher;
+import com.mongodb.reactivestreams.client.DistinctPublisher;
 import com.mongodb.reactivestreams.client.FindPublisher;
 import com.mongodb.reactivestreams.client.MapReducePublisher;
 import com.mongodb.reactivestreams.client.MongoClient;
@@ -88,6 +93,8 @@ public class ReactiveMongoTemplateUnitTests {
 	@Mock Publisher runCommandPublisher;
 	@Mock Publisher updatePublisher;
 	@Mock Publisher findAndUpdatePublisher;
+	@Mock DistinctPublisher distinctPublisher;
+	@Mock Publisher deletePublisher;
 	@Mock MapReducePublisher mapReducePublisher;
 
 	MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
@@ -102,12 +109,20 @@ public class ReactiveMongoTemplateUnitTests {
 		when(db.getCollection(any())).thenReturn(collection);
 		when(db.getCollection(any(), any())).thenReturn(collection);
 		when(db.runCommand(any(), any(Class.class))).thenReturn(runCommandPublisher);
+		when(db.createCollection(any(), any(CreateCollectionOptions.class))).thenReturn(runCommandPublisher);
 		when(collection.find(any(Class.class))).thenReturn(findPublisher);
 		when(collection.find(any(Document.class), any(Class.class))).thenReturn(findPublisher);
 		when(collection.aggregate(anyList())).thenReturn(aggregatePublisher);
 		when(collection.aggregate(anyList(), any(Class.class))).thenReturn(aggregatePublisher);
 		when(collection.count(any(), any(CountOptions.class))).thenReturn(Mono.just(0L));
 		when(collection.updateOne(any(), any(), any(UpdateOptions.class))).thenReturn(updatePublisher);
+		when(collection.updateMany(any(Bson.class), any(), any())).thenReturn(updatePublisher);
+		when(collection.findOneAndUpdate(any(), any(), any(FindOneAndUpdateOptions.class)))
+				.thenReturn(findAndUpdatePublisher);
+		when(collection.findOneAndReplace(any(Bson.class), any(), any())).thenReturn(findPublisher);
+		when(collection.findOneAndDelete(any(), any(FindOneAndDeleteOptions.class))).thenReturn(findPublisher);
+		when(collection.distinct(anyString(), any(Document.class), any())).thenReturn(distinctPublisher);
+		when(collection.deleteMany(any(Bson.class), any())).thenReturn(deletePublisher);
 		when(collection.findOneAndUpdate(any(), any(), any(FindOneAndUpdateOptions.class)))
 				.thenReturn(findAndUpdatePublisher);
 		when(collection.mapReduce(anyString(), anyString(), any())).thenReturn(mapReducePublisher);
@@ -405,6 +420,255 @@ public class ReactiveMongoTemplateUnitTests {
 				.contains(new org.bson.Document("element", new Document("$gte", 100)));
 	}
 
+	@Test // DATAMONGO-1854
+	public void findShouldNotUseCollationWhenNoDefaultPresent() {
+
+		template.find(new BasicQuery("{'foo' : 'bar'}"), Jedi.class).subscribe();
+
+		verify(findPublisher, never()).collation(any());
+	}
+
+	@Test // DATAMONGO-1854
+	public void findShouldUseDefaultCollationWhenPresent() {
+
+		template.find(new BasicQuery("{'foo' : 'bar'}"), Sith.class).subscribe();
+
+		verify(findPublisher).collation(eq(com.mongodb.client.model.Collation.builder().locale("de_AT").build()));
+	}
+
+	@Test // DATAMONGO-1854
+	public void findOneShouldUseDefaultCollationWhenPresent() {
+
+		template.findOne(new BasicQuery("{'foo' : 'bar'}"), Sith.class).subscribe();
+
+		verify(findPublisher).collation(eq(com.mongodb.client.model.Collation.builder().locale("de_AT").build()));
+	}
+
+	@Test // DATAMONGO-1854
+	public void existsShouldUseDefaultCollationWhenPresent() {
+
+		template.exists(new BasicQuery("{}"), Sith.class).subscribe();
+
+		verify(findPublisher).collation(eq(com.mongodb.client.model.Collation.builder().locale("de_AT").build()));
+	}
+
+	@Test // DATAMONGO-1854
+	public void findAndModfiyShoudUseDefaultCollationWhenPresent() {
+
+		template.findAndModify(new BasicQuery("{}"), new Update(), Sith.class).subscribe();
+
+		ArgumentCaptor<FindOneAndUpdateOptions> options = ArgumentCaptor.forClass(FindOneAndUpdateOptions.class);
+		verify(collection).findOneAndUpdate(any(), any(), options.capture());
+
+		assertThat(options.getValue().getCollation(),
+				is(com.mongodb.client.model.Collation.builder().locale("de_AT").build()));
+	}
+
+	@Test // DATAMONGO-1854
+	public void findAndRemoveShouldUseDefaultCollationWhenPresent() {
+
+		template.findAndRemove(new BasicQuery("{}"), Sith.class).subscribe();
+
+		ArgumentCaptor<FindOneAndDeleteOptions> options = ArgumentCaptor.forClass(FindOneAndDeleteOptions.class);
+		verify(collection).findOneAndDelete(any(), options.capture());
+
+		assertThat(options.getValue().getCollation(),
+				is(com.mongodb.client.model.Collation.builder().locale("de_AT").build()));
+	}
+
+	@Test // DATAMONGO-1854
+	public void createCollectionShouldNotCollationIfNotPresent() {
+
+		template.createCollection(AutogenerateableId.class).subscribe();
+
+		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
+		verify(db).createCollection(any(), options.capture());
+
+		Assertions.assertThat(options.getValue().getCollation()).isNull();
+	}
+
+	@Test // DATAMONGO-1854
+	public void createCollectionShouldApplyDefaultCollation() {
+
+		template.createCollection(Sith.class).subscribe();
+
+		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
+		verify(db).createCollection(any(), options.capture());
+
+		assertThat(options.getValue().getCollation(),
+				is(com.mongodb.client.model.Collation.builder().locale("de_AT").build()));
+	}
+
+	@Test // DATAMONGO-1854
+	public void createCollectionShouldFavorExplicitOptionsOverDefaultCollation() {
+
+		template.createCollection(Sith.class, CollectionOptions.just(Collation.of("en_US"))).subscribe();
+
+		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
+		verify(db).createCollection(any(), options.capture());
+
+		assertThat(options.getValue().getCollation(),
+				is(com.mongodb.client.model.Collation.builder().locale("en_US").build()));
+	}
+
+	@Test // DATAMONGO-1854
+	public void createCollectionShouldUseDefaultCollationIfCollectionOptionsAreNull() {
+
+		template.createCollection(Sith.class, null).subscribe();
+
+		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
+		verify(db).createCollection(any(), options.capture());
+
+		assertThat(options.getValue().getCollation(),
+				is(com.mongodb.client.model.Collation.builder().locale("de_AT").build()));
+	}
+
+	@Test // DATAMONGO-1854
+	public void aggreateShouldUseDefaultCollationIfPresent() {
+
+		template.aggregate(newAggregation(Sith.class, project("id")), AutogenerateableId.class, Document.class).subscribe();
+
+		verify(aggregatePublisher).collation(eq(com.mongodb.client.model.Collation.builder().locale("de_AT").build()));
+	}
+
+	@Test // DATAMONGO-1854
+	public void aggreateShouldUseCollationFromOptionsEvenIfDefaultCollationIsPresent() {
+
+		template
+				.aggregate(
+						newAggregation(Sith.class, project("id"))
+								.withOptions(newAggregationOptions().collation(Collation.of("fr")).build()),
+						AutogenerateableId.class, Document.class)
+				.subscribe();
+
+		verify(aggregatePublisher).collation(eq(com.mongodb.client.model.Collation.builder().locale("fr").build()));
+	}
+
+	@Test // DATAMONGO-18545
+	public void findAndReplaceShouldUseCollationWhenPresent() {
+
+		template.findAndReplace(new BasicQuery("{}").collation(Collation.of("fr")), new Jedi()).subscribe();
+
+		ArgumentCaptor<FindOneAndReplaceOptions> options = ArgumentCaptor.forClass(FindOneAndReplaceOptions.class);
+		verify(collection).findOneAndReplace(any(Bson.class), any(), options.capture());
+
+		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
+	}
+
+	@Test // DATAMONGO-18545
+	public void findAndReplaceShouldUseDefaultCollationWhenPresent() {
+
+		template.findAndReplace(new BasicQuery("{}"), new Sith()).subscribe();
+
+		ArgumentCaptor<FindOneAndReplaceOptions> options = ArgumentCaptor.forClass(FindOneAndReplaceOptions.class);
+		verify(collection).findOneAndReplace(any(Bson.class), any(), options.capture());
+
+		assertThat(options.getValue().getCollation().getLocale(), is("de_AT"));
+	}
+
+	@Test // DATAMONGO-18545
+	public void findAndReplaceShouldUseCollationEvenIfDefaultCollationIsPresent() {
+
+		template.findAndReplace(new BasicQuery("{}").collation(Collation.of("fr")), new MongoTemplateUnitTests.Sith())
+				.subscribe();
+
+		ArgumentCaptor<FindOneAndReplaceOptions> options = ArgumentCaptor.forClass(FindOneAndReplaceOptions.class);
+		verify(collection).findOneAndReplace(any(Bson.class), any(), options.capture());
+
+		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
+	}
+
+	@Test // DATAMONGO-1854
+	public void findDistinctShouldUseDefaultCollationWhenPresent() {
+
+		template.findDistinct(new BasicQuery("{}"), "name", Sith.class, String.class).subscribe();
+
+		verify(distinctPublisher).collation(eq(com.mongodb.client.model.Collation.builder().locale("de_AT").build()));
+	}
+
+	@Test // DATAMONGO-1854
+	public void findDistinctPreferCollationFromQueryOverDefaultCollation() {
+
+		template.findDistinct(new BasicQuery("{}").collation(Collation.of("fr")), "name", Sith.class, String.class)
+				.subscribe();
+
+		verify(distinctPublisher).collation(eq(com.mongodb.client.model.Collation.builder().locale("fr").build()));
+	}
+
+	@Test // DATAMONGO-1854
+	public void updateFirstShouldUseDefaultCollationWhenPresent() {
+
+		template.updateFirst(new BasicQuery("{}"), Update.update("foo", "bar"), Sith.class).subscribe();
+
+		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
+		verify(collection).updateOne(any(), any(), options.capture());
+
+		assertThat(options.getValue().getCollation(),
+				is(com.mongodb.client.model.Collation.builder().locale("de_AT").build()));
+	}
+
+	@Test // DATAMONGO-1854
+	public void updateFirstShouldPreferExplicitCollationOverDefaultCollation() {
+
+		template.updateFirst(new BasicQuery("{}").collation(Collation.of("fr")), Update.update("foo", "bar"), Sith.class)
+				.subscribe();
+
+		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
+		verify(collection).updateOne(any(), any(), options.capture());
+
+		assertThat(options.getValue().getCollation(),
+				is(com.mongodb.client.model.Collation.builder().locale("fr").build()));
+	}
+
+	@Test // DATAMONGO-1854
+	public void updateMultiShouldUseDefaultCollationWhenPresent() {
+
+		template.updateMulti(new BasicQuery("{}"), Update.update("foo", "bar"), Sith.class).subscribe();
+
+		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
+		verify(collection).updateMany(any(), any(), options.capture());
+
+		assertThat(options.getValue().getCollation(),
+				is(com.mongodb.client.model.Collation.builder().locale("de_AT").build()));
+	}
+
+	@Test // DATAMONGO-1854
+	public void updateMultiShouldPreferExplicitCollationOverDefaultCollation() {
+
+		template.updateMulti(new BasicQuery("{}").collation(Collation.of("fr")), Update.update("foo", "bar"), Sith.class)
+				.subscribe();
+
+		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
+		verify(collection).updateMany(any(), any(), options.capture());
+
+		assertThat(options.getValue().getCollation(),
+				is(com.mongodb.client.model.Collation.builder().locale("fr").build()));
+	}
+
+	@Test // DATAMONGO-1854
+	public void removeShouldUseDefaultCollationWhenPresent() {
+
+		template.remove(new BasicQuery("{}"), Sith.class).subscribe();
+
+		ArgumentCaptor<DeleteOptions> options = ArgumentCaptor.forClass(DeleteOptions.class);
+		verify(collection).deleteMany(any(), options.capture());
+
+		assertThat(options.getValue().getCollation(),
+				is(com.mongodb.client.model.Collation.builder().locale("de_AT").build()));
+	}
+
+	@Test // DATAMONGO-1854
+	public void removeShouldPreferExplicitCollationOverDefaultCollation() {
+
+		template.remove(new BasicQuery("{}").collation(Collation.of("fr")), Sith.class).subscribe();
+
+		ArgumentCaptor<DeleteOptions> options = ArgumentCaptor.forClass(DeleteOptions.class);
+		verify(collection).deleteMany(any(), options.capture());
+
+		assertThat(options.getValue().getCollation(),
+				is(com.mongodb.client.model.Collation.builder().locale("fr").build()));
+	}
+
 	@Data
 	@org.springframework.data.mongodb.core.mapping.Document(collection = "star-wars")
 	static class Person {
@@ -430,6 +694,12 @@ public class ReactiveMongoTemplateUnitTests {
 
 	@Data
 	static class Jedi {
+
+		@Field("firstname") String name;
+	}
+
+	@org.springframework.data.mongodb.core.mapping.Document(collation = "de_AT")
+	static class Sith {
 
 		@Field("firstname") String name;
 	}
