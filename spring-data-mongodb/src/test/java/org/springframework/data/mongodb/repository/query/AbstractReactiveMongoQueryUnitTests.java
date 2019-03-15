@@ -281,25 +281,25 @@ public class AbstractReactiveMongoQueryUnitTests {
 
 	private interface Repo extends ReactiveMongoRepository<Person, Long> {
 
-		@org.springframework.data.mongodb.repository.Query(collation = "en_US")
+		@org.springframework.data.mongodb.core.mapping.Collation("en_US")
 		List<Person> findWithCollationUsingSpimpleStringValueByFirstName(String firstname);
 
-		@org.springframework.data.mongodb.repository.Query(collation = "{ 'locale' : 'en_US' }")
+		@org.springframework.data.mongodb.core.mapping.Collation("{ 'locale' : 'en_US' }")
 		List<Person> findWithCollationUsingDocumentByFirstName(String firstname);
 
-		@org.springframework.data.mongodb.repository.Query(collation = "?1")
+		@org.springframework.data.mongodb.core.mapping.Collation("?1")
 		List<Person> findWithCollationUsingPlaceholderByFirstName(String firstname, Object collation);
 
-		@org.springframework.data.mongodb.repository.Query(collation = "{ 'locale' : '?1' }")
+		@org.springframework.data.mongodb.core.mapping.Collation("{ 'locale' : '?1' }")
 		List<Person> findWithCollationUsingPlaceholderInDocumentByFirstName(String firstname, String collation);
 
-		@org.springframework.data.mongodb.repository.Query(collation = "{ 'locale' : '?1', 'strength' : ?#{[2]}}")
+		@org.springframework.data.mongodb.core.mapping.Collation("{ 'locale' : '?1', 'strength' : ?#{[2]}}")
 		List<Person> findWithCollationUsingPlaceholdersInDocumentByFirstName(String firstname, String collation,
 				int strength);
 
 		List<Person> findWithCollationParameterByFirstName(String firstname, Collation collation);
 
-		@org.springframework.data.mongodb.repository.Query(collation = "{ 'locale' : 'en_US' }")
+		@org.springframework.data.mongodb.core.mapping.Collation("{ 'locale' : 'en_US' }")
 		List<Person> findWithWithCollationParameterAndAnnotationByFirstName(String firstname, Collation collation);
 	}
 }

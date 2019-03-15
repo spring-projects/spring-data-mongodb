@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository.support;
 import org.bson.types.ObjectId;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.repository.core.support.PersistentEntityInformation;
 import org.springframework.lang.Nullable;
@@ -141,6 +142,15 @@ public class MappingMongoEntityInformation<T, ID> extends PersistentEntityInform
 		PersistentPropertyAccessor<T> accessor = this.entityMetadata.getPropertyAccessor(entity);
 
 		return accessor.getProperty(this.entityMetadata.getRequiredVersionProperty());
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.MongoEntityInformation#getCollation()
+	 */
+	@Nullable
+	public Collation getCollation() {
+		return this.entityMetadata.getCollation();
 	}
 
 }

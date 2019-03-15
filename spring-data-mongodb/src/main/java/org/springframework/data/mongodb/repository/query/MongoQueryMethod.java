@@ -28,6 +28,7 @@ import org.springframework.data.geo.GeoPage;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mongodb.core.mapping.Collation;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.repository.Meta;
@@ -323,28 +324,33 @@ public class MongoQueryMethod extends QueryMethod {
 	}
 
 	/**
-	 * Check if the query method is decorated with an non empty {@link Query#collation()}.
+	 * Check if the query method is decorated with an non empty {@link Collation#collation()}.
 	 *
-	 * @return true if method annotated with {@link Query} having an non empty collation attribute.
+	 * @return true if method annotated with {@link Collation} having an non empty collation attribute.
 	 * @since 2.2
 	 */
 	public boolean hasAnnotatedCollation() {
-		return lookupQueryAnnotation().map(it -> !it.collation().isEmpty()).orElse(false);
+		return lookupCollationAnnotation().map(it -> !it.collation().isEmpty()).orElse(false);
 	}
 
 	/**
-	 * Get the collation value extracted from the {@link Query} annotation.
+	 * Get the collation value extracted from the {@link Collation} annotation.
 	 *
-	 * @return the {@link Query#collation()} value.
-	 * @throws IllegalStateException if method not annotated with {@link Query}. Make sure to check
+	 * @return the {@link Collation#collation()} value.
+	 * @throws IllegalStateException if method not annotated with {@link Collation}. Make sure to check
 	 *           {@link #hasAnnotatedQuery()} first.
 	 * @since 2.2
 	 */
 	public String getAnnotatedCollation() {
 
-		return lookupQueryAnnotation().map(Query::collation).orElseThrow(() -> new IllegalStateException(
+		return lookupCollationAnnotation().map(Collation::collation).orElseThrow(() -> new IllegalStateException(
 				"Expected to find @Query annotation but did not. Make sure to check hasAnnotatedCollation() before."));
 	}
+
+	Optional<Collation> lookupCollationAnnotation() {
+		return doFindAnnotation(Collation.class);
+	}
+
 
 	@SuppressWarnings("unchecked")
 	private <A extends Annotation> Optional<A> doFindAnnotation(Class<A> annotationType) {

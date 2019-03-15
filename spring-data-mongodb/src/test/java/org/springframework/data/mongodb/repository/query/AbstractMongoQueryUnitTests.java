@@ -524,21 +524,21 @@ public class AbstractMongoQueryUnitTests {
 		@org.springframework.data.mongodb.repository.Query(sort = "{ age : 1 }")
 		List<Person> findByAge(Integer age, Sort page);
 
-		@org.springframework.data.mongodb.repository.Query(collation = "en_US")
+		@org.springframework.data.mongodb.core.mapping.Collation(collation = "en_US")
 		List<Person> findWithCollationUsingSpimpleStringValueByFirstName(String firstname);
 
-		@org.springframework.data.mongodb.repository.Query(collation = "{ 'locale' : 'en_US' }")
+		@org.springframework.data.mongodb.core.mapping.Collation(collation = "{ 'locale' : 'en_US' }")
 		List<Person> findWithCollationUsingDocumentByFirstName(String firstname);
 
-		@org.springframework.data.mongodb.repository.Query(collation = "?1")
+		@org.springframework.data.mongodb.core.mapping.Collation(collation = "?1")
 		List<Person> findWithCollationUsingPlaceholderByFirstName(String firstname, Object collation);
 
-		@org.springframework.data.mongodb.repository.Query(collation = "{ 'locale' : '?1' }")
+		@org.springframework.data.mongodb.core.mapping.Collation(collation = "{ 'locale' : '?1' }")
 		List<Person> findWithCollationUsingPlaceholderInDocumentByFirstName(String firstname, String collation);
 
 		List<Person> findWithCollationParameterByFirstName(String firstname, Collation collation);
 
-		@org.springframework.data.mongodb.repository.Query(collation = "{ 'locale' : 'en_US' }")
+		@org.springframework.data.mongodb.core.mapping.Collation(collation = "{ 'locale' : 'en_US' }")
 		List<Person> findWithWithCollationParameterAndAnnotationByFirstName(String firstname, Collation collation);
 	}
 

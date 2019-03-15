@@ -515,7 +515,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					sortObject, fieldsObject, collectionName);
 		}
 
-		this.executeQueryInternal(new FindCallback(queryObject, fieldsObject), preparer, documentCallbackHandler,
+		this.executeQueryInternal(new FindCallback(queryObject, fieldsObject, null), preparer, documentCallbackHandler,
 				collectionName);
 	}
 
@@ -602,7 +602,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @see org.springframework.data.mongodb.core.MongoOperations#createCollection(java.lang.Class)
 	 */
 	public <T> MongoCollection<Document> createCollection(Class<T> entityClass) {
-		return createCollection(operations.determineCollectionName(entityClass));
+		return createCollection(entityClass, CollectionOptions.empty());
 	}
 
 	/*
@@ -613,8 +613,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			@Nullable CollectionOptions collectionOptions) {
 
 		Assert.notNull(entityClass, "EntityClass must not be null!");
-		return doCreateCollection(operations.determineCollectionName(entityClass),
-				convertToDocument(collectionOptions, entityClass));
+
+		CollectionOptions options = collectionOptions != null ? collectionOptions : CollectionOptions.empty();
+		options = Optionals
+				.firstNonEmpty(() -> collectionOptions != null ? collectionOptions.getCollation() : Optional.empty(),
+						() -> getCollationForType(entityClass)) //
+				.map(options::collation).orElse(options);
+
+		return doCreateCollection(operations.determineCollectionName(entityClass), convertToDocument(options, entityClass));
 	}
 
 	/*
@@ -786,8 +792,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(entityClass, "EntityClass must not be null!");
 		Assert.notNull(collectionName, "CollectionName must not be null!");
 
-		if (ObjectUtils.isEmpty(query.getSortObject()) && !query.getCollation().isPresent()) {
-			return doFindOne(collectionName, query.getQueryObject(), query.getFieldsObject(), entityClass);
+		if (ObjectUtils.isEmpty(query.getSortObject())) {
+
+			return doFindOne(collectionName, query.getQueryObject(), query.getFieldsObject(),
+					Optionals.firstNonEmpty(() -> query.getCollation(), () -> getCollationForType(entityClass))
+							.map(Collation::toMongoCollation).orElse(null),
+					entityClass);
 		} else {
 			query.limit(1);
 			List<T> results = find(query, entityClass, collectionName);
@@ -816,7 +826,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Document mappedQuery = queryMapper.getMappedObject(query.getQueryObject(), getPersistentEntity(entityClass));
 
 		return execute(collectionName,
-				new ExistsCallback(mappedQuery, query.getCollation().map(Collation::toMongoCollation).orElse(null)));
+				new ExistsCallback(mappedQuery,
+						Optionals.firstNonEmpty(() -> query.getCollation(), () -> getCollationForType(entityClass))
+								.map(Collation::toMongoCollation).orElse(null)));
 	}
 
 	// Find methods that take a Query to express the query and that return a List of objects.
@@ -906,7 +918,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			DistinctIterable<T> iterable = collection.distinct(mappedFieldName, mappedQuery, mongoDriverCompatibleType);
 
-			return query.getCollation().map(Collation::toMongoCollation).map(iterable::collation).orElse(iterable);
+			return Optionals.firstNonEmpty(() -> query.getCollation(), () -> getCollationForType(entityClass))
+					.map(Collation::toMongoCollation) //
+					.map(iterable::collation) //
+					.orElse(iterable);
 		});
 
 		if (resultClass == Object.class || mongoDriverCompatibleType != resultClass) {
@@ -1063,7 +1078,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					"Both Query and FindAndModifyOptions define a collation. Please provide the collation only via one of the two.");
 		});
 
-		query.getCollation().ifPresent(optionsToUse::collation);
+		Optionals
+				.firstNonEmpty(() -> query.getCollation(), () -> options.getCollation(), () -> getCollationForType(entityClass))
+				.ifPresent(optionsToUse::collation);
 
 		return doFindAndModify(collectionName, query.getQueryObject(), query.getFieldsObject(),
 				getMappedSortObject(query, entityClass), entityClass, update, optionsToUse);
@@ -1096,8 +1113,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Document mappedReplacement = operations.forEntity(replacement).toMappedDocument(this.mongoConverter).getDocument();
 
 		return doFindAndReplace(collectionName, mappedQuery, mappedFields, mappedSort,
-				query.getCollation().map(Collation::toMongoCollation).orElse(null), entityType, mappedReplacement, options,
-				resultType);
+				Optionals.firstNonEmpty(() -> query.getCollation(), () -> getCollationForType(entityType))
+						.map(Collation::toMongoCollation).orElse(null),
+				entityType, mappedReplacement, options, resultType);
 	}
 
 	// Find methods that take a Query to express the query and that return a single object that is also removed from the
@@ -1118,7 +1136,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(collectionName, "CollectionName must not be null!");
 
 		return doFindAndRemove(collectionName, query.getQueryObject(), query.getFieldsObject(),
-				getMappedSortObject(query, entityClass), query.getCollation().orElse(null), entityClass);
+				getMappedSortObject(query, entityClass),
+				Optionals.firstNonEmpty(() -> query.getCollation(), () -> getCollationForType(entityClass)).orElse(null),
+				entityClass);
 	}
 
 	@Override
@@ -1610,10 +1630,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				Document queryObj = new Document();
 
 				if (query != null) {
-
 					queryObj.putAll(queryMapper.getMappedObject(query.getQueryObject(), entity));
-					query.getCollation().map(Collation::toMongoCollation).ifPresent(opts::collation);
 				}
+
+				Optionals.firstNonEmpty(() -> query.getCollation(), () -> getCollationForType(entityClass)) //
+						.map(Collation::toMongoCollation) //
+						.ifPresent(opts::collation);
 
 				Document updateObj = update instanceof MappedUpdate ? update.getUpdateObject()
 						: updateMapper.getMappedObject(update.getUpdateObject(), entity);
@@ -1717,7 +1739,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				Document removeQuery = queryObject;
 
 				DeleteOptions options = new DeleteOptions();
-				query.getCollation().map(Collation::toMongoCollation).ifPresent(options::collation);
+				Optionals.firstNonEmpty(() -> query.getCollation(), () -> getCollationForType(entityClass)) //
+						.map(Collation::toMongoCollation) //
+						.ifPresent(options::collation);
 
 				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.REMOVE, collectionName,
 						entityClass, null, queryObject);
@@ -1764,8 +1788,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	@Override
 	public <T> List<T> findAll(Class<T> entityClass, String collectionName) {
-		return executeFindMultiInternal(new FindCallback(new Document(), new Document()), null,
-				new ReadDocumentCallback<>(mongoConverter, entityClass, collectionName), collectionName);
+		return executeFindMultiInternal(
+				new FindCallback(new Document(), new Document(),
+						getCollationForType(entityClass).map(Collation::toMongoCollation).orElse(null)),
+				null, new ReadDocumentCallback<>(mongoConverter, entityClass, collectionName), collectionName);
 	}
 
 	@Override
@@ -1877,6 +1903,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					mapReduce = mapReduce.databaseName(mapReduceOptions.getOutputDatabase().get());
 				}
 			}
+		}
+
+		if(!collation.isPresent()) {
+			collation = getCollationForType(domainType);
 		}
 
 		mapReduce = collation.map(Collation::toMongoCollation).map(mapReduce::collation).orElse(mapReduce);
@@ -2123,8 +2153,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			List<Document> rawResult = new ArrayList<>();
 
+			Optional<Collation> collation = Optionals.firstNonEmpty(() -> options.getCollation(), () -> getCollationForType(
+					aggregation instanceof TypedAggregation ? ((TypedAggregation) aggregation).getInputType() : null));
+
 			AggregateIterable<Document> aggregateIterable = collection.aggregate(pipeline, Document.class) //
-					.collation(options.getCollation().map(Collation::toMongoCollation).orElse(null)) //
+					.collation(collation.map(Collation::toMongoCollation).orElse(null)) //
 					.allowDiskUse(options.isAllowDiskUse());
 
 			if (options.getCursorBatchSize() != null) {
@@ -2165,16 +2198,18 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return execute(collectionName, (CollectionCallback<CloseableIterator<O>>) collection -> {
 
 			AggregateIterable<Document> cursor = collection.aggregate(pipeline, Document.class) //
-					.allowDiskUse(options.isAllowDiskUse()) //
-					.useCursor(true);
+					.allowDiskUse(options.isAllowDiskUse());
 
 			if (options.getCursorBatchSize() != null) {
 				cursor = cursor.batchSize(options.getCursorBatchSize());
 			}
 
-			if (options.getCollation().isPresent()) {
-				cursor = cursor.collation(options.getCollation().map(Collation::toMongoCollation).get());
-			}
+			Optionals
+					.firstNonEmpty(() -> options.getCollation(),
+							() -> getCollationForType(
+									aggregation instanceof TypedAggregation ? ((TypedAggregation) aggregation).getInputType() : null)) //
+					.map(Collation::toMongoCollation) //
+					.ifPresent(cursor::collation);
 
 			return new CloseableIterableCursorAdapter<>(cursor, exceptionTranslator, readCallback);
 		});
@@ -2368,6 +2403,21 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @return the {@link List} of converted objects.
 	 */
 	protected <T> T doFindOne(String collectionName, Document query, Document fields, Class<T> entityClass) {
+		return doFindOne(collectionName, query, fields, null, entityClass);
+	}
+
+	/**
+	 * Map the results of an ad-hoc query on the default MongoDB collection to an object using the template's converter.
+	 * The query document is specified as a standard {@link Document} and so is the fields specification.
+	 *
+	 * @param collectionName name of the collection to retrieve the objects from.
+	 * @param query the query document that specifies the criteria used to find a record.
+	 * @param fields the document that specifies the fields to be returned.
+	 * @param entityClass the parameterized type of the returned list.
+	 * @return the {@link List} of converted objects.
+	 */
+	protected <T> T doFindOne(String collectionName, Document query, Document fields,
+			@Nullable com.mongodb.client.model.Collation collation, Class<T> entityClass) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 		Document mappedQuery = queryMapper.getMappedObject(query, entity);
@@ -2378,7 +2428,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					mappedFields, entityClass, collectionName);
 		}
 
-		return executeFindOneInternal(new FindOneCallback(mappedQuery, mappedFields),
+		return executeFindOneInternal(new FindOneCallback(mappedQuery, mappedFields, collation),
 				new ReadDocumentCallback<>(this.mongoConverter, entityClass, collectionName), collectionName);
 	}
 
@@ -2429,7 +2479,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					serializeToJsonSafely(mappedQuery), mappedFields, entityClass, collectionName);
 		}
 
-		return executeFindMultiInternal(new FindCallback(mappedQuery, mappedFields), preparer, objectCallback,
+		return executeFindMultiInternal(new FindCallback(mappedQuery, mappedFields, null), preparer, objectCallback,
 				collectionName);
 	}
 
@@ -2452,7 +2502,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					serializeToJsonSafely(mappedQuery), mappedFields, sourceClass, collectionName);
 		}
 
-		return executeFindMultiInternal(new FindCallback(mappedQuery, mappedFields), preparer,
+		return executeFindMultiInternal(new FindCallback(mappedQuery, mappedFields, null), preparer,
 				new ProjectingReadCallback<>(mongoConverter, sourceClass, targetClass, collectionName), collectionName);
 	}
 
@@ -2819,15 +2869,21 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		private final Document query;
 		private final Optional<Document> fields;
+		private final @Nullable com.mongodb.client.model.Collation collation;
 
-		public FindOneCallback(Document query, Document fields) {
+		public FindOneCallback(Document query, Document fields, @Nullable com.mongodb.client.model.Collation collation) {
+
 			this.query = query;
 			this.fields = Optional.of(fields).filter(it -> !ObjectUtils.isEmpty(fields));
+			this.collation = collation;
 		}
 
 		public Document doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
 
 			FindIterable<Document> iterable = collection.find(query, Document.class);
+			if (collation != null) {
+				iterable = iterable.collation(collation);
+			}
 
 			if (LOGGER.isDebugEnabled()) {
 
@@ -2856,20 +2912,27 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		private final Document query;
 		private final Document fields;
+		private final @Nullable com.mongodb.client.model.Collation collation;
 
-		public FindCallback(Document query, Document fields) {
+		public FindCallback(Document query, Document fields, @Nullable com.mongodb.client.model.Collation collation) {
 
 			Assert.notNull(query, "Query must not be null!");
 			Assert.notNull(fields, "Fields must not be null!");
 
 			this.query = query;
 			this.fields = fields;
+			this.collation = collation;
 		}
 
 		public FindIterable<Document> doInCollection(MongoCollection<Document> collection)
 				throws MongoException, DataAccessException {
 
-			return collection.find(query, Document.class).projection(fields);
+			FindIterable<Document> findIterable = collection.find(query, Document.class).projection(fields);
+
+			if (collation != null) {
+				findIterable = findIterable.collation(collation);
+			}
+			return findIterable;
 		}
 	}
 
@@ -3156,19 +3219,22 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		 */
 		public FindIterable<Document> prepare(FindIterable<Document> cursor) {
 
+			FindIterable<Document> cursorToUse = cursor;
+
+			Optionals
+					.firstNonEmpty(() -> query != null ? query.getCollation() : Optional.empty(), () -> getCollationForType(type))
+					.map(Collation::toMongoCollation) //
+					.ifPresent(cursorToUse::collation);
+
 			if (query == null) {
-				return cursor;
+				return cursorToUse;
 			}
 
 			Meta meta = query.getMeta();
 			if (query.getSkip() <= 0 && query.getLimit() <= 0 && ObjectUtils.isEmpty(query.getSortObject())
 					&& !StringUtils.hasText(query.getHint()) && !meta.hasValues() && !query.getCollation().isPresent()) {
-				return cursor;
+				return cursorToUse;
 			}
-
-			FindIterable<Document> cursorToUse;
-
-			cursorToUse = query.getCollation().map(Collation::toMongoCollation).map(cursor::collation).orElse(cursor);
 
 			try {
 				if (query.getSkip() > 0) {
@@ -3416,5 +3482,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			return execute(collectionName, collection -> collection.countDocuments(filter, options));
 		}
+	}
+
+	@Nullable
+	private Optional<Collation> getCollationForType(Class<?> type) {
+
+		if (type == null || type == Document.class) {
+			return Optional.empty();
+		}
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(type);
+		return entity != null ? Optional.ofNullable(entity.getCollation()) : Optional.empty();
 	}
 }
