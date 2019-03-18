@@ -18,8 +18,7 @@ package org.springframework.data.mongodb.repository.support;
 import static com.querydsl.core.types.ExpressionUtils.path;
 import static com.querydsl.core.types.ExpressionUtils.predicate;
 import static com.querydsl.core.types.dsl.Expressions.*;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.Collections;
 
@@ -78,14 +77,14 @@ public class SpringDataMongodbSerializerUnitTests {
 	public void uses_idAsKeyForIdProperty() {
 
 		StringPath path = QPerson.person.id;
-		assertThat(serializer.getKeyForPath(path, path.getMetadata()), is("_id"));
+		assertThat(serializer.getKeyForPath(path, path.getMetadata())).isEqualTo("_id");
 	}
 
 	@Test
 	public void buildsNestedKeyCorrectly() {
 
 		StringPath path = QPerson.person.address.street;
-		assertThat(serializer.getKeyForPath(path, path.getMetadata()), is("street"));
+		assertThat(serializer.getKeyForPath(path, path.getMetadata())).isEqualTo("street");
 	}
 
 	@Test
@@ -98,18 +97,17 @@ public class SpringDataMongodbSerializerUnitTests {
 		Document document = serializer.asDocument("foo", address);
 
 		Object value = document.get("foo");
-		assertThat(value, is(notNullValue()));
-		assertThat(value, is(instanceOf(Document.class)));
+		assertThat(value).isNotNull().isInstanceOf(Document.class);
 
 		Object reference = converter.convertToMongoType(address);
-		assertThat(value, is(reference));
+		assertThat(value).isEqualTo(reference);
 	}
 
 	@Test // DATAMONGO-376
 	public void returnsEmptyStringIfNoPathExpressionIsGiven() {
 
 		QAddress address = QPerson.person.shippingAddresses.any();
-		assertThat(serializer.getKeyForPath(address, address.getMetadata()), is(""));
+		assertThat(serializer.getKeyForPath(address, address.getMetadata())).isEmpty();
 	}
 
 	@Test // DATAMONGO-467, DATAMONGO-1798
@@ -121,9 +119,7 @@ public class SpringDataMongodbSerializerUnitTests {
 		StringPath idPath = builder.getString("id");
 
 		Document result = (Document) serializer.visit((BooleanOperation) idPath.eq(id.toString()), null);
-		assertThat(result.get("_id"), is(notNullValue()));
-		assertThat(result.get("_id"), is(instanceOf(String.class)));
-		assertThat(result.get("_id"), is(id.toString()));
+		assertThat(result.get("_id")).isNotNull().isInstanceOf(String.class).isEqualTo(id.toString());
 	}
 
 	@Test // DATAMONGO-761
@@ -133,7 +129,7 @@ public class SpringDataMongodbSerializerUnitTests {
 		SimplePath<Object> firstElementPath = builder.getArray("foo", String[].class).get(0);
 		String path = serializer.getKeyForPath(firstElementPath, firstElementPath.getMetadata());
 
-		assertThat(path, is("0"));
+		assertThat(path).isEqualTo("0");
 	}
 
 	@Test // DATAMONGO-1485
@@ -148,10 +144,10 @@ public class SpringDataMongodbSerializerUnitTests {
 		this.converter = converter;
 		this.serializer = new SpringDataMongodbSerializer(this.converter);
 
-		Object mappedPredicate = this.serializer.handle(QPerson.person.sex.eq(Sex.FEMALE));
+		Object mappedPredicate = serializer.handle(QPerson.person.sex.eq(Sex.FEMALE));
 
-		assertThat(mappedPredicate, is(instanceOf(Document.class)));
-		assertThat(((Document) mappedPredicate).get("sex"), is("f"));
+		assertThat(mappedPredicate).isInstanceOf(Document.class);
+		assertThat(((Document) mappedPredicate).get("sex")).isEqualTo("f");
 	}
 
 	@Test // DATAMONGO-1848, DATAMONGO-1943
@@ -160,9 +156,8 @@ public class SpringDataMongodbSerializerUnitTests {
 		BooleanExpression criteria = QPerson.person.lastname.isNotEmpty()
 				.and(QPerson.person.firstname.containsIgnoreCase("foo")).not();
 
-		assertThat(this.serializer.handle(criteria),
-				is(equalTo(Document.parse("{ \"$or\" : [ { \"lastname\" : { \"$not\" : { "
-						+ "\"$ne\" : \"\"}}} , { \"firstname\" : { \"$not\" : { \"$regex\" : \".*\\\\Qfoo\\\\E.*\" , \"$options\" : \"i\"}}}]}"))));
+		assertThat(serializer.handle(criteria)).isEqualTo(Document.parse("{ \"$or\" : [ { \"lastname\" : { \"$not\" : { "
+				+ "\"$ne\" : \"\"}}} , { \"firstname\" : { \"$not\" : { \"$regex\" : \".*\\\\Qfoo\\\\E.*\" , \"$options\" : \"i\"}}}]}"));
 	}
 
 	@Test // DATAMONGO-2228
@@ -174,9 +169,7 @@ public class SpringDataMongodbSerializerUnitTests {
 				predicate(Ops.OR, predicate(Ops.EQ, path(Object.class, "lastname"), constant("Smith")),
 						predicate(Ops.EQ, path(Object.class, "lastname"), constant("Connor"))));
 
-		Document result = (Document) serializer.visit(testExpression, null);
-
-		assertThat(result.toJson(), is(
+		assertThat(serializer.handle(testExpression)).isEqualTo(Document.parse(
 				"{\"$and\": [{\"$or\": [{\"firstname\": \"John\"}, {\"firstname\": \"Sarah\"}]}, {\"$or\": [{\"lastname\": \"Smith\"}, {\"lastname\": \"Connor\"}]}]}"));
 	}
 
