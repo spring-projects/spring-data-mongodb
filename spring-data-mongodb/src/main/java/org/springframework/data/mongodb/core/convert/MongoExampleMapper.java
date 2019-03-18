@@ -277,7 +277,7 @@ public class MongoExampleMapper {
 	}
 
 	private static boolean isEmptyIdProperty(Entry<String, Object> entry) {
-		return entry.getKey().equals("_id") && entry.getValue() == null || entry.getValue().equals(Optional.empty());
+		return entry.getKey().equals("_id") && (entry.getValue() == null || entry.getValue().equals(Optional.empty()));
 	}
 
 	private static void applyStringMatcher(Map.Entry<String, Object> entry, StringMatcher stringMatcher,
