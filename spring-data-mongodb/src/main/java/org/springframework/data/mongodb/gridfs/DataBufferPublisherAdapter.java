@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
+
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.DataBufferUtils;
@@ -74,11 +75,14 @@ class DataBufferPublisherAdapter {
 	@RequiredArgsConstructor
 	static class State {
 
-		private static final AtomicLongFieldUpdater<State> DEMAND = AtomicLongFieldUpdater.newUpdater(State.class, "demand");
+		private static final AtomicLongFieldUpdater<State> DEMAND = AtomicLongFieldUpdater.newUpdater(State.class,
+				"demand");
 
-		private static final AtomicIntegerFieldUpdater<State> STATE = AtomicIntegerFieldUpdater.newUpdater(State.class, "state");
+		private static final AtomicIntegerFieldUpdater<State> STATE = AtomicIntegerFieldUpdater.newUpdater(State.class,
+				"state");
 
-		private static final AtomicIntegerFieldUpdater<State> READ = AtomicIntegerFieldUpdater.newUpdater(State.class, "read");
+		private static final AtomicIntegerFieldUpdater<State> READ = AtomicIntegerFieldUpdater.newUpdater(State.class,
+				"read");
 
 		private static final int STATE_OPEN = 0;
 		private static final int STATE_CLOSED = 1;
@@ -123,6 +127,10 @@ class DataBufferPublisherAdapter {
 			return DEMAND.get(this);
 		}
 
+		boolean decrementDemand() {
+			return DEMAND.decrementAndGet(this) > 0;
+		}
+
 		void close() {
 			STATE.compareAndSet(this, STATE_OPEN, STATE_CLOSED);
 		}
@@ -141,7 +149,11 @@ class DataBufferPublisherAdapter {
 			DataBuffer dataBuffer = dataBufferFactory.allocateBuffer();
 			ByteBuffer intermediate = ByteBuffer.allocate(dataBuffer.capacity());
 
-			Mono.from(inputStream.read(intermediate)).subscribe(new BufferCoreSubscriber(sink, dataBuffer, intermediate));
+			try {
+				Mono.from(inputStream.read(intermediate)).subscribe(new BufferCoreSubscriber(sink, dataBuffer, intermediate));
+			} catch (Exception e) {
+				sink.error(e);
+			}
 		}
 
 		private class BufferCoreSubscriber implements CoreSubscriber<Integer> {
@@ -182,6 +194,7 @@ class DataBufferPublisherAdapter {
 				dataBuffer.write(intermediate);
 
 				sink.next(dataBuffer);
+				decrementDemand();
 
 				try {
 					if (bytes == -1) {
