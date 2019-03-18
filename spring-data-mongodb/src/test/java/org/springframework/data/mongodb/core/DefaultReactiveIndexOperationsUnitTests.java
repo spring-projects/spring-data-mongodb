@@ -118,7 +118,7 @@ public class DefaultReactiveIndexOperationsUnitTests {
 		@Field("firstname") String name;
 	}
 
-	@org.springframework.data.mongodb.core.mapping.Collation("de_AT")
+	@org.springframework.data.mongodb.core.mapping.Document(collation = "de_AT")
 	static class Sith {
 		@Field("firstname") String name;
 	}

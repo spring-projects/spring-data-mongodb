@@ -1467,7 +1467,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		@Field("custom-named-field") String customName;
 	}
 
-	@org.springframework.data.mongodb.core.mapping.Collation("de_AT")
+	@org.springframework.data.mongodb.core.mapping.Document(collation = "de_AT")
 	static class Sith {
 
 		@Field("firstname") String name;

@@ -304,13 +304,13 @@ public class BasicMongoPersistentEntityUnitTests {
 	@Document("#{myProperty}")
 	class MappedWithExtension {}
 
-	@Collation("#{myCollation}")
+	@Document(collation = "#{myCollation}")
 	class WithCollationFromSpEL {}
 
-	@Collation("en_US")
+	@Document(collation = "en_US")
 	class WithSimpleCollation {}
 
-	@Collation("{ 'locale' : 'en_US' }")
+	@Document(collation = "{ 'locale' : 'en_US' }")
 	class WithDocumentCollation {}
 
 	static class SampleExtension implements EvaluationContextExtension {

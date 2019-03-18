@@ -82,21 +82,13 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 			this.collection = StringUtils.hasText(document.collection()) ? document.collection() : fallback;
 			this.language = StringUtils.hasText(document.language()) ? document.language() : "";
 			this.expression = detectExpression(document.collection());
+			this.collation = document.collation();
+			this.collationExpression = detectExpression(document.collation());
 		} else {
 
 			this.collection = fallback;
 			this.language = "";
 			this.expression = null;
-		}
-
-		if (this.isAnnotationPresent(Collation.class)) {
-
-			Collation collation = getRequiredAnnotation(Collation.class);
-
-			this.collation = collation.value();
-			this.collationExpression = detectExpression(collation.value());
-		} else {
-
 			this.collation = null;
 			this.collationExpression = null;
 		}
