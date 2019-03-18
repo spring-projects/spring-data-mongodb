@@ -1691,8 +1691,8 @@ Collations can be used to create collections and indexes. If you create a collec
 collation is applied to index creation and queries unless you specify a different collation. A collation is valid for a
 whole operation and cannot be specified on a per-field basis.
 
-Like other metadata, collations can be be derived from the domain type via the `@Collation` annotation and will be applied
-directly when executing queries, creating collections or indexes.
+Like other metadata, collations can be be derived from the domain type via the `collation` attribute of the `@Document`
+annotation and will be applied directly when executing queries, creating collections or indexes.
 
 NOTE: Annotated collations will not be used when a collection is auto created by MongoDB on first interaction. This would
 require additional store interaction delaying the entire process. Please use `MongoOperations.createCollection` for those cases.
@@ -1744,7 +1744,7 @@ AggregationResults<TagCount> results = template.aggregate(aggregation, "tags", T
 
 WARNING: Indexes are only used if the collation used for the operation matches the index collation.
 
-<<mongo.repositories>> support `Collations` via the `@org.springframework.data.mongodb.mapping.Collation` annotation.
+<<mongo.repositories>> support `Collations` via the `collation` attribute of the `@Query` annotation.
 
 .Collation support for Repositories
 ====
@@ -1752,21 +1752,21 @@ WARNING: Indexes are only used if the collation used for the operation matches t
 ----
 public interface PersonRepository extends MongoRepository<Person, String> {
 
-  @Collation("en_US")  <1>
+  @Query(collation = "en_US")  <1>
   List<Person> findByFirstname(String firstname);
 
-  @Collation("{ 'locale' : 'en_US' }") <2>
+  @Query(collation = "{ 'locale' : 'en_US' }") <2>
   List<Person> findPersonByFirstname(String firstname);
 
-  @Collation("?1") <3>
+  @Query(collation = "?1") <3>
   List<Person> findByFirstname(String firstname, Object collation);
 
-  @Collation("{ 'locale' : '?1' }") <4>
+  @Query(collation = "{ 'locale' : '?1' }") <4>
   List<Person> findByFirstname(String firstname, String collation);
 
   List<Person> findByFirstname(String firstname, Collation collation); <5>
 
-  @Collation("{ 'locale' : 'en_US' }")
+  @Query(collation = "{ 'locale' : 'en_US' }")
   List<Person> findByFirstname(String firstname, @Nullable Collation collation); <6>
 }
 ----

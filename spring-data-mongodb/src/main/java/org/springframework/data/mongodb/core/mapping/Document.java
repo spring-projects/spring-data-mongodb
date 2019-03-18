@@ -60,9 +60,17 @@ public @interface Document {
 	/**
 	 * Defines the default language to be used with this document.
 	 *
-	 * @since 1.6
 	 * @return
+	 * @since 1.6
 	 */
 	String language() default "";
+
+	/**
+	 * Defines the collation to apply when executing a query or creating indexes.
+	 *
+	 * @return an empty {@link String} by default.
+	 * @since 2.2
+	 */
+	String collation() default "";
 
 }
