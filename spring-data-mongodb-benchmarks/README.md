@@ -1,6 +1,6 @@
 # Benchmarks
 
-Benchmarks are based on [JMH](http://openjdk.java.net/projects/code-tools/jmh/).
+Benchmarks are based on [JMH](https://openjdk.java.net/projects/code-tools/jmh/).
 
 # Running Benchmarks
 

@@ -20,7 +20,7 @@ import org.springframework.util.Assert;
 
 /**
  * An {@link AggregationExpression} that renders a MongoDB Aggregation Framework expression from the AST of a
- * <a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#expressions">SpEL
+ * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#expressions">SpEL
  * expression</a>. <br />
  * <br />
  * <strong>Samples:</strong> <br />

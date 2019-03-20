@@ -20,9 +20,9 @@ For most tasks, you should use `MongoTemplate` or the Repository support, which 
 [[mongodb-getting-started]]
 == Getting Started
 
-An easy way to bootstrap setting up a working environment is to create a Spring-based project in http://spring.io/tools/sts[STS].
+An easy way to bootstrap setting up a working environment is to create a Spring-based project in https://spring.io/tools/sts[STS].
 
-First, you need to set up a running MongoDB server. Refer to the http://docs.mongodb.org/manual/core/introduction/[MongoDB Quick Start guide] for an explanation on how to startup a MongoDB instance. Once installed, starting MongoDB is typically a matter of running the following command: `${MONGO_HOME}/bin/mongod`
+First, you need to set up a running MongoDB server. Refer to the https://docs.mongodb.org/manual/core/introduction/[MongoDB Quick Start guide] for an explanation on how to startup a MongoDB instance. Once installed, starting MongoDB is typically a matter of running the following command: `${MONGO_HOME}/bin/mongod`
 
 To create a Spring project in STS:
 
@@ -57,12 +57,12 @@ To create a Spring project in STS:
   <repository>
     <id>spring-milestone</id>
     <name>Spring Maven MILESTONE Repository</name>
-    <url>http://repo.spring.io/libs-milestone</url>
+    <url>https://repo.spring.io/libs-milestone</url>
   </repository>
 </repositories>
 ----
 
-The repository is also http://repo.spring.io/milestone/org/springframework/data/[browseable here].
+The repository is also https://repo.spring.io/milestone/org/springframework/data/[browseable here].
 
 You may also want to set the logging level to `DEBUG` to see some additional information. To do so, edit the `log4j.properties` file to have the following content:
 
@@ -167,7 +167,7 @@ There is a https://github.com/spring-projects/spring-data-examples[GitHub reposi
 
 One of the first tasks when using MongoDB and Spring is to create a `com.mongodb.MongoClient` or `com.mongodb.client.MongoClient` object using the IoC container. There are two main ways to do this, either by using Java-based bean metadata or by using XML-based bean metadata. Both are discussed in the following sections.
 
-NOTE: For those not familiar with how to configure the Spring container using Java-based bean metadata instead of XML-based metadata, see the high-level introduction in the reference docs http://docs.spring.io/spring/docs/3.2.x/spring-framework-reference/html/new-in-3.0.html#new-java-configuration[here] as well as the detailed documentation http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/core.html#beans-java-instantiating-container[here].
+NOTE: For those not familiar with how to configure the Spring container using Java-based bean metadata instead of XML-based metadata, see the high-level introduction in the reference docs https://docs.spring.io/spring/docs/3.2.x/spring-framework-reference/html/new-in-3.0.html#new-java-configuration[here] as well as the detailed documentation https://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/core.html#beans-java-instantiating-container[here].
 
 [[mongo.mongo-java-config]]
 === Registering a Mongo Instance by using Java-based Metadata
@@ -191,7 +191,7 @@ public class AppConfig {
 ----
 ====
 
-This approach lets you use the standard `com.mongodb.MongoClient` instance, with the container using Spring's `MongoClientFactoryBean`. As compared to instantiating a `com.mongodb.MongoClient` instance directly, the `FactoryBean` has the added advantage of also providing the container with an `ExceptionTranslator` implementation that translates MongoDB exceptions to exceptions in Spring's portable `DataAccessException` hierarchy for data access classes annotated with the `@Repository` annotation. This hierarchy and the use of `@Repository` is described in http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/data-access.html[Spring's DAO support features].
+This approach lets you use the standard `com.mongodb.MongoClient` instance, with the container using Spring's `MongoClientFactoryBean`. As compared to instantiating a `com.mongodb.MongoClient` instance directly, the `FactoryBean` has the added advantage of also providing the container with an `ExceptionTranslator` implementation that translates MongoDB exceptions to exceptions in Spring's portable `DataAccessException` hierarchy for data access classes annotated with the `@Repository` annotation. This hierarchy and the use of `@Repository` is described in https://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/data-access.html[Spring's DAO support features].
 
 The following example shows an example of a Java-based bean metadata that supports exception translation on `@Repository` annotated classes:
 
@@ -234,10 +234,10 @@ To use the Mongo namespace elements, you need to reference the Mongo schema, as 
           xmlns:mongo="http://www.springframework.org/schema/data/mongo"
           xsi:schemaLocation=
           "http://www.springframework.org/schema/context
-          http://www.springframework.org/schema/context/spring-context.xsd
-          http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo.xsd
+          https://www.springframework.org/schema/context/spring-context.xsd
+          http://www.springframework.org/schema/data/mongo https://www.springframework.org/schema/data/mongo/spring-mongo.xsd
           http://www.springframework.org/schema/beans
-          http://www.springframework.org/schema/beans/spring-beans.xsd">
+          https://www.springframework.org/schema/beans/spring-beans.xsd">
 
     <!-- Default bean name is 'mongo' -->
     <mongo:mongo-client host="localhost" port="27017"/>
@@ -1350,7 +1350,7 @@ The geo-near operations return a `GeoResults` wrapper object that encapsulates `
 [[mongo.geo-json]]
 === GeoJSON Support
 
-MongoDB supports http://geojson.org/[GeoJSON] and simple (legacy) coordinate pairs for geospatial data. Those formats can both be used for storing as well as querying data. See the http://docs.mongodb.org/manual/core/2dsphere/#geospatial-indexes-store-geojson/[MongoDB manual on GeoJSON support] to learn about requirements and restrictions.
+MongoDB supports http://geojson.org/[GeoJSON] and simple (legacy) coordinate pairs for geospatial data. Those formats can both be used for storing as well as querying data. See the https://docs.mongodb.org/manual/core/2dsphere/#geospatial-indexes-store-geojson/[MongoDB manual on GeoJSON support] to learn about requirements and restrictions.
 
 ==== GeoJSON Types in Domain Classes
 
@@ -1609,7 +1609,7 @@ Returning the 3 Documents just like the GeoJSON variant:
 [[mongo.textsearch]]
 === Full-text Queries
 
-Since version 2.6 of MongoDB, you can run full-text queries by using the `$text` operator. Methods and operations specific to full-text queries are available in `TextQuery` and `TextCriteria`. When doing full text search, see the http://docs.mongodb.org/manual/reference/operator/query/text/#behavior[MongoDB reference] for its behavior and limitations.
+Since version 2.6 of MongoDB, you can run full-text queries by using the `$text` operator. Methods and operations specific to full-text queries are available in `TextQuery` and `TextCriteria`. When doing full text search, see the https://docs.mongodb.org/manual/reference/operator/query/text/#behavior[MongoDB reference] for its behavior and limitations.
 
 ==== Full-text Search
 
@@ -2051,7 +2051,7 @@ include::query-by-example.adoc[leveloffset=+1]
 
 You can query MongoDB by using Map-Reduce, which is useful for batch processing, for data aggregation, and for when the query language does not fulfill your needs.
 
-Spring provides integration with MongoDB's Map-Reduce by providing methods on `MongoOperations` to simplify the creation and execution of Map-Reduce operations. It can convert the results of a Map-Reduce operation to a POJO and integrates with Spring's http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/core.html#resources[Resource abstraction]. This lets you place your JavaScript files on the file system, classpath, HTTP server, or any other Spring Resource implementation and then reference the JavaScript resources through an easy URI style syntax -- for example, `classpath:reduce.js;`. Externalizing JavaScript code in files is often preferable to embedding them as Java strings in your code. Note that you can still pass JavaScript code as Java strings if you prefer.
+Spring provides integration with MongoDB's Map-Reduce by providing methods on `MongoOperations` to simplify the creation and execution of Map-Reduce operations. It can convert the results of a Map-Reduce operation to a POJO and integrates with Spring's https://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/core.html#resources[Resource abstraction]. This lets you place your JavaScript files on the file system, classpath, HTTP server, or any other Spring Resource implementation and then reference the JavaScript resources through an easy URI style syntax -- for example, `classpath:reduce.js;`. Externalizing JavaScript code in files is often preferable to embedding them as Java strings in your code. Note that you can still pass JavaScript code as Java strings if you prefer.
 
 [[mongo.mapreduce.example]]
 === Example Usage
@@ -2197,9 +2197,9 @@ scriptOps.call("echo", "execute script via name");            <3>
 [[mongo.group]]
 == Group Operations
 
-As an alternative to using Map-Reduce to perform data aggregation, you can use the http://www.mongodb.org/display/DOCS/Aggregation#Aggregation-Group[`group` operation] which feels similar to using SQL's group by query style, so it may feel more approachable vs. using Map-Reduce. Using the group operations does have some limitations, for example it is not supported in a shared environment and it returns the full result set in a single BSON object, so the result should be small, less than 10,000 keys.
+As an alternative to using Map-Reduce to perform data aggregation, you can use the https://www.mongodb.org/display/DOCS/Aggregation#Aggregation-Group[`group` operation] which feels similar to using SQL's group by query style, so it may feel more approachable vs. using Map-Reduce. Using the group operations does have some limitations, for example it is not supported in a shared environment and it returns the full result set in a single BSON object, so the result should be small, less than 10,000 keys.
 
-Spring provides integration with MongoDB's group operation by providing methods on MongoOperations to simplify the creation and execution of group operations. It can convert the results of the group operation to a POJO and also integrates with Spring's http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/core.html#resources[Resource abstraction] abstraction. This will let you place your JavaScript files on the file system, classpath, http server or any other Spring Resource implementation and then reference the JavaScript resources via an easy URI style syntax, e.g. 'classpath:reduce.js;. Externalizing JavaScript code in files if often preferable to embedding them as Java strings in your code. Note that you can still pass JavaScript code as Java strings if you prefer.
+Spring provides integration with MongoDB's group operation by providing methods on MongoOperations to simplify the creation and execution of group operations. It can convert the results of the group operation to a POJO and also integrates with Spring's https://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/core.html#resources[Resource abstraction] abstraction. This will let you place your JavaScript files on the file system, classpath, http server or any other Spring Resource implementation and then reference the JavaScript resources via an easy URI style syntax, e.g. 'classpath:reduce.js;. Externalizing JavaScript code in files if often preferable to embedding them as Java strings in your code. Note that you can still pass JavaScript code as Java strings if you prefer.
 
 [[mongo.group.example]]
 === Example Usage
@@ -2294,7 +2294,7 @@ GroupByResults<XObject> results = mongoTemplate.group(where("x").gt(0),
 
 Spring Data MongoDB provides support for the Aggregation Framework introduced to MongoDB in version 2.2.
 
-For further information, see the full http://docs.mongodb.org/manual/aggregation/[reference documentation] of the aggregation framework and other data aggregation tools for MongoDB.
+For further information, see the full https://docs.mongodb.org/manual/aggregation/[reference documentation] of the aggregation framework and other data aggregation tools for MongoDB.
 
 [[mongo.aggregation.basic-concepts]]
 === Basic Concepts
@@ -2439,7 +2439,7 @@ project().and("firstname").as("name"), sort(ASC, "firstname")
 ----
 ====
 
-More examples for project operations can be found in the `AggregationTests` class. Note that further details regarding the projection expressions can be found in the http://docs.mongodb.org/manual/reference/operator/aggregation/project/#pipe._S_project[corresponding section] of the MongoDB Aggregation Framework reference documentation.
+More examples for project operations can be found in the `AggregationTests` class. Note that further details regarding the projection expressions can be found in the https://docs.mongodb.org/manual/reference/operator/aggregation/project/#pipe._S_project[corresponding section] of the MongoDB Aggregation Framework reference documentation.
 
 [[mongo.aggregation.facet]]
 === Faceted Classification
@@ -2489,8 +2489,8 @@ bucketAuto("price", 5).andOutput("title").push().as("titles");
 
 To create output fields in buckets, bucket operations can use `AggregationExpression` through `andOutput()` and <<mongo.aggregation.projection.expressions, SpEL expressions>> through `andOutputExpression()`.
 
-Note that further details regarding bucket expressions can be found in the http://docs.mongodb.org/manual/reference/operator/aggregation/bucket/[`$bucket` section] and
-http://docs.mongodb.org/manual/reference/operator/aggregation/bucketAuto/[`$bucketAuto` section] of the MongoDB Aggregation Framework reference documentation.
+Note that further details regarding bucket expressions can be found in the https://docs.mongodb.org/manual/reference/operator/aggregation/bucket/[`$bucket` section] and
+https://docs.mongodb.org/manual/reference/operator/aggregation/bucketAuto/[`$bucketAuto` section] of the MongoDB Aggregation Framework reference documentation.
 
 ==== Multi-faceted Aggregation
 
@@ -2520,7 +2520,7 @@ facet(project("title").and("publicationDate").extractYear().as("publicationYear"
 ----
 ====
 
-Note that further details regarding facet operation can be found in the http://docs.mongodb.org/manual/reference/operator/aggregation/facet/[`$facet` section] of the MongoDB Aggregation Framework reference documentation.
+Note that further details regarding facet operation can be found in the https://docs.mongodb.org/manual/reference/operator/aggregation/facet/[`$facet` section] of the MongoDB Aggregation Framework reference documentation.
 
 [[mongo.aggregation.sort-by-count]]
 ==== Sort By Count
@@ -2665,7 +2665,7 @@ Note that the input collection is explicitly specified as the `tags` parameter t
 [[mongo.aggregation.examples.example2]]
 ===== Aggregation Framework Example 2
 
-This example is based on the http://docs.mongodb.org/manual/tutorial/aggregation-examples/#largest-and-smallest-cities-by-state[Largest and Smallest Cities by State] example from the MongoDB Aggregation Framework documentation. We added additional sorting to produce stable results with different MongoDB versions. Here we want to return the smallest and largest cities by population for each state by using the aggregation framework. This example demonstrates grouping, sorting, and projections (selection).
+This example is based on the https://docs.mongodb.org/manual/tutorial/aggregation-examples/#largest-and-smallest-cities-by-state[Largest and Smallest Cities by State] example from the MongoDB Aggregation Framework documentation. We added additional sorting to produce stable results with different MongoDB versions. Here we want to return the smallest and largest cities by population for each state by using the aggregation framework. This example demonstrates grouping, sorting, and projections (selection).
 
 [source,java]
 ----
@@ -2731,7 +2731,7 @@ Note that we derive the name of the input collection from the `ZipInfo` class pa
 [[mongo.aggregation.examples.example3]]
 ===== Aggregation Framework Example 3
 
-This example is based on the http://docs.mongodb.org/manual/tutorial/aggregation-examples/#states-with-populations-over-10-million[States with Populations Over 10 Million] example from the MongoDB Aggregation Framework documentation. We added additional sorting to produce stable results with different MongoDB versions. Here we want to return all states with a population greater than 10 million, using the aggregation framework. This example demonstrates grouping, sorting, and matching (filtering).
+This example is based on the https://docs.mongodb.org/manual/tutorial/aggregation-examples/#states-with-populations-over-10-million[States with Populations Over 10 Million] example from the MongoDB Aggregation Framework documentation. We added additional sorting to produce stable results with different MongoDB versions. Here we want to return all states with a population greater than 10 million, using the aggregation framework. This example demonstrates grouping, sorting, and matching (filtering).
 
 [source,java]
 ----
@@ -2937,7 +2937,7 @@ To have more fine-grained control over the mapping process, you can register Spr
 
 The `MappingMongoConverter` checks to see if any Spring converters can handle a specific class before attempting to map the object itself. To 'hijack' the normal mapping strategies of the `MappingMongoConverter`, perhaps for increased performance or other custom mapping needs, you first need to create an implementation of the Spring `Converter` interface and then register it with the `MappingConverter`.
 
-NOTE: For more information on the Spring type conversion service, see the reference docs http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/core.html#validation[here].
+NOTE: For more information on the Spring type conversion service, see the reference docs https://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/core.html#validation[here].
 
 [[mongo.custom-converters.writer]]
 === Saving by Using a Registered Spring Converter
@@ -3178,7 +3178,7 @@ NOTE: Lifecycle events are only emitted for root level types. Complex types used
 
 The Spring framework provides exception translation for a wide variety of database and mapping technologies. This has traditionally been for JDBC and JPA. The Spring support for MongoDB extends this feature to the MongoDB Database by providing an implementation of the `org.springframework.dao.support.PersistenceExceptionTranslator` interface.
 
-The motivation behind mapping to Spring's http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/data-access.html#dao-exceptions[consistent data access exception hierarchy] is that you are then able to write portable and descriptive exception handling code without resorting to coding against MongoDB error codes. All of Spring's data access exceptions are inherited from the root `DataAccessException` class so that you can be sure to catch all database related exception within a single try-catch block. Note that not all exceptions thrown by the MongoDB driver inherit from the `MongoException` class. The inner exception and message are preserved so that no information is lost.
+The motivation behind mapping to Spring's https://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/data-access.html#dao-exceptions[consistent data access exception hierarchy] is that you are then able to write portable and descriptive exception handling code without resorting to coding against MongoDB error codes. All of Spring's data access exceptions are inherited from the root `DataAccessException` class so that you can be sure to catch all database related exception within a single try-catch block. Note that not all exceptions thrown by the MongoDB driver inherit from the `MongoException` class. The inner exception and message are preserved so that no information is lost.
 
 Some of the mappings performed by the `MongoExceptionTranslator` are `com.mongodb.Network to DataAccessResourceFailureException` and `MongoException` error codes 1003, 12001, 12010, 12011, and 12012 to `InvalidDataAccessApiUsageException`. Look into the implementation for more details on the mapping.
 
@@ -3248,9 +3248,9 @@ The corresponding XML configuration follows:
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:mongo="http://www.springframework.org/schema/data/mongo"
   xsi:schemaLocation="http://www.springframework.org/schema/data/mongo
-                      http://www.springframework.org/schema/data/mongo/spring-mongo.xsd
+                      https://www.springframework.org/schema/data/mongo/spring-mongo.xsd
                       http://www.springframework.org/schema/beans
-                      http://www.springframework.org/schema/beans/spring-beans.xsd">
+                      https://www.springframework.org/schema/beans/spring-beans.xsd">
 
   <mongo:db-factory id="mongoDbFactory" dbname="database" />
   <mongo:mapping-converter id="converter" />

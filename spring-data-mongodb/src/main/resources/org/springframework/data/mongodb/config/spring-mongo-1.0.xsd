@@ -13,7 +13,7 @@
 	<xsd:import namespace="http://www.springframework.org/schema/tool" />
 	<xsd:import namespace="http://www.springframework.org/schema/context" />
 	<xsd:import namespace="http://www.springframework.org/schema/data/repository"
-				schemaLocation="http://www.springframework.org/schema/data/repository/spring-repository-1.0.xsd" />
+				schemaLocation="https://www.springframework.org/schema/data/repository/spring-repository-1.0.xsd" />
 
 	<xsd:element name="mongo" type="mongoType">
 		<xsd:annotation>
