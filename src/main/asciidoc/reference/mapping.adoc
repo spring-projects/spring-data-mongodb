@@ -158,7 +158,7 @@ calling `get()` before the actual conversion
 
 | `URL`
 | converter
-| `{"website" : "http://projects.spring.io/spring-data-mongodb/" }`
+| `{"website" : "https://projects.spring.io/spring-data-mongodb/" }`
 
 | `Locale`
 | converter
@@ -313,9 +313,9 @@ Spring's MongoDB namespace lets you  enable mapping functionality in XML, as the
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:context="http://www.springframework.org/schema/context"
   xmlns:mongo="http://www.springframework.org/schema/data/mongo"
-  xsi:schemaLocation="http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
-    http://www.springframework.org/schema/data/mongo http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd
-    http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+  xsi:schemaLocation="http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context-3.0.xsd
+    http://www.springframework.org/schema/data/mongo https://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd
+    http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
   <!-- Default bean name is 'mongo' -->
   <mongo:mongo-client host="localhost" port="27017"/>
@@ -631,7 +631,7 @@ When storing and querying your objects, it is convenient to have a `MongoConvert
 
 To selectively handle the conversion yourself, register one or more one or more `org.springframework.core.convert.converter.Converter` instances with the `MongoConverter`.
 
-NOTE: Spring 3.0 introduced a core.convert package that provides a general type conversion system. This is described in detail in the Spring reference documentation section entitled http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/core.html#validation["`Spring Type Conversion`"].
+NOTE: Spring 3.0 introduced a core.convert package that provides a general type conversion system. This is described in detail in the Spring reference documentation section entitled https://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/core.html#validation["`Spring Type Conversion`"].
 
 You can use the `customConversions` method in `AbstractMongoConfiguration` to configure converters. The examples <<mapping-configuration, at the beginning of this chapter>> show how to perform the configuration using Java and XML.
 

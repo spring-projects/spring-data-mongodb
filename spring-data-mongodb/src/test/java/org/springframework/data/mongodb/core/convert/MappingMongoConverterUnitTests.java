@@ -1006,19 +1006,19 @@ public class MappingMongoConverterUnitTests {
 	public void writesURLsAsStringOutOfTheBox() throws Exception {
 
 		URLWrapper wrapper = new URLWrapper();
-		wrapper.url = new URL("http://springsource.org");
+		wrapper.url = new URL("https://springsource.org");
 		org.bson.Document sink = new org.bson.Document();
 
 		converter.write(wrapper, sink);
 
-		assertThat(sink.get("url"), is("http://springsource.org"));
+		assertThat(sink.get("url"), is("https://springsource.org"));
 	}
 
 	@Test // DATAMONGO-462
 	public void readsURLFromStringOutOfTheBox() throws Exception {
-		org.bson.Document document = new org.bson.Document("url", "http://springsource.org");
+		org.bson.Document document = new org.bson.Document("url", "https://springsource.org");
 		URLWrapper result = converter.read(URLWrapper.class, document);
-		assertThat(result.url, is(new URL("http://springsource.org")));
+		assertThat(result.url, is(new URL("https://springsource.org")));
 	}
 
 	@Test // DATAMONGO-485

@@ -1014,7 +1014,7 @@ public class AggregationTests {
 
 	/**
 	 * @see <a href=
-	 *      "http://stackoverflow.com/questions/18653574/spring-data-mongodb-aggregation-framework-invalid-reference-in-group-operati">Spring
+	 *      "https://stackoverflow.com/questions/18653574/spring-data-mongodb-aggregation-framework-invalid-reference-in-group-operati">Spring
 	 *      Data MongoDB - Aggregation Framework - invalid reference in group Operation</a>
 	 */
 	@Test // DATAMONGO-753
@@ -1043,7 +1043,7 @@ public class AggregationTests {
 
 	/**
 	 * @see <a href=
-	 *      "http://stackoverflow.com/questions/18653574/spring-data-mongodb-aggregation-framework-invalid-reference-in-group-operati">Spring
+	 *      "https://stackoverflow.com/questions/18653574/spring-data-mongodb-aggregation-framework-invalid-reference-in-group-operati">Spring
 	 *      Data MongoDB - Aggregation Framework - invalid reference in group Operation</a>
 	 */
 	@Test // DATAMONGO-753
@@ -1371,7 +1371,7 @@ public class AggregationTests {
 	}
 
 	/**
-	 * {@link http://stackoverflow.com/questions/24185987/using-root-inside-spring-data-mongodb-for-retrieving-whole-document}
+	 * {@link https://stackoverflow.com/questions/24185987/using-root-inside-spring-data-mongodb-for-retrieving-whole-document}
 	 */
 	@Test // DATAMONGO-954
 	@MongoVersion(asOf = "2.6")
