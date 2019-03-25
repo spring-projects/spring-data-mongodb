@@ -199,31 +199,28 @@ public class MongoTemplateDbRefTests {
 	static class WithRefToAnotherDb {
 
 		@Id String id;
-		@org.springframework.data.mongodb.core.mapping.DBRef(db = "mongo-template-dbref-tests-other-db") JustSomeType value;
+		@DBRef(db = "mongo-template-dbref-tests-other-db") JustSomeType value;
 	}
 
 	@Data
 	static class WithLazyRefToAnotherDb {
 
 		@Id String id;
-		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true,
-				db = "mongo-template-dbref-tests-other-db") JustSomeType value;
+		@DBRef(lazy = true, db = "mongo-template-dbref-tests-other-db") JustSomeType value;
 	}
 
 	@Data
 	static class WithListRefToAnotherDb {
 
 		@Id String id;
-		@org.springframework.data.mongodb.core.mapping.DBRef(
-				db = "mongo-template-dbref-tests-other-db") List<JustSomeType> value;
+		@DBRef(db = "mongo-template-dbref-tests-other-db") List<JustSomeType> value;
 	}
 
 	@Data
 	static class WithLazyListRefToAnotherDb {
 
 		@Id String id;
-		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true,
-				db = "mongo-template-dbref-tests-other-db") List<JustSomeType> value;
+		@DBRef(lazy = true, db = "mongo-template-dbref-tests-other-db") List<JustSomeType> value;
 	}
 
 	@Data
