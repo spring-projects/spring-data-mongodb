@@ -28,6 +28,7 @@ import java.util.List;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.convert.LazyLoadingProxy;
 import org.springframework.data.mongodb.core.convert.LazyLoadingTestUtils;
@@ -269,45 +270,42 @@ public class MongoTemplateDbRefTests {
 	static class WithDBRefOnRawStringId {
 
 		@Id String id;
-		@org.springframework.data.mongodb.core.mapping.DBRef RawStringId value;
+		@DBRef RawStringId value;
 	}
 
 	@Data
 	static class WithLazyDBRefOnRawStringId {
 
 		@Id String id;
-		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true) RawStringId value;
+		@DBRef(lazy = true) RawStringId value;
 	}
 
 	@Data
 	static class WithRefToAnotherDb {
 
 		@Id String id;
-		@org.springframework.data.mongodb.core.mapping.DBRef(db = "mongo-template-dbref-tests-other-db") JustSomeType value;
+		@DBRef(db = "mongo-template-dbref-tests-other-db") JustSomeType value;
 	}
 
 	@Data
 	static class WithLazyRefToAnotherDb {
 
 		@Id String id;
-		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true,
-				db = "mongo-template-dbref-tests-other-db") JustSomeType value;
+		@DBRef(lazy = true, db = "mongo-template-dbref-tests-other-db") JustSomeType value;
 	}
 
 	@Data
 	static class WithListRefToAnotherDb {
 
 		@Id String id;
-		@org.springframework.data.mongodb.core.mapping.DBRef(
-				db = "mongo-template-dbref-tests-other-db") List<JustSomeType> value;
+		@DBRef(db = "mongo-template-dbref-tests-other-db") List<JustSomeType> value;
 	}
 
 	@Data
 	static class WithLazyListRefToAnotherDb {
 
 		@Id String id;
-		@org.springframework.data.mongodb.core.mapping.DBRef(lazy = true,
-				db = "mongo-template-dbref-tests-other-db") List<JustSomeType> value;
+		@DBRef(lazy = true, db = "mongo-template-dbref-tests-other-db") List<JustSomeType> value;
 	}
 
 	@Data
