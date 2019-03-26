@@ -33,6 +33,7 @@ import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
+
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.domain.Example;
@@ -1078,7 +1079,7 @@ public class QueryMapper {
 		 * Querydsl happens to map id fields directly to {@literal _id} which breaks {@link PropertyPath} resolution. So if
 		 * the first attempt fails we try to replace {@literal _id} with just {@literal id} and see if we can resolve if
 		 * then.
-		 * 
+		 *
 		 * @param path
 		 * @return the path or {@literal null}
 		 */
