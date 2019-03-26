@@ -33,7 +33,6 @@ import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
-
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.domain.Example;
@@ -952,9 +951,7 @@ public class QueryMapper {
 			MongoPersistentProperty idProperty = entity.getIdProperty();
 
 			if (idProperty != null) {
-
-				return name.equals(idProperty.getName()) || name.equals(idProperty.getFieldName())
-						|| name.endsWith("." + idProperty.getName()) || name.endsWith("." + idProperty.getFieldName());
+				return name.equals(idProperty.getName()) || name.equals(idProperty.getFieldName());
 			}
 
 			return DEFAULT_ID_NAMES.contains(name);
@@ -1042,16 +1039,15 @@ public class QueryMapper {
 		@Nullable
 		private PersistentPropertyPath<MongoPersistentProperty> getPath(String pathExpression) {
 
+			String rawPath = pathExpression.replaceAll("\\.\\d+", "") //
+					.replaceAll(POSITIONAL_OPERATOR.pattern(), "");
+
+			PropertyPath path = forName(rawPath);
+			if (path == null || isPathToJavaLangClassProperty(path)) {
+				return null;
+			}
+
 			try {
-
-				String rawPath = pathExpression.replaceAll("\\.\\d+", "") //
-						.replaceAll(POSITIONAL_OPERATOR.pattern(), "");
-
-				PropertyPath path = PropertyPath.from(rawPath, entity.getTypeInformation());
-
-				if (isPathToJavaLangClassProperty(path)) {
-					return null;
-				}
 
 				PersistentPropertyPath<MongoPersistentProperty> propertyPath = mappingContext.getPersistentPropertyPath(path);
 
@@ -1073,7 +1069,30 @@ public class QueryMapper {
 				}
 
 				return propertyPath;
+			} catch (InvalidPersistentPropertyPath e) {
+				return null;
+			}
+		}
+
+		/**
+		 * Querydsl happens to map id fields directly to {@literal _id} which breaks {@link PropertyPath} resolution. So if
+		 * the first attempt fails we try to replace {@literal _id} with just {@literal id} and see if we can resolve if
+		 * then.
+		 * 
+		 * @param path
+		 * @return the path or {@literal null}
+		 */
+		@Nullable
+		private PropertyPath forName(String path) {
+
+			try {
+				return PropertyPath.from(path, entity.getTypeInformation());
 			} catch (PropertyReferenceException | InvalidPersistentPropertyPath e) {
+
+				if (path.endsWith("_id")) {
+					return forName(path.substring(0, path.length() - 3) + "id");
+				}
+
 				return null;
 			}
 		}

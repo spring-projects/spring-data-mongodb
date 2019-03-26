@@ -831,6 +831,30 @@ public class QueryMapperUnitTests {
 		assertThat(document).isEqualTo(new org.bson.Document("nested.id", idHex));
 	}
 
+	@Test // DATAMONGO-2221
+	public void shouldNotConvertHexStringToObjectIdForRenamedDeeplyNestedIdField() {
+
+		String idHex = new ObjectId().toHexString();
+		Query query = new Query(where("nested.deeplyNested.id").is(idHex));
+
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(RootForClassWithExplicitlyRenamedIdField.class));
+
+		assertThat(document).isEqualTo(new org.bson.Document("nested.deeplyNested.id", idHex));
+	}
+
+	@Test // DATAMONGO-2221
+	public void shouldNotConvertHexStringToObjectIdForUnresolvablePath() {
+
+		String idHex = new ObjectId().toHexString();
+		Query query = new Query(where("nested.unresolvablePath.id").is(idHex));
+
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(RootForClassWithExplicitlyRenamedIdField.class));
+
+		assertThat(document).isEqualTo(new org.bson.Document("nested.unresolvablePath.id", idHex));
+	}
+
 	@Document
 	public class Foo {
 		@Id private ObjectId id;
@@ -925,6 +949,11 @@ public class QueryMapperUnitTests {
 
 	static class ClassWithExplicitlyRenamedField {
 
+		@Field("id") String id;
+		DeeplyNestedClassWithExplicitlyRenamedField deeplyNested;
+	}
+
+	static class DeeplyNestedClassWithExplicitlyRenamedField {
 		@Field("id") String id;
 	}
 
