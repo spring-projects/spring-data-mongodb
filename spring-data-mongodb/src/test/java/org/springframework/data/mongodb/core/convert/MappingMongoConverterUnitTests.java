@@ -35,6 +35,8 @@ import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import org.bson.types.Code;
+import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
 import org.hamcrest.Matcher;
 import org.hamcrest.Matchers;
@@ -76,6 +78,7 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverterUnitTe
 import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.PersonPojoStringId;
@@ -1194,13 +1197,12 @@ public class MappingMongoConverterUnitTests {
 	@Test // DATAMONGO-743, DATAMONGO-2198
 	public void readsIntoStringsOutOfTheBox() {
 
-
 		String target = converter.read(String.class, new org.bson.Document("firstname", "Dave"));
 
 		assertThat(target, Matchers.startsWith("{"));
 		assertThat(target, Matchers.endsWith("}"));
-		assertThat(target, Matchers.containsString( "\"firstname\""));
-		assertThat(target, Matchers.containsString( "\"Dave\""));
+		assertThat(target, Matchers.containsString("\"firstname\""));
+		assertThat(target, Matchers.containsString("\"Dave\""));
 	}
 
 	@Test // DATAMONGO-766
@@ -1919,21 +1921,21 @@ public class MappingMongoConverterUnitTests {
 		assertThat(target).doesNotContainKeys("_class");
 	}
 
-	@Test  // DATAMONGO-1798
+	@Test // DATAMONGO-1798
 	public void convertStringIdThatIsAnObjectIdHexToObjectIdIfTargetIsObjectId() {
 
 		ObjectId source = new ObjectId();
 		assertThat(converter.convertId(source.toHexString(), ObjectId.class)).isEqualTo(source);
 	}
 
-	@Test  // DATAMONGO-1798
+	@Test // DATAMONGO-1798
 	public void donNotConvertStringIdThatIsAnObjectIdHexToObjectIdIfTargetIsString() {
 
 		ObjectId source = new ObjectId();
 		assertThat(converter.convertId(source.toHexString(), String.class)).isEqualTo(source.toHexString());
 	}
 
-	@Test  // DATAMONGO-1798
+	@Test // DATAMONGO-1798
 	public void donNotConvertStringIdThatIsAnObjectIdHexToObjectIdIfTargetIsObject() {
 
 		ObjectId source = new ObjectId();
@@ -1950,6 +1952,43 @@ public class MappingMongoConverterUnitTests {
 		Order order = converter.read(Order.class, orderDocument);
 
 		assertThat(order.items).hasSize(3);
+	}
+
+	@Test // DATAMONGO-1849
+	public void mapsValueToExplicitTargetType() {
+
+		WithExplicitTargetTypes source = new WithExplicitTargetTypes();
+		source.script = "if (a > b) a else b";
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(source, target);
+
+		assertThat(target.get("script")).isEqualTo(new Code(source.script));
+	}
+
+	@Test // DATAMONGO-1849
+	public void mapsCollectionValueToExplicitTargetType() {
+
+		String script = "if (a > b) a else b";
+		WithExplicitTargetTypes source = new WithExplicitTargetTypes();
+		source.scripts = Collections.singletonList(script);
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(source, target);
+
+		assertThat(target.get("scripts", List.class)).containsExactly(new Code(script));
+	}
+
+	@Test // DATAMONGO-1849
+	public void mapsBigDecimalToDecimal128WhenAnnotatedWithFieldTargetType() {
+
+		WithExplicitTargetTypes source = new WithExplicitTargetTypes();
+		source.bigDecimal = BigDecimal.valueOf(3.14159D);
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(source, target);
+
+		assertThat(target.get("bigDecimal")).isEqualTo(new Decimal128(source.bigDecimal));
 	}
 
 	static class GenericType<T> {
@@ -2391,4 +2430,17 @@ public class MappingMongoConverterUnitTests {
 	static class Order {
 		Collection<SomeItem> items = new ArrayList<>();
 	}
+
+	static class WithExplicitTargetTypes {
+
+		@Field(targetType = FieldType.SCRIPT) //
+		String script;
+
+		@Field(targetType = FieldType.SCRIPT) //
+		List<String> scripts;
+
+		@Field(targetType = FieldType.DECIMAL128)
+		BigDecimal bigDecimal;
+	}
+
 }

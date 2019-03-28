@@ -106,11 +106,29 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	DBRef getDBRef();
 
 	/**
+	 * Returns whether property access shall be used for reading the property value. This means it will use the getter
+	 * instead of field access.
+	 *
+	 * @return
+	 */
+	boolean usePropertyAccess();
+
+	/**
+	 * @return {@literal true} if the property defines an explicit {@link Field#targetType() target type}.
+	 * @since 2.2
+	 */
+	default boolean hasExplicitWriteTarget() {
+
+		Field field = findAnnotation(Field.class);
+		return field != null ? !FieldType.IMPLICIT.equals(field.targetType()) : false;
+	}
+
+	/**
 	 * Simple {@link Converter} implementation to transform a {@link MongoPersistentProperty} into its field name.
 	 *
 	 * @author Oliver Gierke
 	 */
-	public enum PropertyToFieldNameConverter implements Converter<MongoPersistentProperty, String> {
+	enum PropertyToFieldNameConverter implements Converter<MongoPersistentProperty, String> {
 
 		INSTANCE;
 
@@ -122,12 +140,4 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 			return source.getFieldName();
 		}
 	}
-
-	/**
-	 * Returns whether property access shall be used for reading the property value. This means it will use the getter
-	 * instead of field access.
-	 *
-	 * @return
-	 */
-	boolean usePropertyAccess();
 }

@@ -13,6 +13,7 @@
 * Changed behavior of `Reactive/MongoOperations#count` now limiting the range to count matches within by passing on _offset_ & _limit_ to the server.
 * Kotlin extension methods accepting `KClass` are deprecated now in favor of `reified` methods.
 * Support of array filters in `Update` operations.
+* <<mongo.jsonSchema.generated, Json Schema generation>> from domain types.
 
 [[new-features.2-1-0]]
 == What's New in Spring Data MongoDB 2.1

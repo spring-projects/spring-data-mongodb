@@ -46,4 +46,15 @@ public interface MongoTypeMapper extends TypeMapper<Bson> {
 	 * @param restrictedTypes must not be {@literal null}
 	 */
 	void writeTypeRestrictions(Document result, Set<Class<?>> restrictedTypes);
+
+	/**
+	 * Compute the target type for a given source considering {@link org.springframework.data.convert.CustomConversions}.
+	 *
+	 * @param source the source type.
+	 * @return never {@literal null}.
+	 * @since 2.2
+	 */
+	default Class<?> getWriteTargetTypeFor(Class<?> source) {
+		return source;
+	}
 }

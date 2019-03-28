@@ -22,6 +22,12 @@ import static org.springframework.data.mongodb.core.schema.JsonSchemaObject.of;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.bson.Document;
 import org.junit.Test;
@@ -35,6 +41,48 @@ import org.springframework.data.domain.Range.*;
  * @author Mark Paluch
  */
 public class JsonSchemaObjectUnitTests {
+
+	// -----------------
+	// type from class
+	// -----------------
+
+	@Test // DATAMONGO-1849
+	public void primitiveType() {
+
+		assertThat(JsonSchemaObject.of(boolean.class).getTypes()).containsExactly(Type.booleanType());
+		assertThat(JsonSchemaObject.of(int.class).getTypes()).containsExactly(Type.intType());
+		assertThat(JsonSchemaObject.of(long.class).getTypes()).containsExactly(Type.longType());
+		assertThat(JsonSchemaObject.of(float.class).getTypes()).containsExactly(Type.doubleType());
+		assertThat(JsonSchemaObject.of(double.class).getTypes()).containsExactly(Type.doubleType());
+		assertThat(JsonSchemaObject.of(short.class).getTypes()).containsExactly(Type.numberType());
+	}
+
+	@Test // DATAMONGO-1849
+	public void objectType() {
+
+		assertThat(JsonSchemaObject.of(Object.class).getTypes()).containsExactly(Type.objectType());
+		assertThat(JsonSchemaObject.of(Map.class).getTypes()).containsExactly(Type.objectType());
+		assertThat(JsonSchemaObject.of(Document.class).getTypes()).containsExactly(Type.objectType());
+	}
+
+	@Test // DATAMONGO-1849
+	public void binaryData() {
+		assertThat(JsonSchemaObject.of(byte[].class).getTypes()).containsExactly(Type.binaryType());
+	}
+
+	@Test // DATAMONGO-1849
+	public void collectionType() {
+
+		assertThat(JsonSchemaObject.of(Object[].class).getTypes()).containsExactly(Type.arrayType());
+		assertThat(JsonSchemaObject.of(Collection.class).getTypes()).containsExactly(Type.arrayType());
+		assertThat(JsonSchemaObject.of(List.class).getTypes()).containsExactly(Type.arrayType());
+		assertThat(JsonSchemaObject.of(Set.class).getTypes()).containsExactly(Type.arrayType());
+	}
+
+	@Test // DATAMONGO-1849
+	public void dateType() {
+		assertThat(JsonSchemaObject.of(Date.class).getTypes()).containsExactly(Type.dateType());
+	}
 
 	// -----------------
 	// type : 'object'
@@ -58,10 +106,10 @@ public class JsonSchemaObjectUnitTests {
 	@Test // DATAMONGO-1835
 	public void objectObjectShouldRenderRequiredPropertiesCorrectly() {
 
-		assertThat(object().required("spring", "data", "mongodb").generatedDescription().toDocument()).isEqualTo(
-				new Document("type", "object")
-						.append("description", "Must be an object where spring, data, mongodb are mandatory.").append("required",
-								Arrays.asList("spring", "data", "mongodb")));
+		assertThat(object().required("spring", "data", "mongodb").generatedDescription().toDocument())
+				.isEqualTo(new Document("type", "object")
+						.append("description", "Must be an object where spring, data, mongodb are mandatory.")
+						.append("required", Arrays.asList("spring", "data", "mongodb")));
 	}
 
 	@Test // DATAMONGO-1835
@@ -101,7 +149,6 @@ public class JsonSchemaObjectUnitTests {
 								.append("properties", new Document("city", new Document("type", "string")
 										.append("description", "Must be a string with length [3-unbounded.").append("minLength", 3)))));
 
-
 		assertThat(object()
 				.properties(JsonSchemaProperty.object("address")
 						.properties(JsonSchemaProperty.string("city").minLength(3).generatedDescription()).generatedDescription())
@@ -118,6 +165,17 @@ public class JsonSchemaObjectUnitTests {
 
 		assertThat(object().patternProperties(JsonSchemaProperty.string("na.*").maxLength(10).generatedDescription())
 				.generatedDescription().toDocument()).isEqualTo(expected);
+	}
+
+	@Test // DATAMONGO-1849
+	public void objectShouldIncludeRequiredNestedCorrectly() {
+
+		assertThat(object() //
+				.properties( //
+						JsonSchemaProperty.required(JsonSchemaProperty.string("lastname")) //
+				).toDocument())
+						.isEqualTo(new Document("type", "object").append("required", Collections.singletonList("lastname"))
+								.append("properties", new Document("lastname", new Document("type", "string"))));
 	}
 
 	// -----------------

@@ -21,10 +21,13 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.springframework.core.annotation.AliasFor;
+
 /**
  * Annotation to define custom metadata for document fields.
  *
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
@@ -32,11 +35,21 @@ import java.lang.annotation.Target;
 public @interface Field {
 
 	/**
-	 * The key to be used to store the field inside the document.
+	 * The key to be used to store the field inside the document. Alias for {@link #name()}.
 	 *
-	 * @return
+	 * @return an empty {@link String} by default.
 	 */
+	@AliasFor("name")
 	String value() default "";
+
+	/**
+	 * The key to be used to store the field inside the document. Alias for {@link #value()}.
+	 *
+	 * @return an empty {@link String} by default.
+	 * @since 2.2
+	 */
+	@AliasFor("value")
+	String name() default "";
 
 	/**
 	 * The order in which various fields shall be stored. Has to be a positive integer.
@@ -44,4 +57,12 @@ public @interface Field {
 	 * @return the order the field shall have in the document or -1 if undefined.
 	 */
 	int order() default Integer.MAX_VALUE;
+
+	/**
+	 * The actual desired target type the field should be stored as.
+	 *
+	 * @return {@link FieldType#IMPLICIT} by default.
+	 * @since 2.2
+	 */
+	FieldType targetType() default FieldType.IMPLICIT;
 }

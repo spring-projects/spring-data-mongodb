@@ -953,7 +953,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 
 		/**
 		 * @return new instance of {@link DateJsonSchemaProperty}.
-		 * @see DateJsonSchemaProperty#generateDescription()
+		 * @see DateJsonSchemaProperty#generatedDescription()
 		 */
 		public DateJsonSchemaProperty generatedDescription() {
 			return new DateJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.generatedDescription());
@@ -983,10 +983,65 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 
 		/**
 		 * @return new instance of {@link TimestampJsonSchemaProperty}.
-		 * @see TimestampJsonSchemaProperty#generateDescription()
+		 * @see TimestampJsonSchemaProperty#generatedDescription()
 		 */
 		public TimestampJsonSchemaProperty generatedDescription() {
 			return new TimestampJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.generatedDescription());
+		}
+	}
+
+	/**
+	 * Delegating {@link JsonSchemaProperty} implementation having a {@literal required} flag for evaluation during schema
+	 * creation process.
+	 *
+	 * @author Christoph Strobl
+	 * @since 2.2
+	 */
+	public static class RequiredJsonSchemaProperty implements JsonSchemaProperty {
+
+		private final JsonSchemaProperty delegate;
+		private final boolean required;
+
+		RequiredJsonSchemaProperty(JsonSchemaProperty delegate, boolean required) {
+
+			this.delegate = delegate;
+			this.required = required;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.schema.JsonSchemaProperty#getIdentifier()
+		 */
+		@Override
+		public String getIdentifier() {
+			return delegate.getIdentifier();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.schema.JsonSchemaObject#getTypes()
+		 */
+		@Override
+		public Set<Type> getTypes() {
+			return delegate.getTypes();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.schema.JsonSchemaObject#toDocument()
+		 */
+		@Override
+		public Document toDocument() {
+			return delegate.toDocument();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.schema.JsonSchemaProperty#isRequired()
+		 */
+		@Override
+		public boolean isRequired() {
+			return required;
 		}
 	}
 }

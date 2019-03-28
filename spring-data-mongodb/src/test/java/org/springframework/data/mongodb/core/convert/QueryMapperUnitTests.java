@@ -28,13 +28,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.bson.types.Code;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
@@ -48,6 +48,7 @@ import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.TextScore;
@@ -856,6 +857,30 @@ public class QueryMapperUnitTests {
 		assertThat(document).isEqualTo(new org.bson.Document("nested.unresolvablePath.id", idHex));
 	}
 
+	@Test // DATAMONGO-1849
+	public void shouldConvertPropertyWithExplicitTargetType() {
+
+		String script = "if (a > b) a else b";
+		Query query = new Query(where("script").is(script));
+
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(WithExplicitTargetTypes.class));
+
+		assertThat(document).isEqualTo(new org.bson.Document("script", new Code(script)));
+	}
+
+	@Test // DATAMONGO-1849
+	public void shouldConvertCollectionPropertyWithExplicitTargetType() {
+
+		String script = "if (a > b) a else b";
+		Query query = new Query(where("scripts").is(script));
+
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(WithExplicitTargetTypes.class));
+
+		assertThat(document).isEqualTo(new org.bson.Document("scripts", new Code(script)));
+	}
+
 	@Document
 	public class Foo {
 		@Id private ObjectId id;
@@ -978,5 +1003,14 @@ public class QueryMapperUnitTests {
 
 	static class EntityWithComplexValueTypeList {
 		List<SimpeEntityWithoutId> list;
+	}
+
+	static class WithExplicitTargetTypes {
+
+		@Field(targetType = FieldType.SCRIPT) //
+		String script;
+
+		@Field(targetType = FieldType.SCRIPT) //
+		List<String> scripts;
 	}
 }

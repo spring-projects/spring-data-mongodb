@@ -37,6 +37,7 @@ import org.springframework.data.annotation.Id;
  * @since 2.2
  */
 @Id
+@Field
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD, ElementType.METHOD, ElementType.ANNOTATION_TYPE })
 public @interface MongoId {
@@ -45,7 +46,7 @@ public @interface MongoId {
 	 * @return the preferred id type.
 	 * @see #targetType()
 	 */
-	@AliasFor("targetType")
+	@AliasFor(annotation = Field.class, attribute="targetType")
 	FieldType value() default FieldType.IMPLICIT;
 
 	/**
@@ -55,7 +56,7 @@ public @interface MongoId {
 	 *
 	 * @return the preferred {@literal id} type. {@link FieldType#IMPLICIT} by default.
 	 */
-	@AliasFor("value")
+	@AliasFor(annotation = Field.class, attribute="targetType")
 	FieldType targetType() default FieldType.IMPLICIT;
 
 }

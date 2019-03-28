@@ -19,13 +19,19 @@ import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.bson.BsonTimestamp;
 import org.bson.Document;
+import org.bson.types.BSONTimestamp;
+import org.bson.types.Binary;
+import org.bson.types.Code;
+import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ArrayJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.BooleanJsonSchemaObject;
@@ -177,13 +183,17 @@ public interface JsonSchemaObject {
 			return of(Type.nullType());
 		}
 
-		if (type.isArray()) {
+		if (type.isArray() || ClassUtils.isAssignable(Collection.class, type)) {
 
 			if (type.equals(byte[].class)) {
 				return of(Type.binaryType());
 			}
 
 			return of(Type.arrayType());
+		}
+
+		if (type.equals(Document.class) || ClassUtils.isAssignable(Map.class, type)) {
+			return of(Type.objectType());
 		}
 
 		if (type.equals(Object.class)) {
@@ -202,7 +212,19 @@ public interface JsonSchemaObject {
 			return of(Type.dateType());
 		}
 
-		if (ClassUtils.isAssignable(BsonTimestamp.class, type)) {
+		if (ClassUtils.isAssignable(Binary.class, type)) {
+			return of(Type.binaryType());
+		}
+
+		if (ClassUtils.isAssignable(Code.class, type)) {
+			return of(Type.javascriptType());
+		}
+
+		if (ClassUtils.isAssignable(Decimal128.class, type)) {
+			return of(Type.bigDecimalType());
+		}
+
+		if (ClassUtils.isAssignable(BsonTimestamp.class, type) || ClassUtils.isAssignable(BSONTimestamp.class, type)) {
 			return of(Type.timestampType());
 		}
 
@@ -210,29 +232,34 @@ public interface JsonSchemaObject {
 			return of(Type.regexType());
 		}
 
-		if (ClassUtils.isAssignable(Boolean.class, type)) {
+		if (ClassUtils.isAssignable(Enum.class, type)) {
+			return of(Type.stringType());
+		}
+
+		Class<?> resolved = ClassUtils.resolvePrimitiveIfNecessary(type);
+		if (ClassUtils.isAssignable(Boolean.class, resolved)) {
 			return of(Type.booleanType());
 		}
 
-		if (ClassUtils.isAssignable(Number.class, type)) {
+		if (ClassUtils.isAssignable(Number.class, resolved)) {
 
-			if (type.equals(Long.class)) {
+			if (resolved.equals(Long.class)) {
 				return of(Type.longType());
 			}
 
-			if (type.equals(Float.class)) {
+			if (resolved.equals(Float.class)) {
 				return of(Type.doubleType());
 			}
 
-			if (type.equals(Double.class)) {
+			if (resolved.equals(Double.class)) {
 				return of(Type.doubleType());
 			}
 
-			if (type.equals(Integer.class)) {
+			if (resolved.equals(Integer.class)) {
 				return of(Type.intType());
 			}
 
-			if (type.equals(BigDecimal.class)) {
+			if (resolved.equals(BigDecimal.class)) {
 				return of(Type.bigDecimalType());
 			}
 

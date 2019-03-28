@@ -15,8 +15,19 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import java.util.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -29,9 +40,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.CollectionFactory;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
-import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.EntityInstantiator;
-import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
@@ -112,7 +121,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		this.dbRefResolver = dbRefResolver;
 		this.mappingContext = mappingContext;
-		this.typeMapper = new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, mappingContext);
+		this.typeMapper = new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, mappingContext,
+				this::computeWriteTarget);
 		this.idMapper = new QueryMapper(this);
 
 		this.spELContext = new SpELContext(DocumentPropertyAccessor.INSTANCE);
@@ -660,6 +670,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	protected List<Object> createCollection(Collection<?> collection, MongoPersistentProperty property) {
 
 		if (!property.isDbReference()) {
+
+			if (property.hasExplicitWriteTarget()) {
+				return writeCollectionInternal(collection, new HijackedTypeInformation<>(property), new ArrayList<>());
+			}
 			return writeCollectionInternal(collection, property.getTypeInformation(), new BasicDBList());
 		}
 
@@ -739,7 +753,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			Class<?> elementType = element == null ? null : element.getClass();
 
 			if (elementType == null || conversions.isSimpleType(elementType)) {
-				collection.add(getPotentiallyConvertedSimpleWrite(element));
+				collection.add(getPotentiallyConvertedSimpleWrite(element,
+						componentType != null ? componentType.getType() : Object.class));
 			} else if (element instanceof Collection || elementType.isArray()) {
 				collection.add(writeCollectionInternal(asCollection(element), componentType, new BasicDBList()));
 			} else {
@@ -842,7 +857,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		return conversions.hasCustomWriteTarget(key.getClass(), String.class)
-				? (String) getPotentiallyConvertedSimpleWrite(key)
+				? (String) getPotentiallyConvertedSimpleWrite(key, Object.class)
 				: key.toString();
 	}
 
@@ -884,12 +899,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @param key must not be {@literal null}.
 	 */
 	private void writeSimpleInternal(Object value, Bson bson, String key) {
-		addToMap(bson, key, getPotentiallyConvertedSimpleWrite(value));
+		addToMap(bson, key, getPotentiallyConvertedSimpleWrite(value, Object.class));
 	}
 
 	private void writeSimpleInternal(Object value, Bson bson, MongoPersistentProperty property) {
 		DocumentAccessor accessor = new DocumentAccessor(bson);
-		accessor.put(property, getPotentiallyConvertedSimpleWrite(value));
+		accessor.put(property, getPotentiallyConvertedSimpleWrite(value,
+				property.hasExplicitWriteTarget() ? property.getFieldType() : Object.class));
 	}
 
 	/**
@@ -900,10 +916,17 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @return
 	 */
 	@Nullable
-	private Object getPotentiallyConvertedSimpleWrite(@Nullable Object value) {
+	private Object getPotentiallyConvertedSimpleWrite(@Nullable Object value, @Nullable Class<?> typeHint) {
 
 		if (value == null) {
 			return null;
+		}
+
+		if (typeHint != null && Object.class != typeHint) {
+
+			if (conversionService.canConvert(value.getClass(), typeHint)) {
+				value = conversionService.convert(value, typeHint);
+			}
 		}
 
 		Optional<Class<?>> customTarget = conversions.getCustomWriteTarget(value.getClass());
@@ -1204,7 +1227,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		if (conversions.isSimpleType(obj.getClass())) {
 			// Doesn't need conversion
-			return getPotentiallyConvertedSimpleWrite(obj);
+			return getPotentiallyConvertedSimpleWrite(obj,
+					typeInformation != null ? typeInformation.getType() : Object.class);
 		}
 
 		if (obj instanceof List) {
@@ -1599,6 +1623,16 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return dbRefResolver.bulkFetch(references);
 	}
 
+	/**
+	 * Get the conversion target type if defined or return the {@literal source}.
+	 *
+	 * @param source must not be {@literal null}.
+	 * @return
+	 * @since 2.2
+	 */
+	protected Class<?> computeWriteTarget(Class<?> source) {
+		return conversions.getCustomWriteTarget(source).orElse(source);
+	}
 
 	/**
 	 * Create a new {@link MappingMongoConverter} using the given {@link MongoDbFactory} when loading {@link DBRef}.
@@ -1665,6 +1699,93 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		@Override
 		public <T> T getParameterValue(Parameter<T, MongoPersistentProperty> parameter) {
 			return null;
+		}
+	}
+
+	private static class HijackedTypeInformation<S> implements TypeInformation<S> {
+
+		private MongoPersistentProperty persistentProperty;
+		private TypeInformation<?> delegate;
+
+		public HijackedTypeInformation(MongoPersistentProperty property) {
+
+			this.persistentProperty = property;
+			this.delegate = property.getTypeInformation();
+		}
+
+		@Override
+		public List<org.springframework.data.util.TypeInformation<?>> getParameterTypes(Constructor constructor) {
+			return persistentProperty.getTypeInformation().getParameterTypes(constructor);
+		}
+
+		@Override
+		public org.springframework.data.util.TypeInformation<?> getProperty(String property) {
+			return delegate.getProperty(property);
+		}
+
+		@Override
+		public boolean isCollectionLike() {
+			return delegate.isCollectionLike();
+		}
+
+		@Override
+		public org.springframework.data.util.TypeInformation<?> getComponentType() {
+			return ClassTypeInformation.from(persistentProperty.getFieldType());
+		}
+
+		@Override
+		public boolean isMap() {
+			return delegate.isMap();
+		}
+
+		@Override
+		public org.springframework.data.util.TypeInformation<?> getMapValueType() {
+			return ClassTypeInformation.from(persistentProperty.getFieldType());
+		}
+
+		@Override
+		public Class getType() {
+			return delegate.getType();
+		}
+
+		@Override
+		public ClassTypeInformation<?> getRawTypeInformation() {
+			return delegate.getRawTypeInformation();
+		}
+
+		@Override
+		public org.springframework.data.util.TypeInformation<?> getActualType() {
+			return delegate.getActualType();
+		}
+
+		@Override
+		public org.springframework.data.util.TypeInformation<?> getReturnType(Method method) {
+			return delegate.getReturnType(method);
+		}
+
+		@Override
+		public List<org.springframework.data.util.TypeInformation<?>> getParameterTypes(Method method) {
+			return delegate.getParameterTypes(method);
+		}
+
+		@Override
+		public org.springframework.data.util.TypeInformation<?> getSuperTypeInformation(Class superType) {
+			return delegate.getSuperTypeInformation(superType);
+		}
+
+		@Override
+		public boolean isAssignableFrom(org.springframework.data.util.TypeInformation target) {
+			return delegate.isAssignableFrom(target);
+		}
+
+		@Override
+		public List<org.springframework.data.util.TypeInformation<?>> getTypeArguments() {
+			return delegate.getTypeArguments();
+		}
+
+		@Override
+		public org.springframework.data.util.TypeInformation specialize(ClassTypeInformation type) {
+			return delegate.specialize(type);
 		}
 	}
 }

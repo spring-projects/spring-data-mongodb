@@ -334,6 +334,12 @@ public class QueryMapper {
 	@SuppressWarnings("unchecked")
 	protected Object getMappedValue(Field documentField, Object value) {
 
+		if(documentField.getProperty() != null && documentField.getProperty().hasExplicitWriteTarget()) {
+			if(conversionService.canConvert(value.getClass(), documentField.getProperty().getFieldType())) {
+				value = conversionService.convert(value, documentField.getProperty().getFieldType());
+			}
+		}
+
 		if (documentField.isIdField() && !documentField.isAssociation()) {
 
 			if (isDBObject(value)) {

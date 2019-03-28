@@ -15,6 +15,13 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
+import java.util.Date;
+import java.util.regex.Pattern;
+
+import org.bson.types.BSONTimestamp;
+import org.bson.types.Binary;
+import org.bson.types.Code;
+import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
 
 /**
@@ -34,7 +41,20 @@ public enum FieldType {
 	/**
 	 * Implicit type that is derived from the property value.
 	 */
-	IMPLICIT(-1, Object.class), STRING(2, String.class), OBJECT_ID(7, ObjectId.class);
+	IMPLICIT(-1, Object.class), //
+	DOUBLE(1, Double.class), //
+	STRING(2, String.class), //
+	ARRAY(4, Object[].class), //
+	BINARY(5, Binary.class), //
+	OBJECT_ID(7, ObjectId.class), //
+	BOOLEAN(8, Boolean.class), //
+	DATE_TIME(9, Date.class), //
+	PATTERN(11, Pattern.class), //
+	SCRIPT(13, Code.class), //
+	INT32(15, Integer.class), //
+	TIMESTAMP(16, BSONTimestamp.class), //
+	INT64(17, Long.class), //
+	DECIMAL128(18, Decimal128.class);
 
 	private final int bsonType;
 	private final Class<?> javaClass;
