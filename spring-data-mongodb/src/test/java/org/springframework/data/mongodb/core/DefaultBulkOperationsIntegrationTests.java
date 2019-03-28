@@ -15,17 +15,14 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import com.mongodb.BulkWriteException;
 import org.bson.Document;
-import org.hamcrest.core.IsInstanceOf;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -95,7 +92,7 @@ public class DefaultBulkOperationsIntegrationTests {
 
 		List<BaseDoc> documents = Arrays.asList(newDoc("1"), newDoc("2"));
 
-		assertThat(createBulkOps(BulkMode.ORDERED).insert(documents).execute().getInsertedCount(), is(2));
+		assertThat(createBulkOps(BulkMode.ORDERED).insert(documents).execute().getInsertedCount()).isEqualTo(2);
 	}
 
 	@Test // DATAMONGO-934
@@ -103,16 +100,17 @@ public class DefaultBulkOperationsIntegrationTests {
 
 		List<BaseDoc> documents = Arrays.asList(newDoc("1"), newDoc("1"), newDoc("2"));
 
-		try {
-			createBulkOps(BulkMode.ORDERED).insert(documents).execute();
-			fail();
-		} catch (DuplicateKeyException e) {
+		assertThatThrownBy(() -> createBulkOps(BulkMode.ORDERED).insert(documents).execute()) //
+				.isInstanceOf(DuplicateKeyException.class) //
+				.hasCauseInstanceOf(MongoBulkWriteException.class) //
+				.extracting(Throwable::getCause) //
+				.satisfies(it -> {
 
-			assertThat(e.getCause(), IsInstanceOf.instanceOf(MongoBulkWriteException.class));
-			assertThat(((MongoBulkWriteException)e.getCause()).getWriteResult().getInsertedCount(), is(1)); // fails after first error
-			assertThat(((MongoBulkWriteException)e.getCause()).getWriteErrors(), notNullValue());
-			assertThat(((MongoBulkWriteException)e.getCause()).getWriteErrors().size(), is(1));
-		}
+					MongoBulkWriteException ex = (MongoBulkWriteException) it;
+					assertThat(ex.getWriteResult().getInsertedCount()).isOne();
+					assertThat(ex.getWriteErrors()).isNotNull();
+					assertThat(ex.getWriteErrors().size()).isOne();
+				});
 	}
 
 	@Test // DATAMONGO-934
@@ -120,7 +118,7 @@ public class DefaultBulkOperationsIntegrationTests {
 
 		List<BaseDoc> documents = Arrays.asList(newDoc("1"), newDoc("2"));
 
-		assertThat(createBulkOps(BulkMode.UNORDERED).insert(documents).execute().getInsertedCount(), is(2));
+		assertThat(createBulkOps(BulkMode.UNORDERED).insert(documents).execute().getInsertedCount()).isEqualTo(2);
 	}
 
 	@Test // DATAMONGO-934
@@ -128,16 +126,17 @@ public class DefaultBulkOperationsIntegrationTests {
 
 		List<BaseDoc> documents = Arrays.asList(newDoc("1"), newDoc("1"), newDoc("2"));
 
-		try {
-			createBulkOps(BulkMode.UNORDERED).insert(documents).execute();
-			fail();
-		} catch (DuplicateKeyException e) {
+		assertThatThrownBy(() -> createBulkOps(BulkMode.UNORDERED).insert(documents).execute()) //
+				.isInstanceOf(DuplicateKeyException.class) //
+				.hasCauseInstanceOf(MongoBulkWriteException.class) //
+				.extracting(Throwable::getCause) //
+				.satisfies(it -> {
 
-			assertThat(e.getCause(), IsInstanceOf.instanceOf(MongoBulkWriteException.class));
-			assertThat(((MongoBulkWriteException)e.getCause()).getWriteResult().getInsertedCount(), is(2)); // two docs were inserted
-			assertThat(((MongoBulkWriteException)e.getCause()).getWriteErrors(), notNullValue());
-			assertThat(((MongoBulkWriteException)e.getCause()).getWriteErrors().size(), is(1));
-		}
+					MongoBulkWriteException ex = (MongoBulkWriteException) it;
+					assertThat(ex.getWriteResult().getInsertedCount()).isEqualTo(2);
+					assertThat(ex.getWriteErrors()).isNotNull();
+					assertThat(ex.getWriteErrors().size()).isOne();
+				});
 	}
 
 	@Test // DATAMONGO-934
@@ -149,12 +148,12 @@ public class DefaultBulkOperationsIntegrationTests {
 				upsert(where("value", "value1"), set("value", "value2")).//
 				execute();
 
-		assertThat(result, notNullValue());
-		assertThat(result.getMatchedCount(), is(2));
-		assertThat(result.getModifiedCount(), is(2));
-		assertThat(result.getInsertedCount(), is(0));
-		assertThat(result.getUpserts(), is(notNullValue()));
-		assertThat(result.getUpserts().size(), is(0));
+		assertThat(result).isNotNull();
+		assertThat(result.getMatchedCount()).isEqualTo(2);
+		assertThat(result.getModifiedCount()).isEqualTo(2);
+		assertThat(result.getInsertedCount()).isZero();
+		assertThat(result.getUpserts()).isNotNull();
+		assertThat(result.getUpserts().size()).isZero();
 	}
 
 	@Test // DATAMONGO-934
@@ -164,11 +163,11 @@ public class DefaultBulkOperationsIntegrationTests {
 				upsert(where("_id", "1"), set("value", "v1")).//
 				execute();
 
-		assertThat(result, notNullValue());
-		assertThat(result.getMatchedCount(), is(0));
-		assertThat(result.getModifiedCount(), is(0));
-		assertThat(result.getUpserts(), is(notNullValue()));
-		assertThat(result.getUpserts().size(), is(1));
+		assertThat(result).isNotNull();
+		assertThat(result.getMatchedCount()).isZero();
+		assertThat(result.getModifiedCount()).isZero();
+		assertThat(result.getUpserts()).isNotNull();
+		assertThat(result.getUpserts().size()).isOne();
 	}
 
 	@Test // DATAMONGO-934
@@ -220,10 +219,24 @@ public class DefaultBulkOperationsIntegrationTests {
 				replaceOne(where("_id", "1"), rawDoc("1", "value2")).//
 				execute();
 
-		assertThat(result, notNullValue());
-		assertThat(result.getMatchedCount(), is(1));
-		assertThat(result.getModifiedCount(), is(1));
-		assertThat(result.getInsertedCount(), is(0));
+		assertThat(result).isNotNull();
+		assertThat(result.getMatchedCount()).isOne();
+		assertThat(result.getModifiedCount()).isOne();
+		assertThat(result.getInsertedCount()).isZero();
+	}
+
+	@Test // DATAMONGO-2218
+	public void replaceOneWithUpsert() {
+
+		com.mongodb.bulk.BulkWriteResult result = createBulkOps(BulkMode.ORDERED).//
+				replaceOne(where("_id", "1"), rawDoc("1", "value2"), FindAndReplaceOptions.options().upsert()).//
+				execute();
+
+		assertThat(result).isNotNull();
+		assertThat(result.getMatchedCount()).isZero();
+		assertThat(result.getInsertedCount()).isZero();
+		assertThat(result.getModifiedCount()).isZero();
+		assertThat(result.getUpserts().size()).isOne();
 	}
 
 	/**
@@ -237,10 +250,10 @@ public class DefaultBulkOperationsIntegrationTests {
 				remove(where("value", "v2")).//
 				execute();
 
-		assertThat(result, notNullValue());
-		assertThat(result.getInsertedCount(), is(1));
-		assertThat(result.getModifiedCount(), is(1));
-		assertThat(result.getDeletedCount(), is(1));
+		assertThat(result).isNotNull();
+		assertThat(result.getInsertedCount()).isOne();
+		assertThat(result.getModifiedCount()).isOne();
+		assertThat(result.getDeletedCount()).isOne();
 	}
 
 	/**
@@ -257,10 +270,10 @@ public class DefaultBulkOperationsIntegrationTests {
 		com.mongodb.bulk.BulkWriteResult result = createBulkOps(BulkMode.ORDERED, BaseDoc.class).insert(inserts)
 				.updateMulti(updates).remove(removes).execute();
 
-		assertThat(result, notNullValue());
-		assertThat(result.getInsertedCount(), is(3));
-		assertThat(result.getModifiedCount(), is(2));
-		assertThat(result.getDeletedCount(), is(1));
+		assertThat(result).isNotNull();
+		assertThat(result.getInsertedCount()).isEqualTo(3);
+		assertThat(result.getModifiedCount()).isEqualTo(2);
+		assertThat(result.getDeletedCount()).isOne();
 	}
 
 	@Test // DATAMONGO-1534
@@ -275,8 +288,8 @@ public class DefaultBulkOperationsIntegrationTests {
 
 		BaseDoc doc = operations.findOne(where("_id", specialDoc.id), BaseDoc.class, COLLECTION_NAME);
 
-		assertThat(doc, notNullValue());
-		assertThat(doc, instanceOf(SpecialDoc.class));
+		assertThat(doc).isNotNull();
+		assertThat(doc).isInstanceOf(SpecialDoc.class);
 	}
 
 	private void testUpdate(BulkMode mode, boolean multi, int expectedUpdates) {
@@ -292,7 +305,7 @@ public class DefaultBulkOperationsIntegrationTests {
 		int modifiedCount = multi ? bulkOps.updateMulti(updates).execute().getModifiedCount()
 				: bulkOps.updateOne(updates).execute().getModifiedCount();
 
-		assertThat(modifiedCount, is(expectedUpdates));
+		assertThat(modifiedCount).isEqualTo(expectedUpdates);
 	}
 
 	private void testRemove(BulkMode mode) {
@@ -301,7 +314,7 @@ public class DefaultBulkOperationsIntegrationTests {
 
 		List<Query> removes = Arrays.asList(where("_id", "1"), where("value", "value2"));
 
-		assertThat(createBulkOps(mode).remove(removes).execute().getDeletedCount(), is(3));
+		assertThat(createBulkOps(mode).remove(removes).execute().getDeletedCount()).isEqualTo(3);
 	}
 
 	private void testReplaceOne(BulkMode mode) {
@@ -314,7 +327,7 @@ public class DefaultBulkOperationsIntegrationTests {
 		Document document = rawDoc("1", "value2");
 		int modifiedCount = bulkOps.replaceOne(query, document).execute().getModifiedCount();
 
-		assertThat(modifiedCount, is(1));
+		assertThat(modifiedCount).isOne();
 	}
 
 	private BulkOperations createBulkOps(BulkMode mode) {
@@ -324,7 +337,8 @@ public class DefaultBulkOperationsIntegrationTests {
 	private BulkOperations createBulkOps(BulkMode mode, Class<?> entityType) {
 
 		Optional<? extends MongoPersistentEntity<?>> entity = entityType != null
-				? Optional.of(operations.getConverter().getMappingContext().getPersistentEntity(entityType)) : Optional.empty();
+				? Optional.of(operations.getConverter().getMappingContext().getPersistentEntity(entityType))
+				: Optional.empty();
 
 		BulkOperationContext bulkOperationContext = new BulkOperationContext(mode, entity,
 				new QueryMapper(operations.getConverter()), new UpdateMapper(operations.getConverter()));

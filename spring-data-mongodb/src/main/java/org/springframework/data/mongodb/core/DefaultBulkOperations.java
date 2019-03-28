@@ -112,16 +112,7 @@ class DefaultBulkOperations implements BulkOperations {
 
 		Assert.notNull(document, "Document must not be null!");
 
-		if (document instanceof Document) {
-
-			models.add(new InsertOneModel<>((Document) document));
-			return this;
-		}
-
-		Document sink = new Document();
-		mongoOperations.getConverter().write(document, sink);
-
-		models.add(new InsertOneModel<>(sink));
+		models.add(new InsertOneModel<>(getMappedObject(document)));
 
 		return this;
 	}
@@ -258,26 +249,21 @@ class DefaultBulkOperations implements BulkOperations {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.BulkOperations#replaceOne(org.springframework.data.mongodb.core.query.Query, java.lang.Object)
+	 * @see org.springframework.data.mongodb.core.BulkOperations#replaceOne(org.springframework.data.mongodb.core.query.Query, java.lang.Object, org.springframework.data.mongodb.core.FindAndReplaceOptions)
 	 */
 	@Override
-	public BulkOperations replaceOne(Query query, Object document) {
+	public BulkOperations replaceOne(Query query, Object replacement, FindAndReplaceOptions options) {
 
 		Assert.notNull(query, "Query must not be null!");
-		Assert.notNull(document, "Document must not be null!");
+		Assert.notNull(replacement, "Replacement must not be null!");
+		Assert.notNull(options, "Options must not be null!");
 
 		ReplaceOptions replaceOptions = new ReplaceOptions();
+		replaceOptions.upsert(options.isUpsert());
 		query.getCollation().map(Collation::toMongoCollation).ifPresent(replaceOptions::collation);
-		Bson mappedQuery = getMappedQuery(query.getQueryObject());
 
-		if (document instanceof Document) {
-			models.add(new ReplaceOneModel<>(mappedQuery, (Document) document, replaceOptions));
-			return this;
-		}
-
-		Document sink = new Document();
-		mongoOperations.getConverter().write(document, sink);
-		models.add(new ReplaceOneModel<>(mappedQuery, sink, replaceOptions));
+		models.add(
+				new ReplaceOneModel<>(getMappedQuery(query.getQueryObject()), getMappedObject(replacement), replaceOptions));
 
 		return this;
 	}
@@ -290,7 +276,7 @@ class DefaultBulkOperations implements BulkOperations {
 	public com.mongodb.bulk.BulkWriteResult execute() {
 
 		try {
-			
+
 			return mongoOperations.execute(collectionName, collection -> {
 				return collection.bulkWrite(models.stream().map(this::mapWriteModel).collect(Collectors.toList()), bulkOptions);
 			});
@@ -367,6 +353,17 @@ class DefaultBulkOperations implements BulkOperations {
 
 	private Bson getMappedQuery(Bson query) {
 		return bulkOperationContext.getQueryMapper().getMappedObject(query, bulkOperationContext.getEntity());
+	}
+
+	private Document getMappedObject(Object source) {
+
+		if (source instanceof Document) {
+			return (Document) source;
+		}
+
+		Document sink = new Document();
+		mongoOperations.getConverter().write(source, sink);
+		return sink;
 	}
 
 	private static BulkWriteOptions getBulkWriteOptions(BulkMode bulkMode) {

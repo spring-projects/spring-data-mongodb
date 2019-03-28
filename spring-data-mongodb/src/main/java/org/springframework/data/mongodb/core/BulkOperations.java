@@ -140,10 +140,24 @@ public interface BulkOperations {
 	 * Add a single replace operation to the bulk operation.
 	 *
 	 * @param query Update criteria.
-	 * @param document the document to replace, must not be {@literal null}.
+	 * @param replacement the replacement document. Must not be {@literal null}.
 	 * @return the current {@link BulkOperations} instance with the replace added, will never be {@literal null}.
+	 * @since 2.2
 	 */
-	BulkOperations replaceOne(Query query, Object document);
+	default BulkOperations replaceOne(Query query, Object replacement) {
+		return replaceOne(query, replacement, FindAndReplaceOptions.empty());
+	}
+
+	/**
+	 * Add a single replace operation to the bulk operation.
+	 *
+	 * @param query Update criteria.
+	 * @param replacement the replacement document. Must not be {@literal null}.
+	 * @param options the {@link FindAndModifyOptions} holding additional information. Must not be {@literal null}.
+	 * @return the current {@link BulkOperations} instance with the replace added, will never be {@literal null}.
+	 * @since 2.2
+	 */
+	BulkOperations replaceOne(Query query, Object replacement, FindAndReplaceOptions options);
 
 	/**
 	 * Execute all bulk operations using the default write concern.
