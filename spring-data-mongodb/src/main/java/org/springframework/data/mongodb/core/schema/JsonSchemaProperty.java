@@ -24,11 +24,13 @@ import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProper
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.NullJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.NumericJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.ObjectJsonSchemaProperty;
+import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.RequiredJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.StringJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.TimestampJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.UntypedJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.NumericJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ObjectJsonSchemaObject;
+import org.springframework.lang.Nullable;
 
 /**
  * A {@literal property} or {@literal patternProperty} within a {@link JsonSchemaObject} of {@code type : 'object'}.
@@ -46,6 +48,14 @@ public interface JsonSchemaProperty extends JsonSchemaObject {
 	 * @return never {@literal null}.
 	 */
 	String getIdentifier();
+
+	/**
+	 * @return {@literal false} by default.
+	 * @since 2.2
+	 */
+	default boolean isRequired() {
+		return false;
+	}
 
 	/**
 	 * Creates a new {@link UntypedJsonSchemaProperty} with given {@literal identifier} without {@code type}.
@@ -202,6 +212,17 @@ public interface JsonSchemaProperty extends JsonSchemaObject {
 	}
 
 	/**
+	 * Turns the given {@link JsonSchemaProperty} into a required on.
+	 *
+	 * @param property must not be {@literal null}.
+	 * @return new instance of {@link JsonSchemaProperty}.
+	 * @since 2.2
+	 */
+	static JsonSchemaProperty required(JsonSchemaProperty property) {
+		return new RequiredJsonSchemaProperty(property, true);
+	}
+
+	/**
 	 * Builder for {@link IdentifiableJsonSchemaProperty}.
 	 */
 	@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -217,6 +238,17 @@ public interface JsonSchemaProperty extends JsonSchemaObject {
 		 */
 		public IdentifiableJsonSchemaProperty<TypedJsonSchemaObject> ofType(Type type) {
 			return new IdentifiableJsonSchemaProperty<>(identifier, TypedJsonSchemaObject.of(type));
+		}
+
+		/**
+		 * Configure the {@link Type} for the property by deriving it from the given {@link Class type}.
+		 *
+		 * @param type must not be {@literal null}.
+		 * @return new instance of {@link IdentifiableJsonSchemaProperty}.
+		 * @since 2.2
+		 */
+		public IdentifiableJsonSchemaProperty<TypedJsonSchemaObject> ofType(@Nullable Class<?> type) {
+			return new IdentifiableJsonSchemaProperty<>(identifier, JsonSchemaObject.of(type));
 		}
 
 		/**

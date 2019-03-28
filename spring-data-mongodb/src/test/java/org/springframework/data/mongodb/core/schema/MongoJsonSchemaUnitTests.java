@@ -57,6 +57,20 @@ public class MongoJsonSchemaUnitTests {
 				new Document("type", "object").append("required", Arrays.asList("firstname", "lastname"))));
 	}
 
+	@Test // DATAMONGO-1849
+	public void rendersRequiredPropertiesCorrectly() {
+
+		MongoJsonSchema schema = MongoJsonSchema.builder() //
+				.required("firstname") //
+				.properties( //
+						JsonSchemaProperty.required(JsonSchemaProperty.string("lastname")) //
+				).build();
+
+		assertThat(schema.toDocument()).isEqualTo(new Document("$jsonSchema",
+				new Document("type", "object").append("required", Arrays.asList("firstname", "lastname")).append("properties",
+						new Document("lastname", new Document("type", "string")))));
+	}
+
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1835
 	public void throwsExceptionOnNullRoot() {
 		MongoJsonSchema.of((JsonSchemaObject) null);

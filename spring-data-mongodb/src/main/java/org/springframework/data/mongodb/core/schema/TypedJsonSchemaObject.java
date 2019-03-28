@@ -445,8 +445,9 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		public Document toDocument() {
 
 			Document doc = new Document(super.toDocument());
-			if (!CollectionUtils.isEmpty(requiredProperties)) {
-				doc.append("required", requiredProperties);
+			Collection<String> allRequiredProperties = requiredProperties();
+			if (!CollectionUtils.isEmpty(allRequiredProperties)) {
+				doc.append("required", new ArrayList<>(allRequiredProperties));
 			}
 
 			if (propertiesCount != null) {
@@ -465,10 +466,19 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 
 			if (additionalProperties != null) {
 
-				doc.append("additionalProperties", additionalProperties instanceof JsonSchemaObject
-						? ((JsonSchemaObject) additionalProperties).toDocument() : additionalProperties);
+				doc.append("additionalProperties",
+						additionalProperties instanceof JsonSchemaObject ? ((JsonSchemaObject) additionalProperties).toDocument()
+								: additionalProperties);
 			}
 			return doc;
+		}
+
+		private Collection<String> requiredProperties() {
+
+			Set<String> target = new LinkedHashSet<>();
+			target.addAll(requiredProperties);
+			properties.stream().filter(JsonSchemaProperty::isRequired).forEach(it -> target.add(it.getIdentifier()));
+			return target;
 		}
 
 		private ObjectJsonSchemaObject newInstance(@Nullable String description, boolean generateDescription,

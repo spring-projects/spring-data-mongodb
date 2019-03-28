@@ -149,4 +149,15 @@ public interface MongoConverter
 			return convertToMongoType(id, null);
 		}
 	}
+
+	/**
+	 * Compute the target type for a given source considering {@link org.springframework.data.convert.CustomConversions}.
+	 *
+	 * @param source the source type.
+	 * @return never {@literal null}.
+	 * @since 2.2
+	 */
+	default Class<?> computeWriteTarget(Class<?> source) {
+		return source;
+	}
 }

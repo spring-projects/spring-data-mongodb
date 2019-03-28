@@ -19,8 +19,10 @@ import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -177,13 +179,17 @@ public interface JsonSchemaObject {
 			return of(Type.nullType());
 		}
 
-		if (type.isArray()) {
+		if (type.isArray() || ClassUtils.isAssignable(Collection.class, type)) {
 
 			if (type.equals(byte[].class)) {
 				return of(Type.binaryType());
 			}
 
 			return of(Type.arrayType());
+		}
+
+		if (type.equals(Document.class) || ClassUtils.isAssignable(Map.class, type)) {
+			return of(Type.objectType());
 		}
 
 		if (type.equals(Object.class)) {
@@ -210,29 +216,34 @@ public interface JsonSchemaObject {
 			return of(Type.regexType());
 		}
 
-		if (ClassUtils.isAssignable(Boolean.class, type)) {
+		if (ClassUtils.isAssignable(Enum.class, type)) {
+			return of(Type.stringType());
+		}
+
+		Class<?> resolved = ClassUtils.resolvePrimitiveIfNecessary(type);
+		if (ClassUtils.isAssignable(Boolean.class, resolved)) {
 			return of(Type.booleanType());
 		}
 
-		if (ClassUtils.isAssignable(Number.class, type)) {
+		if (ClassUtils.isAssignable(Number.class, resolved)) {
 
-			if (type.equals(Long.class)) {
+			if (resolved.equals(Long.class)) {
 				return of(Type.longType());
 			}
 
-			if (type.equals(Float.class)) {
+			if (resolved.equals(Float.class)) {
 				return of(Type.doubleType());
 			}
 
-			if (type.equals(Double.class)) {
+			if (resolved.equals(Double.class)) {
 				return of(Type.doubleType());
 			}
 
-			if (type.equals(Integer.class)) {
+			if (resolved.equals(Integer.class)) {
 				return of(Type.intType());
 			}
 
-			if (type.equals(BigDecimal.class)) {
+			if (resolved.equals(BigDecimal.class)) {
 				return of(Type.bigDecimalType());
 			}
 
