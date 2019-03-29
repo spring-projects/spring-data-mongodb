@@ -19,7 +19,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
-import com.mongodb.MongoClient;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -30,7 +29,9 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
+
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.mongodb.test.util.MongoVersion;
@@ -39,6 +40,7 @@ import org.springframework.data.mongodb.test.util.ReplicaSet;
 import org.springframework.data.util.Version;
 
 import com.mongodb.ClientSessionOptions;
+import com.mongodb.MongoClient;
 import com.mongodb.client.ClientSession;
 
 /**
@@ -87,6 +89,18 @@ public class ClientSessionTests {
 		assertThat(session.getServerSession().isClosed()).isFalse();
 
 		session.close();
+	}
+
+	@Test // DATAMONGO-2241
+	public void shouldReuseConfiguredConverter() {
+
+		ClientSession session = client.startSession(ClientSessionOptions.builder().causallyConsistent(true).build());
+
+		MongoConverter converter = template.getConverter();
+		MongoConverter sessionTemplateConverter = template.withSession(() -> session)
+				.execute(MongoOperations::getConverter);
+
+		assertThat(sessionTemplateConverter).isSameAs(converter);
 	}
 
 	@Test // DATAMONGO-1920
