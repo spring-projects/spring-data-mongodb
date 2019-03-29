@@ -33,6 +33,7 @@ import org.bson.codecs.Codec;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -259,8 +260,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		this.mongoDbFactory = dbFactory;
 		this.exceptionTranslator = that.exceptionTranslator;
 		this.sessionSynchronization = that.sessionSynchronization;
-		this.mongoConverter = that.mongoConverter instanceof MappingMongoConverter ? getDefaultMongoConverter(dbFactory)
-				: that.mongoConverter;
+		this.mongoConverter = that.mongoConverter;
 		this.queryMapper = that.queryMapper;
 		this.updateMapper = that.updateMapper;
 		this.schemaMapper = that.schemaMapper;
