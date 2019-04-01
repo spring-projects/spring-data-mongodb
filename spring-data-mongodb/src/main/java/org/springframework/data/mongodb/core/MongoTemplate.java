@@ -276,17 +276,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		// we need to (re)create the MappingMongoConverter as we need to have it use a DbRefResolver that operates within
 		// the sames session. Otherwise loading referenced objects would happen outside of it.
-		if(that.mongoConverter instanceof MappingMongoConverter) {
-
-
-			MappingMongoConverter sourceConverter = (MappingMongoConverter) that.mongoConverter;
-			MappingMongoConverter targetConverter = new MappingMongoConverter(new DefaultDbRefResolver(dbFactory), that.mongoConverter.getMappingContext());
-
-			targetConverter.setInstantiators(sourceConverter.getEntityInstantiators());
-			targetConverter.setCustomConversions(sourceConverter.getCustomConversions());
-			targetConverter.afterPropertiesSet();
-
-			this.mongoConverter = targetConverter;
+		if (that.mongoConverter instanceof MappingMongoConverter) {
+			this.mongoConverter = ((MappingMongoConverter) that.mongoConverter).with(dbFactory);
 		} else {
 			this.mongoConverter = that.mongoConverter;
 		}

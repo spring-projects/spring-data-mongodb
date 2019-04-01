@@ -1599,24 +1599,24 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return dbRefResolver.bulkFetch(references);
 	}
 
-	/**
-	 * Get the {@link EntityInstantiators} used by the converter.
-	 *
-	 * @return never {@literal null}.
-	 * @since 2.1.6
-	 */
-	public EntityInstantiators getEntityInstantiators() {
-		return instantiators;
-	}
 
 	/**
-	 * Get the {@link CustomConversions} used by the converter.
+	 * Create a new {@link MappingMongoConverter} using the given {@link MongoDbFactory} when loading {@link DBRef}.
 	 *
-	 * @return ever {@literal null}.
+	 * @return new instance of {@link MappingMongoConverter}. Never {@literal null}.
 	 * @since 2.1.6
 	 */
-	public CustomConversions getCustomConversions() {
-		return conversions;
+	public MappingMongoConverter with(MongoDbFactory dbFactory) {
+
+		MappingMongoConverter target = new MappingMongoConverter(new DefaultDbRefResolver(dbFactory), mappingContext);
+		target.applicationContext = applicationContext;
+		target.conversions = conversions;
+		target.spELContext = spELContext;
+		target.setInstantiators(instantiators);
+		target.typeMapper = typeMapper;
+		target.afterPropertiesSet();
+
+		return target;
 	}
 
 	/**

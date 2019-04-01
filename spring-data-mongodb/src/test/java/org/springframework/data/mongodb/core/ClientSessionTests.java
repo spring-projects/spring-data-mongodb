@@ -37,6 +37,7 @@ import org.springframework.data.mongodb.test.util.MongoVersion;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.mongodb.test.util.ReplicaSet;
 import org.springframework.data.util.Version;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.MongoClient;
@@ -100,8 +101,10 @@ public class ClientSessionTests {
 				.cast(template.withSession(() -> session).execute(MongoOperations::getConverter));
 
 		assertThat(sessionTemplateConverter.getMappingContext()).isSameAs(source.getMappingContext());
-		assertThat(sessionTemplateConverter.getCustomConversions()).isSameAs(source.getCustomConversions());
-		assertThat(sessionTemplateConverter.getEntityInstantiators()).isSameAs(source.getEntityInstantiators());
+		assertThat(ReflectionTestUtils.getField(sessionTemplateConverter, "conversions"))
+				.isSameAs(ReflectionTestUtils.getField(source, "conversions"));
+		assertThat(ReflectionTestUtils.getField(sessionTemplateConverter, "instantiators"))
+				.isSameAs(ReflectionTestUtils.getField(source, "instantiators"));
 	}
 
 	@Test // DATAMONGO-1920
