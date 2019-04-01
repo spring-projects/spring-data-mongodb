@@ -1,6 +1,13 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.0.14.RELEASE (2019-04-01)
+----------------------------------------------
+* DATAMONGO-2225 - Potential bug in MongoExampleMapper.
+* DATAMONGO-2219 - findAllAndRemove throws MongoWriteException if query has no matches.
+* DATAMONGO-2186 - Release 2.0.14 (Kay SR14).
+
+
 Changes in version 1.10.20.RELEASE (2019-04-01)
 -----------------------------------------------
 * DATAMONGO-2243 - Release 1.10.20 (Ingalls SR20).
