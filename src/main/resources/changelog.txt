@@ -1,6 +1,11 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.10.19.RELEASE (2019-04-01)
+-----------------------------------------------
+* DATAMONGO-2185 - Release 1.10.19 (Ingalls SR19).
+
+
 Changes in version 2.2.0.M2 (2019-03-07)
 ----------------------------------------
 * DATAMONGO-2220 - Upgrade to MongoDB Reactive Streams Driver 1.11.0.
