@@ -29,7 +29,9 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.CollectionFactory;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
+import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.EntityInstantiator;
+import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
@@ -1595,6 +1597,26 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	List<Document> bulkReadRefs(List<DBRef> references) {
 		return dbRefResolver.bulkFetch(references);
+	}
+
+
+	/**
+	 * Create a new {@link MappingMongoConverter} using the given {@link MongoDbFactory} when loading {@link DBRef}.
+	 *
+	 * @return new instance of {@link MappingMongoConverter}. Never {@literal null}.
+	 * @since 2.1.6
+	 */
+	public MappingMongoConverter with(MongoDbFactory dbFactory) {
+
+		MappingMongoConverter target = new MappingMongoConverter(new DefaultDbRefResolver(dbFactory), mappingContext);
+		target.applicationContext = applicationContext;
+		target.conversions = conversions;
+		target.spELContext = spELContext;
+		target.setInstantiators(instantiators);
+		target.typeMapper = typeMapper;
+		target.afterPropertiesSet();
+
+		return target;
 	}
 
 	/**
