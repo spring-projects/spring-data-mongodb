@@ -1,6 +1,19 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.1.6.RELEASE (2019-04-01)
+---------------------------------------------
+* DATAMONGO-2241 - Memory leak in ClassGeneratingPropertyAccessorFactory when using MongoDB sessions.
+* DATAMONGO-2228 - MongodbDocumentSerializer cuts off branches with same Ops in handling Ops.AND.
+* DATAMONGO-2225 - Potential bug in MongoExampleMapper.
+* DATAMONGO-2224 - Add trace logging for DBRef resolution.
+* DATAMONGO-2223 - Add missing tests for DBRef resolution in different database.
+* DATAMONGO-2221 - Query on nested id field incorrectly returns no results.
+* DATAMONGO-2219 - findAllAndRemove throws MongoWriteException if query has no matches.
+* DATAMONGO-2206 - Migrate Kotlin tests to Mockk.
+* DATAMONGO-2204 - Release 2.1.6 (Lovelace SR6).
+
+
 Changes in version 2.0.14.RELEASE (2019-04-01)
 ----------------------------------------------
 * DATAMONGO-2225 - Potential bug in MongoExampleMapper.
