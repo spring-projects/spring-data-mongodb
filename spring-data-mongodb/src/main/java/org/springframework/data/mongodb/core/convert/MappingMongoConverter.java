@@ -29,7 +29,9 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.CollectionFactory;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
+import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.EntityInstantiator;
+import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
@@ -1595,6 +1597,26 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	List<Document> bulkReadRefs(List<DBRef> references) {
 		return dbRefResolver.bulkFetch(references);
+	}
+
+	/**
+	 * Get the {@link EntityInstantiators} used by the converter.
+	 *
+	 * @return never {@literal null}.
+	 * @since 2.1.6
+	 */
+	public EntityInstantiators getEntityInstantiators() {
+		return instantiators;
+	}
+
+	/**
+	 * Get the {@link CustomConversions} used by the converter.
+	 *
+	 * @return ever {@literal null}.
+	 * @since 2.1.6
+	 */
+	public CustomConversions getCustomConversions() {
+		return conversions;
 	}
 
 	/**

@@ -33,7 +33,6 @@ import org.bson.codecs.Codec;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -274,7 +273,24 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		this.mongoDbFactory = dbFactory;
 		this.exceptionTranslator = that.exceptionTranslator;
 		this.sessionSynchronization = that.sessionSynchronization;
-		this.mongoConverter = that.mongoConverter;
+
+		// we need to (re)create the MappingMongoConverter as we need to have it use a DbRefResolver that operates within
+		// the sames session. Otherwise loading referenced objects would happen outside of it.
+		if(that.mongoConverter instanceof MappingMongoConverter) {
+
+
+			MappingMongoConverter sourceConverter = (MappingMongoConverter) that.mongoConverter;
+			MappingMongoConverter targetConverter = new MappingMongoConverter(new DefaultDbRefResolver(dbFactory), that.mongoConverter.getMappingContext());
+
+			targetConverter.setInstantiators(sourceConverter.getEntityInstantiators());
+			targetConverter.setCustomConversions(sourceConverter.getCustomConversions());
+			targetConverter.afterPropertiesSet();
+
+			this.mongoConverter = targetConverter;
+		} else {
+			this.mongoConverter = that.mongoConverter;
+		}
+
 		this.queryMapper = that.queryMapper;
 		this.updateMapper = that.updateMapper;
 		this.schemaMapper = that.schemaMapper;

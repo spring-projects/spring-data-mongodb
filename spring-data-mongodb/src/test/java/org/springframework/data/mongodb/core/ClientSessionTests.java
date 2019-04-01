@@ -29,9 +29,8 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
-
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.mongodb.test.util.MongoVersion;
@@ -92,15 +91,17 @@ public class ClientSessionTests {
 	}
 
 	@Test // DATAMONGO-2241
-	public void shouldReuseConfiguredConverter() {
+	public void shouldReuseConfiguredInfrastructure() {
 
 		ClientSession session = client.startSession(ClientSessionOptions.builder().causallyConsistent(true).build());
 
-		MongoConverter converter = template.getConverter();
-		MongoConverter sessionTemplateConverter = template.withSession(() -> session)
-				.execute(MongoOperations::getConverter);
+		MappingMongoConverter source = MappingMongoConverter.class.cast(template.getConverter());
+		MappingMongoConverter sessionTemplateConverter = MappingMongoConverter.class
+				.cast(template.withSession(() -> session).execute(MongoOperations::getConverter));
 
-		assertThat(sessionTemplateConverter).isSameAs(converter);
+		assertThat(sessionTemplateConverter.getMappingContext()).isSameAs(source.getMappingContext());
+		assertThat(sessionTemplateConverter.getCustomConversions()).isSameAs(source.getCustomConversions());
+		assertThat(sessionTemplateConverter.getEntityInstantiators()).isSameAs(source.getEntityInstantiators());
 	}
 
 	@Test // DATAMONGO-1920
