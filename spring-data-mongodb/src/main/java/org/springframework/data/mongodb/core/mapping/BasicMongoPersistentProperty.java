@@ -150,18 +150,22 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	@Override
 	public Class<?> getFieldType() {
 
+		Field fieldAnnotation = findAnnotation(Field.class);
+
 		if (!isIdProperty()) {
-			return getType();
+
+			if (fieldAnnotation == null || fieldAnnotation.targetType() == FieldType.IMPLICIT) {
+				return getType();
+			}
+
+			return fieldAnnotation.targetType().getJavaClass();
 		}
 
-		MongoId idAnnotation = findAnnotation(MongoId.class);
-
-		if (idAnnotation == null) {
+		if (fieldAnnotation == null) {
 			return FieldType.OBJECT_ID.getJavaClass();
 		}
 
-		FieldType fieldType = idAnnotation.targetType();
-
+		FieldType fieldType = fieldAnnotation.targetType();
 		if (fieldType == FieldType.IMPLICIT) {
 			return getType();
 		}

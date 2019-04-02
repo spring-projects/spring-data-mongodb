@@ -108,7 +108,8 @@ public class Person {
     private int age; <3>
     private Species species; <4>
     private Address address; <5>
-    private @Transient Boolean useTheForce; <6>
+    private @Field(fieldType=SCRIPT) String theForce; <6>
+    private @Transient Boolean useTheForce; <7>
 
     public Person(String firstname, @Nullable String lastname) { <1> <2>
 
@@ -143,7 +144,8 @@ template.createCollection(Person.class, CollectionOptions.empty().schema(schema)
             'properties' : {
                 'postCode' : { 'type': 'string' }
             }
-        }
+        },
+        'theForce' : { 'type' : 'javascript'} <6>
      }
 }
 ----
@@ -152,7 +154,8 @@ template.createCollection(Person.class, CollectionOptions.empty().schema(schema)
 <3> Primitive types are considered required properties.
 <4> Enums are restricted to possible values.
 <5> Object type properties get are inspected themselfes.
-<6> `@Transient` properties are left out when generating the schema.
+<6> `String` type property that is truned into `Code` by the mapping.
+<7> `@Transient` properties are left out when generating the schema.
 ====
 
 NOTE: `_id` properties using types that can be converted into `ObjectId` like `String` are mapped to `{ type : 'object' }`

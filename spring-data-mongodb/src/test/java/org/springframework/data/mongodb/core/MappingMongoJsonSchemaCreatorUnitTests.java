@@ -39,18 +39,18 @@ import org.springframework.lang.Nullable;
 /**
  * @author Christoph Strobl
  */
-public class MappingJsonSchemaCreatorUnitTests {
+public class MappingMongoJsonSchemaCreatorUnitTests {
 
 	MappingMongoConverter converter;
 	MongoMappingContext mappingContext;
-	MappingJsonSchemaCreator schemaCreator;
+	MappingMongoJsonSchemaCreator schemaCreator;
 
 	@Before
 	public void setUp() {
 
 		mappingContext = new MongoMappingContext();
 		converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext);
-		schemaCreator = new MappingJsonSchemaCreator(converter);
+		schemaCreator = new MappingMongoJsonSchemaCreator(converter);
 	}
 
 	@Test // DATAMONGO-1849
@@ -111,7 +111,7 @@ public class MappingJsonSchemaCreatorUnitTests {
 		converter.setCustomConversions(mcc);
 		converter.afterPropertiesSet();
 
-		schemaCreator = new MappingJsonSchemaCreator(converter);
+		schemaCreator = new MappingMongoJsonSchemaCreator(converter);
 
 		MongoJsonSchema schema = schemaCreator.createSchemaFor(WithNestedDomainType.class);
 		Assertions.assertThat(schema.toDocument().get("$jsonSchema", Document.class)).isEqualTo(Document.parse(
@@ -137,6 +137,7 @@ public class MappingJsonSchemaCreatorUnitTests {
 			"    'properties' : {" + //
 			"        'id' : { 'type' : 'string' }," + //
 			"        're-named-property' : { 'type' : 'string' }," + //
+			"        'retypedProperty' : { 'bsonType' : 'javascript' }," + //
 			"        'primitiveInt' : { 'bsonType' : 'int' }," + //
 			"        'booleanProperty' : { 'type' : 'boolean' }," + //
 			"        'longProperty' : { 'bsonType' : 'long' }," + //
@@ -155,6 +156,7 @@ public class MappingJsonSchemaCreatorUnitTests {
 
 		@Field("id") String id;
 		@Field("re-named-property") String renamedProperty;
+		@Field(targetType = FieldType.SCRIPT) String retypedProperty;
 		@Transient String transientProperty;
 		int primitiveInt;
 		Boolean booleanProperty;

@@ -418,7 +418,7 @@ The MappingMongoConverter can use metadata to drive the mapping of objects to do
 * `@Transient`: By default all private fields are mapped to the document, this annotation excludes the field where it is applied from being stored in the database
 * `@PersistenceConstructor`: Marks a given constructor - even a package protected one - to use when instantiating the object from the database. Constructor arguments are mapped by name to the key values in the retrieved Document.
 * `@Value`: This annotation is part of the Spring Framework . Within the mapping framework it can be applied to constructor arguments. This lets you use a Spring Expression Language statement to transform a key's value retrieved in the database before it is used to construct a domain object. In order to reference a property of a given document one has to use expressions like: `@Value("#root.myProperty")` where `root` refers to the root of the given document.
-* `@Field`: Applied at the field level and described the name of the field as it will be represented in the MongoDB BSON document thus allowing the name to be different than the fieldname of the class.
+* `@Field`: Applied at the field level it allows to describe the name and type of the field as it will be represented in the MongoDB BSON document thus allowing the name and type to be different than the fieldname of the class as well as the property type.
 * `@Version`: Applied at field level is used for optimistic locking and checked for modification on save operations. The initial value is `zero` which is bumped automatically on every update.
 
 The mapping metadata infrastructure is defined in a separate spring-data-commons project that is technology agnostic. Specific subclasses are using in the MongoDB support to support annotation based metadata. Other strategies are also possible to put in place if there is demand.
@@ -455,7 +455,6 @@ public class Person<T extends Address> {
 
   private T address;
 
-
   public Person(Integer ssn) {
     this.ssn = ssn;
   }
@@ -481,6 +480,43 @@ public class Person<T extends Address> {
 
 // other getters/setters omitted
 ----
+
+[TIP]
+====
+`@Field(targetType=...)` can come in handy when the native MongoDB type inferred by the mapping infrastructure does not
+match the expected one. Like for `BigDecimal`, which is represented as `String` instead of `Decimal128`, just because earlier
+versions of MongoDB Server did not have support for it.
+[source,java]
+----
+public class Balance {
+
+  @Field(targetType = DECIMAL128)
+  private BigDecimal value;
+
+  // ...
+}
+----
+
+You may even consider your own, custom annotation.
+
+[source,java]
+----
+@Target(ElementType.FIELD)
+@Retention(RetentionPolicy.RUNTIME)
+@Field(targetType = FieldType.DECIMAL128)
+public @interface Decimal128 { }
+
+// ...
+
+public class Balance {
+
+  @Decimal128
+  private BigDecimal value;
+
+  // ...
+}
+----
+====
 
 [[mapping-custom-object-construction]]
 === Customized Object Construction

@@ -26,7 +26,7 @@ import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.SimplePropertyHandler;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.ObjectJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.JsonSchemaObject;
@@ -42,24 +42,24 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
 /**
- * {@link JsonSchemaCreator} implementation using both {@link MongoConverter} and {@link MappingContext} to obtain
+ * {@link MongoJsonSchemaCreator} implementation using both {@link MongoConverter} and {@link MappingContext} to obtain
  * domain type meta information which considers {@link org.springframework.data.mongodb.core.mapping.Field field names}
  * and {@link org.springframework.data.mongodb.core.convert.MongoCustomConversions custom conversions}.
  * 
  * @author Christoph Strobl
  * @since 2.2
  */
-class MappingJsonSchemaCreator implements JsonSchemaCreator {
+class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 
 	private MongoConverter converter;
 	private MappingContext mappingContext;
 
 	/**
-	 * Create a new instance of {@link MappingJsonSchemaCreator}.
+	 * Create a new instance of {@link MappingMongoJsonSchemaCreator}.
 	 *
 	 * @param converter must not be {@literal null}.
 	 */
-	MappingJsonSchemaCreator(MongoConverter converter) {
+	MappingMongoJsonSchemaCreator(MongoConverter converter) {
 
 		Assert.notNull(converter, "Converter must not be null!");
 		this.converter = converter;
@@ -69,7 +69,7 @@ class MappingJsonSchemaCreator implements JsonSchemaCreator {
 
 	/*
 	 * (non-Javadoc)
-	 * org.springframework.data.mongodb.core.JsonSchemaCreator#createSchemaFor(java.lang.Class)
+	 * org.springframework.data.mongodb.core.MongoJsonSchemaCreator#createSchemaFor(java.lang.Class)
 	 */
 	@Override
 	public MongoJsonSchema createSchemaFor(Class<?> type) {
@@ -195,8 +195,8 @@ class MappingJsonSchemaCreator implements JsonSchemaCreator {
 			return mongoProperty.getFieldType();
 		}
 
-		if (mongoProperty.isAnnotationPresent(MongoId.class)) {
-			return mongoProperty.findAnnotation(MongoId.class).value().getJavaClass();
+		if (mongoProperty.hasExplicitWriteTarget()) {
+			return mongoProperty.findAnnotation(Field.class).targetType().getJavaClass();
 		}
 
 		return mongoProperty.getFieldType() != mongoProperty.getActualType() ? Object.class : mongoProperty.getFieldType();

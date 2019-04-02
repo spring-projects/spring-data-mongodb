@@ -20,7 +20,7 @@ import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.util.Assert;
 
 /**
- * {@link JsonSchemaCreator} extracts the {@link MongoJsonSchema} for a given {@link Class} by applying the following
+ * {@link MongoJsonSchemaCreator} extracts the {@link MongoJsonSchema} for a given {@link Class} by applying the following
  * mapping rules.
  * <p>
  * <strong>Required Properties</strong><br />
@@ -49,7 +49,7 @@ import org.springframework.util.Assert;
  * @author Christoph Strobl
  * @since 2.2
  */
-public interface JsonSchemaCreator {
+public interface MongoJsonSchemaCreator {
 
 	/**
 	 * Create the {@link MongoJsonSchema} for the given {@link Class type}.
@@ -60,14 +60,14 @@ public interface JsonSchemaCreator {
 	MongoJsonSchema createSchemaFor(Class<?> type);
 
 	/**
-	 * Creates a new {@link JsonSchemaCreator} that is aware of conversions applied by the given {@link MongoConverter}.
+	 * Creates a new {@link MongoJsonSchemaCreator} that is aware of conversions applied by the given {@link MongoConverter}.
 	 *
 	 * @param mongoConverter must not be {@literal null}.
-	 * @return new instance of {@link JsonSchemaCreator}.
+	 * @return new instance of {@link MongoJsonSchemaCreator}.
 	 */
-	default JsonSchemaCreator jsonSchemaCreator(MongoConverter mongoConverter) {
+	default MongoJsonSchemaCreator jsonSchemaCreator(MongoConverter mongoConverter) {
 
 		Assert.notNull(mongoConverter, "MongoConverter must not be null!");
-		return new MappingJsonSchemaCreator(mongoConverter);
+		return new MappingMongoJsonSchemaCreator(mongoConverter);
 	}
 }

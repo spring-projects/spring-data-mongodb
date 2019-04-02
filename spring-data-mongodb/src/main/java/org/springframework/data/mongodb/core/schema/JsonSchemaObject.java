@@ -28,6 +28,10 @@ import java.util.regex.Pattern;
 
 import org.bson.BsonTimestamp;
 import org.bson.Document;
+import org.bson.types.BSONTimestamp;
+import org.bson.types.Binary;
+import org.bson.types.Code;
+import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ArrayJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.BooleanJsonSchemaObject;
@@ -208,7 +212,19 @@ public interface JsonSchemaObject {
 			return of(Type.dateType());
 		}
 
-		if (ClassUtils.isAssignable(BsonTimestamp.class, type)) {
+		if (ClassUtils.isAssignable(Binary.class, type)) {
+			return of(Type.binaryType());
+		}
+
+		if (ClassUtils.isAssignable(Code.class, type)) {
+			return of(Type.javascriptType());
+		}
+
+		if (ClassUtils.isAssignable(Decimal128.class, type)) {
+			return of(Type.bigDecimalType());
+		}
+
+		if (ClassUtils.isAssignable(BsonTimestamp.class, type) || ClassUtils.isAssignable(BSONTimestamp.class, type)) {
 			return of(Type.timestampType());
 		}
 

@@ -34,6 +34,7 @@ import org.bson.BsonTimestamp;
 import org.bson.Document;
 import org.bson.types.Binary;
 import org.bson.types.Code;
+import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
 import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.TypeDescriptor;
@@ -75,7 +76,9 @@ abstract class MongoConverters {
 		List<Object> converters = new ArrayList<>();
 
 		converters.add(BigDecimalToStringConverter.INSTANCE);
+		converters.add(BigDecimalToDecimal128Converter.INSTANCE);
 		converters.add(StringToBigDecimalConverter.INSTANCE);
+		converters.add(Decimal128ToBigDecimalConverter.INSTANCE);
 		converters.add(BigIntegerToStringConverter.INSTANCE);
 		converters.add(StringToBigIntegerConverter.INSTANCE);
 		converters.add(URLToStringConverter.INSTANCE);
@@ -158,11 +161,33 @@ abstract class MongoConverters {
 		}
 	}
 
+	/**
+	 * @since 2.2
+	 */
+	enum BigDecimalToDecimal128Converter implements Converter<BigDecimal, Decimal128> {
+		INSTANCE;
+
+		public Decimal128 convert(BigDecimal source) {
+			return source == null ? null : new Decimal128(source);
+		}
+	}
+
 	enum StringToBigDecimalConverter implements Converter<String, BigDecimal> {
 		INSTANCE;
 
 		public BigDecimal convert(String source) {
 			return StringUtils.hasText(source) ? new BigDecimal(source) : null;
+		}
+	}
+
+	/**
+	 * @since 2.2
+	 */
+	enum Decimal128ToBigDecimalConverter implements Converter<Decimal128, BigDecimal> {
+		INSTANCE;
+
+		public BigDecimal convert(Decimal128 source) {
+			return source.bigDecimalValue();
 		}
 	}
 
