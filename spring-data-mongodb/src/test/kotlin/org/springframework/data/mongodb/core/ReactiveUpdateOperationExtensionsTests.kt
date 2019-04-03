@@ -22,6 +22,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import org.junit.Test
 import reactor.core.publisher.Mono
 
@@ -50,7 +51,7 @@ class ReactiveUpdateOperationExtensionsTests {
 	}
 
 	@Test // DATAMONGO-2209
-	fun findModifyAndAwait() {
+	fun findModifyAndAwaitWithValue() {
 
 		val find = mockk<ReactiveUpdateOperation.TerminatingFindAndModify<String>>()
 		every { find.findAndModify() } returns Mono.just("foo")
@@ -65,13 +66,103 @@ class ReactiveUpdateOperationExtensionsTests {
 	}
 
 	@Test // DATAMONGO-2209
-	fun findReplaceAndAwait() {
+	fun findModifyAndAwaitWithNull() {
+
+		val find = mockk<ReactiveUpdateOperation.TerminatingFindAndModify<String>>()
+		every { find.findAndModify() } returns Mono.empty()
+
+		assertThatExceptionOfType(NoSuchElementException::class.java).isThrownBy {
+			runBlocking { find.findModifyAndAwait() }
+		}
+
+		verify {
+			find.findAndModify()
+		}
+	}
+
+	@Test // DATAMONGO-2209
+	fun findModifyAndAwaitOrNullWithValue() {
+
+		val find = mockk<ReactiveUpdateOperation.TerminatingFindAndModify<String>>()
+		every { find.findAndModify() } returns Mono.just("foo")
+
+		runBlocking {
+			assertThat(find.findModifyAndAwaitOrNull()).isEqualTo("foo")
+		}
+
+		verify {
+			find.findAndModify()
+		}
+	}
+
+	@Test // DATAMONGO-2209
+	fun findModifyAndAwaitOrNullWithNull() {
+
+		val find = mockk<ReactiveUpdateOperation.TerminatingFindAndModify<String>>()
+		every { find.findAndModify() } returns Mono.empty()
+
+		runBlocking {
+			assertThat(find.findModifyAndAwaitOrNull()).isNull()
+		}
+
+		verify {
+			find.findAndModify()
+		}
+	}
+
+	@Test // DATAMONGO-2209
+	fun findReplaceAndAwaitWithValue() {
 
 		val find = mockk<ReactiveUpdateOperation.TerminatingFindAndReplace<String>>()
 		every { find.findAndReplace() } returns Mono.just("foo")
 
 		runBlocking {
 			assertThat(find.findReplaceAndAwait()).isEqualTo("foo")
+		}
+
+		verify {
+			find.findAndReplace()
+		}
+	}
+
+	@Test // DATAMONGO-2209
+	fun findReplaceAndAwaitWithNull() {
+
+		val find = mockk<ReactiveUpdateOperation.TerminatingFindAndReplace<String>>()
+		every { find.findAndReplace() } returns Mono.empty()
+
+		assertThatExceptionOfType(NoSuchElementException::class.java).isThrownBy {
+			runBlocking { find.findReplaceAndAwait() }
+		}
+
+		verify {
+			find.findAndReplace()
+		}
+	}
+
+	@Test // DATAMONGO-2209
+	fun findReplaceAndAwaitOrNullWithValue() {
+
+		val find = mockk<ReactiveUpdateOperation.TerminatingFindAndReplace<String>>()
+		every { find.findAndReplace() } returns Mono.just("foo")
+
+		runBlocking {
+			assertThat(find.findReplaceAndAwaitOrNull()).isEqualTo("foo")
+		}
+
+		verify {
+			find.findAndReplace()
+		}
+	}
+
+	@Test // DATAMONGO-2209
+	fun findReplaceAndAwaitOrNullWithNull() {
+
+		val find = mockk<ReactiveUpdateOperation.TerminatingFindAndReplace<String>>()
+		every { find.findAndReplace() } returns Mono.empty()
+
+		runBlocking {
+			assertThat(find.findReplaceAndAwaitOrNull()).isNull()
 		}
 
 		verify {

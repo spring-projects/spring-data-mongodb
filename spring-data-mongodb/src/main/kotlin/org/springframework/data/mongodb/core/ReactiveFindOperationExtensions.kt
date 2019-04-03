@@ -77,21 +77,39 @@ inline fun <reified T : Any> ReactiveFindOperation.DistinctWithProjection.asType
 		`as`(T::class.java)
 
 /**
- * Coroutines variant of [ReactiveFindOperation.TerminatingFind.one].
+ * Non-nullable Coroutines variant of [ReactiveFindOperation.TerminatingFind.one].
  *
  * @author Sebastien Deleuze
  * @since 2.2
  */
-suspend inline fun <reified T : Any> ReactiveFindOperation.TerminatingFind<T>.awaitOne(): T? =
+suspend inline fun <reified T : Any> ReactiveFindOperation.TerminatingFind<T>.awaitOne(): T =
+		one().awaitSingle()
+
+/**
+ * Nullable Coroutines variant of [ReactiveFindOperation.TerminatingFind.one].
+ *
+ * @author Sebastien Deleuze
+ * @since 2.2
+ */
+suspend inline fun <reified T : Any> ReactiveFindOperation.TerminatingFind<T>.awaitOneOrNull(): T? =
 		one().awaitFirstOrNull()
 
 /**
- * Coroutines variant of [ReactiveFindOperation.TerminatingFind.first].
+ * Non-nullable Coroutines variant of [ReactiveFindOperation.TerminatingFind.first].
  *
  * @author Sebastien Deleuze
  * @since 2.2
  */
-suspend inline fun <reified T : Any> ReactiveFindOperation.TerminatingFind<T>.awaitFirst(): T? =
+suspend inline fun <reified T : Any> ReactiveFindOperation.TerminatingFind<T>.awaitFirst(): T =
+		first().awaitSingle()
+
+/**
+ * Nullable Coroutines variant of [ReactiveFindOperation.TerminatingFind.first].
+ *
+ * @author Sebastien Deleuze
+ * @since 2.2
+ */
+suspend inline fun <reified T : Any> ReactiveFindOperation.TerminatingFind<T>.awaitFirstOrNull(): T? =
 		first().awaitFirstOrNull()
 
 /**

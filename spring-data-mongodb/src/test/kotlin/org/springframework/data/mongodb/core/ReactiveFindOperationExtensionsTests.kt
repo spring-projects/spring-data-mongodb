@@ -21,7 +21,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.Assert.assertEquals
+import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import org.junit.Test
 import reactor.core.publisher.Mono
 
@@ -80,7 +80,7 @@ class ReactiveFindOperationExtensionsTests {
 	}
 
 	@Test // DATAMONGO-2209
-	fun terminatingFindAwaitOne() {
+	fun terminatingFindAwaitOneWithValue() {
 
 		val find = mockk<ReactiveFindOperation.TerminatingFind<String>>()
 		every { find.one() } returns Mono.just("foo")
@@ -95,13 +95,103 @@ class ReactiveFindOperationExtensionsTests {
 	}
 
 	@Test // DATAMONGO-2209
-	fun terminatingFindAwaitFirst() {
+	fun terminatingFindAwaitOneWithNull() {
+
+		val find = mockk<ReactiveFindOperation.TerminatingFind<String>>()
+		every { find.one() } returns Mono.empty()
+
+		assertThatExceptionOfType(NoSuchElementException::class.java).isThrownBy {
+			runBlocking { find.awaitOne() }
+		}
+
+		verify {
+			find.one()
+		}
+	}
+
+	@Test // DATAMONGO-2209
+	fun terminatingFindAwaitOneOrNullWithValue() {
+
+		val find = mockk<ReactiveFindOperation.TerminatingFind<String>>()
+		every { find.one() } returns Mono.just("foo")
+
+		runBlocking {
+			assertThat(find.awaitOneOrNull()).isEqualTo("foo")
+		}
+
+		verify {
+			find.one()
+		}
+	}
+
+	@Test // DATAMONGO-2209
+	fun terminatingFindAwaitOneOrNullWithNull() {
+
+		val find = mockk<ReactiveFindOperation.TerminatingFind<String>>()
+		every { find.one() } returns Mono.empty()
+
+		runBlocking {
+			assertThat(find.awaitOneOrNull()).isNull()
+		}
+
+		verify {
+			find.one()
+		}
+	}
+
+	@Test // DATAMONGO-2209
+	fun terminatingFindAwaitFirstWithValue() {
 
 		val find = mockk<ReactiveFindOperation.TerminatingFind<String>>()
 		every { find.first() } returns Mono.just("foo")
 
 		runBlocking {
 			assertThat(find.awaitFirst()).isEqualTo("foo")
+		}
+
+		verify {
+			find.first()
+		}
+	}
+
+	@Test // DATAMONGO-2209
+	fun terminatingFindAwaitFirstWithNull() {
+
+		val find = mockk<ReactiveFindOperation.TerminatingFind<String>>()
+		every { find.first() } returns Mono.empty()
+
+		assertThatExceptionOfType(NoSuchElementException::class.java).isThrownBy {
+			runBlocking { find.awaitFirst() }
+		}
+
+		verify {
+			find.first()
+		}
+	}
+
+	@Test // DATAMONGO-2209
+	fun terminatingFindAwaitFirstOrNullWithValue() {
+
+		val find = mockk<ReactiveFindOperation.TerminatingFind<String>>()
+		every { find.first() } returns Mono.just("foo")
+
+		runBlocking {
+			assertThat(find.awaitFirstOrNull()).isEqualTo("foo")
+		}
+
+		verify {
+			find.first()
+		}
+	}
+
+	@Test // DATAMONGO-2209
+	fun terminatingFindAwaitFirstOrNullWithNull() {
+
+		val find = mockk<ReactiveFindOperation.TerminatingFind<String>>()
+		every { find.first() } returns Mono.empty()
+
+		runBlocking {
+			assertThat(find.awaitFirstOrNull()).isNull()
 		}
 
 		verify {
