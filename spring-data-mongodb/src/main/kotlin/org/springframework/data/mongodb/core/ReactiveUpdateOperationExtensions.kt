@@ -40,22 +40,39 @@ inline fun <reified T : Any> ReactiveUpdateOperation.update(): ReactiveUpdateOpe
 		update(T::class.java)
 
 /**
- * Coroutines variant of [ReactiveUpdateOperation.TerminatingFindAndModify.findModifyAndAwait].
+ * Non-nullable Coroutines variant of [ReactiveUpdateOperation.TerminatingFindAndModify.findModifyAndAwait].
  *
  * @author Sebastien Deleuze
  * @since 2.2
  */
-suspend fun <T : Any> ReactiveUpdateOperation.TerminatingFindAndModify<T>.findModifyAndAwait(): T? =
-		findAndModify().awaitFirstOrNull()
-
+suspend fun <T : Any> ReactiveUpdateOperation.TerminatingFindAndModify<T>.findModifyAndAwait(): T =
+		findAndModify().awaitSingle()
 
 /**
- * Coroutines variant of [ReactiveUpdateOperation.TerminatingFindAndReplace.findAndReplace].
+ * Nullable Coroutines variant of [ReactiveUpdateOperation.TerminatingFindAndModify.findModifyAndAwait].
  *
  * @author Sebastien Deleuze
  * @since 2.2
  */
-suspend fun <T : Any> ReactiveUpdateOperation.TerminatingFindAndReplace<T>.findReplaceAndAwait(): T? =
+suspend fun <T : Any> ReactiveUpdateOperation.TerminatingFindAndModify<T>.findModifyAndAwaitOrNull(): T? =
+		findAndModify().awaitFirstOrNull()
+
+/**
+ * Non-nullable Coroutines variant of [ReactiveUpdateOperation.TerminatingFindAndReplace.findAndReplace].
+ *
+ * @author Sebastien Deleuze
+ * @since 2.2
+ */
+suspend fun <T : Any> ReactiveUpdateOperation.TerminatingFindAndReplace<T>.findReplaceAndAwait(): T =
+		findAndReplace().awaitSingle()
+
+/**
+ * Nullable Coroutines variant of [ReactiveUpdateOperation.TerminatingFindAndReplace.findAndReplace].
+ *
+ * @author Sebastien Deleuze
+ * @since 2.2
+ */
+suspend fun <T : Any> ReactiveUpdateOperation.TerminatingFindAndReplace<T>.findReplaceAndAwaitOrNull(): T? =
 		findAndReplace().awaitFirstOrNull()
 
 /**
