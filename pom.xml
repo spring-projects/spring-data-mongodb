@@ -20,7 +20,6 @@
 
 	<modules>
 		<module>spring-data-mongodb</module>
-		<module>spring-data-mongodb-cross-store</module>
 		<module>spring-data-mongodb-distribution</module>
 	</modules>
 
@@ -132,7 +131,6 @@
 			<id>benchmarks</id>
 			<modules>
 				<module>spring-data-mongodb</module>
-				<module>spring-data-mongodb-cross-store</module>
 				<module>spring-data-mongodb-distribution</module>
 				<module>spring-data-mongodb-benchmarks</module>
 			</modules>
