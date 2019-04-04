@@ -65,7 +65,7 @@ class ReactiveUpdateOperationExtensionsTests {
 		}
 	}
 
-	@Test // DATAMONGO-2209
+	@Test // DATAMONGO-2247
 	fun findModifyAndAwaitWithNull() {
 
 		val find = mockk<ReactiveUpdateOperation.TerminatingFindAndModify<String>>()
@@ -80,7 +80,7 @@ class ReactiveUpdateOperationExtensionsTests {
 		}
 	}
 
-	@Test // DATAMONGO-2209
+	@Test // DATAMONGO-2247
 	fun findModifyAndAwaitOrNullWithValue() {
 
 		val find = mockk<ReactiveUpdateOperation.TerminatingFindAndModify<String>>()
@@ -95,7 +95,7 @@ class ReactiveUpdateOperationExtensionsTests {
 		}
 	}
 
-	@Test // DATAMONGO-2209
+	@Test // DATAMONGO-2247
 	fun findModifyAndAwaitOrNullWithNull() {
 
 		val find = mockk<ReactiveUpdateOperation.TerminatingFindAndModify<String>>()
@@ -125,7 +125,7 @@ class ReactiveUpdateOperationExtensionsTests {
 		}
 	}
 
-	@Test // DATAMONGO-2209
+	@Test // DATAMONGO-2247
 	fun findReplaceAndAwaitWithNull() {
 
 		val find = mockk<ReactiveUpdateOperation.TerminatingFindAndReplace<String>>()
@@ -140,7 +140,7 @@ class ReactiveUpdateOperationExtensionsTests {
 		}
 	}
 
-	@Test // DATAMONGO-2209
+	@Test // DATAMONGO-2247
 	fun findReplaceAndAwaitOrNullWithValue() {
 
 		val find = mockk<ReactiveUpdateOperation.TerminatingFindAndReplace<String>>()
@@ -155,7 +155,7 @@ class ReactiveUpdateOperationExtensionsTests {
 		}
 	}
 
-	@Test // DATAMONGO-2209
+	@Test // DATAMONGO-2247
 	fun findReplaceAndAwaitOrNullWithNull() {
 
 		val find = mockk<ReactiveUpdateOperation.TerminatingFindAndReplace<String>>()

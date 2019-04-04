@@ -94,7 +94,7 @@ class ReactiveFindOperationExtensionsTests {
 		}
 	}
 
-	@Test // DATAMONGO-2209
+	@Test // DATAMONGO-2247
 	fun terminatingFindAwaitOneWithNull() {
 
 		val find = mockk<ReactiveFindOperation.TerminatingFind<String>>()
@@ -109,7 +109,7 @@ class ReactiveFindOperationExtensionsTests {
 		}
 	}
 
-	@Test // DATAMONGO-2209
+	@Test // DATAMONGO-2247
 	fun terminatingFindAwaitOneOrNullWithValue() {
 
 		val find = mockk<ReactiveFindOperation.TerminatingFind<String>>()
@@ -124,7 +124,7 @@ class ReactiveFindOperationExtensionsTests {
 		}
 	}
 
-	@Test // DATAMONGO-2209
+	@Test // DATAMONGO-2247
 	fun terminatingFindAwaitOneOrNullWithNull() {
 
 		val find = mockk<ReactiveFindOperation.TerminatingFind<String>>()
@@ -154,7 +154,7 @@ class ReactiveFindOperationExtensionsTests {
 		}
 	}
 
-	@Test // DATAMONGO-2209
+	@Test // DATAMONGO-2247
 	fun terminatingFindAwaitFirstWithNull() {
 
 		val find = mockk<ReactiveFindOperation.TerminatingFind<String>>()
@@ -169,7 +169,7 @@ class ReactiveFindOperationExtensionsTests {
 		}
 	}
 
-	@Test // DATAMONGO-2209
+	@Test // DATAMONGO-2247
 	fun terminatingFindAwaitFirstOrNullWithValue() {
 
 		val find = mockk<ReactiveFindOperation.TerminatingFind<String>>()
@@ -184,7 +184,7 @@ class ReactiveFindOperationExtensionsTests {
 		}
 	}
 
-	@Test // DATAMONGO-2209
+	@Test // DATAMONGO-2247
 	fun terminatingFindAwaitFirstOrNullWithNull() {
 
 		val find = mockk<ReactiveFindOperation.TerminatingFind<String>>()
