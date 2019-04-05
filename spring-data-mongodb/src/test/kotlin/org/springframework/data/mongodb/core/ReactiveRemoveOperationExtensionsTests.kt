@@ -20,9 +20,12 @@ import example.first.First
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 /**
@@ -60,6 +63,22 @@ class ReactiveRemoveOperationExtensionsTests {
 
 		verify {
 			remove.all()
+		}
+	}
+
+	@Test
+	@FlowPreview
+	fun terminatingRemoveFindAndRemoveAsFlow() {
+
+		val spec = mockk<ReactiveRemoveOperation.TerminatingRemove<String>>()
+		every { spec.findAndRemove() } returns Flux.just("foo", "bar", "baz")
+
+		runBlocking {
+			assertThat(spec.findAndRemoveAsFlow().toList()).contains("foo", "bar", "baz")
+		}
+
+		verify {
+			spec.findAndRemove()
 		}
 	}
 }

@@ -19,9 +19,12 @@ import example.first.First
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 /**
@@ -58,6 +61,23 @@ class ReactiveInsertOperationExtensionsTests {
 
 		verify {
 			find.one("foo")
+		}
+	}
+
+	@Test
+	@FlowPreview
+	fun terminatingInsertAllAsFlow() {
+
+		val insert = mockk<ReactiveInsertOperation.TerminatingInsert<String>>()
+		val list = listOf("foo", "bar")
+		every { insert.all(any()) } returns Flux.fromIterable(list)
+
+		runBlocking {
+			assertThat(insert.allAsFlow(list).toList()).containsAll(list)
+		}
+
+		verify {
+			insert.all(list)
 		}
 	}
 }
