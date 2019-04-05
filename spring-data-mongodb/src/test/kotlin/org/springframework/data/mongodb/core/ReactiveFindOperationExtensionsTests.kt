@@ -19,10 +19,15 @@ import example.first.First
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatExceptionOfType
 import org.junit.Test
+import org.springframework.data.geo.Distance
+import org.springframework.data.geo.GeoResult
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 /**
@@ -226,6 +231,73 @@ class ReactiveFindOperationExtensionsTests {
 
 		verify {
 			find.exists()
+		}
+	}
+
+	@Test
+	@FlowPreview
+	fun terminatingFindAllAsFlow() {
+
+		val spec = mockk<ReactiveFindOperation.TerminatingFind<String>>()
+		every { spec.all() } returns Flux.just("foo", "bar", "baz")
+
+		runBlocking {
+			assertThat(spec.allAsFlow().toList()).contains("foo", "bar", "baz")
+		}
+
+		verify {
+			spec.all()
+		}
+	}
+
+	@Test
+	@FlowPreview
+	fun terminatingFindTailAsFlow() {
+
+		val spec = mockk<ReactiveFindOperation.TerminatingFind<String>>()
+		every { spec.tail() } returns Flux.just("foo", "bar", "baz")
+
+		runBlocking {
+			assertThat(spec.tailAsFlow().toList()).contains("foo", "bar", "baz")
+		}
+
+		verify {
+			spec.tail()
+		}
+	}
+
+	@Test
+	@FlowPreview
+	fun terminatingFindNearAllAsFlow() {
+
+		val spec = mockk<ReactiveFindOperation.TerminatingFindNear<String>>()
+		val foo = GeoResult("foo", Distance(0.0))
+		val bar = GeoResult("bar", Distance(0.0))
+		val baz = GeoResult("baz", Distance(0.0))
+		every { spec.all() } returns Flux.just(foo, bar, baz)
+
+		runBlocking {
+			assertThat(spec.allAsFlow().toList()).contains(foo, bar, baz)
+		}
+
+		verify {
+			spec.all()
+		}
+	}
+
+	@Test
+	@FlowPreview
+	fun terminatingDistinctAllAsFlow() {
+
+		val spec = mockk<ReactiveFindOperation.TerminatingDistinct<String>>()
+		every { spec.all() } returns Flux.just("foo", "bar", "baz")
+
+		runBlocking {
+			assertThat(spec.allAsFlow().toList()).contains("foo", "bar", "baz")
+		}
+
+		verify {
+			spec.all()
 		}
 	}
 }

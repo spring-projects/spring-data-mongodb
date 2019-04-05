@@ -16,9 +16,15 @@
 package org.springframework.data.mongodb.core
 
 import example.first.First
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.runBlocking
+import org.assertj.core.api.Assertions
 import org.junit.Test
+import reactor.core.publisher.Flux
 
 /**
  * @author Mark Paluch
@@ -40,6 +46,22 @@ class ReactiveAggregationOperationExtensionsTests {
 
 		operation.aggregateAndReturn<First>()
 		verify { operation.aggregateAndReturn(First::class.java) }
+	}
+
+	@Test
+	@FlowPreview
+	fun terminatingAggregationOperationAllAsFlow() {
+
+		val spec = mockk<ReactiveAggregationOperation.TerminatingAggregationOperation<String>>()
+		every { spec.all() } returns Flux.just("foo", "bar", "baz")
+
+		runBlocking {
+			Assertions.assertThat(spec.allAsFlow().toList()).contains("foo", "bar", "baz")
+		}
+
+		verify {
+			spec.all()
+		}
 	}
 
 }
