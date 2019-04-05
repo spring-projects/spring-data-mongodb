@@ -47,17 +47,17 @@ class ReactiveInsertOperationExtensionsTests {
 	}
 
 	@Test // DATAMONGO-2209
-	fun terminatingFindAwaitOne() {
+	fun terminatingInsertOneAndAwait() {
 
-		val find = mockk<ReactiveInsertOperation.TerminatingInsert<String>>()
-		every { find.one("foo") } returns Mono.just("foo")
+		val insert = mockk<ReactiveInsertOperation.TerminatingInsert<String>>()
+		every { insert.one("foo") } returns Mono.just("foo")
 
 		runBlocking {
-			assertThat(find.oneAndAwait("foo")).isEqualTo("foo")
+			assertThat(insert.oneAndAwait("foo")).isEqualTo("foo")
 		}
 
 		verify {
-			find.one("foo")
+			insert.one("foo")
 		}
 	}
 }
