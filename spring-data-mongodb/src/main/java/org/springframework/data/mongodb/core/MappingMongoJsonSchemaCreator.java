@@ -114,7 +114,7 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 
 		boolean required = isRequiredProperty(parent, property);
 		Class<?> rawTargetType = computeTargetType(property); // target type before conversion
-		Class<?> targetType = converter.computeWriteTarget(rawTargetType); // conversion target type
+		Class<?> targetType = converter.getTypeMapper().getWriteTargetTypeFor(rawTargetType); // conversion target type
 
 		if (property.isEntity() && ObjectUtils.nullSafeEquals(rawTargetType, targetType)) {
 			return createObjectSchemaPropertyForEntity(path, property, required);

@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -58,6 +59,7 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 
 	private final TypeAliasAccessor<Bson> accessor;
 	private final @Nullable String typeKey;
+	private Function<Class<?>, Class<?>> writeTarget = it -> it;
 
 	public DefaultMongoTypeMapper() {
 		this(DEFAULT_TYPE_KEY);
@@ -71,6 +73,13 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 			MappingContext<? extends PersistentEntity<?, ?>, ?> mappingContext) {
 		this(typeKey, new DocumentTypeAliasAccessor(typeKey), mappingContext,
 				Arrays.asList(new SimpleTypeInformationMapper()));
+	}
+
+	public DefaultMongoTypeMapper(@Nullable String typeKey,
+			MappingContext<? extends PersistentEntity<?, ?>, ?> mappingContext, Function<Class<?>, Class<?>> writeTarget) {
+		this(typeKey, new DocumentTypeAliasAccessor(typeKey), mappingContext,
+				Arrays.asList(new SimpleTypeInformationMapper()));
+		this.writeTarget = writeTarget;
 	}
 
 	public DefaultMongoTypeMapper(@Nullable String typeKey, List<? extends TypeInformationMapper> mappers) {
@@ -118,6 +127,15 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 		}
 
 		accessor.writeTypeTo(result, new Document("$in", restrictedMappedTypes));
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.convert.MongoTypeMapper#getWriteTargetTypeFor(java.lang.Class)
+	 */
+	@Override
+	public Class<?> getWriteTargetTypeFor(Class<?> source) {
+		return writeTarget.apply(source);
 	}
 
 	/*

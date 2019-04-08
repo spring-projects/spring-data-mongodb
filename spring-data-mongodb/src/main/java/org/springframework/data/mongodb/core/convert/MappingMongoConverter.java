@@ -121,7 +121,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		this.dbRefResolver = dbRefResolver;
 		this.mappingContext = mappingContext;
-		this.typeMapper = new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, mappingContext);
+		this.typeMapper = new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, mappingContext,
+				this::computeWriteTarget);
 		this.idMapper = new QueryMapper(this);
 
 		this.spELContext = new SpELContext(DocumentPropertyAccessor.INSTANCE);
@@ -1620,6 +1621,17 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	List<Document> bulkReadRefs(List<DBRef> references) {
 		return dbRefResolver.bulkFetch(references);
+	}
+
+	/**
+	 * Get the conversion target type if defined or return the {@literal source}.
+	 *
+	 * @param source must not be {@literal null}.
+	 * @return
+	 * @since 2.2
+	 */
+	protected Class<?> computeWriteTarget(Class<?> source) {
+		return conversions.getCustomWriteTarget(source).orElse(source);
 	}
 
 	/**
