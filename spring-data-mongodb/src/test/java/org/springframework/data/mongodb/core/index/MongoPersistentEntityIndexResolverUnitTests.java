@@ -54,6 +54,7 @@ import org.springframework.data.util.ClassTypeInformation;
 /**
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Dave Perryman
  */
 @RunWith(Suite.class)
 @SuiteClasses({ IndexResolutionTests.class, GeoSpatialIndexResolutionTests.class, CompoundIndexResolutionTests.class,
@@ -513,6 +514,21 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 					.containing("unique", true).containing("background", true));
 		}
 
+		@Test // DATAMONGO-1569
+		public void singleIndexWithPartialFilter() {
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					SingleCompoundIndexWithPartialFilter.class);
+
+			assertThat(indexDefinitions, hasSize(1));
+			assertThat(indexDefinitions.get(0).getIndexKeys(), isBsonObject().containing("foo", 1).containing("bar", -1));
+			assertThat(indexDefinitions.get(0).getIndexOptions(), isBsonObject().containing("name", "compound_index_with_partial")
+					.containing("unique", true).containing("background", true));
+			assertThat(indexDefinitions.get(0).getIndexOptions(),
+					isBsonObject().containing("partialFilterExpression",
+							new org.bson.Document().append("bar", new org.bson.Document().append("$exists", true))));
+		}
+
+
 		@Document("CompoundIndexOnLevelOne")
 		static class CompoundIndexOnLevelOne {
 
@@ -577,6 +593,10 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 		}
 
+		@Document("SingleCompoundIndexWithPartialFilter")
+		@CompoundIndex(name = "compound_index_with_partial", def = "{'foo': 1, 'bar': -1}", background = true, sparse = true,
+				unique = true, partial = "{'bar': {$exists: true}}")
+		static class SingleCompoundIndexWithPartialFilter {}
 	}
 
 	public static class TextIndexedResolutionTests {

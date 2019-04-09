@@ -29,6 +29,7 @@ import java.lang.annotation.Target;
  * @author Philipp Schneider
  * @author Johno Crawford
  * @author Christoph Strobl
+ * @author Dave Perryman
  */
 @Target({ ElementType.TYPE })
 @Documented
@@ -139,4 +140,13 @@ public @interface CompoundIndex {
 	 */
 	boolean background() default false;
 
+
+	/**
+	 * Only index the documents in a collection that meet a specified {@link IndexFilter filter expression}.
+	 *
+	 * @return
+	 * @see <a href=
+	 *      "https://docs.mongodb.com/manual/core/index-partial/">https://docs.mongodb.com/manual/core/index-partial/</a>
+	 */
+	String partial() default "";
 }
