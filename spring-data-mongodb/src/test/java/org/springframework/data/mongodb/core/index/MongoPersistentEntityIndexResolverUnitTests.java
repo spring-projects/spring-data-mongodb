@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
@@ -54,6 +54,7 @@ import org.springframework.data.util.ClassTypeInformation;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Dave Perryman
  */
 @RunWith(Suite.class)
 @SuiteClasses({ IndexResolutionTests.class, GeoSpatialIndexResolutionTests.class, CompoundIndexResolutionTests.class,
@@ -663,6 +664,21 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 					indexDefinitions.get(1));
 		}
 
+		@Test // DATAMONGO-1569
+		public void singleIndexWithPartialFilter() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					SingleCompoundIndexWithPartialFilter.class);
+
+			assertThat(indexDefinitions).hasSize(1);
+			assertThat(indexDefinitions.get(0).getIndexKeys()).containsEntry("foo", 1).containsEntry("bar", -1);
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("name", "compound_index_with_partial")
+					.containsEntry("unique", true).containsEntry("background", true);
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("partialFilterExpression",
+							new org.bson.Document().append("bar", new org.bson.Document().append("$exists", true)));
+		}
+
+
 		@Document("CompoundIndexOnLevelOne")
 		static class CompoundIndexOnLevelOne {
 
@@ -733,6 +749,11 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		@CompoundIndex(name = "cmp-idx-one", def = "{'firstname': 1, 'lastname': -1}")
 		@CompoundIndex(name = "cmp-idx-two", def = "{'address.city': -1, 'address.street': 1}")
 		static class RepeatedCompoundIndex {}
+
+		@Document("SingleCompoundIndexWithPartialFilter")
+		@CompoundIndex(name = "compound_index_with_partial", def = "{'foo': 1, 'bar': -1}", background = true,
+				unique = true, partial = "{'bar': {$exists: true}}")
+		static class SingleCompoundIndexWithPartialFilter {}
 	}
 
 	public static class TextIndexedResolutionTests {

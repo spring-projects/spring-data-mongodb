@@ -69,6 +69,7 @@ import org.springframework.util.StringUtils;
  * @author Thomas Darimont
  * @author Martin Macko
  * @author Mark Paluch
+ * @author Dave Perryman
  * @since 1.5
  */
 public class MongoPersistentEntityIndexResolver implements IndexResolver {
@@ -378,6 +379,10 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		if (index.background()) {
 			indexDefinition.background();
+		}
+
+		if (StringUtils.hasText(index.partial())) {
+			indexDefinition.partial(PartialIndexFilter.of(org.bson.Document.parse(index.partial())));
 		}
 
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
