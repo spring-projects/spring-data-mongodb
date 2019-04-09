@@ -34,6 +34,7 @@ import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -122,7 +123,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		this.dbRefResolver = dbRefResolver;
 		this.mappingContext = mappingContext;
 		this.typeMapper = new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, mappingContext,
-				this::computeWriteTarget);
+				this::getWriteTarget);
 		this.idMapper = new QueryMapper(this);
 
 		this.spELContext = new SpELContext(DocumentPropertyAccessor.INSTANCE);
@@ -1608,6 +1609,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @param ref
 	 * @return
 	 */
+	@Nullable
 	Document readRef(DBRef ref) {
 		return dbRefResolver.fetch(ref);
 	}
@@ -1630,7 +1632,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @return
 	 * @since 2.2
 	 */
-	protected Class<?> computeWriteTarget(Class<?> source) {
+	public Class<?> getWriteTarget(Class<?> source) {
 		return conversions.getCustomWriteTarget(source).orElse(source);
 	}
 
