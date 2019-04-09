@@ -594,7 +594,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 
 		@Document("SingleCompoundIndexWithPartialFilter")
-		@CompoundIndex(name = "compound_index_with_partial", def = "{'foo': 1, 'bar': -1}", background = true, sparse = true,
+		@CompoundIndex(name = "compound_index_with_partial", def = "{'foo': 1, 'bar': -1}", background = true,
 				unique = true, partial = "{'bar': {$exists: true}}")
 		static class SingleCompoundIndexWithPartialFilter {}
 	}
