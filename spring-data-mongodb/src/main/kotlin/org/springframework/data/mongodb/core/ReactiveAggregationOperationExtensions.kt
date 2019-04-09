@@ -49,5 +49,5 @@ inline fun <reified T : Any> ReactiveAggregationOperation.aggregateAndReturn(): 
  * @since 2.2
  */
 @FlowPreview
-fun <T : Any> ReactiveAggregationOperation.TerminatingAggregationOperation<T>.allAsFlow(batchSize: Int = 1): Flow<T> =
+fun <T : Any> ReactiveAggregationOperation.TerminatingAggregationOperation<T>.flow(batchSize: Int = 1): Flow<T> =
 		all().asFlow(batchSize)

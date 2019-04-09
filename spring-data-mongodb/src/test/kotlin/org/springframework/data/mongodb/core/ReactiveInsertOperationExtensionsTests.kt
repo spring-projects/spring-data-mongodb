@@ -64,7 +64,7 @@ class ReactiveInsertOperationExtensionsTests {
 		}
 	}
 
-	@Test
+	@Test // DATAMONGO-2255
 	@FlowPreview
 	fun terminatingInsertAllAsFlow() {
 
@@ -73,7 +73,7 @@ class ReactiveInsertOperationExtensionsTests {
 		every { insert.all(any()) } returns Flux.fromIterable(list)
 
 		runBlocking {
-			assertThat(insert.allAsFlow(list).toList()).containsAll(list)
+			assertThat(insert.flow(list).toList()).containsAll(list)
 		}
 
 		verify {

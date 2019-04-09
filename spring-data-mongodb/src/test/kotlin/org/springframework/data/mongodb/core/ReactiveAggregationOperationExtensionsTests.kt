@@ -22,7 +22,7 @@ import io.mockk.verify
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
-import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import reactor.core.publisher.Flux
 
@@ -48,7 +48,7 @@ class ReactiveAggregationOperationExtensionsTests {
 		verify { operation.aggregateAndReturn(First::class.java) }
 	}
 
-	@Test
+	@Test // DATAMONGO-2255
 	@FlowPreview
 	fun terminatingAggregationOperationAllAsFlow() {
 
@@ -56,7 +56,7 @@ class ReactiveAggregationOperationExtensionsTests {
 		every { spec.all() } returns Flux.just("foo", "bar", "baz")
 
 		runBlocking {
-			Assertions.assertThat(spec.allAsFlow().toList()).contains("foo", "bar", "baz")
+			assertThat(spec.flow().toList()).contains("foo", "bar", "baz")
 		}
 
 		verify {

@@ -66,7 +66,7 @@ class ReactiveRemoveOperationExtensionsTests {
 		}
 	}
 
-	@Test
+	@Test // DATAMONGO-2255
 	@FlowPreview
 	fun terminatingRemoveFindAndRemoveAsFlow() {
 

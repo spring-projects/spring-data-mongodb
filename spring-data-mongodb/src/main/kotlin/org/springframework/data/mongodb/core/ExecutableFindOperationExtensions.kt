@@ -39,7 +39,7 @@ inline fun <reified T : Any> ExecutableFindOperation.query(): ExecutableFindOper
 		query(T::class.java)
 
 /**
- * Extension for [ExecutableFindOperation.FindWithProjection. as] providing a [KClass] based variant.
+ * Extension for [ExecutableFindOperation.FindWithProjection.as] providing a [KClass] based variant.
  *
  * @author Sebastien Deleuze
  * @author Mark Paluch
@@ -50,7 +50,7 @@ fun <T : Any> ExecutableFindOperation.FindWithProjection<*>.asType(resultType: K
 		`as`(resultType.java)
 
 /**
- * Extension for [ExecutableFindOperation.FindWithProjection. as] leveraging reified type parameters.
+ * Extension for [ExecutableFindOperation.FindWithProjection.as] leveraging reified type parameters.
  *
  * @author Sebastien Deleuze
  * @author Mark Paluch
@@ -60,7 +60,7 @@ inline fun <reified T : Any> ExecutableFindOperation.FindWithProjection<*>.asTyp
 		`as`(T::class.java)
 
 /**
- * Extension for [ExecutableFindOperation.DistinctWithProjection. as] providing a [KClass] based variant.
+ * Extension for [ExecutableFindOperation.DistinctWithProjection.as] providing a [KClass] based variant.
  *
  * @author Christoph Strobl
  * @since 2.1
@@ -70,7 +70,7 @@ fun <T : Any> ExecutableFindOperation.DistinctWithProjection.asType(resultType: 
 		`as`(resultType.java);
 
 /**
- * Extension for [ExecutableFindOperation.DistinctWithProjection. as] leveraging reified type parameters.
+ * Extension for [ExecutableFindOperation.DistinctWithProjection.as] leveraging reified type parameters.
  *
  * @author Christoph Strobl
  * @since 2.1

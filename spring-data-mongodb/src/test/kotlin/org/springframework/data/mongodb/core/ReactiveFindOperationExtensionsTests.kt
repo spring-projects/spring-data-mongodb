@@ -20,6 +20,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
@@ -34,6 +35,7 @@ import reactor.core.publisher.Mono
  * @author Mark Paluch
  * @author Sebastien Deleuze
  */
+@FlowPreview
 class ReactiveFindOperationExtensionsTests {
 
 	val operation = mockk<ReactiveFindOperation>(relaxed = true)
@@ -234,15 +236,14 @@ class ReactiveFindOperationExtensionsTests {
 		}
 	}
 
-	@Test
-	@FlowPreview
+	@Test // DATAMONGO-2255
 	fun terminatingFindAllAsFlow() {
 
 		val spec = mockk<ReactiveFindOperation.TerminatingFind<String>>()
 		every { spec.all() } returns Flux.just("foo", "bar", "baz")
 
 		runBlocking {
-			assertThat(spec.allAsFlow().toList()).contains("foo", "bar", "baz")
+			assertThat(spec.flow().toList()).contains("foo", "bar", "baz")
 		}
 
 		verify {
@@ -250,15 +251,14 @@ class ReactiveFindOperationExtensionsTests {
 		}
 	}
 
-	@Test
-	@FlowPreview
+	@Test // DATAMONGO-2255
 	fun terminatingFindTailAsFlow() {
 
 		val spec = mockk<ReactiveFindOperation.TerminatingFind<String>>()
-		every { spec.tail() } returns Flux.just("foo", "bar", "baz")
+		every { spec.tail() } returns Flux.just("foo", "bar", "baz").concatWith(Flux.never())
 
 		runBlocking {
-			assertThat(spec.tailAsFlow().toList()).contains("foo", "bar", "baz")
+			assertThat(spec.tailAsFlow().take(3).toList()).contains("foo", "bar", "baz")
 		}
 
 		verify {
@@ -266,8 +266,7 @@ class ReactiveFindOperationExtensionsTests {
 		}
 	}
 
-	@Test
-	@FlowPreview
+	@Test // DATAMONGO-2255
 	fun terminatingFindNearAllAsFlow() {
 
 		val spec = mockk<ReactiveFindOperation.TerminatingFindNear<String>>()
@@ -277,7 +276,7 @@ class ReactiveFindOperationExtensionsTests {
 		every { spec.all() } returns Flux.just(foo, bar, baz)
 
 		runBlocking {
-			assertThat(spec.allAsFlow().toList()).contains(foo, bar, baz)
+			assertThat(spec.flow().toList()).contains(foo, bar, baz)
 		}
 
 		verify {
@@ -285,15 +284,14 @@ class ReactiveFindOperationExtensionsTests {
 		}
 	}
 
-	@Test
-	@FlowPreview
+	@Test // DATAMONGO-2255
 	fun terminatingDistinctAllAsFlow() {
 
 		val spec = mockk<ReactiveFindOperation.TerminatingDistinct<String>>()
 		every { spec.all() } returns Flux.just("foo", "bar", "baz")
 
 		runBlocking {
-			assertThat(spec.allAsFlow().toList()).contains("foo", "bar", "baz")
+			assertThat(spec.flow().toList()).contains("foo", "bar", "baz")
 		}
 
 		verify {

@@ -60,5 +60,5 @@ suspend inline fun <reified T: Any> ReactiveInsertOperation.TerminatingInsert<T>
  * @since 2.2
  */
 @FlowPreview
-fun <T : Any> ReactiveInsertOperation.TerminatingInsert<T>.allAsFlow(objects: Collection<T>, batchSize: Int = 1): Flow<T> =
+fun <T : Any> ReactiveInsertOperation.TerminatingInsert<T>.flow(objects: Collection<T>, batchSize: Int = 1): Flow<T> =
 		all(objects).asFlow(batchSize)
