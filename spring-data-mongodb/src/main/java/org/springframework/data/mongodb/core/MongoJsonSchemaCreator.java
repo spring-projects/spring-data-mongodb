@@ -23,29 +23,30 @@ import org.springframework.util.Assert;
  * {@link MongoJsonSchemaCreator} extracts the {@link MongoJsonSchema} for a given {@link Class} by applying the
  * following mapping rules.
  * <p>
- * <strong>Required Properties</strong><br />
- * - All Constructor arguments annotated with {@link org.springframework.lang.Nullable}. <br />
- * - Properties of primitive type. <br />
- * </p>
- * <p>
- * <strong>Ignored Properties</strong><br />
- * - All properties annotated with {@link org.springframework.data.annotation.Transient}. <br />
- * </p>
- * <p>
- * <strong>Property Type Mapping</strong><br />
- * - {@link java.lang.Object} -> {@code type : 'object'} <br />
- * - {@link java.util.Arrays} -> {@code type : 'array'} <br />
- * - {@link java.util.Collection} -> {@code type : 'array'} <br />
- * - {@link java.util.Map} -> {@code type : 'object'} <br />
- * - {@link java.lang.Enum} -> {@code type : 'string', enum : [the enum values]} <br />
- * - Simple Types -> {@code type : 'the corresponding bson type' } <br />
- * - Domain Types -> {@code type : 'object', properties : &#123;the types properties&#125; } <br />
+ * <strong>Required Properties</strong>
+ * <ul>
+ * <li>Properties of primitive type</li>
+ * </ul>
+ * <strong>Ignored Properties</strong>
+ * <ul>
+ * <li>All properties annotated with {@link org.springframework.data.annotation.Transient}</li>
+ * </ul>
+ * <strong>Property Type Mapping</strong>
+ * <ul>
+ * <li>{@link java.lang.Object} -> {@code type : 'object'}</li>
+ * <li>{@link java.util.Arrays} -> {@code type : 'array'}</li>
+ * <li>{@link java.util.Collection} -> {@code type : 'array'}</li>
+ * <li>{@link java.util.Map} -> {@code type : 'object'}</li>
+ * <li>{@link java.lang.Enum} -> {@code type : 'string', enum : [the enum values]}</li>
+ * <li>Simple Types -> {@code type : 'the corresponding bson type' }</li>
+ * <li>Domain Types -> {@code type : 'object', properties : &#123;the types properties&#125; }</li>
+ * </ul>
  * <br />
  * {@link org.springframework.data.annotation.Id _id} properties using types that can be converted into
  * {@link org.bson.types.ObjectId} like {@link String} will be mapped to {@code type : 'object'} unless there is more
  * specific information available via the {@link org.springframework.data.mongodb.core.mapping.MongoId} annotation.
  * </p>
- * 
+ *
  * @author Christoph Strobl
  * @since 2.2
  */
@@ -66,7 +67,7 @@ public interface MongoJsonSchemaCreator {
 	 * @param mongoConverter must not be {@literal null}.
 	 * @return new instance of {@link MongoJsonSchemaCreator}.
 	 */
-	static MongoJsonSchemaCreator jsonSchemaCreator(MongoConverter mongoConverter) {
+	static MongoJsonSchemaCreator create(MongoConverter mongoConverter) {
 
 		Assert.notNull(mongoConverter, "MongoConverter must not be null!");
 		return new MappingMongoJsonSchemaCreator(mongoConverter);

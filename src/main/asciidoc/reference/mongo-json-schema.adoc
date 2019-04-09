@@ -87,15 +87,14 @@ template.createCollection(Person.class, CollectionOptions.empty().schema(schema)
 ====
 
 [[mongo.jsonSchema.generated]]
-==== Generating the Schema
+==== Generating a Schema
 
-Setting up a schema can be a time consuming task and we encourage everyone who decides to do so, to really take the time
-it takes. It's important, schema changes can be hard. However there might be times when one does not want to balked
-with it, and that is where the `JsonSchemaCreator` comes into play.
+Setting up a schema can be a time consuming task and we encourage everyone who decides to do so, to really take the time it takes.
+It's important, schema changes can be hard.
+However, there might be times when one does not want to balked with it, and that is where `JsonSchemaCreator` comes into play.
 
-The `JsonSchemaCreator` and its default implementation generate the `MongoJsonSchema` out of the domain types metadata provided
-by the mapping infrastructure. This means that <<mapping-usage-annotations, annotated properties>> as well as potential <<mapping-configuration, custom conversions>>
-are considered.
+`JsonSchemaCreator` and its default implementation generates a `MongoJsonSchema` out of domain types metadata provided by the mapping infrastructure.
+This means, that <<mapping-usage-annotations, annotated properties>> as well as potential <<mapping-configuration, custom conversions>> are considered.
 
 .Generate Json Schema from domain type
 ====
@@ -103,25 +102,24 @@ are considered.
 ----
 public class Person {
 
-    private final String firstname; <1>
-    private final @Nullable String lastname; <2>
-    private int age; <3>
-    private Species species; <4>
-    private Address address; <5>
-    private @Field(fieldType=SCRIPT) String theForce; <6>
-    private @Transient Boolean useTheForce; <7>
+    private final String firstname;                   <1>
+    private final int age;                            <2>
+    private Species species;                          <3>
+    private Address address;                          <4>
+    private @Field(fieldType=SCRIPT) String theForce; <5>
+    private @Transient Boolean useTheForce;           <6>
 
-    public Person(String firstname, @Nullable String lastname) { <1> <2>
+    public Person(String firstname, int age) {        <1> <2>
 
         this.firstname = firstname;
-        this.lastname = lastname;
+        this.age = age;
     }
 
     // gettter / setter omitted
 }
 
-MongoJsonSchema schema = schemaCreator.jsonSchemaCreator(mongoOperations.getConverter())
-    .createSchemaFor(DomainType.class);
+MongoJsonSchema schema = MongoJsonSchemaCreator.create(mongoOperations.getConverter())
+    .createSchemaFor(Person.class);
 
 template.createCollection(Person.class, CollectionOptions.empty().schema(schema));
 ----
@@ -130,38 +128,36 @@ template.createCollection(Person.class, CollectionOptions.empty().schema(schema)
 ----
 {
     'type' : 'object',
-    'required' : ['firstname', 'age'], <1> <3>
+    'required' : ['age'],                     <2>
     'properties' : {
-        'firstname' : { 'type' : 'string' }, <1>
-        'lastname' : { 'type' : 'string' }, <2>
-        'age' : { 'bsonType' : 'int' } <3>
-        'species' : { <4>
+        'firstname' : { 'type' : 'string' },  <1>
+        'age' : { 'bsonType' : 'int' }        <2>
+        'species' : {                         <3>
             'type' : 'string',
             'enum' : ['HUMAN', 'WOOKIE', 'UNKNOWN']
         }
-        'address' : { <5>
+        'address' : {                         <4>
             'type' : 'object'
             'properties' : {
                 'postCode' : { 'type': 'string' }
             }
         },
-        'theForce' : { 'type' : 'javascript'} <6>
+        'theForce' : { 'type' : 'javascript'} <5>
      }
 }
 ----
-<1> Required property as **not** `@Nullable` and used in the constructor.
-<2> Optional property though used in the constructor it is still `@Nullable`.
-<3> Primitive types are considered required properties.
-<4> Enums are restricted to possible values.
-<5> Object type properties get are inspected themselfes.
-<6> `String` type property that is truned into `Code` by the mapping.
-<7> `@Transient` properties are left out when generating the schema.
+<1> Simple object properties are consideres regular properties.
+<2> Primitive types are considered required properties
+<3> Enums are restricted to possible values.
+<4> Object type properties are inspected and represented as nested documents.
+<5> `String` type property that is converted to `Code` by the converter.
+<6> `@Transient` properties are omitted when generating the schema.
 ====
 
 NOTE: `_id` properties using types that can be converted into `ObjectId` like `String` are mapped to `{ type : 'object' }`
 unless there is more specific information available via the `@MongoId` annotation.
 
-[cols="3,1,6", options="header"]
+[cols="2,2,6", options="header"]
 .Sepcial Schema Generation rules
 |===
 | Java
@@ -169,33 +165,33 @@ unless there is more specific information available via the `@MongoId` annotatio
 | Notes
 
 | `Object`
-| type : object
+| `type : object`
 | with `properties` if metadata available.
 
 | `Collection`
-| type : array
+| `type : array`
 | -
 
 | `Map`
-| type : object
+| `type : object`
 | -
 
 | `Enum`
-| type : string
+| `type : string`
 | with `enum` property holding the possible enumeration values.
 
 | `array`
-| type : array
+| `type : array`
 | simple type array unless it's a `byte[]`
 
 | `byte[]`
-| bsonType : binData
+| `bsonType : binData`
 | -
 
 |===
 
 [[mongo.jsonSchema.query]]
-==== Query a collection for matching Json Schema
+==== Query a collection for matching JSON Schema
 
 You can use a schema to query any collection for documents that match a given structure defined by a JSON schema, as the following example shows:
 
@@ -210,7 +206,7 @@ template.find(query(matchingDocumentStructure(schema)), Person.class);
 ====
 
 [[mongo.jsonSchema.types]]
-==== Json Schema Types
+==== JSON Schema Types
 
 The following table shows the supported JSON schema types:
 

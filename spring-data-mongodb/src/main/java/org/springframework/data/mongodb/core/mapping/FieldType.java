@@ -31,8 +31,9 @@ import org.bson.types.ObjectId;
  * <p/>
  * Bson types are identified by a {@code byte} {@link #getBsonType() value}. This enumeration typically returns the
  * according bson type value except for {@link #IMPLICIT} which is a marker to derive the field type from a property.
- * 
+ *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.2
  * @see org.bson.BsonType
  */
@@ -67,7 +68,7 @@ public enum FieldType {
 
 	/**
 	 * Returns the BSON type identifier. Can be {@code -1} if {@link FieldType} maps to a synthetic Bson type.
-	 * 
+	 *
 	 * @return the BSON type identifier. Can be {@code -1} if {@link FieldType} maps to a synthetic Bson type.
 	 */
 	public int getBsonType() {
@@ -76,7 +77,7 @@ public enum FieldType {
 
 	/**
 	 * Returns the Java class used to represent the type.
-	 * 
+	 *
 	 * @return the Java class used to represent the type.
 	 */
 	public Class<?> getJavaClass() {

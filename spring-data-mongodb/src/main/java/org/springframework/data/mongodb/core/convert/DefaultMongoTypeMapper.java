@@ -15,14 +15,16 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
+
+import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.DefaultTypeMapper;
 import org.springframework.data.convert.SimpleTypeInformationMapper;
 import org.springframework.data.convert.TypeAliasAccessor;
@@ -59,29 +61,58 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 
 	private final TypeAliasAccessor<Bson> accessor;
 	private final @Nullable String typeKey;
-	private Function<Class<?>, Class<?>> writeTarget = it -> it;
+	private UnaryOperator<Class<?>> writeTarget = UnaryOperator.identity();
 
+	/**
+	 * Create a new {@link MongoTypeMapper} with fully-qualified type hints using {@code _class}.
+	 */
 	public DefaultMongoTypeMapper() {
 		this(DEFAULT_TYPE_KEY);
 	}
 
+	/**
+	 * Create a new {@link MongoTypeMapper} with fully-qualified type hints using {@code typeKey}.
+	 *
+	 * @param typeKey name of the field to read and write type hints. Can be {@literal null} to disable type hints.
+	 */
 	public DefaultMongoTypeMapper(@Nullable String typeKey) {
-		this(typeKey, Arrays.asList(new SimpleTypeInformationMapper()));
+		this(typeKey, Collections.singletonList(new SimpleTypeInformationMapper()));
 	}
 
+	/**
+	 * Create a new {@link MongoTypeMapper} with fully-qualified type hints using {@code typeKey}.
+	 *
+	 * @param typeKey name of the field to read and write type hints. Can be {@literal null} to disable type hints.
+	 * @param mappingContext the mapping context.
+	 */
 	public DefaultMongoTypeMapper(@Nullable String typeKey,
 			MappingContext<? extends PersistentEntity<?, ?>, ?> mappingContext) {
 		this(typeKey, new DocumentTypeAliasAccessor(typeKey), mappingContext,
-				Arrays.asList(new SimpleTypeInformationMapper()));
+				Collections.singletonList(new SimpleTypeInformationMapper()));
 	}
 
+	/**
+	 * Create a new {@link MongoTypeMapper} with fully-qualified type hints using {@code typeKey}. Uses
+	 * {@link UnaryOperator} to apply {@link CustomConversions}.
+	 *
+	 * @param typeKey name of the field to read and write type hints. Can be {@literal null} to disable type hints.
+	 * @param mappingContext the mapping context to look up types using type hints.
+	 * @see MappingMongoConverter#getWriteTarget(Class)
+	 */
 	public DefaultMongoTypeMapper(@Nullable String typeKey,
-			MappingContext<? extends PersistentEntity<?, ?>, ?> mappingContext, Function<Class<?>, Class<?>> writeTarget) {
+			MappingContext<? extends PersistentEntity<?, ?>, ?> mappingContext, UnaryOperator<Class<?>> writeTarget) {
 		this(typeKey, new DocumentTypeAliasAccessor(typeKey), mappingContext,
-				Arrays.asList(new SimpleTypeInformationMapper()));
+				Collections.singletonList(new SimpleTypeInformationMapper()));
 		this.writeTarget = writeTarget;
 	}
 
+	/**
+	 * Create a new {@link MongoTypeMapper} with fully-qualified type hints using {@code typeKey}. Uses
+	 * {@link TypeInformationMapper} to map type hints.
+	 *
+	 * @param typeKey name of the field to read and write type hints. Can be {@literal null} to disable type hints.
+	 * @param mappers
+	 */
 	public DefaultMongoTypeMapper(@Nullable String typeKey, List<? extends TypeInformationMapper> mappers) {
 		this(typeKey, new DocumentTypeAliasAccessor(typeKey), null, mappers);
 	}

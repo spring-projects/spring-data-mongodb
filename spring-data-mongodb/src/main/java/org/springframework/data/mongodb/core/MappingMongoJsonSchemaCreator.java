@@ -21,12 +21,11 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 
-import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
-import org.springframework.data.mapping.SimplePropertyHandler;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.ObjectJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.JsonSchemaObject;
@@ -35,7 +34,6 @@ import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema.MongoJsonSchemaBuilder;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
@@ -45,26 +43,28 @@ import org.springframework.util.ObjectUtils;
  * {@link MongoJsonSchemaCreator} implementation using both {@link MongoConverter} and {@link MappingContext} to obtain
  * domain type meta information which considers {@link org.springframework.data.mongodb.core.mapping.Field field names}
  * and {@link org.springframework.data.mongodb.core.convert.MongoCustomConversions custom conversions}.
- * 
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.2
  */
 class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 
-	private MongoConverter converter;
-	private MappingContext mappingContext;
+	private final MongoConverter converter;
+	private final MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
 	/**
 	 * Create a new instance of {@link MappingMongoJsonSchemaCreator}.
 	 *
 	 * @param converter must not be {@literal null}.
 	 */
+	@SuppressWarnings("unchecked")
 	MappingMongoJsonSchemaCreator(MongoConverter converter) {
 
 		Assert.notNull(converter, "Converter must not be null!");
 		this.converter = converter;
-		this.mappingContext = converter.getMappingContext();
-
+		this.mappingContext = (MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty>) converter
+				.getMappingContext();
 	}
 
 	/*
@@ -74,7 +74,7 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 	@Override
 	public MongoJsonSchema createSchemaFor(Class<?> type) {
 
-		PersistentEntity<?, ?> entity = mappingContext.getPersistentEntity(type);
+		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(type);
 		MongoJsonSchemaBuilder schemaBuilder = MongoJsonSchema.builder();
 
 		List<JsonSchemaProperty> schemaProperties = computePropertiesForEntity(Collections.emptyList(), entity);
@@ -84,35 +84,33 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 
 	}
 
-	private List<JsonSchemaProperty> computePropertiesForEntity(List<PersistentProperty> path,
-			PersistentEntity<?, ?> entity) {
+	private List<JsonSchemaProperty> computePropertiesForEntity(List<MongoPersistentProperty> path,
+			MongoPersistentEntity<?> entity) {
 
 		List<JsonSchemaProperty> schemaProperties = new ArrayList<>();
-		entity.doWithProperties((SimplePropertyHandler) nested -> {
 
-			ArrayList<PersistentProperty> currentPath = new ArrayList<>(path);
+		for (MongoPersistentProperty nested : entity) {
+
+			List<MongoPersistentProperty> currentPath = new ArrayList<>(path);
 
 			if (path.contains(nested)) { // cycle guard
 				schemaProperties.add(createSchemaProperty(computePropertyFieldName(CollectionUtils.lastElement(currentPath)),
 						Object.class, false));
-				return;
+				break;
 			}
 
 			currentPath.add(nested);
-			JsonSchemaProperty jsonSchemaProperty = computeSchemaForProperty(currentPath, entity);
-			if (jsonSchemaProperty != null) {
-				schemaProperties.add(jsonSchemaProperty);
-			}
-		});
+			schemaProperties.add(computeSchemaForProperty(currentPath));
+		}
 
 		return schemaProperties;
 	}
 
-	private JsonSchemaProperty computeSchemaForProperty(List<PersistentProperty> path, PersistentEntity<?, ?> parent) {
+	private JsonSchemaProperty computeSchemaForProperty(List<MongoPersistentProperty> path) {
 
-		PersistentProperty property = CollectionUtils.lastElement(path);
+		MongoPersistentProperty property = CollectionUtils.lastElement(path);
 
-		boolean required = isRequiredProperty(parent, property);
+		boolean required = isRequiredProperty(property);
 		Class<?> rawTargetType = computeTargetType(property); // target type before conversion
 		Class<?> targetType = converter.getTypeMapper().getWriteTargetTypeFor(rawTargetType); // conversion target type
 
@@ -133,12 +131,12 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 		return createSchemaProperty(fieldName, targetType, required);
 	}
 
-	private JsonSchemaProperty createObjectSchemaPropertyForEntity(List<PersistentProperty> path,
-			PersistentProperty property, boolean required) {
+	private JsonSchemaProperty createObjectSchemaPropertyForEntity(List<MongoPersistentProperty> path,
+			MongoPersistentProperty property, boolean required) {
 
 		ObjectJsonSchemaProperty target = JsonSchemaProperty.object(property.getName());
 		List<JsonSchemaProperty> nestedProperties = computePropertiesForEntity(path,
-				mappingContext.getPersistentEntity(property));
+				mappingContext.getRequiredPersistentEntity(property));
 
 		return createPotentiallyRequiredSchemaProperty(
 				target.properties(nestedProperties.toArray(new JsonSchemaProperty[0])), required);
@@ -147,6 +145,7 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 	private JsonSchemaProperty createEnumSchemaProperty(String fieldName, Class<?> targetType, boolean required) {
 
 		List<Object> possibleValues = new ArrayList<>();
+
 		for (Object enumValue : EnumSet.allOf((Class) targetType)) {
 			possibleValues.add(converter.convertToMongoType(enumValue));
 		}
@@ -178,10 +177,8 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 				: property.getName();
 	}
 
-	private boolean isRequiredProperty(PersistentEntity<?, ?> parent, PersistentProperty property) {
-
-		return (parent.isConstructorArgument(property) && !property.isAnnotationPresent(Nullable.class))
-				|| property.getType().isPrimitive();
+	private boolean isRequiredProperty(PersistentProperty property) {
+		return property.getType().isPrimitive();
 	}
 
 	private Class<?> computeTargetType(PersistentProperty<?> property) {
@@ -196,7 +193,7 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 		}
 
 		if (mongoProperty.hasExplicitWriteTarget()) {
-			return mongoProperty.findAnnotation(Field.class).targetType().getJavaClass();
+			return mongoProperty.getRequiredAnnotation(Field.class).targetType().getJavaClass();
 		}
 
 		return mongoProperty.getFieldType() != mongoProperty.getActualType() ? Object.class : mongoProperty.getFieldType();

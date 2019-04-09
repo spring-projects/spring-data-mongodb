@@ -15,15 +15,17 @@
  */
 package org.springframework.data.mongodb.core;
 
+import static org.springframework.data.mongodb.test.util.Assertions.*;
+
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import org.assertj.core.api.Assertions;
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
+
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -34,10 +36,12 @@ import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
-import org.springframework.lang.Nullable;
 
 /**
+ * Unit tests for {@link MappingMongoJsonSchemaCreator}.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class MappingMongoJsonSchemaCreatorUnitTests {
 
@@ -58,52 +62,25 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 
 		MongoJsonSchema schema = schemaCreator.createSchemaFor(VariousFieldTypes.class);
 
-		Assertions.assertThat(schema.toDocument().get("$jsonSchema", Document.class))
-				.isEqualTo(Document.parse(VARIOUS_FIELD_TYPES));
-	}
-
-	@Test // DATAMONGO-1849
-	public void requiredCtorArgs() {
-
-		MongoJsonSchema schema = schemaCreator.createSchemaFor(RequiredArgsCtor.class);
-		Assertions.assertThat(schema.toDocument().get("$jsonSchema", Document.class))
-				.isEqualTo(Document.parse(REQUIRED_ARGS_CTOR));
-	}
-
-	@Test // DATAMONGO-1849
-	public void withNestedObject() {
-
-		MongoJsonSchema schema = schemaCreator.createSchemaFor(WithNestedDomainType.class);
-		Assertions.assertThat(schema.toDocument().get("$jsonSchema", Document.class))
-				.isEqualTo(Document.parse(WITH_NESTED_DOMAIN_TYPE));
-	}
-
-	@Test // DATAMONGO-1849
-	public void withNestedThatHasRequiredFieldsObject() {
-
-		MongoJsonSchema schema = schemaCreator.createSchemaFor(WithNestedDomainTypeHavingRequiredCtor.class);
-
-		Assertions.assertThat(schema.toDocument().get("$jsonSchema", Document.class))
-				.isEqualTo(Document.parse(WITH_NESTED_DOMAIN_TYPE_HAVING_REQUIRED_CTOR));
+		assertThat(schema.toDocument().get("$jsonSchema", Document.class)).isEqualTo(Document.parse(VARIOUS_FIELD_TYPES));
 	}
 
 	@Test // DATAMONGO-1849
 	public void withRemappedIdType() {
 
 		MongoJsonSchema schema = schemaCreator.createSchemaFor(WithExplicitMongoIdTypeMapping.class);
-		Assertions.assertThat(schema.toDocument().get("$jsonSchema", Document.class))
-				.isEqualTo(Document.parse(WITH_EXPLICIT_MONGO_ID_TYPE_MAPPING));
+		assertThat(schema.toDocument().get("$jsonSchema", Document.class)).isEqualTo(WITH_EXPLICIT_MONGO_ID_TYPE_MAPPING);
 	}
 
 	@Test // DATAMONGO-1849
 	public void cyclic() {
 
 		MongoJsonSchema schema = schemaCreator.createSchemaFor(Cyclic.class);
-		Assertions.assertThat(schema.toDocument().get("$jsonSchema", Document.class)).isEqualTo(Document.parse(CYCLIC));
+		assertThat(schema.toDocument().get("$jsonSchema", Document.class)).isEqualTo(CYCLIC);
 	}
 
 	@Test // DATAMONGO-1849
-	public void convterRegisterd() {
+	public void converterRegistered() {
 
 		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext);
 		MongoCustomConversions mcc = new MongoCustomConversions(
@@ -114,8 +91,8 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 		schemaCreator = new MappingMongoJsonSchemaCreator(converter);
 
 		MongoJsonSchema schema = schemaCreator.createSchemaFor(WithNestedDomainType.class);
-		Assertions.assertThat(schema.toDocument().get("$jsonSchema", Document.class)).isEqualTo(Document.parse(
-				"{ 'type' : 'object', 'properties' : { '_id' : { 'type' : 'object' }, 'nested' : { 'type' : 'object' } } }"));
+		assertThat(schema.toDocument().get("$jsonSchema", Document.class)).isEqualTo(
+				"{ 'type' : 'object', 'properties' : { '_id' : { 'type' : 'object' }, 'nested' : { 'type' : 'object' } } }");
 	}
 
 	// --> TYPES AND JSON
@@ -171,32 +148,6 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 		JustSomeEnum enumProperty;
 	}
 
-	// --> REQUIRED ARGS (CTOR)
-
-	static final String REQUIRED_ARGS_CTOR = "" + //
-			"{" + //
-			"    'type' : 'object'," + //
-			"    'required' : ['requiredCtorArg']," + //
-			"    'properties' : {" + //
-			"        'requiredCtorArg' : { 'type' : 'string' }," + //
-			"        'nullableCtorArg' : { 'type' : 'string' }," + //
-			"        'optionalArg' : { 'type' : 'string' }" + //
-			"     }" + //
-			"}";
-
-	static class RequiredArgsCtor {
-
-		String requiredCtorArg;
-		@Nullable String nullableCtorArg;
-		String optionalArg;
-
-		public RequiredArgsCtor(String requiredCtorArg, @Nullable String nullableCtorArg) {
-
-			this.requiredCtorArg = requiredCtorArg;
-			this.nullableCtorArg = nullableCtorArg;
-		}
-	}
-
 	// --> NESTED DOMAIN TYPE
 
 	static final String WITH_NESTED_DOMAIN_TYPE = "" + //
@@ -212,21 +163,6 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 
 		String id;
 		VariousFieldTypes nested;
-	}
-
-	static final String WITH_NESTED_DOMAIN_TYPE_HAVING_REQUIRED_CTOR = "" + //
-			"{" + //
-			"    'type' : 'object'," + //
-			"    'properties' : {" + //
-			"        '_id' : { 'type' : 'object' }," + //
-			"        'nested' : " + REQUIRED_ARGS_CTOR + //
-			"     }" + //
-			"}";
-
-	static class WithNestedDomainTypeHavingRequiredCtor {
-
-		String id;
-		RequiredArgsCtor nested;
 	}
 
 	// --> EXPLICIT MONGO_ID MAPPING

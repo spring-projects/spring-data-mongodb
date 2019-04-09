@@ -2,7 +2,7 @@
 == Custom Conversions - Overriding Default Mapping
 
 The most trivial way of influencing the the mapping result is by specifying the desired native MongoDB target type via the
-`@Field` annotation. This allows to work with non mongoDB types like `BigDecimal` in the domain model while persisting
+`@Field` annotation. This allows to work with non MongoDB types like `BigDecimal` in the domain model while persisting
 values in native `org.bson.types.Decimal128` format.
 
 .Explicit target type mapping
