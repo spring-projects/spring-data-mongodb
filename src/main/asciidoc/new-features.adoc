@@ -15,6 +15,7 @@
 * Support of array filters in `Update` operations.
 * <<mongo.jsonSchema.generated, JSON Schema generation>> from domain types.
 * SpEL support in for expressions in `@Indexed`.
+* Annotation-based Collation support through `@Document` and `@Query`.
 
 [[new-features.2-1-0]]
 == What's New in Spring Data MongoDB 2.1
