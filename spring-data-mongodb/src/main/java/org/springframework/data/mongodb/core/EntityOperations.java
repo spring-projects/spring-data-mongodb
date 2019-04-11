@@ -21,12 +21,15 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 
 import org.bson.Document;
+
 import org.springframework.core.convert.ConversionService;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mapping.IdentifierAccessor;
 import org.springframework.data.mapping.MappingException;
+import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
@@ -34,6 +37,7 @@ import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.lang.Nullable;
@@ -176,6 +180,20 @@ class EntityOperations {
 		}
 	}
 
+	public <T> TypedOperations<T> forType(@Nullable Class<T> entityClass) {
+
+		if (entityClass != null) {
+
+			MongoPersistentEntity<?> entity = context.getPersistentEntity(entityClass);
+
+			if (entity != null) {
+				return new TypedEntityOperations(entity);
+			}
+
+		}
+		return UntypedOperations.instance();
+	}
+
 	/**
 	 * A representation of information about an entity.
 	 *
@@ -263,7 +281,7 @@ class EntityOperations {
 
 		/**
 		 * Returns whether the entity is considered to be new.
-		 * 
+		 *
 		 * @return
 		 * @since 2.1.2
 		 */
@@ -414,7 +432,7 @@ class EntityOperations {
 			return map;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.EntityOperations.Entity#isNew()
 		 */
@@ -585,7 +603,7 @@ class EntityOperations {
 			return propertyAccessor.getBean();
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.EntityOperations.Entity#isNew()
 		 */
@@ -698,4 +716,102 @@ class EntityOperations {
 			return propertyAccessor.getBean();
 		}
 	}
+
+	/**
+	 * Type-specific operations abstraction.
+	 *
+	 * @author Mark Paluch
+	 * @param <T>
+	 * @since 2.2
+	 */
+	interface TypedOperations<T> {
+
+		/**
+		 * Return the optional {@link Collation} for the underlying entity.
+		 *
+		 * @return
+		 */
+		Optional<Collation> getCollation();
+
+		/**
+		 * Return the optional {@link Collation} from the given {@link Query} and fall back to the collation configured for
+		 * the underlying entity.
+		 *
+		 * @return
+		 */
+		Optional<Collation> getCollation(Query query);
+	}
+
+	/**
+	 * {@link TypedOperations} for generic entities that are not represented with {@link PersistentEntity} (e.g. custom
+	 * conversions).
+	 */
+	@RequiredArgsConstructor
+	enum UntypedOperations implements TypedOperations<Object> {
+
+		INSTANCE;
+
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		public static <T> TypedOperations<T> instance() {
+			return (TypedOperations) INSTANCE;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.EntityOperations.TypedOperations#getCollation()
+		 */
+		@Override
+		public Optional<Collation> getCollation() {
+			return Optional.empty();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.EntityOperations.TypedOperations#getCollation(org.springframework.data.mongodb.core.query.Query)
+		 */
+		@Override
+		public Optional<Collation> getCollation(Query query) {
+
+			if (query == null) {
+				return Optional.empty();
+			}
+
+			return query.getCollation();
+		}
+	}
+
+	/**
+	 * {@link TypedOperations} backed by {@link MongoPersistentEntity}.
+	 *
+	 * @param <T>
+	 */
+	@RequiredArgsConstructor
+	static class TypedEntityOperations<T> implements TypedOperations<T> {
+
+		private final @NonNull MongoPersistentEntity<T> entity;
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.EntityOperations.TypedOperations#getCollation()
+		 */
+		@Override
+		public Optional<Collation> getCollation() {
+			return Optional.ofNullable(entity.getCollation());
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.EntityOperations.TypedOperations#getCollation(org.springframework.data.mongodb.core.query.Query)
+		 */
+		@Override
+		public Optional<Collation> getCollation(Query query) {
+
+			if (query.getCollation().isPresent()) {
+				return query.getCollation();
+			}
+
+			return Optional.ofNullable(entity.getCollation());
+		}
+	}
+
 }

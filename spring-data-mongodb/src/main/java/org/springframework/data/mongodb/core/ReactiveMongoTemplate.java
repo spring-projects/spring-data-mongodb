@@ -25,7 +25,17 @@ import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -40,6 +50,7 @@ import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -649,8 +660,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		CollectionOptions options = collectionOptions != null ? collectionOptions : CollectionOptions.empty();
 		options = Optionals
-				.firstNonEmpty(() -> collectionOptions != null ? collectionOptions.getCollation() : Optional.empty(),
-						() -> getCollationForType(entityClass)) //
+				.firstNonEmpty(() -> Optional.ofNullable(collectionOptions).flatMap(CollectionOptions::getCollation),
+						() -> operations.forType(entityClass).getCollation()) //
 				.map(options::collation).orElse(options);
 
 		return doCreateCollection(determineCollectionName(entityClass),
@@ -754,7 +765,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		if (ObjectUtils.isEmpty(query.getSortObject())) {
 			return doFindOne(collectionName, query.getQueryObject(), query.getFieldsObject(), entityClass,
-					Optionals.firstNonEmpty(() -> query.getCollation(), () -> getCollationForType(entityClass)).orElse(null));
+					operations.forType(entityClass).getCollation(query).orElse(null));
 		}
 
 		query.limit(1);
@@ -797,8 +808,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				LOGGER.debug("exists: {} in collection: {}", serializeToJsonSafely(filter), collectionName);
 			}
 
-			findPublisher = Optionals.firstNonEmpty(() -> query.getCollation(), () -> getCollationForType(entityClass))
-					.map(Collation::toMongoCollation).map(findPublisher::collation).orElse(findPublisher);
+			findPublisher = operations.forType(entityClass).getCollation(query).map(Collation::toMongoCollation)
+					.map(findPublisher::collation).orElse(findPublisher);
 
 			return findPublisher.limit(1);
 		}).hasElements();
@@ -884,7 +895,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			}
 
 			DistinctPublisher<T> publisher = collection.distinct(mappedFieldName, mappedQuery, mongoDriverCompatibleType);
-			return Optionals.firstNonEmpty(() -> query.getCollation(), () -> getCollationForType(entityClass))
+			return operations.forType(entityClass).getCollation(query) //
 					.map(Collation::toMongoCollation) //
 					.map(publisher::collation) //
 					.orElse(publisher);
@@ -1011,7 +1022,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			cursor = cursor.batchSize(options.getCursorBatchSize());
 		}
 
-		Optionals.firstNonEmpty(() -> options.getCollation(), () -> getCollationForType(inputType)) //
+		Optionals.firstNonEmpty(options::getCollation, () -> operations.forType(inputType).getCollation()) //
 				.map(Collation::toMongoCollation) //
 				.ifPresent(cursor::collation);
 
@@ -1119,9 +1130,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 					"Both Query and FindAndModifyOptions define a collation. Please provide the collation only via one of the two.");
 		});
 
-		Optionals
-				.firstNonEmpty(() -> query.getCollation(), () -> options.getCollation(), () -> getCollationForType(entityClass))
-				.ifPresent(optionsToUse::collation);
+		if (!optionsToUse.getCollation().isPresent()) {
+			operations.forType(entityClass).getCollation(query).ifPresent(optionsToUse::collation);
+			;
+		}
 
 		return doFindAndModify(collectionName, query.getQueryObject(), query.getFieldsObject(),
 				getMappedSortObject(query, entityClass), entityClass, update, optionsToUse);
@@ -1154,9 +1166,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Document mappedReplacement = operations.forEntity(replacement).toMappedDocument(this.mongoConverter).getDocument();
 
 		return doFindAndReplace(collectionName, mappedQuery, mappedFields, mappedSort,
-				Optionals.firstNonEmpty(() -> query.getCollation(), () -> getCollationForType(entityType))
-						.map(Collation::toMongoCollation).orElse(null),
-				entityType, mappedReplacement, options, resultType);
+				operations.forType(entityType).getCollation(query).map(Collation::toMongoCollation).orElse(null), entityType,
+				mappedReplacement, options, resultType);
 	}
 
 	/*
@@ -1173,9 +1184,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	public <T> Mono<T> findAndRemove(Query query, Class<T> entityClass, String collectionName) {
 
+		operations.forType(entityClass).getCollation(query);
 		return doFindAndRemove(collectionName, query.getQueryObject(), query.getFieldsObject(),
-				getMappedSortObject(query, entityClass),
-				Optionals.firstNonEmpty(() -> query.getCollation(), () -> getCollationForType(entityClass)).orElse(null),
+				getMappedSortObject(query, entityClass), operations.forType(entityClass).getCollation(query).orElse(null),
 				entityClass);
 	}
 
@@ -1209,26 +1220,20 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		return createMono(collectionName, collection -> {
 
-			Document filter = query == null ? null
-					: queryMapper.getMappedObject(query.getQueryObject(),
-							entityClass == null ? null : mappingContext.getPersistentEntity(entityClass));
+			Document filter = queryMapper.getMappedObject(query.getQueryObject(),
+					entityClass == null ? null : mappingContext.getPersistentEntity(entityClass));
 
 			CountOptions options = new CountOptions();
-			if (query != null) {
-				query.getCollation().map(Collation::toMongoCollation).ifPresent(options::collation);
+			query.getCollation().map(Collation::toMongoCollation).ifPresent(options::collation);
 
-				if (query.getLimit() > 0) {
-					options.limit(query.getLimit());
-				}
-				if (query.getSkip() > 0) {
-					options.skip((int) query.getSkip());
-				}
+			if (query.getLimit() > 0) {
+				options.limit(query.getLimit());
+			}
+			if (query.getSkip() > 0) {
+				options.skip((int) query.getSkip());
 			}
 
-			Optionals
-					.firstNonEmpty(() -> query != null ? query.getCollation() : Optional.empty(),
-							() -> getCollationForType(entityClass))
-					.map(Collation::toMongoCollation) //
+			operations.forType(entityClass).getCollation(query).map(Collation::toMongoCollation) //
 					.ifPresent(options::collation);
 
 			if (LOGGER.isDebugEnabled()) {
@@ -1698,7 +1703,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			MongoCollection<Document> collectionToUse = prepareCollection(collection, writeConcernToUse);
 
 			UpdateOptions updateOptions = new UpdateOptions().upsert(upsert);
-			Optionals.firstNonEmpty(() -> query.getCollation(), () -> getCollationForType(entityClass)) //
+			operations.forType(entityClass).getCollation(query) //
 					.map(Collation::toMongoCollation) //
 					.ifPresent(updateOptions::collation);
 
@@ -1865,7 +1870,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			DeleteOptions deleteOptions = new DeleteOptions();
 
-			Optionals.firstNonEmpty(() -> query.getCollation(), () -> getCollationForType(entityClass)) //
+			operations.forType(entityClass).getCollation(query) //
 					.map(Collation::toMongoCollation) //
 					.ifPresent(deleteOptions::collation);
 
@@ -3070,10 +3075,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	class QueryFindPublisherPreparer implements FindPublisherPreparer {
 
-		private final @Nullable Query query;
+		private final Query query;
 		private final @Nullable Class<?> type;
 
-		QueryFindPublisherPreparer(@Nullable Query query, @Nullable Class<?> type) {
+		QueryFindPublisherPreparer(Query query, @Nullable Class<?> type) {
 
 			this.query = query;
 			this.type = type;
@@ -3082,15 +3087,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		@SuppressWarnings("deprecation")
 		public <T> FindPublisher<T> prepare(FindPublisher<T> findPublisher) {
 
-			FindPublisher<T> findPublisherToUse = Optionals //
-					.firstNonEmpty(() -> query != null ? query.getCollation() : Optional.empty(), () -> getCollationForType(type))
+			FindPublisher<T> findPublisherToUse = operations.forType(type) //
+					.getCollation(query) //
 					.map(Collation::toMongoCollation) //
 					.map(findPublisher::collation) //
 					.orElse(findPublisher);
-
-			if (query == null) {
-				return findPublisherToUse;
-			}
 
 			Meta meta = query.getMeta();
 			if (query.getSkip() <= 0 && query.getLimit() <= 0 && ObjectUtils.isEmpty(query.getSortObject())
@@ -3266,13 +3267,4 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		}
 	}
 
-	@Nullable
-	private Optional<Collation> getCollationForType(Class<?> type) {
-
-		if (type == null) {
-			return Optional.empty();
-		}
-		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(type);
-		return entity != null ? Optional.ofNullable(entity.getCollation()) : Optional.empty();
-	}
 }

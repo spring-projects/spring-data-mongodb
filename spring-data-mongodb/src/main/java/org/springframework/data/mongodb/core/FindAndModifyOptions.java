@@ -53,7 +53,7 @@ public class FindAndModifyOptions {
 		}
 
 		@Override
-		public FindAndModifyOptions collation(Collation collation) {
+		public FindAndModifyOptions collation(@Nullable Collation collation) {
 			throw new UnsupportedOperationException(ERROR_MSG);
 		}
 	};
@@ -79,7 +79,7 @@ public class FindAndModifyOptions {
 
 	/**
 	 * Create new {@link FindAndModifyOptions} based on option of given {@litearl source}.
-	 * 
+	 *
 	 * @param source can be {@literal null}.
 	 * @return new instance of {@link FindAndModifyOptions}.
 	 * @since 2.0
