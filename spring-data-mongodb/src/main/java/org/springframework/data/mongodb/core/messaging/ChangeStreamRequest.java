@@ -372,6 +372,36 @@ public class ChangeStreamRequest<T>
 		}
 
 		/**
+		 * Set the resume token after which to continue emitting notifications.
+		 *
+		 * @param resumeToken must not be {@literal null}.
+		 * @return this.
+		 * @since 2.2
+		 */
+		public ChangeStreamRequestBuilder<T> resumeAfter(BsonValue resumeToken) {
+
+			Assert.notNull(resumeToken, "ResumeToken must not be null!");
+			this.delegate.resumeAfter(resumeToken);
+
+			return this;
+		}
+
+		/**
+		 * Set the resume token after which to start emitting notifications.
+		 *
+		 * @param resumeToken must not be {@literal null}.
+		 * @return this.
+		 * @since 2.2
+		 */
+		public ChangeStreamRequestBuilder<T> startAfter(BsonValue resumeToken) {
+
+			Assert.notNull(resumeToken, "ResumeToken must not be null!");
+			this.delegate.startAfter(resumeToken);
+
+			return this;
+		}
+
+		/**
 		 * Set the {@link FullDocument} lookup to {@link FullDocument#UPDATE_LOOKUP}.
 		 *
 		 * @return this.

@@ -92,6 +92,7 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 		FullDocument fullDocument = ClassUtils.isAssignable(Document.class, targetType) ? FullDocument.DEFAULT
 				: FullDocument.UPDATE_LOOKUP;
 		BsonTimestamp startAt = null;
+		boolean resumeAfter = true;
 
 		if (options instanceof ChangeStreamRequest.ChangeStreamRequestOptions) {
 
@@ -108,7 +109,9 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 			}
 
 			if (changeStreamOptions.getResumeToken().isPresent()) {
+
 				resumeToken = changeStreamOptions.getResumeToken().get().asDocument();
+				resumeAfter = changeStreamOptions.isResumeAfter();
 			}
 
 			fullDocument = changeStreamOptions.getFullDocumentLookup()
@@ -119,7 +122,8 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 		}
 
 		MongoDatabase db = StringUtils.hasText(options.getDatabaseName())
-				? template.getMongoDbFactory().getDb(options.getDatabaseName()) : template.getDb();
+				? template.getMongoDbFactory().getDb(options.getDatabaseName())
+				: template.getDb();
 
 		ChangeStreamIterable<Document> iterable;
 
@@ -132,7 +136,12 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 		}
 
 		if (!resumeToken.isEmpty()) {
-			iterable = iterable.resumeAfter(resumeToken);
+
+			if (resumeAfter) {
+				iterable = iterable.resumeAfter(resumeToken);
+			} else {
+				iterable = iterable.startAfter(resumeToken);
+			}
 		}
 
 		if (startAt != null) {
