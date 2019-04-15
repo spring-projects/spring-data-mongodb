@@ -44,6 +44,8 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
+import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -56,6 +58,7 @@ import com.mongodb.reactivestreams.client.AggregatePublisher;
 import com.mongodb.reactivestreams.client.ClientSession;
 import com.mongodb.reactivestreams.client.DistinctPublisher;
 import com.mongodb.reactivestreams.client.FindPublisher;
+import com.mongodb.reactivestreams.client.MapReducePublisher;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
@@ -85,6 +88,7 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 	@Mock AggregatePublisher aggregatePublisher;
 	@Mock DistinctPublisher distinctPublisher;
 	@Mock Publisher resultPublisher;
+	@Mock MapReducePublisher mapReducePublisher;
 	@Mock MongoClient client;
 	@Mock CodecRegistry codecRegistry;
 
@@ -115,6 +119,7 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 		when(collection.updateMany(any(ClientSession.class), any(), any(), any(UpdateOptions.class)))
 				.thenReturn(resultPublisher);
 		when(collection.dropIndex(any(ClientSession.class), anyString())).thenReturn(resultPublisher);
+		when(collection.mapReduce(any(ClientSession.class), any(), any(), any())).thenReturn(mapReducePublisher);
 		when(findPublisher.projection(any())).thenReturn(findPublisher);
 		when(findPublisher.limit(anyInt())).thenReturn(findPublisher);
 		when(findPublisher.collation(any())).thenReturn(findPublisher);
@@ -269,11 +274,11 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 		verify(database).runCommand(eq(clientSession), any(), eq(Document.class));
 	}
 
-	@Test // DATAMONGO-1880, DATAMONGO-1890
-	@Ignore("No map reduce yet on template - DATAMONGO-1890")
+	@Test // DATAMONGO-1880, DATAMONGO-1890, DATAMONGO-257
 	public void mapReduceShouldUseProxiedCollection() {
 
-		// template.mapReduce(COLLECTION_NAME, "foo", "bar", Person.class);
+		template.mapReduce(new BasicQuery("{}"), Person.class, COLLECTION_NAME, Person.class, "foo", "bar",
+				MapReduceOptions.options()).subscribe();
 
 		verify(collection).mapReduce(eq(clientSession), anyString(), anyString(), eq(Document.class));
 	}

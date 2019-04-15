@@ -362,4 +362,7 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 
 	@Query(value = "{ 'shippingAddresses' : { '$elemMatch' : { 'city' : { '$eq' : 'lnz' } } } }", fields = "{ 'shippingAddresses.$': ?0 }")
 	Person findWithArrayPositionInProjection(int position);
+
+	 @Query(value = "{ 'fans' : { '$elemMatch' : { '$ref' : 'user' } } }", fields = "{ 'fans.$': ?0 }")
+	 Person findWithArrayPositionInProjectionWithDbRef(int position);
 }

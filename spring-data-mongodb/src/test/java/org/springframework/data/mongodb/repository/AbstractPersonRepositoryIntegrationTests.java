@@ -36,7 +36,6 @@ import java.util.stream.Stream;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -1274,15 +1273,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(target.getShippingAddresses()).hasSize(1);
 	}
 
-	@Test // DATAMONGO-2149, DATAMONGO-2154
-	@Ignore("This one fails due to Json parse exception within MongoDB")
+	@Test // DATAMONGO-2149, DATAMONGO-2154, DATAMONGO-2199
 	public void annotatedQueryShouldAllowPositionalParameterInFieldsProjectionWithDbRef() {
-
-		// the following needs to be added to PersonRepository.
-
-		// @Query(value = "{ 'fans' : { '$elemMatch' : { '$ref' : 'user' } } }", fields = "{ 'fans.$': ?0 }")
-		// Person findWithArrayPositionInProjectionWithDbRef(int position);
-
 		List<User> userList = IntStream.range(0, 10).mapToObj(it -> {
 
 			User user = new User();
@@ -1297,9 +1289,9 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		alicia.setFans(userList);
 		operations.save(alicia);
 
-		// Person target = repository.findWithArrayPositionInProjectionWithDbRef(1);
-		//
-		// assertThat(target).isNotNull();
-		// assertThat(target.getShippingAddresses()).hasSize(1);
+		Person target = repository.findWithArrayPositionInProjectionWithDbRef(1);
+
+		assertThat(target).isNotNull();
+		assertThat(target.getFans()).hasSize(1);
 	}
 }

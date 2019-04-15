@@ -33,7 +33,6 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -47,6 +46,7 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -63,6 +63,7 @@ import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.reactivestreams.client.AggregatePublisher;
 import com.mongodb.reactivestreams.client.FindPublisher;
+import com.mongodb.reactivestreams.client.MapReducePublisher;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
@@ -87,6 +88,7 @@ public class ReactiveMongoTemplateUnitTests {
 	@Mock Publisher runCommandPublisher;
 	@Mock Publisher updatePublisher;
 	@Mock Publisher findAndUpdatePublisher;
+	@Mock MapReducePublisher mapReducePublisher;
 
 	MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
 	MappingMongoConverter converter;
@@ -106,7 +108,9 @@ public class ReactiveMongoTemplateUnitTests {
 		when(collection.aggregate(anyList(), any(Class.class))).thenReturn(aggregatePublisher);
 		when(collection.count(any(), any(CountOptions.class))).thenReturn(Mono.just(0L));
 		when(collection.updateOne(any(), any(), any(UpdateOptions.class))).thenReturn(updatePublisher);
-		when(collection.findOneAndUpdate(any(), any(), any(FindOneAndUpdateOptions.class))).thenReturn(findAndUpdatePublisher);
+		when(collection.findOneAndUpdate(any(), any(), any(FindOneAndUpdateOptions.class)))
+				.thenReturn(findAndUpdatePublisher);
+		when(collection.mapReduce(anyString(), anyString(), any())).thenReturn(mapReducePublisher);
 		when(findPublisher.projection(any())).thenReturn(findPublisher);
 		when(findPublisher.limit(anyInt())).thenReturn(findPublisher);
 		when(findPublisher.collation(any())).thenReturn(findPublisher);
@@ -271,14 +275,13 @@ public class ReactiveMongoTemplateUnitTests {
 		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
 	}
 
-	@Ignore("currently no mapReduce")
-	@Test // DATAMONGO-1518
+	@Test // DATAMONGO-1518, DATAMONGO-2257
 	public void mapReduceShouldUseCollationWhenPresent() {
 
-		// template.mapReduce("", "", "", MapReduceOptions.options().collation(Collation.of("fr")),
-		// AutogenerateableId.class).subscribe();
-		//
-		// verify(mapReduceIterable).collation(eq(com.mongodb.client.model.Collation.builder().locale("fr").build()));
+		template.mapReduce(new BasicQuery("{}"), AutogenerateableId.class, AutogenerateableId.class, "", "",
+				MapReduceOptions.options().collation(Collation.of("fr"))).subscribe();
+
+		verify(mapReducePublisher).collation(eq(com.mongodb.client.model.Collation.builder().locale("fr").build()));
 	}
 
 	@Test // DATAMONGO-1518
