@@ -16,11 +16,10 @@
 package org.springframework.data.mongodb.gridfs;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.gridfs.GridFsCriteria.*;
 
-import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
@@ -32,12 +31,14 @@ import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.core.io.buffer.DefaultDataBuffer;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -143,7 +144,7 @@ public class ReactiveGridFsTemplateTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAMONGO-1855
+	@Test // DATAMONGO-1855, DATAMONGO-2240
 	public void shouldEmitFirstEntryWhenFindFirstRetrievesMoreThanOneResult() throws IOException {
 
 		AsyncInputStream upload1 = AsyncStreamHelper.toAsyncInputStream(resource.getInputStream());
@@ -155,8 +156,23 @@ public class ReactiveGridFsTemplateTests {
 		operations.findFirst(query(where("filename").regex("foo*"))) //
 				.flatMap(operations::getResource) //
 				.as(StepVerifier::create) //
-				.expectNextCount(1) //
+				.assertNext(actual -> {
+
+					assertThat(actual.getGridFSFile()).isNotNull();
+				})
 				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-2240
+	public void shouldReturnNoGridFsFileWhenAbsent() {
+
+		operations.getResource("absent") //
+				.as(StepVerifier::create) //
+				.assertNext(actual -> {
+
+					assertThat(actual.exists()).isFalse();
+					assertThat(actual.getGridFSFile()).isNull();
+				}).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1855
