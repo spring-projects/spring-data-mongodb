@@ -116,7 +116,7 @@ public class GridFsResource extends InputStreamResource {
 	public long contentLength() throws IOException {
 
 		verifyExists();
-		return file.getLength();
+		return getGridFSFile().getLength();
 	}
 
 	/*
@@ -125,7 +125,7 @@ public class GridFsResource extends InputStreamResource {
 	 */
 	@Override
 	public String getFilename() throws IllegalStateException {
-		return filename;
+		return this.filename;
 	}
 
 	/*
@@ -134,7 +134,7 @@ public class GridFsResource extends InputStreamResource {
 	 */
 	@Override
 	public boolean exists() {
-		return file != null;
+		return this.file != null;
 	}
 
 	/*
@@ -145,7 +145,7 @@ public class GridFsResource extends InputStreamResource {
 	public long lastModified() throws IOException {
 
 		verifyExists();
-		return file.getUploadDate().getTime();
+		return getGridFSFile().getUploadDate().getTime();
 	}
 
 	/*
@@ -167,7 +167,7 @@ public class GridFsResource extends InputStreamResource {
 
 		Assert.state(exists(), () -> String.format("%s does not exist.", getDescription()));
 
-		return file.getId();
+		return getGridFSFile().getId();
 	}
 
 	/**
@@ -176,7 +176,7 @@ public class GridFsResource extends InputStreamResource {
 	 */
 	@Nullable
 	public GridFSFile getGridFSFile() {
-		return file;
+		return this.file;
 	}
 
 	/**
@@ -194,8 +194,9 @@ public class GridFsResource extends InputStreamResource {
 
 		return Optionals
 				.firstNonEmpty(
-						() -> Optional.ofNullable(file.getMetadata()).map(it -> it.get(CONTENT_TYPE_FIELD, String.class)),
-						() -> Optional.ofNullable(file.getContentType()))
+						() -> Optional.ofNullable(getGridFSFile().getMetadata())
+								.map(it -> it.get(CONTENT_TYPE_FIELD, String.class)),
+						() -> Optional.ofNullable(getGridFSFile().getContentType()))
 				.orElseThrow(() -> new MongoGridFSException("No contentType data for this GridFS file"));
 	}
 

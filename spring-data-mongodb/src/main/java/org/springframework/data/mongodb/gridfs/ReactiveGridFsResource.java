@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.gridfs;
 
 import reactor.core.publisher.Flux;
 
-import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -39,9 +38,6 @@ import com.mongodb.client.gridfs.model.GridFSFile;
  * @since 2.2
  */
 public class ReactiveGridFsResource extends AbstractResource {
-
-	static final String CONTENT_TYPE_FIELD = "_contentType";
-	private static final ByteArrayInputStream EMPTY_INPUT_STREAM = new ByteArrayInputStream(new byte[0]);
 
 	private final @Nullable GridFSFile file;
 	private final String filename;
@@ -105,7 +101,7 @@ public class ReactiveGridFsResource extends AbstractResource {
 	public long contentLength() throws IOException {
 
 		verifyExists();
-		return file.getLength();
+		return getGridFSFile().getLength();
 	}
 
 	/*
@@ -114,7 +110,7 @@ public class ReactiveGridFsResource extends AbstractResource {
 	 */
 	@Override
 	public String getFilename() throws IllegalStateException {
-		return filename;
+		return this.filename;
 	}
 
 	/*
@@ -123,7 +119,7 @@ public class ReactiveGridFsResource extends AbstractResource {
 	 */
 	@Override
 	public boolean exists() {
-		return file != null;
+		return this.file != null;
 	}
 
 	/*
@@ -134,7 +130,7 @@ public class ReactiveGridFsResource extends AbstractResource {
 	public long lastModified() throws IOException {
 
 		verifyExists();
-		return file.getUploadDate().getTime();
+		return getGridFSFile().getUploadDate().getTime();
 	}
 
 	/*
@@ -156,7 +152,7 @@ public class ReactiveGridFsResource extends AbstractResource {
 
 		Assert.state(exists(), () -> String.format("%s does not exist.", getDescription()));
 
-		return file.getId();
+		return getGridFSFile().getId();
 	}
 
 	/**
@@ -178,7 +174,7 @@ public class ReactiveGridFsResource extends AbstractResource {
 		if (!exists()) {
 			return Flux.error(new FileNotFoundException(String.format("%s does not exist.", getDescription())));
 		}
-		return content;
+		return this.content;
 	}
 
 	private void verifyExists() throws FileNotFoundException {
