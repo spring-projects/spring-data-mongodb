@@ -48,7 +48,7 @@ public class GridFsResource extends InputStreamResource {
 
 	/**
 	 * Creates a new, absent {@link GridFsResource}.
-	 * 
+	 *
 	 * @param filename filename of the absent resource.
 	 * @since 2.1
 	 */
@@ -168,6 +168,15 @@ public class GridFsResource extends InputStreamResource {
 		Assert.state(exists(), () -> String.format("%s does not exist.", getDescription()));
 
 		return file.getId();
+	}
+
+	/**
+	 * @return the underlying {@link GridFSFile}. Can be {@literal null} if absent.
+	 * @since 2.2
+	 */
+	@Nullable
+	public GridFSFile getGridFSFile() {
+		return file;
 	}
 
 	/**

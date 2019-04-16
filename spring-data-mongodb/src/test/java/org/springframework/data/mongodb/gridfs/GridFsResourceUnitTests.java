@@ -45,6 +45,15 @@ public class GridFsResourceUnitTests {
 		assertThat(resource.getContentType()).isEqualTo("text/plain");
 	}
 
+	@Test // DATAMONGO-2240
+	public void shouldReturnGridFSFile() {
+
+		GridFSFile file = new GridFSFile(new BsonObjectId(), "foo", 0, 0, new Date(), "foo", new Document());
+		GridFsResource resource = new GridFsResource(file);
+
+		assertThat(resource.getGridFSFile()).isSameAs(file);
+	}
+
 	@Test // DATAMONGO-1850
 	public void shouldThrowExceptionOnEmptyContentType() {
 
@@ -89,6 +98,5 @@ public class GridFsResourceUnitTests {
 		assertThat(absent.exists()).isFalse();
 		assertThat(absent.getDescription()).contains("GridFs resource [foo]");
 		assertThat(absent.getFilename()).isEqualTo("foo");
-
 	}
 }

@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.reactivestreams.Publisher;
+
 import org.springframework.core.io.AbstractResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -156,6 +157,15 @@ public class ReactiveGridFsResource extends AbstractResource {
 		Assert.state(exists(), () -> String.format("%s does not exist.", getDescription()));
 
 		return file.getId();
+	}
+
+	/**
+	 * @return the underlying {@link GridFSFile}. Can be {@literal null} if absent.
+	 * @since 2.2
+	 */
+	@Nullable
+	public GridFSFile getGridFSFile() {
+		return file;
 	}
 
 	/**
