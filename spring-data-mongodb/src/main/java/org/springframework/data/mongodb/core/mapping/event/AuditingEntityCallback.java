@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,44 +16,42 @@
 package org.springframework.data.mongodb.core.mapping.event;
 
 import org.springframework.beans.factory.ObjectFactory;
-import org.springframework.context.ApplicationListener;
 import org.springframework.core.Ordered;
 import org.springframework.data.auditing.AuditingHandler;
 import org.springframework.data.auditing.IsNewAwareAuditingHandler;
+import org.springframework.data.mapping.callback.EntityCallback;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.util.Assert;
 
 /**
- * Event listener to populate auditing related fields on an entity about to be saved.
+ * {@link EntityCallback} to populate auditing related fields on an entity about to be saved.
  *
- * @author Oliver Gierke
- * @author Thomas Darimont
- * @deprecated since 2.2, use {@link AuditingEntityCallback}.
+ * @author Mark Paluch
+ * @since 2.2
  */
-@Deprecated
-public class AuditingEventListener implements ApplicationListener<BeforeConvertEvent<Object>>, Ordered {
+public class AuditingEntityCallback implements BeforeConvertCallback<Object>, Ordered {
 
 	private final ObjectFactory<IsNewAwareAuditingHandler> auditingHandlerFactory;
 
 	/**
-	 * Creates a new {@link AuditingEventListener} using the given {@link MappingContext} and {@link AuditingHandler}
+	 * Creates a new {@link AuditingEntityCallback} using the given {@link MappingContext} and {@link AuditingHandler}
 	 * provided by the given {@link ObjectFactory}.
 	 *
 	 * @param auditingHandlerFactory must not be {@literal null}.
 	 */
-	public AuditingEventListener(ObjectFactory<IsNewAwareAuditingHandler> auditingHandlerFactory) {
+	public AuditingEntityCallback(ObjectFactory<IsNewAwareAuditingHandler> auditingHandlerFactory) {
 
 		Assert.notNull(auditingHandlerFactory, "IsNewAwareAuditingHandler must not be null!");
 		this.auditingHandlerFactory = auditingHandlerFactory;
 	}
 
-	/*
+	/* 
 	 * (non-Javadoc)
-	 * @see org.springframework.context.ApplicationListener#onApplicationEvent(org.springframework.context.ApplicationEvent)
+	 * @see org.springframework.data.mongodb.core.mapping.event.BeforeConvertCallback#onBeforeConvert(java.lang.Object, java.lang.String)
 	 */
 	@Override
-	public void onApplicationEvent(BeforeConvertEvent<Object> event) {
-		event.mapSource(it -> auditingHandlerFactory.getObject().markAudited(it));
+	public Object onBeforeConvert(Object entity, String collection) {
+		return auditingHandlerFactory.getObject().markAudited(entity);
 	}
 
 	/*

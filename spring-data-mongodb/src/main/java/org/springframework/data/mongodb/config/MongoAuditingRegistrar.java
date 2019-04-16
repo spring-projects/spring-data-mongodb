@@ -32,16 +32,22 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.data.mongodb.core.mapping.event.AuditingEventListener;
+import org.springframework.data.mongodb.core.mapping.event.AuditingEntityCallback;
+import org.springframework.data.mongodb.core.mapping.event.ReactiveAuditingEntityCallback;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 
 /**
  * {@link ImportBeanDefinitionRegistrar} to enable {@link EnableMongoAuditing} annotation.
  *
  * @author Thomas Darimont
  * @author Oliver Gierke
+ * @author Mark Paluch
  */
 class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
+
+	private static boolean PROJECT_REACTOR_AVAILABLE = ClassUtils.isPresent("reactor.core.publisher.Mono",
+			MongoAuditingRegistrar.class.getClassLoader());
 
 	/*
 	 * (non-Javadoc)
@@ -104,12 +110,27 @@ class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 		Assert.notNull(registry, "BeanDefinitionRegistry must not be null!");
 
 		BeanDefinitionBuilder listenerBeanDefinitionBuilder = BeanDefinitionBuilder
-				.rootBeanDefinition(AuditingEventListener.class);
+				.rootBeanDefinition(AuditingEntityCallback.class);
 		listenerBeanDefinitionBuilder
 				.addConstructorArgValue(ParsingUtils.getObjectFactoryBeanDefinition(getAuditingHandlerBeanName(), registry));
 
 		registerInfrastructureBeanWithId(listenerBeanDefinitionBuilder.getBeanDefinition(),
-				AuditingEventListener.class.getName(), registry);
+				AuditingEntityCallback.class.getName(), registry);
+
+		if (PROJECT_REACTOR_AVAILABLE) {
+			registerReactiveAuditingEntityCallback(registry, auditingHandlerDefinition.getSource());
+		}
+	}
+
+	private void registerReactiveAuditingEntityCallback(BeanDefinitionRegistry registry, Object source) {
+
+		BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(ReactiveAuditingEntityCallback.class);
+
+		builder.addConstructorArgValue(ParsingUtils.getObjectFactoryBeanDefinition(getAuditingHandlerBeanName(), registry));
+		builder.getRawBeanDefinition().setSource(source);
+
+		registerInfrastructureBeanWithId(builder.getBeanDefinition(), ReactiveAuditingEntityCallback.class.getName(),
+				registry);
 	}
 
 	/**

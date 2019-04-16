@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.config;
 import static org.springframework.data.config.ParsingUtils.*;
 import static org.springframework.data.mongodb.config.BeanNames.*;
 
+import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.RootBeanDefinition;
@@ -26,17 +27,25 @@ import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.data.auditing.config.IsNewAwareAuditingHandlerBeanDefinitionParser;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-import org.springframework.data.mongodb.core.mapping.event.AuditingEventListener;
+import org.springframework.data.mongodb.core.mapping.event.AuditingEntityCallback;
+import org.springframework.data.mongodb.core.mapping.event.ReactiveAuditingEntityCallback;
+import org.springframework.lang.Nullable;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
+
 import org.w3c.dom.Element;
 
 /**
- * {@link BeanDefinitionParser} to register a {@link AuditingEventListener} to transparently set auditing information on
- * an entity.
+ * {@link BeanDefinitionParser} to register a {@link AuditingEntityCallback} to transparently set auditing information
+ * on an entity.
  *
  * @author Oliver Gierke
+ * @author Mark Paluch
  */
 public class MongoAuditingBeanDefinitionParser extends AbstractSingleBeanDefinitionParser {
+
+	private static boolean PROJECT_REACTOR_AVAILABLE = ClassUtils.isPresent("reactor.core.publisher.Mono",
+			MongoAuditingRegistrar.class.getClassLoader());
 
 	/*
 	 * (non-Javadoc)
@@ -44,7 +53,7 @@ public class MongoAuditingBeanDefinitionParser extends AbstractSingleBeanDefinit
 	 */
 	@Override
 	protected Class<?> getBeanClass(Element element) {
-		return AuditingEventListener.class;
+		return AuditingEntityCallback.class;
 	}
 
 	/*
@@ -80,7 +89,24 @@ public class MongoAuditingBeanDefinitionParser extends AbstractSingleBeanDefinit
 				mappingContextRef);
 		parser.parse(element, parserContext);
 
-		builder.addConstructorArgValue(getObjectFactoryBeanDefinition(parser.getResolvedBeanName(),
-				parserContext.extractSource(element)));
+		AbstractBeanDefinition isNewAwareAuditingHandler = getObjectFactoryBeanDefinition(parser.getResolvedBeanName(),
+				parserContext.extractSource(element));
+		builder.addConstructorArgValue(isNewAwareAuditingHandler);
+
+		if (PROJECT_REACTOR_AVAILABLE) {
+			registerReactiveAuditingEntityCallback(parserContext.getRegistry(), isNewAwareAuditingHandler,
+					parserContext.extractSource(element));
+		}
+	}
+
+	private void registerReactiveAuditingEntityCallback(BeanDefinitionRegistry registry,
+			AbstractBeanDefinition isNewAwareAuditingHandler, @Nullable Object source) {
+
+		BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(ReactiveAuditingEntityCallback.class);
+
+		builder.addConstructorArgValue(isNewAwareAuditingHandler);
+		builder.getRawBeanDefinition().setSource(source);
+
+		registry.registerBeanDefinition(ReactiveAuditingEntityCallback.class.getName(), builder.getBeanDefinition());
 	}
 }

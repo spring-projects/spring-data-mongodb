@@ -20,22 +20,25 @@ import static org.junit.Assert.*;
 
 import org.joda.time.DateTime;
 import org.junit.Test;
+
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.mapping.callback.SimpleEntityCallbacks;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
+import org.springframework.data.mongodb.core.mapping.event.BeforeConvertCallback;
 
 /**
  * Integration test for the auditing support.
  *
  * @author Oliver Gierke
+ * @author Mark Paluch
  */
 public class AuditingIntegrationTests {
 
-	@Test // DATAMONGO-577, DATAMONGO-800, DATAMONGO-883
+	@Test // DATAMONGO-577, DATAMONGO-800, DATAMONGO-883, 2261
 	public void enablesAuditingAndSetsPropertiesAccordingly() throws Exception {
 
 		AbstractApplicationContext context = new ClassPathXmlApplicationContext("auditing.xml", getClass());
@@ -43,17 +46,18 @@ public class AuditingIntegrationTests {
 		MongoMappingContext mappingContext = context.getBean(MongoMappingContext.class);
 		mappingContext.getPersistentEntity(Entity.class);
 
+		SimpleEntityCallbacks callbacks = new SimpleEntityCallbacks(context);
+
 		Entity entity = new Entity();
-		BeforeConvertEvent<Entity> event = new BeforeConvertEvent<Entity>(entity, "collection-1");
-		context.publishEvent(event);
+		entity = callbacks.callback(entity, BeforeConvertCallback.class, (cb, e) -> cb.onBeforeConvert(e, "collection-1"));
 
 		assertThat(entity.created, is(notNullValue()));
 		assertThat(entity.modified, is(entity.created));
 
 		Thread.sleep(10);
 		entity.id = 1L;
-		event = new BeforeConvertEvent<Entity>(entity, "collection-1");
-		context.publishEvent(event);
+
+		entity = callbacks.callback(entity, BeforeConvertCallback.class, (cb, e) -> cb.onBeforeConvert(e, "collection-1"));
 
 		assertThat(entity.created, is(notNullValue()));
 		assertThat(entity.modified, is(not(entity.created)));
