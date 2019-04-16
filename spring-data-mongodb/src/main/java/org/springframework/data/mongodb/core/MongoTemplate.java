@@ -56,6 +56,7 @@ import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Metric;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.PropertyReferenceException;
+import org.springframework.data.mapping.callback.SimpleEntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.MongoDatabaseUtils;
 import org.springframework.data.mongodb.MongoDbFactory;
@@ -92,8 +93,10 @@ import org.springframework.data.mongodb.core.mapping.event.AfterConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterLoadEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
+import org.springframework.data.mongodb.core.mapping.event.BeforeConvertCallback;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
+import org.springframework.data.mongodb.core.mapping.event.BeforeSaveCallback;
 import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
 import org.springframework.data.mongodb.core.mapreduce.GroupBy;
@@ -140,7 +143,17 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
-import com.mongodb.client.model.*;
+import com.mongodb.client.model.CountOptions;
+import com.mongodb.client.model.CreateCollectionOptions;
+import com.mongodb.client.model.DeleteOptions;
+import com.mongodb.client.model.FindOneAndDeleteOptions;
+import com.mongodb.client.model.FindOneAndReplaceOptions;
+import com.mongodb.client.model.FindOneAndUpdateOptions;
+import com.mongodb.client.model.ReplaceOptions;
+import com.mongodb.client.model.ReturnDocument;
+import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.ValidationAction;
+import com.mongodb.client.model.ValidationLevel;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
@@ -201,6 +214,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	private WriteResultChecking writeResultChecking = WriteResultChecking.NONE;
 	private @Nullable ReadPreference readPreference;
 	private @Nullable ApplicationEventPublisher eventPublisher;
+	private @Nullable SimpleEntityCallbacks entityCallbacks;
 	private @Nullable ResourceLoader resourceLoader;
 	private @Nullable MongoPersistentEntityIndexCreator indexCreator;
 
@@ -345,6 +359,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		prepareIndexCreator(applicationContext);
 
 		eventPublisher = applicationContext;
+
+		entityCallbacks = new SimpleEntityCallbacks(applicationContext);
 
 		if (mappingContext instanceof ApplicationEventPublisherAware) {
 			((ApplicationEventPublisherAware) mappingContext).setApplicationEventPublisher(eventPublisher);
@@ -1245,6 +1261,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		BeforeConvertEvent<T> event = new BeforeConvertEvent<>(objectToSave, collectionName);
 		T toConvert = maybeEmitEvent(event).getSource();
+		toConvert = maybeCallBeforeConvert(toConvert, collectionName);
 
 		AdaptibleEntity<T> entity = operations.forEntity(toConvert, mongoConverter.getConversionService());
 		entity.assertUpdateableIdIfNotSet();
@@ -1253,6 +1270,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Document dbDoc = entity.toMappedDocument(writer).getDocument();
 
 		maybeEmitEvent(new BeforeSaveEvent<>(initialized, dbDoc, collectionName));
+		initialized = maybeCallBeforeSave(initialized, dbDoc, collectionName);
 		Object id = insertDocument(collectionName, dbDoc, initialized.getClass());
 
 		T saved = populateIdIfNecessary(initialized, id);
@@ -1332,6 +1350,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			BeforeConvertEvent<T> event = new BeforeConvertEvent<>(uninitialized, collectionName);
 			T toConvert = maybeEmitEvent(event).getSource();
+			toConvert = maybeCallBeforeConvert(toConvert, collectionName);
 
 			AdaptibleEntity<T> entity = operations.forEntity(toConvert, mongoConverter.getConversionService());
 			entity.assertUpdateableIdIfNotSet();
@@ -1339,6 +1358,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			T initialized = entity.initializeVersionProperty();
 			Document document = entity.toMappedDocument(writer).getDocument();
 			maybeEmitEvent(new BeforeSaveEvent<>(initialized, document, collectionName));
+			initialized = maybeCallBeforeSave(initialized, document, collectionName);
 
 			documentList.add(document);
 			initializedBatchToSave.add(initialized);
@@ -1399,12 +1419,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		T toSave = source.incrementVersion();
 
 		toSave = maybeEmitEvent(new BeforeConvertEvent<T>(toSave, collectionName)).getSource();
+		toSave = maybeCallBeforeConvert(toSave, collectionName);
 
 		source.assertUpdateableIdIfNotSet();
 
 		MappedDocument mapped = source.toMappedDocument(mongoConverter);
 
 		maybeEmitEvent(new BeforeSaveEvent<>(toSave, mapped.getDocument(), collectionName));
+		toSave = maybeCallBeforeSave(toSave, mapped.getDocument(), collectionName);
 		UpdateDefinition update = mapped.updateWithoutId();
 
 		UpdateResult result = doUpdate(collectionName, query, update, toSave.getClass(), false, false);
@@ -1423,6 +1445,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	protected <T> T doSave(String collectionName, T objectToSave, MongoWriter<T> writer) {
 
 		objectToSave = maybeEmitEvent(new BeforeConvertEvent<>(objectToSave, collectionName)).getSource();
+		objectToSave = maybeCallBeforeConvert(objectToSave, collectionName);
 
 		AdaptibleEntity<T> entity = operations.forEntity(objectToSave, mongoConverter.getConversionService());
 		entity.assertUpdateableIdIfNotSet();
@@ -1431,6 +1454,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Document dbDoc = mapped.getDocument();
 
 		maybeEmitEvent(new BeforeSaveEvent<>(objectToSave, dbDoc, collectionName));
+		objectToSave = maybeCallBeforeSave(objectToSave, dbDoc, collectionName);
 		Object id = saveDocument(collectionName, dbDoc, objectToSave.getClass());
 
 		T saved = populateIdIfNecessary(entity.getBean(), id);
@@ -2312,6 +2336,28 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return event;
 	}
 
+	@SuppressWarnings("unchecked")
+	protected <T> T maybeCallBeforeConvert(T object, String collection) {
+
+		if (null != entityCallbacks) {
+			return (T) entityCallbacks.callback(object, BeforeConvertCallback.class,
+					(cb, t) -> cb.onBeforeConvert(t, collection));
+		}
+
+		return object;
+	}
+
+	@SuppressWarnings("unchecked")
+	protected <T> T maybeCallBeforeSave(T object, Document document, String collection) {
+
+		if (null != entityCallbacks) {
+			return (T) entityCallbacks.callback(object, BeforeSaveCallback.class,
+					(cb, t) -> cb.onBeforeSave(t, document, collection));
+		}
+
+		return object;
+	}
+
 	/**
 	 * Create the specified collection using the provided options
 	 *
@@ -2634,6 +2680,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		maybeEmitEvent(new BeforeSaveEvent<>(replacement, replacement, collectionName));
+		replacement = maybeCallBeforeSave(replacement, replacement, collectionName);
 
 		return executeFindOneInternal(
 				new FindAndReplaceCallback(mappedQuery, mappedFields, mappedSort, replacement, collation, options),
