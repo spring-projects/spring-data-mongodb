@@ -25,6 +25,7 @@ import org.bson.BsonDocument;
 import org.bson.BsonTimestamp;
 import org.bson.BsonValue;
 import org.bson.Document;
+
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.lang.Nullable;
@@ -52,7 +53,7 @@ public class ChangeStreamOptions {
 	private @Nullable FullDocument fullDocumentLookup;
 	private @Nullable Collation collation;
 	private @Nullable Object resumeTimestamp;
-	private Resume resume = Resume.RESUME_AFTER;
+	private Resume resume = Resume.UNDEFINED;
 
 	protected ChangeStreamOptions() {}
 
@@ -161,6 +162,8 @@ public class ChangeStreamOptions {
 	 */
 	enum Resume {
 
+		UNDEFINED,
+
 		/**
 		 * @see com.mongodb.client.ChangeStreamIterable#startAfter(BsonDocument)
 		 */
@@ -185,7 +188,7 @@ public class ChangeStreamOptions {
 		private @Nullable FullDocument fullDocumentLookup;
 		private @Nullable Collation collation;
 		private @Nullable Object resumeTimestamp;
-		private Resume resume = Resume.RESUME_AFTER;
+		private Resume resume = Resume.UNDEFINED;
 
 		private ChangeStreamOptionsBuilder() {}
 
@@ -253,6 +256,11 @@ public class ChangeStreamOptions {
 			Assert.notNull(resumeToken, "ResumeToken must not be null!");
 
 			this.resumeToken = resumeToken;
+
+			if (this.resume == Resume.UNDEFINED) {
+				this.resume = Resume.RESUME_AFTER;
+			}
+
 			return this;
 		}
 
@@ -319,7 +327,7 @@ public class ChangeStreamOptions {
 		public ChangeStreamOptionsBuilder resumeAfter(BsonValue resumeToken) {
 
 			resumeToken(resumeToken);
-			resume = Resume.RESUME_AFTER;
+			this.resume = Resume.RESUME_AFTER;
 
 			return this;
 		}
@@ -334,7 +342,7 @@ public class ChangeStreamOptions {
 		public ChangeStreamOptionsBuilder startAfter(BsonValue resumeToken) {
 
 			resumeToken(resumeToken);
-			resume = Resume.START_AFTER;
+			this.resume = Resume.START_AFTER;
 
 			return this;
 		}
@@ -346,12 +354,12 @@ public class ChangeStreamOptions {
 
 			ChangeStreamOptions options = new ChangeStreamOptions();
 
-			options.filter = filter;
-			options.resumeToken = resumeToken;
-			options.fullDocumentLookup = fullDocumentLookup;
-			options.collation = collation;
-			options.resumeTimestamp = resumeTimestamp;
-			options.resume = resume;
+			options.filter = this.filter;
+			options.resumeToken = this.resumeToken;
+			options.fullDocumentLookup = this.fullDocumentLookup;
+			options.collation = this.collation;
+			options.resumeTimestamp = this.resumeTimestamp;
+			options.resume = this.resume;
 
 			return options;
 		}

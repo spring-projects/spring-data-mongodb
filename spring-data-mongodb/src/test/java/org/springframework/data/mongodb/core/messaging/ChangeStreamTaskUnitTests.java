@@ -27,6 +27,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -71,7 +72,7 @@ public class ChangeStreamTaskUnitTests {
 	}
 
 	@Test // DATAMONGO-2258
-	public void shouldBe2DotOneComplient() {
+	public void shouldNotBreakLovelaceBehavior() {
 
 		BsonDocument resumeToken = new BsonDocument("token", new BsonString(UUID.randomUUID().toString()));
 
