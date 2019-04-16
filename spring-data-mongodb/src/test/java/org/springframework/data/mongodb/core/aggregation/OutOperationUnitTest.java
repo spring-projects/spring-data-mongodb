@@ -15,12 +15,19 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+
+import java.util.Arrays;
+
+import org.bson.Document;
 import org.junit.Test;
 
 /**
  * Unit tests for {@link OutOperation}.
  *
  * @author Nikolay Bogdanov
+ * @author Christoph Strobl
  */
 public class OutOperationUnitTest {
 
@@ -28,4 +35,51 @@ public class OutOperationUnitTest {
 	public void shouldCheckNPEInCreation() {
 		new OutOperation(null);
 	}
+
+	@Test // DATAMONGO-2259
+	public void shouldUsePreMongoDB42FormatWhenOnlyCollectionIsPresent() {
+		assertThat(out("out-col").toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo(new Document("$out", "out-col"));
+	}
+
+	@Test // DATAMONGO-2259
+	public void shouldUseMongoDB42ExtendedFormatWhenAdditionalParametersPresent() {
+
+		assertThat(out("out-col").insertDocuments().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(new Document("$out", new Document("to", "out-col").append("mode", "insertDocuments")));
+	}
+
+	@Test // DATAMONGO-2259
+	public void shouldRenderExtendedFormatWithJsonStringKey() {
+
+		assertThat(out("out-col").insertDocuments().in("database-2").uniqueKey("{ 'field-1' : 1, 'field-2' : 1}")
+				.toDocument(Aggregation.DEFAULT_CONTEXT))
+						.isEqualTo(new Document("$out", new Document("to", "out-col").append("mode", "insertDocuments")
+								.append("db", "database-2").append("uniqueKey", new Document("field-1", 1).append("field-2", 1))));
+	}
+
+	@Test // DATAMONGO-2259
+	public void shouldRenderExtendedFormatWithSingleFieldKey() {
+
+		assertThat(
+				out("out-col").insertDocuments().in("database-2").uniqueKey("field-1").toDocument(Aggregation.DEFAULT_CONTEXT))
+						.isEqualTo(new Document("$out", new Document("to", "out-col").append("mode", "insertDocuments")
+								.append("db", "database-2").append("uniqueKey", new Document("field-1", 1))));
+	}
+
+	@Test // DATAMONGO-2259
+	public void shouldRenderExtendedFormatWithMultiFieldKey() {
+
+		assertThat(out("out-col").insertDocuments().in("database-2").uniqueKeyOf(Arrays.asList("field-1", "field-2"))
+				.toDocument(Aggregation.DEFAULT_CONTEXT))
+						.isEqualTo(new Document("$out", new Document("to", "out-col").append("mode", "insertDocuments")
+								.append("db", "database-2").append("uniqueKey", new Document("field-1", 1).append("field-2", 1))));
+	}
+
+	@Test // DATAMONGO-2259
+	public void shouldErrorOnExtendedFormatWithoutMode() {
+
+		assertThatThrownBy(() -> out("out-col").in("database-2").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isInstanceOf(IllegalStateException.class);
+	}
+
 }

@@ -18,12 +18,14 @@ package org.springframework.data.mongodb.util;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Map;
+import java.util.function.Function;
 
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -129,4 +131,20 @@ public class BsonUtils {
 		Arrays.asList(documents).forEach(target::putAll);
 		return target;
 	}
+
+	/**
+	 * @param source
+	 * @param orElse
+	 * @return
+	 * @since 2.2
+	 */
+	public static Document toDocumentOrElse(String source, Function<String, Document> orElse) {
+
+		if (StringUtils.trimLeadingWhitespace(source).startsWith("{")) {
+			return Document.parse(source);
+		}
+
+		return orElse.apply(source);
+	}
+
 }
