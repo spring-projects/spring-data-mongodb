@@ -3,6 +3,7 @@
 
 [[new-features.2-2-0]]
 == What's New in Spring Data MongoDB 2.2
+* Compatible with MongoDB 4.2.
 * <<mongo.query.kotlin-support,Type-safe Queries for Kotlin>>
 * <<mongodb.reactive.repositories.queries.type-safe,Querydsl support for reactive repositories>> via `ReactiveQuerydslPredicateExecutor`.
 * <<reactive.gridfs,Reactive GridFS support>>.

@@ -21,10 +21,10 @@ import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexOperationsProvider;
@@ -36,6 +36,8 @@ import org.springframework.data.repository.query.parser.Part;
 import org.springframework.data.repository.query.parser.Part.Type;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.util.Assert;
+
+import com.mongodb.MongoException;
 
 /**
  * {@link QueryCreationListener} inspecting {@link PartTreeMongoQuery}s and creating an index for the properties it
@@ -104,7 +106,26 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 		}
 
 		MongoEntityMetadata<?> metadata = query.getQueryMethod().getEntityInformation();
-		indexOperationsProvider.indexOps(metadata.getCollectionName()).ensureIndex(index);
+		try {
+			indexOperationsProvider.indexOps(metadata.getCollectionName()).ensureIndex(index);
+		} catch (UncategorizedMongoDbException e) {
+
+			if (e.getCause() instanceof MongoException) {
+
+				/*
+				 * As of MongoDB 4.2 index creation raises an error when creating an index for the very same keys with
+				 * different name, whereas previous versions silently ignored this.
+				 * Because an index is by default named after the repository finder method it is not uncommon that an index
+				 * for the very same property combination might already exist with a different name.
+				 * So you see, that's why we need to ignore the error here.
+				 *
+				 * For details please see: https://docs.mongodb.com/master/release-notes/4.2-compatibility/#indexes
+				 */
+				if (((MongoException) e.getCause()).getCode() != 85) {
+					throw e;
+				}
+			}
+		}
 		LOG.debug(String.format("Created %s!", index));
 	}
 

@@ -24,10 +24,13 @@ import org.bson.Document;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.test.util.MongoVersionRule;
+import org.springframework.data.util.Version;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -43,6 +46,8 @@ import com.mongodb.client.MongoCollection;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
 public class GroupByTests {
+
+	public static @ClassRule MongoVersionRule REQUIRES_AT_MOST_4_0 = MongoVersionRule.atMost(Version.parse("4.0.999"));
 
 	@Autowired MongoTemplate mongoTemplate;
 

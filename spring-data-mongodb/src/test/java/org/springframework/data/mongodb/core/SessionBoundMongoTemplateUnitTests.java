@@ -258,14 +258,14 @@ public class SessionBoundMongoTemplateUnitTests {
 		verify(collection).distinct(eq(clientSession), anyString(), any(), any());
 	}
 
-	@Test // DATAMONGO-1880
+	@Test // DATAMONGO-1880, DATAMONGO-2264
 	public void geoNearShouldUseProxiedDatabase() {
 
 		when(database.runCommand(any(ClientSession.class), any(), eq(Document.class)))
 				.thenReturn(new Document("results", Collections.emptyList()));
 		template.geoNear(NearQuery.near(new Point(0, 0), Metrics.NEUTRAL), Person.class);
 
-		verify(database).runCommand(eq(clientSession), any(), eq(Document.class));
+		verify(collection).aggregate(eq(clientSession), anyList(), eq(Document.class));
 	}
 
 	@Test // DATAMONGO-1880

@@ -19,6 +19,7 @@ import org.bson.Document;
 import org.springframework.jmx.export.annotation.ManagedMetric;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.jmx.support.MetricType;
+import org.springframework.util.NumberUtils;
 
 import com.mongodb.MongoClient;
 
@@ -66,6 +67,6 @@ public class OperationCounters extends AbstractMonitor {
 
 	private int getOpCounter(String key) {
 		Document opCounters = (Document) getServerStatus().get("opcounters");
-		return (Integer) opCounters.get(key);
+		return NumberUtils.convertNumberToTargetClass((Number) opCounters.get(key), Integer.class);
 	}
 }

@@ -42,13 +42,15 @@ import com.mongodb.MongoException;
 import com.mongodb.client.MongoDatabase;
 
 /**
- * Default implementation of {@link ScriptOperations} capable of saving and executing {@link ServerSideJavaScript}.
+ * Default implementation of {@link ScriptOperations} capable of saving and executing {@link ExecutableMongoScript}.
  *
  * @author Christoph Strobl
  * @author Oliver Gierke
  * @author Mark Paluch
  * @since 1.7
+ * @deprecated since 2.2. The {@code eval} command has been removed in MongoDB Server 4.2.0.
  */
+@Deprecated
 class DefaultScriptOperations implements ScriptOperations {
 
 	private static final String SCRIPT_COLLECTION_NAME = "system.js";

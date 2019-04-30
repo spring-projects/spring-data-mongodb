@@ -20,22 +20,13 @@ import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.util.NumberUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -50,7 +41,6 @@ import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -1060,34 +1050,16 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		}
 
 		String collection = StringUtils.hasText(collectionName) ? collectionName : determineCollectionName(entityClass);
-		Document nearDocument = near.toDocument();
+		String distanceField = operations.nearQueryDistanceFieldName(entityClass);
 
-		Document command = new Document("geoNear", collection);
-		command.putAll(nearDocument);
+		GeoNearResultDocumentCallback<T> callback = new GeoNearResultDocumentCallback<>(distanceField,
+				new ProjectingReadCallback<>(mongoConverter, entityClass, returnType, collection), near.getMetric());
 
-		return Flux.defer(() -> {
+		Aggregation $geoNear = TypedAggregation.newAggregation(entityClass, Aggregation.geoNear(near, "dis"))
+				.withOptions(AggregationOptions.builder().collation(near.getCollation()).build());
 
-			if (nearDocument.containsKey("query")) {
-				Document query = (Document) nearDocument.get("query");
-				command.put("query", queryMapper.getMappedObject(query, getPersistentEntity(entityClass)));
-			}
-
-			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug("Executing geoNear using: {} for class: {} in collection: {}", serializeToJsonSafely(command),
-						entityClass, collectionName);
-			}
-
-			GeoNearResultDocumentCallback<T> callback = new GeoNearResultDocumentCallback<>(
-					new ProjectingReadCallback<>(mongoConverter, entityClass, returnType, collectionName), near.getMetric());
-
-			return executeCommand(command, this.readPreference).flatMapMany(document -> {
-
-				List<Document> results = document.get("results", List.class);
-
-				return results == null ? Flux.empty() : Flux.fromIterable(results);
-
-			}).skip(near.getSkip() != null ? near.getSkip() : 0).map(callback::doWith);
-		});
+		return aggregate($geoNear, collection, Document.class) //
+				.map(callback::doWith);
 	}
 
 	/*
@@ -3039,9 +3011,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * a delegate and creates a {@link GeoResult} from the result.
 	 *
 	 * @author Mark Paluch
+	 * @author Chrstoph Strobl
 	 */
 	static class GeoNearResultDocumentCallback<T> implements DocumentCallback<GeoResult<T>> {
 
+		private final String distanceField;
 		private final DocumentCallback<T> delegate;
 		private final Metric metric;
 
@@ -3049,22 +3023,29 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		 * Creates a new {@link GeoNearResultDocumentCallback} using the given {@link DocumentCallback} delegate for
 		 * {@link GeoResult} content unmarshalling.
 		 *
+		 * @param distanceField the field to read the distance from.
 		 * @param delegate must not be {@literal null}.
+		 * @param metric the {@link Metric} to apply to the result distance.
 		 */
-		GeoNearResultDocumentCallback(DocumentCallback<T> delegate, Metric metric) {
+		GeoNearResultDocumentCallback(String distanceField, DocumentCallback<T> delegate, Metric metric) {
 
 			Assert.notNull(delegate, "DocumentCallback must not be null!");
 
+			this.distanceField = distanceField;
 			this.delegate = delegate;
 			this.metric = metric;
 		}
 
 		public GeoResult<T> doWith(Document object) {
 
-			double distance = (Double) object.get("dis");
-			Document content = (Document) object.get("obj");
+			double distance = Double.NaN;
+			if (object.containsKey(distanceField)) {
 
-			T doWith = delegate.doWith(content);
+				distance = NumberUtils.convertNumberToTargetClass(object.get(distanceField, Number.class), Double.class)
+						.doubleValue();
+			}
+
+			T doWith = delegate.doWith(object);
 
 			return new GeoResult<>(doWith, new Distance(distance, metric));
 		}

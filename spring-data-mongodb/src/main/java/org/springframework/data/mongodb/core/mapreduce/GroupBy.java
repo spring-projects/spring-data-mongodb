@@ -29,7 +29,9 @@ import org.springframework.lang.Nullable;
  * @author Mark Pollack
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @deprecated since 2.2. The {@code group} command has been removed in MongoDB Server 4.2.0.
  */
+@Deprecated
 public class GroupBy {
 
 	private @Nullable Document initialDocument;

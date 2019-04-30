@@ -16,9 +16,12 @@ before_install:
 
 env:
   matrix:
-    - PROFILE=ci
+    - MONGO_VERSION=4.1.10
+    - MONGO_VERSION=4.0.4
+    - MONGO_VERSION=3.6.12
+    - MONGO_VERSION=3.4.20
   global:
-    - MONGO_VERSION=4.0.0
+    - PROFILE=ci
 
 addons:
   apt:

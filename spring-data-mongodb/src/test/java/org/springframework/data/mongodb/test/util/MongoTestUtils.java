@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.test.util;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.time.Duration;
+
 import org.bson.Document;
 
 import com.mongodb.MongoClientURI;
@@ -78,8 +80,9 @@ public class MongoTestUtils {
 		com.mongodb.reactivestreams.client.MongoDatabase database = client.getDatabase(dbName)
 				.withWriteConcern(WriteConcern.MAJORITY).withReadPreference(ReadPreference.primary());
 
-		return Mono.from(database.getCollection(collectionName).drop())
-				.then(Mono.from(database.createCollection(collectionName)));
+		return Mono.from(database.getCollection(collectionName).drop()) //
+				.then(Mono.from(database.createCollection(collectionName))) //
+				.delayElement(Duration.ofMillis(10)); // server replication time
 	}
 
 	/**

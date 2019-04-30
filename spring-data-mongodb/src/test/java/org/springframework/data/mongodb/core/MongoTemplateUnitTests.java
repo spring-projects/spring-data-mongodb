@@ -425,29 +425,24 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(collection, never()).withReadPreference(any());
 	}
 
-	@Test // DATAMONGO-1166
+	@Test // DATAMONGO-1166, DATAMONGO-2264
 	public void geoNearShouldHonorReadPreferenceWhenSet() {
 
-		when(db.runCommand(any(org.bson.Document.class), any(ReadPreference.class), eq(Document.class)))
-				.thenReturn(mock(Document.class));
 		template.setReadPreference(ReadPreference.secondary());
 
 		NearQuery query = NearQuery.near(new Point(1, 1));
 		template.geoNear(query, Wrapper.class);
 
-		verify(this.db, times(1)).runCommand(any(org.bson.Document.class), eq(ReadPreference.secondary()),
-				eq(Document.class));
+		verify(collection).withReadPreference(eq(ReadPreference.secondary()));
 	}
 
-	@Test // DATAMONGO-1166
+	@Test // DATAMONGO-1166, DATAMONGO-2264
 	public void geoNearShouldIgnoreReadPreferenceWhenNotSet() {
-
-		when(db.runCommand(any(Document.class), eq(Document.class))).thenReturn(mock(Document.class));
 
 		NearQuery query = NearQuery.near(new Point(1, 1));
 		template.geoNear(query, Wrapper.class);
 
-		verify(this.db, times(1)).runCommand(any(Document.class), eq(Document.class));
+		verify(collection, never()).withReadPreference(any());
 	}
 
 	@Test // DATAMONGO-1334
@@ -886,16 +881,13 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(mapReduceIterable, never()).databaseName(any());
 	}
 
-	@Test // DATAMONGO-1518
+	@Test // DATAMONGO-1518, DATAMONGO-2264
 	public void geoNearShouldUseCollationWhenPresent() {
 
 		NearQuery query = NearQuery.near(0D, 0D).query(new BasicQuery("{}").collation(Collation.of("fr")));
 		template.geoNear(query, AutogenerateableId.class);
 
-		ArgumentCaptor<Document> cmd = ArgumentCaptor.forClass(Document.class);
-		verify(db).runCommand(cmd.capture(), any(Class.class));
-
-		assertThat(cmd.getValue().get("collation", Document.class), equalTo(new Document("locale", "fr")));
+		verify(aggregateIterable).collation(eq(com.mongodb.client.model.Collation.builder().locale("fr").build()));
 	}
 
 	@Test // DATAMONGO-1518
@@ -980,38 +972,38 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(findIterable).projection(eq(new Document()));
 	}
 
-	@Test // DATAMONGO-1348
+	@Test // DATAMONGO-1348, DATAMONGO-2264
 	public void geoNearShouldMapQueryCorrectly() {
-
-		when(db.runCommand(any(Document.class), eq(Document.class))).thenReturn(mock(Document.class));
 
 		NearQuery query = NearQuery.near(new Point(1, 1));
 		query.query(Query.query(Criteria.where("customName").is("rand al'thor")));
 
 		template.geoNear(query, WithNamedFields.class);
 
-		ArgumentCaptor<Document> capture = ArgumentCaptor.forClass(Document.class);
-		verify(this.db, times(1)).runCommand(capture.capture(), any(Class.class));
+		ArgumentCaptor<List<Document>> capture = ArgumentCaptor.forClass(List.class);
 
-		assertThat(capture.getValue(), IsBsonObject.isBsonObject().containing("query.custom-named-field", "rand al'thor")
+		verify(collection).aggregate(capture.capture(), eq(Document.class));
+		Document $geoNear = capture.getValue().iterator().next();
+
+		assertThat($geoNear, IsBsonObject.isBsonObject().containing("$geoNear.query.custom-named-field", "rand al'thor")
 				.notContaining("query.customName"));
 	}
 
-	@Test // DATAMONGO-1348
+	@Test // DATAMONGO-1348, DATAMONGO-2264
 	public void geoNearShouldMapGeoJsonPointCorrectly() {
-
-		when(db.runCommand(any(Document.class), eq(Document.class))).thenReturn(mock(Document.class));
 
 		NearQuery query = NearQuery.near(new GeoJsonPoint(1, 2));
 		query.query(Query.query(Criteria.where("customName").is("rand al'thor")));
 
 		template.geoNear(query, WithNamedFields.class);
 
-		ArgumentCaptor<Document> capture = ArgumentCaptor.forClass(Document.class);
-		verify(this.db, times(1)).runCommand(capture.capture(), any(Class.class));
+		ArgumentCaptor<List<Document>> capture = ArgumentCaptor.forClass(List.class);
 
-		assertThat(capture.getValue(), IsBsonObject.isBsonObject().containing("near.type", "Point")
-				.containing("near.coordinates.[0]", 1D).containing("near.coordinates.[1]", 2D));
+		verify(collection).aggregate(capture.capture(), eq(Document.class));
+		Document $geoNear = capture.getValue().iterator().next();
+
+		assertThat($geoNear, IsBsonObject.isBsonObject().containing("$geoNear.near.type", "Point")
+				.containing("$geoNear.near.coordinates.[0]", 1D).containing("$geoNear.near.coordinates.[1]", 2D));
 	}
 
 	@Test // DATAMONGO-2155

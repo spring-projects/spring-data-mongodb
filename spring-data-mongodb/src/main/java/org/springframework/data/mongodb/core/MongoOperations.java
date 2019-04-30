@@ -355,7 +355,9 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *
 	 * @return
 	 * @since 1.7
+	 * @deprecated since 2.2. The {@code eval} command has been removed without replacement in MongoDB Server 4.2.0.
 	 */
+	@Deprecated
 	ScriptOperations scriptOps();
 
 	/**
@@ -427,7 +429,11 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *          reduce function.
 	 * @param entityClass The parametrized type of the returned list
 	 * @return The results of the group operation
+	 * @deprecated since 2.2. The {@code group} command has been removed in MongoDB Server 4.2.0. <br />
+	 *             Please use {@link #aggregate(TypedAggregation, String, Class) } with a
+	 *             {@link org.springframework.data.mongodb.core.aggregation.GroupOperation} instead.
 	 */
+	@Deprecated
 	<T> GroupByResults<T> group(String inputCollectionName, GroupBy groupBy, Class<T> entityClass);
 
 	/**
@@ -442,7 +448,12 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *          reduce function.
 	 * @param entityClass The parametrized type of the returned list
 	 * @return The results of the group operation
+	 * @deprecated since 2.2. The {@code group} command has been removed in MongoDB Server 4.2.0. <br />
+	 *             Please use {@link #aggregate(TypedAggregation, String, Class) } with a
+	 *             {@link org.springframework.data.mongodb.core.aggregation.GroupOperation} and
+	 *             {@link org.springframework.data.mongodb.core.aggregation.MatchOperation} instead.
 	 */
+	@Deprecated
 	<T> GroupByResults<T> group(@Nullable Criteria criteria, String inputCollectionName, GroupBy groupBy,
 			Class<T> entityClass);
 
@@ -1147,8 +1158,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
-	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's Type
-	 * Conversion"</a> for more details.
+	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's
+	 * Type Conversion"</a> for more details.
 	 * <p/>
 	 * <p/>
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
@@ -1209,8 +1220,8 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
-	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's Type
-	 * Conversion"</a> for more details.
+	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's
+	 * Type Conversion"</a> for more details.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @return the saved object.

@@ -27,6 +27,7 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.core.query.Update.*;
 
 import com.mongodb.MongoClient;
+import com.mongodb.client.model.IndexOptions;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -45,6 +46,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.assertj.core.api.Assertions;
+import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.hamcrest.collection.IsMapContaining;
 import org.joda.time.DateTime;
@@ -415,16 +417,15 @@ public class MongoTemplateTests {
 		assertThat(field, is(IndexField.create("age", Direction.DESC)));
 	}
 
-	@Test // DATAMONGO-746
+	@Test // DATAMONGO-746, DATAMONGO-2264
 	public void testReadIndexInfoForIndicesCreatedViaMongoShellCommands() throws Exception {
 
-		String command = "db." + template.getCollectionName(Person.class)
-				+ ".createIndex({'age':-1}, {'unique':true, 'sparse':true}), 1";
 		template.indexOps(Person.class).dropAllIndexes();
 
 		assertThat(template.indexOps(Person.class).getIndexInfo().isEmpty(), is(true));
 
-		factory.getDb().runCommand(new org.bson.Document("eval", command));
+		factory.getDb().getCollection(template.getCollectionName(Person.class))
+				.createIndex(new org.bson.Document("age", -1), new IndexOptions().name("age_-1").unique(true).sparse(true));
 
 		ListIndexesIterable<org.bson.Document> indexInfo = template.getCollection(template.getCollectionName(Person.class))
 				.listIndexes();
@@ -443,7 +444,7 @@ public class MongoTemplateTests {
 			}
 		}
 
-		assertThat(indexKey, IsMapContaining.<String, Object> hasEntry("age", -1D));
+		assertThat(indexKey, IsMapContaining.<String, Object> hasEntry("age", -1));
 		assertThat(unique, is(true));
 
 		IndexInfo info = template.indexOps(Person.class).getIndexInfo().get(1);

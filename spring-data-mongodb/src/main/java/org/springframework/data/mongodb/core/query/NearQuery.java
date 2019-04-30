@@ -179,7 +179,7 @@ public final class NearQuery {
 	private @Nullable Distance minDistance;
 	private Metric metric;
 	private boolean spherical;
-	private @Nullable Long num;
+	private @Nullable Long limit;
 	private @Nullable Long skip;
 
 	/**
@@ -269,9 +269,22 @@ public final class NearQuery {
 	 *
 	 * @param num
 	 * @return
+	 * @deprecated since 2.2. Please use {@link #limit(long)} instead.
 	 */
+	@Deprecated
 	public NearQuery num(long num) {
-		this.num = num;
+		return limit(num);
+	}
+
+	/**
+	 * Configures the maximum number of results to return.
+	 *
+	 * @param limit
+	 * @return
+	 * @since 2.2
+	 */
+	public NearQuery limit(long limit) {
+		this.limit = limit;
 		return this;
 	}
 
@@ -296,8 +309,8 @@ public final class NearQuery {
 
 		Assert.notNull(pageable, "Pageable must not be 'null'.");
 		if (pageable.isPaged()) {
-			this.num = pageable.getOffset() + pageable.getPageSize();
 			this.skip = pageable.getOffset();
+			this.limit = (long) pageable.getPageSize();
 		}
 		return this;
 	}
@@ -530,7 +543,7 @@ public final class NearQuery {
 		this.skip = query.getSkip();
 
 		if (query.getLimit() != 0) {
-			this.num = (long) query.getLimit();
+			this.limit = (long) query.getLimit();
 		}
 		return this;
 	}
@@ -541,6 +554,17 @@ public final class NearQuery {
 	@Nullable
 	public Long getSkip() {
 		return skip;
+	}
+
+	/**
+	 * Get the {@link Collation} to use along with the {@link #query(Query)}.
+	 * 
+	 * @return the {@link Collation} if set. {@literal null} otherwise.
+	 * @since 2.2
+	 */
+	@Nullable
+	public Collation getCollation() {
+		return query != null ? query.getCollation().orElse(null) : null;
 	}
 
 	/**
@@ -570,8 +594,8 @@ public final class NearQuery {
 			document.put("distanceMultiplier", getDistanceMultiplier());
 		}
 
-		if (num != null) {
-			document.put("num", num);
+		if (limit != null) {
+			document.put("num", limit);
 		}
 
 		if (usesGeoJson()) {

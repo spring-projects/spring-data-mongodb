@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.bson.Document;
-
 import org.springframework.core.convert.ConversionService;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mapping.IdentifierAccessor;
@@ -45,6 +44,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.ObjectUtils;
 
 /**
  * Common operations performed on an entity in the context of it's mapping metadata.
@@ -162,6 +162,28 @@ class EntityOperations {
 		}
 
 		return ID_FIELD;
+	}
+
+	/**
+	 * Return the name used for {@code $geoNear.distanceField} avoiding clashes with potentially existing properties.
+	 *
+	 * @param domainType must not be {@literal null}.
+	 * @return the name of the distanceField to use. {@literal dis} by default.
+	 * @since 2.2
+	 */
+	public String nearQueryDistanceFieldName(Class<?> domainType) {
+
+		if (!context.hasPersistentEntityFor(domainType)
+				|| context.getPersistentEntity(domainType).getPersistentProperty("dis") == null) {
+			return "dis";
+		}
+
+		String distanceFieldName = "calculated-distance";
+		while (context.getPersistentEntity(domainType).getPersistentProperty(distanceFieldName) != null) {
+			distanceFieldName += "-" + ObjectUtils.getIdentityHexString(new Object());
+		}
+
+		return distanceFieldName;
 	}
 
 	private static Document parse(String source) {
