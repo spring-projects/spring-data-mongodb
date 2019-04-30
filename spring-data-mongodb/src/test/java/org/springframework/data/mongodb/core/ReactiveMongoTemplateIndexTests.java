@@ -44,6 +44,7 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import com.mongodb.client.model.IndexOptions;
 import com.mongodb.reactivestreams.client.ListIndexesPublisher;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.Success;
@@ -140,11 +141,8 @@ public class ReactiveMongoTemplateIndexTests {
 				}).verifyComplete();
 	}
 
-	@Test // DATAMONGO-1444
+	@Test // DATAMONGO-1444, DATAMONGO-2264
 	public void testReadIndexInfoForIndicesCreatedViaMongoShellCommands() {
-
-		String command = "db." + template.getCollectionName(Person.class)
-				+ ".createIndex({'age':-1}, {'unique':true, 'sparse':true}), 1";
 
 		template.indexOps(Person.class).dropAllIndexes() //
 				.as(StepVerifier::create) //
@@ -154,7 +152,8 @@ public class ReactiveMongoTemplateIndexTests {
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
-		Flux.from(factory.getMongoDatabase().runCommand(new org.bson.Document("eval", command))) //
+		Flux.from(factory.getMongoDatabase().getCollection(template.getCollectionName(Person.class))
+				.createIndex(new Document("age", -1), new IndexOptions().unique(true).sparse(true))) //
 				.as(StepVerifier::create) //
 				.expectNextCount(1) //
 				.verifyComplete();
@@ -177,7 +176,7 @@ public class ReactiveMongoTemplateIndexTests {
 						}
 					}
 
-					assertThat(indexKey).containsEntry("age", -1D);
+					assertThat(indexKey).containsEntry("age", -1);
 					assertThat(unique).isTrue();
 				}).verifyComplete();
 
@@ -207,12 +206,11 @@ public class ReactiveMongoTemplateIndexTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAMONGO-1928
+	@Test // DATAMONGO-1928, DATAMONGO-2264
 	public void indexCreationShouldFail() throws InterruptedException {
 
-		String command = "db.indexfail" + ".createIndex({'field':1}, {'name':'foo', 'unique':true, 'sparse':true}), 1";
-
-		Flux.from(factory.getMongoDatabase().runCommand(new org.bson.Document("eval", command))) //
+		Flux.from(factory.getMongoDatabase().getCollection("indexfail") //
+				.createIndex(new Document("field", 1), new IndexOptions().name("foo").unique(true).sparse(true)))
 				.as(StepVerifier::create) //
 				.expectNextCount(1) //
 				.verifyComplete();

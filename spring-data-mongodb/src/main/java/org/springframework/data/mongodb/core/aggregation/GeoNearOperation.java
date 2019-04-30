@@ -15,10 +15,15 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.bson.Document;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.NumberUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -89,6 +94,15 @@ public class GeoNearOperation implements AggregationOperation {
 	public Document toDocument(AggregationOperationContext context) {
 
 		Document command = context.getMappedObject(nearQuery.toDocument());
+
+		if(command.containsKey("query")) {
+			command.replace("query", context.getMappedObject(command.get("query", Document.class)));
+		}
+
+		if(command.containsKey("collation")) {
+			command.remove("collation");
+		}
+
 		command.put("distanceField", distanceField);
 
 		if (StringUtils.hasText(indexKey)) {
@@ -96,5 +110,29 @@ public class GeoNearOperation implements AggregationOperation {
 		}
 
 		return new Document("$geoNear", command);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toPipelineStages(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+	 */
+	@Override
+	public List<Document> toPipelineStages(AggregationOperationContext context) {
+
+		Document command = toDocument(context);
+		Number limit = (Number) command.get("$geoNear", Document.class).remove("num");
+
+		List<Document> stages = new ArrayList<>();
+		stages.add(command);
+
+		if(nearQuery.getSkip() != null && nearQuery.getSkip() > 0){
+			stages.add(new Document("$skip", nearQuery.getSkip()));
+		}
+
+		if(limit != null) {
+			stages.add(new Document("$limit", limit.longValue()));
+		}
+
+		return stages;
 	}
 }

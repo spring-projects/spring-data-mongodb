@@ -24,11 +24,11 @@ import lombok.Data;
 import java.util.Arrays;
 import java.util.List;
 
+import org.assertj.core.data.Percentage;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataAccessException;
@@ -95,7 +95,7 @@ public class GeoJsonTests {
 		removeCollections();
 	}
 
-	@Test // DATAMONGO-1135
+	@Test // DATAMONGO-1135, DATAMONGO-2264
 	public void geoNear() {
 
 		NearQuery geoNear = NearQuery.near(new GeoJsonPoint(-73, 40), Metrics.KILOMETERS).num(10).maxDistance(150);
@@ -104,6 +104,42 @@ public class GeoJsonTests {
 
 		assertThat(result.getContent()).isNotEmpty();
 		assertThat(result.getAverageDistance().getMetric()).isEqualTo(Metrics.KILOMETERS);
+		assertThat(result.getAverageDistance().getValue()).isCloseTo(117.84629457941556, Percentage.withPercentage(0.001));
+	}
+
+	@Test // DATAMONGO-2264
+	public void geoNearShouldNotOverridePropertyWithDefaultNameForCalculatedDistance/* namely "dis" */() {
+
+		NearQuery geoNear = NearQuery.near(new GeoJsonPoint(-73, 40), Metrics.KILOMETERS).num(10).maxDistance(150);
+
+		GeoResults<VenueWithDistanceField> result = template.geoNear(geoNear, VenueWithDistanceField.class);
+
+		assertThat(result.getContent()).isNotEmpty();
+		assertThat(result.getAverageDistance().getMetric()).isEqualTo(Metrics.KILOMETERS);
+		assertThat(result.getAverageDistance().getValue()).isCloseTo(117.84629457941556, Percentage.withPercentage(0.001));
+		result.getContent().forEach(it -> {
+
+			assertThat(it.getDistance().getValue()).isNotZero();
+			assertThat(it.getContent().getDis()).isNull();
+		});
+	}
+
+	@Test // DATAMONGO-2264
+	public void geoNearShouldAllowToReadBackCalculatedDistanceIntoTargetTypeProperty/* namely "dis" */() {
+
+		NearQuery geoNear = NearQuery.near(new GeoJsonPoint(-73, 40), Metrics.KILOMETERS).num(10).maxDistance(150);
+
+		GeoResults<VenueWithDistanceField> result = template.geoNear(geoNear, Venue2DSphere.class,
+				template.getCollectionName(Venue2DSphere.class), VenueWithDistanceField.class);
+
+		assertThat(result.getContent()).isNotEmpty();
+		assertThat(result.getAverageDistance().getMetric()).isEqualTo(Metrics.KILOMETERS);
+		assertThat(result.getAverageDistance().getValue()).isCloseTo(117.84629457941556, Percentage.withPercentage(0.001));
+		result.getContent().forEach(it -> {
+
+			assertThat(it.getDistance().getValue()).isNotZero();
+			assertThat(it.getContent().getDis()).isEqualTo(it.getDistance().getValue());
+		});
 	}
 
 	@Test // DATAMONGO-1148
@@ -124,8 +160,7 @@ public class GeoJsonTests {
 	@Test // DATAMONGO-1348
 	public void geoNearShouldReturnDistanceCorrectly/*which is using the meters*/() {
 
-		NearQuery geoNear = NearQuery.near(new Point(-73.99171, 40.738868), Metrics.KILOMETERS).num(10)
-				.maxDistance(0.4);
+		NearQuery geoNear = NearQuery.near(new Point(-73.99171, 40.738868), Metrics.KILOMETERS).num(10).maxDistance(0.4);
 
 		GeoResults<Venue2DSphere> result = template.geoNear(geoNear, Venue2DSphere.class);
 
@@ -466,6 +501,23 @@ public class GeoJsonTests {
 		@Override
 		public String toString() {
 			return "Venue2DSphere [id=" + id + ", name=" + name + ", location=" + Arrays.toString(location) + "]";
+		}
+	}
+
+	static class VenueWithDistanceField extends Venue2DSphere {
+
+		private Double dis; // geoNear command default distance field name
+
+		public VenueWithDistanceField(String name, double[] location) {
+			super(name, location);
+		}
+
+		public Double getDis() {
+			return dis;
+		}
+
+		public void setDis(Double dis) {
+			this.dis = dis;
 		}
 	}
 

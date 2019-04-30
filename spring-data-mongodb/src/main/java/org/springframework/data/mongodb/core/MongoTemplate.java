@@ -23,18 +23,9 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Scanner;
-import java.util.Set;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -44,7 +35,6 @@ import org.bson.codecs.Codec;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -126,6 +116,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
@@ -148,17 +139,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
-import com.mongodb.client.model.CountOptions;
-import com.mongodb.client.model.CreateCollectionOptions;
-import com.mongodb.client.model.DeleteOptions;
-import com.mongodb.client.model.FindOneAndDeleteOptions;
-import com.mongodb.client.model.FindOneAndReplaceOptions;
-import com.mongodb.client.model.FindOneAndUpdateOptions;
-import com.mongodb.client.model.ReplaceOptions;
-import com.mongodb.client.model.ReturnDocument;
-import com.mongodb.client.model.UpdateOptions;
-import com.mongodb.client.model.ValidationAction;
-import com.mongodb.client.model.ValidationLevel;
+import com.mongodb.client.model.*;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
@@ -989,7 +970,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return geoNear(near, domainType, collectionName, domainType);
 	}
 
-	@SuppressWarnings("unchecked")
 	public <T> GeoResults<T> geoNear(NearQuery near, Class<?> domainType, String collectionName, Class<T> returnType) {
 
 		if (near == null) {
@@ -1005,53 +985,31 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		String collection = StringUtils.hasText(collectionName) ? collectionName
 				: operations.determineCollectionName(domainType);
-		Document nearDocument = near.toDocument();
+		String distanceField = operations.nearQueryDistanceFieldName(domainType);
 
-		Document command = new Document("geoNear", collection);
-		command.putAll(queryMapper.getMappedObject(nearDocument, Optional.empty()));
+		Aggregation $geoNear = TypedAggregation.newAggregation(domainType, Aggregation.geoNear(near, distanceField))
+				.withOptions(AggregationOptions.builder().collation(near.getCollation()).build());
 
-		if (nearDocument.containsKey("query")) {
-			Document query = (Document) nearDocument.get("query");
-			command.put("query", queryMapper.getMappedObject(query, getPersistentEntity(domainType)));
+		AggregationResults<Document> results = aggregate($geoNear, collection, Document.class);
+
+		DocumentCallback<GeoResult<T>> callback = new GeoNearResultDocumentCallback<>(distanceField,
+				new ProjectingReadCallback<>(mongoConverter, domainType, returnType, collection), near.getMetric());
+
+		List<GeoResult<T>> result = new ArrayList<>();
+
+		BigDecimal aggregate = BigDecimal.ZERO;
+		for (Document element : results) {
+
+			GeoResult<T> geoResult = callback.doWith(element);
+			aggregate = aggregate.add(new BigDecimal(geoResult.getDistance().getValue()));
+			result.add(geoResult);
 		}
 
-		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Executing geoNear using: {} for class: {} in collection: {}", serializeToJsonSafely(command),
-					domainType, collectionName);
-		}
+		Distance avgDistance = new Distance(
+				result.size() == 0 ? 0 : aggregate.divide(new BigDecimal(result.size()), RoundingMode.HALF_UP).doubleValue(),
+				near.getMetric());
 
-		Document commandResult = executeCommand(command, this.readPreference);
-		List<Object> results = (List<Object>) commandResult.get("results");
-		results = results == null ? Collections.emptyList() : results;
-
-		DocumentCallback<GeoResult<T>> callback = new GeoNearResultDocumentCallback<>(
-				new ProjectingReadCallback<>(mongoConverter, domainType, returnType, collectionName), near.getMetric());
-		List<GeoResult<T>> result = new ArrayList<>(results.size());
-
-		int index = 0;
-		long elementsToSkip = near.getSkip() != null ? near.getSkip() : 0;
-
-		for (Object element : results) {
-
-			/*
-			 * As MongoDB currently (2.4.4) doesn't support the skipping of elements in near queries
-			 * we skip the elements ourselves to avoid at least the document 2 object mapping overhead.
-			 *
-			 * @see <a href="https://jira.mongodb.org/browse/SERVER-3925">MongoDB Jira: SERVER-3925</a>
-			 */
-			if (index >= elementsToSkip) {
-				result.add(callback.doWith((Document) element));
-			}
-			index++;
-		}
-
-		if (elementsToSkip > 0) {
-			// as we skipped some elements we have to calculate the averageDistance ourselves:
-			return new GeoResults<>(result, near.getMetric());
-		}
-
-		GeoCommandStatistics stats = GeoCommandStatistics.from(commandResult);
-		return new GeoResults<>(result, new Distance(stats.getAverageDistance(), near.getMetric()));
+		return new GeoResults<>(result, avgDistance);
 	}
 
 	@Nullable
@@ -3314,9 +3272,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * a delegate and creates a {@link GeoResult} from the result.
 	 *
 	 * @author Oliver Gierke
+	 * @author Christoph Strobl
 	 */
 	static class GeoNearResultDocumentCallback<T> implements DocumentCallback<GeoResult<T>> {
 
+		private final String distanceField;
 		private final DocumentCallback<T> delegate;
 		private final Metric metric;
 
@@ -3324,12 +3284,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		 * Creates a new {@link GeoNearResultDocumentCallback} using the given {@link DocumentCallback} delegate for
 		 * {@link GeoResult} content unmarshalling.
 		 *
+		 * @param distanceField the field to read the distance from.
 		 * @param delegate must not be {@literal null}.
+		 * @param metric the {@link Metric} to apply to the result distance.
 		 */
-		public GeoNearResultDocumentCallback(DocumentCallback<T> delegate, Metric metric) {
+		GeoNearResultDocumentCallback(String distanceField, DocumentCallback<T> delegate, Metric metric) {
 
 			Assert.notNull(delegate, "DocumentCallback must not be null!");
 
+			this.distanceField = distanceField;
 			this.delegate = delegate;
 			this.metric = metric;
 		}
@@ -3337,10 +3300,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		@Nullable
 		public GeoResult<T> doWith(@Nullable Document object) {
 
-			double distance = ((Double) object.get("dis")).doubleValue();
-			Document content = (Document) object.get("obj");
+			double distance = Double.NaN;
+			if (object.containsKey(distanceField)) {
 
-			T doWith = delegate.doWith(content);
+				distance = NumberUtils.convertNumberToTargetClass(object.get(distanceField, Number.class), Double.class)
+						.doubleValue();
+			}
+
+			T doWith = delegate.doWith(object);
 
 			return new GeoResult<>(doWith, new Distance(distance, metric));
 		}

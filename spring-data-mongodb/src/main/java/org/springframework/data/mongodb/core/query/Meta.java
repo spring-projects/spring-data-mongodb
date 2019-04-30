@@ -110,8 +110,10 @@ public class Meta {
 
 	/**
 	 * @return {@literal null} if not set.
+	 * @deprecated since 2.2. {@code $maxScan} has been removed without replacement in MongoDB 4.2.
 	 */
 	@Nullable
+	@Deprecated
 	public Long getMaxScan() {
 		return getValue(MetaKey.MAX_SCAN.key);
 	}
@@ -120,7 +122,7 @@ public class Meta {
 	 * Only scan the specified number of documents.
 	 *
 	 * @param maxScan
-	 * @deprecated since 2.1 due to deprecation in MongoDB 4.0.
+	 * @deprecated since 2.1. {@code $maxScan} has been removed without replacement in MongoDB 4.2.
 	 */
 	@Deprecated
 	public void setMaxScan(long maxScan) {

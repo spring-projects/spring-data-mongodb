@@ -30,7 +30,6 @@ import org.bson.Document;
 import org.bson.codecs.BsonValueCodec;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -257,21 +256,12 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 		verify(collection).distinct(eq(clientSession), anyString(), any(), any());
 	}
 
-	@Test // DATAMONGO-1880
+	@Test // DATAMONGO-1880, DATAMONGO-2264
 	public void geoNearShouldUseProxiedDatabase() {
 
 		template.geoNear(NearQuery.near(new Point(0, 0), Metrics.NEUTRAL), Person.class).subscribe();
 
-		verify(database).runCommand(eq(clientSession), any(), eq(Document.class));
-	}
-
-	@Test // DATAMONGO-1880, DATAMONGO-1889
-	@Ignore("No group by yet - DATAMONGO-1889")
-	public void groupShouldUseProxiedDatabase() {
-
-		// template.group(COLLECTION_NAME, GroupBy.key("firstName"), Person.class).subscribe();
-
-		verify(database).runCommand(eq(clientSession), any(), eq(Document.class));
+		verify(collection).aggregate(eq(clientSession), anyList(), eq(Document.class));
 	}
 
 	@Test // DATAMONGO-1880, DATAMONGO-1890, DATAMONGO-257

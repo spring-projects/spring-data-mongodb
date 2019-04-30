@@ -29,7 +29,9 @@ import com.mongodb.DB;
  * @author Christoph Strobl
  * @author Oliver Gierke
  * @since 1.7
+ * @deprecated since 2.2. The {@code eval} command has been removed without replacement in MongoDB Server 4.2.0.
  */
+@Deprecated
 public interface ScriptOperations {
 
 	/**

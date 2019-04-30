@@ -40,7 +40,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.reactivestreams.Publisher;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.MongoTemplateUnitTests.AutogenerateableId;
@@ -299,16 +298,13 @@ public class ReactiveMongoTemplateUnitTests {
 		verify(mapReducePublisher).collation(eq(com.mongodb.client.model.Collation.builder().locale("fr").build()));
 	}
 
-	@Test // DATAMONGO-1518
+	@Test // DATAMONGO-1518, DATAMONGO-2264
 	public void geoNearShouldUseCollationWhenPresent() {
 
 		NearQuery query = NearQuery.near(0D, 0D).query(new BasicQuery("{}").collation(Collation.of("fr")));
 		template.geoNear(query, AutogenerateableId.class).subscribe();
 
-		ArgumentCaptor<Document> cmd = ArgumentCaptor.forClass(Document.class);
-		verify(db).runCommand(cmd.capture(), any(Class.class));
-
-		assertThat(cmd.getValue().get("collation", Document.class), equalTo(new Document("locale", "fr")));
+		verify(aggregatePublisher).collation(eq(com.mongodb.client.model.Collation.builder().locale("fr").build()));
 	}
 
 	@Test // DATAMONGO-1719

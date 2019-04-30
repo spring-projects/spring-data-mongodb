@@ -52,7 +52,7 @@ class AggregationOperationRenderer {
 
 		for (AggregationOperation operation : operations) {
 
-			operationDocuments.add(operation.toDocument(contextToUse));
+			operationDocuments.addAll(operation.toPipelineStages(contextToUse));
 
 			if (operation instanceof FieldsExposingAggregationOperation) {
 

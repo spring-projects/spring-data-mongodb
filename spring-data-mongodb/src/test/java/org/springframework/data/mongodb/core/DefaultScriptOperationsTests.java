@@ -23,6 +23,7 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 
 import org.bson.Document;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,8 @@ import org.springframework.dao.UncategorizedDataAccessException;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.script.ExecutableMongoScript;
 import org.springframework.data.mongodb.core.script.NamedMongoScript;
+import org.springframework.data.mongodb.test.util.MongoVersionRule;
+import org.springframework.data.util.Version;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -47,6 +50,8 @@ import com.mongodb.MongoClient;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
 public class DefaultScriptOperationsTests {
+
+	public static @ClassRule MongoVersionRule REQUIRES_AT_MOST_4_0 = MongoVersionRule.atMost(Version.parse("4.0.999"));
 
 	@Configuration
 	static class Config {

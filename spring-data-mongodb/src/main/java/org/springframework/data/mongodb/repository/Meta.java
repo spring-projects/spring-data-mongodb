@@ -46,7 +46,9 @@ public @interface Meta {
 	 * Only scan the specified number of documents.
 	 *
 	 * @return
+	 * @deprecated since 2.2. {@code $maxScan} has been removed without replacement in MongoDB 4.2.
 	 */
+	@Deprecated
 	long maxScanDocuments() default -1;
 
 	/**

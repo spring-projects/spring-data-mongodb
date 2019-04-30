@@ -52,11 +52,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
-import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.TestEntities;
@@ -779,8 +779,9 @@ public class AggregationTests {
 				group("make").avg(ConditionalOperators //
 						.when(Criteria.where("year").gte(2012)) //
 						.then(1) //
-						.otherwise(9000)).as("score"),
-				sort(ASC, "make"));
+						.otherwise(9000)) //
+						.as("score"),
+				sort(ASC, "score"));
 
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Document.class);
 
@@ -795,7 +796,7 @@ public class AggregationTests {
 		assertThat(((Number) good.get("score")).longValue()).isEqualTo(9000L);
 	}
 
-	@Test // DATAMONGO-1784
+	@Test // DATAMONGO-1784, DATAMONGO-2264
 	public void shouldAllowSumUsingConditionalExpressions() {
 
 		mongoTemplate.dropCollection(CarPerson.class);
@@ -823,7 +824,7 @@ public class AggregationTests {
 						.when(Criteria.where("year").gte(2012)) //
 						.then(1) //
 						.otherwise(9000)).as("score"),
-				sort(ASC, "make"));
+				sort(ASC, "score"));
 
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Document.class);
 
@@ -995,23 +996,6 @@ public class AggregationTests {
 				.isEqualTo((product.netPrice * (1 - product.discountRate) + shippingCosts) * (1 + product.taxRate));
 	}
 
-	@Test
-	public void shouldThrowExceptionIfUnknownFieldIsReferencedInArithmenticExpressionsInProjection() {
-
-		exception.expect(MappingException.class);
-		exception.expectMessage("unknown");
-
-		Product product = new Product("P1", "A", 1.99, 3, 0.05, 0.19);
-		mongoTemplate.insert(product);
-
-		TypedAggregation<Product> agg = newAggregation(Product.class, //
-				project("name", "netPrice") //
-						.andExpression("unknown + 1").as("netPricePlus1") //
-		);
-
-		mongoTemplate.aggregate(agg, Document.class);
-	}
-
 	/**
 	 * @see <a href=
 	 *      "https://stackoverflow.com/questions/18653574/spring-data-mongodb-aggregation-framework-invalid-reference-in-group-operati">Spring
@@ -1027,18 +1011,19 @@ public class AggregationTests {
 				unwind("pd"), //
 				group("pd.pDch") // the nested field expression
 						.sum("pd.up").as("uplift"), //
-				project("_id", "uplift"));
+				project("_id", "uplift"), //
+				sort(Sort.by("uplift")));
 
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Document.class);
 		List<Document> stats = result.getMappedResults();
 
 		assertThat(stats.size()).isEqualTo(3);
-		assertThat(stats.get(0).get("_id").toString()).isEqualTo("C");
-		assertThat((Integer) stats.get(0).get("uplift")).isEqualTo(2);
-		assertThat(stats.get(1).get("_id").toString()).isEqualTo("B");
-		assertThat((Integer) stats.get(1).get("uplift")).isEqualTo(3);
-		assertThat(stats.get(2).get("_id").toString()).isEqualTo("A");
-		assertThat((Integer) stats.get(2).get("uplift")).isEqualTo(1);
+		assertThat(stats.get(0).get("_id").toString()).isEqualTo("A");
+		assertThat((Integer) stats.get(0).get("uplift")).isEqualTo(1);
+		assertThat(stats.get(1).get("_id").toString()).isEqualTo("C");
+		assertThat((Integer) stats.get(1).get("uplift")).isEqualTo(2);
+		assertThat(stats.get(2).get("_id").toString()).isEqualTo("B");
+		assertThat((Integer) stats.get(2).get("uplift")).isEqualTo(3);
 	}
 
 	/**
@@ -1151,7 +1136,7 @@ public class AggregationTests {
 		assertThat((Integer) resultDocument.keySet().size()).isEqualTo(1);
 	}
 
-	@Test // DATAMONGO-788
+	@Test // DATAMONGO-788, DATAMONGO-2264
 	public void referencesToGroupIdsShouldBeRenderedProperly() {
 
 		mongoTemplate.insert(new DATAMONGO788(1, 1));
@@ -1165,7 +1150,7 @@ public class AggregationTests {
 		AggregationOperation project = Aggregation.project("xPerY", "x", "y").andExclude("_id");
 
 		TypedAggregation<DATAMONGO788> aggregation = Aggregation.newAggregation(DATAMONGO788.class, projectFirst, group,
-				project);
+				project, Aggregation.sort(Sort.by("xPerY")));
 		AggregationResults<Document> aggResults = mongoTemplate.aggregate(aggregation, Document.class);
 		List<Document> items = aggResults.getMappedResults();
 
@@ -1347,7 +1332,7 @@ public class AggregationTests {
 		assertThat(rawResult.containsKey("stages")).isEqualTo(true);
 	}
 
-	@Test // DATAMONGO-954
+	@Test // DATAMONGO-954, DATAMONGO-2264
 	@MongoVersion(asOf = "2.6")
 	public void shouldSupportReturningCurrentAggregationRoot() {
 
@@ -1359,11 +1344,11 @@ public class AggregationTests {
 		List<Document> personsWithAge25 = mongoTemplate.find(Query.query(where("age").is(25)), Document.class,
 				mongoTemplate.getCollectionName(Person.class));
 
-		Aggregation agg = newAggregation(group("age").push(Aggregation.ROOT).as("users"));
+		Aggregation agg = newAggregation(group("age").push(Aggregation.ROOT).as("users"), sort(Sort.by("_id")));
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Person.class, Document.class);
 
 		assertThat(result.getMappedResults()).hasSize(3);
-		Document o = result.getMappedResults().get(2);
+		Document o = result.getMappedResults().get(1);
 
 		assertThat(o.get("_id")).isEqualTo((Object) 25);
 		assertThat((List<?>) o.get("users")).hasSize(2);
@@ -1373,7 +1358,7 @@ public class AggregationTests {
 	/**
 	 * {@link https://stackoverflow.com/questions/24185987/using-root-inside-spring-data-mongodb-for-retrieving-whole-document}
 	 */
-	@Test // DATAMONGO-954
+	@Test // DATAMONGO-954, DATAMONGO-2264
 	@MongoVersion(asOf = "2.6")
 	public void shouldSupportReturningCurrentAggregationRootInReference() {
 
@@ -1771,7 +1756,7 @@ public class AggregationTests {
 				new Document("_id", "2").append("finalTotal", 10.25D));
 	}
 
-	@Test // DATAMONGO-1551
+	@Test // DATAMONGO-1551, DATAMONGO-2264
 	@MongoVersion(asOf = "3.4")
 	public void graphLookupShouldBeAppliedCorrectly() {
 
@@ -1789,16 +1774,18 @@ public class AggregationTests {
 						.connectTo("name") //
 						.depthField("depth") //
 						.maxDepth(5) //
-						.as("reportingHierarchy"));
+						.as("reportingHierarchy"), //
+				project("id", "depth", "name", "reportsTo", "reportingHierarchy"));
 
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Document.class);
 
 		Document object = result.getUniqueMappedResult();
 		List<Object> list = (List<Object>) object.get("reportingHierarchy");
 
-		Assert.assertThat(object, isBsonObject().containing("reportingHierarchy", List.class));
-		assertThat((Document) list.get(0)).containsEntry("name", "Dev").containsEntry("depth", 1L);
-		assertThat((Document) list.get(1)).containsEntry("name", "Eliot").containsEntry("depth", 0L);
+		assertThat(object).containsEntry("name", "Andrew").containsEntry("reportsTo", "Eliot");
+		assertThat(list).containsOnly(
+				new Document("_id", 2).append("name", "Eliot").append("reportsTo", "Dev").append("depth", 0L).append("_class", Employee.class.getName()),
+				new Document("_id", 1).append("name", "Dev").append("depth", 1L).append("_class", Employee.class.getName()));
 	}
 
 	@Test // DATAMONGO-1552

@@ -89,15 +89,14 @@ public class NearQueryUnitTests {
 		assertThat(query.getMetric(), is((Metric) Metrics.MILES));
 	}
 
-	@Test // DATAMONGO-445
+	@Test // DATAMONGO-445, DATAMONGO-2264
 	public void shouldTakeSkipAndLimitSettingsFromGivenPageable() {
 
 		Pageable pageable = PageRequest.of(3, 5);
 		NearQuery query = NearQuery.near(new Point(1, 1)).with(pageable);
 
 		assertThat(query.getSkip(), is((long) pageable.getPageNumber() * pageable.getPageSize()));
-		assertThat((Long) query.toDocument().get("num"),
-				is((long) (pageable.getPageNumber() + 1) * pageable.getPageSize()));
+		assertThat(query.toDocument().get("num"), is((long) pageable.getPageSize()));
 	}
 
 	@Test // DATAMONGO-445
@@ -112,7 +111,7 @@ public class NearQueryUnitTests {
 		assertThat((Long) query.toDocument().get("num"), is((long) limit));
 	}
 
-	@Test // DATAMONGO-445
+	@Test // DATAMONGO-445, DATAMONGO-2264
 	public void shouldTakeSkipAndLimitSettingsFromPageableEvenIfItWasSpecifiedOnQuery() {
 
 		int limit = 10;
@@ -122,8 +121,7 @@ public class NearQueryUnitTests {
 				.query(Query.query(Criteria.where("foo").is("bar")).limit(limit).skip(skip)).with(pageable);
 
 		assertThat(query.getSkip(), is((long) pageable.getPageNumber() * pageable.getPageSize()));
-		assertThat((Long) query.toDocument().get("num"),
-				is((long) (pageable.getPageNumber() + 1) * pageable.getPageSize()));
+		assertThat(query.toDocument().get("num"), is((long) pageable.getPageSize()));
 	}
 
 	@Test // DATAMONGO-829

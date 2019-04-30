@@ -1333,6 +1333,33 @@ List<Venue> venues =
 [[mongo.geo-near]]
 ==== Geo-near Queries
 
+[WARNING]
+====
+*Changed in 2.2!* +
+https://docs.mongodb.com/master/release-notes/4.2-compatibility/[MongoDB 4.2] removed support for the
+`geoNear` command which had been previously used to run the `NearQuery`.
+
+Spring Data MongoDB 2.2 `MongoOperations#geoNear` uses the `$geoNear` https://docs.mongodb.com/manual/reference/operator/aggregation/geoNear/[aggregation]
+instead of the `geoNear` command to run a `NearQuery`.
+
+The calculated distance (the `dis` when using a geoNear command) previously returned within a wrapper type now is embedded
+into the resulting document. If the given domain type already contains a property with equal name, the calculated distance
+is named `calculated-distance` or if that name is taken as well, postfixed with a random hash.
+
+Target types may contain a property named after the returned distance to (additionally) read it back directly into the domain
+type as shown below.
+
+[source,java]
+----
+GeoResults<VenueWithDisField> = template.query(Venue.class) <1>
+    .as(VenueWithDisField.class) <2>
+    .near(NearQuery.near(new GeoJsonPoint(-73.99, 40.73), KILOMETERS))
+    .all();
+----
+<1> Domain type used to identify the target collection and potential query mapping.
+<2> Target type containing a `dis` field of type `Number`.
+====
+
 MongoDB supports querying the database for geo locations and calculating the distance from a given origin at the same time. With geo-near queries, you can express queries such as "find all restaurants in the surrounding 10 miles". To let you do so, `MongoOperations` provides `geoNear(…)` methods that take a `NearQuery` as an argument (as well as the already familiar entity type and collection), as shown in the following example:
 
 [source,java]
@@ -2225,6 +2252,13 @@ Note that you can specify additional limit and sort values on the query, but you
 
 [[mongo.server-side-scripts]]
 == Script Operations
+
+[WARNING]
+====
+https://docs.mongodb.com/master/release-notes/4.2-compatibility/[MongoDB 4.2] removed support for the `eval` command used
+by `ScriptOperations`. +
+There is no replacement for the removed functionallity.
+====
 
 MongoDB allows executing JavaScript functions on the server by either directly sending the script or calling a stored one. `ScriptOperations` can be accessed through `MongoTemplate` and provides basic abstraction for `JavaScript` usage. The following example shows how to us the `ScriptOperations` class:
 

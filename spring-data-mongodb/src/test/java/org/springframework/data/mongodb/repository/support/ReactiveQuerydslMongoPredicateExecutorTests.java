@@ -15,12 +15,14 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
+import org.springframework.data.mongodb.core.query.BasicQuery;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -100,19 +102,20 @@ public class ReactiveQuerydslMongoPredicateExecutorTests {
 		MongoEntityInformation<Person, String> entityInformation = factory.getEntityInformation(Person.class);
 		repository = new ReactiveQuerydslMongoPredicateExecutor<>(entityInformation, operations);
 
-		operations.dropCollection(Person.class) //
-				.as(StepVerifier::create) //
-				.verifyComplete();
-
 		dave = new Person("Dave", "Matthews", 42);
 		oliver = new Person("Oliver August", "Matthews", 4);
 		carter = new Person("Carter", "Beauford", 49);
 
 		person = new QPerson("person");
 
-		operations.insertAll(Arrays.asList(oliver, dave, carter)).as(StepVerifier::create) //
-				.expectNextCount(3) //
-				.verifyComplete();
+		Flux.merge(operations.insert(oliver), operations.insert(dave), operations.insert(carter)).then() //
+				.as(StepVerifier::create).verifyComplete();
+	}
+
+	@After
+	public void tearDown() {
+		operations.remove(new BasicQuery("{}"), "person").then().as(StepVerifier::create).verifyComplete();
+		operations.remove(new BasicQuery("{}"), "uer").then().as(StepVerifier::create).verifyComplete();
 	}
 
 	@Test // DATAMONGO-2182
@@ -200,10 +203,10 @@ public class ReactiveQuerydslMongoPredicateExecutorTests {
 		User user3 = new User();
 		user3.setUsername("user-3");
 
-		operations.insertAll(Arrays.asList(user1, user2, user3)) //
+		Flux.merge(operations.save(user1), operations.save(user2), operations.save(user3)) //
+				.then() //
 				.as(StepVerifier::create) //
-				.expectNextCount(3) //
-				.verifyComplete();
+				.verifyComplete(); //
 
 		Person person1 = new Person("Max", "The Mighty");
 		person1.setCoworker(user1);
