@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
+import org.springframework.lang.Nullable;
 
 /**
  * The context for an {@link AggregationOperation}.
@@ -33,7 +34,20 @@ public interface AggregationOperationContext {
 	 * @param document will never be {@literal null}.
 	 * @return must not be {@literal null}.
 	 */
-	Document getMappedObject(Document document);
+	default Document getMappedObject(Document document) {
+		return getMappedObject(document, null);
+	}
+
+	/**
+	 * Returns the mapped {@link Document}, potentially converting the source considering mapping metadata for the given
+	 * type.
+	 *
+	 * @param document will never be {@literal null}.
+	 * @param type can be {@literal null}.
+	 * @return must not be {@literal null}.
+	 * @since 2.2
+	 */
+	Document getMappedObject(Document document, @Nullable Class<?> type);
 
 	/**
 	 * Returns a {@link FieldReference} for the given field or {@literal null} if the context does not expose the given

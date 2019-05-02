@@ -1,0 +1,90 @@
+[[mongodb.repositories.queries.aggregation]]
+=== Aggregation Repository Methods
+
+The repository layer offers means interact with <<mongo.aggregation, the aggregation framework>> via annotated repository
+finder methods. Similar to the <<mongodb.repositories.queries.json-based, JSON based queries>> a pipeline can be defined
+via the `org.springframework.data.mongodb.repository.Aggregation` annotation. The definition may contain simple placeholders
+like `?0` as well as https://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/core.html#expressions[SpEL expressions]
+`?#{ ... }`.
+
+.Aggregating Repository Method
+====
+[source,java]
+----
+public interface PersonRepository extends CrudReppsitory<Person, String> {
+
+  @Aggregation("{ $group: { _id : $lastname, names : { $addToSet : $?0 } } }")
+  List<PersonAggregate> groupByLastnameAnd(String property); <1>
+
+  @Aggregation("{ $group: { _id : $lastname, names : { $addToSet : $firstname } } }")
+  List<PersonAggregate> groupByLastnameAndFirstnames(Sort sort); <2>
+
+  @Aggregation("{ $group: { _id : $lastname, names : { $addToSet : $?0 } } }")
+  List<PersonAggregate> groupByLastnameAnd(String property, Pageable page); <3>
+
+  @Aggregation("{ $group : { _id : null, total : { $sum : $age } } }")
+  SumValue sumAgeUsingValueWrapper(); <4>
+
+  @Aggregation("{ $group : { _id : null, total : { $sum : $age } } }")
+  Long sumAge(); <5>
+
+  @Aggregation("{ $group : { _id : null, total : { $sum : $age } } }")
+  AggregationResults<SumValue> sumAgeRaw(); <6>
+
+  @Aggregation("{ '$project': { '_id' : '$lastname' } }")
+  List<String> findAllLastnames(); <7>
+}
+----
+[source,java]
+----
+public class PersonAggregate {
+
+  private @Id String lastname; <2>
+  private List<String> names;
+
+  public PersonAggregate(String lastname, List<String> names) {
+     // ...
+  }
+
+  // Getter / Setter omitted
+}
+
+public class SumValue {
+
+  private final Long total; <4> <6>
+
+  public SumValue(Long total) {
+    // ...
+  }
+
+  // Getter omitted
+}
+----
+<1> Replace `?0` with the given value for `property`.
+<2> If `Sort` argument is present, `$sort` is added at the pipelines tail so that it only affects the order of the final results
+after having passed all other aggregation stages. Therefore the `Sort` properties are mapped against the methods return type
+`PersonAggregate` which turns `Sort.by("lastname")` into `{ $sort : { '_id', 1 } }` because `PersonAggregate.lastname` is
+annotated with `@Id`.
+<3> `$skip`, `$limit` and `$sort` can be passed on via a `Pageable` argument. Same as in 2., the operators are applied at
+the pipelines tail.
+<4> Map the result of an aggregation returning a single `Document` to an instance of a desired `SumValue` target type.
+<5> Aggregations resulting in single document holding just an accumulation result like eg. `$sum` can be extracted directly from
+the result `Document`. To gain more control one might consider `AggregationResult` as the methods return type as shown in 4. or 6.
+<6> Obtain the raw `AggregationResults` mapped to the generic target wrapper type `SumValue` or `org.bson.Document`.
+<7> Like in (5) a single value can be directly obtained from mutliple result ``Document``s.
+====
+
+TIP: `@Aggregation` can also be used with <<mongo.reactive.repositories, Reactive Repositories>>.
+
+[NOTE]
+====
+Obtaining simple type single results inspects the returned `Document` and checks for the following
+
+. Only one entry in the document, return it.
+. Two entries, one is the `_id` value. Return the other.
+. Return for the first value assignable to the return type.
+. Throw an execption if none of the above applied.
+====
+
+WARNING: The `Page` return type is not supported for repository methods using `@Aggregation`. However you can use a
+`Pageable` argument to add `$skip`, `$limit` and `$sort` to the pipeline.

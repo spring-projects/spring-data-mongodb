@@ -24,6 +24,7 @@ import static org.springframework.data.geo.Metrics.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -34,6 +35,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import org.bson.Document;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -60,6 +62,7 @@ import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -1275,6 +1278,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 	@Test // DATAMONGO-2149, DATAMONGO-2154, DATAMONGO-2199
 	public void annotatedQueryShouldAllowPositionalParameterInFieldsProjectionWithDbRef() {
+
 		List<User> userList = IntStream.range(0, 10).mapToObj(it -> {
 
 			User user = new User();
@@ -1293,5 +1297,72 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		assertThat(target).isNotNull();
 		assertThat(target.getFans()).hasSize(1);
+	}
+
+	@Test // DATAMONGO-2153
+	public void findListOfSingleValue() {
+
+		assertThat(repository.findAllLastnames()) //
+				.contains("Lessard") //
+				.contains("Keys") //
+				.contains("Tinsley") //
+				.contains("Beauford") //
+				.contains("Moore") //
+				.contains("Matthews"); //
+	}
+
+	@Test // DATAMONGO-2153
+	public void annotatedAggregationWithPlaceholderValue() {
+
+		assertThat(repository.groupByLastnameAnd("firstname"))
+				.contains(new PersonAggregate("Lessard", Collections.singletonList("Stefan"))) //
+				.contains(new PersonAggregate("Keys", Collections.singletonList("Alicia"))) //
+				.contains(new PersonAggregate("Tinsley", Collections.singletonList("Boyd"))) //
+				.contains(new PersonAggregate("Beauford", Collections.singletonList("Carter"))) //
+				.contains(new PersonAggregate("Moore", Collections.singletonList("Leroi"))) //
+				.contains(new PersonAggregate("Matthews", Arrays.asList("Dave", "Oliver August")));
+	}
+
+	@Test // DATAMONGO-2153
+	public void annotatedAggregationWithSort() {
+
+		assertThat(repository.groupByLastnameAnd("firstname", Sort.by("lastname"))) //
+				.containsSequence( //
+						new PersonAggregate("Beauford", Collections.singletonList("Carter")), //
+						new PersonAggregate("Keys", Collections.singletonList("Alicia")), //
+						new PersonAggregate("Lessard", Collections.singletonList("Stefan")), //
+						new PersonAggregate("Matthews", Arrays.asList("Dave", "Oliver August")), //
+						new PersonAggregate("Moore", Collections.singletonList("Leroi")), //
+						new PersonAggregate("Tinsley", Collections.singletonList("Boyd")));
+	}
+
+	@Test // DATAMONGO-2153
+	public void annotatedAggregationWithPageable() {
+
+		assertThat(repository.groupByLastnameAnd("firstname", PageRequest.of(1, 2, Sort.by("lastname")))) //
+				.containsExactly( //
+						new PersonAggregate("Lessard", Collections.singletonList("Stefan")), //
+						new PersonAggregate("Matthews", Arrays.asList("Dave", "Oliver August")));
+	}
+
+	@Test // DATAMONGO-2153
+	public void annotatedAggregationWithSingleSimpleResult() {
+		assertThat(repository.sumAge()).isInstanceOf(Long.class).isEqualTo(245L);
+	}
+
+	@Test // DATAMONGO-2153
+	public void annotatedAggregationWithAggregationResultAsReturnType() {
+
+		assertThat(repository.sumAgeAndReturnAggregationResultWrapper()) //
+				.isInstanceOf(AggregationResults.class) //
+				.containsExactly(new Document("_id", null).append("total", 245));
+	}
+
+	@Test // DATAMONGO-2153
+	public void annotatedAggregationWithAggregationResultAsReturnTypeAndProjection() {
+
+		assertThat(repository.sumAgeAndReturnAggregationResultWrapperWithConcreteType()) //
+				.isInstanceOf(AggregationResults.class) //
+				.containsExactly(new SumAge(245L));
 	}
 }

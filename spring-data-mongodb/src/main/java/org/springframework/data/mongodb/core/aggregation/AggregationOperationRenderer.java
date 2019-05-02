@@ -24,6 +24,7 @@ import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedFi
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.data.mongodb.core.aggregation.Fields.AggregationField;
 import org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation;
+import org.springframework.lang.Nullable;
 
 /**
  * Rendering support for {@link AggregationOperation} into a {@link List} of {@link org.bson.Document}.
@@ -75,15 +76,16 @@ class AggregationOperationRenderer {
 	 * Simple {@link AggregationOperationContext} that just returns {@link FieldReference}s as is.
 	 *
 	 * @author Oliver Gierke
+	 * @author Christoph Strobl
 	 */
 	private static class NoOpAggregationOperationContext implements AggregationOperationContext {
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(org.bson.Document)
+		 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(org.bson.Document, java.lang.Class)
 		 */
 		@Override
-		public Document getMappedObject(Document document) {
+		public Document getMappedObject(Document document, @Nullable Class<?> type) {
 			return document;
 		}
 

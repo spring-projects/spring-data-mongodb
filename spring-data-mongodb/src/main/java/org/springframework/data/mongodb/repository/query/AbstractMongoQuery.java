@@ -16,7 +16,6 @@
 package org.springframework.data.mongodb.repository.query;
 
 import org.bson.Document;
-
 import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFind;
@@ -32,6 +31,7 @@ import org.springframework.data.repository.query.QueryMethodEvaluationContextPro
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -94,22 +94,36 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 		ConvertingParameterAccessor accessor = new ConvertingParameterAccessor(operations.getConverter(),
 				new MongoParametersParameterAccessor(method, parameters));
+
+		ResultProcessor processor = method.getResultProcessor().withDynamicProjection(accessor);
+		Class<?> typeToRead = processor.getReturnedType().getTypeToRead();
+
+		return processor.processResult(doExecute(method, processor, accessor, typeToRead));
+	}
+
+	/**
+	 * Execute the {@link RepositoryQuery} of the given method with the parameters provided by the
+	 * {@link ConvertingParameterAccessor accessor}
+	 *
+	 * @param method the {@link MongoQueryMethod} invoked. Never {@literal null}.
+	 * @param processor {@link ResultProcessor} for post procession. Never {@literal null}.
+	 * @param accessor for providing invocation arguments. Never {@literal null}.
+	 * @param typeToRead the desired component target type. Can be {@literal null}.
+	 */
+	protected Object doExecute(MongoQueryMethod method, ResultProcessor processor, ConvertingParameterAccessor accessor,
+			@Nullable Class<?> typeToRead) {
+
 		Query query = createQuery(accessor);
 
 		applyQueryMetaAttributesWhenPresent(query);
 		query = applyAnnotatedDefaultSortIfPresent(query);
 		query = applyAnnotatedCollationIfPresent(query, accessor);
 
-		ResultProcessor processor = method.getResultProcessor().withDynamicProjection(accessor);
-		Class<?> typeToRead = processor.getReturnedType().getTypeToRead();
-
 		FindWithQuery<?> find = typeToRead == null //
 				? executableFind //
 				: executableFind.as(typeToRead);
 
-		MongoQueryExecution execution = getExecution(accessor, find);
-
-		return processor.processResult(execution.execute(query));
+		return getExecution(accessor, find).execute(query);
 	}
 
 	private MongoQueryExecution getExecution(ConvertingParameterAccessor accessor, FindWithQuery<?> operation) {

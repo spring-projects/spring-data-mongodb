@@ -18,9 +18,13 @@ package org.springframework.data.mongodb.repository.query;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 import java.lang.reflect.Method;
 import java.util.List;
 
+import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -33,6 +37,7 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.User;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.Address;
+import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.Contact;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.Person;
@@ -40,9 +45,6 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
-
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 /**
  * Unit test for {@link ReactiveMongoQueryMethod}.
@@ -149,9 +151,27 @@ public class ReactiveMongoQueryMethodUnitTests {
 	@Test // DATAMONGO-1444
 	public void fallsBackToRepositoryDomainTypeIfMethodDoesNotReturnADomainType() throws Exception {
 
-		MongoQueryMethod method = queryMethod(PersonRepository.class, "deleteByUserName", String.class);
+		ReactiveMongoQueryMethod method = queryMethod(PersonRepository.class, "deleteByUserName", String.class);
 
 		assertThat(method.getEntityInformation().getJavaType(), is(typeCompatibleWith(User.class)));
+	}
+
+	@Test // DATAMONGO-2153
+	public void findsAnnotatedAggregation() throws Exception {
+
+		ReactiveMongoQueryMethod method = queryMethod(PersonRepository.class, "findByAggregation");
+
+		Assertions.assertThat(method.hasAnnotatedAggregation()).isTrue();
+		Assertions.assertThat(method.getAnnotatedAggregation()).hasSize(1);
+	}
+
+	@Test // DATAMONGO-2153
+	public void detectsCollationForAggregation() throws Exception {
+
+		ReactiveMongoQueryMethod method = queryMethod(PersonRepository.class, "findByAggregationWithCollation");
+
+		Assertions.assertThat(method.hasAnnotatedCollation()).isTrue();
+		Assertions.assertThat(method.getAnnotatedCollation()).isEqualTo("de_AT");
 	}
 
 	private ReactiveMongoQueryMethod queryMethod(Class<?> repository, String name, Class<?>... parameters)
@@ -188,6 +208,13 @@ public class ReactiveMongoQueryMethodUnitTests {
 		Flux<User> metaWithMaxExecutionTime();
 
 		void deleteByUserName(String userName);
+
+		@Aggregation("{'$group': { _id: '$templateId', maxVersion : { $max : '$version'} } }")
+		Flux<User> findByAggregation();
+
+		@Aggregation(pipeline = "{'$group': { _id: '$templateId', maxVersion : { $max : '$version'} } }",
+				collation = "de_AT")
+		Flux<User> findByAggregationWithCollation();
 	}
 
 	interface SampleRepository extends Repository<Contact, Long> {

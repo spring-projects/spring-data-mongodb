@@ -27,6 +27,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
@@ -156,7 +157,7 @@ public class ReactiveMongoRepositoryTests {
 
 		alicia = new Person("Alicia", "Keys", 30, Sex.FEMALE);
 
-		StepVerifier.create(repository.saveAll(Arrays.asList(oliver, dave, carter, boyd, stefan, leroi, alicia))) //
+		StepVerifier.create(repository.saveAll(Arrays.asList(oliver, carter, boyd, stefan, leroi, alicia, dave))) //
 				.expectNextCount(7) //
 				.verifyComplete();
 	}
@@ -423,6 +424,101 @@ public class ReactiveMongoRepositoryTests {
 				}).verifyComplete();
 	}
 
+	@Test // DATAMONGO-2153
+	public void findListOfSingleValue() {
+
+		repository.findAllLastnames() //
+				.collectList() //
+				.as(StepVerifier::create) //
+				.assertNext(actual -> {
+					assertThat(actual) //
+							.contains("Lessard") //
+							.contains("Keys") //
+							.contains("Tinsley") //
+							.contains("Beauford") //
+							.contains("Moore") //
+							.contains("Matthews");
+				}).verifyComplete();
+	}
+
+	@Test // DATAMONGO-2153
+	public void annotatedAggregationWithPlaceholderValue() {
+
+		repository.groupByLastnameAnd("firstname") //
+				.collectList() //
+				.as(StepVerifier::create) //
+				.assertNext(actual -> {
+					assertThat(actual) //
+							.contains(new PersonAggregate("Lessard", Collections.singletonList("Stefan"))) //
+							.contains(new PersonAggregate("Keys", Collections.singletonList("Alicia"))) //
+							.contains(new PersonAggregate("Tinsley", Collections.singletonList("Boyd"))) //
+							.contains(new PersonAggregate("Beauford", Collections.singletonList("Carter"))) //
+							.contains(new PersonAggregate("Moore", Collections.singletonList("Leroi"))) //
+							.contains(new PersonAggregate("Matthews", Arrays.asList("Dave", "Oliver August")));
+				}).verifyComplete();
+	}
+
+	@Test // DATAMONGO-2153
+	public void annotatedAggregationWithSort() {
+
+		repository.groupByLastnameAnd("firstname", Sort.by("lastname")) //
+				.collectList() //
+				.as(StepVerifier::create) //
+				.assertNext(actual -> {
+					assertThat(actual) //
+							.containsSequence( //
+									new PersonAggregate("Beauford", Collections.singletonList("Carter")), //
+									new PersonAggregate("Keys", Collections.singletonList("Alicia")), //
+									new PersonAggregate("Lessard", Collections.singletonList("Stefan")), //
+									new PersonAggregate("Matthews", Arrays.asList("Dave", "Oliver August")), //
+									new PersonAggregate("Moore", Collections.singletonList("Leroi")), //
+									new PersonAggregate("Tinsley", Collections.singletonList("Boyd")));
+				}) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-2153
+	public void annotatedAggregationWithPageable() {
+
+		repository.groupByLastnameAnd("firstname", PageRequest.of(1, 2, Sort.by("lastname"))) //
+				.collectList() //
+				.as(StepVerifier::create) //
+				.assertNext(actual -> {
+					assertThat(actual) //
+							.containsExactly( //
+									new PersonAggregate("Lessard", Collections.singletonList("Stefan")), //
+									new PersonAggregate("Matthews", Arrays.asList("Dave", "Oliver August")));
+				}) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-2153
+	public void annotatedAggregationWithSingleSimpleResult() {
+
+		repository.sumAge() //
+				.as(StepVerifier::create) //
+				.expectNext(245L) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-2153
+	public void annotatedAggregationWithAggregationResultAsReturnType() {
+
+		repository.sumAgeAndReturnRawResult() //
+				.as(StepVerifier::create) //
+				.expectNext(new org.bson.Document("_id", null).append("total", 245)) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-2153
+	public void annotatedAggregationWithAggregationResultAsReturnTypeAndProjection() {
+
+		repository.sumAgeAndReturnSumWrapper() //
+				.as(StepVerifier::create) //
+				.expectNext(new SumAge(245L)) //
+				.verifyComplete();
+	}
+
 	interface ReactivePersonRepository
 			extends ReactiveMongoRepository<Person, String>, ReactiveQuerydslPredicateExecutor<Person> {
 
@@ -462,6 +558,27 @@ public class ReactiveMongoRepositoryTests {
 
 		@Query(sort = "{ age : -1 }")
 		Flux<Person> findByAgeGreaterThan(int age, Sort sort);
+
+		@Aggregation("{ '$project': { '_id' : '$lastname' } }")
+		Flux<String> findAllLastnames();
+
+		@Aggregation("{ '$group': { '_id' : '$lastname', names : { $addToSet : '$?0' } } }")
+		Flux<PersonAggregate> groupByLastnameAnd(String property);
+
+		@Aggregation("{ '$group': { '_id' : '$lastname', names : { $addToSet : '$?0' } } }")
+		Flux<PersonAggregate> groupByLastnameAnd(String property, Sort sort);
+
+		@Aggregation("{ '$group': { '_id' : '$lastname', names : { $addToSet : '$?0' } } }")
+		Flux<PersonAggregate> groupByLastnameAnd(String property, Pageable page);
+
+		@Aggregation(pipeline = "{ '$group' : { '_id' : null, 'total' : { $sum: '$age' } } }")
+		Mono<Long> sumAge();
+
+		@Aggregation(pipeline = "{ '$group' : { '_id' : null, 'total' : { $sum: '$age' } } }")
+		Mono<org.bson.Document> sumAgeAndReturnRawResult();
+
+		@Aggregation(pipeline = "{ '$group' : { '_id' : null, 'total' : { $sum: '$age' } } }")
+		Mono<SumAge> sumAgeAndReturnSumWrapper();
 	}
 
 	interface ReactiveContactRepository extends ReactiveMongoRepository<Contact, String> {}

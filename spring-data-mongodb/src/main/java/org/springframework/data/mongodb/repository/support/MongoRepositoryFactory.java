@@ -30,6 +30,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.mongodb.repository.query.MongoQueryMethod;
 import org.springframework.data.mongodb.repository.query.PartTreeMongoQuery;
+import org.springframework.data.mongodb.repository.query.StringBasedAggregation;
 import org.springframework.data.mongodb.repository.query.StringBasedMongoQuery;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
@@ -187,6 +188,8 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 				String namedQuery = namedQueries.getQuery(namedQueryName);
 				return new StringBasedMongoQuery(namedQuery, queryMethod, operations, EXPRESSION_PARSER,
 						evaluationContextProvider);
+			} else if (queryMethod.hasAnnotatedAggregation()) {
+				return new StringBasedAggregation(queryMethod, operations, EXPRESSION_PARSER, evaluationContextProvider);
 			} else if (queryMethod.hasAnnotatedQuery()) {
 				return new StringBasedMongoQuery(queryMethod, operations, EXPRESSION_PARSER, evaluationContextProvider);
 			} else {

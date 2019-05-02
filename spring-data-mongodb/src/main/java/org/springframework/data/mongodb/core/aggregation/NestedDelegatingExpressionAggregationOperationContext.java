@@ -45,11 +45,11 @@ class NestedDelegatingExpressionAggregationOperationContext implements Aggregati
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(org.bson.Document)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(org.bson.Document, java.lang.Class)
 	 */
 	@Override
-	public Document getMappedObject(Document document) {
-		return delegate.getMappedObject(document);
+	public Document getMappedObject(Document document, Class<?> type) {
+		return delegate.getMappedObject(document, type);
 	}
 
 	/*
