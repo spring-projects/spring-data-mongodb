@@ -25,6 +25,7 @@ import java.util.Set;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
+import org.springframework.lang.Nullable;
 
 /**
  * {@link AggregationOperationContext} implementation prefixing non-command keys on root level with the given prefix.
@@ -56,11 +57,11 @@ public class PrefixingDelegatingAggregationOperationContext implements Aggregati
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(org.bson.Document)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(org.bson.Document, java.lang.Class)
 	 */
 	@Override
-	public Document getMappedObject(Document document) {
-		return doPrefix(delegate.getMappedObject(document));
+	public Document getMappedObject(Document document, @Nullable Class<?> type) {
+		return doPrefix(delegate.getMappedObject(document, type));
 	}
 
 	/*

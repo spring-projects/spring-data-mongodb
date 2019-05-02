@@ -27,6 +27,7 @@ import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldRefe
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -70,7 +71,16 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 	 */
 	@Override
 	public Document getMappedObject(Document document) {
-		return mapper.getMappedObject(document, mappingContext.getPersistentEntity(type));
+		return getMappedObject(document, type);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(org.bson.Document, java.lang.Class)
+	 */
+	@Override
+	public Document getMappedObject(Document document, @Nullable Class<?> type) {
+		return mapper.getMappedObject(document, type != null ? mappingContext.getPersistentEntity(type) : null);
 	}
 
 	/*

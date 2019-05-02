@@ -35,6 +35,8 @@ import org.springframework.data.geo.GeoPage;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.query.Param;
@@ -363,6 +365,27 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	@Query(value = "{ 'shippingAddresses' : { '$elemMatch' : { 'city' : { '$eq' : 'lnz' } } } }", fields = "{ 'shippingAddresses.$': ?0 }")
 	Person findWithArrayPositionInProjection(int position);
 
-	 @Query(value = "{ 'fans' : { '$elemMatch' : { '$ref' : 'user' } } }", fields = "{ 'fans.$': ?0 }")
-	 Person findWithArrayPositionInProjectionWithDbRef(int position);
+	@Query(value = "{ 'fans' : { '$elemMatch' : { '$ref' : 'user' } } }", fields = "{ 'fans.$': ?0 }")
+	Person findWithArrayPositionInProjectionWithDbRef(int position);
+
+	@Aggregation("{ '$project': { '_id' : '$lastname' } }")
+	List<String> findAllLastnames();
+
+	@Aggregation("{ '$group': { '_id' : '$lastname', names : { $addToSet : '$?0' } } }")
+	List<PersonAggregate> groupByLastnameAnd(String property);
+
+	@Aggregation("{ '$group': { '_id' : '$lastname', names : { $addToSet : '$?0' } } }")
+	List<PersonAggregate> groupByLastnameAnd(String property, Sort sort);
+
+	@Aggregation("{ '$group': { '_id' : '$lastname', names : { $addToSet : '$?0' } } }")
+	List<PersonAggregate> groupByLastnameAnd(String property, Pageable page);
+
+	@Aggregation(pipeline = "{ '$group' : { '_id' : null, 'total' : { $sum: '$age' } } }")
+	Long sumAge();
+
+	@Aggregation(pipeline = "{ '$group' : { '_id' : null, 'total' : { $sum: '$age' } } }")
+	AggregationResults<org.bson.Document> sumAgeAndReturnAggregationResultWrapper();
+
+	@Aggregation(pipeline = "{ '$group' : { '_id' : null, 'total' : { $sum: '$age' } } }")
+	AggregationResults<SumAge> sumAgeAndReturnAggregationResultWrapperWithConcreteType();
 }

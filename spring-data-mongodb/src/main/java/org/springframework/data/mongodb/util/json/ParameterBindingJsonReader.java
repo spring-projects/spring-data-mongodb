@@ -36,13 +36,13 @@ import org.bson.types.Decimal128;
 import org.bson.types.MaxKey;
 import org.bson.types.MinKey;
 import org.bson.types.ObjectId;
-
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.NumberUtils;
+import org.springframework.util.ObjectUtils;
 
 /**
  * Reads a JSON and evaluates placehoders and SpEL expressions. Modified version of <a href=
@@ -387,12 +387,29 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		}
 
 		String computedValue = tokenValue;
+
+		boolean matched = false;
 		while (matcher.find()) {
 
+			matched = true;
 			String group = matcher.group();
 			int index = computeParameterIndex(group);
-			computedValue = computedValue.replace(group, getBindableValueForIndex(index).toString());
+			computedValue = computedValue.replace(group, ObjectUtils.nullSafeToString(getBindableValueForIndex(index)));
 		}
+
+		if (!matched) {
+
+			Matcher regexMatcher = EXPRESSION_BINDING_PATTERN.matcher(tokenValue);
+
+			while (regexMatcher.find()) {
+
+				String binding = regexMatcher.group();
+				String expression = binding.substring(3, binding.length() - 1);
+
+				computedValue = computedValue.replace(binding, ObjectUtils.nullSafeToString(evaluateExpression(expression)));
+			}
+		}
+
 		bindableValue.setValue(computedValue);
 		bindableValue.setType(BsonType.STRING);
 
@@ -1332,7 +1349,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		if (patternToken.getType() == JsonTokenType.STRING || patternToken.getType() == JsonTokenType.UNQUOTED_STRING) {
 			return bindableValueFor(patternToken).getValue().toString();
 		}
-		
+
 		throw new JsonParseException("JSON reader expected a string but found '%s'.", patternToken.getValue());
 
 		// Spring Data Customization END

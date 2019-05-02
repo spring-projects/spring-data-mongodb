@@ -22,6 +22,7 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
 
+import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.data.domain.Pageable;
@@ -33,6 +34,7 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.User;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.Address;
+import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.Contact;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.Person;
@@ -217,7 +219,8 @@ public class MongoQueryMethodUnitTests {
 
 		assertThat(method.hasQueryMetaAttributes(), is(true));
 		assertThat(method.getQueryMetaAttributes().getFlags(),
-				containsInAnyOrder(org.springframework.data.mongodb.core.query.Meta.CursorOption.NO_TIMEOUT, org.springframework.data.mongodb.core.query.Meta.CursorOption.SLAVE_OK));
+				containsInAnyOrder(org.springframework.data.mongodb.core.query.Meta.CursorOption.NO_TIMEOUT,
+						org.springframework.data.mongodb.core.query.Meta.CursorOption.SLAVE_OK));
 	}
 
 	@Test // DATAMONGO-1266
@@ -226,6 +229,24 @@ public class MongoQueryMethodUnitTests {
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "deleteByUserName", String.class);
 
 		assertThat(method.getEntityInformation().getJavaType(), is(typeCompatibleWith(User.class)));
+	}
+
+	@Test // DATAMONGO-2153
+	public void findsAnnotatedAggregation() throws Exception {
+
+		MongoQueryMethod method = queryMethod(PersonRepository.class, "findByAggregation");
+
+		Assertions.assertThat(method.hasAnnotatedAggregation()).isTrue();
+		Assertions.assertThat(method.getAnnotatedAggregation()).hasSize(1);
+	}
+
+	@Test // DATAMONGO-2153
+	public void detectsCollationForAggregation() throws Exception {
+
+		MongoQueryMethod method = queryMethod(PersonRepository.class, "findByAggregationWithCollation");
+
+		Assertions.assertThat(method.hasAnnotatedCollation()).isTrue();
+		Assertions.assertThat(method.getAnnotatedCollation()).isEqualTo("de_AT");
 	}
 
 	private MongoQueryMethod queryMethod(Class<?> repository, String name, Class<?>... parameters) throws Exception {
@@ -275,11 +296,19 @@ public class MongoQueryMethodUnitTests {
 		@Meta(flags = { org.springframework.data.mongodb.core.query.Meta.CursorOption.NO_TIMEOUT })
 		List<User> metaWithNoCursorTimeout();
 
-		@Meta(flags = { org.springframework.data.mongodb.core.query.Meta.CursorOption.NO_TIMEOUT, org.springframework.data.mongodb.core.query.Meta.CursorOption.SLAVE_OK })
+		@Meta(flags = { org.springframework.data.mongodb.core.query.Meta.CursorOption.NO_TIMEOUT,
+				org.springframework.data.mongodb.core.query.Meta.CursorOption.SLAVE_OK })
 		List<User> metaWithMultipleFlags();
 
 		// DATAMONGO-1266
 		void deleteByUserName(String userName);
+
+		@Aggregation("{'$group': { _id: '$templateId', maxVersion : { $max : '$version'} } }")
+		List<User> findByAggregation();
+
+		@Aggregation(pipeline = "{'$group': { _id: '$templateId', maxVersion : { $max : '$version'} } }",
+				collation = "de_AT")
+		List<User> findByAggregationWithCollation();
 	}
 
 	interface SampleRepository extends Repository<Contact, Long> {

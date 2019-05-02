@@ -30,6 +30,7 @@ import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.Tailable;
@@ -165,6 +166,17 @@ public class MongoQueryMethod extends QueryMethod {
 		}
 
 		return this.metadata;
+	}
+
+	/**
+	 * Get the declared {@link org.springframework.data.repository.Repository} domain type.
+	 *
+	 * @return the domain type declared at repository level.
+	 * @see QueryMethod#getDomainClass()
+	 * @since 2.2
+	 */
+	Class<?> getRepositoryDomainType() {
+		return getDomainClass();
 	}
 
 	/*
@@ -323,27 +335,65 @@ public class MongoQueryMethod extends QueryMethod {
 	}
 
 	/**
-	 * Check if the query method is decorated with an non empty {@link Query#collation()}.
+	 * Check if the query method is decorated with an non empty {@link Query#collation()} or or
+	 * {@link Aggregation#collation()}.
 	 *
-	 * @return true if method annotated with {@link Query} having an non empty collation attribute.
+	 * @return true if method annotated with {@link Query} or {@link Aggregation} having an non empty collation attribute.
 	 * @since 2.2
 	 */
 	public boolean hasAnnotatedCollation() {
-		return lookupQueryAnnotation().map(it -> !it.collation().isEmpty()).orElse(false);
+
+		return lookupQueryAnnotation().map(it -> !it.collation().isEmpty())
+				.orElseGet(() -> lookupAggregationAnnotation().map(it -> !it.collation().isEmpty()).orElse(false));
 	}
 
 	/**
-	 * Get the collation value extracted from the {@link Query} annotation.
+	 * Get the collation value extracted from the {@link Query} or {@link Aggregation} annotation.
 	 *
-	 * @return the {@link Query#collation()} value.
-	 * @throws IllegalStateException if method not annotated with {@link Query}. Make sure to check
+	 * @return the {@link Query#collation()} or or {@link Aggregation#collation()} value.
+	 * @throws IllegalStateException if method not annotated with {@link Query} or {@link Aggregation}. Make sure to check
 	 *           {@link #hasAnnotatedQuery()} first.
 	 * @since 2.2
 	 */
 	public String getAnnotatedCollation() {
 
-		return lookupQueryAnnotation().map(Query::collation).orElseThrow(() -> new IllegalStateException(
-				"Expected to find @Query annotation but did not. Make sure to check hasAnnotatedCollation() before."));
+		return lookupQueryAnnotation().map(Query::collation)
+				.orElseGet(() -> lookupAggregationAnnotation().map(Aggregation::collation) //
+						.orElseThrow(() -> new IllegalStateException(
+								"Expected to find @Query annotation but did not. Make sure to check hasAnnotatedCollation() before.")));
+	}
+
+	/**
+	 * Returns whether the method has an annotated query.
+	 *
+	 * @return true if {@link Aggregation} is present.
+	 * @since 2.2
+	 */
+	public boolean hasAnnotatedAggregation() {
+		return findAnnotatedAggregation().isPresent();
+	}
+
+	/**
+	 * Returns the query string declared in a {@link Query} annotation or {@literal null} if neither the annotation found
+	 * nor the attribute was specified.
+	 *
+	 * @return
+	 * @since 2.2
+	 */
+	@Nullable
+	public String[] getAnnotatedAggregation() {
+		return findAnnotatedAggregation().orElse(null);
+	}
+
+	private Optional<String[]> findAnnotatedAggregation() {
+
+		return lookupAggregationAnnotation() //
+				.map(Aggregation::pipeline) //
+				.filter(it -> !ObjectUtils.isEmpty(it));
+	}
+
+	Optional<Aggregation> lookupAggregationAnnotation() {
+		return doFindAnnotation(Aggregation.class);
 	}
 
 	@SuppressWarnings("unchecked")

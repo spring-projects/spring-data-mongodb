@@ -32,6 +32,7 @@ import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.mongodb.repository.query.PartTreeMongoQuery;
 import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryMethod;
 import org.springframework.data.mongodb.repository.query.ReactivePartTreeMongoQuery;
+import org.springframework.data.mongodb.repository.query.ReactiveStringBasedAggregation;
 import org.springframework.data.mongodb.repository.query.ReactiveStringBasedMongoQuery;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor;
@@ -154,6 +155,7 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 	 * {@link QueryLookupStrategy} to create {@link PartTreeMongoQuery} instances.
 	 *
 	 * @author Mark Paluch
+	 * @author Christoph Strobl
 	 */
 	@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 	private static class MongoQueryLookupStrategy implements QueryLookupStrategy {
@@ -176,6 +178,9 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 			if (namedQueries.hasQuery(namedQueryName)) {
 				String namedQuery = namedQueries.getQuery(namedQueryName);
 				return new ReactiveStringBasedMongoQuery(namedQuery, queryMethod, operations, EXPRESSION_PARSER,
+						evaluationContextProvider);
+			} else if (queryMethod.hasAnnotatedAggregation()) {
+				return new ReactiveStringBasedAggregation(queryMethod, operations, EXPRESSION_PARSER,
 						evaluationContextProvider);
 			} else if (queryMethod.hasAnnotatedQuery()) {
 				return new ReactiveStringBasedMongoQuery(queryMethod, operations, EXPRESSION_PARSER, evaluationContextProvider);

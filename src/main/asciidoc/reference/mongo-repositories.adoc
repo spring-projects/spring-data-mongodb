@@ -579,6 +579,8 @@ List<FullTextDocument> result = repository.findByTitleOrderByScoreDesc("mongodb"
 
 include::../{spring-data-commons-docs}/repository-projections.adoc[leveloffset=+2]
 
+include::./mongo-repositories-aggregation.adoc[]
+
 [[mongodb.repositories.misc.cdi-integration]]
 == CDI Integration
 

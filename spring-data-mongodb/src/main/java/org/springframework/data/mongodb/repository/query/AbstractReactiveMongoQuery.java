@@ -20,7 +20,6 @@ import reactor.core.publisher.Mono;
 
 import org.bson.Document;
 import org.reactivestreams.Publisher;
-
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -38,6 +37,7 @@ import org.springframework.data.repository.query.QueryMethodEvaluationContextPro
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -119,14 +119,30 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 
 		ConvertingParameterAccessor convertingParamterAccessor = new ConvertingParameterAccessor(operations.getConverter(),
 				parameterAccessor);
-		Query query = createQuery(convertingParamterAccessor);
-
-		applyQueryMetaAttributesWhenPresent(query);
-		query = applyAnnotatedDefaultSortIfPresent(query);
-		query = applyAnnotatedCollationIfPresent(query, convertingParamterAccessor);
 
 		ResultProcessor processor = method.getResultProcessor().withDynamicProjection(convertingParamterAccessor);
 		Class<?> typeToRead = processor.getReturnedType().getTypeToRead();
+
+		return doExecute(method, processor, convertingParamterAccessor, typeToRead);
+	}
+
+	/**
+	 * Execute the {@link RepositoryQuery} of the given method with the parameters provided by the
+	 * {@link ConvertingParameterAccessor accessor}
+	 *
+	 * @param method the {@link ReactiveMongoQueryMethod} invoked. Never {@literal null}.
+	 * @param processor {@link ResultProcessor} for post procession. Never {@literal null}.
+	 * @param accessor for providing invocation arguments. Never {@literal null}.
+	 * @param typeToRead the desired component target type. Can be {@literal null}.
+	 */
+	protected Object doExecute(ReactiveMongoQueryMethod method, ResultProcessor processor,
+			ConvertingParameterAccessor accessor, @Nullable Class<?> typeToRead) {
+
+		Query query = createQuery(accessor);
+
+		applyQueryMetaAttributesWhenPresent(query);
+		query = applyAnnotatedDefaultSortIfPresent(query);
+		query = applyAnnotatedCollationIfPresent(query, accessor);
 
 		FindWithQuery<?> find = typeToRead == null //
 				? findOperationWithProjection //
@@ -134,9 +150,8 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 
 		String collection = method.getEntityInformation().getCollectionName();
 
-		ReactiveMongoQueryExecution execution = getExecution(convertingParamterAccessor,
+		ReactiveMongoQueryExecution execution = getExecution(accessor,
 				new ResultProcessingConverter(processor, operations, instantiators), find);
-
 		return execution.execute(query, processor.getReturnedType().getDomainType(), collection);
 	}
 
