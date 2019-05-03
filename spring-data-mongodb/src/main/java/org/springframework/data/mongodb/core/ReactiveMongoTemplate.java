@@ -200,6 +200,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	private @Nullable ApplicationEventPublisher eventPublisher;
 	private @Nullable ReactiveMongoPersistentEntityIndexCreator indexCreator;
 
+	private SessionSynchronization sessionSynchronization = SessionSynchronization.ON_ACTUAL_TRANSACTION;
+
 	/**
 	 * Constructor used for a basic template configuration.
 	 *
@@ -289,6 +291,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		this.mappingContext = that.mappingContext;
 		this.operations = that.operations;
 		this.propertyOperations = that.propertyOperations;
+		this.sessionSynchronization = that.sessionSynchronization;
 	}
 
 	private void onCheckForIndexes(MongoPersistentEntity<?> entity, Consumer<Throwable> subscriptionExceptionHandler) {
@@ -498,6 +501,17 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				});
 			}
 		};
+	}
+
+	/**
+	 * Define if {@link ReactiveMongoTemplate} should participate in transactions. Default is set to
+	 * {@link SessionSynchronization#ON_ACTUAL_TRANSACTION}.<br />
+	 * <strong>NOTE:</strong> MongoDB transactions require at least MongoDB 4.0.
+	 *
+	 * @since 2.2
+	 */
+	public void setSessionSynchronization(SessionSynchronization sessionSynchronization) {
+		this.sessionSynchronization = sessionSynchronization;
 	}
 
 	/*
@@ -757,7 +771,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	protected Mono<MongoDatabase> doGetDatabase() {
-		return ReactiveMongoDatabaseUtils.getDatabase(mongoDatabaseFactory, SessionSynchronization.ON_ACTUAL_TRANSACTION);
+		return ReactiveMongoDatabaseUtils.getDatabase(mongoDatabaseFactory, sessionSynchronization);
 	}
 
 	/*
