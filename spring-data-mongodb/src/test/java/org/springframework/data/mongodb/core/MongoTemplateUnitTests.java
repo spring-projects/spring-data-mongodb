@@ -15,12 +15,9 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.any;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
-import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import lombok.Data;
 
@@ -36,9 +33,6 @@ import org.assertj.core.api.Assertions;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
-import org.hamcrest.collection.IsIterableContainingInOrder;
-import org.hamcrest.core.Is;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -48,6 +42,7 @@ import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.convert.converter.Converter;
@@ -78,7 +73,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.data.mongodb.test.util.IsBsonObject;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.DB;
@@ -209,7 +203,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test
 	public void defaultsConverterToMappingMongoConverter() throws Exception {
 		MongoTemplate template = new MongoTemplate(mongo, "database");
-		assertTrue(ReflectionTestUtils.getField(template, "mongoConverter") instanceof MappingMongoConverter);
+		assertThat(ReflectionTestUtils.getField(template, "mongoConverter") instanceof MappingMongoConverter).isTrue();
 	}
 
 	@Test(expected = InvalidDataAccessApiUsageException.class)
@@ -248,7 +242,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		AutogenerateableId entity = new AutogenerateableId();
 		template.save(entity);
 
-		assertThat(entity.id, is(notNullValue()));
+		assertThat(entity.id).isNotNull();
 	}
 
 	@Test // DATAMONGO-1912
@@ -260,7 +254,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		Map<String, String> entity = new LinkedHashMap<>();
 		template.save(entity, "foo");
 
-		assertThat(entity, hasKey("_id"));
+		assertThat(entity).containsKey("_id");
 	}
 
 	@Test // DATAMONGO-374
@@ -287,7 +281,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		NotAutogenerateableId entity = new NotAutogenerateableId();
 
 		template.populateIdIfNecessary(entity, 5);
-		assertThat(entity.id, is(5));
+		assertThat(entity.id).isEqualTo(5);
 	}
 
 	@Test // DATAMONGO-474
@@ -297,7 +291,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		entity.id = 5;
 
 		template.populateIdIfNecessary(entity, 7);
-		assertThat(entity.id, is(5));
+		assertThat(entity.id).isEqualTo(5);
 	}
 
 	@Test // DATAMONGO-868
@@ -313,7 +307,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		verify(collection, times(1)).findOneAndUpdate(any(org.bson.Document.class), captor.capture(),
 				any(FindOneAndUpdateOptions.class));
-		Assert.assertThat(captor.getValue().get("$inc"), Is.is(new org.bson.Document("version", 1L)));
+		assertThat(captor.getValue().get("$inc")).isEqualTo(new Document("version", 1L));
 	}
 
 	@Test // DATAMONGO-868
@@ -330,8 +324,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(collection, times(1)).findOneAndUpdate(any(org.bson.Document.class), captor.capture(),
 				any(FindOneAndUpdateOptions.class));
 
-		Assert.assertThat(captor.getValue().get("$set"), Is.is(new org.bson.Document("version", 100)));
-		Assert.assertThat(captor.getValue().get("$inc"), nullValue());
+		assertThat(captor.getValue().get("$set")).isEqualTo(new Document("version", 100));
+		assertThat(captor.getValue().get("$inc")).isNull();
 	}
 
 	@Test // DATAMONGO-533
@@ -378,8 +372,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(collection, times(1)).deleteMany(queryCaptor.capture(), any());
 
 		Document idField = DocumentTestUtils.getAsDocument(queryCaptor.getValue(), "_id");
-		assertThat((List<Object>) idField.get("$in"),
-				IsIterableContainingInOrder.<Object> contains(Integer.valueOf(0), Integer.valueOf(1)));
+		assertThat((List<Object>) idField.get("$in")).containsExactly(Integer.valueOf(0), Integer.valueOf(1));
 	}
 
 	@Test // DATAMONGO-566
@@ -404,7 +397,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<org.bson.Document> captor = ArgumentCaptor.forClass(org.bson.Document.class);
 
 		verify(findIterable, times(1)).sort(captor.capture());
-		assertThat(captor.getValue(), equalTo(new org.bson.Document("foo", 1)));
+		assertThat(captor.getValue()).isEqualTo(new Document("foo", 1));
 	}
 
 	@Test // DATAMONGO-1166, DATAMONGO-1824
@@ -564,7 +557,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 			@Override
 			public void onBeforeConvert(BeforeConvertEvent<VersionedEntity> event) {
-				assertThat(event.getSource().version, is(1));
+				assertThat(event.getSource().version).isEqualTo(1);
 			}
 		});
 
@@ -583,8 +576,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		verify(collection).updateOne(queryCaptor.capture(), updateCaptor.capture(), any());
 
-		assertThat(queryCaptor.getValue(), isBsonObject().notContaining("$isolated"));
-		assertThat(updateCaptor.getValue(), isBsonObject().containing("$set.jon", "snow").notContaining("$isolated"));
+		assertThat((Document) queryCaptor.getValue()).doesNotContainKey("$isolated");
+		assertThat((Document) updateCaptor.getValue()).containsEntry("$set.jon", "snow").doesNotContainKey("$isolated");
 	}
 
 	@Test // DATAMONGO-1447
@@ -597,8 +590,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		verify(collection).updateMany(queryCaptor.capture(), updateCaptor.capture(), any());
 
-		assertThat(queryCaptor.getValue(), isBsonObject().withSize(1).containing("$isolated", 1));
-		assertThat(updateCaptor.getValue(), isBsonObject().containing("$set.jon", "snow").notContaining("$isolated"));
+		assertThat((Document) queryCaptor.getValue()).hasSize(1).containsEntry("$isolated", 1);
+		assertThat((Document) updateCaptor.getValue()).containsEntry("$set.jon", "snow").doesNotContainKey("$isolated");
 	}
 
 	@Test // DATAMONGO-1447
@@ -614,8 +607,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		verify(collection).updateMany(queryCaptor.capture(), updateCaptor.capture(), any());
 
-		assertThat(queryCaptor.getValue(), isBsonObject().containing("$isolated", 1).containing("eddard", "stark"));
-		assertThat(updateCaptor.getValue(), isBsonObject().containing("$set.jon", "snow").notContaining("$isolated"));
+		assertThat((Document) queryCaptor.getValue()).containsEntry("$isolated", 1).containsEntry("eddard", "stark");
+		assertThat((Document) updateCaptor.getValue()).containsEntry("$set.jon", "snow").doesNotContainKey("$isolated");
 	}
 
 	@Test // DATAMONGO-1447
@@ -631,8 +624,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		verify(collection).updateMany(queryCaptor.capture(), updateCaptor.capture(), any());
 
-		assertThat(queryCaptor.getValue(), isBsonObject().notContaining("$isolated").containing("eddard", "stark"));
-		assertThat(updateCaptor.getValue(), isBsonObject().containing("$set.jon", "snow").notContaining("$isolated"));
+		assertThat((Document) queryCaptor.getValue()).doesNotContainKey("$isolated").containsEntry("eddard", "stark");
+		assertThat((Document) updateCaptor.getValue()).containsEntry("$set.jon", "snow").doesNotContainKey("$isolated");
 	}
 
 	@Test // DATAMONGO-1447
@@ -648,8 +641,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		verify(collection).updateMany(queryCaptor.capture(), updateCaptor.capture(), any());
 
-		assertThat(queryCaptor.getValue(), isBsonObject().containing("$isolated", 1).containing("eddard", "stark"));
-		assertThat(updateCaptor.getValue(), isBsonObject().containing("$set.jon", "snow").notContaining("$isolated"));
+		assertThat((Document) queryCaptor.getValue()).containsEntry("$isolated", 1).containsEntry("eddard", "stark");
+		assertThat((Document) updateCaptor.getValue()).containsEntry("$set.jon", "snow").doesNotContainKey("$isolated");
 	}
 
 	@Test // DATAMONGO-1447
@@ -665,8 +658,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		verify(collection).updateMany(queryCaptor.capture(), updateCaptor.capture(), any());
 
-		assertThat(queryCaptor.getValue(), isBsonObject().containing("$isolated", 0).containing("eddard", "stark"));
-		assertThat(updateCaptor.getValue(), isBsonObject().containing("$set.jon", "snow").notContaining("$isolated"));
+		assertThat((Document) queryCaptor.getValue()).containsEntry("$isolated", 0).containsEntry("eddard", "stark");
+		assertThat((Document) updateCaptor.getValue()).containsEntry("$set.jon", "snow").doesNotContainKey("$isolated");
 	}
 
 	@Test // DATAMONGO-1311
@@ -720,8 +713,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
 		verify(collection).count(any(), options.capture());
 
-		assertThat(options.getValue().getCollation(),
-				is(equalTo(com.mongodb.client.model.Collation.builder().locale("fr").build())));
+		assertThat(options.getValue().getCollation())
+				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("fr").build());
 	}
 
 	@Test // DATAMONGO-1518
@@ -732,7 +725,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<FindOneAndUpdateOptions> options = ArgumentCaptor.forClass(FindOneAndUpdateOptions.class);
 		verify(collection).findOneAndUpdate(any(), any(), options.capture());
 
-		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
+		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
 	}
 
 	@Test // DATAMONGO-1518
@@ -743,7 +736,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<FindOneAndDeleteOptions> options = ArgumentCaptor.forClass(FindOneAndDeleteOptions.class);
 		verify(collection).findOneAndDelete(any(), options.capture());
 
-		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
+		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
 	}
 
 	@Test // DATAMONGO-2196
@@ -768,7 +761,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<DeleteOptions> options = ArgumentCaptor.forClass(DeleteOptions.class);
 		verify(collection).deleteMany(any(), options.capture());
 
-		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
+		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
 	}
 
 	@Test // DATAMONGO-1518
@@ -780,7 +773,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
 		verify(collection).updateOne(any(), any(), options.capture());
 
-		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
+		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
 	}
 
 	@Test // DATAMONGO-1518
@@ -792,8 +785,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
 		verify(collection).updateMany(any(), any(), options.capture());
 
-		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
-
+		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
 	}
 
 	@Test // DATAMONGO-1518
@@ -804,7 +796,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<ReplaceOptions> options = ArgumentCaptor.forClass(ReplaceOptions.class);
 		verify(collection).replaceOne(any(), any(), options.capture());
 
-		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
+		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
 	}
 
 	@Test // DATAMONGO-1518, DATAMONGO-1824
@@ -900,8 +892,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<Document> cmd = ArgumentCaptor.forClass(Document.class);
 		verify(db).runCommand(cmd.capture(), any(Class.class));
 
-		assertThat(cmd.getValue().get("group", Document.class).get("collation", Document.class),
-				equalTo(new Document("locale", "fr")));
+		assertThat(cmd.getValue().get("group", Document.class).get("collation", Document.class))
+				.isEqualTo(new Document("locale", "fr"));
 	}
 
 	@Test // DATAMONGO-1880
@@ -912,8 +904,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
 		verify(collection).count(any(), options.capture());
 
-		assertThat(options.getValue().getCollation(),
-				is(equalTo(com.mongodb.client.model.Collation.builder().locale("fr").build())));
+		assertThat(options.getValue().getCollation())
+				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("fr").build());
 	}
 
 	@Test // DATAMONGO-1733
@@ -985,8 +977,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(collection).aggregate(capture.capture(), eq(Document.class));
 		Document $geoNear = capture.getValue().iterator().next();
 
-		assertThat($geoNear, IsBsonObject.isBsonObject().containing("$geoNear.query.custom-named-field", "rand al'thor")
-				.notContaining("query.customName"));
+		assertThat($geoNear).containsEntry("$geoNear.query.custom-named-field", "rand al'thor")
+				.doesNotContainKey("query.customName");
 	}
 
 	@Test // DATAMONGO-1348, DATAMONGO-2264
@@ -1002,8 +994,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(collection).aggregate(capture.capture(), eq(Document.class));
 		Document $geoNear = capture.getValue().iterator().next();
 
-		assertThat($geoNear, IsBsonObject.isBsonObject().containing("$geoNear.near.type", "Point")
-				.containing("$geoNear.near.coordinates.[0]", 1D).containing("$geoNear.near.coordinates.[1]", 2D));
+		assertThat($geoNear).containsEntry("$geoNear.near.type", "Point").containsEntry("$geoNear.near.coordinates.[0]", 1D)
+				.containsEntry("$geoNear.near.coordinates.[1]", 2D);
 	}
 
 	@Test // DATAMONGO-2155
@@ -1022,9 +1014,9 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		verify(collection, times(1)).replaceOne(queryCaptor.capture(), updateCaptor.capture(), any(ReplaceOptions.class));
 
-		assertThat(queryCaptor.getValue(), is(equalTo(new Document("_id", 1).append("version", 10))));
-		assertThat(updateCaptor.getValue(),
-				is(equalTo(new Document("version", 11).append("_class", VersionedEntity.class.getName()))));
+		assertThat(queryCaptor.getValue()).isEqualTo(new Document("_id", 1).append("version", 10));
+		assertThat(updateCaptor.getValue())
+				.isEqualTo(new Document("version", 11).append("_class", VersionedEntity.class.getName()));
 	}
 
 	@Test // DATAMONGO-1783
@@ -1035,7 +1027,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
 		verify(collection).count(any(), options.capture());
 
-		assertThat(options.getValue().getSkip(), is(equalTo(100)));
+		assertThat(options.getValue().getSkip()).isEqualTo(100);
 	}
 
 	@Test // DATAMONGO-1783
@@ -1046,7 +1038,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
 		verify(collection).count(any(), options.capture());
 
-		assertThat(options.getValue().getLimit(), is(equalTo(10)));
+		assertThat(options.getValue().getLimit()).isEqualTo(10);
 	}
 
 	@Test // DATAMONGO-2215
@@ -1117,8 +1109,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
 		verify(collection).count(any(), options.capture());
 
-		assertThat(options.getValue().getCollation(),
-				is(equalTo(com.mongodb.client.model.Collation.builder().locale("de_AT").build())));
+		assertThat(options.getValue().getCollation())
+				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de_AT").build());
 	}
 
 	@Test // DATAMONGO-1854
@@ -1129,8 +1121,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<FindOneAndUpdateOptions> options = ArgumentCaptor.forClass(FindOneAndUpdateOptions.class);
 		verify(collection).findOneAndUpdate(any(), any(), options.capture());
 
-		assertThat(options.getValue().getCollation(),
-				is(com.mongodb.client.model.Collation.builder().locale("de_AT").build()));
+		assertThat(options.getValue().getCollation())
+				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de_AT").build());
 	}
 
 	@Test // DATAMONGO-1854
@@ -1141,8 +1133,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<FindOneAndDeleteOptions> options = ArgumentCaptor.forClass(FindOneAndDeleteOptions.class);
 		verify(collection).findOneAndDelete(any(), options.capture());
 
-		assertThat(options.getValue().getCollation(),
-				is(com.mongodb.client.model.Collation.builder().locale("de_AT").build()));
+		assertThat(options.getValue().getCollation())
+				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de_AT").build());
 	}
 
 	@Test // DATAMONGO-1854
@@ -1164,8 +1156,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
 		verify(db).createCollection(any(), options.capture());
 
-		assertThat(options.getValue().getCollation(),
-				is(com.mongodb.client.model.Collation.builder().locale("de_AT").build()));
+		assertThat(options.getValue().getCollation())
+				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de_AT").build());
 	}
 
 	@Test // DATAMONGO-1854
@@ -1176,8 +1168,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
 		verify(db).createCollection(any(), options.capture());
 
-		assertThat(options.getValue().getCollation(),
-				is(com.mongodb.client.model.Collation.builder().locale("en_US").build()));
+		assertThat(options.getValue().getCollation())
+				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("en_US").build());
 	}
 
 	@Test // DATAMONGO-1854
@@ -1188,8 +1180,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
 		verify(db).createCollection(any(), options.capture());
 
-		assertThat(options.getValue().getCollation(),
-				is(com.mongodb.client.model.Collation.builder().locale("de_AT").build()));
+		assertThat(options.getValue().getCollation())
+				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de_AT").build());
 	}
 
 	@Test // DATAMONGO-1854
@@ -1234,7 +1226,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<FindOneAndReplaceOptions> options = ArgumentCaptor.forClass(FindOneAndReplaceOptions.class);
 		verify(collection).findOneAndReplace(any(), any(), options.capture());
 
-		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
+		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
 	}
 
 	@Test // DATAMONGO-1854
@@ -1261,7 +1253,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<FindOneAndReplaceOptions> options = ArgumentCaptor.forClass(FindOneAndReplaceOptions.class);
 		verify(collection).findOneAndReplace(any(), any(), options.capture());
 
-		assertThat(options.getValue().getCollation().getLocale(), is("de_AT"));
+		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("de_AT");
 	}
 
 	@Test // DATAMONGO-18545
@@ -1272,7 +1264,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<FindOneAndReplaceOptions> options = ArgumentCaptor.forClass(FindOneAndReplaceOptions.class);
 		verify(collection).findOneAndReplace(any(), any(), options.capture());
 
-		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
+		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
 	}
 
 	@Test // DATAMONGO-1854
@@ -1299,8 +1291,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
 		verify(collection).updateOne(any(), any(), options.capture());
 
-		assertThat(options.getValue().getCollation(),
-				is(com.mongodb.client.model.Collation.builder().locale("de_AT").build()));
+		assertThat(options.getValue().getCollation())
+				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de_AT").build());
 	}
 
 	@Test // DATAMONGO-1854
@@ -1311,8 +1303,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
 		verify(collection).updateOne(any(), any(), options.capture());
 
-		assertThat(options.getValue().getCollation(),
-				is(com.mongodb.client.model.Collation.builder().locale("fr").build()));
+		assertThat(options.getValue().getCollation())
+				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("fr").build());
 	}
 
 	@Test // DATAMONGO-1854
@@ -1323,8 +1315,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
 		verify(collection).updateMany(any(), any(), options.capture());
 
-		assertThat(options.getValue().getCollation(),
-				is(com.mongodb.client.model.Collation.builder().locale("de_AT").build()));
+		assertThat(options.getValue().getCollation())
+				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de_AT").build());
 	}
 
 	@Test // DATAMONGO-1854
@@ -1335,8 +1327,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
 		verify(collection).updateMany(any(), any(), options.capture());
 
-		assertThat(options.getValue().getCollation(),
-				is(com.mongodb.client.model.Collation.builder().locale("fr").build()));
+		assertThat(options.getValue().getCollation())
+				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("fr").build());
 	}
 
 	@Test // DATAMONGO-1854
@@ -1347,8 +1339,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<DeleteOptions> options = ArgumentCaptor.forClass(DeleteOptions.class);
 		verify(collection).deleteMany(any(), options.capture());
 
-		assertThat(options.getValue().getCollation(),
-				is(com.mongodb.client.model.Collation.builder().locale("de_AT").build()));
+		assertThat(options.getValue().getCollation())
+				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de_AT").build());
 	}
 
 	@Test // DATAMONGO-1854
@@ -1359,8 +1351,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<DeleteOptions> options = ArgumentCaptor.forClass(DeleteOptions.class);
 		verify(collection).deleteMany(any(), options.capture());
 
-		assertThat(options.getValue().getCollation(),
-				is(com.mongodb.client.model.Collation.builder().locale("fr").build()));
+		assertThat(options.getValue().getCollation())
+				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("fr").build());
 	}
 
 	@Test // DATAMONGO-1854
