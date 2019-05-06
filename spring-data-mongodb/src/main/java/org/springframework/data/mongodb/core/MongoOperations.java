@@ -22,6 +22,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.bson.Document;
+
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -641,24 +642,52 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * information to determine the collection the query is ran against. Note, that MongoDB limits the number of results
 	 * by default. Make sure to add an explicit limit to the {@link NearQuery} if you expect a particular number of
 	 * results.
+	 * <p>
+	 * MongoDB 4.2 has removed the {@code geoNear} command. This method uses since version 2.2 aggregations and the
+	 * {@code $geoNear} aggregation command to emulate {@code geoNear} command functionality. We recommend using
+	 * aggregations directly:
+	 * </p>
+	 *
+	 * <pre class="code">
+	 * TypedAggregation&lt;T&gt; geoNear = TypedAggregation.newAggregation(entityClass, Aggregation.geoNear(near, "dis"))
+	 * 		.withOptions(AggregationOptions.builder().collation(near.getCollation()).build());
+	 * AggregationResults&lt;Document&gt; results = aggregate(geoNear, Document.class);
+	 * </pre>
 	 *
 	 * @param near must not be {@literal null}.
 	 * @param entityClass must not be {@literal null}.
 	 * @return
+	 * @deprecated since 2.2. The {@code eval} command has been removed in MongoDB Server 4.2.0. Use Aggregations with
+	 *             {@link Aggregation#geoNear(NearQuery, String)} instead.
 	 */
+	@Deprecated
 	<T> GeoResults<T> geoNear(NearQuery near, Class<T> entityClass);
 
 	/**
 	 * Returns {@link GeoResults} for all entities matching the given {@link NearQuery}. Note, that MongoDB limits the
 	 * number of results by default. Make sure to add an explicit limit to the {@link NearQuery} if you expect a
 	 * particular number of results.
+	 * <p>
+	 * MongoDB 4.2 has removed the {@code geoNear} command. This method uses since version 2.2 aggregations and the
+	 * {@code $geoNear} aggregation command to emulate {@code geoNear} command functionality. We recommend using
+	 * aggregations directly:
+	 * </p>
+	 *
+	 * <pre class="code">
+	 * TypedAggregation&lt;T&gt; geoNear = TypedAggregation.newAggregation(entityClass, Aggregation.geoNear(near, "dis"))
+	 * 		.withOptions(AggregationOptions.builder().collation(near.getCollation()).build());
+	 * AggregationResults&lt;Document&gt; results = aggregate(geoNear, Document.class);
+	 * </pre>
 	 *
 	 * @param near must not be {@literal null}.
 	 * @param entityClass must not be {@literal null}.
 	 * @param collectionName the collection to trigger the query against. If no collection name is given the entity class
 	 *          will be inspected. Must not be {@literal null} nor empty.
 	 * @return
+	 * @deprecated since 2.2. The {@code eval} command has been removed in MongoDB Server 4.2.0. Use Aggregations with
+	 *             {@link Aggregation#geoNear(NearQuery, String)} instead.
 	 */
+	@Deprecated
 	<T> GeoResults<T> geoNear(NearQuery near, Class<T> entityClass, String collectionName);
 
 	/**

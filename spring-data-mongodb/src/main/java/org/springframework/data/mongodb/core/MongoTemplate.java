@@ -35,6 +35,7 @@ import org.bson.codecs.Codec;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -3302,9 +3303,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			double distance = Double.NaN;
 			if (object.containsKey(distanceField)) {
-
-				distance = NumberUtils.convertNumberToTargetClass(object.get(distanceField, Number.class), Double.class)
-						.doubleValue();
+				distance = NumberUtils.convertNumberToTargetClass(object.get(distanceField, Number.class), Double.class);
 			}
 
 			T doWith = delegate.doWith(object);

@@ -1055,7 +1055,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		GeoNearResultDocumentCallback<T> callback = new GeoNearResultDocumentCallback<>(distanceField,
 				new ProjectingReadCallback<>(mongoConverter, entityClass, returnType, collection), near.getMetric());
 
-		Aggregation $geoNear = TypedAggregation.newAggregation(entityClass, Aggregation.geoNear(near, "dis"))
+		Aggregation $geoNear = TypedAggregation.newAggregation(entityClass, Aggregation.geoNear(near, distanceField))
 				.withOptions(AggregationOptions.builder().collation(near.getCollation()).build());
 
 		return aggregate($geoNear, collection, Document.class) //
@@ -3040,9 +3040,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			double distance = Double.NaN;
 			if (object.containsKey(distanceField)) {
-
-				distance = NumberUtils.convertNumberToTargetClass(object.get(distanceField, Number.class), Double.class)
-						.doubleValue();
+				distance = NumberUtils.convertNumberToTargetClass(object.get(distanceField, Number.class), Double.class);
 			}
 
 			T doWith = delegate.doWith(object);

@@ -321,11 +321,14 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void findsPeoplePageableGeoresultByLocationWithinBox() {
+	public void findsPeoplePageableGeoresultByLocationWithinBox() throws InterruptedException {
 
 		Point point = new Point(-73.99171, 40.738868);
 		dave.setLocation(point);
 		StepVerifier.create(repository.save(dave)).expectNextCount(1).verifyComplete();
+
+		// Allow for index creation
+		Thread.sleep(500);
 
 		StepVerifier.create(repository.findByLocationNear(new Point(-73.99, 40.73), //
 				new Distance(2000, Metrics.KILOMETERS), //
@@ -338,11 +341,14 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void findsPeopleByLocationWithinBox() {
+	public void findsPeopleByLocationWithinBox() throws InterruptedException {
 
 		Point point = new Point(-73.99171, 40.738868);
 		dave.setLocation(point);
 		StepVerifier.create(repository.save(dave)).expectNextCount(1).verifyComplete();
+
+		// Allow for index creation
+		Thread.sleep(500);
 
 		StepVerifier.create(repository.findPersonByLocationNear(new Point(-73.99, 40.73), //
 				new Distance(2000, Metrics.KILOMETERS))) //
