@@ -25,6 +25,7 @@ import java.util.function.Supplier;
 import org.bson.Document;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
+
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -612,24 +613,52 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * entity mapping information to determine the collection the query is ran against. Note, that MongoDB limits the
 	 * number of results by default. Make sure to add an explicit limit to the {@link NearQuery} if you expect a
 	 * particular number of results.
+	 * <p>
+	 * MongoDB 4.2 has removed the {@code geoNear} command. This method uses since version 2.2 aggregations and the
+	 * {@code $geoNear} aggregation command to emulate {@code geoNear} command functionality. We recommend using
+	 * aggregations directly:
+	 * </p>
+	 *
+	 * <pre class="code">
+	 * TypedAggregation&lt;T&gt; geoNear = TypedAggregation.newAggregation(entityClass, Aggregation.geoNear(near, "dis"))
+	 * 		.withOptions(AggregationOptions.builder().collation(near.getCollation()).build());
+	 * Flux&lt;Document&gt; results = aggregate(geoNear, Document.class);
+	 * </pre>
 	 *
 	 * @param near must not be {@literal null}.
 	 * @param entityClass must not be {@literal null}.
 	 * @return the converted {@link GeoResult}s.
+	 * @deprecated since 2.2. The {@code eval} command has been removed in MongoDB Server 4.2.0. Use Aggregations with
+	 *             {@link Aggregation#geoNear(NearQuery, String)} instead.
 	 */
+	@Deprecated
 	<T> Flux<GeoResult<T>> geoNear(NearQuery near, Class<T> entityClass);
 
 	/**
 	 * Returns {@link Flux} of {@link GeoResult} for all entities matching the given {@link NearQuery}. Note, that MongoDB
 	 * limits the number of results by default. Make sure to add an explicit limit to the {@link NearQuery} if you expect
 	 * a particular number of results.
+	 * <p>
+	 * MongoDB 4.2 has removed the {@code geoNear} command. This method uses since version 2.2 aggregations and the
+	 * {@code $geoNear} aggregation command to emulate {@code geoNear} command functionality. We recommend using
+	 * aggregations directly:
+	 * </p>
+	 *
+	 * <pre class="code">
+	 * TypedAggregation&lt;T&gt; geoNear = TypedAggregation.newAggregation(entityClass, Aggregation.geoNear(near, "dis"))
+	 * 		.withOptions(AggregationOptions.builder().collation(near.getCollation()).build());
+	 * Flux&lt;Document&gt; results = aggregate(geoNear, Document.class);
+	 * </pre>
 	 *
 	 * @param near must not be {@literal null}.
 	 * @param entityClass must not be {@literal null}.
 	 * @param collectionName the collection to trigger the query against. If no collection name is given the entity class
 	 *          will be inspected.
 	 * @return the converted {@link GeoResult}s.
+	 * @deprecated since 2.2. The {@code eval} command has been removed in MongoDB Server 4.2.0. Use Aggregations with
+	 *             {@link Aggregation#geoNear(NearQuery, String)} instead.
 	 */
+	@Deprecated
 	<T> Flux<GeoResult<T>> geoNear(NearQuery near, Class<T> entityClass, String collectionName);
 
 	/**
@@ -933,8 +962,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
-	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's Type
-	 * Conversion"</a> for more details.
+	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's
+	 * Type Conversion"</a> for more details.
 	 * <p/>
 	 * <p/>
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
@@ -993,8 +1022,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
-	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's Type
-	 * Conversion"</a> for more details.
+	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's
+	 * Type Conversion"</a> for more details.
 	 * <p/>
 	 * <p/>
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
@@ -1041,8 +1070,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
-	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's Type
-	 * Conversion"</a> for more details.
+	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's
+	 * Type Conversion"</a> for more details.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @return the saved object.
@@ -1078,8 +1107,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
-	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's Type
-	 * Conversion"</a> for more details.
+	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's
+	 * Type Conversion"</a> for more details.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @return the saved object.

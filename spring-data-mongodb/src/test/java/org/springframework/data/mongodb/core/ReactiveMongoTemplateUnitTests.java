@@ -136,7 +136,6 @@ public class ReactiveMongoTemplateUnitTests {
 		this.mappingContext = new MongoMappingContext();
 		this.converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext);
 		this.template = new ReactiveMongoTemplate(factory, converter);
-
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1444

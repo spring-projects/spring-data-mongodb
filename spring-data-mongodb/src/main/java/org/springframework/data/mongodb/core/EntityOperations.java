@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.bson.Document;
+
 import org.springframework.core.convert.ConversionService;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mapping.IdentifierAccessor;
@@ -44,7 +45,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.util.ObjectUtils;
 
 /**
  * Common operations performed on an entity in the context of it's mapping metadata.
@@ -173,14 +173,15 @@ class EntityOperations {
 	 */
 	public String nearQueryDistanceFieldName(Class<?> domainType) {
 
-		if (!context.hasPersistentEntityFor(domainType)
-				|| context.getPersistentEntity(domainType).getPersistentProperty("dis") == null) {
+		MongoPersistentEntity<?> persistentEntity = context.getPersistentEntity(domainType);
+		if (persistentEntity == null || persistentEntity.getPersistentProperty("dis") == null) {
 			return "dis";
 		}
 
 		String distanceFieldName = "calculated-distance";
-		while (context.getPersistentEntity(domainType).getPersistentProperty(distanceFieldName) != null) {
-			distanceFieldName += "-" + ObjectUtils.getIdentityHexString(new Object());
+		int counter = 0;
+		while (persistentEntity.getPersistentProperty(distanceFieldName) != null) {
+			distanceFieldName += "-" + (counter++);
 		}
 
 		return distanceFieldName;

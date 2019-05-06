@@ -1343,16 +1343,16 @@ Spring Data MongoDB 2.2 `MongoOperations#geoNear` uses the `$geoNear` https://do
 instead of the `geoNear` command to run a `NearQuery`.
 
 The calculated distance (the `dis` when using a geoNear command) previously returned within a wrapper type now is embedded
-into the resulting document. If the given domain type already contains a property with equal name, the calculated distance
-is named `calculated-distance` or if that name is taken as well, postfixed with a random hash.
+into the resulting document.
+If the given domain type already contains a property with that name, the calculated distance
+is named `calculated-distance` with a potentially random postfix.
 
-Target types may contain a property named after the returned distance to (additionally) read it back directly into the domain
-type as shown below.
+Target types may contain a property named after the returned distance to (additionally) read it back directly into the domain type as shown below.
 
 [source,java]
 ----
 GeoResults<VenueWithDisField> = template.query(Venue.class) <1>
-    .as(VenueWithDisField.class) <2>
+    .as(VenueWithDisField.class)                            <2>
     .near(NearQuery.near(new GeoJsonPoint(-73.99, 40.73), KILOMETERS))
     .all();
 ----
