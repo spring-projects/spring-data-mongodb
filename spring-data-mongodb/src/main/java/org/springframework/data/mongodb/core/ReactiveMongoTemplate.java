@@ -709,17 +709,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#getCollection(java.lang.String)
-	 */
-	public Mono<MongoCollection<Document>> getCollection2(final String collectionName) {
-
-		Assert.notNull(collectionName, "Collection name must not be null!");
-
-		return doGetDatabase().map(it -> it.getCollection(collectionName));
-	}
-
-	/*
-	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#collectionExists(java.lang.Class)
 	 */
 	public <T> Mono<Boolean> collectionExists(Class<T> entityClass) {
@@ -1247,8 +1236,23 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				LOGGER.debug("Executing count: {} in collection: {}", serializeToJsonSafely(filter), collectionName);
 			}
 
-			return collection.count(filter, options);
+			return doCount(collectionName, filter, options);
 		});
+	}
+
+	/**
+	 * Run the actual count operation against the collection with given name.
+	 *
+	 * @param collectionName the name of the collection to count matching documents in.
+	 * @param filter the filter to apply. Must not be {@literal null}.
+	 * @param options options to apply. Like collation and the such.
+	 * @return
+	 */
+	protected Mono<Long> doCount(String collectionName, Document filter, CountOptions options) {
+
+		return ReactiveMongoDatabaseUtils.isTransactionActive(mongoDatabaseFactory) //
+				.flatMap(txActive -> createMono(collectionName,
+						collection -> txActive ? collection.countDocuments(filter, options) : collection.count(filter, options)));
 	}
 
 	/*
@@ -3218,32 +3222,16 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveMongoTemplate#count(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
+		 * @see org.springframework.data.mongodb.core.ReactiveMongoTemplate#count(java.lang.String, org.bson.Document, com.mongodb.client.model.CountOptions)
 		 */
 		@Override
-		public Mono<Long> count(Query query, @Nullable Class<?> entityClass, String collectionName) {
+		public Mono<Long> doCount(String collectionName, Document filter, CountOptions options) {
 
 			if (!session.hasActiveTransaction()) {
-				return super.count(query, entityClass, collectionName);
+				return super.doCount(collectionName, filter, options);
 			}
 
-			return createMono(collectionName, collection -> {
-
-				Document filter = query == null ? null
-						: delegate.queryMapper.getMappedObject(query.getQueryObject(),
-								entityClass == null ? null : delegate.mappingContext.getPersistentEntity(entityClass));
-
-				CountOptions options = new CountOptions();
-				if (query != null) {
-					query.getCollation().map(Collation::toMongoCollation).ifPresent(options::collation);
-				}
-
-				if (LOGGER.isDebugEnabled()) {
-					LOGGER.debug("Executing count: {} in collection: {}", serializeToJsonSafely(filter), collectionName);
-				}
-
-				return collection.countDocuments(filter, options);
-			});
+			return createMono(collectionName, collection -> collection.countDocuments(filter, options));
 		}
 	}
 

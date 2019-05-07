@@ -17,6 +17,7 @@
 * <<mongo.jsonSchema.generated, JSON Schema generation>> from domain types.
 * SpEL support in for expressions in `@Indexed`.
 * Annotation-based Collation support through `@Document` and `@Query`.
+* Declarative reactive transactions using <<mongo.transactions.reactive-tx-manager, @Transactional>>.
 
 [[new-features.2-1-0]]
 == What's New in Spring Data MongoDB 2.1

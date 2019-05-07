@@ -1,11 +1,11 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -22,8 +22,8 @@ import org.springframework.transaction.support.ResourceHolderSupport;
 import com.mongodb.reactivestreams.client.ClientSession;
 
 /**
- * MongoDB specific resource holder, wrapping a {@link ClientSession}. {@link MongoTransactionManager} binds instances
- * of this class to the subscriber context.
+ * MongoDB specific resource holder, wrapping a {@link ClientSession}. {@link ReactiveMongoTransactionManager} binds
+ * instances of this class to the subscriber context.
  * <p />
  * <strong>Note:</strong> Intended for internal usage only.
  *
@@ -93,6 +93,24 @@ class ReactiveMongoResourceHolder extends ResourceHolderSupport {
 	 */
 	boolean hasSession() {
 		return session != null;
+	}
+
+	/**
+	 * If the {@link ReactiveMongoResourceHolder} is {@link #hasSession() not already associated} with a
+	 * {@link ClientSession} the given value is {@link #setSession(ClientSession) set} and returned, otherwise the current
+	 * bound session is returned.
+	 * 
+	 * @param session
+	 * @return
+	 */
+	@Nullable
+	public ClientSession setSessionIfAbsent(@Nullable ClientSession session) {
+
+		if (!hasSession()) {
+			setSession(session);
+		}
+
+		return session;
 	}
 
 	/**
