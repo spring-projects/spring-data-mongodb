@@ -27,7 +27,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.reactive.TransactionalOperator;
@@ -42,6 +41,7 @@ import com.mongodb.session.ServerSession;
  * Unit tests for {@link ReactiveMongoTransactionManager}.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 @RunWith(MockitoJUnitRunner.class)
 public class ReactiveMongoTransactionManagerUnitTests {
@@ -64,6 +64,9 @@ public class ReactiveMongoTransactionManagerUnitTests {
 
 		when(databaseFactory.getMongoDatabase()).thenReturn(db);
 		when(databaseFactory2.getMongoDatabase()).thenReturn(db2);
+
+		when(session.getServerSession()).thenReturn(serverSession);
+		when(session2.getServerSession()).thenReturn(serverSession);
 	}
 
 	@After
@@ -95,8 +98,7 @@ public class ReactiveMongoTransactionManagerUnitTests {
 		verify(session).startTransaction();
 		verify(session).commitTransaction();
 
-		// TODO: Bug in doCleanupAfterCompletion
-		// verify(session).close();
+		verify(session).close();
 	}
 
 	@Test // DATAMONGO-2265
@@ -124,9 +126,7 @@ public class ReactiveMongoTransactionManagerUnitTests {
 
 		verify(session).startTransaction();
 		verify(session).commitTransaction();
-
-		// TODO: Bug in doCleanupAfterCompletion
-		// verify(session).close();
+		verify(session).close();
 	}
 
 	@Test // DATAMONGO-2265
@@ -151,9 +151,7 @@ public class ReactiveMongoTransactionManagerUnitTests {
 
 		verify(session).startTransaction();
 		verify(session).abortTransaction();
-
-		// TODO: Bug in doCleanupAfterCompletion
-		// verify(session).close();
+		verify(session).close();
 	}
 
 	@Test // DATAMONGO-2265
@@ -190,11 +188,8 @@ public class ReactiveMongoTransactionManagerUnitTests {
 		verify(databaseFactory, times(1)).withSession(eq(session));
 		verify(databaseFactory, never()).withSession(eq(session2));
 
-		// Bug in TransactionalOperator, should be 2
-		verify(db, times(1)).drop();
+		verify(db, times(2)).drop();
 
-		// TODO: Bug in doCleanupAfterCompletion
-		// verify(session).close();
 		verify(session2, never()).close();
 	}
 
@@ -236,9 +231,8 @@ public class ReactiveMongoTransactionManagerUnitTests {
 		verify(db).drop();
 		verify(db2).drop();
 
-		// TODO: Bug in doCleanupAfterCompletion
-		// verify(session).close();
-		// verify(session2).close();
+		verify(session).close();
+		verify(session2).close();
 	}
 
 	@Test // DATAMONGO-2265
@@ -264,8 +258,6 @@ public class ReactiveMongoTransactionManagerUnitTests {
 
 		verify(session).startTransaction();
 		verify(session).commitTransaction();
-
-		// TODO: Bug in doCleanupAfterCompletion
-		// verify(session).close();
+		verify(session).close();
 	}
 }

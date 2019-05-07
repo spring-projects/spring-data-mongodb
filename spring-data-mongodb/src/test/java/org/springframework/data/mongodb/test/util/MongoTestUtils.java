@@ -81,7 +81,8 @@ public class MongoTestUtils {
 				.withWriteConcern(WriteConcern.MAJORITY).withReadPreference(ReadPreference.primary());
 
 		return Mono.from(database.getCollection(collectionName).drop()) //
-				.then(Mono.from(database.createCollection(collectionName))) //
+				.delayElement(Duration.ofMillis(10)) // server replication time
+				.then(Mono.from(database.createCollection(collectionName)))
 				.delayElement(Duration.ofMillis(10)); // server replication time
 	}
 
@@ -97,6 +98,26 @@ public class MongoTestUtils {
 			com.mongodb.reactivestreams.client.MongoClient client) {
 
 		createOrReplaceCollection(dbName, collectionName, client) //
+				.as(StepVerifier::create) //
+				.expectNext(Success.SUCCESS) //
+				.verifyComplete();
+	}
+
+	/**
+	 * Create a {@link com.mongodb.client.MongoCollection} if it does not exist, or drop and recreate it if it does and
+	 * verify operation result.
+	 *
+	 * @param dbName must not be {@literal null}.
+	 * @param collectionName must not be {@literal null}.
+	 * @param client must not be {@literal null}.
+	 */
+	public static void dropCollectionNow(String dbName, String collectionName,
+			com.mongodb.reactivestreams.client.MongoClient client) {
+
+		com.mongodb.reactivestreams.client.MongoDatabase database = client.getDatabase(dbName)
+				.withWriteConcern(WriteConcern.MAJORITY).withReadPreference(ReadPreference.primary());
+
+		Mono.from(database.getCollection(collectionName).drop()) //
 				.as(StepVerifier::create) //
 				.expectNext(Success.SUCCESS) //
 				.verifyComplete();

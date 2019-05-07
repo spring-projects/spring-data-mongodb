@@ -1,11 +1,11 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -33,13 +33,14 @@ import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 
 /**
- * Helper class for managing a {@link MongoDatabase} instances via {@link ReactiveMongoDatabaseFactory}. Used for
+ * Helper class for managing reactive {@link MongoDatabase} instances via {@link ReactiveMongoDatabaseFactory}. Used for
  * obtaining {@link ClientSession session bound} resources, such as {@link MongoDatabase} and {@link MongoCollection}
  * suitable for transactional usage.
  * <p />
  * <strong>Note:</strong> Intended for internal usage only.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.2
  */
 public class ReactiveMongoDatabaseUtils {
@@ -53,7 +54,7 @@ public class ReactiveMongoDatabaseUtils {
 	 * {@link com.mongodb.reactivestreams.client.ClientSession#hasActiveTransaction() active transaction}.
 	 *
 	 * @param databaseFactory the resource to check transactions for. Must not be {@literal null}.
-	 * @return {@literal true} if the factory has an ongoing transaction.
+	 * @return a {@link Mono} emitting {@literal true} if the factory has an ongoing transaction.
 	 */
 	public static Mono<Boolean> isTransactionActive(ReactiveMongoDatabaseFactory databaseFactory) {
 
@@ -61,11 +62,13 @@ public class ReactiveMongoDatabaseUtils {
 			return Mono.just(true);
 		}
 
-		return TransactionSynchronizationManager.currentTransaction().map(it -> {
+		return TransactionSynchronizationManager.currentTransaction() //
+				.map(it -> {
 
-			ReactiveMongoResourceHolder holder = (ReactiveMongoResourceHolder) it.getResource(databaseFactory);
-			return holder != null && holder.hasActiveTransaction();
-		}).onErrorResume(NoTransactionException.class, e -> Mono.just(false));
+					ReactiveMongoResourceHolder holder = (ReactiveMongoResourceHolder) it.getResource(databaseFactory);
+					return holder != null && holder.hasActiveTransaction();
+				}) //
+				.onErrorResume(NoTransactionException.class, e -> Mono.just(false));
 	}
 
 	/**
@@ -132,23 +135,23 @@ public class ReactiveMongoDatabaseUtils {
 	private static Mono<MongoDatabase> doGetMongoDatabase(@Nullable String dbName, ReactiveMongoDatabaseFactory factory,
 			SessionSynchronization sessionSynchronization) {
 
-		Assert.notNull(factory, "Factory must not be null!");
+		Assert.notNull(factory, "DatabaseFactory must not be null!");
 
 		return TransactionSynchronizationManager.currentTransaction()
-				.filter(TransactionSynchronizationManager::isSynchronizationActive).flatMap(synchronizationManager -> {
+				.filter(TransactionSynchronizationManager::isSynchronizationActive) //
+				.flatMap(synchronizationManager -> {
 
-					Mono<ClientSession> session = doGetSession(synchronizationManager, factory, sessionSynchronization);
+					return doGetSession(synchronizationManager, factory, sessionSynchronization) //
+							.map(it -> getMongoDatabaseOrDefault(dbName, factory.withSession(it)));
+				})
+				.onErrorResume(NoTransactionException.class,
+						e -> Mono.fromSupplier(() -> getMongoDatabaseOrDefault(dbName, factory)))
+				.defaultIfEmpty(getMongoDatabaseOrDefault(dbName, factory));
+	}
 
-					return session.map(it -> {
-
-						ReactiveMongoDatabaseFactory factoryToUse = factory.withSession(it);
-						return StringUtils.hasText(dbName) ? factoryToUse.getMongoDatabase(dbName)
-								: factoryToUse.getMongoDatabase();
-					});
-
-				}).onErrorResume(NoTransactionException.class, e -> Mono.fromSupplier(() -> {
-					return StringUtils.hasText(dbName) ? factory.getMongoDatabase(dbName) : factory.getMongoDatabase();
-				}));
+	private static MongoDatabase getMongoDatabaseOrDefault(@Nullable String dbName,
+			ReactiveMongoDatabaseFactory factory) {
+		return StringUtils.hasText(dbName) ? factory.getMongoDatabase(dbName) : factory.getMongoDatabase();
 	}
 
 	private static Mono<ClientSession> doGetSession(TransactionSynchronizationManager synchronizationManager,
@@ -161,14 +164,8 @@ public class ReactiveMongoDatabaseUtils {
 		if (registeredHolder != null
 				&& (registeredHolder.hasSession() || registeredHolder.isSynchronizedWithTransaction())) {
 
-			return createClientSession(dbFactory).map(session -> {
-
-				if (!registeredHolder.hasSession()) {
-					registeredHolder.setSession(session);
-				}
-
-				return registeredHolder.getSession();
-			});
+			return registeredHolder.hasSession() ? Mono.just(registeredHolder.getSession())
+					: createClientSession(dbFactory).map(registeredHolder::setSessionIfAbsent);
 		}
 
 		if (SessionSynchronization.ON_ACTUAL_TRANSACTION.equals(sessionSynchronization)) {
@@ -246,7 +243,9 @@ public class ReactiveMongoDatabaseUtils {
 			return Mono.defer(() -> {
 
 				if (status == TransactionSynchronization.STATUS_ROLLED_BACK && isTransactionActive(this.resourceHolder)) {
-					return Mono.from(resourceHolder.getRequiredSession().abortTransaction()).then(super.afterCompletion(status));
+
+					return Mono.from(resourceHolder.getRequiredSession().abortTransaction()) //
+							.then(super.afterCompletion(status));
 				}
 
 				return super.afterCompletion(status);

@@ -1,11 +1,11 @@
 /*
- * Copyright 2018 the original author or authors.
+ * Copyright 2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *      https://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -104,7 +104,7 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 	public ReactiveMongoTransactionManager(ReactiveMongoDatabaseFactory databaseFactory,
 			@Nullable TransactionOptions options) {
 
-		Assert.notNull(databaseFactory, "DbFactory must not be null!");
+		Assert.notNull(databaseFactory, "DatabaseFactory must not be null!");
 
 		this.databaseFactory = databaseFactory;
 		this.options = options;
@@ -164,9 +164,10 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 					logger.debug(String.format("Started transaction for session %s.", debugString(resourceHolder.getSession())));
 				}
 
-			}).onErrorMap(
-					ex -> new TransactionSystemException(String.format("Could not start Mongo transaction for session %s.",
-							debugString(mongoTransactionObject.getSession())), ex))
+			})//
+					.onErrorMap(
+							ex -> new TransactionSystemException(String.format("Could not start Mongo transaction for session %s.",
+									debugString(mongoTransactionObject.getSession())), ex))
 					.doOnSuccess(resourceHolder -> {
 
 						synchronizationManager.bindResource(getRequiredDatabaseFactory(), resourceHolder);
@@ -316,7 +317,7 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 	 */
 	public void setDatabaseFactory(ReactiveMongoDatabaseFactory databaseFactory) {
 
-		Assert.notNull(databaseFactory, "DbFactory must not be null!");
+		Assert.notNull(databaseFactory, "DatabaseFactory must not be null!");
 		this.databaseFactory = databaseFactory;
 	}
 
@@ -362,7 +363,7 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 	private ReactiveMongoDatabaseFactory getRequiredDatabaseFactory() {
 
 		Assert.state(databaseFactory != null,
-				"MongoTransactionManager operates upon a ReactiveMongoDatabaseFactory. Did you forget to provide one? It's required.");
+				"ReactiveMongoTransactionManager operates upon a ReactiveMongoDatabaseFactory. Did you forget to provide one? It's required.");
 
 		return databaseFactory;
 	}
@@ -525,6 +526,5 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 		public void flush() {
 			throw new UnsupportedOperationException("flush() not supported");
 		}
-
 	}
 }

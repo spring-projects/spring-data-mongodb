@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import reactor.core.publisher.Mono;
@@ -27,7 +27,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-
 import org.springframework.transaction.reactive.TransactionSynchronizationManager;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
@@ -40,6 +39,7 @@ import com.mongodb.session.ServerSession;
  * Unit tests for {@link ReactiveMongoDatabaseUtils}.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
 @RunWith(MockitoJUnitRunner.class)
 public class ReactiveMongoDatabaseUtilsUnitTests {
@@ -128,8 +128,6 @@ public class ReactiveMongoDatabaseUtilsUnitTests {
 
 		verify(session).startTransaction();
 		verify(session).abortTransaction();
-
-		// TODO: Bug in doCleanupAfterCompletion
-		// verify(session).close();
+		verify(session).close();
 	}
 }
