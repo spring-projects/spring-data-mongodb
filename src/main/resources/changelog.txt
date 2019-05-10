@@ -1,6 +1,11 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 1.10.21.RELEASE (2019-05-10)
+-----------------------------------------------
+* DATAMONGO-2244 - Release 1.10.21 (Ingalls SR21).
+
+
 Changes in version 2.1.7.RELEASE (2019-05-10)
 ---------------------------------------------
 * DATAMONGO-2246 - Release 2.1.7 (Lovelace SR7).
