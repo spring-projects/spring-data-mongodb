@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.convert;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -79,6 +80,19 @@ public class ObjectPathUnitTests {
 		ObjectPath path = ObjectPath.ROOT.push(new EntityThree(), one, "id-1");
 
 		assertThat(path.getPathItem("id-1", "one", ValueInterface.class)).isNotNull();
+	}
+
+	@Test // DATAMONGO-2267
+	public void collectionLookupShouldBeLazy/* because we may need to resolve SpEL which can be pretty expensive */() {
+
+		MongoPersistentEntity<EntityOne> spied = spy(one);
+		ObjectPath path = ObjectPath.ROOT.push(new EntityThree(), spied, "id-1");
+
+		verify(spied, never()).getCollection();
+
+		path.getPathItem("id-1", "foo", EntityTwo.class);
+
+		verify(spied).getCollection();
 	}
 
 	@Document("one")

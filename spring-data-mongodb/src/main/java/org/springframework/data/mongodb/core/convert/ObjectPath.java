@@ -17,8 +17,10 @@ package org.springframework.data.mongodb.core.convert;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.util.Lazy;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -46,14 +48,14 @@ class ObjectPath {
 	private final @Nullable ObjectPath parent;
 	private final @Nullable Object object;
 	private final @Nullable Object idValue;
-	private final String collection;
+	private final Lazy<String> collection;
 
 	private ObjectPath() {
 
 		this.parent = null;
 		this.object = null;
 		this.idValue = null;
-		this.collection = "";
+		this.collection = Lazy.empty();
 	}
 
 	/**
@@ -64,7 +66,7 @@ class ObjectPath {
 	 * @param idValue
 	 * @param collection
 	 */
-	private ObjectPath(ObjectPath parent, Object object, @Nullable Object idValue, String collection) {
+	private ObjectPath(ObjectPath parent, Object object, @Nullable Object idValue, Lazy<String> collection) {
 
 		this.parent = parent;
 		this.object = object;
@@ -85,7 +87,7 @@ class ObjectPath {
 		Assert.notNull(object, "Object must not be null!");
 		Assert.notNull(entity, "MongoPersistentEntity must not be null!");
 
-		return new ObjectPath(this, object, id, entity.getCollection());
+		return new ObjectPath(this, object, id, Lazy.of(() -> entity.getCollection()));
 	}
 
 	/**
@@ -175,7 +177,7 @@ class ObjectPath {
 	}
 
 	private String getCollection() {
-		return collection;
+		return collection.get();
 	}
 
 	/*
