@@ -1,6 +1,17 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.2.0.M4 (2019-05-13)
+----------------------------------------
+* DATAMONGO-2268 - Upgrade to MongoDB Java Driver 3.11.0-beta3.
+* DATAMONGO-2265 - Add ReactiveMongoTransactionManager.
+* DATAMONGO-2264 - Assert compatibility with MongoDB 4.2.
+* DATAMONGO-2260 - Release 2.2 M4 (Moore).
+* DATAMONGO-2258 - Add startAfter option to change stream support.
+* DATAMONGO-2257 - Upgrade MongoDB Java driver to 3.11.0-beta2.
+* DATAMONGO-1854 - Add annotation-based Collation support.
+
+
 Changes in version 1.10.21.RELEASE (2019-05-10)
 -----------------------------------------------
 * DATAMONGO-2244 - Release 1.10.21 (Ingalls SR21).
