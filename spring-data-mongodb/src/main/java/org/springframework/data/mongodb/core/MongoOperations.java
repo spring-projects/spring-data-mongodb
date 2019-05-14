@@ -22,7 +22,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.bson.Document;
-
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -58,6 +57,10 @@ import com.mongodb.client.result.UpdateResult;
  * Interface that specifies a basic set of MongoDB operations. Implemented by {@link MongoTemplate}. Not often used but
  * a useful option for extensibility and testability (as it can be easily mocked, stubbed, or be the target of a JDK
  * proxy).
+ * <p />
+ * <strong>NOTE:</strong> Some operations cannot be executed within a MongoDB transaction. Please refer to the MongoDB
+ * specific documentation to learn more about <a href="https://docs.mongodb.com/manual/core/transactions/">Multi
+ * Document Transactions</a>.
  *
  * @author Thomas Risberg
  * @author Mark Pollack
@@ -290,12 +293,15 @@ public interface MongoOperations extends FluentMongoOperations {
 	Set<String> getCollectionNames();
 
 	/**
-	 * Get a collection by name, creating it if it doesn't exist.
+	 * Get a {@link MongoCollection} by its name. The returned collection may not exists yet (except in local memory) and
+	 * is created on first interaction with the server. Collections can be explicitly created via
+	 * {@link #createCollection(Class)}. Please make sure to check if the collection {@link #collectionExists(Class)
+	 * exists} first.
 	 * <p/>
 	 * Translate any exceptions as necessary.
 	 *
 	 * @param collectionName name of the collection. Must not be {@literal null}.
-	 * @return an existing collection or a newly created one.
+	 * @return an existing collection or one created on first server interaction.
 	 */
 	MongoCollection<Document> getCollection(String collectionName);
 
