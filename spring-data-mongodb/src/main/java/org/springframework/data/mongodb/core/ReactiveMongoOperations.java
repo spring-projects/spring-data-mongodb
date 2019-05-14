@@ -56,6 +56,10 @@ import com.mongodb.reactivestreams.client.MongoCollection;
  * Implemented by {@link ReactiveMongoTemplate}. Not often used but a useful option for extensibility and testability
  * (as it can be easily mocked, stubbed, or be the target of a JDK proxy). Command execution using
  * {@link ReactiveMongoOperations} is deferred until subscriber subscribes to the {@link Publisher}.
+ * <p />
+ * <strong>NOTE:</strong> Some operations cannot be executed within a MongoDB transaction. Please refer to the MongoDB
+ * specific documentation to learn more about <a href="https://docs.mongodb.com/manual/core/transactions/">Multi
+ * Document Transactions</a>.
  *
  * @author Mark Paluch
  * @author Christoph Strobl
@@ -277,12 +281,15 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	Flux<String> getCollectionNames();
 
 	/**
-	 * Get a collection by name, creating it if it doesn't exist.
+	 * Get a {@link MongoCollection} by name. The returned collection may not exists yet (except in local memory) and is
+	 * created on first interaction with the server. Collections can be explicitly created via
+	 * {@link #createCollection(Class)}. Please make sure to check if the collection {@link #collectionExists(Class)
+	 * exists} first.
 	 * <p/>
 	 * Translate any exceptions as necessary.
 	 *
 	 * @param collectionName name of the collection.
-	 * @return an existing collection or a newly created one.
+	 * @return an existing collection or one created on first server interaction.
 	 */
 	MongoCollection<Document> getCollection(String collectionName);
 
