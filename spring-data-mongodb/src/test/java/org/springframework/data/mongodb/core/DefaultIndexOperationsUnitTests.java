@@ -69,6 +69,14 @@ public class DefaultIndexOperationsUnitTests {
 		this.template = new MongoTemplate(factory, converter);
 	}
 
+	@Test // DATAMONGO-1183
+	public void indexOperationsMapFieldNameCorrectly() {
+
+		indexOpsFor(Jedi.class).ensureIndex(new Index("name", Direction.DESC));
+
+		verify(collection).createIndex(eq(new Document("firstname", -1)), any());
+	}
+
 	@Test // DATAMONGO-1854
 	public void ensureIndexDoesNotSetCollectionIfNoDefaultDefined() {
 
