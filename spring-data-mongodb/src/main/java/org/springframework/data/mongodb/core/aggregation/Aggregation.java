@@ -245,6 +245,19 @@ public class Aggregation {
 	}
 
 	/**
+	 * Creates a new {@link ProjectionOperation} including all top level fields of the given given {@link Class}.
+	 *
+	 * @param type must not be {@literal null}.
+	 * @return new instance of {@link ProjectionOperation}.
+	 * @since 2.2
+	 */
+	public static ProjectionOperation project(Class<?> type) {
+
+		Assert.notNull(type, "Type must not be null!");
+		return new ProjectionOperation(type);
+	}
+
+	/**
 	 * Factory method to create a new {@link UnwindOperation} for the field with the given name.
 	 *
 	 * @param field must not be {@literal null} or empty.

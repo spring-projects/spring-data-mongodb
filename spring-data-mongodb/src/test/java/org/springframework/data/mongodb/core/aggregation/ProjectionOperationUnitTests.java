@@ -27,6 +27,7 @@ import lombok.Data;
 import java.util.Arrays;
 import java.util.List;
 
+import org.assertj.core.api.Assertions;
 import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.domain.Range;
@@ -41,6 +42,12 @@ import org.springframework.data.mongodb.core.aggregation.DateOperators.Timezone;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.StringOperators.Concat;
 import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
+import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 /**
  * Unit tests for {@link ProjectionOperation}.
@@ -61,7 +68,7 @@ public class ProjectionOperationUnitTests {
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-586
 	public void rejectsNullFields() {
-		new ProjectionOperation(null);
+		new ProjectionOperation((Fields) null);
 	}
 
 	@Test // DATAMONGO-586
@@ -2099,6 +2106,36 @@ public class ProjectionOperationUnitTests {
 				"{ $project : { newDate: { $dateFromString: { dateString : \"2017-02-08T12:10:40.787\", format : \"dd/mm/yyyy\" } } } }"));
 	}
 
+	@Test // DATAMONGO-2200
+	public void typeProjectionShouldIncludeTopLevelFieldsOfType() {
+
+		ProjectionOperation operation = Aggregation.project(Book.class);
+
+		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
+
+		Assertions.assertThat(projectClause) //
+				.hasSize(2) //
+				.containsEntry("title", 1) //
+				.containsEntry("author", 1);
+	}
+
+	@Test // DATAMONGO-2200
+	public void typeProjectionShouldMapFieldNames() {
+
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		MongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext);
+
+		Document document = Aggregation.project(BookRenamed.class)
+				.toDocument(new TypeBasedAggregationOperationContext(Book.class, mappingContext, new QueryMapper(converter)));
+		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
+
+		Assertions.assertThat(projectClause) //
+				.hasSize(2) //
+				.containsEntry("ti_tl_e", 1) //
+				.containsEntry("author", 1);
+	}
+
 	private static Document exctractOperation(String field, Document fromProjectClause) {
 		return (Document) fromProjectClause.get(field);
 	}
@@ -2106,6 +2143,12 @@ public class ProjectionOperationUnitTests {
 	@Data
 	static class Book {
 		String title;
+		Author author;
+	}
+
+	@Data
+	static class BookRenamed {
+		@Field("ti_tl_e") String title;
 		Author author;
 	}
 
