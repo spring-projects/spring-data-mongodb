@@ -414,6 +414,7 @@ The MappingMongoConverter can use metadata to drive the mapping of objects to do
 * `@CompoundIndex` (repeatable): Applied at the type level to declare Compound Indexes.
 * `@GeoSpatialIndexed`: Applied at the field level to describe how to geoindex the field.
 * `@TextIndexed`: Applied at the field level to mark the field to be included in the text index.
+* `@HashIndexed`: Applied at the field level for usage within a hashed index to partition data across a sharded cluster.
 * `@Language`: Applied at the field level to set the language override property for text index.
 * `@Transient`: By default all private fields are mapped to the document, this annotation excludes the field where it is applied from being stored in the database
 * `@PersistenceConstructor`: Marks a given constructor - even a package protected one - to use when instantiating the object from the database. Constructor arguments are mapped by name to the key values in the retrieved Document.
@@ -599,6 +600,84 @@ public class Person {
 
   // ...
 }
+----
+====
+
+[[mapping-usage-indexes.hashed-index]]
+=== Hashed Indexes
+
+Hashed indexes allow hash based sharding within a sharded cluster. The hashed field value is used to shard  collection results
+in a more random distribution. For details refer to the https://docs.mongodb.com/manual/core/index-hashed/[MongoDB Documentation].
+
+Here's an example that creates a hashed index for `_id`:
+
+.Example Hashed Index Usage
+====
+[source,java]
+----
+@Document
+public class DomainType {
+
+  @HashIndexed @Id String id;
+
+  // ...
+}
+----
+====
+
+Hashed indexes can be created next to other index definitions like shown below, in that case both indices will be created.
+
+.Example Hashed Index Usage togehter with simple index
+====
+[source,java]
+----
+@Document
+public class DomainType {
+
+  @Indexed
+  @HashIndexed
+  String value;
+
+  // ...
+}
+----
+====
+
+In case the above example is too verbose, a compound annotation allows to reduce the number of annotations present.
+
+.Example Composed Hashed Index Usage
+====
+[source,java]
+----
+@Document
+public class DomainType {
+
+  @IndexAndHash(name = "idx...") <1>
+  String value;
+
+  // ...
+}
+
+@Indexed
+@HashIndexed
+@Retention(RetentionPolicy.RUNTIME)
+public @interface IndexAndHash {
+
+  @AliasFor(annotation = Indexed.class, attribute = "name") <1>
+  String name() default "";
+}
+----
+<1> Potentially register an alias for certain attributes of the meta annotation.
+====
+
+[NOTE]
+====
+Although index creation via annotations comes in handy for many scenarios please cosider taking over more control by setting up indices manually via `IndexOperations`.
+
+[source,java]
+----
+mongoOperations.indexOpsFor(Jedi.class)
+  .ensureIndex(HashedIndex.hashed("useTheForce"));
 ----
 ====
 

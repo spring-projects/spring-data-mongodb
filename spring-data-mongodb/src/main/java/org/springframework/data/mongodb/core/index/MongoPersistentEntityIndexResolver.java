@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.Association;
@@ -140,10 +139,10 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 						persistentProperty.getFieldName(), Path.of(persistentProperty), root.getCollection(), guard));
 			}
 
-			IndexDefinitionHolder indexDefinitionHolder = createIndexDefinitionHolderForProperty(
+			List<IndexDefinitionHolder> indexDefinitions = createIndexDefinitionHolderForProperty(
 					persistentProperty.getFieldName(), root.getCollection(), persistentProperty);
-			if (indexDefinitionHolder != null) {
-				indexes.add(indexDefinitionHolder);
+			if (!indexDefinitions.isEmpty()) {
+				indexes.addAll(indexDefinitions);
 			}
 		} catch (CyclicPropertyReferenceException e) {
 			LOGGER.info(e.getMessage());
@@ -170,14 +169,14 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		indexInformation.addAll(potentiallyCreateCompoundIndexDefinitions(dotPath, collection, entity));
 
 		entity.doWithProperties((PropertyHandler<MongoPersistentProperty>) property -> this
-				.guradAndPotentiallyAddIndexForProperty(property, dotPath, path, collection, indexInformation, guard));
+				.guardAndPotentiallyAddIndexForProperty(property, dotPath, path, collection, indexInformation, guard));
 
 		indexInformation.addAll(resolveIndexesForDbrefs(dotPath, collection, entity));
 
 		return indexInformation;
 	}
 
-	private void guradAndPotentiallyAddIndexForProperty(MongoPersistentProperty persistentProperty, String dotPath,
+	private void guardAndPotentiallyAddIndexForProperty(MongoPersistentProperty persistentProperty, String dotPath,
 			Path path, String collection, List<IndexDefinitionHolder> indexes, CycleGuard guard) {
 
 		String propertyDotPath = (StringUtils.hasText(dotPath) ? dotPath + "." : "") + persistentProperty.getFieldName();
@@ -194,25 +193,31 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			}
 		}
 
-		IndexDefinitionHolder indexDefinitionHolder = createIndexDefinitionHolderForProperty(propertyDotPath, collection,
+		List<IndexDefinitionHolder> indexDefinitions = createIndexDefinitionHolderForProperty(propertyDotPath, collection,
 				persistentProperty);
 
-		if (indexDefinitionHolder != null) {
-			indexes.add(indexDefinitionHolder);
+		if (!indexDefinitions.isEmpty()) {
+			indexes.addAll(indexDefinitions);
 		}
 	}
 
 	@Nullable
-	private IndexDefinitionHolder createIndexDefinitionHolderForProperty(String dotPath, String collection,
+	private List<IndexDefinitionHolder> createIndexDefinitionHolderForProperty(String dotPath, String collection,
 			MongoPersistentProperty persistentProperty) {
 
+		List<IndexDefinitionHolder> indices = new ArrayList<>(2);
+
 		if (persistentProperty.isAnnotationPresent(Indexed.class)) {
-			return createIndexDefinition(dotPath, collection, persistentProperty);
+			indices.add(createIndexDefinition(dotPath, collection, persistentProperty));
 		} else if (persistentProperty.isAnnotationPresent(GeoSpatialIndexed.class)) {
-			return createGeoSpatialIndexDefinition(dotPath, collection, persistentProperty);
+			indices.add(createGeoSpatialIndexDefinition(dotPath, collection, persistentProperty));
 		}
 
-		return null;
+		if (persistentProperty.isAnnotationPresent(HashIndexed.class)) {
+			indices.add(createHashedIndexDefinition(dotPath, collection, persistentProperty));
+		}
+
+		return indices;
 	}
 
 	private List<IndexDefinitionHolder> potentiallyCreateCompoundIndexDefinitions(String dotPath, String collection,
@@ -327,7 +332,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 *
 	 * @param dotPath The properties {@literal "dot"} path representation from its document root.
 	 * @param fallbackCollection
-	 * @param type
+	 * @param entity
 	 * @return
 	 */
 	protected List<IndexDefinitionHolder> createCompoundIndexDefinitions(String dotPath, String fallbackCollection,
@@ -410,14 +415,14 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 *
 	 * @param dotPath The properties {@literal "dot"} path representation from its document root.
 	 * @param collection
-	 * @param persitentProperty
+	 * @param persistentProperty
 	 * @return
 	 */
 	@Nullable
 	protected IndexDefinitionHolder createIndexDefinition(String dotPath, String collection,
-			MongoPersistentProperty persitentProperty) {
+			MongoPersistentProperty persistentProperty) {
 
-		Indexed index = persitentProperty.findAnnotation(Indexed.class);
+		Indexed index = persistentProperty.findAnnotation(Indexed.class);
 
 		if (index == null) {
 			return null;
@@ -427,7 +432,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 				IndexDirection.ASCENDING.equals(index.direction()) ? Sort.Direction.ASC : Sort.Direction.DESC);
 
 		if (!index.useGeneratedName()) {
-			indexDefinition.named(pathAwareIndexName(index.name(), dotPath, persitentProperty.getOwner(), persitentProperty));
+			indexDefinition
+					.named(pathAwareIndexName(index.name(), dotPath, persistentProperty.getOwner(), persistentProperty));
 		}
 
 		if (index.unique()) {
@@ -455,13 +461,36 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			}
 
 			Duration timeout = computeIndexTimeout(index.expireAfter(),
-					getEvaluationContextForProperty(persitentProperty.getOwner()));
+					getEvaluationContextForProperty(persistentProperty.getOwner()));
 			if (!timeout.isZero() && !timeout.isNegative()) {
 				indexDefinition.expire(timeout);
 			}
 		}
 
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
+	}
+
+	/**
+	 * Creates {@link HashedIndex} wrapped in {@link IndexDefinitionHolder} out of {@link HashIndexed} for given
+	 * {@link MongoPersistentProperty}.
+	 *
+	 * @param dotPath The properties {@literal "dot"} path representation from its document root.
+	 * @param collection
+	 * @param persistentProperty
+	 * @return
+	 * @since 2.2
+	 */
+	@Nullable
+	protected IndexDefinitionHolder createHashedIndexDefinition(String dotPath, String collection,
+			MongoPersistentProperty persistentProperty) {
+
+		HashIndexed index = persistentProperty.findAnnotation(HashIndexed.class);
+
+		if (index == null) {
+			return null;
+		}
+
+		return new IndexDefinitionHolder(dotPath, HashedIndex.hashed(dotPath), collection);
 	}
 
 	/**
@@ -588,11 +617,11 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 							propertyDotPath));
 		}
 
-		IndexDefinitionHolder indexDefinitionHolder = createIndexDefinitionHolderForProperty(propertyDotPath, collection,
+		List<IndexDefinitionHolder> indexDefinitions = createIndexDefinitionHolderForProperty(propertyDotPath, collection,
 				property);
 
-		if (indexDefinitionHolder != null) {
-			indexes.add(indexDefinitionHolder);
+		if (!indexDefinitions.isEmpty()) {
+			indexes.addAll(indexDefinitions);
 		}
 	}
 

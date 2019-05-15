@@ -25,6 +25,7 @@ import org.springframework.data.domain.Sort.Direction;
  * Unit tests for {@link IndexField}.
  *
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 @SuppressWarnings("deprecation")
 public class IndexFieldUnitTests {
@@ -64,6 +65,21 @@ public class IndexFieldUnitTests {
 
 		IndexField first = IndexField.geo("bar");
 		IndexField second = IndexField.geo("bar");
+
+		assertThat(first, is(second));
+		assertThat(second, is(first));
+	}
+
+	@Test // DATAMONGO-1183
+	public void correctTypeForHashedFields() {
+		assertThat(IndexField.hashed("key").isHashed(), is(true));
+	}
+
+	@Test // DATAMONGO-1183
+	public void correctEqualsForHashedFields() {
+
+		IndexField first = IndexField.hashed("bar");
+		IndexField second = IndexField.hashed("bar");
 
 		assertThat(first, is(second));
 		assertThat(second, is(first));

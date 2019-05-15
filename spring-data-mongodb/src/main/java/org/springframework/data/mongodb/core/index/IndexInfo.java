@@ -96,12 +96,17 @@ public class IndexInfo {
 
 			} else {
 
-				Double keyValue = new Double(value.toString());
+				if (ObjectUtils.nullSafeEquals("hashed", value)) {
+					indexFields.add(IndexField.hashed(key));
+				} else {
 
-				if (ONE.equals(keyValue)) {
-					indexFields.add(IndexField.create(key, ASC));
-				} else if (MINUS_ONE.equals(keyValue)) {
-					indexFields.add(IndexField.create(key, DESC));
+					Double keyValue = new Double(value.toString());
+
+					if (ONE.equals(keyValue)) {
+						indexFields.add(IndexField.create(key, ASC));
+					} else if (MINUS_ONE.equals(keyValue)) {
+						indexFields.add(IndexField.create(key, DESC));
+					}
 				}
 			}
 		}
@@ -204,6 +209,14 @@ public class IndexInfo {
 	 */
 	public Optional<Duration> getExpireAfter() {
 		return Optional.ofNullable(expireAfter);
+	}
+
+	/**
+	 * @return {@literal true} if a hashed index field is present.
+	 * @since 2.2
+	 */
+	public boolean isHashed() {
+		return getIndexFields().stream().anyMatch(IndexField::isHashed);
 	}
 
 	@Override

@@ -31,6 +31,7 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.index.HashedIndex;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -110,6 +111,14 @@ public class DefaultIndexOperationsUnitTests {
 
 		assertThat(options.getValue().getCollation())
 				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("en_US").build());
+	}
+
+	@Test // DATAMONGO-1183
+	public void shouldCreateHashedIndexCorrectly() {
+
+		indexOpsFor(Jedi.class).ensureIndex(HashedIndex.hashed("name"));
+
+		verify(collection).createIndex(eq(new Document("firstname", "hashed")), any());
 	}
 
 	private DefaultIndexOperations indexOpsFor(Class<?> type) {

@@ -1174,6 +1174,60 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 					"listWithGeneircTypeElement.entity.property_index");
 		}
 
+		@Test // DATAMONGO-1183
+		public void hashedIndexOnId() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					WithHashedIndexOnId.class);
+
+			assertThat(indexDefinitions).hasSize(1);
+			assertThat(indexDefinitions.get(0)).satisfies(it -> {
+				assertThat(it.getIndexKeys()).isEqualTo(new org.bson.Document("_id", "hashed"));
+			});
+		}
+
+		@Test // DATAMONGO-1183
+		public void hashedIndex() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(WithHashedIndex.class);
+
+			assertThat(indexDefinitions).hasSize(1);
+			assertThat(indexDefinitions.get(0)).satisfies(it -> {
+				assertThat(it.getIndexKeys()).isEqualTo(new org.bson.Document("value", "hashed"));
+			});
+		}
+
+		@Test // DATAMONGO-1183
+		public void hashedIndexAndIndex() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					WithHashedIndexAndIndex.class);
+
+			assertThat(indexDefinitions).hasSize(2);
+			assertThat(indexDefinitions.get(0)).satisfies(it -> {
+				assertThat(it.getIndexKeys()).isEqualTo(new org.bson.Document("value", 1));
+			});
+			assertThat(indexDefinitions.get(1)).satisfies(it -> {
+				assertThat(it.getIndexKeys()).isEqualTo(new org.bson.Document("value", "hashed"));
+			});
+		}
+
+		@Test // DATAMONGO-1183
+		public void hashedIndexAndIndexViaComposedAnnotation() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					WithComposedHashedIndexAndIndex.class);
+
+			assertThat(indexDefinitions).hasSize(2);
+			assertThat(indexDefinitions.get(0)).satisfies(it -> {
+				assertThat(it.getIndexKeys()).isEqualTo(new org.bson.Document("value", 1));
+				assertThat(it.getIndexOptions()).containsEntry("name", "idx-name");
+			});
+			assertThat(indexDefinitions.get(1)).satisfies(it -> {
+				assertThat(it.getIndexKeys()).isEqualTo(new org.bson.Document("value", "hashed"));
+			});
+		}
+
 		@Document
 		static class MixedIndexRoot {
 
@@ -1375,6 +1429,41 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		@Document
 		static class EntityWithGenericTypeWrapperAsElement {
 			List<GenericEntityWrapper<DocumentWithNamedIndex>> listWithGeneircTypeElement;
+		}
+
+		@Document
+		static class WithHashedIndexOnId {
+
+			@HashIndexed @Id String id;
+		}
+
+		@Document
+		static class WithHashedIndex {
+
+			@HashIndexed String value;
+		}
+
+		@Document
+		static class WithHashedIndexAndIndex {
+
+			@Indexed //
+			@HashIndexed //
+			String value;
+		}
+
+		@Document
+		static class WithComposedHashedIndexAndIndex {
+
+			@ComposedHashIndexed(name = "idx-name") String value;
+		}
+
+		@HashIndexed
+		@Indexed
+		@Retention(RetentionPolicy.RUNTIME)
+		@interface ComposedHashIndexed {
+
+			@AliasFor(annotation = Indexed.class, attribute = "name")
+			String name() default "";
 		}
 	}
 
