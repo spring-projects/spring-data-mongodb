@@ -30,6 +30,7 @@ import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Pro
 import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ReflectionUtils;
 
 /**
  * Encapsulates the aggregation framework {@code $project}-operation.
@@ -71,6 +72,16 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 	 */
 	public ProjectionOperation(Fields fields) {
 		this(NONE, ProjectionOperationBuilder.FieldProjection.from(fields));
+	}
+
+	/**
+	 * Creates a new {@link ProjectionOperation} including all top level fields of the given {@link Class type}.
+	 *
+	 * @param type must not be {@literal null}.
+	 * @since 2.2
+	 */
+	public ProjectionOperation(Class<?> type) {
+		this(NONE, Collections.singletonList(new TypeProjection(type)));
 	}
 
 	/**
@@ -1698,6 +1709,37 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		@Override
 		public Document toDocument(AggregationOperationContext context) {
 			return new Document(field.getName(), expression.toDocument(context));
+		}
+	}
+
+	/**
+	 * A {@link Projection} including all top level fields of the given target type mapped to include potentially
+	 * deviating field names.
+	 *
+	 * @since 2.2
+	 * @author Christoph Strobl
+	 */
+	static class TypeProjection extends Projection {
+
+		private final Class<?> type;
+
+		TypeProjection(Class<?> type) {
+
+			super(Fields.field(type.getSimpleName()));
+			this.type = type;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+		 */
+		@Override
+		public Document toDocument(AggregationOperationContext context) {
+
+			Document projections = new Document();
+			ReflectionUtils.doWithFields(type, it -> projections.append(it.getName(), 1));
+
+			return context.getMappedObject(projections, type);
 		}
 	}
 }
