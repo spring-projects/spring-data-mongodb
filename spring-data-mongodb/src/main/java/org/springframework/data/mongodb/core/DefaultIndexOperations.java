@@ -127,7 +127,8 @@ public class DefaultIndexOperations implements IndexOperations {
 			indexOptions = addPartialFilterIfPresent(indexOptions, indexDefinition.getIndexOptions(), entity);
 			indexOptions = addDefaultCollationIfRequired(indexOptions, entity);
 
-			return collection.createIndex(indexDefinition.getIndexKeys(), indexOptions);
+			Document mappedKeys = mapper.getMappedObject(indexDefinition.getIndexKeys(), entity);
+			return collection.createIndex(mappedKeys, indexOptions);
 		});
 	}
 
