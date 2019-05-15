@@ -118,14 +118,15 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		Document document = root.findAnnotation(Document.class);
 		Assert.notNull(document, "Given entity is not collection root.");
 
-		final List<IndexDefinitionHolder> indexInformation = new ArrayList<>();
-		indexInformation.addAll(potentiallyCreateCompoundIndexDefinitions("", root.getCollection(), root));
-		indexInformation.addAll(potentiallyCreateTextIndexDefinition(root));
+		List<IndexDefinitionHolder> indexInformation = new ArrayList<>();
+		String collection = root.getCollection();
+		indexInformation.addAll(potentiallyCreateCompoundIndexDefinitions("", collection, root));
+		indexInformation.addAll(potentiallyCreateTextIndexDefinition(root, collection));
 
 		root.doWithProperties((PropertyHandler<MongoPersistentProperty>) property -> this
 				.potentiallyAddIndexForProperty(root, property, indexInformation, new CycleGuard()));
 
-		indexInformation.addAll(resolveIndexesForDbrefs("", root.getCollection(), root));
+		indexInformation.addAll(resolveIndexesForDbrefs("", collection, root));
 
 		return indexInformation;
 	}
@@ -225,7 +226,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	}
 
 	private Collection<? extends IndexDefinitionHolder> potentiallyCreateTextIndexDefinition(
-			MongoPersistentEntity<?> root) {
+			MongoPersistentEntity<?> root, String collection) {
 
 		String name = root.getType().getSimpleName() + "_TextIndex";
 		if (name.getBytes().length > 127) {
@@ -261,7 +262,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			return Collections.emptyList();
 		}
 
-		IndexDefinitionHolder holder = new IndexDefinitionHolder("", indexDefinition, root.getCollection());
+		IndexDefinitionHolder holder = new IndexDefinitionHolder("", indexDefinition, collection);
 		return Collections.singletonList(holder);
 
 	}

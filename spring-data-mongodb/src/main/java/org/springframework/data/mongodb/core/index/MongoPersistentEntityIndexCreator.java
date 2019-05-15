@@ -134,16 +134,18 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 	private void checkForAndCreateIndexes(MongoPersistentEntity<?> entity) {
 
 		if (entity.isAnnotationPresent(Document.class)) {
+
+			String collection = entity.getCollection();
+
 			for (IndexDefinition indexDefinition : indexResolver.resolveIndexFor(entity.getTypeInformation())) {
 
 				JustOnceLogger.logWarnIndexCreationConfigurationChange(this.getClass().getName());
 
 				IndexDefinitionHolder indexToCreate = indexDefinition instanceof IndexDefinitionHolder
 						? (IndexDefinitionHolder) indexDefinition
-						: new IndexDefinitionHolder("", indexDefinition, entity.getCollection());
+						: new IndexDefinitionHolder("", indexDefinition, collection);
 
 				createIndex(indexToCreate);
-
 			}
 		}
 	}

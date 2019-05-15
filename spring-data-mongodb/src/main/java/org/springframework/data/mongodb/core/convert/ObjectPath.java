@@ -87,7 +87,7 @@ class ObjectPath {
 		Assert.notNull(object, "Object must not be null!");
 		Assert.notNull(entity, "MongoPersistentEntity must not be null!");
 
-		return new ObjectPath(this, object, id, Lazy.of(() -> entity.getCollection()));
+		return new ObjectPath(this, object, id, Lazy.of(entity::getCollection));
 	}
 
 	/**

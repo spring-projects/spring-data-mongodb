@@ -125,11 +125,13 @@ public class ReactiveMongoPersistentEntityIndexCreator {
 		List<Mono<?>> publishers = new ArrayList<>();
 
 		if (entity.isAnnotationPresent(Document.class)) {
+
+			String collection = entity.getCollection();
 			for (IndexDefinition indexDefinition : indexResolver.resolveIndexFor(entity.getTypeInformation())) {
 
 				IndexDefinitionHolder indexToCreate = indexDefinition instanceof IndexDefinitionHolder
 						? (IndexDefinitionHolder) indexDefinition
-						: new IndexDefinitionHolder("", indexDefinition, entity.getCollection());
+						: new IndexDefinitionHolder("", indexDefinition, collection);
 
 				publishers.add(createIndex(indexToCreate));
 			}

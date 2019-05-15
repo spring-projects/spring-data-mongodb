@@ -26,6 +26,8 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.util.ClassTypeInformation;
 
 /**
+ * Unit tests for {@link ObjectPath}.
+ *
  * @author Christoph Strobl
  */
 public class ObjectPathUnitTests {
@@ -37,9 +39,9 @@ public class ObjectPathUnitTests {
 	@Before
 	public void setUp() {
 
-		one = new BasicMongoPersistentEntity(ClassTypeInformation.from(EntityOne.class));
-		two = new BasicMongoPersistentEntity(ClassTypeInformation.from(EntityTwo.class));
-		three = new BasicMongoPersistentEntity(ClassTypeInformation.from(EntityThree.class));
+		one = new BasicMongoPersistentEntity<>(ClassTypeInformation.from(EntityOne.class));
+		two = new BasicMongoPersistentEntity<>(ClassTypeInformation.from(EntityTwo.class));
+		three = new BasicMongoPersistentEntity<>(ClassTypeInformation.from(EntityThree.class));
 	}
 
 	@Test // DATAMONGO-1703
@@ -96,20 +98,12 @@ public class ObjectPathUnitTests {
 	}
 
 	@Document("one")
-	static class EntityOne {
+	static class EntityOne {}
 
-	}
+	static class EntityTwo extends EntityOne {}
 
-	static class EntityTwo extends EntityOne {
-
-	}
-
-	interface ValueInterface {
-
-	}
+	interface ValueInterface {}
 
 	@Document("three")
-	static class EntityThree implements ValueInterface {
-
-	}
+	static class EntityThree implements ValueInterface {}
 }
