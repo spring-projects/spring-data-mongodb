@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.index;
 
 import static org.springframework.data.domain.Sort.Direction.*;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -27,6 +28,7 @@ import java.util.Optional;
 import org.bson.Document;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -47,6 +49,7 @@ public class IndexInfo {
 	private final boolean unique;
 	private final boolean sparse;
 	private final String language;
+	private @Nullable Duration expireAfter;
 	private @Nullable String partialFilterExpression;
 	private @Nullable Document collation;
 
@@ -108,11 +111,15 @@ public class IndexInfo {
 		String language = sourceDocument.containsKey("default_language") ? (String) sourceDocument.get("default_language")
 				: "";
 		String partialFilter = sourceDocument.containsKey("partialFilterExpression")
-				? ((Document) sourceDocument.get("partialFilterExpression")).toJson() : null;
+				? ((Document) sourceDocument.get("partialFilterExpression")).toJson()
+				: null;
 
 		IndexInfo info = new IndexInfo(indexFields, name, unique, sparse, language);
 		info.partialFilterExpression = partialFilter;
 		info.collation = sourceDocument.get("collation", Document.class);
+		info.expireAfter = !sourceDocument.containsKey("expireAfterSeconds") ? null
+				: Duration.ofSeconds(
+						NumberUtils.convertNumberToTargetClass(sourceDocument.get("expireAfterSeconds", Number.class), Long.class));
 		return info;
 	}
 
@@ -183,11 +190,22 @@ public class IndexInfo {
 		return Optional.ofNullable(collation);
 	}
 
+	/**
+	 * Get the duration after which documents within the index expire.
+	 *
+	 * @return the expiration time if set, {@link Optional#empty()} otherwise.
+	 * @since 2.2
+	 */
+	public Optional<Duration> getExpireAfter() {
+		return Optional.ofNullable(expireAfter);
+	}
+
 	@Override
 	public String toString() {
+
 		return "IndexInfo [indexFields=" + indexFields + ", name=" + name + ", unique=" + unique + ", sparse=" + sparse
 				+ ", language=" + language + ", partialFilterExpression=" + partialFilterExpression + ", collation=" + collation
-				+ "]";
+				+ ", expireAfterSeconds=" + ObjectUtils.nullSafeToString(expireAfter) + "]";
 	}
 
 	@Override
@@ -201,6 +219,7 @@ public class IndexInfo {
 		result += 31 * ObjectUtils.nullSafeHashCode(language);
 		result += 31 * ObjectUtils.nullSafeHashCode(partialFilterExpression);
 		result += 31 * ObjectUtils.nullSafeHashCode(collation);
+		result += 31 * ObjectUtils.nullSafeHashCode(expireAfter);
 		return result;
 	}
 
@@ -243,7 +262,11 @@ public class IndexInfo {
 			return false;
 		}
 
-		if (!ObjectUtils.nullSafeEquals(collation, collation)) {
+		if (!ObjectUtils.nullSafeEquals(collation, other.collation)) {
+			return false;
+		}
+
+		if (!ObjectUtils.nullSafeEquals(expireAfter, other.expireAfter)) {
 			return false;
 		}
 		return true;
