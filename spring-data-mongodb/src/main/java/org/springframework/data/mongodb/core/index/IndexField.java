@@ -30,7 +30,7 @@ import org.springframework.util.ObjectUtils;
 public final class IndexField {
 
 	enum Type {
-		GEO, TEXT, DEFAULT;
+		GEO, TEXT, DEFAULT, HASH;
 	}
 
 	private final String key;
@@ -49,7 +49,9 @@ public final class IndexField {
 		if (Type.GEO.equals(type) || Type.TEXT.equals(type)) {
 			Assert.isNull(direction, "Geo/Text indexes must not have a direction!");
 		} else {
-			Assert.notNull(direction, "Default indexes require a direction");
+			if (!Type.HASH.equals(type)) {
+				Assert.notNull(direction, "Default indexes require a direction");
+			}
 		}
 
 		this.key = key;
@@ -63,6 +65,17 @@ public final class IndexField {
 		Assert.notNull(order, "Direction must not be null!");
 
 		return new IndexField(key, order, Type.DEFAULT);
+	}
+
+	/**
+	 * Creates a {@literal hashed} {@link IndexField} for the given key.
+	 *
+	 * @param key must not be {@literal null} or empty.
+	 * @return new instance of {@link IndexField}.
+	 * @since 2.2
+	 */
+	static IndexField hashed(String key) {
+		return new IndexField(key, null, Type.HASH);
 	}
 
 	/**
@@ -118,6 +131,16 @@ public final class IndexField {
 	 */
 	public boolean isText() {
 		return Type.TEXT.equals(type);
+	}
+
+	/**
+	 * Returns whether the {@link IndexField} is a {@literal hashed}.
+	 *
+	 * @return {@literal true} if {@link IndexField} is hashed.
+	 * @since 2.2
+	 */
+	public boolean isHashed() {
+		return Type.HASH.equals(type);
 	}
 
 	/*
