@@ -2269,6 +2269,24 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return new ReactiveMapReduceOperationSupport(this).mapReduce(domainType);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ReactiveChangeStreamOperation#changeStream()
+	 */
+	@Override
+	public ReactiveChangeStream<Document> changeStream() {
+		return new ReactiveChangeStreamOperationSupport(this).changeStream();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.ReactiveChangeStreamOperation#changeStream(java.lang.Class)
+	 */
+	@Override
+	public <T> ReactiveChangeStream<T> changeStream(Class<T> domainType) {
+		return new ReactiveChangeStreamOperationSupport(this).changeStream(domainType);
+	}
+
 	/**
 	 * Retrieve and remove all documents matching the given {@code query} by calling {@link #find(Query, Class, String)}
 	 * and {@link #remove(Query, Class, String)}, whereas the {@link Query} for {@link #remove(Query, Class, String)} is
