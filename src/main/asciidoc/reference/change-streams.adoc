@@ -51,14 +51,14 @@ Subscribing to Change Streams with the reactive API is a more natural approach t
 ====
 [source,java]
 ----
-ChangeStreamOptions options = ChangeStreamOptions.builder()
-    .filter(newAggregation(User.class, match(where("age").gte(38)))                              <1>
-    .build();
-
-Flux<ChangeStreamEvent<User>> flux = reactiveTemplate.changeStream("user", options, User.class); <2>
+Flux<ChangeStreamEvent<User>> flux = reactiveTemplate.changeStream(User.class) <1>
+    .watchCollection("persons")
+    .filter(where("age").gte(38))                                              <2>
+    .listen();                                                                 <3>
 ----
-<1> Use an aggregation pipeline to filter events.
-<2> Obtain a `Flux` of change stream events. The `ChangeStreamEvent#getBody()` is converted to the requested domain type. Use `Document` to receive raw results without conversion.
+<1> The event target type the underlying document should be converted to. Leave this out to receive raw results without conversion.
+<2> Use an aggregation pipeline or just a query `Criteria` to filter events.
+<3> Obtain a `Flux` of change stream events. The `ChangeStreamEvent#getBody()` is converted to the requested domain type from (2).
 ====
 
 === Resuming Change Streams
@@ -72,11 +72,11 @@ The following example shows how to set the resume offset using server time:
 ====
 [source,java]
 ----
-ChangeStreamOptions = ChangeStreamOptions.builder()
-    .resumeAt(Instant.now().minusSeconds(1))        <1>
-    .build()
-
-Flux<ChangeStreamEvent<Person>> resumed = template.changeStream("person", options, User.class)
+Flux<ChangeStreamEvent<Person>> resumed = template.changeStream()
+    .watchCollection("persons")
+    .as(User.class)
+    .resumeAt(Instant.now().minusSeconds(1)) <1>
+    .listen();
 ----
 <1> You may obtain the server time of an `ChangeStreamEvent` through the `getTimestamp` method or use the `resumeToken`
 exposed through `getResumeToken`.

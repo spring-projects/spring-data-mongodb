@@ -23,4 +23,4 @@ package org.springframework.data.mongodb.core;
  * @since 2.0
  */
 public interface ReactiveFluentMongoOperations extends ReactiveFindOperation, ReactiveInsertOperation,
-		ReactiveUpdateOperation, ReactiveRemoveOperation, ReactiveAggregationOperation, ReactiveMapReduceOperation {}
+		ReactiveUpdateOperation, ReactiveRemoveOperation, ReactiveAggregationOperation, ReactiveMapReduceOperation, ReactiveChangeStreamOperation {}
