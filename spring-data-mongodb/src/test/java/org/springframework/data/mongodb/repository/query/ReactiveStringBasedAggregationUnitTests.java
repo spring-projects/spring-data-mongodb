@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.repository.query;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import lombok.Value;
@@ -34,6 +34,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
@@ -55,8 +56,11 @@ import org.springframework.data.repository.query.QueryMethodEvaluationContextPro
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
+import org.springframework.util.ClassUtils;
 
 /**
+ * Unit tests for {@link ReactiveStringBasedAggregation}.
+ *
  * @author Christoph Strobl
  */
 @RunWith(MockitoJUnitRunner.class)
@@ -158,18 +162,12 @@ public class ReactiveStringBasedAggregationUnitTests {
 
 	private ReactiveStringBasedAggregation createAggregationForMethod(String name, Class<?>... parameters) {
 
-		try {
-
-			Method method = SampleRepository.class.getMethod(name, parameters);
-			ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
-			ReactiveMongoQueryMethod queryMethod = new ReactiveMongoQueryMethod(method,
-					new DefaultRepositoryMetadata(SampleRepository.class), factory, converter.getMappingContext());
-			return new ReactiveStringBasedAggregation(queryMethod, operations, PARSER,
-					QueryMethodEvaluationContextProvider.DEFAULT);
-
-		} catch (Exception e) {
-			throw new IllegalArgumentException(e.getMessage(), e);
-		}
+		Method method = ClassUtils.getMethod(SampleRepository.class, name, parameters);
+		ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
+		ReactiveMongoQueryMethod queryMethod = new ReactiveMongoQueryMethod(method,
+				new DefaultRepositoryMetadata(SampleRepository.class), factory, converter.getMappingContext());
+		return new ReactiveStringBasedAggregation(queryMethod, operations, PARSER,
+				QueryMethodEvaluationContextProvider.DEFAULT);
 	}
 
 	private List<Document> pipelineOf(AggregationInvocation invocation) {
@@ -222,8 +220,8 @@ public class ReactiveStringBasedAggregationUnitTests {
 	@Value
 	static class AggregationInvocation {
 
-		final TypedAggregation<?> aggregation;
-		final Class<?> targetType;
-		final Object result;
+		TypedAggregation<?> aggregation;
+		Class<?> targetType;
+		Object result;
 	}
 }

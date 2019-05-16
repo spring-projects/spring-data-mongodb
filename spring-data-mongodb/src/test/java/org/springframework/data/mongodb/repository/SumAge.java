@@ -21,7 +21,7 @@ import lombok.Value;
  * @author Christoph Strobl
  */
 @Value
-public class SumAge {
+class SumAge {
 
 	private Long total;
 }

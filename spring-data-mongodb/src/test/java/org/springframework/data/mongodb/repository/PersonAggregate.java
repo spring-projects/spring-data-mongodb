@@ -17,16 +17,29 @@ package org.springframework.data.mongodb.repository;
 
 import lombok.Value;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.PersistenceConstructor;
 
 /**
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @Value
-public class PersonAggregate {
+class PersonAggregate {
 
 	@Id private String lastname;
 	private List<String> names;
+
+	@PersistenceConstructor
+	public PersonAggregate(String lastname, List<String> names) {
+		this.lastname = lastname;
+		this.names = names;
+	}
+
+	public PersonAggregate(String lastname, String name) {
+		this(lastname, Collections.singletonList(name));
+	}
 }
