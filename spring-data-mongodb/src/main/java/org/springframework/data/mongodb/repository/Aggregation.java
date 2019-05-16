@@ -25,12 +25,13 @@ import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.annotation.QueryAnnotation;
 
 /**
- * The {@link Aggregation} annotation can be used to decorate a {@link org.springframework.data.repository.Repository}
- * query method so that it runs the {@link Aggregation#pipeline()} on invocation. <br />
- * The pipeline stages are mapped against the {@link org.springframework.data.repository.Repository} domain type to
- * consider {@link org.springframework.data.mongodb.core.mapping.Field field} mappings and may contain simple
- * placeholders {@code ?0} as well as {@link org.springframework.expression.spel.standard.SpelExpression
- * SpelExpressions}. <br />
+ * The {@link Aggregation} annotation can be used to annotate a {@link org.springframework.data.repository.Repository}
+ * query method so that it runs the {@link Aggregation#pipeline()} on invocation.
+ * <p />
+ * Pipeline stages are mapped against the {@link org.springframework.data.repository.Repository} domain type to consider
+ * {@link org.springframework.data.mongodb.core.mapping.Field field} mappings and may contain simple placeholders
+ * {@code ?0} as well as {@link org.springframework.expression.spel.standard.SpelExpression SpelExpressions}.
+ * <p />
  * Query method {@link org.springframework.data.domain.Sort} and {@link org.springframework.data.domain.Pageable}
  * arguments are applied at the end of the pipeline or can be defined manually as part of it.
  *
@@ -121,7 +122,6 @@ public @interface Aggregation {
 	 * </pre>
 	 *
 	 * @return an empty {@link String} by default.
-	 * @since 2.2
 	 */
 	String collation() default "";
 }

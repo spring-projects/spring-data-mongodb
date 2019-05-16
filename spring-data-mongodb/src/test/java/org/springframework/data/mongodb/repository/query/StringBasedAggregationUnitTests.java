@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.repository.query;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import lombok.Value;
@@ -25,6 +25,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.IntFunction;
 
 import org.bson.Document;
 import org.junit.Before;
@@ -33,6 +34,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -55,8 +57,11 @@ import org.springframework.data.repository.core.support.DefaultRepositoryMetadat
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
+import org.springframework.util.ClassUtils;
 
 /**
+ * Unit tests for {@link StringBasedAggregation}.
+ *
  * @author Christoph Strobl
  */
 @RunWith(MockitoJUnitRunner.class)
@@ -176,7 +181,7 @@ public class StringBasedAggregationUnitTests {
 
 	private AggregationInvocation executeAggregation(String name, Object... args) {
 
-		Class<?>[] argTypes = Arrays.stream(args).map(Object::getClass).toArray(size -> new Class<?>[size]);
+		Class<?>[] argTypes = Arrays.stream(args).map(Object::getClass).toArray(Class[]::new);
 		StringBasedAggregation aggregation = createAggregationForMethod(name, argTypes);
 
 		ArgumentCaptor<TypedAggregation> aggregationCaptor = ArgumentCaptor.forClass(TypedAggregation.class);
@@ -191,17 +196,11 @@ public class StringBasedAggregationUnitTests {
 
 	private StringBasedAggregation createAggregationForMethod(String name, Class<?>... parameters) {
 
-		try {
-
-			Method method = SampleRepository.class.getMethod(name, parameters);
-			ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
-			MongoQueryMethod queryMethod = new MongoQueryMethod(method, new DefaultRepositoryMetadata(SampleRepository.class),
-					factory, converter.getMappingContext());
-			return new StringBasedAggregation(queryMethod, operations, PARSER, QueryMethodEvaluationContextProvider.DEFAULT);
-
-		} catch (Exception e) {
-			throw new IllegalArgumentException(e.getMessage(), e);
-		}
+		Method method = ClassUtils.getMethod(SampleRepository.class, name, parameters);
+		ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
+		MongoQueryMethod queryMethod = new MongoQueryMethod(method, new DefaultRepositoryMetadata(SampleRepository.class),
+				factory, converter.getMappingContext());
+		return new StringBasedAggregation(queryMethod, operations, PARSER, QueryMethodEvaluationContextProvider.DEFAULT);
 	}
 
 	private List<Document> pipelineOf(AggregationInvocation invocation) {
@@ -266,8 +265,8 @@ public class StringBasedAggregationUnitTests {
 	@Value
 	static class AggregationInvocation {
 
-		final TypedAggregation<?> aggregation;
-		final Class<?> targetType;
-		final Object result;
+		TypedAggregation<?> aggregation;
+		Class<?> targetType;
+		Object result;
 	}
 }

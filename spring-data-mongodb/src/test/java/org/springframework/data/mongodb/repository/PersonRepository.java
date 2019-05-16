@@ -381,7 +381,7 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	List<PersonAggregate> groupByLastnameAnd(String property, Pageable page);
 
 	@Aggregation(pipeline = "{ '$group' : { '_id' : null, 'total' : { $sum: '$age' } } }")
-	Long sumAge();
+	int sumAge();
 
 	@Aggregation(pipeline = "{ '$group' : { '_id' : null, 'total' : { $sum: '$age' } } }")
 	AggregationResults<org.bson.Document> sumAgeAndReturnAggregationResultWrapper();

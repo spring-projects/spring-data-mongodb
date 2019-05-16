@@ -168,15 +168,12 @@ public class MongoQueryMethod extends QueryMethod {
 		return this.metadata;
 	}
 
-	/**
-	 * Get the declared {@link org.springframework.data.repository.Repository} domain type.
-	 *
-	 * @return the domain type declared at repository level.
-	 * @see QueryMethod#getDomainClass()
-	 * @since 2.2
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.QueryMethod#getDomainClass()
 	 */
-	Class<?> getRepositoryDomainType() {
-		return getDomainClass();
+	protected Class<?> getDomainClass() {
+		return super.getDomainClass();
 	}
 
 	/*
@@ -317,7 +314,7 @@ public class MongoQueryMethod extends QueryMethod {
 	 * @since 2.1
 	 */
 	public boolean hasAnnotatedSort() {
-		return lookupQueryAnnotation().map(it -> !it.sort().isEmpty()).orElse(false);
+		return lookupQueryAnnotation().map(Query::sort).filter(StringUtils::hasText).isPresent();
 	}
 
 	/**
@@ -338,13 +335,18 @@ public class MongoQueryMethod extends QueryMethod {
 	 * Check if the query method is decorated with an non empty {@link Query#collation()} or or
 	 * {@link Aggregation#collation()}.
 	 *
-	 * @return true if method annotated with {@link Query} or {@link Aggregation} having an non empty collation attribute.
+	 * @return true if method annotated with {@link Query} or {@link Aggregation} having a non-empty collation attribute.
 	 * @since 2.2
 	 */
 	public boolean hasAnnotatedCollation() {
 
-		return lookupQueryAnnotation().map(it -> !it.collation().isEmpty())
-				.orElseGet(() -> lookupAggregationAnnotation().map(it -> !it.collation().isEmpty()).orElse(false));
+		Optional<String> optionalCollation = lookupQueryAnnotation().map(Query::collation);
+
+		if (!optionalCollation.isPresent()) {
+			optionalCollation = lookupAggregationAnnotation().map(Aggregation::collation);
+		}
+
+		return optionalCollation.filter(StringUtils::hasText).isPresent();
 	}
 
 	/**
@@ -374,15 +376,16 @@ public class MongoQueryMethod extends QueryMethod {
 	}
 
 	/**
-	 * Returns the query string declared in a {@link Query} annotation or {@literal null} if neither the annotation found
-	 * nor the attribute was specified.
+	 * Returns the aggregation pipeline declared in a {@link Aggregation} annotation.
 	 *
-	 * @return
+	 * @return the aggregation pipeline.
+	 * @throws IllegalStateException if method not annotated with {@link Aggregation}. Make sure to check
+	 *           {@link #hasAnnotatedAggregation()} first.
 	 * @since 2.2
 	 */
-	@Nullable
 	public String[] getAnnotatedAggregation() {
-		return findAnnotatedAggregation().orElse(null);
+		return findAnnotatedAggregation().orElseThrow(() -> new IllegalStateException(
+				"Expected to find @Aggregation annotation but did not. Make sure to check hasAnnotatedAggregation() before."));
 	}
 
 	private Optional<String[]> findAnnotatedAggregation() {

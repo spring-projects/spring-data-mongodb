@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
+
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
@@ -27,7 +28,6 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
-import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.ResultProcessor;
@@ -71,7 +71,7 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 	protected Object doExecute(MongoQueryMethod method, ResultProcessor resultProcessor,
 			ConvertingParameterAccessor accessor, Class<?> typeToRead) {
 
-		Class<?> sourceType = method.getRepositoryDomainType();
+		Class<?> sourceType = method.getDomainClass();
 		Class<?> targetType = typeToRead;
 
 		List<AggregationOperation> pipeline = computePipeline(method, accessor);
@@ -84,7 +84,7 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 		if (isSimpleReturnType) {
 			targetType = Document.class;
 		} else if (isRawAggregationResult) {
-			targetType = method.getReturnType().getActualType().getComponentType().getType();
+			targetType = method.getReturnType().getRequiredActualType().getRequiredComponentType().getType();
 		}
 
 		AggregationOptions options = computeOptions(method, accessor);
@@ -108,13 +108,11 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 			return result.getMappedResults();
 		}
 
-		if (isSimpleReturnType) {
+		Object uniqueResult = result.getUniqueMappedResult();
 
-			return AggregationUtils.extractSimpleTypeResult((Document) result.getUniqueMappedResult(), typeToRead,
-					mongoConverter);
-		}
-
-		return result.getUniqueMappedResult();
+		return isSimpleReturnType
+				? AggregationUtils.extractSimpleTypeResult((Document) uniqueResult, typeToRead, mongoConverter)
+				: uniqueResult;
 	}
 
 	private boolean isSimpleReturnType(Class<?> targetType) {
@@ -139,7 +137,7 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 	 */
 	@Override
 	protected Query createQuery(ConvertingParameterAccessor accessor) {
-		return new BasicQuery("{}");
+		throw new UnsupportedOperationException("No query support for aggregation");
 	}
 
 	/*

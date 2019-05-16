@@ -1347,7 +1347,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 	@Test // DATAMONGO-2153
 	public void annotatedAggregationWithSingleSimpleResult() {
-		assertThat(repository.sumAge()).isInstanceOf(Long.class).isEqualTo(245L);
+		assertThat(repository.sumAge()).isEqualTo(245);
 	}
 
 	@Test // DATAMONGO-2153

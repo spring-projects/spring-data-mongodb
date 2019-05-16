@@ -20,6 +20,7 @@ import reactor.core.publisher.Flux;
 import java.util.List;
 
 import org.bson.Document;
+
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
@@ -27,7 +28,6 @@ import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
-import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.ResultProcessor;
@@ -39,6 +39,7 @@ import org.springframework.util.ClassUtils;
  * {@link AggregationOperation aggregation} pipeline to actually execute.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.2
  */
 public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
@@ -74,10 +75,10 @@ public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 	protected Object doExecute(ReactiveMongoQueryMethod method, ResultProcessor processor,
 			ConvertingParameterAccessor accessor, Class<?> typeToRead) {
 
-		Class<?> sourceType = method.getRepositoryDomainType();
+		Class<?> sourceType = method.getDomainClass();
 		Class<?> targetType = typeToRead;
 
-		List<AggregationOperation> pipeline = computePipeline(method, accessor);
+		List<AggregationOperation> pipeline = computePipeline(accessor);
 		AggregationUtils.appendSortIfPresent(pipeline, accessor, typeToRead);
 		AggregationUtils.appendLimitAndOffsetIfPresent(pipeline, accessor);
 
@@ -94,17 +95,21 @@ public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 		Flux<?> flux = reactiveMongoOperations.aggregate(aggregation, targetType);
 
 		if (isSimpleReturnType && !isRawReturnType) {
-			return flux.map(it -> AggregationUtils.extractSimpleTypeResult((Document) it, typeToRead, mongoConverter));
+			flux = flux.map(it -> AggregationUtils.extractSimpleTypeResult((Document) it, typeToRead, mongoConverter));
 		}
 
-		return flux;
+		if (method.isCollectionQuery()) {
+			return flux;
+		} else {
+			return flux.next();
+		}
 	}
 
 	private boolean isSimpleReturnType(Class<?> targetType) {
 		return MongoSimpleTypes.HOLDER.isSimpleType(targetType);
 	}
 
-	List<AggregationOperation> computePipeline(MongoQueryMethod method, ConvertingParameterAccessor accessor) {
+	List<AggregationOperation> computePipeline(ConvertingParameterAccessor accessor) {
 		return AggregationUtils.computePipeline(getQueryMethod(), accessor, expressionParser, evaluationContextProvider);
 	}
 
@@ -122,7 +127,7 @@ public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 	 */
 	@Override
 	protected Query createQuery(ConvertingParameterAccessor accessor) {
-		return new BasicQuery("{}");
+		throw new UnsupportedOperationException("No query support for aggregation");
 	}
 
 	/*

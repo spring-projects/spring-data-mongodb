@@ -62,7 +62,6 @@ class AggregationUtils {
 	 * @see AggregationOptions#getCollation()
 	 * @see CollationUtils#computeCollation(String, ConvertingParameterAccessor, MongoParameters, SpelExpressionParser,
 	 *      QueryMethodEvaluationContextProvider)
-	 * @since 2.2
 	 */
 	static AggregationOptions.Builder applyCollation(AggregationOptions.Builder builder,
 			@Nullable String collationExpression, ConvertingParameterAccessor accessor, MongoParameters parameters,
@@ -79,7 +78,7 @@ class AggregationUtils {
 	 * {@link ParameterBindingDocumentCodec} to obtain the MongoDB native {@link Document} representation returned by
 	 * {@link AggregationOperation#toDocument(AggregationOperationContext)} that is mapped against the domain type
 	 * properties.
-	 * 
+	 *
 	 * @param method
 	 * @param accessor
 	 * @param expressionParser
@@ -94,7 +93,7 @@ class AggregationUtils {
 
 		List<AggregationOperation> target = new ArrayList<>(method.getAnnotatedAggregation().length);
 		for (String source : method.getAnnotatedAggregation()) {
-			target.add(ctx -> ctx.getMappedObject(CODEC.decode(source, bindingContext), method.getRepositoryDomainType()));
+			target.add(ctx -> ctx.getMappedObject(CODEC.decode(source, bindingContext), method.getDomainClass()));
 		}
 		return target;
 	}
@@ -174,16 +173,16 @@ class AggregationUtils {
 			return getPotentiallyConvertedSimpleTypeValue(converter, source.values().iterator().next(), targetType);
 		}
 
-		Document tmp = new Document(source);
-		tmp.remove("_id");
+		Document intermediate = new Document(source);
+		intermediate.remove("_id");
 
-		if (tmp.size() == 1) {
-			return getPotentiallyConvertedSimpleTypeValue(converter, tmp.values().iterator().next(), targetType);
+		if (intermediate.size() == 1) {
+			return getPotentiallyConvertedSimpleTypeValue(converter, intermediate.values().iterator().next(), targetType);
 		}
 
-		for (Map.Entry<String, Object> entry : tmp.entrySet()) {
+		for (Map.Entry<String, Object> entry : intermediate.entrySet()) {
 			if (entry != null && ClassUtils.isAssignable(targetType, entry.getValue().getClass())) {
-				return (T) entry.getValue();
+				return targetType.cast(entry.getValue());
 			}
 		}
 
@@ -192,14 +191,15 @@ class AggregationUtils {
 	}
 
 	@Nullable
-	private static <T> T getPotentiallyConvertedSimpleTypeValue(MongoConverter converter, Object value,
+	@SuppressWarnings("unchecked")
+	private static <T> T getPotentiallyConvertedSimpleTypeValue(MongoConverter converter, @Nullable Object value,
 			Class<T> targetType) {
 
 		if (value == null) {
-			return (T) value;
+			return null;
 		}
 
-		if (!converter.getConversionService().canConvert(value.getClass(), targetType)) {
+		if (ClassUtils.isAssignableValue(targetType, value)) {
 			return (T) value;
 		}
 

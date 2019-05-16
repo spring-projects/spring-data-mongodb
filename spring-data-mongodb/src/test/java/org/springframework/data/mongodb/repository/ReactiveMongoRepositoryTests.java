@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static org.assertj.core.api.Assertions.offset;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.domain.Sort.Direction.*;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
@@ -27,7 +27,6 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
@@ -37,6 +36,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.reactivestreams.Publisher;
+
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -455,11 +455,11 @@ public class ReactiveMongoRepositoryTests {
 				.as(StepVerifier::create) //
 				.assertNext(actual -> {
 					assertThat(actual) //
-							.contains(new PersonAggregate("Lessard", Collections.singletonList("Stefan"))) //
-							.contains(new PersonAggregate("Keys", Collections.singletonList("Alicia"))) //
-							.contains(new PersonAggregate("Tinsley", Collections.singletonList("Boyd"))) //
-							.contains(new PersonAggregate("Beauford", Collections.singletonList("Carter"))) //
-							.contains(new PersonAggregate("Moore", Collections.singletonList("Leroi"))) //
+							.contains(new PersonAggregate("Lessard", "Stefan")) //
+							.contains(new PersonAggregate("Keys", "Alicia")) //
+							.contains(new PersonAggregate("Tinsley", "Boyd")) //
+							.contains(new PersonAggregate("Beauford", "Carter")) //
+							.contains(new PersonAggregate("Moore", "Leroi")) //
 							.contains(new PersonAggregate("Matthews", Arrays.asList("Dave", "Oliver August")));
 				}).verifyComplete();
 	}
@@ -473,12 +473,12 @@ public class ReactiveMongoRepositoryTests {
 				.assertNext(actual -> {
 					assertThat(actual) //
 							.containsSequence( //
-									new PersonAggregate("Beauford", Collections.singletonList("Carter")), //
-									new PersonAggregate("Keys", Collections.singletonList("Alicia")), //
-									new PersonAggregate("Lessard", Collections.singletonList("Stefan")), //
+									new PersonAggregate("Beauford", "Carter"), //
+									new PersonAggregate("Keys", "Alicia"), //
+									new PersonAggregate("Lessard", "Stefan"), //
 									new PersonAggregate("Matthews", Arrays.asList("Dave", "Oliver August")), //
-									new PersonAggregate("Moore", Collections.singletonList("Leroi")), //
-									new PersonAggregate("Tinsley", Collections.singletonList("Boyd")));
+									new PersonAggregate("Moore", "Leroi"), //
+									new PersonAggregate("Tinsley", "Boyd"));
 				}) //
 				.verifyComplete();
 	}
@@ -492,7 +492,7 @@ public class ReactiveMongoRepositoryTests {
 				.assertNext(actual -> {
 					assertThat(actual) //
 							.containsExactly( //
-									new PersonAggregate("Lessard", Collections.singletonList("Stefan")), //
+									new PersonAggregate("Lessard", "Stefan"), //
 									new PersonAggregate("Matthews", Arrays.asList("Dave", "Oliver August")));
 				}) //
 				.verifyComplete();
