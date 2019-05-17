@@ -21,6 +21,7 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.*;
 
 import lombok.Data;
+import org.bson.Document;
 import reactor.test.StepVerifier;
 
 import org.junit.AfterClass;
@@ -197,6 +198,15 @@ public class JsonSchemaQueryTests {
 
 		assertThat(template.find(query(where("value").type(Type.intType(), Type.stringType())), Person.class))
 				.containsExactlyInAnyOrder(jellyBelly, kazmardBoombub);
+	}
+
+	@Test // DATAMONGO-1835
+	public void findsWithSchemaReturningRawDocument() {
+
+		MongoJsonSchema schema = MongoJsonSchema.builder().required("address").build();
+
+		assertThat(template.find(query(matchingDocumentStructure(schema)), Document.class, template.getCollectionName(Person.class)))
+				.hasSize(2);
 	}
 
 	@Data
