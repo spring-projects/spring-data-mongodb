@@ -297,7 +297,7 @@ public class QueryMapper {
 		}
 
 		if (keyword.isJsonSchema()) {
-			return schemaMapper.mapSchema(new Document(keyword.getKey(), keyword.getValue()), entity.getType());
+			return schemaMapper.mapSchema(new Document(keyword.getKey(), keyword.getValue()), entity != null ? entity.getType() : Object.class);
 		}
 
 		return new Document(keyword.getKey(), convertSimpleOrDocument(keyword.getValue(), entity));
