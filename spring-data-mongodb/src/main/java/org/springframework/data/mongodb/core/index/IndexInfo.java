@@ -32,6 +32,8 @@ import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
 
 /**
+ * Index information for a MongoDB index.
+ *
  * @author Mark Pollack
  * @author Oliver Gierke
  * @author Christoph Strobl
@@ -117,9 +119,13 @@ public class IndexInfo {
 		IndexInfo info = new IndexInfo(indexFields, name, unique, sparse, language);
 		info.partialFilterExpression = partialFilter;
 		info.collation = sourceDocument.get("collation", Document.class);
-		info.expireAfter = !sourceDocument.containsKey("expireAfterSeconds") ? null
-				: Duration.ofSeconds(
-						NumberUtils.convertNumberToTargetClass(sourceDocument.get("expireAfterSeconds", Number.class), Long.class));
+
+		if (sourceDocument.containsKey("expireAfterSeconds")) {
+
+			Number expireAfterSeconds = sourceDocument.get("expireAfterSeconds", Number.class);
+			info.expireAfter = Duration.ofSeconds(NumberUtils.convertNumberToTargetClass(expireAfterSeconds, Long.class));
+		}
+
 		return info;
 	}
 
@@ -261,11 +267,9 @@ public class IndexInfo {
 		if (!ObjectUtils.nullSafeEquals(partialFilterExpression, other.partialFilterExpression)) {
 			return false;
 		}
-
 		if (!ObjectUtils.nullSafeEquals(collation, other.collation)) {
 			return false;
 		}
-
 		if (!ObjectUtils.nullSafeEquals(expireAfter, other.expireAfter)) {
 			return false;
 		}

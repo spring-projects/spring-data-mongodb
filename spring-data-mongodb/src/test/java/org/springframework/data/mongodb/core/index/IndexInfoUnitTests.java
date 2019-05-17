@@ -60,7 +60,7 @@ public class IndexInfoUnitTests {
 
 	@Test // DATAMONGO-2081
 	public void expireAfterIsParsedCorrectly() {
-		assertThat(getIndexInfo(INDEX_WITH_EXPIRATION_TIME).getExpireAfter()).contains(Duration.ofSeconds(3600));
+		assertThat(getIndexInfo(INDEX_WITH_EXPIRATION_TIME).getExpireAfter()).contains(Duration.ofHours(1));
 	}
 
 	@Test // DATAMONGO-2081
