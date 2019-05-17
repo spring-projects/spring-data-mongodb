@@ -30,6 +30,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationOperationCon
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.util.json.ParameterBindingContext;
 import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
@@ -37,12 +38,14 @@ import org.springframework.data.repository.query.QueryMethodEvaluationContextPro
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.StringUtils;
 
 /**
  * Internal utility class to help avoid duplicate code required in both the reactive and the sync {@link Aggregation}
  * support offered by repositories.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.2
  */
 @UtilityClass
@@ -70,6 +73,27 @@ class AggregationUtils {
 		Collation collation = CollationUtils.computeCollation(collationExpression, accessor, parameters, expressionParser,
 				evaluationContextProvider);
 		return collation == null ? builder : builder.collation(collation);
+	}
+
+	/**
+	 * Apply {@link Meta#getComment()} and {@link Meta#getCursorBatchSize()}.
+	 *
+	 * @param builder must not be {@literal null}.
+	 * @param queryMethod must not be {@literal null}.
+	 */
+	static AggregationOptions.Builder applyMeta(AggregationOptions.Builder builder, MongoQueryMethod queryMethod) {
+
+		Meta meta = queryMethod.getQueryMetaAttributes();
+
+		if (StringUtils.hasText(meta.getComment())) {
+			builder.comment(meta.getComment());
+		}
+
+		if (meta.getCursorBatchSize() != null) {
+			builder.cursorBatchSize(meta.getCursorBatchSize());
+		}
+
+		return builder;
 	}
 
 	/**

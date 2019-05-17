@@ -2136,6 +2136,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				aggregateIterable = aggregateIterable.batchSize(options.getCursorBatchSize());
 			}
 
+			options.getComment().ifPresent(aggregateIterable::comment);
+
 			MongoIterable<O> iterable = aggregateIterable.map(val -> {
 
 				rawResult.add(val);
@@ -2176,6 +2178,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			if (options.getCursorBatchSize() != null) {
 				cursor = cursor.batchSize(options.getCursorBatchSize());
 			}
+
+			options.getComment().ifPresent(cursor::comment);
 
 			Class<?> domainType = aggregation instanceof TypedAggregation ? ((TypedAggregation) aggregation).getInputType()
 					: null;

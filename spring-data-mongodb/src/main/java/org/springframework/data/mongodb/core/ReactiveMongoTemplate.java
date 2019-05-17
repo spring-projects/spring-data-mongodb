@@ -1036,6 +1036,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			cursor = cursor.batchSize(options.getCursorBatchSize());
 		}
 
+		options.getComment().ifPresent(cursor::comment);
+
 		Optionals.firstNonEmpty(options::getCollation, () -> operations.forType(inputType).getCollation()) //
 				.map(Collation::toMongoCollation) //
 				.ifPresent(cursor::collation);

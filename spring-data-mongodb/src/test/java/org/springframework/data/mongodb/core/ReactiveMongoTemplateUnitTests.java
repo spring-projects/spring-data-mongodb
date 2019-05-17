@@ -43,6 +43,7 @@ import org.reactivestreams.Publisher;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.MongoTemplateUnitTests.AutogenerateableId;
+import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -537,6 +538,17 @@ public class ReactiveMongoTemplateUnitTests {
 				.subscribe();
 
 		verify(aggregatePublisher).collation(eq(com.mongodb.client.model.Collation.builder().locale("fr").build()));
+	}
+
+	@Test // DATAMONGO-2153
+	public void aggregateShouldHonorOptionsComment() {
+
+		AggregationOptions options = AggregationOptions.builder().comment("expensive").build();
+
+		template.aggregate(newAggregation(Sith.class, project("id")).withOptions(options), AutogenerateableId.class,
+				Document.class).subscribe();
+
+		verify(aggregatePublisher).comment("expensive");
 	}
 
 	@Test // DATAMONGO-18545

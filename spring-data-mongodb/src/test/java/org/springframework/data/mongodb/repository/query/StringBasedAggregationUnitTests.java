@@ -25,7 +25,6 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.IntFunction;
 
 import org.bson.Document;
 import org.junit.Before;
@@ -39,6 +38,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
+import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
@@ -49,6 +49,7 @@ import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.repository.Aggregation;
+import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
@@ -63,6 +64,7 @@ import org.springframework.util.ClassUtils;
  * Unit tests for {@link StringBasedAggregation}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(MockitoJUnitRunner.class)
 public class StringBasedAggregationUnitTests {
@@ -101,12 +103,29 @@ public class StringBasedAggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-2153
+	public void plainStringAggregationConsidersMeta() {
+
+		AggregationInvocation invocation = executeAggregation("plainStringAggregation");
+
+		AggregationOptions options = invocation.aggregation.getOptions();
+
+		assertThat(options.getComment()).contains("expensive-aggregation");
+		assertThat(options.getCursorBatchSize()).isEqualTo(42);
+	}
+
+	@Test // DATAMONGO-2153
 	public void returnSingleObject() {
 
 		PersonAggregate expected = new PersonAggregate();
 		when(aggregationResults.getUniqueMappedResult()).thenReturn(Collections.singletonList(expected));
 
-		assertThat(executeAggregation("returnSingleEntity").result).isEqualTo(expected);
+		AggregationInvocation invocation = executeAggregation("returnSingleEntity");
+		assertThat(invocation.result).isEqualTo(expected);
+
+		AggregationOptions options = invocation.aggregation.getOptions();
+
+		assertThat(options.getComment()).isEmpty();
+		assertThat(options.getCursorBatchSize()).isNull();
 	}
 
 	@Test // DATAMONGO-2153
@@ -227,6 +246,7 @@ public class StringBasedAggregationUnitTests {
 
 	private interface SampleRepository extends Repository<Person, Long> {
 
+		@Meta(cursorBatchSize = 42, comment = "expensive-aggregation")
 		@Aggregation({ RAW_GROUP_BY_LASTNAME_STRING, RAW_SORT_STRING })
 		PersonAggregate plainStringAggregation();
 

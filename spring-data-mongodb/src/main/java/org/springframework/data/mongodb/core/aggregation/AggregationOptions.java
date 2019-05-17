@@ -44,11 +44,13 @@ public class AggregationOptions {
 	private static final String EXPLAIN = "explain";
 	private static final String ALLOW_DISK_USE = "allowDiskUse";
 	private static final String COLLATION = "collation";
+	private static final String COMMENT = "comment";
 
 	private final boolean allowDiskUse;
 	private final boolean explain;
 	private final Optional<Document> cursor;
 	private final Optional<Collation> collation;
+	private final Optional<String> comment;
 
 	/**
 	 * Creates a new {@link AggregationOptions}.
@@ -73,11 +75,28 @@ public class AggregationOptions {
 	 */
 	public AggregationOptions(boolean allowDiskUse, boolean explain, @Nullable Document cursor,
 			@Nullable Collation collation) {
+		this(allowDiskUse, explain, cursor, collation, null);
+	}
+
+	/**
+	 * Creates a new {@link AggregationOptions}.
+	 *
+	 * @param allowDiskUse whether to off-load intensive sort-operations to disk.
+	 * @param explain whether to get the execution plan for the aggregation instead of the actual results.
+	 * @param cursor can be {@literal null}, used to pass additional options (such as {@code batchSize}) to the
+	 *          aggregation.
+	 * @param collation collation for string comparison. Can be {@literal null}.
+	 * @param comment execution comment. Can be {@literal null}.
+	 * @since 2.2
+	 */
+	public AggregationOptions(boolean allowDiskUse, boolean explain, @Nullable Document cursor,
+			@Nullable Collation collation, @Nullable String comment) {
 
 		this.allowDiskUse = allowDiskUse;
 		this.explain = explain;
 		this.cursor = Optional.ofNullable(cursor);
 		this.collation = Optional.ofNullable(collation);
+		this.comment = Optional.ofNullable(comment);
 	}
 
 	/**
@@ -108,8 +127,9 @@ public class AggregationOptions {
 		Document cursor = document.get(CURSOR, Document.class);
 		Collation collation = document.containsKey(COLLATION) ? Collation.from(document.get(COLLATION, Document.class))
 				: null;
+		String comment = document.getString(COMMENT);
 
-		return new AggregationOptions(allowDiskUse, explain, cursor, collation);
+		return new AggregationOptions(allowDiskUse, explain, cursor, collation, comment);
 	}
 
 	/**
@@ -177,6 +197,16 @@ public class AggregationOptions {
 	}
 
 	/**
+	 * Get the comment for the aggregation.
+	 *
+	 * @return
+	 * @since 2.2
+	 */
+	public Optional<String> getComment() {
+		return comment;
+	}
+
+	/**
 	 * Returns a new potentially adjusted copy for the given {@code aggregationCommandObject} with the configuration
 	 * applied.
 	 *
@@ -219,6 +249,7 @@ public class AggregationOptions {
 
 		cursor.ifPresent(val -> document.put(CURSOR, val));
 		collation.ifPresent(val -> document.append(COLLATION, val.toDocument()));
+		comment.ifPresent(val -> document.append(COMMENT, val));
 
 		return document;
 	}
@@ -247,6 +278,7 @@ public class AggregationOptions {
 		private boolean explain;
 		private @Nullable Document cursor;
 		private @Nullable Collation collation;
+		private @Nullable String comment;
 
 		/**
 		 * Defines whether to off-load intensive sort-operations to disk.
@@ -302,10 +334,24 @@ public class AggregationOptions {
 		 *
 		 * @param collation can be {@literal null}.
 		 * @return
+		 * @since 2.0
 		 */
 		public Builder collation(@Nullable Collation collation) {
 
 			this.collation = collation;
+			return this;
+		}
+
+		/**
+		 * Define a comment to describe the execution.
+		 *
+		 * @param comment can be {@literal null}.
+		 * @return
+		 * @since 2.2
+		 */
+		public Builder comment(@Nullable String comment) {
+
+			this.comment = comment;
 			return this;
 		}
 
@@ -315,7 +361,7 @@ public class AggregationOptions {
 		 * @return
 		 */
 		public AggregationOptions build() {
-			return new AggregationOptions(allowDiskUse, explain, cursor, collation);
+			return new AggregationOptions(allowDiskUse, explain, cursor, collation, comment);
 		}
 	}
 }

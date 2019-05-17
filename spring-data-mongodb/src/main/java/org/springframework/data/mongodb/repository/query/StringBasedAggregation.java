@@ -125,10 +125,13 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 
 	private AggregationOptions computeOptions(MongoQueryMethod method, ConvertingParameterAccessor accessor) {
 
-		return AggregationUtils
-				.applyCollation(Aggregation.newAggregationOptions(), method.getAnnotatedCollation(), accessor,
-						method.getParameters(), expressionParser, evaluationContextProvider) //
-				.build();
+		AggregationOptions.Builder builder = Aggregation.newAggregationOptions();
+
+		AggregationUtils.applyCollation(builder, method.getAnnotatedCollation(), accessor, method.getParameters(),
+				expressionParser, evaluationContextProvider);
+		AggregationUtils.applyMeta(builder, method);
+
+		return builder.build();
 	}
 
 	/*

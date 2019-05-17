@@ -55,6 +55,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
@@ -416,6 +417,16 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.aggregate(newAggregation(Aggregation.unwind("foo")), "collection-1", Wrapper.class);
 
 		verify(collection, never()).withReadPreference(any());
+	}
+
+	@Test // DATAMONGO-2153
+	public void aggregateShouldHonorOptionsComment() {
+
+		AggregationOptions options = AggregationOptions.builder().comment("expensive").build();
+
+		template.aggregate(newAggregation(Aggregation.unwind("foo")).withOptions(options), "collection-1", Wrapper.class);
+
+		verify(aggregateIterable).comment("expensive");
 	}
 
 	@Test // DATAMONGO-1166, DATAMONGO-2264

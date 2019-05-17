@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 import org.bson.Document;
@@ -40,36 +39,40 @@ public class AggregationOptionsTests {
 		aggregationOptions = newAggregationOptions().explain(true) //
 				.cursorBatchSize(1) //
 				.allowDiskUse(true) //
+				.comment("hola!") //
 				.build();
 	}
 
 	@Test // DATAMONGO-960
 	public void aggregationOptionsBuilderShouldSetOptionsAccordingly() {
 
-		assertThat(aggregationOptions.isAllowDiskUse(), is(true));
-		assertThat(aggregationOptions.isExplain(), is(true));
-		assertThat(aggregationOptions.getCursor().get(), is(new Document("batchSize", 1)));
+		assertThat(aggregationOptions.isAllowDiskUse()).isTrue();
+		assertThat(aggregationOptions.isExplain()).isTrue();
+		assertThat(aggregationOptions.getCursor().get()).isEqualTo(new Document("batchSize", 1));
 	}
 
-	@Test // DATAMONGO-1637
+	@Test // DATAMONGO-1637, DATAMONGO-2153
 	public void shouldInitializeFromDocument() {
 
 		Document document = new Document();
 		document.put("cursor", new Document("batchSize", 1));
 		document.put("explain", true);
 		document.put("allowDiskUse", true);
+		document.put("comment", "hola!");
 
 		aggregationOptions = AggregationOptions.fromDocument(document);
 
-		assertThat(aggregationOptions.isAllowDiskUse(), is(true));
-		assertThat(aggregationOptions.isExplain(), is(true));
-		assertThat(aggregationOptions.getCursor().get(), is(new Document("batchSize", 1)));
-		assertThat(aggregationOptions.getCursorBatchSize(), is(1));
+		assertThat(aggregationOptions.isAllowDiskUse()).isTrue();
+		assertThat(aggregationOptions.isExplain()).isTrue();
+		assertThat(aggregationOptions.getCursor().get()).isEqualTo(new Document("batchSize", 1));
+		assertThat(aggregationOptions.getCursorBatchSize()).isEqualTo(1);
+		assertThat(aggregationOptions.getComment().get()).isEqualTo("hola!");
 	}
 
-	@Test // DATAMONGO-960
+	@Test // DATAMONGO-960, DATAMONGO-2153
 	public void aggregationOptionsToString() {
-		assertThat(aggregationOptions.toDocument(),
-				is(Document.parse("{ \"allowDiskUse\" : true , \"explain\" : true , \"cursor\" : { \"batchSize\" : 1}}")));
+
+		assertThat(aggregationOptions.toDocument()).isEqualTo(Document.parse(
+				"{ \"allowDiskUse\" : true , \"explain\" : true , \"cursor\" : { \"batchSize\" : 1}, \"comment\": \"hola!\"}"));
 	}
 }

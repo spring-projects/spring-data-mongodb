@@ -39,6 +39,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
+import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
@@ -48,6 +49,7 @@ import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.repository.Aggregation;
+import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
@@ -62,6 +64,7 @@ import org.springframework.util.ClassUtils;
  * Unit tests for {@link ReactiveStringBasedAggregation}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @RunWith(MockitoJUnitRunner.class)
 public class ReactiveStringBasedAggregationUnitTests {
@@ -99,6 +102,17 @@ public class ReactiveStringBasedAggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-2153
+	public void plainStringAggregationConsidersMeta() {
+
+		AggregationInvocation invocation = executeAggregation("plainStringAggregation");
+
+		AggregationOptions options = invocation.aggregation.getOptions();
+
+		assertThat(options.getComment()).contains("expensive-aggregation");
+		assertThat(options.getCursorBatchSize()).isEqualTo(42);
+	}
+
+	@Test // DATAMONGO-2153
 	public void plainStringAggregationWithSortParameter() {
 
 		AggregationInvocation invocation = executeAggregation("plainStringAggregation",
@@ -107,6 +121,11 @@ public class ReactiveStringBasedAggregationUnitTests {
 		assertThat(inputTypeOf(invocation)).isEqualTo(Person.class);
 		assertThat(targetTypeOf(invocation)).isEqualTo(PersonAggregate.class);
 		assertThat(pipelineOf(invocation)).containsExactly(GROUP_BY_LASTNAME, SORT);
+
+		AggregationOptions options = invocation.aggregation.getOptions();
+
+		assertThat(options.getComment()).isEmpty();
+		assertThat(options.getCursorBatchSize()).isNull();
 	}
 
 	@Test // DATAMONGO-2153
@@ -194,6 +213,7 @@ public class ReactiveStringBasedAggregationUnitTests {
 
 	private interface SampleRepository extends ReactiveCrudRepository<Person, Long> {
 
+		@Meta(cursorBatchSize = 42, comment = "expensive-aggregation")
 		@Aggregation({ RAW_GROUP_BY_LASTNAME_STRING, RAW_SORT_STRING })
 		Mono<PersonAggregate> plainStringAggregation();
 
