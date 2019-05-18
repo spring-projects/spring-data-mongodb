@@ -18,8 +18,10 @@ package org.springframework.data.mongodb.core.index;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
@@ -54,6 +56,7 @@ import com.mongodb.client.model.IndexOptions;
  * @author Christoph Strobl
  * @author Thomas Darimont
  * @author Mark Paluch
+ * @author Nick Balkissoon
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MongoPersistentEntityIndexCreatorUnitTests {
@@ -218,12 +221,62 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		new MongoPersistentEntityIndexCreator(mappingContext, mongoTemplate);
 	}
 
-	private static MongoMappingContext prepareMappingContext(Class<?> type) {
+	@Test // DATAMONGO-719
+	public void createIndexShouldCreateIndexesForSamePersistentEntityButDifferentCollectionName() {
+
+		String collection1 = "collection1";
+		DynamicCollectionRouter.collectionName = collection1;
+		MongoMappingContext mappingContext = prepareMappingContext(DynamicCollectionDocument.class);
+
+		MongoPersistentEntityIndexCreator indexCreator = new MongoPersistentEntityIndexCreator(mappingContext, mongoTemplate);
+
+		MappingContextEvent<MongoPersistentEntity<?>, MongoPersistentProperty> event = new MappingContextEvent<MongoPersistentEntity<?>, MongoPersistentProperty>(mappingContext, mappingContext.getRequiredPersistentEntity(DynamicCollectionDocument.class));
+
+		String collection2 = "collection2";
+		DynamicCollectionRouter.collectionName = collection2;
+
+		indexCreator.onApplicationEvent(event);
+		indexCreator.onApplicationEvent(event);
+
+		ArgumentCaptor<String> collectionNameCapturer = ArgumentCaptor.forClass(String.class);
+		verify(db, times(2)).getCollection(collectionNameCapturer.capture(), any());
+		assertThat(collection1).isEqualTo(collectionNameCapturer.getAllValues().get(0));
+		assertThat(collection2).isEqualTo(collectionNameCapturer.getAllValues().get(1));
+	}
+
+	@Test // DATAMONGO-719
+	public void createIndexShouldCreateIndexesForDifferentPersistentEntitySameCollectionName() {
+
+		String collection1 = "collection1";
+		DynamicCollectionRouter.collectionName = collection1;
+		MongoMappingContext mappingContext = prepareMappingContext(DynamicCollectionDocument.class, OtherDynamicCollectionDocument.class);
+
+		MongoPersistentEntityIndexCreator indexCreator = new MongoPersistentEntityIndexCreator(mappingContext, mongoTemplate);
+
+		MappingContextEvent<MongoPersistentEntity<?>, MongoPersistentProperty> event = new MappingContextEvent<MongoPersistentEntity<?>, MongoPersistentProperty>(mappingContext, mappingContext.getRequiredPersistentEntity(DynamicCollectionDocument.class));
+		MappingContextEvent<MongoPersistentEntity<?>, MongoPersistentProperty> otherEvent = new MappingContextEvent<MongoPersistentEntity<?>, MongoPersistentProperty>(mappingContext, mappingContext.getRequiredPersistentEntity(OtherDynamicCollectionDocument.class));
+
+		String collection2 = "collection2";
+		DynamicCollectionRouter.collectionName = collection2;
+
+		indexCreator.onApplicationEvent(event);
+		indexCreator.onApplicationEvent(otherEvent);
+		indexCreator.onApplicationEvent(event);
+		indexCreator.onApplicationEvent(otherEvent);
+
+		ArgumentCaptor<String> collectionNameCapturer = ArgumentCaptor.forClass(String.class);
+		verify(db, times(4)).getCollection(collectionNameCapturer.capture(), any());
+		assertThat(collection1).isEqualTo(collectionNameCapturer.getAllValues().get(0));
+		assertThat(collection1).isEqualTo(collectionNameCapturer.getAllValues().get(1));
+		assertThat(collection2).isEqualTo(collectionNameCapturer.getAllValues().get(2));
+		assertThat(collection2).isEqualTo(collectionNameCapturer.getAllValues().get(3));
+	}
+
+	private static MongoMappingContext prepareMappingContext(Class<?>... types) {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
-		mappingContext.setInitialEntitySet(Collections.singleton(type));
+		mappingContext.setInitialEntitySet(new HashSet<>(Arrays.asList(types)));
 		mappingContext.initialize();
-
 		return mappingContext;
 	}
 
@@ -286,4 +339,33 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 
 		@Indexed(useGeneratedName = true, name = "ignored") String lastname;
 	}
+
+	public static class DynamicCollectionRouter {
+		static String collectionName;
+
+		public static String determineCollection() {
+			return collectionName;
+		}
+	}
+
+	public static final String dynamicCollectionSpel = "#{ T(org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreatorUnitTests.DynamicCollectionRouter).determineCollection()}";
+
+	@Document(collection = dynamicCollectionSpel)
+	static class DynamicCollectionDocument {
+
+		@Indexed(name = "indexName") //
+		@Field("fieldname") //
+				String field;
+
+	}
+
+	@Document(collection = dynamicCollectionSpel)
+	static class OtherDynamicCollectionDocument {
+
+		@Indexed(name = "otherIndexName") //
+		@Field("otherFieldName") //
+				String otherField;
+
+	}
+
 }

@@ -16,9 +16,10 @@
 package org.springframework.data.mongodb.core.index;
 
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
+import com.mongodb.MongoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
@@ -50,12 +51,13 @@ import com.mongodb.MongoException;
  * @author Laurent Canet
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Nick Balkissoon
  */
 public class MongoPersistentEntityIndexCreator implements ApplicationListener<MappingContextEvent<?, ?>> {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(MongoPersistentEntityIndexCreator.class);
 
-	private final Map<Class<?>, Boolean> classesSeen = new ConcurrentHashMap<Class<?>, Boolean>();
+	private final Table<Class, String, Boolean> collectionsSeen = HashBasedTable.create();
 	private final IndexOperationsProvider indexOperationsProvider;
 	private final MongoMappingContext mappingContext;
 	private final IndexResolver indexResolver;
@@ -119,12 +121,15 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 
 		Class<?> type = entity.getType();
 
-		if (!classesSeen.containsKey(type)) {
+		String collection = entity.getCollection();
 
-			this.classesSeen.put(type, Boolean.TRUE);
+		if (!collectionsSeen.contains(type, collection)) {
+
+			this.collectionsSeen.put(type, collection, Boolean.TRUE);
 
 			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug("Analyzing class " + type + " for index information.");
+				LOGGER.debug("Analyzing class " + type
+						+ " for index information in collection " + collection);
 			}
 
 			checkForAndCreateIndexes(entity);
