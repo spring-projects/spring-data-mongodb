@@ -19,7 +19,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
@@ -249,12 +248,12 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 
 		String collection1 = "collection1";
 		DynamicCollectionRouter.collectionName = collection1;
-		MongoMappingContext mappingContext = prepareMappingContext(DynamicCollectionDocument.class, OtherDynamicCollectionDocument.class);
+		MongoMappingContext mappingContext = prepareMappingContext(DynamicCollectionDocument.class, AnotherDynamicCollectionDocument.class);
 
 		MongoPersistentEntityIndexCreator indexCreator = new MongoPersistentEntityIndexCreator(mappingContext, mongoTemplate);
 
 		MappingContextEvent<MongoPersistentEntity<?>, MongoPersistentProperty> event = new MappingContextEvent<MongoPersistentEntity<?>, MongoPersistentProperty>(mappingContext, mappingContext.getRequiredPersistentEntity(DynamicCollectionDocument.class));
-		MappingContextEvent<MongoPersistentEntity<?>, MongoPersistentProperty> otherEvent = new MappingContextEvent<MongoPersistentEntity<?>, MongoPersistentProperty>(mappingContext, mappingContext.getRequiredPersistentEntity(OtherDynamicCollectionDocument.class));
+		MappingContextEvent<MongoPersistentEntity<?>, MongoPersistentProperty> otherEvent = new MappingContextEvent<MongoPersistentEntity<?>, MongoPersistentProperty>(mappingContext, mappingContext.getRequiredPersistentEntity(AnotherDynamicCollectionDocument.class));
 
 		String collection2 = "collection2";
 		DynamicCollectionRouter.collectionName = collection2;
@@ -340,7 +339,7 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		@Indexed(useGeneratedName = true, name = "ignored") String lastname;
 	}
 
-	public static class DynamicCollectionRouter {
+	static class DynamicCollectionRouter {
 		static String collectionName;
 
 		public static String determineCollection() {
@@ -348,23 +347,21 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		}
 	}
 
-	public static final String dynamicCollectionSpel = "#{ T(org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreatorUnitTests.DynamicCollectionRouter).determineCollection()}";
+	private static final String dynamicCollectionSpel = "#{ T(org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreatorUnitTests.DynamicCollectionRouter).determineCollection()}";
 
 	@Document(collection = dynamicCollectionSpel)
 	static class DynamicCollectionDocument {
 
-		@Indexed(name = "indexName") //
-		@Field("fieldname") //
-				String field;
+		@Indexed
+		String field;
 
 	}
 
 	@Document(collection = dynamicCollectionSpel)
-	static class OtherDynamicCollectionDocument {
+	static class AnotherDynamicCollectionDocument {
 
-		@Indexed(name = "otherIndexName") //
-		@Field("otherFieldName") //
-				String otherField;
+		@Indexed
+		String anotherField;
 
 	}
 
