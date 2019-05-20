@@ -57,6 +57,15 @@ public class PrefixingDelegatingAggregationOperationContext implements Aggregati
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(org.bson.Document)
+	 */
+	@Override
+	public Document getMappedObject(Document document) {
+		return doPrefix(delegate.getMappedObject(document));
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(org.bson.Document, java.lang.Class)
 	 */
 	@Override
