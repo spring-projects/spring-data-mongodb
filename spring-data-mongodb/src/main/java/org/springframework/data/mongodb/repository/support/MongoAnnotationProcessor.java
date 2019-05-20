@@ -24,6 +24,7 @@ import javax.lang.model.SourceVersion;
 import javax.tools.Diagnostic;
 
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.lang.Nullable;
 
 import com.querydsl.apt.AbstractQuerydslProcessor;
 import com.querydsl.apt.Configuration;
@@ -33,14 +34,14 @@ import com.querydsl.core.annotations.QueryEmbedded;
 import com.querydsl.core.annotations.QueryEntities;
 import com.querydsl.core.annotations.QuerySupertype;
 import com.querydsl.core.annotations.QueryTransient;
-import org.springframework.lang.Nullable;
 
 /**
  * Annotation processor to create Querydsl query types for QueryDsl annotated classes.
  *
  * @author Oliver Gierke
+ * @author Owen Q
  */
-@SupportedAnnotationTypes({ "com.mysema.query.annotations.*", "org.springframework.data.mongodb.core.mapping.*" })
+@SupportedAnnotationTypes({ "com.querydsl.core.annotations.*", "org.springframework.data.mongodb.core.mapping.*" })
 @SupportedSourceVersion(SourceVersion.RELEASE_6)
 public class MongoAnnotationProcessor extends AbstractQuerydslProcessor {
 
