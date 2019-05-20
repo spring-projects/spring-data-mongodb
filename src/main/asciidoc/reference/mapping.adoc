@@ -411,7 +411,7 @@ The MappingMongoConverter can use metadata to drive the mapping of objects to do
 * `@Document`: Applied at the class level to indicate this class is a candidate for mapping to the database. You can specify the name of the collection where the database will be stored.
 * `@DBRef`: Applied at the field to indicate it is to be stored using a com.mongodb.DBRef.
 * `@Indexed`: Applied at the field level to describe how to index the field.
-* `@CompoundIndex`: Applied at the type level to declare Compound Indexes
+* `@CompoundIndex` (repeatable): Applied at the type level to declare Compound Indexes.
 * `@GeoSpatialIndexed`: Applied at the field level to describe how to geoindex the field.
 * `@TextIndexed`: Applied at the field level to mark the field to be included in the text index.
 * `@Language`: Applied at the field level to set the language override property for text index.
@@ -581,6 +581,27 @@ public class Person {
   private String firstName;
   private String lastName;
 
+}
+----
+====
+
+[TIP]
+====
+`@CompoundIndex` is a repeatable annotation using `@CompoundIndexes` as the container.
+
+[source,java]
+----
+@Document
+@CompoundIndex(name = "cmp-idx-one", def = "{'firstname': 1, 'lastname': -1}")
+@CompoundIndex(name = "cmp-idx-two", def = "{'address.city': -1, 'address.street': 1}")
+public class Person {
+
+  String firstname;
+  String lastname;
+
+  Address address;
+
+  // ...
 }
 ----
 ====
