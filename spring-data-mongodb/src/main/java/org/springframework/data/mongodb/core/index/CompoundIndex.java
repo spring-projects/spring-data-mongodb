@@ -17,12 +17,32 @@ package org.springframework.data.mongodb.core.index;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
  * Mark a class to use compound indexes.
+ * <p />
+ * Some situations may require to have more than one {@link CompoundIndex}. For those scenarios {@link CompoundIndexes}
+ * functions as container annotation for multiple {@link CompoundIndex} annotations via the
+ * {@link CompoundIndexes#value()} or by repeating the {@link CompoundIndex} on the class itself.
+ * 
+ * <pre>
+ * <code>
+ * 
+ * &#64;Document
+ * &#64;CompoundIndex(def = "{'firstname': 1, 'lastname': 1}")
+ * &#64;CompoundIndex(def = "{'address.city': 1, 'address.street': 1}")
+ * class Person {
+ *   String firstname;
+ *   String lastname;
+ *
+ *   Address address;
+ * }
+ * </code>
+ * </pre>
  *
  * @author Jon Brisbin
  * @author Oliver Gierke
@@ -32,6 +52,7 @@ import java.lang.annotation.Target;
  */
 @Target({ ElementType.TYPE })
 @Documented
+@Repeatable(CompoundIndexes.class)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface CompoundIndex {
 

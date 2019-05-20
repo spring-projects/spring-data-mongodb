@@ -15,15 +15,20 @@
  */
 package org.springframework.data.mongodb.core.index;
 
+import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @author Jon Brisbin <jbrisbin@vmware.com>
+ * Container annotation that allows to collect multiple {@link CompoundIndex} annotations.
+ *
+ * @author Jon Brisbin
+ * @author Christoph Strobl
  */
 @Target({ ElementType.TYPE })
+@Documented
 @Retention(RetentionPolicy.RUNTIME)
 public @interface CompoundIndexes {
 

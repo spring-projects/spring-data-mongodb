@@ -29,7 +29,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
-
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.geo.Point;
@@ -651,6 +650,18 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 					indexDefinitions.get(0));
 		}
 
+		@Test // DATAMONGO-2067
+		public void shouldIdentifyRepeatedAnnotationCorrectly() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					RepeatedCompoundIndex.class);
+
+			assertThat(indexDefinitions).hasSize(2);
+			assertIndexPathAndCollection(new String[] { "firstname", "lastname" }, "repeatedCompoundIndex",
+					indexDefinitions.get(0));
+			assertIndexPathAndCollection(new String[] { "address.city", "address.street" }, "repeatedCompoundIndex", indexDefinitions.get(1));
+		}
+
 		@Document("CompoundIndexOnLevelOne")
 		static class CompoundIndexOnLevelOne {
 
@@ -717,6 +728,10 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		@CompoundIndex(def = "#{T(org.bson.Document).parse(\"{ 'foo': 1, 'bar': -1 }\")}")
 		static class CompoundIndexWithDefExpression {}
 
+		@Document
+		@CompoundIndex(name = "cmp-idx-one", def = "{'firstname': 1, 'lastname': -1}")
+		@CompoundIndex(name = "cmp-idx-two", def = "{'address.city': -1, 'address.street': 1}")
+		static class RepeatedCompoundIndex {}
 	}
 
 	public static class TextIndexedResolutionTests {
