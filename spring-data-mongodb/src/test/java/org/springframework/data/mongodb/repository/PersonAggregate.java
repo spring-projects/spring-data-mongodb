@@ -17,8 +17,11 @@ package org.springframework.data.mongodb.repository;
 
 import lombok.Value;
 
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
@@ -31,12 +34,12 @@ import org.springframework.data.annotation.PersistenceConstructor;
 class PersonAggregate {
 
 	@Id private String lastname;
-	private List<String> names;
+	private Set<String> names;
 
 	@PersistenceConstructor
-	public PersonAggregate(String lastname, List<String> names) {
+	public PersonAggregate(String lastname, Collection<String> names) {
 		this.lastname = lastname;
-		this.names = names;
+		this.names = new HashSet<>(names);
 	}
 
 	public PersonAggregate(String lastname, String name) {
