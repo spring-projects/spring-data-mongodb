@@ -15,9 +15,8 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import java.util.Collection;
-
 import org.bson.Document;
+
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -46,7 +45,6 @@ public class OutOperation implements AggregationOperation {
 	 */
 	public OutOperation(String outCollectionName) {
 		this(null, outCollectionName, null, null);
-
 	}
 
 	/**
@@ -69,7 +67,8 @@ public class OutOperation implements AggregationOperation {
 	}
 
 	/**
-	 * Optionally specify the database of the target collection.
+	 * Optionally specify the database of the target collection. <br />
+	 * <strong>NOTE:</strong> Requires MongoDB 4.2 or later.
 	 *
 	 * @param database can be {@literal null}. Defaulted to aggregation target database.
 	 * @return new instance of {@link OutOperation}.
@@ -80,12 +79,11 @@ public class OutOperation implements AggregationOperation {
 	}
 
 	/**
-	 * Optionally specify the field that uniquely identify a document in the target collection. <br />
+	 * Optionally specify the field that uniquely identifies a document in the target collection. <br />
 	 * For convenience the given {@literal key} can either be a single field name or the Json representation of a key
 	 * {@link Document}.
 	 *
-	 * <pre>
-	 *     <code>
+	 * <pre class="code">
 	 *
 	 * // {
 	 * //    "field-1" : 1
@@ -97,9 +95,9 @@ public class OutOperation implements AggregationOperation {
 	 * //    "field-2" : 1
 	 * // }
 	 * .uniqueKey("{ 'field-1' : 1, 'field-2' : 1}")
-	 *
-	 * </code>
 	 * </pre>
+	 *
+	 * <strong>NOTE:</strong> Requires MongoDB 4.2 or later.
 	 *
 	 * @param key can be {@literal null}. Server uses {@literal _id} when {@literal null}.
 	 * @return new instance of {@link OutOperation}.
@@ -112,24 +110,24 @@ public class OutOperation implements AggregationOperation {
 	}
 
 	/**
-	 * Optionally specify the fields that uniquely identify a document in the target collection. <br />
-	 * 
-	 * <pre>
-	 *     <code>
+	 * Optionally specify the fields that uniquely identifies a document in the target collection. <br />
+	 *
+	 * <pre class="code">
 	 *
 	 * // {
 	 * //    "field-1" : 1
 	 * //    "field-2" : 1
 	 * // }
-	 * .uniqueKeyOf("field-1", "field-2")
-	 *         </code>
+	 * .uniqueKeyOf(Arrays.asList("field-1", "field-2"))
 	 * </pre>
+	 *
+	 * <strong>NOTE:</strong> Requires MongoDB 4.2 or later.
 	 *
 	 * @param fields must not be {@literal null}.
 	 * @return new instance of {@link OutOperation}.
 	 * @since 2.2
 	 */
-	public OutOperation uniqueKeyOf(Collection<String> fields) {
+	public OutOperation uniqueKeyOf(Iterable<String> fields) {
 
 		Assert.notNull(fields, "Fields must not be null!");
 
@@ -140,7 +138,8 @@ public class OutOperation implements AggregationOperation {
 	}
 
 	/**
-	 * Specify how to merge the aggregation output with the target collection.
+	 * Specify how to merge the aggregation output with the target collection. <br />
+	 * <strong>NOTE:</strong> Requires MongoDB 4.2 or later.
 	 *
 	 * @param mode must not be {@literal null}.
 	 * @return new instance of {@link OutOperation}.
@@ -153,7 +152,8 @@ public class OutOperation implements AggregationOperation {
 	}
 
 	/**
-	 * Replace the target collection.
+	 * Replace the target collection. <br />
+	 * <strong>NOTE:</strong> Requires MongoDB 4.2 or later.
 	 *
 	 * @return new instance of {@link OutOperation}.
 	 * @see OutMode#REPLACE_COLLECTION
@@ -164,7 +164,8 @@ public class OutOperation implements AggregationOperation {
 	}
 
 	/**
-	 * Replace/Upsert documents in the target collection.
+	 * Replace/Upsert documents in the target collection. <br />
+	 * <strong>NOTE:</strong> Requires MongoDB 4.2 or later.
 	 *
 	 * @return new instance of {@link OutOperation}.
 	 * @see OutMode#REPLACE
@@ -175,7 +176,8 @@ public class OutOperation implements AggregationOperation {
 	}
 
 	/**
-	 * Insert documents to the target collection.
+	 * Insert documents to the target collection. <br />
+	 * <strong>NOTE:</strong> Requires MongoDB 4.2 or later.
 	 *
 	 * @return new instance of {@link OutOperation}.
 	 * @see OutMode#INSERT
@@ -192,7 +194,7 @@ public class OutOperation implements AggregationOperation {
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
 
-		if (!requiresMongoDb42expandedFormat()) {
+		if (!requiresMongoDb42Format()) {
 			return new Document("$out", collectionName);
 		}
 
@@ -212,7 +214,7 @@ public class OutOperation implements AggregationOperation {
 		return new Document("$out", $out);
 	}
 
-	private boolean requiresMongoDb42expandedFormat() {
+	private boolean requiresMongoDb42Format() {
 		return StringUtils.hasText(databaseName) || mode != null || uniqueKey != null;
 	}
 
