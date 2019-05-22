@@ -63,4 +63,9 @@ public class JsonSchemaPropertyUnitTests {
 	public void shouldRenderTimestampCorrectly() {
 		assertThat(JsonSchemaProperty.timestamp("foo").toDocument()).containsEntry("foo.bsonType", "timestamp");
 	}
+
+	@Test // DATAMONGO-2282
+	public void objectIdShouldBeRenderedCorrectly() {
+		assertThat(JsonSchemaProperty.objectId("_id").toDocument()).containsEntry("_id.bsonType", "objectId");
+	}
 }

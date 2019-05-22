@@ -91,6 +91,18 @@ public interface JsonSchemaProperty extends JsonSchemaObject {
 	}
 
 	/**
+	 * Creates a new {@link JsonSchemaProperty} with given {@literal identifier} of {@code bsonType : 'objectId'}.
+	 *
+	 * @param identifier the {@literal property} name or {@literal patternProperty} regex. Must not be {@literal null} nor
+	 *          {@literal empty}.
+	 * @return new instance of {@link JsonSchemaProperty}.
+	 * @since 2.2
+	 */
+	static JsonSchemaProperty objectId(String identifier) {
+		return JsonSchemaProperty.named(identifier).ofType(Type.objectIdType());
+	}
+
+	/**
 	 * Creates a new {@link NumericJsonSchemaProperty} with given {@literal identifier} of {@code type : 'number'}.
 	 *
 	 * @param identifier the {@literal property} name or {@literal patternProperty} regex. Must not be {@literal null} nor
