@@ -15,13 +15,16 @@
  */
 package org.springframework.data.mongodb.core.index;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
-import com.google.common.collect.HashBasedTable;
-import com.google.common.collect.Table;
 import com.mongodb.MongoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.context.ApplicationListener;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.mapping.PersistentEntity;
@@ -37,8 +40,6 @@ import org.springframework.data.mongodb.util.MongoDbErrorCodes;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
-
-import com.mongodb.MongoException;
 
 /**
  * Component that inspects {@link MongoPersistentEntity} instances contained in the given {@link MongoMappingContext}
@@ -57,7 +58,7 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(MongoPersistentEntityIndexCreator.class);
 
-	private final Table<Class, String, Boolean> collectionsSeen = HashBasedTable.create();
+	private final Map<String, Set<Class>> collectionsClassesSeen = new ConcurrentHashMap<>();
 	private final IndexOperationsProvider indexOperationsProvider;
 	private final MongoMappingContext mappingContext;
 	private final IndexResolver indexResolver;
@@ -123,9 +124,11 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 
 		String collection = entity.getCollection();
 
-		if (!collectionsSeen.contains(type, collection)) {
+		collectionsClassesSeen.putIfAbsent(collection, new HashSet<>());
 
-			this.collectionsSeen.put(type, collection, Boolean.TRUE);
+		if (!collectionsClassesSeen.get(collection).contains(type)) {
+
+			collectionsClassesSeen.get(collection).add(type);
 
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("Analyzing class " + type
