@@ -25,23 +25,20 @@ import java.lang.annotation.Target;
 /**
  * Mark a class to use compound indexes.
  * <p />
- * Some situations may require to have more than one {@link CompoundIndex}. For those scenarios {@link CompoundIndexes}
- * functions as container annotation for multiple {@link CompoundIndex} annotations via the
- * {@link CompoundIndexes#value()} or by repeating the {@link CompoundIndex} on the class itself.
- * 
- * <pre>
- * <code>
- * 
+ * <p>
+ * <b>NOTE: This annotation is repeatable according to Java 8 conventions using {@link CompoundIndexes#value()} as
+ * container.</b>
+ *
+ * <pre class="code">
  * &#64;Document
  * &#64;CompoundIndex(def = "{'firstname': 1, 'lastname': 1}")
  * &#64;CompoundIndex(def = "{'address.city': 1, 'address.street': 1}")
  * class Person {
- *   String firstname;
- *   String lastname;
+ * 	String firstname;
+ * 	String lastname;
  *
- *   Address address;
+ * 	Address address;
  * }
- * </code>
  * </pre>
  *
  * @author Jon Brisbin
@@ -63,9 +60,7 @@ public @interface CompoundIndex {
 	 * <br />
 	 * If left empty on nested document, the whole document will be indexed.
 	 *
-	 * <pre>
-	 * <code>
-	 *
+	 * <pre class="code">
 	 * &#64;Document
 	 * &#64;CompoundIndex(def = "{'h1': 1, 'h2': 1}")
 	 * class JsonStringIndexDefinition {
@@ -77,7 +72,6 @@ public @interface CompoundIndex {
 	 * class ExpressionIndexDefinition {
 	 *   String h1, h2;
 	 * }
-	 * </code>
 	 * </pre>
 	 *
 	 * @return
@@ -127,35 +121,31 @@ public @interface CompoundIndex {
 	 * <br />
 	 * The structure below
 	 *
-	 * <pre>
-	 * <code>
+	 * <pre class="code">
 	 * &#64;Document
 	 * class Root {
-	 *   Hybrid hybrid;
-	 *   Nested nested;
+	 * 	Hybrid hybrid;
+	 * 	Nested nested;
 	 * }
 	 *
 	 * &#64;Document
 	 * &#64;CompoundIndex(name = "compound_index", def = "{'h1': 1, 'h2': 1}")
 	 * class Hybrid {
-	 *   String h1, h2;
+	 * 	String h1, h2;
 	 * }
 	 *
 	 * &#64;CompoundIndex(name = "compound_index", def = "{'n1': 1, 'n2': 1}")
 	 * class Nested {
-	 *   String n1, n2;
+	 * 	String n1, n2;
 	 * }
-	 * </code>
 	 * </pre>
 	 *
 	 * resolves in the following index structures
 	 *
-	 * <pre>
-	 * <code>
+	 * <pre class="code">
 	 * db.root.createIndex( { hybrid.h1: 1, hybrid.h2: 1 } , { name: "hybrid.compound_index" } )
 	 * db.root.createIndex( { nested.n1: 1, nested.n2: 1 } , { name: "nested.compound_index" } )
 	 * db.hybrid.createIndex( { h1: 1, h2: 1 } , { name: "compound_index" } )
-	 * </code>
 	 * </pre>
 	 *
 	 * @return

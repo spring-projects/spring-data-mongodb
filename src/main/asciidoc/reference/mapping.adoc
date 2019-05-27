@@ -428,9 +428,7 @@ Here is an example of a more complex mapping.
 [source,java]
 ----
 @Document
-@CompoundIndexes({
-    @CompoundIndex(name = "age_idx", def = "{'lastName': 1, 'age': -1}")
-})
+@CompoundIndex(name = "age_idx", def = "{'lastName': 1, 'age': -1}")
 public class Person<T extends Address> {
 
   @Id
@@ -570,9 +568,7 @@ Here's an example that creates a compound index of `lastName` in ascending order
 package com.mycompany.domain;
 
 @Document
-@CompoundIndexes({
-    @CompoundIndex(name = "age_idx", def = "{'lastName': 1, 'age': -1}")
-})
+@CompoundIndex(name = "age_idx", def = "{'lastName': 1, 'age': -1}")
 public class Person {
 
   @Id
@@ -587,7 +583,7 @@ public class Person {
 
 [TIP]
 ====
-`@CompoundIndex` is a repeatable annotation using `@CompoundIndexes` as the container.
+`@CompoundIndex` is repeatable using `@CompoundIndexes` as its container.
 
 [source,java]
 ----
