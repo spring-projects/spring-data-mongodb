@@ -163,7 +163,7 @@ txTemplate.execute(new TransactionCallbackWithoutResult() {
 
         process(step);
 
-    template.update(Step.class).apply(Update.set("state", // ...
+        template.update(Step.class).apply(Update.set("state", // ...
     };
 });
 ----
