@@ -21,43 +21,37 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Marker interface for a property that should be used as key for a
- * <a href="https://docs.mongodb.com/manual/core/index-hashed/">Hashed Index</a>. If used on a simple property the index
- * uses a hashing function to compute the hash of the value of the index field. Added to a property of complex type the
- * embedded document is collapsed and the hash computed for the entire object.
+ * Annotation for a property that should be used as key for a
+ * <a href="https://docs.mongodb.com/manual/core/index-hashed/">Hashed Index</a>. If used on a simple property, the
+ * index uses a hashing function to compute the hash of the value of the index field. Added to a property of complex
+ * type the embedded document is collapsed and the hash computed for the entire object.
  * <p />
- * 
- * <pre>
- *     <code>
  *
+ * <pre class="code">
  * &#64;Document
  * public class DomainType {
  *
- *   &#64;HashIndexed @Id String id;
+ * 	&#64;HashIndexed @Id String id;
  * }
- *     </code>
  * </pre>
  *
- * {@link HashIndexed} can also be used as meta {@link java.lang.annotation.Annotation} to create composed annotations.
- * 
- * <pre>
- *     <code>
+ * {@link HashIndexed} can also be used as meta {@link java.lang.annotation.Annotation} to create composed annotations:
  *
+ * <pre class="code">
  * &#64;Indexed
  * &#64;HashIndexed
  * &#64;Retention(RetentionPolicy.RUNTIME)
  * public @interface IndexAndHash {
  *
- *   &#64;AliasFor(annotation = Indexed.class, attribute = "name")
- *   String name() default "";
+ * 	&#64;AliasFor(annotation = Indexed.class, attribute = "name")
+ * 	String name() default "";
  * }
  *
  * &#64;Document
  * public class DomainType {
  *
- *   &#64;ComposedHashIndexed(name = "idx-name") String value;
+ * 	&#64;ComposedHashIndexed(name = "idx-name") String value;
  * }
- *     </code>
  * </pre>
  *
  * @author Christoph Strobl
@@ -67,5 +61,4 @@ import java.lang.annotation.Target;
 @Target({ ElementType.ANNOTATION_TYPE, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface HashIndexed {
-
 }

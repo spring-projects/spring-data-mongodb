@@ -103,19 +103,20 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	}
 
 	/**
-	 * Resolve the {@link IndexDefinition}s for given {@literal root} entity by traversing {@link MongoPersistentProperty}
-	 * scanning for index annotations {@link Indexed}, {@link CompoundIndex} and {@link GeospatialIndex}. The given
-	 * {@literal root} has therefore to be annotated with {@link Document}.
+	 * Resolve the {@link IndexDefinition}s for a given {@literal root} entity by traversing
+	 * {@link MongoPersistentProperty} scanning for index annotations {@link Indexed}, {@link CompoundIndex} and
+	 * {@link GeospatialIndex}. The given {@literal root} has therefore to be annotated with {@link Document}.
 	 *
 	 * @param root must not be null.
 	 * @return List of {@link IndexDefinitionHolder}. Will never be {@code null}.
 	 * @throws IllegalArgumentException in case of missing {@link Document} annotation marking root entities.
 	 */
-	public List<IndexDefinitionHolder> resolveIndexForEntity(final MongoPersistentEntity<?> root) {
+	public List<IndexDefinitionHolder> resolveIndexForEntity(MongoPersistentEntity<?> root) {
 
-		Assert.notNull(root, "Index cannot be resolved for given 'null' entity.");
+		Assert.notNull(root, "MongoPersistentEntity must not be null!");
 		Document document = root.findAnnotation(Document.class);
-		Assert.notNull(document, "Given entity is not collection root.");
+		Assert.notNull(document, () -> String
+				.format("Entity %s is not a collection root. Make sure to annotate it with @Document!", root.getName()));
 
 		List<IndexDefinitionHolder> indexInformation = new ArrayList<>();
 		String collection = root.getCollection();
@@ -201,7 +202,6 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		}
 	}
 
-	@Nullable
 	private List<IndexDefinitionHolder> createIndexDefinitionHolderForProperty(String dotPath, String collection,
 			MongoPersistentProperty persistentProperty) {
 
@@ -328,7 +328,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	}
 
 	/**
-	 * Create {@link IndexDefinition} wrapped in {@link IndexDefinitionHolder} for {@link CompoundIndexes} of given type.
+	 * Create {@link IndexDefinition} wrapped in {@link IndexDefinitionHolder} for {@link CompoundIndexes} of a given
+	 * type.
 	 *
 	 * @param dotPath The properties {@literal "dot"} path representation from its document root.
 	 * @param fallbackCollection
@@ -410,7 +411,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	}
 
 	/**
-	 * Creates {@link IndexDefinition} wrapped in {@link IndexDefinitionHolder} out of {@link Indexed} for given
+	 * Creates {@link IndexDefinition} wrapped in {@link IndexDefinitionHolder} out of {@link Indexed} for a given
 	 * {@link MongoPersistentProperty}.
 	 *
 	 * @param dotPath The properties {@literal "dot"} path representation from its document root.
@@ -471,7 +472,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	}
 
 	/**
-	 * Creates {@link HashedIndex} wrapped in {@link IndexDefinitionHolder} out of {@link HashIndexed} for given
+	 * Creates {@link HashedIndex} wrapped in {@link IndexDefinitionHolder} out of {@link HashIndexed} for a given
 	 * {@link MongoPersistentProperty}.
 	 *
 	 * @param dotPath The properties {@literal "dot"} path representation from its document root.

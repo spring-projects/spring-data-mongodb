@@ -15,10 +15,10 @@
  */
 package org.springframework.data.mongodb.core.index;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.junit.Test;
+
 import org.springframework.data.domain.Sort.Direction;
 
 /**
@@ -27,7 +27,6 @@ import org.springframework.data.domain.Sort.Direction;
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
-@SuppressWarnings("deprecation")
 public class IndexFieldUnitTests {
 
 	@Test
@@ -35,9 +34,9 @@ public class IndexFieldUnitTests {
 
 		IndexField field = IndexField.create("foo", Direction.ASC);
 
-		assertThat(field.getKey(), is("foo"));
-		assertThat(field.getDirection(), is(Direction.ASC));
-		assertThat(field.isGeo(), is(false));
+		assertThat(field.getKey()).isEqualTo("foo");
+		assertThat(field.getDirection()).isEqualTo(Direction.ASC);
+		assertThat(field.isGeo()).isFalse();
 	}
 
 	@Test
@@ -45,9 +44,9 @@ public class IndexFieldUnitTests {
 
 		IndexField field = IndexField.geo("foo");
 
-		assertThat(field.getKey(), is("foo"));
-		assertThat(field.getDirection(), is(nullValue()));
-		assertThat(field.isGeo(), is(true));
+		assertThat(field.getKey()).isEqualTo("foo");
+		assertThat(field.getDirection()).isNull();
+		assertThat(field.isGeo()).isTrue();
 	}
 
 	@Test
@@ -56,8 +55,8 @@ public class IndexFieldUnitTests {
 		IndexField first = IndexField.create("foo", Direction.ASC);
 		IndexField second = IndexField.create("foo", Direction.ASC);
 
-		assertThat(first, is(second));
-		assertThat(second, is(first));
+		assertThat(first).isEqualTo(second);
+		assertThat(second).isEqualTo(first);
 	}
 
 	@Test
@@ -66,13 +65,13 @@ public class IndexFieldUnitTests {
 		IndexField first = IndexField.geo("bar");
 		IndexField second = IndexField.geo("bar");
 
-		assertThat(first, is(second));
-		assertThat(second, is(first));
+		assertThat(first).isEqualTo(second);
+		assertThat(second).isEqualTo(first);
 	}
 
 	@Test // DATAMONGO-1183
 	public void correctTypeForHashedFields() {
-		assertThat(IndexField.hashed("key").isHashed(), is(true));
+		assertThat(IndexField.hashed("key").isHashed()).isTrue();
 	}
 
 	@Test // DATAMONGO-1183
@@ -81,7 +80,7 @@ public class IndexFieldUnitTests {
 		IndexField first = IndexField.hashed("bar");
 		IndexField second = IndexField.hashed("bar");
 
-		assertThat(first, is(second));
-		assertThat(second, is(first));
+		assertThat(first).isEqualTo(second);
+		assertThat(second).isEqualTo(first);
 	}
 }

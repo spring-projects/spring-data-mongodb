@@ -1182,7 +1182,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			assertThat(indexDefinitions).hasSize(1);
 			assertThat(indexDefinitions.get(0)).satisfies(it -> {
-				assertThat(it.getIndexKeys()).isEqualTo(new org.bson.Document("_id", "hashed"));
+				assertThat(it.getIndexKeys()).hasSize(1).containsEntry("_id", "hashed");
 			});
 		}
 
@@ -1193,7 +1193,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			assertThat(indexDefinitions).hasSize(1);
 			assertThat(indexDefinitions.get(0)).satisfies(it -> {
-				assertThat(it.getIndexKeys()).isEqualTo(new org.bson.Document("value", "hashed"));
+				assertThat(it.getIndexKeys()).hasSize(1).containsEntry("value", "hashed");
 			});
 		}
 
@@ -1205,10 +1205,10 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			assertThat(indexDefinitions).hasSize(2);
 			assertThat(indexDefinitions.get(0)).satisfies(it -> {
-				assertThat(it.getIndexKeys()).isEqualTo(new org.bson.Document("value", 1));
+				assertThat(it.getIndexKeys()).containsEntry("value", 1);
 			});
 			assertThat(indexDefinitions.get(1)).satisfies(it -> {
-				assertThat(it.getIndexKeys()).isEqualTo(new org.bson.Document("value", "hashed"));
+				assertThat(it.getIndexKeys()).containsEntry("value", "hashed");
 			});
 		}
 
@@ -1220,11 +1220,11 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			assertThat(indexDefinitions).hasSize(2);
 			assertThat(indexDefinitions.get(0)).satisfies(it -> {
-				assertThat(it.getIndexKeys()).isEqualTo(new org.bson.Document("value", 1));
+				assertThat(it.getIndexKeys()).containsEntry("value", 1);
 				assertThat(it.getIndexOptions()).containsEntry("name", "idx-name");
 			});
 			assertThat(indexDefinitions.get(1)).satisfies(it -> {
-				assertThat(it.getIndexKeys()).isEqualTo(new org.bson.Document("value", "hashed"));
+				assertThat(it.getIndexKeys()).containsEntry("value", "hashed");
 			});
 		}
 

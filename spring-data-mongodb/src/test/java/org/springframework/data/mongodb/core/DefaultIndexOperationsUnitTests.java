@@ -42,6 +42,8 @@ import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.IndexOptions;
 
 /**
+ * Unit tests for {@link DefaultIndexOperations}.
+ *
  * @author Christoph Strobl
  */
 @RunWith(MockitoJUnitRunner.class)

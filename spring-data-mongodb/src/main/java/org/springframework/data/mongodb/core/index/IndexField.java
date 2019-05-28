@@ -26,7 +26,6 @@ import org.springframework.util.ObjectUtils;
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
-@SuppressWarnings("deprecation")
 public final class IndexField {
 
 	enum Type {

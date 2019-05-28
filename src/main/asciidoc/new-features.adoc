@@ -19,6 +19,7 @@
 * Annotation-based Collation support through `@Document` and `@Query`.
 * <<mongodb.repositories.queries.aggregation, Aggregation framework>> support via repository query methods.
 * Declarative reactive transactions using <<mongo.transactions.reactive-tx-manager, @Transactional>>.
+* Support for <<mapping-usage-indexes.hashed-index>>.
 
 [[new-features.2-1-0]]
 == What's New in Spring Data MongoDB 2.1

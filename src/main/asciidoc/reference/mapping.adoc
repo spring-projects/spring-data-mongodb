@@ -606,8 +606,9 @@ public class Person {
 [[mapping-usage-indexes.hashed-index]]
 === Hashed Indexes
 
-Hashed indexes allow hash based sharding within a sharded cluster. The hashed field value is used to shard  collection results
-in a more random distribution. For details refer to the https://docs.mongodb.com/manual/core/index-hashed/[MongoDB Documentation].
+Hashed indexes allow hash based sharding within a sharded cluster.
+Using hashed field values to shard collections results in a more random distribution.
+For details, refer to the https://docs.mongodb.com/manual/core/index-hashed/[MongoDB Documentation].
 
 Here's an example that creates a hashed index for `_id`:
 
@@ -625,7 +626,7 @@ public class DomainType {
 ----
 ====
 
-Hashed indexes can be created next to other index definitions like shown below, in that case both indices will be created.
+Hashed indexes can be created next to other index definitions like shown below, in that case both indices are created:
 
 .Example Hashed Index Usage togehter with simple index
 ====
@@ -643,7 +644,7 @@ public class DomainType {
 ----
 ====
 
-In case the above example is too verbose, a compound annotation allows to reduce the number of annotations present.
+In case the example above is too verbose, a compound annotation allows to reduce the number of annotations that need to be declared on a property:
 
 .Example Composed Hashed Index Usage
 ====
@@ -652,7 +653,7 @@ In case the above example is too verbose, a compound annotation allows to reduce
 @Document
 public class DomainType {
 
-  @IndexAndHash(name = "idx...") <1>
+  @IndexAndHash(name = "idx...")                            <1>
   String value;
 
   // ...
@@ -672,7 +673,7 @@ public @interface IndexAndHash {
 
 [NOTE]
 ====
-Although index creation via annotations comes in handy for many scenarios please cosider taking over more control by setting up indices manually via `IndexOperations`.
+Although index creation via annotations comes in handy for many scenarios cosider taking over more control by setting up indices manually via `IndexOperations`.
 
 [source,java]
 ----
@@ -684,7 +685,7 @@ mongoOperations.indexOpsFor(Jedi.class)
 [[mapping-usage-indexes.text-index]]
 === Text Indexes
 
-NOTE: The text index feature is disabled by default for mongodb v.2.4.
+NOTE: The text index feature is disabled by default for MongoDB v.2.4.
 
 Creating a text index allows accumulating several fields into a searchable full-text index. It is only possible to have one text index per collection, so all fields marked with `@TextIndexed` are combined into this index. Properties can be weighted to influence the document score for ranking results. The default language for the text index is English. To change the default language, set the `language` attribute to whichever language you want (for example,`@Document(language="spanish")`). Using a property called `language` or `@Language` lets you define a language override on a per document base. The following example shows how to created a text index and set the language to Spanish:
 
