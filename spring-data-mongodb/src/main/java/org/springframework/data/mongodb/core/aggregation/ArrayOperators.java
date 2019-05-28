@@ -33,6 +33,7 @@ import org.springframework.util.Assert;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Shashank Sharma
  * @since 1.0
  */
 public class ArrayOperators {
@@ -1442,6 +1443,7 @@ public class ArrayOperators {
 	 * {@link AggregationExpression} for {@code $in}.
 	 *
 	 * @author Christoph Strobl
+	 * @author Shashank Sharma
 	 */
 	public static class In extends AbstractAggregationExpression {
 
@@ -1492,6 +1494,28 @@ public class ArrayOperators {
 
 					Assert.notNull(value, "Value must not be null!");
 					return new In(Arrays.asList(value, expression));
+				}
+			};
+		}
+
+		/**
+		 * Support for Aggregation In Search an Element in List of Objects to Filter Start creating {@link In}.
+		 * 
+		 * @author Shashank Sharma
+		 * @param elementList must not be {@literal null}.
+		 * @return
+		 */
+		public static InBuilder arrayOf(final List<Object> elementList) {
+
+			Assert.notNull(elementList, "Elements must not be null!");
+
+			return new InBuilder() {
+
+				@Override
+				public In containsValue(Object value) {
+
+					Assert.notNull(value, "Value must not be null!");
+					return new In(Arrays.asList(value, elementList));
 				}
 			};
 		}
