@@ -19,6 +19,7 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.junit.Assert.*;
 
 import java.net.UnknownHostException;
+import java.util.Collections;
 
 import org.bson.BsonDocument;
 import org.junit.Before;
@@ -29,15 +30,18 @@ import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
+import org.springframework.data.mongodb.BulkOperationException;
 import org.springframework.data.mongodb.ClientSessionException;
 import org.springframework.data.mongodb.MongoTransactionException;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
 
+import com.mongodb.MongoBulkWriteException;
 import com.mongodb.MongoCursorNotFoundException;
 import com.mongodb.MongoException;
 import com.mongodb.MongoInternalException;
 import com.mongodb.MongoSocketException;
 import com.mongodb.ServerAddress;
+import com.mongodb.bulk.BulkWriteResult;
 
 /**
  * Unit tests for {@link MongoExceptionTranslator}.
@@ -45,6 +49,7 @@ import com.mongodb.ServerAddress;
  * @author Michal Vich
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Jacob Botuck
  */
 public class MongoExceptionTranslatorUnitTests {
 
@@ -79,6 +84,14 @@ public class MongoExceptionTranslatorUnitTests {
 		expectExceptionWithCauseMessage(
 				translator.translateExceptionIfPossible(new MongoCursorNotFoundException(1L, new ServerAddress())),
 				DataAccessResourceFailureException.class);
+	}
+
+	@Test // DATAMONGO-2285
+	public void translateMongoBulkWriteException() {
+		expectExceptionWithCauseMessage(translator.translateExceptionIfPossible(
+				new MongoBulkWriteException(BulkWriteResult.acknowledged(0, 0, 0, 0, Collections.emptyList()),
+						Collections.emptyList(), null, new ServerAddress())),
+				BulkOperationException.class);
 	}
 
 	@Test

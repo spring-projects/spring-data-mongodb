@@ -16,18 +16,23 @@
 package org.springframework.data.mongodb;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.dao.DataAccessException;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.BulkWriteError;
 import com.mongodb.BulkWriteException;
 import com.mongodb.BulkWriteResult;
+import com.mongodb.BulkWriteUpsert;
+import com.mongodb.MongoBulkWriteException;
 
 /**
  * Is thrown when errors occur during bulk operations.
  *
  * @author Tobias Trelle
  * @author Oliver Gierke
+ * @author Jacob Botuck
  * @since 1.9
  */
 public class BulkOperationException extends DataAccessException {
@@ -49,6 +54,51 @@ public class BulkOperationException extends DataAccessException {
 
 		this.errors = source.getWriteErrors();
 		this.result = source.getWriteResult();
+	}
+
+	public BulkOperationException(String message, MongoBulkWriteException source) {
+		super(message, source);
+
+		this.errors = source.getWriteErrors().stream().map(error -> new BulkWriteError(error.getCode(), error.getMessage(),
+				new BasicDBObject(error.getDetails()), error.getIndex())).collect(Collectors.toList());
+		this.result = new BulkWriteResult() { // Create a child of BulkWriteResult that delegates to an instance of the
+																					// newer BulkWriteResult
+			@Override
+			public boolean isAcknowledged() {
+				return source.getWriteResult().wasAcknowledged();
+			}
+
+			@Override
+			public int getInsertedCount() {
+				return source.getWriteResult().getInsertedCount();
+			}
+
+			@Override
+			public int getMatchedCount() {
+				return source.getWriteResult().getMatchedCount();
+			}
+
+			@Override
+			public int getRemovedCount() {
+				return source.getWriteResult().getDeletedCount();
+			}
+
+			@Override
+			public boolean isModifiedCountAvailable() {
+				return true;
+			}
+
+			@Override
+			public int getModifiedCount() {
+				return source.getWriteResult().getModifiedCount();
+			}
+
+			@Override
+			public List<BulkWriteUpsert> getUpserts() {
+				return source.getWriteResult().getUpserts().stream()
+						.map(upsert -> new BulkWriteUpsert(upsert.getIndex(), upsert.getId())).collect(Collectors.toList());
+			}
+		};
 	}
 
 	public List<BulkWriteError> getErrors() {
