@@ -61,4 +61,12 @@ public class ArrayOperatorsUnitTests {
 		assertThat(ArrayToObject.arrayToObject(source).toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo(Document.parse("{ $arrayToObject: [ [ \"king\", \"shrewd\"], [ \"prince\", \"verity\" ] ] } "));
 	}
+
+	@Test // DATAMONGO-2287
+	public void inArrayAggregationWithArgumentList() {
+
+		assertThat(ArrayOperators.In.arrayOf(Arrays.asList("Shashank", "Sharma"))
+				.containsValue("$userName").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ \"$in\" : [\"$userName\", [\"Shashank\", \"Sharma\"]] }"));
+	}
 }

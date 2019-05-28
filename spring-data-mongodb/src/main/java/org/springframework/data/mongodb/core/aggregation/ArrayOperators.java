@@ -1497,6 +1497,29 @@ public class ArrayOperators {
 		}
 
 		/**
+		 * Support for Aggregation In
+		 * Search an Element in List of Objects to Filter
+		 * Start creating {@link In}.
+		 * @author Shashank Sharma
+		 * @param elementList must not be {@literal null}.
+		 * @return
+		 */
+		public static InBuilder arrayOf(final List<Object> elementList) {
+
+			Assert.notNull(elementList, "Elements must not be null!");
+
+			return new InBuilder() {
+
+				@Override
+				public In containsValue(Object value) {
+
+					Assert.notNull(value, "Value must not be null!");
+					return new In(Arrays.asList(value, elementList));
+				}
+			};
+		}
+
+		/**
 		 * @author Christoph Strobl
 		 */
 		public interface InBuilder {
