@@ -25,6 +25,8 @@ import lombok.Data;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,13 +43,18 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.reactivestreams.Publisher;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
 import org.springframework.data.mongodb.core.MongoTemplateUnitTests.AutogenerateableId;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeConvertCallback;
+import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeSaveCallback;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
@@ -55,7 +62,9 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.lang.Nullable;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.util.CollectionUtils;
 
 import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.CreateCollectionOptions;
@@ -65,6 +74,7 @@ import com.mongodb.client.model.FindOneAndReplaceOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.result.UpdateResult;
 import com.mongodb.reactivestreams.client.AggregatePublisher;
 import com.mongodb.reactivestreams.client.DistinctPublisher;
 import com.mongodb.reactivestreams.client.FindPublisher;
@@ -72,6 +82,7 @@ import com.mongodb.reactivestreams.client.MapReducePublisher;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
+import com.mongodb.reactivestreams.client.Success;
 
 /**
  * Unit tests for {@link ReactiveMongoTemplate}.
@@ -91,8 +102,9 @@ public class ReactiveMongoTemplateUnitTests {
 	@Mock FindPublisher findPublisher;
 	@Mock AggregatePublisher aggregatePublisher;
 	@Mock Publisher runCommandPublisher;
-	@Mock Publisher updatePublisher;
+	@Mock Publisher<UpdateResult> updateResultPublisher;
 	@Mock Publisher findAndUpdatePublisher;
+	@Mock Publisher<Success> successPublisher;
 	@Mock DistinctPublisher distinctPublisher;
 	@Mock Publisher deletePublisher;
 	@Mock MapReducePublisher mapReducePublisher;
@@ -115,8 +127,8 @@ public class ReactiveMongoTemplateUnitTests {
 		when(collection.aggregate(anyList())).thenReturn(aggregatePublisher);
 		when(collection.aggregate(anyList(), any(Class.class))).thenReturn(aggregatePublisher);
 		when(collection.count(any(), any(CountOptions.class))).thenReturn(Mono.just(0L));
-		when(collection.updateOne(any(), any(), any(UpdateOptions.class))).thenReturn(updatePublisher);
-		when(collection.updateMany(any(Bson.class), any(), any())).thenReturn(updatePublisher);
+		when(collection.updateOne(any(), any(), any(UpdateOptions.class))).thenReturn(updateResultPublisher);
+		when(collection.updateMany(any(Bson.class), any(), any())).thenReturn(updateResultPublisher);
 		when(collection.findOneAndUpdate(any(), any(), any(FindOneAndUpdateOptions.class)))
 				.thenReturn(findAndUpdatePublisher);
 		when(collection.findOneAndReplace(any(Bson.class), any(), any())).thenReturn(findPublisher);
@@ -126,6 +138,9 @@ public class ReactiveMongoTemplateUnitTests {
 		when(collection.findOneAndUpdate(any(), any(), any(FindOneAndUpdateOptions.class)))
 				.thenReturn(findAndUpdatePublisher);
 		when(collection.mapReduce(anyString(), anyString(), any())).thenReturn(mapReducePublisher);
+		when(collection.replaceOne(any(Bson.class), any(), any(ReplaceOptions.class))).thenReturn(updateResultPublisher);
+		when(collection.insertOne(any(Bson.class))).thenReturn(successPublisher);
+		when(collection.insertMany(anyList())).thenReturn(successPublisher);
 		when(findPublisher.projection(any())).thenReturn(findPublisher);
 		when(findPublisher.limit(anyInt())).thenReturn(findPublisher);
 		when(findPublisher.collation(any())).thenReturn(findPublisher);
@@ -676,6 +691,120 @@ public class ReactiveMongoTemplateUnitTests {
 				is(com.mongodb.client.model.Collation.builder().locale("fr").build()));
 	}
 
+	@Test // DATAMONGO-2261
+	public void saveShouldInvokeCallbacks() {
+
+		ValueCapturingBeforeConvertCallback beforeConvertCallback = spy(new ValueCapturingBeforeConvertCallback());
+		ValueCapturingBeforeSaveCallback beforeSaveCallback = spy(new ValueCapturingBeforeSaveCallback());
+
+		template.setEntityCallbacks(ReactiveEntityCallbacks.create(beforeConvertCallback, beforeSaveCallback));
+
+		Person entity = new Person();
+		entity.id = "init";
+		entity.firstname = "luke";
+
+		template.save(entity).subscribe();
+
+		verify(beforeConvertCallback).onBeforeConvert(eq(entity), anyString());
+		verify(beforeSaveCallback).onBeforeSave(eq(entity), any(), anyString());
+	}
+
+	@Test // DATAMONGO-2261
+	public void insertShouldInvokeCallbacks() {
+
+		ValueCapturingBeforeConvertCallback beforeConvertCallback = spy(new ValueCapturingBeforeConvertCallback());
+		ValueCapturingBeforeSaveCallback beforeSaveCallback = spy(new ValueCapturingBeforeSaveCallback());
+
+		template.setEntityCallbacks(ReactiveEntityCallbacks.create(beforeConvertCallback, beforeSaveCallback));
+
+		Person entity = new Person();
+		entity.id = "init";
+		entity.firstname = "luke";
+
+		template.insert(entity).subscribe();
+
+		verify(beforeConvertCallback).onBeforeConvert(eq(entity), anyString());
+		verify(beforeSaveCallback).onBeforeSave(eq(entity), any(), anyString());
+	}
+
+	@Test // DATAMONGO-2261
+	public void insertAllShouldInvokeCallbacks() {
+
+		ValueCapturingBeforeConvertCallback beforeConvertCallback = spy(new ValueCapturingBeforeConvertCallback());
+		ValueCapturingBeforeSaveCallback beforeSaveCallback = spy(new ValueCapturingBeforeSaveCallback());
+
+		template.setEntityCallbacks(ReactiveEntityCallbacks.create(beforeConvertCallback, beforeSaveCallback));
+
+		Person entity1 = new Person();
+		entity1.id = "1";
+		entity1.firstname = "luke";
+
+		Person entity2 = new Person();
+		entity1.id = "2";
+		entity1.firstname = "luke";
+
+		template.insertAll(Arrays.asList(entity1, entity2)).subscribe();
+
+		verify(beforeConvertCallback, times(2)).onBeforeConvert(any(), anyString());
+		verify(beforeSaveCallback, times(2)).onBeforeSave(any(), any(), anyString());
+	}
+
+	@Test // DATAMONGO-2261
+	public void findAndReplaceShouldInvokeCallbacks() {
+
+		ValueCapturingBeforeConvertCallback beforeConvertCallback = spy(new ValueCapturingBeforeConvertCallback());
+		ValueCapturingBeforeSaveCallback beforeSaveCallback = spy(new ValueCapturingBeforeSaveCallback());
+
+		template.setEntityCallbacks(ReactiveEntityCallbacks.create(beforeConvertCallback, beforeSaveCallback));
+
+		Person entity = new Person();
+		entity.id = "init";
+		entity.firstname = "luke";
+
+		template.findAndReplace(new Query(), entity).subscribe();
+
+		verify(beforeConvertCallback).onBeforeConvert(eq(entity), anyString());
+		verify(beforeSaveCallback).onBeforeSave(eq(entity), any(), anyString());
+	}
+
+	@Test // DATAMONGO-2261
+	public void entityCallbacksAreNotSetByDefault() {
+		Assertions.assertThat(ReflectionTestUtils.getField(template, "entityCallbacks")).isNull();
+	}
+
+	@Test // DATAMONGO-2261
+	public void entityCallbacksShouldBeInitiatedOnSettingApplicationContext() {
+
+		ApplicationContext ctx = new StaticApplicationContext();
+		template.setApplicationContext(ctx);
+
+		Assertions.assertThat(ReflectionTestUtils.getField(template, "entityCallbacks")).isNotNull();
+	}
+
+	@Test // DATAMONGO-2261
+	public void setterForEntityCallbackOverridesContextInitializedOnes() {
+
+		ApplicationContext ctx = new StaticApplicationContext();
+		template.setApplicationContext(ctx);
+
+		ReactiveEntityCallbacks callbacks = ReactiveEntityCallbacks.create();
+		template.setEntityCallbacks(callbacks);
+
+		Assertions.assertThat(ReflectionTestUtils.getField(template, "entityCallbacks")).isSameAs(callbacks);
+	}
+
+	@Test // DATAMONGO-2261
+	public void setterForApplicationContextShouldNotOverrideAlreadySetEntityCallbacks() {
+
+		ReactiveEntityCallbacks callbacks = ReactiveEntityCallbacks.create();
+		ApplicationContext ctx = new StaticApplicationContext();
+
+		template.setEntityCallbacks(callbacks);
+		template.setApplicationContext(ctx);
+
+		Assertions.assertThat(ReflectionTestUtils.getField(template, "entityCallbacks")).isSameAs(callbacks);
+	}
+
 	@Data
 	@org.springframework.data.mongodb.core.mapping.Document(collection = "star-wars")
 	static class Person {
@@ -713,5 +842,45 @@ public class ReactiveMongoTemplateUnitTests {
 
 	static class EntityWithListOfSimple {
 		List<Integer> grades;
+	}
+
+	static class ValueCapturingEntityCallback<T> {
+
+		private final List<T> values = new ArrayList<>(1);
+
+		protected void capture(T value) {
+			values.add(value);
+		}
+
+		public List<T> getValues() {
+			return values;
+		}
+
+		@Nullable
+		public T getValue() {
+			return CollectionUtils.lastElement(values);
+		}
+	}
+
+	static class ValueCapturingBeforeConvertCallback extends ValueCapturingEntityCallback<Person>
+			implements ReactiveBeforeConvertCallback<Person> {
+
+		@Override
+		public Mono<Person> onBeforeConvert(Person entity, String collection) {
+
+			capture(entity);
+			return Mono.just(entity);
+		}
+	}
+
+	static class ValueCapturingBeforeSaveCallback extends ValueCapturingEntityCallback<Person>
+			implements ReactiveBeforeSaveCallback<Person> {
+
+		@Override
+		public Mono<Person> onBeforeSave(Person entity, Document document, String collection) {
+
+			capture(entity);
+			return Mono.just(entity);
+		}
 	}
 }

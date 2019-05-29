@@ -16,22 +16,19 @@
 package org.springframework.data.mongodb.core.mapping.event;
 
 import org.bson.Document;
-
 import org.springframework.data.mapping.callback.EntityCallback;
-import org.springframework.data.mapping.callback.SimpleEntityCallbacks;
 
 /**
  * Entity callback triggered before save of a document.
  *
  * @author Mark Paluch
  * @since 2.2
- * @see SimpleEntityCallbacks
  */
 @FunctionalInterface
 public interface BeforeSaveCallback<T> extends EntityCallback<T> {
 
 	/**
-	 * Entity callback method invoked before a domain object is saved. Can return either the same of a modified instance
+	 * Entity callback method invoked before a domain object is saved. Can return either the same or a modified instance
 	 * of the domain object and can modify {@link Document} contents. This method called after converting the
 	 * {@code entity} to {@link Document} so effectively the document is used as outcome of invoking this callback.
 	 *

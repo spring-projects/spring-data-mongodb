@@ -26,7 +26,6 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 import java.util.List;
 import java.util.Optional;
 
-import com.mongodb.client.model.*;
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,6 +35,7 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.DefaultBulkOperations.BulkOperationContext;
@@ -46,12 +46,20 @@ import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.event.BeforeConvertCallback;
+import org.springframework.data.mongodb.core.mapping.event.BeforeSaveCallback;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Update;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.DeleteManyModel;
+import com.mongodb.client.model.InsertOneModel;
+import com.mongodb.client.model.ReplaceOneModel;
+import com.mongodb.client.model.UpdateManyModel;
+import com.mongodb.client.model.UpdateOneModel;
+import com.mongodb.client.model.WriteModel;
 
 /**
  * Unit tests for {@link DefaultBulkOperations}.
@@ -90,7 +98,7 @@ public class DefaultBulkOperationsUnitTests {
 		ops = new DefaultBulkOperations(template, "collection-1",
 				new BulkOperationContext(BulkMode.ORDERED,
 						Optional.of(mappingContext.getPersistentEntity(SomeDomainType.class)), new QueryMapper(converter),
-						new UpdateMapper(converter)));
+						new UpdateMapper(converter), null));
 	}
 
 	@Test // DATAMONGO-1518
@@ -183,6 +191,34 @@ public class DefaultBulkOperationsUnitTests {
 		assertThat(updateModel.getReplacement().getString("lastName")).isEqualTo("Kim");
 	}
 
+	@Test // DATAMONGO-2261
+	public void bulkInsertInvokesEntityCallbacks() {
+
+		BeforeConvertPersonCallback beforeConvertCallback = spy(new BeforeConvertPersonCallback());
+		BeforeSavePersonCallback beforeSaveCallback = spy(new BeforeSavePersonCallback());
+
+		ops = new DefaultBulkOperations(template, "collection-1",
+				new BulkOperationContext(BulkMode.ORDERED, Optional.of(mappingContext.getPersistentEntity(Person.class)),
+						new QueryMapper(converter), new UpdateMapper(converter),
+						EntityCallbacks.create(beforeConvertCallback, beforeSaveCallback)));
+
+		Person entity = new Person("init");
+		ops.insert(entity);
+
+		ArgumentCaptor<Person> personArgumentCaptor = ArgumentCaptor.forClass(Person.class);
+		verify(beforeConvertCallback).onBeforeConvert(personArgumentCaptor.capture(), eq("collection-1"));
+		verifyZeroInteractions(beforeSaveCallback);
+
+		ops.execute();
+
+		verify(beforeSaveCallback).onBeforeSave(personArgumentCaptor.capture(), any(), eq("collection-1"));
+		assertThat(personArgumentCaptor.getAllValues()).extracting("firstName").containsExactly("init", "before-convert");
+		verify(collection).bulkWrite(captor.capture(), any());
+
+		InsertOneModel<Document> updateModel = (InsertOneModel<Document>) captor.getValue().get(0);
+		assertThat(updateModel.getDocument()).containsEntry("firstName", "before-save");
+	}
+
 	class SomeDomainType {
 
 		@Id String id;
@@ -193,5 +229,23 @@ public class DefaultBulkOperationsUnitTests {
 
 	enum Gender {
 		M, F
+	}
+
+	static class BeforeConvertPersonCallback implements BeforeConvertCallback<Person> {
+
+		@Override
+		public Person onBeforeConvert(Person entity, String collection) {
+			return new Person("before-convert");
+		}
+	}
+
+	static class BeforeSavePersonCallback implements BeforeSaveCallback<Person> {
+
+		@Override
+		public Person onBeforeSave(Person entity, Document document, String collection) {
+
+			document.put("firstName", "before-save");
+			return new Person("before-save");
+		}
 	}
 }

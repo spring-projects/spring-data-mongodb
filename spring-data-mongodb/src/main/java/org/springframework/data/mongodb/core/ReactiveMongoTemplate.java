@@ -20,7 +20,6 @@ import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.util.NumberUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -115,6 +114,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
@@ -358,13 +358,34 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		prepareIndexCreator(applicationContext);
 
 		eventPublisher = applicationContext;
-		entityCallbacks = new ReactiveEntityCallbacks(applicationContext);
+
+		if (entityCallbacks == null) {
+			setEntityCallbacks(ReactiveEntityCallbacks.create(applicationContext));
+		}
+
 		if (mappingContext instanceof ApplicationEventPublisherAware) {
 			((ApplicationEventPublisherAware) mappingContext).setApplicationEventPublisher(eventPublisher);
 		}
 
 		projectionFactory.setBeanFactory(applicationContext);
 		projectionFactory.setBeanClassLoader(applicationContext.getClassLoader());
+	}
+
+	/**
+	 * Set the {@link ReactiveEntityCallbacks} instance to use when invoking
+	 * {@link org.springframework.data.mapping.callback.EntityCallback callbacks} like the
+	 * {@link ReactiveBeforeSaveCallback}.
+	 * <p />
+	 * Overrides potentially existing {@link ReactiveEntityCallbacks}.
+	 *
+	 * @param entityCallbacks must not be {@literal null}.
+	 * @throws IllegalArgumentException if the given instance is {@literal null}.
+	 * @since 2.2
+	 */
+	public void setEntityCallbacks(ReactiveEntityCallbacks entityCallbacks) {
+
+		Assert.notNull(entityCallbacks, "EntityCallbacks must not be null!");
+		this.entityCallbacks = entityCallbacks;
 	}
 
 	/**
@@ -1166,11 +1187,25 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Document mappedFields = queryMapper.getMappedFields(query.getFieldsObject(), entity);
 		Document mappedSort = queryMapper.getMappedSort(query.getSortObject(), entity);
 
-		Document mappedReplacement = operations.forEntity(replacement).toMappedDocument(this.mongoConverter).getDocument();
+		return Mono.just(PersistableEntityModel.of(replacement, collectionName)) //
+				.doOnNext(it -> maybeEmitEvent(new BeforeConvertEvent<>(it.getSource(), it.getCollection()))) //
+				.flatMap(it -> maybeCallBeforeConvert(it.getSource(), it.getCollection()).map(it::mutate))
+				.map(it -> it
+						.addTargetDocument(operations.forEntity(it.getSource()).toMappedDocument(mongoConverter).getDocument())) //
+				.doOnNext(it -> maybeEmitEvent(new BeforeSaveEvent(it.getSource(), it.getTarget(), it.getCollection()))) //
+				.flatMap(it -> {
 
-		return doFindAndReplace(collectionName, mappedQuery, mappedFields, mappedSort,
-				operations.forType(entityType).getCollation(query).map(Collation::toMongoCollation).orElse(null), entityType,
-				mappedReplacement, options, resultType);
+					PersistableEntityModel<S> flowObject = (PersistableEntityModel<S>) it;
+					return maybeCallBeforeSave(flowObject.getSource(), flowObject.getTarget(), flowObject.getCollection())
+							.map(potentiallyModified -> PersistableEntityModel.of(potentiallyModified, flowObject.getTarget(),
+									flowObject.getCollection()));
+				}).flatMap(it -> {
+
+					PersistableEntityModel<S> flowObject = (PersistableEntityModel<S>) it;
+					return doFindAndReplace(flowObject.getCollection(), mappedQuery, mappedFields, mappedSort,
+							operations.forType(entityType).getCollation(query).map(Collation::toMongoCollation).orElse(null),
+							entityType, flowObject.getTarget(), options, resultType);
+				});
 	}
 
 	/*
@@ -1321,32 +1356,31 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	protected <T> Mono<T> doInsert(String collectionName, T objectToSave, MongoWriter<Object> writer) {
 
-		return Mono.defer(() -> {
+		return Mono.just(PersistableEntityModel.of(objectToSave, collectionName)) //
+				.doOnNext(it -> maybeEmitEvent(new BeforeConvertEvent<>(it.getSource(), it.getCollection()))) //
+				.flatMap(it -> maybeCallBeforeConvert(it.getSource(), it.getCollection()).map(it::mutate)) //
+				.map(it -> {
 
-			BeforeConvertEvent<T> event = new BeforeConvertEvent<>(objectToSave, collectionName);
-			T toConvert = maybeEmitEvent(event).getSource();
-			return maybeCallBeforeConvert(toConvert, collectionName).flatMap(toSave -> {
+					AdaptibleEntity<T> entity = operations.forEntity(it.getSource(), mongoConverter.getConversionService());
+					entity.assertUpdateableIdIfNotSet();
 
-				AdaptibleEntity<T> entity = operations.forEntity(toConvert, mongoConverter.getConversionService());
-				entity.assertUpdateableIdIfNotSet();
+					return PersistableEntityModel.of(entity.initializeVersionProperty(),
+							entity.toMappedDocument(writer).getDocument(), it.getCollection());
+				}).doOnNext(it -> maybeEmitEvent(new BeforeSaveEvent<>(it.getSource(), it.getTarget(), it.getCollection()))) //
+				.flatMap(it -> {
 
-				T initialized = entity.initializeVersionProperty();
-				Document dbDoc = entity.toMappedDocument(writer).getDocument();
+					return maybeCallBeforeSave(it.getSource(), it.getTarget(), it.getCollection()).map(it::mutate);
 
-				maybeEmitEvent(new BeforeSaveEvent<>(initialized, dbDoc, collectionName));
-				return maybeCallBeforeSave(initialized, dbDoc, collectionName).flatMap(it -> {
+				}).flatMap(it -> {
 
-					Mono<T> afterInsert = insertDocument(collectionName, dbDoc, it.getClass()).map(id -> {
+					return insertDocument(it.getCollection(), it.getTarget(), it.getSource().getClass()).map(id -> {
 
-						T saved = entity.populateIdIfNecessary(id);
-						maybeEmitEvent(new AfterSaveEvent<>(saved, dbDoc, collectionName));
+						T saved = operations.forEntity(it.getSource(), mongoConverter.getConversionService())
+								.populateIdIfNecessary(id);
+						maybeEmitEvent(new AfterSaveEvent<>(saved, it.getTarget(), collectionName));
 						return saved;
 					});
-
-					return afterInsert;
 				});
-			});
-		});
 	}
 
 	/*
@@ -2514,15 +2548,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 						serializeToJsonSafely(replacement), collectionName);
 			}
 
-			maybeEmitEvent(new BeforeSaveEvent<>(replacement, replacement, collectionName));
+			return executeFindOneInternal(
+					new FindAndReplaceCallback(mappedQuery, mappedFields, mappedSort, replacement, collation, options),
+					new ProjectingReadCallback<>(this.mongoConverter, entityType, resultType, collectionName), collectionName);
 
-			return maybeCallBeforeSave(replacement, replacement, collectionName).flatMap(it -> {
-
-				return executeFindOneInternal(
-						new FindAndReplaceCallback(mappedQuery, mappedFields, mappedSort, it, collation, options),
-						new ProjectingReadCallback<>(this.mongoConverter, entityType, resultType, collectionName), collectionName);
-
-			});
 		});
 	}
 
@@ -2539,8 +2568,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	protected <T> Mono<T> maybeCallBeforeConvert(T object, String collection) {
 
 		if (null != entityCallbacks) {
-			return entityCallbacks.callbackLater(object, ReactiveBeforeConvertCallback.class,
-					(cb, t) -> cb.onBeforeConvert(t, collection));
+			return entityCallbacks.callback(ReactiveBeforeConvertCallback.class, object, collection);
 		}
 
 		return Mono.just(object);
@@ -2550,8 +2578,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	protected <T> Mono<T> maybeCallBeforeSave(T object, Document document, String collection) {
 
 		if (null != entityCallbacks) {
-			return entityCallbacks.callbackLater(object, ReactiveBeforeSaveCallback.class,
-					(cb, t) -> cb.onBeforeSave(t, document, collection));
+			return entityCallbacks.callback(ReactiveBeforeSaveCallback.class, object, document, collection);
 		}
 
 		return Mono.just(object);
@@ -3307,4 +3334,54 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		}
 	}
 
+	/**
+	 * Value object chaining together a given source document with its mapped representation and the collection to persist
+	 * it to.
+	 *
+	 * @param <T>
+	 * @author Christoph Strobl
+	 * @since 2.2
+	 */
+	private static class PersistableEntityModel<T> {
+
+		private final T source;
+		private final @Nullable Document target;
+		private final String collection;
+
+		private PersistableEntityModel(T source, @Nullable Document target, String collection) {
+
+			this.source = source;
+			this.target = target;
+			this.collection = collection;
+		}
+
+		static <T> PersistableEntityModel<T> of(T source, String collection) {
+			return new PersistableEntityModel<>(source, null, collection);
+		}
+
+		static <T> PersistableEntityModel<T> of(T source, Document target, String collection) {
+			return new PersistableEntityModel<>(source, target, collection);
+		}
+
+		PersistableEntityModel<T> mutate(T source) {
+			return new PersistableEntityModel(source, target, collection);
+		}
+
+		PersistableEntityModel<T> addTargetDocument(Document target) {
+			return new PersistableEntityModel(source, target, collection);
+		}
+
+		T getSource() {
+			return source;
+		}
+
+		@Nullable
+		Document getTarget() {
+			return target;
+		}
+
+		String getCollection() {
+			return collection;
+		}
+	}
 }
