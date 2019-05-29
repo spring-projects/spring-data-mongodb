@@ -22,6 +22,8 @@ import static org.springframework.data.mongodb.test.util.Assertions.*;
 import lombok.Data;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -42,9 +44,11 @@ import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
-
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -53,6 +57,7 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
@@ -65,7 +70,10 @@ import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCre
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
+import org.springframework.data.mongodb.core.mapping.event.BeforeConvertCallback;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
+import org.springframework.data.mongodb.core.mapping.event.BeforeSaveCallback;
+import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
 import org.springframework.data.mongodb.core.mapreduce.GroupBy;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.query.BasicQuery;
@@ -74,7 +82,9 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.lang.Nullable;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.util.CollectionUtils;
 
 import com.mongodb.DB;
 import com.mongodb.MongoClient;
@@ -1382,6 +1392,212 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(mapReduceIterable).collation(eq(com.mongodb.client.model.Collation.builder().locale("fr").build()));
 	}
 
+	@Test // DATAMONGO-2261
+	public void saveShouldInvokeCallbacks() {
+
+		ValueCapturingBeforeConvertCallback beforeConvertCallback = spy(new ValueCapturingBeforeConvertCallback());
+		ValueCapturingBeforeSaveCallback beforeSaveCallback = spy(new ValueCapturingBeforeSaveCallback());
+
+		template.setEntityCallbacks(EntityCallbacks.create(beforeConvertCallback, beforeSaveCallback));
+
+		Person entity = new Person();
+		entity.id = "init";
+		entity.firstname = "luke";
+
+		template.save(entity);
+
+		verify(beforeConvertCallback).onBeforeConvert(eq(entity), anyString());
+		verify(beforeSaveCallback).onBeforeSave(eq(entity), any(), anyString());
+	}
+
+	@Test // DATAMONGO-2261
+	public void insertShouldInvokeCallbacks() {
+
+		ValueCapturingBeforeConvertCallback beforeConvertCallback = spy(new ValueCapturingBeforeConvertCallback());
+		ValueCapturingBeforeSaveCallback beforeSaveCallback = spy(new ValueCapturingBeforeSaveCallback());
+
+		template.setEntityCallbacks(EntityCallbacks.create(beforeConvertCallback, beforeSaveCallback));
+
+		Person entity = new Person();
+		entity.id = "init";
+		entity.firstname = "luke";
+
+		template.insert(entity);
+
+		verify(beforeConvertCallback).onBeforeConvert(eq(entity), anyString());
+		verify(beforeSaveCallback).onBeforeSave(eq(entity), any(), anyString());
+	}
+
+	@Test // DATAMONGO-2261
+	public void insertAllShouldInvokeCallbacks() {
+
+		ValueCapturingBeforeConvertCallback beforeConvertCallback = spy(new ValueCapturingBeforeConvertCallback());
+		ValueCapturingBeforeSaveCallback beforeSaveCallback = spy(new ValueCapturingBeforeSaveCallback());
+
+		template.setEntityCallbacks(EntityCallbacks.create(beforeConvertCallback, beforeSaveCallback));
+
+		Person entity1 = new Person();
+		entity1.id = "1";
+		entity1.firstname = "luke";
+
+		Person entity2 = new Person();
+		entity1.id = "2";
+		entity1.firstname = "luke";
+
+		template.insertAll(Arrays.asList(entity1, entity2));
+
+		verify(beforeConvertCallback, times(2)).onBeforeConvert(any(), anyString());
+		verify(beforeSaveCallback, times(2)).onBeforeSave(any(), any(), anyString());
+	}
+
+	@Test // DATAMONGO-2261
+	public void findAndReplaceShouldInvokeCallbacks() {
+
+		ValueCapturingBeforeConvertCallback beforeConvertCallback = spy(new ValueCapturingBeforeConvertCallback());
+		ValueCapturingBeforeSaveCallback beforeSaveCallback = spy(new ValueCapturingBeforeSaveCallback());
+
+		template.setEntityCallbacks(EntityCallbacks.create(beforeConvertCallback, beforeSaveCallback));
+
+		Person entity = new Person();
+		entity.id = "init";
+		entity.firstname = "luke";
+
+		template.findAndReplace(new Query(), entity);
+
+		verify(beforeConvertCallback).onBeforeConvert(eq(entity), anyString());
+		verify(beforeSaveCallback).onBeforeSave(eq(entity), any(), anyString());
+	}
+
+	@Test // DATAMONGO-2261
+	public void publishesEventsAndEntityCallbacksInOrder() {
+
+		BeforeConvertCallback<Person> beforeConvertCallback = new BeforeConvertCallback<Person>() {
+
+			@Override
+			public Person onBeforeConvert(Person entity, String collection) {
+
+				assertThat(entity.id).isEqualTo("before-convert-event");
+				entity.id = "before-convert-callback";
+				return entity;
+			}
+		};
+
+		BeforeSaveCallback<Person> beforeSaveCallback = new BeforeSaveCallback<Person>() {
+
+			@Override
+			public Person onBeforeSave(Person entity, Document document, String collection) {
+
+				assertThat(entity.id).isEqualTo("before-save-event");
+				entity.id = "before-save-callback";
+				return entity;
+			}
+		};
+
+		AbstractMongoEventListener<Person> eventListener = new AbstractMongoEventListener<Person>() {
+
+			@Override
+			public void onBeforeConvert(BeforeConvertEvent<Person> event) {
+
+				assertThat(event.getSource().id).isEqualTo("init");
+				event.getSource().id = "before-convert-event";
+			}
+
+			@Override
+			public void onBeforeSave(BeforeSaveEvent<Person> event) {
+
+				assertThat(event.getSource().id).isEqualTo("before-convert-callback");
+				event.getSource().id = "before-save-event";
+			}
+		};
+
+		StaticApplicationContext ctx = new StaticApplicationContext();
+		ctx.registerBean(ApplicationListener.class, () -> eventListener);
+		ctx.registerBean(BeforeConvertCallback.class, () -> beforeConvertCallback);
+		ctx.registerBean(BeforeSaveCallback.class, () -> beforeSaveCallback);
+		ctx.refresh();
+
+		template.setApplicationContext(ctx);
+
+		Person entity = new Person();
+		entity.id = "init";
+		entity.firstname = "luke";
+
+		Person saved = template.save(entity);
+
+		assertThat(saved.id).isEqualTo("before-save-callback");
+	}
+
+	@Test // DATAMONGO-2261
+	public void beforeSaveCallbackAllowsTargetDocumentModifications() {
+
+		BeforeSaveCallback<Person> beforeSaveCallback = new BeforeSaveCallback<Person>() {
+
+			@Override
+			public Person onBeforeSave(Person entity, Document document, String collection) {
+
+				document.append("added-by", "callback");
+				return entity;
+			}
+		};
+
+		StaticApplicationContext ctx = new StaticApplicationContext();
+		ctx.registerBean(BeforeSaveCallback.class, () -> beforeSaveCallback);
+		ctx.refresh();
+
+		template.setApplicationContext(ctx);
+
+		Person entity = new Person();
+		entity.id = "luke-skywalker";
+		entity.firstname = "luke";
+
+		template.save(entity);
+
+		ArgumentCaptor<Document> captor = ArgumentCaptor.forClass(Document.class);
+
+		verify(collection).replaceOne(any(), captor.capture(), any(ReplaceOptions.class));
+		assertThat(captor.getValue()).containsEntry("added-by", "callback");
+	}
+
+	// TODO: additional tests for what is when saved.
+
+	@Test // DATAMONGO-2261
+	public void entityCallbacksAreNotSetByDefault() {
+		Assertions.assertThat(ReflectionTestUtils.getField(template, "entityCallbacks")).isNull();
+	}
+
+	@Test // DATAMONGO-2261
+	public void entityCallbacksShouldBeInitiatedOnSettingApplicationContext() {
+
+		ApplicationContext ctx = new StaticApplicationContext();
+		template.setApplicationContext(ctx);
+
+		Assertions.assertThat(ReflectionTestUtils.getField(template, "entityCallbacks")).isNotNull();
+	}
+
+	@Test // DATAMONGO-2261
+	public void setterForEntityCallbackOverridesContextInitializedOnes() {
+
+		ApplicationContext ctx = new StaticApplicationContext();
+		template.setApplicationContext(ctx);
+
+		EntityCallbacks callbacks = EntityCallbacks.create();
+		template.setEntityCallbacks(callbacks);
+
+		Assertions.assertThat(ReflectionTestUtils.getField(template, "entityCallbacks")).isSameAs(callbacks);
+	}
+
+	@Test // DATAMONGO-2261
+	public void setterForApplicationContextShouldNotOverrideAlreadySetEntityCallbacks() {
+
+		EntityCallbacks callbacks = EntityCallbacks.create();
+		ApplicationContext ctx = new StaticApplicationContext();
+
+		template.setEntityCallbacks(callbacks);
+		template.setApplicationContext(ctx);
+
+		Assertions.assertThat(ReflectionTestUtils.getField(template, "entityCallbacks")).isSameAs(callbacks);
+	}
+
 	class AutogenerateableId {
 
 		@Id BigInteger id;
@@ -1499,5 +1715,46 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Override
 	protected MongoOperations getOperations() {
 		return this.template;
+	}
+
+	static class ValueCapturingEntityCallback<T> {
+
+		private final List<T> values = new ArrayList<>(1);
+
+		protected void capture(T value) {
+			values.add(value);
+		}
+
+		public List<T> getValues() {
+			return values;
+		}
+
+		@Nullable
+		public T getValue() {
+			return CollectionUtils.lastElement(values);
+		}
+
+	}
+
+	static class ValueCapturingBeforeConvertCallback extends ValueCapturingEntityCallback<Person>
+			implements BeforeConvertCallback<Person> {
+
+		@Override
+		public Person onBeforeConvert(Person entity, String collection) {
+
+			capture(entity);
+			return entity;
+		}
+	}
+
+	static class ValueCapturingBeforeSaveCallback extends ValueCapturingEntityCallback<Person>
+			implements BeforeSaveCallback<Person> {
+
+		@Override
+		public Person onBeforeSave(Person entity, Document document, String collection) {
+
+			capture(entity);
+			return entity;
+		}
 	}
 }

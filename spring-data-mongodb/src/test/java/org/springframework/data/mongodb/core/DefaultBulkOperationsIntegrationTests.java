@@ -72,19 +72,19 @@ public class DefaultBulkOperationsIntegrationTests {
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-934
 	public void rejectsNullMongoOperations() {
 		new DefaultBulkOperations(null, COLLECTION_NAME,
-				new BulkOperationContext(BulkMode.ORDERED, Optional.empty(), null, null));
+				new BulkOperationContext(BulkMode.ORDERED, Optional.empty(), null, null, null));
 
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-934
 	public void rejectsNullCollectionName() {
 		new DefaultBulkOperations(operations, null,
-				new BulkOperationContext(BulkMode.ORDERED, Optional.empty(), null, null));
+				new BulkOperationContext(BulkMode.ORDERED, Optional.empty(), null, null, null));
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-934
 	public void rejectsEmptyCollectionName() {
-		new DefaultBulkOperations(operations, "", new BulkOperationContext(BulkMode.ORDERED, Optional.empty(), null, null));
+		new DefaultBulkOperations(operations, "", new BulkOperationContext(BulkMode.ORDERED, Optional.empty(), null, null, null));
 	}
 
 	@Test // DATAMONGO-934
@@ -341,7 +341,7 @@ public class DefaultBulkOperationsIntegrationTests {
 				: Optional.empty();
 
 		BulkOperationContext bulkOperationContext = new BulkOperationContext(mode, entity,
-				new QueryMapper(operations.getConverter()), new UpdateMapper(operations.getConverter()));
+				new QueryMapper(operations.getConverter()), new UpdateMapper(operations.getConverter()), null);
 
 		DefaultBulkOperations bulkOps = new DefaultBulkOperations(operations, COLLECTION_NAME, bulkOperationContext);
 		bulkOps.setDefaultWriteConcern(WriteConcern.ACKNOWLEDGED);

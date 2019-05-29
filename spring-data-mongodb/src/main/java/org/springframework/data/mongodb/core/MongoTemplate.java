@@ -35,7 +35,6 @@ import org.bson.codecs.Codec;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -56,7 +55,7 @@ import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Metric;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.PropertyReferenceException;
-import org.springframework.data.mapping.callback.SimpleEntityCallbacks;
+import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.MongoDatabaseUtils;
 import org.springframework.data.mongodb.MongoDbFactory;
@@ -143,17 +142,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.MongoIterable;
-import com.mongodb.client.model.CountOptions;
-import com.mongodb.client.model.CreateCollectionOptions;
-import com.mongodb.client.model.DeleteOptions;
-import com.mongodb.client.model.FindOneAndDeleteOptions;
-import com.mongodb.client.model.FindOneAndReplaceOptions;
-import com.mongodb.client.model.FindOneAndUpdateOptions;
-import com.mongodb.client.model.ReplaceOptions;
-import com.mongodb.client.model.ReturnDocument;
-import com.mongodb.client.model.UpdateOptions;
-import com.mongodb.client.model.ValidationAction;
-import com.mongodb.client.model.ValidationLevel;
+import com.mongodb.client.model.*;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
@@ -214,7 +203,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	private WriteResultChecking writeResultChecking = WriteResultChecking.NONE;
 	private @Nullable ReadPreference readPreference;
 	private @Nullable ApplicationEventPublisher eventPublisher;
-	private @Nullable SimpleEntityCallbacks entityCallbacks;
+	private @Nullable EntityCallbacks entityCallbacks;
 	private @Nullable ResourceLoader resourceLoader;
 	private @Nullable MongoPersistentEntityIndexCreator indexCreator;
 
@@ -360,7 +349,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		eventPublisher = applicationContext;
 
-		entityCallbacks = new SimpleEntityCallbacks(applicationContext);
+		if (entityCallbacks == null) {
+			setEntityCallbacks(EntityCallbacks.create(applicationContext));
+		}
 
 		if (mappingContext instanceof ApplicationEventPublisherAware) {
 			((ApplicationEventPublisherAware) mappingContext).setApplicationEventPublisher(eventPublisher);
@@ -370,6 +361,22 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		projectionFactory.setBeanFactory(applicationContext);
 		projectionFactory.setBeanClassLoader(applicationContext.getClassLoader());
+	}
+
+	/**
+	 * Set the {@link EntityCallbacks} instance to use when invoking
+	 * {@link org.springframework.data.mapping.callback.EntityCallback callbacks} like the {@link BeforeSaveCallback}.
+	 * <p />
+	 * Overrides potentially existing {@link EntityCallbacks}.
+	 *
+	 * @param entityCallbacks must not be {@literal null}.
+	 * @throws IllegalArgumentException if the given instance is {@literal null}.
+	 * @since 2.2
+	 */
+	public void setEntityCallbacks(EntityCallbacks entityCallbacks) {
+
+		Assert.notNull(entityCallbacks, "EntityCallbacks must not be null!");
+		this.entityCallbacks = entityCallbacks;
 	}
 
 	/**
@@ -771,7 +778,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 
 		DefaultBulkOperations operations = new DefaultBulkOperations(this, collectionName, new BulkOperationContext(mode,
-				Optional.ofNullable(getPersistentEntity(entityType)), queryMapper, updateMapper));
+				Optional.ofNullable(getPersistentEntity(entityType)), queryMapper, updateMapper, entityCallbacks));
 
 		operations.setExceptionTranslator(exceptionTranslator);
 		operations.setDefaultWriteConcern(writeConcern);
@@ -1098,7 +1105,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Document mappedFields = queryMapper.getMappedFields(query.getFieldsObject(), entity);
 		Document mappedSort = queryMapper.getMappedSort(query.getSortObject(), entity);
 
+		replacement = maybeCallBeforeConvert(replacement, collectionName);
 		Document mappedReplacement = operations.forEntity(replacement).toMappedDocument(this.mongoConverter).getDocument();
+
+		maybeEmitEvent(new BeforeSaveEvent<>(replacement, mappedReplacement, collectionName));
+		maybeCallBeforeSave(replacement, mappedReplacement, collectionName);
 
 		return doFindAndReplace(collectionName, mappedQuery, mappedFields, mappedSort,
 				operations.forType(entityType).getCollation(query).map(Collation::toMongoCollation).orElse(null), entityType,
@@ -2340,8 +2351,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	protected <T> T maybeCallBeforeConvert(T object, String collection) {
 
 		if (null != entityCallbacks) {
-			return (T) entityCallbacks.callback(object, BeforeConvertCallback.class,
-					(cb, t) -> cb.onBeforeConvert(t, collection));
+			return entityCallbacks.callback(BeforeConvertCallback.class, object, collection);
 		}
 
 		return object;
@@ -2351,8 +2361,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	protected <T> T maybeCallBeforeSave(T object, Document document, String collection) {
 
 		if (null != entityCallbacks) {
-			return (T) entityCallbacks.callback(object, BeforeSaveCallback.class,
-					(cb, t) -> cb.onBeforeSave(t, document, collection));
+			return entityCallbacks.callback(BeforeSaveCallback.class, object, document, collection);
 		}
 
 		return object;
@@ -2678,9 +2687,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					serializeToJsonSafely(mappedQuery), serializeToJsonSafely(mappedFields), serializeToJsonSafely(mappedSort),
 					entityType, serializeToJsonSafely(replacement), collectionName);
 		}
-
-		maybeEmitEvent(new BeforeSaveEvent<>(replacement, replacement, collectionName));
-		replacement = maybeCallBeforeSave(replacement, replacement, collectionName);
 
 		return executeFindOneInternal(
 				new FindAndReplaceCallback(mappedQuery, mappedFields, mappedSort, replacement, collation, options),
