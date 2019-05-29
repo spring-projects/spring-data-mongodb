@@ -47,7 +47,7 @@ public class MongoAnnotationProcessor extends AbstractQuerydslProcessor {
 
 	/*
 	 * (non-Javadoc)
-	 * @see com.mysema.query.apt.AbstractQuerydslProcessor#createConfiguration(javax.annotation.processing.RoundEnvironment)
+	 * @see com.querydsl.apt.AbstractQuerydslProcessor#createConfiguration(javax.annotation.processing.RoundEnvironment)
 	 */
 	@Override
 	protected Configuration createConfiguration(@Nullable RoundEnvironment roundEnv) {
@@ -55,7 +55,7 @@ public class MongoAnnotationProcessor extends AbstractQuerydslProcessor {
 		processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Running " + getClass().getSimpleName());
 
 		DefaultConfiguration configuration = new DefaultConfiguration(roundEnv, processingEnv.getOptions(),
-				Collections.<String> emptySet(), QueryEntities.class, Document.class, QuerySupertype.class,
+				Collections.emptySet(), QueryEntities.class, Document.class, QuerySupertype.class,
 				QueryEmbeddable.class, QueryEmbedded.class, QueryTransient.class);
 		configuration.setUnknownAsEmbedded(true);
 
