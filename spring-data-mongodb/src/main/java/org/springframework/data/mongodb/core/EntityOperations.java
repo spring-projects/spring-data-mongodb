@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.bson.Document;
-
 import org.springframework.core.convert.ConversionService;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mapping.IdentifierAccessor;
@@ -51,6 +50,7 @@ import org.springframework.util.MultiValueMap;
  *
  * @author Oliver Gierke
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.1
  * @see MongoTemplate
  * @see ReactiveMongoTemplate
@@ -673,22 +673,19 @@ class EntityOperations {
 		public T populateIdIfNecessary(@Nullable Object id) {
 
 			if (id == null) {
-				return null;
+				return propertyAccessor.getBean();
 			}
 
-			T bean = propertyAccessor.getBean();
 			MongoPersistentProperty idProperty = entity.getIdProperty();
-
 			if (idProperty == null) {
-				return bean;
+				return propertyAccessor.getBean();
 			}
 
 			if (identifierAccessor.getIdentifier() != null) {
-				return bean;
+				return propertyAccessor.getBean();
 			}
 
 			propertyAccessor.setProperty(idProperty, id);
-
 			return propertyAccessor.getBean();
 		}
 
