@@ -62,7 +62,7 @@ public class ReactiveMongoDatabaseUtils {
 			return Mono.just(true);
 		}
 
-		return TransactionSynchronizationManager.currentTransaction() //
+		return TransactionSynchronizationManager.forCurrentTransaction() //
 				.map(it -> {
 
 					ReactiveMongoResourceHolder holder = (ReactiveMongoResourceHolder) it.getResource(databaseFactory);
@@ -137,7 +137,7 @@ public class ReactiveMongoDatabaseUtils {
 
 		Assert.notNull(factory, "DatabaseFactory must not be null!");
 
-		return TransactionSynchronizationManager.currentTransaction()
+		return TransactionSynchronizationManager.forCurrentTransaction()
 				.filter(TransactionSynchronizationManager::isSynchronizationActive) //
 				.flatMap(synchronizationManager -> {
 
@@ -210,7 +210,7 @@ public class ReactiveMongoDatabaseUtils {
 			this.resourceHolder = resourceHolder;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.transaction.reactive.ReactiveResourceSynchronization#shouldReleaseBeforeCompletion()
 		 */
@@ -219,7 +219,7 @@ public class ReactiveMongoDatabaseUtils {
 			return false;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.transaction.reactive.ReactiveResourceSynchronization#processResourceAfterCommit(java.lang.Object)
 		 */
@@ -233,7 +233,7 @@ public class ReactiveMongoDatabaseUtils {
 			return Mono.empty();
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.transaction.reactive.ReactiveResourceSynchronization#afterCompletion(int)
 		 */
@@ -252,7 +252,7 @@ public class ReactiveMongoDatabaseUtils {
 			});
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.transaction.reactive.ReactiveResourceSynchronization#releaseResource(java.lang.Object, java.lang.Object)
 		 */

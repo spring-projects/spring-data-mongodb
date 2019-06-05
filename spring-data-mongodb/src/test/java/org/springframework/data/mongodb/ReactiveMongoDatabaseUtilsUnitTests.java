@@ -116,7 +116,7 @@ public class ReactiveMongoDatabaseUtilsUnitTests {
 
 		operator.execute(tx -> {
 
-			return TransactionSynchronizationManager.currentTransaction().doOnNext(synchronizationManager -> {
+			return TransactionSynchronizationManager.forCurrentTransaction().doOnNext(synchronizationManager -> {
 
 				assertThat(synchronizationManager.isSynchronizationActive()).isTrue();
 				assertThat(tx.isNewTransaction()).isTrue();
