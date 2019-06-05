@@ -28,7 +28,7 @@ import org.springframework.util.ObjectUtils;
  *
  * @author Christoph Strobl
  * @since 1.7
- * @see <a href="http://geojson.org/geojson-spec.html#multilinestring">http://geojson.org/geojson-spec.html#multilinestring</a>
+ * @see <a href="https://geojson.org/geojson-spec.html#multilinestring">https://geojson.org/geojson-spec.html#multilinestring</a>
  */
 public class GeoJsonMultiLineString implements GeoJson<Iterable<GeoJsonLineString>> {
 
