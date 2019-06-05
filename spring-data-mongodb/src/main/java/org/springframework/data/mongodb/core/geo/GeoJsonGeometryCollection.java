@@ -27,7 +27,7 @@ import org.springframework.util.ObjectUtils;
  *
  * @author Christoph Strobl
  * @since 1.7
- * @see <a href="http://geojson.org/geojson-spec.html#geometry-collection">http://geojson.org/geojson-spec.html#geometry-collection</a>
+ * @see <a href="https://geojson.org/geojson-spec.html#geometry-collection">https://geojson.org/geojson-spec.html#geometry-collection</a>
  */
 public class GeoJsonGeometryCollection implements GeoJson<Iterable<GeoJson<?>>> {
 

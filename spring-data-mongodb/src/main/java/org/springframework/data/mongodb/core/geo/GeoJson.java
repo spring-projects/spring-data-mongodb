@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.core.geo;
 
 /**
- * Interface definition for structures defined in GeoJSON ({@link http://geojson.org/}) format.
+ * Interface definition for structures defined in GeoJSON ({@link https://geojson.org/}) format.
  *
  * @author Christoph Strobl
  * @since 1.7
@@ -27,7 +27,7 @@ public interface GeoJson<T extends Iterable<?>> {
 	 * String value representing the type of the {@link GeoJson} object.
 	 *
 	 * @return will never be {@literal null}.
-	 * @see <a href="http://geojson.org/geojson-spec.html#geojson-objects">http://geojson.org/geojson-spec.html#geojson-objects</a>
+	 * @see <a href="https://geojson.org/geojson-spec.html#geojson-objects">https://geojson.org/geojson-spec.html#geojson-objects</a>
 	 */
 	String getType();
 
@@ -36,7 +36,7 @@ public interface GeoJson<T extends Iterable<?>> {
 	 * determined by {@link #getType()} of geometry.
 	 *
 	 * @return will never be {@literal null}.
-	 * @see <a href="http://geojson.org/geojson-spec.html#geometry-objects">http://geojson.org/geojson-spec.html#geometry-objects</a>
+	 * @see <a href="https://geojson.org/geojson-spec.html#geometry-objects">https://geojson.org/geojson-spec.html#geometry-objects</a>
 	 */
 	T getCoordinates();
 }

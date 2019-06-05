@@ -29,7 +29,7 @@ import org.springframework.util.ObjectUtils;
  *
  * @author Christoph Strobl
  * @since 1.7
- * @see <a href="http://geojson.org/geojson-spec.html#multipoint">http://geojson.org/geojson-spec.html#multipoint</a>
+ * @see <a href="https://geojson.org/geojson-spec.html#multipoint">https://geojson.org/geojson-spec.html#multipoint</a>
  */
 public class GeoJsonMultiPoint implements GeoJson<Iterable<Point>> {
 

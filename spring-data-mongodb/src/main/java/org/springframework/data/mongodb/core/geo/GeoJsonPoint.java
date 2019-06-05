@@ -25,7 +25,7 @@ import org.springframework.data.geo.Point;
  *
  * @author Christoph Strobl
  * @since 1.7
- * @see <a href="http://geojson.org/geojson-spec.html#point">http://geojson.org/geojson-spec.html#point</a>
+ * @see <a href="https://geojson.org/geojson-spec.html#point">https://geojson.org/geojson-spec.html#point</a>
  */
 public class GeoJsonPoint extends Point implements GeoJson<List<Double>> {
 

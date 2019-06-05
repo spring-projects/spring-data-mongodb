@@ -24,7 +24,7 @@ import org.springframework.data.geo.Point;
  *
  * @author Christoph Strobl
  * @since 1.7
- * @see <a href="http://geojson.org/geojson-spec.html#linestring">http://geojson.org/geojson-spec.html#linestring</a>
+ * @see <a href="https://geojson.org/geojson-spec.html#linestring">https://geojson.org/geojson-spec.html#linestring</a>
  */
 public class GeoJsonLineString extends GeoJsonMultiPoint {
 
