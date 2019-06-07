@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
  * Unit tests for {@link DocumentField}.
  *
  * @author Oliver Gierke
+ * @author Owen Q
  */
 public class FieldUnitTests {
 
@@ -36,6 +37,16 @@ public class FieldUnitTests {
 		assertThat(right).isEqualTo(left);
 	}
 
+	@Test // DATAMONGO-2294
+	public void sameObjectSetupCreatesEqualFieldByCollections() {
+
+		Field left = new Field().includes("foo", "bar");
+		Field right = new Field().include("foo").include("bar");
+
+		assertThat(left, is(right));
+		assertThat(right, is(left));
+	}
+
 	@Test
 	public void differentObjectSetupCreatesEqualField() {
 
@@ -44,5 +55,15 @@ public class FieldUnitTests {
 
 		assertThat(left).isNotEqualTo(right);
 		assertThat(right).isNotEqualTo(left);
+	}
+
+	@Test // DATAMONGO-2294
+	public void differentObjectSetupCreatesEqualFieldByCollections() {
+
+		Field left = new Field().includes("foo", "bar");
+		Field right = new Field().include("foo").include("zoo");
+
+		assertThat(left, is(not(right)));
+		assertThat(right, is(not(left)));
 	}
 }
