@@ -17,23 +17,14 @@ package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
-import static org.hamcrest.Matchers.*;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.*;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 import static org.junit.Assume.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.core.query.Update.*;
-
-import com.mongodb.MongoClient;
-import com.mongodb.client.model.IndexOptions;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.Value;
-import lombok.experimental.Wither;
 
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
@@ -45,8 +36,13 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.assertj.core.api.Assertions;
-import org.bson.Document;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.Value;
+import lombok.experimental.Wither;
+
 import org.bson.types.ObjectId;
 import org.hamcrest.collection.IsMapContaining;
 import org.joda.time.DateTime;
@@ -111,6 +107,7 @@ import org.springframework.util.StringUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
+import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
@@ -119,6 +116,7 @@ import com.mongodb.client.ListIndexesIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.IndexOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
@@ -3723,6 +3721,27 @@ public class MongoTemplateTests {
 		assertThat(target).isNotNull();
 		assertThat(target.id).isEqualTo(outerId);
 		assertThat(target.inner.id).isEqualTo(innerId);
+	}
+
+	@Test // DATAMONGO-2294
+	public void shouldProjectWithCollections() {
+
+		MyPerson person = new MyPerson("Walter");
+		person.address = new Address("TX", "Austin");
+		template.save(person);
+
+		Query queryByChainedInclude = query(where("name").is("Walter"));
+		queryByChainedInclude.fields().include("id").include("name");
+
+		Query queryByCollectionInclude = query(where("name").is("Walter"));
+		queryByCollectionInclude.fields().includes("id", "name");
+
+		MyPerson first = template.findAndReplace(queryByChainedInclude, new MyPerson("Walter"));
+		MyPerson second = template.findAndReplace(queryByCollectionInclude, new MyPerson("Walter"));
+
+		assertThat(first).isEqualTo(second);
+		assertThat(first.address).isNull();
+		assertThat(second.address).isNull();
 	}
 
 	private AtomicReference<ImmutableVersioned> createAfterSaveReference() {

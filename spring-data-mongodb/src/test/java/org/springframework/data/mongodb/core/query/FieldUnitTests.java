@@ -24,6 +24,7 @@ import org.junit.Test;
  * Unit tests for {@link DocumentField}.
  *
  * @author Oliver Gierke
+ * @author Owen Q
  */
 public class FieldUnitTests {
 
@@ -37,11 +38,31 @@ public class FieldUnitTests {
 		assertThat(right, is(left));
 	}
 
+	@Test // DATAMONGO-2294
+	public void sameObjectSetupCreatesEqualFieldByCollections() {
+
+		Field left = new Field().includes("foo", "bar");
+		Field right = new Field().include("foo").include("bar");
+
+		assertThat(left, is(right));
+		assertThat(right, is(left));
+	}
+
 	@Test
 	public void differentObjectSetupCreatesEqualField() {
 
 		Field left = new Field().elemMatch("key", Criteria.where("foo").is("bar"));
 		Field right = new Field().elemMatch("key", Criteria.where("foo").is("foo"));
+
+		assertThat(left, is(not(right)));
+		assertThat(right, is(not(left)));
+	}
+
+	@Test // DATAMONGO-2294
+	public void differentObjectSetupCreatesEqualFieldByCollections() {
+
+		Field left = new Field().includes("foo", "bar");
+		Field right = new Field().include("foo").include("zoo");
 
 		assertThat(left, is(not(right)));
 		assertThat(right, is(not(left)));
