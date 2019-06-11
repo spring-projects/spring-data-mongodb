@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyList;
 import static org.mockito.Mockito.eq;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
@@ -26,6 +27,8 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 import java.util.List;
 import java.util.Optional;
 
+import org.bson.BsonDocument;
+import org.bson.BsonString;
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,6 +37,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mongodb.MongoDbFactory;
@@ -46,12 +52,17 @@ import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertCallback;
+import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeSaveCallback;
+import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Update;
 
+import com.mongodb.MongoWriteException;
+import com.mongodb.WriteError;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.DeleteManyModel;
@@ -85,20 +96,20 @@ public class DefaultBulkOperationsUnitTests {
 	@Before
 	public void setUp() {
 
+		when(factory.getDb()).thenReturn(database);
+		when(factory.getExceptionTranslator()).thenReturn(new NullExceptionTranslator());
+		when(database.getCollection(anyString(), eq(Document.class))).thenReturn(collection);
+
 		mappingContext = new MongoMappingContext();
 		mappingContext.afterPropertiesSet();
 
 		converter = new MappingMongoConverter(dbRefResolver, mappingContext);
-
 		template = new MongoTemplate(factory, converter);
-
-		when(factory.getDb()).thenReturn(database);
-		when(database.getCollection(anyString(), eq(Document.class))).thenReturn(collection);
 
 		ops = new DefaultBulkOperations(template, "collection-1",
 				new BulkOperationContext(BulkMode.ORDERED,
 						Optional.of(mappingContext.getPersistentEntity(SomeDomainType.class)), new QueryMapper(converter),
-						new UpdateMapper(converter), null));
+						new UpdateMapper(converter), null, null));
 	}
 
 	@Test // DATAMONGO-1518
@@ -199,7 +210,7 @@ public class DefaultBulkOperationsUnitTests {
 
 		ops = new DefaultBulkOperations(template, "collection-1",
 				new BulkOperationContext(BulkMode.ORDERED, Optional.of(mappingContext.getPersistentEntity(Person.class)),
-						new QueryMapper(converter), new UpdateMapper(converter),
+						new QueryMapper(converter), new UpdateMapper(converter), null,
 						EntityCallbacks.create(beforeConvertCallback, beforeSaveCallback)));
 
 		Person entity = new Person("init");
@@ -217,6 +228,73 @@ public class DefaultBulkOperationsUnitTests {
 
 		InsertOneModel<Document> updateModel = (InsertOneModel<Document>) captor.getValue().get(0);
 		assertThat(updateModel.getDocument()).containsEntry("firstName", "before-save");
+	}
+
+	@Test // DATAMONGO-2290
+	public void bulkReplaceOneEmitsEventsCorrectly() {
+
+		ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
+
+		ops = new DefaultBulkOperations(template, "collection-1",
+				new BulkOperationContext(BulkMode.ORDERED, Optional.of(mappingContext.getPersistentEntity(Person.class)),
+						new QueryMapper(converter), new UpdateMapper(converter), eventPublisher, null));
+
+		ops.replaceOne(query(where("firstName").is("danerys")), new SomeDomainType());
+
+		verify(eventPublisher).publishEvent(any(BeforeConvertEvent.class));
+		verify(eventPublisher, never()).publishEvent(any(BeforeSaveEvent.class));
+		verify(eventPublisher, never()).publishEvent(any(AfterSaveEvent.class));
+
+		ops.execute();
+
+		verify(eventPublisher).publishEvent(any(BeforeSaveEvent.class));
+		verify(eventPublisher).publishEvent(any(AfterSaveEvent.class));
+	}
+
+	@Test // DATAMONGO-2290
+	public void bulkInsertEmitsEventsCorrectly() {
+
+		ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
+
+		ops = new DefaultBulkOperations(template, "collection-1",
+				new BulkOperationContext(BulkMode.ORDERED, Optional.of(mappingContext.getPersistentEntity(Person.class)),
+						new QueryMapper(converter), new UpdateMapper(converter), eventPublisher, null));
+
+		ops.insert(new SomeDomainType());
+
+		verify(eventPublisher).publishEvent(any(BeforeConvertEvent.class));
+		verify(eventPublisher, never()).publishEvent(any(BeforeSaveEvent.class));
+		verify(eventPublisher, never()).publishEvent(any(AfterSaveEvent.class));
+
+		ops.execute();
+
+		verify(eventPublisher).publishEvent(any(BeforeSaveEvent.class));
+		verify(eventPublisher).publishEvent(any(AfterSaveEvent.class));
+	}
+
+	@Test
+	public void noAfterSaveEventOnFailure() {
+
+		ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
+		when(collection.bulkWrite(anyList(), any())).thenThrow(new MongoWriteException(
+				new WriteError(89, "NetworkTimeout", new BsonDocument("hi", new BsonString("there!"))), null));
+
+		ops = new DefaultBulkOperations(template, "collection-1",
+				new BulkOperationContext(BulkMode.ORDERED, Optional.of(mappingContext.getPersistentEntity(Person.class)),
+						new QueryMapper(converter), new UpdateMapper(converter), eventPublisher, null));
+
+		ops.insert(new SomeDomainType());
+
+		verify(eventPublisher).publishEvent(any(BeforeConvertEvent.class));
+
+		try {
+			ops.execute();
+		} catch (MongoWriteException expected) {
+
+		}
+
+		verify(eventPublisher).publishEvent(any(BeforeSaveEvent.class));
+		verify(eventPublisher, never()).publishEvent(any(AfterSaveEvent.class));
 	}
 
 	class SomeDomainType {
@@ -246,6 +324,14 @@ public class DefaultBulkOperationsUnitTests {
 
 			document.put("firstName", "before-save");
 			return new Person("before-save");
+		}
+	}
+
+	static class NullExceptionTranslator implements PersistenceExceptionTranslator {
+
+		@Override
+		public DataAccessException translateExceptionIfPossible(RuntimeException ex) {
+			return null;
 		}
 	}
 }

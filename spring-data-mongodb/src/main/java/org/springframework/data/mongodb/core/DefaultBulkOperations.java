@@ -26,13 +26,18 @@ import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertCallback;
+import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeSaveCallback;
+import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
+import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -115,6 +120,7 @@ class DefaultBulkOperations implements BulkOperations {
 
 		Assert.notNull(document, "Document must not be null!");
 
+		maybeEmitEvent(new BeforeConvertEvent<>(document, collectionName));
 		Object source = maybeInvokeBeforeConvertCallback(document);
 		addModel(source, new InsertOneModel<>(getMappedObject(source)));
 
@@ -266,6 +272,7 @@ class DefaultBulkOperations implements BulkOperations {
 		replaceOptions.upsert(options.isUpsert());
 		query.getCollation().map(Collation::toMongoCollation).ifPresent(replaceOptions::collation);
 
+		maybeEmitEvent(new BeforeConvertEvent<>(replacement, collectionName));
 		Object source = maybeInvokeBeforeConvertCallback(replacement);
 		addModel(source,
 				new ReplaceOneModel<>(getMappedQuery(query.getQueryObject()), getMappedObject(source), replaceOptions));
@@ -282,19 +289,27 @@ class DefaultBulkOperations implements BulkOperations {
 
 		try {
 
-			return mongoOperations.execute(collectionName, collection -> {
+			com.mongodb.bulk.BulkWriteResult result = mongoOperations.execute(collectionName, collection -> {
 				return collection.bulkWrite(models.stream().map(it -> {
 
+					maybeEmitBeforeSaveEvent(it);
+
 					if (it.getModel() instanceof InsertOneModel) {
-						maybeInvokeBeforeSaveCallback(it.getSource(), ((InsertOneModel<Document>) it.getModel()).getDocument());
-					}
-					if (it.getModel() instanceof ReplaceOneModel) {
-						maybeInvokeBeforeSaveCallback(it.getSource(), ((ReplaceOneModel<Document>) it.getModel()).getReplacement());
+
+						Document target = ((InsertOneModel<Document>) it.getModel()).getDocument();
+						maybeInvokeBeforeSaveCallback(it.getSource(), target);
+					} else if (it.getModel() instanceof ReplaceOneModel) {
+
+						Document target = ((ReplaceOneModel<Document>) it.getModel()).getReplacement();
+						maybeInvokeBeforeSaveCallback(it.getSource(), target);
 					}
 
 					return mapWriteModel(it.getModel());
 				}).collect(Collectors.toList()), bulkOptions);
 			});
+
+			models.stream().forEach(this::maybeEmitAfterSaveEvent);
+			return result;
 		} finally {
 			this.bulkOptions = getBulkWriteOptions(bulkOperationContext.getBulkMode());
 		}
@@ -386,6 +401,41 @@ class DefaultBulkOperations implements BulkOperations {
 		models.add(new SourceAwareWriteModelHolder(source, model));
 	}
 
+	private void maybeEmitBeforeSaveEvent(SourceAwareWriteModelHolder it) {
+
+		if (it.getModel() instanceof InsertOneModel) {
+
+			Document target = ((InsertOneModel<Document>) it.getModel()).getDocument();
+			maybeEmitEvent(new BeforeSaveEvent<>(it.getSource(), target, collectionName));
+		} else if (it.getModel() instanceof ReplaceOneModel) {
+
+			Document target = ((ReplaceOneModel<Document>) it.getModel()).getReplacement();
+			maybeEmitEvent(new BeforeSaveEvent<>(it.getSource(), target, collectionName));
+		}
+	}
+
+	private void maybeEmitAfterSaveEvent(SourceAwareWriteModelHolder it) {
+
+		if (it.getModel() instanceof InsertOneModel) {
+
+			Document target = ((InsertOneModel<Document>) it.getModel()).getDocument();
+			maybeEmitEvent(new AfterSaveEvent<>(it.getSource(), target, collectionName));
+		} else if (it.getModel() instanceof ReplaceOneModel) {
+
+			Document target = ((ReplaceOneModel<Document>) it.getModel()).getReplacement();
+			maybeEmitEvent(new AfterSaveEvent<>(it.getSource(), target, collectionName));
+		}
+	}
+
+	private <E extends MongoMappingEvent<T>, T> E maybeEmitEvent(E event) {
+
+		if (null != bulkOperationContext.getEventPublisher()) {
+			bulkOperationContext.getEventPublisher().publishEvent(event);
+		}
+
+		return event;
+	}
+
 	private Object maybeInvokeBeforeConvertCallback(Object value) {
 
 		if (bulkOperationContext.getEntityCallbacks() == null) {
@@ -434,6 +484,7 @@ class DefaultBulkOperations implements BulkOperations {
 		@NonNull Optional<? extends MongoPersistentEntity<?>> entity;
 		@NonNull QueryMapper queryMapper;
 		@NonNull UpdateMapper updateMapper;
+		ApplicationEventPublisher eventPublisher;
 		EntityCallbacks entityCallbacks;
 	}
 
