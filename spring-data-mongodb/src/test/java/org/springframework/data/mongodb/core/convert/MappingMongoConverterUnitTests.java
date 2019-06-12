@@ -81,6 +81,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.PersonPojoStringId;
 import org.springframework.data.mongodb.core.mapping.TextScore;
 import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.BasicDBList;
@@ -1900,6 +1901,23 @@ public class MappingMongoConverterUnitTests {
 		Order order = converter.read(Order.class, orderDocument);
 
 		assertThat(order.items).hasSize(3);
+	}
+
+	@Test // DATAMONGO-2300
+	public void readAndConvertDBRefNestedByMapCorrectly() {
+
+		org.bson.Document cluster = new org.bson.Document("_id", 100L);
+		DBRef dbRef = new DBRef("clusters", 100L);
+
+		org.bson.Document data = new org.bson.Document("_id", 3L);
+		data.append("cluster", dbRef);
+
+		MappingMongoConverter spyConverter = spy(converter);
+		Mockito.doReturn(cluster).when(spyConverter).readRef(dbRef);
+
+		Map<Object, Object> result = spyConverter.readMap(ClassTypeInformation.MAP, data, ObjectPath.ROOT);
+
+		assertEquals(((LinkedHashMap) result.get("cluster")).get("_id"), 100L);
 	}
 
 	static class GenericType<T> {
