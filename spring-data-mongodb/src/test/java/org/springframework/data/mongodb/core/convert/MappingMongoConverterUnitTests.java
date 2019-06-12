@@ -80,6 +80,7 @@ import org.springframework.data.mongodb.core.mapping.PersonPojoStringId;
 import org.springframework.data.mongodb.core.mapping.TextScore;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertCallback;
 import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.BasicDBList;
@@ -95,6 +96,7 @@ import com.mongodb.DBRef;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Roman Puchkovskiy
+ * @author Heesu Jung
  */
 @ExtendWith(MockitoExtension.class)
 public class MappingMongoConverterUnitTests {
@@ -2159,9 +2161,26 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document document = new org.bson.Document("personMap", refMap);
 
 		DBRefWrapper result = converter.read(DBRefWrapper.class, document);
-		
+
 		verify(afterConvertCallback).onAfterConvert(eq(result.personMap.get("foo")),
 				eq(new org.bson.Document()), any());
+	}
+
+	@Test // DATAMONGO-2300
+	public void readAndConvertDBRefNestedByMapCorrectly() {
+
+		org.bson.Document cluster = new org.bson.Document("_id", 100L);
+		DBRef dbRef = new DBRef("clusters", 100L);
+
+		org.bson.Document data = new org.bson.Document("_id", 3L);
+		data.append("cluster", dbRef);
+
+		MappingMongoConverter spyConverter = spy(converter);
+		Mockito.doReturn(cluster).when(spyConverter).readRef(dbRef);
+
+		Map<Object, Object> result = spyConverter.readMap(ClassTypeInformation.MAP, data, ObjectPath.ROOT);
+
+		assertThat(((LinkedHashMap) result.get("cluster")).get("_id")).isEqualTo(100L);
 	}
 
 	static class GenericType<T> {
