@@ -76,6 +76,7 @@ import com.mongodb.DBRef;
  * @author Christoph Strobl
  * @author Jordi Llach
  * @author Mark Paluch
+ * @author Heesu Jung
  */
 public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware {
 
@@ -1120,7 +1121,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				map.put(key, read(defaultedValueType, (BasicDBObject) value, path));
 			} else if (value instanceof DBRef) {
 				map.put(key, DBRef.class.equals(rawValueType) ? value
-						: readAndConvertDBRef((DBRef) value, defaultedValueType, ObjectPath.ROOT, rawValueType));
+						: readAndConvertDBRef((DBRef) value, defaultedValueType, ObjectPath.ROOT, rawValueType != null ? rawValueType : ClassTypeInformation.OBJECT.getType()));
 			} else if (value instanceof List) {
 				map.put(key, readCollectionOrArray(valueType != null ? valueType : ClassTypeInformation.LIST,
 						(List<Object>) value, path));
