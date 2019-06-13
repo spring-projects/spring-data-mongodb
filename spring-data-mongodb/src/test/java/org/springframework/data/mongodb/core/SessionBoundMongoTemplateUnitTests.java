@@ -27,6 +27,7 @@ import org.bson.codecs.configuration.CodecRegistry;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.geo.Metrics;
@@ -66,6 +67,7 @@ import com.mongodb.client.ClientSession;
  * control the behavior by using the methods dedicated for {@link ClientSession} directly.
  *
  * @author Christoph Strobl
+ * @author Jens Schauder
  */
 @SuppressWarnings("unchecked")
 @RunWith(MockitoJUnitRunner.Silent.class)
@@ -77,7 +79,7 @@ public class SessionBoundMongoTemplateUnitTests {
 
 	MongoDbFactory factory;
 
-	@Mock MongoCollection collection;
+	@Mock(answer = Answers.RETURNS_DEEP_STUBS) MongoCollection collection;
 	@Mock MongoDatabase database;
 	@Mock MongoClient client;
 	@Mock ClientSession clientSession;
