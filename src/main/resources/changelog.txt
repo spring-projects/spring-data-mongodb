@@ -1,6 +1,27 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.2.0.RC1 (2019-06-14)
+-----------------------------------------
+* DATAMONGO-2295 - Adapt to renamed TransactionSynchronizationManager.forCurrentTransaction().
+* DATAMONGO-2293 - EntityOperations.populateIdIfNecessary nulls entire entity when just the id is null.
+* DATAMONGO-2292 - Create security policy readme.
+* DATAMONGO-2290 - BulkOperation does not trigger lifecycle callbacks for entities.
+* DATAMONGO-2288 - Fix wrong indentation on documentation code sample.
+* DATAMONGO-2282 - Add shortcut to create JsonSchemaProperty for ObjectId.
+* DATAMONGO-2278 - Update Querydsl package names in MongoAnnotationProcessor.
+* DATAMONGO-2275 - NPE when in QueryMapper for MongoJsonSchema when domain type is Document.
+* DATAMONGO-2267 - Property population resolves collection name via SpEL multiple times.
+* DATAMONGO-2261 - Use Entity Callback API for before-save operations.
+* DATAMONGO-2259 - Add MongoDB 4.2 expanded format to 'out' aggregation operation.
+* DATAMONGO-2256 - Release 2.2 RC1 (Moore).
+* DATAMONGO-2252 - getCollection(collectionName) does not create collection when expected (api description mismatch).
+* DATAMONGO-2153 - Add support for aggregations via annotated repository methods.
+* DATAMONGO-2081 - Expose expireAfterSeconds in IndexInfo.
+* DATAMONGO-2067 - Make @CompoundIndex and all similar annotations repeatable.
+* DATAMONGO-1183 - Add support for Hashed Index.
+
+
 Changes in version 2.1.9.RELEASE (2019-06-14)
 ---------------------------------------------
 * DATAMONGO-2293 - EntityOperations.populateIdIfNecessary nulls entire entity when just the id is null.
