@@ -17,9 +17,12 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.bson.Document;
 import org.springframework.data.mapping.PersistentPropertyPath;
-import org.springframework.data.mapping.PropertyPath;
+import org.springframework.data.mapping.SimplePropertyHandler;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFieldReference;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
@@ -99,6 +102,23 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 	@Override
 	public FieldReference getReference(String name) {
 		return getReferenceFor(field(name));
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getFields(java.lang.Class)
+	 */
+	@Override
+	public Fields getFields(Class<?> type) {
+
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(type);
+		if (entity == null) {
+			return AggregationOperationContext.super.getFields(type);
+		}
+
+		List<String> fields = new ArrayList<>();
+		entity.doWithProperties((SimplePropertyHandler) it -> fields.add(it.getName()));
+		return Fields.fields(fields.toArray(new String[fields.size()]));
 	}
 
 	private FieldReference getReferenceFor(Field field) {

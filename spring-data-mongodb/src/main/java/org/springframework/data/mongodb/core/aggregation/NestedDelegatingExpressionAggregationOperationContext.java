@@ -78,4 +78,13 @@ class NestedDelegatingExpressionAggregationOperationContext implements Aggregati
 	public FieldReference getReference(String name) {
 		return new ExpressionFieldReference(delegate.getReference(name));
 	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getFields(java.lang.Class)
+	 */
+	@Override
+	public Fields getFields(Class<?> type) {
+		return delegate.getFields(type);
+	}
 }

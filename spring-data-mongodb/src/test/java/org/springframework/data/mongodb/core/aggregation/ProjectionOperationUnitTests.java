@@ -27,7 +27,6 @@ import lombok.Data;
 import java.util.Arrays;
 import java.util.List;
 
-import org.assertj.core.api.Assertions;
 import org.bson.Document;
 import org.junit.Test;
 import org.springframework.data.domain.Range;
@@ -2114,7 +2113,7 @@ public class ProjectionOperationUnitTests {
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 
-		Assertions.assertThat(projectClause) //
+		assertThat(projectClause) //
 				.hasSize(2) //
 				.containsEntry("title", 1) //
 				.containsEntry("author", 1);
@@ -2130,10 +2129,34 @@ public class ProjectionOperationUnitTests {
 				.toDocument(new TypeBasedAggregationOperationContext(Book.class, mappingContext, new QueryMapper(converter)));
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 
-		Assertions.assertThat(projectClause) //
+		assertThat(projectClause) //
 				.hasSize(2) //
 				.containsEntry("ti_tl_e", 1) //
 				.containsEntry("author", 1);
+	}
+
+	@Test // DATAMONGO-2200
+	public void typeProjectionShouldIncludeInterfaceProjectionValues() {
+
+		ProjectionOperation operation = Aggregation.project(ProjectionInterface.class);
+
+		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
+
+		assertThat(projectClause) //
+				.hasSize(1) //
+				.containsEntry("title", 1);
+	}
+
+	@Test // DATAMONGO-2200
+	public void typeProjectionShouldBeEmptyIfNoPropertiesFound() {
+
+		ProjectionOperation operation = Aggregation.project(EmptyType.class);
+
+		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
+
+		assertThat(projectClause).isEmpty();
 	}
 
 	private static Document exctractOperation(String field, Document fromProjectClause) {
@@ -2157,6 +2180,14 @@ public class ProjectionOperationUnitTests {
 		String first;
 		String last;
 		String middle;
+	}
+
+	interface ProjectionInterface {
+		String getTitle();
+	}
+
+	static class EmptyType {
+
 	}
 
 }

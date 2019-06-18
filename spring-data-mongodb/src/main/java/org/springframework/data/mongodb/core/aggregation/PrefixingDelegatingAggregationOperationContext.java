@@ -91,6 +91,15 @@ public class PrefixingDelegatingAggregationOperationContext implements Aggregati
 		return delegate.getReference(name);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getFields(java.lang.Class)
+	 */
+	@Override
+	public Fields getFields(Class<?> type) {
+		return delegate.getFields(type);
+	}
+
 	@SuppressWarnings("unchecked")
 	private Document doPrefix(Document source) {
 

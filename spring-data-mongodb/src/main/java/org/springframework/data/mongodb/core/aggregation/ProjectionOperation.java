@@ -1737,8 +1737,9 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		public Document toDocument(AggregationOperationContext context) {
 
 			Document projections = new Document();
-			ReflectionUtils.doWithFields(type, it -> projections.append(it.getName(), 1));
 
+			Fields fields = context.getFields(type);
+			fields.asList().forEach(it -> projections.append(it.getName(), 1));
 			return context.getMappedObject(projections, type);
 		}
 	}
