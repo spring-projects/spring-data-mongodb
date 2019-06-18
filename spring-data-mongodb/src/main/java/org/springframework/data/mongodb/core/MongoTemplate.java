@@ -419,7 +419,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	@Override
 	public <T> CloseableIterator<T> stream(final Query query, final Class<T> entityType) {
 
-		return stream(query, entityType, operations.determineCollectionName(entityType));
+		return stream(query, entityType, getCollectionName(entityType));
 	}
 
 	/*
@@ -565,7 +565,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	public <T> T execute(Class<?> entityClass, CollectionCallback<T> callback) {
 
 		Assert.notNull(entityClass, "EntityClass must not be null!");
-		return execute(operations.determineCollectionName(entityClass), callback);
+		return execute(getCollectionName(entityClass), callback);
 	}
 
 	/*
@@ -643,7 +643,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 						() -> operations.forType(entityClass).getCollation()) //
 				.map(options::collation).orElse(options);
 
-		return doCreateCollection(operations.determineCollectionName(entityClass), convertToDocument(options, entityClass));
+		return doCreateCollection(getCollectionName(entityClass), convertToDocument(options, entityClass));
 	}
 
 	/*
@@ -685,7 +685,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @see org.springframework.data.mongodb.core.ExecutableInsertOperation#getCollection(java.lang.Class)
 	 */
 	public <T> boolean collectionExists(Class<T> entityClass) {
-		return collectionExists(operations.determineCollectionName(entityClass));
+		return collectionExists(getCollectionName(entityClass));
 	}
 
 	/*
@@ -713,7 +713,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @see org.springframework.data.mongodb.core.ExecutableInsertOperation#dropCollection(java.lang.Class)
 	 */
 	public <T> void dropCollection(Class<T> entityClass) {
-		dropCollection(operations.determineCollectionName(entityClass));
+		dropCollection(getCollectionName(entityClass));
 	}
 
 	/*
@@ -749,7 +749,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @see org.springframework.data.mongodb.core.ExecutableInsertOperation#indexOps(java.lang.Class)
 	 */
 	public IndexOperations indexOps(Class<?> entityClass) {
-		return new DefaultIndexOperations(this, operations.determineCollectionName(entityClass), entityClass);
+		return new DefaultIndexOperations(this, getCollectionName(entityClass), entityClass);
 	}
 
 	/*
@@ -765,7 +765,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @see org.springframework.data.mongodb.core.ExecutableInsertOperation#bulkOps(org.springframework.data.mongodb.core.BulkMode, java.lang.Class)
 	 */
 	public BulkOperations bulkOps(BulkMode bulkMode, Class<?> entityClass) {
-		return bulkOps(bulkMode, entityClass, operations.determineCollectionName(entityClass));
+		return bulkOps(bulkMode, entityClass, getCollectionName(entityClass));
 	}
 
 	/*
@@ -800,7 +800,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	@Nullable
 	@Override
 	public <T> T findOne(Query query, Class<T> entityClass) {
-		return findOne(query, entityClass, operations.determineCollectionName(entityClass));
+		return findOne(query, entityClass, getCollectionName(entityClass));
 	}
 
 	@Nullable
@@ -825,7 +825,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	@Override
 	public boolean exists(Query query, Class<?> entityClass) {
-		return exists(query, entityClass, operations.determineCollectionName(entityClass));
+		return exists(query, entityClass, getCollectionName(entityClass));
 	}
 
 	@Override
@@ -856,7 +856,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	@Override
 	public <T> List<T> find(Query query, Class<T> entityClass) {
-		return find(query, entityClass, operations.determineCollectionName(entityClass));
+		return find(query, entityClass, getCollectionName(entityClass));
 	}
 
 	/*
@@ -877,7 +877,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	@Nullable
 	@Override
 	public <T> T findById(Object id, Class<T> entityClass) {
-		return findById(id, entityClass, operations.determineCollectionName(entityClass));
+		return findById(id, entityClass, getCollectionName(entityClass));
 	}
 
 	@Nullable
@@ -899,7 +899,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	@Override
 	public <T> List<T> findDistinct(Query query, String field, Class<?> entityClass, Class<T> resultClass) {
-		return findDistinct(query, field, operations.determineCollectionName(entityClass), entityClass, resultClass);
+		return findDistinct(query, field, getCollectionName(entityClass), entityClass, resultClass);
 	}
 
 	/*
@@ -986,7 +986,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	@Override
 	public <T> GeoResults<T> geoNear(NearQuery near, Class<T> entityClass) {
-		return geoNear(near, entityClass, operations.determineCollectionName(entityClass));
+		return geoNear(near, entityClass, getCollectionName(entityClass));
 	}
 
 	@Override
@@ -1008,7 +1008,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(returnType, "ReturnType must not be null!");
 
 		String collection = StringUtils.hasText(collectionName) ? collectionName
-				: operations.determineCollectionName(domainType);
+				: getCollectionName(domainType);
 		String distanceField = operations.nearQueryDistanceFieldName(domainType);
 
 		Aggregation $geoNear = TypedAggregation.newAggregation(domainType, Aggregation.geoNear(near, distanceField))
@@ -1040,7 +1040,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	@Override
 	public <T> T findAndModify(Query query, Update update, Class<T> entityClass) {
 		return findAndModify(query, update, new FindAndModifyOptions(), entityClass,
-				operations.determineCollectionName(entityClass));
+				getCollectionName(entityClass));
 	}
 
 	@Nullable
@@ -1052,7 +1052,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	@Nullable
 	@Override
 	public <T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass) {
-		return findAndModify(query, update, options, entityClass, operations.determineCollectionName(entityClass));
+		return findAndModify(query, update, options, entityClass, getCollectionName(entityClass));
 	}
 
 	@Nullable
@@ -1122,7 +1122,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	@Nullable
 	@Override
 	public <T> T findAndRemove(Query query, Class<T> entityClass) {
-		return findAndRemove(query, entityClass, operations.determineCollectionName(entityClass));
+		return findAndRemove(query, entityClass, getCollectionName(entityClass));
 	}
 
 	@Nullable
@@ -1142,7 +1142,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	public long count(Query query, Class<?> entityClass) {
 
 		Assert.notNull(entityClass, "Entity class must not be null!");
-		return count(query, entityClass, operations.determineCollectionName(entityClass));
+		return count(query, entityClass, getCollectionName(entityClass));
 	}
 
 	@Override
@@ -1296,7 +1296,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		Assert.notNull(batchToSave, "BatchToSave must not be null!");
 
-		return (Collection<T>) doInsertBatch(operations.determineCollectionName(entityClass), batchToSave,
+		return (Collection<T>) doInsertBatch(getCollectionName(entityClass), batchToSave,
 				this.mongoConverter);
 	}
 
@@ -1557,7 +1557,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	@Override
 	public UpdateResult upsert(Query query, Update update, Class<?> entityClass) {
-		return doUpdate(operations.determineCollectionName(entityClass), query, update, entityClass, true, false);
+		return doUpdate(getCollectionName(entityClass), query, update, entityClass, true, false);
 	}
 
 	@Override
@@ -1575,7 +1575,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	@Override
 	public UpdateResult updateFirst(Query query, Update update, Class<?> entityClass) {
-		return doUpdate(operations.determineCollectionName(entityClass), query, update, entityClass, false, false);
+		return doUpdate(getCollectionName(entityClass), query, update, entityClass, false, false);
 	}
 
 	@Override
@@ -1593,7 +1593,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	@Override
 	public UpdateResult updateMulti(Query query, Update update, Class<?> entityClass) {
-		return doUpdate(operations.determineCollectionName(entityClass), query, update, entityClass, false, true);
+		return doUpdate(getCollectionName(entityClass), query, update, entityClass, false, true);
 	}
 
 	@Override
@@ -1692,7 +1692,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		Assert.notNull(object, "Object must not be null!");
 
-		return remove(object, operations.determineCollectionName(object.getClass()));
+		return remove(object, getCollectionName(object.getClass()));
 	}
 
 	@Override
@@ -1713,7 +1713,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	@Override
 	public DeleteResult remove(Query query, Class<?> entityClass) {
-		return remove(query, entityClass, operations.determineCollectionName(entityClass));
+		return remove(query, entityClass, getCollectionName(entityClass));
 	}
 
 	@Override
@@ -1785,7 +1785,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	@Override
 	public <T> List<T> findAll(Class<T> entityClass) {
-		return findAll(entityClass, operations.determineCollectionName(entityClass));
+		return findAll(entityClass, getCollectionName(entityClass));
 	}
 
 	@Override
@@ -1988,7 +1988,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	@Override
 	public <O> AggregationResults<O> aggregate(TypedAggregation<?> aggregation, Class<O> outputType) {
-		return aggregate(aggregation, operations.determineCollectionName(aggregation.getInputType()), outputType);
+		return aggregate(aggregation, getCollectionName(aggregation.getInputType()), outputType);
 	}
 
 	/* (non-Javadoc)
@@ -2011,7 +2011,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	@Override
 	public <O> AggregationResults<O> aggregate(Aggregation aggregation, Class<?> inputType, Class<O> outputType) {
 
-		return aggregate(aggregation, operations.determineCollectionName(inputType), outputType,
+		return aggregate(aggregation, getCollectionName(inputType), outputType,
 				new TypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper));
 	}
 
@@ -2042,7 +2042,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	@Override
 	public <O> CloseableIterator<O> aggregateStream(TypedAggregation<?> aggregation, Class<O> outputType) {
-		return aggregateStream(aggregation, operations.determineCollectionName(aggregation.getInputType()), outputType);
+		return aggregateStream(aggregation, getCollectionName(aggregation.getInputType()), outputType);
 	}
 
 	/* (non-Javadoc)
@@ -2051,7 +2051,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	@Override
 	public <O> CloseableIterator<O> aggregateStream(Aggregation aggregation, Class<?> inputType, Class<O> outputType) {
 
-		return aggregateStream(aggregation, operations.determineCollectionName(inputType), outputType,
+		return aggregateStream(aggregation, getCollectionName(inputType), outputType,
 				new TypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper));
 	}
 
@@ -2077,7 +2077,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	@Override
 	public <T> List<T> findAllAndRemove(Query query, Class<T> entityClass) {
-		return findAllAndRemove(query, entityClass, operations.determineCollectionName(entityClass));
+		return findAllAndRemove(query, entityClass, getCollectionName(entityClass));
 	}
 
 	/* (non-Javadoc)
