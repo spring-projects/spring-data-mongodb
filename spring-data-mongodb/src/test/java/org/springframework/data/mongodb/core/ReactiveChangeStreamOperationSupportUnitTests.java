@@ -59,7 +59,7 @@ public class ReactiveChangeStreamOperationSupportUnitTests {
 	@Test // DATAMONGO-2089
 	public void listenWithoutDomainTypeUsesDocumentAsDefault() {
 
-		changeStreamSupport.changeStream().listen().subscribe();
+		changeStreamSupport.changeStream(Document.class).listen().subscribe();
 
 		verify(template).changeStream(isNull(), eq(ChangeStreamOptions.empty()), eq(Document.class));
 	}
@@ -104,7 +104,7 @@ public class ReactiveChangeStreamOperationSupportUnitTests {
 	public void listenWithoutDomainTypeCreatesUntypedAggregation() {
 
 		Criteria criteria = where("operationType").is("insert");
-		changeStreamSupport.changeStream().filter(criteria).listen().subscribe();
+		changeStreamSupport.changeStream(Document.class).filter(criteria).listen().subscribe();
 
 		ArgumentCaptor<ChangeStreamOptions> optionsArgumentCaptor = ArgumentCaptor.forClass(ChangeStreamOptions.class);
 		verify(template).changeStream(isNull(), optionsArgumentCaptor.capture(), eq(Document.class));
@@ -126,7 +126,7 @@ public class ReactiveChangeStreamOperationSupportUnitTests {
 
 		Document filter = new Document("$match", new Document("operationType", "insert"));
 
-		changeStreamSupport.changeStream().withOptions(options -> {
+		changeStreamSupport.changeStream(Document.class).withOptions(options -> {
 			options.filter(filter);
 		}).listen().subscribe();
 
@@ -144,7 +144,7 @@ public class ReactiveChangeStreamOperationSupportUnitTests {
 		Document filter = new Document("$match", new Document("operationType", "insert"));
 		Instant resumeTimestamp = Instant.now();
 
-		changeStreamSupport.changeStream().withOptions(options -> {
+		changeStreamSupport.changeStream(Document.class).withOptions(options -> {
 			options.filter(filter);
 		}).resumeAt(resumeTimestamp).listen().subscribe();
 

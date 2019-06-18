@@ -48,15 +48,6 @@ class ReactiveChangeStreamOperationSupport implements ReactiveChangeStreamOperat
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveChangeStreamOperation#changeStream()
-	 */
-	@Override
-	public ReactiveChangeStream<Document> changeStream() {
-		return new ReactiveChangeStreamSupport(template, null, Document.class, null, null);
-	}
-
-	/*
-	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.ReactiveChangeStreamOperation#changeStream(java.lang.Class)
 	 */
 	@Override
@@ -67,7 +58,7 @@ class ReactiveChangeStreamOperationSupport implements ReactiveChangeStreamOperat
 	}
 
 	static class ReactiveChangeStreamSupport<T>
-			implements ReactiveChangeStream<T>, ChangeStreamWithProjection<T>, ChangeStreamWithFilter<T> {
+			implements ReactiveChangeStream<T>, ChangeStreamWithFilterAndProjection<T> {
 
 		private final ReactiveMongoTemplate template;
 		private final @Nullable Class<?> domainType;
@@ -90,7 +81,7 @@ class ReactiveChangeStreamOperationSupport implements ReactiveChangeStreamOperat
 		 * @see org.springframework.data.mongodb.core.ReactiveChangeStreamOperation.ChangeStreamWithCollection#watchCollection(java.lang.String)
 		 */
 		@Override
-		public ChangeStreamWithProjection<T> watchCollection(String collection) {
+		public ChangeStreamWithFilterAndProjection<T> watchCollection(String collection) {
 
 			Assert.hasText(collection, "Collection name must not be null nor empty!");
 			return new ReactiveChangeStreamSupport<>(template, domainType, returnType, collection, options);
@@ -101,14 +92,14 @@ class ReactiveChangeStreamOperationSupport implements ReactiveChangeStreamOperat
 		 * @see org.springframework.data.mongodb.core.ReactiveChangeStreamOperation.ResumingChangeStream#resumeAt(java.lang.Object)
 		 */
 		@Override
-		public TerminatingChangeStream<T> resumeAt(Object beacon) {
+		public TerminatingChangeStream<T> resumeAt(Object token) {
 
 			return withOptions(builder -> {
 
-				if (beacon instanceof Instant) {
-					builder.resumeAt((Instant) beacon);
-				} else if (beacon instanceof BsonTimestamp) {
-					builder.resumeAt((BsonTimestamp) beacon);
+				if (token instanceof Instant) {
+					builder.resumeAt((Instant) token);
+				} else if (token instanceof BsonTimestamp) {
+					builder.resumeAt((BsonTimestamp) token);
 				}
 			});
 		}
@@ -118,10 +109,10 @@ class ReactiveChangeStreamOperationSupport implements ReactiveChangeStreamOperat
 		 * @see org.springframework.data.mongodb.core.ReactiveChangeStreamOperation.ResumingChangeStream#resumeAfter(java.lang.Object)
 		 */
 		@Override
-		public TerminatingChangeStream<T> resumeAfter(Object beacon) {
+		public TerminatingChangeStream<T> resumeAfter(Object token) {
 
-			Assert.isInstanceOf(BsonValue.class, beacon, "Beacon must be a BsonValue");
-			return withOptions(builder -> builder.resumeAfter((BsonValue) beacon));
+			Assert.isInstanceOf(BsonValue.class, token, "Token must be a BsonValue");
+			return withOptions(builder -> builder.resumeAfter((BsonValue) token));
 		}
 
 		/*
@@ -129,10 +120,10 @@ class ReactiveChangeStreamOperationSupport implements ReactiveChangeStreamOperat
 		 * @see org.springframework.data.mongodb.core.ReactiveChangeStreamOperation.ResumingChangeStream#startAfter(java.lang.Object)
 		 */
 		@Override
-		public TerminatingChangeStream<T> startAfter(Object beacon) {
+		public TerminatingChangeStream<T> startAfter(Object token) {
 
-			Assert.isInstanceOf(BsonValue.class, beacon, "Beacon must be a BsonValue");
-			return withOptions(builder -> builder.startAfter((BsonValue) beacon));
+			Assert.isInstanceOf(BsonValue.class, token, "Token must be a BsonValue");
+			return withOptions(builder -> builder.startAfter((BsonValue) token));
 		}
 
 		/*
@@ -153,7 +144,9 @@ class ReactiveChangeStreamOperationSupport implements ReactiveChangeStreamOperat
 		 * @see org.springframework.data.mongodb.core.ReactiveChangeStreamOperation.ChangeStreamWithProjection#as(java.lang.Class)
 		 */
 		@Override
-		public <R> ChangeStreamWithFilter<R> as(Class<R> resultType) {
+		public <R> ChangeStreamWithFilterAndProjection<R> as(Class<R> resultType) {
+
+			Assert.notNull(resultType, "ResultType must not be null!");
 			return new ReactiveChangeStreamSupport<>(template, domainType, resultType, collection, options);
 		}
 
@@ -162,8 +155,8 @@ class ReactiveChangeStreamOperationSupport implements ReactiveChangeStreamOperat
 		 * @see org.springframework.data.mongodb.core.ReactiveChangeStreamOperation.ChangeStreamWithFilter#filter(org.springframework.data.mongodb.core.aggregation.Aggregation)
 		 */
 		@Override
-		public ChangeStreamWithProjection<T> filter(Aggregation aggregation) {
-			return withOptions(builder -> builder.filter(aggregation));
+		public ChangeStreamWithFilterAndProjection<T> filter(Aggregation filter) {
+			return withOptions(builder -> builder.filter(filter));
 		}
 
 		/*
@@ -171,10 +164,11 @@ class ReactiveChangeStreamOperationSupport implements ReactiveChangeStreamOperat
 		 * @see org.springframework.data.mongodb.core.ReactiveChangeStreamOperation.ChangeStreamWithFilter#filter(org.springframework.data.mongodb.core.query.CriteriaDefinition)
 		 */
 		@Override
-		public ChangeStreamWithProjection<T> filter(CriteriaDefinition by) {
+		public ChangeStreamWithFilterAndProjection<T> filter(CriteriaDefinition by) {
 
 			MatchOperation $match = Aggregation.match(by);
-			Aggregation aggregation = domainType != null ? Aggregation.newAggregation(domainType, $match)
+			Aggregation aggregation = domainType != null && !Document.class.equals(domainType)
+					? Aggregation.newAggregation(domainType, $match)
 					: Aggregation.newAggregation($match);
 			return filter(aggregation);
 		}

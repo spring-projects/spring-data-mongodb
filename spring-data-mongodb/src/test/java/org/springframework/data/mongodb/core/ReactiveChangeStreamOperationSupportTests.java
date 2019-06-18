@@ -70,7 +70,7 @@ public class ReactiveChangeStreamOperationSupportTests {
 
 		BlockingQueue<ChangeStreamEvent<Document>> documents = new LinkedBlockingQueue<>(100);
 
-		Disposable disposable = template.changeStream() //
+		Disposable disposable = template.changeStream(Document.class) //
 				.watchCollection("person") //
 				.listen() //
 				.doOnNext(documents::add).subscribe();

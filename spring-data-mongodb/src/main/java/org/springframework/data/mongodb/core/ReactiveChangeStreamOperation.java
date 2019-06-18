@@ -22,9 +22,7 @@ import java.util.function.Consumer;
 
 import org.bson.BsonTimestamp;
 import org.bson.BsonValue;
-import org.bson.Document;
 import org.springframework.data.mongodb.core.ChangeStreamOptions.ChangeStreamOptionsBuilder;
-import org.springframework.data.mongodb.core.ReactiveFindOperation.ReactiveFind;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 
@@ -55,21 +53,12 @@ import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 public interface ReactiveChangeStreamOperation {
 
 	/**
-	 * Start creating a change stream operation.watching all collections within the database. <br />
-	 * Consider limiting events be defining a {@link ChangeStreamWithCollection#watchCollection(String) collection} and/or
-	 * {@link ChangeStreamWithFilter#filter(CriteriaDefinition) filter}.
-	 * 
-	 * @return new instance of {@link ReactiveFind}. Never {@literal null}.
-	 */
-	ReactiveChangeStream<Document> changeStream();
-
-	/**
 	 * Start creating a change stream operation for the given {@literal domainType} watching all collections within the
 	 * database. <br />
 	 * Consider limiting events be defining a {@link ChangeStreamWithCollection#watchCollection(String) collection} and/or
-	 * {@link ChangeStreamWithFilter#filter(CriteriaDefinition) filter}.
+	 * {@link ChangeStreamWithFilterAndProjection#filter(CriteriaDefinition) filter}.
 	 *
-	 * @param domainType must not be {@literal null}.
+	 * @param domainType must not be {@literal null}. Use {@link org.bson.Document} to obtain raw elements.
 	 * @return new instance of {@link ReactiveChangeStream}. Never {@literal null}.
 	 * @throws IllegalArgumentException if domainType is {@literal null}.
 	 */
@@ -102,48 +91,42 @@ public interface ReactiveChangeStreamOperation {
 		 * @return new instance of {@link ChangeStreamWithCollection}.
 		 * @throws IllegalArgumentException if collection is {@literal null}.
 		 */
-		ChangeStreamWithProjection<T> watchCollection(String collection);
-	}
-
-	/**
-	 * Result type override (optional).
-	 */
-	interface ChangeStreamWithProjection<T> extends ChangeStreamWithFilter<T> {
-
-		/**
-		 * Define the target type fields should be mapped to.
-		 *
-		 * @param resultType must not be {@literal null}.
-		 * @param <R> result type.
-		 * @return new instance of {@link ChangeStreamWithProjection}.
-		 * @throws IllegalArgumentException if resultType is {@literal null}.
-		 */
-		<R> ChangeStreamWithFilter<R> as(Class<R> resultType);
+		ChangeStreamWithFilterAndProjection<T> watchCollection(String collection);
 	}
 
 	/**
 	 * Provide a filter for limiting results (optional).
 	 */
-	interface ChangeStreamWithFilter<T> extends ResumingChangeStream<T>, TerminatingChangeStream<T> {
+	interface ChangeStreamWithFilterAndProjection<T> extends ResumingChangeStream<T>, TerminatingChangeStream<T> {
 
 		/**
 		 * Use an {@link Aggregation} to filter matching events.
 		 *
 		 * @param by must not be {@literal null}.
-		 * @return new instance of {@link ChangeStreamWithProjection}.
+		 * @return new instance of {@link ChangeStreamWithFilterAndProjection}.
 		 * @throws IllegalArgumentException if the given {@link Aggregation} is {@literal null}.
 		 */
-		ChangeStreamWithProjection<T> filter(Aggregation by);
+		ChangeStreamWithFilterAndProjection<T> filter(Aggregation by);
 
 		/**
 		 * Use a {@link CriteriaDefinition critera} to filter matching events via an
 		 * {@link org.springframework.data.mongodb.core.aggregation.MatchOperation}.
 		 *
 		 * @param by must not be {@literal null}.
-		 * @return new instance of {@link ChangeStreamWithProjection}.
+		 * @return new instance of {@link ChangeStreamWithFilterAndProjection}.
 		 * @throws IllegalArgumentException if the given {@link CriteriaDefinition} is {@literal null}.
 		 */
-		ChangeStreamWithProjection<T> filter(CriteriaDefinition by);
+		ChangeStreamWithFilterAndProjection<T> filter(CriteriaDefinition by);
+
+		/**
+		 * Define the target type fields should be mapped to.
+		 *
+		 * @param resultType must not be {@literal null}.
+		 * @param <R> result type.
+		 * @return new instance of {@link ChangeStreamWithFilterAndProjection}.
+		 * @throws IllegalArgumentException if resultType is {@literal null}.
+		 */
+		<R> ChangeStreamWithFilterAndProjection<R> as(Class<R> resultType);
 	}
 
 	/**
@@ -154,34 +137,34 @@ public interface ReactiveChangeStreamOperation {
 		/**
 		 * Resume the change stream at a given point.
 		 *
-		 * @param beacon an {@link Instant} or {@link BsonTimestamp}
+		 * @param token an {@link Instant} or {@link BsonTimestamp}
 		 * @return new instance of {@link TerminatingChangeStream}.
 		 * @see ChangeStreamOptionsBuilder#resumeAt(Instant)
 		 * @see ChangeStreamOptionsBuilder#resumeAt(BsonTimestamp)
 		 * @throws IllegalArgumentException if the given beacon is neither {@link Instant} nor {@link BsonTimestamp}.
 		 */
-		TerminatingChangeStream<T> resumeAt(Object beacon);
+		TerminatingChangeStream<T> resumeAt(Object token);
 
 		/**
 		 * Resume the change stream after a given point.
 		 *
-		 * @param beacon an {@link Instant} or {@link BsonTimestamp}
+		 * @param token an {@link Instant} or {@link BsonTimestamp}
 		 * @return new instance of {@link TerminatingChangeStream}.
 		 * @see ChangeStreamOptionsBuilder#resumeAfter(BsonValue)
 		 * @see ChangeStreamOptionsBuilder#resumeToken(BsonValue)
 		 * @throws IllegalArgumentException if the given beacon not a {@link BsonValue}.
 		 */
-		TerminatingChangeStream<T> resumeAfter(Object beacon);
+		TerminatingChangeStream<T> resumeAfter(Object token);
 
 		/**
 		 * Start the change stream after a given point.
 		 *
-		 * @param beacon an {@link Instant} or {@link BsonTimestamp}
+		 * @param token an {@link Instant} or {@link BsonTimestamp}
 		 * @return new instance of {@link TerminatingChangeStream}.
 		 * @see ChangeStreamOptionsBuilder#startAfter(BsonValue) (BsonValue)
 		 * @throws IllegalArgumentException if the given beacon not a {@link BsonValue}.
 		 */
-		TerminatingChangeStream<T> startAfter(Object beacon);
+		TerminatingChangeStream<T> startAfter(Object token);
 	}
 
 	/**
@@ -204,5 +187,5 @@ public interface ReactiveChangeStreamOperation {
 	 * {@link ReactiveChangeStream} provides methods for constructing change stream operations in a fluent way.
 	 */
 	interface ReactiveChangeStream<T> extends ChangeStreamWithOptions<T>, ChangeStreamWithCollection<T>,
-			TerminatingChangeStream<T>, ResumingChangeStream<T>, ChangeStreamWithFilter<T> {}
+			TerminatingChangeStream<T>, ResumingChangeStream<T>, ChangeStreamWithFilterAndProjection<T> {}
 }

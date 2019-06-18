@@ -2271,15 +2271,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveChangeStreamOperation#changeStream()
-	 */
-	@Override
-	public ReactiveChangeStream<Document> changeStream() {
-		return new ReactiveChangeStreamOperationSupport(this).changeStream();
-	}
-
-	/*
-	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.ReactiveChangeStreamOperation#changeStream(java.lang.Class)
 	 */
 	@Override
