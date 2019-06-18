@@ -15,9 +15,18 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import java.beans.PropertyDescriptor;
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.bson.Document;
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
+import org.springframework.util.ReflectionUtils;
 
 /**
  * The context for an {@link AggregationOperation}.
@@ -66,4 +75,32 @@ public interface AggregationOperationContext {
 	 * @return
 	 */
 	FieldReference getReference(String name);
+
+	/**
+	 * Returns the {@link Fields} exposed by the type. May be a {@literal class} or an {@literal interface}.
+	 *
+	 * @param type must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 2.2
+	 */
+	default Fields getFields(Class<?> type) {
+
+		Assert.notNull(type, "Type must not be null!");
+
+		List<String> fields = Arrays.stream(BeanUtils.getPropertyDescriptors(type)) //
+				.filter(it -> { // object and default methods
+					Method method = it.getReadMethod();
+					if (method == null) {
+						return false;
+					}
+					if (ReflectionUtils.isObjectMethod(method)) {
+						return false;
+					}
+					return !method.isDefault();
+				}) //
+				.map(PropertyDescriptor::getName) //
+				.collect(Collectors.toList());
+
+		return Fields.fields(fields.toArray(new String[0]));
+	}
 }

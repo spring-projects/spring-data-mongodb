@@ -81,6 +81,15 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 		return getReference(null, name);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getFields(java.lang.Class)
+	 */
+	@Override
+	public Fields getFields(Class<?> type) {
+		return rootContext.getFields(type);
+	}
+
 	/**
 	 * Returns a {@link FieldReference} to the given {@link Field} with the given {@code name}.
 	 *
