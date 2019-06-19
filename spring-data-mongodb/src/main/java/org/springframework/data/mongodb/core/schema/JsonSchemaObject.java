@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.schema;
 
+import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
@@ -429,6 +430,23 @@ public interface JsonSchemaObject {
 		}
 
 		/**
+		 * Create a {@link Type} with its default {@link Type#representation() representation} via the name.
+		 * 
+		 * @param name must not be {@literal null}.
+		 * @return the matching type instance.
+		 * @since 2.2
+		 */
+		static Type of(String name) {
+
+			Type type = jsonTypeOf(name);
+			if (jsonTypes().contains(type)) {
+				return type;
+			}
+
+			return bsonTypeOf(name);
+		}
+
+		/**
 		 * @return all known JSON types.
 		 */
 		static Set<Type> jsonTypes() {
@@ -457,10 +475,33 @@ public interface JsonSchemaObject {
 		Object value();
 
 		/**
+		 * Get the {@literal bsonType} representation of the given type.
+		 * 
+		 * @return never {@literal null}.
+		 * @since 2.2
+		 */
+		default Type toBsonType() {
+
+			if (representation().equals("bsonType")) {
+				return this;
+			}
+
+			if (value().equals(Type.booleanType().value())) {
+				return bsonTypeOf("bool");
+			}
+			if (value().equals(Type.numberType().value())) {
+				return bsonTypeOf("long");
+			}
+
+			return bsonTypeOf((String) value());
+		}
+
+		/**
 		 * @author Christpoh Strobl
 		 * @since 2.1
 		 */
 		@RequiredArgsConstructor
+		@EqualsAndHashCode
 		class JsonType implements Type {
 
 			private final String name;
@@ -489,6 +530,7 @@ public interface JsonSchemaObject {
 		 * @since 2.1
 		 */
 		@RequiredArgsConstructor
+		@EqualsAndHashCode
 		class BsonType implements Type {
 
 			private final String name;

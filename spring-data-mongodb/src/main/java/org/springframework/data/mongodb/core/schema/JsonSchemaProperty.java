@@ -18,18 +18,9 @@ package org.springframework.data.mongodb.core.schema;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.ArrayJsonSchemaProperty;
-import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.BooleanJsonSchemaProperty;
-import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.DateJsonSchemaProperty;
-import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.NullJsonSchemaProperty;
-import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.NumericJsonSchemaProperty;
-import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.ObjectJsonSchemaProperty;
-import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.RequiredJsonSchemaProperty;
-import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.StringJsonSchemaProperty;
-import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.TimestampJsonSchemaProperty;
-import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.UntypedJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.NumericJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ObjectJsonSchemaObject;
+import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.*;
 import org.springframework.lang.Nullable;
 
 /**
@@ -66,6 +57,17 @@ public interface JsonSchemaProperty extends JsonSchemaObject {
 	 */
 	static UntypedJsonSchemaProperty untyped(String identifier) {
 		return new UntypedJsonSchemaProperty(identifier, JsonSchemaObject.untyped());
+	}
+
+	/**
+	 * Turns the given target property into an {@link EncryptedJsonSchemaProperty ecrypted} one.
+	 *
+	 * @param property must not be {@literal null}.
+	 * @return new instance of {@link EncryptedJsonSchemaProperty}.
+	 * @since 2.2
+	 */
+	static EncryptedJsonSchemaProperty encrypted(JsonSchemaProperty property) {
+		return EncryptedJsonSchemaProperty.encrypted(property);
 	}
 
 	/**
