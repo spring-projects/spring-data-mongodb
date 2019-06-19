@@ -169,6 +169,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author duozhilin
  * @author Andreas Zink
  * @author Cimon Lucas
+ * @author Michael J. Simons
  */
 @SuppressWarnings("deprecation")
 public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider {
@@ -1466,7 +1467,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		objectToSave = maybeCallBeforeSave(objectToSave, dbDoc, collectionName);
 		Object id = saveDocument(collectionName, dbDoc, objectToSave.getClass());
 
-		T saved = populateIdIfNecessary(entity.getBean(), id);
+		T saved = populateIdIfNecessary(objectToSave, id);
 		maybeEmitEvent(new AfterSaveEvent<>(saved, dbDoc, collectionName));
 
 		return saved;
