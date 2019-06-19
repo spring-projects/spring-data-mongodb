@@ -53,6 +53,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.domain.Sort;
@@ -84,6 +85,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.lang.Nullable;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import com.mongodb.DB;
@@ -117,6 +119,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Michael J. Simons
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
@@ -1558,6 +1561,42 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		assertThat(captor.getValue()).containsEntry("added-by", "callback");
 	}
 
+	@Test // DATAMONGO-2307
+	public void beforeSaveCallbackAllowsTargetEntityModificationsUsingSave() {
+
+		StaticApplicationContext ctx = new StaticApplicationContext();
+		ctx.registerBean(BeforeSaveCallback.class, () -> markPersonAsPersistedCallback);
+		ctx.refresh();
+
+		template.setApplicationContext(ctx);
+
+		PersonWithTransientAttribute entity = new PersonWithTransientAttribute();
+		entity.id = "luke-skywalker";
+		entity.firstname = "luke";
+		entity.isNew = true;
+
+		PersonWithTransientAttribute savedPerson = template.save(entity);
+		assertThat(savedPerson.isNew).isFalse();
+	}
+
+	@Test // DATAMONGO-2307
+	public void beforeSaveCallbackAllowsTargetEntityModificationsUsingInsert() {
+
+		StaticApplicationContext ctx = new StaticApplicationContext();
+		ctx.registerBean(BeforeSaveCallback.class, () -> markPersonAsPersistedCallback);
+		ctx.refresh();
+
+		template.setApplicationContext(ctx);
+
+		PersonWithTransientAttribute entity = new PersonWithTransientAttribute();
+		entity.id = "luke-skywalker";
+		entity.firstname = "luke";
+		entity.isNew = true;
+
+		PersonWithTransientAttribute savedPerson = template.insert(entity);
+		assertThat(savedPerson.isNew).isFalse();
+	}
+
 	// TODO: additional tests for what is when saved.
 
 	@Test // DATAMONGO-2261
@@ -1639,6 +1678,22 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		String lastname;
 	}
+
+	static class PersonWithTransientAttribute extends Person {
+
+		@Transient
+		boolean isNew = true;
+	}
+
+	static BeforeSaveCallback<PersonWithTransientAttribute> markPersonAsPersistedCallback = (entity, document, collection) -> {
+
+		// Return a completely new instance, ie in case of an immutable entity;
+		PersonWithTransientAttribute newEntity = new PersonWithTransientAttribute();
+		newEntity.id = entity.id;
+		newEntity.firstname = entity.firstname;
+		newEntity.isNew = false;
+		return newEntity;
+	};
 
 	interface PersonProjection {
 		String getFirstname();

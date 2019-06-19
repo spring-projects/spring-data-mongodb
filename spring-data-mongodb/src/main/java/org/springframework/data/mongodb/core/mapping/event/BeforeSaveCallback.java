@@ -22,6 +22,7 @@ import org.springframework.data.mapping.callback.EntityCallback;
  * Entity callback triggered before save of a document.
  *
  * @author Mark Paluch
+ * @author Michael J. Simons
  * @since 2.2
  */
 @FunctionalInterface
@@ -29,8 +30,11 @@ public interface BeforeSaveCallback<T> extends EntityCallback<T> {
 
 	/**
 	 * Entity callback method invoked before a domain object is saved. Can return either the same or a modified instance
-	 * of the domain object and can modify {@link Document} contents. This method called after converting the
-	 * {@code entity} to {@link Document} so effectively the document is used as outcome of invoking this callback.
+	 * of the domain object and can modify {@link Document} contents. This method is called after converting the
+	 * {@code entity} to a {@link Document} so effectively the document is used as outcome of invoking this callback.
+	 * Changes to the domain object are not taken into account for saving, only changes to the document. Only transient
+	 * fields of the entity should be changed in this callback. To change persistent the entity before being converted,
+	 * use the {@link BeforeConvertCallback}.
 	 *
 	 * @param entity the domain object to save.
 	 * @param document {@link Document} representing the {@code entity}.
