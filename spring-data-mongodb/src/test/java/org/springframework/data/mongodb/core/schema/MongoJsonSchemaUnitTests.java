@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.schema;
 
+import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.*;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.util.Arrays;
@@ -69,6 +70,21 @@ public class MongoJsonSchemaUnitTests {
 		assertThat(schema.toDocument()).isEqualTo(new Document("$jsonSchema",
 				new Document("type", "object").append("required", Arrays.asList("firstname", "lastname")).append("properties",
 						new Document("lastname", new Document("type", "string")))));
+	}
+
+	@Test // DATAMONGO-2306
+	public void rendersEncryptedPropertyCorrectly() {
+
+		MongoJsonSchema schema = MongoJsonSchema.builder().properties( //
+				encrypted(string("ssn")) //
+						.aead_aes_256_cbc_hmac_sha_512_deterministic() //
+						.keyId("*key0_id") //
+		).build();
+
+		assertThat(schema.toDocument()).isEqualTo(new Document("$jsonSchema",
+				new Document("type", "object").append("properties",
+						new Document("ssn", new Document("encrypt", new Document("keyId", "*key0_id")
+								.append("algorithm", "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic").append("bsonType", "string"))))));
 	}
 
 	@Test // DATAMONGO-1835

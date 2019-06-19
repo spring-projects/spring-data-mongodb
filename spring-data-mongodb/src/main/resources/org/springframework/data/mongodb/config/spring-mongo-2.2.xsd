@@ -311,6 +311,20 @@ The name of the MongoClient object that determines what server to monitor. (by d
 		<xsd:union memberTypes="xsd:string"/>
 	</xsd:simpleType>
 
+	<xsd:simpleType name="encryptionSettingsRef">
+		<xsd:annotation>
+			<xsd:documentation><![CDATA[
+Reference to FactoryBean for com.mongodb.AutoEncryptionSettings - @since 2.2
+			]]></xsd:documentation>
+			<xsd:appinfo>
+				<tool:annotation kind="ref">
+					<tool:assignable-to type="org.springframework.data.mongodb.core.MongoEncryptionSettingsFactoryBean" />
+				</tool:annotation>
+			</xsd:appinfo>
+		</xsd:annotation>
+		<xsd:union memberTypes="xsd:string"/>
+	</xsd:simpleType>
+
 	<xsd:simpleType name="writeConcernEnumeration">
 		<xsd:restriction base="xsd:token">
 			<xsd:enumeration value="NONE" />
@@ -543,6 +557,13 @@ This controls if the driver should us an SSL connection.  Defaults to false.
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
 The SSLSocketFactory to use for the SSL connection. If none is configured here, SSLSocketFactory#getDefault() will be used.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="encryption-settings-ref" type="encryptionSettingsRef" use="optional">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+AutoEncryptionSettings for MongoDB 4.2+ - @since 2.2
 				]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>

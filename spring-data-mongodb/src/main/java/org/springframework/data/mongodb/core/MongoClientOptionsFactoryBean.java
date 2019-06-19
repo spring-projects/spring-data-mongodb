@@ -22,6 +22,7 @@ import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.lang.Nullable;
 
+import com.mongodb.AutoEncryptionSettings;
 import com.mongodb.DBDecoderFactory;
 import com.mongodb.DBEncoderFactory;
 import com.mongodb.MongoClient;
@@ -73,6 +74,7 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 
 	private boolean ssl;
 	private @Nullable SSLSocketFactory sslSocketFactory;
+	private @Nullable AutoEncryptionSettings autoEncryptionSettings;
 
 	/**
 	 * Set the {@link MongoClient} description.
@@ -272,6 +274,16 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 		this.serverSelectionTimeout = serverSelectionTimeout;
 	}
 
+	/**
+	 * Set the {@link AutoEncryptionSettings} to be used.
+	 *
+	 * @param autoEncryptionSettings can be {@literal null}.
+	 * @since 2.2
+	 */
+	public void setAutoEncryptionSettings(@Nullable AutoEncryptionSettings autoEncryptionSettings) {
+		this.autoEncryptionSettings = autoEncryptionSettings;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.beans.factory.config.AbstractFactoryBean#createInstance()
@@ -304,7 +316,8 @@ public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClie
 				.requiredReplicaSetName(requiredReplicaSetName) //
 				.serverSelectionTimeout(serverSelectionTimeout) //
 				.sslEnabled(ssl) //
-				.socketFactory(socketFactoryToUse) // TODO: Mongo Driver 4 - remove if not available
+				.autoEncryptionSettings(autoEncryptionSettings) //
+				.socketFactory(socketFactoryToUse) // TODO: Mongo Driver 4 -
 				.socketKeepAlive(socketKeepAlive) // TODO: Mongo Driver 4 - remove if not available
 				.socketTimeout(socketTimeout) //
 				.threadsAllowedToBlockForConnectionMultiplier(threadsAllowedToBlockForConnectionMultiplier) //

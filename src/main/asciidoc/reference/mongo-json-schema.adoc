@@ -205,6 +205,28 @@ template.find(query(matchingDocumentStructure(schema)), Person.class);
 ----
 ====
 
+[[mongo.jsonSchema.encrypted-fields]]
+==== Encrypted Fields
+
+MongoDB 4.2 https://docs.mongodb.com/master/core/security-client-side-encryption/[Field Level Encryption] allows to directly secure certain properties.
+
+Properties can be wrapped within an encrypted property when setting up the JSON Schema as shown in the example below.
+
+.Client-Side Field Level Encryption via Json Schema
+====
+[source,java]
+----
+MongoJsonSchema schema = MongoJsonSchema.builder()
+    .properties(
+        encrypted(string("ssn"))
+            .algorithm("AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic")
+            .keyId("*key0_id")
+	).build();
+----
+====
+
+NOTE: Make sure to set the drivers `com.mongodb.AutoEncryptionSettings` to use client side encryption.
+
 [[mongo.jsonSchema.types]]
 ==== JSON Schema Types
 

@@ -30,7 +30,9 @@ import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.Numeri
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ObjectJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.StringJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.TimestampJsonSchemaObject;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 
 /**
  * {@link JsonSchemaProperty} implementation.
@@ -1042,6 +1044,149 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		@Override
 		public boolean isRequired() {
 			return required;
+		}
+	}
+
+	/**
+	 * {@link JsonSchemaProperty} implementation for encrypted fields.
+	 *
+	 * @author Christoph Strobl
+	 * @since 2.2
+	 */
+	public static class EncryptedJsonSchemaProperty implements JsonSchemaProperty {
+
+		private final JsonSchemaProperty targetProperty;
+		private final @Nullable String algorithm;
+		private final @Nullable char[] keyId;
+		private final @Nullable char[] iv;
+
+		/**
+		 * Create new instance of {@link EncryptedJsonSchemaProperty} wrapping the given {@link JsonSchemaProperty target}.
+		 *
+		 * @param target must not be {@literal null}.
+		 */
+		public EncryptedJsonSchemaProperty(JsonSchemaProperty target) {
+			this(target, null, null, null);
+		}
+
+		private EncryptedJsonSchemaProperty(JsonSchemaProperty target, @Nullable String algorithm, @Nullable char[] keyId,
+				@Nullable char[] iv) {
+
+			Assert.notNull(target, "Target must not be null!");
+			this.targetProperty = target;
+			this.algorithm = algorithm;
+			this.keyId = keyId;
+			this.iv = iv;
+		}
+
+		/**
+		 * Create new instance of {@link EncryptedJsonSchemaProperty} wrapping the given {@link JsonSchemaProperty target}.
+		 *
+		 * @param target must not be {@literal null}.
+		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
+		 */
+		public static EncryptedJsonSchemaProperty encrypted(JsonSchemaProperty target) {
+			return new EncryptedJsonSchemaProperty(target);
+		}
+
+		/**
+		 * Use {@literal AEAD_AES_256_CBC_HMAC_SHA_512-Random} algorithm.
+		 *
+		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
+		 */
+		public EncryptedJsonSchemaProperty aead_aes_256_cbc_hmac_sha_512_random() {
+			return algorithm("AEAD_AES_256_CBC_HMAC_SHA_512-Random");
+		}
+
+		/**
+		 * Use {@literal AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic} algorithm.
+		 *
+		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
+		 */
+		public EncryptedJsonSchemaProperty aead_aes_256_cbc_hmac_sha_512_deterministic() {
+			return algorithm("AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic");
+		}
+
+		/**
+		 * Use the given algorithm identified via its name.
+		 *
+		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
+		 */
+		public EncryptedJsonSchemaProperty algorithm(String algorithm) {
+			return new EncryptedJsonSchemaProperty(targetProperty, algorithm, keyId, iv);
+		}
+
+		/**
+		 * @param key
+		 * @return
+		 */
+		public EncryptedJsonSchemaProperty keyId(char[] key) {
+			return new EncryptedJsonSchemaProperty(targetProperty, algorithm, key, iv);
+		}
+
+		public EncryptedJsonSchemaProperty keyId(String key) {
+			return keyId(key.toCharArray());
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.schema.JsonSchemaObject#toDocument()
+		 */
+		@Override
+		public Document toDocument() {
+
+			Document doc = targetProperty.toDocument();
+			Document propertySpecification = doc.get(targetProperty.getIdentifier(), Document.class);
+
+			Document enc = new Document();
+
+			if (!ObjectUtils.isEmpty(keyId)) {
+				enc.append("keyId", new String(keyId));
+			}
+
+			Type type = extractPropertyType(propertySpecification);
+			if (type != null) {
+
+				propertySpecification.remove(type.representation());
+				enc.append("bsonType", type.toBsonType().value()); // TODO: no samples with type -> is it bson type all the way?
+			}
+
+			enc.append("algorithm", algorithm);
+
+			propertySpecification.append("encrypt", enc);
+
+			return doc;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.schema.JsonSchemaProperty#getIdentifier()
+		 */
+		@Override
+		public String getIdentifier() {
+			return targetProperty.getIdentifier();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.schema.JsonSchemaObject#getTypes()
+		 */
+		@Override
+		public Set<Type> getTypes() {
+			return targetProperty.getTypes();
+		}
+
+		@Nullable
+		private Type extractPropertyType(Document source) {
+
+			if (source.containsKey("type")) {
+				return Type.of(source.get("type", String.class));
+			}
+			if (source.containsKey("bsonType")) {
+				return Type.of(source.get("bsonType", String.class));
+			}
+
+			return null;
 		}
 	}
 }
