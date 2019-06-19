@@ -22,6 +22,7 @@ import lombok.Data;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
+import java.time.Duration;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -41,13 +42,13 @@ import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.reactivestreams.client.ListIndexesPublisher;
 import com.mongodb.reactivestreams.client.MongoClient;
-import com.mongodb.reactivestreams.client.Success;
 
 /**
  * Integration test for index creation via {@link ReactiveMongoTemplate}.
@@ -68,9 +69,9 @@ public class ReactiveMongoTemplateIndexTests {
 	@Before
 	public void setUp() {
 
-		StepVerifier.create(template.getCollection("person").drop()).expectNext(Success.SUCCESS).verifyComplete();
-		StepVerifier.create(template.getCollection("indexfail").drop()).expectNext(Success.SUCCESS).verifyComplete();
-		StepVerifier.create(template.getCollection("indexedSample").drop()).expectNext(Success.SUCCESS).verifyComplete();
+		MongoTestUtils.dropCollectionNow(template.getMongoDatabase().getName(), "person", client);
+		MongoTestUtils.dropCollectionNow(template.getMongoDatabase().getName(), "indexfail", client);
+		MongoTestUtils.dropCollectionNow(template.getMongoDatabase().getName(), "indexedSample", client);
 	}
 
 	@After
@@ -199,6 +200,7 @@ public class ReactiveMongoTemplateIndexTests {
 				.verifyComplete();
 
 		template.findAll(IndexedSample.class) //
+				.delayElements(Duration.ofMillis(200)) // TODO: check if 4.2.0 server GA still requires this timeout
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
