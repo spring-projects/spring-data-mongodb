@@ -52,9 +52,9 @@ Right now this interface serves only to provide type information, but we can add
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns:mongo="http://www.springframework.org/schema/data/mongo"
   xsi:schemaLocation="http://www.springframework.org/schema/beans
-    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+    https://www.springframework.org/schema/beans/spring-beans-3.0.xsd
     http://www.springframework.org/schema/data/mongo
-    http://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd">
+    https://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd">
 
   <mongo:mongo-client id="mongoClient" />
 
@@ -484,7 +484,7 @@ to pick up Query SPI extensions.
 [[mongodb.repositories.queries.type-safe]]
 === Type-safe Query Methods
 
-MongoDB repository support integrates with the http://www.querydsl.com/[Querydsl] project, which provides a way to perform type-safe queries. To quote from the project description, "Instead of writing queries as inline strings or externalizing them into XML files they are constructed via a fluent API." It provides the following features:
+MongoDB repository support integrates with the https://www.querydsl.com/[Querydsl] project, which provides a way to perform type-safe queries. To quote from the project description, "Instead of writing queries as inline strings or externalizing them into XML files they are constructed via a fluent API." It provides the following features:
 
 * Code completion in the IDE (all properties, methods, and operations can be expanded in your favorite Java IDE).
 * Almost no syntactically invalid queries allowed (type-safe on all levels).
@@ -492,7 +492,7 @@ MongoDB repository support integrates with the http://www.querydsl.com/[Querydsl
 * Adapts better to refactoring changes in domain types.
 * Incremental query definition is easier.
 
-See the http://www.querydsl.com/static/querydsl/latest/reference/html/[QueryDSL documentation] for how to bootstrap your environment for APT-based code generation using Maven or Ant.
+See the https://www.querydsl.com/static/querydsl/latest/reference/html/[QueryDSL documentation] for how to bootstrap your environment for APT-based code generation using Maven or Ant.
 
 QueryDSL lets you write queries such as the following:
 

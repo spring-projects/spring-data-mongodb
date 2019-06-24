@@ -721,7 +721,7 @@ public class Collation {
 	/**
 	 * ICU locale abstraction for usage with MongoDB {@link Collation}.
 	 *
-	 * @see <a href="http://site.icu-project.org">ICU - International Components for Unicode</a>
+	 * @see <a href="https://site.icu-project.org">ICU - International Components for Unicode</a>
 	 * @since 2.0
 	 */
 	@RequiredArgsConstructor(access = AccessLevel.PRIVATE)

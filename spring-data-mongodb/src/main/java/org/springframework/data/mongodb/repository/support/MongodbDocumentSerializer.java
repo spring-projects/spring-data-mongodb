@@ -39,7 +39,7 @@ import com.querydsl.mongodb.MongodbOps;
  * </p>
  * <p>
  * Original implementation source {@link com.querydsl.mongodb.MongodbSerializer} by {@literal The Querydsl Team}
- * (<a href="http://www.querydsl.com/team">http://www.querydsl.com/team</a>) licensed under the Apache License, Version
+ * (<a href="https://www.querydsl.com/team">https://www.querydsl.com/team</a>) licensed under the Apache License, Version
  * 2.0.
  * </p>
  * Modified to use {@link Document} instead of {@link com.mongodb.DBObject}, updated nullable types and code format. Use

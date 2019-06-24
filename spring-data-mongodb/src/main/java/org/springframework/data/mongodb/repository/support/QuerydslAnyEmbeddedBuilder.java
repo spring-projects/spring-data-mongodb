@@ -27,7 +27,7 @@ import com.querydsl.mongodb.MongodbOps;
  * {@code QuerydslAnyEmbeddedBuilder} is a builder for constraints on embedded objects.
  * <p>
  * Original implementation source {@link com.querydsl.mongodb.AnyEmbeddedBuilder} by {@literal The Querydsl Team}
- * (<a href="http://www.querydsl.com/team">http://www.querydsl.com/team</a>) licensed under the Apache License, Version
+ * (<a href="https://www.querydsl.com/team">https://www.querydsl.com/team</a>) licensed under the Apache License, Version
  * 2.0.
  * </p>
  * Modified for usage with {@link QuerydslAbstractMongodbQuery}.

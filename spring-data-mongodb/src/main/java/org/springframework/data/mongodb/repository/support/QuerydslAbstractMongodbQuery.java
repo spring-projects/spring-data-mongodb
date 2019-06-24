@@ -34,7 +34,7 @@ import com.querydsl.core.types.Predicate;
  * {@code QuerydslAbstractMongodbQuery} provides a base class for general Querydsl query implementation.
  * <p>
  * Original implementation source {@link com.querydsl.mongodb.AbstractMongodbQuery} by {@literal The Querydsl Team}
- * (<a href="http://www.querydsl.com/team">http://www.querydsl.com/team</a>) licensed under the Apache License, Version
+ * (<a href="https://www.querydsl.com/team">https://www.querydsl.com/team</a>) licensed under the Apache License, Version
  * 2.0.
  * </p>
  * Modified for usage with {@link MongodbDocumentSerializer}.

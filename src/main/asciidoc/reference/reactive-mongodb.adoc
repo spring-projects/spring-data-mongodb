@@ -19,7 +19,7 @@ For most tasks, you should use `ReactiveMongoTemplate` or the repository support
 
 Spring MongoDB support requires MongoDB 2.6 or higher and Java SE 8 or higher.
 
-First, you need to set up a running MongoDB server. Refer to the http://docs.mongodb.org/manual/core/introduction/[MongoDB Quick Start guide] for an explanation on how to startup a MongoDB instance. Once installed, starting MongoDB is typically a matter of executing the following command: `${MONGO_HOME}/bin/mongod`
+First, you need to set up a running MongoDB server. Refer to the https://docs.mongodb.org/manual/core/introduction/[MongoDB Quick Start guide] for an explanation on how to startup a MongoDB instance. Once installed, starting MongoDB is typically a matter of executing the following command: `${MONGO_HOME}/bin/mongod`
 
 To create a Spring project in STS, go to File -> New -> Spring Template Project -> Simple Spring Utility Project and press Yes when prompted. Then enter a project and a package name, such as org.spring.mongodb.example.
 
@@ -164,7 +164,7 @@ public class AppConfig {
 
 This approach lets you use the standard `com.mongodb.reactivestreams.client.MongoClient` API (which you may already know).
 
-An alternative is to register an instance of `com.mongodb.reactivestreams.client.MongoClient` instance with the container by using Spring's `ReactiveMongoClientFactoryBean`. As compared to instantiating a `com.mongodb.reactivestreams.client.MongoClient` instance directly, the `FactoryBean` approach has the added advantage of also providing the container with an `ExceptionTranslator` implementation that translates MongoDB exceptions to exceptions in Spring's portable `DataAccessException` hierarchy for data access classes annotated with the `@Repository` annotation. This hierarchy and use of `@Repository` is described in http://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/data-access.html[Spring's DAO support features].
+An alternative is to register an instance of `com.mongodb.reactivestreams.client.MongoClient` instance with the container by using Spring's `ReactiveMongoClientFactoryBean`. As compared to instantiating a `com.mongodb.reactivestreams.client.MongoClient` instance directly, the `FactoryBean` approach has the added advantage of also providing the container with an `ExceptionTranslator` implementation that translates MongoDB exceptions to exceptions in Spring's portable `DataAccessException` hierarchy for data access classes annotated with the `@Repository` annotation. This hierarchy and use of `@Repository` is described in https://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/data-access.html[Spring's DAO support features].
 
 The following example shows Java-based bean metadata that supports exception translation on `@Repository` annotated classes:
 
