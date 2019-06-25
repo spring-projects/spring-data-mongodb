@@ -18,6 +18,7 @@ pipeline {
                         changeset "ci/openjdk8-mongodb-4.0/**"
                     }
                     agent any
+                    options { timeout(time: 30, unit: 'MINUTES') }
 
                     steps {
                         script {
@@ -33,6 +34,7 @@ pipeline {
                         changeset "ci/openjdk8-mongodb-4.1/**"
                     }
                     agent any
+                    options { timeout(time: 30, unit: 'MINUTES') }
 
                     steps {
                         script {
@@ -50,16 +52,18 @@ pipeline {
             agent {
                 docker {
                     image 'springci/spring-data-openjdk8-with-mongodb-4.0:latest'
-                    args '-v $HOME/.m2:/root/.m2'
+                    args '-v $HOME/.m2:/tmp/spring-data-maven-repository'
                 }
             }
+            options { timeout(time: 30, unit: 'MINUTES') }
             steps {
+                sh 'rm -rf ?'
                 sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
                 sh 'mongod --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
                 sh 'sleep 10'
                 sh 'mongo --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
                 sh 'sleep 15'
-                sh './mvnw clean dependency:list test -Dsort -B'
+                sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/spring-data-maven-repository" ./mvnw clean dependency:list test -Dsort -B'
             }
         }
 
@@ -70,16 +74,18 @@ pipeline {
                         docker {
                             label 'data'
                             image 'springci/spring-data-openjdk8-with-mongodb-4.1:latest'
-                            args '-v $HOME/.m2:/root/.m2'
+                            args '-v $HOME/.m2:/tmp/spring-data-maven-repository'
                         }
                     }
+                    options { timeout(time: 30, unit: 'MINUTES') }
                     steps {
+                        sh 'rm -rf ?'
                         sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
                         sh 'mongod --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
                         sh 'sleep 10'
                         sh 'mongo --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
                         sh 'sleep 15'
-                        sh './mvnw clean dependency:list test -Dsort -B'
+                        sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/spring-data-maven-repository" ./mvnw clean dependency:list test -Dsort -B'
                     }
                 }
             }
@@ -92,16 +98,18 @@ pipeline {
             agent {
                 docker {
                     image 'adoptopenjdk/openjdk8:latest'
-                    args '-v $HOME/.m2:/root/.m2'
+                    args '-v $HOME/.m2:/tmp/spring-data-maven-repository'
                 }
             }
+            options { timeout(time: 20, unit: 'MINUTES') }
 
             environment {
                 ARTIFACTORY = credentials('02bd1690-b54f-4c9f-819d-a77cb7a9822c')
             }
 
             steps {
-                sh "./mvnw -Pci,snapshot -Dmaven.test.skip=true clean deploy -B"
+                sh 'rm -rf ?'
+                sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/spring-data-maven-repository" ./mvnw -Pci,snapshot -Dmaven.test.skip=true clean deploy -B'
             }
         }
 
@@ -112,16 +120,18 @@ pipeline {
             agent {
                 docker {
                     image 'adoptopenjdk/openjdk8:latest'
-                    args '-v $HOME/.m2:/root/.m2'
+                    args '-v $HOME/.m2:/tmp/spring-data-maven-repository'
                 }
             }
+            options { timeout(time: 20, unit: 'MINUTES') }
 
             environment {
                 ARTIFACTORY = credentials('02bd1690-b54f-4c9f-819d-a77cb7a9822c')
             }
 
             steps {
-                sh "./mvnw -Pci,snapshot -Dmaven.test.skip=true clean deploy -B"
+                sh 'rm -rf ?'
+                sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/spring-data-maven-repository" ./mvnw -Pci,snapshot -Dmaven.test.skip=true clean deploy -B'
             }
         }
     }
