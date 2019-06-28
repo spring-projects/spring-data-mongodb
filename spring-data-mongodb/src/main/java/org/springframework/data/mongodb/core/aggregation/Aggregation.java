@@ -245,6 +245,29 @@ public class Aggregation {
 	}
 
 	/**
+	 * Creates a new {@link ProjectionOperation} adding the given {@link AggregationExpression} as projection.
+	 *
+	 * @param expression must not be {@literal null}.
+	 * @return new instance of {@link ProjectionOperation}.
+	 * @throws IllegalArgumentException if the required argument is {@literal null}.
+	 * @since 2.2
+	 */
+	public static ProjectionOperation project(AggregationExpression expression) {
+
+		return new ProjectionOperation(Fields.fields()) {
+
+			@Override
+			public Document toDocument(AggregationOperationContext context) {
+
+				Document target = super.toDocument(context);
+				Document $project = target.get("$project", Document.class);
+				$project.putAll(expression.toDocument(context));
+				return target;
+			}
+		};
+	}
+
+	/**
 	 * Factory method to create a new {@link UnwindOperation} for the field with the given name.
 	 *
 	 * @param field must not be {@literal null} or empty.

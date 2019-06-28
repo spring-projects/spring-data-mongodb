@@ -1930,6 +1930,13 @@ public class AggregationTests {
 		assertThat(groupResults.getMappedResults().size()).isEqualTo(4);
 	}
 
+	@Test // DATAMONGO-2311
+	public void projectWithAggregationExpression() {
+
+		assertThat(project(ctx -> new Document("field", 1)).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(new Document("$project", new Document("field", 1)));
+	}
+
 	private void createUsersWithReferencedPersons() {
 
 		mongoTemplate.dropCollection(User.class);
