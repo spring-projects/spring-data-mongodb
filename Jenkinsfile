@@ -49,6 +49,12 @@ pipeline {
         }
 
         stage("test: baseline") {
+            when {
+                anyOf {
+                    branch 'master'
+                    not { triggeredBy 'UpstreamCause' }
+                }
+            }
             agent {
                 docker {
                     image 'springci/spring-data-openjdk8-with-mongodb-4.0:latest'
@@ -68,6 +74,12 @@ pipeline {
         }
 
         stage("Test other configurations") {
+            when {
+                anyOf {
+                    branch 'master'
+                    not { triggeredBy 'UpstreamCause' }
+                }
+            }
             parallel {
                 stage("test: mongodb 4.1") {
                     agent {
@@ -94,6 +106,7 @@ pipeline {
         stage('Release to artifactory') {
             when {
                 branch 'issue/*'
+                not { triggeredBy 'UpstreamCause' }
             }
             agent {
                 docker {
