@@ -33,6 +33,7 @@ import org.springframework.util.Assert;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Shashank Sharma
  * @since 1.0
  */
 public class ArrayOperators {
