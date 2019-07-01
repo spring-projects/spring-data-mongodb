@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.bson.Document;
 
@@ -175,6 +176,48 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 	 */
 	public ProjectionOperation andInclude(Fields fields) {
 		return new ProjectionOperation(this.projections, FieldProjection.from(fields, true));
+	}
+
+	/**
+	 * Includes the current {@link ProjectionOperation} as an array with given name. <br />
+	 * If you want to specify array values directly use {@link #andArrayOf(Object...)}.
+	 *
+	 * @param name the target property name.
+	 * @return new instance of {@link ProjectionOperation}.
+	 * @since 2.2
+	 */
+	public ProjectionOperation asArray(String name) {
+
+		return new ProjectionOperation(Collections.emptyList(),
+				Collections.singletonList(new ArrayProjection(Fields.field(name), (List) this.projections)));
+	}
+
+	/**
+	 * Includes the given values ({@link Field field references}, {@link AggregationExpression expression}, plain values)
+	 * as an array. <br />
+	 * The target property name needs to be set via {@link ArrayProjectionOperationBuilder#as(String)}.
+	 *
+	 * @param values must not be {@literal null}.
+	 * @return new instance of {@link ArrayProjectionOperationBuilder}.
+	 * @throws IllegalArgumentException if the required argument it {@literal null}.
+	 * @since 2.2
+	 */
+	public ArrayProjectionOperationBuilder andArrayOf(Object... values) {
+
+		ArrayProjectionOperationBuilder builder = new ArrayProjectionOperationBuilder(this);
+
+		for (Object value : values) {
+
+			if (value instanceof Field) {
+				builder.and((Field) value);
+			} else if (value instanceof AggregationExpression) {
+				builder.and((AggregationExpression) value);
+			} else {
+				builder.and(value);
+			}
+		}
+
+		return builder;
 	}
 
 	/*
@@ -1741,6 +1784,97 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			Fields fields = context.getFields(type);
 			fields.forEach(it -> projections.append(it.getName(), 1));
 			return context.getMappedObject(projections, type);
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 * @since 2.2
+	 */
+	public static class ArrayProjectionOperationBuilder {
+
+		private ProjectionOperation target;
+		private final List<Object> projections;
+
+		public ArrayProjectionOperationBuilder(ProjectionOperation target) {
+
+			this.target = target;
+			this.projections = new ArrayList<>();
+		}
+
+		public ArrayProjectionOperationBuilder and(AggregationExpression expression) {
+
+			this.projections.add(expression);
+			return this;
+		}
+
+		public ArrayProjectionOperationBuilder and(Field field) {
+
+			this.projections.add(field);
+			return this;
+		}
+
+		public ArrayProjectionOperationBuilder and(Object value) {
+
+			this.projections.add(value);
+			return this;
+		}
+
+		/**
+		 * Create the {@link ProjectionOperation} for the array property with given {@literal name}.
+		 *
+		 * @param name The target property name. Must not be {@literal null}.
+		 * @return new instance of {@link ArrayProjectionOperationBuilder}.
+		 */
+		public ProjectionOperation as(String name) {
+
+			return new ProjectionOperation(target.projections,
+					Collections.singletonList(new ArrayProjection(Fields.field(name), this.projections)));
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 * @since 2.2
+	 */
+	static class ArrayProjection extends Projection {
+
+		private final Field targetField;
+		private final List<Object> projections;
+
+		public ArrayProjection(Field targetField, List<Object> projections) {
+
+			super(targetField);
+			this.targetField = targetField;
+			this.projections = projections;
+		}
+
+		@Override
+		public Document toDocument(AggregationOperationContext context) {
+
+			return new Document(targetField.getName(),
+					projections.stream().map(it -> toArrayEntry(it, context)).collect(Collectors.toList()));
+		}
+
+		private Object toArrayEntry(Object projection, AggregationOperationContext ctx) {
+
+			if (projection instanceof Field) {
+				return ctx.getReference((Field) projection).toString();
+			}
+
+			if (projection instanceof AggregationExpression) {
+				return ((AggregationExpression) projection).toDocument(ctx);
+			}
+
+			if (projection instanceof FieldProjection) {
+				return ctx.getReference(((FieldProjection) projection).getExposedField().getTarget()).toString();
+			}
+
+			if (projection instanceof Projection) {
+				((Projection) projection).toDocument(ctx);
+			}
+
+			return projection;
 		}
 	}
 }
