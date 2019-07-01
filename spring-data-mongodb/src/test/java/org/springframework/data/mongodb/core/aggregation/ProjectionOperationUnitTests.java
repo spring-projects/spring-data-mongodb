@@ -41,6 +41,11 @@ import org.springframework.data.mongodb.core.aggregation.DateOperators.Timezone;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.StringOperators.Concat;
 import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
+import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 /**
  * Unit tests for {@link ProjectionOperation}.
@@ -2099,6 +2104,69 @@ public class ProjectionOperationUnitTests {
 				"{ $project : { newDate: { $dateFromString: { dateString : \"2017-02-08T12:10:40.787\", format : \"dd/mm/yyyy\" } } } }"));
 	}
 
+	@Test // DATAMONGO-2312
+	public void simpleFieldReferenceAsArray() {
+
+		org.bson.Document doc = Aggregation.newAggregation(project("x", "y", "someField").asArray("myArray"))
+				.toDocument("coll", Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(doc).isEqualTo(Document.parse(
+				"{\"aggregate\":\"coll\", \"pipeline\":[ { $project: { myArray: [ \"$x\", \"$y\", \"$someField\" ] } } ] }"));
+	}
+
+	@Test // DATAMONGO-2312
+	public void mappedFieldReferenceAsArray() {
+
+		MongoMappingContext mappingContext = new MongoMappingContext();
+
+		org.bson.Document doc = Aggregation
+				.newAggregation(BookWithFieldAnnotation.class, project("title", "author").asArray("myArray"))
+				.toDocument("coll", new TypeBasedAggregationOperationContext(BookWithFieldAnnotation.class, mappingContext,
+						new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext))));
+
+		assertThat(doc).isEqualTo(Document
+				.parse("{\"aggregate\":\"coll\", \"pipeline\":[ { $project: { myArray: [ \"$ti_t_le\", \"$author\" ] } } ] }"));
+	}
+
+	@Test // DATAMONGO-2312
+	public void arrayWithNullValue() {
+
+		Document doc = project() //
+				.andArrayOf(Fields.field("field-1"), null, "value")
+				.as("myArray") //
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(doc).isEqualTo(Document.parse(
+				"{ $project: { \"myArray\" : [ \"$field-1\", null, \"value\" ] } }"));
+	}
+
+	@Test // DATAMONGO-2312
+	public void nestedArrayField() {
+
+		Document doc = project("_id", "value") //
+				.andArrayOf(Fields.field("field-1"), "plain - string", ArithmeticOperators.valueOf("field-1").sum().and(10))
+				.as("myArray") //
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(doc).isEqualTo(Document.parse(
+				"{ $project: { \"_id\" : 1, \"value\" : 1, \"myArray\" : [ \"$field-1\", \"plain - string\", { \"$sum\" : [\"$field-1\", 10] } ] } } ] }"));
+	}
+
+	@Test // DATAMONGO-2312
+	public void nestedMappedFieldReferenceInArrayField() {
+
+		MongoMappingContext mappingContext = new MongoMappingContext();
+
+		Document doc = project("author") //
+				.andArrayOf(Fields.field("title"), "plain - string", ArithmeticOperators.valueOf("title").sum().and(10))
+				.as("myArray") //
+				.toDocument(new TypeBasedAggregationOperationContext(BookWithFieldAnnotation.class, mappingContext,
+						new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext))));
+
+		assertThat(doc).isEqualTo(Document.parse(
+				"{ $project: { \"author\" : 1,  \"myArray\" : [ \"$ti_t_le\", \"plain - string\", { \"$sum\" : [\"$ti_t_le\", 10] } ] } } ] }"));
+	}
+
 	private static Document exctractOperation(String field, Document fromProjectClause) {
 		return (Document) fromProjectClause.get(field);
 	}
@@ -2106,6 +2174,13 @@ public class ProjectionOperationUnitTests {
 	@Data
 	static class Book {
 		String title;
+		Author author;
+	}
+
+	@Data
+	static class BookWithFieldAnnotation {
+
+		@Field("ti_t_le") String title;
 		Author author;
 	}
 
