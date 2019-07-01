@@ -35,6 +35,7 @@ import org.w3c.dom.Element;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @SuppressWarnings("deprecation")
 abstract class MongoParsingUtils {
@@ -92,6 +93,7 @@ abstract class MongoParsingUtils {
 		setPropertyValue(clientOptionsDefBuilder, optionsElement, "heartbeat-socket-timeout", "heartbeatSocketTimeout");
 		setPropertyValue(clientOptionsDefBuilder, optionsElement, "ssl", "ssl");
 		setPropertyReference(clientOptionsDefBuilder, optionsElement, "ssl-socket-factory-ref", "sslSocketFactory");
+		setPropertyReference(clientOptionsDefBuilder, optionsElement, "encryption-settings-ref", "autoEncryptionSettings");
 		setPropertyValue(clientOptionsDefBuilder, optionsElement, "server-selection-timeout", "serverSelectionTimeout");
 
 		mongoClientBuilder.addPropertyValue("mongoClientOptions", clientOptionsDefBuilder.getBeanDefinition());

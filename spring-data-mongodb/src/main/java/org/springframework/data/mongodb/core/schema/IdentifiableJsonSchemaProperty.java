@@ -18,9 +18,12 @@ package org.springframework.data.mongodb.core.schema;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.bson.Document;
+
 import org.springframework.data.domain.Range;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ArrayJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.BooleanJsonSchemaObject;
@@ -1057,8 +1060,8 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 
 		private final JsonSchemaProperty targetProperty;
 		private final @Nullable String algorithm;
-		private final @Nullable char[] keyId;
-		private final @Nullable char[] iv;
+		private final @Nullable String keyId;
+		private final @Nullable List<UUID> keyIds;
 
 		/**
 		 * Create new instance of {@link EncryptedJsonSchemaProperty} wrapping the given {@link JsonSchemaProperty target}.
@@ -1069,14 +1072,14 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 			this(target, null, null, null);
 		}
 
-		private EncryptedJsonSchemaProperty(JsonSchemaProperty target, @Nullable String algorithm, @Nullable char[] keyId,
-				@Nullable char[] iv) {
+		private EncryptedJsonSchemaProperty(JsonSchemaProperty target, @Nullable String algorithm, @Nullable String keyId,
+				@Nullable List<UUID> keyIds) {
 
 			Assert.notNull(target, "Target must not be null!");
 			this.targetProperty = target;
 			this.algorithm = algorithm;
 			this.keyId = keyId;
-			this.iv = iv;
+			this.keyIds = keyIds;
 		}
 
 		/**
@@ -1113,19 +1116,23 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
 		 */
 		public EncryptedJsonSchemaProperty algorithm(String algorithm) {
-			return new EncryptedJsonSchemaProperty(targetProperty, algorithm, keyId, iv);
+			return new EncryptedJsonSchemaProperty(targetProperty, algorithm, keyId, keyIds);
 		}
 
 		/**
 		 * @param key
 		 * @return
 		 */
-		public EncryptedJsonSchemaProperty keyId(char[] key) {
-			return new EncryptedJsonSchemaProperty(targetProperty, algorithm, key, iv);
+		public EncryptedJsonSchemaProperty keyId(String keyId) {
+			return new EncryptedJsonSchemaProperty(targetProperty, algorithm, keyId, null);
 		}
 
-		public EncryptedJsonSchemaProperty keyId(String key) {
-			return keyId(key.toCharArray());
+		/**
+		 * @param keyId
+		 * @return
+		 */
+		public EncryptedJsonSchemaProperty keys(UUID... keyId) {
+			return new EncryptedJsonSchemaProperty(targetProperty, algorithm, null, Arrays.asList(keyId));
 		}
 
 		/*
@@ -1141,7 +1148,9 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 			Document enc = new Document();
 
 			if (!ObjectUtils.isEmpty(keyId)) {
-				enc.append("keyId", new String(keyId));
+				enc.append("keyId", keyId);
+			} else if (!ObjectUtils.isEmpty(keyIds)) {
+				enc.append("keyId", keyIds);
 			}
 
 			Type type = extractPropertyType(propertySpecification);
