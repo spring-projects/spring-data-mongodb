@@ -1,4 +1,4 @@
-[[entity-callbacks.mongodb]]
+[[mongo.entity-callbacks]]
 = Store specific EntityCallbacks
 
 Spring Data MongoDB uses the `EntityCallback` API for its auditing support and reacts on the following callbacks.
@@ -12,17 +12,17 @@ Spring Data MongoDB uses the `EntityCallback` API for its auditing support and r
 | Order
 
 | Reactive/BeforeConvertCallback
-| onBeforeConvert(T entity, String collection)
+| `onBeforeConvert(T entity, String collection)`
 | Invoked before a domain object is converted to `org.bson.Document`.
 | `Ordered.LOWEST_PRECEDENCE`
 
 | Reactive/AuditingEntityCallback
-| onBeforeConvert(Object entity, String collection)
+| `onBeforeConvert(Object entity, String collection)`
 | Marks an auditable entity _created_ or _modified_
 | 100
 
 | Reactive/BeforeSaveCallback
-| onBeforeSave(T entity, org.bson.Document target, String collection)
+| `onBeforeSave(T entity, org.bson.Document target, String collection)`
 | Invoked before a domain object is saved. +
  Can modify the target, to be persisted, `Document` containing all mapped entity information.
 | `Ordered.LOWEST_PRECEDENCE`
