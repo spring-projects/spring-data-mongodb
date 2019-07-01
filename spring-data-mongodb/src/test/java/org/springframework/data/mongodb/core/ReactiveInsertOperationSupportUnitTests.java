@@ -52,7 +52,7 @@ public class ReactiveInsertOperationSupportUnitTests {
 	@Before
 	public void setUp() {
 
-		when(template.determineCollectionName(any(Class.class))).thenReturn(STAR_WARS);
+		when(template.getCollectionName(any(Class.class))).thenReturn(STAR_WARS);
 
 		ops = new ReactiveInsertOperationSupport(template);
 
@@ -77,7 +77,7 @@ public class ReactiveInsertOperationSupportUnitTests {
 
 		ArgumentCaptor<Class> captor = ArgumentCaptor.forClass(Class.class);
 
-		verify(template).determineCollectionName(captor.capture());
+		verify(template).getCollectionName(captor.capture());
 		verify(template).insert(eq(luke), eq(STAR_WARS));
 
 		assertThat(captor.getAllValues()).containsExactly(Person.class);
@@ -88,7 +88,7 @@ public class ReactiveInsertOperationSupportUnitTests {
 
 		ops.insert(Person.class).inCollection(STAR_WARS).one(luke);
 
-		verify(template, never()).determineCollectionName(any(Class.class));
+		verify(template, never()).getCollectionName(any(Class.class));
 		verify(template).insert(eq(luke), eq(STAR_WARS));
 	}
 
@@ -97,7 +97,7 @@ public class ReactiveInsertOperationSupportUnitTests {
 
 		ops.insert(Person.class).all(Arrays.asList(luke, han));
 
-		verify(template).determineCollectionName(any(Class.class));
+		verify(template).getCollectionName(any(Class.class));
 		verify(template).insert(anyList(), eq(STAR_WARS));
 	}
 

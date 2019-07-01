@@ -126,7 +126,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 			return template.findAndModify(query, update, findAndModifyOptions != null ? findAndModifyOptions : FindAndModifyOptions.none(), targetType, collectionName);
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.TerminatingFindAndReplace#findAndReplace()
 		 */
@@ -172,7 +172,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 					findAndReplaceOptions, replacement, targetType);
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.UpdateWithUpdate#replaceWith(java.lang.Object)
 		 */
@@ -185,7 +185,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 					findAndReplaceOptions, replacement, targetType);
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.FindAndReplaceWithOptions#withOptions(org.springframework.data.mongodb.core.FindAndReplaceOptions)
 		 */
@@ -216,7 +216,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 		}
 
 		private String getCollectionName() {
-			return StringUtils.hasText(collection) ? collection : template.determineCollectionName(domainType);
+			return StringUtils.hasText(collection) ? collection : template.getCollectionName(domainType);
 		}
 	}
 }

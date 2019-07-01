@@ -116,11 +116,11 @@ class ReactiveAggregationOperationSupport implements ReactiveAggregationOperatio
 				TypedAggregation<?> typedAggregation = (TypedAggregation<?>) aggregation;
 
 				if (typedAggregation.getInputType() != null) {
-					return template.determineCollectionName(typedAggregation.getInputType());
+					return template.getCollectionName(typedAggregation.getInputType());
 				}
 			}
 
-			return template.determineCollectionName(domainType);
+			return template.getCollectionName(domainType);
 		}
 	}
 }

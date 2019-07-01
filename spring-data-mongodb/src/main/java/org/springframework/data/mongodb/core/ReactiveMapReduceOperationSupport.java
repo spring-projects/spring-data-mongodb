@@ -171,7 +171,7 @@ class ReactiveMapReduceOperationSupport implements ReactiveMapReduceOperation {
 		}
 
 		private String getCollectionName() {
-			return StringUtils.hasText(collection) ? collection : template.determineCollectionName(domainType);
+			return StringUtils.hasText(collection) ? collection : template.getCollectionName(domainType);
 		}
 	}
 }

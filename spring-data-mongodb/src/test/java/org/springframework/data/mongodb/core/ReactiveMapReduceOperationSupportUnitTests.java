@@ -55,7 +55,7 @@ public class ReactiveMapReduceOperationSupportUnitTests {
 	@Before
 	public void setUp() {
 
-		when(template.determineCollectionName(eq(Person.class))).thenReturn(STAR_WARS);
+		when(template.getCollectionName(eq(Person.class))).thenReturn(STAR_WARS);
 
 		mapReduceOpsSupport = new ReactiveMapReduceOperationSupport(template);
 	}
