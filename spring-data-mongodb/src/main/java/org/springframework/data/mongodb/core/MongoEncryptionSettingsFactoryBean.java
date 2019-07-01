@@ -20,6 +20,7 @@ import java.util.Map;
 
 import org.bson.BsonDocument;
 import org.springframework.beans.factory.FactoryBean;
+import org.springframework.lang.Nullable;
 
 import com.mongodb.AutoEncryptionSettings;
 import com.mongodb.MongoClientSettings;
@@ -104,7 +105,7 @@ public class MongoEncryptionSettingsFactoryBean implements FactoryBean<AutoEncry
 				.build();
 	}
 
-	private <K, V> Map<K, V> orEmpty(Map<K, V> source) {
+	private <K, V> Map<K, V> orEmpty(@Nullable Map<K, V> source) {
 		return source != null ? source : Collections.emptyMap();
 	}
 

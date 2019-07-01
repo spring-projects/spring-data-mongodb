@@ -1057,8 +1057,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 
 		private final JsonSchemaProperty targetProperty;
 		private final @Nullable String algorithm;
-		private final @Nullable char[] keyId;
-		private final @Nullable char[] iv;
+		private final @Nullable String keyId;
 
 		/**
 		 * Create new instance of {@link EncryptedJsonSchemaProperty} wrapping the given {@link JsonSchemaProperty target}.
@@ -1066,17 +1065,15 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @param target must not be {@literal null}.
 		 */
 		public EncryptedJsonSchemaProperty(JsonSchemaProperty target) {
-			this(target, null, null, null);
+			this(target, null, null);
 		}
 
-		private EncryptedJsonSchemaProperty(JsonSchemaProperty target, @Nullable String algorithm, @Nullable char[] keyId,
-				@Nullable char[] iv) {
+		private EncryptedJsonSchemaProperty(JsonSchemaProperty target, @Nullable String algorithm, @Nullable String keyId) {
 
 			Assert.notNull(target, "Target must not be null!");
 			this.targetProperty = target;
 			this.algorithm = algorithm;
 			this.keyId = keyId;
-			this.iv = iv;
 		}
 
 		/**
@@ -1113,19 +1110,15 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
 		 */
 		public EncryptedJsonSchemaProperty algorithm(String algorithm) {
-			return new EncryptedJsonSchemaProperty(targetProperty, algorithm, keyId, iv);
+			return new EncryptedJsonSchemaProperty(targetProperty, algorithm, keyId);
 		}
 
 		/**
 		 * @param key
 		 * @return
 		 */
-		public EncryptedJsonSchemaProperty keyId(char[] key) {
-			return new EncryptedJsonSchemaProperty(targetProperty, algorithm, key, iv);
-		}
-
-		public EncryptedJsonSchemaProperty keyId(String key) {
-			return keyId(key.toCharArray());
+		public EncryptedJsonSchemaProperty keyId(String keyId) {
+			return new EncryptedJsonSchemaProperty(targetProperty, algorithm, keyId);
 		}
 
 		/*
@@ -1141,7 +1134,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 			Document enc = new Document();
 
 			if (!ObjectUtils.isEmpty(keyId)) {
-				enc.append("keyId", new String(keyId));
+				enc.append("keyId", keyId);
 			}
 
 			Type type = extractPropertyType(propertySpecification);
