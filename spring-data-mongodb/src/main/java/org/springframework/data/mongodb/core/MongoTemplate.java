@@ -1160,7 +1160,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(objectToSave, "ObjectToSave must not be null!");
 
 		ensureNotIterable(objectToSave);
-		return insert(objectToSave, operations.determineEntityCollectionName(objectToSave));
+		return insert(objectToSave, getCollectionName(ClassUtils.getUserClass(objectToSave)));
 	}
 
 	/*
@@ -1289,9 +1289,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				continue;
 			}
 
-			MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(element.getClass());
-
-			String collection = entity.getCollection();
+			String collection = getCollectionName(ClassUtils.getUserClass(element));
 			List<T> collectionElements = elementsByCollection.get(collection);
 
 			if (null == collectionElements) {
@@ -1355,7 +1353,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	public <T> T save(T objectToSave) {
 
 		Assert.notNull(objectToSave, "Object to save must not be null!");
-		return save(objectToSave, operations.determineEntityCollectionName(objectToSave));
+		return save(objectToSave, getCollectionName(ClassUtils.getUserClass(objectToSave)));
 	}
 
 	@Override

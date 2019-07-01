@@ -116,17 +116,6 @@ class EntityOperations {
 		return context.getRequiredPersistentEntity(entityClass).getCollection();
 	}
 
-	/**
-	 * Returns the collection name to be used for the given entity.
-	 *
-	 * @param obj can be {@literal null}.
-	 * @return
-	 */
-	@Nullable
-	public String determineEntityCollectionName(@Nullable Object obj) {
-		return null == obj ? null : determineCollectionName(obj.getClass());
-	}
-
 	public Query getByIdInQuery(Collection<?> entities) {
 
 		MultiValueMap<String, Object> byIds = new LinkedMultiValueMap<>();

@@ -78,13 +78,13 @@ public class ReactiveAggregationOperationSupportUnitTests {
 	@Test // DATAMONGO-1719
 	public void aggregateWithUntypedAggregation() {
 
-		when(template.determineCollectionName(any(Class.class))).thenReturn("person");
+		when(template.getCollectionName(any(Class.class))).thenReturn("person");
 
 		opSupport.aggregateAndReturn(Person.class).by(newAggregation(project("foo"))).all();
 
 		ArgumentCaptor<Class> captor = ArgumentCaptor.forClass(Class.class);
 
-		verify(template).determineCollectionName(captor.capture());
+		verify(template).getCollectionName(captor.capture());
 		verify(template).aggregate(any(Aggregation.class), eq("person"), captor.capture());
 
 		assertThat(captor.getAllValues()).containsExactly(Person.class, Person.class);
@@ -93,13 +93,13 @@ public class ReactiveAggregationOperationSupportUnitTests {
 	@Test // DATAMONGO-1719
 	public void aggregateWithTypeAggregation() {
 
-		when(template.determineCollectionName(any(Class.class))).thenReturn("person");
+		when(template.getCollectionName(any(Class.class))).thenReturn("person");
 
 		opSupport.aggregateAndReturn(Jedi.class).by(newAggregation(Person.class, project("foo"))).all();
 
 		ArgumentCaptor<Class> captor = ArgumentCaptor.forClass(Class.class);
 
-		verify(template).determineCollectionName(captor.capture());
+		verify(template).getCollectionName(captor.capture());
 		verify(template).aggregate(any(Aggregation.class), eq("person"), captor.capture());
 
 		assertThat(captor.getAllValues()).containsExactly(Person.class, Jedi.class);

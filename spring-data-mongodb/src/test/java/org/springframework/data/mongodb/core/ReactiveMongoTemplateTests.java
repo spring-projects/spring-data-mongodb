@@ -708,7 +708,7 @@ public class ReactiveMongoTemplateTests {
 				.expectNextCount(3) //
 				.verifyComplete();
 
-		StepVerifier.create(template.remove(Mono.just(spring), template.determineCollectionName(Sample.class)))
+		StepVerifier.create(template.remove(Mono.just(spring), template.getCollectionName(Sample.class)))
 				.expectNextCount(1).verifyComplete();
 		StepVerifier.create(template.count(new Query(), Sample.class)).expectNext(2L).verifyComplete();
 	}
@@ -756,7 +756,7 @@ public class ReactiveMongoTemplateTests {
 		dbObject.put("firstName", "Oliver");
 
 		StepVerifier.create(template.insert(dbObject, //
-				template.determineCollectionName(PersonWithVersionPropertyOfTypeInteger.class))) //
+				template.getCollectionName(PersonWithVersionPropertyOfTypeInteger.class))) //
 				.expectNextCount(1) //
 				.verifyComplete();
 	}
