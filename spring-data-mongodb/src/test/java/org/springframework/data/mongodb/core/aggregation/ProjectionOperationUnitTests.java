@@ -125,7 +125,7 @@ public class ProjectionOperationUnitTests {
 		ProjectionOperationBuilder operation = new ProjectionOperation().and(fieldName).plus(1);
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
-		Document oper = exctractOperation(fieldName, projectClause);
+		Document oper = extractOperation(fieldName, projectClause);
 
 		assertThat(oper.containsKey(ADD)).isTrue();
 		assertThat(oper.get(ADD)).isEqualTo(Arrays.<Object> asList("$a", 1));
@@ -140,7 +140,7 @@ public class ProjectionOperationUnitTests {
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 
-		Document oper = exctractOperation(fieldAlias, projectClause);
+		Document oper = extractOperation(fieldAlias, projectClause);
 		assertThat(oper.containsKey(ADD)).isTrue();
 		assertThat(oper.get(ADD)).isEqualTo(Arrays.<Object> asList("$a", 1));
 	}
@@ -153,7 +153,7 @@ public class ProjectionOperationUnitTests {
 		ProjectionOperation operation = new ProjectionOperation().and(fieldName).minus(1).as(fieldAlias);
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
-		Document oper = exctractOperation(fieldAlias, projectClause);
+		Document oper = extractOperation(fieldAlias, projectClause);
 
 		assertThat(oper.containsKey(SUBTRACT)).isTrue();
 		assertThat(oper.get(SUBTRACT)).isEqualTo(Arrays.<Object> asList("$a", 1));
@@ -167,7 +167,7 @@ public class ProjectionOperationUnitTests {
 		ProjectionOperation operation = new ProjectionOperation().and(fieldName).multiply(1).as(fieldAlias);
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
-		Document oper = exctractOperation(fieldAlias, projectClause);
+		Document oper = extractOperation(fieldAlias, projectClause);
 
 		assertThat(oper.containsKey(MULTIPLY)).isTrue();
 		assertThat(oper.get(MULTIPLY)).isEqualTo(Arrays.<Object> asList("$a", 1));
@@ -181,7 +181,7 @@ public class ProjectionOperationUnitTests {
 		ProjectionOperation operation = new ProjectionOperation().and(fieldName).divide(1).as(fieldAlias);
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
-		Document oper = exctractOperation(fieldAlias, projectClause);
+		Document oper = extractOperation(fieldAlias, projectClause);
 
 		assertThat(oper.containsKey(DIVIDE)).isTrue();
 		assertThat(oper.get(DIVIDE)).isEqualTo(Arrays.<Object> asList("$a", 1));
@@ -201,7 +201,7 @@ public class ProjectionOperationUnitTests {
 		ProjectionOperation operation = new ProjectionOperation().and(fieldName).mod(3).as(fieldAlias);
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
-		Document oper = exctractOperation(fieldAlias, projectClause);
+		Document oper = extractOperation(fieldAlias, projectClause);
 
 		assertThat(oper.containsKey(MOD)).isTrue();
 		assertThat(oper.get(MOD)).isEqualTo(Arrays.<Object> asList("$a", 3));
@@ -328,7 +328,7 @@ public class ProjectionOperationUnitTests {
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		assertThat(document).isNotNull();
 
-		Document projected = exctractOperation("$project", document);
+		Document projected = extractOperation("$project", document);
 
 		assertThat(projected.get("hour")).isEqualTo(new Document("$hour", Arrays.asList("$date")));
 		assertThat(projected.get("min")).isEqualTo(new Document("$minute", Arrays.asList("$date")));
@@ -354,7 +354,7 @@ public class ProjectionOperationUnitTests {
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		assertThat(document).isNotNull();
 
-		Document projected = exctractOperation("$project", document);
+		Document projected = extractOperation("$project", document);
 		assertThat(projected.get("dayOfYearPlus1Day")).isEqualTo(
 				new Document("$dayOfYear", Arrays.asList(new Document("$add", Arrays.<Object> asList("$date", 86400000)))));
 	}
@@ -370,7 +370,7 @@ public class ProjectionOperationUnitTests {
 
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		Document projected = exctractOperation("$project", document);
+		Document projected = extractOperation("$project", document);
 		assertThat(projected.get("tags_count")).isEqualTo(new Document("$size", Arrays.asList("$tags")));
 	}
 
@@ -384,7 +384,7 @@ public class ProjectionOperationUnitTests {
 
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		Document projected = exctractOperation("$project", document);
+		Document projected = extractOperation("$project", document);
 		assertThat(projected.get("tags_count")).isEqualTo(new Document("$size", Arrays.asList("$tags")));
 	}
 
@@ -394,7 +394,7 @@ public class ProjectionOperationUnitTests {
 		ProjectionOperation operation = Aggregation.project().and("field").slice(10).as("renamed");
 
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		Document projected = exctractOperation("$project", document);
+		Document projected = extractOperation("$project", document);
 
 		assertThat(projected.get("renamed")).isEqualTo(new Document("$slice", Arrays.<Object> asList("$field", 10)));
 	}
@@ -405,7 +405,7 @@ public class ProjectionOperationUnitTests {
 		ProjectionOperation operation = Aggregation.project().and("field").slice(10, 5).as("renamed");
 
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		Document projected = exctractOperation("$project", document);
+		Document projected = extractOperation("$project", document);
 
 		assertThat(projected.get("renamed")).isEqualTo(new Document("$slice", Arrays.<Object> asList("$field", 5, 10)));
 	}
@@ -2167,7 +2167,7 @@ public class ProjectionOperationUnitTests {
 				"{ $project: { \"author\" : 1,  \"myArray\" : [ \"$ti_t_le\", \"plain - string\", { \"$sum\" : [\"$ti_t_le\", 10] } ] } } ] }"));
 	}
 
-	private static Document exctractOperation(String field, Document fromProjectClause) {
+	private static Document extractOperation(String field, Document fromProjectClause) {
 		return (Document) fromProjectClause.get(field);
 	}
 
