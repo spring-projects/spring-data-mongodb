@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -23,11 +23,12 @@ import java.util.List;
 
 import org.bson.Document;
 import org.junit.Test;
+
 import org.springframework.data.mongodb.core.aggregation.ArrayOperators.ArrayToObject;
 
 /**
  * Unit tests for {@link ArrayOperators}
- * 
+ *
  * @author Christoph Strobl
  * @author Shashank Sharma
  * @currentRead Royal Assassin - Robin Hobb
@@ -44,14 +45,14 @@ public class ArrayOperatorsUnitTests {
 	public void toArrayWithFieldReference() {
 
 		assertThat(ArrayOperators.arrayOf("regal").toObject().toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo(Document.parse("{ $arrayToObject: \"$regal\" } "));
+				.isEqualTo("{ $arrayToObject: \"$regal\" } ");
 	}
 
 	@Test // DATAMONGO-2052
 	public void toArrayWithExpression() {
 
 		assertThat(ArrayOperators.arrayOf(EXPRESSION).toObject().toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo(Document.parse("{ $arrayToObject: " + EXPRESSION_STRING + "} "));
+				.isEqualTo("{ $arrayToObject: " + EXPRESSION_STRING + "} ");
 	}
 
 	@Test // DATAMONGO-2052
@@ -62,21 +63,21 @@ public class ArrayOperatorsUnitTests {
 		source.add(Arrays.asList("prince", "verity"));
 
 		assertThat(ArrayToObject.arrayToObject(source).toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo(Document.parse("{ $arrayToObject: [ [ \"king\", \"shrewd\"], [ \"prince\", \"verity\" ] ] } "));
+				.isEqualTo("{ $arrayToObject: [ [ \"king\", \"shrewd\"], [ \"prince\", \"verity\" ] ] } ");
 	}
 
 	@Test // DATAMONGO-2287
 	public void arrayElementAtWithValueList() {
 
 		assertThat(ArrayOperators.arrayOf(VALUE_LIST).elementAt(1).toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo(Document.parse("{ $arrayElemAt: [ " + VALUE_LIST_STRING + ", 1] } "));
+				.isEqualTo("{ $arrayElemAt: [ " + VALUE_LIST_STRING + ", 1] } ");
 	}
 
 	@Test // DATAMONGO-2287
 	public void concatWithValueList() {
 
 		assertThat(ArrayOperators.arrayOf(VALUE_LIST).concat("field").toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo(Document.parse("{ $concatArrays: [ " + VALUE_LIST_STRING + ", \"$field\"] } "));
+				.isEqualTo("{ $concatArrays: [ " + VALUE_LIST_STRING + ", \"$field\"] } ");
 	}
 
 	@Test // DATAMONGO-2287
@@ -84,49 +85,48 @@ public class ArrayOperatorsUnitTests {
 
 		assertThat(ArrayOperators.arrayOf(VALUE_LIST).filter().as("var").by(new Document())
 				.toDocument(Aggregation.DEFAULT_CONTEXT))
-						.isEqualTo(Document
-								.parse("{ $filter: { \"input\" : " + VALUE_LIST_STRING + ", \"as\" :  \"var\", \"cond\" : {}  } } "));
+						.isEqualTo("{ $filter: { \"input\" : " + VALUE_LIST_STRING + ", \"as\" :  \"var\", \"cond\" : {}  } } ");
 	}
 
 	@Test // DATAMONGO-2287
 	public void lengthWithValueList() {
 
 		assertThat(ArrayOperators.arrayOf(VALUE_LIST).length().toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo(Document.parse("{ $size: [ " + VALUE_LIST_STRING + "] } "));
+				.isEqualTo("{ $size: [ " + VALUE_LIST_STRING + "] } ");
 	}
 
 	@Test // DATAMONGO-2287
 	public void sliceWithValueList() {
 
 		assertThat(ArrayOperators.arrayOf(VALUE_LIST).slice().itemCount(3).toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo(Document.parse("{ $slice: [ " + VALUE_LIST_STRING + ", 3] } "));
+				.isEqualTo("{ $slice: [ " + VALUE_LIST_STRING + ", 3] } ");
 	}
 
 	@Test // DATAMONGO-2287
 	public void indexOfWithValueList() {
 
 		assertThat(ArrayOperators.arrayOf(VALUE_LIST).indexOf("s1p").toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo(Document.parse("{ $indexOfArray: [ " + VALUE_LIST_STRING + ", \"s1p\"] } "));
+				.isEqualTo("{ $indexOfArray: [ " + VALUE_LIST_STRING + ", \"s1p\"] } ");
 	}
 
 	@Test // DATAMONGO-2287
 	public void reverseWithValueList() {
 
 		assertThat(ArrayOperators.arrayOf(VALUE_LIST).reverse().toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo(Document.parse("{ $reverseArray: [ " + VALUE_LIST_STRING + "] } "));
+				.isEqualTo("{ $reverseArray: [ " + VALUE_LIST_STRING + "] } ");
 	}
 
 	@Test // DATAMONGO-2287
 	public void zipWithValueList() {
 
 		assertThat(ArrayOperators.arrayOf(VALUE_LIST).zipWith("field").toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo(Document.parse("{ $zip: { \"inputs\": [" + VALUE_LIST_STRING + ", \"$field\"]} } "));
+				.isEqualTo("{ $zip: { \"inputs\": [" + VALUE_LIST_STRING + ", \"$field\"]} } ");
 	}
 
 	@Test // DATAMONGO-2287
 	public void inWithValueList() {
 
 		assertThat(ArrayOperators.arrayOf(VALUE_LIST).containsValue("$userName").toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo(Document.parse("{ \"$in\" : [\"$userName\", " + VALUE_LIST_STRING + "] }"));
+				.isEqualTo("{ \"$in\" : [\"$userName\", " + VALUE_LIST_STRING + "] }");
 	}
 }

@@ -1626,6 +1626,9 @@ public class ArrayOperators {
 	 *
 	 * @author Christoph Strobl
 	 * @author Shashank Sharma
+	 * @see <a href=
+	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/in/">https://docs.mongodb.com/manual/reference/operator/aggregation/in/</a>
+	 * @since 2.2
 	 */
 	public static class In extends AbstractAggregationExpression {
 
@@ -1644,18 +1647,14 @@ public class ArrayOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return
 		 */
-		public static InBuilder arrayOf(final String fieldReference) {
+		public static InBuilder arrayOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 
-			return new InBuilder() {
+			return value -> {
 
-				@Override
-				public In containsValue(Object value) {
-
-					Assert.notNull(value, "Value must not be null!");
-					return new In(Arrays.asList(value, Fields.field(fieldReference)));
-				}
+				Assert.notNull(value, "Value must not be null!");
+				return new In(Arrays.asList(value, Fields.field(fieldReference)));
 			};
 		}
 
@@ -1669,20 +1668,17 @@ public class ArrayOperators {
 
 			Assert.notNull(expression, "Expression must not be null!");
 
-			return new InBuilder() {
+			return value -> {
 
-				@Override
-				public In containsValue(Object value) {
+				Assert.notNull(value, "Value must not be null!");
 
-					Assert.notNull(value, "Value must not be null!");
-					return new In(Arrays.asList(value, expression));
-				}
+				return new In(Arrays.asList(value, expression));
 			};
 		}
 
 		/**
 		 * Support for Aggregation In Search an Element in List of Objects to Filter Start creating {@link In}.
-		 * 
+		 *
 		 * @param values must not be {@literal null}.
 		 * @return new instance of {@link InBuilder}.
 		 * @since 2.2
@@ -1691,14 +1687,11 @@ public class ArrayOperators {
 
 			Assert.notNull(values, "Values must not be null!");
 
-			return new InBuilder() {
+			return value -> {
 
-				@Override
-				public In containsValue(Object value) {
+				Assert.notNull(value, "Value must not be null!");
 
-					Assert.notNull(value, "Value must not be null!");
-					return new In(Arrays.asList(value, values));
-				}
+				return new In(Arrays.asList(value, values));
 			};
 		}
 
