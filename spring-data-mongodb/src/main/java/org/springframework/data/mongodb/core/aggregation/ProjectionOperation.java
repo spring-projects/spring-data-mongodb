@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.bson.Document;
+
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.IfNull;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
@@ -30,7 +31,6 @@ import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Pro
 import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-import org.springframework.util.ReflectionUtils;
 
 /**
  * Encapsulates the aggregation framework {@code $project}-operation.
@@ -1739,7 +1739,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			Document projections = new Document();
 
 			Fields fields = context.getFields(type);
-			fields.asList().forEach(it -> projections.append(it.getName(), 1));
+			fields.forEach(it -> projections.append(it.getName(), 1));
 			return context.getMappedObject(projections, type);
 		}
 	}

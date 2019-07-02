@@ -112,7 +112,7 @@ public final class Fields implements Iterable<Field> {
 		this.fields = verify(fields);
 	}
 
-	private static final List<Field> verify(List<Field> fields) {
+	private static List<Field> verify(List<Field> fields) {
 
 		Map<String, Field> reference = new HashMap<String, Field>();
 
