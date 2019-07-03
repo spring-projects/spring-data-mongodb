@@ -34,6 +34,7 @@ import reactor.core.publisher.Flux
 class ReactiveChangeStreamOperationExtensionsTests {
 
 	val operation = mockk<ReactiveChangeStreamOperation>(relaxed = true)
+	val changestream = mockk<ReactiveChangeStreamOperation.ReactiveChangeStream<First>>(relaxed = true)
 
 	@Test // DATAMONGO-2089
 	fun `ReactiveChangeStreamOperation#changeStream() with reified type parameter extension should call its Java counterpart`() {
@@ -61,4 +62,6 @@ class ReactiveChangeStreamOperationExtensionsTests {
 			spec.listen()
 		}
 	}
+
+	data class Last(val id: String)
 }

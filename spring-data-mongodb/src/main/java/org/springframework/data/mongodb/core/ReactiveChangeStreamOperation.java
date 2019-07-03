@@ -28,7 +28,7 @@ import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 
 /**
  * {@link ReactiveChangeStreamOperation} allows creation and execution of reactive MongoDB
- * <a href="https://docs.mongodb.com/manual/changeStreams/">Change Stream</a> operations in a fluent API * style. <br />
+ * <a href="https://docs.mongodb.com/manual/changeStreams/">Change Stream</a> operations in a fluent API style. <br />
  * The starting {@literal domainType} is used for mapping a potentially given
  * {@link org.springframework.data.mongodb.core.aggregation.TypedAggregation} used for filtering. By default, the
  * originating {@literal domainType} is also used for mapping back the result from the {@link org.bson.Document}.
@@ -38,15 +38,14 @@ import org.springframework.data.mongodb.core.query.CriteriaDefinition;
  *
  * <pre>
  *     <code>
- *         changeStream(Human.class)
+ *         changeStream(Jedi.class)
  *             .watchCollection("star-wars")
  *             .filter(where("operationType").is("insert"))
- *             .as(Jedi.class)
  *             .resumeAt(Instant.now())
  *             .listen();
  *     </code>
  * </pre>
- * 
+ *
  * @author Christoph Strobl
  * @since 2.2
  */
@@ -88,10 +87,20 @@ public interface ReactiveChangeStreamOperation {
 		 * Skip this step to watch all collections within the database.
 		 *
 		 * @param collection must not be {@literal null} nor {@literal empty}.
-		 * @return new instance of {@link ChangeStreamWithCollection}.
-		 * @throws IllegalArgumentException if collection is {@literal null}.
+		 * @return new instance of {@link ChangeStreamWithFilterAndProjection}.
+		 * @throws IllegalArgumentException if {@code collection} is {@literal null}.
 		 */
 		ChangeStreamWithFilterAndProjection<T> watchCollection(String collection);
+
+		/**
+		 * Set the the collection to watch. Collection name is derived from the {@link Class entityClass}.<br />
+		 * Skip this step to watch all collections within the database.
+		 *
+		 * @param entityClass must not be {@literal null}.
+		 * @return new instance of {@link ChangeStreamWithFilterAndProjection}.
+		 * @throws IllegalArgumentException if {@code entityClass} is {@literal null}.
+		 */
+		ChangeStreamWithFilterAndProjection<T> watchCollection(Class<?> entityClass);
 	}
 
 	/**

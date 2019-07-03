@@ -1390,7 +1390,7 @@ public class ReactiveMongoTemplateTests {
 		Thread.sleep(500); // just give it some time to link receive all events
 
 		try {
-			Assertions.assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList())).hasSize(3)
+			assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList())).hasSize(3)
 					.allMatch(val -> val instanceof Document);
 		} finally {
 			disposable.dispose();
@@ -1422,7 +1422,7 @@ public class ReactiveMongoTemplateTests {
 		Thread.sleep(500); // just give it some time to link receive all events
 
 		try {
-			Assertions.assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
+			assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
 					.containsExactly(person1, person2, person3);
 		} finally {
 			disposable.dispose();
@@ -1455,7 +1455,7 @@ public class ReactiveMongoTemplateTests {
 		Thread.sleep(500); // just give it some time to link receive all events
 
 		try {
-			Assertions.assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
+			assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
 					.containsExactly(person1, person3);
 		} finally {
 			disposable.dispose();
@@ -1499,7 +1499,7 @@ public class ReactiveMongoTemplateTests {
 		Thread.sleep(500); // just give it some time to link receive all events
 
 		try {
-			Assertions.assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
+			assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
 					.containsExactly(replacement);
 		} finally {
 			disposable.dispose();
@@ -1541,7 +1541,7 @@ public class ReactiveMongoTemplateTests {
 		Thread.sleep(500); // just give it some time to link receive all events
 
 		try {
-			Assertions.assertThat(resumeDocuments.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
+			assertThat(resumeDocuments.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
 					.containsExactly(person2, person3);
 		} finally {
 			disposable.dispose();
@@ -1563,7 +1563,7 @@ public class ReactiveMongoTemplateTests {
 
 		template.remove(query(where("field").is("lannister")).limit(25), Sample.class) //
 				.as(StepVerifier::create) //
-				.assertNext(wr -> Assertions.assertThat(wr.getDeletedCount()).isEqualTo(25L)).verifyComplete();
+				.assertNext(wr -> assertThat(wr.getDeletedCount()).isEqualTo(25L)).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1870
@@ -1577,7 +1577,7 @@ public class ReactiveMongoTemplateTests {
 
 		template.remove(new Query().skip(25).with(Sort.by("field")), Sample.class) //
 				.as(StepVerifier::create) //
-				.assertNext(wr -> Assertions.assertThat(wr.getDeletedCount()).isEqualTo(75L)).verifyComplete();
+				.assertNext(wr -> assertThat(wr.getDeletedCount()).isEqualTo(75L)).verifyComplete();
 
 		template.count(query(where("field").is("lannister")), Sample.class).as(StepVerifier::create).expectNext(25L)
 				.verifyComplete();
@@ -1651,7 +1651,7 @@ public class ReactiveMongoTemplateTests {
 		Thread.sleep(500); // just give it some time to link receive all events
 
 		try {
-			Assertions.assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
+			assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
 					.containsExactly(person1, person2, person3);
 		} finally {
 			disposable.dispose();
@@ -1701,7 +1701,7 @@ public class ReactiveMongoTemplateTests {
 		Thread.sleep(500); // just give it some time to link receive all events
 
 		try {
-			Assertions.assertThat(resumeDocuments.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
+			assertThat(resumeDocuments.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
 					.containsExactly(person2, person3);
 		} finally {
 			disposable.dispose();

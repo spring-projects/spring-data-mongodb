@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import lombok.SneakyThrows;
@@ -27,18 +28,20 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 
-import org.assertj.core.api.Assertions;
 import org.bson.Document;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
+
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.mongodb.test.util.ReplicaSet;
 
 import com.mongodb.reactivestreams.client.MongoClient;
 
 /**
+ * Tests for {@link ReactiveChangeStreamOperation}.
+ *
  * @author Christoph Strobl
  * @currentRead Dawn Cook - The Decoy Princess
  */
@@ -91,8 +94,8 @@ public class ReactiveChangeStreamOperationSupportTests {
 		Thread.sleep(500); // just give it some time to link receive all events
 
 		try {
-			Assertions.assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList())).hasSize(3)
-					.allMatch(val -> val instanceof Document);
+			assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList())).hasSize(3)
+					.allMatch(Document.class::isInstance);
 		} finally {
 			disposable.dispose();
 		}
@@ -122,7 +125,7 @@ public class ReactiveChangeStreamOperationSupportTests {
 		Thread.sleep(500); // just give it some time to link receive all events
 
 		try {
-			Assertions.assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
+			assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
 					.containsExactly(person1, person2, person3);
 		} finally {
 			disposable.dispose();
@@ -135,7 +138,7 @@ public class ReactiveChangeStreamOperationSupportTests {
 		BlockingQueue<ChangeStreamEvent<Person>> documents = new LinkedBlockingQueue<>(100);
 
 		Disposable disposable = template.changeStream(Person.class) //
-				.watchCollection("person") //
+				.watchCollection(Person.class) //
 				.filter(where("age").gte(38)) //
 				.listen() //
 				.doOnNext(documents::add).subscribe();
@@ -146,9 +149,8 @@ public class ReactiveChangeStreamOperationSupportTests {
 		Person person2 = new Person("Data", 37);
 		Person person3 = new Person("MongoDB", 39);
 
-		Flux.merge(template.save(person1).delayElement(Duration.ofMillis(2)),
-				template.save(person2).delayElement(Duration.ofMillis(2)),
-				template.save(person3).delayElement(Duration.ofMillis(2))) //
+		Flux.merge(template.save(person1), template.save(person2).delayElement(Duration.ofMillis(50)),
+				template.save(person3).delayElement(Duration.ofMillis(100))) //
 				.as(StepVerifier::create) //
 				.expectNextCount(3) //
 				.verifyComplete();
@@ -156,8 +158,8 @@ public class ReactiveChangeStreamOperationSupportTests {
 		Thread.sleep(500); // just give it some time to link receive all events
 
 		try {
-			Assertions.assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
-					.containsExactly(person1, person3);
+			assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList())).containsOnly(person1,
+					person3);
 		} finally {
 			disposable.dispose();
 		}

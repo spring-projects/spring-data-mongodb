@@ -19,9 +19,8 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.reactive.flow.asFlow
 
-
 /**
- * Extension for [RactiveChangeStreamOperation. changeStream] leveraging reified type parameters.
+ * Extension for [RactiveChangeStreamOperation.changeStream] leveraging reified type parameters.
  *
  * @author Christoph Strobl
  * @since 2.2
@@ -30,7 +29,7 @@ inline fun <reified T : Any> ReactiveChangeStreamOperation.changeStream(): React
 		changeStream(T::class.java)
 
 /**
- * Extension for [ReactiveChangeStreamOperation.ChangeStreamWithFilterAndProjection. as] leveraging reified type parameters.
+ * Extension for [ReactiveChangeStreamOperation.ChangeStreamWithFilterAndProjection.as] leveraging reified type parameters.
  *
  * @author Christoph Strobl
  * @since 2.2
@@ -39,7 +38,7 @@ inline fun <reified T : Any> ReactiveChangeStreamOperation.ChangeStreamWithFilte
 		`as`(T::class.java)
 
 /**
- * Coroutines [Flow] variant of [ReactiveChangeStreamOperation.TerminatingChangeStream. listen].
+ * Coroutines [Flow] variant of [ReactiveChangeStreamOperation.TerminatingChangeStream.listen].
  *
  * Backpressure is controlled by [batchSize] parameter that controls the size of in-flight elements
  * and [org.reactivestreams.Subscription.request] size.

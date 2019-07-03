@@ -52,7 +52,7 @@ Subscribing to Change Streams with the reactive API is a more natural approach t
 [source,java]
 ----
 Flux<ChangeStreamEvent<User>> flux = reactiveTemplate.changeStream(User.class) <1>
-    .watchCollection("persons")
+    .watchCollection("people")
     .filter(where("age").gte(38))                                              <2>
     .listen();                                                                 <3>
 ----
@@ -72,9 +72,8 @@ The following example shows how to set the resume offset using server time:
 ====
 [source,java]
 ----
-Flux<ChangeStreamEvent<Person>> resumed = template.changeStream()
-    .watchCollection("persons")
-    .as(User.class)
+Flux<ChangeStreamEvent<User>> resumed = template.changeStream(User.class)
+    .watchCollection("people")
     .resumeAt(Instant.now().minusSeconds(1)) <1>
     .listen();
 ----
