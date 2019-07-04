@@ -15,13 +15,11 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
-import java.net.UnknownHostException;
 import java.util.List;
 
 import org.junit.Before;
@@ -50,7 +48,7 @@ public class QueryByExampleTests {
 	Person p1, p2, p3;
 
 	@Before
-	public void setUp() throws UnknownHostException {
+	public void setUp() {
 
 		operations = new MongoTemplate(new MongoClient(), "query-by-example");
 		operations.remove(new Query(), Person.class);
@@ -82,8 +80,7 @@ public class QueryByExampleTests {
 		Query query = new Query(new Criteria().alike(Example.of(sample)));
 		List<Person> result = operations.find(query, Person.class);
 
-		assertThat(result, hasSize(2));
-		assertThat(result, hasItems(p1, p3));
+		assertThat(result).containsExactlyInAnyOrder(p1, p3);
 	}
 
 	@Test // DATAMONGO-1245
@@ -96,8 +93,7 @@ public class QueryByExampleTests {
 		Query query = new Query(new Criteria().alike(Example.of(sample)));
 		List<Person> result = operations.find(query, Person.class);
 
-		assertThat(result, hasSize(1));
-		assertThat(result, hasItem(p3));
+		assertThat(result).containsExactly(p3);
 	}
 
 	@Test // DATAMONGO-1245
@@ -112,8 +108,7 @@ public class QueryByExampleTests {
 		Query query = new Query(new Criteria().alike(Example.of(sample)));
 		List<Person> result = operations.find(query, Person.class);
 
-		assertThat(result, hasSize(1));
-		assertThat(result, hasItem(p4));
+		assertThat(result).containsExactly(p4);
 	}
 
 	@Test // DATAMONGO-1245
@@ -126,7 +121,7 @@ public class QueryByExampleTests {
 		Query query = new Query(new Criteria().alike(Example.of(sample)));
 		List<Person> result = operations.find(query, Person.class);
 
-		assertThat(result, is(empty()));
+		assertThat(result).isEmpty();
 	}
 
 	@Test // DATAMONGO-1245
@@ -137,8 +132,7 @@ public class QueryByExampleTests {
 		Query query = new Query(new Criteria().alike(Example.of(sample)));
 		List<Person> result = operations.find(query, Person.class);
 
-		assertThat(result, hasSize(3));
-		assertThat(result, hasItems(p1, p2, p3));
+		assertThat(result).containsExactlyInAnyOrder(p1, p2, p3);
 	}
 
 	@Test // DATAMONGO-1245
@@ -150,7 +144,7 @@ public class QueryByExampleTests {
 		Query query = new Query(new Criteria().alike(Example.of(sample)).and("firstname").regex("^ary*"));
 
 		List<Person> result = operations.find(query, Person.class);
-		assertThat(result.size(), is(1));
+		assertThat(result).hasSize(1);
 	}
 
 	@Test // DATAMONGO-1459
@@ -163,8 +157,7 @@ public class QueryByExampleTests {
 		Query query = Query.query(Criteria.byExample(Example.of(probe, ExampleMatcher.matchingAny())));
 		List<Person> result = operations.find(query, Person.class);
 
-		assertThat(result, hasSize(2));
-		assertThat(result, hasItems(p1, p2));
+		assertThat(result).containsExactlyInAnyOrder(p1, p2);
 	}
 
 	@Test // DATAMONGO-1768
@@ -176,7 +169,7 @@ public class QueryByExampleTests {
 		Query query = new Query(new Criteria().alike(Example.of(probe)));
 		List<Person> result = operations.find(query, Person.class);
 
-		assertThat(result, hasSize(0));
+		assertThat(result).isEmpty();
 	}
 
 	@Test // DATAMONGO-1768
@@ -189,8 +182,7 @@ public class QueryByExampleTests {
 				new Criteria().alike(Example.of(probe, ExampleMatcher.matching().withIgnorePaths("_class"))));
 		List<Person> result = operations.find(query, Person.class);
 
-		assertThat(result, hasSize(2));
-		assertThat(result, hasItems(p1, p3));
+		assertThat(result).containsExactlyInAnyOrder(p1, p3);
 	}
 
 	@Test // DATAMONGO-1768
@@ -202,8 +194,7 @@ public class QueryByExampleTests {
 		Query query = new Query(new Criteria().alike(Example.of(probe, UntypedExampleMatcher.matching())));
 		List<Person> result = operations.find(query, Person.class);
 
-		assertThat(result, hasSize(2));
-		assertThat(result, hasItems(p1, p3));
+		assertThat(result).containsExactlyInAnyOrder(p1, p3);
 	}
 
 	@Test // DATAMONGO-2314
@@ -224,8 +215,7 @@ public class QueryByExampleTests {
 				new Criteria("child").alike(Example.of(p1, ExampleMatcher.matching().withIgnorePaths("_class"))));
 		List<PersonWrapper> result = operations.find(query, PersonWrapper.class);
 
-		assertThat(result, hasSize(1));
-		assertThat(result.get(0), is(source1));
+		assertThat(result).containsExactly(source1);
 	}
 
 	@Document("dramatis-personae")
