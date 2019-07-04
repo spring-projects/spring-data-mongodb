@@ -45,10 +45,12 @@ class DateTimeFormatter {
 	static {
 		FormatterImpl dateTimeHelper;
 		try {
-			dateTimeHelper = loadDateTimeFormatter("org.bson.json.DateTimeFormatter$Java8DateTimeFormatter");
+			dateTimeHelper = loadDateTimeFormatter(
+					"org.springframework.data.mongodb.util.json.DateTimeFormatter$Java8DateTimeFormatter");
 		} catch (LinkageError e) {
 			// this is expected if running on a release prior to Java 8: fallback to JAXB.
-			dateTimeHelper = loadDateTimeFormatter("org.bson.json.DateTimeFormatter$JaxbDateTimeFormatter");
+			dateTimeHelper = loadDateTimeFormatter(
+					"org.springframework.data.mongodb.util.json.DateTimeFormatter$JaxbDateTimeFormatter");
 		}
 
 		FORMATTER_IMPL = dateTimeHelper;
