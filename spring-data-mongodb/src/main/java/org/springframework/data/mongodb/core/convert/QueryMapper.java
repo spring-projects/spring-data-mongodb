@@ -318,6 +318,10 @@ public class QueryMapper {
 		Object convertedValue = needsAssociationConversion ? convertAssociation(value, property)
 				: getMappedValue(property.with(keyword.getKey()), value);
 
+		if(keyword.isSample() && convertedValue instanceof Document) {
+			return (Document) convertedValue;
+		}
+
 		return new Document(keyword.key, convertedValue);
 	}
 
@@ -325,9 +329,8 @@ public class QueryMapper {
 	 * Returns the mapped value for the given source object assuming it's a value for the given
 	 * {@link MongoPersistentProperty}.
 	 *
+	 * @param documentField the key the value will be bound to eventually
 	 * @param value the source object to be mapped
-	 * @param property the property the value is a value for
-	 * @param newKey the key the value will be bound to eventually
 	 * @return
 	 */
 	@Nullable
@@ -447,6 +450,10 @@ public class QueryMapper {
 	@Nullable
 	@SuppressWarnings("unchecked")
 	protected Object convertSimpleOrDocument(Object source, @Nullable MongoPersistentEntity<?> entity) {
+
+		if(source instanceof Example) {
+			return exampleMapper.getMappedExample((Example)source, entity);
+		}
 
 		if (source instanceof List) {
 			return delegateConvertToMongoType(source, entity);

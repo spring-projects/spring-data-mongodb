@@ -206,6 +206,28 @@ public class QueryByExampleTests {
 		assertThat(result, hasItems(p1, p3));
 	}
 
+	@Test // DATAMONGO-2314
+	public void alikeShouldWorkOnNestedProperties() {
+
+		PersonWrapper source1 = new PersonWrapper();
+		source1.id = "with-child-doc-1";
+		source1.child = p1;
+
+		PersonWrapper source2 = new PersonWrapper();
+		source2.id = "with-child-doc-2";
+		source2.child = p2;
+
+		operations.save(source1);
+		operations.save(source2);
+
+		Query query = new Query(
+				new Criteria("child").alike(Example.of(p1, ExampleMatcher.matching().withIgnorePaths("_class"))));
+		List<PersonWrapper> result = operations.find(query, PersonWrapper.class);
+
+		assertThat(result, hasSize(1));
+		assertThat(result.get(0), is(source1));
+	}
+
 	@Document("dramatis-personae")
 	@EqualsAndHashCode
 	@ToString
@@ -222,5 +244,14 @@ public class QueryByExampleTests {
 
 		String firstname, middlename;
 		@Field("last_name") String lastname;
+	}
+
+	@Document("dramatis-personae")
+	@EqualsAndHashCode
+	@ToString
+	static class PersonWrapper {
+
+		@Id String id;
+		Person child;
 	}
 }
