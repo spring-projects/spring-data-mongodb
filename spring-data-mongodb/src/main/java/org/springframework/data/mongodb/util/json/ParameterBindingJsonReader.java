@@ -394,7 +394,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 			matched = true;
 			String group = matcher.group();
 			int index = computeParameterIndex(group);
-			computedValue = computedValue.replace(group, ObjectUtils.nullSafeToString(getBindableValueForIndex(index)));
+			computedValue = computedValue.replace(group, nullSaveToString(getBindableValueForIndex(index)));
 		}
 
 		if (!matched) {
@@ -406,7 +406,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 				String binding = regexMatcher.group();
 				String expression = binding.substring(3, binding.length() - 1);
 
-				computedValue = computedValue.replace(binding, ObjectUtils.nullSafeToString(evaluateExpression(expression)));
+				computedValue = computedValue.replace(binding, nullSaveToString(evaluateExpression(expression)));
 			}
 		}
 
@@ -414,6 +414,15 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		bindableValue.setType(BsonType.STRING);
 
 		return bindableValue;
+	}
+
+	private static String nullSaveToString(Object value) {
+
+		if (value instanceof Date) {
+			return DateTimeFormatter.format(((Date) value).getTime());
+		}
+
+		return ObjectUtils.nullSafeToString(value);
 	}
 
 	private static int computeParameterIndex(String parameter) {
@@ -1244,12 +1253,20 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		} else {
 			if (valueToken.getType() == JsonTokenType.INT32 || valueToken.getType() == JsonTokenType.INT64) {
 				value = valueToken.getValue(Long.class);
-			} else if (valueToken.getType() == JsonTokenType.STRING) {
-				String dateTimeString = valueToken.getValue(String.class);
-				try {
-					value = DateTimeFormatter.parse(dateTimeString);
-				} catch (IllegalArgumentException e) {
-					throw new JsonParseException("Failed to parse string as a date", e);
+			} else if (valueToken.getType() == JsonTokenType.STRING
+					|| valueToken.getType() == JsonTokenType.UNQUOTED_STRING) {
+
+				Object dt = bindableValueFor(valueToken).getValue();
+				if (dt instanceof Date) {
+					value = ((Date) dt).getTime();
+				} else if (dt instanceof Number) {
+					value = NumberUtils.convertNumberToTargetClass((Number) dt, Long.class);
+				} else {
+					try {
+						value = DateTimeFormatter.parse(dt.toString());
+					} catch (IllegalArgumentException e) {
+						throw new JsonParseException(String.format("Failed to parse string '%s' as a date", dt), e);
+					}
 				}
 			} else {
 				throw new JsonParseException("JSON reader expected an integer or string but found '%s'.",

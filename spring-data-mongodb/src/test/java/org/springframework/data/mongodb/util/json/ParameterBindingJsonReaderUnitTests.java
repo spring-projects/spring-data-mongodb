@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import org.bson.Document;
@@ -156,6 +157,42 @@ public class ParameterBindingJsonReaderUnitTests {
 		// "{ arg0 : ?#{[0]} }"
 		Document target = parse("{ arg0 : ?#{[0]} }", 100.01D);
 		assertThat(target).isEqualTo(new Document("arg0", 100.01D));
+	}
+
+	@Test // DATAMONGO-2315
+	public void bindDateAsDate() {
+
+		Date date = new Date();
+		Document target = parse("{ 'end_date' : { $gte : { $date : ?0 } } }", date);
+
+		assertThat(target).isEqualTo(Document.parse("{ 'end_date' : { $gte : { $date : " + date.getTime() + " } } } "));
+	}
+
+	@Test // DATAMONGO-2315
+	public void bindQuotedDateAsDate() {
+
+		Date date = new Date();
+		Document target = parse("{ 'end_date' : { $gte : { $date : '?0' } } }", date);
+
+		assertThat(target).isEqualTo(Document.parse("{ 'end_date' : { $gte : { $date : " + date.getTime() + " } } } "));
+	}
+
+	@Test // DATAMONGO-2315
+	public void bindStringAsDate() {
+
+		Date date = new Date();
+		Document target = parse("{ 'end_date' : { $gte : { $date : ?0 } } }", "2019-07-04T12:19:23.000Z");
+
+		assertThat(target).isEqualTo(Document.parse("{ 'end_date' : { $gte : { $date : '2019-07-04T12:19:23.000Z' } } } "));
+	}
+
+	@Test // DATAMONGO-2315
+	public void bindNumberAsDate() {
+
+		Long time = new Date().getTime();
+		Document target = parse("{ 'end_date' : { $gte : { $date : ?0 } } }", time);
+
+		assertThat(target).isEqualTo(Document.parse("{ 'end_date' : { $gte : { $date : " + time + " } } } "));
 	}
 
 	private static Document parse(String json, Object... args) {
