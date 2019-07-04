@@ -611,7 +611,6 @@ public class Criteria implements CriteriaDefinition {
 	public Criteria alike(Example<?> sample) {
 
 		criteria.put("$example", sample);
-		this.criteriaChain.add(this);
 		return this;
 	}
 
