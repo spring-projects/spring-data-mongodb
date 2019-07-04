@@ -130,10 +130,8 @@ public class QueryMapper {
 			// TODO: remove one once QueryMapper can work with Query instances directly
 			if (Query.isRestrictedTypeKey(key)) {
 
-				@SuppressWarnings("unchecked")
 				Set<Class<?>> restrictedTypes = BsonUtils.get(query, key);
 				this.converter.getTypeMapper().writeTypeRestrictions(result, restrictedTypes);
-
 				continue;
 			}
 
@@ -271,7 +269,7 @@ public class QueryMapper {
 		if (keyword.isOrOrNor() || (keyword.hasIterableValue() && !keyword.isGeometry())) {
 
 			Iterable<?> conditions = keyword.getValue();
-			List<Object> newConditions = new ArrayList<Object>();
+			List<Object> newConditions = new ArrayList<>();
 
 			for (Object condition : conditions) {
 				newConditions.add(isDocument(condition) ? getMappedObject((Document) condition, entity)
@@ -282,11 +280,12 @@ public class QueryMapper {
 		}
 
 		if (keyword.isSample()) {
-			return exampleMapper.getMappedExample(keyword.<Example<?>> getValue(), entity);
+			return exampleMapper.getMappedExample(keyword.getValue(), entity);
 		}
 
 		if (keyword.isJsonSchema()) {
-			return schemaMapper.mapSchema(new Document(keyword.getKey(), keyword.getValue()), entity != null ? entity.getType() : Object.class);
+			return schemaMapper.mapSchema(new Document(keyword.getKey(), keyword.getValue()),
+					entity != null ? entity.getType() : Object.class);
 		}
 
 		return new Document(keyword.getKey(), convertSimpleOrDocument(keyword.getValue(), entity));
@@ -307,7 +306,7 @@ public class QueryMapper {
 		Object convertedValue = needsAssociationConversion ? convertAssociation(value, property)
 				: getMappedValue(property.with(keyword.getKey()), value);
 
-		if(keyword.isSample() && convertedValue instanceof Document) {
+		if (keyword.isSample() && convertedValue instanceof Document) {
 			return (Document) convertedValue;
 		}
 
@@ -334,7 +333,7 @@ public class QueryMapper {
 
 				if (valueDbo.containsField("$in") || valueDbo.containsField("$nin")) {
 					String inKey = valueDbo.containsField("$in") ? "$in" : "$nin";
-					List<Object> ids = new ArrayList<Object>();
+					List<Object> ids = new ArrayList<>();
 					for (Object id : (Iterable<?>) valueDbo.get(inKey)) {
 						ids.add(convertId(id));
 					}
@@ -353,7 +352,7 @@ public class QueryMapper {
 
 				if (valueDbo.containsKey("$in") || valueDbo.containsKey("$nin")) {
 					String inKey = valueDbo.containsKey("$in") ? "$in" : "$nin";
-					List<Object> ids = new ArrayList<Object>();
+					List<Object> ids = new ArrayList<>();
 					for (Object id : (Iterable<?>) valueDbo.get(inKey)) {
 						ids.add(convertId(id));
 					}
@@ -426,8 +425,8 @@ public class QueryMapper {
 	@SuppressWarnings("unchecked")
 	protected Object convertSimpleOrDocument(Object source, @Nullable MongoPersistentEntity<?> entity) {
 
-		if(source instanceof Example) {
-			return exampleMapper.getMappedExample((Example)source, entity);
+		if (source instanceof Example) {
+			return exampleMapper.getMappedExample((Example) source, entity);
 		}
 
 		if (source instanceof List) {
