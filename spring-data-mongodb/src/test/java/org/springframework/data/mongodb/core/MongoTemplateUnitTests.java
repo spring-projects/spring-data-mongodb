@@ -85,7 +85,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.lang.Nullable;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import com.mongodb.DB;
@@ -1565,7 +1564,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	public void beforeSaveCallbackAllowsTargetEntityModificationsUsingSave() {
 
 		StaticApplicationContext ctx = new StaticApplicationContext();
-		ctx.registerBean(BeforeSaveCallback.class, () -> markPersonAsPersistedCallback);
+		ctx.registerBean(BeforeSaveCallback.class, this::beforeSaveCallbackReturningNewPersonWithTransientAttribute);
 		ctx.refresh();
 
 		template.setApplicationContext(ctx);
@@ -1583,7 +1582,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	public void beforeSaveCallbackAllowsTargetEntityModificationsUsingInsert() {
 
 		StaticApplicationContext ctx = new StaticApplicationContext();
-		ctx.registerBean(BeforeSaveCallback.class, () -> markPersonAsPersistedCallback);
+		ctx.registerBean(BeforeSaveCallback.class, this::beforeSaveCallbackReturningNewPersonWithTransientAttribute);
 		ctx.refresh();
 
 		template.setApplicationContext(ctx);
@@ -1681,19 +1680,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 	static class PersonWithTransientAttribute extends Person {
 
-		@Transient
-		boolean isNew = true;
+		@Transient boolean isNew = true;
 	}
-
-	static BeforeSaveCallback<PersonWithTransientAttribute> markPersonAsPersistedCallback = (entity, document, collection) -> {
-
-		// Return a completely new instance, ie in case of an immutable entity;
-		PersonWithTransientAttribute newEntity = new PersonWithTransientAttribute();
-		newEntity.id = entity.id;
-		newEntity.firstname = entity.firstname;
-		newEntity.isNew = false;
-		return newEntity;
-	};
 
 	interface PersonProjection {
 		String getFirstname();
@@ -1770,6 +1758,18 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Override
 	protected MongoOperations getOperations() {
 		return this.template;
+	}
+
+	private BeforeSaveCallback<PersonWithTransientAttribute> beforeSaveCallbackReturningNewPersonWithTransientAttribute() {
+		return (entity, document, collection) -> {
+
+			// Return a completely new instance, ie in case of an immutable entity;
+			PersonWithTransientAttribute newEntity = new PersonWithTransientAttribute();
+			newEntity.id = entity.id;
+			newEntity.firstname = entity.firstname;
+			newEntity.isNew = false;
+			return newEntity;
+		};
 	}
 
 	static class ValueCapturingEntityCallback<T> {
