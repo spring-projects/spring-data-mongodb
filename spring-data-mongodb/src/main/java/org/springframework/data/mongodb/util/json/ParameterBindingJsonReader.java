@@ -394,7 +394,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 			matched = true;
 			String group = matcher.group();
 			int index = computeParameterIndex(group);
-			computedValue = computedValue.replace(group, nullSaveToString(getBindableValueForIndex(index)));
+			computedValue = computedValue.replace(group, nullSafeToString(getBindableValueForIndex(index)));
 		}
 
 		if (!matched) {
@@ -406,7 +406,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 				String binding = regexMatcher.group();
 				String expression = binding.substring(3, binding.length() - 1);
 
-				computedValue = computedValue.replace(binding, nullSaveToString(evaluateExpression(expression)));
+				computedValue = computedValue.replace(binding, nullSafeToString(evaluateExpression(expression)));
 			}
 		}
 
@@ -416,7 +416,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		return bindableValue;
 	}
 
-	private static String nullSaveToString(Object value) {
+	private static String nullSafeToString(@Nullable Object value) {
 
 		if (value instanceof Date) {
 			return DateTimeFormatter.format(((Date) value).getTime());
@@ -1256,6 +1256,8 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 			} else if (valueToken.getType() == JsonTokenType.STRING
 					|| valueToken.getType() == JsonTokenType.UNQUOTED_STRING) {
 
+				// Spring Data Customization START
+
 				Object dt = bindableValueFor(valueToken).getValue();
 				if (dt instanceof Date) {
 					value = ((Date) dt).getTime();
@@ -1268,6 +1270,8 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 						throw new JsonParseException(String.format("Failed to parse string '%s' as a date", dt), e);
 					}
 				}
+
+				// Spring Data Customization END
 			} else {
 				throw new JsonParseException("JSON reader expected an integer or string but found '%s'.",
 						valueToken.getValue());

@@ -28,6 +28,8 @@ import org.bson.codecs.DecoderContext;
 import org.junit.Test;
 
 /**
+ * Unit tests for {@link ParameterBindingJsonReader}.
+ *
  * @author Christoph Strobl
  */
 public class ParameterBindingJsonReaderUnitTests {
