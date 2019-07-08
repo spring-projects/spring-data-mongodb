@@ -15,7 +15,10 @@
  */
 package org.springframework.data.mongodb.core.index;
 
+import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
@@ -37,7 +40,8 @@ public interface IndexResolver {
 	 * @return the new {@link IndexResolver}.
 	 * @since 2.2
 	 */
-	static IndexResolver create(MongoMappingContext mappingContext) {
+	static IndexResolver create(
+			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 
 		Assert.notNull(mappingContext, "MongoMappingContext must not be null!");
 
