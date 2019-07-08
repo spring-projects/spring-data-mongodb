@@ -744,16 +744,28 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			assertThat(indexDefinitions).hasSize(1);
 			assertIndexPathAndCollection("bar", "textIndexOnSinglePropertyInRoot", indexDefinitions.get(0));
+			assertThat(indexDefinitions.get(0).getIndexOptions()).doesNotContainKey("collation");
+		}
+
+		@Test // DATAMONGO-2316
+		public void shouldEnforceSimpleCollationOnTextIndex() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					TextIndexWithCollation.class);
+
+			assertThat(indexDefinitions).hasSize(1);
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("collation",
+					new org.bson.Document("locale", "simple"));
 		}
 
 		@Test // DATAMONGO-937
 		public void shouldResolveMultiFieldTextIndexCorrectly() {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
-					TextIndexOnMutiplePropertiesInRoot.class);
+					TextIndexOnMultiplePropertiesInRoot.class);
 
 			assertThat(indexDefinitions).hasSize(1);
-			assertIndexPathAndCollection(new String[] { "foo", "bar" }, "textIndexOnMutiplePropertiesInRoot",
+			assertIndexPathAndCollection(new String[] { "foo", "bar" }, "textIndexOnMultiplePropertiesInRoot",
 					indexDefinitions.get(0));
 		}
 
@@ -862,8 +874,14 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			@TextIndexed String bar;
 		}
 
+		@Document(collation = "de_AT")
+		static class TextIndexWithCollation {
+
+			@TextIndexed String foo;
+		}
+
 		@Document
-		static class TextIndexOnMutiplePropertiesInRoot {
+		static class TextIndexOnMultiplePropertiesInRoot {
 
 			@TextIndexed String foo;
 

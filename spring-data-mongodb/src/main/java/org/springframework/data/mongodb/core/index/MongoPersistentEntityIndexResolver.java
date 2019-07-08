@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.Association;
@@ -41,13 +42,13 @@ import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PropertyHandler;
+import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.CycleGuard.Path;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.TextIndexIncludeOptions.IncludeStrategy;
 import org.springframework.data.mongodb.core.index.TextIndexDefinition.TextIndexDefinitionBuilder;
 import org.springframework.data.mongodb.core.index.TextIndexDefinition.TextIndexedFieldSpec;
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.spel.EvaluationContextProvider;
@@ -80,7 +81,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	private static final Logger LOGGER = LoggerFactory.getLogger(MongoPersistentEntityIndexResolver.class);
 	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
 
-	private final MongoMappingContext mappingContext;
+	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private EvaluationContextProvider evaluationContextProvider = EvaluationContextProvider.DEFAULT;
 
 	/**
@@ -88,7 +89,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 *
 	 * @param mappingContext must not be {@literal null}.
 	 */
-	public MongoPersistentEntityIndexResolver(MongoMappingContext mappingContext) {
+	public MongoPersistentEntityIndexResolver(
+			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 
 		Assert.notNull(mappingContext, "Mapping context must not be null in order to resolve index definitions");
 		this.mappingContext = mappingContext;
@@ -259,6 +261,10 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 					new TextIndexIncludeOptions(IncludeStrategy.DEFAULT), new CycleGuard());
 		} catch (CyclicPropertyReferenceException e) {
 			LOGGER.info(e.getMessage());
+		}
+
+		if (root.hasCollation()) {
+			indexDefinitionBuilder.withSimpleCollation();
 		}
 
 		TextIndexDefinition indexDefinition = indexDefinitionBuilder.build();

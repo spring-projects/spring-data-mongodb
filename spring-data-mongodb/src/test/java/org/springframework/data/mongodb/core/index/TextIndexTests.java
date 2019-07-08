@@ -22,12 +22,15 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.config.AbstractIntegrationTests;
+import org.springframework.data.mongodb.core.CollectionOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Language;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.util.Version;
 
@@ -35,6 +38,7 @@ import com.mongodb.WriteConcern;
 
 /**
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class TextIndexTests extends AbstractIntegrationTests {
 
@@ -48,10 +52,20 @@ public class TextIndexTests extends AbstractIntegrationTests {
 
 		template.setWriteConcern(WriteConcern.JOURNALED);
 		this.indexOps = template.indexOps(TextIndexedDocumentRoot.class);
+
+		template.dropCollection(TextIndexedDocumentRoot.class);
+		template.createCollection(TextIndexedDocumentRoot.class,
+				CollectionOptions.empty().collation(Collation.of("de_AT")));
 	}
 
-	@Test // DATAMONGO-937
+	@Test // DATAMONGO-937, DATAMONGO-2316
 	public void indexInfoShouldHaveBeenCreatedCorrectly() {
+
+		IndexResolver indexResolver = IndexResolver.create(template.getConverter().getMappingContext());
+
+		for (IndexDefinition indexDefinition : indexResolver.resolveIndexFor(TextIndexedDocumentRoot.class)) {
+			indexOps.ensureIndex(indexDefinition);
+		}
 
 		List<IndexInfo> indexInfos = indexOps.getIndexInfo();
 
@@ -69,16 +83,16 @@ public class TextIndexTests extends AbstractIntegrationTests {
 		assertThat(textIndexInfo.getLanguage()).isEqualTo("spanish");
 	}
 
-	@Document(language = "spanish")
+	@Document(language = "spanish", collation = "de_AT")
 	static class TextIndexedDocumentRoot {
 
 		@TextIndexed String textIndexedPropertyWithDefaultWeight;
 		@TextIndexed(weight = 5) String textIndexedPropertyWithWeight;
 
-		TextIndexedDocumentWihtLanguageOverride nestedDocument;
+		TextIndexedDocumentWithLanguageOverride nestedDocument;
 	}
 
-	static class TextIndexedDocumentWihtLanguageOverride {
+	static class TextIndexedDocumentWithLanguageOverride {
 
 		@Language String lang;
 
