@@ -126,7 +126,7 @@ public class ReactiveChangeStreamOperationSupportTests {
 
 		try {
 			assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
-					.containsExactly(person1, person2, person3);
+					.containsOnly(person1, person2, person3);
 		} finally {
 			disposable.dispose();
 		}
