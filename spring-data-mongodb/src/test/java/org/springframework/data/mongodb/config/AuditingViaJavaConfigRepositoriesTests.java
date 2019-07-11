@@ -15,9 +15,7 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Collections;
@@ -27,6 +25,7 @@ import java.util.function.Function;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -100,9 +99,9 @@ public class AuditingViaJavaConfigRepositoriesTests {
 
 		AuditablePerson createdBy = savedUser.getCreatedBy();
 
-		assertThat(createdBy, is(notNullValue()));
-		assertThat(createdBy.getFirstname(), is(this.auditor.getFirstname()));
-		assertThat(savedUser.getCreatedAt(), is(notNullValue()));
+		assertThat(createdBy).isNotNull();
+		assertThat(createdBy.getFirstname()).isEqualTo(this.auditor.getFirstname());
+		assertThat(savedUser.getCreatedAt()).isNotNull();
 	}
 
 	@Test // DATAMONGO-843

@@ -15,19 +15,19 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.HashSet;
 
 import org.bson.Document;
-import org.hamcrest.CoreMatchers;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.convert.CustomConversions;
@@ -109,7 +109,7 @@ public class CustomConvertersUnitTests {
 		Document document = new Document();
 		document.put("foo", null);
 
-		Assert.assertThat(document.containsKey("foo"), CoreMatchers.is(true));
+		assertThat(document.containsKey("foo")).isEqualTo(true);
 	}
 
 	public static class Foo {

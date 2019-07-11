@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb;
 
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import reactor.core.publisher.Mono;
@@ -27,6 +27,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.reactive.TransactionalOperator;
@@ -72,8 +73,8 @@ public class ReactiveMongoTransactionManagerUnitTests {
 	@After
 	public void verifyTransactionSynchronizationManager() {
 
-		assertTrue(TransactionSynchronizationManager.getResourceMap().isEmpty());
-		assertFalse(TransactionSynchronizationManager.isSynchronizationActive());
+		assertThat(TransactionSynchronizationManager.getResourceMap().isEmpty()).isTrue();
+		assertThat(TransactionSynchronizationManager.isSynchronizationActive()).isFalse();
 	}
 
 	@Test // DATAMONGO-2265

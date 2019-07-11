@@ -16,7 +16,6 @@
 package org.springframework.data.mongodb.core.query;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.hamcrest.Matchers.*;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -32,7 +31,7 @@ public class UntypedExampleMatcherUnitTests {
 	ExampleMatcher matcher;
 
 	@Before
-	public void setUp() throws Exception {
+	public void setUp() {
 		matcher = UntypedExampleMatcher.matching();
 	}
 
@@ -125,7 +124,7 @@ public class UntypedExampleMatcherUnitTests {
 		matcher = UntypedExampleMatcher.matching().withIgnorePaths("foo", "bar", "foo");
 		ExampleMatcher configuredExampleSpec = matcher.withIgnoreCase();
 
-		assertThat(matcher).isNotEqualTo(sameInstance(configuredExampleSpec));
+		assertThat(matcher).isNotSameAs(configuredExampleSpec);
 		assertThat(matcher.getIgnoredPaths()).hasSize(2);
 		assertThat(matcher.isIgnoreCaseEnabled()).isFalse();
 

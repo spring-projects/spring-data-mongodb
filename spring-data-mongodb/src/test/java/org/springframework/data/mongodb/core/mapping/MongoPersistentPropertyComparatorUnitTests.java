@@ -1,7 +1,7 @@
 package org.springframework.data.mongodb.core.mapping;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -11,14 +11,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity.MongoPersistentPropertyComparator;
 
-import static org.mockito.Mockito.*;
+import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity.MongoPersistentPropertyComparator;
 
 /**
  * Unit tests for {@link MongoPersistentPropertyComparator}.
- * 
+ *
  * @author Oliver Gierke
  */
 @RunWith(MockitoJUnitRunner.class)
@@ -43,8 +41,8 @@ public class MongoPersistentPropertyComparatorUnitTests {
 		List<MongoPersistentProperty> properties = Arrays.asList(firstName, lastName, ssn);
 		Collections.sort(properties, MongoPersistentPropertyComparator.INSTANCE);
 
-		assertThat(properties.get(0), is(ssn));
-		assertThat(properties.get(1), is(firstName));
-		assertThat(properties.get(2), is(lastName));
+		assertThat(properties.get(0)).isEqualTo(ssn);
+		assertThat(properties.get(1)).isEqualTo(firstName);
+		assertThat(properties.get(2)).isEqualTo(lastName);
 	}
 }

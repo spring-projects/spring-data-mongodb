@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.bson.Document;
 import org.junit.Test;
@@ -37,7 +36,8 @@ public class CountOperationUnitTests {
 	public void shouldRenderCorrectly() {
 
 		CountOperation countOperation = new CountOperation("field");
-		assertThat(countOperation.toDocument(Aggregation.DEFAULT_CONTEXT), is(Document.parse("{$count : \"field\" }")));
+		assertThat(countOperation.toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{$count : \"field\" }"));
 	}
 
 	@Test // DATAMONGO-1549
@@ -45,8 +45,8 @@ public class CountOperationUnitTests {
 
 		CountOperation countOperation = new CountOperation("field");
 
-		assertThat(countOperation.getFields().exposesNoFields(), is(false));
-		assertThat(countOperation.getFields().exposesSingleFieldOnly(), is(true));
-		assertThat(countOperation.getFields().getField("field"), notNullValue());
+		assertThat(countOperation.getFields().exposesNoFields()).isFalse();
+		assertThat(countOperation.getFields().exposesSingleFieldOnly()).isTrue();
+		assertThat(countOperation.getFields().getField("field")).isNotNull();
 	}
 }

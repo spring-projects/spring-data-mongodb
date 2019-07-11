@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.hamcrest.core.Is.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
@@ -26,6 +25,7 @@ import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
@@ -80,7 +80,7 @@ public class NoExplicitIdTests {
 		TypeWithoutIdProperty retrieved = mongoOps.findOne(query(where("someString").is(noid.someString)),
 				TypeWithoutIdProperty.class);
 
-		assertThat(retrieved.someString, is(noid.someString));
+		assertThat(retrieved.someString).isEqualTo(noid.someString);
 	}
 
 	@Test // DATAMONGO-1289
@@ -92,7 +92,7 @@ public class NoExplicitIdTests {
 		repo.save(noid);
 
 		TypeWithoutIdProperty retrieved = repo.findBySomeString(noid.someString);
-		assertThat(retrieved.someString, is(noid.someString));
+		assertThat(retrieved.someString).isEqualTo(noid.someString);
 	}
 
 	@Test // DATAMONGO-1289
@@ -108,7 +108,7 @@ public class NoExplicitIdTests {
 				"typeWithoutIdProperty");
 
 		Optional<TypeWithoutIdProperty> retrieved = repo.findById(map.get("_id").toString());
-		assertThat(retrieved.get().someString, is(noid.someString));
+		assertThat(retrieved.get().someString).isEqualTo(noid.someString);
 	}
 
 	static class TypeWithoutIdProperty {

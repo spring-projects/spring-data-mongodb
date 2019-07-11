@@ -15,25 +15,24 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
 import static org.springframework.data.domain.Example.*;
 import static org.springframework.data.domain.ExampleMatcher.*;
 import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
-import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.bson.conversions.Bson;
-import org.hamcrest.core.Is;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
@@ -47,7 +46,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.UntypedExampleMatcher;
-import org.springframework.data.mongodb.test.util.IsBsonObject;
 import org.springframework.data.util.TypeInformation;
 
 /**
@@ -80,10 +78,8 @@ public class MongoExampleMapperUnitTests {
 		FlatDocument probe = new FlatDocument();
 		probe.id = "steelheart";
 
-		IsBsonObject<Bson> expected = isBsonObject().containing("_id", "steelheart");
-
-		assertThat(mapper.getMappedExample(of(probe), context.getRequiredPersistentEntity(FlatDocument.class)),
-				is(expected));
+		assertThat(mapper.getMappedExample(of(probe), context.getRequiredPersistentEntity(FlatDocument.class)))
+				.containsEntry("_id", "steelheart");
 	}
 
 	@Test // DATAMONGO-1245
@@ -94,13 +90,10 @@ public class MongoExampleMapperUnitTests {
 		probe.stringValue = "firefight";
 		probe.intValue = 100;
 
-		IsBsonObject<Bson> expected = isBsonObject().//
-				containing("_id", "steelheart").//
-				containing("stringValue", "firefight").//
-				containing("intValue", 100);
-
-		assertThat(mapper.getMappedExample(of(probe), context.getRequiredPersistentEntity(FlatDocument.class)),
-				is(expected));
+		assertThat(mapper.getMappedExample(of(probe), context.getRequiredPersistentEntity(FlatDocument.class)))
+				.containsEntry("_id", "steelheart") //
+				.containsEntry("stringValue", "firefight") //
+				.containsEntry("intValue", 100);
 	}
 
 	@Test // DATAMONGO-1245
@@ -110,12 +103,9 @@ public class MongoExampleMapperUnitTests {
 		probe.stringValue = "firefight";
 		probe.intValue = 100;
 
-		IsBsonObject<Bson> expected = isBsonObject().//
-				containing("stringValue", "firefight").//
-				containing("intValue", 100);
-
-		assertThat(mapper.getMappedExample(of(probe), context.getRequiredPersistentEntity(FlatDocument.class)),
-				is(expected));
+		assertThat(mapper.getMappedExample(of(probe), context.getRequiredPersistentEntity(FlatDocument.class))) //
+				.containsEntry("stringValue", "firefight") //
+				.containsEntry("intValue", 100);
 	}
 
 	@Test // DATAMONGO-1245
@@ -126,11 +116,8 @@ public class MongoExampleMapperUnitTests {
 
 		List list = (Arrays.asList("Prof", "Tia", "David"));
 
-		IsBsonObject<Bson> expected = isBsonObject().//
-				containing("listOfString", list);
-
-		assertThat(mapper.getMappedExample(of(probe), context.getRequiredPersistentEntity(FlatDocument.class)),
-				is(expected));
+		assertThat(mapper.getMappedExample(of(probe), context.getRequiredPersistentEntity(FlatDocument.class)))
+				.containsEntry("listOfString", list);
 	}
 
 	@Test // DATAMONGO-1245
@@ -139,10 +126,8 @@ public class MongoExampleMapperUnitTests {
 		FlatDocument probe = new FlatDocument();
 		probe.customNamedField = "Mitosis";
 
-		IsBsonObject<Bson> expected = isBsonObject().containing("custom_field_name", "Mitosis");
-
-		assertThat(mapper.getMappedExample(of(probe), context.getRequiredPersistentEntity(FlatDocument.class)),
-				is(expected));
+		assertThat(mapper.getMappedExample(of(probe), context.getRequiredPersistentEntity(FlatDocument.class)))
+				.containsEntry("custom_field_name", "Mitosis");
 	}
 
 	@Test // DATAMONGO-1245
@@ -155,8 +140,8 @@ public class MongoExampleMapperUnitTests {
 		org.bson.Document document = mapper.getMappedExample(Example.of(probe),
 				context.getRequiredPersistentEntity(WrapperDocument.class));
 
-		assertThat(document,
-				isBsonObject().containing("_class", new org.bson.Document("$in", new String[] { probe.getClass().getName() })));
+		assertThat(document).containsEntry("_class",
+				new org.bson.Document("$in", Collections.singletonList(probe.getClass().getName())));
 	}
 
 	@Test // DATAMONGO-1245
@@ -166,10 +151,8 @@ public class MongoExampleMapperUnitTests {
 		probe.flatDoc = new FlatDocument();
 		probe.flatDoc.stringValue = "conflux";
 
-		IsBsonObject<Bson> expected = isBsonObject().containing("flatDoc\\.stringValue", "conflux");
-
-		assertThat(mapper.getMappedExample(of(probe), context.getRequiredPersistentEntity(WrapperDocument.class)),
-				is(expected));
+		assertThat(mapper.getMappedExample(of(probe), context.getRequiredPersistentEntity(WrapperDocument.class)))
+				.containsEntry("flatDoc\\.stringValue", "conflux");
 	}
 
 	@Test // DATAMONGO-1245
@@ -181,8 +164,8 @@ public class MongoExampleMapperUnitTests {
 
 		Example<?> example = Example.of(probe, matching().withIncludeNullValues());
 
-		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(WrapperDocument.class)), //
-				isBsonObject().containing("flatDoc.stringValue", "conflux"));
+		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(WrapperDocument.class)))
+				.containsEntry("flatDoc.stringValue", "conflux");
 	}
 
 	@Test // DATAMONGO-1245
@@ -194,11 +177,9 @@ public class MongoExampleMapperUnitTests {
 
 		Example<?> example = Example.of(probe, matching().withStringMatcher(StringMatcher.STARTING));
 
-		IsBsonObject<Bson> expected = isBsonObject().//
-				containing("stringValue.$regex", "^firefight").//
-				containing("intValue", 100);
-
-		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(FlatDocument.class)), is(expected));
+		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(FlatDocument.class)))
+				.containsEntry("stringValue.$regex", "^firefight")//
+				.containsEntry("intValue", 100);
 	}
 
 	@Test // DATAMONGO-1245
@@ -210,11 +191,9 @@ public class MongoExampleMapperUnitTests {
 
 		Example<?> example = Example.of(probe, matching().withStringMatcher(StringMatcher.STARTING));
 
-		IsBsonObject<Bson> expected = isBsonObject().//
-				containing("stringValue.$regex", "^" + Pattern.quote("fire.ight")).//
-				containing("intValue", 100);
-
-		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(FlatDocument.class)), is(expected));
+		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(FlatDocument.class)))
+				.containsEntry("stringValue.$regex", "^" + Pattern.quote("fire.ight"))//
+				.containsEntry("intValue", 100);
 	}
 
 	@Test // DATAMONGO-1245
@@ -226,11 +205,9 @@ public class MongoExampleMapperUnitTests {
 
 		Example<?> example = Example.of(probe, matching().withStringMatcher(StringMatcher.ENDING));
 
-		IsBsonObject<Bson> expected = isBsonObject().//
-				containing("stringValue.$regex", "firefight$").//
-				containing("intValue", 100);
-
-		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(FlatDocument.class)), is(expected));
+		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(FlatDocument.class)))
+				.containsEntry("stringValue.$regex", "firefight$") //
+				.containsEntry("intValue", 100);
 	}
 
 	@Test // DATAMONGO-1245
@@ -242,11 +219,9 @@ public class MongoExampleMapperUnitTests {
 
 		Example<?> example = Example.of(probe, matching().withStringMatcher(StringMatcher.REGEX));
 
-		IsBsonObject<Bson> expected = isBsonObject().//
-				containing("stringValue.$regex", "firefight").//
-				containing("custom_field_name.$regex", "^(cat|dog).*shelter\\d?");
-
-		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(FlatDocument.class)), is(expected));
+		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(FlatDocument.class)))
+				.containsEntry("stringValue.$regex", "firefight") //
+				.containsEntry("custom_field_name.$regex", "^(cat|dog).*shelter\\d?");
 	}
 
 	@Test // DATAMONGO-1245
@@ -258,11 +233,9 @@ public class MongoExampleMapperUnitTests {
 
 		Example<?> example = Example.of(probe, matching().withStringMatcher(StringMatcher.ENDING).withIgnoreCase());
 
-		IsBsonObject<Bson> expected = isBsonObject().//
-				containing("stringValue", new org.bson.Document("$regex", "firefight$").append("$options", "i")).//
-				containing("intValue", 100);
-
-		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(FlatDocument.class)), is(expected));
+		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(FlatDocument.class)))
+				.containsEntry("stringValue", new org.bson.Document("$regex", "firefight$").append("$options", "i")) //
+				.containsEntry("intValue", 100);
 	}
 
 	@Test // DATAMONGO-1245
@@ -274,11 +247,10 @@ public class MongoExampleMapperUnitTests {
 
 		Example<?> example = Example.of(probe, matching().withIgnoreCase());
 
-		IsBsonObject<Bson> expected = isBsonObject().//
-				containing("stringValue", new org.bson.Document("$regex", Pattern.quote("firefight")).append("$options", "i")).//
-				containing("intValue", 100);
-
-		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(FlatDocument.class)), is(expected));
+		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(FlatDocument.class)))
+				.containsEntry("stringValue",
+						new org.bson.Document("$regex", Pattern.quote("firefight")).append("$options", "i")) //
+				.containsEntry("intValue", 100);
 	}
 
 	@Test // DATAMONGO-1245
@@ -293,8 +265,8 @@ public class MongoExampleMapperUnitTests {
 				context.getRequiredPersistentEntity(WithDBRef.class));
 		com.mongodb.DBRef reference = getTypedValue(document, "referenceDocument", com.mongodb.DBRef.class);
 
-		assertThat(reference.getId(), Is.<Object> is("200"));
-		assertThat(reference.getCollectionName(), is("refDoc"));
+		assertThat(reference.getId()).isEqualTo("200");
+		assertThat(reference.getCollectionName()).isEqualTo("refDoc");
 	}
 
 	@Test // DATAMONGO-1245
@@ -306,7 +278,7 @@ public class MongoExampleMapperUnitTests {
 		org.bson.Document document = mapper.getMappedExample(of(probe),
 				context.getRequiredPersistentEntity(FlatDocument.class));
 
-		assertThat(document, isBsonObject().containing("stringValue", "steelheart"));
+		assertThat(document).containsEntry("stringValue", "steelheart");
 	}
 
 	@Test // DATAMONGO-1245
@@ -318,8 +290,8 @@ public class MongoExampleMapperUnitTests {
 		org.bson.Document document = mapper.getMappedExample(of(probe),
 				context.getRequiredPersistentEntity(WithDBRef.class));
 
-		assertThat(document.get("legacyPoint.x"), Is.<Object> is(10D));
-		assertThat(document.get("legacyPoint.y"), Is.<Object> is(20D));
+		assertThat(document.get("legacyPoint.x")).isEqualTo(10D);
+		assertThat(document.get("legacyPoint.y")).isEqualTo(20D);
 	}
 
 	@Test // DATAMONGO-1245
@@ -332,11 +304,9 @@ public class MongoExampleMapperUnitTests {
 
 		Example<?> example = Example.of(probe, matching().withIgnorePaths("customNamedField"));
 
-		IsBsonObject<Bson> expected = isBsonObject().//
-				containing("stringValue", "string").//
-				containing("intValue", 10);
-
-		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(FlatDocument.class)), is(expected));
+		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(FlatDocument.class)))
+				.containsEntry("stringValue", "string") //
+				.containsEntry("intValue", 10);
 	}
 
 	@Test // DATAMONGO-1245
@@ -349,11 +319,9 @@ public class MongoExampleMapperUnitTests {
 
 		Example<?> example = Example.of(probe, matching().withIgnorePaths("stringValue"));
 
-		IsBsonObject<Bson> expected = isBsonObject().//
-				containing("custom_field_name", "foo").//
-				containing("intValue", 10);
-
-		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(FlatDocument.class)), is(expected));
+		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(FlatDocument.class)))
+				.containsEntry("custom_field_name", "foo") //
+				.containsEntry("intValue", 10);
 	}
 
 	@Test // DATAMONGO-1245
@@ -367,12 +335,9 @@ public class MongoExampleMapperUnitTests {
 
 		Example<?> example = Example.of(probe, matching().withIgnorePaths("flatDoc.stringValue"));
 
-		IsBsonObject<Bson> expected = isBsonObject().//
-				containing("flatDoc\\.custom_field_name", "foo").//
-				containing("flatDoc\\.intValue", 10);
-
-		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(WrapperDocument.class)),
-				is(expected));
+		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(WrapperDocument.class)))
+				.containsEntry("flatDoc\\.custom_field_name", "foo")//
+				.containsEntry("flatDoc\\.intValue", 10);
 	}
 
 	@Test // DATAMONGO-1245
@@ -386,12 +351,9 @@ public class MongoExampleMapperUnitTests {
 
 		Example<?> example = Example.of(probe, matching().withIgnorePaths("flatDoc.customNamedField"));
 
-		IsBsonObject<Bson> expected = isBsonObject().//
-				containing("flatDoc\\.stringValue", "string").//
-				containing("flatDoc\\.intValue", 10);
-
-		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(WrapperDocument.class)),
-				is(expected));
+		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(WrapperDocument.class)))
+				.containsEntry("flatDoc\\.stringValue", "string") //
+				.containsEntry("flatDoc\\.intValue", 10);
 	}
 
 	@Test // DATAMONGO-1245
@@ -403,11 +365,9 @@ public class MongoExampleMapperUnitTests {
 
 		Example<?> example = Example.of(probe, matching().withMatcher("stringValue", GenericPropertyMatchers.contains()));
 
-		IsBsonObject<Bson> expected = isBsonObject().//
-				containing("stringValue.$regex", ".*firefight.*").//
-				containing("custom_field_name", "steelheart");
-
-		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(FlatDocument.class)), is(expected));
+		assertThat(mapper.getMappedExample(example, context.getRequiredPersistentEntity(FlatDocument.class)))
+				.containsEntry("stringValue.$regex", ".*firefight.*") //
+				.containsEntry("custom_field_name", "steelheart");
 	}
 
 	@Test // DATAMONGO-1245
@@ -421,7 +381,7 @@ public class MongoExampleMapperUnitTests {
 		org.bson.Document document = mapper.getMappedExample(of(probe),
 				context.getRequiredPersistentEntity(FlatDocument.class));
 
-		assertThat(document, isBsonObject().containing("anotherStringValue", "calamity"));
+		assertThat(document).containsEntry("anotherStringValue", "calamity");
 	}
 
 	@Test // DATAMONGO-1459
@@ -433,7 +393,7 @@ public class MongoExampleMapperUnitTests {
 
 		Example<FlatDocument> example = Example.of(probe, ExampleMatcher.matchingAny());
 
-		assertThat(mapper.getMappedExample(example), isBsonObject().containing("$or").containing("_class"));
+		assertThat(mapper.getMappedExample(example)).containsKeys("$or", "_class");
 	}
 
 	@Test // DATAMONGO-1768
@@ -446,7 +406,7 @@ public class MongoExampleMapperUnitTests {
 		org.bson.Document document = mapper
 				.getMappedExample(Example.of(probe, ExampleMatcher.matching().withIgnorePaths("_class")));
 
-		assertThat(document, isBsonObject().notContaining("_class"));
+		assertThat(document).doesNotContainKey("_class");
 	}
 
 	@Test // DATAMONGO-1768
@@ -480,7 +440,7 @@ public class MongoExampleMapperUnitTests {
 		org.bson.Document document = new MongoExampleMapper(mappingMongoConverter)
 				.getMappedExample(Example.of(probe, ExampleMatcher.matching().withIgnorePaths("_foo")));
 
-		assertThat(document, isBsonObject().notContaining("_class").notContaining("_foo"));
+		assertThat(document).doesNotContainKeys("_class", "_foo");
 	}
 
 	@Test // DATAMONGO-1768
@@ -491,7 +451,7 @@ public class MongoExampleMapperUnitTests {
 		probe.flatDoc.stringValue = "conflux";
 
 		org.bson.Document document = mapper.getMappedExample(Example.of(probe, UntypedExampleMatcher.matching()));
-		assertThat(document, isBsonObject().notContaining("_class"));
+		assertThat(document).doesNotContainKey("_class");
 	}
 
 	static class FlatDocument {

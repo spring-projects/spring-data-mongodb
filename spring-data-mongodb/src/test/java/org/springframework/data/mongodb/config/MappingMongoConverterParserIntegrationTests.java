@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.Collections;
 import java.util.Set;
@@ -25,6 +24,7 @@ import org.bson.Document;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanReference;
 import org.springframework.beans.factory.parsing.BeanDefinitionParsingException;
@@ -72,7 +72,7 @@ public class MappingMongoConverterParserIntegrationTests {
 		MappingMongoConverter converter = factory.getBean("converter", MappingMongoConverter.class);
 		MongoTypeMapper customMongoTypeMapper = factory.getBean(CustomMongoTypeMapper.class);
 
-		assertThat(converter.getTypeMapper(), is(customMongoTypeMapper));
+		assertThat(converter.getTypeMapper()).isEqualTo(customMongoTypeMapper);
 	}
 
 	@Test // DATAMONGO-301
@@ -80,8 +80,8 @@ public class MappingMongoConverterParserIntegrationTests {
 
 		loadValidConfiguration();
 		CustomConversions conversions = factory.getBean(CustomConversions.class);
-		assertThat(conversions.hasCustomWriteTarget(Person.class), is(true));
-		assertThat(conversions.hasCustomWriteTarget(Account.class), is(true));
+		assertThat(conversions.hasCustomWriteTarget(Person.class)).isTrue();
+		assertThat(conversions.hasCustomWriteTarget(Account.class)).isTrue();
 	}
 
 	@Test // DATAMONGO-607
@@ -91,9 +91,9 @@ public class MappingMongoConverterParserIntegrationTests {
 		BeanDefinition definition = factory.getBeanDefinition("abbreviatingConverter.mongoMappingContext");
 		Object value = definition.getPropertyValues().getPropertyValue("fieldNamingStrategy").getValue();
 
-		assertThat(value, is(instanceOf(BeanDefinition.class)));
+		assertThat(value).isInstanceOf(BeanDefinition.class);
 		BeanDefinition strategy = (BeanDefinition) value;
-		assertThat(strategy.getBeanClassName(), is(CamelCaseAbbreviatingFieldNamingStrategy.class.getName()));
+		assertThat(strategy.getBeanClassName()).isEqualTo(CamelCaseAbbreviatingFieldNamingStrategy.class.getName());
 	}
 
 	@Test // DATAMONGO-866
@@ -151,7 +151,7 @@ public class MappingMongoConverterParserIntegrationTests {
 		BeanReference value = (BeanReference) definition.getPropertyValues().getPropertyValue("fieldNamingStrategy")
 				.getValue();
 
-		assertThat(value.getBeanName(), is("customFieldNamingStrategy"));
+		assertThat(value.getBeanName()).isEqualTo("customFieldNamingStrategy");
 	}
 
 	@Component

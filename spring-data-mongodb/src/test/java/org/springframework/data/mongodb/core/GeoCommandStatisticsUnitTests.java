@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.bson.Document;
 import org.junit.Test;
@@ -38,10 +37,10 @@ public class GeoCommandStatisticsUnitTests {
 	public void fallsBackToNanIfNoAverageDistanceIsAvailable() {
 
 		GeoCommandStatistics statistics = GeoCommandStatistics.from(new Document("stats", null));
-		assertThat(statistics.getAverageDistance(), is(Double.NaN));
+		assertThat(statistics.getAverageDistance()).isEqualTo(Double.NaN);
 
 		statistics = GeoCommandStatistics.from(new Document("stats", new Document()));
-		assertThat(statistics.getAverageDistance(), is(Double.NaN));
+		assertThat(statistics.getAverageDistance()).isEqualTo(Double.NaN);
 	}
 
 	@Test // DATAMONGO-1361
@@ -50,6 +49,6 @@ public class GeoCommandStatisticsUnitTests {
 		GeoCommandStatistics statistics = GeoCommandStatistics
 				.from(new Document("stats", new Document("avgDistance", 1.5)));
 
-		assertThat(statistics.getAverageDistance(), is(1.5));
+		assertThat(statistics.getAverageDistance()).isEqualTo(1.5);
 	}
 }

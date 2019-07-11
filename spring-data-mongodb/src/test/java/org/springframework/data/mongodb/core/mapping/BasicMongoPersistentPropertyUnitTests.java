@@ -15,9 +15,7 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -33,6 +31,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.MappingException;
@@ -66,22 +65,22 @@ public class BasicMongoPersistentPropertyUnitTests {
 	public void usesAnnotatedFieldName() {
 
 		Field field = ReflectionUtils.findField(Person.class, "firstname");
-		assertThat(getPropertyFor(field).getFieldName(), is("foo"));
+		assertThat(getPropertyFor(field).getFieldName()).isEqualTo("foo");
 	}
 
 	@Test
 	public void returns_IdForIdProperty() {
 		Field field = ReflectionUtils.findField(Person.class, "id");
 		MongoPersistentProperty property = getPropertyFor(field);
-		assertThat(property.isIdProperty(), is(true));
-		assertThat(property.getFieldName(), is("_id"));
+		assertThat(property.isIdProperty()).isTrue();
+		assertThat(property.getFieldName()).isEqualTo("_id");
 	}
 
 	@Test
 	public void returnsPropertyNameForUnannotatedProperties() {
 
 		Field field = ReflectionUtils.findField(Person.class, "lastname");
-		assertThat(getPropertyFor(field).getFieldName(), is("lastname"));
+		assertThat(getPropertyFor(field).getFieldName()).isEqualTo("lastname");
 	}
 
 	@Test
@@ -96,7 +95,7 @@ public class BasicMongoPersistentPropertyUnitTests {
 				ClassTypeInformation.from(Throwable.class));
 		MongoPersistentProperty property = getPropertyFor(entity, "cause");
 
-		assertThat(property.usePropertyAccess(), is(true));
+		assertThat(property.usePropertyAccess()).isTrue();
 	}
 
 	@Test // DATAMONGO-607
@@ -107,13 +106,13 @@ public class BasicMongoPersistentPropertyUnitTests {
 
 		MongoPersistentProperty property = new BasicMongoPersistentProperty(Property.of(type, field), entity,
 				SimpleTypeHolder.DEFAULT, UppercaseFieldNamingStrategy.INSTANCE);
-		assertThat(property.getFieldName(), is("LASTNAME"));
+		assertThat(property.getFieldName()).isEqualTo("LASTNAME");
 
 		field = ReflectionUtils.findField(Person.class, "firstname");
 
 		property = new BasicMongoPersistentProperty(Property.of(type, field), entity, SimpleTypeHolder.DEFAULT,
 				UppercaseFieldNamingStrategy.INSTANCE);
-		assertThat(property.getFieldName(), is("foo"));
+		assertThat(property.getFieldName()).isEqualTo("foo");
 	}
 
 	@Test // DATAMONGO-607
@@ -136,35 +135,35 @@ public class BasicMongoPersistentPropertyUnitTests {
 	public void shouldDetectAnnotatedLanguagePropertyCorrectly() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithLanguageProperty.class, "lang");
-		assertThat(property.isLanguageProperty(), is(true));
+		assertThat(property.isLanguageProperty()).isTrue();
 	}
 
 	@Test // DATAMONGO-937
 	public void shouldDetectIplicitLanguagePropertyCorrectly() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithImplicitLanguageProperty.class, "language");
-		assertThat(property.isLanguageProperty(), is(true));
+		assertThat(property.isLanguageProperty()).isTrue();
 	}
 
 	@Test // DATAMONGO-976
 	public void shouldDetectTextScorePropertyCorrectly() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithTextScoreProperty.class, "score");
-		assertThat(property.isTextScoreProperty(), is(true));
+		assertThat(property.isTextScoreProperty()).isTrue();
 	}
 
 	@Test // DATAMONGO-976
 	public void shouldDetectTextScoreAsReadOnlyProperty() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithTextScoreProperty.class, "score");
-		assertThat(property.isWritable(), is(false));
+		assertThat(property.isWritable()).isFalse();
 	}
 
 	@Test // DATAMONGO-1050
 	public void shouldNotConsiderExplicitlyNameFieldAsIdProperty() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithExplicitlyRenamedIdProperty.class, "id");
-		assertThat(property.isIdProperty(), is(false));
+		assertThat(property.isIdProperty()).isFalse();
 	}
 
 	@Test // DATAMONGO-1050
@@ -172,22 +171,22 @@ public class BasicMongoPersistentPropertyUnitTests {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithExplicitlyRenamedIdPropertyHavingIdAnnotation.class,
 				"id");
-		assertThat(property.isIdProperty(), is(true));
+		assertThat(property.isIdProperty()).isTrue();
 	}
 
 	@Test // DATAMONGO-1373
 	public void shouldConsiderComposedAnnotationsForIdField() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithComposedAnnotations.class, "myId");
-		assertThat(property.isIdProperty(), is(true));
-		assertThat(property.getFieldName(), is("_id"));
+		assertThat(property.isIdProperty()).isTrue();
+		assertThat(property.getFieldName()).isEqualTo("_id");
 	}
 
 	@Test // DATAMONGO-1373
 	public void shouldConsiderComposedAnnotationsForFields() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithComposedAnnotations.class, "myField");
-		assertThat(property.getFieldName(), is("myField"));
+		assertThat(property.getFieldName()).isEqualTo("myField");
 	}
 
 	@Test // DATAMONGO-1737

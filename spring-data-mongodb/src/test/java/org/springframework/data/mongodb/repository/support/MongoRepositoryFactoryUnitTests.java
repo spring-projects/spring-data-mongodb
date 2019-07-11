@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.io.Serializable;
@@ -26,6 +25,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -65,7 +65,7 @@ public class MongoRepositoryFactoryUnitTests {
 
 		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
 		MongoEntityInformation<Person, Serializable> entityInformation = factory.getEntityInformation(Person.class);
-		assertTrue(entityInformation instanceof MappingMongoEntityInformation);
+		assertThat(entityInformation instanceof MappingMongoEntityInformation).isTrue();
 	}
 
 	@Test // DATAMONGO-385
@@ -76,7 +76,7 @@ public class MongoRepositoryFactoryUnitTests {
 
 		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
 		MyPersonRepository repository = factory.getRepository(MyPersonRepository.class);
-		assertThat(repository, is(notNullValue()));
+		assertThat(repository).isNotNull();
 	}
 
 	interface MyPersonRepository extends Repository<Person, Long> {

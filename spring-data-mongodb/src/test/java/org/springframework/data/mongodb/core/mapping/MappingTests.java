@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.core.query.Update.*;
@@ -28,8 +27,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.Test;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DuplicateKeyException;
@@ -43,7 +44,6 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
-import org.bson.Document;
 import com.mongodb.MongoException;
 import com.mongodb.client.MongoCollection;
 
@@ -62,7 +62,7 @@ public class MappingTests extends AbstractIntegrationTests {
 		GeneratedId genId = new GeneratedId("test");
 		template.insert(genId);
 
-		assertNotNull(genId.getId());
+		assertThat(genId.getId()).isNotNull();
 	}
 
 	@Test
@@ -70,12 +70,12 @@ public class MappingTests extends AbstractIntegrationTests {
 
 		PersonWithObjectId p = new PersonWithObjectId(12345, "Person", "Pojo");
 		template.insert(p);
-		assertNotNull(p.getId());
+		assertThat(p.getId()).isNotNull();
 
 		List<PersonWithObjectId> result = template.find(new Query(Criteria.where("ssn").is(12345)),
 				PersonWithObjectId.class);
-		assertThat(result.size(), is(1));
-		assertThat(result.get(0).getSsn(), is(12345));
+		assertThat(result.size()).isEqualTo(1);
+		assertThat(result.get(0).getSsn()).isEqualTo(12345);
 	}
 
 	@Test
@@ -86,24 +86,24 @@ public class MappingTests extends AbstractIntegrationTests {
 
 		List<PersonCustomIdName> result = template.find(new Query(Criteria.where("lastName").is(p.getLastName())),
 				PersonCustomIdName.class);
-		assertThat(result.size(), is(1));
-		assertThat(result.get(0).getFirstName(), is("Custom Id"));
+		assertThat(result.size()).isEqualTo(1);
+		assertThat(result.get(0).getFirstName()).isEqualTo("Custom Id");
 
 		PersonCustomIdName p2 = new PersonCustomIdName(654321, "Custom Id", "LastName");
 		template.insert(p2);
 
 		List<PersonCustomIdName> result2 = template.find(new Query(Criteria.where("lastName").is("LastName")),
 				PersonCustomIdName.class);
-		assertThat(result2.size(), is(1));
-		assertNotNull(result2.get(0).getLastName());
-		assertThat(result2.get(0).getLastName(), is("LastName"));
+		assertThat(result2.size()).isEqualTo(1);
+		assertThat(result2.get(0).getLastName()).isNotNull();
+		assertThat(result2.get(0).getLastName()).isEqualTo("LastName");
 
 		// Test "in" query
 		List<PersonCustomIdName> result3 = template.find(new Query(Criteria.where("lastName").in("LastName")),
 				PersonCustomIdName.class);
-		assertThat(result3.size(), is(1));
-		assertNotNull(result3.get(0).getLastName());
-		assertThat(result3.get(0).getLastName(), is("LastName"));
+		assertThat(result3.size()).isEqualTo(1);
+		assertThat(result3.get(0).getLastName()).isNotNull();
+		assertThat(result3.get(0).getLastName()).isEqualTo("LastName");
 	}
 
 	@Test
@@ -119,13 +119,13 @@ public class MappingTests extends AbstractIntegrationTests {
 		p.setAccounts(accounts);
 
 		template.insert(p);
-		assertNotNull(p.getId());
+		assertThat(p.getId()).isNotNull();
 
 		List<PersonMapProperty> result = template.find(new Query(Criteria.where("ssn").is(1234567)),
 				PersonMapProperty.class);
-		assertThat(result.size(), is(1));
-		assertThat(result.get(0).getAccounts().size(), is(2));
-		assertThat(result.get(0).getAccounts().get("checking").getBalance(), is(1000.0f));
+		assertThat(result.size()).isEqualTo(1);
+		assertThat(result.get(0).getAccounts().size()).isEqualTo(2);
+		assertThat(result.get(0).getAccounts().get("checking").getBalance()).isEqualTo(1000.0f);
 	}
 
 	@Test
@@ -156,12 +156,12 @@ public class MappingTests extends AbstractIntegrationTests {
 		accounts.add(newAcct);
 		template.save(p, "person");
 
-		assertNotNull(p.getId());
+		assertThat(p.getId()).isNotNull();
 
 		List<Person> result = template.find(new Query(Criteria.where("ssn").is(123456789)), Person.class);
-		assertThat(result.size(), is(1));
-		assertThat(result.get(0).getAddress().getCountry(), is("USA"));
-		assertThat(result.get(0).getAccounts(), notNullValue());
+		assertThat(result.size()).isEqualTo(1);
+		assertThat(result.get(0).getAddress().getCountry()).isEqualTo("USA");
+		assertThat(result.get(0).getAccounts()).isNotNull();
 	}
 
 	@Test(expected = DuplicateKeyException.class)
@@ -191,8 +191,8 @@ public class MappingTests extends AbstractIntegrationTests {
 				PersonCustomCollection1.class, "person1");
 		List<PersonCustomCollection2> p2Results = template.find(new Query(Criteria.where("ssn").is(66666)),
 				PersonCustomCollection2.class, "person2");
-		assertThat(p1Results.size(), is(1));
-		assertThat(p2Results.size(), is(1));
+		assertThat(p1Results.size()).isEqualTo(1);
+		assertThat(p2Results.size()).isEqualTo(1);
 	}
 
 	@Test
@@ -201,7 +201,7 @@ public class MappingTests extends AbstractIntegrationTests {
 		template.insert(loc);
 
 		List<Location> result = template.find(new Query(Criteria.where("_id").is(loc.getId())), Location.class, "places");
-		assertThat(result.size(), is(1));
+		assertThat(result.size()).isEqualTo(1);
 	}
 
 	@Test
@@ -209,7 +209,7 @@ public class MappingTests extends AbstractIntegrationTests {
 		CustomCollectionWithIndex ccwi = new CustomCollectionWithIndex("test");
 		template.insert(ccwi);
 
-		assertTrue(template.execute("foobar", new CollectionCallback<Boolean>() {
+		assertThat(template.execute("foobar", new CollectionCallback<Boolean>() {
 			public Boolean doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
 
 				List<Document> indexes = new ArrayList<Document>();
@@ -223,12 +223,12 @@ public class MappingTests extends AbstractIntegrationTests {
 				}
 				return false;
 			}
-		}));
+		})).isTrue();
 
 		DetectedCollectionWithIndex dcwi = new DetectedCollectionWithIndex("test");
 		template.insert(dcwi);
 
-		assertTrue(template.execute(MongoCollectionUtils.getPreferredCollectionName(DetectedCollectionWithIndex.class),
+		assertThat(template.execute(MongoCollectionUtils.getPreferredCollectionName(DetectedCollectionWithIndex.class),
 				new CollectionCallback<Boolean>() {
 					public Boolean doInCollection(MongoCollection<Document> collection)
 							throws MongoException, DataAccessException {
@@ -244,7 +244,7 @@ public class MappingTests extends AbstractIntegrationTests {
 						}
 						return false;
 					}
-				}));
+				})).isTrue();
 	}
 
 	@Test
@@ -256,9 +256,9 @@ public class MappingTests extends AbstractIntegrationTests {
 		template.insert(p);
 		List<PersonMultiDimArrays> result = template.find(new Query(Criteria.where("ssn").is(123)),
 				PersonMultiDimArrays.class);
-		assertThat(result.size(), is(1));
+		assertThat(result.size()).isEqualTo(1);
 
-		assertThat(result.get(0).getGrid().length, is(3));
+		assertThat(result.get(0).getGrid().length).isEqualTo(3);
 	}
 
 	@Test
@@ -276,9 +276,9 @@ public class MappingTests extends AbstractIntegrationTests {
 
 		List<PersonMultiCollection> result = template.find(new Query(Criteria.where("ssn").is(321)),
 				PersonMultiCollection.class);
-		assertThat(result.size(), is(1));
+		assertThat(result.size()).isEqualTo(1);
 
-		assertThat(result.get(0).getGrid().size(), is(1));
+		assertThat(result.get(0).getGrid().size()).isEqualTo(1);
 	}
 
 	@Test
@@ -291,8 +291,8 @@ public class MappingTests extends AbstractIntegrationTests {
 		template.insert(p);
 
 		List<PersonWithDbRef> result = template.find(new Query(Criteria.where("ssn").is(4321)), PersonWithDbRef.class);
-		assertThat(result.size(), is(1));
-		assertThat(result.get(0).getHome().getLocation(), is(pos));
+		assertThat(result.size()).isEqualTo(1);
+		assertThat(result.get(0).getHome().getLocation()).isEqualTo(pos);
 	}
 
 	@Test
@@ -300,7 +300,7 @@ public class MappingTests extends AbstractIntegrationTests {
 		PersonNullProperties p = new PersonNullProperties();
 		template.insert(p);
 
-		assertNotNull(p.getId());
+		assertThat(p.getId()).isNotNull();
 	}
 
 	@Test
@@ -319,7 +319,7 @@ public class MappingTests extends AbstractIntegrationTests {
 		template.updateFirst(query(where("ssn").is(1111)), update("address", addr), Person.class);
 
 		Person p2 = template.findOne(query(where("ssn").is(1111)), Person.class);
-		assertThat(p2.getAddress().getCity(), is("New Town"));
+		assertThat(p2.getAddress().getCity()).isEqualTo("New Town");
 	}
 
 	@Test
@@ -332,19 +332,19 @@ public class MappingTests extends AbstractIntegrationTests {
 		addr.setCountry("USA");
 
 		Person p2 = template.findOne(query(where("ssn").is(1111)), Person.class);
-		assertNull(p2);
+		assertThat(p2).isNull();
 
 		template.upsert(query(where("ssn").is(1111).and("firstName").is("Query").and("lastName").is("Update")),
 				update("address", addr), Person.class);
 
 		p2 = template.findOne(query(where("ssn").is(1111)), Person.class);
-		assertThat(p2.getAddress().getCity(), is("Anytown"));
+		assertThat(p2.getAddress().getCity()).isEqualTo("Anytown");
 
 		template.dropCollection(Person.class);
 		template.upsert(query(where("ssn").is(1111).and("firstName").is("Query").and("lastName").is("Update")),
 				update("address", addr), "person");
 		p2 = template.findOne(query(where("ssn").is(1111)), Person.class);
-		assertThat(p2.getAddress().getCity(), is("Anytown"));
+		assertThat(p2.getAddress().getCity()).isEqualTo("Anytown");
 
 	}
 
@@ -358,9 +358,9 @@ public class MappingTests extends AbstractIntegrationTests {
 		List<PersonWithObjectId> results = template
 				.find(new Query(new Criteria().orOperator(where("ssn").is(1), where("ssn").is(2))), PersonWithObjectId.class);
 
-		assertNotNull(results);
-		assertThat(results.size(), is(2));
-		assertThat(results.get(1).getSsn(), is(2));
+		assertThat(results).isNotNull();
+		assertThat(results.size()).isEqualTo(2);
+		assertThat(results.get(1).getSsn()).isEqualTo(2);
 	}
 
 	@Test
@@ -371,7 +371,7 @@ public class MappingTests extends AbstractIntegrationTests {
 		template.save(p);
 
 		PrimitiveId p2 = template.findOne(query(where("id").is(1)), PrimitiveId.class);
-		assertNotNull(p2);
+		assertThat(p2).isNotNull();
 	}
 
 	@Test
@@ -381,13 +381,13 @@ public class MappingTests extends AbstractIntegrationTests {
 		template.updateFirst(query(where("id").is(1)), update("text", "New Text"), PersonPojoIntId.class);
 
 		PersonPojoIntId p2 = template.findOne(query(where("id").is(1)), PersonPojoIntId.class);
-		assertEquals("New Text", p2.getText());
+		assertThat(p2.getText()).isEqualTo("New Text");
 
 		p.setText("Different Text");
 		template.save(p);
 
 		PersonPojoIntId p3 = template.findOne(query(where("id").is(1)), PersonPojoIntId.class);
-		assertEquals("Different Text", p3.getText());
+		assertThat(p3.getText()).isEqualTo("Different Text");
 
 	}
 
@@ -398,13 +398,13 @@ public class MappingTests extends AbstractIntegrationTests {
 		template.updateFirst(query(where("id").is(1)), update("text", "New Text"), PersonPojoLongId.class);
 
 		PersonPojoLongId p2 = template.findOne(query(where("id").is(1)), PersonPojoLongId.class);
-		assertEquals("New Text", p2.getText());
+		assertThat(p2.getText()).isEqualTo("New Text");
 
 		p.setText("Different Text");
 		template.save(p);
 
 		PersonPojoLongId p3 = template.findOne(query(where("id").is(1)), PersonPojoLongId.class);
-		assertEquals("Different Text", p3.getText());
+		assertThat(p3.getText()).isEqualTo("Different Text");
 
 	}
 
@@ -416,13 +416,13 @@ public class MappingTests extends AbstractIntegrationTests {
 		template.updateFirst(query(where("id").is("1")), update("text", "New Text"), PersonPojoStringId.class);
 
 		PersonPojoStringId p2 = template.findOne(query(where("id").is("1")), PersonPojoStringId.class);
-		assertEquals("New Text", p2.getText());
+		assertThat(p2.getText()).isEqualTo("New Text");
 
 		p.setText("Different Text");
 		template.save(p);
 
 		PersonPojoStringId p3 = template.findOne(query(where("id").is("1")), PersonPojoStringId.class);
-		assertEquals("Different Text", p3.getText());
+		assertThat(p3.getText()).isEqualTo("Different Text");
 
 		PersonPojoStringId p4 = new PersonPojoStringId("2", "Text-2");
 		template.insert(p4);
@@ -430,7 +430,7 @@ public class MappingTests extends AbstractIntegrationTests {
 		Query q = query(where("id").in("1", "2"));
 		q.with(Sort.by(Direction.ASC, "id"));
 		List<PersonPojoStringId> people = template.find(q, PersonPojoStringId.class);
-		assertEquals(2, people.size());
+		assertThat(people.size()).isEqualTo(2);
 
 	}
 
@@ -444,9 +444,9 @@ public class MappingTests extends AbstractIntegrationTests {
 
 		Query q = query(where("ssn").is(21));
 		PersonWithLongDBRef p2 = template.findOne(q, PersonWithLongDBRef.class);
-		assertNotNull(p2);
-		assertNotNull(p2.getPersonPojoLongId());
-		assertEquals(12L, p2.getPersonPojoLongId().getId());
+		assertThat(p2).isNotNull();
+		assertThat(p2.getPersonPojoLongId()).isNotNull();
+		assertThat(p2.getPersonPojoLongId().getId()).isEqualTo(12L);
 	}
 
 	@Test // DATADOC-275
@@ -467,9 +467,9 @@ public class MappingTests extends AbstractIntegrationTests {
 		template.insert(container);
 
 		Container result = template.findOne(query(where("id").is(container.id)), Container.class);
-		assertThat(result.item.id, is(item.id));
-		assertThat(result.items.size(), is(1));
-		assertThat(result.items.get(0).id, is(items.id));
+		assertThat(result.item.id).isEqualTo(item.id);
+		assertThat(result.items.size()).isEqualTo(1);
+		assertThat(result.items.get(0).id).isEqualTo(items.id);
 	}
 
 	@Test // DATAMONGO-805
@@ -490,8 +490,8 @@ public class MappingTests extends AbstractIntegrationTests {
 		query.fields().exclude("item");
 		Container result = template.findOne(query, Container.class);
 
-		assertThat(result, is(notNullValue()));
-		assertThat(result.item, is(nullValue()));
+		assertThat(result).isNotNull();
+		assertThat(result.item).isNull();
 	}
 
 	@Test // DATAMONGO-805
@@ -512,9 +512,9 @@ public class MappingTests extends AbstractIntegrationTests {
 		Query query = new Query(Criteria.where("id").is("foo"));
 		Container result = template.findOne(query, Container.class);
 
-		assertThat(result, is(notNullValue()));
-		assertThat(result.item, is(notNullValue()));
-		assertThat(result.item.value, is("bar"));
+		assertThat(result).isNotNull();
+		assertThat(result.item).isNotNull();
+		assertThat(result.item.value).isEqualTo("bar");
 	}
 
 	static class Container {

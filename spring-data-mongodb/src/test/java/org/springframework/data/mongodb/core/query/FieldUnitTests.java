@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.junit.Test;
 
@@ -33,8 +32,8 @@ public class FieldUnitTests {
 		Field left = new Field().elemMatch("key", Criteria.where("foo").is("bar"));
 		Field right = new Field().elemMatch("key", Criteria.where("foo").is("bar"));
 
-		assertThat(left, is(right));
-		assertThat(right, is(left));
+		assertThat(left).isEqualTo(right);
+		assertThat(right).isEqualTo(left);
 	}
 
 	@Test
@@ -43,7 +42,7 @@ public class FieldUnitTests {
 		Field left = new Field().elemMatch("key", Criteria.where("foo").is("bar"));
 		Field right = new Field().elemMatch("key", Criteria.where("foo").is("foo"));
 
-		assertThat(left, is(not(right)));
-		assertThat(right, is(not(left)));
+		assertThat(left).isNotEqualTo(right);
+		assertThat(right).isNotEqualTo(left);
 	}
 }

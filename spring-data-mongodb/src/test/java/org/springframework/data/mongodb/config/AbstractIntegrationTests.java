@@ -15,13 +15,13 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import org.bson.Document;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataAccessException;
@@ -68,7 +68,7 @@ public abstract class AbstractIntegrationTests {
 					@Override
 					public Void doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
 						collection.deleteMany(new Document());
-						assertThat(collection.find().iterator().hasNext(), is(false));
+						assertThat(collection.find().iterator().hasNext()).isFalse();
 						return null;
 					}
 				});

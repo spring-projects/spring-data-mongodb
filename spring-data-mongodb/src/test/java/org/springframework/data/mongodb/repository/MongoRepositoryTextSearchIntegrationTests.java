@@ -15,11 +15,7 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static org.hamcrest.collection.IsCollectionWithSize.*;
-import static org.hamcrest.core.Is.*;
-import static org.hamcrest.core.IsCollectionContaining.*;
-import static org.hamcrest.core.IsEqual.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -29,6 +25,7 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Page;
@@ -95,8 +92,8 @@ public class MongoRepositoryTextSearchIntegrationTests {
 
 		List<FullTextDocument> result = repo.findAllBy(TextCriteria.forDefaultLanguage().matchingAny("stallone", "payne"));
 
-		assertThat(result, hasSize(2));
-		assertThat(result, hasItems(PASSENGER_57, DEMOLITION_MAN));
+		assertThat(result).hasSize(2);
+		assertThat(result).contains(PASSENGER_57, DEMOLITION_MAN);
 	}
 
 	@Test // DATAMONGO-973
@@ -111,8 +108,8 @@ public class MongoRepositoryTextSearchIntegrationTests {
 		List<FullTextDocument> result = repo.findByNonTextIndexProperty("foo",
 				TextCriteria.forDefaultLanguage().matching("snipes"));
 
-		assertThat(result, hasSize(1));
-		assertThat(result, hasItems(blade));
+		assertThat(result).hasSize(1);
+		assertThat(result).contains(blade);
 	}
 
 	@Test // DATAMONGO-973
@@ -123,10 +120,10 @@ public class MongoRepositoryTextSearchIntegrationTests {
 		Page<FullTextDocument> page = repo.findAllBy(TextCriteria.forDefaultLanguage().matching("film"),
 				PageRequest.of(1, 1, Direction.ASC, "id"));
 
-		assertThat(page.hasNext(), is(true));
-		assertThat(page.hasPrevious(), is(true));
-		assertThat(page.getTotalElements(), is(3L));
-		assertThat(page.getContent().get(0), equalTo(DEMOLITION_MAN));
+		assertThat(page.hasNext()).isTrue();
+		assertThat(page.hasPrevious()).isTrue();
+		assertThat(page.getTotalElements()).isEqualTo(3L);
+		assertThat(page.getContent().get(0)).isEqualTo(DEMOLITION_MAN);
 	}
 
 	@Test // DATAMONGO-973
@@ -139,8 +136,8 @@ public class MongoRepositoryTextSearchIntegrationTests {
 		List<FullTextDocument> result = repo.findAllBy(TextCriteria.forDefaultLanguage().matching("snipes"),
 				Sort.by("score"));
 
-		assertThat(result.size(), is(4));
-		assertThat(result.get(0), equalTo(snipes));
+		assertThat(result.size()).isEqualTo(4);
+		assertThat(result.get(0)).isEqualTo(snipes);
 	}
 
 	@Test // DATAMONGO-973
@@ -153,8 +150,8 @@ public class MongoRepositoryTextSearchIntegrationTests {
 		Page<FullTextDocument> page = repo.findAllBy(TextCriteria.forDefaultLanguage().matching("snipes"),
 				PageRequest.of(0, 10, Direction.ASC, "score"));
 
-		assertThat(page.getTotalElements(), is(4L));
-		assertThat(page.getContent().get(0), equalTo(snipes));
+		assertThat(page.getTotalElements()).isEqualTo(4L);
+		assertThat(page.getContent().get(0)).isEqualTo(snipes);
 	}
 
 	@Test // DATAMONGO-973
@@ -167,8 +164,8 @@ public class MongoRepositoryTextSearchIntegrationTests {
 		Page<FullTextDocument> page = repo.findAllBy(TextCriteria.forDefaultLanguage().matching("snipes"),
 				PageRequest.of(0, 10, Direction.ASC, "id"));
 
-		assertThat(page.getTotalElements(), is(4L));
-		assertThat(page.getContent().get(0), equalTo(PASSENGER_57));
+		assertThat(page.getTotalElements()).isEqualTo(4L);
+		assertThat(page.getContent().get(0)).isEqualTo(PASSENGER_57);
 	}
 
 	@Test // DATAMONGO-973
@@ -180,7 +177,7 @@ public class MongoRepositoryTextSearchIntegrationTests {
 
 		List<FullTextDocument> result = repo
 				.findByNonTextIndexPropertyIsNullOrderByScoreDesc(TextCriteria.forDefaultLanguage().matching("snipes"));
-		assertThat(result.get(0), equalTo(snipes));
+		assertThat(result.get(0)).isEqualTo(snipes);
 	}
 
 	@Test // DATAMONGO-973
@@ -188,8 +185,8 @@ public class MongoRepositoryTextSearchIntegrationTests {
 
 		initRepoWithDefaultDocuments();
 		List<FullTextDocument> result = repo.findByTitle(DROP_ZONE.getTitle());
-		assertThat(result.get(0), equalTo(DROP_ZONE));
-		assertThat(result.get(0).score, equalTo(0.0F));
+		assertThat(result.get(0)).isEqualTo(DROP_ZONE);
+		assertThat(result.get(0).score).isEqualTo(0.0F);
 	}
 
 	private void initRepoWithDefaultDocuments() {

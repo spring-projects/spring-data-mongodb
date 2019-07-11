@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -25,6 +24,7 @@ import java.util.List;
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
+
 import org.springframework.data.convert.ConfigurableTypeInformationMapper;
 import org.springframework.data.convert.SimpleTypeInformationMapper;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
@@ -115,8 +115,8 @@ public class DefaultMongoTypeMapperUnitTests {
 
 		Document typeInfo = DocumentTestUtils.getAsDocument(result, DefaultMongoTypeMapper.DEFAULT_TYPE_KEY);
 		List<Object> aliases = DocumentTestUtils.getAsDBList(typeInfo, "$in");
-		assertThat(aliases, hasSize(1));
-		assertThat(aliases.get(0), is((Object) String.class.getName()));
+		assertThat(aliases).hasSize(1);
+		assertThat(aliases.get(0)).isEqualTo((Object) String.class.getName());
 	}
 
 	@Test
@@ -173,15 +173,15 @@ public class DefaultMongoTypeMapperUnitTests {
 	@Test
 	public void returnsCorrectTypeKey() {
 
-		assertThat(typeMapper.isTypeKey(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY), is(true));
+		assertThat(typeMapper.isTypeKey(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY)).isTrue();
 
 		typeMapper = new DefaultMongoTypeMapper("_custom");
-		assertThat(typeMapper.isTypeKey("_custom"), is(true));
-		assertThat(typeMapper.isTypeKey(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY), is(false));
+		assertThat(typeMapper.isTypeKey("_custom")).isTrue();
+		assertThat(typeMapper.isTypeKey(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY)).isFalse();
 
 		typeMapper = new DefaultMongoTypeMapper(null);
-		assertThat(typeMapper.isTypeKey("_custom"), is(false));
-		assertThat(typeMapper.isTypeKey(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY), is(false));
+		assertThat(typeMapper.isTypeKey("_custom")).isFalse();
+		assertThat(typeMapper.isTypeKey(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY)).isFalse();
 	}
 
 	private void readsTypeFromField(Document document, Class<?> type) {
@@ -189,10 +189,10 @@ public class DefaultMongoTypeMapperUnitTests {
 		TypeInformation<?> typeInfo = typeMapper.readType(document);
 
 		if (type != null) {
-			assertThat(typeInfo, is(notNullValue()));
-			assertThat(typeInfo.getType(), is(typeCompatibleWith(type)));
+			assertThat(typeInfo).isNotNull();
+			assertThat(typeInfo.getType()).isAssignableFrom(type);
 		} else {
-			assertThat(typeInfo, is(nullValue()));
+			assertThat(typeInfo).isNull();
 		}
 	}
 
@@ -201,10 +201,10 @@ public class DefaultMongoTypeMapperUnitTests {
 		typeMapper.writeType(type, document);
 
 		if (field == null) {
-			assertThat(document.keySet().isEmpty(), is(true));
+			assertThat(document.keySet().isEmpty()).isTrue();
 		} else {
-			assertThat(document.containsKey(field), is(true));
-			assertThat(document.get(field), is((Object) type.getName()));
+			assertThat(document.containsKey(field)).isTrue();
+			assertThat(document.get(field)).isEqualTo((Object) type.getName());
 		}
 	}
 
@@ -213,10 +213,10 @@ public class DefaultMongoTypeMapperUnitTests {
 		typeMapper.writeType(type, document);
 
 		if (value == null) {
-			assertThat(document.keySet().isEmpty(), is(true));
+			assertThat(document.keySet().isEmpty()).isTrue();
 		} else {
-			assertThat(document.containsKey(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY), is(true));
-			assertThat(document.get(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY), is(value));
+			assertThat(document.containsKey(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY)).isTrue();
+			assertThat(document.get(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY)).isEqualTo(value);
 		}
 	}
 }

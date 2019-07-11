@@ -15,11 +15,8 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import lombok.AllArgsConstructor;
@@ -98,8 +95,8 @@ public class AuditingEntityCallbackUnitTests {
 	@Test // DATAMONGO-2261
 	public void hasExplicitOrder() {
 
-		assertThat(callback, is(instanceOf(Ordered.class)));
-		assertThat(callback.getOrder(), is(100));
+		assertThat(callback).isInstanceOf(Ordered.class);
+		assertThat(callback.getOrder()).isEqualTo(100);
 	}
 
 	@Test // DATAMONGO-2261

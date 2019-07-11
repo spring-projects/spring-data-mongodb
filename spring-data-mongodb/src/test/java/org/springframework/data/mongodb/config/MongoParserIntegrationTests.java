@@ -15,13 +15,13 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+
 import org.springframework.beans.PropertyValue;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionReader;
@@ -58,10 +58,10 @@ public class MongoParserIntegrationTests {
 
 		List<PropertyValue> values = definition.getPropertyValues().getPropertyValueList();
 
-		assertThat(values.get(2).getValue(), instanceOf(BeanDefinition.class));
+		assertThat(values.get(2).getValue()).isInstanceOf(BeanDefinition.class);
 		BeanDefinition x = (BeanDefinition) values.get(2).getValue();
 
-		assertThat(x.getPropertyValues().getPropertyValueList(), hasItem(new PropertyValue("writeConcern", "SAFE")));
+		assertThat(x.getPropertyValues().getPropertyValueList()).contains(new PropertyValue("writeConcern", "SAFE"));
 
 		factory.getBean("mongoClient");
 	}
@@ -74,7 +74,7 @@ public class MongoParserIntegrationTests {
 		AbstractApplicationContext context = new GenericApplicationContext(factory);
 		context.refresh();
 
-		assertThat(context.getBean("mongo2", Mongo.class), is(notNullValue()));
+		assertThat(context.getBean("mongo2", Mongo.class)).isNotNull();
 		context.close();
 	}
 }

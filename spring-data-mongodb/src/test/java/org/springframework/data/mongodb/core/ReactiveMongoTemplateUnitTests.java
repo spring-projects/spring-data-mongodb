@@ -15,10 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.any;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 import lombok.Data;
@@ -42,6 +40,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.reactivestreams.Publisher;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.StaticApplicationContext;
@@ -167,7 +166,7 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-1444
 	public void defaultsConverterToMappingMongoConverter() throws Exception {
 		ReactiveMongoTemplate template = new ReactiveMongoTemplate(mongoClient, "database");
-		assertTrue(ReflectionTestUtils.getField(template, "mongoConverter") instanceof MappingMongoConverter);
+		assertThat(ReflectionTestUtils.getField(template, "mongoConverter") instanceof MappingMongoConverter).isTrue();
 	}
 
 	@Test // DATAMONGO-1912
@@ -180,7 +179,7 @@ public class ReactiveMongoTemplateUnitTests {
 		Map<String, String> entity = new LinkedHashMap<>();
 		StepVerifier.create(template.save(entity, "foo")).consumeNextWith(actual -> {
 
-			assertThat(entity, hasKey("_id"));
+			assertThat(entity).containsKey("_id");
 		}).verifyComplete();
 	}
 
@@ -231,7 +230,7 @@ public class ReactiveMongoTemplateUnitTests {
 		ArgumentCaptor<FindOneAndUpdateOptions> options = ArgumentCaptor.forClass(FindOneAndUpdateOptions.class);
 		verify(collection).findOneAndUpdate(any(), any(), options.capture());
 
-		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
+		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
 	}
 
 	@Test // DATAMONGO-1518
@@ -244,7 +243,7 @@ public class ReactiveMongoTemplateUnitTests {
 		ArgumentCaptor<FindOneAndDeleteOptions> options = ArgumentCaptor.forClass(FindOneAndDeleteOptions.class);
 		verify(collection).findOneAndDelete(any(), options.capture());
 
-		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
+		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
 	}
 
 	@Test // DATAMONGO-1518
@@ -258,7 +257,7 @@ public class ReactiveMongoTemplateUnitTests {
 		ArgumentCaptor<DeleteOptions> options = ArgumentCaptor.forClass(DeleteOptions.class);
 		verify(collection).deleteMany(any(), options.capture());
 
-		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
+		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
 	}
 
 	@Test // DATAMONGO-1518
@@ -272,7 +271,7 @@ public class ReactiveMongoTemplateUnitTests {
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
 		verify(collection).updateOne(any(), any(), options.capture());
 
-		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
+		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
 	}
 
 	@Test // DATAMONGO-1518
@@ -286,7 +285,7 @@ public class ReactiveMongoTemplateUnitTests {
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
 		verify(collection).updateMany(any(), any(), options.capture());
 
-		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
+		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
 
 	}
 
@@ -301,7 +300,7 @@ public class ReactiveMongoTemplateUnitTests {
 		ArgumentCaptor<ReplaceOptions> options = ArgumentCaptor.forClass(ReplaceOptions.class);
 		verify(collection).replaceOne(any(Bson.class), any(), options.capture());
 
-		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
+		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
 	}
 
 	@Test // DATAMONGO-1518, DATAMONGO-2257
@@ -389,7 +388,7 @@ public class ReactiveMongoTemplateUnitTests {
 		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
 		verify(collection).count(any(), options.capture());
 
-		assertThat(options.getValue().getSkip(), is(equalTo(10)));
+		assertThat(options.getValue().getSkip()).isEqualTo(10);
 	}
 
 	@Test // DATAMONGO-1783
@@ -400,7 +399,7 @@ public class ReactiveMongoTemplateUnitTests {
 		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
 		verify(collection).count(any(), options.capture());
 
-		assertThat(options.getValue().getLimit(), is(equalTo(100)));
+		assertThat(options.getValue().getLimit()).isEqualTo(100);
 	}
 
 	@Test // DATAMONGO-2215
@@ -471,8 +470,8 @@ public class ReactiveMongoTemplateUnitTests {
 		ArgumentCaptor<FindOneAndUpdateOptions> options = ArgumentCaptor.forClass(FindOneAndUpdateOptions.class);
 		verify(collection).findOneAndUpdate(any(), any(), options.capture());
 
-		assertThat(options.getValue().getCollation(),
-				is(com.mongodb.client.model.Collation.builder().locale("de_AT").build()));
+		assertThat(options.getValue().getCollation())
+				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de_AT").build());
 	}
 
 	@Test // DATAMONGO-1854
@@ -483,8 +482,8 @@ public class ReactiveMongoTemplateUnitTests {
 		ArgumentCaptor<FindOneAndDeleteOptions> options = ArgumentCaptor.forClass(FindOneAndDeleteOptions.class);
 		verify(collection).findOneAndDelete(any(), options.capture());
 
-		assertThat(options.getValue().getCollation(),
-				is(com.mongodb.client.model.Collation.builder().locale("de_AT").build()));
+		assertThat(options.getValue().getCollation())
+				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de_AT").build());
 	}
 
 	@Test // DATAMONGO-1854
@@ -506,8 +505,8 @@ public class ReactiveMongoTemplateUnitTests {
 		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
 		verify(db).createCollection(any(), options.capture());
 
-		assertThat(options.getValue().getCollation(),
-				is(com.mongodb.client.model.Collation.builder().locale("de_AT").build()));
+		assertThat(options.getValue().getCollation())
+				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de_AT").build());
 	}
 
 	@Test // DATAMONGO-1854
@@ -518,8 +517,8 @@ public class ReactiveMongoTemplateUnitTests {
 		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
 		verify(db).createCollection(any(), options.capture());
 
-		assertThat(options.getValue().getCollation(),
-				is(com.mongodb.client.model.Collation.builder().locale("en_US").build()));
+		assertThat(options.getValue().getCollation())
+				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("en_US").build());
 	}
 
 	@Test // DATAMONGO-1854
@@ -530,8 +529,8 @@ public class ReactiveMongoTemplateUnitTests {
 		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
 		verify(db).createCollection(any(), options.capture());
 
-		assertThat(options.getValue().getCollation(),
-				is(com.mongodb.client.model.Collation.builder().locale("de_AT").build()));
+		assertThat(options.getValue().getCollation())
+				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de_AT").build());
 	}
 
 	@Test // DATAMONGO-1854
@@ -574,7 +573,7 @@ public class ReactiveMongoTemplateUnitTests {
 		ArgumentCaptor<FindOneAndReplaceOptions> options = ArgumentCaptor.forClass(FindOneAndReplaceOptions.class);
 		verify(collection).findOneAndReplace(any(Bson.class), any(), options.capture());
 
-		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
+		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
 	}
 
 	@Test // DATAMONGO-18545
@@ -585,7 +584,7 @@ public class ReactiveMongoTemplateUnitTests {
 		ArgumentCaptor<FindOneAndReplaceOptions> options = ArgumentCaptor.forClass(FindOneAndReplaceOptions.class);
 		verify(collection).findOneAndReplace(any(Bson.class), any(), options.capture());
 
-		assertThat(options.getValue().getCollation().getLocale(), is("de_AT"));
+		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("de_AT");
 	}
 
 	@Test // DATAMONGO-18545
@@ -597,7 +596,7 @@ public class ReactiveMongoTemplateUnitTests {
 		ArgumentCaptor<FindOneAndReplaceOptions> options = ArgumentCaptor.forClass(FindOneAndReplaceOptions.class);
 		verify(collection).findOneAndReplace(any(Bson.class), any(), options.capture());
 
-		assertThat(options.getValue().getCollation().getLocale(), is("fr"));
+		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
 	}
 
 	@Test // DATAMONGO-1854
@@ -625,8 +624,8 @@ public class ReactiveMongoTemplateUnitTests {
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
 		verify(collection).updateOne(any(), any(), options.capture());
 
-		assertThat(options.getValue().getCollation(),
-				is(com.mongodb.client.model.Collation.builder().locale("de_AT").build()));
+		assertThat(options.getValue().getCollation())
+				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de_AT").build());
 	}
 
 	@Test // DATAMONGO-1854
@@ -638,8 +637,8 @@ public class ReactiveMongoTemplateUnitTests {
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
 		verify(collection).updateOne(any(), any(), options.capture());
 
-		assertThat(options.getValue().getCollation(),
-				is(com.mongodb.client.model.Collation.builder().locale("fr").build()));
+		assertThat(options.getValue().getCollation())
+				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("fr").build());
 	}
 
 	@Test // DATAMONGO-1854
@@ -650,8 +649,8 @@ public class ReactiveMongoTemplateUnitTests {
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
 		verify(collection).updateMany(any(), any(), options.capture());
 
-		assertThat(options.getValue().getCollation(),
-				is(com.mongodb.client.model.Collation.builder().locale("de_AT").build()));
+		assertThat(options.getValue().getCollation())
+				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de_AT").build());
 	}
 
 	@Test // DATAMONGO-1854
@@ -663,8 +662,8 @@ public class ReactiveMongoTemplateUnitTests {
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
 		verify(collection).updateMany(any(), any(), options.capture());
 
-		assertThat(options.getValue().getCollation(),
-				is(com.mongodb.client.model.Collation.builder().locale("fr").build()));
+		assertThat(options.getValue().getCollation())
+				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("fr").build());
 	}
 
 	@Test // DATAMONGO-1854
@@ -675,8 +674,8 @@ public class ReactiveMongoTemplateUnitTests {
 		ArgumentCaptor<DeleteOptions> options = ArgumentCaptor.forClass(DeleteOptions.class);
 		verify(collection).deleteMany(any(), options.capture());
 
-		assertThat(options.getValue().getCollation(),
-				is(com.mongodb.client.model.Collation.builder().locale("de_AT").build()));
+		assertThat(options.getValue().getCollation())
+				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de_AT").build());
 	}
 
 	@Test // DATAMONGO-1854
@@ -687,8 +686,8 @@ public class ReactiveMongoTemplateUnitTests {
 		ArgumentCaptor<DeleteOptions> options = ArgumentCaptor.forClass(DeleteOptions.class);
 		verify(collection).deleteMany(any(), options.capture());
 
-		assertThat(options.getValue().getCollation(),
-				is(com.mongodb.client.model.Collation.builder().locale("fr").build()));
+		assertThat(options.getValue().getCollation())
+				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("fr").build());
 	}
 
 	@Test // DATAMONGO-2261

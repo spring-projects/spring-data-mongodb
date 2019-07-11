@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -30,6 +29,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
@@ -73,10 +73,10 @@ public class ReactiveMongoQueryExecutionUnitTests {
 		verify(operations).geoNear(queryArgumentCaptor.capture(), eq(Person.class), eq("person"));
 
 		NearQuery nearQuery = queryArgumentCaptor.getValue();
-		assertThat(nearQuery.toDocument().get("near"), is(equalTo(Arrays.asList(1d, 2d))));
-		assertThat(nearQuery.getSkip(), is(10L));
-		assertThat(nearQuery.getMinDistance(), is(equalTo(new Distance(10))));
-		assertThat(nearQuery.getMaxDistance(), is(equalTo(new Distance(15))));
+		assertThat(nearQuery.toDocument().get("near")).isEqualTo(Arrays.asList(1d, 2d));
+		assertThat(nearQuery.getSkip()).isEqualTo(10L);
+		assertThat(nearQuery.getMinDistance()).isEqualTo(new Distance(10));
+		assertThat(nearQuery.getMaxDistance()).isEqualTo(new Distance(15));
 	}
 
 	@Test // DATAMONGO-1444
@@ -95,10 +95,10 @@ public class ReactiveMongoQueryExecutionUnitTests {
 		verify(operations).geoNear(queryArgumentCaptor.capture(), eq(Person.class), eq("person"));
 
 		NearQuery nearQuery = queryArgumentCaptor.getValue();
-		assertThat(nearQuery.toDocument().get("near"), is(equalTo(Arrays.asList(1d, 2d))));
-		assertThat(nearQuery.getSkip(), is(0L));
-		assertThat(nearQuery.getMinDistance(), is(nullValue()));
-		assertThat(nearQuery.getMaxDistance(), is(nullValue()));
+		assertThat(nearQuery.toDocument().get("near")).isEqualTo(Arrays.asList(1d, 2d));
+		assertThat(nearQuery.getSkip()).isEqualTo(0L);
+		assertThat(nearQuery.getMinDistance()).isNull();
+		assertThat(nearQuery.getMaxDistance()).isNull();
 	}
 
 	interface GeoRepo {

@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.domain.ExampleMatcher.*;
 
 import lombok.Data;
@@ -30,6 +29,7 @@ import java.util.Arrays;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.BeanFactory;
@@ -197,7 +197,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 
 		StepVerifier.create(repository.insert(person)).expectNext(person).verifyComplete();
 
-		assertThat(person.getId(), is(notNullValue()));
+		assertThat(person.getId()).isNotNull();
 	}
 
 	@Test // DATAMONGO-1444
@@ -207,7 +207,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 
 		repository.insert(person);
 
-		assertThat(person.getId(), is(nullValue()));
+		assertThat(person.getId()).isNull();
 	}
 
 	@Test // DATAMONGO-1444
@@ -223,9 +223,9 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 				.expectNext(dave, oliver, boyd) //
 				.verifyComplete();
 
-		assertThat(dave.getId(), is(notNullValue()));
-		assertThat(oliver.getId(), is(notNullValue()));
-		assertThat(boyd.getId(), is(notNullValue()));
+		assertThat(dave.getId()).isNotNull();
+		assertThat(oliver.getId()).isNotNull();
+		assertThat(boyd.getId()).isNotNull();
 	}
 
 	@Test // DATAMONGO-1444
@@ -239,9 +239,9 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 
 		StepVerifier.create(repository.insert(Flux.just(dave, oliver, boyd))).expectNextCount(3).verifyComplete();
 
-		assertThat(dave.getId(), is(notNullValue()));
-		assertThat(oliver.getId(), is(notNullValue()));
-		assertThat(boyd.getId(), is(notNullValue()));
+		assertThat(dave.getId()).isNotNull();
+		assertThat(oliver.getId()).isNotNull();
+		assertThat(boyd.getId()).isNotNull();
 	}
 
 	@Test // DATAMONGO-1444
@@ -256,8 +256,8 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 
 		StepVerifier.create(repository.findById(dave.id)).consumeNextWith(actual -> {
 
-			assertThat(actual.getFirstname(), is(equalTo(dave.getFirstname())));
-			assertThat(actual.getLastname(), is(equalTo(dave.getLastname())));
+			assertThat(actual.getFirstname()).isEqualTo(dave.getFirstname());
+			assertThat(actual.getLastname()).isEqualTo(dave.getLastname());
 		}).verifyComplete();
 	}
 
@@ -270,8 +270,8 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 
 		StepVerifier.create(repository.findById(person.id)).consumeNextWith(actual -> {
 
-			assertThat(actual.getFirstname(), is(equalTo(person.getFirstname())));
-			assertThat(actual.getLastname(), is(equalTo(person.getLastname())));
+			assertThat(actual.getFirstname()).isEqualTo(person.getFirstname());
+			assertThat(actual.getLastname()).isEqualTo(person.getLastname());
 		}).verifyComplete();
 	}
 
@@ -286,9 +286,9 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 
 		StepVerifier.create(repository.saveAll(Arrays.asList(dave, oliver, boyd))).expectNextCount(3).verifyComplete();
 
-		assertThat(dave.getId(), is(notNullValue()));
-		assertThat(oliver.getId(), is(notNullValue()));
-		assertThat(boyd.getId(), is(notNullValue()));
+		assertThat(dave.getId()).isNotNull();
+		assertThat(oliver.getId()).isNotNull();
+		assertThat(boyd.getId()).isNotNull();
 	}
 
 	@Test // DATAMONGO-1444
@@ -303,7 +303,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 
 		StepVerifier.create(repository.findById(dave.id)).expectNext(dave).verifyComplete();
 
-		assertThat(person.id, is(notNullValue()));
+		assertThat(person.id).isNotNull();
 		StepVerifier.create(repository.findById(person.id)).expectNext(person).verifyComplete();
 	}
 
@@ -318,9 +318,9 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 
 		StepVerifier.create(repository.saveAll(Flux.just(dave, oliver, boyd))).expectNextCount(3).verifyComplete();
 
-		assertThat(dave.getId(), is(notNullValue()));
-		assertThat(oliver.getId(), is(notNullValue()));
-		assertThat(boyd.getId(), is(notNullValue()));
+		assertThat(dave.getId()).isNotNull();
+		assertThat(oliver.getId()).isNotNull();
+		assertThat(boyd.getId()).isNotNull();
 	}
 
 	@Test // DATAMONGO-1444

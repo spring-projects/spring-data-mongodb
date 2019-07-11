@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.springframework.aop.framework.Advised;
 import org.springframework.cglib.proxy.Factory;
@@ -40,8 +39,14 @@ public class LazyLoadingTestUtils {
 	public static void assertProxyIsResolved(Object target, boolean expected) {
 
 		LazyLoadingInterceptor interceptor = extractInterceptor(target);
-		assertThat(ReflectionTestUtils.getField(interceptor, "resolved"), is((Object) expected));
-		assertThat(ReflectionTestUtils.getField(interceptor, "result"), is(expected ? notNullValue() : nullValue()));
+		assertThat(ReflectionTestUtils.getField(interceptor, "resolved")).isEqualTo((Object) expected);
+
+		if (expected) {
+			assertThat(ReflectionTestUtils.getField(interceptor, "result")).isNotNull();
+		} else {
+			assertThat(ReflectionTestUtils.getField(interceptor, "result")).isNull();
+
+		}
 	}
 
 	private static LazyLoadingInterceptor extractInterceptor(Object proxy) {

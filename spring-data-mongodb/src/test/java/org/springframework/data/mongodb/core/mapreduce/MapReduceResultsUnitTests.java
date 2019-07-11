@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core.mapreduce;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.Collections;
 
@@ -36,7 +35,7 @@ public class MapReduceResultsUnitTests {
 		Document rawResult = new Document("result", "FOO");
 		MapReduceResults<Object> results = new MapReduceResults<Object>(Collections.emptyList(), rawResult);
 
-		assertThat(results.getOutputCollection(), is("FOO"));
+		assertThat(results.getOutputCollection()).isEqualTo("FOO");
 	}
 
 	@Test // DATAMONGO-428
@@ -45,7 +44,7 @@ public class MapReduceResultsUnitTests {
 		Document rawResult = new Document("result", new Document("collection", "FOO"));
 		MapReduceResults<Object> results = new MapReduceResults<Object>(Collections.emptyList(), rawResult);
 
-		assertThat(results.getOutputCollection(), is("FOO"));
+		assertThat(results.getOutputCollection()).isEqualTo("FOO");
 	}
 
 	@Test // DATAMONGO-378

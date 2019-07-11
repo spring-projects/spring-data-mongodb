@@ -15,11 +15,8 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import lombok.AllArgsConstructor;
@@ -35,6 +32,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.AdditionalAnswers;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.core.Ordered;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -98,8 +96,8 @@ public class AuditingEventListenerUnitTests {
 	@Test
 	public void hasExplicitOrder() {
 
-		assertThat(listener, is(instanceOf(Ordered.class)));
-		assertThat(listener.getOrder(), is(100));
+		assertThat(listener).isInstanceOf(Ordered.class);
+		assertThat(listener.getOrder()).isEqualTo(100);
 	}
 
 	@Test // DATAMONGO-1992

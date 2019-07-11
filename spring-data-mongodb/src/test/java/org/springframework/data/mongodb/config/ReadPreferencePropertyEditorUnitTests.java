@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -56,7 +55,7 @@ public class ReadPreferencePropertyEditorUnitTests {
 
 		editor.setAsText("secondary");
 
-		assertThat(editor.getValue(), is((Object) ReadPreference.secondary()));
+		assertThat(editor.getValue()).isEqualTo((Object) ReadPreference.secondary());
 	}
 
 	@Test // DATAMONGO-1158
@@ -64,6 +63,6 @@ public class ReadPreferencePropertyEditorUnitTests {
 
 		editor.setAsText("NEAREST");
 
-		assertThat(editor.getValue(), is((Object) ReadPreference.nearest()));
+		assertThat(editor.getValue()).isEqualTo((Object) ReadPreference.nearest());
 	}
 }

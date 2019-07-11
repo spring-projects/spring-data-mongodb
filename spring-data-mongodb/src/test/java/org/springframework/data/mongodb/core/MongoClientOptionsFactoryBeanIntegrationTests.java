@@ -15,10 +15,10 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.junit.Test;
+
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.data.mongodb.config.ReadPreferencePropertyEditor;
@@ -45,6 +45,6 @@ public class MongoClientOptionsFactoryBeanIntegrationTests {
 		factory.registerBeanDefinition("factory", definition);
 
 		MongoClientOptionsFactoryBean bean = factory.getBean("&factory", MongoClientOptionsFactoryBean.class);
-		assertThat(ReflectionTestUtils.getField(bean, "readPreference"), is((Object) ReadPreference.nearest()));
+		assertThat(ReflectionTestUtils.getField(bean, "readPreference")).isEqualTo((Object) ReadPreference.nearest());
 	}
 }

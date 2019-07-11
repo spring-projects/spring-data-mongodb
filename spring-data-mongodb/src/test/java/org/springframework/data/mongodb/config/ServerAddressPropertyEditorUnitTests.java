@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -24,7 +23,6 @@ import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -78,7 +76,7 @@ public class ServerAddressPropertyEditorUnitTests {
 	public void interpretEmptyStringAsNull() {
 
 		editor.setAsText("");
-		assertNull(editor.getValue());
+		assertThat(editor.getValue()).isNull();
 	}
 
 	@Test // DATAMONGO-808
@@ -161,13 +159,13 @@ public class ServerAddressPropertyEditorUnitTests {
 	private static void assertSingleAddressWithPort(String hostAddress, Integer port, Object result)
 			throws UnknownHostException {
 
-		assertThat(result, is(instanceOf(ServerAddress[].class)));
+		assertThat(result).isInstanceOf(ServerAddress[].class);
 		Collection<ServerAddress> addresses = Arrays.asList((ServerAddress[]) result);
-		assertThat(addresses, hasSize(1));
+		assertThat(addresses).hasSize(1);
 		if (port == null) {
-			assertThat(addresses, hasItem(new ServerAddress(InetAddress.getByName(hostAddress))));
+			assertThat(addresses).contains(new ServerAddress(InetAddress.getByName(hostAddress)));
 		} else {
-			assertThat(addresses, hasItem(new ServerAddress(InetAddress.getByName(hostAddress), port)));
+			assertThat(addresses).contains(new ServerAddress(InetAddress.getByName(hostAddress), port));
 		}
 	}
 
@@ -176,7 +174,7 @@ public class ServerAddressPropertyEditorUnitTests {
 		for (String hostname : hostnames) {
 			try {
 				InetAddress.getByName(hostname).isReachable(1500);
-				Assert.fail("Supposedly unresolveable hostname '" + hostname + "' can be resolved.");
+				fail("Supposedly unresolveable hostname '" + hostname + "' can be resolved.");
 			} catch (IOException expected) {
 				// ok
 			}

@@ -15,13 +15,12 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
-import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import org.bson.Document;
 import org.junit.Test;
+
 import org.springframework.data.mongodb.core.query.Criteria;
 
 /**
@@ -61,7 +60,7 @@ public class FacetOperationUnitTests {
 
 		Document agg = facetOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $facet: { } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $facet: { } }"));
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1552

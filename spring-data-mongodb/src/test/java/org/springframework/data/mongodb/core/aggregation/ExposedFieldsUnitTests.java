@@ -15,10 +15,10 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.junit.Test;
+
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 
 /**
@@ -48,9 +48,9 @@ public class ExposedFieldsUnitTests {
 	public void exposesSingleField() {
 
 		ExposedFields fields = ExposedFields.synthetic(Fields.fields("foo"));
-		assertThat(fields.exposesSingleFieldOnly(), is(true));
+		assertThat(fields.exposesSingleFieldOnly()).isTrue();
 
 		fields = fields.and(new ExposedField("bar", true));
-		assertThat(fields.exposesSingleFieldOnly(), is(false));
+		assertThat(fields.exposesSingleFieldOnly()).isFalse();
 	}
 }

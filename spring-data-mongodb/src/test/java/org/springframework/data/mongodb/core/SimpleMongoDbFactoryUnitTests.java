@@ -16,8 +16,6 @@
 package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.util.ReflectionTestUtils.*;
 
@@ -30,14 +28,15 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
-import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.ClientSession;
+import com.mongodb.client.MongoDatabase;
 
 /**
  * Unit tests for {@link SimpleMongoDbFactory}.
@@ -80,7 +79,7 @@ public class SimpleMongoDbFactoryUnitTests {
 		MongoClientURI mongoURI = new MongoClientURI("mongodb://myUsername:myPassword@localhost/myDatabase.myCollection");
 		MongoDbFactory mongoDbFactory = new SimpleMongoDbFactory(mongoURI);
 
-		assertThat(getField(mongoDbFactory, "databaseName").toString(), is("myDatabase"));
+		assertThat(getField(mongoDbFactory, "databaseName").toString()).isEqualTo("myDatabase");
 	}
 
 	@Test // DATAMONGO-1158
@@ -89,7 +88,7 @@ public class SimpleMongoDbFactoryUnitTests {
 		MongoClientURI uri = new MongoClientURI("mongodb://myUserName:myPassWord@127.0.0.1:27017/myDataBase.myCollection");
 		SimpleMongoDbFactory factory = new SimpleMongoDbFactory(uri);
 
-		assertThat(getField(factory, "databaseName").toString(), is("myDataBase"));
+		assertThat(getField(factory, "databaseName").toString()).isEqualTo("myDataBase");
 	}
 
 	@Test // DATAMONGO-1880
@@ -105,7 +104,7 @@ public class SimpleMongoDbFactoryUnitTests {
 		Object singletonTarget = AopProxyUtils
 				.getSingletonTarget(ReflectionTestUtils.getField(invocationHandler, "advised"));
 
-		assertThat(singletonTarget, is(sameInstance(database)));
+		assertThat(singletonTarget).isSameAs(database);
 	}
 
 	private void rejectsDatabaseName(String databaseName) {

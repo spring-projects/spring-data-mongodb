@@ -15,13 +15,13 @@
  */
 package org.springframework.data.mongodb.monitor;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.net.UnknownHostException;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -59,8 +59,8 @@ public class MongoMonitorIntegrationTests {
 			throw e;
 		}
 
-		assertThat(hostName, is(notNullValue()));
-		assertThat(hostName, is("127.0.0.1"));
+		assertThat(hostName).isNotNull();
+		assertThat(hostName).isEqualTo("127.0.0.1");
 	}
 
 	@Test

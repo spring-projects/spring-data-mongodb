@@ -15,11 +15,11 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.bson.Document;
 import org.junit.Test;
+
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 
@@ -35,20 +35,20 @@ public class SortTests {
 	public void testWithSortAscending() {
 
 		Query s = new Query().with(Sort.by(Direction.ASC, "name"));
-		assertEquals(Document.parse("{ \"name\" : 1}"), s.getSortObject());
+		assertThat(s.getSortObject()).isEqualTo(Document.parse("{ \"name\" : 1}"));
 	}
 
 	@Test
 	public void testWithSortDescending() {
 
 		Query s = new Query().with(Sort.by(Direction.DESC, "name"));
-		assertEquals(Document.parse("{ \"name\" : -1}"), s.getSortObject());
+		assertThat(s.getSortObject()).isEqualTo(Document.parse("{ \"name\" : -1}"));
 	}
 
 	@Test // DATADOC-177
 	public void preservesOrderKeysOnMultipleSorts() {
 
 		Query sort = new Query().with(Sort.by(Direction.DESC, "foo").and(Sort.by(Direction.DESC, "bar")));
-		assertThat(sort.getSortObject(), is(Document.parse("{ \"foo\" : -1 , \"bar\" : -1}")));
+		assertThat(sort.getSortObject()).isEqualTo(Document.parse("{ \"foo\" : -1 , \"bar\" : -1}"));
 	}
 }

@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
@@ -36,6 +35,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.reactivestreams.Publisher;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.ImportResource;
@@ -143,7 +143,7 @@ public class ConvertingReactiveMongoRepositoryTests {
 				.getOnNextEvents();
 
 		ProjectedPerson projectedPerson = people.get(0);
-		assertThat(projectedPerson.getFirstname(), is(equalTo(carter.getFirstname())));
+		assertThat(projectedPerson.getFirstname()).isEqualTo(carter.getFirstname());
 	}
 
 	@Test // DATAMONGO-1444
@@ -204,7 +204,7 @@ public class ConvertingReactiveMongoRepositoryTests {
 		testObserver.assertNoErrors();
 
 		testObserver.assertValue(actual -> {
-			assertThat(actual.getFirstname(), is(equalTo(carter.getFirstname())));
+			assertThat(actual.getFirstname()).isEqualTo(carter.getFirstname());
 			return true;
 		});
 	}
@@ -220,7 +220,7 @@ public class ConvertingReactiveMongoRepositoryTests {
 		testObserver.assertNoErrors();
 
 		testObserver.assertValue(actual -> {
-			assertThat(actual.getFirstname(), is(equalTo(carter.getFirstname())));
+			assertThat(actual.getFirstname()).isEqualTo(carter.getFirstname());
 			return true;
 		});
 	}
@@ -275,7 +275,7 @@ public class ConvertingReactiveMongoRepositoryTests {
 				.assertCompleted() //
 				.getOnNextEvents();
 
-		assertThat(people, hasItems(carter, dave));
+		assertThat(people).contains(carter, dave);
 	}
 
 	@Repository

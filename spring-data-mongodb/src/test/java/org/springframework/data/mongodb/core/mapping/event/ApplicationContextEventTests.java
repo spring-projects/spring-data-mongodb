@@ -30,10 +30,10 @@ import java.util.Map;
 
 import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.data.annotation.Id;
@@ -132,8 +132,8 @@ public class ApplicationContextEventTests {
 		assertThat(listener.onBeforeSaveEvents.get(0).getCollectionName()).isEqualTo(COLLECTION_NAME);
 		assertThat(listener.onAfterSaveEvents.get(0).getCollectionName()).isEqualTo(COLLECTION_NAME);
 
-		Assert.assertTrue(personBeforeSaveListener.seenEvents.get(0) instanceof BeforeSaveEvent<?>);
-		Assert.assertTrue(afterSaveListener.seenEvents.get(0) instanceof AfterSaveEvent<?>);
+		assertThat(personBeforeSaveListener.seenEvents.get(0) instanceof BeforeSaveEvent<?>).isTrue();
+		assertThat(afterSaveListener.seenEvents.get(0) instanceof AfterSaveEvent<?>).isTrue();
 
 		BeforeSaveEvent<PersonPojoStringId> beforeSaveEvent = (BeforeSaveEvent<PersonPojoStringId>) personBeforeSaveListener.seenEvents
 				.get(0);
@@ -143,7 +143,7 @@ public class ApplicationContextEventTests {
 		comparePersonAndDocument(p, p2, document);
 
 		AfterSaveEvent<Object> afterSaveEvent = (AfterSaveEvent<Object>) afterSaveListener.seenEvents.get(0);
-		Assert.assertTrue(afterSaveEvent.getSource() instanceof PersonPojoStringId);
+		assertThat(afterSaveEvent.getSource() instanceof PersonPojoStringId).isTrue();
 		p2 = (PersonPojoStringId) afterSaveEvent.getSource();
 		document = beforeSaveEvent.getDocument();
 

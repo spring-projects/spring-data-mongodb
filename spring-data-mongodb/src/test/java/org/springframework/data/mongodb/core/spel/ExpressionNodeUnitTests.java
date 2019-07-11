@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core.spel;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -26,6 +25,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.expression.spel.ExpressionState;
 import org.springframework.expression.spel.SpelNode;
 import org.springframework.expression.spel.ast.OpDivide;
@@ -59,7 +59,7 @@ public class ExpressionNodeUnitTests {
 	public void createsOperatorNodeForOperations() {
 
 		for (SpelNode operator : operators) {
-			assertThat(ExpressionNode.from(operator, state), is(instanceOf(OperatorNode.class)));
+			assertThat(ExpressionNode.from(operator, state)).isInstanceOf(OperatorNode.class);
 		}
 	}
 }

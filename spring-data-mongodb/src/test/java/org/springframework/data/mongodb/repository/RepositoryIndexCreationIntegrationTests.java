@@ -15,15 +15,17 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.bson.Document;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.mongodb.core.CollectionCallback;
@@ -32,7 +34,6 @@ import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import org.bson.Document;
 import com.mongodb.MongoException;
 import com.mongodb.client.MongoCollection;
 

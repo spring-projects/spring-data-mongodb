@@ -15,11 +15,11 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.mongodb.MongoDbFactory;
@@ -41,7 +41,7 @@ public class MongoDbFactoryNoDatabaseRunningTests {
 
 	@Test // DATAMONGO-139
 	public void startsUpWithoutADatabaseRunning() {
-		assertThat(mongoTemplate.getClass().getName(), is("org.springframework.data.mongodb.core.MongoTemplate"));
+		assertThat(mongoTemplate.getClass().getName()).isEqualTo("org.springframework.data.mongodb.core.MongoTemplate");
 	}
 
 	@Test(expected = DataAccessResourceFailureException.class)

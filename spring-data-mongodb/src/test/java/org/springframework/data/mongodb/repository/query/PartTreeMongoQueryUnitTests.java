@@ -15,11 +15,9 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
-import static org.springframework.data.mongodb.core.query.IsTextQuery.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -43,7 +41,6 @@ import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Person;
@@ -98,7 +95,7 @@ public class PartTreeMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findByFirstname", "foo");
 
-		assertThat(query.getFieldsObject(), is(new Document().append("firstname", 1)));
+		assertThat(query.getFieldsObject()).isEqualTo(new Document().append("firstname", 1));
 	}
 
 	@Test // DATAMOGO-952
@@ -107,7 +104,7 @@ public class PartTreeMongoQueryUnitTests {
 		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findByFirstnameAndLastname", "foo",
 				"bar");
 
-		assertThat(query.getFieldsObject(), is(new Document().append("firstname", 1).append("lastname", 1)));
+		assertThat(query.getFieldsObject()).isEqualTo(new Document().append("firstname", 1).append("lastname", 1));
 	}
 
 	@Test // DATAMOGO-952
@@ -116,7 +113,7 @@ public class PartTreeMongoQueryUnitTests {
 		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findPersonByFirstnameAndLastname",
 				"foo", "bar");
 
-		assertThat(query.getFieldsObject(), is(new Document().append("firstname", 0).append("lastname", 0)));
+		assertThat(query.getFieldsObject()).isEqualTo(new Document().append("firstname", 0).append("lastname", 0));
 	}
 
 	@Test // DATAMOGO-973
@@ -125,21 +122,19 @@ public class PartTreeMongoQueryUnitTests {
 		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findPersonByFirstname", "text",
 				TextCriteria.forDefaultLanguage().matching("search"));
 
-		assertThat(query, isTextQuery().searchingFor("search").where(new Criteria("firstname").is("text")));
+		assertThat(query.getQueryObject()).containsEntry("$text.$search", "search").containsEntry("firstname", "text");
 	}
 
 	@Test // DATAMONGO-1180
 	public void propagatesRootExceptionForInvalidQuery() {
 
-		exception.expect(IllegalStateException.class);
-		exception.expectCause(is(instanceOf(JsonParseException.class)));
-
-		deriveQueryFromMethod("findByAge", 1);
+		assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> deriveQueryFromMethod("findByAge", 1))
+				.withCauseInstanceOf(JsonParseException.class);
 	}
 
 	@Test // DATAMONGO-1345, DATAMONGO-1735
 	public void doesNotDeriveFieldSpecForNormalDomainType() {
-		assertThat(deriveQueryFromMethod("findPersonBy", new Object[0]).getFieldsObject(), is(new Document()));
+		assertThat(deriveQueryFromMethod("findPersonBy", new Object[0]).getFieldsObject()).isEqualTo(new Document());
 	}
 
 	@Test // DATAMONGO-1345
@@ -147,8 +142,8 @@ public class PartTreeMongoQueryUnitTests {
 
 		Document fieldsObject = deriveQueryFromMethod("findPersonProjectedBy", new Object[0]).getFieldsObject();
 
-		assertThat(fieldsObject.get("firstname"), is(1));
-		assertThat(fieldsObject.get("lastname"), is(1));
+		assertThat(fieldsObject.get("firstname")).isEqualTo(1);
+		assertThat(fieldsObject.get("lastname")).isEqualTo(1);
 	}
 
 	@Test // DATAMONGO-1345
@@ -156,8 +151,8 @@ public class PartTreeMongoQueryUnitTests {
 
 		Document fieldsObject = deriveQueryFromMethod("findPersonDtoByAge", new Object[] { 42 }).getFieldsObject();
 
-		assertThat(fieldsObject.get("firstname"), is(1));
-		assertThat(fieldsObject.get("lastname"), is(1));
+		assertThat(fieldsObject.get("firstname")).isEqualTo(1);
+		assertThat(fieldsObject.get("lastname")).isEqualTo(1);
 	}
 
 	@Test // DATAMONGO-1345
@@ -165,9 +160,9 @@ public class PartTreeMongoQueryUnitTests {
 
 		Document fields = deriveQueryFromMethod("findDynamicallyProjectedBy", ExtendedProjection.class).getFieldsObject();
 
-		assertThat(fields.get("firstname"), is(1));
-		assertThat(fields.get("lastname"), is(1));
-		assertThat(fields.get("age"), is(1));
+		assertThat(fields.get("firstname")).isEqualTo(1);
+		assertThat(fields.get("lastname")).isEqualTo(1);
+		assertThat(fields.get("age")).isEqualTo(1);
 	}
 
 	@Test // DATAMONGO-1500
@@ -175,8 +170,8 @@ public class PartTreeMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findBySex", Sex.FEMALE);
 
-		assertThat(query.getQueryObject().get("sex"), is(Sex.FEMALE));
-		assertThat(query.getFieldsObject().get("firstname"), is(1));
+		assertThat(query.getQueryObject().get("sex")).isEqualTo(Sex.FEMALE);
+		assertThat(query.getFieldsObject().get("firstname")).isEqualTo(1);
 	}
 
 	@Test // DATAMONGO-1729, DATAMONGO-1735
@@ -184,17 +179,17 @@ public class PartTreeMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findAllBy");
 
-		assertThat(query.getFieldsObject(), is(new Document()));
+		assertThat(query.getFieldsObject()).isEqualTo(new Document());
 	}
 
 	@Test // DATAMONGO-1865
 	public void limitingReturnsTrueIfTreeIsLimiting() {
-		assertThat(createQueryForMethod("findFirstBy").isLimiting(), is(true));
+		assertThat(createQueryForMethod("findFirstBy").isLimiting()).isTrue();
 	}
 
 	@Test // DATAMONGO-1865
 	public void limitingReturnsFalseIfTreeIsNotLimiting() {
-		assertThat(createQueryForMethod("findPersonBy").isLimiting(), is(false));
+		assertThat(createQueryForMethod("findPersonBy").isLimiting()).isFalse();
 	}
 
 	private org.springframework.data.mongodb.core.query.Query deriveQueryFromMethod(String method, Object... args) {

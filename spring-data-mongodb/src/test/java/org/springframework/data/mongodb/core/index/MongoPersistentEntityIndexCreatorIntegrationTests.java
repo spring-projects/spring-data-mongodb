@@ -15,14 +15,11 @@
  */
 package org.springframework.data.mongodb.core.index;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
-import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.List;
 
-import org.hamcrest.Matchers;
 import org.hamcrest.core.IsInstanceOf;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -30,6 +27,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -76,11 +74,11 @@ public class MongoPersistentEntityIndexCreatorIntegrationTests {
 	public void createsIndexForConfiguredMappingContextOnly() {
 
 		List<IndexInfo> indexInfo = templateOne.indexOps(SampleEntity.class).getIndexInfo();
-		assertThat(indexInfo, hasSize(greaterThan(0)));
-		assertThat(indexInfo, Matchers.<IndexInfo> hasItem(hasProperty("name", is("prop"))));
+		assertThat(indexInfo).isNotEmpty();
+		assertThat(indexInfo).extracting(IndexInfo::getName).contains("prop");
 
 		indexInfo = templateTwo.indexOps(SAMPLE_TYPE_COLLECTION_NAME).getIndexInfo();
-		assertThat(indexInfo, hasSize(0));
+		assertThat(indexInfo).hasSize(0);
 	}
 
 	@Test // DATAMONGO-1202
@@ -88,12 +86,12 @@ public class MongoPersistentEntityIndexCreatorIntegrationTests {
 
 		List<IndexInfo> indexInfo = templateOne.indexOps(RecursiveConcreteType.class).getIndexInfo();
 
-		assertThat(indexInfo, hasSize(greaterThan(0)));
-		assertThat(indexInfo, Matchers.<IndexInfo> hasItem(hasProperty("name", is("firstName"))));
+		assertThat(indexInfo).isNotEmpty();
+		assertThat(indexInfo).extracting(IndexInfo::getName).contains("firstName");
 	}
 
 	@Test // DATAMONGO-1125
-	public void createIndexShouldThrowMeaningfulExceptionWhenIndexCreationFails() throws UnknownHostException {
+	public void createIndexShouldThrowMeaningfulExceptionWhenIndexCreationFails() {
 
 		expectedException.expect(DataIntegrityViolationException.class);
 		expectedException.expectMessage("collection 'datamongo-1125'");

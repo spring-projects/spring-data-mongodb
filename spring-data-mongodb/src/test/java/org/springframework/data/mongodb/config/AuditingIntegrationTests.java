@@ -15,11 +15,11 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.joda.time.DateTime;
 import org.junit.Test;
+
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.data.annotation.CreatedDate;
@@ -50,16 +50,16 @@ public class AuditingIntegrationTests {
 		Entity entity = new Entity();
 		entity = callbacks.callback(BeforeConvertCallback.class, entity, "collection-1");
 
-		assertThat(entity.created, is(notNullValue()));
-		assertThat(entity.modified, is(entity.created));
+		assertThat(entity.created).isNotNull();
+		assertThat(entity.modified).isEqualTo(entity.created);
 
 		Thread.sleep(10);
 		entity.id = 1L;
 
 		entity = callbacks.callback(BeforeConvertCallback.class, entity, "collection-1");
 
-		assertThat(entity.created, is(notNullValue()));
-		assertThat(entity.modified, is(not(entity.created)));
+		assertThat(entity.created).isNotNull();
+		assertThat(entity.modified).isNotEqualTo(entity.created);
 		context.close();
 	}
 

@@ -15,15 +15,14 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 
-import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.springframework.data.mongodb.core.aggregation.Fields.AggregationField;
+
+import org.springframework.data.mongodb.core.aggregation.Fields.*;
 
 /**
  * Unit tests for {@link Fields}.
@@ -76,8 +75,8 @@ public class FieldsUnitTests {
 		AggregationField reference = new AggregationField("foo");
 		Fields fields = Fields.from(reference);
 
-		assertThat(fields, is(Matchers.<Field> iterableWithSize(1)));
-		assertThat(fields, hasItem(reference));
+		assertThat(fields).hasSize(1);
+		assertThat(fields).contains(reference);
 	}
 
 	@Test
@@ -90,7 +89,7 @@ public class FieldsUnitTests {
 
 		Fields fields = fields("a", "b").and("c").and("d", "e");
 
-		assertThat(fields, is(Matchers.<Field> iterableWithSize(4)));
+		assertThat(fields).hasSize(4);
 
 		verify(fields.getField("a"), "a", null);
 		verify(fields.getField("b"), "b", null);
@@ -109,8 +108,8 @@ public class FieldsUnitTests {
 	@Test // DATAMONGO-774
 	public void stripsLeadingDollarsFromName() {
 
-		assertThat(Fields.field("$name").getName(), is("name"));
-		assertThat(Fields.field("$$$$name").getName(), is("name"));
+		assertThat(Fields.field("$name").getName()).isEqualTo("name");
+		assertThat(Fields.field("$$$$name").getName()).isEqualTo("name");
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-774
@@ -121,14 +120,14 @@ public class FieldsUnitTests {
 	@Test // DATAMONGO-774
 	public void stripsLeadingDollarsFromTarget() {
 
-		assertThat(Fields.field("$target").getTarget(), is("target"));
-		assertThat(Fields.field("$$$$target").getTarget(), is("target"));
+		assertThat(Fields.field("$target").getTarget()).isEqualTo("target");
+		assertThat(Fields.field("$$$$target").getTarget()).isEqualTo("target");
 	}
 
 	private static void verify(Field field, String name, String target) {
 
-		assertThat(field, is(notNullValue()));
-		assertThat(field.getName(), is(name));
-		assertThat(field.getTarget(), is(target != null ? target : name));
+		assertThat(field).isNotNull();
+		assertThat(field.getName()).isEqualTo(name);
+		assertThat(field.getTarget()).isEqualTo(target != null ? target : name);
 	}
 }

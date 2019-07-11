@@ -15,10 +15,8 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.any;
 import static org.springframework.data.mongodb.core.convert.LazyLoadingTestUtils.*;
 
 import java.io.Serializable;
@@ -42,6 +40,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.data.annotation.AccessType;
 import org.springframework.data.annotation.AccessType.Type;
 import org.springframework.data.annotation.Id;
@@ -54,7 +53,6 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverterUnitTe
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.data.mongodb.util.MongoClientVersion;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.SerializationUtils;
 
@@ -97,8 +95,8 @@ public class DbRefMappingMongoConverterUnitTests {
 		person.id = "foo";
 
 		DBRef dbRef = converter.toDBRef(person, null);
-		assertThat(dbRef.getId(), is("foo"));
-		assertThat(dbRef.getCollectionName(), is("person"));
+		assertThat(dbRef.getId()).isEqualTo("foo");
+		assertThat(dbRef.getCollectionName()).isEqualTo("person");
 	}
 
 	@Test // DATAMONGO-657
@@ -135,13 +133,13 @@ public class DbRefMappingMongoConverterUnitTests {
 
 		Document map = (Document) document.get("map");
 
-		assertThat(map.get("test"), instanceOf(DBRef.class));
+		assertThat(map.get("test")).isInstanceOf(DBRef.class);
 
 		((Document) document.get("map")).put("test", dbRef);
 
 		MapDBRef read = converter.read(MapDBRef.class, document);
 
-		assertThat(read.map.get("test").id, is(BigInteger.ONE));
+		assertThat(read.map.get("test").id).isEqualTo(BigInteger.ONE);
 	}
 
 	@Test // DATAMONGO-347
@@ -154,8 +152,8 @@ public class DbRefMappingMongoConverterUnitTests {
 		person.id = "foo";
 
 		DBRef dbRef = converter.toDBRef(person, property);
-		assertThat(dbRef.getId(), is("foo"));
-		assertThat(dbRef.getCollectionName(), is("person"));
+		assertThat(dbRef.getId()).isEqualTo("foo");
+		assertThat(dbRef.getCollectionName()).isEqualTo("person");
 	}
 
 	@Test // DATAMONGO-348
@@ -174,9 +172,9 @@ public class DbRefMappingMongoConverterUnitTests {
 		ClassWithLazyDbRefs result = converterSpy.read(ClassWithLazyDbRefs.class, document);
 
 		assertProxyIsResolved(result.dbRefToInterface, false);
-		assertThat(result.dbRefToInterface.get(0).getId(), is(id));
+		assertThat(result.dbRefToInterface.get(0).getId()).isEqualTo(id);
 		assertProxyIsResolved(result.dbRefToInterface, true);
-		assertThat(result.dbRefToInterface.get(0).getValue(), is(value));
+		assertThat(result.dbRefToInterface.get(0).getValue()).isEqualTo(value);
 	}
 
 	@Test // DATAMONGO-348
@@ -195,9 +193,9 @@ public class DbRefMappingMongoConverterUnitTests {
 		ClassWithLazyDbRefs result = converterSpy.read(ClassWithLazyDbRefs.class, document);
 
 		assertProxyIsResolved(result.dbRefToConcreteCollection, false);
-		assertThat(result.dbRefToConcreteCollection.get(0).getId(), is(id));
+		assertThat(result.dbRefToConcreteCollection.get(0).getId()).isEqualTo(id);
 		assertProxyIsResolved(result.dbRefToConcreteCollection, true);
-		assertThat(result.dbRefToConcreteCollection.get(0).getValue(), is(value));
+		assertThat(result.dbRefToConcreteCollection.get(0).getValue()).isEqualTo(value);
 	}
 
 	@Test // DATAMONGO-348
@@ -216,9 +214,9 @@ public class DbRefMappingMongoConverterUnitTests {
 		ClassWithLazyDbRefs result = converterSpy.read(ClassWithLazyDbRefs.class, document);
 
 		assertProxyIsResolved(result.dbRefToConcreteType, false);
-		assertThat(result.dbRefToConcreteType.getId(), is(id));
+		assertThat(result.dbRefToConcreteType.getId()).isEqualTo(id);
 		assertProxyIsResolved(result.dbRefToConcreteType, true);
-		assertThat(result.dbRefToConcreteType.getValue(), is(value));
+		assertThat(result.dbRefToConcreteType.getValue()).isEqualTo(value);
 	}
 
 	@Test // DATAMONGO-348
@@ -237,9 +235,9 @@ public class DbRefMappingMongoConverterUnitTests {
 		ClassWithLazyDbRefs result = converterSpy.read(ClassWithLazyDbRefs.class, document);
 
 		assertProxyIsResolved(result.dbRefToConcreteTypeWithPersistenceConstructor, false);
-		assertThat(result.dbRefToConcreteTypeWithPersistenceConstructor.getId(), is(id));
+		assertThat(result.dbRefToConcreteTypeWithPersistenceConstructor.getId()).isEqualTo(id);
 		assertProxyIsResolved(result.dbRefToConcreteTypeWithPersistenceConstructor, true);
-		assertThat(result.dbRefToConcreteTypeWithPersistenceConstructor.getValue(), is(value));
+		assertThat(result.dbRefToConcreteTypeWithPersistenceConstructor.getValue()).isEqualTo(value);
 	}
 
 	@Test // DATAMONGO-348
@@ -259,9 +257,10 @@ public class DbRefMappingMongoConverterUnitTests {
 		ClassWithLazyDbRefs result = converterSpy.read(ClassWithLazyDbRefs.class, document);
 
 		assertProxyIsResolved(result.dbRefToConcreteTypeWithPersistenceConstructorWithoutDefaultConstructor, false);
-		assertThat(result.dbRefToConcreteTypeWithPersistenceConstructorWithoutDefaultConstructor.getId(), is(id));
+		assertThat(result.dbRefToConcreteTypeWithPersistenceConstructorWithoutDefaultConstructor.getId()).isEqualTo(id);
 		assertProxyIsResolved(result.dbRefToConcreteTypeWithPersistenceConstructorWithoutDefaultConstructor, true);
-		assertThat(result.dbRefToConcreteTypeWithPersistenceConstructorWithoutDefaultConstructor.getValue(), is(value));
+		assertThat(result.dbRefToConcreteTypeWithPersistenceConstructorWithoutDefaultConstructor.getValue())
+				.isEqualTo(value);
 	}
 
 	@Test // DATAMONGO-348
@@ -281,9 +280,9 @@ public class DbRefMappingMongoConverterUnitTests {
 
 		SerializableClassWithLazyDbRefs deserializedResult = (SerializableClassWithLazyDbRefs) transport(result);
 
-		assertThat(deserializedResult.dbRefToSerializableTarget.getId(), is(id));
+		assertThat(deserializedResult.dbRefToSerializableTarget.getId()).isEqualTo(id);
 		assertProxyIsResolved(deserializedResult.dbRefToSerializableTarget, true);
-		assertThat(deserializedResult.dbRefToSerializableTarget.getValue(), is(value));
+		assertThat(deserializedResult.dbRefToSerializableTarget.getValue()).isEqualTo(value);
 	}
 
 	@Test // DATAMONGO-884
@@ -301,9 +300,9 @@ public class DbRefMappingMongoConverterUnitTests {
 
 		WithObjectMethodOverrideLazyDbRefs result = converterSpy.read(WithObjectMethodOverrideLazyDbRefs.class, document);
 
-		assertThat(result.dbRefToToStringObjectMethodOverride, is(notNullValue()));
+		assertThat(result.dbRefToToStringObjectMethodOverride).isNotNull();
 		assertProxyIsResolved(result.dbRefToToStringObjectMethodOverride, false);
-		assertThat(result.dbRefToToStringObjectMethodOverride.toString(), is(id + ":" + value));
+		assertThat(result.dbRefToToStringObjectMethodOverride.toString()).isEqualTo(id + ":" + value);
 		assertProxyIsResolved(result.dbRefToToStringObjectMethodOverride, true);
 	}
 
@@ -322,16 +321,16 @@ public class DbRefMappingMongoConverterUnitTests {
 
 		WithObjectMethodOverrideLazyDbRefs result = converterSpy.read(WithObjectMethodOverrideLazyDbRefs.class, document);
 
-		assertThat(result.dbRefToPlainObject, is(notNullValue()));
+		assertThat(result.dbRefToPlainObject).isNotNull();
 		assertProxyIsResolved(result.dbRefToPlainObject, false);
 
 		// calling Object#toString does not initialize the proxy.
 		String proxyString = result.dbRefToPlainObject.toString();
-		assertThat(proxyString, is("lazyDbRefTarget" + ":" + id + "$LazyLoadingProxy"));
+		assertThat(proxyString).isEqualTo("lazyDbRefTarget" + ":" + id + "$LazyLoadingProxy");
 		assertProxyIsResolved(result.dbRefToPlainObject, false);
 
 		// calling another method not declared on object triggers proxy initialization.
-		assertThat(result.dbRefToPlainObject.getValue(), is(value));
+		assertThat(result.dbRefToPlainObject.getValue()).isEqualTo(value);
 		assertProxyIsResolved(result.dbRefToPlainObject, true);
 	}
 
@@ -350,12 +349,12 @@ public class DbRefMappingMongoConverterUnitTests {
 
 		WithObjectMethodOverrideLazyDbRefs result = converterSpy.read(WithObjectMethodOverrideLazyDbRefs.class, document);
 
-		assertThat(result.dbRefToPlainObject, is(notNullValue()));
+		assertThat(result.dbRefToPlainObject).isNotNull();
 		assertProxyIsResolved(result.dbRefToPlainObject, false);
 
-		assertThat(result.dbRefToPlainObject, is(equalTo(result.dbRefToPlainObject)));
-		assertThat(result.dbRefToPlainObject, is(not(equalTo(null))));
-		assertThat(result.dbRefToPlainObject, is(not(equalTo((Object) lazyDbRefs.dbRefToToStringObjectMethodOverride))));
+		assertThat(result.dbRefToPlainObject).isEqualTo(result.dbRefToPlainObject);
+		assertThat(result.dbRefToPlainObject).isNotEqualTo(null);
+		assertThat(result.dbRefToPlainObject).isNotEqualTo((Object) lazyDbRefs.dbRefToToStringObjectMethodOverride);
 
 		assertProxyIsResolved(result.dbRefToPlainObject, false);
 	}
@@ -375,10 +374,10 @@ public class DbRefMappingMongoConverterUnitTests {
 
 		WithObjectMethodOverrideLazyDbRefs result = converterSpy.read(WithObjectMethodOverrideLazyDbRefs.class, document);
 
-		assertThat(result.dbRefToPlainObject, is(notNullValue()));
+		assertThat(result.dbRefToPlainObject).isNotNull();
 		assertProxyIsResolved(result.dbRefToPlainObject, false);
 
-		assertThat(result.dbRefToPlainObject.hashCode(), is(311365444));
+		assertThat(result.dbRefToPlainObject.hashCode()).isEqualTo(311365444);
 
 		assertProxyIsResolved(result.dbRefToPlainObject, false);
 	}
@@ -402,12 +401,12 @@ public class DbRefMappingMongoConverterUnitTests {
 		WithObjectMethodOverrideLazyDbRefs result = converterSpy.read(WithObjectMethodOverrideLazyDbRefs.class, document);
 
 		assertProxyIsResolved(result.dbRefEqualsAndHashcodeObjectMethodOverride1, false);
-		assertThat(result.dbRefEqualsAndHashcodeObjectMethodOverride1, is(notNullValue()));
+		assertThat(result.dbRefEqualsAndHashcodeObjectMethodOverride1).isNotNull();
 		result.dbRefEqualsAndHashcodeObjectMethodOverride1.equals(null);
 		assertProxyIsResolved(result.dbRefEqualsAndHashcodeObjectMethodOverride1, true);
 
 		assertProxyIsResolved(result.dbRefEqualsAndHashcodeObjectMethodOverride2, false);
-		assertThat(result.dbRefEqualsAndHashcodeObjectMethodOverride2, is(notNullValue()));
+		assertThat(result.dbRefEqualsAndHashcodeObjectMethodOverride2).isNotNull();
 		result.dbRefEqualsAndHashcodeObjectMethodOverride2.hashCode();
 		assertProxyIsResolved(result.dbRefEqualsAndHashcodeObjectMethodOverride2, true);
 	}
@@ -422,12 +421,12 @@ public class DbRefMappingMongoConverterUnitTests {
 
 		ClassWithLazyDbRefs result = converter.read(ClassWithLazyDbRefs.class, document);
 
-		assertThat(result.id, is(lazyDbRefs.id));
-		assertThat(result.dbRefToInterface, is(nullValue()));
-		assertThat(result.dbRefToConcreteCollection, is(nullValue()));
-		assertThat(result.dbRefToConcreteType, is(nullValue()));
-		assertThat(result.dbRefToConcreteTypeWithPersistenceConstructor, is(nullValue()));
-		assertThat(result.dbRefToConcreteTypeWithPersistenceConstructorWithoutDefaultConstructor, is(nullValue()));
+		assertThat(result.id).isEqualTo(lazyDbRefs.id);
+		assertThat(result.dbRefToInterface).isNull();
+		assertThat(result.dbRefToConcreteCollection).isNull();
+		assertThat(result.dbRefToConcreteType).isNull();
+		assertThat(result.dbRefToConcreteTypeWithPersistenceConstructor).isNull();
+		assertThat(result.dbRefToConcreteTypeWithPersistenceConstructorWithoutDefaultConstructor).isNull();
 	}
 
 	@Test // DATAMONGO-1005
@@ -442,8 +441,8 @@ public class DbRefMappingMongoConverterUnitTests {
 
 		ClassWithDbRefField found = converter.read(ClassWithDbRefField.class, document);
 
-		assertThat(found, is(notNullValue()));
-		assertThat(found.reference, is(found));
+		assertThat(found).isNotNull();
+		assertThat(found.reference).isEqualTo(found);
 	}
 
 	@Test // DATAMONGO-1005
@@ -460,9 +459,9 @@ public class DbRefMappingMongoConverterUnitTests {
 
 		ClassWithNestedDbRefField found = converter.read(ClassWithNestedDbRefField.class, document);
 
-		assertThat(found, is(notNullValue()));
-		assertThat(found.nested, is(notNullValue()));
-		assertThat(found.nested.reference, is(found));
+		assertThat(found).isNotNull();
+		assertThat(found.nested).isNotNull();
+		assertThat(found.nested.reference).isEqualTo(found);
 	}
 
 	@Test // DATAMONGO-1012
@@ -483,7 +482,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		MongoPersistentProperty idProperty = mappingContext.getRequiredPersistentEntity(LazyDbRefTarget.class)
 				.getIdProperty();
 
-		assertThat(accessor.getProperty(idProperty), is(notNullValue()));
+		assertThat(accessor.getProperty(idProperty)).isNotNull();
 		assertProxyIsResolved(result.dbRefToConcreteType, false);
 	}
 
@@ -501,7 +500,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		ClassWithLazyDbRefs result = converter.read(ClassWithLazyDbRefs.class, object);
 
 		LazyDbRefTargetPropertyAccess proxy = result.dbRefToConcreteTypeWithPropertyAccess;
-		assertThat(ReflectionTestUtils.getField(proxy, "id"), is(nullValue()));
+		assertThat(ReflectionTestUtils.getField(proxy, "id")).isNull();
 		assertProxyIsResolved(proxy, false);
 	}
 
@@ -544,9 +543,9 @@ public class DbRefMappingMongoConverterUnitTests {
 		ClassWithLazyDbRefs result = converterSpy.read(ClassWithLazyDbRefs.class, document);
 
 		assertProxyIsResolved(result.dbRefToConcreteCollection, false);
-		assertThat(result.dbRefToConcreteCollection.get(0).getId(), is(id1));
+		assertThat(result.dbRefToConcreteCollection.get(0).getId()).isEqualTo(id1);
 		assertProxyIsResolved(result.dbRefToConcreteCollection, true);
-		assertThat(result.dbRefToConcreteCollection.get(1).getId(), is(id2));
+		assertThat(result.dbRefToConcreteCollection.get(1).getId()).isEqualTo(id2);
 
 		verify(converterSpy, never()).readRef(Mockito.any(DBRef.class));
 	}
@@ -568,7 +567,7 @@ public class DbRefMappingMongoConverterUnitTests {
 
 		ClassWithDbRefSetConstructor result = converterSpy.read(ClassWithDbRefSetConstructor.class, document);
 
-		assertThat(result.dbRefToInterface, is(instanceOf(Set.class)));
+		assertThat(result.dbRefToInterface).isInstanceOf(Set.class);
 
 		verify(converterSpy, never()).readRef(Mockito.any(DBRef.class));
 	}
@@ -593,9 +592,9 @@ public class DbRefMappingMongoConverterUnitTests {
 		ClassWithLazyDbRefs result = converterSpy.read(ClassWithLazyDbRefs.class, document);
 
 		assertProxyIsResolved(result.dbRefToConcreteCollection, false);
-		assertThat(result.dbRefToConcreteCollection.get(0).getId(), is(id1));
+		assertThat(result.dbRefToConcreteCollection.get(0).getId()).isEqualTo(id1);
 		assertProxyIsResolved(result.dbRefToConcreteCollection, true);
-		assertThat(result.dbRefToConcreteCollection.get(1).getId(), is(id2));
+		assertThat(result.dbRefToConcreteCollection.get(1).getId()).isEqualTo(id2);
 
 		verify(converterSpy, times(2)).readRef(Mockito.any(DBRef.class));
 		verify(converterSpy, never()).bulkReadRefs(anyList());
@@ -625,9 +624,9 @@ public class DbRefMappingMongoConverterUnitTests {
 		MapDBRef result = converterSpy.read(MapDBRef.class, document);
 
 		// assertProxyIsResolved(result.map, false);
-		assertThat(result.map.get("one").id, is(val1.id));
+		assertThat(result.map.get("one").id).isEqualTo(val1.id);
 		// assertProxyIsResolved(result.map, true);
-		assertThat(result.map.get("two").id, is(val2.id));
+		assertThat(result.map.get("two").id).isEqualTo(val2.id);
 
 		verify(converterSpy, times(1)).bulkReadRefs(anyList());
 		verify(converterSpy, never()).readRef(Mockito.any(DBRef.class));
@@ -657,9 +656,9 @@ public class DbRefMappingMongoConverterUnitTests {
 		MapDBRef result = converterSpy.read(MapDBRef.class, document);
 
 		assertProxyIsResolved(result.lazyMap, false);
-		assertThat(result.lazyMap.get("one").id, is(val1.id));
+		assertThat(result.lazyMap.get("one").id).isEqualTo(val1.id);
 		assertProxyIsResolved(result.lazyMap, true);
-		assertThat(result.lazyMap.get("two").id, is(val2.id));
+		assertThat(result.lazyMap.get("two").id).isEqualTo(val2.id);
 
 		verify(converterSpy, times(1)).bulkReadRefs(anyList());
 		verify(converterSpy, never()).readRef(any());

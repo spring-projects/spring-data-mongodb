@@ -15,13 +15,12 @@
  */
 package org.springframework.data.mongodb.core.script;
 
-import static org.hamcrest.core.IsEqual.*;
-import static org.hamcrest.core.IsNull.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
 import org.springframework.util.ObjectUtils;
 
 /**
@@ -54,8 +53,8 @@ public class ExecutableMongoScriptUnitTests {
 
 		ExecutableMongoScript script = new ExecutableMongoScript(jsFunction);
 
-		assertThat(script.getCode(), notNullValue());
-		assertThat(script.getCode().toString(), equalTo(jsFunction));
+		assertThat(script.getCode()).isNotNull();
+		assertThat(script.getCode().toString()).isEqualTo(jsFunction);
 	}
 
 	private void expectException(Class<?> type, String... messageFragments) {

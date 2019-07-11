@@ -15,18 +15,18 @@
  */
 package org.springframework.data.mongodb.core.mapreduce;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.data.Offset.offset;
 import static org.springframework.data.mongodb.core.mapreduce.GroupBy.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import org.bson.Document;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
@@ -71,7 +71,7 @@ public class GroupByTests {
 
 		Document gc = new GroupBy("a").getGroupByObject();
 
-		assertThat(gc, is(Document.parse("{ \"key\" : { \"a\" : 1} , \"$reduce\" :  null  , \"initial\" :  null }")));
+		assertThat(gc).isEqualTo(Document.parse("{ \"key\" : { \"a\" : 1} , \"$reduce\" :  null  , \"initial\" :  null }"));
 	}
 
 	@Test
@@ -79,8 +79,8 @@ public class GroupByTests {
 
 		Document gc = GroupBy.key("a", "b").getGroupByObject();
 
-		assertThat(gc,
-				is(Document.parse("{ \"key\" : { \"a\" : 1 , \"b\" : 1} , \"$reduce\" :  null  , \"initial\" :  null }")));
+		assertThat(gc).isEqualTo(
+				Document.parse("{ \"key\" : { \"a\" : 1 , \"b\" : 1} , \"$reduce\" :  null  , \"initial\" :  null }"));
 	}
 
 	@Test
@@ -88,8 +88,8 @@ public class GroupByTests {
 
 		Document gc = GroupBy.keyFunction("classpath:keyFunction.js").getGroupByObject();
 
-		assertThat(gc, is(
-				Document.parse("{ \"$keyf\" : \"classpath:keyFunction.js\" , \"$reduce\" :  null  , \"initial\" :  null }")));
+		assertThat(gc).isEqualTo(
+				Document.parse("{ \"$keyf\" : \"classpath:keyFunction.js\" , \"$reduce\" :  null  , \"initial\" :  null }"));
 	}
 
 	@Test
@@ -145,19 +145,19 @@ public class GroupByTests {
 		int numResults = 0;
 		for (XObject xObject : results) {
 			if (xObject.getX() == 1) {
-				Assert.assertEquals(2, xObject.getCount(), 0.001);
+				assertThat(xObject.getCount()).isCloseTo(2, offset(0.001f));
 			}
 			if (xObject.getX() == 2) {
-				Assert.assertEquals(1, xObject.getCount(), 0.001);
+				assertThat(xObject.getCount()).isCloseTo(1, offset(0.001f));
 			}
 			if (xObject.getX() == 3) {
-				Assert.assertEquals(3, xObject.getCount(), 0.001);
+				assertThat(xObject.getCount()).isCloseTo(3, offset(0.001f));
 			}
 			numResults++;
 		}
-		assertThat(numResults, is(3));
-		assertThat(results.getKeys(), is(3));
-		assertEquals(6, results.getCount(), 0.001);
+		assertThat(numResults).isEqualTo(3);
+		assertThat(results.getKeys()).isEqualTo(3);
+		assertThat(results.getCount()).isCloseTo(6, offset(0.001));
 	}
 
 	private void createGroupByData() {

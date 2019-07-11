@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.convert.LazyLoadingTestUtils.*;
 
 import java.util.ArrayList;
@@ -26,6 +25,7 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.test.context.ContextConfiguration;
@@ -71,7 +71,7 @@ public class PersonRepositoryLazyLoadingIntegrationTests {
 
 		User user = fans.get(0);
 		assertProxyIsResolved(fans, true);
-		assertThat(user.getUsername(), is(thomas.getUsername()));
+		assertThat(user.getUsername()).isEqualTo(thomas.getUsername());
 	}
 
 	@Test // DATAMONGO-348
@@ -93,13 +93,13 @@ public class PersonRepositoryLazyLoadingIntegrationTests {
 		assertProxyIsResolved(realFans, false);
 		User realFan = realFans.get(0);
 		assertProxyIsResolved(realFans, true);
-		assertThat(realFan.getUsername(), is(thomas.getUsername()));
+		assertThat(realFan.getUsername()).isEqualTo(thomas.getUsername());
 
 		realFans = oliver.getRealFans();
 		assertProxyIsResolved(realFans, true);
 
 		realFan = realFans.get(0);
-		assertThat(realFan.getUsername(), is(thomas.getUsername()));
+		assertThat(realFan.getUsername()).isEqualTo(thomas.getUsername());
 	}
 
 	@Test // DATAMONGO-348
@@ -119,8 +119,8 @@ public class PersonRepositoryLazyLoadingIntegrationTests {
 		User coworker = oliver.getCoworker();
 
 		assertProxyIsResolved(coworker, false);
-		assertThat(coworker.getUsername(), is(thomas.getUsername()));
+		assertThat(coworker.getUsername()).isEqualTo(thomas.getUsername());
 		assertProxyIsResolved(coworker, true);
-		assertThat(coworker.getUsername(), is(thomas.getUsername()));
+		assertThat(coworker.getUsername()).isEqualTo(thomas.getUsername());
 	}
 }

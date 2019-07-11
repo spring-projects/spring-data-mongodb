@@ -15,12 +15,12 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.bson.BsonDocument;
 import org.bson.Document;
 import org.junit.Test;
+
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -49,7 +49,7 @@ public class DocumentAccessorUnitTests {
 		accessor.put(fooProperty, "FooBar");
 
 		Document aDocument = DocumentTestUtils.getAsDocument(document, "a");
-		assertThat(aDocument.get("b"), is((Object) "FooBar"));
+		assertThat(aDocument.get("b")).isEqualTo((Object) "FooBar");
 	}
 
 	@Test // DATAMONGO-766
@@ -58,14 +58,14 @@ public class DocumentAccessorUnitTests {
 		Document source = new Document("a", new Document("b", "FooBar"));
 
 		DocumentAccessor accessor = new DocumentAccessor(source);
-		assertThat(accessor.get(fooProperty), is((Object) "FooBar"));
+		assertThat(accessor.get(fooProperty)).isEqualTo((Object) "FooBar");
 	}
 
 	@Test // DATAMONGO-766
 	public void returnsNullForNonExistingFieldPath() {
 
 		DocumentAccessor accessor = new DocumentAccessor(new Document());
-		assertThat(accessor.get(fooProperty), is(nullValue()));
+		assertThat(accessor.get(fooProperty)).isNull();
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-766
@@ -92,9 +92,9 @@ public class DocumentAccessorUnitTests {
 
 		Document nestedA = DocumentTestUtils.getAsDocument(target, "a");
 
-		assertThat(nestedA, is(notNullValue()));
-		assertThat(nestedA.get("b"), is((Object) "b"));
-		assertThat(nestedA.get("c"), is((Object) "c"));
+		assertThat(nestedA).isNotNull();
+		assertThat(nestedA.get("b")).isEqualTo((Object) "b");
+		assertThat(nestedA.get("c")).isEqualTo((Object) "c");
 	}
 
 	@Test // DATAMONGO-1471
@@ -103,9 +103,9 @@ public class DocumentAccessorUnitTests {
 		DocumentAccessor accessor = new DocumentAccessor(new Document("a", new BasicDBObject("c", "d")));
 		MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(ProjectingType.class);
 
-		assertThat(accessor.hasValue(entity.getRequiredPersistentProperty("foo")), is(false));
-		assertThat(accessor.hasValue(entity.getRequiredPersistentProperty("a")), is(true));
-		assertThat(accessor.hasValue(entity.getRequiredPersistentProperty("name")), is(false));
+		assertThat(accessor.hasValue(entity.getRequiredPersistentProperty("foo"))).isFalse();
+		assertThat(accessor.hasValue(entity.getRequiredPersistentProperty("a"))).isTrue();
+		assertThat(accessor.hasValue(entity.getRequiredPersistentProperty("name"))).isFalse();
 	}
 
 	static class ProjectingType {

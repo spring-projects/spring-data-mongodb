@@ -15,14 +15,14 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
-import static org.hamcrest.core.IsEqual.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import javax.validation.ConstraintViolationException;
 
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
@@ -50,12 +50,10 @@ public class ValidatingMongoEventListenerTests {
 
 		User user = new User("john", 17);
 
-		try {
-			mongoTemplate.save(user);
-			fail();
-		} catch (ConstraintViolationException e) {
-			assertThat(e.getConstraintViolations().size(), equalTo(2));
-		}
+		assertThatExceptionOfType(ConstraintViolationException.class).isThrownBy(() -> mongoTemplate.save(user))
+				.satisfies(e -> {
+					assertThat(e.getConstraintViolations()).hasSize(2);
+				});
 	}
 
 	@Test

@@ -15,11 +15,11 @@
  */
 package org.springframework.data.mongodb.repository.config.lazy;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.repository.config.lazy.ClassWithNestedRepository.NestedUserRepository;
 import org.springframework.test.context.ContextConfiguration;
@@ -38,6 +38,6 @@ public class AllowNestedMongoRepositoriesRepositoryConfigTests {
 
 	@Test // DATAMONGO-780
 	public void shouldFindNestedRepository() {
-		assertThat(fooRepository, is(notNullValue()));
+		assertThat(fooRepository).isNotNull();
 	}
 }

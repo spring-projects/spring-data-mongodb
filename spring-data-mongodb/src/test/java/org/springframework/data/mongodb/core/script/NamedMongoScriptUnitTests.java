@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core.script;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.junit.Test;
 
@@ -49,6 +48,6 @@ public class NamedMongoScriptUnitTests {
 
 		String jsFunction = "function(x) { return x; }";
 
-		assertThat(new NamedMongoScript("echo", jsFunction).getCode(), is(jsFunction));
+		assertThat(new NamedMongoScript("echo", jsFunction).getCode()).isEqualTo(jsFunction);
 	}
 }

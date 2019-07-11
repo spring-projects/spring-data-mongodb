@@ -15,12 +15,10 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
-import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import lombok.AllArgsConstructor;
 
@@ -34,6 +32,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.annotation.Id;
@@ -77,7 +76,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 
 	@Test
 	public void findsSimpleReference() {
-		assertThat(getContext(Foo.class).getReference("bar"), is(notNullValue()));
+		assertThat(getContext(Foo.class).getReference("bar")).isNotNull();
 	}
 
 	@Test(expected = MappingException.class)
@@ -92,16 +91,17 @@ public class TypeBasedAggregationOperationContextUnitTests {
 
 		Field field = field("bar.name");
 
-		assertThat(context.getReference("bar.name"), is(notNullValue()));
-		assertThat(context.getReference(field), is(notNullValue()));
-		assertThat(context.getReference(field), is(context.getReference("bar.name")));
+		assertThat(context.getReference("bar.name")).isNotNull();
+		assertThat(context.getReference(field)).isNotNull();
+		assertThat(context.getReference(field)).isEqualTo(context.getReference("bar.name"));
 	}
 
 	@Test // DATAMONGO-806
 	public void aliasesIdFieldCorrectly() {
 
 		AggregationOperationContext context = getContext(Foo.class);
-		assertThat(context.getReference("id"), is(new DirectFieldReference(new ExposedField(field("id", "_id"), true))));
+		assertThat(context.getReference("id"))
+				.isEqualTo(new DirectFieldReference(new ExposedField(field("id", "_id"), true)));
 	}
 
 	@Test // DATAMONGO-912
@@ -119,7 +119,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		org.bson.Document agg = newAggregation(matchStage, projectStage).toDocument("test", context);
 
 		org.bson.Document age = getValue(getValue(getPipelineElementFromAggregationAt(agg, 0), "$match"), "age");
-		assertThat(age, is(new org.bson.Document("v", 10)));
+		assertThat(age).isEqualTo(new Document("v", 10));
 	}
 
 	@Test // DATAMONGO-912
@@ -137,7 +137,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		org.bson.Document agg = newAggregation(projectStage, matchStage).toDocument("test", context);
 
 		org.bson.Document age = getValue(getValue(getPipelineElementFromAggregationAt(agg, 1), "$match"), "age");
-		assertThat(age, is(new org.bson.Document("v", 10)));
+		assertThat(age).isEqualTo(new Document("v", 10));
 	}
 
 	@Test // DATAMONGO-960
@@ -151,13 +151,13 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		org.bson.Document document = agg.toDocument("person", context);
 
 		org.bson.Document projection = getPipelineElementFromAggregationAt(document, 0);
-		assertThat(projection.containsKey("$project"), is(true));
+		assertThat(projection.containsKey("$project")).isTrue();
 
-		assertThat(projection.get("$project"), is(new Document("name", 1).append("age", 1)));
+		assertThat(projection.get("$project")).isEqualTo(new Document("name", 1).append("age", 1));
 
-		assertThat(document.get("allowDiskUse"), is(true));
-		assertThat(document.get("explain"), is(true));
-		assertThat(document.get("cursor"), is(new Document("foo", 1)));
+		assertThat(document.get("allowDiskUse")).isEqualTo(true);
+		assertThat(document.get("explain")).isEqualTo(true);
+		assertThat(document.get("cursor")).isEqualTo(new Document("foo", 1));
 	}
 
 	@Test // DATAMONGO-1585
@@ -171,7 +171,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		Document sort = getPipelineElementFromAggregationAt(dbo, 1);
 
 		Document definition = (Document) sort.get("$sort");
-		assertThat(definition.get("counter"), is(equalTo(1)));
+		assertThat(definition.get("counter")).isEqualTo(1);
 	}
 
 	@Test // DATAMONGO-1586
@@ -185,9 +185,8 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		Document dbo = agg.toDocument("person", context);
 
 		Document projection = getPipelineElementFromAggregationAt(dbo, 0);
-		assertThat(getAsDocument(projection, "$project"), isBsonObject() //
-				.containing("person_name", "$name") //
-				.containing("age", "$age.value"));
+		assertThat(getAsDocument(projection, "$project")).containsEntry("person_name", "$name") //
+				.containsEntry("age", "$age.value");
 	}
 
 	@Test // DATAMONGO-1893
@@ -200,7 +199,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		Document dbo = agg.toDocument("person", context);
 
 		Document sort = getPipelineElementFromAggregationAt(dbo, 1);
-		assertThat(getAsDocument(sort, "$sort"), is(equalTo(new Document("age.value", 1).append("last_name", 1))));
+		assertThat(getAsDocument(sort, "$sort")).isEqualTo(new Document("age.value", 1).append("last_name", 1));
 	}
 
 	@Test // DATAMONGO-1133
@@ -215,7 +214,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 
 		org.bson.Document definition = (org.bson.Document) group.get("$group");
 
-		assertThat(definition.get("_id"), is(equalTo("$counter_name")));
+		assertThat(definition.get("_id")).isEqualTo("$counter_name");
 	}
 
 	@Test // DATAMONGO-1326, DATAMONGO-1585
@@ -231,8 +230,8 @@ public class TypeBasedAggregationOperationContextUnitTests {
 
 		org.bson.Document definition = (org.bson.Document) sort.get("$sort");
 
-		assertThat(definition.get("resourceId"), is(equalTo(1)));
-		assertThat(definition.get("counter_name"), is(equalTo(1)));
+		assertThat(definition.get("resourceId")).isEqualTo(1);
+		assertThat(definition.get("counter_name")).isEqualTo(1);
 	}
 
 	@Test // DATAMONGO-1326
@@ -247,7 +246,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 
 		org.bson.Document definition = (org.bson.Document) sort.get("$sort");
 
-		assertThat(definition.get("foreignKey"), is(equalTo(1)));
+		assertThat(definition.get("foreignKey")).isEqualTo(1);
 	}
 
 	@Test // DATAMONGO-1326
@@ -264,7 +263,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		org.bson.Document definition = (org.bson.Document) group.get("$group");
 		org.bson.Document field = (org.bson.Document) definition.get("something_totally_different");
 
-		assertThat(field.get("$min"), is(equalTo("$lookup.otherkey")));
+		assertThat(field.get("$min")).isEqualTo("$lookup.otherkey");
 	}
 
 	@Test // DATAMONGO-1326
@@ -281,7 +280,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 
 		org.bson.Document definition = (org.bson.Document) sort.get("$sort");
 
-		assertThat(definition.get("something_totally_different"), is(equalTo(1)));
+		assertThat(definition.get("something_totally_different")).isEqualTo(1);
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1326
@@ -308,14 +307,14 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		Document document = agg.toDocument("person", context);
 
 		Document projection = getPipelineElementFromAggregationAt(document, 0);
-		assertThat(projection.containsKey("$project"), is(true));
+		assertThat(projection.containsKey("$project")).isTrue();
 
 		Document project = getValue(projection, "$project");
 		Document age = getValue(project, "age");
 
-		assertThat(getValue(age, "$cond"), isBsonObject().containing("then.value", 0));
-		assertThat(getValue(age, "$cond"), isBsonObject().containing("then._class", Age.class.getName()));
-		assertThat(getValue(age, "$cond"), isBsonObject().containing("else", "$age"));
+		assertThat((Document) getValue(age, "$cond")).containsEntry("then.value", 0);
+		assertThat((Document) getValue(age, "$cond")).containsEntry("then._class", Age.class.getName());
+		assertThat((Document) getValue(age, "$cond")).containsEntry("else", "$age");
 	}
 
 	/**
@@ -333,17 +332,17 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		Document document = agg.toDocument("person", context);
 
 		Document projection = getPipelineElementFromAggregationAt(document, 0);
-		assertThat(projection.containsKey("$project"), is(true));
+		assertThat(projection.containsKey("$project")).isTrue();
 
 		Document project = getValue(projection, "$project");
 		Document age = getValue(project, "age");
 
-		assertThat(age, is(Document.parse(
-				"{ $ifNull: [ \"$age\", { \"_class\":\"org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContextUnitTests$Age\",  \"value\": 0} ] }")));
+		assertThat(age).isEqualTo(Document.parse(
+				"{ $ifNull: [ \"$age\", { \"_class\":\"org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContextUnitTests$Age\",  \"value\": 0} ] }"));
 
-		assertThat(age, isBsonObject().containing("$ifNull.[0]", "$age"));
-		assertThat(age, isBsonObject().containing("$ifNull.[1].value", 0));
-		assertThat(age, isBsonObject().containing("$ifNull.[1]._class", Age.class.getName()));
+		assertThat(age).containsEntry("$ifNull.[0]", "$age");
+		assertThat(age).containsEntry("$ifNull.[1].value", 0);
+		assertThat(age).containsEntry("$ifNull.[1]._class", Age.class.getName());
 	}
 
 	@Test // DATAMONGO-1756
@@ -354,8 +353,8 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		Document agg = newAggregation(Wrapper.class, project().and("nested1.value1").plus("nested2.value2").as("val"))
 				.toDocument("collection", context);
 
-		assertThat(getPipelineElementFromAggregationAt(agg, 0).get("$project"), is(
-				equalTo(new Document("val", new Document("$add", Arrays.asList("$nested1.value1", "$field2.nestedValue2"))))));
+		assertThat(getPipelineElementFromAggregationAt(agg, 0).get("$project"))
+				.isEqualTo(new Document("val", new Document("$add", Arrays.asList("$nested1.value1", "$field2.nestedValue2"))));
 	}
 
 	@org.springframework.data.mongodb.core.mapping.Document(collection = "person")

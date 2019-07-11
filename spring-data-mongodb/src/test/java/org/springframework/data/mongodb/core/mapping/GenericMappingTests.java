@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.Collections;
 
@@ -26,6 +25,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -64,12 +64,12 @@ public class GenericMappingTests {
 		converter.write(wrapper, document);
 
 		Object container = document.get("container");
-		assertThat(container, is(notNullValue()));
-		assertTrue(container instanceof Document);
+		assertThat(container).isNotNull();
+		assertThat(container instanceof Document).isTrue();
 
 		Object content = ((Document) container).get("content");
-		assertTrue(content instanceof String);
-		assertThat((String) content, is("Foo!"));
+		assertThat(content instanceof String).isTrue();
+		assertThat((String) content).isEqualTo("Foo!");
 	}
 
 	@Test
@@ -79,8 +79,8 @@ public class GenericMappingTests {
 		Document container = new Document("container", content);
 
 		StringWrapper result = converter.read(StringWrapper.class, container);
-		assertThat(result.container, is(notNullValue()));
-		assertThat(result.container.content, is("Foo!"));
+		assertThat(result.container).isNotNull();
+		assertThat(result.container.content).isEqualTo("Foo!");
 	}
 
 	static class StringWrapper extends Wrapper<String> {

@@ -15,12 +15,11 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.domain.Sort.Direction.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
-import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import lombok.Builder;
 
@@ -40,7 +39,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDateTime;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -48,6 +46,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DataAccessException;
@@ -521,7 +520,7 @@ public class AggregationTests {
 		/*
 		 //complex mongodb aggregation framework example from
 		 https://docs.mongodb.org/manual/tutorial/aggregation-examples/#largest-and-smallest-cities-by-state
-		
+
 		 db.zipcodes.aggregate(
 			 	{
 				   $group: {
@@ -1553,7 +1552,7 @@ public class AggregationTests {
 		Document firstItem = mappedResults.get(0);
 
 		assertThat(firstItem).containsEntry("_id", "u1");
-		Assert.assertThat(firstItem, isBsonObject().containing("linkedPerson.[0].firstname", "u1"));
+		assertThat(firstItem).containsEntry("linkedPerson.[0].firstname", "u1");
 	}
 
 	@Test // DATAMONGO-1326
@@ -1574,7 +1573,7 @@ public class AggregationTests {
 		Document firstItem = mappedResults.get(0);
 
 		assertThat(firstItem).containsEntry("foreignKey", "u1");
-		Assert.assertThat(firstItem, isBsonObject().containing("linkedPerson.[0].firstname", "u1"));
+		assertThat(firstItem).containsEntry("linkedPerson.[0].firstname", "u1");
 	}
 
 	@Test // DATAMONGO-1418, DATAMONGO-1824
@@ -1784,7 +1783,8 @@ public class AggregationTests {
 
 		assertThat(object).containsEntry("name", "Andrew").containsEntry("reportsTo", "Eliot");
 		assertThat(list).containsOnly(
-				new Document("_id", 2).append("name", "Eliot").append("reportsTo", "Dev").append("depth", 0L).append("_class", Employee.class.getName()),
+				new Document("_id", 2).append("name", "Eliot").append("reportsTo", "Dev").append("depth", 0L).append("_class",
+						Employee.class.getName()),
 				new Document("_id", 1).append("name", "Dev").append("depth", 1L).append("_class", Employee.class.getName()));
 	}
 
@@ -1812,7 +1812,7 @@ public class AggregationTests {
 
 		// { "_id" : 0 , "count" : 1 , "titles" : [ "Dancer"] , "sum" : 760.4000000000001}
 		Document bound0 = result.getMappedResults().get(0);
-		Assert.assertThat(bound0, isBsonObject().containing("count", 1).containing("titles.[0]", "Dancer"));
+		assertThat(bound0).containsEntry("count", 1).containsEntry("titles.[0]", "Dancer");
 		assertThat((Double) bound0.get("sum")).isCloseTo(760.40, Offset.offset(0.1D));
 
 		// { "_id" : 100 , "count" : 2 , "titles" : [ "The Pillars of Society" , "The Great Wave off Kanagawa"] , "sum" :
@@ -1846,8 +1846,8 @@ public class AggregationTests {
 
 		// { "min" : 680.0 , "max" : 820.0 , "count" : 1 , "titles" : [ "Dancer"] , "sum" : 760.4000000000001}
 		Document bound0 = result.getMappedResults().get(0);
-		Assert.assertThat(bound0, isBsonObject().containing("count", 1).containing("titles.[0]", "Dancer")
-				.containing("min", 680.0).containing("max"));
+		assertThat(bound0).containsEntry("count", 1).containsEntry("titles.[0]", "Dancer").containsEntry("min", 680.0)
+				.containsKey("max");
 
 		// { "min" : 820.0 , "max" : 1800.0 , "count" : 1 , "titles" : [ "The Great Wave off Kanagawa"] , "sum" : 1673.0}
 		Document bound1 = result.getMappedResults().get(1);

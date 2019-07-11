@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import lombok.Value;
@@ -25,6 +24,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.repository.Person;
@@ -48,14 +48,14 @@ public class MappingMongoEntityInformationUnitTests {
 		when(info.getCollection()).thenReturn("Person");
 
 		MongoEntityInformation<Person, Long> information = new MappingMongoEntityInformation<Person, Long>(info);
-		assertThat(information.getCollectionName(), is("Person"));
+		assertThat(information.getCollectionName()).isEqualTo("Person");
 	}
 
 	@Test // DATAMONGO-248
 	public void usesCustomCollectionIfGiven() {
 
 		MongoEntityInformation<Person, Long> information = new MappingMongoEntityInformation<Person, Long>(info, "foobar");
-		assertThat(information.getCollectionName(), is("foobar"));
+		assertThat(information.getCollectionName()).isEqualTo("foobar");
 	}
 
 	@Test // DATAMONGO-1590
@@ -64,7 +64,7 @@ public class MappingMongoEntityInformationUnitTests {
 		EntityInformation<TypeImplementingPersistable, Long> information = new MappingMongoEntityInformation<>(
 				persistableImplementingEntityTypeInfo);
 
-		assertThat(information.isNew(new TypeImplementingPersistable(100L, false)), is(false));
+		assertThat(information.isNew(new TypeImplementingPersistable(100L, false))).isFalse();
 	}
 
 	@Value

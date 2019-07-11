@@ -15,29 +15,25 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import static org.hamcrest.collection.IsCollectionWithSize.*;
-import static org.hamcrest.collection.IsEmptyCollection.*;
-import static org.hamcrest.collection.IsIterableContainingInOrder.*;
-import static org.hamcrest.core.AnyOf.*;
-import static org.hamcrest.core.IsCollectionContaining.*;
-import static org.hamcrest.core.IsEqual.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
+
+import lombok.ToString;
 
 import java.util.List;
 
-import lombok.ToString;
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.mongodb.config.AbstractIntegrationTests;
-import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
+import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.Language;
 import org.springframework.data.mongodb.core.mapping.TextScore;
@@ -107,8 +103,8 @@ public class TextQueryTests extends AbstractIntegrationTests {
 		initWithDefaultDocuments();
 
 		List<FullTextDoc> result = template.find(new TextQuery("bake coffee cake"), FullTextDoc.class);
-		assertThat(result, hasSize(3));
-		assertThat(result, hasItems(BAKE, COFFEE, CAKE));
+		assertThat(result).hasSize(3);
+		assertThat(result).contains(BAKE, COFFEE, CAKE);
 	}
 
 	@Test // DATAMONGO-850
@@ -117,7 +113,7 @@ public class TextQueryTests extends AbstractIntegrationTests {
 		initWithDefaultDocuments();
 
 		List<FullTextDoc> result = template.find(new TextQuery("tasmanian devil"), FullTextDoc.class);
-		assertThat(result, hasSize(0));
+		assertThat(result).hasSize(0);
 	}
 
 	@Test // DATAMONGO-850
@@ -128,11 +124,11 @@ public class TextQueryTests extends AbstractIntegrationTests {
 		template.insert(coffee2);
 
 		List<FullTextDoc> result = template.find(new TextQuery("bake coffee cake").sortByScore(), FullTextDoc.class);
-		assertThat(result, hasSize(4));
-		assertThat(result.get(0), anyOf(equalTo(BAKE), equalTo(coffee2)));
-		assertThat(result.get(1), anyOf(equalTo(BAKE), equalTo(coffee2)));
-		assertThat(result.get(2), equalTo(COFFEE));
-		assertThat(result.get(3), equalTo(CAKE));
+		assertThat(result).hasSize(4);
+		assertThat(result.get(0)).isIn(BAKE, coffee2);
+		assertThat(result.get(1)).isIn(BAKE, coffee2);
+		assertThat(result.get(2)).isEqualTo(COFFEE);
+		assertThat(result.get(3)).isEqualTo(CAKE);
 	}
 
 	@Test // DATAMONGO-850
@@ -140,8 +136,8 @@ public class TextQueryTests extends AbstractIntegrationTests {
 
 		initWithDefaultDocuments();
 		List<FullTextDoc> result = template.find(new TextQuery("leche"), FullTextDoc.class);
-		assertThat(result, hasSize(2));
-		assertThat(result, hasItems(SPANISH_MILK, FRENCH_MILK));
+		assertThat(result).hasSize(2);
+		assertThat(result).contains(SPANISH_MILK, FRENCH_MILK);
 	}
 
 	@Test // DATAMONGO-850
@@ -150,8 +146,8 @@ public class TextQueryTests extends AbstractIntegrationTests {
 		initWithDefaultDocuments();
 		List<FullTextDoc> result = template.find(new TextQuery("leche").addCriteria(where("language").is("spanish")),
 				FullTextDoc.class);
-		assertThat(result, hasSize(1));
-		assertThat(result.get(0), equalTo(SPANISH_MILK));
+		assertThat(result).hasSize(1);
+		assertThat(result.get(0)).isEqualTo(SPANISH_MILK);
 	}
 
 	@Test // DATAMONGO-850
@@ -160,8 +156,8 @@ public class TextQueryTests extends AbstractIntegrationTests {
 		initWithDefaultDocuments();
 
 		List<FullTextDoc> result = template.find(new TextQuery("bake coffee -cake"), FullTextDoc.class);
-		assertThat(result, hasSize(2));
-		assertThat(result, hasItems(BAKE, COFFEE));
+		assertThat(result).hasSize(2);
+		assertThat(result).contains(BAKE, COFFEE);
 	}
 
 	@Test // DATAMONGO-976
@@ -172,9 +168,9 @@ public class TextQueryTests extends AbstractIntegrationTests {
 		List<FullTextDoc> result = template.find(new TextQuery("bake coffee -cake").includeScore().sortByScore(),
 				FullTextDoc.class);
 
-		assertThat(result, hasSize(2));
+		assertThat(result).hasSize(2);
 		for (FullTextDoc scoredDoc : result) {
-			assertTrue(scoredDoc.score > 0F);
+			assertThat(scoredDoc.score > 0F).isTrue();
 		}
 	}
 
@@ -186,8 +182,8 @@ public class TextQueryTests extends AbstractIntegrationTests {
 		TextQuery query = TextQuery.queryText(TextCriteria.forDefaultLanguage().matchingPhrase("milk and sugar"));
 		List<FullTextDoc> result = template.find(query, FullTextDoc.class);
 
-		assertThat(result, hasSize(1));
-		assertThat(result, contains(MILK_AND_SUGAR));
+		assertThat(result).hasSize(1);
+		assertThat(result).containsExactly(MILK_AND_SUGAR);
 	}
 
 	@Test // DATAMONGO-850
@@ -198,7 +194,7 @@ public class TextQueryTests extends AbstractIntegrationTests {
 		TextQuery query = TextQuery.queryText(TextCriteria.forDefaultLanguage().matchingPhrase("milk no sugar"));
 		List<FullTextDoc> result = template.find(query, FullTextDoc.class);
 
-		assertThat(result, empty());
+		assertThat(result).isEmpty();
 	}
 
 	@Test // DATAMONGO-850
@@ -209,14 +205,14 @@ public class TextQueryTests extends AbstractIntegrationTests {
 		// page 1
 		List<FullTextDoc> result = template
 				.find(new TextQuery("bake coffee cake").sortByScore().with(PageRequest.of(0, 2)), FullTextDoc.class);
-		assertThat(result, hasSize(2));
-		assertThat(result, contains(BAKE, COFFEE));
+		assertThat(result).hasSize(2);
+		assertThat(result).containsExactly(BAKE, COFFEE);
 
 		// page 2
 		result = template.find(new TextQuery("bake coffee cake").sortByScore().with(PageRequest.of(1, 2)),
 				FullTextDoc.class);
-		assertThat(result, hasSize(1));
-		assertThat(result, contains(CAKE));
+		assertThat(result).hasSize(1);
+		assertThat(result).containsExactly(CAKE);
 	}
 
 	private void initWithDefaultDocuments() {

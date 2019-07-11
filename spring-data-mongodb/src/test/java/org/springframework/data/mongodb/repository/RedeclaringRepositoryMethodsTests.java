@@ -15,12 +15,12 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
 
 import org.junit.Test;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -40,8 +40,8 @@ public class RedeclaringRepositoryMethodsTests extends AbstractPersonRepositoryI
 
 		Page<Person> page = repository.findAll(PageRequest.of(0, 2));
 
-		assertThat(page.getNumberOfElements(), is(1));
-		assertThat(page.getContent().get(0).getFirstname(), is(oliver.getFirstname()));
+		assertThat(page.getNumberOfElements()).isEqualTo(1);
+		assertThat(page.getContent().get(0).getFirstname()).isEqualTo(oliver.getFirstname());
 	}
 
 	@Test // DATAMONGO-760
@@ -49,6 +49,6 @@ public class RedeclaringRepositoryMethodsTests extends AbstractPersonRepositoryI
 
 		List<Person> result = repository.findAll();
 
-		assertThat(result.isEmpty(), is(true));
+		assertThat(result.isEmpty()).isTrue();
 	}
 }

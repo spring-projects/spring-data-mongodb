@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.gridfs;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.regex.Pattern;
 
@@ -35,8 +34,8 @@ public class AntPathUnitTests {
 		AntPath path = new AntPath("**/foo/*-bar.xml");
 		String regex = path.toRegex();
 
-		assertThat(Pattern.matches(regex, "foo/bar/foo/foo-bar.xml"), is(true));
-		assertThat(Pattern.matches(regex, "foo/bar/foo/bar/foo-bar.xml"), is(false));
-		assertThat(regex, is(".*\\Q/foo/\\E[^/]*\\Q-bar.xml\\E"));
+		assertThat(Pattern.matches(regex, "foo/bar/foo/foo-bar.xml")).isTrue();
+		assertThat(Pattern.matches(regex, "foo/bar/foo/bar/foo-bar.xml")).isFalse();
+		assertThat(regex).isEqualTo(".*\\Q/foo/\\E[^/]*\\Q-bar.xml\\E");
 	}
 }

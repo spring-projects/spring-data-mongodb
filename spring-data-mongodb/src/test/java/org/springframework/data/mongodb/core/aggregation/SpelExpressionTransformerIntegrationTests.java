@@ -15,14 +15,14 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.MongoDbFactory;
@@ -62,8 +62,8 @@ public class SpelExpressionTransformerIntegrationTests {
 		MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, new MongoMappingContext());
 		TypeBasedAggregationOperationContext ctxt = new TypeBasedAggregationOperationContext(Data.class,
 				new MongoMappingContext(), new QueryMapper(converter));
-		assertThat(transformer.transform("item.primitiveIntValue", ctxt, new Object[0]).toString(),
-				is("$item.primitiveIntValue"));
+		assertThat(transformer.transform("item.primitiveIntValue", ctxt, new Object[0]).toString())
+				.isEqualTo("$item.primitiveIntValue");
 	}
 
 	@Test // DATAMONGO-774
@@ -75,6 +75,6 @@ public class SpelExpressionTransformerIntegrationTests {
 		MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, new MongoMappingContext());
 		TypeBasedAggregationOperationContext ctxt = new TypeBasedAggregationOperationContext(Data.class,
 				new MongoMappingContext(), new QueryMapper(converter));
-		assertThat(transformer.transform("item.value2", ctxt, new Object[0]).toString(), is("$item.value2"));
+		assertThat(transformer.transform("item.value2", ctxt, new Object[0]).toString()).isEqualTo("$item.value2");
 	}
 }

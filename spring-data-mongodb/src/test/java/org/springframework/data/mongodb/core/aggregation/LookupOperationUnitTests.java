@@ -15,12 +15,11 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
-import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.bson.Document;
 import org.junit.Test;
+
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 
 /**
@@ -59,11 +58,10 @@ public class LookupOperationUnitTests {
 
 		Document lookupClause = extractDocumentFromLookupOperation(lookupOperation);
 
-		assertThat(lookupClause,
-				isBsonObject().containing("from", "a") //
-						.containing("localField", "b") //
-						.containing("foreignField", "c") //
-						.containing("as", "d"));
+		assertThat(lookupClause).containsEntry("from", "a") //
+				.containsEntry("localField", "b") //
+				.containsEntry("foreignField", "c") //
+				.containsEntry("as", "d");
 	}
 
 	@Test // DATAMONGO-1326
@@ -71,9 +69,9 @@ public class LookupOperationUnitTests {
 
 		LookupOperation lookupOperation = Aggregation.lookup("a", "b", "c", "d");
 
-		assertThat(lookupOperation.getFields().exposesNoFields(), is(false));
-		assertThat(lookupOperation.getFields().exposesSingleFieldOnly(), is(true));
-		assertThat(lookupOperation.getFields().getField("d"), notNullValue());
+		assertThat(lookupOperation.getFields().exposesNoFields()).isFalse();
+		assertThat(lookupOperation.getFields().exposesSingleFieldOnly()).isTrue();
+		assertThat(lookupOperation.getFields().getField("d")).isNotNull();
 	}
 
 	private Document extractDocumentFromLookupOperation(LookupOperation lookupOperation) {
@@ -110,11 +108,10 @@ public class LookupOperationUnitTests {
 
 		Document lookupClause = extractDocumentFromLookupOperation(lookupOperation);
 
-		assertThat(lookupClause,
-				isBsonObject().containing("from", "a") //
-						.containing("localField", "b") //
-						.containing("foreignField", "c") //
-						.containing("as", "d"));
+		assertThat(lookupClause).containsEntry("from", "a") //
+				.containsEntry("localField", "b") //
+				.containsEntry("foreignField", "c") //
+				.containsEntry("as", "d");
 	}
 
 	@Test // DATAMONGO-1326
@@ -122,8 +119,8 @@ public class LookupOperationUnitTests {
 
 		LookupOperation lookupOperation = LookupOperation.newLookup().from("a").localField("b").foreignField("c").as("d");
 
-		assertThat(lookupOperation.getFields().exposesNoFields(), is(false));
-		assertThat(lookupOperation.getFields().exposesSingleFieldOnly(), is(true));
-		assertThat(lookupOperation.getFields().getField("d"), notNullValue());
+		assertThat(lookupOperation.getFields().exposesNoFields()).isFalse();
+		assertThat(lookupOperation.getFields().exposesSingleFieldOnly()).isTrue();
+		assertThat(lookupOperation.getFields().getField("d")).isNotNull();
 	}
 }

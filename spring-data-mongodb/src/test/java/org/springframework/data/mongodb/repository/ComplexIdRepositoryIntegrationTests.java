@@ -15,19 +15,18 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
@@ -92,7 +91,7 @@ public class ComplexIdRepositoryIntegrationTests {
 
 		repo.save(userWithId);
 
-		assertThat(repo.getUserByComplexId(id), is(userWithId));
+		assertThat(repo.getUserByComplexId(id)).isEqualTo(userWithId);
 	}
 
 	@Test // DATAMONGO-1078
@@ -102,8 +101,8 @@ public class ComplexIdRepositoryIntegrationTests {
 
 		List<UserWithComplexId> loaded = repo.findByUserIds(Collections.singleton(id));
 
-		assertThat(loaded, hasSize(1));
-		assertThat(loaded, contains(userWithId));
+		assertThat(loaded).hasSize(1);
+		assertThat(loaded).containsExactly(userWithId);
 	}
 
 	@Test // DATAMONGO-1078
@@ -111,7 +110,7 @@ public class ComplexIdRepositoryIntegrationTests {
 
 		repo.save(userWithId);
 
-		assertThat(repo.findById(id), is(Optional.of(userWithId)));
+		assertThat(repo.findById(id)).isEqualTo(Optional.of(userWithId));
 	}
 
 	@Test // DATAMONGO-1078
@@ -121,8 +120,8 @@ public class ComplexIdRepositoryIntegrationTests {
 
 		Iterable<UserWithComplexId> loaded = repo.findAllById(Collections.singleton(id));
 
-		assertThat(loaded, is(Matchers.<UserWithComplexId> iterableWithSize(1)));
-		assertThat(loaded, contains(userWithId));
+		assertThat(loaded).hasSize(1);
+		assertThat(loaded).containsExactly(userWithId);
 	}
 
 	@Test // DATAMONGO-1373
@@ -130,7 +129,7 @@ public class ComplexIdRepositoryIntegrationTests {
 
 		repo.save(userWithId);
 
-		assertThat(repo.getUserUsingComposedAnnotationByComplexId(id), is(userWithId));
+		assertThat(repo.getUserUsingComposedAnnotationByComplexId(id)).isEqualTo(userWithId);
 	}
 
 	@Test // DATAMONGO-1373
@@ -139,7 +138,7 @@ public class ComplexIdRepositoryIntegrationTests {
 
 		repo.save(userWithId);
 
-		assertThat(repo.findUsersUsingComposedMetaAnnotationByUserIds(Arrays.asList(id)), hasSize(0));
+		assertThat(repo.findUsersUsingComposedMetaAnnotationByUserIds(Arrays.asList(id))).hasSize(0);
 	}
 
 }

@@ -15,11 +15,11 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.hamcrest.core.IsNull.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import org.junit.Test;
+
 import org.springframework.data.mongodb.core.convert.MongoConverters.TermToStringConverter;
 import org.springframework.data.mongodb.core.query.Term;
 import org.springframework.data.mongodb.core.query.Term.Type;
@@ -31,7 +31,7 @@ public class TermToStringConverterUnitTests {
 
 	@Test // DATAMONGO-973
 	public void shouldNotConvertNull() {
-		assertThat(TermToStringConverter.INSTANCE.convert(null), nullValue());
+		assertThat(TermToStringConverter.INSTANCE.convert(null)).isNull();
 	}
 
 	@Test // DATAMONGO-973

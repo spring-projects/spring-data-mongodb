@@ -15,12 +15,11 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.bson.Document;
 import org.junit.Test;
+
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 
 /**
@@ -38,7 +37,7 @@ public class UnwindOperationUnitTests {
 
 		Document pipeline = unwindOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(pipeline, isBsonObject().containing("$unwind", "$a"));
+		assertThat(pipeline).containsEntry("$unwind", "$a");
 	}
 
 	@Test // DATAMONGO-1391
@@ -48,10 +47,9 @@ public class UnwindOperationUnitTests {
 
 		Document unwindClause = extractDocumentFromUnwindOperation(unwindOperation);
 
-		assertThat(unwindClause,
-				isBsonObject().containing("path", "$a").//
-						containing("preserveNullAndEmptyArrays", false).//
-						containing("includeArrayIndex", "index"));
+		assertThat(unwindClause).containsEntry("path", "$a").//
+				containsEntry("preserveNullAndEmptyArrays", false).//
+				containsEntry("includeArrayIndex", "index");
 	}
 
 	@Test // DATAMONGO-1391
@@ -59,7 +57,7 @@ public class UnwindOperationUnitTests {
 
 		UnwindOperation unwindOperation = Aggregation.unwind("a", "index");
 
-		assertThat(unwindOperation.getFields().getField("index"), is(not(nullValue())));
+		assertThat(unwindOperation.getFields().getField("index")).isNotNull();
 	}
 
 	@Test // DATAMONGO-1391
@@ -67,7 +65,7 @@ public class UnwindOperationUnitTests {
 
 		UnwindOperation unwindOperation = Aggregation.unwind("a");
 
-		assertThat(unwindOperation.getFields().exposesNoFields(), is(true));
+		assertThat(unwindOperation.getFields().exposesNoFields()).isTrue();
 	}
 
 	@Test // DATAMONGO-1391
@@ -77,10 +75,9 @@ public class UnwindOperationUnitTests {
 
 		Document unwindClause = extractDocumentFromUnwindOperation(unwindOperation);
 
-		assertThat(unwindClause,
-				isBsonObject().containing("path", "$a").//
-						containing("preserveNullAndEmptyArrays", true).//
-						notContaining("includeArrayIndex"));
+		assertThat(unwindClause).containsEntry("path", "$a").//
+				containsEntry("preserveNullAndEmptyArrays", true).//
+				doesNotContainKey("includeArrayIndex");
 	}
 
 	@Test // DATAMONGO-1391
@@ -89,7 +86,7 @@ public class UnwindOperationUnitTests {
 		UnwindOperation unwindOperation = UnwindOperation.newUnwind().path("$foo").noArrayIndex().skipNullAndEmptyArrays();
 		Document pipeline = unwindOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(pipeline, isBsonObject().containing("$unwind", "$foo"));
+		assertThat(pipeline).containsEntry("$unwind", "$foo");
 	}
 
 	@Test // DATAMONGO-1391
@@ -100,10 +97,9 @@ public class UnwindOperationUnitTests {
 
 		Document unwindClause = extractDocumentFromUnwindOperation(unwindOperation);
 
-		assertThat(unwindClause,
-				isBsonObject().containing("path", "$foo").//
-						containing("preserveNullAndEmptyArrays", true).//
-						containing("includeArrayIndex", "myindex"));
+		assertThat(unwindClause).containsEntry("path", "$foo").//
+				containsEntry("preserveNullAndEmptyArrays", true).//
+				containsEntry("includeArrayIndex", "myindex");
 	}
 
 	private Document extractDocumentFromUnwindOperation(UnwindOperation unwindOperation) {

@@ -15,9 +15,8 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.*;
-import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.util.Arrays;
 
@@ -65,7 +64,7 @@ public class CondExpressionUnitTests {
 				.append("then", "bright") //
 				.append("else", "dark");
 
-		assertThat(document, isBsonObject().containing("$cond", expectedCondition));
+		assertThat(document).containsEntry("$cond", expectedCondition);
 	}
 
 	@Test // DATAMONGO-861, DATAMONGO-1542
@@ -80,7 +79,7 @@ public class CondExpressionUnitTests {
 				.append("then", "bright") //
 				.append("else", "dark");
 
-		assertThat(document, isBsonObject().containing("$cond", expectedCondition));
+		assertThat(document).containsEntry("$cond", expectedCondition);
 	}
 
 	@Test // DATAMONGO-861
@@ -102,7 +101,7 @@ public class CondExpressionUnitTests {
 				.append("then", "bright") //
 				.append("else", "$dark-field");
 
-		assertThat(document, isBsonObject().containing("$cond", expectedCondition));
+		assertThat(document).containsEntry("$cond", expectedCondition);
 	}
 
 	@Test // DATAMONGO-861, DATAMONGO-1542
@@ -122,7 +121,7 @@ public class CondExpressionUnitTests {
 				.append("then", "bright") //
 				.append("else", "dark");
 
-		assertThat(document, isBsonObject().containing("$cond", expectedCondition));
+		assertThat(document).containsEntry("$cond", expectedCondition);
 	}
 
 	@Test // DATAMONGO-861, DATAMONGO-1542
@@ -150,7 +149,7 @@ public class CondExpressionUnitTests {
 				.append("then", "very-dark") //
 				.append("else", "not-so-dark");
 
-		assertThat(document, isBsonObject().containing("$cond.then.$cond", trueCondition));
-		assertThat(document, isBsonObject().containing("$cond.else.$cond", falseCondition));
+		assertThat(document).containsEntry("$cond.then.$cond", trueCondition);
+		assertThat(document).containsEntry("$cond.else.$cond", falseCondition);
 	}
 }

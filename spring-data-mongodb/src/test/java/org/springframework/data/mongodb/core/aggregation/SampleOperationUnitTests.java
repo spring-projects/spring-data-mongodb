@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.bson.Document;
 import org.junit.Test;
@@ -50,10 +49,10 @@ public class SampleOperationUnitTests {
 
 		Document sampleOperationDocument = sampleOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertNotNull(sampleOperationDocument.get(OP));
-		assertThat(sampleOperationDocument.get(OP), is(instanceOf(Document.class)));
+		assertThat(sampleOperationDocument.get(OP)).isNotNull();
+		assertThat(sampleOperationDocument.get(OP)).isInstanceOf(Document.class);
 
 		Document sampleSizeDocument = sampleOperationDocument.get(OP, Document.class);
-		assertEquals(sampleSize, sampleSizeDocument.get(SIZE));
+		assertThat(sampleSizeDocument.get(SIZE)).isEqualTo(sampleSize);
 	}
 }

@@ -15,13 +15,13 @@
  */
 package org.springframework.data.mongodb.repository.custom;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportResource;
@@ -52,8 +52,8 @@ public class CustomReactiveRepositoryImplementationTests {
 		String username = "bubu";
 		List<User> users = customMongoRepository.findByUsernameCustom(username);
 
-		assertThat(users.size(), is(1));
-		assertThat(users.get(0), is(notNullValue()));
-		assertThat(users.get(0).getUsername(), is(username));
+		assertThat(users.size()).isEqualTo(1);
+		assertThat(users.get(0)).isNotNull();
+		assertThat(users.get(0).getUsername()).isEqualTo(username);
 	}
 }

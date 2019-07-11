@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
@@ -27,6 +26,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
@@ -84,7 +84,7 @@ public class ConvertingParameterAccessorUnitTests {
 		BasicDBList reference = new BasicDBList();
 		reference.add("Foo");
 
-		assertThat(result, is((Object) reference));
+		assertThat(result).isEqualTo((Object) reference);
 	}
 
 	@Test // DATAMONGO-505
@@ -95,10 +95,10 @@ public class ConvertingParameterAccessorUnitTests {
 
 		Object result = setupAndConvert(property);
 
-		assertThat(result, is(instanceOf(com.mongodb.DBRef.class)));
+		assertThat(result).isInstanceOf(com.mongodb.DBRef.class);
 		com.mongodb.DBRef dbRef = (com.mongodb.DBRef) result;
-		assertThat(dbRef.getCollectionName(), is("property"));
-		assertThat(dbRef.getId(), is((Object) 5L));
+		assertThat(dbRef.getCollectionName()).isEqualTo("property");
+		assertThat(dbRef.getId()).isEqualTo((Object) 5L);
 	}
 
 	@Test // DATAMONGO-505
@@ -109,16 +109,16 @@ public class ConvertingParameterAccessorUnitTests {
 
 		Object result = setupAndConvert(Arrays.asList(property));
 
-		assertThat(result, is(instanceOf(Collection.class)));
+		assertThat(result).isInstanceOf(Collection.class);
 		Collection<?> collection = (Collection<?>) result;
 
-		assertThat(collection, hasSize(1));
+		assertThat(collection).hasSize(1);
 		Object element = collection.iterator().next();
 
-		assertThat(element, is(instanceOf(com.mongodb.DBRef.class)));
+		assertThat(element).isInstanceOf(com.mongodb.DBRef.class);
 		com.mongodb.DBRef dbRef = (com.mongodb.DBRef) element;
-		assertThat(dbRef.getCollectionName(), is("property"));
-		assertThat(dbRef.getId(), is((Object) 5L));
+		assertThat(dbRef.getCollectionName()).isEqualTo("property");
+		assertThat(dbRef.getId()).isEqualTo((Object) 5L);
 	}
 
 	private Object setupAndConvert(Object... parameters) {

@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
-import static org.hamcrest.core.StringStartsWith.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -78,7 +77,7 @@ public class LoggingEventListenerTests {
 
 		listener.onAfterConvert(new AfterConvertEvent<Object>(new Document("foo", new Foo()), this, "collection"));
 
-		assertThat(appender.list.get(0).getFormattedMessage(), startsWith("onAfterConvert: { \"foo\""));
+		assertThat(appender.list.get(0).getFormattedMessage()).startsWith("onAfterConvert: { \"foo\"");
 	}
 
 	@Test // DATAMONGO-1645
@@ -86,8 +85,8 @@ public class LoggingEventListenerTests {
 
 		listener.onBeforeSave(new BeforeSaveEvent<Object>(new Foo(), new Document("foo", new Foo()), "collection"));
 
-		assertThat(appender.list.get(0).getFormattedMessage(),
-				startsWith("onBeforeSave: org.springframework.data.mongodb.core."));
+		assertThat(appender.list.get(0).getFormattedMessage())
+				.startsWith("onBeforeSave: org.springframework.data.mongodb.core.");
 	}
 
 	@Test // DATAMONGO-1645
@@ -95,8 +94,8 @@ public class LoggingEventListenerTests {
 
 		listener.onAfterSave(new AfterSaveEvent<Object>(new Foo(), new Document("foo", new Foo()), "collection"));
 
-		assertThat(appender.list.get(0).getFormattedMessage(),
-				startsWith("onAfterSave: org.springframework.data.mongodb.core."));
+		assertThat(appender.list.get(0).getFormattedMessage())
+				.startsWith("onAfterSave: org.springframework.data.mongodb.core.");
 	}
 
 	@Test // DATAMONGO-1645
@@ -104,7 +103,7 @@ public class LoggingEventListenerTests {
 
 		listener.onBeforeDelete(new BeforeDeleteEvent<Object>(new Document("foo", new Foo()), Object.class, "collection"));
 
-		assertThat(appender.list.get(0).getFormattedMessage(), startsWith("onBeforeDelete: { \"foo\""));
+		assertThat(appender.list.get(0).getFormattedMessage()).startsWith("onBeforeDelete: { \"foo\"");
 	}
 
 	@Test // DATAMONGO-1645
@@ -112,7 +111,7 @@ public class LoggingEventListenerTests {
 
 		listener.onAfterDelete(new AfterDeleteEvent<Object>(new Document("foo", new Foo()), Object.class, "collection"));
 
-		assertThat(appender.list.get(0).getFormattedMessage(), startsWith("onAfterDelete: { \"foo\""));
+		assertThat(appender.list.get(0).getFormattedMessage()).startsWith("onAfterDelete: { \"foo\"");
 	}
 
 	static class Foo {

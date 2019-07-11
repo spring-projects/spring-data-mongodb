@@ -15,14 +15,13 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
-import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 import org.junit.Test;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.geo.Distance;
@@ -54,9 +53,9 @@ public class NearQueryUnitTests {
 
 		NearQuery query = NearQuery.near(2.5, 2.5, Metrics.KILOMETERS).maxDistance(150);
 
-		assertThat(query.getMaxDistance(), is(ONE_FIFTY_KILOMETERS));
-		assertThat(query.getMetric(), is((Metric) Metrics.KILOMETERS));
-		assertThat(query.isSpherical(), is(true));
+		assertThat(query.getMaxDistance()).isEqualTo(ONE_FIFTY_KILOMETERS);
+		assertThat(query.getMetric()).isEqualTo((Metric) Metrics.KILOMETERS);
+		assertThat(query.isSpherical()).isTrue();
 	}
 
 	@Test
@@ -66,27 +65,27 @@ public class NearQueryUnitTests {
 
 		query.inMiles();
 
-		assertThat(query.getMetric(), is((Metric) Metrics.MILES));
+		assertThat(query.getMetric()).isEqualTo((Metric) Metrics.MILES);
 	}
 
 	@Test
 	public void configuresResultMetricCorrectly() {
 
 		NearQuery query = NearQuery.near(2.5, 2.1);
-		assertThat(query.getMetric(), is((Metric) Metrics.NEUTRAL));
+		assertThat(query.getMetric()).isEqualTo((Metric) Metrics.NEUTRAL);
 
 		query = query.maxDistance(ONE_FIFTY_KILOMETERS);
-		assertThat(query.getMetric(), is((Metric) Metrics.KILOMETERS));
-		assertThat(query.getMaxDistance(), is(ONE_FIFTY_KILOMETERS));
-		assertThat(query.isSpherical(), is(true));
+		assertThat(query.getMetric()).isEqualTo((Metric) Metrics.KILOMETERS);
+		assertThat(query.getMaxDistance()).isEqualTo(ONE_FIFTY_KILOMETERS);
+		assertThat(query.isSpherical()).isTrue();
 
 		query = query.in(Metrics.MILES);
-		assertThat(query.getMetric(), is((Metric) Metrics.MILES));
-		assertThat(query.getMaxDistance(), is(ONE_FIFTY_KILOMETERS));
-		assertThat(query.isSpherical(), is(true));
+		assertThat(query.getMetric()).isEqualTo((Metric) Metrics.MILES);
+		assertThat(query.getMaxDistance()).isEqualTo(ONE_FIFTY_KILOMETERS);
+		assertThat(query.isSpherical()).isTrue();
 
 		query = query.maxDistance(new Distance(200, Metrics.KILOMETERS));
-		assertThat(query.getMetric(), is((Metric) Metrics.MILES));
+		assertThat(query.getMetric()).isEqualTo((Metric) Metrics.MILES);
 	}
 
 	@Test // DATAMONGO-445, DATAMONGO-2264
@@ -95,8 +94,8 @@ public class NearQueryUnitTests {
 		Pageable pageable = PageRequest.of(3, 5);
 		NearQuery query = NearQuery.near(new Point(1, 1)).with(pageable);
 
-		assertThat(query.getSkip(), is((long) pageable.getPageNumber() * pageable.getPageSize()));
-		assertThat(query.toDocument().get("num"), is((long) pageable.getPageSize()));
+		assertThat(query.getSkip()).isEqualTo((long) pageable.getPageNumber() * pageable.getPageSize());
+		assertThat(query.toDocument().get("num")).isEqualTo((long) pageable.getPageSize());
 	}
 
 	@Test // DATAMONGO-445
@@ -107,8 +106,8 @@ public class NearQueryUnitTests {
 		NearQuery query = NearQuery.near(new Point(1, 1))
 				.query(Query.query(Criteria.where("foo").is("bar")).limit(limit).skip(skip));
 
-		assertThat(query.getSkip(), is(skip));
-		assertThat((Long) query.toDocument().get("num"), is((long) limit));
+		assertThat(query.getSkip()).isEqualTo(skip);
+		assertThat((Long) query.toDocument().get("num")).isEqualTo((long) limit);
 	}
 
 	@Test // DATAMONGO-445, DATAMONGO-2264
@@ -120,15 +119,15 @@ public class NearQueryUnitTests {
 		NearQuery query = NearQuery.near(new Point(1, 1))
 				.query(Query.query(Criteria.where("foo").is("bar")).limit(limit).skip(skip)).with(pageable);
 
-		assertThat(query.getSkip(), is((long) pageable.getPageNumber() * pageable.getPageSize()));
-		assertThat(query.toDocument().get("num"), is((long) pageable.getPageSize()));
+		assertThat(query.getSkip()).isEqualTo((long) pageable.getPageNumber() * pageable.getPageSize());
+		assertThat(query.toDocument().get("num")).isEqualTo((long) pageable.getPageSize());
 	}
 
 	@Test // DATAMONGO-829
 	public void nearQueryShouldInoreZeroLimitFromQuery() {
 
 		NearQuery query = NearQuery.near(new Point(1, 2)).query(Query.query(Criteria.where("foo").is("bar")));
-		assertThat(query.toDocument().get("num"), nullValue());
+		assertThat(query.toDocument().get("num")).isNull();
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONOGO-829
@@ -144,7 +143,7 @@ public class NearQueryUnitTests {
 		query.num(num);
 		query.query(Query.query(Criteria.where("foo").is("bar")));
 
-		assertThat(DocumentTestUtils.getTypedValue(query.toDocument(), "num", Long.class), is(num));
+		assertThat(DocumentTestUtils.getTypedValue(query.toDocument(), "num", Long.class)).isEqualTo(num);
 	}
 
 	@Test // DATAMONGO-1348
@@ -152,7 +151,7 @@ public class NearQueryUnitTests {
 
 		NearQuery query = NearQuery.near(new Point(27.987901, 86.9165379));
 
-		assertThat(query.toDocument(), isBsonObject().containing("spherical", false));
+		assertThat(query.toDocument()).containsEntry("spherical", false);
 	}
 
 	@Test // DATAMONGO-1348
@@ -161,7 +160,7 @@ public class NearQueryUnitTests {
 		NearQuery query = NearQuery.near(new Point(27.987901, 86.9165379));
 		query.spherical(true);
 
-		assertThat(query.toDocument(), isBsonObject().containing("spherical", true));
+		assertThat(query.toDocument()).containsEntry("spherical", true);
 	}
 
 	@Test // DATAMONGO-1348
@@ -169,7 +168,7 @@ public class NearQueryUnitTests {
 
 		NearQuery query = NearQuery.near(new GeoJsonPoint(27.987901, 86.9165379));
 
-		assertThat(query.toDocument(), isBsonObject().containing("spherical", true));
+		assertThat(query.toDocument()).containsEntry("spherical", true);
 	}
 
 	@Test // DATAMONGO-1348
@@ -178,7 +177,7 @@ public class NearQueryUnitTests {
 		NearQuery query = NearQuery.near(new GeoJsonPoint(27.987901, 86.9165379));
 		query.spherical(false);
 
-		assertThat(query.toDocument(), isBsonObject().containing("spherical", true));
+		assertThat(query.toDocument()).containsEntry("spherical", true);
 	}
 
 	@Test // DATAMONGO-1348
@@ -190,8 +189,8 @@ public class NearQueryUnitTests {
 		double meterToRadianMultiplier = BigDecimal.valueOf(1 / Metrics.KILOMETERS.getMultiplier() / 1000).//
 				setScale(8, RoundingMode.HALF_UP).//
 				doubleValue();
-		assertThat(query.toDocument(), isBsonObject().containing("maxDistance", Metrics.KILOMETERS.getMultiplier() * 1000)
-				.containing("distanceMultiplier", meterToRadianMultiplier));
+		assertThat(query.toDocument()).containsEntry("maxDistance", Metrics.KILOMETERS.getMultiplier() * 1000)
+				.containsEntry("distanceMultiplier", meterToRadianMultiplier);
 	}
 
 	@Test // DATAMONGO-1348
@@ -200,8 +199,7 @@ public class NearQueryUnitTests {
 		NearQuery query = NearQuery.near(new GeoJsonPoint(27.987901, 86.9165379));
 		query.maxDistance(new Distance(1, Metrics.KILOMETERS));
 
-		assertThat(query.toDocument(),
-				isBsonObject().containing("maxDistance", 1000D).containing("distanceMultiplier", 0.001D));
+		assertThat(query.toDocument()).containsEntry("maxDistance", 1000D).containsEntry("distanceMultiplier", 0.001D);
 	}
 
 	@Test // DATAMONGO-1348
@@ -210,8 +208,8 @@ public class NearQueryUnitTests {
 		NearQuery query = NearQuery.near(new GeoJsonPoint(27.987901, 86.9165379));
 		query.maxDistance(new Distance(1, Metrics.MILES));
 
-		assertThat(query.toDocument(),
-				isBsonObject().containing("maxDistance", 1609.3438343D).containing("distanceMultiplier", 0.00062137D));
+		assertThat(query.toDocument()).containsEntry("maxDistance", 1609.3438343D).containsEntry("distanceMultiplier",
+				0.00062137D);
 	}
 
 	@Test // DATAMONGO-1348
@@ -220,8 +218,8 @@ public class NearQueryUnitTests {
 		NearQuery query = NearQuery.near(new GeoJsonPoint(27.987901, 86.9165379));
 		query.maxDistance(new Distance(1, Metrics.MILES)).in(Metrics.KILOMETERS);
 
-		assertThat(query.toDocument(),
-				isBsonObject().containing("maxDistance", 1609.3438343D).containing("distanceMultiplier", 0.001D));
+		assertThat(query.toDocument()).containsEntry("maxDistance", 1609.3438343D).containsEntry("distanceMultiplier",
+				0.001D);
 	}
 
 	@Test // DATAMONGO-1348
@@ -230,7 +228,6 @@ public class NearQueryUnitTests {
 		NearQuery query = NearQuery.near(new GeoJsonPoint(27.987901, 86.9165379));
 		query.maxDistance(new Distance(1, Metrics.KILOMETERS)).in(Metrics.MILES);
 
-		assertThat(query.toDocument(),
-				isBsonObject().containing("maxDistance", 1000D).containing("distanceMultiplier", 0.00062137D));
+		assertThat(query.toDocument()).containsEntry("maxDistance", 1000D).containsEntry("distanceMultiplier", 0.00062137D);
 	}
 }

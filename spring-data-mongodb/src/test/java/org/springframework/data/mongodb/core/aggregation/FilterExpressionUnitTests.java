@@ -15,9 +15,8 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.hamcrest.core.Is.*;
-import static org.junit.Assert.*;
-import static org.springframework.data.mongodb.core.aggregation.ArrayOperators.Filter.*;
+import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.mongodb.core.aggregation.ArrayOperators.Filter.filter;
 
 import java.util.Arrays;
 import java.util.List;
@@ -28,6 +27,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
@@ -75,7 +75,7 @@ public class FilterExpressionUnitTests {
 				"cond: { $gte: [ \"$$item.price\", 100 ] }" + //
 				"}");
 
-		assertThat($filter, is(new Document(expected)));
+		assertThat($filter).isEqualTo(new Document(expected));
 	}
 
 	@Test // DATAMONGO-1491
@@ -97,7 +97,7 @@ public class FilterExpressionUnitTests {
 				"cond: { $gte: [ \"$$item.price\", 100 ] }" + //
 				"}");
 
-		assertThat($filter, is(expected));
+		assertThat($filter).isEqualTo(expected);
 	}
 
 	@Test // DATAMONGO-1491
@@ -120,7 +120,7 @@ public class FilterExpressionUnitTests {
 				"cond: { $gte: [ \"$$num\", 3 ] }" + //
 				"}");
 
-		assertThat($filter, is(expected));
+		assertThat($filter).isEqualTo(expected);
 	}
 
 	static class Sales {

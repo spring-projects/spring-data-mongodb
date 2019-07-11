@@ -16,25 +16,25 @@
 
 package org.springframework.data.mongodb.core.geo;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
 import java.util.List;
 
 import org.junit.Test;
+
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Metric;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
-import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.Venue;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
+import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.query.NearQuery;
 
 /**
@@ -48,15 +48,15 @@ public class GeoSpatial2DSphereTests extends AbstractGeoSpatialTests {
 		IndexOperations operations = template.indexOps(Venue.class);
 		List<IndexInfo> indexInfo = operations.getIndexInfo();
 
-		assertThat(indexInfo.size(), is(2));
+		assertThat(indexInfo.size()).isEqualTo(2);
 
 		List<IndexField> fields = indexInfo.get(0).getIndexFields();
-		assertThat(fields.size(), is(1));
-		assertThat(fields, hasItem(IndexField.create("_id", Direction.ASC)));
+		assertThat(fields.size()).isEqualTo(1);
+		assertThat(fields).contains(IndexField.create("_id", Direction.ASC));
 
 		fields = indexInfo.get(1).getIndexFields();
-		assertThat(fields.size(), is(1));
-		assertThat(fields, hasItem(IndexField.geo("location")));
+		assertThat(fields.size()).isEqualTo(1);
+		assertThat(fields).contains(IndexField.geo("location"));
 	}
 
 	@Test // DATAMONGO-1110
@@ -66,15 +66,15 @@ public class GeoSpatial2DSphereTests extends AbstractGeoSpatialTests {
 
 		GeoResults<Venue> result = template.geoNear(geoNear, Venue.class);
 
-		assertThat(result.getContent().size(), is(not(0)));
-		assertThat(result.getAverageDistance().getMetric(), is((Metric) Metrics.KILOMETERS));
+		assertThat(result.getContent().size()).isNotEqualTo(0);
+		assertThat(result.getAverageDistance().getMetric()).isEqualTo((Metric) Metrics.KILOMETERS);
 	}
 
 	@Test // DATAMONGO-1110
 	public void nearSphereWithMinDistance() {
 		Point point = new Point(-73.99171, 40.738868);
 		List<Venue> venues = template.find(query(where("location").nearSphere(point).minDistance(0.01)), Venue.class);
-		assertThat(venues.size(), is(1));
+		assertThat(venues.size()).isEqualTo(1);
 	}
 
 	@Override

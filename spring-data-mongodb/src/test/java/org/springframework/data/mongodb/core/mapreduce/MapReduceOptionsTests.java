@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core.mapreduce;
 
-import static org.junit.Assert.*;
-import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import org.junit.Test;
 
@@ -38,11 +37,11 @@ public class MapReduceOptionsTests {
 		MapReduceOptions options = new MapReduceOptions();
 		options.limit(10);
 
-		assertThat(options.getOptionsObject(), isBsonObject().containing("limit", 10));
+		assertThat(options.getOptionsObject()).containsEntry("limit", 10);
 	}
 
 	@Test // DATAMONGO-1334
 	public void limitShouldNotBePresentInDocumentWhenNotSet() {
-		assertThat(new MapReduceOptions().getOptionsObject(), isBsonObject().notContaining("limit"));
+		assertThat(new MapReduceOptions().getOptionsObject()).doesNotContainKey("limit");
 	}
 }

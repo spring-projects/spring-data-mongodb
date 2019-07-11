@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.bson.Document;
 import org.junit.Test;
@@ -41,6 +40,6 @@ public class SkipOperationUnitTests {
 		SkipOperation operation = new SkipOperation(10L);
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(document.get(OP), is((Object) 10L));
+		assertThat(document.get(OP)).isEqualTo((Object) 10L);
 	}
 }

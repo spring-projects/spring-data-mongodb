@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import example.first.First;
 import example.second.Second;
@@ -29,6 +28,7 @@ import java.util.Set;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -61,9 +61,9 @@ public class AbstractReactiveMongoConfigurationUnitTests {
 	public void usesConfigClassPackageAsBaseMappingPackage() throws ClassNotFoundException {
 
 		AbstractReactiveMongoConfiguration configuration = new SampleMongoConfiguration();
-		assertThat(configuration.getMappingBasePackages(), hasItem(SampleMongoConfiguration.class.getPackage().getName()));
-		assertThat(configuration.getInitialEntitySet(), hasSize(2));
-		assertThat(configuration.getInitialEntitySet(), hasItem(Entity.class));
+		assertThat(configuration.getMappingBasePackages()).contains(SampleMongoConfiguration.class.getPackage().getName());
+		assertThat(configuration.getInitialEntitySet()).hasSize(2);
+		assertThat(configuration.getInitialEntitySet()).contains(Entity.class);
 	}
 
 	@Test // DATAMONGO-1444
@@ -83,7 +83,7 @@ public class AbstractReactiveMongoConfigurationUnitTests {
 
 		AbstractApplicationContext context = new AnnotationConfigApplicationContext(SampleMongoConfiguration.class);
 
-		assertThat(context.getBean(SimpleReactiveMongoDatabaseFactory.class), is(notNullValue()));
+		assertThat(context.getBean(SimpleReactiveMongoDatabaseFactory.class)).isNotNull();
 
 		exception.expect(NoSuchBeanDefinitionException.class);
 
@@ -100,9 +100,9 @@ public class AbstractReactiveMongoConfigurationUnitTests {
 		SampleMongoConfiguration configuration = new SampleMongoConfiguration();
 		MongoMappingContext context = configuration.mongoMappingContext();
 
-		assertThat(context.getPersistentEntities(), is(emptyIterable()));
+		assertThat(context.getPersistentEntities()).isEmpty();
 		context.initialize();
-		assertThat(context.getPersistentEntities(), is(not(emptyIterable())));
+		assertThat(context.getPersistentEntities()).isNotEmpty();
 	}
 
 	@Test // DATAMONGO-1444
@@ -114,7 +114,7 @@ public class AbstractReactiveMongoConfigurationUnitTests {
 		EvaluationContextProvider provider = (EvaluationContextProvider) ReflectionTestUtils.getField(entity,
 				"evaluationContextProvider");
 
-		assertThat(provider, is(instanceOf(ExtensionAwareEvaluationContextProvider.class)));
+		assertThat(provider).isInstanceOf(ExtensionAwareEvaluationContextProvider.class);
 		context.close();
 	}
 
@@ -125,8 +125,8 @@ public class AbstractReactiveMongoConfigurationUnitTests {
 		MongoTypeMapper typeMapper = context.getBean(CustomMongoTypeMapper.class);
 		MappingMongoConverter mmc = context.getBean(MappingMongoConverter.class);
 
-		assertThat(mmc, is(notNullValue()));
-		assertThat(mmc.getTypeMapper(), is(typeMapper));
+		assertThat(mmc).isNotNull();
+		assertThat(mmc.getTypeMapper()).isEqualTo(typeMapper);
 		context.close();
 	}
 
@@ -137,8 +137,8 @@ public class AbstractReactiveMongoConfigurationUnitTests {
 		ConfigurationWithMultipleBasePackages config = new ConfigurationWithMultipleBasePackages();
 		Set<Class<?>> entities = config.getInitialEntitySet();
 
-		assertThat(entities, hasSize(2));
-		assertThat(entities, hasItems(First.class, Second.class));
+		assertThat(entities).hasSize(2);
+		assertThat(entities).contains(First.class, Second.class);
 	}
 
 	private static void assertScanningDisabled(final String value) throws ClassNotFoundException {
@@ -150,8 +150,8 @@ public class AbstractReactiveMongoConfigurationUnitTests {
 			}
 		};
 
-		assertThat(configuration.getMappingBasePackages(), hasItem(value));
-		assertThat(configuration.getInitialEntitySet(), hasSize(0));
+		assertThat(configuration.getMappingBasePackages()).contains(value);
+		assertThat(configuration.getInitialEntitySet()).hasSize(0);
 	}
 
 	@Configuration

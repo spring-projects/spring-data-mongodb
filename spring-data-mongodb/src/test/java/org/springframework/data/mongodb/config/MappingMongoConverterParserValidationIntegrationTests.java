@@ -15,11 +15,11 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.junit.Before;
 import org.junit.Test;
+
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.support.BeanDefinitionReader;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
@@ -50,14 +50,14 @@ public class MappingMongoConverterParserValidationIntegrationTests {
 	public void validatingEventListenerCreatedWithDefaultConfig() {
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/converter-default.xml"));
-		assertThat(factory.getBean(BeanNames.VALIDATING_EVENT_LISTENER_BEAN_NAME), is(not(nullValue())));
+		assertThat(factory.getBean(BeanNames.VALIDATING_EVENT_LISTENER_BEAN_NAME)).isNotNull();
 	}
 
 	@Test // DATAMONGO-36
 	public void validatingEventListenerCreatedWhenValidationEnabled() {
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/converter-validation-enabled.xml"));
-		assertThat(factory.getBean(BeanNames.VALIDATING_EVENT_LISTENER_BEAN_NAME), is(not(nullValue())));
+		assertThat(factory.getBean(BeanNames.VALIDATING_EVENT_LISTENER_BEAN_NAME)).isNotNull();
 	}
 
 	@Test(expected = NoSuchBeanDefinitionException.class) // DATAMONGO-36
@@ -71,6 +71,6 @@ public class MappingMongoConverterParserValidationIntegrationTests {
 	public void validatingEventListenerCreatedWithCustomTypeMapperConfig() {
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/converter-custom-typeMapper.xml"));
-		assertThat(factory.getBean(BeanNames.VALIDATING_EVENT_LISTENER_BEAN_NAME), is(not(nullValue())));
+		assertThat(factory.getBean(BeanNames.VALIDATING_EVENT_LISTENER_BEAN_NAME)).isNotNull();
 	}
 }

@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import lombok.Data;
 
@@ -26,13 +25,14 @@ import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.DirectFieldAccessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.FieldType;
+import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.QPerson;
@@ -73,7 +73,7 @@ public class QuerydslRepositorySupportTests {
 		QPerson p = QPerson.person;
 		QuerydslRepositorySupport support = new QuerydslRepositorySupport(operations) {};
 		SpringDataMongodbQuery<Person> query = support.from(p).where(p.lastname.eq("Matthews"));
-		assertThat(query.fetchOne(), is(person));
+		assertThat(query.fetchOne()).isEqualTo(person);
 	}
 
 	@Test // DATAMONGO-1063
@@ -87,7 +87,7 @@ public class QuerydslRepositorySupportTests {
 
 		SpringDataMongodbQuery<Person> query = repoSupport.from(p).where(p.skills.any().in("guitarist"));
 
-		assertThat(query.fetchOne(), is(person));
+		assertThat(query.fetchOne()).isEqualTo(person);
 	}
 
 	@Test // DATAMONGO-1394
@@ -105,8 +105,8 @@ public class QuerydslRepositorySupportTests {
 		SpringDataMongodbQuery<Person> queryUsingIdField = repoSupport.from(p).where(p.coworker.id.eq(bart.getId()));
 		SpringDataMongodbQuery<Person> queryUsingRefObject = repoSupport.from(p).where(p.coworker.eq(bart));
 
-		assertThat(queryUsingIdField.fetchOne(), equalTo(person));
-		assertThat(queryUsingIdField.fetchOne(), equalTo(queryUsingRefObject.fetchOne()));
+		assertThat(queryUsingIdField.fetchOne()).isEqualTo(person);
+		assertThat(queryUsingIdField.fetchOne()).isEqualTo(queryUsingRefObject.fetchOne());
 	}
 
 	@Test // DATAMONGO-1998
@@ -123,7 +123,7 @@ public class QuerydslRepositorySupportTests {
 		QQuerydslRepositorySupportTests_Outer o = QQuerydslRepositorySupportTests_Outer.outer;
 		SpringDataMongodbQuery<Outer> query = repoSupport.from(o).where(o.inner.id.eq(outer.inner.id));
 
-		assertThat(query.fetchOne(), equalTo(outer));
+		assertThat(query.fetchOne()).isEqualTo(outer);
 	}
 
 	@Test // DATAMONGO-1998
@@ -140,7 +140,7 @@ public class QuerydslRepositorySupportTests {
 		QQuerydslRepositorySupportTests_Outer o = QQuerydslRepositorySupportTests_Outer.outer;
 		SpringDataMongodbQuery<Outer> query = repoSupport.from(o).where(o.inner.id.eq(outer.inner.id));
 
-		assertThat(query.fetchOne(), equalTo(outer));
+		assertThat(query.fetchOne()).isEqualTo(outer);
 	}
 
 	@Test // DATAMONGO-1810, DATAMONGO-1848
@@ -170,8 +170,8 @@ public class QuerydslRepositorySupportTests {
 
 		SpringDataMongodbQuery<Person> queryUsingRefObject = repoSupport.from(p).where(p.coworker.eq(bart));
 
-		assertThat(queryUsingIdFieldWithinInClause.fetchOne(), equalTo(person));
-		assertThat(queryUsingIdFieldWithinInClause.fetchOne(), equalTo(queryUsingRefObject.fetchOne()));
+		assertThat(queryUsingIdFieldWithinInClause.fetchOne()).isEqualTo(person);
+		assertThat(queryUsingIdFieldWithinInClause.fetchOne()).isEqualTo(queryUsingRefObject.fetchOne());
 	}
 
 	@Test // DATAMONGO-1810, DATAMONGO-1848
@@ -195,8 +195,8 @@ public class QuerydslRepositorySupportTests {
 
 		SpringDataMongodbQuery<Person> queryUsingRefObject = repoSupport.from(p).where(p.coworker.eq(bart));
 
-		assertThat(queryUsingIdFieldWithinInClause.fetchOne(), equalTo(person));
-		assertThat(queryUsingIdFieldWithinInClause.fetchOne(), equalTo(queryUsingRefObject.fetchOne()));
+		assertThat(queryUsingIdFieldWithinInClause.fetchOne()).isEqualTo(person);
+		assertThat(queryUsingIdFieldWithinInClause.fetchOne()).isEqualTo(queryUsingRefObject.fetchOne());
 	}
 
 	@Test // DATAMONGO-1848, DATAMONGO-2010
@@ -213,7 +213,7 @@ public class QuerydslRepositorySupportTests {
 		QQuerydslRepositorySupportTests_Outer o = QQuerydslRepositorySupportTests_Outer.outer;
 		SpringDataMongodbQuery<Outer> query = repoSupport.from(o).where(o.inner.id.in(outer.inner.id, outer.inner.id));
 
-		assertThat(query.fetchOne(), equalTo(outer));
+		assertThat(query.fetchOne()).isEqualTo(outer);
 	}
 
 	@Test // DATAMONGO-1798
@@ -227,7 +227,7 @@ public class QuerydslRepositorySupportTests {
 		QQuerydslRepositorySupportTests_Outer o = QQuerydslRepositorySupportTests_Outer.outer;
 		SpringDataMongodbQuery<Outer> query = repoSupport.from(o).where(o.id.eq(outer.id));
 
-		assertThat(query.fetchOne(), equalTo(outer));
+		assertThat(query.fetchOne()).isEqualTo(outer);
 	}
 
 	@Test // DATAMONGO-1798
@@ -241,11 +241,11 @@ public class QuerydslRepositorySupportTests {
 		QQuerydslRepositorySupportTests_WithMongoId o = QQuerydslRepositorySupportTests_WithMongoId.withMongoId;
 		SpringDataMongodbQuery<WithMongoId> eqQuery = repoSupport.from(o).where(o.id.eq(document.id));
 
-		assertThat(eqQuery.fetchOne(), equalTo(document));
+		assertThat(eqQuery.fetchOne()).isEqualTo(document);
 
 		SpringDataMongodbQuery<WithMongoId> inQuery = repoSupport.from(o).where(o.id.in(document.id));
 
-		assertThat(inQuery.fetchOne(), equalTo(document));
+		assertThat(inQuery.fetchOne()).isEqualTo(document);
 	}
 
 	@Data

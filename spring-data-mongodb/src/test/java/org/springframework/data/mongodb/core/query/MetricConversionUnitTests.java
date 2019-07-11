@@ -16,10 +16,11 @@
 
 package org.springframework.data.mongodb.core.query;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.data.Offset.offset;
 
 import org.junit.Test;
+
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 
@@ -36,7 +37,7 @@ public class MetricConversionUnitTests {
 		Distance distance = new Distance(1, Metrics.MILES);
 		double distanceInMeters = MetricConversion.getDistanceInMeters(distance);
 
-		assertThat(distanceInMeters, is(closeTo(1609.3438343d, 0.000000001)));
+		assertThat(distanceInMeters).isCloseTo(1609.3438343d, offset(0.000000001));
 	}
 
 	@Test // DATAMONGO-1348
@@ -45,7 +46,7 @@ public class MetricConversionUnitTests {
 		Distance distance = new Distance(1, Metrics.KILOMETERS);
 		double distanceInMeters = MetricConversion.getDistanceInMeters(distance);
 
-		assertThat(distanceInMeters, is(closeTo(1000, 0.000000001)));
+		assertThat(distanceInMeters).isCloseTo(1000, offset(0.000000001));
 	}
 
 	@Test // DATAMONGO-1348
@@ -53,7 +54,7 @@ public class MetricConversionUnitTests {
 
 		double multiplier = MetricConversion.getMetersToMetricMultiplier(Metrics.KILOMETERS);
 
-		assertThat(multiplier, is(closeTo(0.001, 0.000000001)));
+		assertThat(multiplier).isCloseTo(0.001, offset(0.000000001));
 	}
 
 	@Test // DATAMONGO-1348
@@ -61,7 +62,7 @@ public class MetricConversionUnitTests {
 
 		double multiplier = MetricConversion.getMetersToMetricMultiplier(Metrics.MILES);
 
-		assertThat(multiplier, is(closeTo(0.00062137, 0.000000001)));
+		assertThat(multiplier).isCloseTo(0.00062137, offset(0.000000001));
 	}
 
 }

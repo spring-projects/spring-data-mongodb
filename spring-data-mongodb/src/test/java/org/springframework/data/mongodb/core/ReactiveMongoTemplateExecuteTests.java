@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.data.Offset.offset;
 import static org.junit.Assume.*;
 
 import reactor.core.publisher.Flux;
@@ -28,6 +28,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
@@ -81,7 +82,7 @@ public class ReactiveMongoTemplateExecuteTests {
 
 		StepVerifier.create(operations.executeCommand("{ buildInfo: 1 }")).consumeNextWith(actual -> {
 
-			assertThat(actual, hasKey("version"));
+			assertThat(actual).containsKey("version");
 		}).verifyComplete();
 	}
 
@@ -90,7 +91,7 @@ public class ReactiveMongoTemplateExecuteTests {
 
 		StepVerifier.create(operations.executeCommand(new Document("buildInfo", 1))).consumeNextWith(actual -> {
 
-			assertThat(actual, hasKey("version"));
+			assertThat(actual).containsKey("version");
 		}).verifyComplete();
 	}
 
@@ -105,8 +106,8 @@ public class ReactiveMongoTemplateExecuteTests {
 		StepVerifier.create(operations.executeCommand("{ find: 'execute_test'}")) //
 				.consumeNextWith(actual -> {
 
-					assertThat(actual.get("ok", Double.class), is(closeTo(1D, 0D)));
-					assertThat(actual, hasKey("cursor"));
+					assertThat(actual.get("ok", Double.class)).isCloseTo(1D, offset(0D));
+					assertThat(actual).containsKey("cursor");
 				}) //
 				.verifyComplete();
 	}

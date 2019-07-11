@@ -20,8 +20,8 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
 import org.bson.Document;
-import org.junit.Assert;
 import org.junit.Test;
+
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
@@ -76,7 +76,7 @@ public class QueryTests {
 
 		Query q = new Query(new Criteria().andOperator(where("name").is("Sven"), where("age").lt(50)));
 		Document expected = Document.parse("{ \"$and\" : [ { \"name\" : \"Sven\"} , { \"age\" : { \"$lt\" : 50}}]}");
-		Assert.assertEquals(expected, q.getQueryObject());
+		assertThat(q.getQueryObject()).isEqualTo(expected);
 	}
 
 	@Test
@@ -96,7 +96,7 @@ public class QueryTests {
 
 		assertThat(q.getQueryObject()).isEqualTo(Document
 				.parse("{ \"name\" : { \"$gte\" : \"M\" , \"$lte\" : \"T\"} , \"age\" : { \"$not\" : { \"$gt\" : 22}}}"));
-		Assert.assertEquals(50, q.getLimit());
+		assertThat(q.getLimit()).isEqualTo(50);
 	}
 
 	@Test

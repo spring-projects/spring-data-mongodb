@@ -15,16 +15,16 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.hamcrest.core.IsNull.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.data.mongodb.core.script.ExecutableMongoScript;
 import org.springframework.data.mongodb.core.script.NamedMongoScript;
 
@@ -72,7 +72,7 @@ public class DefaultScriptOperationsUnitTests {
 		ArgumentCaptor<NamedMongoScript> captor = ArgumentCaptor.forClass(NamedMongoScript.class);
 
 		verify(mongoOperations, times(1)).save(captor.capture(), eq("system.js"));
-		Assert.assertThat(captor.getValue().getName(), notNullValue());
+		assertThat(captor.getValue().getName()).isNotNull();
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-479

@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import example.first.First;
 import example.second.Second;
@@ -29,6 +28,7 @@ import java.util.Set;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -61,9 +61,9 @@ public class AbstractMongoConfigurationUnitTests {
 	public void usesConfigClassPackageAsBaseMappingPackage() throws ClassNotFoundException {
 
 		AbstractMongoConfiguration configuration = new SampleMongoConfiguration();
-		assertThat(configuration.getMappingBasePackage(), is(SampleMongoConfiguration.class.getPackage().getName()));
-		assertThat(configuration.getInitialEntitySet(), hasSize(2));
-		assertThat(configuration.getInitialEntitySet(), hasItem(Entity.class));
+		assertThat(configuration.getMappingBasePackage()).isEqualTo(SampleMongoConfiguration.class.getPackage().getName());
+		assertThat(configuration.getInitialEntitySet()).hasSize(2);
+		assertThat(configuration.getInitialEntitySet()).contains(Entity.class);
 	}
 
 	@Test // DATAMONGO-496
@@ -83,7 +83,7 @@ public class AbstractMongoConfigurationUnitTests {
 
 		AbstractApplicationContext context = new AnnotationConfigApplicationContext(SampleMongoConfiguration.class);
 
-		assertThat(context.getBean(MongoDbFactory.class), is(notNullValue()));
+		assertThat(context.getBean(MongoDbFactory.class)).isNotNull();
 
 		exception.expect(NoSuchBeanDefinitionException.class);
 		context.getBean(MongoClient.class);
@@ -96,9 +96,9 @@ public class AbstractMongoConfigurationUnitTests {
 		SampleMongoConfiguration configuration = new SampleMongoConfiguration();
 		MongoMappingContext context = configuration.mongoMappingContext();
 
-		assertThat(context.getPersistentEntities(), is(emptyIterable()));
+		assertThat(context.getPersistentEntities()).isEmpty();
 		context.initialize();
-		assertThat(context.getPersistentEntities(), is(not(emptyIterable())));
+		assertThat(context.getPersistentEntities()).isNotEmpty();
 	}
 
 	@Test // DATAMONGO-717
@@ -110,7 +110,7 @@ public class AbstractMongoConfigurationUnitTests {
 		EvaluationContextProvider provider = (EvaluationContextProvider) ReflectionTestUtils.getField(entity,
 				"evaluationContextProvider");
 
-		assertThat(provider, is(instanceOf(ExtensionAwareEvaluationContextProvider.class)));
+		assertThat(provider).isInstanceOf(ExtensionAwareEvaluationContextProvider.class);
 		context.close();
 	}
 
@@ -121,8 +121,8 @@ public class AbstractMongoConfigurationUnitTests {
 		MongoTypeMapper typeMapper = context.getBean(CustomMongoTypeMapper.class);
 		MappingMongoConverter mmc = context.getBean(MappingMongoConverter.class);
 
-		assertThat(mmc, is(notNullValue()));
-		assertThat(mmc.getTypeMapper(), is(typeMapper));
+		assertThat(mmc).isNotNull();
+		assertThat(mmc.getTypeMapper()).isEqualTo(typeMapper);
 		context.close();
 	}
 
@@ -133,8 +133,8 @@ public class AbstractMongoConfigurationUnitTests {
 		ConfigurationWithMultipleBasePackages config = new ConfigurationWithMultipleBasePackages();
 		Set<Class<?>> entities = config.getInitialEntitySet();
 
-		assertThat(entities, hasSize(2));
-		assertThat(entities, hasItems(First.class, Second.class));
+		assertThat(entities).hasSize(2);
+		assertThat(entities).contains(First.class, Second.class);
 	}
 
 	private static void assertScanningDisabled(final String value) throws ClassNotFoundException {
@@ -146,8 +146,8 @@ public class AbstractMongoConfigurationUnitTests {
 			}
 		};
 
-		assertThat(configuration.getMappingBasePackages(), hasItem(value));
-		assertThat(configuration.getInitialEntitySet(), hasSize(0));
+		assertThat(configuration.getMappingBasePackages()).contains(value);
+		assertThat(configuration.getInitialEntitySet()).hasSize(0);
 	}
 
 	@Configuration

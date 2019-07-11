@@ -16,8 +16,6 @@
 package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.InvocationHandler;
@@ -27,6 +25,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -60,7 +59,7 @@ public class SimpleReactiveMongoDatabaseFactoryUnitTests {
 		Object singletonTarget = AopProxyUtils
 				.getSingletonTarget(ReflectionTestUtils.getField(invocationHandler, "advised"));
 
-		assertThat(singletonTarget, is(sameInstance(database)));
+		assertThat(singletonTarget).isSameAs(database);
 	}
 
 	@Test // DATAMONGO-1903

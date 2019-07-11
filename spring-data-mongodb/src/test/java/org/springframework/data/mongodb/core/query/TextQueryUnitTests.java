@@ -15,10 +15,10 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import static org.junit.Assert.*;
-import static org.springframework.data.mongodb.core.query.IsTextQuery.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import org.junit.Test;
+
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 
@@ -35,17 +35,21 @@ public class TextQueryUnitTests {
 
 	@Test // DATAMONGO-850
 	public void shouldCreateQueryObjectCorrectly() {
-		assertThat(new TextQuery(QUERY), isTextQuery().searchingFor(QUERY));
+		assertThat(new TextQuery(QUERY).getQueryObject()).containsEntry("$text.$search", QUERY);
 	}
 
 	@Test // DATAMONGO-850
 	public void shouldIncludeLanguageInQueryObjectWhenNotNull() {
-		assertThat(new TextQuery(QUERY, LANGUAGE_SPANISH), isTextQuery().searchingFor(QUERY).inLanguage(LANGUAGE_SPANISH));
+		assertThat(new TextQuery(QUERY, LANGUAGE_SPANISH).getQueryObject()).containsEntry("$text.$search", QUERY)
+				.containsEntry("$text.$language", LANGUAGE_SPANISH);
 	}
 
 	@Test // DATAMONGO-850
 	public void shouldIncludeScoreFieldCorrectly() {
-		assertThat(new TextQuery(QUERY).includeScore(), isTextQuery().searchingFor(QUERY).returningScore());
+
+		TextQuery textQuery = new TextQuery(QUERY).includeScore();
+		assertThat(textQuery.getQueryObject()).containsEntry("$text.$search", QUERY);
+		assertThat(textQuery.getFieldsObject()).containsKey("score");
 	}
 
 	@Test // DATAMONGO-850
@@ -54,12 +58,18 @@ public class TextQueryUnitTests {
 		TextQuery query = new TextQuery(TextCriteria.forDefaultLanguage().matching(QUERY)).includeScore();
 		query.fields().include("foo");
 
-		assertThat(query, isTextQuery().searchingFor(QUERY).returningScore().includingField("foo"));
+		assertThat(query.getQueryObject()).containsEntry("$text.$search", QUERY);
+		assertThat(query.getFieldsObject()).containsKeys("score", "foo");
 	}
 
 	@Test // DATAMONGO-850
 	public void shouldIncludeSortingByScoreCorrectly() {
-		assertThat(new TextQuery(QUERY).sortByScore(), isTextQuery().searchingFor(QUERY).returningScore().sortingByScore());
+
+		TextQuery textQuery = new TextQuery(QUERY).sortByScore();
+
+		assertThat(textQuery.getQueryObject()).containsEntry("$text.$search", QUERY);
+		assertThat(textQuery.getFieldsObject()).containsKey("score");
+		assertThat(textQuery.getSortObject()).containsKey("score");
 	}
 
 	@Test // DATAMONGO-850
@@ -69,15 +79,19 @@ public class TextQueryUnitTests {
 		query.with(Sort.by(Direction.DESC, "foo"));
 		query.sortByScore();
 
-		assertThat(query,
-				isTextQuery().searchingFor(QUERY).returningScore().sortingByScore().sortingBy("foo", Direction.DESC));
+		assertThat(query.getQueryObject()).containsEntry("$text.$search", QUERY);
+		assertThat(query.getFieldsObject()).containsKeys("score");
+		assertThat(query.getSortObject()).containsEntry("foo", -1).containsKey("score");
 	}
 
 	@Test // DATAMONGO-850
 	public void shouldUseCustomFieldnameForScoring() {
+
 		TextQuery query = new TextQuery(QUERY).includeScore("customFieldForScore").sortByScore();
 
-		assertThat(query, isTextQuery().searchingFor(QUERY).returningScoreAs("customFieldForScore").sortingByScore());
+		assertThat(query.getQueryObject()).containsEntry("$text.$search", QUERY);
+		assertThat(query.getFieldsObject()).containsKeys("customFieldForScore");
+		assertThat(query.getSortObject()).containsKey("customFieldForScore");
 	}
 
 }

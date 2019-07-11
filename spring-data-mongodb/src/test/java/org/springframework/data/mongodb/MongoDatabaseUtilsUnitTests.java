@@ -15,9 +15,8 @@
  */
 package org.springframework.data.mongodb;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import javax.transaction.Status;
@@ -29,6 +28,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.jta.JtaTransactionManager;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
@@ -70,12 +70,12 @@ public class MongoDatabaseUtilsUnitTests {
 	@After
 	public void verifyTransactionSynchronizationManagerState() {
 
-		assertTrue(TransactionSynchronizationManager.getResourceMap().isEmpty());
-		assertFalse(TransactionSynchronizationManager.isSynchronizationActive());
-		assertNull(TransactionSynchronizationManager.getCurrentTransactionName());
-		assertFalse(TransactionSynchronizationManager.isCurrentTransactionReadOnly());
-		assertNull(TransactionSynchronizationManager.getCurrentTransactionIsolationLevel());
-		assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
+		assertThat(TransactionSynchronizationManager.getResourceMap().isEmpty()).isTrue();
+		assertThat(TransactionSynchronizationManager.isSynchronizationActive()).isFalse();
+		assertThat(TransactionSynchronizationManager.getCurrentTransactionName()).isNull();
+		assertThat(TransactionSynchronizationManager.isCurrentTransactionReadOnly()).isFalse();
+		assertThat(TransactionSynchronizationManager.getCurrentTransactionIsolationLevel()).isNull();
+		assertThat(TransactionSynchronizationManager.isActualTransactionActive()).isFalse();
 	}
 
 	@Test // DATAMONGO-2130

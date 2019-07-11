@@ -17,12 +17,6 @@ package org.springframework.data.mongodb.core.convert;
 
 import static java.time.ZoneId.*;
 import static org.assertj.core.api.Assertions.*;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.*;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 
@@ -38,8 +32,6 @@ import java.util.*;
 import org.bson.types.Code;
 import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
-import org.hamcrest.Matcher;
-import org.hamcrest.Matchers;
 import org.joda.time.LocalDate;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -50,6 +42,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.ConversionNotSupportedException;
 import org.springframework.beans.factory.annotation.Value;
@@ -135,8 +128,8 @@ public class MappingMongoConverterUnitTests {
 
 		converter.write(address, document);
 
-		assertThat(document.get("city").toString(), is("New York"));
-		assertThat(document.get("street").toString(), is("Broadway"));
+		assertThat(document.get("city").toString()).isEqualTo("New York");
+		assertThat(document.get("street").toString()).isEqualTo("Broadway");
 	}
 
 	@Test
@@ -151,10 +144,10 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document document = new org.bson.Document();
 		converter.write(person, document);
 
-		assertThat(document.get("birthDate"), is(instanceOf(Date.class)));
+		assertThat(document.get("birthDate")).isInstanceOf(Date.class);
 
 		Person result = converter.read(Person.class, document);
-		assertThat(result.birthDate, is(notNullValue()));
+		assertThat(result.birthDate).isNotNull();
 	}
 
 	@Test
@@ -175,7 +168,7 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document document = new org.bson.Document();
 		converter.write(map, document);
 
-		assertThat(document.get(Locale.US.toString()).toString(), is("Foo"));
+		assertThat(document.get(Locale.US.toString()).toString()).isEqualTo("Foo");
 	}
 
 	@Test // DATAMONGO-130
@@ -185,7 +178,7 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document document = new org.bson.Document("map", mapObject);
 
 		ClassWithMapProperty result = converter.read(ClassWithMapProperty.class, document);
-		assertThat(result.map.get(Locale.US), is("Value"));
+		assertThat(result.map.get(Locale.US)).isEqualTo("Value");
 	}
 
 	@Test // DATAMONGO-128
@@ -195,7 +188,7 @@ public class MappingMongoConverterUnitTests {
 		document.put("birthDate", new LocalDate());
 		document.put(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, Person.class.getName());
 
-		assertThat(converter.read(Contact.class, document), is(instanceOf(Person.class)));
+		assertThat(converter.read(Contact.class, document)).isInstanceOf(Person.class);
 	}
 
 	@Test // DATAMONGO-128
@@ -205,7 +198,7 @@ public class MappingMongoConverterUnitTests {
 		document.put("birthDate", new LocalDate());
 		document.put(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, Person.class.getName());
 
-		assertThat(converter.read(BirthDateContainer.class, document), is(instanceOf(BirthDateContainer.class)));
+		assertThat(converter.read(BirthDateContainer.class, document)).isInstanceOf(BirthDateContainer.class);
 	}
 
 	@Test
@@ -216,8 +209,8 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document result = new org.bson.Document();
 		converter.write(person, result);
 
-		assertThat(result.containsKey(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY), is(true));
-		assertThat(result.get(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY).toString(), is(Person.class.getName()));
+		assertThat(result.containsKey(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY)).isTrue();
+		assertThat(result.get(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY).toString()).isEqualTo(Person.class.getName());
 	}
 
 	@Test // DATAMONGO-136
@@ -229,8 +222,8 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document result = new org.bson.Document();
 		converter.write(value, result);
 
-		assertThat(result.get("sampleEnum"), is(instanceOf(String.class)));
-		assertThat(result.get("sampleEnum").toString(), is("FIRST"));
+		assertThat(result.get("sampleEnum")).isInstanceOf(String.class);
+		assertThat(result.get("sampleEnum").toString()).isEqualTo("FIRST");
 	}
 
 	@Test // DATAMONGO-209
@@ -242,11 +235,11 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document result = new org.bson.Document();
 		converter.write(value, result);
 
-		assertThat(result.get("enums"), is(instanceOf(List.class)));
+		assertThat(result.get("enums")).isInstanceOf(List.class);
 
 		List<Object> enums = (List<Object>) result.get("enums");
-		assertThat(enums.size(), is(1));
-		assertThat(enums.get(0), is("FIRST"));
+		assertThat(enums.size()).isEqualTo(1);
+		assertThat(enums.get(0)).isEqualTo("FIRST");
 	}
 
 	@Test // DATAMONGO-136
@@ -254,7 +247,7 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document document = new org.bson.Document("sampleEnum", "FIRST");
 		ClassWithEnumProperty result = converter.read(ClassWithEnumProperty.class, document);
 
-		assertThat(result.sampleEnum, is(SampleEnum.FIRST));
+		assertThat(result.sampleEnum).isEqualTo(SampleEnum.FIRST);
 	}
 
 	@Test // DATAMONGO-209
@@ -266,9 +259,9 @@ public class MappingMongoConverterUnitTests {
 
 		ClassWithEnumProperty result = converter.read(ClassWithEnumProperty.class, document);
 
-		assertThat(result.enums, is(instanceOf(List.class)));
-		assertThat(result.enums.size(), is(1));
-		assertThat(result.enums, hasItem(SampleEnum.FIRST));
+		assertThat(result.enums).isInstanceOf(List.class);
+		assertThat(result.enums.size()).isEqualTo(1);
+		assertThat(result.enums).contains(SampleEnum.FIRST);
 	}
 
 	@Test // DATAMONGO-144
@@ -280,8 +273,8 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document result = new org.bson.Document();
 		converter.write(person, result);
 
-		assertThat(result.containsKey("foo"), is(true));
-		assertThat(result.containsKey("firstname"), is(false));
+		assertThat(result.containsKey("foo")).isTrue();
+		assertThat(result.containsKey("firstname")).isFalse();
 	}
 
 	@Test // DATAMONGO-144
@@ -290,7 +283,7 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document document = new org.bson.Document("foo", "Oliver");
 		Person result = converter.read(Person.class, document);
 
-		assertThat(result.firstname, is("Oliver"));
+		assertThat(result.firstname).isEqualTo("Oliver");
 	}
 
 	@Test
@@ -306,7 +299,7 @@ public class MappingMongoConverterUnitTests {
 		person.put("addresses", addresses);
 
 		Person result = converter.read(Person.class, person);
-		assertThat(result.addresses, is(notNullValue()));
+		assertThat(result.addresses).isNotNull();
 	}
 
 	@Test // DATAMONGO-145
@@ -322,11 +315,11 @@ public class MappingMongoConverterUnitTests {
 		converter.write(wrapper, document);
 
 		Object result = document.get("contacts");
-		assertThat(result, is(instanceOf(List.class)));
+		assertThat(result).isInstanceOf(List.class);
 		List<Object> contacts = (List<Object>) result;
 		org.bson.Document personDocument = (org.bson.Document) contacts.get(0);
-		assertThat(personDocument.get("foo").toString(), is("Oliver"));
-		assertThat((String) personDocument.get(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY), is(Person.class.getName()));
+		assertThat(personDocument.get("foo").toString()).isEqualTo("Oliver");
+		assertThat((String) personDocument.get(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY)).isEqualTo(Person.class.getName());
 	}
 
 	@Test // DATAMONGO-145
@@ -339,11 +332,11 @@ public class MappingMongoConverterUnitTests {
 		contacts.add(person);
 
 		CollectionWrapper result = converter.read(CollectionWrapper.class, new org.bson.Document("contacts", contacts));
-		assertThat(result.contacts, is(notNullValue()));
-		assertThat(result.contacts.size(), is(1));
+		assertThat(result.contacts).isNotNull();
+		assertThat(result.contacts.size()).isEqualTo(1);
 		Contact contact = result.contacts.get(0);
-		assertThat(contact, is(instanceOf(Person.class)));
-		assertThat(((Person) contact).firstname, is("Oliver"));
+		assertThat(contact).isInstanceOf(Person.class);
+		assertThat(((Person) contact).firstname).isEqualTo("Oliver");
 	}
 
 	@Test
@@ -355,11 +348,11 @@ public class MappingMongoConverterUnitTests {
 		converter.write(wrapper, document);
 
 		Object localeField = document.get("locale");
-		assertThat(localeField, is(instanceOf(String.class)));
-		assertThat(localeField, is("en_US"));
+		assertThat(localeField).isInstanceOf(String.class);
+		assertThat(localeField).isEqualTo("en_US");
 
 		LocaleWrapper read = converter.read(LocaleWrapper.class, document);
-		assertThat(read.locale, is(Locale.US));
+		assertThat(read.locale).isEqualTo(Locale.US);
 	}
 
 	@Test // DATAMONGO-161
@@ -382,8 +375,8 @@ public class MappingMongoConverterUnitTests {
 
 		ClassWithNestedMaps result = converter.read(ClassWithNestedMaps.class, document);
 		Map<String, Map<String, Map<String, String>>> nestedMap = result.nestedMaps;
-		assertThat(nestedMap, is(notNullValue()));
-		assertThat(nestedMap.get("afield"), is(firstLevel));
+		assertThat(nestedMap).isNotNull();
+		assertThat(nestedMap.get("afield")).isEqualTo(firstLevel);
 	}
 
 	@Test // DATACMNS-42, DATAMONGO-171
@@ -396,9 +389,9 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document document = new org.bson.Document();
 		converter.write(container, document);
 
-		assertThat(document.get("value"), is(instanceOf(String.class)));
-		assertThat((String) document.get("value"), is("2.5"));
-		assertThat(((org.bson.Document) document.get("map")).get("foo"), is(instanceOf(String.class)));
+		assertThat(document.get("value")).isInstanceOf(String.class);
+		assertThat((String) document.get("value")).isEqualTo("2.5");
+		assertThat(((org.bson.Document) document.get("map")).get("foo")).isInstanceOf(String.class);
 	}
 
 	@Test // DATACMNS-42, DATAMONGO-171
@@ -412,9 +405,9 @@ public class MappingMongoConverterUnitTests {
 		document.put("collection", list);
 		BigDecimalContainer result = converter.read(BigDecimalContainer.class, document);
 
-		assertThat(result.value, is(BigDecimal.valueOf(2.5d)));
-		assertThat(result.map.get("foo"), is(BigDecimal.valueOf(2.5d)));
-		assertThat(result.collection.get(0), is(BigDecimal.valueOf(2.5d)));
+		assertThat(result.value).isEqualTo(BigDecimal.valueOf(2.5d));
+		assertThat(result.map.get("foo")).isEqualTo(BigDecimal.valueOf(2.5d));
+		assertThat(result.collection.get(0)).isEqualTo(BigDecimal.valueOf(2.5d));
 	}
 
 	@Test
@@ -427,10 +420,10 @@ public class MappingMongoConverterUnitTests {
 		converter.write(wrapper, document);
 
 		Object outerStrings = document.get("strings");
-		assertThat(outerStrings, is(instanceOf(List.class)));
+		assertThat(outerStrings).isInstanceOf(List.class);
 
 		List<Object> typedOuterString = (List<Object>) outerStrings;
-		assertThat(typedOuterString.size(), is(1));
+		assertThat(typedOuterString.size()).isEqualTo(1);
 	}
 
 	@Test // DATAMONGO-192
@@ -450,13 +443,13 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document doc1 = new org.bson.Document();
 
 		converter.write(p1, doc1);
-		assertThat(doc1.get("_id"), is(instanceOf(String.class)));
+		assertThat(doc1.get("_id")).isInstanceOf(String.class);
 
 		PersonPojoStringId p2 = new PersonPojoStringId(new ObjectId().toString(), "Text-1");
 		org.bson.Document doc2 = new org.bson.Document();
 
 		converter.write(p2, doc2);
-		assertThat(doc2.get("_id"), is(instanceOf(ObjectId.class)));
+		assertThat(doc2.get("_id")).isInstanceOf(ObjectId.class);
 	}
 
 	@Test // DATAMONGO-207
@@ -467,13 +460,13 @@ public class MappingMongoConverterUnitTests {
 
 		ClassWithSortedMap result = converter.read(ClassWithSortedMap.class, wrapper);
 
-		assertThat(result, is(instanceOf(ClassWithSortedMap.class)));
-		assertThat(result.map, is(instanceOf(SortedMap.class)));
+		assertThat(result).isInstanceOf(ClassWithSortedMap.class);
+		assertThat(result.map).isInstanceOf(SortedMap.class);
 	}
 
 	@Test // DATAMONGO-211
 	public void maybeConvertHandlesNullValuesCorrectly() {
-		assertThat(converter.convertToMongoType(null), is(nullValue()));
+		assertThat(converter.convertToMongoType(null)).isNull();
 	}
 
 	@Test // DATAMONGO-1509
@@ -488,7 +481,7 @@ public class MappingMongoConverterUnitTests {
 
 		org.bson.Document content = (org.bson.Document) result.get("content");
 		assertTypeHint(content, Address.class);
-		assertThat(content.get("city"), is(notNullValue()));
+		assertThat(content.get("city")).isNotNull();
 	}
 
 	@Test
@@ -498,7 +491,7 @@ public class MappingMongoConverterUnitTests {
 		address.put("city", "London");
 
 		GenericType<?> result = converter.read(GenericType.class, new org.bson.Document("content", address));
-		assertThat(result.content, is(instanceOf(Address.class)));
+		assertThat(result.content).isInstanceOf(Address.class);
 	}
 
 	@Test // DATAMONGO-228
@@ -511,8 +504,8 @@ public class MappingMongoConverterUnitTests {
 		converter.write(foo, result);
 
 		Object map = result.get("map");
-		assertThat(map, is(instanceOf(org.bson.Document.class)));
-		assertThat(((org.bson.Document) map).keySet(), hasItem("en_US"));
+		assertThat(map).isInstanceOf(org.bson.Document.class);
+		assertThat(((org.bson.Document) map).keySet()).contains("en_US");
 	}
 
 	@Test
@@ -524,13 +517,13 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document result = new org.bson.Document();
 		converter.write(foo, result);
 
-		assertThat(result.get("_id"), is(instanceOf(String.class)));
+		assertThat(result.get("_id")).isInstanceOf(String.class);
 	}
 
 	public void convertsObjectsIfNecessary() {
 
 		ObjectId id = new ObjectId();
-		assertThat(converter.convertToMongoType(id), is(id));
+		assertThat(converter.convertToMongoType(id)).isEqualTo(id);
 	}
 
 	@Test // DATAMONGO-235
@@ -543,15 +536,15 @@ public class MappingMongoConverterUnitTests {
 		converter.write(input, result);
 
 		Object field = result.get("mapOfLists");
-		assertThat(field, is(instanceOf(org.bson.Document.class)));
+		assertThat(field).isInstanceOf(org.bson.Document.class);
 
 		org.bson.Document map = (org.bson.Document) field;
 		Object foo = map.get("Foo");
-		assertThat(foo, is(instanceOf(List.class)));
+		assertThat(foo).isInstanceOf(List.class);
 
 		List<Object> value = (List<Object>) foo;
-		assertThat(value.size(), is(1));
-		assertThat(value.get(0), is("Bar"));
+		assertThat(value.size()).isEqualTo(1);
+		assertThat(value.get(0)).isEqualTo("Bar");
 	}
 
 	@Test // DATAMONGO-235
@@ -562,7 +555,7 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document source = new org.bson.Document("mapOfLists", new org.bson.Document("Foo", list));
 
 		ClassWithMapProperty result = converter.read(ClassWithMapProperty.class, source);
-		assertThat(result.mapOfLists, is(not(nullValue())));
+		assertThat(result.mapOfLists).isNotNull();
 	}
 
 	@Test // DATAMONGO-235
@@ -576,15 +569,15 @@ public class MappingMongoConverterUnitTests {
 		converter.write(input, result);
 
 		Object field = result.get("mapOfObjects");
-		assertThat(field, is(instanceOf(org.bson.Document.class)));
+		assertThat(field).isInstanceOf(org.bson.Document.class);
 
 		org.bson.Document map = (org.bson.Document) field;
 		Object foo = map.get("Foo");
-		assertThat(foo, is(instanceOf(BasicDBList.class)));
+		assertThat(foo).isInstanceOf(BasicDBList.class);
 
 		BasicDBList value = (BasicDBList) foo;
-		assertThat(value.size(), is(1));
-		assertThat(value.get(0), is("Bar"));
+		assertThat(value.size()).isEqualTo(1);
+		assertThat(value.get(0)).isEqualTo("Bar");
 	}
 
 	@Test // DATAMONGO-235
@@ -595,7 +588,7 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document source = new org.bson.Document("mapOfObjects", new org.bson.Document("Foo", list));
 
 		ClassWithMapProperty result = converter.read(ClassWithMapProperty.class, source);
-		assertThat(result.mapOfObjects, is(not(nullValue())));
+		assertThat(result.mapOfObjects).isNotNull();
 	}
 
 	@Test // DATAMONGO-245
@@ -607,8 +600,8 @@ public class MappingMongoConverterUnitTests {
 
 		ClassWithMapProperty result = converter.read(ClassWithMapProperty.class, source);
 		Object firstObjectInFoo = ((List<?>) result.mapOfObjects.get("Foo")).get(0);
-		assertThat(firstObjectInFoo, is(instanceOf(Map.class)));
-		assertThat(((Map<?, ?>) firstObjectInFoo).get("Hello"), is(equalTo("World")));
+		assertThat(firstObjectInFoo).isInstanceOf(Map.class);
+		assertThat(((Map<?, ?>) firstObjectInFoo).get("Hello")).isEqualTo("World");
 	}
 
 	@Test // DATAMONGO-245
@@ -622,10 +615,10 @@ public class MappingMongoConverterUnitTests {
 
 		ClassWithMapProperty result = converter.read(ClassWithMapProperty.class, source);
 		Object foo = result.mapOfObjects.get("Foo");
-		assertThat(foo, is(instanceOf(Map.class)));
+		assertThat(foo).isInstanceOf(Map.class);
 		Object doublyNestedObject = ((Map<?, ?>) foo).get("nested");
-		assertThat(doublyNestedObject, is(instanceOf(Map.class)));
-		assertThat(((Map<?, ?>) doublyNestedObject).get("Hello"), is(equalTo("World")));
+		assertThat(doublyNestedObject).isInstanceOf(Map.class);
+		assertThat(((Map<?, ?>) doublyNestedObject).get("Hello")).isEqualTo("World");
 	}
 
 	@Test // DATAMONGO-245
@@ -641,10 +634,10 @@ public class MappingMongoConverterUnitTests {
 
 		ClassWithMapProperty result = converter.read(ClassWithMapProperty.class, source);
 		Object firstObjectInFoo = ((List<?>) result.mapOfObjects.get("Foo")).get(0);
-		assertThat(firstObjectInFoo, is(instanceOf(Map.class)));
+		assertThat(firstObjectInFoo).isInstanceOf(Map.class);
 		Object doublyNestedObject = ((Map<?, ?>) firstObjectInFoo).get("nested");
-		assertThat(doublyNestedObject, is(instanceOf(Map.class)));
-		assertThat(((Map<?, ?>) doublyNestedObject).get("Hello"), is(equalTo("World")));
+		assertThat(doublyNestedObject).isInstanceOf(Map.class);
+		assertThat(((Map<?, ?>) doublyNestedObject).get("Hello")).isEqualTo("World");
 	}
 
 	@Test // DATAMONGO-259
@@ -660,12 +653,12 @@ public class MappingMongoConverterUnitTests {
 		converter.write(wrapper, result);
 
 		List<Object> list = (List<Object>) result.get("listOfMaps");
-		assertThat(list, is(notNullValue()));
-		assertThat(list.size(), is(1));
+		assertThat(list).isNotNull();
+		assertThat(list.size()).isEqualTo(1);
 
 		org.bson.Document document = (org.bson.Document) list.get(0);
-		assertThat(document.containsKey("Foo"), is(true));
-		assertThat((String) document.get("Foo"), is(Locale.ENGLISH.toString()));
+		assertThat(document.containsKey("Foo")).isTrue();
+		assertThat((String) document.get("Foo")).isEqualTo(Locale.ENGLISH.toString());
 	}
 
 	@Test // DATAMONGO-259
@@ -680,10 +673,10 @@ public class MappingMongoConverterUnitTests {
 
 		CollectionWrapper wrapper = converter.read(CollectionWrapper.class, wrapperSource);
 
-		assertThat(wrapper.listOfMaps, is(notNullValue()));
-		assertThat(wrapper.listOfMaps.size(), is(1));
-		assertThat(wrapper.listOfMaps.get(0), is(notNullValue()));
-		assertThat(wrapper.listOfMaps.get(0).get("Foo"), is(Locale.ENGLISH));
+		assertThat(wrapper.listOfMaps).isNotNull();
+		assertThat(wrapper.listOfMaps.size()).isEqualTo(1);
+		assertThat(wrapper.listOfMaps.get(0)).isNotNull();
+		assertThat(wrapper.listOfMaps.get(0).get("Foo")).isEqualTo(Locale.ENGLISH);
 	}
 
 	@Test // DATAMONGO-259
@@ -693,14 +686,14 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document result = new org.bson.Document();
 		converter.write(map, result);
 
-		assertThat(result.containsKey("Foo"), is(true));
-		assertThat(result.get("Foo"), is(notNullValue()));
-		assertThat(result.get("Foo"), is(instanceOf(BasicDBList.class)));
+		assertThat(result.containsKey("Foo")).isTrue();
+		assertThat(result.get("Foo")).isNotNull();
+		assertThat(result.get("Foo")).isInstanceOf(BasicDBList.class);
 
 		BasicDBList list = (BasicDBList) result.get("Foo");
 
-		assertThat(list.size(), is(1));
-		assertThat(list.get(0), is(Locale.US.toString()));
+		assertThat(list.size()).isEqualTo(1);
+		assertThat(list.get(0)).isEqualTo(Locale.US.toString());
 	}
 
 	@Test // DATAMONGO-285
@@ -719,13 +712,13 @@ public class MappingMongoConverterUnitTests {
 
 		Map<String, Object> keyValuesFromMongo = converter.read(Map.class, document);
 
-		assertEquals(keyValues.size(), keyValuesFromMongo.size());
-		assertEquals(keyValues.get("string"), keyValuesFromMongo.get("string"));
-		assertTrue(List.class.isAssignableFrom(keyValuesFromMongo.get("list").getClass()));
+		assertThat(keyValuesFromMongo.size()).isEqualTo(keyValues.size());
+		assertThat(keyValuesFromMongo.get("string")).isEqualTo(keyValues.get("string"));
+		assertThat(List.class.isAssignableFrom(keyValuesFromMongo.get("list").getClass())).isTrue();
 		List<String> listFromMongo = (List) keyValuesFromMongo.get("list");
-		assertEquals(list.size(), listFromMongo.size());
-		assertEquals(list.get(0), listFromMongo.get(0));
-		assertEquals(list.get(1), listFromMongo.get(1));
+		assertThat(listFromMongo.size()).isEqualTo(list.size());
+		assertThat(listFromMongo.get(0)).isEqualTo(list.get(0));
+		assertThat(listFromMongo.get(1)).isEqualTo(list.get(1));
 	}
 
 	@Test // DATAMONGO-309
@@ -740,15 +733,15 @@ public class MappingMongoConverterUnitTests {
 		converter.write(wrapper, result);
 
 		Object mapObject = result.get("mapOfObjects");
-		assertThat(mapObject, is(instanceOf(org.bson.Document.class)));
+		assertThat(mapObject).isInstanceOf(org.bson.Document.class);
 
 		org.bson.Document map = (org.bson.Document) mapObject;
 		Object valueObject = map.get("foo");
-		assertThat(valueObject, is(instanceOf(BasicDBList.class)));
+		assertThat(valueObject).isInstanceOf(BasicDBList.class);
 
 		List<Object> list = (List<Object>) valueObject;
-		assertThat(list.size(), is(1));
-		assertThat(list, hasItem((Object) "bar"));
+		assertThat(list.size()).isEqualTo(1);
+		assertThat(list).contains((Object) "bar");
 	}
 
 	@Test // DATAMONGO-324
@@ -762,7 +755,7 @@ public class MappingMongoConverterUnitTests {
 		converter.write(document, result);
 
 		result.remove(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY);
-		assertThat(document, is(result));
+		assertThat(document).isEqualTo(result);
 	}
 
 	@Test // DATAMONGO-324
@@ -773,7 +766,7 @@ public class MappingMongoConverterUnitTests {
 
 		org.bson.Document result = converter.read(org.bson.Document.class, document);
 
-		assertThat(result, is(document));
+		assertThat(result).isEqualTo(document);
 	}
 
 	@Test // DATAMONGO-329
@@ -787,17 +780,17 @@ public class MappingMongoConverterUnitTests {
 
 		converter.write(a, result);
 
-		assertThat(result.get(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY), is(A.class.getName()));
-		assertThat(result.get("valueType"), is(HashMap.class.getName()));
+		assertThat(result.get(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY)).isEqualTo(A.class.getName());
+		assertThat(result.get("valueType")).isEqualTo(HashMap.class.getName());
 
 		org.bson.Document object = (org.bson.Document) result.get("value");
-		assertThat(object, is(notNullValue()));
+		assertThat(object).isNotNull();
 
 		org.bson.Document inner = (org.bson.Document) object.get("test");
-		assertThat(inner, is(notNullValue()));
-		assertThat(inner.get(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY), is(A.class.getName()));
-		assertThat(inner.get("valueType"), is(String.class.getName()));
-		assertThat(inner.get("value"), is("testValue"));
+		assertThat(inner).isNotNull();
+		assertThat(inner.get(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY)).isEqualTo(A.class.getName());
+		assertThat(inner.get("valueType")).isEqualTo(String.class.getName());
+		assertThat(inner.get("value")).isEqualTo("testValue");
 	}
 
 	@Test
@@ -809,7 +802,7 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document result = new org.bson.Document();
 		converter.write(value, result);
 
-		assertThat(result.get("_id"), is(5));
+		assertThat(result.get("_id")).isEqualTo(5);
 	}
 
 	@Test // DATAMONGO-368
@@ -823,9 +816,9 @@ public class MappingMongoConverterUnitTests {
 		converter.write(wrapper, result);
 
 		Object contacts = result.get("contacts");
-		assertThat(contacts, is(instanceOf(Collection.class)));
-		assertThat(((Collection<?>) contacts).size(), is(2));
-		assertThat((Collection<Object>) contacts, hasItem(nullValue()));
+		assertThat(contacts).isInstanceOf(Collection.class);
+		assertThat(((Collection<?>) contacts).size()).isEqualTo(2);
+		assertThat((Collection<Object>) contacts).containsNull();
 	}
 
 	@Test // DATAMONGO-379
@@ -835,7 +828,7 @@ public class MappingMongoConverterUnitTests {
 		document.put("foobar", 2.5);
 
 		DefaultedConstructorArgument result = converter.read(DefaultedConstructorArgument.class, document);
-		assertThat(result.bar, is(-1));
+		assertThat(result.bar).isEqualTo(-1);
 	}
 
 	@Test // DATAMONGO-379
@@ -846,7 +839,7 @@ public class MappingMongoConverterUnitTests {
 		document.put("foobar", 2.5);
 
 		DefaultedConstructorArgument result = converter.read(DefaultedConstructorArgument.class, document);
-		assertThat(result.bar, is(37));
+		assertThat(result.bar).isEqualTo(37);
 	}
 
 	@Test(expected = MappingInstantiationException.class) // DATAMONGO-379
@@ -872,15 +865,15 @@ public class MappingMongoConverterUnitTests {
 		converter.write(item, result);
 
 		Item read = converter.read(Item.class, result);
-		assertThat(read.attributes.size(), is(1));
-		assertThat(read.attributes.get(0).key, is(attribute.key));
-		assertThat(read.attributes.get(0).value, is(instanceOf(Collection.class)));
+		assertThat(read.attributes.size()).isEqualTo(1);
+		assertThat(read.attributes.get(0).key).isEqualTo(attribute.key);
+		assertThat(read.attributes.get(0).value).isInstanceOf(Collection.class);
 
 		@SuppressWarnings("unchecked")
 		Collection<String> values = (Collection<String>) read.attributes.get(0).value;
 
-		assertThat(values.size(), is(2));
-		assertThat(values, hasItems("1", "2"));
+		assertThat(values.size()).isEqualTo(2);
+		assertThat(values).contains("1", "2");
 	}
 
 	@Test(expected = MappingException.class) // DATAMONGO-380
@@ -896,8 +889,8 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document document = new org.bson.Document();
 		converter.write(Collections.singletonMap("foo.bar", "foobar"), document);
 
-		assertThat((String) document.get("foo~bar"), is("foobar"));
-		assertThat(document.containsKey("foo.bar"), is(false));
+		assertThat((String) document.get("foo~bar")).isEqualTo("foobar");
+		assertThat(document.containsKey("foo.bar")).isFalse();
 	}
 
 	@Test // DATAMONGO-380
@@ -909,8 +902,8 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document document = new org.bson.Document("foo~bar", "foobar");
 		Map<String, String> result = converter.read(Map.class, document);
 
-		assertThat(result.get("foo.bar"), is("foobar"));
-		assertThat(result.containsKey("foobar"), is(false));
+		assertThat(result.get("foo.bar")).isEqualTo("foobar");
+		assertThat(result.containsKey("foobar")).isFalse();
 	}
 
 	@Test // DATAMONGO-382
@@ -922,11 +915,11 @@ public class MappingMongoConverterUnitTests {
 		address.street = "Foo";
 
 		Object result = converter.convertToMongoType(Collections.singleton(address), ClassTypeInformation.OBJECT);
-		assertThat(result, is(instanceOf(List.class)));
+		assertThat(result).isInstanceOf(List.class);
 
 		Set<?> readResult = converter.read(Set.class, (org.bson.Document) result);
-		assertThat(readResult.size(), is(1));
-		assertThat(readResult.iterator().next(), is(instanceOf(Address.class)));
+		assertThat(readResult.size()).isEqualTo(1);
+		assertThat(readResult.iterator().next()).isInstanceOf(Address.class);
 	}
 
 	@Test // DATAMONGO-402
@@ -935,8 +928,8 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document document = new org.bson.Document("inner", new org.bson.Document("value", "FOO!"));
 
 		Outer outer = converter.read(Outer.class, document);
-		assertThat(outer.inner, is(notNullValue()));
-		assertThat(outer.inner.value, is("FOO!"));
+		assertThat(outer.inner).isNotNull();
+		assertThat(outer.inner.value).isEqualTo("FOO!");
 		assertSyntheticFieldValueOf(outer.inner, outer);
 	}
 
@@ -946,7 +939,7 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document document = new org.bson.Document("contactsSet", new BasicDBList());
 		CollectionWrapper wrapper = converter.read(CollectionWrapper.class, document);
 
-		assertThat(wrapper.contactsSet, is(notNullValue()));
+		assertThat(wrapper.contactsSet).isNotNull();
 		wrapper.contactsSet.add(new Contact() {});
 	}
 
@@ -957,7 +950,7 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document document = new org.bson.Document("ref", dbRef);
 
 		DBRefWrapper result = converter.read(DBRefWrapper.class, document);
-		assertThat(result.ref, is(dbRef));
+		assertThat(result.ref).isEqualTo(dbRef);
 	}
 
 	@Test // DATAMONGO-424
@@ -970,8 +963,8 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document document = new org.bson.Document("refs", refs);
 
 		DBRefWrapper result = converter.read(DBRefWrapper.class, document);
-		assertThat(result.refs, hasSize(1));
-		assertThat(result.refs, hasItem(dbRef));
+		assertThat(result.refs).hasSize(1);
+		assertThat(result.refs).contains(dbRef);
 	}
 
 	@Test // DATAMONGO-424
@@ -983,8 +976,8 @@ public class MappingMongoConverterUnitTests {
 
 		DBRefWrapper result = converter.read(DBRefWrapper.class, document);
 
-		assertThat(result.refMap.entrySet(), hasSize(1));
-		assertThat(result.refMap.values(), hasItem(dbRef));
+		assertThat(result.refMap.entrySet()).hasSize(1);
+		assertThat(result.refMap.values()).contains(dbRef);
 	}
 
 	@Test // DATAMONGO-424
@@ -999,10 +992,9 @@ public class MappingMongoConverterUnitTests {
 
 		DBRefWrapper result = converter.read(DBRefWrapper.class, document);
 
-		Matcher isPerson = instanceOf(Person.class);
 
-		assertThat(result.personMap.entrySet(), hasSize(1));
-		assertThat(result.personMap.values(), hasItem(isPerson));
+		assertThat(result.personMap.entrySet()).hasSize(1);
+		assertThat(result.personMap.values()).anyMatch(Person.class::isInstance);
 	}
 
 	@Test // DATAMONGO-462
@@ -1014,14 +1006,14 @@ public class MappingMongoConverterUnitTests {
 
 		converter.write(wrapper, sink);
 
-		assertThat(sink.get("url"), is("https://springsource.org"));
+		assertThat(sink.get("url")).isEqualTo("https://springsource.org");
 	}
 
 	@Test // DATAMONGO-462
 	public void readsURLFromStringOutOfTheBox() throws Exception {
 		org.bson.Document document = new org.bson.Document("url", "https://springsource.org");
 		URLWrapper result = converter.read(URLWrapper.class, document);
-		assertThat(result.url, is(new URL("https://springsource.org")));
+		assertThat(result.url).isEqualTo(new URL("https://springsource.org"));
 	}
 
 	@Test // DATAMONGO-485
@@ -1037,9 +1029,9 @@ public class MappingMongoConverterUnitTests {
 		converter.write(entity, document);
 
 		Object idField = document.get("_id");
-		assertThat(idField, is(notNullValue()));
-		assertThat(idField, is(instanceOf(org.bson.Document.class)));
-		assertThat(((org.bson.Document) idField).get("innerId"), is(4711L));
+		assertThat(idField).isNotNull();
+		assertThat(idField).isInstanceOf(org.bson.Document.class);
+		assertThat(((org.bson.Document) idField).get("innerId")).isEqualTo(4711L);
 	}
 
 	@Test // DATAMONGO-485
@@ -1050,8 +1042,8 @@ public class MappingMongoConverterUnitTests {
 
 		ClassWithComplexId result = converter.read(ClassWithComplexId.class, entity);
 
-		assertThat(result.complexId, is(notNullValue()));
-		assertThat(result.complexId.innerId, is(4711L));
+		assertThat(result.complexId).isNotNull();
+		assertThat(result.complexId.innerId).isEqualTo(4711L);
 	}
 
 	@Test // DATAMONGO-489
@@ -1065,11 +1057,11 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document wrapper = new org.bson.Document("mapOfStrings", map);
 
 		ClassWithMapProperty result = converter.read(ClassWithMapProperty.class, wrapper);
-		assertThat(result.mapOfStrings, is(notNullValue()));
+		assertThat(result.mapOfStrings).isNotNull();
 
 		String[] values = result.mapOfStrings.get("key");
-		assertThat(values, is(notNullValue()));
-		assertThat(values, is(arrayWithSize(2)));
+		assertThat(values).isNotNull();
+		assertThat(values).hasSize(2);
 	}
 
 	@Test // DATAMONGO-497
@@ -1078,14 +1070,14 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document source = new org.bson.Document("attributes", new BasicDBList());
 
 		TypWithCollectionConstructor result = converter.read(TypWithCollectionConstructor.class, source);
-		assertThat(result.attributes, is(notNullValue()));
+		assertThat(result.attributes).isNotNull();
 	}
 
 	private static void assertSyntheticFieldValueOf(Object target, Object expected) {
 
 		for (int i = 0; i < 10; i++) {
 			try {
-				assertThat(ReflectionTestUtils.getField(target, "this$" + i), is(expected));
+				assertThat(ReflectionTestUtils.getField(target, "this$" + i)).isEqualTo(expected);
 				return;
 			} catch (IllegalArgumentException e) {
 				// Suppress and try next
@@ -1102,7 +1094,7 @@ public class MappingMongoConverterUnitTests {
 
 		MongoPersistentProperty property = mock(MongoPersistentProperty.class);
 
-		assertThat(converter.createDBRef(dbRef, property), is(dbRef));
+		assertThat(converter.createDBRef(dbRef, property)).isEqualTo(dbRef);
 	}
 
 	@Test // DATAMONGO-523, DATAMONGO-1509
@@ -1181,17 +1173,17 @@ public class MappingMongoConverterUnitTests {
 
 		ClassWithMapProperty result = mongoConverter.read(ClassWithMapProperty.class, document);
 
-		assertThat(result.mapOfPersons, is(notNullValue()));
+		assertThat(result.mapOfPersons).isNotNull();
 		Person personCandidate = result.mapOfPersons.get("foo");
-		assertThat(personCandidate, is(notNullValue()));
-		assertThat(personCandidate.firstname, is("Dave"));
+		assertThat(personCandidate).isNotNull();
+		assertThat(personCandidate.firstname).isEqualTo("Dave");
 
-		assertThat(result.mapOfObjects, is(notNullValue()));
+		assertThat(result.mapOfObjects).isNotNull();
 		Object value = result.mapOfObjects.get("foo");
-		assertThat(value, is(notNullValue()));
-		assertThat(value, is(instanceOf(Person.class)));
-		assertThat(((Person) value).firstname, is("Dave"));
-		assertThat(((Person) value).lastname, is("converter"));
+		assertThat(value).isNotNull();
+		assertThat(value).isInstanceOf(Person.class);
+		assertThat(((Person) value).firstname).isEqualTo("Dave");
+		assertThat(((Person) value).lastname).isEqualTo("converter");
 	}
 
 	@Test // DATAMONGO-743, DATAMONGO-2198
@@ -1199,10 +1191,10 @@ public class MappingMongoConverterUnitTests {
 
 		String target = converter.read(String.class, new org.bson.Document("firstname", "Dave"));
 
-		assertThat(target, Matchers.startsWith("{"));
-		assertThat(target, Matchers.endsWith("}"));
-		assertThat(target, Matchers.containsString("\"firstname\""));
-		assertThat(target, Matchers.containsString("\"Dave\""));
+		assertThat(target).startsWith("{");
+		assertThat(target).endsWith("}");
+		assertThat(target).contains("\"firstname\"");
+		assertThat(target).contains("\"Dave\"");
 	}
 
 	@Test // DATAMONGO-766
@@ -1219,10 +1211,10 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document result = new org.bson.Document();
 		converter.write(type, result);
 
-		assertThat(result.get("name"), is((Object) "name"));
+		assertThat(result.get("name")).isEqualTo((Object) "name");
 		org.bson.Document aValue = DocumentTestUtils.getAsDocument(result, "a");
-		assertThat(aValue.get("b"), is((Object) "bar"));
-		assertThat(aValue.get("c"), is((Object) "C"));
+		assertThat(aValue.get("b")).isEqualTo((Object) "bar");
+		assertThat(aValue.get("c")).isEqualTo((Object) "C");
 	}
 
 	@Test // DATAMONGO-812, DATAMONGO-893, DATAMONGO-1509
@@ -1235,10 +1227,10 @@ public class MappingMongoConverterUnitTests {
 		Object result = converter.convertToMongoType(Collections.singletonList(address),
 				ClassTypeInformation.from(InterfaceType.class));
 
-		assertThat(result, is(instanceOf(List.class)));
+		assertThat(result).isInstanceOf(List.class);
 
 		List<Object> dbList = (List<Object>) result;
-		assertThat(dbList, hasSize(1));
+		assertThat(dbList).hasSize(1);
 		assertTypeHint(getAsDocument(dbList, 0), Address.class);
 	}
 
@@ -1247,11 +1239,11 @@ public class MappingMongoConverterUnitTests {
 
 		Object result = converter.convertToMongoType(Collections.singletonList("foo"));
 
-		assertThat(result, is(instanceOf(List.class)));
+		assertThat(result).isInstanceOf(List.class);
 
 		List<Object> dbList = (List<Object>) result;
-		assertThat(dbList, hasSize(1));
-		assertThat(dbList.get(0), instanceOf(String.class));
+		assertThat(dbList).hasSize(1);
+		assertThat(dbList.get(0)).isInstanceOf(String.class);
 	}
 
 	@Test // DATAMONGO-812, DATAMONGO-1509
@@ -1263,10 +1255,10 @@ public class MappingMongoConverterUnitTests {
 
 		Object result = converter.convertToMongoType(new Address[] { address }, ClassTypeInformation.OBJECT);
 
-		assertThat(result, is(instanceOf(List.class)));
+		assertThat(result).isInstanceOf(List.class);
 
 		List<Object> dbList = (List<Object>) result;
-		assertThat(dbList, hasSize(1));
+		assertThat(dbList).hasSize(1);
 		assertTypeHint(getAsDocument(dbList, 0), Address.class);
 	}
 
@@ -1275,11 +1267,11 @@ public class MappingMongoConverterUnitTests {
 
 		Object result = converter.convertToMongoType(new String[] { "foo" });
 
-		assertThat(result, is(instanceOf(List.class)));
+		assertThat(result).isInstanceOf(List.class);
 
 		List<Object> dbList = (List<Object>) result;
-		assertThat(dbList, hasSize(1));
-		assertThat(dbList.get(0), instanceOf(String.class));
+		assertThat(dbList).hasSize(1);
+		assertThat(dbList.get(0)).isInstanceOf(String.class);
 	}
 
 	@Test // DATAMONGO-833
@@ -1291,9 +1283,9 @@ public class MappingMongoConverterUnitTests {
 
 		ClassWithEnumProperty result = converter.read(ClassWithEnumProperty.class, document);
 
-		assertThat(result.enumSet, is(instanceOf(EnumSet.class)));
-		assertThat(result.enumSet.size(), is(1));
-		assertThat(result.enumSet, hasItem(SampleEnum.SECOND));
+		assertThat(result.enumSet).isInstanceOf(EnumSet.class);
+		assertThat(result.enumSet.size()).isEqualTo(1);
+		assertThat(result.enumSet).contains(SampleEnum.SECOND);
 	}
 
 	@Test // DATAMONGO-833
@@ -1303,9 +1295,9 @@ public class MappingMongoConverterUnitTests {
 		ClassWithEnumProperty result = converter.read(ClassWithEnumProperty.class,
 				new org.bson.Document("enumMap", enumMap));
 
-		assertThat(result.enumMap, is(instanceOf(EnumMap.class)));
-		assertThat(result.enumMap.size(), is(1));
-		assertThat(result.enumMap.get(SampleEnum.FIRST), is("Dave"));
+		assertThat(result.enumMap).isInstanceOf(EnumMap.class);
+		assertThat(result.enumMap.size()).isEqualTo(1);
+		assertThat(result.enumMap.get(SampleEnum.FIRST)).isEqualTo("Dave");
 	}
 
 	@Test // DATAMONGO-887
@@ -1317,9 +1309,9 @@ public class MappingMongoConverterUnitTests {
 
 		ClassWithMapProperty result = converter.read(ClassWithMapProperty.class, document);
 
-		assertThat(result.treeMapOfPersons, is(notNullValue()));
-		assertThat(result.treeMapOfPersons.get("key"), is(notNullValue()));
-		assertThat(result.treeMapOfPersons.get("key").firstname, is("Dave"));
+		assertThat(result.treeMapOfPersons).isNotNull();
+		assertThat(result.treeMapOfPersons.get("key")).isNotNull();
+		assertThat(result.treeMapOfPersons.get("key").firstname).isEqualTo("Dave");
 	}
 
 	@Test // DATAMONGO-887
@@ -1338,7 +1330,7 @@ public class MappingMongoConverterUnitTests {
 
 		org.bson.Document map = getAsDocument(result, "treeMapOfPersons");
 		org.bson.Document entry = getAsDocument(map, "key");
-		assertThat(entry.get("foo"), is("Dave"));
+		assertThat(entry.get("foo")).isEqualTo("Dave");
 	}
 
 	@Test // DATAMONGO-858
@@ -1350,10 +1342,10 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document document = new org.bson.Document();
 		converter.write(object, document);
 
-		assertThat(document, is(notNullValue()));
-		assertThat(document.get("box"), is(instanceOf(org.bson.Document.class)));
-		assertThat(document.get("box"), is((Object) new org.bson.Document()
-				.append("first", toDocument(object.box.getFirst())).append("second", toDocument(object.box.getSecond()))));
+		assertThat(document).isNotNull();
+		assertThat(document.get("box")).isInstanceOf(org.bson.Document.class);
+		assertThat(document.get("box")).isEqualTo((Object) new org.bson.Document()
+				.append("first", toDocument(object.box.getFirst())).append("second", toDocument(object.box.getSecond())));
 	}
 
 	private static org.bson.Document toDocument(Point point) {
@@ -1371,8 +1363,8 @@ public class MappingMongoConverterUnitTests {
 
 		ClassWithGeoBox result = converter.read(ClassWithGeoBox.class, document);
 
-		assertThat(result, is(notNullValue()));
-		assertThat(result.box, is(object.box));
+		assertThat(result).isNotNull();
+		assertThat(result.box).isEqualTo(object.box);
 	}
 
 	@Test // DATAMONGO-858
@@ -1384,17 +1376,17 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document document = new org.bson.Document();
 		converter.write(object, document);
 
-		assertThat(document, is(notNullValue()));
+		assertThat(document).isNotNull();
 
-		assertThat(document.get("polygon"), is(instanceOf(org.bson.Document.class)));
+		assertThat(document.get("polygon")).isInstanceOf(org.bson.Document.class);
 		org.bson.Document polygonDoc = (org.bson.Document) document.get("polygon");
 
 		@SuppressWarnings("unchecked")
 		List<org.bson.Document> points = (List<org.bson.Document>) polygonDoc.get("points");
 
-		assertThat(points, hasSize(3));
-		assertThat(points, Matchers.<org.bson.Document> hasItems(toDocument(object.polygon.getPoints().get(0)),
-				toDocument(object.polygon.getPoints().get(1)), toDocument(object.polygon.getPoints().get(2))));
+		assertThat(points).hasSize(3);
+		assertThat(points).contains(toDocument(object.polygon.getPoints().get(0)),
+				toDocument(object.polygon.getPoints().get(1)), toDocument(object.polygon.getPoints().get(2)));
 	}
 
 	@Test // DATAMONGO-858
@@ -1408,8 +1400,8 @@ public class MappingMongoConverterUnitTests {
 
 		ClassWithGeoPolygon result = converter.read(ClassWithGeoPolygon.class, document);
 
-		assertThat(result, is(notNullValue()));
-		assertThat(result.polygon, is(object.polygon));
+		assertThat(result).isNotNull();
+		assertThat(result.polygon).isEqualTo(object.polygon);
 	}
 
 	@Test // DATAMONGO-858
@@ -1423,12 +1415,11 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document document = new org.bson.Document();
 		converter.write(object, document);
 
-		assertThat(document, is(notNullValue()));
-		assertThat(document.get("circle"), is(instanceOf(org.bson.Document.class)));
-		assertThat(document.get("circle"),
-				is((Object) new org.bson.Document("center",
-						new org.bson.Document("x", circle.getCenter().getX()).append("y", circle.getCenter().getY()))
-								.append("radius", radius.getNormalizedValue()).append("metric", radius.getMetric().toString())));
+		assertThat(document).isNotNull();
+		assertThat(document.get("circle")).isInstanceOf(org.bson.Document.class);
+		assertThat(document.get("circle")).isEqualTo((Object) new org.bson.Document("center",
+				new org.bson.Document("x", circle.getCenter().getX()).append("y", circle.getCenter().getY()))
+						.append("radius", radius.getNormalizedValue()).append("metric", radius.getMetric().toString()));
 	}
 
 	@Test // DATAMONGO-858
@@ -1442,8 +1433,8 @@ public class MappingMongoConverterUnitTests {
 
 		ClassWithGeoCircle result = converter.read(ClassWithGeoCircle.class, document);
 
-		assertThat(result, is(notNullValue()));
-		assertThat(result.circle, is(result.circle));
+		assertThat(result).isNotNull();
+		assertThat(result.circle).isEqualTo(result.circle);
 	}
 
 	@Test // DATAMONGO-858
@@ -1457,12 +1448,11 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document document = new org.bson.Document();
 		converter.write(object, document);
 
-		assertThat(document, is(notNullValue()));
-		assertThat(document.get("sphere"), is(instanceOf(org.bson.Document.class)));
-		assertThat(document.get("sphere"),
-				is((Object) new org.bson.Document("center",
-						new org.bson.Document("x", sphere.getCenter().getX()).append("y", sphere.getCenter().getY()))
-								.append("radius", radius.getNormalizedValue()).append("metric", radius.getMetric().toString())));
+		assertThat(document).isNotNull();
+		assertThat(document.get("sphere")).isInstanceOf(org.bson.Document.class);
+		assertThat(document.get("sphere")).isEqualTo((Object) new org.bson.Document("center",
+				new org.bson.Document("x", sphere.getCenter().getX()).append("y", sphere.getCenter().getY()))
+						.append("radius", radius.getNormalizedValue()).append("metric", radius.getMetric().toString()));
 	}
 
 	@Test // DATAMONGO-858
@@ -1476,12 +1466,11 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document document = new org.bson.Document();
 		converter.write(object, document);
 
-		assertThat(document, is(notNullValue()));
-		assertThat(document.get("sphere"), is(instanceOf(org.bson.Document.class)));
-		assertThat(document.get("sphere"),
-				is((Object) new org.bson.Document("center",
-						new org.bson.Document("x", sphere.getCenter().getX()).append("y", sphere.getCenter().getY()))
-								.append("radius", radius.getNormalizedValue()).append("metric", radius.getMetric().toString())));
+		assertThat(document).isNotNull();
+		assertThat(document.get("sphere")).isInstanceOf(org.bson.Document.class);
+		assertThat(document.get("sphere")).isEqualTo((Object) new org.bson.Document("center",
+				new org.bson.Document("x", sphere.getCenter().getX()).append("y", sphere.getCenter().getY()))
+						.append("radius", radius.getNormalizedValue()).append("metric", radius.getMetric().toString()));
 	}
 
 	@Test // DATAMONGO-858
@@ -1495,8 +1484,8 @@ public class MappingMongoConverterUnitTests {
 
 		ClassWithGeoSphere result = converter.read(ClassWithGeoSphere.class, document);
 
-		assertThat(result, is(notNullValue()));
-		assertThat(result.sphere, is(object.sphere));
+		assertThat(result).isNotNull();
+		assertThat(result.sphere).isEqualTo(object.sphere);
 	}
 
 	@Test // DATAMONGO-858
@@ -1510,12 +1499,11 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document document = new org.bson.Document();
 		converter.write(object, document);
 
-		assertThat(document, is(notNullValue()));
-		assertThat(document.get("shape"), is(instanceOf(org.bson.Document.class)));
-		assertThat(document.get("shape"),
-				is((Object) new org.bson.Document("center",
-						new org.bson.Document("x", sphere.getCenter().getX()).append("y", sphere.getCenter().getY()))
-								.append("radius", radius.getNormalizedValue()).append("metric", radius.getMetric().toString())));
+		assertThat(document).isNotNull();
+		assertThat(document.get("shape")).isInstanceOf(org.bson.Document.class);
+		assertThat(document.get("shape")).isEqualTo((Object) new org.bson.Document("center",
+				new org.bson.Document("x", sphere.getCenter().getX()).append("y", sphere.getCenter().getY()))
+						.append("radius", radius.getNormalizedValue()).append("metric", radius.getMetric().toString()));
 	}
 
 	@Test // DATAMONGO-858
@@ -1531,8 +1519,8 @@ public class MappingMongoConverterUnitTests {
 
 		ClassWithGeoShape result = converter.read(ClassWithGeoShape.class, document);
 
-		assertThat(result, is(notNullValue()));
-		assertThat(result.shape, is(sphere));
+		assertThat(result).isNotNull();
+		assertThat(result.shape).isEqualTo(sphere);
 	}
 
 	@Test // DATAMONGO-976
@@ -1544,7 +1532,7 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document document = new org.bson.Document();
 		converter.write(source, document);
 
-		assertThat(document.get("score"), nullValue());
+		assertThat(document.get("score")).isNull();
 	}
 
 	@Test // DATAMONGO-976
@@ -1552,7 +1540,7 @@ public class MappingMongoConverterUnitTests {
 
 		ClassWithTextScoreProperty entity = converter.read(ClassWithTextScoreProperty.class,
 				new org.bson.Document("score", 5F));
-		assertThat(entity.score, equalTo(5F));
+		assertThat(entity.score).isEqualTo(5F);
 	}
 
 	@Test // DATAMONGO-1001, DATAMONGO-1509
@@ -1623,8 +1611,8 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document sink = new org.bson.Document();
 		converter.write(source, sink);
 
-		assertThat(sink.get("_id"), is("rootId"));
-		assertThat(sink.get("nested"), is(new org.bson.Document().append("id", "nestedId")));
+		assertThat(sink.get("_id")).isEqualTo("rootId");
+		assertThat(sink.get("nested")).isEqualTo(new org.bson.Document().append("id", "nestedId"));
 	}
 
 	@Test // DATAMONGO-1050
@@ -1636,9 +1624,9 @@ public class MappingMongoConverterUnitTests {
 		RootForClassWithExplicitlyRenamedIdField sink = converter.read(RootForClassWithExplicitlyRenamedIdField.class,
 				source);
 
-		assertThat(sink.id, is("rootId"));
-		assertThat(sink.nested, notNullValue());
-		assertThat(sink.nested.id, is("nestedId"));
+		assertThat(sink.id).isEqualTo("rootId");
+		assertThat(sink.nested).isNotNull();
+		assertThat(sink.nested.id).isEqualTo("nestedId");
 	}
 
 	@Test // DATAMONGO-1050
@@ -1648,7 +1636,7 @@ public class MappingMongoConverterUnitTests {
 
 		ClassWithNamedIdField withNamedIdField = converter.read(ClassWithNamedIdField.class, document);
 
-		assertThat(withNamedIdField.id, is("A"));
+		assertThat(withNamedIdField.id).isEqualTo("A");
 	}
 
 	@Test // DATAMONGO-1050
@@ -1659,7 +1647,7 @@ public class MappingMongoConverterUnitTests {
 		ClassWithExplicitlyRenamedField withExplicitlyRenamedField = converter.read(ClassWithExplicitlyRenamedField.class,
 				document);
 
-		assertThat(withExplicitlyRenamedField.id, is("B"));
+		assertThat(withExplicitlyRenamedField.id).isEqualTo("B");
 	}
 
 	@Test // DATAMONGO-1050
@@ -1669,7 +1657,7 @@ public class MappingMongoConverterUnitTests {
 
 		ClassWithAnnotatedIdField withAnnotatedIdField = converter.read(ClassWithAnnotatedIdField.class, document);
 
-		assertThat(withAnnotatedIdField.key, is("A"));
+		assertThat(withAnnotatedIdField.key).isEqualTo("A");
 	}
 
 	@Test // DATAMONGO-1102
@@ -1681,8 +1669,8 @@ public class MappingMongoConverterUnitTests {
 
 		converter.write(source, result);
 
-		assertThat(result.get("date"), is(instanceOf(Date.class)));
-		assertThat(converter.read(TypeWithLocalDateTime.class, result).date, is(reference));
+		assertThat(result.get("date")).isInstanceOf(Date.class);
+		assertThat(converter.read(TypeWithLocalDateTime.class, result).date).isEqualTo(reference);
 	}
 
 	@Test // DATAMONGO-1128
@@ -1695,10 +1683,10 @@ public class MappingMongoConverterUnitTests {
 
 		converter.write(type, result);
 
-		assertThat(getAsDocument(result, "string"), is(new org.bson.Document()));
+		assertThat(getAsDocument(result, "string")).isEqualTo(new org.bson.Document());
 
 		org.bson.Document localDateTime = getAsDocument(result, "localDateTime");
-		assertThat(localDateTime.get("value"), is(instanceOf(Date.class)));
+		assertThat(localDateTime.get("value")).isInstanceOf(Date.class);
 	}
 
 	@Test // DATAMONGO-1128
@@ -1713,8 +1701,8 @@ public class MappingMongoConverterUnitTests {
 
 		TypeWithOptional read = converter.read(TypeWithOptional.class, result);
 
-		assertThat(read.string, is(Optional.<String> empty()));
-		assertThat(read.localDateTime, is(Optional.of(now)));
+		assertThat(read.string).isEmpty();
+		assertThat(read.localDateTime).isEqualTo(Optional.of(now));
 	}
 
 	@Test // DATAMONGO-1118
@@ -1732,7 +1720,7 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document target = new org.bson.Document();
 		converter.write(source, target);
 
-		assertThat(converter.read(ClassWithMapUsingEnumAsKey.class, target).map, is(source.map));
+		assertThat(converter.read(ClassWithMapUsingEnumAsKey.class, target).map).isEqualTo(source.map);
 	}
 
 	@Test // DATAMONGO-1118
@@ -1752,8 +1740,8 @@ public class MappingMongoConverterUnitTests {
 
 		org.bson.Document map = DocumentTestUtils.getAsDocument(target, "map");
 
-		assertThat(map.containsKey("foo-enum-value"), is(true));
-		assertThat(map.containsKey("bar-enum-value"), is(true));
+		assertThat(map.containsKey("foo-enum-value")).isTrue();
+		assertThat(map.containsKey("bar-enum-value")).isTrue();
 	}
 
 	@Test // DATAMONGO-1118
@@ -1767,12 +1755,12 @@ public class MappingMongoConverterUnitTests {
 
 		ClassWithMapUsingEnumAsKey target = converter.read(ClassWithMapUsingEnumAsKey.class, source);
 
-		assertThat(target.map.get(FooBarEnum.FOO), is("spring"));
+		assertThat(target.map.get(FooBarEnum.FOO)).isEqualTo("spring");
 	}
 
 	@Test // DATAMONGO-1471
 	public void readsDocumentWithPrimitiveIdButNoValue() {
-		assertThat(converter.read(ClassWithIntId.class, new org.bson.Document()), is(notNullValue()));
+		assertThat(converter.read(ClassWithIntId.class, new org.bson.Document())).isNotNull();
 	}
 
 	@Test // DATAMONGO-1497
@@ -1781,7 +1769,7 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document source = new org.bson.Document("nested", new org.bson.Document("sample", "value"));
 		TypeWithPropertyInNestedField result = converter.read(TypeWithPropertyInNestedField.class, source);
 
-		assertThat(result.sample, is("value"));
+		assertThat(result.sample).isEqualTo("value");
 	}
 
 	@Test // DATAMONGO-1525
@@ -1789,7 +1777,7 @@ public class MappingMongoConverterUnitTests {
 
 		org.bson.Document source = new org.bson.Document("enumSet", Collections.emptyList());
 
-		assertThat(converter.read(ClassWithEnumProperty.class, source).enumSet, is(EnumSet.noneOf(SampleEnum.class)));
+		assertThat(converter.read(ClassWithEnumProperty.class, source).enumSet).isEqualTo(EnumSet.noneOf(SampleEnum.class));
 	}
 
 	@Test // DATAMONGO-1757
@@ -1810,7 +1798,7 @@ public class MappingMongoConverterUnitTests {
 
 		org.bson.Document source = new org.bson.Document("array", Collections.emptyList());
 
-		assertThat(converter.read(WithArrayInConstructor.class, source).array, is(emptyArray()));
+		assertThat(converter.read(WithArrayInConstructor.class, source).array).isEmpty();
 	}
 
 	@Test // DATAMONGO-1831
@@ -1818,7 +1806,7 @@ public class MappingMongoConverterUnitTests {
 
 		org.bson.Document source = new org.bson.Document();
 
-		assertThat(converter.read(WithArrayInConstructor.class, source).array, is(nullValue()));
+		assertThat(converter.read(WithArrayInConstructor.class, source).array).isNull();
 	}
 
 	@Test // DATAMONGO-1898

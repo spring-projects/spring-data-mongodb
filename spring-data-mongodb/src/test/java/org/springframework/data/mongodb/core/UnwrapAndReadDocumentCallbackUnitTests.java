@@ -15,9 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.bson.Document;
 import org.junit.Before;
@@ -25,6 +24,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoTemplate.UnwrapAndReadDocumentCallback;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
@@ -62,8 +62,8 @@ public class UnwrapAndReadDocumentCallbackUnitTests {
 
 		Target target = callback.doWith(new Document("foo", "bar"));
 
-		assertThat(target.id, is(nullValue()));
-		assertThat(target.foo, is("bar"));
+		assertThat(target.id).isNull();
+		assertThat(target.foo).isEqualTo("bar");
 	}
 
 	@Test
@@ -71,8 +71,8 @@ public class UnwrapAndReadDocumentCallbackUnitTests {
 
 		Target target = callback.doWith(new Document("_id", new Document("foo", "bar")));
 
-		assertThat(target.id, is(nullValue()));
-		assertThat(target.foo, is("bar"));
+		assertThat(target.id).isNull();
+		assertThat(target.foo).isEqualTo("bar");
 	}
 
 	@Test
@@ -80,8 +80,8 @@ public class UnwrapAndReadDocumentCallbackUnitTests {
 
 		Target target = callback.doWith(new Document("_id", new Document("foo", "bar")).append("foo", "foobar"));
 
-		assertThat(target.id, is(nullValue()));
-		assertThat(target.foo, is("foobar"));
+		assertThat(target.id).isNull();
+		assertThat(target.foo).isEqualTo("foobar");
 	}
 
 	@Test
@@ -89,8 +89,8 @@ public class UnwrapAndReadDocumentCallbackUnitTests {
 
 		Target target = callback.doWith(new Document("_id", "bar").append("foo", "foo"));
 
-		assertThat(target.id, is("bar"));
-		assertThat(target.foo, is("foo"));
+		assertThat(target.id).isEqualTo("bar");
+		assertThat(target.foo).isEqualTo("foo");
 	}
 
 	static class Target {
