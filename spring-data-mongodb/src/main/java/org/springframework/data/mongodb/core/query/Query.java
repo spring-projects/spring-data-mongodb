@@ -142,14 +142,32 @@ public class Query {
 	}
 
 	/**
-	 * Configures the query to use the given hint when being executed.
+	 * Configures the query to use the given hint when being executed. {@code hint} is parsed as {@link Document}.
 	 *
-	 * @param name must not be {@literal null} or empty.
+	 * @param hint must not be {@literal null} or empty.
 	 * @return
+	 * @see Document#parse(String)
+	 * @deprecated since 2.2, use {@link #withHint(Document)}
 	 */
-	public Query withHint(String name) {
-		Assert.hasText(name, "Hint must not be empty or null!");
-		this.hint = name;
+	@Deprecated
+	public Query withHint(String hint) {
+
+		Assert.hasText(hint, "Hint must not be empty or null!");
+		this.hint = hint;
+		return this;
+	}
+
+	/**
+	 * Configures the query to use the given {@link Document hint} when being executed.
+	 *
+	 * @param hint must not be {@literal null}.
+	 * @return
+	 * @since 2.2
+	 */
+	public Query withHint(Document hint) {
+
+		Assert.notNull(hint, "Hint must not be null!");
+		this.hint = hint.toJson();
 		return this;
 	}
 
@@ -284,8 +302,10 @@ public class Query {
 
 	/**
 	 * @return
+	 * @deprecated since 2.2. Return type to be changed to {@link Document}.
 	 */
 	@Nullable
+	@Deprecated
 	public String getHint() {
 		return hint;
 	}

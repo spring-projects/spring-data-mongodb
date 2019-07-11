@@ -73,6 +73,15 @@ public class QueryCursorPreparerUnitTests {
 		verify(cursor).hint(new Document("age", 1));
 	}
 
+	@Test // DATAMONGO-2319
+	public void appliesDocumentHintsCorrectly() {
+
+		Query query = query(where("foo").is("bar")).withHint(Document.parse("{ age: 1 }"));
+		prepare(query);
+
+		verify(cursor).hint(new Document("age", 1));
+	}
+
 	@Test // DATAMONGO-957
 	public void doesNotApplyMetaWhenEmpty() {
 
