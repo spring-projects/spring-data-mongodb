@@ -27,9 +27,9 @@ import org.junit.Test;
  */
 public class CountOperationUnitTests {
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1549
+	@Test // DATAMONGO-1549
 	public void rejectsEmptyFieldName() {
-		new CountOperation("");
+		assertThatIllegalArgumentException().isThrownBy(() -> new CountOperation(""));
 	}
 
 	@Test // DATAMONGO-1549

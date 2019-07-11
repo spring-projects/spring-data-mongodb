@@ -28,19 +28,19 @@ import org.junit.Test;
  */
 public class NamedMongoScriptUnitTests {
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-479
+	@Test // DATAMONGO-479
 	public void shouldThrowExceptionWhenScriptNameIsNull() {
-		new NamedMongoScript(null, "return 1;");
+		assertThatIllegalArgumentException().isThrownBy(() -> new NamedMongoScript(null, "return 1;"));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-479
+	@Test // DATAMONGO-479
 	public void shouldThrowExceptionWhenScriptNameIsEmptyString() {
-		new NamedMongoScript("", "return 1");
+		assertThatIllegalArgumentException().isThrownBy(() -> new NamedMongoScript("", "return 1"));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-479
+	@Test // DATAMONGO-479
 	public void shouldThrowExceptionWhenRawScriptIsEmptyString() {
-		new NamedMongoScript("foo", "");
+		assertThatIllegalArgumentException().isThrownBy(() -> new NamedMongoScript("foo", ""));
 	}
 
 	@Test // DATAMONGO-479

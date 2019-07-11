@@ -66,9 +66,9 @@ public class AuditingEntityCallbackUnitTests {
 		callback = new AuditingEntityCallback(() -> handler);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-2261
+	@Test // DATAMONGO-2261
 	public void rejectsNullAuditingHandler() {
-		new AuditingEntityCallback(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> new AuditingEntityCallback(null));
 	}
 
 	@Test // DATAMONGO-2261

@@ -63,14 +63,14 @@ public class ConvertingParameterAccessorUnitTests {
 		this.converter = new MappingMongoConverter(resolver, context);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void rejectsNullDbRefResolver() {
-		new MappingMongoConverter((DbRefResolver) null, context);
+		assertThatIllegalArgumentException().isThrownBy(() -> new MappingMongoConverter((DbRefResolver) null, context));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void rejectsNullContext() {
-		new MappingMongoConverter(resolver, null);
+		assertThatIllegalArgumentException().isThrownBy(() -> new MappingMongoConverter(resolver, null));
 	}
 
 	@Test

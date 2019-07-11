@@ -22,17 +22,16 @@ import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
 
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
-import org.springframework.data.mapping.MappingException;
 
 import com.mongodb.DBRef;
 
@@ -48,8 +47,6 @@ import com.mongodb.DBRef;
 public class MongoMappingContextUnitTests {
 
 	@Mock ApplicationContext applicationContext;
-
-	@Rule public ExpectedException exception = ExpectedException.none();
 
 	@Test
 	public void addsSelfReferencingPersistentEntityCorrectly() throws Exception {
@@ -93,15 +90,12 @@ public class MongoMappingContextUnitTests {
 	@Test // DATAMONGO-607
 	public void rejectsClassWithAmbiguousFieldMappings() {
 
-		exception.expect(MappingException.class);
-		exception.expectMessage("firstname");
-		exception.expectMessage("lastname");
-		exception.expectMessage("foo");
-		exception.expectMessage("@Field");
-
 		MongoMappingContext context = new MongoMappingContext();
 		context.setApplicationContext(applicationContext);
-		context.getPersistentEntity(InvalidPerson.class);
+
+		assertThatExceptionOfType(MappingException.class).isThrownBy(() -> context.getPersistentEntity(InvalidPerson.class))
+				.withMessageContaining("firstname").withMessageContaining("lastname").withMessageContaining("foo")
+				.withMessageContaining("@Field");
 	}
 
 	@Test // DATAMONGO-694
@@ -157,13 +151,11 @@ public class MongoMappingContextUnitTests {
 	@Test // DATAMONGO-976
 	public void shouldRejectClassWithInvalidTextScoreProperty() {
 
-		exception.expect(MappingException.class);
-		exception.expectMessage("score");
-		exception.expectMessage("Float");
-		exception.expectMessage("Double");
-
 		MongoMappingContext context = new MongoMappingContext();
-		context.getPersistentEntity(ClassWithInvalidTextScoreProperty.class);
+
+		assertThatExceptionOfType(MappingException.class)
+				.isThrownBy(() -> context.getPersistentEntity(ClassWithInvalidTextScoreProperty.class))
+				.withMessageContaining("score").withMessageContaining("Float").withMessageContaining("Double");
 	}
 
 	public class SampleClass {

@@ -29,14 +29,14 @@ import org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.Re
  */
 public class ReplaceRootOperationUnitTests {
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1550
+	@Test // DATAMONGO-1550
 	public void rejectsNullField() {
-		new ReplaceRootOperation((Field) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> new ReplaceRootOperation((Field) null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1550
+	@Test // DATAMONGO-1550
 	public void rejectsNullExpression() {
-		new ReplaceRootOperation((AggregationExpression) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> new ReplaceRootOperation((AggregationExpression) null));
 	}
 
 	@Test // DATAMONGO-1550

@@ -43,7 +43,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.assertj.core.api.Assertions;
 import org.assertj.core.api.Assumptions;
 import org.bson.BsonDocument;
 import org.bson.BsonTimestamp;
@@ -51,10 +50,9 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -96,8 +94,6 @@ import com.mongodb.WriteConcern;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:reactive-infrastructure.xml")
 public class ReactiveMongoTemplateTests {
-
-	@Rule public ExpectedException thrown = ExpectedException.none();
 
 	@Autowired SimpleReactiveMongoDatabaseFactory factory;
 	@Autowired ReactiveMongoTemplate template;
@@ -195,21 +191,19 @@ public class ReactiveMongoTemplateTests {
 	@Test // DATAMONGO-1444
 	public void simpleInsertDoesNotAllowArrays() {
 
-		thrown.expect(IllegalArgumentException.class);
-
 		Person person = new Person("Mark");
 		person.setAge(35);
-		template.insert(new Person[] { person });
+
+		assertThatIllegalArgumentException().isThrownBy(() -> template.insert(new Person[] { person }));
 	}
 
 	@Test // DATAMONGO-1444
 	public void simpleInsertDoesNotAllowCollections() {
 
-		thrown.expect(IllegalArgumentException.class);
-
 		Person person = new Person("Mark");
 		person.setAge(35);
-		template.insert(Collections.singletonList(person));
+
+		assertThatIllegalArgumentException().isThrownBy(() -> template.insert(Collections.singletonList(person)));
 	}
 
 	@Test // DATAMONGO-1444
@@ -563,17 +557,15 @@ public class ReactiveMongoTemplateTests {
 	@Test // DATAMONGO-1827
 	public void findAndReplaceShouldErrorOnSkip() {
 
-		thrown.expect(IllegalArgumentException.class);
-
-		template.findAndReplace(query(where("name").is("Walter")).skip(10), new MyPerson("Heisenberg")).subscribe();
+		assertThatIllegalArgumentException().isThrownBy(() -> template
+				.findAndReplace(query(where("name").is("Walter")).skip(10), new MyPerson("Heisenberg")).subscribe());
 	}
 
 	@Test // DATAMONGO-1827
 	public void findAndReplaceShouldErrorOnLimit() {
 
-		thrown.expect(IllegalArgumentException.class);
-
-		template.findAndReplace(query(where("name").is("Walter")).limit(10), new MyPerson("Heisenberg")).subscribe();
+		assertThatIllegalArgumentException().isThrownBy(() -> template
+				.findAndReplace(query(where("name").is("Walter")).limit(10), new MyPerson("Heisenberg")).subscribe());
 	}
 
 	@Test // DATAMONGO-1827
@@ -755,9 +747,9 @@ public class ReactiveMongoTemplateTests {
 				.verifyComplete();
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1774
+	@Test // DATAMONGO-1774
 	public void removeWithNullShouldThrowError() {
-		template.remove((Object) null).subscribe();
+		assertThatIllegalArgumentException().isThrownBy(() -> template.remove((Object) null).subscribe());
 	}
 
 	@Test // DATAMONGO-1774
@@ -936,9 +928,10 @@ public class ReactiveMongoTemplateTests {
 				.verifyComplete();
 	}
 
-	@Test(expected = MappingException.class) // DATAMONGO-1444, DATAMONGO-1730, DATAMONGO-2150
+	@Test
+	// DATAMONGO-1444, DATAMONGO-1730, DATAMONGO-2150
 	public void savesMongoPrimitiveObjectCorrectly() {
-		template.save(new Object(), "collection");
+		assertThatExceptionOfType(MappingException.class).isThrownBy(() -> template.save(new Object(), "collection"));
 	}
 
 	@Test // DATAMONGO-1444
@@ -1027,9 +1020,9 @@ public class ReactiveMongoTemplateTests {
 				.verifyComplete();
 	}
 
-	@Test(expected = MappingException.class) // DATAMONGO-1444, DATAMONGO-2150
+	@Test // DATAMONGO-1444, DATAMONGO-2150
 	public void rejectsNonJsonStringForSave() {
-		template.save("Foobar!", "collection");
+		assertThatExceptionOfType(MappingException.class).isThrownBy(() -> template.save("Foobar!", "collection"));
 	}
 
 	@Test // DATAMONGO-1444
@@ -1381,7 +1374,6 @@ public class ReactiveMongoTemplateTests {
 		Person person2 = new Person("Data", 39);
 		Person person3 = new Person("MongoDB", 37);
 
-
 		Flux.merge(template.insert(person1), template.insert(person2), template.insert(person3)) //
 				.as(StepVerifier::create) //
 				.expectNextCount(3) //
@@ -1481,7 +1473,6 @@ public class ReactiveMongoTemplateTests {
 
 		Person person1 = new Person("Spring", 38);
 		Person person2 = new Person("Data", 37);
-
 
 		Flux.merge(template.insert(person1), template.insert(person2)) //
 				.as(StepVerifier::create) //

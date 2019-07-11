@@ -28,9 +28,9 @@ import org.junit.Test;
  */
 public class BucketOperationUnitTests {
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1552
+	@Test // DATAMONGO-1552
 	public void rejectsNullFields() {
-		new BucketOperation((Field) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> new BucketOperation((Field) null));
 	}
 
 	@Test // DATAMONGO-1552
@@ -45,9 +45,9 @@ public class BucketOperationUnitTests {
 				"{ \"grossSalesPrice\" : { \"$multiply\" : [ { \"$add\" : [ \"$netPrice\" , \"$surCharge\"]} , \"$taxrate\" , 2]} , \"titles\" : { $push: \"$title\" } }}"));
 	}
 
-	@Test(expected = IllegalStateException.class) // DATAMONGO-1552
+	@Test // DATAMONGO-1552
 	public void shouldRenderEmptyAggregationExpression() {
-		bucket("groupby").andOutput("field").as("alias");
+		assertThatIllegalStateException().isThrownBy(() -> bucket("groupby").andOutput("field").as("alias"));
 	}
 
 	@Test // DATAMONGO-1552

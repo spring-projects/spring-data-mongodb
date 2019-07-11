@@ -67,24 +67,25 @@ public class ReactiveUpdateOperationSupportTests {
 		template = new ReactiveMongoTemplate(MongoClients.create(), "ExecutableUpdateOperationSupportTests");
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1719
+	@Test // DATAMONGO-1719
 	public void domainTypeIsRequired() {
-		template.update(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> template.update(null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1719
+	@Test // DATAMONGO-1719
 	public void updateIsRequired() {
-		template.update(Person.class).apply(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> template.update(Person.class).apply(null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1719
+	@Test // DATAMONGO-1719
 	public void collectionIsRequiredOnSet() {
-		template.update(Person.class).inCollection(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> template.update(Person.class).inCollection(null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1719
+	@Test // DATAMONGO-1719
 	public void findAndModifyOptionsAreRequiredOnSet() {
-		template.update(Person.class).apply(new Update()).withOptions(null);
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> template.update(Person.class).apply(new Update()).withOptions(null));
 	}
 
 	@Test // DATAMONGO-1719

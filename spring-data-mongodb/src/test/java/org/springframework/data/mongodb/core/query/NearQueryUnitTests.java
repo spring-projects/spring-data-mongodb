@@ -43,9 +43,9 @@ public class NearQueryUnitTests {
 
 	private static final Distance ONE_FIFTY_KILOMETERS = new Distance(150, Metrics.KILOMETERS);
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void rejectsNullPoint() {
-		NearQuery.near(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> NearQuery.near(null));
 	}
 
 	@Test
@@ -130,9 +130,9 @@ public class NearQueryUnitTests {
 		assertThat(query.toDocument().get("num")).isNull();
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONOGO-829
+	@Test // DATAMONOGO-829
 	public void nearQueryShouldThrowExceptionWhenGivenANullQuery() {
-		NearQuery.near(new Point(1, 2)).query(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> NearQuery.near(new Point(1, 2)).query(null));
 	}
 
 	@Test // DATAMONGO-829

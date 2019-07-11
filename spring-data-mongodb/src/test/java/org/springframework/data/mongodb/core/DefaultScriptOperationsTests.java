@@ -146,9 +146,9 @@ public class DefaultScriptOperationsTests {
 		assertThat(result).isEqualTo((Object) 10D);
 	}
 
-	@Test(expected = UncategorizedDataAccessException.class) // DATAMONGO-479
+	@Test // DATAMONGO-479
 	public void callShouldThrowExceptionWhenCallingScriptThatDoesNotExist() {
-		scriptOps.call(SCRIPT_NAME, 10);
+		assertThatExceptionOfType(UncategorizedDataAccessException.class).isThrownBy(() -> scriptOps.call(SCRIPT_NAME, 10));
 	}
 
 	@Test // DATAMONGO-479

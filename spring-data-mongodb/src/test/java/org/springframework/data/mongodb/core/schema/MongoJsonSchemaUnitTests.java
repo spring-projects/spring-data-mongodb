@@ -71,13 +71,13 @@ public class MongoJsonSchemaUnitTests {
 						new Document("lastname", new Document("type", "string")))));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1835
+	@Test // DATAMONGO-1835
 	public void throwsExceptionOnNullRoot() {
-		MongoJsonSchema.of((JsonSchemaObject) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> MongoJsonSchema.of((JsonSchemaObject) null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1835
+	@Test // DATAMONGO-1835
 	public void throwsExceptionOnNullDocument() {
-		MongoJsonSchema.of((Document) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> MongoJsonSchema.of((Document) null));
 	}
 }

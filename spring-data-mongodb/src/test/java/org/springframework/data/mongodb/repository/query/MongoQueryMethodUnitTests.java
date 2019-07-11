@@ -100,9 +100,10 @@ public class MongoQueryMethodUnitTests {
 				.isTrue();
 	}
 
-	@Test(expected = IllegalArgumentException.class)
-	public void rejectsGeoPageQueryWithoutPageable() throws Exception {
-		queryMethod(PersonRepository.class, "findByLocationNear", Point.class, Distance.class);
+	@Test
+	public void rejectsGeoPageQueryWithoutPageable() {
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> queryMethod(PersonRepository.class, "findByLocationNear", Point.class, Distance.class));
 	}
 
 	@Test(expected = IllegalArgumentException.class)

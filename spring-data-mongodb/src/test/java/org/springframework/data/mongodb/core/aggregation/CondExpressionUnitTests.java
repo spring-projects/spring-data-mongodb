@@ -33,24 +33,25 @@ import org.springframework.data.mongodb.core.query.Criteria;
  */
 public class CondExpressionUnitTests {
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-861
+	@Test // DATAMONGO-861
 	public void builderRejectsEmptyFieldName() {
-		newBuilder().when("");
+		assertThatIllegalArgumentException().isThrownBy(() -> newBuilder().when(""));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-861
+	@Test // DATAMONGO-861
 	public void builderRejectsNullFieldName() {
-		newBuilder().when((Document) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> newBuilder().when((Document) null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-861
+	@Test // DATAMONGO-861
 	public void builderRejectsNullCriteriaName() {
-		newBuilder().when((Criteria) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> newBuilder().when((Criteria) null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-861
+	@Test // DATAMONGO-861
 	public void builderRejectsBuilderAsThenValue() {
-		newBuilder().when("isYellow").then(newBuilder().when("field").then("then-value")).otherwise("otherwise");
+		assertThatIllegalArgumentException().isThrownBy(
+				() -> newBuilder().when("isYellow").then(newBuilder().when("field").then("then-value")).otherwise("otherwise"));
 	}
 
 	@Test // DATAMONGO-861, DATAMONGO-1542

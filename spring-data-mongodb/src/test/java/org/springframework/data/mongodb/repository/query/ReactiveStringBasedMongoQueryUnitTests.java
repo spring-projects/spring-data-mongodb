@@ -115,9 +115,9 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 		assertThat(mongoQuery.isDeleteQuery()).isTrue();
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1444
-	public void preventsDeleteAndCountFlagAtTheSameTime() throws Exception {
-		createQueryForMethod("invalidMethod", String.class);
+	@Test // DATAMONGO-1444
+	public void preventsDeleteAndCountFlagAtTheSameTime() {
+		assertThatIllegalArgumentException().isThrownBy(() -> createQueryForMethod("invalidMethod", String.class));
 	}
 
 	@Test // DATAMONGO-2030

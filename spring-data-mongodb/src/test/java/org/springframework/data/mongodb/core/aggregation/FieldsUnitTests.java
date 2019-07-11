@@ -18,9 +18,7 @@ package org.springframework.data.mongodb.core.aggregation;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import org.springframework.data.mongodb.core.aggregation.Fields.*;
 
@@ -32,16 +30,14 @@ import org.springframework.data.mongodb.core.aggregation.Fields.*;
  */
 public class FieldsUnitTests {
 
-	@Rule public ExpectedException exception = ExpectedException.none();
-
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void rejectsNullFieldVarArgs() {
-		Fields.from((Field[]) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> Fields.from((Field[]) null));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void rejectsNullFieldNameVarArgs() {
-		Fields.fields((String[]) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> Fields.fields((String[]) null));
 	}
 
 	@Test
@@ -54,19 +50,19 @@ public class FieldsUnitTests {
 		verify(Fields.field("foo", "bar"), "foo", "bar");
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void rejectsNullFieldName() {
-		Fields.field(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> Fields.field(null));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void rejectsNullFieldNameIfTargetGiven() {
-		Fields.field(null, "foo");
+		assertThatIllegalArgumentException().isThrownBy(() -> Fields.field(null, "foo"));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void rejectsEmptyFieldName() {
-		Fields.field("");
+		assertThatIllegalArgumentException().isThrownBy(() -> Fields.field(""));
 	}
 
 	@Test
@@ -99,10 +95,7 @@ public class FieldsUnitTests {
 
 	@Test
 	public void rejectsAmbiguousFieldNames() {
-
-		exception.expect(IllegalArgumentException.class);
-
-		fields("b", "a.b");
+		assertThatIllegalArgumentException().isThrownBy(() -> fields("b", "a.b"));
 	}
 
 	@Test // DATAMONGO-774
@@ -112,9 +105,9 @@ public class FieldsUnitTests {
 		assertThat(Fields.field("$$$$name").getName()).isEqualTo("name");
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-774
+	@Test // DATAMONGO-774
 	public void rejectsNameConsistingOfDollarOnly() {
-		Fields.field("$");
+		assertThatIllegalArgumentException().isThrownBy(() -> Fields.field("$"));
 	}
 
 	@Test // DATAMONGO-774

@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.aggregation.AggregationFunctionExpressions.*;
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
@@ -65,9 +65,9 @@ public class ProjectionOperationUnitTests {
 	static final String DIVIDE = "$divide";
 	static final String PROJECT = "$project";
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-586
+	@Test // DATAMONGO-586
 	public void rejectsNullFields() {
-		new ProjectionOperation((Fields) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> new ProjectionOperation((Fields) null));
 	}
 
 	@Test // DATAMONGO-586
@@ -188,10 +188,9 @@ public class ProjectionOperationUnitTests {
 		assertThat(oper.get(DIVIDE)).isEqualTo(Arrays.<Object> asList("$a", 1));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-586
+	@Test // DATAMONGO-586
 	public void arithmeticProjectionOperationDivideByZeroException() {
-
-		new ProjectionOperation().and("a").divide(0);
+		assertThatIllegalArgumentException().isThrownBy(() -> new ProjectionOperation().and("a").divide(0));
 	}
 
 	@Test // DATAMONGO-586
@@ -267,10 +266,9 @@ public class ProjectionOperationUnitTests {
 		assertThat(projectClause.get("_id")).isEqualTo(0);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void arithmeticProjectionOperationModByZeroException() {
-
-		new ProjectionOperation().and("a").mod(0);
+		assertThatIllegalArgumentException().isThrownBy(() -> new ProjectionOperation().and("a").mod(0));
 	}
 
 	@Test // DATAMONGO-769

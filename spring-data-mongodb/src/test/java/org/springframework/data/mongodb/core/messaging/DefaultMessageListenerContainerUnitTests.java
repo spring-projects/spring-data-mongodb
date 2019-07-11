@@ -49,9 +49,9 @@ public class DefaultMessageListenerContainerUnitTests {
 		container = new DefaultMessageListenerContainer(template);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1803
+	@Test // DATAMONGO-1803
 	public void throwsErrorOnNullTemplate() {
-		new DefaultMessageListenerContainer(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> new DefaultMessageListenerContainer(null));
 	}
 
 	@Test // DATAMONGO-1803

@@ -106,19 +106,19 @@ public class ReactiveFindOperationSupportTests {
 		blocking.createCollection(STAR_WARS, options);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1719
+	@Test // DATAMONGO-1719
 	public void domainTypeIsRequired() {
-		template.query(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> template.query(null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1719
+	@Test // DATAMONGO-1719
 	public void returnTypeIsRequiredOnSet() {
-		template.query(Person.class).as(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> template.query(Person.class).as(null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1719
+	@Test // DATAMONGO-1719
 	public void collectionIsRequiredOnSet() {
-		template.query(Person.class).inCollection(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> template.query(Person.class).inCollection(null));
 	}
 
 	@Test // DATAMONGO-1719

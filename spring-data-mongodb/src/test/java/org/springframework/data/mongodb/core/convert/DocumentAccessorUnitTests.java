@@ -68,14 +68,14 @@ public class DocumentAccessorUnitTests {
 		assertThat(accessor.get(fooProperty)).isNull();
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-766
+	@Test // DATAMONGO-766
 	public void rejectsNonDocuments() {
-		new DocumentAccessor(new BsonDocument());
+		assertThatIllegalArgumentException().isThrownBy(() -> new DocumentAccessor(new BsonDocument()));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-766
+	@Test // DATAMONGO-766
 	public void rejectsNullDocument() {
-		new DocumentAccessor(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> new DocumentAccessor(null));
 	}
 
 	@Test // DATAMONGO-1335

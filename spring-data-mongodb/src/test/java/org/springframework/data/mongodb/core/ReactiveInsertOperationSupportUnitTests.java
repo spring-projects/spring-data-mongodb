@@ -16,8 +16,7 @@
 package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.anyList;
 
@@ -31,6 +30,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.data.annotation.Id;
 
 /**
@@ -65,9 +65,9 @@ public class ReactiveInsertOperationSupportUnitTests {
 		han.id = "id-2";
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1719
+	@Test // DATAMONGO-1719
 	public void nullCollectionShouldThrowException() {
-		ops.insert(Person.class).inCollection(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> ops.insert(Person.class).inCollection(null));
 	}
 
 	@Test // DATAMONGO-1719

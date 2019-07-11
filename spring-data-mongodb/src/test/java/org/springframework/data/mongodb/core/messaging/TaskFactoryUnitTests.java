@@ -52,9 +52,9 @@ public class TaskFactoryUnitTests {
 		factory = new TaskFactory(template);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1803
+	@Test // DATAMONGO-1803
 	public void requestMustNotBeNull() {
-		factory.forRequest(null, Object.class, errorHandler);
+		assertThatIllegalArgumentException().isThrownBy(() -> factory.forRequest(null, Object.class, errorHandler));
 	}
 
 	@Test // DATAMONGO-1803

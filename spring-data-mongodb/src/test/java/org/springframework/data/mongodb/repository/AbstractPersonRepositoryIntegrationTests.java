@@ -33,9 +33,7 @@ import java.util.stream.Stream;
 
 import org.bson.Document;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,8 +78,6 @@ import org.springframework.test.util.ReflectionTestUtils;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 public abstract class AbstractPersonRepositoryIntegrationTests {
-
-	public @Rule ExpectedException expectedException = ExpectedException.none();
 
 	@Autowired protected PersonRepository repository;
 
@@ -178,10 +174,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test // DATAMONGO-1608
 	public void findByFirstnameLikeWithNull() {
 
-		expectedException.expect(IllegalArgumentException.class);
-		expectedException.expectMessage("property 'firstname'");
-
-		repository.findByFirstnameLike(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> repository.findByFirstnameLike(null));
 	}
 
 	@Test
@@ -649,10 +642,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test // DATAMONGO-1608
 	public void findByFirstNameIgnoreCaseWithNull() {
 
-		expectedException.expect(IllegalArgumentException.class);
-		expectedException.expectMessage("property 'firstname'");
-
-		repository.findByFirstnameIgnoreCase(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> repository.findByFirstnameIgnoreCase(null));
 	}
 
 	@Test // DATAMONGO-770
@@ -1164,14 +1154,16 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(repository.findFirstBy()).isNotNull();
 	}
 
-	@Test(expected = IncorrectResultSizeDataAccessException.class) // DATAMONGO-1865
+	@Test // DATAMONGO-1865
 	public void findSingleEntityThrowsErrorWhenNotUnique() {
-		repository.findPersonByLastnameLike(dave.getLastname());
+		assertThatExceptionOfType(IncorrectResultSizeDataAccessException.class)
+				.isThrownBy(() -> repository.findPersonByLastnameLike(dave.getLastname()));
 	}
 
-	@Test(expected = IncorrectResultSizeDataAccessException.class) // DATAMONGO-1865
+	@Test // DATAMONGO-1865
 	public void findOptionalSingleEntityThrowsErrorWhenNotUnique() {
-		repository.findOptionalPersonByLastnameLike(dave.getLastname());
+		assertThatExceptionOfType(IncorrectResultSizeDataAccessException.class)
+				.isThrownBy(() -> repository.findOptionalPersonByLastnameLike(dave.getLastname()));
 	}
 
 	@Test // DATAMONGO-1979

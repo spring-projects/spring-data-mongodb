@@ -25,9 +25,7 @@ import java.util.List;
 import org.bson.Document;
 import org.bson.json.JsonParseException;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -68,8 +66,6 @@ public class PartTreeMongoQueryUnitTests {
 
 	MongoMappingContext mappingContext;
 
-	public @Rule ExpectedException exception = ExpectedException.none();
-
 	@Before
 	public void setUp() {
 
@@ -84,10 +80,8 @@ public class PartTreeMongoQueryUnitTests {
 	@Test // DATAMOGO-952
 	public void rejectsInvalidFieldSpecification() {
 
-		exception.expect(IllegalStateException.class);
-		exception.expectMessage("findByLastname");
-
-		deriveQueryFromMethod("findByLastname", "foo");
+		assertThatIllegalStateException().isThrownBy(() -> deriveQueryFromMethod("findByLastname", "foo"))
+				.withMessageContaining("findByLastname");
 	}
 
 	@Test // DATAMOGO-952

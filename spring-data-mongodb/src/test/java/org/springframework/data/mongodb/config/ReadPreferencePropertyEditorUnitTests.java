@@ -18,9 +18,7 @@ package org.springframework.data.mongodb.config;
 import static org.assertj.core.api.Assertions.*;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import com.mongodb.ReadPreference;
 
@@ -30,8 +28,6 @@ import com.mongodb.ReadPreference;
  * @author Christoph Strobl
  */
 public class ReadPreferencePropertyEditorUnitTests {
-
-	@Rule public ExpectedException expectedException = ExpectedException.none();
 
 	ReadPreferencePropertyEditor editor;
 
@@ -43,11 +39,8 @@ public class ReadPreferencePropertyEditorUnitTests {
 	@Test // DATAMONGO-1158
 	public void shouldThrowExceptionOnUndefinedPreferenceString() {
 
-		expectedException.expect(IllegalArgumentException.class);
-		expectedException.expectMessage("ReadPreference");
-		expectedException.expectMessage("foo");
-
-		editor.setAsText("foo");
+		assertThatIllegalArgumentException().isThrownBy(() -> editor.setAsText("foo")).withMessageContaining("foo")
+				.withMessageContaining("ReadPreference");
 	}
 
 	@Test // DATAMONGO-1158

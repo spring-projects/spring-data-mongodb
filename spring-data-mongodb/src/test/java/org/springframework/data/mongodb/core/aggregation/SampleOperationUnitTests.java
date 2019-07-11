@@ -30,14 +30,14 @@ public class SampleOperationUnitTests {
 	private static final String SIZE = "size";
 	private static final String OP = "$sample";
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1325
+	@Test // DATAMONGO-1325
 	public void rejectsNegativeSample() {
-		new SampleOperation(-1L);
+		assertThatIllegalArgumentException().isThrownBy(() -> new SampleOperation(-1L));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1325
+	@Test // DATAMONGO-1325
 	public void rejectsZeroSample() {
-		new SampleOperation(0L);
+		assertThatIllegalArgumentException().isThrownBy(() -> new SampleOperation(0L));
 	}
 
 	@Test // DATAMONGO-1325

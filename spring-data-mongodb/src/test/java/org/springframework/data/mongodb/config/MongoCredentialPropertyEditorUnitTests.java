@@ -137,14 +137,15 @@ public class MongoCredentialPropertyEditorUnitTests {
 		assertThat(getValue()).isNull();
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1158
+	@Test // DATAMONGO-1158
 	public void shouldThrowExceptionForMalformatedCredentialsString() {
-		editor.setAsText("tyrion");
+		assertThatIllegalArgumentException().isThrownBy(() -> editor.setAsText("tyrion"));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1158
+	@Test // DATAMONGO-1158
 	public void shouldThrowExceptionForMalformatedAuthMechanism() {
-		editor.setAsText(USER_2_AUTH_STRING + "?uri.authMechanism=Targaryen");
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> editor.setAsText(USER_2_AUTH_STRING + "?uri.authMechanism=Targaryen"));
 	}
 
 	@Test // DATAMONGO-1158
@@ -283,10 +284,10 @@ public class MongoCredentialPropertyEditorUnitTests {
 		assertThat(getValue()).contains(SCRAM_SHA_256_CREDENTIALS);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-2016
+	@Test // DATAMONGO-2016
 	@SuppressWarnings("unchecked")
 	public void failsGracefullyOnEmptyQueryArgument() {
-		editor.setAsText(USER_5_AUTH_STRING_WITH_QUERY_ARGS);
+		assertThatIllegalArgumentException().isThrownBy(() -> editor.setAsText(USER_5_AUTH_STRING_WITH_QUERY_ARGS));
 	}
 
 	@SuppressWarnings("unchecked")

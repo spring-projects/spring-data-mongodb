@@ -24,9 +24,7 @@ import reactor.test.StepVerifier;
 
 import org.bson.Document;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,8 +49,6 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
 public class ReactiveMongoTemplateExecuteTests {
 
 	private static final Version THREE = Version.parse("3.0");
-
-	@Rule public ExpectedException thrown = ExpectedException.none();
 
 	@Autowired SimpleReactiveMongoDatabaseFactory factory;
 	@Autowired ReactiveMongoOperations operations;

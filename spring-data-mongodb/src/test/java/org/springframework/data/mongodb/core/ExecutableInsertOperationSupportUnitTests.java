@@ -68,15 +68,14 @@ public class ExecutableInsertOperationSupportUnitTests {
 		han.id = "id-2";
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1563
+	@Test // DATAMONGO-1563
 	public void nullCollectionShouldThrowException() {
-		ops.insert(Person.class).inCollection(null);
-
+		assertThatIllegalArgumentException().isThrownBy(() -> ops.insert(Person.class).inCollection(null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1563
+	@Test // DATAMONGO-1563
 	public void nullBulkModeShouldThrowException() {
-		ops.insert(Person.class).withBulkMode(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> ops.insert(Person.class).withBulkMode(null));
 	}
 
 	@Test // DATAMONGO-1563

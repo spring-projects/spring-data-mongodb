@@ -80,28 +80,25 @@ public class CriteriaUnitTests {
 		assertThat(right).isNotEqualTo(left);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-507
+	@Test // DATAMONGO-507
 	public void shouldThrowExceptionWhenTryingToNegateAndOperation() {
-
-		new Criteria() //
+		assertThatIllegalArgumentException().isThrownBy(() -> new Criteria() //
 				.not() //
-				.andOperator(Criteria.where("delete").is(true).and("_id").is(42)); //
+				.andOperator(Criteria.where("delete").is(true).and("_id").is(42)));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-507
+	@Test // DATAMONGO-507
 	public void shouldThrowExceptionWhenTryingToNegateOrOperation() {
-
-		new Criteria() //
+		assertThatIllegalArgumentException().isThrownBy(() -> new Criteria() //
 				.not() //
-				.orOperator(Criteria.where("delete").is(true).and("_id").is(42)); //
+				.orOperator(Criteria.where("delete").is(true).and("_id").is(42)));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-507
+	@Test // DATAMONGO-507
 	public void shouldThrowExceptionWhenTryingToNegateNorOperation() {
-
-		new Criteria() //
+		assertThatIllegalArgumentException().isThrownBy(() -> new Criteria() //
 				.not() //
-				.norOperator(Criteria.where("delete").is(true).and("_id").is(42)); //
+				.norOperator(Criteria.where("delete").is(true).and("_id").is(42)));
 	}
 
 	@Test // DATAMONGO-507
@@ -204,9 +201,9 @@ public class CriteriaUnitTests {
 		assertThat(document).containsEntry("foo.$nearSphere.$maxDistance", 100D);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1134
+	@Test // DATAMONGO-1134
 	public void intersectsShouldThrowExceptionWhenCalledWihtNullValue() {
-		new Criteria("foo").intersects(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> new Criteria("foo").intersects(null));
 	}
 
 	@Test // DATAMONGO-1134

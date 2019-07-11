@@ -22,9 +22,7 @@ import static org.springframework.test.util.ReflectionTestUtils.*;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -48,7 +46,6 @@ import com.mongodb.client.MongoDatabase;
 @RunWith(MockitoJUnitRunner.class)
 public class SimpleMongoDbFactoryUnitTests {
 
-	public @Rule ExpectedException expectedException = ExpectedException.none();
 	@Mock MongoClient mongo;
 	@Mock ClientSession clientSession;
 	@Mock MongoDatabase database;

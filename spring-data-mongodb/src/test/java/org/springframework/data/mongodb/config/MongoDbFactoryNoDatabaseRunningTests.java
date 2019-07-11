@@ -44,8 +44,9 @@ public class MongoDbFactoryNoDatabaseRunningTests {
 		assertThat(mongoTemplate.getClass().getName()).isEqualTo("org.springframework.data.mongodb.core.MongoTemplate");
 	}
 
-	@Test(expected = DataAccessResourceFailureException.class)
+	@Test
 	public void failsDataAccessWithoutADatabaseRunning() {
-		mongoTemplate.getCollectionNames();
+		assertThatExceptionOfType(DataAccessResourceFailureException.class)
+				.isThrownBy(() -> mongoTemplate.getCollectionNames());
 	}
 }

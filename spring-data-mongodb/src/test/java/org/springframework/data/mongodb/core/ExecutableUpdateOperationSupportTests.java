@@ -66,24 +66,25 @@ public class ExecutableUpdateOperationSupportTests {
 		template.save(luke);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1563
+	@Test // DATAMONGO-1563
 	public void domainTypeIsRequired() {
-		template.update(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> template.update(null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1563
+	@Test // DATAMONGO-1563
 	public void updateIsRequired() {
-		template.update(Person.class).apply(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> template.update(Person.class).apply(null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1563
+	@Test // DATAMONGO-1563
 	public void collectionIsRequiredOnSet() {
-		template.update(Person.class).inCollection(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> template.update(Person.class).inCollection(null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1563
+	@Test // DATAMONGO-1563
 	public void findAndModifyOptionsAreRequiredOnSet() {
-		template.update(Person.class).apply(new Update()).withOptions(null);
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> template.update(Person.class).apply(new Update()).withOptions(null));
 	}
 
 	@Test // DATAMONGO-1563

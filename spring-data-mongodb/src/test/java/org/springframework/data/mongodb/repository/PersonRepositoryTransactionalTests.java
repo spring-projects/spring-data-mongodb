@@ -26,11 +26,10 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -92,8 +91,6 @@ public class PersonRepositoryTransactionalTests {
 			return new MongoTransactionManager(dbFactory);
 		}
 	}
-
-	public @Rule ExpectedException expectedException = ExpectedException.none();
 
 	@Autowired MongoClient client;
 	@Autowired PersonRepository repository;

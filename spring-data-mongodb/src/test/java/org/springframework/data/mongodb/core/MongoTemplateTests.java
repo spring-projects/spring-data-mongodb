@@ -43,7 +43,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -138,7 +137,6 @@ public class MongoTemplateTests {
 	ConfigurableApplicationContext context;
 	MongoTemplate mappingTemplate;
 
-	@Rule public ExpectedException thrown = ExpectedException.none();
 	@Rule public MongoVersionRule mongoVersion = MongoVersionRule.any();
 
 	@Autowired
@@ -160,8 +158,8 @@ public class MongoTemplateTests {
 				Arrays.asList(DateToDateTimeConverter.INSTANCE, DateTimeToDateConverter.INSTANCE));
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
-		mappingContext.setInitialEntitySet(new HashSet<Class<?>>(
-				Arrays.asList(PersonWith_idPropertyOfTypeObjectId.class, PersonWith_idPropertyOfTypeString.class,
+		mappingContext.setInitialEntitySet(
+				new HashSet<>(Arrays.asList(PersonWith_idPropertyOfTypeObjectId.class, PersonWith_idPropertyOfTypeString.class,
 						PersonWithIdPropertyOfTypeObjectId.class, PersonWithIdPropertyOfTypeString.class,
 						PersonWithIdPropertyOfTypeInteger.class, PersonWithIdPropertyOfTypeBigInteger.class,
 						PersonWithIdPropertyOfPrimitiveInt.class, PersonWithIdPropertyOfTypeLong.class,
@@ -293,14 +291,12 @@ public class MongoTemplateTests {
 
 		template.insert(person);
 
-		thrown.expect(DataIntegrityViolationException.class);
-		thrown.expectMessage("array");
-		thrown.expectMessage("age");
-		// thrown.expectMessage("failed");
-
 		Query query = new Query(Criteria.where("firstName").is("Amol"));
 		Update upd = new Update().push("age", 29);
-		template.updateFirst(query, upd, Person.class);
+
+		assertThatExceptionOfType(DataIntegrityViolationException.class)
+				.isThrownBy(() -> template.updateFirst(query, upd, Person.class)).withMessageContaining("array")
+				.withMessageContaining("age");
 	}
 
 	@Test // DATAMONGO-480
@@ -329,9 +325,6 @@ public class MongoTemplateTests {
 	@Test // DATAMONGO-480
 	public void rejectsDuplicateIdInInsertAll() {
 
-		thrown.expect(DataIntegrityViolationException.class);
-		thrown.expectMessage("E11000 duplicate key error");
-
 		MongoTemplate template = new MongoTemplate(factory);
 		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
 
@@ -339,11 +332,12 @@ public class MongoTemplateTests {
 		Person person = new Person(id, "Amol");
 		person.setAge(28);
 
-		List<Person> records = new ArrayList<Person>();
+		List<Person> records = new ArrayList<>();
 		records.add(person);
 		records.add(person);
 
-		template.insertAll(records);
+		assertThatExceptionOfType(DataIntegrityViolationException.class).isThrownBy(() -> template.insertAll(records))
+				.withMessageContaining("E11000 duplicate key error");
 	}
 
 	@Test // DATAMONGO-1687
@@ -379,7 +373,7 @@ public class MongoTemplateTests {
 		template.indexOps(Person.class).ensureIndex(new Index().on("age", Direction.DESC).unique());
 
 		MongoCollection<org.bson.Document> coll = template.getCollection(template.getCollectionName(Person.class));
-		List<org.bson.Document> indexInfo = new ArrayList<org.bson.Document>();
+		List<org.bson.Document> indexInfo = new ArrayList<>();
 		coll.listIndexes().into(indexInfo);
 
 		assertThat(indexInfo.size()).isEqualTo(2);
@@ -1015,7 +1009,7 @@ public class MongoTemplateTests {
 		p4.setAge(41);
 		template.insert(p4);
 
-		List<Integer> l1 = new ArrayList<Integer>();
+		List<Integer> l1 = new ArrayList<>();
 		l1.add(11);
 		l1.add(21);
 		l1.add(41);
@@ -1026,7 +1020,7 @@ public class MongoTemplateTests {
 		assertThat(results1.size()).isEqualTo(3);
 		assertThat(results2.size()).isEqualTo(3);
 		try {
-			List<Integer> l2 = new ArrayList<Integer>();
+			List<Integer> l2 = new ArrayList<>();
 			l2.add(31);
 			Query q3 = new Query(Criteria.where("age").in(l1, l2));
 			template.find(q3, PersonWithIdPropertyOfTypeObjectId.class);
@@ -1238,9 +1232,9 @@ public class MongoTemplateTests {
 		});
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATADOC-166, DATAMONGO-1762
+	@Test // DATADOC-166, DATAMONGO-1762
 	public void removingNullIsANoOp() {
-		template.remove((Object) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> template.remove((Object) null));
 	}
 
 	@Test // DATADOC-240, DATADOC-212
@@ -1321,7 +1315,7 @@ public class MongoTemplateTests {
 		template.insert(new Person("Tom"));
 		template.insert(new Person("Dick"));
 		template.insert(new Person("Harry"));
-		final List<String> names = new ArrayList<String>();
+		final List<String> names = new ArrayList<>();
 		template.executeQuery(new Query(), template.getCollectionName(Person.class), new DocumentCallbackHandler() {
 			public void processDocument(org.bson.Document document) {
 				String name = (String) document.get("firstName");
@@ -1339,7 +1333,7 @@ public class MongoTemplateTests {
 		template.insert(new Person("Tom"));
 		template.insert(new Person("Dick"));
 		template.insert(new Person("Harry"));
-		final List<String> names = new ArrayList<String>();
+		final List<String> names = new ArrayList<>();
 		template.executeQuery(new Query(), template.getCollectionName(Person.class), new DocumentCallbackHandler() {
 			public void processDocument(org.bson.Document document) {
 				String name = (String) document.get("firstName");
@@ -1374,19 +1368,19 @@ public class MongoTemplateTests {
 		assertThat(template.count(query(where("firstName").is("Carter")), Person.class)).isEqualTo(1L);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATADOC-183
+	@Test // DATADOC-183
 	public void countRejectsNullEntityClass() {
-		template.count(null, (Class<?>) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> template.count(null, (Class<?>) null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATADOC-183
+	@Test // DATADOC-183
 	public void countRejectsEmptyCollectionName() {
-		template.count(null, "");
+		assertThatIllegalArgumentException().isThrownBy(() -> template.count(null, ""));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATADOC-183
+	@Test // DATADOC-183
 	public void countRejectsNullCollectionName() {
-		template.count(null, (String) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> template.count(null, (String) null));
 	}
 
 	@Test
@@ -1574,20 +1568,20 @@ public class MongoTemplateTests {
 	// DATAMONGO-549
 	public void savesMapCorrectly() {
 
-		Map<String, String> map = new HashMap<String, String>();
+		Map<String, String> map = new HashMap<>();
 		map.put("key", "value");
 
 		template.save(map, "maps");
 	}
 
-	@Test(expected = MappingException.class) // DATAMONGO-549, DATAMONGO-1730
+	@Test // DATAMONGO-549, DATAMONGO-1730
 	public void savesMongoPrimitiveObjectCorrectly() {
-		template.save(new Object(), "collection");
+		assertThatExceptionOfType(MappingException.class).isThrownBy(() -> template.save(new Object(), "collection"));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-549
+	@Test // DATAMONGO-549
 	public void rejectsNullObjectToBeSaved() {
-		template.save(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> template.save(null));
 	}
 
 	@Test // DATAMONGO-550
@@ -1624,9 +1618,9 @@ public class MongoTemplateTests {
 		template.save("{ 'foo' : 'bar' }", "collection");
 	}
 
-	@Test(expected = MappingException.class) // DATAMONGO-551
+	@Test // DATAMONGO-551
 	public void rejectsNonJsonStringForSave() {
-		template.save("Foobar!", "collection");
+		assertThatExceptionOfType(MappingException.class).isThrownBy(() -> template.save("Foobar!", "collection"));
 	}
 
 	@Test // DATAMONGO-588
@@ -1684,9 +1678,10 @@ public class MongoTemplateTests {
 		assertThat(saved.version).isEqualTo(0L);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-568, DATAMONGO-1762
+	@Test // DATAMONGO-568, DATAMONGO-1762
 	public void queryCantBeNull() {
-		template.find(null, PersonWithIdPropertyOfTypeObjectId.class);
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> template.find(null, PersonWithIdPropertyOfTypeObjectId.class));
 	}
 
 	@Test // DATAMONGO-620
@@ -2224,7 +2219,7 @@ public class MongoTemplateTests {
 
 		DocumentWithNestedCollection doc = new DocumentWithNestedCollection();
 
-		Map<String, Model> entry = new HashMap<String, Model>();
+		Map<String, Model> entry = new HashMap<>();
 		entry.put("key1", new ModelA("value1"));
 		doc.models.add(entry);
 
@@ -2258,7 +2253,7 @@ public class MongoTemplateTests {
 
 		DocumentWithNestedCollection doc = new DocumentWithNestedCollection();
 
-		Map<String, Model> entry = new HashMap<String, Model>();
+		Map<String, Model> entry = new HashMap<>();
 		entry.put("key1", new ModelA("value1"));
 		doc.models.add(entry);
 
@@ -2292,7 +2287,7 @@ public class MongoTemplateTests {
 
 		DocumentWithNestedCollection doc = new DocumentWithNestedCollection();
 
-		Map<String, Model> entry = new HashMap<String, Model>();
+		Map<String, Model> entry = new HashMap<>();
 		entry.put("key1", new ModelA("value1"));
 		doc.models.add(entry);
 
@@ -2324,7 +2319,7 @@ public class MongoTemplateTests {
 	public void findAndModifyShouldRetainTypeInformationWithinUpdatedTypeOnEmbeddedDocumentWithCollectionWhenUpdatingPositionedElement()
 			throws Exception {
 
-		List<Model> models = new ArrayList<Model>();
+		List<Model> models = new ArrayList<>();
 		models.add(new ModelA("value1"));
 
 		DocumentWithEmbeddedDocumentWithCollection doc = new DocumentWithEmbeddedDocumentWithCollection(
@@ -2351,7 +2346,7 @@ public class MongoTemplateTests {
 	public void findAndModifyShouldAddTypeInformationWithinUpdatedTypeOnEmbeddedDocumentWithCollectionWhenUpdatingSecondElement()
 			throws Exception {
 
-		List<Model> models = new ArrayList<Model>();
+		List<Model> models = new ArrayList<>();
 		models.add(new ModelA("value1"));
 
 		DocumentWithEmbeddedDocumentWithCollection doc = new DocumentWithEmbeddedDocumentWithCollection(
@@ -2407,7 +2402,7 @@ public class MongoTemplateTests {
 
 		DocumentWithNestedList doc = new DocumentWithNestedList();
 
-		List<Model> entry = new ArrayList<Model>();
+		List<Model> entry = new ArrayList<>();
 		entry.add(new ModelA("value1"));
 		doc.models.add(entry);
 
@@ -2453,30 +2448,27 @@ public class MongoTemplateTests {
 	@MongoVersion(asOf = "3.6")
 	public void findAndReplaceShouldErrorOnIdPresent() {
 
-		thrown.expect(InvalidDataAccessApiUsageException.class);
-
 		template.save(new MyPerson("Walter"));
 
 		MyPerson replacement = new MyPerson("Heisenberg");
 		replacement.id = "invalid-id";
 
-		template.findAndReplace(query(where("name").is("Walter")), replacement);
+		assertThatExceptionOfType(InvalidDataAccessApiUsageException.class)
+				.isThrownBy(() -> template.findAndReplace(query(where("name").is("Walter")), replacement));
 	}
 
 	@Test // DATAMONGO-1827
 	public void findAndReplaceShouldErrorOnSkip() {
 
-		thrown.expect(IllegalArgumentException.class);
-
-		template.findAndReplace(query(where("name").is("Walter")).skip(10), new MyPerson("Heisenberg"));
+		assertThatIllegalArgumentException().isThrownBy(
+				() -> template.findAndReplace(query(where("name").is("Walter")).skip(10), new MyPerson("Heisenberg")));
 	}
 
 	@Test // DATAMONGO-1827
 	public void findAndReplaceShouldErrorOnLimit() {
 
-		thrown.expect(IllegalArgumentException.class);
-
-		template.findAndReplace(query(where("name").is("Walter")).limit(10), new MyPerson("Heisenberg"));
+		assertThatIllegalArgumentException().isThrownBy(
+				() -> template.findAndReplace(query(where("name").is("Walter")).limit(10), new MyPerson("Heisenberg")));
 	}
 
 	@Test // DATAMONGO-1827
@@ -3432,7 +3424,7 @@ public class MongoTemplateTests {
 		template.save(two);
 
 		DocumentWithDBRefCollection source = new DocumentWithDBRefCollection();
-		source.lazyDbRefAnnotatedMap = new LinkedHashMap<String, Sample>();
+		source.lazyDbRefAnnotatedMap = new LinkedHashMap<>();
 		source.lazyDbRefAnnotatedMap.put("tyrion", two);
 		source.lazyDbRefAnnotatedMap.put("jon", one);
 		template.save(source);
@@ -3865,12 +3857,12 @@ public class MongoTemplateTests {
 
 	static class DocumentWithNestedCollection {
 		@Id String id;
-		List<Map<String, Model>> models = new ArrayList<Map<String, Model>>();
+		List<Map<String, Model>> models = new ArrayList<>();
 	}
 
 	static class DocumentWithNestedList {
 		@Id String id;
-		List<List<Model>> models = new ArrayList<List<Model>>();
+		List<List<Model>> models = new ArrayList<>();
 	}
 
 	static class DocumentWithEmbeddedDocumentWithCollection {

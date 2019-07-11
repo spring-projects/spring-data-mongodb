@@ -28,9 +28,7 @@ import java.util.Locale;
 
 import org.bson.types.ObjectId;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.annotation.Id;
@@ -53,8 +51,6 @@ import org.springframework.util.ReflectionUtils;
 public class BasicMongoPersistentPropertyUnitTests {
 
 	MongoPersistentEntity<Person> entity;
-
-	@Rule public ExpectedException exception = ExpectedException.none();
 
 	@Before
 	public void setup() {
@@ -124,11 +120,8 @@ public class BasicMongoPersistentPropertyUnitTests {
 		MongoPersistentProperty property = new BasicMongoPersistentProperty(Property.of(type, field), entity,
 				SimpleTypeHolder.DEFAULT, InvalidFieldNamingStrategy.INSTANCE);
 
-		exception.expect(MappingException.class);
-		exception.expectMessage(InvalidFieldNamingStrategy.class.getName());
-		exception.expectMessage(property.toString());
-
-		property.getFieldName();
+		assertThatExceptionOfType(MappingException.class).isThrownBy(property::getFieldName)
+				.withMessageContaining(InvalidFieldNamingStrategy.class.getName()).withMessageContaining(property.toString());
 	}
 
 	@Test // DATAMONGO-937
@@ -139,7 +132,7 @@ public class BasicMongoPersistentPropertyUnitTests {
 	}
 
 	@Test // DATAMONGO-937
-	public void shouldDetectIplicitLanguagePropertyCorrectly() {
+	public void shouldDetectImplicitLanguagePropertyCorrectly() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithImplicitLanguageProperty.class, "language");
 		assertThat(property.isLanguageProperty()).isTrue();

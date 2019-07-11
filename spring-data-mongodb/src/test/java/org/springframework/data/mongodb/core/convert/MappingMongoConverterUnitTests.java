@@ -35,9 +35,7 @@ import org.bson.types.ObjectId;
 import org.joda.time.LocalDate;
 import org.junit.Before;
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -97,8 +95,6 @@ public class MappingMongoConverterUnitTests {
 	MongoMappingContext mappingContext;
 	@Mock ApplicationContext context;
 	@Mock DbRefResolver resolver;
-
-	public @Rule ExpectedException exception = ExpectedException.none();
 
 	@Before
 	public void setUp() {
@@ -876,9 +872,10 @@ public class MappingMongoConverterUnitTests {
 		assertThat(values).contains("1", "2");
 	}
 
-	@Test(expected = MappingException.class) // DATAMONGO-380
+	@Test // DATAMONGO-380
 	public void rejectsMapWithKeyContainingDotsByDefault() {
-		converter.write(Collections.singletonMap("foo.bar", "foobar"), new org.bson.Document());
+		assertThatExceptionOfType(MappingException.class)
+				.isThrownBy(() -> converter.write(Collections.singletonMap("foo.bar", "foobar"), new org.bson.Document()));
 	}
 
 	@Test // DATAMONGO-380
@@ -991,7 +988,6 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document document = new org.bson.Document("personMap", refMap);
 
 		DBRefWrapper result = converter.read(DBRefWrapper.class, document);
-
 
 		assertThat(result.personMap.entrySet()).hasSize(1);
 		assertThat(result.personMap.values()).anyMatch(Person.class::isInstance);
@@ -1581,11 +1577,7 @@ public class MappingMongoConverterUnitTests {
 
 		org.bson.Document source = new org.bson.Document("attributes", outer);
 
-		exception.expect(MappingException.class);
-		exception.expectMessage(Item.class.getName());
-		exception.expectMessage(ArrayList.class.getName());
-
-		converter.read(Item.class, source);
+		assertThatExceptionOfType(MappingException.class).isThrownBy(() -> converter.read(Item.class, source));
 	}
 
 	@Test // DATAMONGO-1058
@@ -1786,11 +1778,8 @@ public class MappingMongoConverterUnitTests {
 		org.bson.Document nested = new org.bson.Document("key", "value");
 		org.bson.Document source = new org.bson.Document("map", new org.bson.Document("key", nested));
 
-		exception.expect(MappingException.class);
-		exception.expectMessage(nested.toString());
-		exception.expectMessage(Long.class.getName());
-
-		converter.read(TypeWithMapOfLongValues.class, source);
+		assertThatExceptionOfType(MappingException.class)
+				.isThrownBy(() -> converter.read(TypeWithMapOfLongValues.class, source));
 	}
 
 	@Test // DATAMONGO-1831
@@ -2000,7 +1989,7 @@ public class MappingMongoConverterUnitTests {
 			@Override
 			void method() {
 
-		}
+			}
 		};
 
 		abstract void method();
@@ -2427,8 +2416,7 @@ public class MappingMongoConverterUnitTests {
 		@Field(targetType = FieldType.SCRIPT) //
 		List<String> scripts;
 
-		@Field(targetType = FieldType.DECIMAL128)
-		BigDecimal bigDecimal;
+		@Field(targetType = FieldType.DECIMAL128) BigDecimal bigDecimal;
 	}
 
 }

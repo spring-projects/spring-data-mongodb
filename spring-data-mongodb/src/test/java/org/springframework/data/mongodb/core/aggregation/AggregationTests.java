@@ -42,7 +42,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,7 +102,6 @@ public class AggregationTests {
 
 	@Autowired MongoTemplate mongoTemplate;
 
-	@Rule public ExpectedException exception = ExpectedException.none();
 	@Rule public MongoVersionRule mongoVersion = MongoVersionRule.any();
 
 	@Before
@@ -184,19 +182,22 @@ public class AggregationTests {
 		}
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-586
+	@Test // DATAMONGO-586
 	public void shouldHandleMissingInputCollection() {
-		mongoTemplate.aggregate(newAggregation(), (String) null, TagCount.class);
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> mongoTemplate.aggregate(newAggregation(), (String) null, TagCount.class));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-586
+	@Test // DATAMONGO-586
 	public void shouldHandleMissingAggregationPipeline() {
-		mongoTemplate.aggregate(null, INPUT_COLLECTION, TagCount.class);
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> mongoTemplate.aggregate(null, INPUT_COLLECTION, TagCount.class));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-586
+	@Test // DATAMONGO-586
 	public void shouldHandleMissingEntityClass() {
-		mongoTemplate.aggregate(newAggregation(), INPUT_COLLECTION, null);
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> mongoTemplate.aggregate(newAggregation(), INPUT_COLLECTION, null));
 	}
 
 	@Test // DATAMONGO-586
@@ -1656,13 +1657,12 @@ public class AggregationTests {
 		mongoTemplate.save(new Person("Leoniv", "Yakubov", 55, Person.Sex.MALE));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1418
+	@Test // DATAMONGO-1418
 	public void outShouldOutBeTheLastOperation() {
-
-		newAggregation(match(new Criteria()), //
+		assertThatIllegalArgumentException().isThrownBy(() -> newAggregation(match(new Criteria()), //
 				group("field1").count().as("totalCount"), //
 				out("collection1"), //
-				skip(100L));
+				skip(100L)));
 	}
 
 	@Test // DATAMONGO-1325

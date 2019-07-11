@@ -44,24 +44,25 @@ public class ExecutableAggregationOperationSupportUnitTests {
 		opSupport = new ExecutableAggregationOperationSupport(template);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1563
+	@Test // DATAMONGO-1563
 	public void throwsExceptionOnNullDomainType() {
-		opSupport.aggregateAndReturn(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> opSupport.aggregateAndReturn(null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1563
+	@Test // DATAMONGO-1563
 	public void throwsExceptionOnNullCollectionWhenUsed() {
-		opSupport.aggregateAndReturn(Person.class).inCollection(null);
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> opSupport.aggregateAndReturn(Person.class).inCollection(null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1563
+	@Test // DATAMONGO-1563
 	public void throwsExceptionOnEmptyCollectionWhenUsed() {
-		opSupport.aggregateAndReturn(Person.class).inCollection("");
+		assertThatIllegalArgumentException().isThrownBy(() -> opSupport.aggregateAndReturn(Person.class).inCollection(""));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1563
+	@Test // DATAMONGO-1563
 	public void throwsExceptionOnNullAggregation() {
-		opSupport.aggregateAndReturn(Person.class).by(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> opSupport.aggregateAndReturn(Person.class).by(null));
 	}
 
 	@Test // DATAMONGO-1563

@@ -16,8 +16,7 @@
 package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
@@ -41,11 +40,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.rules.TestRule;
 import org.mockito.Mockito;
+
 import org.springframework.aop.Advisor;
 import org.springframework.aop.framework.Advised;
 import org.springframework.dao.DataAccessException;
@@ -87,8 +85,6 @@ public class SessionBoundMongoTemplateTests {
 
 	public static @ClassRule MongoVersionRule REQUIRES_AT_LEAST_3_6_0 = MongoVersionRule.atLeast(Version.parse("3.6.0"));
 	public static @ClassRule TestRule replSet = ReplicaSet.required();
-
-	public @Rule ExpectedException exception = ExpectedException.none();
 
 	MongoClient client;
 	MongoTemplate template;
@@ -211,8 +207,6 @@ public class SessionBoundMongoTemplateTests {
 	@Test // DATAMONGO-1880
 	public void shouldErrorOnLoadDbRefWhenSessionIsClosed() {
 
-		exception.expect(ClientSessionException.class);
-
 		Person person = new Person("Kylar Stern");
 
 		template.save(person);
@@ -225,7 +219,8 @@ public class SessionBoundMongoTemplateTests {
 
 		session.close();
 
-		sessionBoundTemplate.findById(wdr.id, WithDbRef.class);
+		assertThatExceptionOfType(ClientSessionException.class)
+				.isThrownBy(() -> sessionBoundTemplate.findById(wdr.id, WithDbRef.class));
 	}
 
 	@Test // DATAMONGO-1880
@@ -249,9 +244,6 @@ public class SessionBoundMongoTemplateTests {
 	@Test // DATAMONGO-1880
 	public void shouldErrorOnLoadLazyDbRefWhenSessionIsClosed() {
 
-		exception.expect(LazyLoadingException.class);
-		exception.expectMessage("Invalid session state");
-
 		Person person = new Person("Kylar Stern");
 
 		template.save(person);
@@ -262,16 +254,11 @@ public class SessionBoundMongoTemplateTests {
 
 		template.save(wdr);
 
-		WithLazyDbRef result = null;
-		try {
-			result = sessionBoundTemplate.findById(wdr.id, WithLazyDbRef.class);
-		} catch (Exception e) {
-			fail("Someting went wrong, seems the session was already closed when reading.", e);
-		}
+		WithLazyDbRef result = sessionBoundTemplate.findById(wdr.id, WithLazyDbRef.class);
 
 		session.close(); // now close the session
 
-		assertThat(result.getPersonRef()).isEqualTo(person); // resolve the lazy loading proxy
+		assertThatExceptionOfType(LazyLoadingException.class).isThrownBy(() -> result.getPersonRef().toString());
 	}
 
 	@Test // DATAMONGO-2001

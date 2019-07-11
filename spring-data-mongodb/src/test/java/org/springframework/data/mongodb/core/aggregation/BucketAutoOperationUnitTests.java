@@ -31,14 +31,14 @@ import org.springframework.data.mongodb.core.aggregation.BucketAutoOperation.Gra
  */
 public class BucketAutoOperationUnitTests {
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1552
+	@Test // DATAMONGO-1552
 	public void rejectsNullFields() {
-		new BucketAutoOperation((Field) null, 0);
+		assertThatIllegalArgumentException().isThrownBy(() -> new BucketAutoOperation((Field) null, 0));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1552
+	@Test // DATAMONGO-1552
 	public void rejectsNonPositiveIntegerNullFields() {
-		new BucketAutoOperation(Fields.field("field"), 0);
+		assertThatIllegalArgumentException().isThrownBy(() -> new BucketAutoOperation(Fields.field("field"), 0));
 	}
 
 	@Test // DATAMONGO-1552
@@ -53,9 +53,9 @@ public class BucketAutoOperationUnitTests {
 				"{ \"grossSalesPrice\" : { \"$multiply\" : [ { \"$add\" : [ \"$netPrice\" , \"$surCharge\"]} , \"$taxrate\" , 2]} , \"titles\" : { $push: \"$title\" } }}"));
 	}
 
-	@Test(expected = IllegalStateException.class) // DATAMONGO-1552
+	@Test // DATAMONGO-1552
 	public void shouldRenderEmptyAggregationExpression() {
-		bucket("groupby").andOutput("field").as("alias");
+		assertThatIllegalStateException().isThrownBy(() -> bucket("groupby").andOutput("field").as("alias"));
 	}
 
 	@Test // DATAMONGO-1552

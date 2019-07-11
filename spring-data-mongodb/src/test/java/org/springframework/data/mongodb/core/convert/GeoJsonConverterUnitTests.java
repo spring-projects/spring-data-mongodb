@@ -20,9 +20,7 @@ import static org.springframework.data.mongodb.test.util.Assertions.*;
 import java.util.Arrays;
 
 import org.bson.Document;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
@@ -176,7 +174,6 @@ public class GeoJsonConverterUnitTests {
 	public static class DocumentToGeoJsonPolygonConverterUnitTests {
 
 		DocumentToGeoJsonPolygonConverter converter = DocumentToGeoJsonPolygonConverter.INSTANCE;
-		public @Rule ExpectedException expectedException = ExpectedException.none();
 
 		@Test // DATAMONGO-1137
 		public void shouldConvertDboCorrectly() {
@@ -190,11 +187,7 @@ public class GeoJsonConverterUnitTests {
 
 		@Test // DATAMONGO-1137
 		public void shouldThrowExceptionWhenTypeDoesNotMatchPolygon() {
-
-			expectedException.expect(IllegalArgumentException.class);
-			expectedException.expectMessage("'YouDontKonwMe' to Polygon");
-
-			converter.convert(new Document("type", "YouDontKonwMe"));
+			assertThatIllegalArgumentException().isThrownBy(() -> converter.convert(new Document("type", "YouDontKonwMe")));
 		}
 
 		@Test // DATAMONGO-1399
@@ -210,7 +203,6 @@ public class GeoJsonConverterUnitTests {
 	public static class DocumentToGeoJsonPointConverterUnitTests {
 
 		DocumentToGeoJsonPointConverter converter = DocumentToGeoJsonPointConverter.INSTANCE;
-		public @Rule ExpectedException expectedException = ExpectedException.none();
 
 		@Test // DATAMONGO-1137
 		public void shouldConvertDboCorrectly() {
@@ -225,10 +217,7 @@ public class GeoJsonConverterUnitTests {
 		@Test // DATAMONGO-1137
 		public void shouldThrowExceptionWhenTypeDoesNotMatchPoint() {
 
-			expectedException.expect(IllegalArgumentException.class);
-			expectedException.expectMessage("'YouDontKonwMe' to Point");
-
-			converter.convert(new Document("type", "YouDontKonwMe"));
+			assertThatIllegalArgumentException().isThrownBy(() -> converter.convert(new Document("type", "YouDontKonwMe")));
 		}
 	}
 
@@ -238,7 +227,6 @@ public class GeoJsonConverterUnitTests {
 	public static class DocumentToGeoJsonLineStringConverterUnitTests {
 
 		DocumentToGeoJsonLineStringConverter converter = DocumentToGeoJsonLineStringConverter.INSTANCE;
-		public @Rule ExpectedException expectedException = ExpectedException.none();
 
 		@Test // DATAMONGO-1137
 		public void shouldConvertDboCorrectly() {
@@ -252,11 +240,7 @@ public class GeoJsonConverterUnitTests {
 
 		@Test // DATAMONGO-1137
 		public void shouldThrowExceptionWhenTypeDoesNotMatchPoint() {
-
-			expectedException.expect(IllegalArgumentException.class);
-			expectedException.expectMessage("'YouDontKonwMe' to LineString");
-
-			converter.convert(new Document("type", "YouDontKonwMe"));
+			assertThatIllegalArgumentException().isThrownBy(() -> converter.convert(new Document("type", "YouDontKonwMe")));
 		}
 	}
 
@@ -266,7 +250,6 @@ public class GeoJsonConverterUnitTests {
 	public static class DocumentToGeoJsonMultiLineStringConverterUnitTests {
 
 		DocumentToGeoJsonMultiLineStringConverter converter = DocumentToGeoJsonMultiLineStringConverter.INSTANCE;
-		public @Rule ExpectedException expectedException = ExpectedException.none();
 
 		@Test // DATAMONGO-1137
 		public void shouldConvertDboCorrectly() {
@@ -280,11 +263,7 @@ public class GeoJsonConverterUnitTests {
 
 		@Test // DATAMONGO-1137
 		public void shouldThrowExceptionWhenTypeDoesNotMatchPoint() {
-
-			expectedException.expect(IllegalArgumentException.class);
-			expectedException.expectMessage("'YouDontKonwMe' to MultiLineString");
-
-			converter.convert(new Document("type", "YouDontKonwMe"));
+			assertThatIllegalArgumentException().isThrownBy(() -> converter.convert(new Document("type", "YouDontKonwMe")));
 		}
 	}
 
@@ -294,7 +273,6 @@ public class GeoJsonConverterUnitTests {
 	public static class DocumentToGeoJsonMultiPointConverterUnitTests {
 
 		DocumentToGeoJsonMultiPointConverter converter = DocumentToGeoJsonMultiPointConverter.INSTANCE;
-		public @Rule ExpectedException expectedException = ExpectedException.none();
 
 		@Test // DATAMONGO-1137
 		public void shouldConvertDboCorrectly() {
@@ -308,11 +286,7 @@ public class GeoJsonConverterUnitTests {
 
 		@Test // DATAMONGO-1137
 		public void shouldThrowExceptionWhenTypeDoesNotMatchPoint() {
-
-			expectedException.expect(IllegalArgumentException.class);
-			expectedException.expectMessage("'YouDontKonwMe' to MultiPoint");
-
-			converter.convert(new Document("type", "YouDontKonwMe"));
+			assertThatIllegalArgumentException().isThrownBy(() -> converter.convert(new Document("type", "YouDontKonwMe")));
 		}
 	}
 
@@ -322,7 +296,6 @@ public class GeoJsonConverterUnitTests {
 	public static class DocumentToGeoJsonMultiPolygonConverterUnitTests {
 
 		DocumentToGeoJsonMultiPolygonConverter converter = DocumentToGeoJsonMultiPolygonConverter.INSTANCE;
-		public @Rule ExpectedException expectedException = ExpectedException.none();
 
 		@Test // DATAMONGO-1137
 		public void shouldConvertDboCorrectly() {
@@ -336,11 +309,7 @@ public class GeoJsonConverterUnitTests {
 
 		@Test // DATAMONGO-1137
 		public void shouldThrowExceptionWhenTypeDoesNotMatchPoint() {
-
-			expectedException.expect(IllegalArgumentException.class);
-			expectedException.expectMessage("'YouDontKonwMe' to MultiPolygon");
-
-			converter.convert(new Document("type", "YouDontKonwMe"));
+			assertThatIllegalArgumentException().isThrownBy(() -> converter.convert(new Document("type", "YouDontKonwMe")));
 		}
 	}
 

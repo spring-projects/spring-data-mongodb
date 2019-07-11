@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -58,14 +59,14 @@ public class ExecutableMapReduceOperationSupportUnitTests {
 		mapReduceOpsSupport = new ExecutableMapReduceOperationSupport(template);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1929
+	@Test // DATAMONGO-1929
 	public void throwsExceptionOnNullTemplate() {
-		new ExecutableMapReduceOperationSupport(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> new ExecutableMapReduceOperationSupport(null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1929
+	@Test // DATAMONGO-1929
 	public void throwsExceptionOnNullDomainType() {
-		mapReduceOpsSupport.mapReduce(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> mapReduceOpsSupport.mapReduce(null));
 	}
 
 	@Test // DATAMONGO-1929

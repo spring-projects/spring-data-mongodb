@@ -30,10 +30,9 @@ import java.util.concurrent.TimeUnit;
 import org.bson.Document;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.annotation.Id;
@@ -59,8 +58,6 @@ import com.mongodb.reactivestreams.client.MongoClient;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:reactive-infrastructure.xml")
 public class ReactiveMongoTemplateIndexTests {
-
-	@Rule public ExpectedException thrown = ExpectedException.none();
 
 	@Autowired SimpleReactiveMongoDatabaseFactory factory;
 	@Autowired ReactiveMongoTemplate template;

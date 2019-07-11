@@ -190,19 +190,20 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		this.template = new MongoTemplate(factory, converter);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
-	public void rejectsNullDatabaseName() throws Exception {
-		new MongoTemplate(mongo, null);
+	@Test
+	public void rejectsNullDatabaseName() {
+		assertThatIllegalArgumentException().isThrownBy(() -> new MongoTemplate(mongo, null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1968
+	@Test // DATAMONGO-1968
 	public void rejectsNullMongo() {
-		new MongoTemplate((MongoClient) null, "database");
+		assertThatIllegalArgumentException().isThrownBy(() -> new MongoTemplate((MongoClient) null, "database"));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1968
+	@Test // DATAMONGO-1968
 	public void rejectsNullMongoClient() {
-		new MongoTemplate((com.mongodb.client.MongoClient) null, "database");
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> new MongoTemplate((com.mongodb.client.MongoClient) null, "database"));
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1870

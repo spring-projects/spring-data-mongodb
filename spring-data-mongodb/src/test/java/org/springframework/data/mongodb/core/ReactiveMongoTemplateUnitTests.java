@@ -153,14 +153,14 @@ public class ReactiveMongoTemplateUnitTests {
 		this.template = new ReactiveMongoTemplate(factory, converter);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1444
-	public void rejectsNullDatabaseName() throws Exception {
-		new ReactiveMongoTemplate(mongoClient, null);
+	@Test // DATAMONGO-1444
+	public void rejectsNullDatabaseName() {
+		assertThatIllegalArgumentException().isThrownBy(() -> new ReactiveMongoTemplate(mongoClient, null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1444
-	public void rejectsNullMongo() throws Exception {
-		new ReactiveMongoTemplate(null, "database");
+	@Test // DATAMONGO-1444
+	public void rejectsNullMongo() {
+		assertThatIllegalArgumentException().isThrownBy(() -> new ReactiveMongoTemplate(null, "database"));
 	}
 
 	@Test // DATAMONGO-1444

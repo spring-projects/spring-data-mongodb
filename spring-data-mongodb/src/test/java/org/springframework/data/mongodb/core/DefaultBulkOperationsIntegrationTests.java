@@ -69,22 +69,22 @@ public class DefaultBulkOperationsIntegrationTests {
 		this.collection.deleteMany(new Document());
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-934
+	@Test // DATAMONGO-934
 	public void rejectsNullMongoOperations() {
-		new DefaultBulkOperations(null, COLLECTION_NAME,
-				new BulkOperationContext(BulkMode.ORDERED, Optional.empty(), null, null, null, null));
-
+		assertThatIllegalArgumentException().isThrownBy(() -> new DefaultBulkOperations(null, COLLECTION_NAME,
+				new BulkOperationContext(BulkMode.ORDERED, Optional.empty(), null, null, null, null)));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-934
+	@Test // DATAMONGO-934
 	public void rejectsNullCollectionName() {
-		new DefaultBulkOperations(operations, null,
-				new BulkOperationContext(BulkMode.ORDERED, Optional.empty(), null, null, null, null));
+		assertThatIllegalArgumentException().isThrownBy(() -> new DefaultBulkOperations(operations, null,
+				new BulkOperationContext(BulkMode.ORDERED, Optional.empty(), null, null, null, null)));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-934
+	@Test // DATAMONGO-934
 	public void rejectsEmptyCollectionName() {
-		new DefaultBulkOperations(operations, "", new BulkOperationContext(BulkMode.ORDERED, Optional.empty(), null, null, null, null));
+		assertThatIllegalArgumentException().isThrownBy(() -> new DefaultBulkOperations(operations, "",
+				new BulkOperationContext(BulkMode.ORDERED, Optional.empty(), null, null, null, null)));
 	}
 
 	@Test // DATAMONGO-934

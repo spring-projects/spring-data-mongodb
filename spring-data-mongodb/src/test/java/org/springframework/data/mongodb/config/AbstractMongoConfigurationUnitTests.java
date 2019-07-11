@@ -25,9 +25,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -54,8 +52,6 @@ import com.mongodb.MongoClient;
  * @author Mark Paluch
  */
 public class AbstractMongoConfigurationUnitTests {
-
-	@Rule public ExpectedException exception = ExpectedException.none();
 
 	@Test // DATAMONGO-496
 	public void usesConfigClassPackageAsBaseMappingPackage() throws ClassNotFoundException {
@@ -84,9 +80,8 @@ public class AbstractMongoConfigurationUnitTests {
 		AbstractApplicationContext context = new AnnotationConfigApplicationContext(SampleMongoConfiguration.class);
 
 		assertThat(context.getBean(MongoDbFactory.class)).isNotNull();
+		assertThatExceptionOfType(NoSuchBeanDefinitionException.class).isThrownBy(() -> context.getBean(MongoClient.class));
 
-		exception.expect(NoSuchBeanDefinitionException.class);
-		context.getBean(MongoClient.class);
 		context.close();
 	}
 

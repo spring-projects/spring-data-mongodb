@@ -29,19 +29,19 @@ import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedFi
  */
 public class ExposedFieldsUnitTests {
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void rejectsNullFields() {
-		ExposedFields.from((ExposedField) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> ExposedFields.from((ExposedField) null));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void rejectsNullFieldsForSynthetics() {
-		ExposedFields.synthetic(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> ExposedFields.synthetic(null));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void rejectsNullFieldsForNonSynthetics() {
-		ExposedFields.nonSynthetic(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> ExposedFields.nonSynthetic(null));
 	}
 
 	@Test

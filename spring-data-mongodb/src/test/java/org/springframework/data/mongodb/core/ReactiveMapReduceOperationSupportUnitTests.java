@@ -15,9 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import lombok.AllArgsConstructor;
@@ -29,6 +28,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
@@ -60,14 +60,14 @@ public class ReactiveMapReduceOperationSupportUnitTests {
 		mapReduceOpsSupport = new ReactiveMapReduceOperationSupport(template);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1929
+	@Test // DATAMONGO-1929
 	public void throwsExceptionOnNullTemplate() {
-		new ExecutableMapReduceOperationSupport(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> new ExecutableMapReduceOperationSupport(null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1929
+	@Test // DATAMONGO-1929
 	public void throwsExceptionOnNullDomainType() {
-		mapReduceOpsSupport.mapReduce(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> mapReduceOpsSupport.mapReduce(null));
 	}
 
 	@Test // DATAMONGO-1929

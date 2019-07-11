@@ -28,9 +28,8 @@ import java.util.regex.Pattern;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
+
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.geo.Distance;
@@ -73,8 +72,6 @@ public class MongoQueryCreatorUnitTests {
 
 	MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context;
 	MongoConverter converter;
-
-	@Rule public ExpectedException expection = ExpectedException.none();
 
 	@Before
 	public void setUp() {
@@ -324,13 +321,11 @@ public class MongoQueryCreatorUnitTests {
 	@Test // DATAMONGO-770
 	public void shouldThrowExceptionForQueryWithFindByIgnoreCaseOnNonStringProperty() {
 
-		expection.expect(IllegalArgumentException.class);
-		expection.expectMessage("must be of type String");
-
 		PartTree tree = new PartTree("findByFirstNameAndAgeIgnoreCase", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "foo", 42), context);
 
-		creator.createQuery();
+		assertThatIllegalArgumentException().isThrownBy(creator::createQuery)
+				.withMessageContaining("must be of type String");
 	}
 
 	@Test // DATAMONGO-770
@@ -620,14 +615,12 @@ public class MongoQueryCreatorUnitTests {
 	@Test // DATAMONGO-1588
 	public void queryShouldThrowExceptionWhenArgumentDoesNotMatchDeclaration() {
 
-		expection.expect(IllegalArgumentException.class);
-		expection.expectMessage("Expected parameter type of " + Point.class);
-
 		PartTree tree = new PartTree("findByLocationNear", User.class);
 		ConvertingParameterAccessor accessor = getAccessor(converter,
 				new GeoJsonLineString(new Point(-74.044502D, 40.689247D), new Point(-73.997330D, 40.730824D)));
 
-		new MongoQueryCreator(tree, accessor, context).createQuery();
+		assertThatIllegalArgumentException().isThrownBy(() -> new MongoQueryCreator(tree, accessor, context).createQuery())
+				.withMessageContaining("Expected parameter type of " + Point.class);
 	}
 
 	@Test // DATAMONGO-2003

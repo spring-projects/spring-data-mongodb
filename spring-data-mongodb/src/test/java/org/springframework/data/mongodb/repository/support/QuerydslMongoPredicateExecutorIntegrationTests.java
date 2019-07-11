@@ -108,9 +108,10 @@ public class QuerydslMongoPredicateExecutorIntegrationTests {
 		assertThat(repository.findOne(person.firstname.eq("batman"))).isNotPresent();
 	}
 
-	@Test(expected = IncorrectResultSizeDataAccessException.class) // DATAMONGO-1690
+	@Test // DATAMONGO-1690
 	public void findOneWithPredicateThrowsExceptionForNonUniqueResults() {
-		repository.findOne(person.firstname.contains("e"));
+		assertThatExceptionOfType(IncorrectResultSizeDataAccessException.class)
+				.isThrownBy(() -> repository.findOne(person.firstname.contains("e")));
 	}
 
 	@Test // DATAMONGO-1848
@@ -205,7 +206,8 @@ public class QuerydslMongoPredicateExecutorIntegrationTests {
 		assertThat(result).containsExactly(person2);
 	}
 
-	@Test(expected = PermissionDeniedDataAccessException.class) // DATAMONGO-1434, DATAMONGO-1848
+	@Test(expected = PermissionDeniedDataAccessException.class)
+	// DATAMONGO-1434, DATAMONGO-1848
 	public void translatesExceptionsCorrectly() {
 
 		MongoOperations ops = new MongoTemplate(dbFactory) {

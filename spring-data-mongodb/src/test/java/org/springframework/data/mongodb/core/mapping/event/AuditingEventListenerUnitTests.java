@@ -67,9 +67,9 @@ public class AuditingEventListenerUnitTests {
 		listener = new AuditingEventListener(() -> handler);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-577
+	@Test // DATAMONGO-577
 	public void rejectsNullAuditingHandler() {
-		new AuditingEventListener(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> new AuditingEventListener(null));
 	}
 
 	@Test // DATAMONGO-577

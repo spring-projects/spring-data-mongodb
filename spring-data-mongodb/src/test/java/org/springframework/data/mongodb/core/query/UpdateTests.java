@@ -238,19 +238,21 @@ public class UpdateTests {
 		assertThat(clone.modifies("oof")).isFalse();
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-853
+	@Test // DATAMONGO-853
 	public void testAddingMultiFieldOperationThrowsExceptionWhenCalledWithNullKey() {
-		new Update().addMultiFieldOperation("$op", null, "exprected to throw IllegalArgumentException.");
+		assertThatIllegalArgumentException().isThrownBy(
+				() -> new Update().addMultiFieldOperation("$op", null, "exprected to throw IllegalArgumentException."));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-853
+	@Test // DATAMONGO-853
 	public void testAddingSingleFieldOperationThrowsExceptionWhenCalledWithNullKey() {
-		new Update().addFieldOperation("$op", null, "exprected to throw IllegalArgumentException.");
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> new Update().addFieldOperation("$op", null, "exprected to throw IllegalArgumentException."));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-853
+	@Test // DATAMONGO-853
 	public void testCreatingUpdateWithNullKeyThrowsException() {
-		Update.update(null, "value");
+		assertThatIllegalArgumentException().isThrownBy(() -> Update.update(null, "value"));
 	}
 
 	@Test // DATAMONGO-953
@@ -350,9 +352,9 @@ public class UpdateTests {
 		assertThat(update.toString()).isNotNull();
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1097
+	@Test // DATAMONGO-1097
 	public void multiplyShouldThrowExceptionForNullMultiplier() {
-		new Update().multiply("key", null);
+		assertThatIllegalArgumentException().isThrownBy(() -> new Update().multiply("key", null));
 	}
 
 	@Test // DATAMONGO-1097
@@ -405,14 +407,14 @@ public class UpdateTests {
 		assertThat(pullAll.get("field2")).isNotNull();
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1404
+	@Test // DATAMONGO-1404
 	public void maxShouldThrowExceptionForNullMultiplier() {
-		new Update().max("key", null);
+		assertThatIllegalArgumentException().isThrownBy(() -> new Update().max("key", null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1404
+	@Test // DATAMONGO-1404
 	public void minShouldThrowExceptionForNullMultiplier() {
-		new Update().min("key", null);
+		assertThatIllegalArgumentException().isThrownBy(() -> new Update().min("key", null));
 	}
 
 	@Test // DATAMONGO-1404

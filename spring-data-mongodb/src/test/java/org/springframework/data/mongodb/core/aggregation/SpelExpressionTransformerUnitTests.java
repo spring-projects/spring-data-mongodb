@@ -70,9 +70,9 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(transform("a % b")).isEqualTo((Object) Document.parse("{ \"$mod\" : [ \"$a\" , \"$b\"]}"));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-774
+	@Test // DATAMONGO-774
 	public void shouldThrowExceptionOnUnknownOperand() {
-		transform("a++");
+		assertThatIllegalArgumentException().isThrownBy(() -> transform("a++"));
 	}
 
 	@Test // DATAMONGO-774

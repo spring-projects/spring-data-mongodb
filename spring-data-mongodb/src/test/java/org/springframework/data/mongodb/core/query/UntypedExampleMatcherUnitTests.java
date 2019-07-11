@@ -55,9 +55,10 @@ public class UntypedExampleMatcherUnitTests {
 		assertThat(matcher.getNullHandler()).isEqualTo(NullHandler.IGNORE);
 	}
 
-	@Test(expected = UnsupportedOperationException.class) // DATAMONGO-1768
-	public void ignoredPathsIsNotModifiable() throws Exception {
-		matcher.getIgnoredPaths().add("¯\\_(ツ)_/¯");
+	@Test // DATAMONGO-1768
+	public void ignoredPathsIsNotModifiable() {
+		assertThatExceptionOfType(UnsupportedOperationException.class)
+				.isThrownBy(() -> matcher.getIgnoredPaths().add("¯\\_(ツ)_/¯"));
 	}
 
 	@Test // DATAMONGO-1768

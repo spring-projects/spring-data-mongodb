@@ -31,24 +31,28 @@ import org.springframework.data.mongodb.core.DocumentTestUtils;
  */
 public class LookupOperationUnitTests {
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1326
+	@Test // DATAMONGO-1326
 	public void rejectsNullForFrom() {
-		new LookupOperation(null, Fields.field("localField"), Fields.field("foreignField"), Fields.field("as"));
+		assertThatIllegalArgumentException().isThrownBy(
+				() -> new LookupOperation(null, Fields.field("localField"), Fields.field("foreignField"), Fields.field("as")));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1326
+	@Test // DATAMONGO-1326
 	public void rejectsNullLocalFieldField() {
-		new LookupOperation(Fields.field("from"), null, Fields.field("foreignField"), Fields.field("as"));
+		assertThatIllegalArgumentException().isThrownBy(
+				() -> new LookupOperation(Fields.field("from"), null, Fields.field("foreignField"), Fields.field("as")));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1326
+	@Test // DATAMONGO-1326
 	public void rejectsNullForeignField() {
-		new LookupOperation(Fields.field("from"), Fields.field("localField"), null, Fields.field("as"));
+		assertThatIllegalArgumentException().isThrownBy(
+				() -> new LookupOperation(Fields.field("from"), Fields.field("localField"), null, Fields.field("as")));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1326
+	@Test // DATAMONGO-1326
 	public void rejectsNullForAs() {
-		new LookupOperation(Fields.field("from"), Fields.field("localField"), Fields.field("foreignField"), null);
+		assertThatIllegalArgumentException().isThrownBy(() -> new LookupOperation(Fields.field("from"),
+				Fields.field("localField"), Fields.field("foreignField"), null));
 	}
 
 	@Test // DATAMONGO-1326
@@ -81,24 +85,26 @@ public class LookupOperationUnitTests {
 		return lookupClause;
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1326
+	@Test // DATAMONGO-1326
 	public void builderRejectsNullFromField() {
-		LookupOperation.newLookup().from(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> LookupOperation.newLookup().from(null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1326
+	@Test // DATAMONGO-1326
 	public void builderRejectsNullLocalField() {
-		LookupOperation.newLookup().from("a").localField(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> LookupOperation.newLookup().from("a").localField(null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1326
+	@Test // DATAMONGO-1326
 	public void builderRejectsNullForeignField() {
-		LookupOperation.newLookup().from("a").localField("b").foreignField(null);
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> LookupOperation.newLookup().from("a").localField("b").foreignField(null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1326
+	@Test // DATAMONGO-1326
 	public void builderRejectsNullAsField() {
-		LookupOperation.newLookup().from("a").localField("b").foreignField("c").as(null);
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> LookupOperation.newLookup().from("a").localField("b").foreignField("c").as(null));
 	}
 
 	@Test // DATAMONGO-1326

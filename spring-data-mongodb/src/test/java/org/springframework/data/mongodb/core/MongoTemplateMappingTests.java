@@ -19,10 +19,9 @@ import static org.assertj.core.api.Assertions.*;
 
 import org.bson.Document;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataAccessException;
@@ -46,8 +45,6 @@ public class MongoTemplateMappingTests {
 	@Autowired @Qualifier("mongoTemplate1") MongoTemplate template1;
 
 	@Autowired @Qualifier("mongoTemplate2") MongoTemplate template2;
-
-	@Rule public ExpectedException thrown = ExpectedException.none();
 
 	@Before
 	public void setUp() {

@@ -16,8 +16,7 @@
 package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
@@ -27,6 +26,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 
 /**
@@ -45,24 +45,25 @@ public class ReactiveAggregationOperationSupportUnitTests {
 		opSupport = new ReactiveAggregationOperationSupport(template);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1719
+	@Test // DATAMONGO-1719
 	public void throwsExceptionOnNullDomainType() {
-		opSupport.aggregateAndReturn(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> opSupport.aggregateAndReturn(null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1719
+	@Test // DATAMONGO-1719
 	public void throwsExceptionOnNullCollectionWhenUsed() {
-		opSupport.aggregateAndReturn(Person.class).inCollection(null);
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> opSupport.aggregateAndReturn(Person.class).inCollection(null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1719
+	@Test // DATAMONGO-1719
 	public void throwsExceptionOnEmptyCollectionWhenUsed() {
-		opSupport.aggregateAndReturn(Person.class).inCollection("");
+		assertThatIllegalArgumentException().isThrownBy(() -> opSupport.aggregateAndReturn(Person.class).inCollection(""));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1719
+	@Test // DATAMONGO-1719
 	public void throwsExceptionOnNullAggregation() {
-		opSupport.aggregateAndReturn(Person.class).by(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> opSupport.aggregateAndReturn(Person.class).by(null));
 	}
 
 	@Test // DATAMONGO-1719

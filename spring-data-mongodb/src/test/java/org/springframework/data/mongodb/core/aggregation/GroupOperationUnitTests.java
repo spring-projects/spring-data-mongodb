@@ -36,9 +36,9 @@ import org.springframework.data.mongodb.core.query.Criteria;
  */
 public class GroupOperationUnitTests {
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void rejectsNullFields() {
-		new GroupOperation((Fields) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> new GroupOperation((Fields) null));
 	}
 
 	@Test // DATAMONGO-759
@@ -235,9 +235,10 @@ public class GroupOperationUnitTests {
 				new Document("if", new Document("$eq", Arrays.asList("$foo", "bar"))).append("then", 1).append("else", -1)));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1784
+	@Test // DATAMONGO-1784
 	public void sumWithNullExpressionShouldThrowException() {
-		Aggregation.group("username").sum((AggregationExpression) null);
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> Aggregation.group("username").sum((AggregationExpression) null));
 	}
 
 	private Document extractDocumentFromGroupOperation(GroupOperation groupOperation) {

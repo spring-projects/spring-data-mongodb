@@ -21,9 +21,7 @@ import java.util.Collections;
 import java.util.Set;
 
 import org.bson.Document;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanReference;
@@ -52,8 +50,6 @@ import org.springframework.stereotype.Component;
  * @author Ryan Tenney
  */
 public class MappingMongoConverterParserIntegrationTests {
-
-	@Rule public ExpectedException exception = ExpectedException.none();
 
 	DefaultListableBeanFactory factory;
 
@@ -99,22 +95,20 @@ public class MappingMongoConverterParserIntegrationTests {
 	@Test // DATAMONGO-866
 	public void rejectsInvalidFieldNamingStrategyConfiguration() {
 
-		exception.expect(BeanDefinitionParsingException.class);
-		exception.expectMessage("abbreviation");
-		exception.expectMessage("field-naming-strategy-ref");
-
 		BeanDefinitionRegistry factory = new DefaultListableBeanFactory();
 		XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(factory);
-		reader.loadBeanDefinitions(new ClassPathResource("namespace/converter-invalid.xml"));
+
+		assertThatExceptionOfType(BeanDefinitionParsingException.class)
+				.isThrownBy(() -> reader.loadBeanDefinitions(new ClassPathResource("namespace/converter-invalid.xml")))
+				.withMessageContaining("abbreviation").withMessageContaining("field-naming-strategy-ref");
 	}
 
 	@Test // DATAMONGO-892
 	public void shouldThrowBeanDefinitionParsingExceptionIfConverterDefinedAsNestedBean() {
 
-		exception.expect(BeanDefinitionParsingException.class);
-		exception.expectMessage("Mongo Converter must not be defined as nested bean.");
+		assertThatExceptionOfType(BeanDefinitionParsingException.class).isThrownBy(this::loadNestedBeanConfiguration)
+				.withMessageContaining("Mongo Converter must not be defined as nested bean.");
 
-		loadNestedBeanConfiguration();
 	}
 
 	@Test // DATAMONGO-925, DATAMONGO-928

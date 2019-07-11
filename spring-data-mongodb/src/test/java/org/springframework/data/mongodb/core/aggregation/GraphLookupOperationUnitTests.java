@@ -32,9 +32,9 @@ import org.springframework.data.mongodb.core.query.Criteria;
  */
 public class GraphLookupOperationUnitTests {
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1551
+	@Test // DATAMONGO-1551
 	public void rejectsNullFromCollection() {
-		GraphLookupOperation.builder().from(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> GraphLookupOperation.builder().from(null));
 	}
 
 	@Test // DATAMONGO-1551
@@ -101,15 +101,14 @@ public class GraphLookupOperationUnitTests {
 				Arrays.asList("$reportsTo", new Document("$literal", "$boss")));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1551
+	@Test // DATAMONGO-1551
 	public void shouldRejectUnknownTypeInMixedArrayOfStartsWithCorrectly() {
-
-		GraphLookupOperation graphLookupOperation = GraphLookupOperation.builder() //
+		assertThatIllegalArgumentException().isThrownBy(() -> GraphLookupOperation.builder() //
 				.from("employees") //
 				.startWith("reportsTo", new Person()) //
 				.connectFrom("reportsTo") //
 				.connectTo("name") //
-				.as("reportingHierarchy");
+				.as("reportingHierarchy"));
 	}
 
 	@Test // DATAMONGO-1551

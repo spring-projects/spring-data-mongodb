@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.repository.query;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Method;
@@ -36,6 +36,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -162,9 +163,9 @@ public class StringBasedMongoQueryUnitTests {
 		assertThat(mongoQuery.isDeleteQuery()).isTrue();
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-566
+	@Test // DATAMONGO-566
 	public void preventsDeleteAndCountFlagAtTheSameTime() {
-		createQueryForMethod("invalidMethod", String.class);
+		assertThatIllegalArgumentException().isThrownBy(() -> createQueryForMethod("invalidMethod", String.class));
 	}
 
 	@Test // DATAMONGO-420
@@ -755,7 +756,8 @@ public class StringBasedMongoQueryUnitTests {
 		@Query("{ 'arg0' : '?0', 'arg1' : '?1s' }")
 		List<Person> findByWhenQuotedAndSomeStuffAppended(String arg0, String arg1);
 
-		@Query("{ 'lastname' : { '$regex' : '^(?0|John ?1|?1)'} }") // use spel or some regex string this is bad
+		@Query("{ 'lastname' : { '$regex' : '^(?0|John ?1|?1)'} }")
+		// use spel or some regex string this is bad
 		Person findByLastnameRegex(String lastname, String alternative);
 
 		@Query("{ arg0 : ?#{[0]} }")

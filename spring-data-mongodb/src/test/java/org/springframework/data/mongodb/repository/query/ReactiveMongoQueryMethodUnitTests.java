@@ -110,9 +110,10 @@ public class ReactiveMongoQueryMethodUnitTests {
 				new SpelAwareProxyProjectionFactory(), null);
 	}
 
-	@Test(expected = IllegalStateException.class) // DATAMONGO-1444
-	public void rejectsMonoPageableResult() throws Exception {
-		queryMethod(PersonRepository.class, "findMonoByLastname", String.class, Pageable.class);
+	@Test // DATAMONGO-1444
+	public void rejectsMonoPageableResult() {
+		assertThatIllegalStateException()
+				.isThrownBy(() -> queryMethod(PersonRepository.class, "findMonoByLastname", String.class, Pageable.class));
 	}
 
 	@Test // DATAMONGO-1444
@@ -138,14 +139,16 @@ public class ReactiveMongoQueryMethodUnitTests {
 		assertThat(method.getQueryMetaAttributes().getMaxTimeMsec()).isEqualTo(100L);
 	}
 
-	@Test(expected = InvalidDataAccessApiUsageException.class) // DATAMONGO-1444
-	public void throwsExceptionOnWrappedPage() throws Exception {
-		queryMethod(PersonRepository.class, "findMonoPageByLastname", String.class, Pageable.class);
+	@Test // DATAMONGO-1444
+	public void throwsExceptionOnWrappedPage() {
+		assertThatExceptionOfType(InvalidDataAccessApiUsageException.class)
+				.isThrownBy(() -> queryMethod(PersonRepository.class, "findMonoPageByLastname", String.class, Pageable.class));
 	}
 
-	@Test(expected = InvalidDataAccessApiUsageException.class) // DATAMONGO-1444
-	public void throwsExceptionOnWrappedSlice() throws Exception {
-		queryMethod(PersonRepository.class, "findMonoSliceByLastname", String.class, Pageable.class);
+	@Test // DATAMONGO-1444
+	public void throwsExceptionOnWrappedSlice() {
+		assertThatExceptionOfType(InvalidDataAccessApiUsageException.class)
+				.isThrownBy(() -> queryMethod(PersonRepository.class, "findMonoSliceByLastname", String.class, Pageable.class));
 	}
 
 	@Test // DATAMONGO-1444

@@ -28,9 +28,9 @@ import org.junit.Test;
  */
 public class GeoCommandStatisticsUnitTests {
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1361
+	@Test // DATAMONGO-1361
 	public void rejectsNullCommandResult() {
-		GeoCommandStatistics.from(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> GeoCommandStatistics.from(null));
 	}
 
 	@Test // DATAMONGO-1361

@@ -25,9 +25,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.bson.Document;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
+
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -42,40 +41,36 @@ import org.springframework.data.mongodb.core.query.Criteria;
  */
 public class AggregationUnitTests {
 
-	public @Rule ExpectedException exception = ExpectedException.none();
-
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void rejectsNullAggregationOperation() {
-		newAggregation((AggregationOperation[]) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> newAggregation((AggregationOperation[]) null));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void rejectsNullTypedAggregationOperation() {
-		newAggregation(String.class, (AggregationOperation[]) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> newAggregation(String.class, (AggregationOperation[]) null));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void rejectsNoAggregationOperation() {
-		newAggregation(new AggregationOperation[0]);
+		assertThatIllegalArgumentException().isThrownBy(() -> newAggregation(new AggregationOperation[0]));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void rejectsNoTypedAggregationOperation() {
-		newAggregation(String.class, new AggregationOperation[0]);
+		assertThatIllegalArgumentException().isThrownBy(() -> newAggregation(String.class, new AggregationOperation[0]));
 	}
 
 	@Test // DATAMONGO-753
 	public void checkForCorrectFieldScopeTransfer() {
 
-		exception.expect(IllegalArgumentException.class);
-		exception.expectMessage("Invalid reference");
-		exception.expectMessage("'b'");
-
-		newAggregation( //
-				project("a", "b"), //
-				group("a").count().as("cnt"), // a was introduced to the context by the project operation
-				project("cnt", "b") // b was removed from the context by the group operation
-		).toDocument("foo", Aggregation.DEFAULT_CONTEXT); // -> triggers IllegalArgumentException
+		assertThatIllegalArgumentException().isThrownBy(() -> {
+			newAggregation( //
+					project("a", "b"), //
+					group("a").count().as("cnt"), // a was introduced to the context by the project operation
+					project("cnt", "b") // b was removed from the context by the group operation
+			).toDocument("foo", Aggregation.DEFAULT_CONTEXT); // -> triggers IllegalArgumentException
+		});
 	}
 
 	@Test // DATAMONGO-753

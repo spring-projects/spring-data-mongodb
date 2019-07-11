@@ -29,9 +29,9 @@ public class SkipOperationUnitTests {
 
 	static final String OP = "$skip";
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void rejectsNegativeSkip() {
-		new SkipOperation(-1L);
+		assertThatIllegalArgumentException().isThrownBy(() -> new SkipOperation(-1L));
 	}
 
 	@Test

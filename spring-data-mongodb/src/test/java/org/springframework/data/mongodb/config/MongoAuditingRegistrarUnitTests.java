@@ -15,15 +15,18 @@
  */
 package org.springframework.data.mongodb.config;
 
+import static org.assertj.core.api.Assertions.*;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.core.type.AnnotationMetadata;
 
 /**
- * Unit tests for {@link JpaAuditingRegistrar}.
+ * Unit tests for {@link MongoAuditingRegistrar}.
  *
  * @author Oliver Gierke
  */
@@ -35,13 +38,13 @@ public class MongoAuditingRegistrarUnitTests {
 	@Mock AnnotationMetadata metadata;
 	@Mock BeanDefinitionRegistry registry;
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-792
+	@Test // DATAMONGO-792
 	public void rejectsNullAnnotationMetadata() {
-		registrar.registerBeanDefinitions(null, registry);
+		assertThatIllegalArgumentException().isThrownBy(() -> registrar.registerBeanDefinitions(null, registry));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-792
+	@Test // DATAMONGO-792
 	public void rejectsNullBeanDefinitionRegistry() {
-		registrar.registerBeanDefinitions(metadata, null);
+		assertThatIllegalArgumentException().isThrownBy(() -> registrar.registerBeanDefinitions(metadata, null));
 	}
 }

@@ -15,16 +15,14 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.hamcrest.core.Is.*;
-import static org.hamcrest.core.IsEqual.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.LazyLoadingException;
@@ -41,8 +39,6 @@ import com.mongodb.DBRef;
 @RunWith(MockitoJUnitRunner.class)
 public class LazyLoadingInterceptorUnitTests {
 
-	public @Rule ExpectedException exception = ExpectedException.none();
-
 	@Mock MongoPersistentProperty propertyMock;
 	@Mock DBRef dbrefMock;
 	@Mock DbRefResolverCallback callbackMock;
@@ -53,11 +49,10 @@ public class LazyLoadingInterceptorUnitTests {
 		NullPointerException npe = new NullPointerException("Some Exception we did not think about.");
 		when(callbackMock.resolve(propertyMock)).thenThrow(npe);
 
-		exception.expect(LazyLoadingException.class);
-		exception.expectCause(is(equalTo(npe)));
-
-		new LazyLoadingInterceptor(propertyMock, dbrefMock, new NullExceptionTranslator(), callbackMock).intercept(null,
-				LazyLoadingProxy.class.getMethod("getTarget"), null, null);
+		assertThatExceptionOfType(LazyLoadingException.class).isThrownBy(() -> {
+			new LazyLoadingInterceptor(propertyMock, dbrefMock, new NullExceptionTranslator(), callbackMock).intercept(null,
+					LazyLoadingProxy.class.getMethod("getTarget"), null, null);
+		}).withCause(npe);
 	}
 
 	static class NullExceptionTranslator implements PersistenceExceptionTranslator {

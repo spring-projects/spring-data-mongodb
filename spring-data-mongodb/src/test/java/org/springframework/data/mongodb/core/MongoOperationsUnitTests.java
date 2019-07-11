@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -95,23 +95,23 @@ public abstract class MongoOperationsUnitTests {
 		};
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void rejectsNullForCollectionCallback() {
-
-		getOperations().execute("test", (CollectionCallback) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> getOperations().execute("test", (CollectionCallback) null));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void rejectsNullForCollectionCallback2() {
-		getOperations().execute("collection", (CollectionCallback) null);
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> getOperations().execute("collection", (CollectionCallback) null));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void rejectsNullForDbCallback() {
-		getOperations().execute((DbCallback) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> getOperations().execute((DbCallback) null));
 	}
 
 	@Test
@@ -350,12 +350,7 @@ public abstract class MongoOperationsUnitTests {
 
 		public void assertException(Class<? extends Exception> exception) {
 
-			try {
-				doWith(getOperationsForExceptionHandling());
-				fail("Expected " + exception + " but completed without any!");
-			} catch (Exception e) {
-				assertTrue("Expected " + exception + " but got " + e, exception.isInstance(e));
-			}
+			assertThatThrownBy(() -> doWith(getOperationsForExceptionHandling())).isInstanceOf(exception);
 		}
 
 		public abstract void doWith(MongoOperations operations);

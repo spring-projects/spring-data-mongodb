@@ -78,19 +78,19 @@ public class ExecutableFindOperationSupportTests {
 		initPlanets();
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1563
+	@Test // DATAMONGO-1563
 	public void domainTypeIsRequired() {
-		template.query(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> template.query(null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1563
+	@Test // DATAMONGO-1563
 	public void returnTypeIsRequiredOnSet() {
-		template.query(Person.class).as(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> template.query(Person.class).as(null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1563
+	@Test // DATAMONGO-1563
 	public void collectionIsRequiredOnSet() {
-		template.query(Person.class).inCollection(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> template.query(Person.class).inCollection(null));
 	}
 
 	@Test // DATAMONGO-1563
@@ -164,9 +164,10 @@ public class ExecutableFindOperationSupportTests {
 		assertThat(template.query(Person.class).matching(query(where("firstname").is("spock"))).one()).isEmpty();
 	}
 
-	@Test(expected = IncorrectResultSizeDataAccessException.class) // DATAMONGO-1563
+	@Test // DATAMONGO-1563
 	public void findByTooManyResults() {
-		template.query(Person.class).matching(query(where("firstname").in("han", "luke"))).one();
+		assertThatExceptionOfType(IncorrectResultSizeDataAccessException.class)
+				.isThrownBy(() -> template.query(Person.class).matching(query(where("firstname").in("han", "luke"))).one());
 	}
 
 	@Test // DATAMONGO-1726
@@ -174,9 +175,10 @@ public class ExecutableFindOperationSupportTests {
 		assertThat(template.query(Person.class).matching(query(where("firstname").is("luke"))).oneValue()).isEqualTo(luke);
 	}
 
-	@Test(expected = IncorrectResultSizeDataAccessException.class) // DATAMONGO-1726
+	@Test // DATAMONGO-1726
 	public void findByReturningOneValueButTooManyResults() {
-		template.query(Person.class).matching(query(where("firstname").in("han", "luke"))).oneValue();
+		assertThatExceptionOfType(IncorrectResultSizeDataAccessException.class).isThrownBy(
+				() -> template.query(Person.class).matching(query(where("firstname").in("han", "luke"))).oneValue());
 	}
 
 	@Test // DATAMONGO-1726
@@ -513,9 +515,10 @@ public class ExecutableFindOperationSupportTests {
 		assertThat(template.query(Person.class).distinct("father").all()).containsExactlyInAnyOrder(expected);
 	}
 
-	@Test(expected = InvalidDataAccessApiUsageException.class) // DATAMONGO-1761
+	@Test // DATAMONGO-1761
 	public void distinctThrowsExceptionWhenExplicitMappingTypeCannotBeApplied() {
-		template.query(Person.class).distinct("firstname").as(Long.class).all();
+		assertThatExceptionOfType(InvalidDataAccessApiUsageException.class)
+				.isThrownBy(() -> template.query(Person.class).distinct("firstname").as(Long.class).all());
 	}
 
 	interface Contact {}

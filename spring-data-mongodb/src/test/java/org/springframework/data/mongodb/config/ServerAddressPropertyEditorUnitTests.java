@@ -24,9 +24,7 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import com.mongodb.ServerAddress;
 
@@ -37,8 +35,6 @@ import com.mongodb.ServerAddress;
  * @author Thomas Darimont
  */
 public class ServerAddressPropertyEditorUnitTests {
-
-	@Rule public ExpectedException expectedException = ExpectedException.none();
 
 	ServerAddressPropertyEditor editor;
 
@@ -123,13 +119,11 @@ public class ServerAddressPropertyEditorUnitTests {
 	 * We can't tell whether the last part of the hostAddress represents a port or not.
 	 */
 	@Test // DATAMONGO-808
-	public void shouldFailToHandleAmbiguousIPv6HostaddressLongWithoutPortAndWithoutBrackets()
-			throws UnknownHostException {
-
-		expectedException.expect(IllegalArgumentException.class);
+	public void shouldFailToHandleAmbiguousIPv6HostaddressLongWithoutPortAndWithoutBrackets() {
 
 		String hostAddress = "0000:0000:0000:0000:0000:0000:0000:128";
-		editor.setAsText(hostAddress);
+
+		assertThatIllegalArgumentException().isThrownBy(() -> editor.setAsText(hostAddress));
 	}
 
 	@Test // DATAMONGO-808

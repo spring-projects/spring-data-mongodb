@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.anyList;
@@ -28,6 +28,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
@@ -67,30 +68,30 @@ public class ReactiveAggregationUnitTests {
 		when(publisher.collation(any())).thenReturn(publisher);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1646
+	@Test // DATAMONGO-1646
 	public void shouldHandleMissingInputCollection() {
-		template.aggregate(newAggregation(), (String) null, TagCount.class);
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> template.aggregate(newAggregation(), (String) null, TagCount.class));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1646
+	@Test // DATAMONGO-1646
 	public void shouldHandleMissingAggregationPipeline() {
-		template.aggregate(null, INPUT_COLLECTION, TagCount.class);
+		assertThatIllegalArgumentException().isThrownBy(() -> template.aggregate(null, INPUT_COLLECTION, TagCount.class));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1646
+	@Test // DATAMONGO-1646
 	public void shouldHandleMissingEntityClass() {
-		template.aggregate(newAggregation(), INPUT_COLLECTION, null);
+		assertThatIllegalArgumentException().isThrownBy(() -> template.aggregate(newAggregation(), INPUT_COLLECTION, null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1646
+	@Test // DATAMONGO-1646
 	public void errorsOnExplainUsage() {
-
-		template
+		assertThatIllegalArgumentException().isThrownBy(() -> template
 				.aggregate(newAggregation(Product.class, //
 						project("name", "netPrice")) //
 								.withOptions(AggregationOptions.builder().explain(true).build()),
 						INPUT_COLLECTION, TagCount.class)
-				.subscribe();
+				.subscribe());
 	}
 
 	@Test // DATAMONGO-1646, DATAMONGO-1311

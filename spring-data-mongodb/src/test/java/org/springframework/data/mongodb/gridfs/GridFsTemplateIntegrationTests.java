@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.gridfs;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.gridfs.GridFsCriteria.*;
 
@@ -33,6 +33,7 @@ import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -177,9 +178,9 @@ public class GridFsTemplateIntegrationTests {
 		assertThat(files).hasSize(1).extracting(it -> ((BsonObjectId) it.getId()).getValue()).containsExactly(reference);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1762
+	@Test // DATAMONGO-1762
 	public void queryingWithNullQueryThrowsException() {
-		operations.find(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> operations.find(null));
 	}
 
 	@Test // DATAMONGO-813, DATAMONGO-1914

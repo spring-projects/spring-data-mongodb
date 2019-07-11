@@ -46,14 +46,14 @@ public class DefaultScriptOperationsUnitTests {
 		this.scriptOps = new DefaultScriptOperations(mongoOperations);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-479
+	@Test // DATAMONGO-479
 	public void rejectsNullExecutableMongoScript() {
-		scriptOps.register((ExecutableMongoScript) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> scriptOps.register((ExecutableMongoScript) null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-479
+	@Test // DATAMONGO-479
 	public void rejectsNullNamedMongoScript() {
-		scriptOps.register((NamedMongoScript) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> scriptOps.register((NamedMongoScript) null));
 	}
 
 	@Test // DATAMONGO-479
@@ -75,28 +75,28 @@ public class DefaultScriptOperationsUnitTests {
 		assertThat(captor.getValue().getName()).isNotNull();
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-479
+	@Test // DATAMONGO-479
 	public void executeShouldThrowExceptionWhenScriptIsNull() {
-		scriptOps.execute(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> scriptOps.execute(null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-479
+	@Test // DATAMONGO-479
 	public void existsShouldThrowExceptionWhenScriptNameIsNull() {
-		scriptOps.exists(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> scriptOps.exists(null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-479
+	@Test // DATAMONGO-479
 	public void existsShouldThrowExceptionWhenScriptNameIsEmpty() {
-		scriptOps.exists("");
+		assertThatIllegalArgumentException().isThrownBy(() -> scriptOps.exists(""));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-479
+	@Test // DATAMONGO-479
 	public void callShouldThrowExceptionWhenScriptNameIsNull() {
-		scriptOps.call(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> scriptOps.call(null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-479
+	@Test // DATAMONGO-479
 	public void callShouldThrowExceptionWhenScriptNameIsEmpty() {
-		scriptOps.call("");
+		assertThatIllegalArgumentException().isThrownBy(() -> scriptOps.call(""));
 	}
 }

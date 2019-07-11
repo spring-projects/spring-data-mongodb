@@ -79,9 +79,9 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		assertThat(getContext(Foo.class).getReference("bar")).isNotNull();
 	}
 
-	@Test(expected = MappingException.class)
+	@Test
 	public void rejectsInvalidFieldReference() {
-		getContext(Foo.class).getReference("foo");
+		assertThatExceptionOfType(MappingException.class).isThrownBy(() -> getContext(Foo.class).getReference("foo"));
 	}
 
 	@Test // DATAMONGO-741

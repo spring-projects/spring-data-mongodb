@@ -40,8 +40,8 @@ public class CriteriaValidatorUnitTests {
 				.isEqualTo(new Document("$type", 16).append("$gte", 0).append("$lte", 122));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1322
+	@Test // DATAMONGO-1322
 	public void testFailOnNull() {
-		CriteriaValidator.of(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> CriteriaValidator.of(null));
 	}
 }

@@ -32,9 +32,9 @@ import org.junit.Test;
  */
 public class OutOperationUnitTest {
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1418
+	@Test // DATAMONGO-1418
 	public void shouldCheckNPEInCreation() {
-		new OutOperation(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> new OutOperation(null));
 	}
 
 	@Test // DATAMONGO-2259
