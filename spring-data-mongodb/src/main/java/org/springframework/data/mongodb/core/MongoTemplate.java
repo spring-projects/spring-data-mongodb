@@ -376,8 +376,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @see org.springframework.data.mongodb.core.MongoOperations#executeAsStream(org.springframework.data.mongodb.core.query.Query, java.lang.Class)
 	 */
 	@Override
-	public <T> CloseableIterator<T> stream(final Query query, final Class<T> entityType) {
-
+	public <T> CloseableIterator<T> stream(Query query, Class<T> entityType) {
 		return stream(query, entityType, getCollectionName(entityType));
 	}
 
@@ -386,11 +385,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @see org.springframework.data.mongodb.core.MongoOperations#stream(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
 	 */
 	@Override
-	public <T> CloseableIterator<T> stream(final Query query, final Class<T> entityType, final String collectionName) {
+	public <T> CloseableIterator<T> stream(Query query, Class<T> entityType, String collectionName) {
 		return doStream(query, entityType, collectionName, entityType);
 	}
 
-	protected <T> CloseableIterator<T> doStream(final Query query, final Class<?> entityType, final String collectionName,
+	protected <T> CloseableIterator<T> doStream(Query query, final Class<?> entityType, String collectionName,
 			Class<T> returnType) {
 
 		Assert.notNull(query, "Query must not be null!");
@@ -404,7 +403,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			public CloseableIterator<T> doInCollection(MongoCollection<Document> collection)
 					throws MongoException, DataAccessException {
 
-				MongoPersistentEntity<?> persistentEntity = mappingContext.getRequiredPersistentEntity(entityType);
+				MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(entityType);
 
 				Document mappedFields = getMappedFieldsObject(query.getFieldsObject(), persistentEntity, returnType);
 				Document mappedQuery = queryMapper.getMappedObject(query.getQueryObject(), persistentEntity);
@@ -2419,7 +2418,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	<S, T> List<T> doFind(String collectionName, Document query, Document fields, Class<S> sourceClass,
 			Class<T> targetClass, CursorPreparer preparer) {
 
-		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(sourceClass);
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(sourceClass);
 
 		Document mappedFields = getMappedFieldsObject(fields, entity, targetClass);
 		Document mappedQuery = queryMapper.getMappedObject(query, entity);
@@ -2754,7 +2753,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return queryMapper.getMappedSort(query.getSortObject(), mappingContext.getPersistentEntity(type));
 	}
 
-	private Document getMappedFieldsObject(Document fields, MongoPersistentEntity<?> entity, Class<?> targetType) {
+	private Document getMappedFieldsObject(Document fields, @Nullable MongoPersistentEntity<?> entity,
+			Class<?> targetType) {
+
+		if (entity == null) {
+			return fields;
+		}
 
 		Document projectedFields = propertyOperations.computeFieldsForProjection(projectionFactory, fields,
 				entity.getType(), targetType);

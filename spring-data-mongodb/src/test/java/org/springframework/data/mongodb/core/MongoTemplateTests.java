@@ -3346,7 +3346,7 @@ public class MongoTemplateTests {
 		assertThat(loaded.bigDeciamVal, equalTo(new BigDecimal("800")));
 	}
 
-	@Test // DATAMONGO-1431
+	@Test // DATAMONGO-1431, DATAMONGO-2323
 	public void streamExecutionUsesExplicitCollectionName() {
 
 		template.remove(new Query(), "some_special_collection");
@@ -3357,14 +3357,14 @@ public class MongoTemplateTests {
 		template.insert(document, "some_special_collection");
 
 		CloseableIterator<Document> stream = template.stream(new Query(), Document.class);
-
 		assertThat(stream.hasNext(), is(false));
 
-		stream = template.stream(new Query(), Document.class, "some_special_collection");
+		CloseableIterator<org.bson.Document> stream2 = template.stream(new Query(where("_id").is(document.id)),
+				org.bson.Document.class, "some_special_collection");
 
-		assertThat(stream.hasNext(), is(true));
-		assertThat(stream.next().id, is(document.id));
-		assertThat(stream.hasNext(), is(false));
+		assertThat(stream2.hasNext()).isTrue();
+		assertThat(stream2.next().get("_id")).isEqualTo(new ObjectId(document.id));
+		assertThat(stream2.hasNext()).isFalse();
 	}
 
 	@Test // DATAMONGO-1194
