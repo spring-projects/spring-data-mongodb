@@ -147,6 +147,13 @@ public class ExecutableFindOperationSupportTests {
 				.hasSize(1);
 	}
 
+	@Test // DATAMONGO-2323
+	public void findAllAsDocument() {
+		assertThat(
+				template.query(Document.class).inCollection(STAR_WARS).matching(query(where("firstname").is("luke"))).all())
+						.hasSize(1);
+	}
+
 	@Test // DATAMONGO-1563
 	public void findAllByWithProjection() {
 

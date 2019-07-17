@@ -134,6 +134,12 @@ public class ReactiveFindOperationSupportTests {
 		StepVerifier.create(template.query(Human.class).inCollection(STAR_WARS).all()).expectNextCount(2).verifyComplete();
 	}
 
+	@Test // DATAMONGO-2323
+	public void findAllAsDocumentDocument() {
+		StepVerifier.create(template.query(Document.class).inCollection(STAR_WARS).all()).expectNextCount(2)
+				.verifyComplete();
+	}
+
 	@Test // DATAMONGO-1719
 	public void findAllWithProjection() {
 

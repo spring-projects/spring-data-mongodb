@@ -436,8 +436,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#reactiveIndexOps(java.lang.Class)
 	 */
 	public ReactiveIndexOperations indexOps(Class<?> entityClass) {
-		return new DefaultReactiveIndexOperations(this, getCollectionName(entityClass), this.queryMapper,
-				entityClass);
+		return new DefaultReactiveIndexOperations(this, getCollectionName(entityClass), this.queryMapper, entityClass);
 	}
 
 	public String getCollectionName(Class<?> entityClass) {
@@ -697,8 +696,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 						() -> operations.forType(entityClass).getCollation()) //
 				.map(options::collation).orElse(options);
 
-		return doCreateCollection(getCollectionName(entityClass),
-				convertToCreateCollectionOptions(options, entityClass));
+		return doCreateCollection(getCollectionName(entityClass), convertToCreateCollectionOptions(options, entityClass));
 	}
 
 	/*
@@ -2103,8 +2101,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	public <T> Flux<T> mapReduce(Query filterQuery, Class<?> domainType, Class<T> resultType, String mapFunction,
 			String reduceFunction, MapReduceOptions options) {
 
-		return mapReduce(filterQuery, domainType, getCollectionName(domainType), resultType, mapFunction,
-				reduceFunction, options);
+		return mapReduce(filterQuery, domainType, getCollectionName(domainType), resultType, mapFunction, reduceFunction,
+				options);
 	}
 
 	/*
@@ -2402,7 +2400,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	<S, T> Flux<T> doFind(String collectionName, Document query, Document fields, Class<S> sourceClass,
 			Class<T> targetClass, FindPublisherPreparer preparer) {
 
-		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(sourceClass);
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(sourceClass);
 
 		Document mappedFields = getMappedFieldsObject(fields, entity, targetClass);
 		Document mappedQuery = queryMapper.getMappedObject(query, entity);
@@ -2416,7 +2414,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				new ProjectingReadCallback<>(mongoConverter, sourceClass, targetClass, collectionName), collectionName);
 	}
 
-	private Document getMappedFieldsObject(Document fields, MongoPersistentEntity<?> entity, Class<?> targetType) {
+	private Document getMappedFieldsObject(Document fields, @Nullable MongoPersistentEntity<?> entity,
+			Class<?> targetType) {
+
+		if (entity == null) {
+			return fields;
+		}
 
 		Document projectedFields = propertyOperations.computeFieldsForProjection(projectionFactory, fields,
 				entity.getType(), targetType);
