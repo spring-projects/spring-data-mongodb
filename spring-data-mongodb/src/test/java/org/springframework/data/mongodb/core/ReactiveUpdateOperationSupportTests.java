@@ -90,7 +90,7 @@ public class ReactiveUpdateOperationSupportTests {
 	@Test // DATAMONGO-1719
 	public void updateFirst() {
 
-		StepVerifier.create(template.update(Person.class).apply(new Update().set("firstname", "Han")).first())
+		template.update(Person.class).apply(new Update().set("firstname", "Han")).first().as(StepVerifier::create)
 				.consumeNextWith(actual -> {
 
 					assertThat(actual.getModifiedCount()).isEqualTo(1L);
@@ -102,7 +102,7 @@ public class ReactiveUpdateOperationSupportTests {
 	@Test // DATAMONGO-1719
 	public void updateAll() {
 
-		StepVerifier.create(template.update(Person.class).apply(new Update().set("firstname", "Han")).all())
+		template.update(Person.class).apply(new Update().set("firstname", "Han")).all().as(StepVerifier::create)
 				.consumeNextWith(actual -> {
 
 					assertThat(actual.getModifiedCount()).isEqualTo(2L);
@@ -113,8 +113,8 @@ public class ReactiveUpdateOperationSupportTests {
 	@Test // DATAMONGO-1719
 	public void updateAllMatching() {
 
-		StepVerifier
-				.create(template.update(Person.class).matching(queryHan()).apply(new Update().set("firstname", "Han")).all())
+		template.update(Person.class).matching(queryHan()).apply(new Update().set("firstname", "Han")).all()
+				.as(StepVerifier::create)
 				.consumeNextWith(actual -> {
 
 					assertThat(actual.getModifiedCount()).isEqualTo(1L);
@@ -125,8 +125,8 @@ public class ReactiveUpdateOperationSupportTests {
 	@Test // DATAMONGO-1719
 	public void updateWithDifferentDomainClassAndCollection() {
 
-		StepVerifier.create(template.update(Jedi.class).inCollection(STAR_WARS)
-				.matching(query(where("_id").is(han.getId()))).apply(new Update().set("name", "Han")).all())
+		template.update(Jedi.class).inCollection(STAR_WARS).matching(query(where("_id").is(han.getId())))
+				.apply(new Update().set("name", "Han")).all().as(StepVerifier::create)
 				.consumeNextWith(actual -> {
 
 					assertThat(actual.getModifiedCount()).isEqualTo(1L);
@@ -140,8 +140,8 @@ public class ReactiveUpdateOperationSupportTests {
 	@Test // DATAMONGO-1719
 	public void findAndModify() {
 
-		StepVerifier.create(
-				template.update(Person.class).matching(queryHan()).apply(new Update().set("firstname", "Han")).findAndModify())
+		template.update(Person.class).matching(queryHan()).apply(new Update().set("firstname", "Han")).findAndModify()
+				.as(StepVerifier::create)
 				.expectNext(han).verifyComplete();
 
 		assertThat(blocking.findOne(queryHan(), Person.class)).isNotEqualTo(han).hasFieldOrPropertyWithValue("firstname",
@@ -151,9 +151,8 @@ public class ReactiveUpdateOperationSupportTests {
 	@Test // DATAMONGO-1719
 	public void findAndModifyWithDifferentDomainTypeAndCollection() {
 
-		StepVerifier
-				.create(template.update(Jedi.class).inCollection(STAR_WARS).matching(query(where("_id").is(han.getId())))
-						.apply(new Update().set("name", "Han")).findAndModify())
+		template.update(Jedi.class).inCollection(STAR_WARS).matching(query(where("_id").is(han.getId())))
+				.apply(new Update().set("name", "Han")).findAndModify().as(StepVerifier::create)
 				.consumeNextWith(actual -> assertThat(actual.getName()).isEqualTo("han")).verifyComplete();
 
 		assertThat(blocking.findOne(queryHan(), Person.class)).isNotEqualTo(han).hasFieldOrPropertyWithValue("firstname",
@@ -163,8 +162,9 @@ public class ReactiveUpdateOperationSupportTests {
 	@Test // DATAMONGO-1719
 	public void findAndModifyWithOptions() {
 
-		StepVerifier.create(template.update(Person.class).matching(queryHan()).apply(new Update().set("firstname", "Han"))
-				.withOptions(FindAndModifyOptions.options().returnNew(true)).findAndModify()).consumeNextWith(actual -> {
+		template.update(Person.class).matching(queryHan()).apply(new Update().set("firstname", "Han"))
+				.withOptions(FindAndModifyOptions.options().returnNew(true)).findAndModify().as(StepVerifier::create)
+				.consumeNextWith(actual -> {
 
 					assertThat(actual).isNotEqualTo(han).hasFieldOrPropertyWithValue("firstname", "Han");
 				}).verifyComplete();
@@ -173,8 +173,8 @@ public class ReactiveUpdateOperationSupportTests {
 	@Test // DATAMONGO-1719
 	public void upsert() {
 
-		StepVerifier.create(template.update(Person.class).matching(query(where("id").is("id-3")))
-				.apply(new Update().set("firstname", "Chewbacca")).upsert()).consumeNextWith(actual -> {
+		template.update(Person.class).matching(query(where("id").is("id-3")))
+				.apply(new Update().set("firstname", "Chewbacca")).upsert().as(StepVerifier::create).consumeNextWith(actual -> {
 
 					assertThat(actual.getModifiedCount()).isEqualTo(0L);
 					assertThat(actual.getUpsertedId()).isEqualTo(new BsonString("id-3"));

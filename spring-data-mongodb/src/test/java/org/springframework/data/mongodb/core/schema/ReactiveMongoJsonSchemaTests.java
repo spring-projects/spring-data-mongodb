@@ -73,7 +73,7 @@ public class ReactiveMongoJsonSchemaTests {
 
 	@Before
 	public void setUp() {
-		StepVerifier.create(template.dropCollection(Person.class)).verifyComplete();
+		template.dropCollection(Person.class).as(StepVerifier::create).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1835
@@ -88,7 +88,7 @@ public class ReactiveMongoJsonSchemaTests {
 
 				).build();
 
-		StepVerifier.create(template.createCollection(Person.class, CollectionOptions.empty().schema(schema)))
+		template.createCollection(Person.class, CollectionOptions.empty().schema(schema)).as(StepVerifier::create)
 				.expectNextCount(1).verifyComplete();
 
 		Document $jsonSchema = new MongoJsonSchemaMapper(template.getConverter()).mapSchema(schema.toDocument(),

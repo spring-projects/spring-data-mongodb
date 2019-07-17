@@ -75,14 +75,19 @@ public class ReactiveMongoTemplateTransactionTests {
 
 		template = new ReactiveMongoTemplate(client, DATABASE_NAME);
 
-		StepVerifier.create(MongoTestUtils.createOrReplaceCollection(DATABASE_NAME, COLLECTION_NAME, client)) //
+		MongoTestUtils.createOrReplaceCollection(DATABASE_NAME, COLLECTION_NAME, client).as(StepVerifier::create) //
 				.expectNext(Success.SUCCESS) //
 				.verifyComplete();
 
-		StepVerifier.create(MongoTestUtils.createOrReplaceCollection(DATABASE_NAME, "person", client))
+		MongoTestUtils.createOrReplaceCollection(DATABASE_NAME, "person", client).as(StepVerifier::create)
 				.expectNext(Success.SUCCESS) //
 				.verifyComplete();
 
+		MongoTestUtils.createOrReplaceCollection(DATABASE_NAME, "personWithVersionPropertyOfTypeInteger", client)
+				.as(StepVerifier::create).expectNext(Success.SUCCESS) //
+				.verifyComplete();
+
+		template.insert(DOCUMENT, COLLECTION_NAME).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 		StepVerifier.create(template.insert(DOCUMENT, COLLECTION_NAME)).expectNextCount(1).verifyComplete();
 
 		template.insertAll(Arrays.asList(AHMANN, ARLEN, LEESHA, RENNA)) //

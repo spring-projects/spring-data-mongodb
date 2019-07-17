@@ -21,14 +21,15 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.*;
 
 import lombok.Data;
-import org.bson.Document;
 import reactor.test.StepVerifier;
 
+import org.bson.Document;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
@@ -91,7 +92,7 @@ public class JsonSchemaQueryTests {
 		template.save(roseSpringHeart);
 		template.save(kazmardBoombub);
 	}
-	
+
 	@AfterClass
 	public static void afterClass() {
 		if (client != null) {
@@ -115,9 +116,9 @@ public class JsonSchemaQueryTests {
 
 		com.mongodb.reactivestreams.client.MongoClient mongoClient = com.mongodb.reactivestreams.client.MongoClients.create();
 
-		StepVerifier.create(new ReactiveMongoTemplate(mongoClient, DATABASE_NAME)
-				.find(query(matchingDocumentStructure(schema)), Person.class)).expectNextCount(2).verifyComplete();
-		
+		new ReactiveMongoTemplate(mongoClient, DATABASE_NAME).find(query(matchingDocumentStructure(schema)), Person.class)
+				.as(StepVerifier::create).expectNextCount(2).verifyComplete();
+
 		mongoClient.close();
 	}
 

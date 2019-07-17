@@ -67,7 +67,7 @@ public class ReactiveRemoveOperationSupportTests {
 	@Test // DATAMONGO-1719
 	public void removeAll() {
 
-		StepVerifier.create(template.remove(Person.class).all()).consumeNextWith(actual -> {
+		template.remove(Person.class).all().as(StepVerifier::create).consumeNextWith(actual -> {
 			assertThat(actual.getDeletedCount()).isEqualTo(2L);
 		}).verifyComplete();
 	}
@@ -75,22 +75,22 @@ public class ReactiveRemoveOperationSupportTests {
 	@Test // DATAMONGO-1719
 	public void removeAllMatching() {
 
-		StepVerifier.create(template.remove(Person.class).matching(query(where("firstname").is("han"))).all())
+		template.remove(Person.class).matching(query(where("firstname").is("han"))).all().as(StepVerifier::create)
 				.consumeNextWith(actual -> assertThat(actual.getDeletedCount()).isEqualTo(1L)).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1719
 	public void removeAllMatchingWithAlternateDomainTypeAndCollection() {
 
-		StepVerifier
-				.create(template.remove(Jedi.class).inCollection(STAR_WARS).matching(query(where("name").is("luke"))).all())
+		template.remove(Jedi.class).inCollection(STAR_WARS).matching(query(where("name").is("luke"))).all()
+				.as(StepVerifier::create)
 				.consumeNextWith(actual -> assertThat(actual.getDeletedCount()).isEqualTo(1L)).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1719
 	public void removeAndReturnAllMatching() {
 
-		StepVerifier.create(template.remove(Person.class).matching(query(where("firstname").is("han"))).findAndRemove())
+		template.remove(Person.class).matching(query(where("firstname").is("han"))).findAndRemove().as(StepVerifier::create)
 				.expectNext(han).verifyComplete();
 	}
 

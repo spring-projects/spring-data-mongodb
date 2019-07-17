@@ -136,7 +136,7 @@ public class ReactiveMongoTemplateUnitTests {
 				any(Class.class));
 
 		Map<String, String> entity = new LinkedHashMap<>();
-		StepVerifier.create(template.save(entity, "foo")).consumeNextWith(actual -> {
+		template.save(entity, "foo").as(StepVerifier::create).consumeNextWith(actual -> {
 
 			assertThat(entity, hasKey("_id"));
 		}).verifyComplete();

@@ -124,26 +124,27 @@ public class ReactiveFindOperationSupportTests {
 	@Test // DATAMONGO-1719
 	public void findAll() {
 
-		StepVerifier.create(template.query(Person.class).all().collectList()).consumeNextWith(actual -> {
+		template.query(Person.class).all().collectList().as(StepVerifier::create).consumeNextWith(actual -> {
 			assertThat(actual).containsExactlyInAnyOrder(han, luke);
 		}).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1719
 	public void findAllWithCollection() {
-		StepVerifier.create(template.query(Human.class).inCollection(STAR_WARS).all()).expectNextCount(2).verifyComplete();
+		template.query(Human.class).inCollection(STAR_WARS).all().as(StepVerifier::create).expectNextCount(2)
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-2323
 	public void findAllAsDocumentDocument() {
-		StepVerifier.create(template.query(Document.class).inCollection(STAR_WARS).all()).expectNextCount(2)
+		template.query(Document.class).inCollection(STAR_WARS).all().as(StepVerifier::create).expectNextCount(2)
 				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1719
 	public void findAllWithProjection() {
 
-		StepVerifier.create(template.query(Person.class).as(Jedi.class).all().map(it -> it.getClass().getName())) //
+		template.query(Person.class).as(Jedi.class).all().map(it -> it.getClass().getName()).as(StepVerifier::create) //
 				.expectNext(Jedi.class.getName(), Jedi.class.getName()) //
 				.verifyComplete();
 	}
@@ -151,7 +152,7 @@ public class ReactiveFindOperationSupportTests {
 	@Test // DATAMONGO-1719
 	public void findAllBy() {
 
-		StepVerifier.create(template.query(Person.class).matching(query(where("firstname").is("luke"))).all()) //
+		template.query(Person.class).matching(query(where("firstname").is("luke"))).all().as(StepVerifier::create) //
 				.expectNext(luke) //
 				.verifyComplete();
 	}
@@ -159,8 +160,8 @@ public class ReactiveFindOperationSupportTests {
 	@Test // DATAMONGO-1719
 	public void findAllByWithCollectionUsingMappingInformation() {
 
-		StepVerifier
-				.create(template.query(Jedi.class).inCollection(STAR_WARS).matching(query(where("name").is("luke"))).all())
+		template.query(Jedi.class).inCollection(STAR_WARS).matching(query(where("name").is("luke"))).all()
+				.as(StepVerifier::create)
 				.consumeNextWith(it -> assertThat(it).isInstanceOf(Jedi.class)) //
 				.verifyComplete();
 	}
@@ -168,9 +169,8 @@ public class ReactiveFindOperationSupportTests {
 	@Test // DATAMONGO-1719
 	public void findAllByWithCollection() {
 
-		StepVerifier
-				.create(
-						template.query(Human.class).inCollection(STAR_WARS).matching(query(where("firstname").is("luke"))).all())
+		template.query(Human.class).inCollection(STAR_WARS).matching(query(where("firstname").is("luke"))).all()
+				.as(StepVerifier::create)
 				.expectNextCount(1) //
 				.verifyComplete();
 	}
@@ -178,8 +178,8 @@ public class ReactiveFindOperationSupportTests {
 	@Test // DATAMONGO-1719
 	public void findAllByWithProjection() {
 
-		StepVerifier
-				.create(template.query(Person.class).as(Jedi.class).matching(query(where("firstname").is("luke"))).all())
+		template.query(Person.class).as(Jedi.class).matching(query(where("firstname").is("luke"))).all()
+				.as(StepVerifier::create)
 				.consumeNextWith(it -> assertThat(it).isInstanceOf(Jedi.class)) //
 				.verifyComplete();
 	}
@@ -187,8 +187,8 @@ public class ReactiveFindOperationSupportTests {
 	@Test // DATAMONGO-1719
 	public void findAllByWithClosedInterfaceProjection() {
 
-		StepVerifier.create(
-				template.query(Person.class).as(PersonProjection.class).matching(query(where("firstname").is("luke"))).all())
+		template.query(Person.class).as(PersonProjection.class).matching(query(where("firstname").is("luke"))).all()
+				.as(StepVerifier::create)
 				.consumeNextWith(it -> {
 
 					assertThat(it).isInstanceOf(PersonProjection.class);
@@ -200,8 +200,8 @@ public class ReactiveFindOperationSupportTests {
 	@Test // DATAMONGO-1719
 	public void findAllByWithOpenInterfaceProjection() {
 
-		StepVerifier.create(template.query(Person.class).as(PersonSpELProjection.class)
-				.matching(query(where("firstname").is("luke"))).all()).consumeNextWith(it -> {
+		template.query(Person.class).as(PersonSpELProjection.class).matching(query(where("firstname").is("luke"))).all()
+				.as(StepVerifier::create).consumeNextWith(it -> {
 
 					assertThat(it).isInstanceOf(PersonSpELProjection.class);
 					assertThat(it.getName()).isEqualTo("luke");
@@ -212,7 +212,7 @@ public class ReactiveFindOperationSupportTests {
 	@Test // DATAMONGO-1719
 	public void findBy() {
 
-		StepVerifier.create(template.query(Person.class).matching(query(where("firstname").is("luke"))).one())
+		template.query(Person.class).matching(query(where("firstname").is("luke"))).one().as(StepVerifier::create)
 				.expectNext(luke) //
 				.verifyComplete();
 	}
@@ -220,14 +220,14 @@ public class ReactiveFindOperationSupportTests {
 	@Test // DATAMONGO-1719
 	public void findByNoMatch() {
 
-		StepVerifier.create(template.query(Person.class).matching(query(where("firstname").is("spock"))).one())
+		template.query(Person.class).matching(query(where("firstname").is("spock"))).one().as(StepVerifier::create)
 				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1719
 	public void findByTooManyResults() {
 
-		StepVerifier.create(template.query(Person.class).matching(query(where("firstname").in("han", "luke"))).one())
+		template.query(Person.class).matching(query(where("firstname").in("han", "luke"))).one().as(StepVerifier::create)
 				.expectError(IncorrectResultSizeDataAccessException.class) //
 				.verify();
 	}
@@ -244,7 +244,7 @@ public class ReactiveFindOperationSupportTests {
 		blocking.save(alderan);
 		blocking.save(dantooine);
 
-		StepVerifier.create(template.query(Planet.class).near(NearQuery.near(-73.9667, 40.78).spherical(true)).all())
+		template.query(Planet.class).near(NearQuery.near(-73.9667, 40.78).spherical(true)).all().as(StepVerifier::create)
 				.consumeNextWith(actual -> {
 					assertThat(actual.getDistance()).isNotNull();
 				}) //
@@ -264,8 +264,9 @@ public class ReactiveFindOperationSupportTests {
 		blocking.save(alderan);
 		blocking.save(dantooine);
 
-		StepVerifier.create(template.query(Object.class).inCollection(STAR_WARS).as(Human.class)
-				.near(NearQuery.near(-73.9667, 40.78).spherical(true)).all()).consumeNextWith(actual -> {
+		template.query(Object.class).inCollection(STAR_WARS).as(Human.class)
+				.near(NearQuery.near(-73.9667, 40.78).spherical(true)).all().as(StepVerifier::create)
+				.consumeNextWith(actual -> {
 					assertThat(actual.getDistance()).isNotNull();
 					assertThat(actual.getContent()).isInstanceOf(Human.class);
 					assertThat(actual.getContent().getId()).isEqualTo("alderan");
@@ -286,8 +287,8 @@ public class ReactiveFindOperationSupportTests {
 		blocking.save(alderan);
 		blocking.save(dantooine);
 
-		StepVerifier.create(template.query(Planet.class).as(PlanetProjection.class)
-				.near(NearQuery.near(-73.9667, 40.78).spherical(true)).all()).consumeNextWith(it -> {
+		template.query(Planet.class).as(PlanetProjection.class).near(NearQuery.near(-73.9667, 40.78).spherical(true)).all()
+				.as(StepVerifier::create).consumeNextWith(it -> {
 
 					assertThat(it.getDistance()).isNotNull();
 					assertThat(it.getContent()).isInstanceOf(PlanetProjection.class);
@@ -309,8 +310,8 @@ public class ReactiveFindOperationSupportTests {
 		blocking.save(alderan);
 		blocking.save(dantooine);
 
-		StepVerifier.create(template.query(Planet.class).as(PlanetSpELProjection.class)
-				.near(NearQuery.near(-73.9667, 40.78).spherical(true)).all()).consumeNextWith(it -> {
+		template.query(Planet.class).as(PlanetSpELProjection.class).near(NearQuery.near(-73.9667, 40.78).spherical(true))
+				.all().as(StepVerifier::create).consumeNextWith(it -> {
 
 					assertThat(it.getDistance()).isNotNull();
 					assertThat(it.getContent()).isInstanceOf(PlanetSpELProjection.class);
@@ -397,26 +398,26 @@ public class ReactiveFindOperationSupportTests {
 
 	@Test // DATAMONGO-1719
 	public void firstShouldReturnFirstEntryInCollection() {
-		StepVerifier.create(template.query(Person.class).first()).expectNextCount(1).verifyComplete();
+		template.query(Person.class).first().as(StepVerifier::create).expectNextCount(1).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1719
 	public void countShouldReturnNrOfElementsInCollectionWhenNoQueryPresent() {
-		StepVerifier.create(template.query(Person.class).count()).expectNext(2L).verifyComplete();
+		template.query(Person.class).count().as(StepVerifier::create).expectNext(2L).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1719
 	public void countShouldReturnNrOfElementsMatchingQuery() {
 
-		StepVerifier
-				.create(template.query(Person.class).matching(query(where("firstname").is(luke.getFirstname()))).count())
+		template.query(Person.class).matching(query(where("firstname").is(luke.getFirstname()))).count()
+				.as(StepVerifier::create)
 				.expectNext(1L) //
 				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1719
 	public void existsShouldReturnTrueIfAtLeastOneElementExistsInCollection() {
-		StepVerifier.create(template.query(Person.class).exists()).expectNext(true).verifyComplete();
+		template.query(Person.class).exists().as(StepVerifier::create).expectNext(true).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1719
@@ -424,14 +425,14 @@ public class ReactiveFindOperationSupportTests {
 
 		blocking.remove(new BasicQuery("{}"), STAR_WARS);
 
-		StepVerifier.create(template.query(Person.class).exists()).expectNext(false).verifyComplete();
+		template.query(Person.class).exists().as(StepVerifier::create).expectNext(false).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1719
 	public void existsShouldReturnTrueIfAtLeastOneElementMatchesQuery() {
 
-		StepVerifier
-				.create(template.query(Person.class).matching(query(where("firstname").is(luke.getFirstname()))).exists())
+		template.query(Person.class).matching(query(where("firstname").is(luke.getFirstname()))).exists()
+				.as(StepVerifier::create)
 				.expectNext(true) //
 				.verifyComplete();
 	}
@@ -439,7 +440,7 @@ public class ReactiveFindOperationSupportTests {
 	@Test // DATAMONGO-1719
 	public void existsShouldReturnFalseWhenNoElementMatchesQuery() {
 
-		StepVerifier.create(template.query(Person.class).matching(query(where("firstname").is("spock"))).exists())
+		template.query(Person.class).matching(query(where("firstname").is("spock"))).exists().as(StepVerifier::create)
 				.expectNext(false) //
 				.verifyComplete();
 	}
@@ -447,7 +448,8 @@ public class ReactiveFindOperationSupportTests {
 	@Test // DATAMONGO-1761
 	public void distinctReturnsEmptyListIfNoMatchFound() {
 
-		StepVerifier.create(template.query(Person.class).distinct("actually-not-property-in-use").as(String.class).all())
+		template.query(Person.class).distinct("actually-not-property-in-use").as(String.class).all()
+				.as(StepVerifier::create)
 				.verifyComplete();
 	}
 
@@ -460,7 +462,7 @@ public class ReactiveFindOperationSupportTests {
 
 		blocking.save(anakin);
 
-		StepVerifier.create(template.query(Person.class).distinct("lastname").as(String.class).all())
+		template.query(Person.class).distinct("lastname").as(String.class).all().as(StepVerifier::create)
 				.assertNext(in("solo", "skywalker")).assertNext(in("solo", "skywalker")) //
 				.verifyComplete();
 	}
@@ -486,7 +488,7 @@ public class ReactiveFindOperationSupportTests {
 
 		Consumer<Object> containedInAbilities = in(anakin.ability, padme.ability, jaja.ability);
 
-		StepVerifier.create(template.query(Person.class).distinct("ability").all()) //
+		template.query(Person.class).distinct("ability").all().as(StepVerifier::create) //
 				.assertNext(containedInAbilities) //
 				.assertNext(containedInAbilities) //
 				.assertNext(containedInAbilities) //
@@ -505,7 +507,7 @@ public class ReactiveFindOperationSupportTests {
 
 		blocking.save(anakin);
 
-		StepVerifier.create(template.query(Person.class).distinct("ability").all()) //
+		template.query(Person.class).distinct("ability").all().as(StepVerifier::create) //
 				.expectNext(anakin.ability) //
 				.verifyComplete();
 	}
@@ -522,7 +524,7 @@ public class ReactiveFindOperationSupportTests {
 
 		blocking.save(anakin);
 
-		StepVerifier.create(template.query(Person.class).distinct("ability").as(Sith.class).all()) //
+		template.query(Person.class).distinct("ability").as(Sith.class).all().as(StepVerifier::create) //
 				.expectNext(sith) //
 				.verifyComplete();
 	}
@@ -539,7 +541,7 @@ public class ReactiveFindOperationSupportTests {
 
 		blocking.save(anakin);
 
-		StepVerifier.create(template.query(Person.class).distinct("ability").as(Document.class).all())
+		template.query(Person.class).distinct("ability").as(Document.class).all().as(StepVerifier::create)
 				.expectNext(new Document("rank", "lord").append("_class", Sith.class.getName())) //
 				.verifyComplete();
 	}
@@ -547,7 +549,7 @@ public class ReactiveFindOperationSupportTests {
 	@Test // DATAMONGO-1761
 	public void distinctMapsFieldNameCorrectly() {
 
-		StepVerifier.create(template.query(Jedi.class).inCollection(STAR_WARS).distinct("name").as(String.class).all())
+		template.query(Jedi.class).inCollection(STAR_WARS).distinct("name").as(String.class).all().as(StepVerifier::create)
 				.assertNext(in("han", "luke")).assertNext(in("han", "luke")) //
 				.verifyComplete();
 	}
@@ -556,7 +558,7 @@ public class ReactiveFindOperationSupportTests {
 	public void distinctReturnsRawValuesIfReturnTypeIsBsonValue() {
 
 		Consumer<BsonValue> inValues = in(new BsonString("solo"), new BsonString("skywalker"));
-		StepVerifier.create(template.query(Person.class).distinct("lastname").as(BsonValue.class).all())
+		template.query(Person.class).distinct("lastname").as(BsonValue.class).all().as(StepVerifier::create)
 				.assertNext(inValues) //
 				.assertNext(inValues) //
 				.verifyComplete();
@@ -567,7 +569,7 @@ public class ReactiveFindOperationSupportTests {
 
 		blocking.save(new Document("darth", "vader"), STAR_WARS);
 
-		StepVerifier.create(template.query(Person.class).distinct("darth").all()) //
+		template.query(Person.class).distinct("darth").all().as(StepVerifier::create) //
 				.expectNext("vader") //
 				.verifyComplete();
 	}
@@ -580,7 +582,7 @@ public class ReactiveFindOperationSupportTests {
 
 		blocking.save(luke);
 
-		StepVerifier.create(template.query(Person.class).distinct("father").as(Jedi.class).all())
+		template.query(Person.class).distinct("father").as(Jedi.class).all().as(StepVerifier::create)
 				.expectNext(new Jedi("anakin")) //
 				.verifyComplete();
 	}
@@ -593,7 +595,8 @@ public class ReactiveFindOperationSupportTests {
 
 		blocking.save(luke);
 
-		StepVerifier.create(template.query(Object.class).inCollection(STAR_WARS).distinct("father").as(Jedi.class).all())
+		template.query(Object.class).inCollection(STAR_WARS).distinct("father").as(Jedi.class).all()
+				.as(StepVerifier::create)
 				.expectNext(new Jedi("anakin")) //
 				.verifyComplete();
 	}
@@ -609,7 +612,7 @@ public class ReactiveFindOperationSupportTests {
 		Person expected = new Person();
 		expected.firstname = luke.father.firstname;
 
-		StepVerifier.create(template.query(Person.class).distinct("father").all()) //
+		template.query(Person.class).distinct("father").all().as(StepVerifier::create) //
 				.expectNext(expected) //
 				.verifyComplete();
 	}
@@ -617,7 +620,7 @@ public class ReactiveFindOperationSupportTests {
 	@Test // DATAMONGO-1761
 	public void distinctThrowsExceptionWhenExplicitMappingTypeCannotBeApplied() {
 
-		StepVerifier.create(template.query(Person.class).distinct("firstname").as(Long.class).all())
+		template.query(Person.class).distinct("firstname").as(Long.class).all().as(StepVerifier::create)
 				.expectError(InvalidDataAccessApiUsageException.class) //
 				.verify();
 	}
