@@ -69,18 +69,18 @@ public class ReactiveMongoTemplateCollationTests {
 
 	@Before
 	public void setUp() {
-		StepVerifier.create(template.dropCollection(COLLECTION_NAME)).verifyComplete();
+		template.dropCollection(COLLECTION_NAME).as(StepVerifier::create).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1693
 	public void createCollectionWithCollation() {
 
-		StepVerifier.create(template.createCollection(COLLECTION_NAME, CollectionOptions.just(Collation.of("en_US")))) //
+		template.createCollection(COLLECTION_NAME, CollectionOptions.just(Collation.of("en_US"))).as(StepVerifier::create) //
 				.expectNextCount(1) //
 				.verifyComplete();
 
 		Mono<Document> collation = getCollationInfo(COLLECTION_NAME);
-		StepVerifier.create(collation) //
+		collation.as(StepVerifier::create) //
 				.consumeNextWith(document -> assertThat(document.get("locale")).isEqualTo("en_US")) //
 				.verifyComplete();
 

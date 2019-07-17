@@ -66,12 +66,11 @@ public class ReactiveAggregationTests {
 
 	private void cleanDb() {
 
-		StepVerifier
-				.create(reactiveMongoTemplate.dropCollection(INPUT_COLLECTION) //
-						.then(reactiveMongoTemplate.dropCollection(OUTPUT_COLLECTION)) //
-						.then(reactiveMongoTemplate.dropCollection(Product.class)) //
-						.then(reactiveMongoTemplate.dropCollection(City.class)) //
-						.then(reactiveMongoTemplate.dropCollection(Venue.class))) //
+		reactiveMongoTemplate.dropCollection(INPUT_COLLECTION) //
+				.then(reactiveMongoTemplate.dropCollection(OUTPUT_COLLECTION)) //
+				.then(reactiveMongoTemplate.dropCollection(Product.class)) //
+				.then(reactiveMongoTemplate.dropCollection(City.class)) //
+				.then(reactiveMongoTemplate.dropCollection(Venue.class)).as(StepVerifier::create) //
 				.verifyComplete();
 	}
 
@@ -79,7 +78,7 @@ public class ReactiveAggregationTests {
 	public void expressionsInProjectionExampleShowcase() {
 
 		Product product = new Product("P1", "A", 1.99, 3, 0.05, 0.19);
-		StepVerifier.create(reactiveMongoTemplate.insert(product)).expectNextCount(1).verifyComplete();
+		reactiveMongoTemplate.insert(product).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
 		double shippingCosts = 1.2;
 
@@ -88,7 +87,7 @@ public class ReactiveAggregationTests {
 						.andExpression("netPrice * 10", shippingCosts).as("salesPrice") //
 		);
 
-		StepVerifier.create(reactiveMongoTemplate.aggregate(agg, Document.class)).consumeNextWith(actual -> {
+		reactiveMongoTemplate.aggregate(agg, Document.class).as(StepVerifier::create).consumeNextWith(actual -> {
 
 			assertThat(actual).containsEntry("_id", product.id);
 			assertThat(actual).containsEntry("name", product.name);
@@ -104,13 +103,13 @@ public class ReactiveAggregationTests {
 		City braunschweig = new City("Braunschweig", 102);
 		City weinheim = new City("Weinheim", 103);
 
-		StepVerifier.create(reactiveMongoTemplate.insertAll(Arrays.asList(dresden, linz, braunschweig, weinheim)))
+		reactiveMongoTemplate.insertAll(Arrays.asList(dresden, linz, braunschweig, weinheim)).as(StepVerifier::create)
 				.expectNextCount(4).verifyComplete();
 
 		Aggregation agg = newAggregation( //
 				match(where("population").lt(103)));
 
-		StepVerifier.create(reactiveMongoTemplate.aggregate(agg, "city", City.class).collectList())
+		reactiveMongoTemplate.aggregate(agg, "city", City.class).collectList().as(StepVerifier::create)
 				.consumeNextWith(actual -> {
 					assertThat(actual).hasSize(3).contains(dresden, linz, braunschweig);
 				}).verifyComplete();
@@ -124,14 +123,15 @@ public class ReactiveAggregationTests {
 		City braunschweig = new City("Braunschweig", 102);
 		City weinheim = new City("Weinheim", 103);
 
-		StepVerifier.create(reactiveMongoTemplate.insertAll(Arrays.asList(dresden, linz, braunschweig, weinheim)))
+		reactiveMongoTemplate.insertAll(Arrays.asList(dresden, linz, braunschweig, weinheim)).as(StepVerifier::create)
 				.expectNextCount(4).verifyComplete();
 
 		Aggregation agg = newAggregation( //
 				out(OUTPUT_COLLECTION));
 
-		StepVerifier.create(reactiveMongoTemplate.aggregate(agg, "city", City.class)).expectNextCount(4).verifyComplete();
-		StepVerifier.create(reactiveMongoTemplate.find(new Query(), City.class, OUTPUT_COLLECTION)).expectNextCount(4)
+		reactiveMongoTemplate.aggregate(agg, "city", City.class).as(StepVerifier::create).expectNextCount(4)
+				.verifyComplete();
+		reactiveMongoTemplate.find(new Query(), City.class, OUTPUT_COLLECTION).as(StepVerifier::create).expectNextCount(4)
 				.verifyComplete();
 	}
 

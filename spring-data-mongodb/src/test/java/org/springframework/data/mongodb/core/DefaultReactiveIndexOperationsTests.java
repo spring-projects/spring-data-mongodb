@@ -107,7 +107,7 @@ public class DefaultReactiveIndexOperationsTests {
 		IndexDefinition id = new Index().named("with-collation").on("xyz", Direction.ASC)
 				.collation(Collation.of("de_AT").caseFirst(CaseFirst.off()));
 
-		StepVerifier.create(indexOps.ensureIndex(id)).expectNextCount(1).verifyComplete();
+		indexOps.ensureIndex(id).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
 		Document expected = new Document("locale", "de_AT") //
 				.append("caseLevel", false) //
@@ -119,7 +119,7 @@ public class DefaultReactiveIndexOperationsTests {
 				.append("normalization", false) //
 				.append("backwards", false);
 
-		StepVerifier.create(indexOps.getIndexInfo().filter(this.indexByName("with-collation"))) //
+		indexOps.getIndexInfo().filter(this.indexByName("with-collation")).as(StepVerifier::create) //
 				.consumeNextWith(indexInfo -> {
 
 					assertThat(indexInfo.getCollation()).isPresent();
@@ -141,9 +141,9 @@ public class DefaultReactiveIndexOperationsTests {
 		IndexDefinition id = new Index().named("partial-with-criteria").on("k3y", Direction.ASC)
 				.partial(of(where("q-t-y").gte(10)));
 
-		StepVerifier.create(indexOps.ensureIndex(id)).expectNextCount(1).verifyComplete();
+		indexOps.ensureIndex(id).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
-		StepVerifier.create(indexOps.getIndexInfo().filter(this.indexByName("partial-with-criteria"))) //
+		indexOps.getIndexInfo().filter(this.indexByName("partial-with-criteria")).as(StepVerifier::create) //
 				.consumeNextWith(indexInfo -> {
 					assertThat(Document.parse(indexInfo.getPartialFilterExpression())).isEqualTo(Document.parse("{ \"q-t-y\" : { \"$gte\" : 10 } }"));
 				}) //
@@ -158,9 +158,9 @@ public class DefaultReactiveIndexOperationsTests {
 		IndexDefinition id = new Index().named("partial-with-mapped-criteria").on("k3y", Direction.ASC)
 				.partial(of(where("quantity").gte(10)));
 
-		StepVerifier.create(indexOps.ensureIndex(id)).expectNextCount(1).verifyComplete();
+		indexOps.ensureIndex(id).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
-		StepVerifier.create(indexOps.getIndexInfo().filter(this.indexByName("partial-with-mapped-criteria"))) //
+		indexOps.getIndexInfo().filter(this.indexByName("partial-with-mapped-criteria")).as(StepVerifier::create) //
 				.consumeNextWith(indexInfo -> {
 					assertThat(Document.parse(indexInfo.getPartialFilterExpression())).isEqualTo(Document.parse("{ \"qty\" : { \"$gte\" : 10 } }"));
 				}).verifyComplete();
@@ -174,9 +174,9 @@ public class DefaultReactiveIndexOperationsTests {
 		IndexDefinition id = new Index().named("partial-with-dbo").on("k3y", Direction.ASC)
 				.partial(of(new org.bson.Document("qty", new org.bson.Document("$gte", 10))));
 
-		StepVerifier.create(indexOps.ensureIndex(id)).expectNextCount(1).verifyComplete();
+		indexOps.ensureIndex(id).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
-		StepVerifier.create(indexOps.getIndexInfo().filter(this.indexByName("partial-with-dbo"))) //
+		indexOps.getIndexInfo().filter(this.indexByName("partial-with-dbo")).as(StepVerifier::create) //
 				.consumeNextWith(indexInfo -> {
 					assertThat(Document.parse(indexInfo.getPartialFilterExpression())).isEqualTo(Document.parse("{ \"qty\" : { \"$gte\" : 10 } }"));
 				}) //
@@ -196,9 +196,9 @@ public class DefaultReactiveIndexOperationsTests {
 				this.template.getCollectionName(DefaultIndexOperationsIntegrationTestsSample.class),
 				new QueryMapper(template.getConverter()), MappingToSameCollection.class);
 
-		StepVerifier.create(indexOps.ensureIndex(id)).expectNextCount(1).verifyComplete();
+		indexOps.ensureIndex(id).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
-		StepVerifier.create(indexOps.getIndexInfo().filter(this.indexByName("partial-with-inheritance"))) //
+		indexOps.getIndexInfo().filter(this.indexByName("partial-with-inheritance")).as(StepVerifier::create) //
 				.consumeNextWith(indexInfo -> {
 					assertThat(Document.parse(indexInfo.getPartialFilterExpression())).isEqualTo(Document.parse("{ \"a_g_e\" : { \"$gte\" : 10 } }"));
 				}) //

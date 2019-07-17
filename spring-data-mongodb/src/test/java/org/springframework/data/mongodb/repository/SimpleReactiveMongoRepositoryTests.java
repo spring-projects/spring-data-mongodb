@@ -90,7 +90,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 
 		repository = factory.getRepository(ReactivePersonRepostitory.class);
 
-		StepVerifier.create(repository.deleteAll()).verifyComplete();
+		repository.deleteAll().as(StepVerifier::create).verifyComplete();
 
 		dave = new ReactivePerson("Dave", "Matthews", 42);
 		oliver = new ReactivePerson("Oliver August", "Matthews", 4);
@@ -100,102 +100,103 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		leroi = new ReactivePerson("Leroi", "Moore", 41);
 		alicia = new ReactivePerson("Alicia", "Keys", 30);
 
-		StepVerifier.create(repository.saveAll(Arrays.asList(oliver, dave, carter, boyd, stefan, leroi, alicia))) //
+		repository.saveAll(Arrays.asList(oliver, dave, carter, boyd, stefan, leroi, alicia)).as(StepVerifier::create) //
 				.expectNextCount(7) //
 				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void existsByIdShouldReturnTrueForExistingObject() {
-		StepVerifier.create(repository.existsById(dave.id)).expectNext(true).verifyComplete();
+		repository.existsById(dave.id).as(StepVerifier::create).expectNext(true).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void existsByIdShouldReturnFalseForAbsentObject() {
-		StepVerifier.create(repository.existsById("unknown")).expectNext(false).verifyComplete();
+		repository.existsById("unknown").as(StepVerifier::create).expectNext(false).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void existsByMonoOfIdShouldReturnTrueForExistingObject() {
-		StepVerifier.create(repository.existsById(Mono.just(dave.id))).expectNext(true).verifyComplete();
+		repository.existsById(Mono.just(dave.id)).as(StepVerifier::create).expectNext(true).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1712
 	public void existsByFluxOfIdShouldReturnTrueForExistingObject() {
-		StepVerifier.create(repository.existsById(Flux.just(dave.id, oliver.id))).expectNext(true).verifyComplete();
+		repository.existsById(Flux.just(dave.id, oliver.id)).as(StepVerifier::create).expectNext(true).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void existsByEmptyMonoOfIdShouldReturnEmptyMono() {
-		StepVerifier.create(repository.existsById(Mono.empty())).verifyComplete();
+		repository.existsById(Mono.empty()).as(StepVerifier::create).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void findByIdShouldReturnObject() {
-		StepVerifier.create(repository.findById(dave.id)).expectNext(dave).verifyComplete();
+		repository.findById(dave.id).as(StepVerifier::create).expectNext(dave).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void findByIdShouldCompleteWithoutValueForAbsentObject() {
-		StepVerifier.create(repository.findById("unknown")).verifyComplete();
+		repository.findById("unknown").as(StepVerifier::create).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void findByIdByMonoOfIdShouldReturnTrueForExistingObject() {
-		StepVerifier.create(repository.findById(Mono.just(dave.id))).expectNext(dave).verifyComplete();
+		repository.findById(Mono.just(dave.id)).as(StepVerifier::create).expectNext(dave).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1712
 	public void findByIdByFluxOfIdShouldReturnTrueForExistingObject() {
-		StepVerifier.create(repository.findById(Flux.just(dave.id, oliver.id))).expectNext(dave).verifyComplete();
+		repository.findById(Flux.just(dave.id, oliver.id)).as(StepVerifier::create).expectNext(dave).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void findByIdByEmptyMonoOfIdShouldReturnEmptyMono() {
-		StepVerifier.create(repository.findById(Mono.empty())).verifyComplete();
+		repository.findById(Mono.empty()).as(StepVerifier::create).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void findAllShouldReturnAllResults() {
-		StepVerifier.create(repository.findAll()).expectNextCount(7).verifyComplete();
+		repository.findAll().as(StepVerifier::create).expectNextCount(7).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void findAllByIterableOfIdShouldReturnResults() {
-		StepVerifier.create(repository.findAllById(Arrays.asList(dave.id, boyd.id))).expectNextCount(2).verifyComplete();
+		repository.findAllById(Arrays.asList(dave.id, boyd.id)).as(StepVerifier::create).expectNextCount(2)
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void findAllByPublisherOfIdShouldReturnResults() {
-		StepVerifier.create(repository.findAllById(Flux.just(dave.id, boyd.id))).expectNextCount(2).verifyComplete();
+		repository.findAllById(Flux.just(dave.id, boyd.id)).as(StepVerifier::create).expectNextCount(2).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void findAllByEmptyPublisherOfIdShouldReturnResults() {
-		StepVerifier.create(repository.findAllById(Flux.empty())).verifyComplete();
+		repository.findAllById(Flux.empty()).as(StepVerifier::create).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void findAllWithSortShouldReturnResults() {
 
-		StepVerifier.create(repository.findAll(Sort.by(new Order(Direction.ASC, "age")))) //
+		repository.findAll(Sort.by(new Order(Direction.ASC, "age"))).as(StepVerifier::create) //
 				.expectNextCount(7) //
 				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void countShouldReturnNumberOfRecords() {
-		StepVerifier.create(repository.count()).expectNext(7L).verifyComplete();
+		repository.count().as(StepVerifier::create).expectNext(7L).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void insertEntityShouldInsertEntity() {
 
-		StepVerifier.create(repository.deleteAll()).verifyComplete();
+		repository.deleteAll().as(StepVerifier::create).verifyComplete();
 
 		ReactivePerson person = new ReactivePerson("Homer", "Simpson", 36);
 
-		StepVerifier.create(repository.insert(person)).expectNext(person).verifyComplete();
+		repository.insert(person).as(StepVerifier::create).expectNext(person).verifyComplete();
 
 		assertThat(person.getId()).isNotNull();
 	}
@@ -213,13 +214,13 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	@Test // DATAMONGO-1444
 	public void insertIterableOfEntitiesShouldInsertEntity() {
 
-		StepVerifier.create(repository.deleteAll()).verifyComplete();
+		repository.deleteAll().as(StepVerifier::create).verifyComplete();
 
 		dave.setId(null);
 		oliver.setId(null);
 		boyd.setId(null);
 
-		StepVerifier.create(repository.insert(Arrays.asList(dave, oliver, boyd))) //
+		repository.insert(Arrays.asList(dave, oliver, boyd)).as(StepVerifier::create) //
 				.expectNext(dave, oliver, boyd) //
 				.verifyComplete();
 
@@ -231,13 +232,13 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	@Test // DATAMONGO-1444
 	public void insertPublisherOfEntitiesShouldInsertEntity() {
 
-		StepVerifier.create(repository.deleteAll()).verifyComplete();
+		repository.deleteAll().as(StepVerifier::create).verifyComplete();
 
 		dave.setId(null);
 		oliver.setId(null);
 		boyd.setId(null);
 
-		StepVerifier.create(repository.insert(Flux.just(dave, oliver, boyd))).expectNextCount(3).verifyComplete();
+		repository.insert(Flux.just(dave, oliver, boyd)).as(StepVerifier::create).expectNextCount(3).verifyComplete();
 
 		assertThat(dave.getId()).isNotNull();
 		assertThat(oliver.getId()).isNotNull();
@@ -250,11 +251,11 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		dave.setFirstname("Hello, Dave");
 		dave.setLastname("Bowman");
 
-		StepVerifier.create(repository.save(dave)).expectNext(dave).verifyComplete();
+		repository.save(dave).as(StepVerifier::create).expectNext(dave).verifyComplete();
 
-		StepVerifier.create(repository.findByLastname("Matthews")).expectNext(oliver).verifyComplete();
+		repository.findByLastname("Matthews").as(StepVerifier::create).expectNext(oliver).verifyComplete();
 
-		StepVerifier.create(repository.findById(dave.id)).consumeNextWith(actual -> {
+		repository.findById(dave.id).as(StepVerifier::create).consumeNextWith(actual -> {
 
 			assertThat(actual.getFirstname()).isEqualTo(dave.getFirstname());
 			assertThat(actual.getLastname()).isEqualTo(dave.getLastname());
@@ -266,9 +267,9 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 
 		ReactivePerson person = new ReactivePerson("Homer", "Simpson", 36);
 
-		StepVerifier.create(repository.save(person)).expectNext(person).verifyComplete();
+		repository.save(person).as(StepVerifier::create).expectNext(person).verifyComplete();
 
-		StepVerifier.create(repository.findById(person.id)).consumeNextWith(actual -> {
+		repository.findById(person.id).as(StepVerifier::create).consumeNextWith(actual -> {
 
 			assertThat(actual.getFirstname()).isEqualTo(person.getFirstname());
 			assertThat(actual.getLastname()).isEqualTo(person.getLastname());
@@ -278,13 +279,13 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	@Test // DATAMONGO-1444
 	public void saveIterableOfNewEntitiesShouldInsertEntity() {
 
-		StepVerifier.create(repository.deleteAll()).verifyComplete();
+		repository.deleteAll().as(StepVerifier::create).verifyComplete();
 
 		dave.setId(null);
 		oliver.setId(null);
 		boyd.setId(null);
 
-		StepVerifier.create(repository.saveAll(Arrays.asList(dave, oliver, boyd))).expectNextCount(3).verifyComplete();
+		repository.saveAll(Arrays.asList(dave, oliver, boyd)).as(StepVerifier::create).expectNextCount(3).verifyComplete();
 
 		assertThat(dave.getId()).isNotNull();
 		assertThat(oliver.getId()).isNotNull();
@@ -299,24 +300,24 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		dave.setFirstname("Hello, Dave");
 		dave.setLastname("Bowman");
 
-		StepVerifier.create(repository.saveAll(Arrays.asList(person, dave))).expectNextCount(2).verifyComplete();
+		repository.saveAll(Arrays.asList(person, dave)).as(StepVerifier::create).expectNextCount(2).verifyComplete();
 
-		StepVerifier.create(repository.findById(dave.id)).expectNext(dave).verifyComplete();
+		repository.findById(dave.id).as(StepVerifier::create).expectNext(dave).verifyComplete();
 
 		assertThat(person.id).isNotNull();
-		StepVerifier.create(repository.findById(person.id)).expectNext(person).verifyComplete();
+		repository.findById(person.id).as(StepVerifier::create).expectNext(person).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void savePublisherOfEntitiesShouldInsertEntity() {
 
-		StepVerifier.create(repository.deleteAll()).verifyComplete();
+		repository.deleteAll().as(StepVerifier::create).verifyComplete();
 
 		dave.setId(null);
 		oliver.setId(null);
 		boyd.setId(null);
 
-		StepVerifier.create(repository.saveAll(Flux.just(dave, oliver, boyd))).expectNextCount(3).verifyComplete();
+		repository.saveAll(Flux.just(dave, oliver, boyd)).as(StepVerifier::create).expectNextCount(3).verifyComplete();
 
 		assertThat(dave.getId()).isNotNull();
 		assertThat(oliver.getId()).isNotNull();
@@ -326,63 +327,63 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	@Test // DATAMONGO-1444
 	public void deleteAllShouldRemoveEntities() {
 
-		StepVerifier.create(repository.deleteAll()).verifyComplete();
+		repository.deleteAll().as(StepVerifier::create).verifyComplete();
 
-		StepVerifier.create(repository.findAll()).verifyComplete();
+		repository.findAll().as(StepVerifier::create).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void deleteByIdShouldRemoveEntity() {
 
-		StepVerifier.create(repository.deleteById(dave.id)).verifyComplete();
+		repository.deleteById(dave.id).as(StepVerifier::create).verifyComplete();
 
-		StepVerifier.create(repository.findById(dave.id)).verifyComplete();
+		repository.findById(dave.id).as(StepVerifier::create).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1712
 	public void deleteByIdUsingMonoShouldRemoveEntity() {
 
-		StepVerifier.create(repository.deleteById(Mono.just(dave.id))).verifyComplete();
+		repository.deleteById(Mono.just(dave.id)).as(StepVerifier::create).verifyComplete();
 
-		StepVerifier.create(repository.existsById(dave.id)).expectNext(false).verifyComplete();
+		repository.existsById(dave.id).as(StepVerifier::create).expectNext(false).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1712
 	public void deleteByIdUsingFluxShouldRemoveEntity() {
 
-		StepVerifier.create(repository.deleteById(Flux.just(dave.id, oliver.id))).verifyComplete();
+		repository.deleteById(Flux.just(dave.id, oliver.id)).as(StepVerifier::create).verifyComplete();
 
-		StepVerifier.create(repository.existsById(dave.id)).expectNext(false).verifyComplete();
-		StepVerifier.create(repository.existsById(oliver.id)).expectNext(true).verifyComplete();
+		repository.existsById(dave.id).as(StepVerifier::create).expectNext(false).verifyComplete();
+		repository.existsById(oliver.id).as(StepVerifier::create).expectNext(true).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void deleteShouldRemoveEntity() {
 
-		StepVerifier.create(repository.delete(dave)).verifyComplete();
+		repository.delete(dave).as(StepVerifier::create).verifyComplete();
 
-		StepVerifier.create(repository.findById(dave.id)).verifyComplete();
+		repository.findById(dave.id).as(StepVerifier::create).verifyComplete();
 
 	}
 
 	@Test // DATAMONGO-1444
 	public void deleteIterableOfEntitiesShouldRemoveEntities() {
 
-		StepVerifier.create(repository.deleteAll(Arrays.asList(dave, boyd))).verifyComplete();
+		repository.deleteAll(Arrays.asList(dave, boyd)).as(StepVerifier::create).verifyComplete();
 
-		StepVerifier.create(repository.findById(boyd.id)).verifyComplete();
+		repository.findById(boyd.id).as(StepVerifier::create).verifyComplete();
 
-		StepVerifier.create(repository.findByLastname("Matthews")).expectNext(oliver).verifyComplete();
+		repository.findByLastname("Matthews").as(StepVerifier::create).expectNext(oliver).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void deletePublisherOfEntitiesShouldRemoveEntities() {
 
-		StepVerifier.create(repository.deleteAll(Flux.just(dave, boyd))).verifyComplete();
+		repository.deleteAll(Flux.just(dave, boyd)).as(StepVerifier::create).verifyComplete();
 
-		StepVerifier.create(repository.findById(boyd.id)).verifyComplete();
+		repository.findById(boyd.id).as(StepVerifier::create).verifyComplete();
 
-		StepVerifier.create(repository.findByLastname("Matthews")).expectNext(oliver).verifyComplete();
+		repository.findByLastname("Matthews").as(StepVerifier::create).expectNext(oliver).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1619
@@ -390,7 +391,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 
 		Example<ReactivePerson> example = Example.of(dave);
 
-		StepVerifier.create(repository.findOne(example)).expectNext(dave).verifyComplete();
+		repository.findOne(example).as(StepVerifier::create).expectNext(dave).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1619
@@ -398,7 +399,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 
 		Example<ReactivePerson> example = Example.of(dave, matching().withIgnorePaths("id", "age", "firstname"));
 
-		StepVerifier.create(repository.findAll(example)).expectNextCount(2).verifyComplete();
+		repository.findAll(example).as(StepVerifier::create).expectNextCount(2).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1619
@@ -406,7 +407,8 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 
 		Example<ReactivePerson> example = Example.of(dave, matching().withIgnorePaths("id", "age", "firstname"));
 
-		StepVerifier.create(repository.findAll(example, Sort.by("firstname"))).expectNext(dave, oliver).verifyComplete();
+		repository.findAll(example, Sort.by("firstname")).as(StepVerifier::create).expectNext(dave, oliver)
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1619
@@ -414,7 +416,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 
 		Example<ReactivePerson> example = Example.of(dave, matching().withIgnorePaths("id", "age", "firstname"));
 
-		StepVerifier.create(repository.count(example)).expectNext(2L).verifyComplete();
+		repository.count(example).as(StepVerifier::create).expectNext(2L).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1619
@@ -422,7 +424,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 
 		Example<ReactivePerson> example = Example.of(dave, matching().withIgnorePaths("id", "age", "firstname"));
 
-		StepVerifier.create(repository.exists(example)).expectNext(true).verifyComplete();
+		repository.exists(example).as(StepVerifier::create).expectNext(true).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1619
@@ -430,7 +432,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 
 		Example<ReactivePerson> example = Example.of(new ReactivePerson("foo", "bar", -1));
 
-		StepVerifier.create(repository.exists(example)).expectNext(false).verifyComplete();
+		repository.exists(example).as(StepVerifier::create).expectNext(false).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1619
@@ -439,7 +441,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		Example<ReactivePerson> example = Example.of(new ReactivePerson(null, "Matthews", -1),
 				matching().withIgnorePaths("age"));
 
-		StepVerifier.create(repository.findOne(example)).expectError(IncorrectResultSizeDataAccessException.class);
+		repository.findOne(example).as(StepVerifier::create).expectError(IncorrectResultSizeDataAccessException.class);
 	}
 
 	@Test // DATAMONGO-1907
@@ -447,7 +449,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 
 		Example<ReactivePerson> example = Example.of(new ReactivePerson("foo", "bar", -1));
 
-		StepVerifier.create(repository.findOne(example)).verifyComplete();
+		repository.findOne(example).as(StepVerifier::create).verifyComplete();
 	}
 
 	interface ReactivePersonRepostitory extends ReactiveMongoRepository<ReactivePerson, String> {

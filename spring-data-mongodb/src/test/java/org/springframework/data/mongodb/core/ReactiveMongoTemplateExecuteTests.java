@@ -63,7 +63,7 @@ public class ReactiveMongoTemplateExecuteTests {
 				.mergeWith(operations.dropCollection("execute_test1")) //
 				.mergeWith(operations.dropCollection("execute_test2"));
 
-		StepVerifier.create(cleanup).verifyComplete();
+		cleanup.as(StepVerifier::create).verifyComplete();
 
 		if (mongoVersion == null) {
 			mongoVersion = operations.executeCommand("{ buildInfo: 1 }") //
@@ -76,7 +76,7 @@ public class ReactiveMongoTemplateExecuteTests {
 	@Test // DATAMONGO-1444
 	public void executeCommandJsonCommandShouldReturnSingleResponse() {
 
-		StepVerifier.create(operations.executeCommand("{ buildInfo: 1 }")).consumeNextWith(actual -> {
+		operations.executeCommand("{ buildInfo: 1 }").as(StepVerifier::create).consumeNextWith(actual -> {
 
 			assertThat(actual).containsKey("version");
 		}).verifyComplete();
@@ -85,7 +85,7 @@ public class ReactiveMongoTemplateExecuteTests {
 	@Test // DATAMONGO-1444
 	public void executeCommandDocumentCommandShouldReturnSingleResponse() {
 
-		StepVerifier.create(operations.executeCommand(new Document("buildInfo", 1))).consumeNextWith(actual -> {
+		operations.executeCommand(new Document("buildInfo", 1)).as(StepVerifier::create).consumeNextWith(actual -> {
 
 			assertThat(actual).containsKey("version");
 		}).verifyComplete();
@@ -96,10 +96,10 @@ public class ReactiveMongoTemplateExecuteTests {
 
 		assumeTrue(mongoVersion.isGreaterThan(THREE));
 
-		StepVerifier.create(operations.executeCommand("{ insert: 'execute_test', documents: [{},{},{}]}"))
+		operations.executeCommand("{ insert: 'execute_test', documents: [{},{},{}]}").as(StepVerifier::create)
 				.expectNextCount(1).verifyComplete();
 
-		StepVerifier.create(operations.executeCommand("{ find: 'execute_test'}")) //
+		operations.executeCommand("{ find: 'execute_test'}").as(StepVerifier::create) //
 				.consumeNextWith(actual -> {
 
 					assertThat(actual.get("ok", Double.class)).isCloseTo(1D, offset(0D));
@@ -111,7 +111,7 @@ public class ReactiveMongoTemplateExecuteTests {
 	@Test // DATAMONGO-1444
 	public void executeCommandJsonCommandShouldTranslateExceptions() {
 
-		StepVerifier.create(operations.executeCommand("{ unknown: 1 }")) //
+		operations.executeCommand("{ unknown: 1 }").as(StepVerifier::create) //
 				.expectError(InvalidDataAccessApiUsageException.class) //
 				.verify();
 	}
@@ -119,7 +119,7 @@ public class ReactiveMongoTemplateExecuteTests {
 	@Test // DATAMONGO-1444
 	public void executeCommandDocumentCommandShouldTranslateExceptions() {
 
-		StepVerifier.create(operations.executeCommand(new Document("unknown", 1))) //
+		operations.executeCommand(new Document("unknown", 1)).as(StepVerifier::create) //
 				.expectError(InvalidDataAccessApiUsageException.class) //
 				.verify();
 
@@ -128,7 +128,7 @@ public class ReactiveMongoTemplateExecuteTests {
 	@Test // DATAMONGO-1444
 	public void executeCommandWithReadPreferenceCommandShouldTranslateExceptions() {
 
-		StepVerifier.create(operations.executeCommand(new Document("unknown", 1), ReadPreference.nearest())) //
+		operations.executeCommand(new Document("unknown", 1), ReadPreference.nearest()).as(StepVerifier::create) //
 				.expectError(InvalidDataAccessApiUsageException.class) //
 				.verify();
 	}
@@ -140,11 +140,11 @@ public class ReactiveMongoTemplateExecuteTests {
 				.mergeWith(operations.executeCommand("{ insert: 'execute_test1', documents: [{},{},{}]}"))
 				.mergeWith(operations.executeCommand("{ insert: 'execute_test2', documents: [{},{},{}]}"));
 
-		StepVerifier.create(documentFlux).expectNextCount(3).verifyComplete();
+		documentFlux.as(StepVerifier::create).expectNextCount(3).verifyComplete();
 
 		Flux<Document> execute = operations.execute(MongoDatabase::listCollections);
 
-		StepVerifier.create(execute.filter(document -> document.getString("name").startsWith("execute_test"))) //
+		execute.filter(document -> document.getString("name").startsWith("execute_test")).as(StepVerifier::create) //
 				.expectNextCount(3) //
 				.verifyComplete();
 	}
@@ -166,27 +166,28 @@ public class ReactiveMongoTemplateExecuteTests {
 			throw new MongoException(50, "hi there");
 		});
 
-		StepVerifier.create(execute).expectError(UncategorizedMongoDbException.class).verify();
+		execute.as(StepVerifier::create).expectError(UncategorizedMongoDbException.class).verify();
 	}
 
 	@Test // DATAMONGO-1444
 	public void executeOnCollectionWithTypeShouldReturnFindResults() {
 
-		StepVerifier.create(operations.executeCommand("{ insert: 'person', documents: [{},{},{}]}")) //
+		operations.executeCommand("{ insert: 'person', documents: [{},{},{}]}").as(StepVerifier::create) //
 				.expectNextCount(1) //
 				.verifyComplete();
 
-		StepVerifier.create(operations.execute(Person.class, MongoCollection::find)).expectNextCount(3).verifyComplete();
+		operations.execute(Person.class, MongoCollection::find).as(StepVerifier::create).expectNextCount(3)
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void executeOnCollectionWithNameShouldReturnFindResults() {
 
-		StepVerifier.create(operations.executeCommand("{ insert: 'execute_test', documents: [{},{},{}]}")) //
+		operations.executeCommand("{ insert: 'execute_test', documents: [{},{},{}]}").as(StepVerifier::create) //
 				.expectNextCount(1) //
 				.verifyComplete();
 
-		StepVerifier.create(operations.execute("execute_test", MongoCollection::find)) //
+		operations.execute("execute_test", MongoCollection::find).as(StepVerifier::create) //
 				.expectNextCount(3) //
 				.verifyComplete();
 	}

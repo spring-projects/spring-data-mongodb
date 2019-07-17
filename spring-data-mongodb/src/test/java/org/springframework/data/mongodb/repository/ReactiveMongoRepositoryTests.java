@@ -157,29 +157,30 @@ public class ReactiveMongoRepositoryTests {
 
 		alicia = new Person("Alicia", "Keys", 30, Sex.FEMALE);
 
-		StepVerifier.create(repository.saveAll(Arrays.asList(oliver, carter, boyd, stefan, leroi, alicia, dave))) //
+		repository.saveAll(Arrays.asList(oliver, carter, boyd, stefan, leroi, alicia, dave)).as(StepVerifier::create) //
 				.expectNextCount(7) //
 				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void shouldFindByLastName() {
-		StepVerifier.create(repository.findByLastname(dave.getLastname())).expectNextCount(2).verifyComplete();
+		repository.findByLastname(dave.getLastname()).as(StepVerifier::create).expectNextCount(2).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void shouldFindOneByLastName() {
-		StepVerifier.create(repository.findOneByLastname(carter.getLastname())).expectNext(carter).verifyComplete();
+		repository.findOneByLastname(carter.getLastname()).as(StepVerifier::create).expectNext(carter).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void shouldFindOneByPublisherOfLastName() {
-		StepVerifier.create(repository.findByLastname(Mono.just(carter.getLastname()))).expectNext(carter).verifyComplete();
+		repository.findByLastname(Mono.just(carter.getLastname())).as(StepVerifier::create).expectNext(carter)
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void shouldFindByPublisherOfLastNameIn() {
-		StepVerifier.create(repository.findByLastnameIn(Flux.just(carter.getLastname(), dave.getLastname()))) //
+		repository.findByLastnameIn(Flux.just(carter.getLastname(), dave.getLastname())).as(StepVerifier::create) //
 				.expectNextCount(3) //
 				.verifyComplete();
 	}
@@ -187,8 +188,8 @@ public class ReactiveMongoRepositoryTests {
 	@Test // DATAMONGO-1444
 	public void shouldFindByPublisherOfLastNameInAndAgeGreater() {
 
-		StepVerifier
-				.create(repository.findByLastnameInAndAgeGreaterThan(Flux.just(carter.getLastname(), dave.getLastname()), 41)) //
+		repository.findByLastnameInAndAgeGreaterThan(Flux.just(carter.getLastname(), dave.getLastname()), 41)
+				.as(StepVerifier::create) //
 				.expectNextCount(2) //
 				.verifyComplete();
 	}
@@ -196,7 +197,7 @@ public class ReactiveMongoRepositoryTests {
 	@Test // DATAMONGO-1444
 	public void shouldFindUsingPublishersInStringQuery() {
 
-		StepVerifier.create(repository.findStringQuery(Flux.just("Beauford", "Matthews"), Mono.just(41))) //
+		repository.findStringQuery(Flux.just("Beauford", "Matthews"), Mono.just(41)).as(StepVerifier::create) //
 				.expectNextCount(2) //
 				.verifyComplete();
 	}
@@ -204,11 +205,11 @@ public class ReactiveMongoRepositoryTests {
 	@Test // DATAMONGO-1444
 	public void shouldFindByLastNameAndSort() {
 
-		StepVerifier.create(repository.findByLastname("Matthews", Sort.by(ASC, "age"))) //
+		repository.findByLastname("Matthews", Sort.by(ASC, "age")).as(StepVerifier::create) //
 				.expectNext(oliver, dave) //
 				.verifyComplete();
 
-		StepVerifier.create(repository.findByLastname("Matthews", Sort.by(DESC, "age"))) //
+		repository.findByLastname("Matthews", Sort.by(DESC, "age")).as(StepVerifier::create) //
 				.expectNext(dave, oliver) //
 				.verifyComplete();
 	}
@@ -216,13 +217,14 @@ public class ReactiveMongoRepositoryTests {
 	@Test // DATAMONGO-1444
 	public void shouldUseTailableCursor() throws Exception {
 
-		StepVerifier.create(template.dropCollection(Capped.class) //
+		template.dropCollection(Capped.class) //
 				.then(template.createCollection(Capped.class, //
-						CollectionOptions.empty().size(1000).maxDocuments(100).capped()))) //
+						CollectionOptions.empty().size(1000).maxDocuments(100).capped()))
+				.as(StepVerifier::create) //
 				.expectNextCount(1) //
 				.verifyComplete();
 
-		StepVerifier.create(template.insert(new Capped("value", Math.random()))).expectNextCount(1).verifyComplete();
+		template.insert(new Capped("value", Math.random())).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
 		BlockingQueue<Capped> documents = new LinkedBlockingDeque<>(100);
 
@@ -230,7 +232,7 @@ public class ReactiveMongoRepositoryTests {
 
 		assertThat(documents.poll(5, TimeUnit.SECONDS)).isNotNull();
 
-		StepVerifier.create(template.insert(new Capped("value", Math.random()))).expectNextCount(1).verifyComplete();
+		template.insert(new Capped("value", Math.random())).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 		assertThat(documents.poll(5, TimeUnit.SECONDS)).isNotNull();
 		assertThat(documents).isEmpty();
 
@@ -240,13 +242,14 @@ public class ReactiveMongoRepositoryTests {
 	@Test // DATAMONGO-1444
 	public void shouldUseTailableCursorWithProjection() throws Exception {
 
-		StepVerifier.create(template.dropCollection(Capped.class) //
+		template.dropCollection(Capped.class) //
 				.then(template.createCollection(Capped.class, //
-						CollectionOptions.empty().size(1000).maxDocuments(100).capped()))) //
+						CollectionOptions.empty().size(1000).maxDocuments(100).capped()))
+				.as(StepVerifier::create) //
 				.expectNextCount(1) //
 				.verifyComplete();
 
-		StepVerifier.create(template.insert(new Capped("value", Math.random()))).expectNextCount(1).verifyComplete();
+		template.insert(new Capped("value", Math.random())).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
 		BlockingQueue<CappedProjection> documents = new LinkedBlockingDeque<>(100);
 
@@ -256,7 +259,7 @@ public class ReactiveMongoRepositoryTests {
 		assertThat(projection1).isNotNull();
 		assertThat(projection1.getRandom()).isNotEqualTo(0);
 
-		StepVerifier.create(template.insert(new Capped("value", Math.random()))).expectNextCount(1).verifyComplete();
+		template.insert(new Capped("value", Math.random())).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
 		CappedProjection projection2 = documents.poll(5, TimeUnit.SECONDS);
 		assertThat(projection2).isNotNull();
@@ -285,9 +288,9 @@ public class ReactiveMongoRepositoryTests {
 
 		Point point = new Point(-73.99171, 40.738868);
 		dave.setLocation(point);
-		StepVerifier.create(repository.save(dave)).expectNextCount(1).verifyComplete();
+		repository.save(dave).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
-		StepVerifier.create(repository.findByLocationWithin(new Circle(-78.99171, 45.738868, 170))) //
+		repository.findByLocationWithin(new Circle(-78.99171, 45.738868, 170)).as(StepVerifier::create) //
 				.expectNext(dave) //
 				.verifyComplete();
 	}
@@ -297,10 +300,10 @@ public class ReactiveMongoRepositoryTests {
 
 		Point point = new Point(-73.99171, 40.738868);
 		dave.setLocation(point);
-		StepVerifier.create(repository.save(dave)).expectNextCount(1).verifyComplete();
+		repository.save(dave).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
-		StepVerifier.create(repository.findByLocationWithin(new Circle(-78.99171, 45.738868, 170), //
-				PageRequest.of(0, 10))) //
+		repository.findByLocationWithin(new Circle(-78.99171, 45.738868, 170), //
+				PageRequest.of(0, 10)).as(StepVerifier::create) //
 				.expectNext(dave) //
 				.verifyComplete();
 	}
@@ -310,11 +313,10 @@ public class ReactiveMongoRepositoryTests {
 
 		Point point = new Point(-73.99171, 40.738868);
 		dave.setLocation(point);
-		StepVerifier.create(repository.save(dave)).expectNextCount(1).verifyComplete();
+		repository.save(dave).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
-		StepVerifier.create(repository.findByLocationNear(new Point(-73.99, 40.73), //
-				new Distance(2000, Metrics.KILOMETERS)) //
-		).consumeNextWith(actual -> {
+		repository.findByLocationNear(new Point(-73.99, 40.73), //
+				new Distance(2000, Metrics.KILOMETERS)).as(StepVerifier::create).consumeNextWith(actual -> {
 
 			assertThat(actual.getDistance().getValue()).isCloseTo(1, offset(1d));
 			assertThat(actual.getContent()).isEqualTo(dave);
@@ -326,14 +328,14 @@ public class ReactiveMongoRepositoryTests {
 
 		Point point = new Point(-73.99171, 40.738868);
 		dave.setLocation(point);
-		StepVerifier.create(repository.save(dave)).expectNextCount(1).verifyComplete();
+		repository.save(dave).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
 		// Allow for index creation
 		Thread.sleep(500);
 
-		StepVerifier.create(repository.findByLocationNear(new Point(-73.99, 40.73), //
+		repository.findByLocationNear(new Point(-73.99, 40.73), //
 				new Distance(2000, Metrics.KILOMETERS), //
-				PageRequest.of(0, 10))) //
+				PageRequest.of(0, 10)).as(StepVerifier::create) //
 				.consumeNextWith(actual -> {
 
 					assertThat(actual.getDistance().getValue()).isCloseTo(1, offset(1d));
@@ -346,31 +348,31 @@ public class ReactiveMongoRepositoryTests {
 
 		Point point = new Point(-73.99171, 40.738868);
 		dave.setLocation(point);
-		StepVerifier.create(repository.save(dave)).expectNextCount(1).verifyComplete();
+		repository.save(dave).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
 		// Allow for index creation
 		Thread.sleep(500);
 
-		StepVerifier.create(repository.findPersonByLocationNear(new Point(-73.99, 40.73), //
-				new Distance(2000, Metrics.KILOMETERS))) //
+		repository.findPersonByLocationNear(new Point(-73.99, 40.73), //
+				new Distance(2000, Metrics.KILOMETERS)).as(StepVerifier::create) //
 				.expectNext(dave) //
 				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1865
 	public void shouldErrorOnFindOneWithNonUniqueResult() {
-		StepVerifier.create(repository.findOneByLastname(dave.getLastname()))
+		repository.findOneByLastname(dave.getLastname()).as(StepVerifier::create)
 				.expectError(IncorrectResultSizeDataAccessException.class).verify();
 	}
 
 	@Test // DATAMONGO-1865
 	public void shouldReturnFirstFindFirstWithMoreResults() {
-		StepVerifier.create(repository.findFirstByLastname(dave.getLastname())).expectNextCount(1).verifyComplete();
+		repository.findFirstByLastname(dave.getLastname()).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 	}
 
 	@Test // DATAMONGO-2030
 	public void shouldReturnExistsBy() {
-		StepVerifier.create(repository.existsByLastname(dave.getLastname())).expectNext(true).verifyComplete();
+		repository.existsByLastname(dave.getLastname()).as(StepVerifier::create).expectNext(true).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1979
