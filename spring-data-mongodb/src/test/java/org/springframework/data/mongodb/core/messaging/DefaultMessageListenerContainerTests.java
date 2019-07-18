@@ -16,13 +16,14 @@
 package org.springframework.data.mongodb.core.messaging;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.messaging.SubscriptionUtils.*;
 
 import lombok.Data;
 
 import java.time.Duration;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
@@ -30,6 +31,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
+
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.annotation.Id;
@@ -99,12 +101,42 @@ public class DefaultMessageListenerContainerTests {
 
 		assertThat(messageListener.getMessages().stream().map(Message::getBody).collect(Collectors.toList()))
 				.containsExactly(new Person("id-1", "foo"), new Person("id-2", "bar"));
+	}
 
+	@Test // DATAMONGO-2322
+	@IfProfileValue(name = "replSet", value = "true")
+	public void shouldNotifyErrorHandlerOnErrorInListener() throws InterruptedException {
+
+		ErrorHandler errorHandler = mock(ErrorHandler.class);
+		MessageListenerContainer container = new DefaultMessageListenerContainer(template);
+		AtomicBoolean thrownException = new AtomicBoolean();
+		Subscription subscription = container.register(new ChangeStreamRequest(message -> {
+
+			try {
+				if (thrownException.compareAndSet(false, true)) {
+					throw new IllegalStateException("Boom!");
+				}
+			} finally {
+				messageListener.onMessage(message);
+			}
+
+		}, () -> COLLECTION_NAME), Person.class, errorHandler);
+		container.start();
+
+		awaitSubscription(subscription, Duration.ofMillis(500));
+
+		collection.insertOne(new Document("_id", "id-1").append("firstname", "foo"));
+		collection.insertOne(new Document("_id", "id-2").append("firstname", "bar"));
+
+		awaitMessages(messageListener, 2, Duration.ofMillis(500));
+
+		verify(errorHandler, atLeast(1)).handleError(any(IllegalStateException.class));
+		assertThat(messageListener.getTotalNumberMessagesReceived()).isEqualTo(2);
 	}
 
 	@Test // DATAMONGO-1803
 	@IfProfileValue(name = "replSet", value = "true")
-	public void shouldNoLongerReceiveMessagesWhenConainerStopped() throws InterruptedException {
+	public void shouldNoLongerReceiveMessagesWhenContainerStopped() throws InterruptedException {
 
 		MessageListenerContainer container = new DefaultMessageListenerContainer(template);
 		Subscription subscription = container.register(new ChangeStreamRequest(messageListener, () -> COLLECTION_NAME),

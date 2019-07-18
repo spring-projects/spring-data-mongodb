@@ -75,24 +75,34 @@ abstract class CursorReadingTask<T, R> implements Task {
 
 		start();
 
-		while (isRunning()) {
+		try {
+			while (isRunning()) {
 
-			try {
+				try {
 
-				T next = execute(this::getNext);
+					T next = execute(this::getNext);
 
-				if (next != null) {
-					emitMessage(createMessage(next, targetType, request.getRequestOptions()));
-				} else {
-					Thread.sleep(10);
+					if (next != null) {
+						emitMessage(createMessage(next, targetType, request.getRequestOptions()));
+					} else {
+						Thread.sleep(10);
+					}
+				} catch (InterruptedException e) {
+
+					synchronized (lifecycleMonitor) {
+						state = State.CANCELLED;
+					}
+					Thread.currentThread().interrupt();
+					break;
 				}
-			} catch (InterruptedException e) {
-
-				synchronized (lifecycleMonitor) {
-					state = State.CANCELLED;
-				}
-				Thread.currentThread().interrupt();
 			}
+		} catch (RuntimeException e) {
+
+			synchronized (lifecycleMonitor) {
+				state = State.CANCELLED;
+			}
+
+			errorHandler.handleError(e);
 		}
 	}
 
@@ -126,7 +136,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 					if (valid) {
 						this.cursor = cursor;
 						state = State.RUNNING;
-					} else if(cursor != null){
+					} else if (cursor != null) {
 						cursor.close();
 					}
 				}
@@ -219,7 +229,11 @@ abstract class CursorReadingTask<T, R> implements Task {
 
 	@SuppressWarnings("unchecked")
 	private void emitMessage(Message<T, R> message) {
-		request.getMessageListener().onMessage((Message) message);
+		try {
+			request.getMessageListener().onMessage((Message) message);
+		} catch (Exception e) {
+			errorHandler.handleError(e);
+		}
 	}
 
 	@Nullable
