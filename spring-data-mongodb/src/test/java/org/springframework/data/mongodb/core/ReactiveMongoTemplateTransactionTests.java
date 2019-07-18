@@ -83,11 +83,6 @@ public class ReactiveMongoTemplateTransactionTests {
 				.expectNext(Success.SUCCESS) //
 				.verifyComplete();
 
-		MongoTestUtils.createOrReplaceCollection(DATABASE_NAME, "personWithVersionPropertyOfTypeInteger", client)
-				.as(StepVerifier::create).expectNext(Success.SUCCESS) //
-				.verifyComplete();
-
-		template.insert(DOCUMENT, COLLECTION_NAME).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 		StepVerifier.create(template.insert(DOCUMENT, COLLECTION_NAME)).expectNextCount(1).verifyComplete();
 
 		template.insertAll(Arrays.asList(AHMANN, ARLEN, LEESHA, RENNA)) //

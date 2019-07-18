@@ -50,6 +50,7 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -1262,6 +1263,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1803
+	@Ignore("Heavily relying on timing assumptions. Cannot test message resumption properly. Too much race for too little time in between.")
 	public void changeStreamEventsShouldBeResumedCorrectly() throws InterruptedException {
 
 		Assumptions.assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
