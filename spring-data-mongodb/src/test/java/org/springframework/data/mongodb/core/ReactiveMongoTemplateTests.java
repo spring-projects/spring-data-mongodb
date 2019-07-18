@@ -50,6 +50,7 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -1358,6 +1359,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1803
+	@Ignore("Heavily relying on timing assumptions. Cannot test message resumption properly. Too much race for too little time in between.")
 	public void changeStreamEventsShouldBeEmittedCorrectly() throws InterruptedException {
 
 		Assumptions.assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
@@ -1390,6 +1392,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1803
+	@Ignore("Heavily relying on timing assumptions. Cannot test message resumption properly. Too much race for too little time in between.")
 	public void changeStreamEventsShouldBeConvertedCorrectly() throws InterruptedException {
 
 		Assumptions.assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
@@ -1422,6 +1425,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1803
+	@Ignore("Heavily relying on timing assumptions. Cannot test message resumption properly. Too much race for too little time in between.")
 	public void changeStreamEventsShouldBeFilteredCorrectly() throws InterruptedException {
 
 		Assumptions.assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
@@ -1498,6 +1502,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1803
+	@Ignore("Heavily relying on timing assumptions. Cannot test message resumption properly. Too much race for too little time in between.")
 	public void changeStreamEventsShouldBeResumedCorrectly() throws InterruptedException {
 
 		Assumptions.assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();

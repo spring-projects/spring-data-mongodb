@@ -303,25 +303,27 @@ public class ReactiveTransactionIntegrationTests {
 		}
 
 		@Transactional
-		public Mono<Person> declarativeSavePerson(Person person) {
+		public Flux<Person> declarativeSavePerson(Person person) {
 
 			TransactionalOperator transactionalOperator = TransactionalOperator.create(manager,
 					new DefaultTransactionDefinition());
 
-			return operations.save(person) //
-					.flatMap(Mono::just) //
-					.as(transactionalOperator::transactional);
+			return transactionalOperator.execute(reactiveTransaction -> {
+				return operations.save(person);
+			});
 		}
 
 		@Transactional
-		public Mono<Person> declarativeSavePersonErrors(Person person) {
+		public Flux<Person> declarativeSavePersonErrors(Person person) {
 
 			TransactionalOperator transactionalOperator = TransactionalOperator.create(manager,
 					new DefaultTransactionDefinition());
 
-			return operations.save(person) //
-					.<Person> flatMap(it -> Mono.error(new RuntimeException("poof!"))) //
-					.as(transactionalOperator::transactional);
+			return transactionalOperator.execute(reactiveTransaction -> {
+
+				return operations.save(person) //
+						.<Person> flatMap(it -> Mono.error(new RuntimeException("poof!")));
+			});
 		}
 	}
 
