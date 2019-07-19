@@ -107,8 +107,10 @@ pipeline {
 
         stage('Release to artifactory') {
             when {
-                branch 'issue/*'
-                not { triggeredBy 'UpstreamCause' }
+                anyOf {
+                    branch 'master'
+                    not { triggeredBy 'UpstreamCause' }
+                }
             }
             agent {
                 docker {
@@ -136,7 +138,7 @@ pipeline {
             }
         }
 
-        stage('Release to artifactory with docs') {
+        stage('Publish documentation') {
             when {
                 branch 'master'
             }
@@ -154,14 +156,11 @@ pipeline {
             }
 
             steps {
-                sh 'rm -rf ?'
-                sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -Pci,artifactory ' +
+                sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -Pci,distribute ' +
                         '-Dartifactory.server=https://repo.spring.io ' +
                         "-Dartifactory.username=${ARTIFACTORY_USR} " +
                         "-Dartifactory.password=${ARTIFACTORY_PSW} " +
-                        "-Dartifactory.staging-repository=libs-snapshot-local " +
-                        "-Dartifactory.build-name=spring-data-mongodb " +
-                        "-Dartifactory.build-number=${BUILD_NUMBER} " +
+                        "-Dartifactory.distribution-repository=temp-private-local " +
                         '-Dmaven.test.skip=true clean deploy -B'
             }
         }
