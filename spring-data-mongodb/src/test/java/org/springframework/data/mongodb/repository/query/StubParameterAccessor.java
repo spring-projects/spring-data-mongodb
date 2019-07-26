@@ -163,4 +163,13 @@ class StubParameterAccessor implements MongoParameterAccessor {
 	public Optional<Class<?>> getDynamicProjection() {
 		return Optional.empty();
 	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.ParameterAccessor#findDynamicProjection()
+	 */
+	@Override
+	public Class<?> findDynamicProjection() {
+		return null;
+	}
 }
