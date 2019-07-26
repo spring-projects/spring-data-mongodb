@@ -126,15 +126,15 @@ public class ReactiveMongoTemplateUnitTests {
 		when(collection.aggregate(anyList())).thenReturn(aggregatePublisher);
 		when(collection.aggregate(anyList(), any(Class.class))).thenReturn(aggregatePublisher);
 		when(collection.count(any(), any(CountOptions.class))).thenReturn(Mono.just(0L));
-		when(collection.updateOne(any(), any(), any(UpdateOptions.class))).thenReturn(updateResultPublisher);
-		when(collection.updateMany(any(Bson.class), any(), any())).thenReturn(updateResultPublisher);
-		when(collection.findOneAndUpdate(any(), any(), any(FindOneAndUpdateOptions.class)))
+		when(collection.updateOne(any(), any(Bson.class), any(UpdateOptions.class))).thenReturn(updateResultPublisher);
+		when(collection.updateMany(any(Bson.class), any(Bson.class), any())).thenReturn(updateResultPublisher);
+		when(collection.findOneAndUpdate(any(), any(Bson.class), any(FindOneAndUpdateOptions.class)))
 				.thenReturn(findAndUpdatePublisher);
 		when(collection.findOneAndReplace(any(Bson.class), any(), any())).thenReturn(findPublisher);
 		when(collection.findOneAndDelete(any(), any(FindOneAndDeleteOptions.class))).thenReturn(findPublisher);
 		when(collection.distinct(anyString(), any(Document.class), any())).thenReturn(distinctPublisher);
 		when(collection.deleteMany(any(Bson.class), any())).thenReturn(deletePublisher);
-		when(collection.findOneAndUpdate(any(), any(), any(FindOneAndUpdateOptions.class)))
+		when(collection.findOneAndUpdate(any(), any(Bson.class), any(FindOneAndUpdateOptions.class)))
 				.thenReturn(findAndUpdatePublisher);
 		when(collection.mapReduce(anyString(), anyString(), any())).thenReturn(mapReducePublisher);
 		when(collection.replaceOne(any(Bson.class), any(), any(ReplaceOptions.class))).thenReturn(updateResultPublisher);
@@ -222,13 +222,13 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-1518
 	public void findAndModfiyShoudUseCollationWhenPresent() {
 
-		when(collection.findOneAndUpdate(any(Bson.class), any(), any())).thenReturn(Mono.empty());
+		when(collection.findOneAndUpdate(any(Bson.class), any(Bson.class), any())).thenReturn(Mono.empty());
 
 		template.findAndModify(new BasicQuery("{}").collation(Collation.of("fr")), new Update(), AutogenerateableId.class)
 				.subscribe();
 
 		ArgumentCaptor<FindOneAndUpdateOptions> options = ArgumentCaptor.forClass(FindOneAndUpdateOptions.class);
-		verify(collection).findOneAndUpdate(any(), any(), options.capture());
+		verify(collection).findOneAndUpdate(any(), any(Bson.class), options.capture());
 
 		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
 	}
@@ -263,13 +263,13 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-1518
 	public void updateOneShouldUseCollationWhenPresent() {
 
-		when(collection.updateOne(any(Bson.class), any(), any())).thenReturn(Mono.empty());
+		when(collection.updateOne(any(Bson.class), any(Bson.class), any())).thenReturn(Mono.empty());
 
 		template.updateFirst(new BasicQuery("{}").collation(Collation.of("fr")), new Update().set("foo", "bar"),
 				AutogenerateableId.class).subscribe();
 
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
-		verify(collection).updateOne(any(), any(), options.capture());
+		verify(collection).updateOne(any(), any(Bson.class), options.capture());
 
 		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
 	}
@@ -277,13 +277,13 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-1518
 	public void updateManyShouldUseCollationWhenPresent() {
 
-		when(collection.updateMany(any(Bson.class), any(), any())).thenReturn(Mono.empty());
+		when(collection.updateMany(any(Bson.class), any(Bson.class), any())).thenReturn(Mono.empty());
 
 		template.updateMulti(new BasicQuery("{}").collation(Collation.of("fr")), new Update().set("foo", "bar"),
 				AutogenerateableId.class).subscribe();
 
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
-		verify(collection).updateMany(any(), any(), options.capture());
+		verify(collection).updateMany(any(), any(Bson.class), options.capture());
 
 		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
 
@@ -410,7 +410,7 @@ public class ReactiveMongoTemplateUnitTests {
 				EntityWithListOfSimple.class).subscribe();
 
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
-		verify(collection).updateOne(any(), any(), options.capture());
+		verify(collection).updateOne(any(), any(Bson.class), options.capture());
 
 		Assertions.assertThat((List<Bson>) options.getValue().getArrayFilters())
 				.contains(new org.bson.Document("element", new Document("$gte", 100)));
@@ -424,7 +424,7 @@ public class ReactiveMongoTemplateUnitTests {
 				EntityWithListOfSimple.class).subscribe();
 
 		ArgumentCaptor<FindOneAndUpdateOptions> options = ArgumentCaptor.forClass(FindOneAndUpdateOptions.class);
-		verify(collection).findOneAndUpdate(any(), any(), options.capture());
+		verify(collection).findOneAndUpdate(any(), any(Bson.class), options.capture());
 
 		Assertions.assertThat((List<Bson>) options.getValue().getArrayFilters())
 				.contains(new org.bson.Document("element", new Document("$gte", 100)));
@@ -468,7 +468,7 @@ public class ReactiveMongoTemplateUnitTests {
 		template.findAndModify(new BasicQuery("{}"), new Update(), Sith.class).subscribe();
 
 		ArgumentCaptor<FindOneAndUpdateOptions> options = ArgumentCaptor.forClass(FindOneAndUpdateOptions.class);
-		verify(collection).findOneAndUpdate(any(), any(), options.capture());
+		verify(collection).findOneAndUpdate(any(), any(Bson.class), options.capture());
 
 		assertThat(options.getValue().getCollation())
 				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de_AT").build());
@@ -622,7 +622,7 @@ public class ReactiveMongoTemplateUnitTests {
 		template.updateFirst(new BasicQuery("{}"), Update.update("foo", "bar"), Sith.class).subscribe();
 
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
-		verify(collection).updateOne(any(), any(), options.capture());
+		verify(collection).updateOne(any(), any(Bson.class), options.capture());
 
 		assertThat(options.getValue().getCollation())
 				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de_AT").build());
@@ -635,7 +635,7 @@ public class ReactiveMongoTemplateUnitTests {
 				.subscribe();
 
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
-		verify(collection).updateOne(any(), any(), options.capture());
+		verify(collection).updateOne(any(), any(Bson.class), options.capture());
 
 		assertThat(options.getValue().getCollation())
 				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("fr").build());
@@ -647,7 +647,7 @@ public class ReactiveMongoTemplateUnitTests {
 		template.updateMulti(new BasicQuery("{}"), Update.update("foo", "bar"), Sith.class).subscribe();
 
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
-		verify(collection).updateMany(any(), any(), options.capture());
+		verify(collection).updateMany(any(), any(Bson.class), options.capture());
 
 		assertThat(options.getValue().getCollation())
 				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de_AT").build());
@@ -660,7 +660,7 @@ public class ReactiveMongoTemplateUnitTests {
 				.subscribe();
 
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
-		verify(collection).updateMany(any(), any(), options.capture());
+		verify(collection).updateMany(any(), any(Bson.class), options.capture());
 
 		assertThat(options.getValue().getCollation())
 				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("fr").build());

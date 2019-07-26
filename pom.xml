@@ -28,7 +28,7 @@
 		<dist.id>spring-data-mongodb</dist.id>
 		<springdata.commons>2.2.0.BUILD-SNAPSHOT</springdata.commons>
 		<mongo>3.11.0-rc0</mongo>
-		<mongo.reactivestreams>1.11.0</mongo.reactivestreams>
+		<mongo.reactivestreams>1.12.0-rc0</mongo.reactivestreams>
 		<jmh.version>1.19</jmh.version>
 	</properties>
 

@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
@@ -29,12 +29,14 @@ import java.lang.reflect.Proxy;
 import org.bson.Document;
 import org.bson.codecs.BsonValueCodec;
 import org.bson.codecs.configuration.CodecRegistry;
+import org.bson.conversions.Bson;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.reactivestreams.Publisher;
+
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
@@ -111,11 +113,12 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 		when(collection.aggregate(any(ClientSession.class), anyList(), any(Class.class))).thenReturn(aggregatePublisher);
 		when(collection.count(any(ClientSession.class), any(), any(CountOptions.class))).thenReturn(resultPublisher);
 		when(collection.drop(any(ClientSession.class))).thenReturn(resultPublisher);
-		when(collection.findOneAndUpdate(any(ClientSession.class), any(), any(), any())).thenReturn(resultPublisher);
-		when(collection.distinct(any(ClientSession.class), any(), any(), any())).thenReturn(distinctPublisher);
-		when(collection.updateOne(any(ClientSession.class), any(), any(), any(UpdateOptions.class)))
+		when(collection.findOneAndUpdate(any(ClientSession.class), any(), any(Bson.class), any()))
 				.thenReturn(resultPublisher);
-		when(collection.updateMany(any(ClientSession.class), any(), any(), any(UpdateOptions.class)))
+		when(collection.distinct(any(ClientSession.class), any(), any(Bson.class), any())).thenReturn(distinctPublisher);
+		when(collection.updateOne(any(ClientSession.class), any(), any(Bson.class), any(UpdateOptions.class)))
+				.thenReturn(resultPublisher);
+		when(collection.updateMany(any(ClientSession.class), any(), any(Bson.class), any(UpdateOptions.class)))
 				.thenReturn(resultPublisher);
 		when(collection.dropIndex(any(ClientSession.class), anyString())).thenReturn(resultPublisher);
 		when(collection.mapReduce(any(ClientSession.class), any(), any(), any())).thenReturn(mapReducePublisher);
@@ -245,7 +248,7 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 
 		template.findAndModify(new Query(), new Update().set("foo", "bar"), Person.class).subscribe();
 
-		verify(collection).findOneAndUpdate(eq(clientSession), any(), any(), any(FindOneAndUpdateOptions.class));
+		verify(collection).findOneAndUpdate(eq(clientSession), any(), any(Bson.class), any(FindOneAndUpdateOptions.class));
 	}
 
 	@Test // DATAMONGO-1880
@@ -278,7 +281,7 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 
 		template.updateFirst(new Query(), Update.update("foo", "bar"), Person.class).subscribe();
 
-		verify(collection).updateOne(eq(clientSession), any(), any(), any(UpdateOptions.class));
+		verify(collection).updateOne(eq(clientSession), any(), any(Bson.class), any(UpdateOptions.class));
 	}
 
 	@Test // DATAMONGO-1880
@@ -286,7 +289,7 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 
 		template.updateMulti(new Query(), Update.update("foo", "bar"), Person.class).subscribe();
 
-		verify(collection).updateMany(eq(clientSession), any(), any(), any(UpdateOptions.class));
+		verify(collection).updateMany(eq(clientSession), any(), any(Bson.class), any(UpdateOptions.class));
 	}
 
 	@Test // DATAMONGO-1880
@@ -294,7 +297,7 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 
 		template.upsert(new Query(), Update.update("foo", "bar"), Person.class).subscribe();
 
-		verify(collection).updateOne(eq(clientSession), any(), any(), any(UpdateOptions.class));
+		verify(collection).updateOne(eq(clientSession), any(), any(Bson.class), any(UpdateOptions.class));
 	}
 
 	@Test // DATAMONGO-1880
