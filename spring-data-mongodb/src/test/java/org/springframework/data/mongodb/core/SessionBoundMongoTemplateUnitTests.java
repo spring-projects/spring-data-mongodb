@@ -24,12 +24,14 @@ import java.util.Collections;
 import org.bson.Document;
 import org.bson.codecs.BsonValueCodec;
 import org.bson.codecs.configuration.CodecRegistry;
+import org.bson.conversions.Bson;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.MongoDbFactory;
@@ -46,6 +48,7 @@ import org.springframework.data.mongodb.core.query.Update;
 
 import com.mongodb.MongoClient;
 import com.mongodb.client.AggregateIterable;
+import com.mongodb.client.ClientSession;
 import com.mongodb.client.DistinctIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MapReduceIterable;
@@ -57,7 +60,6 @@ import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.UpdateOptions;
-import com.mongodb.client.ClientSession;
 
 /**
  * Unit test for {@link SessionBoundMongoTemplate} making sure a proxied {@link MongoCollection} and
@@ -249,7 +251,7 @@ public class SessionBoundMongoTemplateUnitTests {
 
 		template.findAndModify(new Query(), new Update().set("foo", "bar"), Person.class);
 
-		verify(collection).findOneAndUpdate(eq(clientSession), any(), any(), any(FindOneAndUpdateOptions.class));
+		verify(collection).findOneAndUpdate(eq(clientSession), any(), any(Bson.class), any(FindOneAndUpdateOptions.class));
 	}
 
 	@Test // DATAMONGO-1880
@@ -302,7 +304,7 @@ public class SessionBoundMongoTemplateUnitTests {
 
 		template.updateFirst(new Query(), Update.update("foo", "bar"), Person.class);
 
-		verify(collection).updateOne(eq(clientSession), any(), any(), any(UpdateOptions.class));
+		verify(collection).updateOne(eq(clientSession), any(), any(Bson.class), any(UpdateOptions.class));
 	}
 
 	@Test // DATAMONGO-1880
@@ -310,7 +312,7 @@ public class SessionBoundMongoTemplateUnitTests {
 
 		template.updateMulti(new Query(), Update.update("foo", "bar"), Person.class);
 
-		verify(collection).updateMany(eq(clientSession), any(), any(), any(UpdateOptions.class));
+		verify(collection).updateMany(eq(clientSession), any(), any(Bson.class), any(UpdateOptions.class));
 	}
 
 	@Test // DATAMONGO-1880
@@ -318,7 +320,7 @@ public class SessionBoundMongoTemplateUnitTests {
 
 		template.upsert(new Query(), Update.update("foo", "bar"), Person.class);
 
-		verify(collection).updateOne(eq(clientSession), any(), any(), any(UpdateOptions.class));
+		verify(collection).updateOne(eq(clientSession), any(), any(Bson.class), any(UpdateOptions.class));
 	}
 
 	@Test // DATAMONGO-1880

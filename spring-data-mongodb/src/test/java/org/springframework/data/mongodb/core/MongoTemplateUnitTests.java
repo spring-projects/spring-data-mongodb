@@ -747,7 +747,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.findAndModify(new BasicQuery("{}").collation(Collation.of("fr")), new Update(), AutogenerateableId.class);
 
 		ArgumentCaptor<FindOneAndUpdateOptions> options = ArgumentCaptor.forClass(FindOneAndUpdateOptions.class);
-		verify(collection).findOneAndUpdate(any(), any(), options.capture());
+		verify(collection).findOneAndUpdate(any(), any(Bson.class), options.capture());
 
 		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
 	}
@@ -795,7 +795,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 				AutogenerateableId.class);
 
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
-		verify(collection).updateOne(any(), any(), options.capture());
+		verify(collection).updateOne(any(), any(Bson.class), options.capture());
 
 		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
 	}
@@ -807,7 +807,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 				AutogenerateableId.class);
 
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
-		verify(collection).updateMany(any(), any(), options.capture());
+		verify(collection).updateMany(any(), any(Bson.class), options.capture());
 
 		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
 	}
@@ -1073,7 +1073,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 				EntityWithListOfSimple.class);
 
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
-		verify(collection).updateOne(any(), any(), options.capture());
+		verify(collection).updateOne(any(), any(Bson.class), options.capture());
 
 		Assertions.assertThat((List<Bson>) options.getValue().getArrayFilters())
 				.contains(new org.bson.Document("element", new Document("$gte", 100)));
@@ -1087,7 +1087,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 				EntityWithListOfSimple.class);
 
 		ArgumentCaptor<FindOneAndUpdateOptions> options = ArgumentCaptor.forClass(FindOneAndUpdateOptions.class);
-		verify(collection).findOneAndUpdate(any(), any(), options.capture());
+		verify(collection).findOneAndUpdate(any(), any(Bson.class), options.capture());
 
 		Assertions.assertThat((List<Bson>) options.getValue().getArrayFilters())
 				.contains(new org.bson.Document("element", new Document("$gte", 100)));
@@ -1143,7 +1143,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.findAndModify(new BasicQuery("{}"), new Update(), Sith.class);
 
 		ArgumentCaptor<FindOneAndUpdateOptions> options = ArgumentCaptor.forClass(FindOneAndUpdateOptions.class);
-		verify(collection).findOneAndUpdate(any(), any(), options.capture());
+		verify(collection).findOneAndUpdate(any(), any(Bson.class), options.capture());
 
 		assertThat(options.getValue().getCollation())
 				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de_AT").build());
@@ -1313,7 +1313,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.updateFirst(new BasicQuery("{}"), Update.update("foo", "bar"), Sith.class);
 
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
-		verify(collection).updateOne(any(), any(), options.capture());
+		verify(collection).updateOne(any(), any(Bson.class), options.capture());
 
 		assertThat(options.getValue().getCollation())
 				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de_AT").build());
@@ -1325,7 +1325,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.updateFirst(new BasicQuery("{}").collation(Collation.of("fr")), Update.update("foo", "bar"), Sith.class);
 
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
-		verify(collection).updateOne(any(), any(), options.capture());
+		verify(collection).updateOne(any(), any(Bson.class), options.capture());
 
 		assertThat(options.getValue().getCollation())
 				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("fr").build());
@@ -1337,7 +1337,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.updateMulti(new BasicQuery("{}"), Update.update("foo", "bar"), Sith.class);
 
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
-		verify(collection).updateMany(any(), any(), options.capture());
+		verify(collection).updateMany(any(), any(Bson.class), options.capture());
 
 		assertThat(options.getValue().getCollation())
 				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de_AT").build());
@@ -1349,7 +1349,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.updateMulti(new BasicQuery("{}").collation(Collation.of("fr")), Update.update("foo", "bar"), Sith.class);
 
 		ArgumentCaptor<UpdateOptions> options = ArgumentCaptor.forClass(UpdateOptions.class);
-		verify(collection).updateMany(any(), any(), options.capture());
+		verify(collection).updateMany(any(), any(Bson.class), options.capture());
 
 		assertThat(options.getValue().getCollation())
 				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("fr").build());
