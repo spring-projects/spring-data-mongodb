@@ -15,8 +15,12 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import java.math.BigInteger;
+import static org.springframework.data.convert.ConverterBuilder.*;
 
+import java.math.BigInteger;
+import java.util.Date;
+
+import org.bson.types.Code;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.convert.ConversionService;
@@ -93,6 +97,21 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 			conversionService.addConverter(BigIntegerToObjectIdConverter.INSTANCE);
 		}
 
+		if (!conversionService.canConvert(Date.class, Long.class)) {
+			conversionService.addConverter(writing(Date.class, Long.class, Date::getTime).getWritingConverter());
+		}
+
+		if (!conversionService.canConvert(Long.class, Date.class)) {
+			conversionService.addConverter(reading(Long.class, Date.class, Date::new).getReadingConverter());
+		}
+
+		if (!conversionService.canConvert(ObjectId.class, Date.class)) {
+
+			conversionService.addConverter(
+					reading(ObjectId.class, Date.class, objectId -> new Date(objectId.getTimestamp())).getReadingConverter());
+		}
+
+		conversionService.addConverter(reading(Code.class, String.class, Code::getCode).getReadingConverter());
 		conversions.registerConvertersIn(conversionService);
 	}
 

@@ -40,7 +40,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
-
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.ConversionNotSupportedException;
 import org.springframework.beans.factory.annotation.Value;
@@ -1943,6 +1942,16 @@ public class MappingMongoConverterUnitTests {
 		assertThat(target.get("script")).isEqualTo(new Code(source.script));
 	}
 
+	@Test // DATAMONGO-2328
+	public void readsScriptAsStringWhenAnnotatedWithFieldTargetType() {
+
+		String reference = "if (a > b) a else b";
+		WithExplicitTargetTypes target = converter.read(WithExplicitTargetTypes.class,
+				new org.bson.Document("script", new Code(reference)));
+
+		assertThat(target.script).isEqualTo(reference);
+	}
+
 	@Test // DATAMONGO-1849
 	public void mapsCollectionValueToExplicitTargetType() {
 
@@ -1968,6 +1977,96 @@ public class MappingMongoConverterUnitTests {
 		assertThat(target.get("bigDecimal")).isEqualTo(new Decimal128(source.bigDecimal));
 	}
 
+	@Test // DATAMONGO-2328
+	public void mapsDateToLongWhenAnnotatedWithFieldTargetType() {
+
+		WithExplicitTargetTypes source = new WithExplicitTargetTypes();
+		source.dateAsLong = new Date();
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(source, target);
+
+		assertThat(target.get("dateAsLong")).isEqualTo(source.dateAsLong.getTime());
+	}
+
+	@Test // DATAMONGO-2328
+	public void readsLongAsDateWhenAnnotatedWithFieldTargetType() {
+
+		Date reference = new Date();
+		WithExplicitTargetTypes target = converter.read(WithExplicitTargetTypes.class,
+				new org.bson.Document("dateAsLong", reference.getTime()));
+
+		assertThat(target.dateAsLong).isEqualTo(reference);
+	}
+
+	@Test // DATAMONGO-2328
+	public void mapsLongToDateWhenAnnotatedWithFieldTargetType() {
+
+		Date date = new Date();
+		WithExplicitTargetTypes source = new WithExplicitTargetTypes();
+		source.longAsDate = date.getTime();
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(source, target);
+
+		assertThat(target.get("longAsDate")).isEqualTo(date);
+	}
+
+	@Test // DATAMONGO-2328
+	public void readsDateAsLongWhenAnnotatedWithFieldTargetType() {
+
+		Date reference = new Date();
+		WithExplicitTargetTypes target = converter.read(WithExplicitTargetTypes.class,
+				new org.bson.Document("longAsDate", reference));
+
+		assertThat(target.longAsDate).isEqualTo(reference.getTime());
+	}
+
+	@Test // DATAMONGO-2328
+	public void mapsStringAsBooleanWhenAnnotatedWithFieldTargetType() {
+
+		WithExplicitTargetTypes source = new WithExplicitTargetTypes();
+		source.stringAsBoolean = "true";
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(source, target);
+
+		assertThat(target.get("stringAsBoolean")).isEqualTo(true);
+	}
+
+	@Test // DATAMONGO-2328
+	public void readsBooleanAsStringWhenAnnotatedWithFieldTargetType() {
+
+		WithExplicitTargetTypes target = converter.read(WithExplicitTargetTypes.class,
+				new org.bson.Document("stringAsBoolean", true));
+
+		assertThat(target.stringAsBoolean).isEqualTo("true");
+	}
+
+	@Test // DATAMONGO-2328
+	public void mapsDateAsObjectIdWhenAnnotatedWithFieldTargetType() {
+
+		WithExplicitTargetTypes source = new WithExplicitTargetTypes();
+		source.dateAsObjectId = new Date();
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(source, target);
+
+		// need to compare the the timestamp as ObjectId has an internal counter
+		assertThat(target.get("dateAsObjectId", ObjectId.class).getTimestamp())
+				.isEqualTo(new ObjectId(source.dateAsObjectId).getTimestamp());
+	}
+
+	@Test // DATAMONGO-2328
+	public void readsObjectIdAsDateWhenAnnotatedWithFieldTargetType() {
+
+		ObjectId reference = new ObjectId();
+		WithExplicitTargetTypes target = converter.read(WithExplicitTargetTypes.class,
+				new org.bson.Document("dateAsObjectId", reference));
+
+		assertThat(target.dateAsObjectId).isEqualTo(new Date(reference.getTimestamp()));
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -1987,9 +2086,7 @@ public class MappingMongoConverterUnitTests {
 		},
 		SECOND {
 			@Override
-			void method() {
-
-			}
+			void method() {}
 		};
 
 		abstract void method();
@@ -2416,7 +2513,20 @@ public class MappingMongoConverterUnitTests {
 		@Field(targetType = FieldType.SCRIPT) //
 		List<String> scripts;
 
-		@Field(targetType = FieldType.DECIMAL128) BigDecimal bigDecimal;
+		@Field(targetType = FieldType.DECIMAL128) //
+		BigDecimal bigDecimal;
+
+		@Field(targetType = FieldType.INT64) //
+		Date dateAsLong;
+
+		@Field(targetType = FieldType.DATE_TIME) //
+		Long longAsDate;
+
+		@Field(targetType = FieldType.BOOLEAN) //
+		String stringAsBoolean;
+
+		@Field(targetType = FieldType.OBJECT_ID) //
+		Date dateAsObjectId;
 	}
 
 }
