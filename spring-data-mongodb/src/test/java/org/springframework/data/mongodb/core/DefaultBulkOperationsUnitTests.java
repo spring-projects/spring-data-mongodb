@@ -30,6 +30,7 @@ import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Answers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -49,6 +50,7 @@ import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Update;
 
+import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.DeleteManyModel;
@@ -67,7 +69,7 @@ public class DefaultBulkOperationsUnitTests {
 
 	MongoTemplate template;
 	@Mock MongoDatabase database;
-	@Mock MongoCollection<Document> collection;
+	@Mock(answer = Answers.RETURNS_DEEP_STUBS) MongoCollection<Document> collection;
 	@Mock MongoDbFactory factory;
 	@Mock DbRefResolver dbRefResolver;
 	@Captor ArgumentCaptor<List<WriteModel<Document>>> captor;
@@ -154,6 +156,26 @@ public class DefaultBulkOperationsUnitTests {
 
 		DeleteManyModel<Document> updateModel = (DeleteManyModel<Document>) captor.getValue().get(0);
 		assertThat(updateModel.getFilter()).isEqualTo(new Document("first_name", "danerys"));
+	}
+
+	@Test // DATAMONGO-2330
+	public void writeConcernNotAppliedWhenNotSet() {
+
+		ops.updateOne(new BasicQuery("{}").collation(Collation.of("de")), new Update().set("lastName", "targaryen"))
+				.execute();
+
+		verify(collection, never()).withWriteConcern(any());
+	}
+
+	@Test // DATAMONGO-2330
+	public void writeConcernAppliedCorrectlyWhenSet() {
+
+		ops.setDefaultWriteConcern(WriteConcern.MAJORITY);
+
+		ops.updateOne(new BasicQuery("{}").collation(Collation.of("de")), new Update().set("lastName", "targaryen"))
+				.execute();
+
+		verify(collection).withWriteConcern(eq(WriteConcern.MAJORITY));
 	}
 
 	class SomeDomainType {
