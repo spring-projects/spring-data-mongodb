@@ -59,6 +59,7 @@ import lombok.Value;
  * @author Mark Paluch
  * @author Minsu Kim
  * @author Jens Schauder
+ * @author Michail Nikolaev
  * @since 1.9
  */
 class DefaultBulkOperations implements BulkOperations {
@@ -305,6 +306,10 @@ class DefaultBulkOperations implements BulkOperations {
 	}
 
 	private BulkWriteResult bulkWriteTo(MongoCollection<Document> collection) {
+
+		if (defaultWriteConcern != null) {
+			collection = collection.withWriteConcern(defaultWriteConcern);
+		}
 
 		return collection.bulkWrite( //
 				models.stream() //
