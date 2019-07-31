@@ -63,6 +63,7 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Update;
 
 import com.mongodb.MongoWriteException;
+import com.mongodb.WriteConcern;
 import com.mongodb.WriteError;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -86,7 +87,7 @@ public class DefaultBulkOperationsUnitTests {
 
 	MongoTemplate template;
 	@Mock MongoDatabase database;
-	@Mock(answer= Answers.RETURNS_DEEP_STUBS) MongoCollection<Document> collection;
+	@Mock(answer = Answers.RETURNS_DEEP_STUBS) MongoCollection<Document> collection;
 	@Mock MongoDbFactory factory;
 	@Mock DbRefResolver dbRefResolver;
 	@Captor ArgumentCaptor<List<WriteModel<Document>>> captor;
@@ -297,6 +298,26 @@ public class DefaultBulkOperationsUnitTests {
 
 		verify(eventPublisher).publishEvent(any(BeforeSaveEvent.class));
 		verify(eventPublisher, never()).publishEvent(any(AfterSaveEvent.class));
+	}
+
+	@Test // DATAMONGO-2330
+	public void writeConcernNotAppliedWhenNotSet() {
+
+		ops.updateOne(new BasicQuery("{}").collation(Collation.of("de")), new Update().set("lastName", "targaryen"))
+				.execute();
+
+		verify(collection, never()).withWriteConcern(any());
+	}
+
+	@Test // DATAMONGO-2330
+	public void writeConcernAppliedCorrectlyWhenSet() {
+
+		ops.setDefaultWriteConcern(WriteConcern.MAJORITY);
+
+		ops.updateOne(new BasicQuery("{}").collation(Collation.of("de")), new Update().set("lastName", "targaryen"))
+				.execute();
+
+		verify(collection).withWriteConcern(eq(WriteConcern.MAJORITY));
 	}
 
 	class SomeDomainType {
