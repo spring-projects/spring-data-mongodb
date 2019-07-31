@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
-
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.IfNull;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
@@ -1549,7 +1548,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 				final Field aliasedField = Fields.field(alias, this.field.getName());
 				return new OperationProjection(aliasedField, operation, values.toArray()) {
 
-					/* (non-Javadoc)
+					/* 
+					 * (non-Javadoc)
 					 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder.OperationProjection#getField()
 					 */
 					@Override
@@ -1749,6 +1749,10 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			this.expression = expression;
 		}
 
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+		 */
 		@Override
 		public Document toDocument(AggregationOperationContext context) {
 			return new Document(field.getName(), expression.toDocument(context));
@@ -1788,6 +1792,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 	}
 
 	/**
+	 * Builder for {@code array} projections.
+	 *
 	 * @author Christoph Strobl
 	 * @since 2.2
 	 */
@@ -1802,18 +1808,40 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			this.projections = new ArrayList<>();
 		}
 
+		/**
+		 * Creates a new {@link ArrayProjectionOperationBuilder} with the current {@link Projection}s and the given one.
+		 *
+		 * @param expression
+		 * @return
+		 */
 		public ArrayProjectionOperationBuilder and(AggregationExpression expression) {
+
+			Assert.notNull(expression, "AggregationExpression must not be null!");
 
 			this.projections.add(expression);
 			return this;
 		}
 
+		/**
+		 * Creates a new {@link ArrayProjectionOperationBuilder} with the current {@link Projection}s and the given one.
+		 *
+		 * @param field
+		 * @return
+		 */
 		public ArrayProjectionOperationBuilder and(Field field) {
+
+			Assert.notNull(field, "Field must not be null!");
 
 			this.projections.add(field);
 			return this;
 		}
 
+		/**
+		 * Creates a new {@link ArrayProjectionOperationBuilder} with the current {@link Projection}s and the given one.
+		 *
+		 * @param value
+		 * @return
+		 */
 		public ArrayProjectionOperationBuilder and(Object value) {
 
 			this.projections.add(value);
@@ -1849,6 +1877,10 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			this.projections = projections;
 		}
 
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+		 */
 		@Override
 		public Document toDocument(AggregationOperationContext context) {
 
