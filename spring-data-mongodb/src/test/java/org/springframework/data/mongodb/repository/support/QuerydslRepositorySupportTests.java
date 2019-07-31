@@ -25,7 +25,6 @@ import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.DirectFieldAccessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
@@ -39,6 +38,7 @@ import org.springframework.data.mongodb.repository.QPerson;
 import org.springframework.data.mongodb.repository.User;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.util.StringUtils;
 
 /**
  * Unit tests for {@link QuerydslRepositorySupport}.
@@ -246,6 +246,33 @@ public class QuerydslRepositorySupportTests {
 		SpringDataMongodbQuery<WithMongoId> inQuery = repoSupport.from(o).where(o.id.in(document.id));
 
 		assertThat(inQuery.fetchOne()).isEqualTo(document);
+	}
+
+	@Test // DATAMONGO-2327
+	public void toJsonShouldRenderQuery() {
+
+		QPerson p = QPerson.person;
+		SpringDataMongodbQuery<Person> query = repoSupport.from(p).where(p.lastname.eq("Matthews"))
+				.orderBy(p.firstname.asc()).offset(1).limit(5);
+
+		assertThat(StringUtils.trimAllWhitespace(query.toJson())).isEqualTo("{\"lastname\":\"Matthews\"}");
+	}
+
+	@Test // DATAMONGO-2327
+	public void toStringShouldRenderQuery() {
+
+		QPerson p = QPerson.person;
+		SpringDataMongodbQuery<Person> query = repoSupport.from(p).where(p.lastname.eq("Matthews"));
+
+		assertThat(StringUtils.trimAllWhitespace(query.toString())).isEqualTo("find({\"lastname\":\"Matthews\"})");
+
+		query = query.orderBy(p.firstname.asc());
+		assertThat(StringUtils.trimAllWhitespace(query.toString()))
+				.isEqualTo("find({\"lastname\":\"Matthews\"}).sort({\"firstname\":1})");
+
+		query = query.offset(1).limit(5);
+		assertThat(StringUtils.trimAllWhitespace(query.toString()))
+				.isEqualTo("find({\"lastname\":\"Matthews\"}).sort({\"firstname\":1}).skip(1).limit(5)");
 	}
 
 	@Data

@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.repository.support;
 import java.util.List;
 
 import org.bson.Document;
+import org.bson.json.JsonMode;
+import org.bson.json.JsonWriterSettings;
 import org.springframework.lang.Nullable;
 
 import com.querydsl.core.DefaultQueryMetadata;
@@ -47,6 +49,9 @@ import com.querydsl.core.types.Predicate;
  */
 public abstract class QuerydslAbstractMongodbQuery<K, Q extends QuerydslAbstractMongodbQuery<K, Q>>
 		implements SimpleQuery<Q> {
+
+	private static final JsonWriterSettings JSON_WRITER_SETTINGS = JsonWriterSettings.builder().outputMode(JsonMode.SHELL)
+			.build();
 
 	private final MongodbDocumentSerializer serializer;
 	private final QueryMixin<Q> queryMixin;
@@ -195,8 +200,65 @@ public abstract class QuerydslAbstractMongodbQuery<K, Q extends QuerydslAbstract
 		return createQuery(queryMixin.getMetadata().getWhere());
 	}
 
+	/**
+	 * Returns the {@literal Mongo Shell} representation of the query. <br />
+	 * The following query
+	 *
+	 * <pre class="code">
+	 *
+	 * where(p.lastname.eq("Matthews")).orderBy(p.firstname.asc()).offset(1).limit(5);
+	 * </pre>
+	 *
+	 * results in
+	 *
+	 * <pre class="code">
+	 *
+	 * find({"lastname" : "Matthews"}).sort({"firstname" : 1}).skip(1).limit(5)
+	 * </pre>
+	 *
+	 * @return never {@literal null}.
+	 */
 	@Override
 	public String toString() {
-		return asDocument().toString();
+
+		Document projection = createProjection(queryMixin.getMetadata().getProjection());
+		Document sort = createSort(queryMixin.getMetadata().getOrderBy());
+
+		StringBuilder sb = new StringBuilder("find(" + asDocument().toJson(JSON_WRITER_SETTINGS));
+		if (!projection.isEmpty()) {
+			sb.append(", " + projection.toJson(JSON_WRITER_SETTINGS));
+		}
+		sb.append(")");
+		if (!sort.isEmpty()) {
+			sb.append(".sort(" + sort.toJson(JSON_WRITER_SETTINGS) + ")");
+		}
+		if (queryMixin.getMetadata().getModifiers().getOffset() != null) {
+			sb.append(".skip(" + queryMixin.getMetadata().getModifiers().getOffset() + ")");
+		}
+		if (queryMixin.getMetadata().getModifiers().getLimit() != null) {
+			sb.append(".limit(" + queryMixin.getMetadata().getModifiers().getLimit() + ")");
+		}
+		return sb.toString();
+	}
+
+	/**
+	 * Obtain the {@literal Mongo Shell} json query representation.
+	 * 
+	 * @return never {@literal null}.
+	 * @since 2.2
+	 */
+	public String toJson() {
+		return toJson(JSON_WRITER_SETTINGS);
+	}
+
+	/**
+	 * Obtain the json query representation applying given {@link JsonWriterSettings settings}.
+	 *
+	 * @param settings must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 2.2
+	 */
+	public String toJson(JsonWriterSettings settings) {
+		return asDocument().toJson(settings);
 	}
 }
