@@ -58,6 +58,7 @@ import com.mongodb.client.model.WriteModel;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Michail Nikolaev
  * @since 1.9
  */
 class DefaultBulkOperations implements BulkOperations {
@@ -274,8 +275,12 @@ class DefaultBulkOperations implements BulkOperations {
 	public com.mongodb.bulk.BulkWriteResult execute() {
 
 		try {
-			
+
 			return mongoOperations.execute(collectionName, collection -> {
+
+				if (defaultWriteConcern != null) {
+					collection = collection.withWriteConcern(defaultWriteConcern);
+				}
 				return collection.bulkWrite(models.stream().map(this::mapWriteModel).collect(Collectors.toList()), bulkOptions);
 			});
 		} finally {
