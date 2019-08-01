@@ -18,10 +18,13 @@ package org.springframework.data.mongodb.repository.support;
 import java.util.List;
 
 import org.bson.Document;
+import org.bson.codecs.DocumentCodec;
 import org.bson.json.JsonMode;
 import org.bson.json.JsonWriterSettings;
+
 import org.springframework.lang.Nullable;
 
+import com.mongodb.MongoClientSettings;
 import com.querydsl.core.DefaultQueryMetadata;
 import com.querydsl.core.QueryModifiers;
 import com.querydsl.core.SimpleQuery;
@@ -40,7 +43,7 @@ import com.querydsl.core.types.Predicate;
  * 2.0.
  * </p>
  * Modified for usage with {@link MongodbDocumentSerializer}.
- * 
+ *
  * @param <Q> concrete subtype
  * @author laimw
  * @author Mark Paluch
@@ -184,7 +187,7 @@ public abstract class QuerydslAbstractMongodbQuery<K, Q extends QuerydslAbstract
 
 	/**
 	 * Get the actual {@link QueryMixin} delegate.
-	 * 
+	 *
 	 * @return
 	 */
 	QueryMixin<Q> getQueryMixin() {
@@ -216,6 +219,9 @@ public abstract class QuerydslAbstractMongodbQuery<K, Q extends QuerydslAbstract
 	 * find({"lastname" : "Matthews"}).sort({"firstname" : 1}).skip(1).limit(5)
 	 * </pre>
 	 *
+	 * Note that encoding to {@link String} may fail when using data types that cannot be encoded or DBRef's without an
+	 * identifier.
+	 *
 	 * @return never {@literal null}.
 	 */
 	@Override
@@ -223,27 +229,28 @@ public abstract class QuerydslAbstractMongodbQuery<K, Q extends QuerydslAbstract
 
 		Document projection = createProjection(queryMixin.getMetadata().getProjection());
 		Document sort = createSort(queryMixin.getMetadata().getOrderBy());
+		DocumentCodec codec = new DocumentCodec(MongoClientSettings.getDefaultCodecRegistry());
 
-		StringBuilder sb = new StringBuilder("find(" + asDocument().toJson(JSON_WRITER_SETTINGS));
+		StringBuilder sb = new StringBuilder("find(" + asDocument().toJson(JSON_WRITER_SETTINGS, codec));
 		if (!projection.isEmpty()) {
-			sb.append(", " + projection.toJson(JSON_WRITER_SETTINGS));
+			sb.append(", ").append(projection.toJson(JSON_WRITER_SETTINGS, codec));
 		}
 		sb.append(")");
 		if (!sort.isEmpty()) {
-			sb.append(".sort(" + sort.toJson(JSON_WRITER_SETTINGS) + ")");
+			sb.append(".sort(").append(sort.toJson(JSON_WRITER_SETTINGS, codec)).append(")");
 		}
 		if (queryMixin.getMetadata().getModifiers().getOffset() != null) {
-			sb.append(".skip(" + queryMixin.getMetadata().getModifiers().getOffset() + ")");
+			sb.append(".skip(").append(queryMixin.getMetadata().getModifiers().getOffset()).append(")");
 		}
 		if (queryMixin.getMetadata().getModifiers().getLimit() != null) {
-			sb.append(".limit(" + queryMixin.getMetadata().getModifiers().getLimit() + ")");
+			sb.append(".limit(").append(queryMixin.getMetadata().getModifiers().getLimit()).append(")");
 		}
 		return sb.toString();
 	}
 
 	/**
 	 * Obtain the {@literal Mongo Shell} json query representation.
-	 * 
+	 *
 	 * @return never {@literal null}.
 	 * @since 2.2
 	 */
