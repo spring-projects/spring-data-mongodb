@@ -616,7 +616,7 @@ public class ArrayOperators {
 			}
 
 			NestedDelegatingExpressionAggregationOperationContext nea = new NestedDelegatingExpressionAggregationOperationContext(
-					context);
+					context, Collections.singleton(as));
 			return ((AggregationExpression) condition).toDocument(nea);
 		}
 
