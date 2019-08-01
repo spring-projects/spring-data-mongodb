@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.springframework.data.convert.ConverterBuilder.*;
-
 import java.math.BigInteger;
 import java.util.Date;
 
@@ -26,6 +24,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.data.convert.ConverterBuilder;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.mongodb.core.convert.MongoConverters.BigIntegerToObjectIdConverter;
@@ -98,20 +97,23 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 		}
 
 		if (!conversionService.canConvert(Date.class, Long.class)) {
-			conversionService.addConverter(writing(Date.class, Long.class, Date::getTime).getWritingConverter());
+			conversionService
+					.addConverter(ConverterBuilder.writing(Date.class, Long.class, Date::getTime).getWritingConverter());
 		}
 
 		if (!conversionService.canConvert(Long.class, Date.class)) {
-			conversionService.addConverter(reading(Long.class, Date.class, Date::new).getReadingConverter());
+			conversionService.addConverter(ConverterBuilder.reading(Long.class, Date.class, Date::new).getReadingConverter());
 		}
 
 		if (!conversionService.canConvert(ObjectId.class, Date.class)) {
 
 			conversionService.addConverter(
-					reading(ObjectId.class, Date.class, objectId -> new Date(objectId.getTimestamp())).getReadingConverter());
+					ConverterBuilder.reading(ObjectId.class, Date.class, objectId -> new Date(objectId.getTimestamp()))
+							.getReadingConverter());
 		}
 
-		conversionService.addConverter(reading(Code.class, String.class, Code::getCode).getReadingConverter());
+		conversionService
+				.addConverter(ConverterBuilder.reading(Code.class, String.class, Code::getCode).getReadingConverter());
 		conversions.registerConvertersIn(conversionService);
 	}
 
