@@ -123,6 +123,29 @@ public class FilterExpressionUnitTests {
 		assertThat($filter, is(expected));
 	}
 
+	@Test // DATAMONGO-2320
+	public void shouldConstructFilterExpressionCorrectlyWhenConditionContainsFieldReference() {
+
+		Aggregation agg = Aggregation.newAggregation(Aggregation.project().and((ctx) -> new Document()).as("field-1")
+				.and(filter("items").as("item").by(ComparisonOperators.valueOf("item.price").greaterThan("field-1")))
+				.as("items"));
+
+		Document dbo = agg.toDocument("sales", Aggregation.DEFAULT_CONTEXT);
+
+		List<Object> pipeline = DocumentTestUtils.getAsDBList(dbo, "pipeline");
+		Document $project = DocumentTestUtils.getAsDocument((Document) pipeline.get(0), "$project");
+		Document items = DocumentTestUtils.getAsDocument($project, "items");
+		Document $filter = DocumentTestUtils.getAsDocument(items, "$filter");
+
+		Document expected = Document.parse("{" + //
+				"input: \"$items\"," + //
+				"as: \"item\"," + //
+				"cond: { $gt: [ \"$$item.price\", \"$field-1\" ] }" + //
+				"}");
+
+		assertThat($filter).isEqualTo(new Document(expected));
+	}
+
 	static class Sales {
 
 		List<Object> items;

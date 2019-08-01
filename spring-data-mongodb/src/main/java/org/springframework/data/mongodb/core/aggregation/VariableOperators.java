@@ -18,7 +18,9 @@ package org.springframework.data.mongodb.core.aggregation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable;
@@ -185,7 +187,8 @@ public class VariableOperators {
 			map.putAll(context.getMappedObject(input));
 			map.put("as", itemVariableName);
 			map.put("in",
-					functionToApply.toDocument(new NestedDelegatingExpressionAggregationOperationContext(operationContext)));
+					functionToApply.toDocument(new NestedDelegatingExpressionAggregationOperationContext(operationContext,
+							Collections.singleton(Fields.field(itemVariableName)))));
 
 			return new Document("$map", map);
 		}
@@ -322,12 +325,14 @@ public class VariableOperators {
 
 		private Document getMappedVariable(ExpressionVariable var, AggregationOperationContext context) {
 
-			return new Document(var.variableName, var.expression instanceof AggregationExpression
-					? ((AggregationExpression) var.expression).toDocument(context) : var.expression);
+			return new Document(var.variableName,
+					var.expression instanceof AggregationExpression ? ((AggregationExpression) var.expression).toDocument(context)
+							: var.expression);
 		}
 
 		private Object getMappedIn(AggregationOperationContext context) {
-			return expression.toDocument(new NestedDelegatingExpressionAggregationOperationContext(context));
+			return expression.toDocument(new NestedDelegatingExpressionAggregationOperationContext(context,
+					this.vars.stream().map(var -> Fields.field(var.variableName)).collect(Collectors.toList())));
 		}
 
 		/**
