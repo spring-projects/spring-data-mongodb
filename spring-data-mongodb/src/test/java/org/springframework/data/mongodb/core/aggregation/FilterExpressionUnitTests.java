@@ -27,7 +27,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
@@ -121,6 +120,29 @@ public class FilterExpressionUnitTests {
 				"}");
 
 		assertThat($filter).isEqualTo(expected);
+	}
+
+	@Test // DATAMONGO-2320
+	public void shouldConstructFilterExpressionCorrectlyWhenConditionContainsFieldReference() {
+
+		Aggregation agg = Aggregation.newAggregation(Aggregation.project().and((ctx) -> new Document()).as("field-1")
+				.and(filter("items").as("item").by(ComparisonOperators.valueOf("item.price").greaterThan("field-1")))
+				.as("items"));
+
+		Document dbo = agg.toDocument("sales", Aggregation.DEFAULT_CONTEXT);
+
+		List<Object> pipeline = DocumentTestUtils.getAsDBList(dbo, "pipeline");
+		Document $project = DocumentTestUtils.getAsDocument((Document) pipeline.get(0), "$project");
+		Document items = DocumentTestUtils.getAsDocument($project, "items");
+		Document $filter = DocumentTestUtils.getAsDocument(items, "$filter");
+
+		Document expected = Document.parse("{" + //
+				"input: \"$items\"," + //
+				"as: \"item\"," + //
+				"cond: { $gt: [ \"$$item.price\", \"$field-1\" ] }" + //
+				"}");
+
+		assertThat($filter).isEqualTo(new Document(expected));
 	}
 
 	static class Sales {
