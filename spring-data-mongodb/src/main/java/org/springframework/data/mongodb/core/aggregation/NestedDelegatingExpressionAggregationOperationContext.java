@@ -16,13 +16,11 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.bson.Document;
-import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
+
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExpressionFieldReference;
+import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.util.Assert;
 
 /**
@@ -31,23 +29,25 @@ import org.springframework.util.Assert;
  * variable.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 1.10
  */
 class NestedDelegatingExpressionAggregationOperationContext implements AggregationOperationContext {
 
 	private final AggregationOperationContext delegate;
-	private final Set<String> inners;
+	private final Collection<Field> inners;
 
 	/**
 	 * Creates new {@link NestedDelegatingExpressionAggregationOperationContext}.
 	 *
 	 * @param referenceContext must not be {@literal null}.
 	 */
-	NestedDelegatingExpressionAggregationOperationContext(AggregationOperationContext referenceContext, Collection<Field> inners) {
+	NestedDelegatingExpressionAggregationOperationContext(AggregationOperationContext referenceContext,
+			Collection<Field> inners) {
 
 		Assert.notNull(referenceContext, "Reference context must not be null!");
 		this.delegate = referenceContext;
-		this.inners = inners.stream().map(Field::getName).collect(Collectors.toSet());
+		this.inners = inners;
 	}
 
 	/*
@@ -76,20 +76,23 @@ class NestedDelegatingExpressionAggregationOperationContext implements Aggregati
 	public FieldReference getReference(Field field) {
 
 		FieldReference reference = delegate.getReference(field);
-		return !isInnerVariableReference(field) ? reference : new ExpressionFieldReference(delegate.getReference(field)) ;
+		return isInnerVariableReference(field) ? new ExpressionFieldReference(delegate.getReference(field)) : reference;
 	}
 
 	private boolean isInnerVariableReference(Field field) {
 
-		if(inners.isEmpty()) {
+		if (inners.isEmpty()) {
 			return false;
 		}
 
-		if(inners.contains(field.getName())) {
-			return true;
+		for (Field inner : inners) {
+			if (inner.getName().equals(field.getName())
+					|| (field.getTarget().contains(".") && field.getTarget().startsWith(inner.getName()))) {
+				return true;
+			}
 		}
 
-		return inners.stream().anyMatch(it -> field.getTarget().contains(".") && field.getTarget().startsWith(it));
+		return false;
 	}
 
 	/*
