@@ -119,7 +119,7 @@ public class FilterExpressionUnitTests {
 				"cond: { $gt: [ \"$$item.price\", \"$field-1\" ] }" + //
 				"}");
 
-		assertThat($filter).isEqualTo(new Document(expected));
+		assertThat($filter, is(expected));
 	}
 
 	private Document extractFilterOperatorFromDocument(Document source) {
