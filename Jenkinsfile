@@ -71,7 +71,7 @@ pipeline {
 				sh 'sleep 10'
 				sh 'mongo --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
 				sh 'sleep 15'
-				sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw clean dependency:list test -Dsort -B'
+				sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw clean dependency:list test -Dsort -U -B'
 			}
 		}
 
@@ -99,7 +99,7 @@ pipeline {
 						sh 'sleep 10'
 						sh 'mongo --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
 						sh 'sleep 15'
-						sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw clean dependency:list test -Dsort -B'
+						sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw clean dependency:list test -Dsort -U -B'
 					}
 				}
 			}
@@ -134,7 +134,7 @@ pipeline {
 						"-Dartifactory.staging-repository=libs-snapshot-local " +
 						"-Dartifactory.build-name=spring-data-mongodb " +
 						"-Dartifactory.build-number=${BUILD_NUMBER} " +
-						'-Dmaven.test.skip=true clean deploy -B'
+						'-Dmaven.test.skip=true clean deploy -U -B'
 			}
 		}
 
@@ -161,7 +161,7 @@ pipeline {
 						"-Dartifactory.username=${ARTIFACTORY_USR} " +
 						"-Dartifactory.password=${ARTIFACTORY_PSW} " +
 						"-Dartifactory.distribution-repository=temp-private-local " +
-						'-Dmaven.test.skip=true clean deploy -B'
+						'-Dmaven.test.skip=true clean deploy -U -B'
 			}
 		}
 	}
