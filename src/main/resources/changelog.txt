@@ -1,6 +1,20 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.1.10.RELEASE (2019-08-05)
+----------------------------------------------
+* DATAMONGO-2330 - Regression: DefaultBulkOperations ignores defaultWriteConcern.
+* DATAMONGO-2323 - .stream() cannot be used with Document.class type.
+* DATAMONGO-2322 - Exceptions from MessageListeners are not caught by change stream container's error handler.
+* DATAMONGO-2320 - Invalid variable reference in ArrayOperators.Filter.
+* DATAMONGO-2314 - Query by Example does not work on nested properties.
+* DATAMONGO-2309 - Fix NoHTTP errors.
+* DATAMONGO-2302 - Release 2.1.10 (Lovelace SR10).
+* DATAMONGO-2296 - MongoTemplate should consistently use getCollectionName(Class).
+* DATAMONGO-2280 - Introduce Jenkins CI.
+* DATAMONGO-2168 - Using className as type hint field name with versioned entities fails with InvalidPersistentPropertyPath in UpdateMapper.
+
+
 Changes in version 1.10.23.RELEASE (2019-08-05)
 -----------------------------------------------
 * DATAMONGO-2280 - Introduce Jenkins CI.
