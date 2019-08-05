@@ -1,6 +1,37 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.2.0.RC2 (2019-08-05)
+-----------------------------------------
+* DATAMONGO-2330 - Regression: DefaultBulkOperations ignores defaultWriteConcern.
+* DATAMONGO-2328 - Add missing type converters for native target type conversion.
+* DATAMONGO-2327 - QuerydslAbstractMongodbQuery lacks a toJson method.
+* DATAMONGO-2326 - Upgrade to MongoDB Reactive Streams Driver 1.12.0-rc0.
+* DATAMONGO-2325 - Upgrade to MongoDB Driver 3.11.0-rc0.
+* DATAMONGO-2324 - Adapt to changed API in Commons.
+* DATAMONGO-2323 - .stream() cannot be used with Document.class type.
+* DATAMONGO-2322 - Exceptions from MessageListeners are not caught by change stream container's error handler.
+* DATAMONGO-2321 - Migrate tests to AssertJ.
+* DATAMONGO-2320 - Invalid variable reference in ArrayOperators.Filter.
+* DATAMONGO-2319 - Deprecate Query.withHint(String) and introduce replacement method accepting Document.
+* DATAMONGO-2318 - Revise readme for a consistent structure.
+* DATAMONGO-2316 - TextIndex cannot be created when @Document contains collation specified.
+* DATAMONGO-2315 - ParameterBindingJsonReader cannot bind Date values.
+* DATAMONGO-2314 - Query by Example does not work on nested properties.
+* DATAMONGO-2312 - Add support for projecting new array fields to aggregation.
+* DATAMONGO-2306 - Add support for field level encryption.
+* DATAMONGO-2305 - Upgrade to MongoDB Java Driver 3.11.0-beta4.
+* DATAMONGO-2304 - Fix EntityCallback API documentation inclusion and offset.
+* DATAMONGO-2303 - Release 2.2 RC2 (Moore).
+* DATAMONGO-2296 - MongoTemplate should consistently use getCollectionName(Class).
+* DATAMONGO-2287 - Add Support of In Aggregation with field value search in Array with In.
+* DATAMONGO-2280 - Introduce Jenkins CI.
+* DATAMONGO-2240 - Expose GridFSFile through [Reactive]GridFsResource.
+* DATAMONGO-2200 - Derive fields for aggregation $project stage from a given type.
+* DATAMONGO-2168 - Using className as type hint field name with versioned entities fails with InvalidPersistentPropertyPath in UpdateMapper.
+* DATAMONGO-2089 - Add fluent API for ChangeStreams.
+
+
 Changes in version 2.1.10.RELEASE (2019-08-05)
 ----------------------------------------------
 * DATAMONGO-2330 - Regression: DefaultBulkOperations ignores defaultWriteConcern.
