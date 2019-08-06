@@ -84,7 +84,7 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 	 * #createRepositoryFactory()
 	 */
 	@Override
-	protected final RepositoryFactorySupport createRepositoryFactory() {
+	protected RepositoryFactorySupport createRepositoryFactory() {
 
 		RepositoryFactorySupport factory = getFactoryInstance(operations);
 
