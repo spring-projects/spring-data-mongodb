@@ -89,7 +89,7 @@ public class ReactiveMongoRepositoryFactoryBean<T extends Repository<S, ID>, S, 
 	 * #createRepositoryFactory()
 	 */
 	@Override
-	protected final RepositoryFactorySupport createRepositoryFactory() {
+	protected RepositoryFactorySupport createRepositoryFactory() {
 
 		RepositoryFactorySupport factory = getFactoryInstance(operations);
 
