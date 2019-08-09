@@ -881,6 +881,15 @@ public class QueryMapperUnitTests {
 		assertThat(document).isEqualTo(new org.bson.Document("scripts", new Code(script)));
 	}
 
+	@Test // DATAMONGO-2339
+	public void findByIdUsesMappedIdFieldNameWithUnderscoreCorrectly() {
+
+		org.bson.Document target = mapper.getMappedObject(new org.bson.Document("with_underscore", "id-1"),
+				context.getPersistentEntity(WithIdPropertyContainingUnderscore.class));
+
+		assertThat(target).isEqualTo(new org.bson.Document("_id", "id-1"));
+	}
+
 	@Document
 	public class Foo {
 		@Id private ObjectId id;
@@ -1012,5 +1021,9 @@ public class QueryMapperUnitTests {
 
 		@Field(targetType = FieldType.SCRIPT) //
 		List<String> scripts;
+	}
+
+	static class WithIdPropertyContainingUnderscore {
+		@Id String with_underscore;
 	}
 }

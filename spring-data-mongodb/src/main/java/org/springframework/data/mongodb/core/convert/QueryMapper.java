@@ -33,7 +33,6 @@ import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
-
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.domain.Example;
@@ -1099,6 +1098,11 @@ public class QueryMapper {
 		private PropertyPath forName(String path) {
 
 			try {
+
+				if (entity.getPersistentProperty(path) != null) {
+					return PropertyPath.from(Pattern.quote(path), entity.getTypeInformation());
+				}
+
 				return PropertyPath.from(path, entity.getTypeInformation());
 			} catch (PropertyReferenceException | InvalidPersistentPropertyPath e) {
 
