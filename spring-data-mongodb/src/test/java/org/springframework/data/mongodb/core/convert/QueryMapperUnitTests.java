@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.bson.types.Code;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
@@ -856,6 +857,15 @@ public class QueryMapperUnitTests {
 		assertThat(document).isEqualTo(new org.bson.Document("nested.unresolvablePath.id", idHex));
 	}
 
+	@Test // DATAMONGO-2339
+	public void findByIdUsesMappedIdFieldNameWithUnderscoreCorrectly() {
+
+		org.bson.Document target = mapper.getMappedObject(new org.bson.Document("with_underscore", "id-1"),
+				context.getPersistentEntity(WithIdPropertyContainingUnderscore.class));
+
+		assertThat(target).isEqualTo(new org.bson.Document("_id", "id-1"));
+	}
+
 	@Document
 	public class Foo {
 		@Id private ObjectId id;
@@ -978,5 +988,9 @@ public class QueryMapperUnitTests {
 
 	static class EntityWithComplexValueTypeList {
 		List<SimpeEntityWithoutId> list;
+	}
+
+	static class WithIdPropertyContainingUnderscore {
+		@Id String with_underscore;
 	}
 }

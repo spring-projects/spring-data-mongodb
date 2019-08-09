@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.bson.BsonValue;
 import org.bson.Document;
@@ -1064,6 +1065,11 @@ public class QueryMapper {
 		private PropertyPath forName(String path) {
 
 			try {
+
+				if (entity.getPersistentProperty(path) != null) {
+					return PropertyPath.from(Pattern.quote(path), entity.getTypeInformation());
+				}
+
 				return PropertyPath.from(path, entity.getTypeInformation());
 			} catch (PropertyReferenceException | InvalidPersistentPropertyPath e) {
 
