@@ -46,6 +46,22 @@ pipeline {
 						}
 					}
 				}
+				stage('Publish JDK 8 + MongoDB 4.2') {
+                	when {
+                		changeset "ci/openjdk8-mongodb-4.2/**"
+                	}
+                	agent { label 'data' }
+                	options { timeout(time: 30, unit: 'MINUTES') }
+
+                	steps {
+                		script {
+                			def image = docker.build("springci/spring-data-openjdk8-with-mongodb-4.2", "ci/openjdk8-mongodb-4.2/")
+                			docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
+                				image.push()
+                			}
+                		}
+                	}
+                }
 			}
 		}
 
@@ -58,7 +74,7 @@ pipeline {
 			}
 			agent {
 				docker {
-					image 'springci/spring-data-openjdk8-with-mongodb-4.0:latest'
+					image 'springci/spring-data-openjdk8-with-mongodb-4.2:latest'
 					label 'data'
 					args '-v $HOME:/tmp/jenkins-home'
 				}
