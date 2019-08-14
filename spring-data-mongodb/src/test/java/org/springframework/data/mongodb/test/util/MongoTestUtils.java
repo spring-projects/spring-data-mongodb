@@ -118,6 +118,7 @@ public class MongoTestUtils {
 				.withWriteConcern(WriteConcern.MAJORITY).withReadPreference(ReadPreference.primary());
 
 		Mono.from(database.getCollection(collectionName).drop()) //
+				.retryBackoff(3, Duration.ofMillis(250)) //
 				.as(StepVerifier::create) //
 				.expectNext(Success.SUCCESS) //
 				.verifyComplete();
