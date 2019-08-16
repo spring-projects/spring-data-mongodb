@@ -8,6 +8,8 @@ The Spring Data MongoDB project aims to provide a familiar and consistent Spring
 The Spring Data MongoDB project provides integration with the MongoDB document database.
 Key functional areas of Spring Data MongoDB are a POJO centric model for interacting with a MongoDB `+Document+` and easily writing a repository style data access layer.
 
+
+
 == Code of Conduct
 
 This project is governed by the link:CODE_OF_CONDUCT.adoc[Spring Code of Conduct]. By participating, you are expected to uphold this code of conduct. Please report unacceptable behavior to spring-code-of-conduct@pivotal.io.
