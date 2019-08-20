@@ -105,6 +105,7 @@ import org.springframework.data.mongodb.core.mapreduce.MapReduceResults;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Meta;
+import org.springframework.data.mongodb.core.query.Meta.CursorOption;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -447,8 +448,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			Document mappedFields = getMappedFieldsObject(query.getFieldsObject(), persistentEntity, returnType);
 			Document mappedQuery = queryMapper.getMappedObject(query.getQueryObject(), persistentEntity);
 
-			FindIterable<Document> cursor = new QueryCursorPreparer(query, entityType)
-					.prepare(collection.find(mappedQuery, Document.class).projection(mappedFields));
+			FindIterable<Document> cursor = new QueryCursorPreparer(query, entityType).initiateFind(collection,
+					col -> col.find(mappedQuery, Document.class).projection(mappedFields));
 
 			return new CloseableIterableCursorAdapter<>(cursor, exceptionTranslator,
 					new ProjectingReadCallback<>(mongoConverter, entityType, returnType, collectionName));
@@ -538,8 +539,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					sortObject, fieldsObject, collectionName);
 		}
 
-		this.executeQueryInternal(new FindCallback(queryObject, fieldsObject, null), preparer, documentCallbackHandler,
-				collectionName);
+		this.executeQueryInternal(new FindCallback(queryObject, fieldsObject, null),
+				preparer != null ? preparer : CursorPreparer.NO_OP_PREPARER, documentCallbackHandler, collectionName);
 	}
 
 	/*
@@ -777,8 +778,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(mode, "BulkMode must not be null!");
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 
-		DefaultBulkOperations operations = new DefaultBulkOperations(this, collectionName, new BulkOperationContext(mode,
-				Optional.ofNullable(getPersistentEntity(entityType)), queryMapper, updateMapper, eventPublisher, entityCallbacks));
+		DefaultBulkOperations operations = new DefaultBulkOperations(this, collectionName,
+				new BulkOperationContext(mode, Optional.ofNullable(getPersistentEntity(entityType)), queryMapper, updateMapper,
+						eventPublisher, entityCallbacks));
 
 		operations.setExceptionTranslator(exceptionTranslator);
 		operations.setDefaultWriteConcern(writeConcern);
@@ -814,8 +816,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		if (ObjectUtils.isEmpty(query.getSortObject())) {
 
 			return doFindOne(collectionName, query.getQueryObject(), query.getFieldsObject(),
-					operations.forType(entityClass).getCollation(query).map(Collation::toMongoCollation).orElse(null),
-					entityClass);
+					new QueryCursorPreparer(query, entityClass), entityClass);
 		} else {
 			query.limit(1);
 			List<T> results = find(query, entityClass, collectionName);
@@ -933,6 +934,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 						serializeToJsonSafely(mappedQuery), field, collectionName);
 			}
 
+			QueryCursorPreparer preparer = new QueryCursorPreparer(query, entityClass);
+			if (preparer.hasReadPreferences()) {
+				collection = collection.withReadPreference(preparer.getReadPreference());
+			}
+
 			DistinctIterable<T> iterable = collection.distinct(mappedFieldName, mappedQuery, mongoDriverCompatibleType);
 
 			return operations.forType(entityClass) //
@@ -1007,8 +1013,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(collectionName, "CollectionName must not be null!");
 		Assert.notNull(returnType, "ReturnType must not be null!");
 
-		String collection = StringUtils.hasText(collectionName) ? collectionName
-				: getCollectionName(domainType);
+		String collection = StringUtils.hasText(collectionName) ? collectionName : getCollectionName(domainType);
 		String distanceField = operations.nearQueryDistanceFieldName(domainType);
 
 		Aggregation $geoNear = TypedAggregation.newAggregation(domainType, Aggregation.geoNear(near, distanceField))
@@ -1039,8 +1044,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	@Nullable
 	@Override
 	public <T> T findAndModify(Query query, Update update, Class<T> entityClass) {
-		return findAndModify(query, update, new FindAndModifyOptions(), entityClass,
-				getCollectionName(entityClass));
+		return findAndModify(query, update, new FindAndModifyOptions(), entityClass, getCollectionName(entityClass));
 	}
 
 	@Nullable
@@ -1296,8 +1300,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		Assert.notNull(batchToSave, "BatchToSave must not be null!");
 
-		return (Collection<T>) doInsertBatch(getCollectionName(entityClass), batchToSave,
-				this.mongoConverter);
+		return (Collection<T>) doInsertBatch(getCollectionName(entityClass), batchToSave, this.mongoConverter);
 	}
 
 	@Override
@@ -1795,7 +1798,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return executeFindMultiInternal(
 				new FindCallback(new Document(), new Document(),
 						operations.forType(entityClass).getCollation().map(Collation::toMongoCollation).orElse(null)),
-				null, new ReadDocumentCallback<>(mongoConverter, entityClass, collectionName), collectionName);
+				CursorPreparer.NO_OP_PREPARER, new ReadDocumentCallback<>(mongoConverter, entityClass, collectionName),
+				collectionName);
 	}
 
 	@Override
@@ -2435,7 +2439,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @return the {@link List} of converted objects.
 	 */
 	protected <T> T doFindOne(String collectionName, Document query, Document fields, Class<T> entityClass) {
-		return doFindOne(collectionName, query, fields, null, entityClass);
+		return doFindOne(collectionName, query, fields, CursorPreparer.NO_OP_PREPARER, entityClass);
 	}
 
 	/**
@@ -2446,12 +2450,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param query the query document that specifies the criteria used to find a record.
 	 * @param fields the document that specifies the fields to be returned.
 	 * @param entityClass the parameterized type of the returned list.
+	 * @param preparer the preparer used to modify the cursor on execution.
 	 * @return the {@link List} of converted objects.
 	 * @since 2.2
 	 */
 	@SuppressWarnings("ConstantConditions")
-	protected <T> T doFindOne(String collectionName, Document query, Document fields,
-			@Nullable com.mongodb.client.model.Collation collation, Class<T> entityClass) {
+	protected <T> T doFindOne(String collectionName, Document query, Document fields, CursorPreparer preparer,
+			Class<T> entityClass) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 		Document mappedQuery = queryMapper.getMappedObject(query, entity);
@@ -2462,7 +2467,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					mappedFields, entityClass, collectionName);
 		}
 
-		return executeFindOneInternal(new FindOneCallback(mappedQuery, mappedFields, collation),
+		return executeFindOneInternal(new FindOneCallback(mappedQuery, mappedFields, preparer),
 				new ReadDocumentCallback<>(this.mongoConverter, entityClass, collectionName), collectionName);
 	}
 
@@ -2513,8 +2518,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					serializeToJsonSafely(mappedQuery), mappedFields, entityClass, collectionName);
 		}
 
-		return executeFindMultiInternal(new FindCallback(mappedQuery, mappedFields, null), preparer, objectCallback,
-				collectionName);
+		return executeFindMultiInternal(new FindCallback(mappedQuery, mappedFields, null),
+				preparer != null ? preparer : CursorPreparer.NO_OP_PREPARER, objectCallback, collectionName);
 	}
 
 	/**
@@ -2736,6 +2741,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			DocumentCallback<T> objectCallback, String collectionName) {
 
 		try {
+
 			T result = objectCallback
 					.doWith(collectionCallback.doInCollection(getAndPrepareCollection(doGetDatabase(), collectionName)));
 			return result;
@@ -2763,7 +2769,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @return
 	 */
 	private <T> List<T> executeFindMultiInternal(CollectionCallback<FindIterable<Document>> collectionCallback,
-			@Nullable CursorPreparer preparer, DocumentCallback<T> objectCallback, String collectionName) {
+			CursorPreparer preparer, DocumentCallback<T> objectCallback, String collectionName) {
 
 		try {
 
@@ -2771,14 +2777,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			try {
 
-				FindIterable<Document> iterable = collectionCallback
-						.doInCollection(getAndPrepareCollection(doGetDatabase(), collectionName));
-
-				if (preparer != null) {
-					iterable = preparer.prepare(iterable);
-				}
-
-				cursor = iterable.iterator();
+				cursor = preparer
+						.initiateFind(getAndPrepareCollection(doGetDatabase(), collectionName), collectionCallback::doInCollection)
+						.iterator();
 
 				List<T> result = new ArrayList<>();
 
@@ -2800,21 +2801,17 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	private void executeQueryInternal(CollectionCallback<FindIterable<Document>> collectionCallback,
-			@Nullable CursorPreparer preparer, DocumentCallbackHandler callbackHandler, String collectionName) {
+			CursorPreparer preparer, DocumentCallbackHandler callbackHandler, String collectionName) {
 
 		try {
 
 			MongoCursor<Document> cursor = null;
 
 			try {
-				FindIterable<Document> iterable = collectionCallback
-						.doInCollection(getAndPrepareCollection(doGetDatabase(), collectionName));
 
-				if (preparer != null) {
-					iterable = preparer.prepare(iterable);
-				}
-
-				cursor = iterable.iterator();
+				cursor = preparer
+						.initiateFind(getAndPrepareCollection(doGetDatabase(), collectionName), collectionCallback::doInCollection)
+						.iterator();
 
 				while (cursor.hasNext()) {
 					callbackHandler.processDocument(cursor.next());
@@ -2908,21 +2905,19 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		private final Document query;
 		private final Optional<Document> fields;
-		private final @Nullable com.mongodb.client.model.Collation collation;
+		private final CursorPreparer cursorPreparer;
 
-		public FindOneCallback(Document query, Document fields, @Nullable com.mongodb.client.model.Collation collation) {
+		FindOneCallback(Document query, Document fields, CursorPreparer preparer) {
 
 			this.query = query;
 			this.fields = Optional.of(fields).filter(it -> !ObjectUtils.isEmpty(fields));
-			this.collation = collation;
+			this.cursorPreparer = preparer;
 		}
 
+		@Override
 		public Document doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
 
-			FindIterable<Document> iterable = collection.find(query, Document.class);
-			if (collation != null) {
-				iterable = iterable.collation(collation);
-			}
+			FindIterable<Document> iterable = cursorPreparer.initiateFind(collection, col -> col.find(query, Document.class));
 
 			if (LOGGER.isDebugEnabled()) {
 
@@ -3318,6 +3313,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 							case PARTIAL:
 								cursorToUse = cursorToUse.partial(true);
 								break;
+							case SLAVE_OK:
+								break;
 							default:
 								throw new IllegalArgumentException(String.format("%s is no supported flag.", option));
 						}
@@ -3329,6 +3326,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			}
 
 			return cursorToUse;
+		}
+
+		@Override
+		public ReadPreference getReadPreference() {
+			return query.getMeta().getFlags().contains(CursorOption.SLAVE_OK) ? ReadPreference.primaryPreferred() : null;
 		}
 	}
 

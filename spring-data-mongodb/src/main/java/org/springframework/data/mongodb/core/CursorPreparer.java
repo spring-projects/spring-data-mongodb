@@ -15,9 +15,15 @@
  */
 package org.springframework.data.mongodb.core;
 
-import org.bson.Document;
+import java.util.function.Function;
 
+import org.bson.Document;
+import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
+
+import com.mongodb.ReadPreference;
 import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCollection;
 
 /**
  * Simple callback interface to allow customization of a {@link FindIterable}.
@@ -25,7 +31,14 @@ import com.mongodb.client.FindIterable;
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
-interface CursorPreparer {
+interface CursorPreparer extends ReadPreferenceAware {
+
+	/**
+	 * Default {@link CursorPreparer} just passing on the given {@link FindIterable}.
+	 *
+	 * @since 2.2
+	 */
+	CursorPreparer NO_OP_PREPARER = (iterable -> iterable);
 
 	/**
 	 * Prepare the given cursor (apply limits, skips and so on). Returns the prepared cursor.
@@ -33,4 +46,37 @@ interface CursorPreparer {
 	 * @param cursor
 	 */
 	FindIterable<Document> prepare(FindIterable<Document> cursor);
+
+	/**
+	 * Apply query specific settings to {@link MongoCollection} and initate a find operation returning a
+	 * {@link FindIterable} via the given {@link Function find} function.
+	 * 
+	 * @param collection must not be {@literal null}.
+	 * @param find must not be {@literal null}.
+	 * @return
+	 * @throws IllegalArgumentException if one of the required arguments is {@literal null}.
+	 * @since 2.2
+	 */
+	default FindIterable<Document> initiateFind(MongoCollection<Document> collection,
+			Function<MongoCollection<Document>, FindIterable<Document>> find) {
+
+		Assert.notNull(collection, "Collection must not be null!");
+		Assert.notNull(find, "Find function must not be null!");
+
+		if (hasReadPreferences()) {
+			collection = collection.withReadPreference(getReadPreference());
+		}
+
+		return prepare(find.apply(collection));
+	}
+
+	/**
+	 * @return the {@link ReadPreference} to apply or {@literal null} if none defined.
+	 * @since 2.2
+	 */
+	@Override
+	@Nullable
+	default ReadPreference getReadPreference() {
+		return null;
+	}
 }

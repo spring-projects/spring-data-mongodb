@@ -15,14 +15,36 @@
  */
 package org.springframework.data.mongodb.core;
 
+import java.util.function.Function;
+
+import org.bson.Document;
+import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
+
+import com.mongodb.ReadPreference;
 import com.mongodb.reactivestreams.client.FindPublisher;
+import com.mongodb.reactivestreams.client.MongoCollection;
 
 /**
  * Simple callback interface to allow customization of a {@link FindPublisher}.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  */
-interface FindPublisherPreparer {
+interface FindPublisherPreparer extends ReadPreferenceAware {
+
+	/**
+	 * Default {@link FindPublisherPreparer} just passing on the given {@link FindPublisher}.
+	 *
+	 * @since 2.2
+	 */
+	FindPublisherPreparer NO_OP_PREPARER = new FindPublisherPreparer() {
+
+		@Override
+		public <T> FindPublisher<T> prepare(FindPublisher<T> findPublisher) {
+			return findPublisher;
+		}
+	};
 
 	/**
 	 * Prepare the given cursor (apply limits, skips and so on). Returns the prepared cursor.
@@ -30,4 +52,37 @@ interface FindPublisherPreparer {
 	 * @param findPublisher must not be {@literal null}.
 	 */
 	<T> FindPublisher<T> prepare(FindPublisher<T> findPublisher);
+
+	/**
+	 * Apply query specific settings to {@link MongoCollection} and initate a find operation returning a
+	 * {@link FindPublisher} via the given {@link Function find} function.
+	 *
+	 * @param collection must not be {@literal null}.
+	 * @param find must not be {@literal null}.
+	 * @return
+	 * @throws IllegalArgumentException if one of the required arguments is {@literal null}.
+	 * @since 2.2
+	 */
+	default FindPublisher<Document> initiateFind(MongoCollection<Document> collection,
+			Function<MongoCollection<Document>, FindPublisher<Document>> find) {
+
+		Assert.notNull(collection, "Collection must not be null!");
+		Assert.notNull(find, "Find function must not be null!");
+
+		if (hasReadPreferences()) {
+			collection = collection.withReadPreference(getReadPreference());
+		}
+
+		return prepare(find.apply(collection));
+	}
+
+	/**
+	 * @return the {@link ReadPreference} to apply or {@literal null} if none defined.
+	 * @since 2.2
+	 */
+	@Override
+	@Nullable
+	default ReadPreference getReadPreference() {
+		return null;
+	}
 }

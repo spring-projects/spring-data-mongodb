@@ -102,6 +102,7 @@ import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeSaveCal
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Meta;
+import org.springframework.data.mongodb.core.query.Meta.CursorOption;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -803,7 +804,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		if (ObjectUtils.isEmpty(query.getSortObject())) {
 			return doFindOne(collectionName, query.getQueryObject(), query.getFieldsObject(), entityClass,
-					operations.forType(entityClass).getCollation(query).orElse(null));
+					new QueryFindPublisherPreparer(query, entityClass));
 		}
 
 		query.limit(1);
@@ -891,7 +892,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		String idKey = operations.getIdPropertyName(entityClass);
 
-		return doFindOne(collectionName, new Document(idKey, id), null, entityClass, null);
+		return doFindOne(collectionName, new Document(idKey, id), null, entityClass, (Collation) null);
 	}
 
 	/*
@@ -930,6 +931,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("Executing findDistinct using query {} for field: {} in collection: {}",
 						serializeToJsonSafely(mappedQuery), field, collectionName);
+			}
+
+			FindPublisherPreparer preparer = new QueryFindPublisherPreparer(query, entityClass);
+			if (preparer.hasReadPreferences()) {
+				collection = collection.withReadPreference(preparer.getReadPreference());
 			}
 
 			DistinctPublisher<T> publisher = collection.distinct(mappedFieldName, mappedQuery, mongoDriverCompatibleType);
@@ -1981,7 +1987,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#findAll(java.lang.Class, java.lang.String)
 	 */
 	public <T> Flux<T> findAll(Class<T> entityClass, String collectionName) {
-		return executeFindMultiInternal(new FindCallback(null), null,
+		return executeFindMultiInternal(new FindCallback(null), FindPublisherPreparer.NO_OP_PREPARER,
 				new ReadDocumentCallback<>(mongoConverter, entityClass, collectionName), collectionName);
 	}
 
@@ -2035,8 +2041,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			LOGGER.debug(String.format("find for class: %s in collection: %s", entityClass, collectionName));
 
 			return executeFindMultiInternal(
-					collection -> new FindCallback(null).doInCollection(collection).cursorType(CursorType.TailableAwait), null,
-					new ReadDocumentCallback<>(mongoConverter, entityClass, collectionName), collectionName);
+					collection -> new FindCallback(null).doInCollection(collection).cursorType(CursorType.TailableAwait),
+					FindPublisherPreparer.NO_OP_PREPARER, new ReadDocumentCallback<>(mongoConverter, entityClass, collectionName),
+					collectionName);
 		}
 
 		return doFind(collectionName, query.getQueryObject(), query.getFieldsObject(), entityClass,
@@ -2327,6 +2334,29 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	protected <T> Mono<T> doFindOne(String collectionName, Document query, @Nullable Document fields,
 			Class<T> entityClass, @Nullable Collation collation) {
 
+		return doFindOne(collectionName, query, fields, entityClass, new FindPublisherPreparer() {
+			@Override
+			public <T> FindPublisher<T> prepare(FindPublisher<T> findPublisher) {
+				return collation != null ? findPublisher.collation(collation.toMongoCollation()) : findPublisher;
+			}
+		});
+	}
+
+	/**
+	 * Map the results of an ad-hoc query on the default MongoDB collection to an object using the template's converter.
+	 * The query document is specified as a standard {@link Document} and so is the fields specification.
+	 *
+	 * @param collectionName name of the collection to retrieve the objects from.
+	 * @param query the query document that specifies the criteria used to find a record.
+	 * @param fields the document that specifies the fields to be returned.
+	 * @param entityClass the parameterized type of the returned list.
+	 * @param preparer the preparer modifying collection and publisher to fit the needs.
+	 * @return the {@link List} of converted objects.
+	 * @since 2.2
+	 */
+	protected <T> Mono<T> doFindOne(String collectionName, Document query, @Nullable Document fields,
+			Class<T> entityClass, FindPublisherPreparer preparer) {
+
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 		Document mappedQuery = queryMapper.getMappedObject(query, entity);
 		Document mappedFields = fields == null ? null : queryMapper.getMappedObject(fields, entity);
@@ -2336,7 +2366,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 					serializeToJsonSafely(query), mappedFields, entityClass, collectionName));
 		}
 
-		return executeFindOneInternal(new FindOneCallback(mappedQuery, mappedFields, collation),
+		return executeFindOneInternal(new FindOneCallback(mappedQuery, mappedFields, preparer),
 				new ReadDocumentCallback<>(this.mongoConverter, entityClass, collectionName), collectionName);
 	}
 
@@ -2706,13 +2736,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			@Nullable FindPublisherPreparer preparer, DocumentCallback<T> objectCallback, String collectionName) {
 
 		return createFlux(collectionName, collection -> {
-
-			FindPublisher<Document> findPublisher = collectionCallback.doInCollection(collection);
-
-			if (preparer != null) {
-				findPublisher = preparer.prepare(findPublisher);
-			}
-			return Flux.from(findPublisher).map(objectCallback::doWith);
+			return Flux.from(preparer.initiateFind(collection, collectionCallback::doInCollection))
+					.map(objectCallback::doWith);
 		});
 	}
 
@@ -2784,24 +2809,23 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 *
 	 * @author Oliver Gierke
 	 * @author Thomas Risberg
+	 * @author Christoph Strobl
 	 */
 	private static class FindOneCallback implements ReactiveCollectionCallback<Document> {
 
 		private final Document query;
 		private final Optional<Document> fields;
-		private final Optional<Collation> collation;
+		private final FindPublisherPreparer preparer;
 
-		FindOneCallback(Document query, @Nullable Document fields, @Nullable Collation collation) {
+		FindOneCallback(Document query, @Nullable Document fields, FindPublisherPreparer preparer) {
 			this.query = query;
 			this.fields = Optional.ofNullable(fields);
-			this.collation = Optional.ofNullable(collation);
+			this.preparer = preparer;
 		}
 
 		@Override
 		public Publisher<Document> doInCollection(MongoCollection<Document> collection)
 				throws MongoException, DataAccessException {
-
-			FindPublisher<Document> publisher = collection.find(query, Document.class);
 
 			if (LOGGER.isDebugEnabled()) {
 
@@ -2809,11 +2833,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 						serializeToJsonSafely(fields.orElseGet(Document::new)), collection.getNamespace().getFullName());
 			}
 
+			FindPublisher<Document> publisher = preparer.initiateFind(collection, col -> col.find(query, Document.class));
+
 			if (fields.isPresent()) {
 				publisher = publisher.projection(fields.get());
 			}
-
-			publisher = collation.map(Collation::toMongoCollation).map(publisher::collation).orElse(publisher);
 
 			return publisher.limit(1).first();
 		}
@@ -3220,6 +3244,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			}
 
 			return findPublisherToUse;
+		}
+
+		@Override
+		public ReadPreference getReadPreference() {
+			return query.getMeta().getFlags().contains(CursorOption.SLAVE_OK) ? ReadPreference.primaryPreferred() : null;
 		}
 	}
 

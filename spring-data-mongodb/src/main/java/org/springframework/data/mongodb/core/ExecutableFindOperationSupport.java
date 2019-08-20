@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import com.mongodb.ReadPreference;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -266,6 +267,11 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 
 			this.limit = Optional.of(limit);
 			return this;
+		}
+
+		@Override
+		public ReadPreference getReadPreference() {
+			return delegate.getReadPreference();
 		}
 	}
 
