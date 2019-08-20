@@ -935,7 +935,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1733
 	public void appliesFieldsWhenInterfaceProjectionIsClosedAndQueryDoesNotDefineFields() {
 
-		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonProjection.class, null);
+		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonProjection.class,
+				CursorPreparer.NO_OP_PREPARER);
 
 		verify(findIterable).projection(eq(new Document("firstname", 1)));
 	}
@@ -943,7 +944,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1733
 	public void doesNotApplyFieldsWhenInterfaceProjectionIsClosedAndQueryDefinesFields() {
 
-		template.doFind("star-wars", new Document(), new Document("bar", 1), Person.class, PersonProjection.class, null);
+		template.doFind("star-wars", new Document(), new Document("bar", 1), Person.class, PersonProjection.class,
+				CursorPreparer.NO_OP_PREPARER);
 
 		verify(findIterable).projection(eq(new Document("bar", 1)));
 	}
@@ -951,7 +953,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1733
 	public void doesNotApplyFieldsWhenInterfaceProjectionIsOpen() {
 
-		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonSpELProjection.class, null);
+		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonSpELProjection.class,
+				CursorPreparer.NO_OP_PREPARER);
 
 		verify(findIterable).projection(eq(new Document()));
 	}
@@ -959,7 +962,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1733, DATAMONGO-2041
 	public void appliesFieldsToDtoProjection() {
 
-		template.doFind("star-wars", new Document(), new Document(), Person.class, Jedi.class, null);
+		template.doFind("star-wars", new Document(), new Document(), Person.class, Jedi.class,
+				CursorPreparer.NO_OP_PREPARER);
 
 		verify(findIterable).projection(eq(new Document("firstname", 1)));
 	}
@@ -967,7 +971,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1733
 	public void doesNotApplyFieldsToDtoProjectionWhenQueryDefinesFields() {
 
-		template.doFind("star-wars", new Document(), new Document("bar", 1), Person.class, Jedi.class, null);
+		template.doFind("star-wars", new Document(), new Document("bar", 1), Person.class, Jedi.class,
+				CursorPreparer.NO_OP_PREPARER);
 
 		verify(findIterable).projection(eq(new Document("bar", 1)));
 	}
@@ -975,7 +980,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1733
 	public void doesNotApplyFieldsWhenTargetIsNotAProjection() {
 
-		template.doFind("star-wars", new Document(), new Document(), Person.class, Person.class, null);
+		template.doFind("star-wars", new Document(), new Document(), Person.class, Person.class,
+				CursorPreparer.NO_OP_PREPARER);
 
 		verify(findIterable).projection(eq(new Document()));
 	}
@@ -983,7 +989,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1733
 	public void doesNotApplyFieldsWhenTargetExtendsDomainType() {
 
-		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonExtended.class, null);
+		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonExtended.class,
+				CursorPreparer.NO_OP_PREPARER);
 
 		verify(findIterable).projection(eq(new Document()));
 	}
@@ -1635,6 +1642,37 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.setApplicationContext(ctx);
 
 		Assertions.assertThat(ReflectionTestUtils.getField(template, "entityCallbacks")).isSameAs(callbacks);
+	}
+
+	@Test // DATAMONGO-2344
+	public void slaveOkQueryOptionShouldApplyPrimaryPreferredReadPreferenceForFind() {
+
+		template.find(new Query().slaveOk(), AutogenerateableId.class);
+
+		verify(collection).withReadPreference(eq(ReadPreference.primaryPreferred()));
+	}
+
+	@Test // DATAMONGO-2344
+	public void slaveOkQueryOptionShouldApplyPrimaryPreferredReadPreferenceForFindOne() {
+
+		template.findOne(new Query().slaveOk(), AutogenerateableId.class);
+
+		verify(collection).withReadPreference(eq(ReadPreference.primaryPreferred()));
+	}
+
+	@Test // DATAMONGO-2344
+	public void slaveOkQueryOptionShouldApplyPrimaryPreferredReadPreferenceForFindDistinct() {
+
+		template.findDistinct(new Query().slaveOk(), "name", AutogenerateableId.class, String.class);
+
+		verify(collection).withReadPreference(eq(ReadPreference.primaryPreferred()));
+	}
+
+	@Test // DATAMONGO-2344
+	public void slaveOkQueryOptionShouldApplyPrimaryPreferredReadPreferenceForStream() {
+
+		template.stream(new Query().slaveOk(), AutogenerateableId.class);
+		verify(collection).withReadPreference(eq(ReadPreference.primaryPreferred()));
 	}
 
 	class AutogenerateableId {
