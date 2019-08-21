@@ -82,7 +82,18 @@ public abstract class MongoSimpleTypes {
 	}
 
 	private static final Set<Class<?>> MONGO_SIMPLE_TYPES;
-	public static final SimpleTypeHolder HOLDER = new SimpleTypeHolder(MONGO_SIMPLE_TYPES, true);
+	public static final SimpleTypeHolder HOLDER = new SimpleTypeHolder(MONGO_SIMPLE_TYPES, true) {
+
+		@Override
+		public boolean isSimpleType(Class<?> type) {
+
+			if (type.getName().startsWith("java.time")) {
+				return false;
+			}
+
+			return super.isSimpleType(type);
+		}
+	};
 
 	private MongoSimpleTypes() {}
 }
