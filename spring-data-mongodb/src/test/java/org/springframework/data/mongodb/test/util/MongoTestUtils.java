@@ -82,7 +82,7 @@ public class MongoTestUtils {
 
 		return Mono.from(database.getCollection(collectionName).drop()) //
 				.delayElement(Duration.ofMillis(10)) // server replication time
-				.then(Mono.from(database.createCollection(collectionName)))
+				.then(Mono.from(database.createCollection(collectionName))) //
 				.delayElement(Duration.ofMillis(10)); // server replication time
 	}
 
@@ -121,6 +121,26 @@ public class MongoTestUtils {
 				.retryBackoff(3, Duration.ofMillis(250)) //
 				.as(StepVerifier::create) //
 				.expectNext(Success.SUCCESS) //
+				.verifyComplete();
+	}
+
+	/**
+	 * Remove all documents from the {@link MongoCollection} with given name in the according {@link MongoDatabase
+	 * database}.
+	 *
+	 * @param dbName must not be {@literal null}.
+	 * @param collectionName must not be {@literal null}.
+	 * @param client must not be {@literal null}.
+	 */
+	public static void flushCollection(String dbName, String collectionName,
+			com.mongodb.reactivestreams.client.MongoClient client) {
+
+		com.mongodb.reactivestreams.client.MongoDatabase database = client.getDatabase(dbName)
+				.withWriteConcern(WriteConcern.MAJORITY).withReadPreference(ReadPreference.primary());
+
+		Mono.from(database.getCollection(collectionName).deleteMany(new Document())) //
+				.then() //
+				.as(StepVerifier::create) //
 				.verifyComplete();
 	}
 
