@@ -252,7 +252,7 @@ interface MongoQueryExecution {
 			}
 
 			DeleteResult writeResult = operations.remove(query, type, collectionName);
-			return writeResult != null ? writeResult.getDeletedCount() : 0L;
+			return writeResult != null && writeResult.wasAcknowledged() ? writeResult.getDeletedCount() : 0L;
 		}
 	}
 }

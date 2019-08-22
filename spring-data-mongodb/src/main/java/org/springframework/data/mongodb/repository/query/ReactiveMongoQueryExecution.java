@@ -127,7 +127,8 @@ interface ReactiveMongoQueryExecution {
 				return operations.findAllAndRemove(query, type, collection);
 			}
 
-			return operations.remove(query, type, collection).map(DeleteResult::getDeletedCount);
+			return operations.remove(query, type, collection)
+					.map(deleteResult -> deleteResult.wasAcknowledged() ? deleteResult.getDeletedCount() : 0L);
 		}
 	}
 

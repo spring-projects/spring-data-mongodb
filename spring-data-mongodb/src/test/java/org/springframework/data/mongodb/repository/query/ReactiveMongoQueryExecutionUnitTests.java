@@ -19,7 +19,10 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import com.mongodb.client.result.DeleteResult;
+
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -41,6 +44,7 @@ import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Person;
+import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.DeleteExecution;
 import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.GeoNearExecution;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.util.ClassUtils;
@@ -55,6 +59,7 @@ public class ReactiveMongoQueryExecutionUnitTests {
 
 	@Mock private ReactiveMongoOperations operations;
 	@Mock private MongoParameterAccessor parameterAccessor;
+	@Mock private MongoQueryMethod method;
 
 	@Test // DATAMONGO-1444
 	public void geoNearExecutionShouldApplyQuerySettings() throws Exception {
@@ -99,6 +104,26 @@ public class ReactiveMongoQueryExecutionUnitTests {
 		assertThat(nearQuery.getSkip()).isEqualTo(0L);
 		assertThat(nearQuery.getMinDistance()).isNull();
 		assertThat(nearQuery.getMaxDistance()).isNull();
+	}
+
+	@Test // DATAMONGO-2351
+	public void acknowledgedDeleteReturnsDeletedCount() {
+		when(operations.remove(any(Query.class), any(Class.class), anyString())).thenReturn(Mono.just(DeleteResult.acknowledged(10)));
+
+		DeleteExecution execution = new DeleteExecution(operations, method);
+		Object result = ((Mono) execution.execute(new Query(), Class.class, "")).block();
+
+		assertThat(result).isEqualTo(10L);
+	}
+
+	@Test // DATAMONGO-2351
+	public void unacknowledgedDeleteReturnsZeroDeletedCount() {
+		when(operations.remove(any(Query.class), any(Class.class), anyString())).thenReturn(Mono.just(DeleteResult.unacknowledged()));
+
+		DeleteExecution execution = new DeleteExecution(operations, method);
+		Object result = ((Mono) execution.execute(new Query(), Class.class, "")).block();
+
+		assertThat(result).isEqualTo(0L);
 	}
 
 	interface GeoRepo {

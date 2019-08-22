@@ -15,12 +15,15 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
+
+import com.mongodb.client.result.DeleteResult;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -47,6 +50,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Person;
+import org.springframework.data.mongodb.repository.query.MongoQueryExecution.DeleteExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.PagedExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.PagingGeoNearExecution;
 import org.springframework.data.projection.ProjectionFactory;
@@ -171,6 +175,28 @@ public class MongoQueryExecutionUnitTests {
 
 		verify(terminatingGeoMock).all();
 		verify(terminatingMock).count();
+	}
+
+	@Test // DATAMONGO-2351
+	public void acknowledgedDeleteReturnsDeletedCount() {
+		when(mongoOperationsMock.remove(any(Query.class), any(Class.class), anyString())).thenReturn(DeleteResult.acknowledged(10));
+
+		DeleteExecution execution = new DeleteExecution(mongoOperationsMock, queryMethod);
+		Object result = execution.execute(new Query());
+
+		assertThat(result).isEqualTo(10L);
+
+	}
+
+	@Test // DATAMONGO-2351
+	public void unacknowledgedDeleteReturnsZeroDeletedCount() {
+		when(mongoOperationsMock.remove(any(Query.class), any(Class.class), anyString())).thenReturn(DeleteResult.unacknowledged());
+
+		DeleteExecution execution = new DeleteExecution(mongoOperationsMock, queryMethod);
+		Object result = execution.execute(new Query());
+
+		assertThat(result).isEqualTo(0L);
+
 	}
 
 	interface PersonRepository extends Repository<Person, Long> {
