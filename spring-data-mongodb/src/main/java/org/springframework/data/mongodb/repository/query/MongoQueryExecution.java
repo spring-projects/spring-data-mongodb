@@ -228,6 +228,9 @@ interface MongoQueryExecution {
 	/**
 	 * {@link MongoQueryExecution} removing documents matching the query.
 	 *
+	 * @author Oliver Gierke
+	 * @author Mark Paluch
+	 * @author Artyom Gabeev
 	 * @since 1.5
 	 */
 	@RequiredArgsConstructor
@@ -251,7 +254,7 @@ interface MongoQueryExecution {
 			}
 
 			DeleteResult writeResult = operations.remove(query, type, collectionName);
-			return writeResult != null ? writeResult.getDeletedCount() : 0L;
+			return writeResult != null && writeResult.wasAcknowledged() ? writeResult.getDeletedCount() : 0L;
 		}
 	}
 }

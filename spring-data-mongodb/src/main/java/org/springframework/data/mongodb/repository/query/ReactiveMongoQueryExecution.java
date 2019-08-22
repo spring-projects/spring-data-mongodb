@@ -109,6 +109,7 @@ interface ReactiveMongoQueryExecution {
 	 * {@link ReactiveMongoQueryExecution} removing documents matching the query.
 	 *
 	 * @author Mark Paluch
+	 * @author Artyom Gabeev
 	 */
 	@RequiredArgsConstructor
 	final class DeleteExecution implements ReactiveMongoQueryExecution {
@@ -127,7 +128,8 @@ interface ReactiveMongoQueryExecution {
 				return operations.findAllAndRemove(query, type, collection);
 			}
 
-			return operations.remove(query, type, collection).map(DeleteResult::getDeletedCount);
+			return operations.remove(query, type, collection)
+					.map(deleteResult -> deleteResult.wasAcknowledged() ? deleteResult.getDeletedCount() : 0L);
 		}
 	}
 
