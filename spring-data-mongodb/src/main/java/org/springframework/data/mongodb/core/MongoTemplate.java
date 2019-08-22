@@ -1430,6 +1430,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		toSave = maybeEmitEvent(new BeforeConvertEvent<T>(toSave, collectionName)).getSource();
 		toSave = maybeCallBeforeConvert(toSave, collectionName);
 
+		if (source.getBean() != toSave) {
+			source = operations.forEntity(toSave, mongoConverter.getConversionService());
+		}
+
 		source.assertUpdateableIdIfNotSet();
 
 		MappedDocument mapped = source.toMappedDocument(mongoConverter);

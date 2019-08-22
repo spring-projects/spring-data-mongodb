@@ -1542,7 +1542,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			return maybeCallBeforeConvert(afterEvent, collectionName).flatMap(toConvert -> {
 
-				MappedDocument mapped = operations.forEntity(toSave).toMappedDocument(mongoConverter);
+				MappedDocument mapped = operations.forEntity(toConvert).toMappedDocument(mongoConverter);
 				Document document = mapped.getDocument();
 
 				maybeEmitEvent(new BeforeSaveEvent<>(toConvert, document, collectionName));
