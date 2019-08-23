@@ -96,6 +96,8 @@ public class AbstractMongoQueryUnitTests {
 		doReturn(executableFind).when(mongoOperationsMock).query(any());
 		doReturn(withQueryMock).when(executableFind).as(any());
 		doReturn(withQueryMock).when(withQueryMock).matching(any());
+
+		when(mongoOperationsMock.remove(any(), any(), anyString())).thenReturn(deleteResultMock);
 	}
 
 	@Test // DATAMONGO-566
@@ -128,7 +130,7 @@ public class AbstractMongoQueryUnitTests {
 	public void testDeleteExecutionReturnsNrDocumentsDeletedFromWriteResult() {
 
 		when(deleteResultMock.getDeletedCount()).thenReturn(100L);
-		when(mongoOperationsMock.remove(any(), eq(Person.class), eq("persons"))).thenReturn(deleteResultMock);
+		when(deleteResultMock.wasAcknowledged()).thenReturn(true);
 
 		MongoQueryFake query = createQueryForMethod("deletePersonByLastname", String.class);
 		query.setDeleteQuery(true);

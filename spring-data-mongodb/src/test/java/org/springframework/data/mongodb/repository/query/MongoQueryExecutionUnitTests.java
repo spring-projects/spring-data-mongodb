@@ -16,7 +16,8 @@
 package org.springframework.data.mongodb.repository.query;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Method;
@@ -174,26 +175,20 @@ public class MongoQueryExecutionUnitTests {
 
 	@Test // DATAMONGO-2351
 	public void acknowledgedDeleteReturnsDeletedCount() {
+
 		when(mongoOperationsMock.remove(any(Query.class), any(Class.class), anyString()))
 				.thenReturn(DeleteResult.acknowledged(10));
 
-		DeleteExecution execution = new DeleteExecution(mongoOperationsMock, queryMethod);
-		Object result = execution.execute(new Query());
-
-		assertThat(result).isEqualTo(10L);
-
+		assertThat(new DeleteExecution(mongoOperationsMock, queryMethod).execute(new Query())).isEqualTo(10L);
 	}
 
 	@Test // DATAMONGO-2351
 	public void unacknowledgedDeleteReturnsZeroDeletedCount() {
+
 		when(mongoOperationsMock.remove(any(Query.class), any(Class.class), anyString()))
 				.thenReturn(DeleteResult.unacknowledged());
 
-		DeleteExecution execution = new DeleteExecution(mongoOperationsMock, queryMethod);
-		Object result = execution.execute(new Query());
-
-		assertThat(result).isEqualTo(0L);
-
+		assertThat(new DeleteExecution(mongoOperationsMock, queryMethod).execute(new Query())).isEqualTo(0L);
 	}
 
 	interface PersonRepository extends Repository<Person, Long> {
