@@ -16,11 +16,14 @@
 package org.springframework.data.mongodb.repository.query;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -30,6 +33,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.reactivestreams.Publisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
@@ -108,24 +112,26 @@ public class ReactiveMongoQueryExecutionUnitTests {
 
 	@Test // DATAMONGO-2351
 	public void acknowledgedDeleteReturnsDeletedCount() {
+
 		when(operations.remove(any(Query.class), any(Class.class), anyString()))
 				.thenReturn(Mono.just(DeleteResult.acknowledged(10)));
 
-		DeleteExecution execution = new DeleteExecution(operations, method);
-		Object result = ((Mono) execution.execute(new Query(), Class.class, "")).block();
-
-		assertThat(result).isEqualTo(10L);
+		Mono.from((Publisher<Long>) new DeleteExecution(operations, method).execute(new Query(), Class.class, "")) //
+				.as(StepVerifier::create) //
+				.expectNext(10L) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-2351
 	public void unacknowledgedDeleteReturnsZeroDeletedCount() {
+
 		when(operations.remove(any(Query.class), any(Class.class), anyString()))
 				.thenReturn(Mono.just(DeleteResult.unacknowledged()));
 
-		DeleteExecution execution = new DeleteExecution(operations, method);
-		Object result = ((Mono) execution.execute(new Query(), Class.class, "")).block();
-
-		assertThat(result).isEqualTo(0L);
+		Mono.from((Publisher<Long>) new DeleteExecution(operations, method).execute(new Query(), Class.class, "")) //
+				.as(StepVerifier::create) //
+				.expectNext(0L) //
+				.verifyComplete();
 	}
 
 	interface GeoRepo {

@@ -232,6 +232,7 @@ interface MongoQueryExecution {
 	 * @author Oliver Gierke
 	 * @author Mark Paluch
 	 * @author Artyom Gabeev
+	 * @author Christoph Strobl
 	 * @since 1.5
 	 */
 	@RequiredArgsConstructor
@@ -255,7 +256,7 @@ interface MongoQueryExecution {
 			}
 
 			DeleteResult writeResult = operations.remove(query, type, collectionName);
-			return writeResult != null && writeResult.wasAcknowledged() ? writeResult.getDeletedCount() : 0L;
+			return writeResult.wasAcknowledged() ? writeResult.getDeletedCount() : 0L;
 		}
 	}
 }
