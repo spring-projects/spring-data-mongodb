@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 import java.util.List;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,9 +30,11 @@ import org.springframework.data.mongodb.config.AbstractIntegrationTests;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Language;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.util.Version;
 
+import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
 
 /**
@@ -44,10 +47,19 @@ public class TextIndexTests extends AbstractIntegrationTests {
 	private @Autowired MongoTemplate template;
 	private IndexOperations indexOps;
 
+	@BeforeClass
+	public static void beforeClass() {
+
+		try (MongoClient client = new MongoClient()) {
+			MongoTestUtils.createOrReplaceCollection("database", "textIndexedDocumentRoot", client);
+			MongoTestUtils.createOrReplaceCollection("database", "textIndexedDocumentWihtLanguageOverride", client);
+		}
+	}
+
 	@Before
 	public void setUp() throws Exception {
 
-		template.setWriteConcern(WriteConcern.FSYNC_SAFE);
+		template.setWriteConcern(WriteConcern.ACKNOWLEDGED);
 		this.indexOps = template.indexOps(TextIndexedDocumentRoot.class);
 	}
 
