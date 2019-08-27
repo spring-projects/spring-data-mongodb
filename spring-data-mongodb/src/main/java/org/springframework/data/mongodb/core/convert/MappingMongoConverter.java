@@ -252,6 +252,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(typeToUse);
 
+		// hacking - use below will allow kotlin test to pass
+		// MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(rawType);
 		if (entity == null) {
 			throw new MappingException(String.format(INVALID_TYPE_TO_READ, target, typeToUse.getType()));
 		}

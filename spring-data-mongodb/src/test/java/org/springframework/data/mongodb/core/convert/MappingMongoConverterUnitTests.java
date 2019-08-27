@@ -29,6 +29,7 @@ import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.*;
 
+import org.bson.json.JsonWriterSettings;
 import org.bson.types.Code;
 import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
@@ -60,12 +61,14 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.geo.Shape;
 import org.springframework.data.mapping.MappingException;
+import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.model.MappingInstantiationException;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.convert.DocumentAccessorUnitTests.NestedType;
 import org.springframework.data.mongodb.core.convert.DocumentAccessorUnitTests.ProjectingType;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverterUnitTests.ClassWithMapUsingEnumAsKey.FooBarEnum;
 import org.springframework.data.mongodb.core.geo.Sphere;
+import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
@@ -74,6 +77,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.PersonPojoStringId;
 import org.springframework.data.mongodb.core.mapping.TextScore;
 import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.BasicDBList;
@@ -2528,5 +2532,140 @@ public class MappingMongoConverterUnitTests {
 		@Field(targetType = FieldType.OBJECT_ID) //
 		Date dateAsObjectId;
 	}
+
+	static class Model<EVT, ID> {
+
+		private final @Id Long id;
+		private final EVT event;
+
+		public Model(Long id, EVT event) {
+			this.id = id;
+			this.event = event;
+		}
+
+		@Override
+		public String toString() {
+			return "Model{" + "id=" + id + ", event=" + event + '}';
+		}
+	}
+
+	static abstract class DomainEvent<EVT, REF_ID> {
+
+		private final REF_ID aggregateId;
+		private final EVT root;
+
+		DomainEvent(REF_ID aggregateId, EVT root) {
+			this.aggregateId = aggregateId;
+			this.root = root;
+		}
+
+		public EVT getRoot() {
+			return root;
+		}
+
+		public REF_ID getAggregateId() {
+			return aggregateId;
+		}
+	}
+
+	final static class ConcreteEvent extends DomainEvent<Details, Long> {
+
+		ConcreteEvent(Long aggregateId, Details root) {
+			super(aggregateId, root);
+		}
+
+		@Override
+		public String toString() {
+			return "ConcreteEvent{" + "id=" + getAggregateId() + ", root=" + getRoot() + '}';
+		}
+	}
+
+	final static class Details {
+		private final String value;
+
+		public Details(String value) {
+			this.value = value;
+		}
+
+		@Override
+		public String toString() {
+			return "Details{" + "value='" + value + '\'' + '}';
+		}
+	}
+
+	@Test
+	public void javaReadWithGenerics() {
+
+		Model model = new Model(1L, new ConcreteEvent(100L, new Details("details")));
+
+		org.bson.Document target = new org.bson.Document();
+
+		converter.write(model, target);
+
+		System.out.println("target: " + target.toJson(JsonWriterSettings.builder().indent(true).build()));
+
+		Model back = converter.read(Model.class, target);
+		System.out.println("back: " + back);
+	}
+
+	@Test
+	public void kotlinReadWithGenerics() {
+
+		StoredEvent event = new StoredEvent(1L, new OfferCreated(100L, new OfferDetails("details")));
+
+		org.bson.Document target = new org.bson.Document();
+
+		converter.write(event, target);
+
+		System.out.println("target: " + target.toJson(JsonWriterSettings.builder().indent(true).build()));
+
+		// KotlinClassGeneratingEntityInstantiator kci = new KotlinClassGeneratingEntityInstantiator().createInstance()
+
+		StoredEvent back = converter.read(StoredEvent.class, target);
+		System.out.println("back: " + back);
+
+		// OfferCreated
+	}
+
+//	@Test
+//	public void cti() {
+//
+//		ClassTypeInformation<ConcreteEvent> javaInfo = ClassTypeInformation.from(ConcreteEvent.class);
+//		System.out.println("javaInfo: " + javaInfo);
+//		TypeInformation<?> javaProperty = javaInfo.getProperty("root");
+//		System.out.println("javaProperty: " + javaProperty.getType());
+//
+//		ClassTypeInformation<OfferCreated> kotlinInfo = ClassTypeInformation.from(OfferCreated.class);
+//		System.out.println("kotlinInfo: " + kotlinInfo);
+//		TypeInformation<?> kotlinProperty = kotlinInfo.getProperty("root");
+//		System.out.println("kotlinProperty: " + kotlinProperty.getType());
+//
+//		MongoMappingContext mappingContext = new MongoMappingContext();
+//		mappingContext.afterPropertiesSet();
+//
+//		BasicMongoPersistentEntity<?> mpe = mappingContext.getPersistentEntity(OfferCreated.class);
+//
+//		PersistentProperty mpp = mpe.getPersistentProperty("root");
+//		TypeInformation ti = mpp.getTypeInformation();
+//
+//		BasicMongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(ti);
+//		System.out.println("entity type: " + entity.getType());
+//		System.out.println("ti: " + ti);
+//		System.out.println("kotlinPersistentProperty: " + ti.getType());
+//
+//	}
+//
+//	@Test
+//	public void c4() {
+//
+//
+//		TypeInformation<? extends DomainEvent> cti = ClassTypeInformation.from(DomainEvent.class);
+//		TypeInformation<? extends DomainEvent> evt = cti.specialize(ClassTypeInformation.from(OfferCreated.class));
+//
+//		TypeInformation<?> x = evt.getProperty("root");
+//		System.out.println("x.getType(): " + x.getType());
+//
+//
+//	}
 
 }
