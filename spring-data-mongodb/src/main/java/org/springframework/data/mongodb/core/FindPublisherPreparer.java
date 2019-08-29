@@ -30,8 +30,9 @@ import com.mongodb.reactivestreams.client.MongoCollection;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Konstantin Volivach
  */
-interface FindPublisherPreparer extends ReadPreferenceAware {
+public interface FindPublisherPreparer extends ReadPreferenceAware {
 
 	/**
 	 * Default {@link FindPublisherPreparer} just passing on the given {@link FindPublisher}.
