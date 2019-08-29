@@ -21,8 +21,9 @@ import com.mongodb.reactivestreams.client.FindPublisher;
  * Simple callback interface to allow customization of a {@link FindPublisher}.
  *
  * @author Mark Paluch
+ * @author Konstantin Volivach
  */
-interface FindPublisherPreparer {
+public interface FindPublisherPreparer {
 
 	/**
 	 * Prepare the given cursor (apply limits, skips and so on). Returns the prepared cursor.
