@@ -25,6 +25,8 @@ import org.junit.Test;
 import org.springframework.core.convert.converter.Converter;
 
 /**
+ * Unit tests for {@link MongoCustomConversions}.
+ *
  * @author Christoph Strobl
  */
 public class MongoCustomConversionsUnitTests {
