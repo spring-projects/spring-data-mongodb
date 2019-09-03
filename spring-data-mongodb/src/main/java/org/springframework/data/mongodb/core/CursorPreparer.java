@@ -50,7 +50,7 @@ interface CursorPreparer extends ReadPreferenceAware {
 	/**
 	 * Apply query specific settings to {@link MongoCollection} and initate a find operation returning a
 	 * {@link FindIterable} via the given {@link Function find} function.
-	 * 
+	 *
 	 * @param collection must not be {@literal null}.
 	 * @param find must not be {@literal null}.
 	 * @return
@@ -63,7 +63,7 @@ interface CursorPreparer extends ReadPreferenceAware {
 		Assert.notNull(collection, "Collection must not be null!");
 		Assert.notNull(find, "Find function must not be null!");
 
-		if (hasReadPreferences()) {
+		if (hasReadPreference()) {
 			collection = collection.withReadPreference(getReadPreference());
 		}
 

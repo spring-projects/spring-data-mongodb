@@ -934,7 +934,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			}
 
 			FindPublisherPreparer preparer = new QueryFindPublisherPreparer(query, entityClass);
-			if (preparer.hasReadPreferences()) {
+			if (preparer.hasReadPreference()) {
 				collection = collection.withReadPreference(preparer.getReadPreference());
 			}
 
@@ -2334,12 +2334,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	protected <T> Mono<T> doFindOne(String collectionName, Document query, @Nullable Document fields,
 			Class<T> entityClass, @Nullable Collation collation) {
 
-		return doFindOne(collectionName, query, fields, entityClass, new FindPublisherPreparer() {
-			@Override
-			public <T> FindPublisher<T> prepare(FindPublisher<T> findPublisher) {
-				return collation != null ? findPublisher.collation(collation.toMongoCollation()) : findPublisher;
-			}
-		});
+		return doFindOne(collectionName, query, fields, entityClass,
+				findPublisher -> collation != null ? findPublisher.collation(collation.toMongoCollation()) : findPublisher);
 	}
 
 	/**
@@ -3183,9 +3179,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		}
 
 		@SuppressWarnings("deprecation")
-		public <T> FindPublisher<T> prepare(FindPublisher<T> findPublisher) {
+		public FindPublisher<Document> prepare(FindPublisher<Document> findPublisher) {
 
-			FindPublisher<T> findPublisherToUse = operations.forType(type) //
+			FindPublisher<Document> findPublisherToUse = operations.forType(type) //
 					.getCollation(query) //
 					.map(Collation::toMongoCollation) //
 					.map(findPublisher::collation) //
@@ -3259,7 +3255,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		}
 
 		@Override
-		public <T> FindPublisher<T> prepare(FindPublisher<T> findPublisher) {
+		public FindPublisher<Document> prepare(FindPublisher<Document> findPublisher) {
 			return super.prepare(findPublisher.cursorType(CursorType.TailableAwait));
 		}
 	}

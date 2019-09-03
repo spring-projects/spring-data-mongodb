@@ -935,7 +935,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			}
 
 			QueryCursorPreparer preparer = new QueryCursorPreparer(query, entityClass);
-			if (preparer.hasReadPreferences()) {
+			if (preparer.hasReadPreference()) {
 				collection = collection.withReadPreference(preparer.getReadPreference());
 			}
 

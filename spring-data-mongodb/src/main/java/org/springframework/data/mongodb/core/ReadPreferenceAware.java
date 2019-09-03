@@ -20,7 +20,12 @@ import org.springframework.lang.Nullable;
 import com.mongodb.ReadPreference;
 
 /**
+ * Interface to be implemented by any object that wishes to expose the {@link ReadPreference}.
+ * <p>
+ * Typically implemented by cursor or query preparer objects.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.2
  */
 interface ReadPreferenceAware {
@@ -28,7 +33,7 @@ interface ReadPreferenceAware {
 	/**
 	 * @return {@literal true} if a {@link ReadPreference} is set.
 	 */
-	default boolean hasReadPreferences() {
+	default boolean hasReadPreference() {
 		return getReadPreference() != null;
 	}
 

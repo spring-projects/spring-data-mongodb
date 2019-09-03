@@ -38,20 +38,14 @@ interface FindPublisherPreparer extends ReadPreferenceAware {
 	 *
 	 * @since 2.2
 	 */
-	FindPublisherPreparer NO_OP_PREPARER = new FindPublisherPreparer() {
-
-		@Override
-		public <T> FindPublisher<T> prepare(FindPublisher<T> findPublisher) {
-			return findPublisher;
-		}
-	};
+	FindPublisherPreparer NO_OP_PREPARER = (findPublisher -> findPublisher);
 
 	/**
 	 * Prepare the given cursor (apply limits, skips and so on). Returns the prepared cursor.
 	 *
 	 * @param findPublisher must not be {@literal null}.
 	 */
-	<T> FindPublisher<T> prepare(FindPublisher<T> findPublisher);
+	FindPublisher<Document> prepare(FindPublisher<Document> findPublisher);
 
 	/**
 	 * Apply query specific settings to {@link MongoCollection} and initate a find operation returning a
@@ -69,7 +63,7 @@ interface FindPublisherPreparer extends ReadPreferenceAware {
 		Assert.notNull(collection, "Collection must not be null!");
 		Assert.notNull(find, "Find function must not be null!");
 
-		if (hasReadPreferences()) {
+		if (hasReadPreference()) {
 			collection = collection.withReadPreference(getReadPreference());
 		}
 
