@@ -111,6 +111,7 @@ public abstract class AbstractMongoConfiguration extends MongoConfigurationSuppo
 		DbRefResolver dbRefResolver = new DefaultDbRefResolver(mongoDbFactory());
 		MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, mongoMappingContext());
 		converter.setCustomConversions(customConversions());
+		converter.setCodecRegistryProvider(mongoDbFactory());
 
 		return converter;
 	}

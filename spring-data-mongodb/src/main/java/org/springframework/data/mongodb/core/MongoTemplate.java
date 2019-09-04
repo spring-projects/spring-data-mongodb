@@ -2846,6 +2846,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, mappingContext);
 		converter.setCustomConversions(conversions);
+		converter.setCodecRegistryProvider(factory);
 		converter.afterPropertiesSet();
 
 		return converter;

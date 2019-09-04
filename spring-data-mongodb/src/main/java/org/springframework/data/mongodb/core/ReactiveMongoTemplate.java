@@ -2774,7 +2774,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return type == null ? null : mappingContext.getPersistentEntity(type);
 	}
 
-	private static MappingMongoConverter getDefaultMongoConverter() {
+	private MappingMongoConverter getDefaultMongoConverter() {
 
 		MongoCustomConversions conversions = new MongoCustomConversions(Collections.emptyList());
 
@@ -2784,6 +2784,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		MappingMongoConverter converter = new MappingMongoConverter(NO_OP_REF_RESOLVER, context);
 		converter.setCustomConversions(conversions);
+		converter.setCodecRegistryProvider(this.mongoDatabaseFactory);
 		converter.afterPropertiesSet();
 
 		return converter;
