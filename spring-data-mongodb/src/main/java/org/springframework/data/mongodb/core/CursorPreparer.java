@@ -31,7 +31,7 @@ import com.mongodb.client.MongoCollection;
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
-interface CursorPreparer extends ReadPreferenceAware {
+public interface CursorPreparer extends ReadPreferenceAware {
 
 	/**
 	 * Default {@link CursorPreparer} just passing on the given {@link FindIterable}.

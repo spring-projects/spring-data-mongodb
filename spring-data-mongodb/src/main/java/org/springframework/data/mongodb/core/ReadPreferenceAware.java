@@ -28,7 +28,7 @@ import com.mongodb.ReadPreference;
  * @author Mark Paluch
  * @since 2.2
  */
-interface ReadPreferenceAware {
+public interface ReadPreferenceAware {
 
 	/**
 	 * @return {@literal true} if a {@link ReadPreference} is set.
