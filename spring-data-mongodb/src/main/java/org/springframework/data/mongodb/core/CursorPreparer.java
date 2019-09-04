@@ -25,7 +25,7 @@ import com.mongodb.client.FindIterable;
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
-interface CursorPreparer {
+public interface CursorPreparer {
 
 	/**
 	 * Prepare the given cursor (apply limits, skips and so on). Returns the prepared cursor.
