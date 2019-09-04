@@ -573,7 +573,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 					return Flux.usingWhen(Mono.just(session), //
 							s -> ReactiveMongoTemplate.this.withSession(action, s), //
 							ClientSession::commitTransaction, //
-							ClientSession::abortTransaction) //
+							(sess, err) -> sess.abortTransaction(), //
+							ClientSession::commitTransaction) //
 							.doFinally(signalType -> doFinally.accept(session));
 				});
 			}

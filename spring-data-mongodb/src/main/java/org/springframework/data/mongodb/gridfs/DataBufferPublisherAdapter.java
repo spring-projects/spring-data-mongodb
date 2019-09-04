@@ -68,7 +68,7 @@ class DataBufferPublisherAdapter {
 					state.request(sink, n);
 				});
 			});
-		}, AsyncInputStream::close, AsyncInputStream::close, AsyncInputStream::close) //
+		}, AsyncInputStream::close, (it, err) -> it.close(), AsyncInputStream::close) //
 				.concatMap(Flux::just, 1);
 	}
 
