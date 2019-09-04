@@ -30,11 +30,13 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.bson.Document;
+import org.bson.codecs.Codec;
+import org.bson.codecs.DecoderContext;
 import org.bson.conversions.Bson;
+import org.bson.json.JsonReader;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -57,6 +59,7 @@ import org.springframework.data.mapping.model.PropertyValueProvider;
 import org.springframework.data.mapping.model.SpELContext;
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mapping.model.SpELExpressionParameterValueProvider;
+import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -103,6 +106,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	protected @Nullable ApplicationContext applicationContext;
 	protected MongoTypeMapper typeMapper;
 	protected @Nullable String mapKeyDotReplacement = null;
+	protected @Nullable CodecRegistryProvider codecRegistryProvider;
 
 	private SpELContext spELContext;
 
@@ -141,6 +145,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	public MappingMongoConverter(MongoDbFactory mongoDbFactory,
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 		this(new DefaultDbRefResolver(mongoDbFactory), mappingContext);
+		setCodecRegistryProvider(mongoDbFactory);
 	}
 
 	/**
@@ -176,6 +181,17 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	public void setMapKeyDotReplacement(@Nullable String mapKeyDotReplacement) {
 		this.mapKeyDotReplacement = mapKeyDotReplacement;
+	}
+
+	/**
+	 * Configure a {@link CodecRegistryProvider} that provides native MongoDB {@link org.bson.codecs.Codec codecs} for
+	 * reading values.
+	 *
+	 * @param codecRegistryProvider can be {@literal null}.
+	 * @since 2.2
+	 */
+	public void setCodecRegistryProvider(@Nullable CodecRegistryProvider codecRegistryProvider) {
+		this.codecRegistryProvider = codecRegistryProvider;
 	}
 
 	/*
@@ -253,6 +269,16 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(typeToUse);
 
 		if (entity == null) {
+
+			if (codecRegistryProvider != null) {
+
+				Optional<? extends Codec<? extends S>> codec = codecRegistryProvider.getCodecFor(rawType);
+				if(codec.isPresent()) {
+					return codec.get().decode(new JsonReader(target.toJson()),
+							DecoderContext.builder().build());
+				}
+			}
+
 			throw new MappingException(String.format(INVALID_TYPE_TO_READ, target, typeToUse.getType()));
 		}
 
@@ -1650,6 +1676,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		target.spELContext = spELContext;
 		target.setInstantiators(instantiators);
 		target.typeMapper = typeMapper;
+		target.setCodecRegistryProvider(dbFactory);
 		target.afterPropertiesSet();
 
 		return target;

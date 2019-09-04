@@ -407,6 +407,7 @@ public class SessionBoundMongoTemplateTests {
 
 		MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, mappingContext);
 		converter.setCustomConversions(conversions);
+		converter.setCodecRegistryProvider(factory);
 		converter.afterPropertiesSet();
 
 		return converter;

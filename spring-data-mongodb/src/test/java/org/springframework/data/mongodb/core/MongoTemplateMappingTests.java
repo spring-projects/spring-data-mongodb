@@ -16,20 +16,30 @@
 package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.core.query.Query.*;
+
+import lombok.Data;
+
+import java.util.Arrays;
 
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.annotation.Id;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.MongoException;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.geojson.Geometry;
+import com.mongodb.client.model.geojson.MultiPolygon;
+import com.mongodb.client.model.geojson.PolygonCoordinates;
+import com.mongodb.client.model.geojson.Position;
 
 /**
  * Integration test for {@link MongoTemplate}.
@@ -63,6 +73,46 @@ public class MongoTemplateMappingTests {
 
 		addAndRetrievePerson(template2);
 		checkPersonPersisted(template2);
+	}
+
+	@Test // DATAMONGO-2357
+	public void writesAndReadsEntityWithNativeMongoGeoJsonTypesCorrectly() {
+
+		WithMongoGeoJson source = new WithMongoGeoJson();
+		source.id = "id-2";
+		source.multiPolygon = new MultiPolygon(Arrays.asList(new PolygonCoordinates(Arrays.asList(new Position(0, 0),
+				new Position(0, 1), new Position(1, 1), new Position(1, 0), new Position(0, 0)))));
+
+		template1.save(source);
+
+		assertThat(template1.findOne(query(where("id").is(source.id)), WithMongoGeoJson.class)).isEqualTo(source);
+	}
+
+	@Test // DATAMONGO-2357
+	public void writesAndReadsEntityWithOpenNativeMongoGeoJsonTypesCorrectly() {
+
+		WithOpenMongoGeoJson source = new WithOpenMongoGeoJson();
+		source.id = "id-2";
+		source.geometry = new MultiPolygon(Arrays.asList(new PolygonCoordinates(Arrays.asList(new Position(0, 0),
+				new Position(0, 1), new Position(1, 1), new Position(1, 0), new Position(0, 0)))));
+
+		template1.save(source);
+
+		assertThat(template1.findOne(query(where("id").is(source.id)), WithOpenMongoGeoJson.class)).isEqualTo(source);
+	}
+
+	@Data
+	static class WithMongoGeoJson {
+
+		@Id String id;
+		MultiPolygon multiPolygon;
+	}
+
+	@Data
+	static class WithOpenMongoGeoJson {
+
+		@Id String id;
+		Geometry geometry;
 	}
 
 	private void addAndRetrievePerson(MongoTemplate template) {

@@ -33,6 +33,14 @@ import org.bson.types.Symbol;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 
 import com.mongodb.DBRef;
+import com.mongodb.client.model.geojson.Geometry;
+import com.mongodb.client.model.geojson.GeometryCollection;
+import com.mongodb.client.model.geojson.LineString;
+import com.mongodb.client.model.geojson.MultiLineString;
+import com.mongodb.client.model.geojson.MultiPoint;
+import com.mongodb.client.model.geojson.MultiPolygon;
+import com.mongodb.client.model.geojson.Point;
+import com.mongodb.client.model.geojson.Polygon;
 
 /**
  * Simple constant holder for a {@link SimpleTypeHolder} enriched with Mongo specific simple types.
@@ -79,6 +87,15 @@ public abstract class MongoSimpleTypes {
 		simpleTypes.add(BsonRegularExpression.class);
 		simpleTypes.add(BsonString.class);
 		simpleTypes.add(BsonTimestamp.class);
+
+		simpleTypes.add(Geometry.class);
+		simpleTypes.add(GeometryCollection.class);
+		simpleTypes.add(LineString.class);
+		simpleTypes.add(MultiLineString.class);
+		simpleTypes.add(MultiPoint.class);
+		simpleTypes.add(MultiPolygon.class);
+		simpleTypes.add(Point.class);
+		simpleTypes.add(Polygon.class);
 
 		MONGO_SIMPLE_TYPES = Collections.unmodifiableSet(simpleTypes);
 	}

@@ -83,6 +83,7 @@ public abstract class AbstractReactiveMongoConfiguration extends MongoConfigurat
 
 		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mongoMappingContext());
 		converter.setCustomConversions(customConversions());
+		converter.setCodecRegistryProvider(reactiveMongoDbFactory());
 
 		return converter;
 	}
