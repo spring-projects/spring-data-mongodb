@@ -33,6 +33,7 @@ class ExecutableFindOperationExtensionsTests {
 	val distinctWithProjection = mockk<ExecutableFindOperation.DistinctWithProjection>(relaxed = true)
 
 	@Test // DATAMONGO-1689
+	@Suppress("DEPRECATION")
 	fun `ExecutableFindOperation#query(KClass) extension should call its Java counterpart`() {
 
 		operation.query(First::class)
@@ -47,6 +48,7 @@ class ExecutableFindOperationExtensionsTests {
 	}
 
 	@Test // DATAMONGO-1689, DATAMONGO-2086
+	@Suppress("DEPRECATION")
 	fun `ExecutableFindOperation#FindOperationWithProjection#asType(KClass) extension should call its Java counterpart`() {
 
 		operationWithProjection.asType(User::class)
@@ -61,6 +63,7 @@ class ExecutableFindOperationExtensionsTests {
 	}
 
 	@Test // DATAMONGO-1761, DATAMONGO-2086
+	@Suppress("DEPRECATION")
 	fun `ExecutableFindOperation#DistinctWithProjection#asType(KClass) extension should call its Java counterpart`() {
 
 		distinctWithProjection.asType(User::class)

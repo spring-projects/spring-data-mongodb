@@ -20,7 +20,7 @@ import example.first.First
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
@@ -37,6 +37,7 @@ class ReactiveRemoveOperationExtensionsTests {
 	val operation = mockk<ReactiveRemoveOperation>(relaxed = true)
 
 	@Test // DATAMONGO-1719
+	@Suppress("DEPRECATION")
 	fun `remove(KClass) extension should call its Java counterpart`() {
 
 		operation.remove(First::class)
@@ -67,7 +68,7 @@ class ReactiveRemoveOperationExtensionsTests {
 	}
 
 	@Test // DATAMONGO-2255
-	@FlowPreview
+	@ExperimentalCoroutinesApi
 	fun terminatingRemoveFindAndRemoveAsFlow() {
 
 		val spec = mockk<ReactiveRemoveOperation.TerminatingRemove<String>>()

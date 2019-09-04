@@ -31,6 +31,7 @@ class ExecutableMapReduceOperationExtensionsTests {
 	val operationWithProjection = mockk<ExecutableMapReduceOperation.MapReduceWithProjection<First>>(relaxed = true)
 
 	@Test // DATAMONGO-1929
+	@Suppress("DEPRECATION")
 	fun `ExecutableMapReduceOperation#mapReduce(KClass) extension should call its Java counterpart`() {
 
 		operation.mapReduce(First::class)
@@ -45,6 +46,7 @@ class ExecutableMapReduceOperationExtensionsTests {
 	}
 
 	@Test // DATAMONGO-1929, DATAMONGO-2086
+	@Suppress("DEPRECATION")
 	fun `ExecutableMapReduceOperation#MapReduceWithProjection#asType(KClass) extension should call its Java counterpart`() {
 
 		operationWithProjection.asType(User::class)

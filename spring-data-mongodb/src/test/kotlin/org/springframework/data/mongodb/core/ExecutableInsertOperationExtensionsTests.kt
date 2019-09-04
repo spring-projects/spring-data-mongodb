@@ -29,6 +29,7 @@ class ExecutableInsertOperationExtensionsTests {
 	val operation = mockk<ExecutableInsertOperation>(relaxed = true)
 
 	@Test // DATAMONGO-1689
+	@Suppress("DEPRECATION")
 	fun `insert(KClass) extension should call its Java counterpart`() {
 
 		operation.insert(First::class)

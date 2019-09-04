@@ -29,6 +29,7 @@ class ExecutableAggregationOperationExtensionsTests {
 	val operation = mockk<ExecutableAggregationOperation>(relaxed = true)
 
 	@Test // DATAMONGO-1689
+	@Suppress("DEPRECATION")
 	fun `aggregateAndReturn(KClass) extension should call its Java counterpart`() {
 
 		operation.aggregateAndReturn(First::class)
