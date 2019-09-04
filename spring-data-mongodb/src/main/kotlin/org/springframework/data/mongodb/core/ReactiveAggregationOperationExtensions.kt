@@ -15,9 +15,9 @@
  */
 package org.springframework.data.mongodb.core
 
-import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.reactive.flow.asFlow
+import kotlinx.coroutines.reactive.asFlow
 import kotlin.reflect.KClass
 
 /**
@@ -42,12 +42,9 @@ inline fun <reified T : Any> ReactiveAggregationOperation.aggregateAndReturn(): 
 /**
  * Coroutines [Flow] variant of [ReactiveAggregationOperation.TerminatingAggregationOperation.all].
  *
- * Backpressure is controlled by [batchSize] parameter that controls the size of in-flight elements
- * and [org.reactivestreams.Subscription.request] size.
- *
  * @author Sebastien Deleuze
  * @since 2.2
  */
-@FlowPreview
-fun <T : Any> ReactiveAggregationOperation.TerminatingAggregationOperation<T>.flow(batchSize: Int = 1): Flow<T> =
-		all().asFlow(batchSize)
+@ExperimentalCoroutinesApi
+fun <T : Any> ReactiveAggregationOperation.TerminatingAggregationOperation<T>.flow(): Flow<T> =
+		all().asFlow()

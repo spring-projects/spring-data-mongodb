@@ -19,7 +19,7 @@ import example.first.First
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
@@ -36,6 +36,7 @@ class ReactiveInsertOperationExtensionsTests {
 	val operation = mockk<ReactiveInsertOperation>(relaxed = true)
 
 	@Test // DATAMONGO-1719
+	@Suppress("DEPRECATION")
 	fun `insert(KClass) extension should call its Java counterpart`() {
 
 		operation.insert(First::class)
@@ -65,7 +66,7 @@ class ReactiveInsertOperationExtensionsTests {
 	}
 
 	@Test // DATAMONGO-2255
-	@FlowPreview
+	@ExperimentalCoroutinesApi
 	fun terminatingInsertAllAsFlow() {
 
 		val insert = mockk<ReactiveInsertOperation.TerminatingInsert<String>>()

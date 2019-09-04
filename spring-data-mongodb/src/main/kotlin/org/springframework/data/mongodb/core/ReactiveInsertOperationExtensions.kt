@@ -15,10 +15,10 @@
  */
 package org.springframework.data.mongodb.core
 
-import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.reactive.flow.asFlow
 import kotlin.reflect.KClass
 
 /**
@@ -53,12 +53,9 @@ suspend inline fun <reified T: Any> ReactiveInsertOperation.TerminatingInsert<T>
 /**
  * Coroutines [Flow] variant of [ReactiveInsertOperation.TerminatingInsert.all].
  *
- * Backpressure is controlled by [batchSize] parameter that controls the size of in-flight elements
- * and [org.reactivestreams.Subscription.request] size.
- *
  * @author Sebastien Deleuze
  * @since 2.2
  */
-@FlowPreview
-fun <T : Any> ReactiveInsertOperation.TerminatingInsert<T>.flow(objects: Collection<T>, batchSize: Int = 1): Flow<T> =
-		all(objects).asFlow(batchSize)
+@ExperimentalCoroutinesApi
+fun <T : Any> ReactiveInsertOperation.TerminatingInsert<T>.flow(objects: Collection<T>): Flow<T> =
+		all(objects).asFlow()

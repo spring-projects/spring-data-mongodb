@@ -216,6 +216,8 @@ inline fun <reified T : Any, reified E : Any> ReactiveMongoOperations.findDistin
  * @author Sebastien Deleuze
  * @since 2.0
  */
+@Suppress("DEPRECATION")
+@Deprecated("Since 2.2, the `geoNear` command has been removed in MongoDB Server 4.2.0. Use Aggregations with `Aggregation.geoNear(NearQuery, String)` instead.", replaceWith = ReplaceWith("aggregate<T>()"))
 inline fun <reified T : Any> ReactiveMongoOperations.geoNear(near: NearQuery, collectionName: String? = null): Flux<GeoResult<T>> =
 		if (collectionName != null) geoNear(near, T::class.java, collectionName) else geoNear(near, T::class.java)
 

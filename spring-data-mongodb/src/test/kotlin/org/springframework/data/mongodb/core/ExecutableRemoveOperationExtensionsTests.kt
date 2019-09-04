@@ -29,6 +29,7 @@ class ExecutableRemoveOperationExtensionsTests {
 	val operation = mockk<ExecutableRemoveOperation>(relaxed = true)
 
 	@Test // DATAMONGO-1689
+	@Suppress("DEPRECATION")
 	fun `remove(KClass) extension should call its Java counterpart`() {
 
 		operation.remove(First::class)

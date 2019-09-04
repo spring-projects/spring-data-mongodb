@@ -16,10 +16,10 @@
 package org.springframework.data.mongodb.core
 
 import com.mongodb.client.result.DeleteResult
-import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.reactive.flow.asFlow
 import kotlin.reflect.KClass
 
 /**
@@ -54,12 +54,9 @@ suspend fun <T : Any> ReactiveRemoveOperation.TerminatingRemove<T>.allAndAwait()
 /**
  * Coroutines [Flow] variant of [ReactiveRemoveOperation.TerminatingRemove.findAndRemove].
  *
- * Backpressure is controlled by [batchSize] parameter that controls the size of in-flight elements
- * and [org.reactivestreams.Subscription.request] size.
- *
  * @author Sebastien Deleuze
  * @since 2.2
  */
-@FlowPreview
-fun <T : Any> ReactiveRemoveOperation.TerminatingRemove<T>.findAndRemoveAsFlow(batchSize: Int = 1): Flow<T> =
-		findAndRemove().asFlow(batchSize)
+@ExperimentalCoroutinesApi
+fun <T : Any> ReactiveRemoveOperation.TerminatingRemove<T>.findAndRemoveAsFlow(): Flow<T> =
+		findAndRemove().asFlow()

@@ -19,7 +19,7 @@ import example.first.First
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
@@ -35,7 +35,7 @@ import reactor.core.publisher.Mono
  * @author Mark Paluch
  * @author Sebastien Deleuze
  */
-@FlowPreview
+@ExperimentalCoroutinesApi
 class ReactiveFindOperationExtensionsTests {
 
 	val operation = mockk<ReactiveFindOperation>(relaxed = true)
@@ -45,6 +45,7 @@ class ReactiveFindOperationExtensionsTests {
 	val distinctWithProjection = mockk<ReactiveFindOperation.DistinctWithProjection>(relaxed = true)
 
 	@Test // DATAMONGO-1719
+	@Suppress("DEPRECATION")
 	fun `ReactiveFind#query(KClass) extension should call its Java counterpart`() {
 
 		operation.query(First::class)
@@ -59,6 +60,7 @@ class ReactiveFindOperationExtensionsTests {
 	}
 
 	@Test // DATAMONGO-1719, DATAMONGO-2086
+	@Suppress("DEPRECATION")
 	fun `ReactiveFind#FindOperatorWithProjection#asType(KClass) extension should call its Java counterpart`() {
 
 		operationWithProjection.asType(User::class)
@@ -73,6 +75,7 @@ class ReactiveFindOperationExtensionsTests {
 	}
 
 	@Test // DATAMONGO-1761, DATAMONGO-2086
+	@Suppress("DEPRECATION")
 	fun `ReactiveFind#DistinctWithProjection#asType(KClass) extension should call its Java counterpart`() {
 
 		distinctWithProjection.asType(User::class)

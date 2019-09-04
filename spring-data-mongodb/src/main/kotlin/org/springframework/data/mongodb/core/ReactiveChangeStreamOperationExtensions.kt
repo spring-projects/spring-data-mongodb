@@ -15,9 +15,9 @@
  */
 package org.springframework.data.mongodb.core
 
-import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.reactive.flow.asFlow
+import kotlinx.coroutines.reactive.asFlow
 
 /**
  * Extension for [RactiveChangeStreamOperation.changeStream] leveraging reified type parameters.
@@ -40,13 +40,11 @@ inline fun <reified T : Any> ReactiveChangeStreamOperation.ChangeStreamWithFilte
 /**
  * Coroutines [Flow] variant of [ReactiveChangeStreamOperation.TerminatingChangeStream.listen].
  *
- * Backpressure is controlled by [batchSize] parameter that controls the size of in-flight elements
- * and [org.reactivestreams.Subscription.request] size.
- *
  * @author Christoph Strobl
+ * @author Sebastien Deleuze
  * @since 2.2
  */
-@FlowPreview
-fun <T : Any> ReactiveChangeStreamOperation.TerminatingChangeStream<T>.flow(batchSize: Int = 1): Flow<ChangeStreamEvent<T>> =
-		listen().asFlow(batchSize)
+@ExperimentalCoroutinesApi
+fun <T : Any> ReactiveChangeStreamOperation.TerminatingChangeStream<T>.flow(): Flow<ChangeStreamEvent<T>> =
+		listen().asFlow()
 

@@ -31,6 +31,7 @@ class ExecutableUpdateOperationExtensionsTests {
 	val operation = mockk<ExecutableUpdateOperation>(relaxed = true)
 
 	@Test // DATAMONGO-1719
+	@Suppress("DEPRECATION")
 	fun `update(KClass) extension should call its Java counterpart`() {
 
 		operation.update(First::class)

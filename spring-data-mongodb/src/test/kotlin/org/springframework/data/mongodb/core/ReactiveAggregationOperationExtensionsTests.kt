@@ -19,7 +19,7 @@ import example.first.First
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
@@ -35,6 +35,7 @@ class ReactiveAggregationOperationExtensionsTests {
 	val operation = mockk<ReactiveAggregationOperation>(relaxed = true)
 
 	@Test // DATAMONGO-1719
+	@Suppress("DEPRECATION")
 	fun `aggregateAndReturn(KClass) extension should call its Java counterpart`() {
 
 		operation.aggregateAndReturn(First::class)
@@ -49,7 +50,7 @@ class ReactiveAggregationOperationExtensionsTests {
 	}
 
 	@Test // DATAMONGO-2255
-	@FlowPreview
+	@ExperimentalCoroutinesApi
 	fun terminatingAggregationOperationAllAsFlow() {
 
 		val spec = mockk<ReactiveAggregationOperation.TerminatingAggregationOperation<String>>()

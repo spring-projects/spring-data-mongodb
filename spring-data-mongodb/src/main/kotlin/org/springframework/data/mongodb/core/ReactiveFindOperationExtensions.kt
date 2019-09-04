@@ -15,11 +15,11 @@
  */
 package org.springframework.data.mongodb.core
 
-import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
-import kotlinx.coroutines.reactive.flow.asFlow
 import org.springframework.data.geo.GeoResult
 import kotlin.reflect.KClass
 
@@ -137,48 +137,36 @@ suspend fun <T : Any> ReactiveFindOperation.TerminatingFind<T>.awaitExists(): Bo
 /**
  * Coroutines [Flow] variant of [ReactiveFindOperation.TerminatingFind.all].
  *
- * Backpressure is controlled by [batchSize] parameter that controls the size of in-flight elements
- * and [org.reactivestreams.Subscription.request] size.
- *
  * @author Sebastien Deleuze
  */
-@FlowPreview
-fun <T : Any> ReactiveFindOperation.TerminatingFind<T>.flow(batchSize: Int = 1): Flow<T> =
-		all().asFlow(batchSize)
+@ExperimentalCoroutinesApi
+fun <T : Any> ReactiveFindOperation.TerminatingFind<T>.flow(): Flow<T> =
+		all().asFlow()
 
 /**
  * Coroutines [Flow] variant of [ReactiveFindOperation.TerminatingFind.tail].
  *
- * Backpressure is controlled by [batchSize] parameter that controls the size of in-flight elements
- * and [org.reactivestreams.Subscription.request] size.
- *
  * @author Sebastien Deleuze
  */
-@FlowPreview
-fun <T : Any> ReactiveFindOperation.TerminatingFind<T>.tailAsFlow(batchSize: Int = 1): Flow<T> =
-		tail().asFlow(batchSize)
+@ExperimentalCoroutinesApi
+fun <T : Any> ReactiveFindOperation.TerminatingFind<T>.tailAsFlow(): Flow<T> =
+		tail().asFlow()
 
 /**
  * Coroutines [Flow] variant of [ReactiveFindOperation.TerminatingFindNear.all].
  *
- * Backpressure is controlled by [batchSize] parameter that controls the size of in-flight elements
- * and [org.reactivestreams.Subscription.request] size.
- *
  * @author Sebastien Deleuze
  */
-@FlowPreview
-fun <T : Any> ReactiveFindOperation.TerminatingFindNear<T>.flow(batchSize: Int = 1): Flow<GeoResult<T>> =
-		all().asFlow(batchSize)
+@ExperimentalCoroutinesApi
+fun <T : Any> ReactiveFindOperation.TerminatingFindNear<T>.flow(): Flow<GeoResult<T>> =
+		all().asFlow()
 
 /**
  * Coroutines [Flow] variant of [ReactiveFindOperation.TerminatingDistinct.all].
  *
- * Backpressure is controlled by [batchSize] parameter that controls the size of in-flight elements
- * and [org.reactivestreams.Subscription.request] size.
- *
  * @author Sebastien Deleuze
  * @since 2.2
  */
-@FlowPreview
-fun <T : Any> ReactiveFindOperation.TerminatingDistinct<T>.flow(batchSize: Int = 1): Flow<T> =
-		all().asFlow(batchSize)
+@ExperimentalCoroutinesApi
+fun <T : Any> ReactiveFindOperation.TerminatingDistinct<T>.flow(): Flow<T> =
+		all().asFlow()
