@@ -2060,6 +2060,12 @@ An `Aggregation` represents a MongoDB `aggregate` operation and holds the descri
 +
 The actual aggregate operation is executed by the `aggregate` method of the `MongoTemplate`, which takes the desired output class as a parameter.
 +
+* `TypedAggregation`
++
+A `TypedAggregation`, just like an `Aggregation`, holds the instructions of the aggregation pipeline and a reference to the input type, that is used for mapping domain properties to actual document fields.
++
+On execution field references get checked against the given input type considering potential `@Field` annotations and raising errors when referencing non existing properties.
++
 * `AggregationOperation`
 +
 An `AggregationOperation` represents a MongoDB aggregation pipeline operation and describes the processing that should be performed in this aggregation step. Although you could manually create an `AggregationOperation`, we recommend using the static factory methods provided by the `Aggregate` class to construct an `AggregateOperation`.
