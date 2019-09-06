@@ -1,6 +1,26 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.2.0.RC3 (2019-09-06)
+-----------------------------------------
+* DATAMONGO-2358 - Upgrade to Kotlin Coroutines 1.3.0.
+* DATAMONGO-2357 - com.mongodb.client.model.geojson types should be considered as store specific simple ones.
+* DATAMONGO-2356 - Switch to newly introduced usingWhen methods.
+* DATAMONGO-2354 - protected function expose package-private propertty.
+* DATAMONGO-2352 - Documentation Typo Fix.
+* DATAMONGO-2351 - UnsupportedOperationException is thrown during delete with UNACKNOWLEDGED write concern.
+* DATAMONGO-2349 - ZonedDateTime to/from Date not recognized without @Reading/@WritingConverter.
+* DATAMONGO-2348 - Initial value of @Version annotated fields not described correctly in reference documentation.
+* DATAMONGO-2346 - Field annotated with @LastModifiedDate is not persisted in Kotlin data classes.
+* DATAMONGO-2344 - Add SLAVE_OK as a cursor option throws an exception.
+* DATAMONGO-2342 - Upgrade to MongoDB Java Driver 3.11.
+* DATAMONGO-2339 - Id property containing underscore not mapped correctly.
+* DATAMONGO-2338 - Unable to specialise MongoRepositoryFactoryBean due to final method.
+* DATAMONGO-2337 - Add HTTPS entries into spring.schemas.
+* DATAMONGO-2335 - Release 2.2 RC3 (Moore).
+* DATAMONGO-2310 - Improve TypedAggregation vs. untyped aggregation documentation.
+
+
 Changes in version 2.2.0.RC2 (2019-08-05)
 -----------------------------------------
 * DATAMONGO-2330 - Regression: DefaultBulkOperations ignores defaultWriteConcern.
