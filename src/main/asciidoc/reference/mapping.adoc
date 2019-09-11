@@ -408,7 +408,7 @@ The MappingMongoConverter can use metadata to drive the mapping of objects to do
 
 * `@Id`: Applied at the field level to mark the field used for identity purpose.
 * `@MongoId`: Applied at the field level to mark the field used for identity purpose. Accepts an optional `FieldType` to customize id conversion.
-* `@Document`: Applied at the class level to indicate this class is a candidate for mapping to the database. You can specify the name of the collection where the database will be stored.
+* `@Document`: Applied at the class level to indicate this class is a candidate for mapping to the database. You can specify the name of the collection where the data will be stored.
 * `@DBRef`: Applied at the field to indicate it is to be stored using a com.mongodb.DBRef.
 * `@Indexed`: Applied at the field level to describe how to index the field.
 * `@CompoundIndex` (repeatable): Applied at the type level to declare Compound Indexes.
