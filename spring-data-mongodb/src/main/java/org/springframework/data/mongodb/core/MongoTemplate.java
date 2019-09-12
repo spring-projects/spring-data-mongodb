@@ -1130,6 +1130,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		CountOptions options = new CountOptions();
 		query.getCollation().map(Collation::toMongoCollation).ifPresent(options::collation);
 
+		if (StringUtils.hasText(query.getHint())) {
+			options.hint(Document.parse(query.getHint()));
+		}
+
 		Document document = queryMapper.getMappedObject(query.getQueryObject(),
 				Optional.ofNullable(entityClass).map(it -> mappingContext.getPersistentEntity(entityClass)));
 

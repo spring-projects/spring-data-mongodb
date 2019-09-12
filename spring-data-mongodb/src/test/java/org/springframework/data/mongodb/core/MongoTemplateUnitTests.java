@@ -910,6 +910,18 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 				is(equalTo(com.mongodb.client.model.Collation.builder().locale("fr").build())));
 	}
 
+	@Test // DATAMONGO-2360
+	public void countShouldApplyQueryHintIfPresent() {
+
+		Document queryHint = new Document("age", 1);
+		template.count(new BasicQuery("{}").withHint(queryHint), AutogenerateableId.class);
+
+		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
+		verify(collection).count(any(), options.capture());
+
+		assertThat(options.getValue().getHint()).isEqualTo(queryHint);
+	}
+
 	@Test // DATAMONGO-1733
 	public void appliesFieldsWhenInterfaceProjectionIsClosedAndQueryDoesNotDefineFields() {
 
