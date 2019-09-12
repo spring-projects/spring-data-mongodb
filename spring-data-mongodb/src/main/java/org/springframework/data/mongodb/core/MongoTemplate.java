@@ -1172,6 +1172,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		if (query.getSkip() > 0) {
 			options.skip((int) query.getSkip());
 		}
+		if (StringUtils.hasText(query.getHint())) {
+			options.hint(Document.parse(query.getHint()));
+		}
 
 		Document document = queryMapper.getMappedObject(query.getQueryObject(),
 				Optional.ofNullable(entityClass).map(it -> mappingContext.getPersistentEntity(entityClass)));
