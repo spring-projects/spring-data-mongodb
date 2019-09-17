@@ -19,6 +19,7 @@ import java.util.Optional;
 
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.lang.Nullable;
 
 import com.mongodb.client.result.UpdateResult;
@@ -151,13 +152,26 @@ public interface ExecutableUpdateOperation {
 	interface UpdateWithUpdate<T> {
 
 		/**
-		 * Set the {@link Update} to be applied.
+		 * Set the {@link UpdateDefinition} to be applied.
 		 *
 		 * @param update must not be {@literal null}.
 		 * @return new instance of {@link TerminatingUpdate}.
 		 * @throws IllegalArgumentException if update is {@literal null}.
 		 */
-		TerminatingUpdate<T> apply(Update update);
+		TerminatingUpdate<T> apply(UpdateDefinition update);
+
+		/**
+		 * Set the {@link Update} to be applied.
+		 *
+		 * @param update must not be {@literal null}.
+		 * @return new instance of {@link TerminatingUpdate}.
+		 * @throws IllegalArgumentException if update is {@literal null}.
+		 * @deprecated since 2.3 in favor of {@link #apply(UpdateDefinition)}.
+		 */
+		@Deprecated
+		default TerminatingUpdate<T> apply(Update update) {
+			return apply((UpdateDefinition) update);
+		}
 
 		/**
 		 * Specify {@code replacement} object.

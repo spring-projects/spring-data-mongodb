@@ -68,7 +68,9 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.aggregation.Fields;
+import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
@@ -108,7 +110,6 @@ import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.Meta.CursorOption;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.mongodb.core.validation.Validator;
@@ -1043,25 +1044,25 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	@Nullable
 	@Override
-	public <T> T findAndModify(Query query, Update update, Class<T> entityClass) {
+	public <T> T findAndModify(Query query, UpdateDefinition update, Class<T> entityClass) {
 		return findAndModify(query, update, new FindAndModifyOptions(), entityClass, getCollectionName(entityClass));
 	}
 
 	@Nullable
 	@Override
-	public <T> T findAndModify(Query query, Update update, Class<T> entityClass, String collectionName) {
+	public <T> T findAndModify(Query query, UpdateDefinition update, Class<T> entityClass, String collectionName) {
 		return findAndModify(query, update, new FindAndModifyOptions(), entityClass, collectionName);
 	}
 
 	@Nullable
 	@Override
-	public <T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass) {
+	public <T> T findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options, Class<T> entityClass) {
 		return findAndModify(query, update, options, entityClass, getCollectionName(entityClass));
 	}
 
 	@Nullable
 	@Override
-	public <T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass,
+	public <T> T findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options, Class<T> entityClass,
 			String collectionName) {
 
 		Assert.notNull(query, "Query must not be null!");
@@ -1561,17 +1562,17 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	@Override
-	public UpdateResult upsert(Query query, Update update, Class<?> entityClass) {
+	public UpdateResult upsert(Query query, UpdateDefinition update, Class<?> entityClass) {
 		return doUpdate(getCollectionName(entityClass), query, update, entityClass, true, false);
 	}
 
 	@Override
-	public UpdateResult upsert(Query query, Update update, String collectionName) {
+	public UpdateResult upsert(Query query, UpdateDefinition update, String collectionName) {
 		return doUpdate(collectionName, query, update, null, true, false);
 	}
 
 	@Override
-	public UpdateResult upsert(Query query, Update update, Class<?> entityClass, String collectionName) {
+	public UpdateResult upsert(Query query, UpdateDefinition update, Class<?> entityClass, String collectionName) {
 
 		Assert.notNull(entityClass, "EntityClass must not be null!");
 
@@ -1579,17 +1580,17 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	@Override
-	public UpdateResult updateFirst(Query query, Update update, Class<?> entityClass) {
+	public UpdateResult updateFirst(Query query, UpdateDefinition update, Class<?> entityClass) {
 		return doUpdate(getCollectionName(entityClass), query, update, entityClass, false, false);
 	}
 
 	@Override
-	public UpdateResult updateFirst(final Query query, final Update update, final String collectionName) {
+	public UpdateResult updateFirst(final Query query, final UpdateDefinition update, final String collectionName) {
 		return doUpdate(collectionName, query, update, null, false, false);
 	}
 
 	@Override
-	public UpdateResult updateFirst(Query query, Update update, Class<?> entityClass, String collectionName) {
+	public UpdateResult updateFirst(Query query, UpdateDefinition update, Class<?> entityClass, String collectionName) {
 
 		Assert.notNull(entityClass, "EntityClass must not be null!");
 
@@ -1597,17 +1598,18 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	@Override
-	public UpdateResult updateMulti(Query query, Update update, Class<?> entityClass) {
+	public UpdateResult updateMulti(Query query, UpdateDefinition update, Class<?> entityClass) {
 		return doUpdate(getCollectionName(entityClass), query, update, entityClass, false, true);
 	}
 
 	@Override
-	public UpdateResult updateMulti(final Query query, final Update update, String collectionName) {
+	public UpdateResult updateMulti(final Query query, final UpdateDefinition update, String collectionName) {
 		return doUpdate(collectionName, query, update, null, false, true);
 	}
 
 	@Override
-	public UpdateResult updateMulti(final Query query, final Update update, Class<?> entityClass, String collectionName) {
+	public UpdateResult updateMulti(final Query query, final UpdateDefinition update, Class<?> entityClass,
+			String collectionName) {
 
 		Assert.notNull(entityClass, "EntityClass must not be null!");
 
@@ -1622,24 +1624,52 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(update, "Update must not be null!");
 
+		MongoPersistentEntity<?> entity = entityClass == null ? null : getPersistentEntity(entityClass);
+		increaseVersionForUpdateIfNecessary(entity, update);
+
+		UpdateOptions opts = new UpdateOptions();
+		opts.upsert(upsert);
+
+		if (update.hasArrayFilters()) {
+			opts.arrayFilters(update.getArrayFilters().stream().map(ArrayFilter::asDocument).collect(Collectors.toList()));
+		}
+
+		Document queryObj = new Document();
+
+		if (query != null) {
+			queryObj.putAll(queryMapper.getMappedObject(query.getQueryObject(), entity));
+		}
+
+		if (multi && update.isIsolated() && !queryObj.containsKey("$isolated")) {
+			queryObj.put("$isolated", 1);
+		}
+
+		if (update instanceof AggregationUpdate) {
+
+			AggregationOperationContext context = entityClass != null
+					? new RelaxedTypeBasedAggregationOperationContext(entityClass, mappingContext, queryMapper)
+					: Aggregation.DEFAULT_CONTEXT;
+
+			AggregationUpdate aUppdate = ((AggregationUpdate) update);
+			List<Document> pipeline = new AggregationUtil(queryMapper, mappingContext).createPipeline(aUppdate, context);
+
+			return execute(collectionName, collection -> {
+
+				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.UPDATE, collectionName,
+						entityClass, update.getUpdateObject(), queryObj);
+				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
+
+				collection = writeConcernToUse != null ? collection.withWriteConcern(writeConcernToUse) : collection;
+
+				if (multi) {
+					return collection.updateMany(queryObj, pipeline, opts);
+				}
+
+				return collection.updateOne(queryObj, pipeline, opts);
+			});
+		}
+
 		return execute(collectionName, collection -> {
-
-			MongoPersistentEntity<?> entity = entityClass == null ? null : getPersistentEntity(entityClass);
-
-			increaseVersionForUpdateIfNecessary(entity, update);
-
-			UpdateOptions opts = new UpdateOptions();
-			opts.upsert(upsert);
-
-			if (update.hasArrayFilters()) {
-				opts.arrayFilters(update.getArrayFilters().stream().map(ArrayFilter::asDocument).collect(Collectors.toList()));
-			}
-
-			Document queryObj = new Document();
-
-			if (query != null) {
-				queryObj.putAll(queryMapper.getMappedObject(query.getQueryObject(), entity));
-			}
 
 			operations.forType(entityClass) //
 					.getCollation(query) //
@@ -1648,10 +1678,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			Document updateObj = update instanceof MappedUpdate ? update.getUpdateObject()
 					: updateMapper.getMappedObject(update.getUpdateObject(), entity);
-
-			if (multi && update.isIsolated() && !queryObj.containsKey("$isolated")) {
-				queryObj.put("$isolated", 1);
-			}
 
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("Calling update using query: {} and update: {} in collection: {}", serializeToJsonSafely(queryObj),
@@ -2640,7 +2666,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	@SuppressWarnings("ConstantConditions")
 	protected <T> T doFindAndModify(String collectionName, Document query, Document fields, Document sort,
-			Class<T> entityClass, Update update, @Nullable FindAndModifyOptions options) {
+			Class<T> entityClass, UpdateDefinition update, @Nullable FindAndModifyOptions options) {
 
 		EntityReader<? super T, Bson> readerToUse = this.mongoConverter;
 
@@ -2653,7 +2679,18 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		increaseVersionForUpdateIfNecessary(entity, update);
 
 		Document mappedQuery = queryMapper.getMappedObject(query, entity);
-		Document mappedUpdate = updateMapper.getMappedObject(update.getUpdateObject(), entity);
+
+		Object mappedUpdate = new Document();
+		if (update instanceof AggregationUpdate) {
+
+			AggregationOperationContext context = entityClass != null
+					? new RelaxedTypeBasedAggregationOperationContext(entityClass, mappingContext, queryMapper)
+					: Aggregation.DEFAULT_CONTEXT;
+
+			mappedUpdate = new AggregationUtil(queryMapper, mappingContext).createPipeline((Aggregation) update, context);
+		} else {
+			mappedUpdate = updateMapper.getMappedObject(update.getUpdateObject(), entity);
+		}
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(
@@ -3027,11 +3064,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		private final Document query;
 		private final Document fields;
 		private final Document sort;
-		private final Document update;
+		private final Object update;
 		private final List<Document> arrayFilters;
 		private final FindAndModifyOptions options;
 
-		public FindAndModifyCallback(Document query, Document fields, Document sort, Document update,
+		public FindAndModifyCallback(Document query, Document fields, Document sort, Object update,
 				List<Document> arrayFilters, FindAndModifyOptions options) {
 			this.query = query;
 			this.fields = fields;
@@ -3059,7 +3096,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				opts.arrayFilters(arrayFilters);
 			}
 
-			return collection.findOneAndUpdate(query, update, opts);
+			if (update instanceof Document) {
+				return collection.findOneAndUpdate(query, (Document) update, opts);
+			} else if (update instanceof List) {
+				return collection.findOneAndUpdate(query, (List<Document>) update, opts);
+			}
+			throw new IllegalArgumentException("doh - that does not work");
 		}
 	}
 

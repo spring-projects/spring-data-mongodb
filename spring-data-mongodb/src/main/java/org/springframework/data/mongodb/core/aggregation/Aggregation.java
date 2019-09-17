@@ -116,6 +116,17 @@ public class Aggregation {
 	}
 
 	/**
+	 * Creates a new {@link AggregationUpdate} from the given {@link AggregationOperation}s.
+	 * 
+	 * @param operations can be {@literal empty} but must not be {@literal null}.
+	 * @return new instance of {@link AggregationUpdate}.
+	 * @since 2.3
+	 */
+	public static AggregationUpdate newUpdate(AggregationOperation... operations) {
+		return AggregationUpdate.from(Arrays.asList(operations));
+	}
+
+	/**
 	 * Returns a copy of this {@link Aggregation} with the given {@link AggregationOptions} set. Note that options are
 	 * supported in MongoDB version 2.6+.
 	 *
@@ -181,13 +192,12 @@ public class Aggregation {
 	/**
 	 * Creates a new {@link Aggregation} from the given {@link AggregationOperation}s.
 	 *
-	 * @param aggregationOperations must not be {@literal null} or empty.
+	 * @param aggregationOperations must not be {@literal null}.
 	 * @param options must not be {@literal null} or empty.
 	 */
 	protected Aggregation(List<AggregationOperation> aggregationOperations, AggregationOptions options) {
 
 		Assert.notNull(aggregationOperations, "AggregationOperations must not be null!");
-		Assert.isTrue(!aggregationOperations.isEmpty(), "At least one AggregationOperation has to be provided");
 		Assert.notNull(options, "AggregationOptions must not be null!");
 
 		// check $out is the last operation if it exists

@@ -992,6 +992,61 @@ assertThat(p.getFirstName(), is("Mary"));
 assertThat(p.getAge(), is(1));
 ----
 
+[[mongo-template.aggregation-update]]
+=== Aggregation Pipeline Updates
+
+The update methods exposed by `MongoOperations` and `ReactiveMongoOperations` also accept an <<mongo.aggregation, Aggregation Pipeline>> via `AggregationUpdate`.
+This allows to leverage https://docs.mongodb.com/manual/reference/method/db.collection.update/#update-with-aggregation-pipeline[MongoDB 4.2 aggregations] in an update operation.
+
+The update can consist of the following stages:
+
+* `AggregationUpdate.set(...).toValue(...)` -> `$set : { ... }`
+* `AggregationUpdate.unset(...)` -> `$unset : [ ... ]`
+* `AggregationUpdate.replaceWith(...)` -> `$replaceWith : { ... }`
+
+.Update Aggregation
+====
+[source,java]
+----
+AggregationUpdate update = Aggregation.newUpdate()
+    .set("average").toValue(ArithmeticOperators.valueOf("tests").avg())     <1>
+    .set("grade").toValue(ConditionalOperators.switchCases(                 <2>
+        when(valueOf("average").greaterThanEqualToValue(90)).then("A"),
+        when(valueOf("average").greaterThanEqualToValue(80)).then("B"),
+        when(valueOf("average").greaterThanEqualToValue(70)).then("C"),
+        when(valueOf("average").greaterThanEqualToValue(60)).then("D"))
+        .defaultTo("F")
+    );
+
+template.update(Student.class)                                              <3>
+    .apply(update)
+    .all();                                                                 <4>
+----
+[source,javascript]
+----
+db.students.update(                                                         <3>
+   { },
+   [
+     { $set: { average : { $avg: "$tests" } } },                            <1>
+     { $set: { grade: { $switch: {                                          <2>
+                           branches: [
+                               { case: { $gte: [ "$average", 90 ] }, then: "A" },
+                               { case: { $gte: [ "$average", 80 ] }, then: "B" },
+                               { case: { $gte: [ "$average", 70 ] }, then: "C" },
+                               { case: { $gte: [ "$average", 60 ] }, then: "D" }
+                           ],
+                           default: "F"
+     } } } }
+   ],
+   { multi: true }                                                          <4>
+)
+----
+<1> The 1st `$set` stage calculates a new field _average_ based on the average of the _tests_ field.
+<2> The 2nd `$set` stage calculates a new field _grade_ based on the _average_ field calculated by the first aggregation stage.
+<3> The pipeline is executed on the _students_ collection and uses `Student` for the aggregation field mapping.
+<4> Apply the update to all documents within the collection.
+====
+
 [[mongo-template.find-and-replace]]
 === Finding and Replacing Documents
 
