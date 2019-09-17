@@ -64,6 +64,13 @@ import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
+import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
+import org.springframework.data.mongodb.core.aggregation.ArithmeticOperators;
+import org.springframework.data.mongodb.core.aggregation.ComparisonOperators.Gte;
+import org.springframework.data.mongodb.core.aggregation.ConditionalOperators;
+import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Switch.CaseOperator;
+import org.springframework.data.mongodb.core.aggregation.Fields;
+import org.springframework.data.mongodb.core.aggregation.SetOperation;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
@@ -1711,6 +1718,101 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		template.stream(new Query().slaveOk(), AutogenerateableId.class);
 		verify(collection).withReadPreference(eq(ReadPreference.primaryPreferred()));
+	}
+
+	@Test // DATAMONGO-2331
+	public void updateShouldAllowAggregationExpressions() {
+
+		AggregationUpdate update = new AggregationUpdate().set("total")
+				.toValue(ArithmeticOperators.valueOf("val1").sum().and("val2"));
+
+		template.updateFirst(new BasicQuery("{}"), update, Wrapper.class);
+
+		ArgumentCaptor<List<Document>> captor = ArgumentCaptor.forClass(List.class);
+
+		verify(collection, times(1)).updateOne(any(org.bson.Document.class), captor.capture(), any(UpdateOptions.class));
+
+		assertThat(captor.getValue()).isEqualTo(
+				Collections.singletonList(Document.parse("{ $set : { total : { $sum : [  \"$val1\",\"$val2\" ] } } }")));
+	}
+
+	@Test // DATAMONGO-2331
+	public void updateShouldAllowMultipleAggregationExpressions() {
+
+		AggregationUpdate update = new AggregationUpdate() //
+				.set("average").toValue(ArithmeticOperators.valueOf("tests").avg()) //
+				.set("grade").toValue(ConditionalOperators.switchCases( //
+						CaseOperator.when(Gte.valueOf("average").greaterThanEqualToValue(90)).then("A"), //
+						CaseOperator.when(Gte.valueOf("average").greaterThanEqualToValue(80)).then("B"), //
+						CaseOperator.when(Gte.valueOf("average").greaterThanEqualToValue(70)).then("C"), //
+						CaseOperator.when(Gte.valueOf("average").greaterThanEqualToValue(60)).then("D") //
+				) //
+						.defaultTo("F"));//
+
+		template.updateFirst(new BasicQuery("{}"), update, Wrapper.class);
+
+		ArgumentCaptor<List<Document>> captor = ArgumentCaptor.forClass(List.class);
+
+		verify(collection, times(1)).updateOne(any(org.bson.Document.class), captor.capture(), any(UpdateOptions.class));
+
+		assertThat(captor.getValue()).containsExactly(Document.parse("{ $set: { average : { $avg: \"$tests\" } } }"),
+				Document.parse("{ $set: { grade: { $switch: {\n" + "                           branches: [\n"
+						+ "                               { case: { $gte: [ \"$average\", 90 ] }, then: \"A\" },\n"
+						+ "                               { case: { $gte: [ \"$average\", 80 ] }, then: \"B\" },\n"
+						+ "                               { case: { $gte: [ \"$average\", 70 ] }, then: \"C\" },\n"
+						+ "                               { case: { $gte: [ \"$average\", 60 ] }, then: \"D\" }\n"
+						+ "                           ],\n" + "                           default: \"F\"\n" + "     } } } }"));
+	}
+
+	@Test // DATAMONGO-2331
+	public void updateShouldMapAggregationExpressionToDomainType() {
+
+		AggregationUpdate update = new AggregationUpdate().set("name")
+				.toValue(ArithmeticOperators.valueOf("val1").sum().and("val2"));
+
+		template.updateFirst(new BasicQuery("{}"), update, Jedi.class);
+
+		ArgumentCaptor<List<Document>> captor = ArgumentCaptor.forClass(List.class);
+
+		verify(collection, times(1)).updateOne(any(org.bson.Document.class), captor.capture(), any(UpdateOptions.class));
+
+		assertThat(captor.getValue()).isEqualTo(
+				Collections.singletonList(Document.parse("{ $set : { firstname : { $sum:[  \"$val1\",\"$val2\" ] } } }")));
+	}
+
+	@Test // DATAMONGO-2331
+	public void updateShouldPassOnUnsetCorrectly() {
+
+		SetOperation setOperation = SetOperation.builder().set("status").toValue("Modified").and().set("comments")
+				.toValue(Fields.fields("misc1").and("misc2").asList());
+		AggregationUpdate update = new AggregationUpdate();
+		update.set(setOperation);
+		update.unset("misc1", "misc2");
+
+		template.updateFirst(new BasicQuery("{}"), update, Wrapper.class);
+
+		ArgumentCaptor<List<Document>> captor = ArgumentCaptor.forClass(List.class);
+
+		verify(collection, times(1)).updateOne(any(org.bson.Document.class), captor.capture(), any(UpdateOptions.class));
+
+		assertThat(captor.getValue()).isEqualTo(
+				Arrays.asList(Document.parse("{ $set: { status: \"Modified\", comments: [ \"$misc1\", \"$misc2\" ] } }"),
+						Document.parse("{ $unset: [ \"misc1\", \"misc2\" ] }")));
+	}
+
+	@Test // DATAMONGO-2331
+	public void updateShouldMapAggregationUnsetToDomainType() {
+
+		AggregationUpdate update = new AggregationUpdate();
+		update.unset("name");
+
+		template.updateFirst(new BasicQuery("{}"), update, Jedi.class);
+
+		ArgumentCaptor<List<Document>> captor = ArgumentCaptor.forClass(List.class);
+
+		verify(collection, times(1)).updateOne(any(org.bson.Document.class), captor.capture(), any(UpdateOptions.class));
+
+		assertThat(captor.getValue()).isEqualTo(Collections.singletonList(Document.parse("{ $unset : \"firstname\" }")));
 	}
 
 	class AutogenerateableId {

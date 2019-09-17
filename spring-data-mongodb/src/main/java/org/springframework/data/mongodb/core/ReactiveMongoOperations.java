@@ -39,6 +39,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.lang.Nullable;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import org.springframework.util.Assert;
@@ -678,11 +679,42 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification. Must not be {@literal null}.
+	 * @param update the {@link UpdateDefinition} to apply on matching documents. Must not be {@literal null}.
+	 * @param entityClass the parametrized type. Must not be {@literal null}.
+	 * @return the converted object that was updated before it was updated.
+	 * @since 2.3
+	 */
+	<T> Mono<T> findAndModify(Query query, UpdateDefinition update, Class<T> entityClass);
+
+	/**
+	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify<a/>
+	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
+	 *
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
+	 *          fields specification. Must not be {@literal null}.
 	 * @param update the {@link Update} to apply on matching documents. Must not be {@literal null}.
 	 * @param entityClass the parametrized type. Must not be {@literal null}.
 	 * @return the converted object that was updated before it was updated.
+	 * @deprecated since 2.3 in favor of {@link #findAndModify(Query, UpdateDefinition, Class)}.
 	 */
-	<T> Mono<T> findAndModify(Query query, Update update, Class<T> entityClass);
+	@Deprecated
+	default <T> Mono<T> findAndModify(Query query, Update update, Class<T> entityClass) {
+		return findAndModify(query, (UpdateDefinition) update, entityClass);
+	}
+
+	/**
+	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify<a/>
+	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
+	 *
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
+	 *          fields specification. Must not be {@literal null}.
+	 * @param update the {@link UpdateDefinition} to apply on matching documents. Must not be {@literal null}.
+	 * @param entityClass the parametrized type. Must not be {@literal null}.
+	 * @param collectionName the collection to query. Must not be {@literal null}.
+	 * @return the converted object that was updated before it was updated.
+	 * @since 2.3
+	 */
+	<T> Mono<T> findAndModify(Query query, UpdateDefinition update, Class<T> entityClass, String collectionName);
 
 	/**
 	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify<a/>
@@ -694,8 +726,28 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param entityClass the parametrized type. Must not be {@literal null}.
 	 * @param collectionName the collection to query. Must not be {@literal null}.
 	 * @return the converted object that was updated before it was updated.
+	 * @deprecated since 2.3 in favor of {@link #findAndModify(Query, UpdateDefinition, Class, String)}.
 	 */
-	<T> Mono<T> findAndModify(Query query, Update update, Class<T> entityClass, String collectionName);
+	@Deprecated
+	default <T> Mono<T> findAndModify(Query query, Update update, Class<T> entityClass, String collectionName) {
+		return findAndModify(query, (UpdateDefinition) update, entityClass, collectionName);
+	}
+
+	/**
+	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify<a/>
+	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
+	 * {@link FindAndModifyOptions} into account.
+	 *
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
+	 *          fields specification.
+	 * @param update the {@link UpdateDefinition} to apply on matching documents.
+	 * @param options the {@link FindAndModifyOptions} holding additional information.
+	 * @param entityClass the parametrized type.
+	 * @return the converted object that was updated. Depending on the value of {@link FindAndModifyOptions#isReturnNew()}
+	 *         this will either be the object as it was before the update or as it is after the update.
+	 * @since 2.3
+	 */
+	<T> Mono<T> findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options, Class<T> entityClass);
 
 	/**
 	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify<a/>
@@ -709,8 +761,30 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param entityClass the parametrized type.
 	 * @return the converted object that was updated. Depending on the value of {@link FindAndModifyOptions#isReturnNew()}
 	 *         this will either be the object as it was before the update or as it is after the update.
+	 * @deprecated since 2.3 in favor of {@link #findAndModify(Query, UpdateDefinition, FindAndModifyOptions, Class)}.
 	 */
-	<T> Mono<T> findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass);
+	@Deprecated
+	default <T> Mono<T> findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass) {
+		return findAndModify(query, (UpdateDefinition) update, options, entityClass);
+	}
+
+	/**
+	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify<a/>
+	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
+	 * {@link FindAndModifyOptions} into account.
+	 *
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
+	 *          fields specification. Must not be {@literal null}.
+	 * @param update the {@link UpdateDefinition} to apply on matching documents. Must not be {@literal null}.
+	 * @param options the {@link FindAndModifyOptions} holding additional information. Must not be {@literal null}.
+	 * @param entityClass the parametrized type. Must not be {@literal null}.
+	 * @param collectionName the collection to query. Must not be {@literal null}.
+	 * @return the converted object that was updated. Depending on the value of {@link FindAndModifyOptions#isReturnNew()}
+	 *         this will either be the object as it was before the update or as it is after the update.
+	 * @since 2.3
+	 */
+	<T> Mono<T> findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options, Class<T> entityClass,
+			String collectionName);
 
 	/**
 	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify<a/>
@@ -725,9 +799,14 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param collectionName the collection to query. Must not be {@literal null}.
 	 * @return the converted object that was updated. Depending on the value of {@link FindAndModifyOptions#isReturnNew()}
 	 *         this will either be the object as it was before the update or as it is after the update.
+	 * @deprecated since 2.3 in favor of
+	 *             {@link #findAndModify(Query, UpdateDefinition, FindAndModifyOptions, Class, String)}.
 	 */
-	<T> Mono<T> findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass,
-			String collectionName);
+	@Deprecated
+	default <T> Mono<T> findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass,
+			String collectionName) {
+		return findAndModify(query, (UpdateDefinition) update, options, entityClass, collectionName);
+	}
 
 	/**
 	 * Triggers
@@ -1157,8 +1236,42 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *          object. Must not be {@literal null}.
 	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 2.3
 	 */
-	Mono<UpdateResult> upsert(Query query, Update update, Class<?> entityClass);
+	Mono<UpdateResult> upsert(Query query, UpdateDefinition update, Class<?> entityClass);
+
+	/**
+	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
+	 * combining the query document and the update document.
+	 *
+	 * @param query the query document that specifies the criteria used to select a record to be upserted. Must not be
+	 *          {@literal null}.
+	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
+	 *          object. Must not be {@literal null}.
+	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
+	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @deprecated since 2.3 in favor of {@link #upsert(Query, UpdateDefinition, Class)}.
+	 */
+	@Deprecated
+	default Mono<UpdateResult> upsert(Query query, Update update, Class<?> entityClass) {
+		return upsert(query, (UpdateDefinition) update, entityClass);
+	}
+
+	/**
+	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
+	 * combining the query document and the update document. <br />
+	 * <strong>NOTE:</strong> Any additional support for field mapping, versions, etc. is not available due to the lack of
+	 * domain type information. Use {@link #upsert(Query, Update, Class, String)} to get full type specific support.
+	 *
+	 * @param query the query document that specifies the criteria used to select a record to be upserted. Must not be
+	 *          {@literal null}.
+	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
+	 *          object. Must not be {@literal null}.
+	 * @param collectionName name of the collection to update the object in.
+	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 2.3
+	 */
+	Mono<UpdateResult> upsert(Query query, UpdateDefinition update, String collectionName);
 
 	/**
 	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
@@ -1175,8 +1288,27 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *          object. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @deprecated since 2.3 in favor of {@link #upsert(Query, UpdateDefinition, String)}.
 	 */
-	Mono<UpdateResult> upsert(Query query, Update update, String collectionName);
+	@Deprecated
+	default Mono<UpdateResult> upsert(Query query, Update update, String collectionName) {
+		return upsert(query, (UpdateDefinition) update, collectionName);
+	}
+
+	/**
+	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
+	 * combining the query document and the update document.
+	 *
+	 * @param query the query document that specifies the criteria used to select a record to be upserted. Must not be
+	 *          {@literal null}.
+	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
+	 *          object. Must not be {@literal null}.
+	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
+	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
+	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 2.3
+	 */
+	Mono<UpdateResult> upsert(Query query, UpdateDefinition update, Class<?> entityClass, String collectionName);
 
 	/**
 	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
@@ -1191,8 +1323,12 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @deprecated since 2.3 in favor of {@link #upsert(Query, UpdateDefinition, Class, String)}.
 	 */
-	Mono<UpdateResult> upsert(Query query, Update update, Class<?> entityClass, String collectionName);
+	@Deprecated
+	default Mono<UpdateResult> upsert(Query query, Update update, Class<?> entityClass, String collectionName) {
+		return upsert(query, (UpdateDefinition) update, entityClass, collectionName);
+	}
 
 	/**
 	 * Updates the first object that is found in the collection of the entity class that matches the query document with
@@ -1206,8 +1342,26 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *          not be {@literal null}.
 	 * @param entityClass class that determines the collection to use.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 2.3
 	 */
-	Mono<UpdateResult> updateFirst(Query query, Update update, Class<?> entityClass);
+	Mono<UpdateResult> updateFirst(Query query, UpdateDefinition update, Class<?> entityClass);
+
+	/**
+	 * Updates the first object that is found in the collection of the entity class that matches the query document with
+	 * the provided update document.
+	 *
+	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
+	 *          {@literal null}.
+	 * @param update the update document that contains the updated object or $ operators to manipulate the existing. Must
+	 *          not be {@literal null}.
+	 * @param entityClass class that determines the collection to use.
+	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @deprecated since 2.3 in favor of {@link #updateFirst(Query, UpdateDefinition, Class)}.
+	 */
+	@Deprecated
+	default Mono<UpdateResult> updateFirst(Query query, Update update, Class<?> entityClass) {
+		return updateFirst(query, (UpdateDefinition) update, entityClass);
+	}
 
 	/**
 	 * Updates the first object that is found in the specified collection that matches the query document criteria with
@@ -1224,8 +1378,28 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *          not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 2.3
 	 */
-	Mono<UpdateResult> updateFirst(Query query, Update update, String collectionName);
+	Mono<UpdateResult> updateFirst(Query query, UpdateDefinition update, String collectionName);
+
+	/**
+	 * Updates the first object that is found in the specified collection that matches the query document criteria with
+	 * the provided updated document. <br />
+	 * <strong>NOTE:</strong> Any additional support for field mapping, versions, etc. is not available due to the lack of
+	 * domain type information. Use {@link #updateFirst(Query, Update, Class, String)} to get full type specific support.
+	 *
+	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
+	 *          {@literal null}.
+	 * @param update the update document that contains the updated object or $ operators to manipulate the existing. Must
+	 *          not be {@literal null}.
+	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
+	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @deprecated since 2.3 in favor of {@link #updateFirst(Query, UpdateDefinition, String)}.
+	 */
+	@Deprecated
+	default Mono<UpdateResult> updateFirst(Query query, Update update, String collectionName) {
+		return updateFirst(query, (UpdateDefinition) update, collectionName);
+	}
 
 	/**
 	 * Updates the first object that is found in the specified collection that matches the query document criteria with
@@ -1240,8 +1414,27 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 2.3
 	 */
-	Mono<UpdateResult> updateFirst(Query query, Update update, Class<?> entityClass, String collectionName);
+	Mono<UpdateResult> updateFirst(Query query, UpdateDefinition update, Class<?> entityClass, String collectionName);
+
+	/**
+	 * Updates the first object that is found in the specified collection that matches the query document criteria with
+	 * the provided updated document. <br />
+	 *
+	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
+	 *          {@literal null}.
+	 * @param update the update document that contains the updated object or $ operators to manipulate the existing. Must
+	 *          not be {@literal null}.
+	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
+	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
+	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @deprecated since 2.3 in favor of {@link #updateFirst(Query, UpdateDefinition, Class, String)}.
+	 */
+	@Deprecated
+	default Mono<UpdateResult> updateFirst(Query query, Update update, Class<?> entityClass, String collectionName) {
+		return updateFirst(query, (UpdateDefinition) update, entityClass, collectionName);
+	}
 
 	/**
 	 * Updates all objects that are found in the collection for the entity class that matches the query document criteria
@@ -1253,8 +1446,26 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *          not be {@literal null}.
 	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 2.3
 	 */
-	Mono<UpdateResult> updateMulti(Query query, Update update, Class<?> entityClass);
+	Mono<UpdateResult> updateMulti(Query query, UpdateDefinition update, Class<?> entityClass);
+
+	/**
+	 * Updates all objects that are found in the collection for the entity class that matches the query document criteria
+	 * with the provided updated document.
+	 *
+	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
+	 *          {@literal null}.
+	 * @param update the update document that contains the updated object or $ operators to manipulate the existing. Must
+	 *          not be {@literal null}.
+	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
+	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @deprecated since 2.3 in favor of {@link #updateMulti(Query, UpdateDefinition, Class)}.
+	 */
+	@Deprecated
+	default Mono<UpdateResult> updateMulti(Query query, Update update, Class<?> entityClass) {
+		return updateMulti(query, (UpdateDefinition) update, entityClass);
+	}
 
 	/**
 	 * Updates all objects that are found in the specified collection that matches the query document criteria with the
@@ -1268,8 +1479,28 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *          not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 2.3
 	 */
-	Mono<UpdateResult> updateMulti(Query query, Update update, String collectionName);
+	Mono<UpdateResult> updateMulti(Query query, UpdateDefinition update, String collectionName);
+
+	/**
+	 * Updates all objects that are found in the specified collection that matches the query document criteria with the
+	 * provided updated document. <br />
+	 * <strong>NOTE:</strong> Any additional support for field mapping, versions, etc. is not available due to the lack of
+	 * domain type information. Use {@link #updateMulti(Query, Update, Class, String)} to get full type specific support.
+	 *
+	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
+	 *          {@literal null}.
+	 * @param update the update document that contains the updated object or $ operators to manipulate the existing. Must
+	 *          not be {@literal null}.
+	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
+	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @deprecated since 2.3 in favor of {@link #updateMulti(Query, UpdateDefinition, String)}.
+	 */
+	@Deprecated
+	default Mono<UpdateResult> updateMulti(Query query, Update update, String collectionName) {
+		return updateMulti(query, (UpdateDefinition) update, collectionName);
+	}
 
 	/**
 	 * Updates all objects that are found in the collection for the entity class that matches the query document criteria
@@ -1282,8 +1513,27 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 2.3
 	 */
-	Mono<UpdateResult> updateMulti(Query query, Update update, Class<?> entityClass, String collectionName);
+	Mono<UpdateResult> updateMulti(Query query, UpdateDefinition update, Class<?> entityClass, String collectionName);
+
+	/**
+	 * Updates all objects that are found in the collection for the entity class that matches the query document criteria
+	 * with the provided updated document.
+	 *
+	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
+	 *          {@literal null}.
+	 * @param update the update document that contains the updated object or $ operators to manipulate the existing. Must
+	 *          not be {@literal null}.
+	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
+	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
+	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @deprecated since 2.3 in favor of {@link #updateMulti(Query, UpdateDefinition, Class, String)}.
+	 */
+	@Deprecated
+	default Mono<UpdateResult> updateMulti(Query query, Update update, Class<?> entityClass, String collectionName) {
+		return updateMulti(query, (UpdateDefinition) update, entityClass, collectionName);
+	}
 
 	/**
 	 * Remove the given object from the collection by id.

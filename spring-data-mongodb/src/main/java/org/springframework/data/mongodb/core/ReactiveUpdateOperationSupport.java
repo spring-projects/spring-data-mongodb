@@ -63,7 +63,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 		@NonNull ReactiveMongoTemplate template;
 		@NonNull Class<?> domainType;
 		Query query;
-		org.springframework.data.mongodb.core.query.Update update;
+		org.springframework.data.mongodb.core.query.UpdateDefinition update;
 		@Nullable String collection;
 		@Nullable FindAndModifyOptions findAndModifyOptions;
 		@Nullable FindAndReplaceOptions findAndReplaceOptions;
@@ -72,10 +72,10 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.UpdateWithUpdate#apply(org.springframework.data.mongodb.core.query.Update)
+		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.UpdateWithUpdate#apply(org.springframework.data.mongodb.core.query.UpdateDefinition)
 		 */
 		@Override
-		public TerminatingUpdate<T> apply(org.springframework.data.mongodb.core.query.Update update) {
+		public TerminatingUpdate<T> apply(org.springframework.data.mongodb.core.query.UpdateDefinition update) {
 
 			Assert.notNull(update, "Update must not be null!");
 

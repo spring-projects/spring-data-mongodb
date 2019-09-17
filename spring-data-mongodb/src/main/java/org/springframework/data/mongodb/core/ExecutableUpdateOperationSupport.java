@@ -21,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -67,7 +67,7 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		@NonNull MongoTemplate template;
 		@NonNull Class domainType;
 		Query query;
-		@Nullable Update update;
+		@Nullable UpdateDefinition update;
 		@Nullable String collection;
 		@Nullable FindAndModifyOptions findAndModifyOptions;
 		@Nullable FindAndReplaceOptions findAndReplaceOptions;
@@ -76,10 +76,10 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableUpdateOperation.UpdateWithUpdate#apply(Update)
+		 * @see org.springframework.data.mongodb.core.ExecutableUpdateOperation.UpdateWithUpdate#apply(org.springframework.data.mongodb.core.query.UpdateDefinition)
 		 */
 		@Override
-		public TerminatingUpdate<T> apply(Update update) {
+		public TerminatingUpdate<T> apply(UpdateDefinition update) {
 
 			Assert.notNull(update, "Update must not be null!");
 

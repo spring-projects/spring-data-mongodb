@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bson.Document;
-
 import org.springframework.data.mapping.PersistentPropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFieldReference;
@@ -128,7 +127,7 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 		return Fields.fields(fields.toArray(new String[0]));
 	}
 
-	private FieldReference getReferenceFor(Field field) {
+	protected FieldReference getReferenceFor(Field field) {
 
 		PersistentPropertyPath<MongoPersistentProperty> propertyPath = mappingContext
 				.getPersistentPropertyPath(field.getTarget(), type);

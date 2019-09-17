@@ -69,7 +69,9 @@ import org.springframework.data.mongodb.core.EntityOperations.AdaptibleEntity;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
+import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.aggregation.PrefixingDelegatingAggregationOperationContext;
+import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
@@ -105,7 +107,6 @@ import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.Meta.CursorOption;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.mongodb.core.validation.Validator;
@@ -1125,34 +1126,35 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#findAndModify(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.Update, java.lang.Class)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#findAndModify(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.UpdateDefinition, java.lang.Class)
 	 */
-	public <T> Mono<T> findAndModify(Query query, Update update, Class<T> entityClass) {
+	public <T> Mono<T> findAndModify(Query query, UpdateDefinition update, Class<T> entityClass) {
 		return findAndModify(query, update, new FindAndModifyOptions(), entityClass, getCollectionName(entityClass));
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#findAndModify(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.Update, java.lang.Class, java.lang.String)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#findAndModify(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.UpdateDefinition, java.lang.Class, java.lang.String)
 	 */
-	public <T> Mono<T> findAndModify(Query query, Update update, Class<T> entityClass, String collectionName) {
+	public <T> Mono<T> findAndModify(Query query, UpdateDefinition update, Class<T> entityClass, String collectionName) {
 		return findAndModify(query, update, new FindAndModifyOptions(), entityClass, collectionName);
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#findAndModify(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.Update, org.springframework.data.mongodb.core.FindAndModifyOptions, java.lang.Class)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#findAndModify(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.UpdateDefinition, org.springframework.data.mongodb.core.FindAndModifyOptions, java.lang.Class)
 	 */
-	public <T> Mono<T> findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass) {
+	public <T> Mono<T> findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options,
+			Class<T> entityClass) {
 		return findAndModify(query, update, options, entityClass, getCollectionName(entityClass));
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#findAndModify(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.Update, org.springframework.data.mongodb.core.FindAndModifyOptions, java.lang.Class, java.lang.String)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#findAndModify(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.UpdateDefinition, org.springframework.data.mongodb.core.FindAndModifyOptions, java.lang.Class, java.lang.String)
 	 */
-	public <T> Mono<T> findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass,
-			String collectionName) {
+	public <T> Mono<T> findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options,
+			Class<T> entityClass, String collectionName) {
 
 		Assert.notNull(options, "Options must not be null! ");
 
@@ -1165,7 +1167,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		if (!optionsToUse.getCollation().isPresent()) {
 			operations.forType(entityClass).getCollation(query).ifPresent(optionsToUse::collation);
-			;
 		}
 
 		return doFindAndModify(collectionName, query.getQueryObject(), query.getFieldsObject(),
@@ -1687,73 +1688,75 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#upsert(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.Update, java.lang.Class)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#upsert(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.UpdateDefinition, java.lang.Class)
 	 */
-	public Mono<UpdateResult> upsert(Query query, Update update, Class<?> entityClass) {
+	public Mono<UpdateResult> upsert(Query query, UpdateDefinition update, Class<?> entityClass) {
 		return doUpdate(getCollectionName(entityClass), query, update, entityClass, true, false);
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#upsert(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.Update, java.lang.String)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#upsert(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.UpdateDefinition, java.lang.String)
 	 */
-	public Mono<UpdateResult> upsert(Query query, Update update, String collectionName) {
+	public Mono<UpdateResult> upsert(Query query, UpdateDefinition update, String collectionName) {
 		return doUpdate(collectionName, query, update, null, true, false);
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#upsert(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.Update, java.lang.Class, java.lang.String)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#upsert(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.UpdateDefinition, java.lang.Class, java.lang.String)
 	 */
-	public Mono<UpdateResult> upsert(Query query, Update update, Class<?> entityClass, String collectionName) {
+	public Mono<UpdateResult> upsert(Query query, UpdateDefinition update, Class<?> entityClass, String collectionName) {
 		return doUpdate(collectionName, query, update, entityClass, true, false);
 	}
 
 	/*
 	 * (non-Javadoc))
-	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#updateFirst(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.Update, java.lang.Class)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#updateFirst(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.UpdateDefinition, java.lang.Class)
 	 */
-	public Mono<UpdateResult> updateFirst(Query query, Update update, Class<?> entityClass) {
+	public Mono<UpdateResult> updateFirst(Query query, UpdateDefinition update, Class<?> entityClass) {
 		return doUpdate(getCollectionName(entityClass), query, update, entityClass, false, false);
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#updateFirst(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.Update, java.lang.String)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#updateFirst(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.UpdateDefinition, java.lang.String)
 	 */
-	public Mono<UpdateResult> updateFirst(Query query, Update update, String collectionName) {
+	public Mono<UpdateResult> updateFirst(Query query, UpdateDefinition update, String collectionName) {
 		return doUpdate(collectionName, query, update, null, false, false);
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#updateFirst(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.Update, java.lang.Class, java.lang.String)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#updateFirst(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.UpdateDefinition, java.lang.Class, java.lang.String)
 	 */
-	public Mono<UpdateResult> updateFirst(Query query, Update update, Class<?> entityClass, String collectionName) {
+	public Mono<UpdateResult> updateFirst(Query query, UpdateDefinition update, Class<?> entityClass,
+			String collectionName) {
 		return doUpdate(collectionName, query, update, entityClass, false, false);
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#updateMulti(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.Update, java.lang.Class)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#updateMulti(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.UpdateDefinition, java.lang.Class)
 	 */
-	public Mono<UpdateResult> updateMulti(Query query, Update update, Class<?> entityClass) {
+	public Mono<UpdateResult> updateMulti(Query query, UpdateDefinition update, Class<?> entityClass) {
 		return doUpdate(getCollectionName(entityClass), query, update, entityClass, false, true);
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#updateMulti(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.Update, java.lang.String)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#updateMulti(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.UpdateDefinition, java.lang.String)
 	 */
-	public Mono<UpdateResult> updateMulti(Query query, Update update, String collectionName) {
+	public Mono<UpdateResult> updateMulti(Query query, UpdateDefinition update, String collectionName) {
 		return doUpdate(collectionName, query, update, null, false, true);
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#updateMulti(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.Update, java.lang.Class, java.lang.String)
+	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#updateMulti(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.UpdateDefinition, java.lang.Class, java.lang.String)
 	 */
-	public Mono<UpdateResult> updateMulti(Query query, Update update, Class<?> entityClass, String collectionName) {
+	public Mono<UpdateResult> updateMulti(Query query, UpdateDefinition update, Class<?> entityClass,
+			String collectionName) {
 		return doUpdate(collectionName, query, update, entityClass, false, true);
 	}
 
@@ -1767,54 +1770,86 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		}
 
 		MongoPersistentEntity<?> entity = entityClass == null ? null : getPersistentEntity(entityClass);
+		increaseVersionForUpdateIfNecessary(entity, update);
 
-		Flux<UpdateResult> result = execute(collectionName, collection -> {
+		Document queryObj = queryMapper.getMappedObject(query.getQueryObject(), entity);
 
-			increaseVersionForUpdateIfNecessary(entity, update);
+		UpdateOptions updateOptions = new UpdateOptions().upsert(upsert);
+		operations.forType(entityClass).getCollation(query) //
+				.map(Collation::toMongoCollation) //
+				.ifPresent(updateOptions::collation);
 
-			Document queryObj = queryMapper.getMappedObject(query.getQueryObject(), entity);
-			Document updateObj = update == null ? new Document()
-					: updateMapper.getMappedObject(update.getUpdateObject(), entity);
+		if (update.hasArrayFilters()) {
+			updateOptions.arrayFilters(update.getArrayFilters().stream().map(ArrayFilter::asDocument)
+					.map(it -> queryMapper.getMappedObject(it, entity)).collect(Collectors.toList()));
+		}
 
-			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug(String.format("Calling update using query: %s and update: %s in collection: %s",
-						serializeToJsonSafely(queryObj), serializeToJsonSafely(updateObj), collectionName));
-			}
+		if (multi && update.isIsolated() && !queryObj.containsKey("$isolated")) {
+			queryObj.put("$isolated", 1);
+		}
 
-			MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.UPDATE, collectionName, entityClass,
-					updateObj, queryObj);
-			WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
-			MongoCollection<Document> collectionToUse = prepareCollection(collection, writeConcernToUse);
+		Flux<UpdateResult> result = Flux.empty();
 
-			UpdateOptions updateOptions = new UpdateOptions().upsert(upsert);
-			operations.forType(entityClass).getCollation(query) //
-					.map(Collation::toMongoCollation) //
-					.ifPresent(updateOptions::collation);
+		if (update instanceof AggregationUpdate) {
 
-			if (update.hasArrayFilters()) {
-				updateOptions.arrayFilters(update.getArrayFilters().stream().map(ArrayFilter::asDocument)
-						.map(it -> queryMapper.getMappedObject(it, entity)).collect(Collectors.toList()));
-			}
+			AggregationOperationContext context = entityClass != null
+					? new RelaxedTypeBasedAggregationOperationContext(entityClass, mappingContext, queryMapper)
+					: Aggregation.DEFAULT_CONTEXT;
 
-			if (!UpdateMapper.isUpdateObject(updateObj)) {
+			AggregationUpdate aUppdate = ((AggregationUpdate) update);
+			List<Document> pipeline = new AggregationUtil(queryMapper, mappingContext).createPipeline(aUppdate, context);
 
-				ReplaceOptions replaceOptions = new ReplaceOptions();
-				replaceOptions.upsert(updateOptions.isUpsert());
-				replaceOptions.collation(updateOptions.getCollation());
+			result = execute(collectionName, collection -> {
 
-				return collectionToUse.replaceOne(queryObj, updateObj, replaceOptions);
-			}
-			if (multi) {
-				return collectionToUse.updateMany(queryObj, updateObj, updateOptions);
-			}
-			return collectionToUse.updateOne(queryObj, updateObj, updateOptions);
-		}).doOnNext(updateResult -> {
+				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.UPDATE, collectionName,
+						entityClass, update.getUpdateObject(), queryObj);
+				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
+
+				collection = writeConcernToUse != null ? collection.withWriteConcern(writeConcernToUse) : collection;
+
+				if (multi) {
+					return collection.updateMany(queryObj, pipeline, updateOptions);
+				}
+
+				return collection.updateOne(queryObj, pipeline, updateOptions);
+			});
+		} else {
+
+			result = execute(collectionName, collection -> {
+
+				Document updateObj = update == null ? new Document()
+						: updateMapper.getMappedObject(update.getUpdateObject(), entity);
+
+				if (LOGGER.isDebugEnabled()) {
+					LOGGER.debug(String.format("Calling update using query: %s and update: %s in collection: %s",
+							serializeToJsonSafely(queryObj), serializeToJsonSafely(updateObj), collectionName));
+				}
+
+				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.UPDATE, collectionName,
+						entityClass, updateObj, queryObj);
+				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
+				MongoCollection<Document> collectionToUse = prepareCollection(collection, writeConcernToUse);
+
+				if (!UpdateMapper.isUpdateObject(updateObj)) {
+
+					ReplaceOptions replaceOptions = new ReplaceOptions();
+					replaceOptions.upsert(updateOptions.isUpsert());
+					replaceOptions.collation(updateOptions.getCollation());
+
+					return collectionToUse.replaceOne(queryObj, updateObj, replaceOptions);
+				}
+				if (multi) {
+					return collectionToUse.updateMany(queryObj, updateObj, updateOptions);
+				}
+				return collectionToUse.updateOne(queryObj, updateObj, updateOptions);
+			});
+		}
+
+		result = result.doOnNext(updateResult -> {
 
 			if (entity != null && entity.hasVersionProperty() && !multi) {
 				if (updateResult.wasAcknowledged() && updateResult.getMatchedCount() == 0) {
 
-					Document queryObj = query == null ? new Document()
-							: queryMapper.getMappedObject(query.getQueryObject(), entity);
 					Document updateObj = update == null ? new Document()
 							: updateMapper.getMappedObject(update.getUpdateObject(), entity);
 					if (containsVersionProperty(queryObj, entity))
@@ -2542,16 +2577,26 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	}
 
 	protected <T> Mono<T> doFindAndModify(String collectionName, Document query, Document fields, Document sort,
-			Class<T> entityClass, Update update, FindAndModifyOptions options) {
+			Class<T> entityClass, UpdateDefinition update, FindAndModifyOptions options) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
+		increaseVersionForUpdateIfNecessary(entity, update);
 
 		return Mono.defer(() -> {
 
-			increaseVersionForUpdateIfNecessary(entity, update);
-
 			Document mappedQuery = queryMapper.getMappedObject(query, entity);
-			Document mappedUpdate = updateMapper.getMappedObject(update.getUpdateObject(), entity);
+
+			Object mappedUpdate = new Document();
+			if (update instanceof AggregationUpdate) {
+
+				AggregationOperationContext context = entityClass != null
+						? new RelaxedTypeBasedAggregationOperationContext(entityClass, mappingContext, queryMapper)
+						: Aggregation.DEFAULT_CONTEXT;
+
+				mappedUpdate = new AggregationUtil(queryMapper, mappingContext).createPipeline((Aggregation) update, context);
+			} else {
+				mappedUpdate = updateMapper.getMappedObject(update.getUpdateObject(), entity);
+			}
 
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug(String.format(
@@ -2928,7 +2973,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		private final Document query;
 		private final Document fields;
 		private final Document sort;
-		private final Document update;
+		private final Object update;
 		private final List<Document> arrayFilters;
 		private final FindAndModifyOptions options;
 
@@ -2947,7 +2992,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			FindOneAndUpdateOptions findOneAndUpdateOptions = convertToFindOneAndUpdateOptions(options, fields, sort,
 					arrayFilters);
-			return collection.findOneAndUpdate(query, update, findOneAndUpdateOptions);
+			if (update instanceof Document) {
+				return collection.findOneAndUpdate(query, (Document) update, findOneAndUpdateOptions);
+			} else if (update instanceof List) {
+				return collection.findOneAndUpdate(query, (List<Document>) update, findOneAndUpdateOptions);
+			}
+			return Flux.error(new IllegalArgumentException("doh - that does not work"));
 		}
 
 		private static FindOneAndUpdateOptions convertToFindOneAndUpdateOptions(FindAndModifyOptions options,

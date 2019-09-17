@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import reactor.core.publisher.Mono;
 
 import org.springframework.data.mongodb.core.query.Query;
@@ -123,8 +124,22 @@ public interface ReactiveUpdateOperation {
 		 * @param update must not be {@literal null}.
 		 * @return new instance of {@link TerminatingUpdate}. Never {@literal null}.
 		 * @throws IllegalArgumentException if update is {@literal null}.
+		 * @since 2.3
 		 */
-		TerminatingUpdate<T> apply(org.springframework.data.mongodb.core.query.Update update);
+		TerminatingUpdate<T> apply(org.springframework.data.mongodb.core.query.UpdateDefinition update);
+
+		/**
+		 * Set the {@link org.springframework.data.mongodb.core.query.Update} to be applied.
+		 *
+		 * @param update must not be {@literal null}.
+		 * @return new instance of {@link TerminatingUpdate}. Never {@literal null}.
+		 * @throws IllegalArgumentException if update is {@literal null}.
+		 * @deprecated since 2.3 in favor of {@link #apply(UpdateDefinition)}.
+		 */
+		@Deprecated
+		default TerminatingUpdate<T> apply(org.springframework.data.mongodb.core.query.Update update) {
+			return apply((UpdateDefinition) update);
+		}
 
 		/**
 		 * Specify {@code replacement} object.

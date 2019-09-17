@@ -40,6 +40,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -57,7 +58,7 @@ import com.mongodb.client.result.UpdateResult;
  * Interface that specifies a basic set of MongoDB operations. Implemented by {@link MongoTemplate}. Not often used but
  * a useful option for extensibility and testability (as it can be easily mocked, stubbed, or be the target of a JDK
  * proxy).
- * <p />
+ * <p/>
  * <strong>NOTE:</strong> Some operations cannot be executed within a MongoDB transaction. Please refer to the MongoDB
  * specific documentation to learn more about <a href="https://docs.mongodb.com/manual/core/transactions/">Multi
  * Document Transactions</a>.
@@ -175,7 +176,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	/**
 	 * Obtain a {@link ClientSession session} bound instance of {@link SessionScoped} binding the {@link ClientSession}
 	 * provided by the given {@link Supplier} to each and every command issued against MongoDB.
-	 * <p />
+	 * <p/>
 	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle. Use the
 	 * {@link SessionScoped#execute(SessionCallback, Consumer)} hook to potentially close the {@link ClientSession}.
 	 *
@@ -211,7 +212,7 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Obtain a {@link ClientSession} bound instance of {@link MongoOperations}.
-	 * <p />
+	 * <p/>
 	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle.
 	 *
 	 * @param session must not be {@literal null}.
@@ -653,7 +654,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * {@code $geoNear} aggregation command to emulate {@code geoNear} command functionality. We recommend using
 	 * aggregations directly:
 	 * </p>
-	 *
+	 * 
 	 * <pre class="code">
 	 * TypedAggregation&lt;T&gt; geoNear = TypedAggregation.newAggregation(entityClass, Aggregation.geoNear(near, "dis"))
 	 * 		.withOptions(AggregationOptions.builder().collation(near.getCollation()).build());
@@ -678,7 +679,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * {@code $geoNear} aggregation command to emulate {@code geoNear} command functionality. We recommend using
 	 * aggregations directly:
 	 * </p>
-	 *
+	 * 
 	 * <pre class="code">
 	 * TypedAggregation&lt;T&gt; geoNear = TypedAggregation.newAggregation(entityClass, Aggregation.geoNear(near, "dis"))
 	 * 		.withOptions(AggregationOptions.builder().collation(near.getCollation()).build());
@@ -883,12 +884,45 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification. Must not be {@literal null}.
+	 * @param update the {@link UpdateDefinition} to apply on matching documents. Must not be {@literal null}.
+	 * @param entityClass the parametrized type. Must not be {@literal null}.
+	 * @return the converted object that was updated before it was updated or {@literal null}, if not found.
+	 * @since 2.3
+	 */
+	@Nullable
+	<T> T findAndModify(Query query, UpdateDefinition update, Class<T> entityClass);
+
+	/**
+	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify <a/>
+	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
+	 *
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
+	 *          fields specification. Must not be {@literal null}.
 	 * @param update the {@link Update} to apply on matching documents. Must not be {@literal null}.
 	 * @param entityClass the parametrized type. Must not be {@literal null}.
 	 * @return the converted object that was updated before it was updated or {@literal null}, if not found.
+	 * @deprecated since 2.3 in favor of {@link #findAndModify(Query, UpdateDefinition, Class)}.
+	 */
+	@Deprecated
+	@Nullable
+	default <T> T findAndModify(Query query, Update update, Class<T> entityClass) {
+		return findAndModify(query, (UpdateDefinition) update, entityClass);
+	}
+
+	/**
+	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify <a/>
+	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
+	 *
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
+	 *          fields specification. Must not be {@literal null}.
+	 * @param update the {@link UpdateDefinition} to apply on matching documents. Must not be {@literal null}.
+	 * @param entityClass the parametrized type. Must not be {@literal null}.
+	 * @param collectionName the collection to query. Must not be {@literal null}.
+	 * @return the converted object that was updated before it was updated or {@literal null}, if not found.
+	 * @since 2.3
 	 */
 	@Nullable
-	<T> T findAndModify(Query query, Update update, Class<T> entityClass);
+	<T> T findAndModify(Query query, UpdateDefinition update, Class<T> entityClass, String collectionName);
 
 	/**
 	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify <a/>
@@ -900,9 +934,31 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param entityClass the parametrized type. Must not be {@literal null}.
 	 * @param collectionName the collection to query. Must not be {@literal null}.
 	 * @return the converted object that was updated before it was updated or {@literal null}, if not found.
+	 * @deprecated since 2.3 in favor of {@link #findAndModify(Query, UpdateDefinition, Class, String)}.
+	 */
+	@Deprecated
+	@Nullable
+	default <T> T findAndModify(Query query, Update update, Class<T> entityClass, String collectionName) {
+		return findAndModify(query, (UpdateDefinition) update, entityClass, collectionName);
+	}
+
+	/**
+	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify <a/>
+	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
+	 * {@link FindAndModifyOptions} into account.
+	 *
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
+	 *          fields specification.
+	 * @param update the {@link UpdateDefinition} to apply on matching documents.
+	 * @param options the {@link FindAndModifyOptions} holding additional information.
+	 * @param entityClass the parametrized type.
+	 * @return the converted object that was updated or {@literal null}, if not found. Depending on the value of
+	 *         {@link FindAndModifyOptions#isReturnNew()} this will either be the object as it was before the update or as
+	 *         it is after the update.
+	 * @since 2.3
 	 */
 	@Nullable
-	<T> T findAndModify(Query query, Update update, Class<T> entityClass, String collectionName);
+	<T> T findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options, Class<T> entityClass);
 
 	/**
 	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify <a/>
@@ -917,9 +973,33 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @return the converted object that was updated or {@literal null}, if not found. Depending on the value of
 	 *         {@link FindAndModifyOptions#isReturnNew()} this will either be the object as it was before the update or as
 	 *         it is after the update.
+	 * @deprecated since 2.3 in favor of {@link #findAndModify(Query, UpdateDefinition, FindAndModifyOptions, Class)}
 	 */
 	@Nullable
-	<T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass);
+	@Deprecated
+	default <T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass) {
+		return findAndModify(query, (UpdateDefinition) update, options, entityClass);
+	}
+
+	/**
+	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify <a/>
+	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
+	 * {@link FindAndModifyOptions} into account.
+	 *
+	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
+	 *          fields specification. Must not be {@literal null}.
+	 * @param update the {@link UpdateDefinition} to apply on matching documents. Must not be {@literal null}.
+	 * @param options the {@link FindAndModifyOptions} holding additional information. Must not be {@literal null}.
+	 * @param entityClass the parametrized type. Must not be {@literal null}.
+	 * @param collectionName the collection to query. Must not be {@literal null}.
+	 * @return the converted object that was updated or {@literal null}, if not found. Depending on the value of
+	 *         {@link FindAndModifyOptions#isReturnNew()} this will either be the object as it was before the update or as
+	 *         it is after the update.
+	 * @since 2.3
+	 */
+	@Nullable
+	<T> T findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options, Class<T> entityClass,
+			String collectionName);
 
 	/**
 	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify <a/>
@@ -935,10 +1015,15 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @return the converted object that was updated or {@literal null}, if not found. Depending on the value of
 	 *         {@link FindAndModifyOptions#isReturnNew()} this will either be the object as it was before the update or as
 	 *         it is after the update.
+	 * @deprecated since 2.3 in favor of
+	 *             {@link #findAndModify(Query, UpdateDefinition, FindAndModifyOptions, Class, String)}.
 	 */
+	@Deprecated
 	@Nullable
-	<T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass,
-			String collectionName);
+	default <T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass,
+			String collectionName) {
+		return findAndModify(query, (UpdateDefinition) update, options, entityClass, collectionName);
+	}
 
 	/**
 	 * Triggers
@@ -1294,8 +1379,26 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *          object. Must not be {@literal null}.
 	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 2.3
 	 */
-	UpdateResult upsert(Query query, Update update, Class<?> entityClass);
+	UpdateResult upsert(Query query, UpdateDefinition update, Class<?> entityClass);
+
+	/**
+	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
+	 * combining the query document and the update document.
+	 *
+	 * @param query the query document that specifies the criteria used to select a record to be upserted. Must not be
+	 *          {@literal null}.
+	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
+	 *          object. Must not be {@literal null}.
+	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
+	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @deprecated since 2.3 in favor of {@link #upsert(Query, UpdateDefinition, Class)}
+	 */
+	@Deprecated
+	default UpdateResult upsert(Query query, Update update, Class<?> entityClass) {
+		return upsert(query, (UpdateDefinition) update, entityClass);
+	}
 
 	/**
 	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
@@ -1312,8 +1415,43 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *          object. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 2.3
 	 */
-	UpdateResult upsert(Query query, Update update, String collectionName);
+	UpdateResult upsert(Query query, UpdateDefinition update, String collectionName);
+
+	/**
+	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
+	 * combining the query document and the update document. <br />
+	 * <strong>NOTE:</strong> Any additional support for field mapping, versions, etc. is not available due to the lack of
+	 * domain type information. Use {@link #upsert(Query, Update, Class, String)} to get full type specific support.
+	 *
+	 * @param query the query document that specifies the criteria used to select a record to be upserted. Must not be
+	 *          {@literal null}.
+	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
+	 *          object. Must not be {@literal null}.
+	 * @param collectionName name of the collection to update the object in.
+	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @deprecated since 2.3 in favor of {@link #upsert(Query, UpdateDefinition, String)}
+	 */
+	@Deprecated
+	default UpdateResult upsert(Query query, Update update, String collectionName) {
+		return upsert(query, (UpdateDefinition) update, collectionName);
+	}
+
+	/**
+	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
+	 * combining the query document and the update document.
+	 *
+	 * @param query the query document that specifies the criteria used to select a record to be upserted. Must not be
+	 *          {@literal null}.
+	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
+	 *          object. Must not be {@literal null}.
+	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
+	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
+	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 2.3
+	 */
+	UpdateResult upsert(Query query, UpdateDefinition update, Class<?> entityClass, String collectionName);
 
 	/**
 	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
@@ -1328,8 +1466,26 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @deprecated since 2.3 in favor of {@link #upsert(Query, UpdateDefinition, Class, String)}
 	 */
-	UpdateResult upsert(Query query, Update update, Class<?> entityClass, String collectionName);
+	@Deprecated
+	default UpdateResult upsert(Query query, Update update, Class<?> entityClass, String collectionName) {
+		return upsert(query, (UpdateDefinition) update, entityClass, collectionName);
+	}
+
+	/**
+	 * Updates the first object that is found in the collection of the entity class that matches the query document with
+	 * the provided update document.
+	 *
+	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
+	 *          {@literal null}.
+	 * @param update the update document that contains the updated object or $ operators to manipulate the existing. Must
+	 *          not be {@literal null}.
+	 * @param entityClass class that determines the collection to use.
+	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 2.3
+	 */
+	UpdateResult updateFirst(Query query, UpdateDefinition update, Class<?> entityClass);
 
 	/**
 	 * Updates the first object that is found in the collection of the entity class that matches the query document with
@@ -1343,8 +1499,12 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *          not be {@literal null}.
 	 * @param entityClass class that determines the collection to use.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @deprecated since 2.3 in favor of {@link #updateFirst(Query, UpdateDefinition, Class)}.
 	 */
-	UpdateResult updateFirst(Query query, Update update, Class<?> entityClass);
+	@Deprecated
+	default UpdateResult updateFirst(Query query, Update update, Class<?> entityClass) {
+		return updateFirst(query, (UpdateDefinition) update, entityClass);
+	}
 
 	/**
 	 * Updates the first object that is found in the specified collection that matches the query document criteria with
@@ -1361,8 +1521,43 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *          not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 2.3
 	 */
-	UpdateResult updateFirst(Query query, Update update, String collectionName);
+	UpdateResult updateFirst(Query query, UpdateDefinition update, String collectionName);
+
+	/**
+	 * Updates the first object that is found in the specified collection that matches the query document criteria with
+	 * the provided updated document. <br />
+	 * <strong>NOTE:</strong> Any additional support for field mapping, versions, etc. is not available due to the lack of
+	 * domain type information. Use {@link #updateFirst(Query, Update, Class, String)} to get full type specific support.
+	 *
+	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
+	 *          {@literal null}.
+	 * @param update the update document that contains the updated object or $ operators to manipulate the existing. Must
+	 *          not be {@literal null}.
+	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
+	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @deprecated since 2.3 in favor of {@link #updateFirst(Query, UpdateDefinition, String)}.
+	 */
+	@Deprecated
+	default UpdateResult updateFirst(Query query, Update update, String collectionName) {
+		return updateFirst(query, (UpdateDefinition) update, collectionName);
+	}
+
+	/**
+	 * Updates the first object that is found in the specified collection that matches the query document criteria with
+	 * the provided updated document. <br />
+	 *
+	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
+	 *          {@literal null}.
+	 * @param update the update document that contains the updated object or $ operators to manipulate the existing. Must
+	 *          not be {@literal null}.
+	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
+	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
+	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 2.3
+	 */
+	UpdateResult updateFirst(Query query, UpdateDefinition update, Class<?> entityClass, String collectionName);
 
 	/**
 	 * Updates the first object that is found in the specified collection that matches the query document criteria with
@@ -1377,8 +1572,12 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @deprecated since 2.3 in favor of {@link #updateFirst(Query, UpdateDefinition, Class, String)}.
 	 */
-	UpdateResult updateFirst(Query query, Update update, Class<?> entityClass, String collectionName);
+	@Deprecated
+	default UpdateResult updateFirst(Query query, Update update, Class<?> entityClass, String collectionName) {
+		return updateFirst(query, (UpdateDefinition) update, entityClass, collectionName);
+	}
 
 	/**
 	 * Updates all objects that are found in the collection for the entity class that matches the query document criteria
@@ -1390,8 +1589,26 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *          not be {@literal null}.
 	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 2.3
 	 */
-	UpdateResult updateMulti(Query query, Update update, Class<?> entityClass);
+	UpdateResult updateMulti(Query query, UpdateDefinition update, Class<?> entityClass);
+
+	/**
+	 * Updates all objects that are found in the collection for the entity class that matches the query document criteria
+	 * with the provided updated document.
+	 *
+	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
+	 *          {@literal null}.
+	 * @param update the update document that contains the updated object or $ operators to manipulate the existing. Must
+	 *          not be {@literal null}.
+	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
+	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @deprecated since 2.3 in favor of {@link #updateMulti(Query, UpdateDefinition, Class)}.
+	 */
+	@Deprecated
+	default UpdateResult updateMulti(Query query, Update update, Class<?> entityClass) {
+		return updateMulti(query, (UpdateDefinition) update, entityClass);
+	}
 
 	/**
 	 * Updates all objects that are found in the specified collection that matches the query document criteria with the
@@ -1405,8 +1622,28 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *          not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 2.3
 	 */
-	UpdateResult updateMulti(Query query, Update update, String collectionName);
+	UpdateResult updateMulti(Query query, UpdateDefinition update, String collectionName);
+
+	/**
+	 * Updates all objects that are found in the specified collection that matches the query document criteria with the
+	 * provided updated document. <br />
+	 * <strong>NOTE:</strong> Any additional support for field mapping, versions, etc. is not available due to the lack of
+	 * domain type information. Use {@link #updateMulti(Query, Update, Class, String)} to get full type specific support.
+	 *
+	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
+	 *          {@literal null}.
+	 * @param update the update document that contains the updated object or $ operators to manipulate the existing. Must
+	 *          not be {@literal null}.
+	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
+	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @deprecated since 2.3 in favor of {@link #updateMulti(Query, UpdateDefinition, String)}.
+	 */
+	@Deprecated
+	default UpdateResult updateMulti(Query query, Update update, String collectionName) {
+		return updateMulti(query, (UpdateDefinition) update, collectionName);
+	}
 
 	/**
 	 * Updates all objects that are found in the collection for the entity class that matches the query document criteria
@@ -1419,8 +1656,27 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 2.3
 	 */
-	UpdateResult updateMulti(Query query, Update update, Class<?> entityClass, String collectionName);
+	UpdateResult updateMulti(Query query, UpdateDefinition update, Class<?> entityClass, String collectionName);
+
+	/**
+	 * Updates all objects that are found in the collection for the entity class that matches the query document criteria
+	 * with the provided updated document.
+	 *
+	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
+	 *          {@literal null}.
+	 * @param update the update document that contains the updated object or $ operators to manipulate the existing. Must
+	 *          not be {@literal null}.
+	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
+	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
+	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @deprecated since 2.3 in favor of {@link #updateMulti(Query, UpdateDefinition, Class, String)}.
+	 */
+	@Deprecated
+	default UpdateResult updateMulti(Query query, Update update, Class<?> entityClass, String collectionName) {
+		return updateMulti(query, (UpdateDefinition) update, entityClass, collectionName);
+	}
 
 	/**
 	 * Remove the given object from the collection by {@literal id} and (if applicable) its
