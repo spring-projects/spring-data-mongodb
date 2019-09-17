@@ -45,6 +45,9 @@ public class MongoVersionRule implements TestRule {
 	private static final Version DEFAULT_HIGH = ANY;
 	private static final Version DEFAULT_LOW = new Version(0, 0, 0);
 
+	public static MongoVersionRule REQUIRES_4_2 = MongoVersionRule
+			.atLeast(org.springframework.data.util.Version.parse("4.2"));
+
 	private final AtomicReference<Version> currentVersion = new AtomicReference<>(null);
 	private final Version minVersion;
 	private final Version maxVersion;
@@ -127,7 +130,6 @@ public class MongoVersionRule implements TestRule {
 							: MongoVersionRule.this.minVersion;
 					Version maxVersion = MongoVersionRule.this.maxVersion.equals(ANY) ? DEFAULT_HIGH
 							: MongoVersionRule.this.maxVersion;
-
 
 					if (description.getAnnotation(MongoVersion.class) != null) {
 						MongoVersion version = description.getAnnotation(MongoVersion.class);

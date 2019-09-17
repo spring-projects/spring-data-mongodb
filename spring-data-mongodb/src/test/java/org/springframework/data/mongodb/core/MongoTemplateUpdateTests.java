@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.data.annotation.Id;
@@ -36,6 +37,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
+import org.springframework.data.mongodb.test.util.MongoVersionRule;
 
 import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
@@ -44,6 +46,8 @@ import com.mongodb.client.MongoCollection;
  * @author Christoph Strobl
  */
 public class MongoTemplateUpdateTests {
+
+	public static @ClassRule MongoVersionRule REQUIRES_AT_LEAST_4_2 = MongoVersionRule.REQUIRES_4_2;
 
 	static final String DB_NAME = "update-test";
 
