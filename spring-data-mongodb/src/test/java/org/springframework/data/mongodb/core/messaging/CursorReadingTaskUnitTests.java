@@ -96,15 +96,27 @@ public class CursorReadingTaskUnitTests {
 		verify(listener, times(task.getValues().size())).onMessage(any());
 	}
 
-	@Test // DATAMONGO-2173
+	@Test // DATAMONGO-2173, DATAMONGO-2366
 	public void writesErrorOnStartToErrorHandler() {
 
 		ArgumentCaptor<Throwable> errorCaptor = ArgumentCaptor.forClass(Throwable.class);
 		Task task = new ErrorOnInitCursorTaskStub(template, request, Object.class, errorHandler);
 
-		assertThatExceptionOfType(RuntimeException.class).isThrownBy(task::run);
+		task.run();
 		verify(errorHandler).handleError(errorCaptor.capture());
 		assertThat(errorCaptor.getValue()).hasMessageStartingWith("let's get it started (ha)");
+	}
+
+	@Test // DATAMONGO-2366
+	public void errorOnNextNotifiesErrorHandlerOnlyOnce() {
+
+		ArgumentCaptor<Throwable> errorCaptor = ArgumentCaptor.forClass(Throwable.class);
+		when(cursor.getServerCursor()).thenReturn(new ServerCursor(10, new ServerAddress("mock")));
+		when(cursor.tryNext()).thenThrow(new IllegalStateException());
+
+		task.run();
+		verify(errorHandler).handleError(errorCaptor.capture());
+		assertThat(errorCaptor.getValue()).isInstanceOf(IllegalStateException.class);
 	}
 
 	private static class MultithreadedStopRunningWhileEmittingMessages extends MultithreadedTestCase {
