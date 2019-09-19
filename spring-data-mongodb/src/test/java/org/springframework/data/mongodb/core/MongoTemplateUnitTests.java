@@ -914,12 +914,12 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	public void countShouldApplyQueryHintIfPresent() {
 
 		Document queryHint = new Document("age", 1);
-		template.count(new BasicQuery("{}").withHint(queryHint), AutogenerateableId.class);
+		template.count(new BasicQuery("{}").withHint(queryHint.toJson()), AutogenerateableId.class);
 
 		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
 		verify(collection).count(any(), options.capture());
 
-		assertThat(options.getValue().getHint()).isEqualTo(queryHint);
+		assertThat(options.getValue().getHint(), is(equalTo(queryHint)));
 	}
 
 	@Test // DATAMONGO-1733

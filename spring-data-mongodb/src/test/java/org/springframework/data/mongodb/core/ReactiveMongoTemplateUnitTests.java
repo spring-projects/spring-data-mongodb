@@ -38,6 +38,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.reactivestreams.Publisher;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.MongoTemplateUnitTests.AutogenerateableId;
@@ -52,6 +53,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.model.FindOneAndDeleteOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
@@ -341,6 +343,19 @@ public class ReactiveMongoTemplateUnitTests {
 		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonExtended.class, null).subscribe();
 
 		verify(findPublisher, never()).projection(any());
+	}
+
+	@Test // DATAMONGO-2360
+	public void countShouldApplyQueryHintIfPresent() {
+
+		when(collection.count(any(Bson.class), any(CountOptions.class))).thenReturn(Mono.empty());
+		Document queryHint = new Document("age", 1);
+		template.count(new Query().withHint(queryHint.toJson()), Person.class, "star-wars").subscribe();
+
+		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
+		verify(collection).count(any(), options.capture());
+
+		assertThat(options.getValue().getHint(), is(equalTo(queryHint)));
 	}
 
 	@Data

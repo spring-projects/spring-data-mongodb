@@ -1167,6 +1167,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			if (query != null) {
 				query.getCollation().map(Collation::toMongoCollation).ifPresent(options::collation);
 			}
+			if (StringUtils.hasText(query.getHint())) {
+				options.hint(Document.parse(query.getHint()));
+			}
 
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("Executing count: {} in collection: {}", serializeToJsonSafely(filter), collectionName);
