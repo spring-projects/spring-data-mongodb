@@ -360,9 +360,10 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	@Query(value = "{ 'id' : ?0 }", fields = "{ 'fans': { '$slice': [ ?1, ?2 ] } }")
 	Person findWithSliceInProjection(String id, int skip, int limit);
 
-	@Query(value = "{ 'shippingAddresses' : { '$elemMatch' : { 'city' : { '$eq' : 'lnz' } } } }", fields = "{ 'shippingAddresses.$': ?0 }")
+	@Query(value = "{ 'shippingAddresses' : { '$elemMatch' : { 'city' : { '$eq' : 'lnz' } } } }",
+			fields = "{ 'shippingAddresses.$': ?0 }")
 	Person findWithArrayPositionInProjection(int position);
 
-	@Query(value="{_id:?0}")
+	@Query(value = "{_id:?0}")
 	Optional<org.bson.Document> findDocumentById(String id);
 }

@@ -281,9 +281,9 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 		repository.findByLocationNear(new Point(-73.99, 40.73), //
 				new Distance(2000, Metrics.KILOMETERS)).as(StepVerifier::create).consumeNextWith(actual -> {
 
-			assertThat(actual.getDistance().getValue()).isCloseTo(1, offset(1d));
-			assertThat(actual.getContent()).isEqualTo(dave);
-		}).verifyComplete();
+					assertThat(actual.getDistance().getValue()).isCloseTo(1, offset(1d));
+					assertThat(actual.getContent()).isEqualTo(dave);
+				}).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
