@@ -384,6 +384,16 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 				.verifyComplete();
 	}
 
+	@Test // DATAMONGO-2374
+	public void findsWithNativeProjection() {
+
+		repository.findDocumentById(dave.getId()) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(it -> {
+					assertThat(it).containsEntry("firstname", dave.getFirstname()).containsEntry("lastname", dave.getLastname());
+				}).verifyComplete();
+	}
+
 	interface ReactivePersonRepository extends ReactiveMongoRepository<Person, String> {
 
 		Flux<Person> findByLastname(String lastname);
@@ -422,6 +432,9 @@ public class ReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanF
 
 		@Query(sort = "{ age : -1 }")
 		Flux<Person> findByAgeGreaterThan(int age, Sort sort);
+
+		@Query(value = "{_id:?0}")
+		Mono<org.bson.Document> findDocumentById(String id);
 	}
 
 	interface ReactiveContactRepository extends ReactiveMongoRepository<Contact, String> {}
