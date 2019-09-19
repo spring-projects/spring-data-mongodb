@@ -36,11 +36,17 @@ Subscription subscription = container.register(new ChangeStreamRequest<>(listene
 
 container.stop();                                                                                         <5>
 ----
-<1> Starting the container intializes the resources and starts `Task` instances for already registered `SubscriptionRequest` instances. Requests added after startup are ran immediately.
+<1> Starting the container initializes the resources and starts `Task` instances for already registered `SubscriptionRequest` instances. Requests added after startup are ran immediately.
 <2> Define the listener called when a `Message` is received. The `Message#getBody()` is converted to the requested domain type. Use `Document` to receive raw results without conversion.
 <3> Set the collection to listen to and provide additional options through `ChangeStreamOptions`.
 <4> Register the request. The returned `Subscription` can be used to check the current `Task` state and cancel its execution to free resources.
 <5> Do not forget to stop the container once you are sure you no longer need it. Doing so stops all running `Task` instances within the container.
+====
+
+[NOTE]
+====
+Errors while processing are passed on to an `org.springframework.util.ErrorHandler`. If not stated otherwise a log appending `ErrorHandler` gets applied by default. +
+Please use `register(request, body, errorHandler)` to provide additional functionality.
 ====
 
 === Reactive Change Streams
