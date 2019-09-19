@@ -66,8 +66,12 @@ class PropertyOperations {
 				projectionInformation.getInputProperties().forEach(it -> projectedFields.append(it.getName(), 1));
 			}
 		} else {
-			mappingContext.getRequiredPersistentEntity(targetType).doWithProperties(
-					(SimplePropertyHandler) persistentProperty -> projectedFields.append(persistentProperty.getName(), 1));
+
+			MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(targetType);
+			if(entity != null) {
+				entity.doWithProperties(
+						(SimplePropertyHandler) persistentProperty -> projectedFields.append(persistentProperty.getName(), 1));
+			}
 		}
 
 		return projectedFields;
