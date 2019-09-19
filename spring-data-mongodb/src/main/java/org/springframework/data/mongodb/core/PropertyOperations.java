@@ -68,7 +68,7 @@ class PropertyOperations {
 		} else {
 
 			MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(targetType);
-			if(entity != null) {
+			if (entity != null) {
 				entity.doWithProperties(
 						(SimplePropertyHandler) persistentProperty -> projectedFields.append(persistentProperty.getName(), 1));
 			}

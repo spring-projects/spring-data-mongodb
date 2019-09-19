@@ -36,8 +36,6 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
-import com.mongodb.client.result.DeleteResult;
-
 /**
  * Set of classes to contain query execution strategies. Depending (mostly) on the return type of a
  * {@link org.springframework.data.repository.query.QueryMethod} a {@link AbstractReactiveMongoQuery} can be executed in
@@ -174,7 +172,7 @@ interface ReactiveMongoQueryExecution {
 				return source;
 			}
 
-			if(!operations.getConverter().getMappingContext().hasPersistentEntityFor(returnedType.getReturnedType())) {
+			if (!operations.getConverter().getMappingContext().hasPersistentEntityFor(returnedType.getReturnedType())) {
 				return source;
 			}
 
