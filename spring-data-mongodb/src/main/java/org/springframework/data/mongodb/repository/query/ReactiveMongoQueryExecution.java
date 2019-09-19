@@ -174,6 +174,10 @@ interface ReactiveMongoQueryExecution {
 				return source;
 			}
 
+			if(!operations.getConverter().getMappingContext().hasPersistentEntityFor(returnedType.getReturnedType())) {
+				return source;
+			}
+
 			Converter<Object, Object> converter = new DtoInstantiatingConverter(returnedType.getReturnedType(),
 					operations.getConverter().getMappingContext(), instantiators);
 

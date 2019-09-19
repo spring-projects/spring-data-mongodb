@@ -527,6 +527,16 @@ public class ReactiveMongoRepositoryTests {
 				.verifyComplete();
 	}
 
+	@Test // DATAMONGO-2374
+	public void findsWithNativeProjection() {
+
+		repository.findDocumentById(dave.getId()) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(it -> {
+					assertThat(it).containsEntry("firstname", dave.getFirstname()).containsEntry("lastname", dave.getLastname());
+				}).verifyComplete();
+	}
+
 	interface ReactivePersonRepository
 			extends ReactiveMongoRepository<Person, String>, ReactiveQuerydslPredicateExecutor<Person> {
 
@@ -587,6 +597,9 @@ public class ReactiveMongoRepositoryTests {
 
 		@Aggregation(pipeline = "{ '$group' : { '_id' : null, 'total' : { $sum: '$age' } } }")
 		Mono<SumAge> sumAgeAndReturnSumWrapper();
+
+		@Query(value = "{_id:?0}")
+		Mono<org.bson.Document> findDocumentById(String id);
 	}
 
 	interface ReactiveContactRepository extends ReactiveMongoRepository<Contact, String> {}

@@ -1318,4 +1318,11 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 				.isInstanceOf(AggregationResults.class) //
 				.containsExactly(new SumAge(245L));
 	}
+
+	@Test // DATAMONGO-2374
+	public void findsWithNativeProjection() {
+
+		assertThat(repository.findDocumentById(dave.getId()).get()).containsEntry("firstname", dave.getFirstname())
+				.containsEntry("lastname", dave.getLastname());
+	}
 }

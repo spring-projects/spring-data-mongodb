@@ -388,4 +388,7 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 
 	@Aggregation(pipeline = "{ '$group' : { '_id' : null, 'total' : { $sum: '$age' } } }")
 	AggregationResults<SumAge> sumAgeAndReturnAggregationResultWrapperWithConcreteType();
+
+	@Query(value="{_id:?0}")
+	Optional<org.bson.Document> findDocumentById(String id);
 }
