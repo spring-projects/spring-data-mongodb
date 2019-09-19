@@ -1275,6 +1275,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			if (query.getSkip() > 0) {
 				options.skip((int) query.getSkip());
 			}
+			if (StringUtils.hasText(query.getHint())) {
+				options.hint(Document.parse(query.getHint()));
+			}
 
 			operations.forType(entityClass).getCollation(query).map(Collation::toMongoCollation) //
 					.ifPresent(options::collation);

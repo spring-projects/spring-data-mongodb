@@ -407,6 +407,18 @@ public class ReactiveMongoTemplateUnitTests {
 		assertThat(options.getValue().getLimit()).isEqualTo(100);
 	}
 
+	@Test // DATAMONGO-2360
+	public void countShouldApplyQueryHintIfPresent() {
+
+		Document queryHint = new Document("age", 1);
+		template.count(new Query().withHint(queryHint), Person.class, "star-wars").subscribe();
+
+		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
+		verify(collection).count(any(), options.capture());
+
+		assertThat(options.getValue().getHint()).isEqualTo(queryHint);
+	}
+
 	@Test // DATAMONGO-2215
 	public void updateShouldApplyArrayFilters() {
 
