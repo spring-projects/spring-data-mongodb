@@ -148,6 +148,15 @@ public class BasicQuery extends Query {
 		this.sortObject = sortObject;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.query.Query#isSorted()
+	 */
+	@Override
+	public boolean isSorted() {
+		return super.isSorted() || !sortObject.isEmpty();
+	}
+
 	/**
 	 * Set the fields (projection) {@link Document}.
 	 *

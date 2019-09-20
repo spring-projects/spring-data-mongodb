@@ -1757,6 +1757,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	protected Mono<UpdateResult> doUpdate(String collectionName, Query query, @Nullable UpdateDefinition update,
 			@Nullable Class<?> entityClass, boolean upsert, boolean multi) {
 
+		if (query.isSorted() && LOGGER.isWarnEnabled()) {
+
+			LOGGER.warn("{} does not support sort ('{}'). Please use findAndModify() instead.",
+					upsert ? "Upsert" : "UpdateFirst", serializeToJsonSafely(query.getSortObject()));
+		}
+
 		MongoPersistentEntity<?> entity = entityClass == null ? null : getPersistentEntity(entityClass);
 
 		Flux<UpdateResult> result = execute(collectionName, collection -> {

@@ -30,7 +30,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
-
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
@@ -283,6 +282,17 @@ public class Query {
 	}
 
 	/**
+	 * Returns {@literal true} if the {@link Query} has a sort parameter.
+	 *
+	 * @return {@literal true} if sorted.
+	 * @see Sort#isSorted()
+	 * @since 2.1.11 / 2.2
+	 */
+	public boolean isSorted() {
+		return sort.isSorted();
+	}
+
+	/**
 	 * Get the number of documents to skip.
 	 *
 	 * @return
@@ -529,6 +539,11 @@ public class Query {
 			@Override
 			public Document getQueryObject() {
 				return BsonUtils.merge(sourceQuery, super.getQueryObject());
+			}
+
+			@Override
+			public boolean isSorted() {
+				return source.isSorted() || super.isSorted();
 			}
 		};
 
