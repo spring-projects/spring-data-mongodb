@@ -868,6 +868,8 @@ Most methods return the `Update` object to provide a fluent style for the API.
 * *updateFirst*: Updates the first document that matches the query document criteria with the updated document.
 * *updateMulti*: Updates all objects that match the query document criteria with the updated document.
 
+WARNING: `updateFirst` does not support ordering. Please use <<mongo-template.find-and-upsert, findAndModify>> to apply `Sort`.
+
 [[mongodb-template-update.update]]
 ==== Methods in the `Update` Class
 
@@ -918,6 +920,8 @@ Related to performing an `updateFirst` operation, you can also perform an "`upse
 ----
 template.upsert(query(where("ssn").is(1111).and("firstName").is("Joe").and("Fraizer").is("Update")), update("address", addr), Person.class);
 ----
+
+WARNING: `upsert` does not support ordering. Please use <<mongo-template.find-and-upsert, findAndModify>> to apply `Sort`.
 
 [[mongo-template.find-and-upsert]]
 === Finding and Upserting Documents in a Collection

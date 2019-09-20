@@ -1101,7 +1101,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 
 	/**
 	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
-	 * combining the query document and the update document.
+	 * combining the query document and the update document. <br />
+	 * <strong>NOTE:</strong> {@link Query#getSortObject() sorting} is not supported by {@code db.collection.updateOne}.
+	 * Use {@link #findAndModify(Query, Update, Class)} instead.
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be upserted. Must not be
 	 *          {@literal null}.
@@ -1117,6 +1119,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * combining the query document and the update document. <br />
 	 * <strong>NOTE:</strong> Any additional support for field mapping, versions, etc. is not available due to the lack of
 	 * domain type information. Use {@link #upsert(Query, Update, Class, String)} to get full type specific support.
+	 * <br />
+	 * <strong>NOTE:</strong> {@link Query#getSortObject() sorting} is not supported by {@code db.collection.updateOne}.
+	 * Use {@link #findAndModify(Query, Update, Class, String)} instead.
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be upserted. Must not be
 	 *          {@literal null}.
@@ -1129,7 +1134,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 
 	/**
 	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
-	 * combining the query document and the update document.
+	 * combining the query document and the update document. <br />
+	 * <strong>NOTE:</strong> {@link Query#getSortObject() sorting} is not supported by {@code db.collection.updateOne}.
+	 * Use {@link #findAndModify(Query, Update, Class, String)} instead.
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be upserted. Must not be
 	 *          {@literal null}.
@@ -1143,7 +1150,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 
 	/**
 	 * Updates the first object that is found in the collection of the entity class that matches the query document with
-	 * the provided update document.
+	 * the provided update document. <br />
+	 * <strong>NOTE:</strong> {@link Query#getSortObject() sorting} is not supported by {@code db.collection.updateOne}.
+	 * Use {@link #findAndModify(Query, Update, Class)} instead.
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
 	 *          {@literal null}.
@@ -1159,6 +1168,9 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * the provided updated document. <br />
 	 * <strong>NOTE:</strong> Any additional support for field mapping, versions, etc. is not available due to the lack of
 	 * domain type information. Use {@link #updateFirst(Query, Update, Class, String)} to get full type specific support.
+	 * <br />
+	 * <strong>NOTE:</strong> {@link Query#getSortObject() sorting} is not supported by {@code db.collection.updateOne}.
+	 * Use {@link #findAndModify(Query, Update, Class, String)} instead.
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
 	 *          {@literal null}.
@@ -1172,6 +1184,8 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	/**
 	 * Updates the first object that is found in the specified collection that matches the query document criteria with
 	 * the provided updated document. <br />
+	 * <strong>NOTE:</strong> {@link Query#getSortObject() sorting} is not supported by {@code db.collection.updateOne}.
+	 * Use {@link #findAndModify(Query, Update, Class, String)} instead.
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
 	 *          {@literal null}.

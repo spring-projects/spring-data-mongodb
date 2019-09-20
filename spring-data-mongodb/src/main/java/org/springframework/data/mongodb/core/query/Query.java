@@ -263,6 +263,17 @@ public class Query {
 	}
 
 	/**
+	 * Returns {@literal true} if the {@link Query} has a sort parameter.
+	 *
+	 * @return {@literal true} if sorted.
+	 * @see Sort#isSorted()
+	 * @since 2.1
+	 */
+	public boolean isSorted() {
+		return sort.isSorted();
+	}
+
+	/**
 	 * Get the number of documents to skip.
 	 *
 	 * @return
@@ -372,7 +383,7 @@ public class Query {
 	 * Set the number of documents to return in each response batch. <br />
 	 * Use {@literal 0 (zero)} for no limit. A <strong>negative limit</strong> closes the cursor after returning a single
 	 * batch indicating to the server that the client will not ask for a subsequent one.
-	 * 
+	 *
 	 * @param batchSize The number of documents to return per batch.
 	 * @return this.
 	 * @see Meta#setCursorBatchSize(int)

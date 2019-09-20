@@ -1576,6 +1576,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(update, "Update must not be null!");
 
+		if (query.isSorted() && LOGGER.isWarnEnabled()) {
+
+			LOGGER.warn("{} does not support sort ('{}'). Please use findAndModify() instead.",
+					upsert ? "Upsert" : "UpdateFirst", serializeToJsonSafely(query.getSortObject()));
+		}
+
 		return execute(collectionName, new CollectionCallback<UpdateResult>() {
 			public UpdateResult doInCollection(MongoCollection<Document> collection)
 					throws MongoException, DataAccessException {

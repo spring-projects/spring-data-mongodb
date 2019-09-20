@@ -180,4 +180,13 @@ public class TextQuery extends Query {
 
 		return sort;
 	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.query.Query#isSorted()
+	 */
+	@Override
+	public boolean isSorted() {
+		return super.isSorted() || sortByScore;
+	}
 }
