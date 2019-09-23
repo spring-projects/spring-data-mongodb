@@ -43,4 +43,12 @@ public interface Field {
 	 * @return
 	 */
 	boolean isAliased();
+
+	/**
+	 * @return true if the field name references a local value such as {@code $$this}.
+	 * @since 2.1.11
+	 */
+	default boolean isInternal() {
+		return false;
+	}
 }

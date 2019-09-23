@@ -69,6 +69,11 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 	 */
 	@Override
 	public FieldReference getReference(Field field) {
+
+		if(field.isInternal()) {
+			return new DirectFieldReference(new ExposedField(field, true));
+		}
+
 		return getReference(field, field.getTarget());
 	}
 
