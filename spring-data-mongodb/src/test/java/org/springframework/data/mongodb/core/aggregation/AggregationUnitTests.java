@@ -22,6 +22,7 @@ import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.bson.Document;
@@ -567,6 +568,24 @@ public class AggregationUnitTests {
 				"$project");
 
 		assertThat($project.containsKey("plts.ests")).isTrue();
+	}
+
+	@Test // DATAMONGO-2377
+	public void shouldAllowInternal$$thisAnd$$valueReferences() {
+
+		Document untyped = newAggregation( //
+				Arrays.asList( //
+						(group("uid", "data.sourceId") //
+								.push("data.attributeRecords").as("attributeRecordArrays")), //
+						(project() //
+								.and(ArrayOperators.arrayOf("attributeRecordArrays") //
+										.reduce(ArrayOperators.arrayOf("$$value").concat("$$this")) //
+										.startingWith(Collections.emptyList())) //
+								.as("attributeRecordArrays")) //
+				)).toDocument("collection-1", DEFAULT_CONTEXT);
+
+		assertThat(extractPipelineElement(untyped, 1, "$project")).isEqualTo(Document.parse(
+				"{\"attributeRecordArrays\": {\"$reduce\": {\"input\": \"$attributeRecordArrays\", \"initialValue\": [], \"in\": {\"$concatArrays\": [\"$$value\", \"$$this\"]}}}}"));
 	}
 
 	private Document extractPipelineElement(Document agg, int index, String operation) {

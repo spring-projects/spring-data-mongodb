@@ -283,6 +283,11 @@ public final class Fields implements Iterable<Field> {
 			return !getName().equals(getTarget());
 		}
 
+		@Override
+		public boolean isInternal() {
+			return getRaw().endsWith("$$this") || getRaw().endsWith("$$value");
+		}
+
 		/**
 		 * @return {@literal true} in case the field name starts with {@code $$}.
 		 * @since 1.10
