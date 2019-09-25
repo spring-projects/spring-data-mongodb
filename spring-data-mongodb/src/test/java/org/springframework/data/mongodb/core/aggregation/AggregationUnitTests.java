@@ -562,11 +562,11 @@ public class AggregationUnitTests {
 		Document $project = extractPipelineElement(agg.toDocument("collection-1", Aggregation.DEFAULT_CONTEXT), 0,
 				"$project");
 
-		assertThat($project.containsKey("plts.ests")).isTrue();
+		assertThat($project).containsKey("plts.ests");
 	}
 
 	@Test // DATAMONGO-2377
-	public void shouldAllowInternal$$thisAnd$$valueReferences() {
+	public void shouldAllowInternalThisAndValueReferences() {
 
 		Document untyped = newAggregation( //
 				Arrays.asList( //

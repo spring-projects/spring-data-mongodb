@@ -286,7 +286,7 @@ public class Query {
 	 *
 	 * @return {@literal true} if sorted.
 	 * @see Sort#isSorted()
-	 * @since 2.1.11 / 2.2
+	 * @since 2.2
 	 */
 	public boolean isSorted() {
 		return sort.isSorted();
