@@ -38,11 +38,12 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.stereotype.Repository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 
 /**
  * Integration tests for auditing via Java config.
@@ -65,7 +66,7 @@ public class AuditingViaJavaConfigRepositoriesTests {
 	@Configuration
 	@EnableMongoAuditing(auditorAwareRef = "auditorProvider")
 	@EnableMongoRepositories(basePackageClasses = AuditablePersonRepository.class, considerNestedRepositories = true)
-	static class Config extends AbstractMongoConfiguration {
+	static class Config extends AbstractMongoClientConfiguration {
 
 		@Override
 		protected String getDatabaseName() {
@@ -74,7 +75,7 @@ public class AuditingViaJavaConfigRepositoriesTests {
 
 		@Override
 		public MongoClient mongoClient() {
-			return new MongoClient();
+			return MongoTestUtils.client();
 		}
 
 		@Bean
@@ -197,11 +198,11 @@ public class AuditingViaJavaConfigRepositoriesTests {
 
 	@Configuration
 	@EnableMongoAuditing
-	static class SimpleConfig extends AbstractMongoConfiguration {
+	static class SimpleConfig extends AbstractMongoClientConfiguration {
 
 		@Override
 		public MongoClient mongoClient() {
-			return new MongoClient();
+			return MongoTestUtils.client();
 		}
 
 		@Override

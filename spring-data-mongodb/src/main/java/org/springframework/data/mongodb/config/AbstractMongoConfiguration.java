@@ -42,8 +42,10 @@ import com.mongodb.MongoClient;
  * @author Mark Paluch
  * @see MongoConfigurationSupport
  * @see AbstractMongoClientConfiguration
+ * @deprecated since 2.2 in favor of {@link AbstractMongoClientConfiguration}.
  */
 @Configuration
+@Deprecated
 public abstract class AbstractMongoConfiguration extends MongoConfigurationSupport {
 
 	/**

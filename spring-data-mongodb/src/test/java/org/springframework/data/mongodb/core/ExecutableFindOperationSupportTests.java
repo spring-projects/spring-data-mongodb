@@ -43,8 +43,7 @@ import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.NearQuery;
-
-import com.mongodb.MongoClient;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
 /**
  * Integration tests for {@link ExecutableFindOperationSupport}.
@@ -67,7 +66,8 @@ public class ExecutableFindOperationSupportTests {
 	@Before
 	public void setUp() {
 
-		template = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), "ExecutableFindOperationSupportTests"));
+		template = new MongoTemplate(
+				new SimpleMongoClientDbFactory(MongoTestUtils.client(), "ExecutableFindOperationSupportTests"));
 		template.dropCollection(STAR_WARS);
 		template.dropCollection(STAR_WARS_PLANETS);
 

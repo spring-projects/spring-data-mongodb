@@ -37,8 +37,10 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.mongodb.test.util.ReplicaSet;
 import org.springframework.test.annotation.IfProfileValue;
 import org.springframework.util.ErrorHandler;
@@ -71,7 +73,7 @@ public class DefaultMessageListenerContainerTests {
 	@Before
 	public void setUp() {
 
-		dbFactory = new SimpleMongoDbFactory(new MongoClient(), DATABASE_NAME);
+		dbFactory = new SimpleMongoClientDbFactory(MongoTestUtils.client(), DATABASE_NAME);
 		template = new MongoTemplate(dbFactory);
 
 		template.dropCollection(COLLECTION_NAME);

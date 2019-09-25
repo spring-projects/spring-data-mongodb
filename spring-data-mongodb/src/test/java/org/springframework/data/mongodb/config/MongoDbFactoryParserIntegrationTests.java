@@ -29,10 +29,11 @@ import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.MongoURI;
 import com.mongodb.WriteConcern;
@@ -59,7 +60,7 @@ public class MongoDbFactoryParserIntegrationTests {
 	@Test // DATAMONGO-2199
 	public void testWriteConcern() throws Exception {
 
-		SimpleMongoDbFactory dbFactory = new SimpleMongoDbFactory(new MongoClient("localhost"), "database");
+		SimpleMongoClientDbFactory dbFactory = new SimpleMongoClientDbFactory(MongoTestUtils.client(), "database");
 		dbFactory.setWriteConcern(WriteConcern.ACKNOWLEDGED);
 		dbFactory.getDb();
 

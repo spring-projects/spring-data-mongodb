@@ -31,7 +31,20 @@ import com.mongodb.MongoClient;
 @ManagedResource(description = "Global Lock Metrics")
 public class GlobalLockMetrics extends AbstractMonitor {
 
+	/**
+	 * @param mongoClient
+	 * @deprecated since 2.2 in favor of {@link #GlobalLockMetrics(com.mongodb.client.MongoClient)}
+	 */
+	@Deprecated
 	public GlobalLockMetrics(MongoClient mongoClient) {
+		super(mongoClient);
+	}
+
+	/**
+	 * @param mongoClient
+	 * @since 2.2
+	 */
+	public GlobalLockMetrics(com.mongodb.client.MongoClient mongoClient) {
 		super(mongoClient);
 	}
 

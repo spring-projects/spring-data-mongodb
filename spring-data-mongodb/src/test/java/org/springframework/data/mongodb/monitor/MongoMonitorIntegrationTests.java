@@ -60,7 +60,7 @@ public class MongoMonitorIntegrationTests {
 		}
 
 		assertThat(hostName).isNotNull();
-		assertThat(hostName).isEqualTo("127.0.0.1");
+		assertThat(hostName).isEqualTo("127.0.0.1:27017");
 	}
 
 	@Test

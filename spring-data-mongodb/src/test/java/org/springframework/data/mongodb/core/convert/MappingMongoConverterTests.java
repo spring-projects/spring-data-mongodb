@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.core.convert;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.any;
 
@@ -32,11 +32,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
+import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 
 /**
  * Integration tests for {@link MappingMongoConverter}.
@@ -54,10 +55,10 @@ public class MappingMongoConverterTests {
 	@Before
 	public void setUp() {
 
-		client = new MongoClient();
-		client.dropDatabase("mapping-converter-tests");
+		client = MongoClients.create();
+		client.getDatabase("mapping-converter-tests").drop();
 
-		MongoDbFactory factory = new SimpleMongoDbFactory(client, "mapping-converter-tests");
+		MongoDbFactory factory = new SimpleMongoClientDbFactory(client, "mapping-converter-tests");
 
 		dbRefResolver = spy(new DefaultDbRefResolver(factory));
 		mappingContext = new MongoMappingContext();

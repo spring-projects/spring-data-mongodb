@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
+import com.mongodb.client.MongoClients;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -33,7 +34,7 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.util.Base64Utils;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 
 /**
  * Integration tests for {@link Criteria} usage as part of a {@link Query}.
@@ -58,7 +59,7 @@ public class CriteriaTests {
 	@Before
 	public void setUp() {
 
-		client = new MongoClient();
+		client = MongoClients.create();
 		ops = new MongoTemplate(client, "criteria-tests");
 
 		ops.dropCollection(DocumentWithBitmask.class);

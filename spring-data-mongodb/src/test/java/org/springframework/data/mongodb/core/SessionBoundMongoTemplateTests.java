@@ -43,7 +43,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.rules.TestRule;
 import org.mockito.Mockito;
-
 import org.springframework.aop.Advisor;
 import org.springframework.aop.framework.Advised;
 import org.springframework.dao.DataAccessException;
@@ -71,8 +70,8 @@ import org.springframework.data.util.Version;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.ClientSessionOptions;
-import com.mongodb.MongoClient;
 import com.mongodb.client.ClientSession;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
@@ -98,7 +97,7 @@ public class SessionBoundMongoTemplateTests {
 
 		client = MongoTestUtils.replSetClient();
 
-		MongoDbFactory factory = new SimpleMongoDbFactory(client, "session-bound-mongo-template-tests") {
+		MongoDbFactory factory = new SimpleMongoClientDbFactory(client, "session-bound-mongo-template-tests") {
 
 			@Override
 			public MongoDatabase getDb() throws DataAccessException {

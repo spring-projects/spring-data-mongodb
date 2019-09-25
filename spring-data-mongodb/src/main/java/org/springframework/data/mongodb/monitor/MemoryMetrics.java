@@ -30,7 +30,20 @@ import com.mongodb.MongoClient;
 @ManagedResource(description = "Memory Metrics")
 public class MemoryMetrics extends AbstractMonitor {
 
+	/**
+	 * @param mongoClient
+	 * @deprecated since 2.2 in favor of {@link #MemoryMetrics(com.mongodb.client.MongoClient)}
+	 */
+	@Deprecated
 	public MemoryMetrics(MongoClient mongoClient) {
+		super(mongoClient);
+	}
+
+	/**
+	 * @param mongoClient
+	 * @since 2.2
+	 */
+	public MemoryMetrics(com.mongodb.client.MongoClient mongoClient) {
 		super(mongoClient);
 	}
 

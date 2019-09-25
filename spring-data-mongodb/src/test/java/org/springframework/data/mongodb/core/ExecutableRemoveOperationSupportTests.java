@@ -27,8 +27,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
-import com.mongodb.MongoClient;
 import com.mongodb.client.result.DeleteResult;
 
 /**
@@ -48,7 +48,8 @@ public class ExecutableRemoveOperationSupportTests {
 	@Before
 	public void setUp() {
 
-		template = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), "ExecutableRemoveOperationSupportTests"));
+		template = new MongoTemplate(
+				new SimpleMongoClientDbFactory(MongoTestUtils.client(), "ExecutableRemoveOperationSupportTests"));
 		template.dropCollection(STAR_WARS);
 
 		han = new Person();

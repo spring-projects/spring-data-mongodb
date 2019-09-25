@@ -20,6 +20,7 @@ import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
+import com.mongodb.client.MongoClients;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -33,7 +34,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.data.annotation.Id;
@@ -47,8 +47,8 @@ import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactory;
 import org.springframework.data.mongodb.repository.support.QuerydslMongoPredicateExecutor;
 
-import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 
 /**
@@ -75,7 +75,7 @@ public class ApplicationContextEventTests {
 
 	@BeforeClass
 	public static void beforeClass() {
-		mongo = new MongoClient();
+		mongo = MongoClients.create();
 	}
 
 	@AfterClass

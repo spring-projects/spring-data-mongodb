@@ -40,6 +40,7 @@ import org.springframework.data.mongodb.core.messaging.Message.MessageProperties
 import org.springframework.data.mongodb.core.messaging.TailableCursorRequest.TailableCursorRequestOptions;
 
 import com.mongodb.MongoClient;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
 /**
  * Integration test for subscribing to a capped {@link com.mongodb.client.MongoCollection} inside the
@@ -68,7 +69,7 @@ public class TailableCursorTests {
 	@Before
 	public void setUp() {
 
-		template = new MongoTemplate(new MongoClient(), "tailable-cursor-tests");
+		template = new MongoTemplate(MongoTestUtils.client(), "tailable-cursor-tests");
 
 		template.dropCollection(User.class);
 		template.createCollection(User.class, CollectionOptions.empty().capped().maxDocuments(10000).size(10000));

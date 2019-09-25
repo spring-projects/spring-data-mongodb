@@ -216,7 +216,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 *
 	 * @param mongoClient must not be {@literal null}.
 	 * @param databaseName must not be {@literal null} or empty.
+	 * @deprecated since 2.2 in favor of {@link #MongoTemplate(com.mongodb.client.MongoClient, String)}.
 	 */
+	@Deprecated
 	public MongoTemplate(MongoClient mongoClient, String databaseName) {
 		this(new SimpleMongoDbFactory(mongoClient, databaseName), (MongoConverter) null);
 	}

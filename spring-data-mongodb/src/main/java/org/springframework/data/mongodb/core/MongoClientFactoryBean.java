@@ -38,7 +38,11 @@ import com.mongodb.ServerAddress;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @since 1.7
+ * @deprecated since 2.2 - There is no replacement for this {@link org.springframework.beans.factory.FactoryBean} at
+ *             this time. However moving forward the {@link org.springframework.beans.factory.FactoryBean} will be
+ *             suitable to provide instances of {@link com.mongodb.client.MongoClient}.
  */
+@Deprecated
 public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> implements PersistenceExceptionTranslator {
 
 	private static final PersistenceExceptionTranslator DEFAULT_EXCEPTION_TRANSLATOR = new MongoExceptionTranslator();

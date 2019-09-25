@@ -21,9 +21,7 @@ import com.mongodb.ClientSessionOptions;
 import com.mongodb.DB;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
-import com.mongodb.WriteConcern;
 import com.mongodb.client.ClientSession;
-import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
 /**
@@ -35,7 +33,9 @@ import com.mongodb.client.MongoDatabase;
  * @author Christoph Strobl
  * @author George Moraitis
  * @author Mark Paluch
+ * @deprecated since 2.2 in favor of {@link SimpleMongoClientDbFactory}.
  */
+@Deprecated
 public class SimpleMongoDbFactory extends MongoDbFactorySupport<MongoClient> implements DisposableBean {
 
 	/**

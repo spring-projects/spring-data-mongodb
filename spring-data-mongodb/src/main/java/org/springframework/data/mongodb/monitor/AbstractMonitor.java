@@ -15,10 +15,15 @@
  */
 package org.springframework.data.mongodb.monitor;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.bson.Document;
 
 import com.mongodb.MongoClient;
+import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.connection.ServerDescription;
 
 /**
  * Base class to encapsulate common configuration settings when connecting to a database
@@ -29,9 +34,22 @@ import com.mongodb.client.MongoDatabase;
  */
 public abstract class AbstractMonitor {
 
-	private final MongoClient mongoClient;
+	private final Object mongoClient;
 
+	/**
+	 * @param mongoClient
+	 * @deprecated since 2.2 in favor of {@link #AbstractMonitor(com.mongodb.client.MongoClient)}
+	 */
+	@Deprecated
 	protected AbstractMonitor(MongoClient mongoClient) {
+		this.mongoClient = mongoClient;
+	}
+
+	/**
+	 * @param mongoClient
+	 * @since 2.2
+	 */
+	protected AbstractMonitor(com.mongodb.client.MongoClient mongoClient) {
 		this.mongoClient = mongoClient;
 	}
 
@@ -40,10 +58,30 @@ public abstract class AbstractMonitor {
 	}
 
 	public MongoDatabase getDb(String databaseName) {
-		return mongoClient.getDatabase(databaseName);
+
+		if (mongoClient instanceof MongoClient) {
+			return ((MongoClient) mongoClient).getDatabase(databaseName);
+		}
+
+		return ((com.mongodb.client.MongoClient) mongoClient).getDatabase(databaseName);
 	}
 
 	protected MongoClient getMongoClient() {
-		return mongoClient;
+
+		if (mongoClient instanceof MongoClient) {
+			return (MongoClient) mongoClient;
+		}
+
+		throw new IllegalStateException("A com.mongodb.MongoClient is required but was com.mongodb.client.MongoClient");
+	}
+
+	protected List<ServerAddress> hosts() {
+
+		if (mongoClient instanceof MongoClient) {
+			return ((MongoClient) mongoClient).getServerAddressList();
+		}
+
+		return ((com.mongodb.client.MongoClient) mongoClient).getClusterDescription().getServerDescriptions().stream()
+				.map(ServerDescription::getAddress).collect(Collectors.toList());
 	}
 }
