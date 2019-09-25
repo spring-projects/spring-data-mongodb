@@ -25,16 +25,16 @@ import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
+import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 
 /**
  * Integration tests for DATAMONGO-1289.
@@ -48,7 +48,7 @@ public class NoExplicitIdTests {
 
 	@Configuration
 	@EnableMongoRepositories(considerNestedRepositories = true)
-	static class Config extends AbstractMongoConfiguration {
+	static class Config extends AbstractMongoClientConfiguration {
 
 		@Override
 		protected String getDatabaseName() {
@@ -57,7 +57,7 @@ public class NoExplicitIdTests {
 
 		@Override
 		public MongoClient mongoClient() {
-			return new MongoClient();
+			return MongoTestUtils.client();
 		}
 	}
 

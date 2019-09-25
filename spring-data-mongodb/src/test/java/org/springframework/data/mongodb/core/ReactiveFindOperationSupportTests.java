@@ -48,8 +48,8 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
-import com.mongodb.MongoClient;
 import com.mongodb.reactivestreams.client.MongoClients;
 
 /**
@@ -70,7 +70,8 @@ public class ReactiveFindOperationSupportTests {
 	@Before
 	public void setUp() {
 
-		blocking = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), "ExecutableFindOperationSupportTests"));
+		blocking = new MongoTemplate(
+				new SimpleMongoClientDbFactory(MongoTestUtils.client(), "ExecutableFindOperationSupportTests"));
 		recreateCollection(STAR_WARS, false);
 
 		insertObjects();
@@ -161,8 +162,7 @@ public class ReactiveFindOperationSupportTests {
 	public void findAllByWithCollectionUsingMappingInformation() {
 
 		template.query(Jedi.class).inCollection(STAR_WARS).matching(query(where("name").is("luke"))).all()
-				.as(StepVerifier::create)
-				.consumeNextWith(it -> assertThat(it).isInstanceOf(Jedi.class)) //
+				.as(StepVerifier::create).consumeNextWith(it -> assertThat(it).isInstanceOf(Jedi.class)) //
 				.verifyComplete();
 	}
 
@@ -170,8 +170,7 @@ public class ReactiveFindOperationSupportTests {
 	public void findAllByWithCollection() {
 
 		template.query(Human.class).inCollection(STAR_WARS).matching(query(where("firstname").is("luke"))).all()
-				.as(StepVerifier::create)
-				.expectNextCount(1) //
+				.as(StepVerifier::create).expectNextCount(1) //
 				.verifyComplete();
 	}
 
@@ -179,8 +178,7 @@ public class ReactiveFindOperationSupportTests {
 	public void findAllByWithProjection() {
 
 		template.query(Person.class).as(Jedi.class).matching(query(where("firstname").is("luke"))).all()
-				.as(StepVerifier::create)
-				.consumeNextWith(it -> assertThat(it).isInstanceOf(Jedi.class)) //
+				.as(StepVerifier::create).consumeNextWith(it -> assertThat(it).isInstanceOf(Jedi.class)) //
 				.verifyComplete();
 	}
 
@@ -188,8 +186,7 @@ public class ReactiveFindOperationSupportTests {
 	public void findAllByWithClosedInterfaceProjection() {
 
 		template.query(Person.class).as(PersonProjection.class).matching(query(where("firstname").is("luke"))).all()
-				.as(StepVerifier::create)
-				.consumeNextWith(it -> {
+				.as(StepVerifier::create).consumeNextWith(it -> {
 
 					assertThat(it).isInstanceOf(PersonProjection.class);
 					assertThat(it.getFirstname()).isEqualTo("luke");
@@ -410,8 +407,7 @@ public class ReactiveFindOperationSupportTests {
 	public void countShouldReturnNrOfElementsMatchingQuery() {
 
 		template.query(Person.class).matching(query(where("firstname").is(luke.getFirstname()))).count()
-				.as(StepVerifier::create)
-				.expectNext(1L) //
+				.as(StepVerifier::create).expectNext(1L) //
 				.verifyComplete();
 	}
 
@@ -432,8 +428,7 @@ public class ReactiveFindOperationSupportTests {
 	public void existsShouldReturnTrueIfAtLeastOneElementMatchesQuery() {
 
 		template.query(Person.class).matching(query(where("firstname").is(luke.getFirstname()))).exists()
-				.as(StepVerifier::create)
-				.expectNext(true) //
+				.as(StepVerifier::create).expectNext(true) //
 				.verifyComplete();
 	}
 
@@ -449,8 +444,7 @@ public class ReactiveFindOperationSupportTests {
 	public void distinctReturnsEmptyListIfNoMatchFound() {
 
 		template.query(Person.class).distinct("actually-not-property-in-use").as(String.class).all()
-				.as(StepVerifier::create)
-				.verifyComplete();
+				.as(StepVerifier::create).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1761
@@ -596,8 +590,7 @@ public class ReactiveFindOperationSupportTests {
 		blocking.save(luke);
 
 		template.query(Object.class).inCollection(STAR_WARS).distinct("father").as(Jedi.class).all()
-				.as(StepVerifier::create)
-				.expectNext(new Jedi("anakin")) //
+				.as(StepVerifier::create).expectNext(new Jedi("anakin")) //
 				.verifyComplete();
 	}
 

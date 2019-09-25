@@ -34,7 +34,8 @@ import org.springframework.util.StringUtils;
 
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
@@ -87,7 +88,7 @@ public class CleanMongoDB implements TestRule {
 	 * @throws UnknownHostException
 	 */
 	public CleanMongoDB(String host, int port) throws UnknownHostException {
-		this(new MongoClient(host, port));
+		this(MongoTestUtils.client(host, port));
 	}
 
 	/**
@@ -289,7 +290,7 @@ public class CleanMongoDB implements TestRule {
 			return false;
 		}
 
-		client.dropDatabase(dbName);
+		client.getDatabase(dbName).drop();
 		LOGGER.debug("Dropping DB '{}'. ", dbName);
 		return true;
 	}
@@ -360,7 +361,7 @@ public class CleanMongoDB implements TestRule {
 
 			boolean isInternal = false;
 			if (client == null) {
-				client = new MongoClient();
+				client = MongoClients.create();
 				isInternal = true;
 			}
 

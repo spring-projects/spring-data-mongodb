@@ -29,14 +29,13 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.MongoTransactionManager;
-import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
+import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.data.mongodb.test.util.AfterTransactionAssertion;
@@ -52,9 +51,9 @@ import org.springframework.test.context.transaction.AfterTransaction;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.mongodb.MongoClient;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 
@@ -74,7 +73,7 @@ public class PersonRepositoryTransactionalTests {
 
 	@Configuration
 	@EnableMongoRepositories
-	static class Config extends AbstractMongoConfiguration {
+	static class Config extends AbstractMongoClientConfiguration {
 
 		@Bean
 		public MongoClient mongoClient() {

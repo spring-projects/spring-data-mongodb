@@ -34,12 +34,27 @@ import com.mongodb.client.MongoDatabase;
 @ManagedResource(description = "Mongo Admin Operations")
 public class MongoAdmin implements MongoAdminOperations {
 
-	private final MongoClient mongoClient;
+	private final Object mongoClient;
 
+	/**
+	 * @param mongoClient
+	 * @deprecated since 2.2 in favor of {@link MongoAdmin(com.mongodb.client.MongoClient)}.
+	 */
+	@Deprecated
 	public MongoAdmin(MongoClient mongoClient) {
 
 		Assert.notNull(mongoClient, "MongoClient must not be null!");
 		this.mongoClient = mongoClient;
+	}
+
+	/**
+	 * @param client the underlying {@link com.mongodb.client.MongoClient} used for data access.
+	 * @since 2.2
+	 */
+	public MongoAdmin(com.mongodb.client.MongoClient client) {
+
+		Assert.notNull(client, "Client must not be null!");
+		this.mongoClient = client;
 	}
 
 	/* (non-Javadoc)
@@ -73,6 +88,11 @@ public class MongoAdmin implements MongoAdminOperations {
 	}
 
 	MongoDatabase getDB(String databaseName) {
-		return mongoClient.getDatabase(databaseName);
+
+		if (mongoClient instanceof MongoClient) {
+			return ((MongoClient) mongoClient).getDatabase(databaseName);
+		}
+
+		return ((com.mongodb.client.MongoClient) mongoClient).getDatabase(databaseName);
 	}
 }

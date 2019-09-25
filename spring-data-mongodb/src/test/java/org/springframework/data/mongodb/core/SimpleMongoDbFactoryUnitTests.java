@@ -26,14 +26,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-
 import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.client.ClientSession;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 
 /**
@@ -64,9 +63,9 @@ public class SimpleMongoDbFactoryUnitTests {
 	@Test // DATADOC-254
 	@SuppressWarnings("deprecation")
 	public void allowsDatabaseNames() {
-		new SimpleMongoDbFactory(mongo, "foo-bar");
-		new SimpleMongoDbFactory(mongo, "foo_bar");
-		new SimpleMongoDbFactory(mongo, "foo01231bar");
+		new SimpleMongoClientDbFactory(mongo, "foo-bar");
+		new SimpleMongoClientDbFactory(mongo, "foo_bar");
+		new SimpleMongoClientDbFactory(mongo, "foo01231bar");
 	}
 
 	@Test // DATADOC-295
@@ -93,7 +92,7 @@ public class SimpleMongoDbFactoryUnitTests {
 
 		when(mongo.getDatabase("foo")).thenReturn(database);
 
-		MongoDbFactory factory = new SimpleMongoDbFactory(mongo, "foo");
+		MongoDbFactory factory = new SimpleMongoClientDbFactory(mongo, "foo");
 		MongoDbFactory wrapped = factory.withSession(clientSession).withSession(clientSession);
 
 		InvocationHandler invocationHandler = Proxy.getInvocationHandler(wrapped.getDb());
@@ -105,7 +104,7 @@ public class SimpleMongoDbFactoryUnitTests {
 	}
 
 	private void rejectsDatabaseName(String databaseName) {
-		assertThatThrownBy(() -> new SimpleMongoDbFactory(mongo, databaseName))
+		assertThatThrownBy(() -> new SimpleMongoClientDbFactory(mongo, databaseName))
 				.isInstanceOf(IllegalArgumentException.class);
 	}
 }

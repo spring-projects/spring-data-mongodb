@@ -20,6 +20,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
 import lombok.Data;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import reactor.test.StepVerifier;
 
 import org.bson.BsonString;
@@ -50,7 +51,7 @@ public class ReactiveUpdateOperationSupportTests {
 	@Before
 	public void setUp() {
 
-		blocking = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), "ExecutableUpdateOperationSupportTests"));
+		blocking = new MongoTemplate(new SimpleMongoClientDbFactory(MongoTestUtils.client(), "ExecutableUpdateOperationSupportTests"));
 		blocking.dropCollection(STAR_WARS);
 
 		han = new Person();

@@ -30,8 +30,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
-import com.mongodb.MongoClient;
 import com.mongodb.client.result.UpdateResult;
 
 /**
@@ -51,7 +51,8 @@ public class ExecutableUpdateOperationSupportTests {
 	@Before
 	public void setUp() {
 
-		template = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), "ExecutableUpdateOperationSupportTests"));
+		template = new MongoTemplate(
+				new SimpleMongoClientDbFactory(MongoTestUtils.client(), "ExecutableUpdateOperationSupportTests"));
 		template.dropCollection(STAR_WARS);
 
 		han = new Person();

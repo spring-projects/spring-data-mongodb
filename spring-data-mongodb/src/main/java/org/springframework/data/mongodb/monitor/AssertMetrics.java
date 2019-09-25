@@ -32,7 +32,22 @@ import com.mongodb.Mongo;
 @ManagedResource(description = "Assertion Metrics")
 public class AssertMetrics extends AbstractMonitor {
 
+	/**
+	 *
+	 * @param mongoClient
+	 * @deprecated since 2.2 in favor of {@link #AssertMetrics(com.mongodb.client.MongoClient)}
+	 */
+	@Deprecated
 	public AssertMetrics(MongoClient mongoClient) {
+		super(mongoClient);
+	}
+
+	/**
+	 *
+	 * @param mongoClient
+	 * @since 2.2
+	 */
+	public AssertMetrics(com.mongodb.client.MongoClient mongoClient) {
 		super(mongoClient);
 	}
 

@@ -23,8 +23,6 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.mongodb.client.FindIterable;
-import com.mongodb.client.model.CreateCollectionOptions;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.Before;
@@ -32,7 +30,7 @@ import org.junit.Test;
 import org.springframework.core.Constants;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
+import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -43,15 +41,13 @@ import org.springframework.util.Assert;
 import org.springframework.util.StopWatch;
 import org.springframework.util.StringUtils;
 
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.CreateCollectionOptions;
 
 /**
  * Test class to execute performance tests for plain MongoDB driver usage, {@link MongoTemplate} and the repositories
@@ -80,16 +76,16 @@ public class PerformanceTests {
 	@Before
 	public void setUp() throws Exception {
 
-		this.mongo = new MongoClient();
+		this.mongo = MongoClients.create();
 
-		SimpleMongoDbFactory mongoDbFactory = new SimpleMongoDbFactory(this.mongo, DATABASE_NAME);
+		SimpleMongoClientDbFactory mongoDbFactory = new SimpleMongoClientDbFactory(this.mongo, DATABASE_NAME);
 
 		MongoMappingContext context = new MongoMappingContext();
 		context.setInitialEntitySet(Collections.singleton(Person.class));
 		context.afterPropertiesSet();
 
 		this.converter = new MappingMongoConverter(new DefaultDbRefResolver(mongoDbFactory), context);
-		this.operations = new MongoTemplate(new SimpleMongoDbFactory(this.mongo, DATABASE_NAME), converter);
+		this.operations = new MongoTemplate(new SimpleMongoClientDbFactory(this.mongo, DATABASE_NAME), converter);
 
 		MongoRepositoryFactoryBean<PersonRepository, Person, ObjectId> factory = new MongoRepositoryFactoryBean<PersonRepository, Person, ObjectId>(
 				PersonRepository.class);
@@ -106,11 +102,11 @@ public class PerformanceTests {
 			public void doWithWriteConcern(String constantName, WriteConcern concern) {
 				writeHeadline("WriteConcern: " + constantName);
 				System.out.println(String.format("Writing %s objects using plain driver took %sms", NUMBER_OF_PERSONS,
-						writingObjectsUsingPlainDriver(NUMBER_OF_PERSONS)));
+						writingObjectsUsingPlainDriver(NUMBER_OF_PERSONS, concern)));
 				System.out.println(String.format("Writing %s objects using template took %sms", NUMBER_OF_PERSONS,
-						writingObjectsUsingMongoTemplate(NUMBER_OF_PERSONS)));
+						writingObjectsUsingMongoTemplate(NUMBER_OF_PERSONS, concern)));
 				System.out.println(String.format("Writing %s objects using repository took %sms", NUMBER_OF_PERSONS,
-						writingObjectsUsingRepositories(NUMBER_OF_PERSONS)));
+						writingObjectsUsingRepositories(NUMBER_OF_PERSONS, concern)));
 				writeFooter();
 			}
 		});
@@ -174,13 +170,10 @@ public class PerformanceTests {
 
 	@Test
 	public void writeAndRead() throws Exception {
-
-		mongo.setWriteConcern(WriteConcern.ACKNOWLEDGED);
-
-		readsAndWrites(NUMBER_OF_PERSONS, ITERATIONS);
+		readsAndWrites(NUMBER_OF_PERSONS, ITERATIONS, WriteConcern.ACKNOWLEDGED);
 	}
 
-	private void readsAndWrites(int numberOfPersons, int iterations) {
+	private void readsAndWrites(int numberOfPersons, int iterations, WriteConcern writeConcern) {
 
 		Statistics statistics = new Statistics("Reading " + numberOfPersons + " - After %s iterations");
 
@@ -188,9 +181,11 @@ public class PerformanceTests {
 
 			setupCollections();
 
-			statistics.registerTime(Api.DRIVER, Mode.WRITE, writingObjectsUsingPlainDriver(numberOfPersons));
-			statistics.registerTime(Api.TEMPLATE, Mode.WRITE, writingObjectsUsingMongoTemplate(numberOfPersons));
-			statistics.registerTime(Api.REPOSITORY, Mode.WRITE, writingObjectsUsingRepositories(numberOfPersons));
+			statistics.registerTime(Api.DRIVER, Mode.WRITE, writingObjectsUsingPlainDriver(numberOfPersons, writeConcern));
+			statistics.registerTime(Api.TEMPLATE, Mode.WRITE,
+					writingObjectsUsingMongoTemplate(numberOfPersons, writeConcern));
+			statistics.registerTime(Api.REPOSITORY, Mode.WRITE,
+					writingObjectsUsingRepositories(numberOfPersons, writeConcern));
 
 			statistics.registerTime(Api.DRIVER, Mode.READ, readingUsingPlainDriver());
 			statistics.registerTime(Api.TEMPLATE, Mode.READ, readingUsingTemplate());
@@ -240,8 +235,6 @@ public class PerformanceTests {
 			}
 
 			WriteConcern writeConcern = (WriteConcern) constants.asObject(constantName);
-			mongo.setWriteConcern(writeConcern);
-
 			setupCollections();
 
 			callback.doWithWriteConcern(constantName, writeConcern);
@@ -276,9 +269,11 @@ public class PerformanceTests {
 		return document;
 	}
 
-	private long writingObjectsUsingPlainDriver(int numberOfPersons) {
+	private long writingObjectsUsingPlainDriver(int numberOfPersons, WriteConcern writeConcern) {
 
-		MongoCollection<Document> collection = mongo.getDatabase(DATABASE_NAME).getCollection("driver");
+		MongoCollection<Document> collection = mongo.getDatabase(DATABASE_NAME).getCollection("driver")
+				.withWriteConcern(writeConcern);
+		;
 		List<Person> persons = getPersonObjects(numberOfPersons);
 
 		executeWatched(() -> persons.stream().map(Person::toDocument).map(it -> {
@@ -290,7 +285,7 @@ public class PerformanceTests {
 		return watch.getLastTaskTimeMillis();
 	}
 
-	private long writingObjectsUsingRepositories(int numberOfPersons) {
+	private long writingObjectsUsingRepositories(int numberOfPersons, WriteConcern writeConcern) {
 
 		List<Person> persons = getPersonObjects(numberOfPersons);
 
@@ -299,9 +294,10 @@ public class PerformanceTests {
 		return watch.getLastTaskTimeMillis();
 	}
 
-	private long writingObjectsUsingMongoTemplate(int numberOfPersons) {
+	private long writingObjectsUsingMongoTemplate(int numberOfPersons, WriteConcern writeConcern) {
 
 		List<Person> persons = getPersonObjects(numberOfPersons);
+		operations.setWriteConcern(writeConcern);
 
 		executeWatched(() -> persons.stream()//
 				.peek(it -> operations.save(it, "template"))//
@@ -465,7 +461,7 @@ public class PerformanceTests {
 		public static Address from(Document source) {
 			String zipCode = (String) source.get("zipCode");
 			String city = (String) source.get("city");
-			BasicDBList types = (BasicDBList) source.get("types");
+			List<Document> types = (List<Document>) source.get("types");
 
 			return new Address(zipCode, city, new HashSet<AddressType>(readFromBasicDBList(types, AddressType.class)));
 		}
@@ -479,7 +475,7 @@ public class PerformanceTests {
 		}
 	}
 
-	private static <T extends Enum<T>> List<T> readFromBasicDBList(BasicDBList source, Class<T> type) {
+	private static <T extends Enum<T>> List<T> readFromBasicDBList(List<Document> source, Class<T> type) {
 
 		List<T> result = new ArrayList<T>(source.size());
 		for (Object object : source) {
@@ -488,8 +484,8 @@ public class PerformanceTests {
 		return result;
 	}
 
-	private static <T extends Enum<T>> BasicDBList toBasicDBList(Collection<T> enums) {
-		BasicDBList result = new BasicDBList();
+	private static <T extends Enum<T>> List<String> toBasicDBList(Collection<T> enums) {
+		List<String> result = new ArrayList<>();
 		for (T element : enums) {
 			result.add(element.toString());
 		}
@@ -522,7 +518,7 @@ public class PerformanceTests {
 
 		public static Order from(Document source) {
 
-			BasicDBList lineItemsSource = (BasicDBList) source.get("lineItems");
+			List<Document> lineItemsSource = (List<Document>) source.get("lineItems");
 			List<LineItem> lineItems = new ArrayList<PerformanceTests.LineItem>(lineItemsSource.size());
 			for (Object lineItemSource : lineItemsSource) {
 				lineItems.add(LineItem.from((Document) lineItemSource));
@@ -628,8 +624,8 @@ public class PerformanceTests {
 		Document toDocument();
 	}
 
-	private static BasicDBList writeAll(Collection<? extends Convertible> convertibles) {
-		BasicDBList result = new BasicDBList();
+	private static List<Document> writeAll(Collection<? extends Convertible> convertibles) {
+		List<Document> result = new ArrayList<>();
 		for (Convertible convertible : convertibles) {
 			result.add(convertible.toDocument());
 		}

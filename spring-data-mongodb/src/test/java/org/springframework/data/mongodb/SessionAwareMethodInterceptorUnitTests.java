@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.any;
 
@@ -34,7 +34,7 @@ import org.springframework.data.mongodb.SessionAwareMethodInterceptor.MethodCach
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.ClassUtils;
 
-import com.mongodb.MongoClient;
+import com.mongodb.MongoClientSettings;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -138,7 +138,7 @@ public class SessionAwareMethodInterceptorUnitTests {
 		MongoDatabase otherDb = mock(MongoDatabase.class);
 		when(targetDatabase.withCodecRegistry(any())).thenReturn(otherDb);
 
-		MongoDatabase target = database.withCodecRegistry(MongoClient.getDefaultCodecRegistry());
+		MongoDatabase target = database.withCodecRegistry(MongoClientSettings.getDefaultCodecRegistry());
 		assertThat(target).isInstanceOf(Proxy.class).isNotSameAs(database).isNotSameAs(targetDatabase);
 
 		target.drop();
@@ -152,7 +152,7 @@ public class SessionAwareMethodInterceptorUnitTests {
 		MongoCollection otherCollection = mock(MongoCollection.class);
 		when(targetCollection.withCodecRegistry(any())).thenReturn(otherCollection);
 
-		MongoCollection target = collection.withCodecRegistry(MongoClient.getDefaultCodecRegistry());
+		MongoCollection target = collection.withCodecRegistry(MongoClientSettings.getDefaultCodecRegistry());
 		assertThat(target).isInstanceOf(Proxy.class).isNotSameAs(collection).isNotSameAs(targetCollection);
 
 		target.drop();

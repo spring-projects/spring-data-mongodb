@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.core.mapping;
 
 import static org.assertj.core.api.Assertions.*;
 
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,11 +30,12 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
@@ -55,18 +55,18 @@ public class GeoIndexedTests {
 	@Autowired MongoMappingContext mappingContext;
 
 	@Before
-	public void setUp() throws Exception {
+	public void setUp() {
 		cleanDb();
 	}
 
 	@After
-	public void cleanUp() throws Exception {
+	public void cleanUp() {
 		cleanDb();
 	}
 
-	private void cleanDb() throws UnknownHostException {
+	private void cleanDb() {
 
-		MongoClient mongo = new MongoClient();
+		MongoClient mongo = MongoTestUtils.client();
 		MongoDatabase db = mongo.getDatabase(GeoIndexedAppConfig.GEO_DB);
 
 		for (String coll : collectionsToDrop) {

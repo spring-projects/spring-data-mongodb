@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2014-2019 the original author or authors.
  *
@@ -13,10 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 
-import com.mongodb.Mongo;
 import com.mongodb.MongoClient;
 
 /**

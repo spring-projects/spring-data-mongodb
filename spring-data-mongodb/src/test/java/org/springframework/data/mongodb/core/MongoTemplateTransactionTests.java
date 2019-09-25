@@ -39,7 +39,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.MongoTransactionManager;
-import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
+import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.test.util.AfterTransactionAssertion;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
@@ -52,8 +52,8 @@ import org.springframework.test.context.transaction.AfterTransaction;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.mongodb.MongoClient;
 import com.mongodb.ReadPreference;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 
@@ -73,7 +73,7 @@ public class MongoTemplateTransactionTests {
 	static final String COLLECTION_NAME = "assassins";
 
 	@Configuration
-	static class Config extends AbstractMongoConfiguration {
+	static class Config extends AbstractMongoClientConfiguration {
 
 		@Bean
 		public MongoClient mongoClient() {
@@ -109,7 +109,7 @@ public class MongoTemplateTransactionTests {
 	}
 
 	@AfterTransaction
-	public void verifyDbState()  {
+	public void verifyDbState() {
 
 		MongoCollection<Document> collection = client.getDatabase(DB_NAME).withReadPreference(ReadPreference.primary())
 				.getCollection(COLLECTION_NAME);

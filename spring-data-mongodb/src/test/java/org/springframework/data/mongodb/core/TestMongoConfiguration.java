@@ -21,13 +21,14 @@ import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.CustomConversions;
-import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
+import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 
-public class TestMongoConfiguration extends AbstractMongoConfiguration {
+public class TestMongoConfiguration extends AbstractMongoClientConfiguration {
 
 	@Override
 	public String getDatabaseName() {
@@ -37,7 +38,7 @@ public class TestMongoConfiguration extends AbstractMongoConfiguration {
 	@Override
 	@Bean
 	public MongoClient mongoClient() {
-		return new MongoClient("127.0.0.1", 27017);
+		return MongoTestUtils.client();
 	}
 
 	@Override

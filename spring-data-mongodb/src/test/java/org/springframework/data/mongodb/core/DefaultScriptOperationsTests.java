@@ -32,12 +32,13 @@ import org.springframework.dao.UncategorizedDataAccessException;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.script.ExecutableMongoScript;
 import org.springframework.data.mongodb.core.script.NamedMongoScript;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.util.Version;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 
 /**
  * Integration tests for {@link DefaultScriptOperations}.
@@ -59,14 +60,13 @@ public class DefaultScriptOperationsTests {
 
 		@Bean
 		public MongoClient mongoClient() {
-			return new MongoClient();
+			return MongoTestUtils.client();
 		}
 
 		@Bean
 		public MongoTemplate template() throws Exception {
 			return new MongoTemplate(mongoClient(), DB_NAME);
 		}
-
 	}
 
 	static final String JAVASCRIPT_COLLECTION_NAME = "system.js";

@@ -29,11 +29,10 @@ import org.junit.runner.RunWith;
 import org.junit.runners.model.Statement;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-
 import org.springframework.data.mongodb.test.util.CleanMongoDB.Struct;
 
-import com.mongodb.MongoClient;
 import com.mongodb.client.ListDatabasesIterable;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
@@ -54,7 +53,7 @@ public class CleanMongoDBTests {
 	private @Mock MongoClient mongoClientMock;
 
 	// Some Mock DBs
-	private @Mock MongoDatabase db1mock, db2mock;
+	private @Mock MongoDatabase db1mock, db2mock, admin;
 	private @Mock MongoCollection<Document> db1collection1mock, db1collection2mock, db2collection1mock;
 
 	@SuppressWarnings({ "serial", "unchecked" })
@@ -93,7 +92,7 @@ public class CleanMongoDBTests {
 
 		cleaner.apply(baseStatementMock, descriptionMock).evaluate();
 
-		verify(mongoClientMock, never()).dropDatabase(eq("admin"));
+		verify(admin, never()).drop();
 	}
 
 	@Test
@@ -104,7 +103,7 @@ public class CleanMongoDBTests {
 
 		cleaner.apply(baseStatementMock, descriptionMock).evaluate();
 
-		verify(mongoClientMock, never()).dropDatabase(eq("db1"));
+		verify(db1mock, never()).drop();
 	}
 
 	@Test
@@ -114,8 +113,8 @@ public class CleanMongoDBTests {
 
 		cleaner.apply(baseStatementMock, descriptionMock).evaluate();
 
-		verify(mongoClientMock, times(1)).dropDatabase(eq("db1"));
-		verify(mongoClientMock, times(1)).dropDatabase(eq("db2"));
+		verify(db1mock).drop();
+		verify(db2mock).drop();
 	}
 
 	@Test
@@ -126,8 +125,8 @@ public class CleanMongoDBTests {
 
 		cleaner.apply(baseStatementMock, descriptionMock).evaluate();
 
-		verify(mongoClientMock, times(1)).dropDatabase(eq("db2"));
-		verify(mongoClientMock, never()).dropDatabase(eq("db1"));
+		verify(db2mock).drop();
+		verify(db1mock, never()).drop();
 	}
 
 	@Test
@@ -137,9 +136,9 @@ public class CleanMongoDBTests {
 
 		cleaner.apply(baseStatementMock, descriptionMock).evaluate();
 
-		verify(mongoClientMock, never()).dropDatabase(eq("db1"));
-		verify(mongoClientMock, never()).dropDatabase(eq("db2"));
-		verify(mongoClientMock, never()).dropDatabase(eq("admin"));
+		verify(db1mock, never()).drop();
+		verify(db2mock, never()).drop();
+		verify(admin, never()).drop();
 	}
 
 	@Test
@@ -187,9 +186,9 @@ public class CleanMongoDBTests {
 
 		cleaner.apply(baseStatementMock, descriptionMock).evaluate();
 
-		verify(mongoClientMock, never()).dropDatabase(eq("db1"));
-		verify(mongoClientMock, never()).dropDatabase(eq("db2"));
-		verify(mongoClientMock, never()).dropDatabase(eq("admin"));
+		verify(db1mock, never()).drop();
+		verify(db2mock, never()).drop();
+		verify(admin, never()).drop();
 
 		verify(db1collection1mock, times(1)).dropIndexes();
 	}

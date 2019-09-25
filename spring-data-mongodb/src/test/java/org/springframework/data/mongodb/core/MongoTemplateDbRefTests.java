@@ -28,15 +28,14 @@ import java.util.List;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.convert.LazyLoadingProxy;
 import org.springframework.data.mongodb.core.convert.LazyLoadingTestUtils;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
-import com.mongodb.MongoClient;
 import com.mongodb.client.model.Filters;
 
 /**
@@ -53,7 +52,7 @@ public class MongoTemplateDbRefTests {
 	@Before
 	public void setUp() {
 
-		template = new MongoTemplate(new MongoClient(), "mongo-template-dbref-tests");
+		template = new MongoTemplate(MongoTestUtils.client(), "mongo-template-dbref-tests");
 
 		template.dropCollection(RefCycleLoadingIntoDifferentTypeRoot.class);
 		template.dropCollection(RefCycleLoadingIntoDifferentTypeIntermediate.class);
@@ -65,7 +64,7 @@ public class MongoTemplateDbRefTests {
 		template.dropCollection(WithListRefToAnotherDb.class);
 		template.dropCollection(WithLazyListRefToAnotherDb.class);
 
-		otherDbTemplate = new MongoTemplate(new MongoClient(), "mongo-template-dbref-tests-other-db");
+		otherDbTemplate = new MongoTemplate(MongoTestUtils.client(), "mongo-template-dbref-tests-other-db");
 		otherDbTemplate.dropCollection(JustSomeType.class);
 	}
 

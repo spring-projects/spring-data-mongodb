@@ -25,7 +25,7 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.springframework.test.annotation.IfProfileValue;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 
 /**
  * {@link TestRule} evaluating if MongoDB Server is running with {@code --replSet} flag.
@@ -94,7 +94,7 @@ public class ReplicaSet implements TestRule {
 
 		if (runsAsReplicaSet.get() == null) {
 
-			try (MongoClient client = new MongoClient()) {
+			try (MongoClient client = MongoTestUtils.client()) {
 
 				boolean tmp = client.getDatabase("admin").runCommand(new Document("getCmdLineOpts", "1"))
 						.get("argv", List.class).contains("--replSet");

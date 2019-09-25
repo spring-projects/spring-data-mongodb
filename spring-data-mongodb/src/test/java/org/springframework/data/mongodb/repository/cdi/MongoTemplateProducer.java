@@ -21,9 +21,11 @@ import javax.enterprise.inject.Produces;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 
 import com.mongodb.MongoClient;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
 /**
  * Simple component exposing a {@link MongoOperations} instance as CDI bean.
@@ -36,7 +38,7 @@ class MongoTemplateProducer {
 	@ApplicationScoped
 	public MongoOperations createMongoTemplate() {
 
-		MongoDbFactory factory = new SimpleMongoDbFactory(new MongoClient(), "database");
+		MongoDbFactory factory = new SimpleMongoClientDbFactory(MongoTestUtils.client(), "database");
 		return new MongoTemplate(factory);
 	}
 }

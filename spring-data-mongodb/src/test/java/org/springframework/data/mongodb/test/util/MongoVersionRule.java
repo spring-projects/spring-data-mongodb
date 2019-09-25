@@ -27,7 +27,7 @@ import org.junit.runners.model.Statement;
 import org.springframework.data.util.Version;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 
 /**
@@ -128,7 +128,6 @@ public class MongoVersionRule implements TestRule {
 					Version maxVersion = MongoVersionRule.this.maxVersion.equals(ANY) ? DEFAULT_HIGH
 							: MongoVersionRule.this.maxVersion;
 
-
 					if (description.getAnnotation(MongoVersion.class) != null) {
 						MongoVersion version = description.getAnnotation(MongoVersion.class);
 						if (version != null) {
@@ -176,8 +175,7 @@ public class MongoVersionRule implements TestRule {
 
 		try {
 
-			MongoClient client;
-			client = new MongoClient(host, port);
+			MongoClient client = MongoTestUtils.client(host, port);
 			MongoDatabase database = client.getDatabase("test");
 			Document result = database.runCommand(new Document("buildInfo", 1));
 			client.close();

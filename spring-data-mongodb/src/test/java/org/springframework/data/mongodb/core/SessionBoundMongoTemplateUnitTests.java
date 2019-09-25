@@ -31,7 +31,6 @@ import org.junit.runner.RunWith;
 import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.MongoDbFactory;
@@ -46,12 +45,12 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
-import com.mongodb.MongoClient;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.DistinctIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MapReduceIterable;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
@@ -125,7 +124,7 @@ public class SessionBoundMongoTemplateUnitTests {
 		when(cursor.hasNext()).thenReturn(false);
 		when(findIterable.projection(any())).thenReturn(findIterable);
 
-		factory = new SimpleMongoDbFactory(client, "foo");
+		factory = new SimpleMongoClientDbFactory(client, "foo");
 
 		this.mappingContext = new MongoMappingContext();
 		this.converter = new MappingMongoConverter(new DefaultDbRefResolver(factory), mappingContext);

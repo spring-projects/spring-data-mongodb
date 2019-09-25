@@ -26,8 +26,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
-import com.mongodb.MongoClient;
 import com.mongodb.reactivestreams.client.MongoClients;
 
 /**
@@ -47,7 +47,8 @@ public class ReactiveRemoveOperationSupportTests {
 	@Before
 	public void setUp() {
 
-		blocking = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), "ExecutableRemoveOperationSupportTests"));
+		blocking = new MongoTemplate(
+				new SimpleMongoClientDbFactory(MongoTestUtils.client(), "ExecutableRemoveOperationSupportTests"));
 		blocking.dropCollection(STAR_WARS);
 
 		han = new Person();
@@ -83,8 +84,8 @@ public class ReactiveRemoveOperationSupportTests {
 	public void removeAllMatchingWithAlternateDomainTypeAndCollection() {
 
 		template.remove(Jedi.class).inCollection(STAR_WARS).matching(query(where("name").is("luke"))).all()
-				.as(StepVerifier::create)
-				.consumeNextWith(actual -> assertThat(actual.getDeletedCount()).isEqualTo(1L)).verifyComplete();
+				.as(StepVerifier::create).consumeNextWith(actual -> assertThat(actual.getDeletedCount()).isEqualTo(1L))
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1719

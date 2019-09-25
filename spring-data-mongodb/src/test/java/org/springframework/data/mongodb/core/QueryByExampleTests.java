@@ -32,8 +32,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UntypedExampleMatcher;
-
-import com.mongodb.MongoClient;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
 /**
  * Integration tests for Query-by-example.
@@ -50,7 +49,7 @@ public class QueryByExampleTests {
 	@Before
 	public void setUp() {
 
-		operations = new MongoTemplate(new MongoClient(), "query-by-example");
+		operations = new MongoTemplate(MongoTestUtils.client(), "query-by-example");
 		operations.remove(new Query(), Person.class);
 
 		p1 = new Person();

@@ -37,7 +37,11 @@ import com.mongodb.WriteConcern;
  * @author Oliver Gierke
  * @author Mark Paluch
  * @since 1.7
+ * @deprecated since 2.2 - There is no replacement for this {@link org.springframework.beans.factory.FactoryBean}.
+ *             However moving forward there will be a dedicated factory bean for {@link com.mongodb.MongoClientSettings}
+ *             replacing {@link MongoClientOptions}.
  */
+@Deprecated
 public class MongoClientOptionsFactoryBean extends AbstractFactoryBean<MongoClientOptions> {
 
 	private static final MongoClientOptions DEFAULT_MONGO_OPTIONS = MongoClientOptions.builder().build();

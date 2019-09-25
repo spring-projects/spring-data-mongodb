@@ -30,7 +30,21 @@ import com.mongodb.MongoClient;
 @ManagedResource(description = "Connection metrics")
 public class ConnectionMetrics extends AbstractMonitor {
 
+	/**
+	 *
+	 * @param mongoClient
+	 * @deprecated since 2.2 in favor of {@link #ConnectionMetrics(com.mongodb.client.MongoClient)}
+	 */
+	@Deprecated
 	public ConnectionMetrics(MongoClient mongoClient) {
+		super(mongoClient);
+	}
+
+	/**
+	 * @param mongoClient
+	 * @since 2.2
+	 */
+	public ConnectionMetrics(com.mongodb.client.MongoClient mongoClient) {
 		super(mongoClient);
 	}
 

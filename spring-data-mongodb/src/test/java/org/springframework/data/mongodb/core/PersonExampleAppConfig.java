@@ -17,15 +17,16 @@ package org.springframework.data.mongodb.core;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 
 @Configuration
 public class PersonExampleAppConfig {
 
 	@Bean
 	public MongoClient mongoClient() {
-		return new MongoClient("localhost");
+		return MongoTestUtils.client();
 	}
 
 	@Bean

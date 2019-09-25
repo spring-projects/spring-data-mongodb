@@ -30,7 +30,20 @@ import com.mongodb.MongoClient;
 @ManagedResource(description = "Btree Metrics")
 public class BtreeIndexCounters extends AbstractMonitor {
 
+	/**
+	 * @param mongoClient
+	 * @deprecated since 2.2 in favor of {@link #BtreeIndexCounters(com.mongodb.client.MongoClient)}
+	 */
+	@Deprecated
 	public BtreeIndexCounters(MongoClient mongoClient) {
+		super(mongoClient);
+	}
+
+	/**
+	 * @param mongoClient
+	 * @since 2.2
+	 */
+	public BtreeIndexCounters(com.mongodb.client.MongoClient mongoClient) {
 		super(mongoClient);
 	}
 

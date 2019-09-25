@@ -32,7 +32,20 @@ import com.mongodb.MongoClient;
 @ManagedResource(description = "Background Flushing Metrics")
 public class BackgroundFlushingMetrics extends AbstractMonitor {
 
+	/**
+	 * @param mongoClient
+	 * @deprecated since 2.2 in favor of {@link #BackgroundFlushingMetrics(com.mongodb.client.MongoClient)}
+	 */
+	@Deprecated
 	public BackgroundFlushingMetrics(MongoClient mongoClient) {
+		super(mongoClient);
+	}
+
+	/**
+	 * @param mongoClient
+	 * @since 2.2
+	 */
+	public BackgroundFlushingMetrics(com.mongodb.client.MongoClient mongoClient) {
 		super(mongoClient);
 	}
 

@@ -25,7 +25,6 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Page;
@@ -33,13 +32,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
+import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.index.TextIndexDefinition.TextIndexDefinitionBuilder;
 import org.springframework.data.mongodb.core.index.TextIndexed;
 import org.springframework.data.mongodb.core.mapping.TextScore;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactory;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.util.Version;
 import org.springframework.test.context.ContextConfiguration;
@@ -47,7 +47,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 
 /**
  * Integration tests for text searches on repository.
@@ -194,7 +194,7 @@ public class MongoRepositoryTextSearchIntegrationTests {
 	}
 
 	@org.springframework.context.annotation.Configuration
-	public static class Configuration extends AbstractMongoConfiguration {
+	public static class Configuration extends AbstractMongoClientConfiguration {
 
 		@Override
 		protected String getDatabaseName() {
@@ -203,7 +203,7 @@ public class MongoRepositoryTextSearchIntegrationTests {
 
 		@Override
 		public MongoClient mongoClient() {
-			return new MongoClient();
+			return MongoTestUtils.client();
 		}
 
 	}

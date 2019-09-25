@@ -31,7 +31,20 @@ import com.mongodb.MongoClient;
 @ManagedResource(description = "Operation Counters")
 public class OperationCounters extends AbstractMonitor {
 
+	/**
+	 * @param mongoClient
+	 * @deprecated since 2.2 in favor of {@link #OperationCounters(com.mongodb.client.MongoClient)}
+	 */
+	@Deprecated
 	public OperationCounters(MongoClient mongoClient) {
+		super(mongoClient);
+	}
+
+	/**
+	 * @param mongoClient
+	 * @since 2.2
+	 */
+	public OperationCounters(com.mongodb.client.MongoClient mongoClient) {
 		super(mongoClient);
 	}
 

@@ -23,8 +23,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.data.mongodb.repository.PersonRepository;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -45,7 +47,7 @@ public class MongoRepositoriesRegistrarIntegrationTests {
 
 		@Bean
 		public MongoOperations mongoTemplate() throws Exception {
-			return new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), "database"));
+			return new MongoTemplate(new SimpleMongoClientDbFactory(MongoTestUtils.client(), "database"));
 		}
 	}
 
