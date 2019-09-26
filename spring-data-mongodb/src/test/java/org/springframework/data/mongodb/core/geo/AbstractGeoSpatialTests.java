@@ -120,24 +120,33 @@ public abstract class AbstractGeoSpatialTests {
 	public void withinCenter() {
 
 		Circle circle = new Circle(-73.99171, 40.738868, 0.01);
-		List<Venue> venues = template.find(query(where("location").within(circle)), Venue.class);
+		Query query = query(where("location").within(circle));
+		List<Venue> venues = template.find(query, Venue.class);
+
 		assertThat(venues).hasSize(7);
+		assertThat(template.count(query, Venue.class)).isEqualTo(7);
 	}
 
 	@Test
 	public void withinCenterSphere() {
 
 		Circle circle = new Circle(-73.99171, 40.738868, 0.003712240453784);
-		List<Venue> venues = template.find(query(where("location").withinSphere(circle)), Venue.class);
+		Query query = query(where("location").withinSphere(circle));
+
+		List<Venue> venues = template.find(query, Venue.class);
 		assertThat(venues).hasSize(11);
+		assertThat(template.count(query, Venue.class)).isEqualTo(11);
 	}
 
 	@Test
 	public void withinBox() {
 
 		Box box = new Box(new Point(-73.99756, 40.73083), new Point(-73.988135, 40.741404));
-		List<Venue> venues = template.find(query(where("location").within(box)), Venue.class);
+		Query query = query(where("location").within(box));
+
+		List<Venue> venues = template.find(query, Venue.class);
 		assertThat(venues).hasSize(4);
+		assertThat(template.count(query, Venue.class)).isEqualTo(4);
 	}
 
 	@Test
@@ -150,8 +159,10 @@ public abstract class AbstractGeoSpatialTests {
 
 		Polygon polygon = new Polygon(first, second, third, fourth);
 
-		List<Venue> venues = template.find(query(where("location").within(polygon)), Venue.class);
+		Query query = query(where("location").within(polygon));
+		List<Venue> venues = template.find(query, Venue.class);
 		assertThat(venues).hasSize(4);
+		assertThat(template.count(query, Venue.class)).isEqualTo(4);
 	}
 
 	@Test
@@ -159,8 +170,10 @@ public abstract class AbstractGeoSpatialTests {
 
 		Point point = new Point(-73.99171, 40.738868);
 		Query query = query(where("location").nearSphere(point).maxDistance(0.003712240453784));
+
 		List<Venue> venues = template.find(query, Venue.class);
 		assertThat(venues).hasSize(11);
+		assertThat(template.count(query, Venue.class)).isEqualTo(11);
 	}
 
 	@Test // DATAMONGO-1360

@@ -22,6 +22,7 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import org.springframework.data.domain.Sort.Direction;
@@ -36,6 +37,7 @@ import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.query.NearQuery;
+import org.springframework.data.mongodb.core.query.Query;
 
 /**
  * @author Christoph Strobl
@@ -72,9 +74,21 @@ public class GeoSpatial2DSphereTests extends AbstractGeoSpatialTests {
 
 	@Test // DATAMONGO-1110
 	public void nearSphereWithMinDistance() {
+
 		Point point = new Point(-73.99171, 40.738868);
-		List<Venue> venues = template.find(query(where("location").nearSphere(point).minDistance(0.01)), Venue.class);
+		Query query = query(where("location").nearSphere(point).minDistance(0.01));
+
+		List<Venue> venues = template.find(query, Venue.class);
 		assertThat(venues.size()).isEqualTo(1);
+	}
+
+	@Test
+	public void countNearSphereWithMinDistance() {
+
+		Point point = new Point(-73.99171, 40.738868);
+		Query query = query(where("location").nearSphere(point).minDistance(0.01));
+
+		assertThat(template.count(query, Venue.class)).isEqualTo(1);
 	}
 
 	@Override

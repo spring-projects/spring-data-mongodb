@@ -284,7 +284,6 @@ public class SessionBoundMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-2012
-	@Ignore("error 2 (BadValue): $match does not support $geoNear, $near, and $nearSphere")
 	public void countWithGeoInTransaction() {
 
 		if (!template.collectionExists(Person.class)) {

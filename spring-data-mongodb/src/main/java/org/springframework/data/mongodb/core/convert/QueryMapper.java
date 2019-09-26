@@ -15,17 +15,8 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,6 +27,7 @@ import org.bson.types.ObjectId;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.domain.Example;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentEntity;
@@ -1289,5 +1281,98 @@ public class QueryMapper {
 
 	public MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext() {
 		return mappingContext;
+	}
+
+	public static Document processCountFilter(Document source) {
+
+		Document target = new Document();
+		for (Entry<String, Object> entry : source.entrySet()) {
+
+			if (entry.getValue() instanceof Document) {
+
+				Document theValue = (Document) entry.getValue();
+				if (containsNear(theValue)) {
+					target.putAll(createGeoWithin(entry.getKey(), theValue));
+				} else {
+					target.put(entry.getKey(), entry.getValue());
+				}
+			} else if (entry.getValue() instanceof Collection) {
+
+				Collection<Object> tmp = new ArrayList<>();
+				for (Object val : (Collection) entry.getValue()) {
+					if (val instanceof Document) {
+						tmp.add(processCountFilter((Document) val));
+					} else {
+						tmp.add(val);
+					}
+				}
+				target.put(entry.getKey(), tmp);
+			} else {
+				target.put(entry.getKey(), entry.getValue());
+			}
+		}
+		return target;
+	}
+
+	private static Document createGeoWithin(String key, Document source) {
+
+		boolean spheric = source.containsKey("$nearSphere");
+		Object $near = spheric ? source.get("$nearSphere") : source.get("$near");
+
+		Number maxDistance = source.containsKey("$maxDistance") ? (Number) source.get("$maxDistance") : Double.MAX_VALUE;
+		List<Object> $centerMax = Arrays.asList(toCenterCoordinates($near), maxDistance);
+		Document $geoWithinMax = new Document("$geoWithin",
+				new Document(spheric ? "$centerSphere" : "$center", $centerMax));
+
+		if (!containsNearWithMinDistance(source)) {
+			return new Document(key, $geoWithinMax);
+		}
+
+		Number minDistance = (Number) source.get("$minDistance");
+		List<Object> $centerMin = Arrays.asList(toCenterCoordinates($near), minDistance);
+		Document $geoWithinMin = new Document("$geoWithin",
+				new Document(spheric ? "$centerSphere" : "$center", $centerMin));
+
+		List<Document> criteria = new ArrayList<>();
+		criteria.add(new Document("$nor", Arrays.asList(new Document(key, $geoWithinMin))));
+		criteria.add(new Document(key, $geoWithinMax));
+		return new Document("$and", criteria);
+	}
+
+	private static boolean containsNear(Document source) {
+
+		if (source.containsKey("$near") || source.containsKey("$nearSphere")) {
+			return true;
+		}
+
+		return false;
+	}
+
+	private static boolean containsNearWithMinDistance(Document source) {
+
+		if (!containsNear(source)) {
+			return false;
+		}
+
+		return source.containsKey("$minDistance");
+	}
+
+	private static Object toCenterCoordinates(Object value) {
+
+		if (ObjectUtils.isArray(value)) {
+			return value;
+		}
+
+		if (value instanceof Point) {
+			return Arrays.asList(((Point) value).getX(), ((Point) value).getY());
+		}
+
+		if (value instanceof Document && ((Document) value).containsKey("x")) {
+
+			Document point = (Document) value;
+			return Arrays.asList(point.get("x"), point.get("y"));
+		}
+
+		return value;
 	}
 }

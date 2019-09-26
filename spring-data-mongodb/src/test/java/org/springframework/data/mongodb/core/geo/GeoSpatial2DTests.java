@@ -32,6 +32,7 @@ import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.index.IndexOperations;
+import org.springframework.data.mongodb.core.query.Query;
 
 /**
  * Modified from https://github.com/deftlabs/mongo-java-geospatial-example
@@ -45,9 +46,13 @@ public class GeoSpatial2DTests extends AbstractGeoSpatialTests {
 
 	@Test
 	public void nearPoint() {
+
 		Point point = new Point(-73.99171, 40.738868);
-		List<Venue> venues = template.find(query(where("location").near(point).maxDistance(0.01)), Venue.class);
+		Query query = query(where("location").near(point).maxDistance(0.01));
+
+		List<Venue> venues = template.find(query, Venue.class);
 		assertThat(venues.size()).isEqualTo(7);
+		assertThat(template.count(query, Venue.class)).isEqualTo(7);
 	}
 
 	@Test // DATAMONGO-360

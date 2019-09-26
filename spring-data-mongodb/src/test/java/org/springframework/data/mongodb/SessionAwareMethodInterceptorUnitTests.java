@@ -107,11 +107,11 @@ public class SessionAwareMethodInterceptorUnitTests {
 	public void usesCacheForMethodLookup() {
 
 		MethodCache cache = (MethodCache) ReflectionTestUtils.getField(SessionAwareMethodInterceptor.class, "METHOD_CACHE");
-		Method countMethod = ClassUtils.getMethod(MongoCollection.class, "count");
+		Method countMethod = ClassUtils.getMethod(MongoCollection.class, "countDocuments");
 
 		assertThat(cache.contains(countMethod, MongoCollection.class)).isFalse();
 
-		collection.count();
+		collection.countDocuments();
 
 		assertThat(cache.contains(countMethod, MongoCollection.class)).isTrue();
 	}
