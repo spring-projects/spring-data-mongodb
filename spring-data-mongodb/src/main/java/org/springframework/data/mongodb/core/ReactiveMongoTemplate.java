@@ -1300,9 +1300,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	protected Mono<Long> doCount(String collectionName, Document filter, CountOptions options) {
 
-		return ReactiveMongoDatabaseUtils.isTransactionActive(mongoDatabaseFactory) //
-				.flatMap(txActive -> createMono(collectionName,
-						collection -> txActive ? collection.countDocuments(filter, options) : collection.count(filter, options)));
+		return createMono(collectionName,
+				collection -> collection.countDocuments(QueryMapper.processCountFilter(filter), options));
 	}
 
 	/*
@@ -3322,20 +3321,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			// native MongoDB objects that offer methods with ClientSession must not be proxied.
 			return delegate.getMongoDatabase();
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveMongoTemplate#count(java.lang.String, org.bson.Document, com.mongodb.client.model.CountOptions)
-		 */
-		@Override
-		public Mono<Long> doCount(String collectionName, Document filter, CountOptions options) {
-
-			if (!session.hasActiveTransaction()) {
-				return super.doCount(collectionName, filter, options);
-			}
-
-			return createMono(collectionName, collection -> collection.countDocuments(filter, options));
 		}
 	}
 

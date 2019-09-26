@@ -226,7 +226,7 @@ public class SessionBoundMongoTemplateUnitTests {
 
 		template.count(new Query(), Person.class);
 
-		verify(collection).count(eq(clientSession), any(), any(CountOptions.class));
+		verify(collection).countDocuments(eq(clientSession), any(), any(CountOptions.class));
 	}
 
 	@Test // DATAMONGO-1880

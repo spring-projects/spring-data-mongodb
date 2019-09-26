@@ -111,7 +111,7 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 		when(collection.deleteMany(any(ClientSession.class), any(), any())).thenReturn(resultPublisher);
 		when(collection.insertOne(any(ClientSession.class), any(Document.class))).thenReturn(resultPublisher);
 		when(collection.aggregate(any(ClientSession.class), anyList(), any(Class.class))).thenReturn(aggregatePublisher);
-		when(collection.count(any(ClientSession.class), any(), any(CountOptions.class))).thenReturn(resultPublisher);
+		when(collection.countDocuments(any(ClientSession.class), any(), any(CountOptions.class))).thenReturn(resultPublisher);
 		when(collection.drop(any(ClientSession.class))).thenReturn(resultPublisher);
 		when(collection.findOneAndUpdate(any(ClientSession.class), any(), any(Bson.class), any()))
 				.thenReturn(resultPublisher);
@@ -224,7 +224,7 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 
 		template.count(new Query(), Person.class).subscribe();
 
-		verify(collection).count(eq(clientSession), any(), any(CountOptions.class));
+		verify(collection).countDocuments(eq(clientSession), any(), any(CountOptions.class));
 	}
 
 	@Test // DATAMONGO-1880

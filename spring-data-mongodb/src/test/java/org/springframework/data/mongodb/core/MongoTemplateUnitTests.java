@@ -154,7 +154,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(db.runCommand(any(), any(Class.class))).thenReturn(commandResultDocument);
 		when(collection.find(any(org.bson.Document.class), any(Class.class))).thenReturn(findIterable);
 		when(collection.mapReduce(any(), any(), eq(Document.class))).thenReturn(mapReduceIterable);
-		when(collection.count(any(Bson.class), any(CountOptions.class))).thenReturn(1L); // TODO: MongoDB 4 - fix me
+		when(collection.countDocuments(any(Bson.class), any(CountOptions.class))).thenReturn(1L); // TODO: MongoDB 4 - fix me
 		when(collection.getNamespace()).thenReturn(new MongoNamespace("db.mock-collection"));
 		when(collection.aggregate(any(List.class), any())).thenReturn(aggregateIterable);
 		when(collection.withReadPreference(any())).thenReturn(collection);
@@ -735,7 +735,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.exists(new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class);
 
 		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
-		verify(collection).count(any(), options.capture());
+		verify(collection).countDocuments(any(), options.capture());
 
 		assertThat(options.getValue().getCollation())
 				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("fr").build());
@@ -926,7 +926,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.count(new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class);
 
 		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
-		verify(collection).count(any(), options.capture());
+		verify(collection).countDocuments(any(), options.capture());
 
 		assertThat(options.getValue().getCollation())
 				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("fr").build());
@@ -939,7 +939,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.count(new BasicQuery("{}").withHint(queryHint), AutogenerateableId.class);
 
 		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
-		verify(collection).count(any(), options.capture());
+		verify(collection).countDocuments(any(), options.capture());
 
 		assertThat(options.getValue().getHint()).isEqualTo(queryHint);
 	}
@@ -1068,7 +1068,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.count(new BasicQuery("{}").skip(100), AutogenerateableId.class);
 
 		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
-		verify(collection).count(any(), options.capture());
+		verify(collection).countDocuments(any(), options.capture());
 
 		assertThat(options.getValue().getSkip()).isEqualTo(100);
 	}
@@ -1079,7 +1079,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.count(new BasicQuery("{}").limit(10), AutogenerateableId.class);
 
 		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
-		verify(collection).count(any(), options.capture());
+		verify(collection).countDocuments(any(), options.capture());
 
 		assertThat(options.getValue().getLimit()).isEqualTo(10);
 	}
@@ -1150,7 +1150,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.exists(new BasicQuery("{}"), Sith.class);
 
 		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
-		verify(collection).count(any(), options.capture());
+		verify(collection).countDocuments(any(), options.capture());
 
 		assertThat(options.getValue().getCollation())
 				.isEqualTo(com.mongodb.client.model.Collation.builder().locale("de_AT").build());

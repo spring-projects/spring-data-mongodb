@@ -890,6 +890,96 @@ public class QueryMapperUnitTests {
 		assertThat(target).isEqualTo(new org.bson.Document("_id", "id-1"));
 	}
 
+	@Test // DATAMONGO-2059
+	public void nearToGeoWithinWithoutDistance() {
+
+		Query source = query(where("location").near(new Point(-73.99171, 40.738868)));
+		org.bson.Document target = postProcessQueryForCount(source);
+
+		assertThat(target).isEqualTo(org.bson.Document
+				.parse("{\"location\": {\"$geoWithin\": {\"$center\": [[-73.99171, 40.738868], 1.7976931348623157E308]}}}"));
+	}
+
+	@Test // DATAMONGO-2059
+	public void nearSphereToGeoWithinWithoutDistance() {
+
+		Query source = query(where("location").nearSphere(new Point(-73.99171, 40.738868)));
+		org.bson.Document target = postProcessQueryForCount(source);
+
+		assertThat(target).isEqualTo(org.bson.Document.parse(
+				"{\"location\": {\"$geoWithin\": {\"$centerSphere\": [[-73.99171, 40.738868], 1.7976931348623157E308]}}}"));
+	}
+
+	@Test // DATAMONGO-2059
+	public void nearToGeoWithinWithMaxDistance() {
+
+		Query source = query(where("location").near(new Point(-73.99171, 40.738868)).maxDistance(10));
+		org.bson.Document target = postProcessQueryForCount(source);
+
+		assertThat(target).isEqualTo(
+				org.bson.Document.parse("{\"location\": {\"$geoWithin\": {\"$center\": [[-73.99171, 40.738868], 10.0]}}}"));
+	}
+
+	@Test // DATAMONGO-2059
+	public void nearSphereToGeoWithinWithMaxDistance() {
+
+		Query source = query(where("location").nearSphere(new Point(-73.99171, 40.738868)).maxDistance(10));
+		org.bson.Document target = postProcessQueryForCount(source);
+
+		assertThat(target).isEqualTo(org.bson.Document
+				.parse("{\"location\": {\"$geoWithin\": {\"$centerSphere\": [[-73.99171, 40.738868], 10.0]}}}"));
+	}
+
+	@Test // DATAMONGO-2059
+	public void nearToGeoWithinWithMinDistance() {
+
+		Query source = query(where("location").near(new Point(-73.99171, 40.738868)).minDistance(0.01));
+		org.bson.Document target = postProcessQueryForCount(source);
+
+		assertThat(target).isEqualTo(org.bson.Document.parse(
+				"{\"$and\":[{\"$nor\":[{\"location\":{\"$geoWithin\":{\"$center\":[ [ -73.99171, 40.738868 ], 0.01]}}}]},"
+						+ "  {\"location\":{\"$geoWithin\":{\"$center\":[ [ -73.99171, 40.738868 ], 1.7976931348623157E308]}}}]}"));
+	}
+
+	@Test // DATAMONGO-2059
+	public void nearToGeoWithinWithMaxDistanceAndCombinedWithOtherCriteria() {
+
+		Query source = query(
+				where("name").is("food").and("location").near(new Point(-73.99171, 40.738868)).maxDistance(10));
+		org.bson.Document target = postProcessQueryForCount(source);
+
+		assertThat(target).isEqualTo(org.bson.Document
+				.parse("{\"name\": \"food\", \"location\": {\"$geoWithin\": {\"$center\": [[-73.99171, 40.738868], 10.0]}}}"));
+	}
+
+	@Test // DATAMONGO-2059
+	public void nearToGeoWithinWithMinDistanceOrCombinedWithOtherCriteria() {
+
+		Query source = query(new Criteria().orOperator(where("name").is("food"),
+				where("location").near(new Point(-73.99171, 40.738868)).minDistance(0.01)));
+		org.bson.Document target = postProcessQueryForCount(source);
+
+		assertThat(target).isEqualTo(org.bson.Document.parse(
+				"{\"$or\" : [ { \"name\": \"food\" }, {\"$and\":[{\"$nor\":[{\"location\":{\"$geoWithin\":{\"$center\":[ [ -73.99171, 40.738868 ], 0.01]}}}]},{\"location\":{\"$geoWithin\":{\"$center\":[ [ -73.99171, 40.738868 ], 1.7976931348623157E308]}}}]} ]}"));
+	}
+
+	@Test // DATAMONGO-2059
+	public void nearToGeoWithinWithMaxDistanceOrCombinedWithOtherCriteria() {
+
+		Query source = query(new Criteria().orOperator(where("name").is("food"),
+				where("location").near(new Point(-73.99171, 40.738868)).maxDistance(10)));
+		org.bson.Document target = postProcessQueryForCount(source);
+
+		assertThat(target).isEqualTo(org.bson.Document.parse(
+				"{\"$or\" : [ { \"name\": \"food\" }, {\"location\": {\"$geoWithin\": {\"$center\": [[-73.99171, 40.738868], 10.0]}}} ]}"));
+	}
+
+	private org.bson.Document postProcessQueryForCount(Query source) {
+
+		org.bson.Document intermediate = mapper.getMappedObject(source.getQueryObject(), (MongoPersistentEntity<?>) null);
+		return QueryMapper.processCountFilter(intermediate);
+	}
+
 	@Document
 	public class Foo {
 		@Id private ObjectId id;

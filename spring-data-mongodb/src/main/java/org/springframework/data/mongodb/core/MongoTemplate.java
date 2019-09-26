@@ -53,6 +53,7 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Metric;
+import org.springframework.data.geo.Point;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.data.mapping.callback.EntityCallbacks;
@@ -1191,11 +1192,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			LOGGER.debug("Executing count: {} in collection: {}", serializeToJsonSafely(filter), collectionName);
 		}
 
-		if (MongoDatabaseUtils.isTransactionActive(getMongoDbFactory())) {
-			return execute(collectionName, collection -> collection.countDocuments(filter, options));
-		}
-
-		return execute(collectionName, collection -> collection.count(filter, options));
+		return execute(collectionName, collection -> collection.countDocuments(QueryMapper.processCountFilter(filter), options));
 	}
 
 	/*
@@ -3522,20 +3519,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			// native MongoDB objects that offer methods with ClientSession must not be proxied.
 			return delegate.getDb();
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.MongoTemplate#doCount(java.lang.String, org.bson.Document, com.mongodb.client.model.CountOptions)
-		 */
-		@Override
-		protected long doCount(String collectionName, Document filter, CountOptions options) {
-
-			if (!session.hasActiveTransaction()) {
-				return super.doCount(collectionName, filter, options);
-			}
-
-			return execute(collectionName, collection -> collection.countDocuments(filter, options));
 		}
 	}
 }

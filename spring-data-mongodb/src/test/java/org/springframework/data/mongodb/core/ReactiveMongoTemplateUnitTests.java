@@ -126,7 +126,7 @@ public class ReactiveMongoTemplateUnitTests {
 		when(collection.find(any(Document.class), any(Class.class))).thenReturn(findPublisher);
 		when(collection.aggregate(anyList())).thenReturn(aggregatePublisher);
 		when(collection.aggregate(anyList(), any(Class.class))).thenReturn(aggregatePublisher);
-		when(collection.count(any(), any(CountOptions.class))).thenReturn(Mono.just(0L));
+		when(collection.countDocuments(any(), any(CountOptions.class))).thenReturn(Mono.just(0L));
 		when(collection.updateOne(any(), any(Bson.class), any(UpdateOptions.class))).thenReturn(updateResultPublisher);
 		when(collection.updateMany(any(Bson.class), any(Bson.class), any())).thenReturn(updateResultPublisher);
 		when(collection.findOneAndUpdate(any(), any(Bson.class), any(FindOneAndUpdateOptions.class)))
@@ -391,7 +391,7 @@ public class ReactiveMongoTemplateUnitTests {
 		template.count(new Query().skip(10), Person.class, "star-wars").subscribe();
 
 		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
-		verify(collection).count(any(), options.capture());
+		verify(collection).countDocuments(any(), options.capture());
 
 		assertThat(options.getValue().getSkip()).isEqualTo(10);
 	}
@@ -402,7 +402,7 @@ public class ReactiveMongoTemplateUnitTests {
 		template.count(new Query().limit(100), Person.class, "star-wars").subscribe();
 
 		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
-		verify(collection).count(any(), options.capture());
+		verify(collection).countDocuments(any(), options.capture());
 
 		assertThat(options.getValue().getLimit()).isEqualTo(100);
 	}
@@ -414,7 +414,7 @@ public class ReactiveMongoTemplateUnitTests {
 		template.count(new Query().withHint(queryHint), Person.class, "star-wars").subscribe();
 
 		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
-		verify(collection).count(any(), options.capture());
+		verify(collection).countDocuments(any(), options.capture());
 
 		assertThat(options.getValue().getHint()).isEqualTo(queryHint);
 	}
