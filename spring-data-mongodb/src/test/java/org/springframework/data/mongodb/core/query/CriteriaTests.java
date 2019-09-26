@@ -32,6 +32,7 @@ import org.junit.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.util.Base64Utils;
 
 import com.mongodb.client.MongoClient;
@@ -59,7 +60,7 @@ public class CriteriaTests {
 	@Before
 	public void setUp() {
 
-		client = MongoClients.create();
+		client = MongoTestUtils.client();
 		ops = new MongoTemplate(client, "criteria-tests");
 
 		ops.dropCollection(DocumentWithBitmask.class);

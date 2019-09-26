@@ -28,17 +28,18 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.config.AbstractReactiveMongoConfiguration;
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.util.Version;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.reactivestreams.client.MongoClient;
-import com.mongodb.reactivestreams.client.MongoClients;
 
 /**
  * @author Mark Paluch
@@ -56,7 +57,7 @@ public class ReactiveMongoTemplateCollationTests {
 
 		@Override
 		public MongoClient reactiveMongoClient() {
-			return MongoClients.create();
+			return MongoTestUtils.reactiveClient();
 		}
 
 		@Override
@@ -98,10 +99,9 @@ public class ReactiveMongoTemplateCollationTests {
 
 		return template.execute(db -> {
 
-			return Flux
-					.from(db.runCommand(new Document() //
-							.append("listCollections", 1) //
-							.append("filter", new Document("name", collectionName)))) //
+			return Flux.from(db.runCommand(new Document() //
+					.append("listCollections", 1) //
+					.append("filter", new Document("name", collectionName)))) //
 					.map(it -> it.get("cursor", Document.class))
 					.flatMapIterable(it -> (List<Document>) it.get("firstBatch", List.class));
 		}).next();

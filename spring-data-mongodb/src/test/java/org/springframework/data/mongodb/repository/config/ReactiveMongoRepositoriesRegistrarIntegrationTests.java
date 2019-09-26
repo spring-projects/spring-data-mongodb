@@ -25,6 +25,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.repository.ReactivePersonRepository;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -45,7 +46,8 @@ public class ReactiveMongoRepositoriesRegistrarIntegrationTests {
 
 		@Bean
 		public ReactiveMongoTemplate reactiveMongoTemplate() throws Exception {
-			return new ReactiveMongoTemplate(new SimpleReactiveMongoDatabaseFactory(MongoClients.create(), "database"));
+			return new ReactiveMongoTemplate(
+					new SimpleReactiveMongoDatabaseFactory(MongoTestUtils.reactiveClient(), "database"));
 		}
 	}
 

@@ -76,7 +76,7 @@ public class ReactiveFindOperationSupportTests {
 
 		insertObjects();
 
-		template = new ReactiveMongoTemplate(MongoClients.create(), "ExecutableFindOperationSupportTests");
+		template = new ReactiveMongoTemplate(MongoTestUtils.reactiveClient(), "ExecutableFindOperationSupportTests");
 	}
 
 	void insertObjects() {

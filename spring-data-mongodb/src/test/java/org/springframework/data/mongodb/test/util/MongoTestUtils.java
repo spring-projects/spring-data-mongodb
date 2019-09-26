@@ -15,37 +15,69 @@
  */
 package org.springframework.data.mongodb.test.util;
 
-import com.mongodb.client.MongoClient;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.bson.Document;
 
+import org.springframework.util.ClassUtils;
+import org.springframework.util.ReflectionUtils;
+
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.reactivestreams.client.MongoClients;
 import com.mongodb.reactivestreams.client.Success;
 
 /**
+ * Utility to create (and reuse) imperative and reactive {@code MongoClient} instances.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class MongoTestUtils {
 
-
-	private static final String CONNECTION_STRING_PATTERN = "mongodb://%s:%s/";
 	public static final String CONNECTION_STRING = "mongodb://localhost:27017/?replicaSet=rs0"; // &readPreference=primary&w=majority
 
+	private static final String CONNECTION_STRING_PATTERN = "mongodb://%s:%s/";
+	private static final Map<String, com.mongodb.client.MongoClient> CLIENT_CACHE = new HashMap<>();
+	private static final Map<String, com.mongodb.reactivestreams.client.MongoClient> REACTIVE_CLIENT_CACHE = new HashMap<>();
+
+	/**
+	 * Create a new {@link com.mongodb.client.MongoClient} with defaults.
+	 *
+	 * @return new instance of {@link com.mongodb.client.MongoClient}.
+	 */
 	public static MongoClient client() {
 		return client("localhost", 27017);
 	}
 
 	public static MongoClient client(String host, int port) {
-		return com.mongodb.client.MongoClients.create(String.format(CONNECTION_STRING_PATTERN, host, port));
+		return getOrCreate(String.format(CONNECTION_STRING_PATTERN, host, port));
 	}
+
+	/**
+	 * Create a new {@link com.mongodb.reactivestreams.client.MongoClient} with defaults.
+	 *
+	 * @return new instance of {@link com.mongodb.reactivestreams.client.MongoClient}.
+	 */
+	public static com.mongodb.reactivestreams.client.MongoClient reactiveClient() {
+		return reactiveClient("localhost", 27017);
+	}
+
+	public static com.mongodb.reactivestreams.client.MongoClient reactiveClient(String host, int port) {
+		return getOrCreateReactive(String.format(CONNECTION_STRING_PATTERN, host, port));
+	}
+
 	/**
 	 * Create a {@link com.mongodb.client.MongoCollection} if it does not exist, or drop and recreate it if it does.
 	 *
@@ -159,7 +191,7 @@ public class MongoTestUtils {
 	 * @return new instance of {@link com.mongodb.MongoClient}.
 	 */
 	public static com.mongodb.client.MongoClient replSetClient() {
-		return com.mongodb.client.MongoClients.create(CONNECTION_STRING);
+		return getOrCreate(CONNECTION_STRING);
 	}
 
 	/**
@@ -168,7 +200,49 @@ public class MongoTestUtils {
 	 * @return new instance of {@link com.mongodb.reactivestreams.client.MongoClient}.
 	 */
 	public static com.mongodb.reactivestreams.client.MongoClient reactiveReplSetClient() {
-		return MongoClients.create(CONNECTION_STRING);
+		return getOrCreateReactive(CONNECTION_STRING);
+	}
+
+	private static com.mongodb.client.MongoClient getOrCreate(String connectionString) {
+		return CLIENT_CACHE.computeIfAbsent(connectionString,
+				key -> wrapClient(com.mongodb.client.MongoClients.create(key)));
+	}
+
+	private static com.mongodb.reactivestreams.client.MongoClient getOrCreateReactive(String connectionString) {
+		return REACTIVE_CLIENT_CACHE.computeIfAbsent(connectionString, key -> wrapClient(MongoClients.create(key)));
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T> T wrapClient(T client) {
+
+		CloseSurpressingInvocationHandler ih = new CloseSurpressingInvocationHandler(client);
+		Object proxy = Proxy.newProxyInstance(MongoTestUtils.class.getClassLoader(), ClassUtils.getAllInterfaces(client),
+				ih);
+		return (T) proxy;
+
+	}
+
+	static class CloseSurpressingInvocationHandler implements InvocationHandler {
+
+		private final Object mongoClient;
+		private final Map<Method, Method> methodCache = new HashMap<>();
+
+		public CloseSurpressingInvocationHandler(Object mongoClient) {
+			this.mongoClient = mongoClient;
+		}
+
+		@Override
+		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+
+			if (method.getName().equals("close")) {
+				throw new UnsupportedOperationException("Cannot close cached MongoClient. See MongoTestUtils.");
+			}
+
+			Method toInvoke = methodCache.computeIfAbsent(method, key -> {
+				return ReflectionUtils.findMethod(mongoClient.getClass(), key.getName(), key.getParameterTypes());
+			});
+			return toInvoke.invoke(mongoClient, args);
+		}
 	}
 
 }

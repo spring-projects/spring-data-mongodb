@@ -178,7 +178,6 @@ public class MongoVersionRule implements TestRule {
 			MongoClient client = MongoTestUtils.client(host, port);
 			MongoDatabase database = client.getDatabase("test");
 			Document result = database.runCommand(new Document("buildInfo", 1));
-			client.close();
 
 			return Version.parse(result.get("version", String.class));
 		} catch (Exception e) {

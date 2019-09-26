@@ -46,6 +46,7 @@ import org.springframework.data.mongodb.repository.QPerson;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactory;
 import org.springframework.data.mongodb.repository.support.QuerydslMongoPredicateExecutor;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
 import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoClient;
@@ -75,12 +76,7 @@ public class ApplicationContextEventTests {
 
 	@BeforeClass
 	public static void beforeClass() {
-		mongo = MongoClients.create();
-	}
-
-	@AfterClass
-	public static void afterClass() {
-		mongo.close();
+		mongo = MongoTestUtils.client();
 	}
 
 	@Before

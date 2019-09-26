@@ -69,11 +69,6 @@ public class ClientSessionTests {
 		template.getDb().getCollection(COLLECTION_NAME).insertOne(new Document("_id", "id-1").append("value", "spring"));
 	}
 
-	@After
-	public void tearDown() {
-		client.close();
-	}
-
 	@Test // DATAMONGO-1880
 	public void shouldApplyClientSession() {
 

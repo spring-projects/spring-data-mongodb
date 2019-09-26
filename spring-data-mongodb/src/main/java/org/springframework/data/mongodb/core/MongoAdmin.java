@@ -38,7 +38,7 @@ public class MongoAdmin implements MongoAdminOperations {
 
 	/**
 	 * @param mongoClient
-	 * @deprecated since 2.2 in favor of {@link MongoAdmin(com.mongodb.client.MongoClient)}.
+	 * @deprecated since 2.2 in favor of {@link MongoAdmin#MongoAdmin(com.mongodb.client.MongoClient)}.
 	 */
 	@Deprecated
 	public MongoAdmin(MongoClient mongoClient) {

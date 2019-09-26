@@ -65,7 +65,7 @@ public class ReactiveUpdateOperationSupportTests {
 		blocking.save(han);
 		blocking.save(luke);
 
-		template = new ReactiveMongoTemplate(MongoClients.create(), "ExecutableUpdateOperationSupportTests");
+		template = new ReactiveMongoTemplate(MongoTestUtils.reactiveClient(), "ExecutableUpdateOperationSupportTests");
 	}
 
 	@Test // DATAMONGO-1719
