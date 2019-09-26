@@ -62,7 +62,7 @@ public class ReactiveRemoveOperationSupportTests {
 		blocking.save(han);
 		blocking.save(luke);
 
-		template = new ReactiveMongoTemplate(MongoClients.create(), "ExecutableRemoveOperationSupportTests");
+		template = new ReactiveMongoTemplate(MongoTestUtils.reactiveClient(), "ExecutableRemoveOperationSupportTests");
 	}
 
 	@Test // DATAMONGO-1719

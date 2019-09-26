@@ -94,12 +94,11 @@ public class ReplicaSet implements TestRule {
 
 		if (runsAsReplicaSet.get() == null) {
 
-			try (MongoClient client = MongoTestUtils.client()) {
+			MongoClient client = MongoTestUtils.client();
 
-				boolean tmp = client.getDatabase("admin").runCommand(new Document("getCmdLineOpts", "1"))
-						.get("argv", List.class).contains("--replSet");
-				runsAsReplicaSet.compareAndSet(null, tmp);
-			}
+			boolean tmp = client.getDatabase("admin").runCommand(new Document("getCmdLineOpts", "1")).get("argv", List.class)
+					.contains("--replSet");
+			runsAsReplicaSet.compareAndSet(null, tmp);
 		}
 		return runsAsReplicaSet.get();
 	}

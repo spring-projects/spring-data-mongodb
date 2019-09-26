@@ -31,6 +31,7 @@ import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.repository.VersionedPerson;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -49,7 +50,7 @@ public class SimpleReactiveMongoRepositoryVersionedEntityTests {
 
 		@Override
 		public MongoClient reactiveMongoClient() {
-			return MongoClients.create();
+			return MongoTestUtils.reactiveClient();
 		}
 
 		@Override

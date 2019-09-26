@@ -33,6 +33,7 @@ import org.junit.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.util.Version;
 
@@ -50,13 +51,13 @@ public class JsonSchemaQueryTests {
 
 	public static @ClassRule MongoVersionRule REQUIRES_AT_LEAST_3_6_0 = MongoVersionRule.atLeast(Version.parse("3.6.0"));
 
-	static MongoClient client = MongoClients.create();
+	static MongoClient client = MongoTestUtils.client();
 	MongoTemplate template;
 	Person jellyBelly, roseSpringHeart, kazmardBoombub;
 
 	@BeforeClass
 	public static void beforeClass() {
-		 client = MongoClients.create();
+		client = MongoTestUtils.client();
 	}
 
 	@Before
@@ -93,13 +94,6 @@ public class JsonSchemaQueryTests {
 		template.save(kazmardBoombub);
 	}
 
-	@AfterClass
-	public static void afterClass() {
-		if (client != null) {
-			client.close();
-		}
-	}
-
 	@Test // DATAMONGO-1835
 	public void findsDocumentsWithRequiredFieldsCorrectly() {
 
@@ -114,12 +108,10 @@ public class JsonSchemaQueryTests {
 
 		MongoJsonSchema schema = MongoJsonSchema.builder().required("address").build();
 
-		com.mongodb.reactivestreams.client.MongoClient mongoClient = com.mongodb.reactivestreams.client.MongoClients.create();
+		com.mongodb.reactivestreams.client.MongoClient mongoClient = MongoTestUtils.reactiveClient();
 
 		new ReactiveMongoTemplate(mongoClient, DATABASE_NAME).find(query(matchingDocumentStructure(schema)), Person.class)
 				.as(StepVerifier::create).expectNextCount(2).verifyComplete();
-
-		mongoClient.close();
 	}
 
 	@Test // DATAMONGO-1835

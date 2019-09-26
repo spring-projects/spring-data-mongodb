@@ -85,13 +85,12 @@ public class ReactiveTransactionIntegrationTests {
 		personService = context.getBean(PersonService.class);
 		operations = context.getBean(ReactiveMongoOperations.class);
 
-		try (MongoClient client = MongoClients.create()) {
+		MongoClient client = MongoTestUtils.reactiveClient();
 
-			Flux.merge( //
-					MongoTestUtils.createOrReplaceCollection(DATABASE, operations.getCollectionName(Person.class), client),
-					MongoTestUtils.createOrReplaceCollection(DATABASE, operations.getCollectionName(EventLog.class), client) //
-			).then().as(StepVerifier::create).verifyComplete();
-		}
+		Flux.merge( //
+				MongoTestUtils.createOrReplaceCollection(DATABASE, operations.getCollectionName(Person.class), client),
+				MongoTestUtils.createOrReplaceCollection(DATABASE, operations.getCollectionName(EventLog.class), client) //
+		).then().as(StepVerifier::create).verifyComplete();
 	}
 
 	@Test // DATAMONGO-2265
@@ -224,7 +223,7 @@ public class ReactiveTransactionIntegrationTests {
 
 		@Override
 		public MongoClient reactiveMongoClient() {
-			return MongoClients.create("mongodb://localhost");
+			return MongoTestUtils.reactiveClient();
 		}
 
 		@Override

@@ -35,6 +35,7 @@ import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
@@ -55,7 +56,7 @@ public class MappingMongoConverterTests {
 	@Before
 	public void setUp() {
 
-		client = MongoClients.create();
+		client = MongoTestUtils.client();
 		client.getDatabase("mapping-converter-tests").drop();
 
 		MongoDbFactory factory = new SimpleMongoClientDbFactory(client, "mapping-converter-tests");

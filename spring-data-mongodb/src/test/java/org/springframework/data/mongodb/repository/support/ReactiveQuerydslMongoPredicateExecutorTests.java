@@ -78,7 +78,7 @@ public class ReactiveQuerydslMongoPredicateExecutorTests {
 
 		@Override
 		public MongoClient reactiveMongoClient() {
-			return MongoClients.create();
+			return MongoTestUtils.reactiveClient();
 		}
 
 		@Override
@@ -90,11 +90,10 @@ public class ReactiveQuerydslMongoPredicateExecutorTests {
 	@BeforeClass
 	public static void cleanDb() {
 
-		try (MongoClient client = MongoClients.create()) {
+		MongoClient client = MongoTestUtils.reactiveClient();
 
-			MongoTestUtils.createOrReplaceCollectionNow("reactive", "person", client);
-			MongoTestUtils.createOrReplaceCollectionNow("reactive", "user", client);
-		}
+		MongoTestUtils.createOrReplaceCollectionNow("reactive", "person", client);
+		MongoTestUtils.createOrReplaceCollectionNow("reactive", "user", client);
 	}
 
 	@Before

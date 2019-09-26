@@ -36,6 +36,7 @@ import org.springframework.data.mongodb.core.CollectionOptions;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.util.Version;
 import org.springframework.test.context.ContextConfiguration;
@@ -60,7 +61,7 @@ public class ReactiveMongoJsonSchemaTests {
 
 		@Override
 		public MongoClient reactiveMongoClient() {
-			return MongoClients.create();
+			return MongoTestUtils.reactiveClient();
 		}
 
 		@Override

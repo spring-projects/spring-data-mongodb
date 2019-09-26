@@ -149,7 +149,6 @@ public class SessionBoundMongoTemplateTests {
 	public void tearDown() {
 
 		session.close();
-		client.close();
 	}
 
 	@Test // DATAMONGO-1880

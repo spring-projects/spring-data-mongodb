@@ -361,14 +361,13 @@ public class CleanMongoDB implements TestRule {
 
 			boolean isInternal = false;
 			if (client == null) {
-				client = MongoClients.create();
+				client = MongoTestUtils.client();
 				isInternal = true;
 			}
 
 			doClean();
 
 			if (isInternal) {
-				client.close();
 				client = null;
 			}
 		}

@@ -60,7 +60,7 @@ public class ReactiveMongoTemplateAuditingTests {
 		@Bean
 		@Override
 		public MongoClient reactiveMongoClient() {
-			return MongoClients.create();
+			return MongoTestUtils.reactiveClient();
 		}
 
 		@Override

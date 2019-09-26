@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.test.util;
 
-import com.mongodb.client.MongoClient;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -25,20 +24,29 @@ import org.bson.Document;
 
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.reactivestreams.client.MongoClients;
 import com.mongodb.reactivestreams.client.Success;
 
 /**
+ * Utility to create (and reuse) imperative and reactive {@code MongoClient} instances.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public class MongoTestUtils {
 
-
-	private static final String CONNECTION_STRING_PATTERN = "mongodb://%s:%s/";
 	public static final String CONNECTION_STRING = "mongodb://localhost:27017/?replicaSet=rs0"; // &readPreference=primary&w=majority
 
+	private static final String CONNECTION_STRING_PATTERN = "mongodb://%s:%s/";
+
+	/**
+	 * Create a new {@link com.mongodb.client.MongoClient} with defaults.
+	 *
+	 * @return new instance of {@link com.mongodb.client.MongoClient}.
+	 */
 	public static MongoClient client() {
 		return client("localhost", 27017);
 	}
@@ -46,6 +54,20 @@ public class MongoTestUtils {
 	public static MongoClient client(String host, int port) {
 		return com.mongodb.client.MongoClients.create(String.format(CONNECTION_STRING_PATTERN, host, port));
 	}
+
+	/**
+	 * Create a new {@link com.mongodb.reactivestreams.client.MongoClient} with defaults.
+	 *
+	 * @return new instance of {@link com.mongodb.reactivestreams.client.MongoClient}.
+	 */
+	public static com.mongodb.reactivestreams.client.MongoClient reactiveClient() {
+		return reactiveClient("localhost", 27017);
+	}
+
+	public static com.mongodb.reactivestreams.client.MongoClient reactiveClient(String host, int port) {
+		return MongoClients.create(String.format(CONNECTION_STRING_PATTERN, host, port));
+	}
+
 	/**
 	 * Create a {@link com.mongodb.client.MongoCollection} if it does not exist, or drop and recreate it if it does.
 	 *

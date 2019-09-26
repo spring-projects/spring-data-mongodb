@@ -27,6 +27,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -52,7 +53,7 @@ public abstract class AbstractIntegrationTests {
 
 		@Override
 		public MongoClient mongoClient() {
-			return MongoClients.create();
+			return MongoTestUtils.client();
 		}
 	}
 
