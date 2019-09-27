@@ -16,7 +16,6 @@
 package org.springframework.data.mongodb.core
 
 import com.mongodb.client.result.DeleteResult
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitSingle
@@ -57,6 +56,5 @@ suspend fun <T : Any> ReactiveRemoveOperation.TerminatingRemove<T>.allAndAwait()
  * @author Sebastien Deleuze
  * @since 2.2
  */
-@ExperimentalCoroutinesApi
 fun <T : Any> ReactiveRemoveOperation.TerminatingRemove<T>.findAndRemoveAsFlow(): Flow<T> =
 		findAndRemove().asFlow()

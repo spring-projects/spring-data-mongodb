@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.core
 
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.reactive.asFlow
 import kotlin.reflect.KClass
@@ -65,6 +64,5 @@ inline fun <reified T : Any> ReactiveMapReduceOperation.MapReduceWithProjection<
  * @author Sebastien Deleuze
  * @since 2.2
  */
-@ExperimentalCoroutinesApi
 fun <T : Any> ReactiveMapReduceOperation.TerminatingMapReduce<T>.flow(): Flow<T> =
 		all().asFlow()

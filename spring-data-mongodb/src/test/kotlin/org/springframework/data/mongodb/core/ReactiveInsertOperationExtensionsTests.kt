@@ -19,7 +19,6 @@ import example.first.First
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
@@ -66,7 +65,6 @@ class ReactiveInsertOperationExtensionsTests {
 	}
 
 	@Test // DATAMONGO-2255
-	@ExperimentalCoroutinesApi
 	fun terminatingInsertAllAsFlow() {
 
 		val insert = mockk<ReactiveInsertOperation.TerminatingInsert<String>>()
