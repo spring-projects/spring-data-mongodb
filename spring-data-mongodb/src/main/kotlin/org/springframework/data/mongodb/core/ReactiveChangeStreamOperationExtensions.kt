@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.core
 
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.reactive.asFlow
 
@@ -44,7 +43,6 @@ inline fun <reified T : Any> ReactiveChangeStreamOperation.ChangeStreamWithFilte
  * @author Sebastien Deleuze
  * @since 2.2
  */
-@ExperimentalCoroutinesApi
 fun <T : Any> ReactiveChangeStreamOperation.TerminatingChangeStream<T>.flow(): Flow<ChangeStreamEvent<T>> =
 		listen().asFlow()
 

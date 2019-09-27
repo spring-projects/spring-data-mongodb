@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.core
 
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitFirstOrNull
@@ -139,7 +138,6 @@ suspend fun <T : Any> ReactiveFindOperation.TerminatingFind<T>.awaitExists(): Bo
  *
  * @author Sebastien Deleuze
  */
-@ExperimentalCoroutinesApi
 fun <T : Any> ReactiveFindOperation.TerminatingFind<T>.flow(): Flow<T> =
 		all().asFlow()
 
@@ -148,7 +146,6 @@ fun <T : Any> ReactiveFindOperation.TerminatingFind<T>.flow(): Flow<T> =
  *
  * @author Sebastien Deleuze
  */
-@ExperimentalCoroutinesApi
 fun <T : Any> ReactiveFindOperation.TerminatingFind<T>.tailAsFlow(): Flow<T> =
 		tail().asFlow()
 
@@ -157,7 +154,6 @@ fun <T : Any> ReactiveFindOperation.TerminatingFind<T>.tailAsFlow(): Flow<T> =
  *
  * @author Sebastien Deleuze
  */
-@ExperimentalCoroutinesApi
 fun <T : Any> ReactiveFindOperation.TerminatingFindNear<T>.flow(): Flow<GeoResult<T>> =
 		all().asFlow()
 
@@ -167,6 +163,5 @@ fun <T : Any> ReactiveFindOperation.TerminatingFindNear<T>.flow(): Flow<GeoResul
  * @author Sebastien Deleuze
  * @since 2.2
  */
-@ExperimentalCoroutinesApi
 fun <T : Any> ReactiveFindOperation.TerminatingDistinct<T>.flow(): Flow<T> =
 		all().asFlow()

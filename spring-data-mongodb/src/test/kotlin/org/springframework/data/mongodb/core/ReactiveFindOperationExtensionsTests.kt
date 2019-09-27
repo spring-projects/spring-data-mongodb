@@ -19,7 +19,6 @@ import example.first.First
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
@@ -35,7 +34,6 @@ import reactor.core.publisher.Mono
  * @author Mark Paluch
  * @author Sebastien Deleuze
  */
-@ExperimentalCoroutinesApi
 class ReactiveFindOperationExtensionsTests {
 
 	val operation = mockk<ReactiveFindOperation>(relaxed = true)

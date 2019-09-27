@@ -19,7 +19,6 @@ import example.first.First
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
@@ -50,7 +49,6 @@ class ReactiveAggregationOperationExtensionsTests {
 	}
 
 	@Test // DATAMONGO-2255
-	@ExperimentalCoroutinesApi
 	fun terminatingAggregationOperationAllAsFlow() {
 
 		val spec = mockk<ReactiveAggregationOperation.TerminatingAggregationOperation<String>>()

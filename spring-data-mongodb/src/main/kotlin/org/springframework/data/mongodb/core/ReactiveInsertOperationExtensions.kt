@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.core
 
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitSingle
@@ -56,6 +55,5 @@ suspend inline fun <reified T: Any> ReactiveInsertOperation.TerminatingInsert<T>
  * @author Sebastien Deleuze
  * @since 2.2
  */
-@ExperimentalCoroutinesApi
 fun <T : Any> ReactiveInsertOperation.TerminatingInsert<T>.flow(objects: Collection<T>): Flow<T> =
 		all(objects).asFlow()
