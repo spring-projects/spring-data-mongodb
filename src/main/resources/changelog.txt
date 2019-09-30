@@ -1,6 +1,20 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.2.0.RELEASE (2019-09-30)
+---------------------------------------------
+* DATAMONGO-2380 - Remove @ExperimentalCoroutinesApi annotations.
+* DATAMONGO-2379 - Add documentation for Kotlin support.
+* DATAMONGO-2378 - Favor com.mongodb.client.MongoClient (over already deprecated com.mongodb.MongoClient) where possible.
+* DATAMONGO-2377 - Wrong processing of $$value and $$this.
+* DATAMONGO-2374 - Couldn't find PersistentEntity for type class org.bson.Document using query methods.
+* DATAMONGO-2366 - CursorReadingTask calls errorHandler.handleError twice for exception raised while reading from the cursor.
+* DATAMONGO-2361 - Trivial fix in Mapping Annotation Overview chapter of RefDoc.
+* DATAMONGO-2360 - MongoTemplate#count does not use hinted index.
+* DATAMONGO-2334 - Release 2.2 GA (Moore).
+* DATAMONGO-1731 - Improve JavaDoc of MongoOperations update / findAndModify methods.
+
+
 Changes in version 2.1.11.RELEASE (2019-09-30)
 ----------------------------------------------
 * DATAMONGO-2377 - Wrong processing of $$value and $$this.
