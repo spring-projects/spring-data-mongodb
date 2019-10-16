@@ -60,6 +60,11 @@ public class MongoTemplateCollationTests {
 		protected String getDatabaseName() {
 			return "collation-tests";
 		}
+
+		@Override
+		protected boolean autoIndexCreation() {
+			return false;
+		}
 	}
 
 	@Autowired MongoTemplate template;
