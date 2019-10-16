@@ -184,7 +184,7 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 	public void delete(Query query) {
 
 		for (GridFSFile gridFSFile : find(query)) {
-			getGridFs().delete(((BsonObjectId) gridFSFile.getId()).getValue());
+			getGridFs().delete(gridFSFile.getId());
 		}
 	}
 
@@ -215,7 +215,7 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 
 		Assert.notNull(file, "GridFSFile must not be null!");
 
-		return new GridFsResource(file, getGridFs().openDownloadStream(file.getObjectId()));
+		return new GridFsResource(file, getGridFs().openDownloadStream(file.getId()));
 	}
 
 	/*
