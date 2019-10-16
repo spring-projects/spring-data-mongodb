@@ -85,6 +85,11 @@ public class MongoTemplateTransactionTests {
 			return DB_NAME;
 		}
 
+		@Override
+		protected boolean autoIndexCreation() {
+			return false;
+		}
+
 		@Bean
 		MongoTransactionManager txManager(MongoDbFactory dbFactory) {
 			return new MongoTransactionManager(dbFactory);
