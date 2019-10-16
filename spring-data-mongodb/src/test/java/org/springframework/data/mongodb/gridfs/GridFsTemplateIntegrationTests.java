@@ -26,6 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.UUID;
 
 import org.bson.BsonObjectId;
 import org.bson.Document;
@@ -39,6 +40,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -47,6 +49,8 @@ import org.springframework.util.StreamUtils;
 import com.mongodb.MongoGridFSException;
 import com.mongodb.client.gridfs.GridFSFindIterable;
 import com.mongodb.client.gridfs.model.GridFSFile;
+import com.mongodb.gridfs.GridFS;
+import com.mongodb.gridfs.GridFSInputFile;
 
 /**
  * Integration tests for {@link GridFsTemplate}.
@@ -65,6 +69,7 @@ public class GridFsTemplateIntegrationTests {
 	Resource resource = new ClassPathResource("gridfs/gridfs.xml");
 
 	@Autowired GridFsOperations operations;
+	@Autowired SimpleMongoDbFactory mongoClient;
 
 	@Before
 	public void setUp() {
@@ -76,11 +81,29 @@ public class GridFsTemplateIntegrationTests {
 
 		ObjectId reference = operations.store(resource.getInputStream(), "foo.xml");
 
-		List<com.mongodb.client.gridfs.model.GridFSFile> files = new ArrayList<com.mongodb.client.gridfs.model.GridFSFile>();
+		List<com.mongodb.client.gridfs.model.GridFSFile> files = new ArrayList<>();
 		GridFSFindIterable result = operations.find(query(where("_id").is(reference)));
 		result.into(files);
-		assertThat(files.size()).isEqualTo(1);
+		assertThat(files).hasSize(1);
 		assertThat(((BsonObjectId) files.get(0).getId()).getValue()).isEqualTo(reference);
+	}
+
+	@Test // DATAMONGO-2392
+	public void storesAndFindsByUUID() throws IOException {
+
+		UUID uuid = UUID.randomUUID();
+
+		GridFS fs = new GridFS(mongoClient.getLegacyDb());
+		GridFSInputFile in = fs.createFile(resource.getInputStream(), "gridfs.xml");
+
+		in.put("_id", uuid);
+		in.put("contentType", "application/octet-stream");
+		in.save();
+
+		GridFSFile file = operations.findOne(query(where("_id").is(uuid)));
+		GridFsResource resource = operations.getResource(file);
+
+		assertThat(resource.exists()).isTrue();
 	}
 
 	@Test // DATAMONGO-6
