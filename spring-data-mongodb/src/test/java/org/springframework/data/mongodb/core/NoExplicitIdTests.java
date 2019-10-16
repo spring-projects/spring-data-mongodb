@@ -59,6 +59,11 @@ public class NoExplicitIdTests {
 		public MongoClient mongoClient() {
 			return MongoTestUtils.client();
 		}
+
+		@Override
+		protected boolean autoIndexCreation() {
+			return false;
+		}
 	}
 
 	@Autowired MongoOperations mongoOps;
