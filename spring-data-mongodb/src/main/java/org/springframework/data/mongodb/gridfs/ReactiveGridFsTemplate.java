@@ -49,6 +49,7 @@ import com.mongodb.reactivestreams.client.gridfs.GridFSFindPublisher;
  * {@link DefaultDataBufferFactory} to create {@link DataBuffer buffers}.
  *
  * @author Mark Paluch
+ * @author Nick Stolwijk
  * @since 2.2
  */
 public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements ReactiveGridFsOperations {
