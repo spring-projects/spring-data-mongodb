@@ -74,6 +74,11 @@ public class MongoTemplateValidationTests {
 		protected String getDatabaseName() {
 			return "validation-tests";
 		}
+
+		@Override
+		protected boolean autoIndexCreation() {
+			return false;
+		}
 	}
 
 	@Autowired MongoTemplate template;
