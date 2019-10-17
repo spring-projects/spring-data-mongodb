@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assumptions.*;
 import static org.springframework.data.mongodb.core.index.PartialIndexFilter.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
+import org.bson.BsonDocument;
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,6 +40,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.ObjectUtils;
 
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.IndexOptions;
 
 /**
  * Integration tests for {@link DefaultIndexOperations}.
@@ -151,6 +153,21 @@ public class DefaultIndexOperationsIntegrationTests {
 		IndexInfo info = findAndReturnIndexInfo(indexOps.getIndexInfo(), "partial-with-inheritance");
 		assertThat(Document.parse(info.getPartialFilterExpression()))
 				.isEqualTo(Document.parse("{ \"a_g_e\" : { \"$gte\" : 10 } }"));
+	}
+
+	@Test // DATAMONGO-2388
+	public void shouldReadIndexWithPartialFilterContainingDbRefCorrectly() {
+
+		BsonDocument partialFilter = BsonDocument.parse(
+				"{ \"the-ref\" : { \"$ref\" : \"other-collection\", \"$id\" : { \"$oid\" : \"59ce08baf264b906810fe8c5\"} } }");
+		IndexOptions indexOptions = new IndexOptions();
+		indexOptions.name("partial-with-dbref");
+		indexOptions.partialFilterExpression(partialFilter);
+
+		collection.createIndex(BsonDocument.parse("{ \"key-1\" : 1, \"key-2\": 1}"), indexOptions);
+
+		IndexInfo info = findAndReturnIndexInfo(indexOps.getIndexInfo(), "partial-with-dbref");
+		assertThat(BsonDocument.parse(info.getPartialFilterExpression())).isEqualTo(partialFilter);
 	}
 
 	@Test // DATAMONGO-1518
