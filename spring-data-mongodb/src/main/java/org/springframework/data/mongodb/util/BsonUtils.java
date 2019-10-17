@@ -15,17 +15,27 @@
  */
 package org.springframework.data.mongodb.util;
 
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.bson.json.JsonParseException;
+
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.lang.Nullable;
+import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
+import com.mongodb.MongoClientSettings;
 
 /**
  * @author Christoph Strobl
@@ -103,5 +113,80 @@ public class BsonUtils {
 			default:
 				return value;
 		}
+	}
+
+	/**
+	 * Serialize the given {@link Document} as Json applying default codecs if necessary.
+	 *
+	 * @param source
+	 * @return
+	 * @since 2.1.1
+	 */
+	@Nullable
+	public static String toJson(@Nullable Document source) {
+
+		if (source == null) {
+			return null;
+		}
+
+		try {
+			return source.toJson();
+		} catch (Exception e) {
+			return toJson((Object) source);
+		}
+	}
+
+	private static String toJson(@Nullable Object value) {
+
+		if (value == null) {
+			return null;
+		}
+
+		try {
+			return value instanceof Document
+					? ((Document) value).toJson(MongoClientSettings.getDefaultCodecRegistry().get(Document.class))
+					: serializeValue(value);
+
+		} catch (Exception e) {
+
+			if (value instanceof Collection) {
+				return toString((Collection<?>) value);
+			} else if (value instanceof Map) {
+				return toString((Map<?, ?>) value);
+			} else if (ObjectUtils.isArray(value)) {
+				return toString(Arrays.asList(ObjectUtils.toObjectArray(value)));
+			}
+
+			throw e instanceof JsonParseException ? (JsonParseException) e : new JsonParseException(e);
+		}
+	}
+
+	private static String serializeValue(@Nullable Object value) {
+
+		if (value == null) {
+			return "null";
+		}
+
+		String documentJson = new Document("toBeEncoded", value).toJson();
+		return documentJson.substring(documentJson.indexOf(':') + 1, documentJson.length() - 1).trim();
+	}
+
+	private static String toString(Map<?, ?> source) {
+
+		return iterableToDelimitedString(source.entrySet(), "{ ", " }",
+				entry -> String.format("\"%s\" : %s", entry.getKey(), toJson(entry.getValue())));
+	}
+
+	private static String toString(Collection<?> source) {
+		return iterableToDelimitedString(source, "[ ", " ]", BsonUtils::toJson);
+	}
+
+	private static <T> String iterableToDelimitedString(Iterable<T> source, String prefix, String postfix,
+			Converter<? super T, Object> transformer) {
+
+		return prefix
+				+ StringUtils.collectionToCommaDelimitedString(
+						StreamSupport.stream(source.spliterator(), false).map(transformer::convert).collect(Collectors.toList()))
+				+ postfix;
 	}
 }
