@@ -27,9 +27,8 @@ import java.util.regex.Pattern;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
-import org.junit.Before;
-import org.junit.Test;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.geo.Distance;
@@ -73,8 +72,8 @@ public class MongoQueryCreatorUnitTests {
 	MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context;
 	MongoConverter converter;
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	public void beforeEach() {
 
 		context = new MongoMappingContext();
 
