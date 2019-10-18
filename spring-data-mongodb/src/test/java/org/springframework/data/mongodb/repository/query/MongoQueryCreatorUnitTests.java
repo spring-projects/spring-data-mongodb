@@ -652,6 +652,17 @@ public class MongoQueryCreatorUnitTests {
 		assertThat(creator.createQuery()).isEqualTo(query(where("age").gt(10).lt(11)));
 	}
 
+	@Test // DATAMONGO-2394
+	public void nearShouldUseMetricDistanceForGeoJsonTypes() {
+
+		GeoJsonPoint point = new GeoJsonPoint(27.987901, 86.9165379);
+		PartTree tree = new PartTree("findByLocationNear", User.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree,
+				getAccessor(converter, point, new Distance(1, Metrics.KILOMETERS)), context);
+
+		assertThat(creator.createQuery()).isEqualTo(query(where("location").nearSphere(point).maxDistance(1000.0D)));
+	}
+
 	interface PersonRepository extends Repository<Person, Long> {
 
 		List<Person> findByLocationNearAndFirstname(Point location, Distance maxDistance, String firstname);

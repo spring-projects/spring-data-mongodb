@@ -890,6 +890,17 @@ public class QueryMapperUnitTests {
 		assertThat(target).isEqualTo(new org.bson.Document("_id", "id-1"));
 	}
 
+	@Test // DATAMONGO-2394
+	public void leavesDistanceUntouchedWhenUsingGeoJson() {
+
+		Query query = query(where("geoJsonPoint").near(new GeoJsonPoint(27.987901, 86.9165379)).maxDistance(1000));
+
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(ClassWithGeoTypes.class));
+		assertThat(document).containsEntry("geoJsonPoint.$near.$geometry.type", "Point");
+		assertThat(document).containsEntry("geoJsonPoint.$near.$maxDistance", 1000.0D);
+	}
+
 	@Document
 	public class Foo {
 		@Id private ObjectId id;
