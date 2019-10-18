@@ -30,11 +30,11 @@ import java.util.Optional;
 
 import org.bson.types.Code;
 import org.bson.types.ObjectId;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
@@ -69,7 +69,7 @@ import com.mongodb.QueryBuilder;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class QueryMapperUnitTests {
 
 	QueryMapper mapper;
@@ -78,8 +78,8 @@ public class QueryMapperUnitTests {
 
 	@Mock MongoDbFactory factory;
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	public void beforeEach() {
 
 		this.context = new MongoMappingContext();
 
