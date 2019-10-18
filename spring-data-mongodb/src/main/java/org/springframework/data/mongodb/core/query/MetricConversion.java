@@ -29,7 +29,7 @@ import org.springframework.data.geo.Metrics;
  * @author Mark Paluch
  * @since 2.2
  */
-class MetricConversion {
+public class MetricConversion {
 
 	private static final BigDecimal METERS_MULTIPLIER = new BigDecimal(Metrics.KILOMETERS.getMultiplier())
 			.multiply(new BigDecimal(1000));
@@ -43,7 +43,7 @@ class MetricConversion {
 	 * @param metric
 	 * @return
 	 */
-	protected static double getMetersToMetricMultiplier(Metric metric) {
+	public static double getMetersToMetricMultiplier(Metric metric) {
 
 		ConversionMultiplier conversionMultiplier = ConversionMultiplier.builder().from(METERS_MULTIPLIER).to(metric)
 				.build();
@@ -56,7 +56,7 @@ class MetricConversion {
 	 * @param distance
 	 * @return
 	 */
-	protected static double getDistanceInMeters(Distance distance) {
+	public static double getDistanceInMeters(Distance distance) {
 		return new BigDecimal(distance.getValue()).multiply(getMetricToMetersMultiplier(distance.getMetric()))
 				.doubleValue();
 	}
