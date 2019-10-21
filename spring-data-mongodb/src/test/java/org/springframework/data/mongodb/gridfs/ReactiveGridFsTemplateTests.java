@@ -24,6 +24,7 @@ import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.UUID;
 
 import org.bson.BsonObjectId;
@@ -40,7 +41,9 @@ import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.core.io.buffer.DefaultDataBuffer;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -48,6 +51,7 @@ import org.springframework.util.StreamUtils;
 
 import com.mongodb.gridfs.GridFS;
 import com.mongodb.gridfs.GridFSInputFile;
+import com.mongodb.internal.HexUtils;
 import com.mongodb.reactivestreams.client.gridfs.AsyncInputStream;
 import com.mongodb.reactivestreams.client.gridfs.helpers.AsyncStreamHelper;
 
@@ -66,6 +70,8 @@ public class ReactiveGridFsTemplateTests {
 
 	@Autowired ReactiveGridFsOperations operations;
 	@Autowired SimpleMongoDbFactory mongoClient;
+	@Autowired ReactiveMongoDatabaseFactory dbFactory;
+	@Autowired MongoConverter mongoConverter;
 
 	@Before
 	public void setUp() {
@@ -90,6 +96,48 @@ public class ReactiveGridFsTemplateTests {
 					assertThat(((BsonObjectId) actual.getId()).getValue()).isEqualTo(reference);
 				}) //
 				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-1855
+	public void storesAndLoadsLargeFileCorrectly() {
+
+		ByteBuffer buffer = ByteBuffer.allocate(1000 * 1000 * 1); // 1 mb
+
+		int i = 0;
+		while (buffer.remaining() != 0) {
+			byte b = (byte) (i++ % 16);
+			String string = HexUtils.toHex(new byte[] { b });
+			buffer.put(string.getBytes());
+		}
+		buffer.flip();
+
+		DefaultDataBufferFactory factory = new DefaultDataBufferFactory();
+
+		ObjectId reference = operations.store(Flux.just(factory.wrap(buffer)), "large.txt").block();
+
+		buffer.clear();
+
+		// default chunk size
+		operations.findOne(query(where("_id").is(reference))).flatMap(operations::getResource)
+				.flatMapMany(ReactiveGridFsResource::getDownloadStream) //
+				.transform(DataBufferUtils::join) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(dataBuffer -> {
+
+					assertThat(dataBuffer.readableByteCount()).isEqualTo(buffer.remaining());
+					assertThat(dataBuffer.asByteBuffer()).isEqualTo(buffer);
+				}).verifyComplete();
+
+		// small chunk size
+		operations.findOne(query(where("_id").is(reference))).flatMap(operations::getResource)
+				.flatMapMany(reactiveGridFsResource -> reactiveGridFsResource.getDownloadStream(256)) //
+				.transform(DataBufferUtils::join) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(dataBuffer -> {
+
+					assertThat(dataBuffer.readableByteCount()).isEqualTo(buffer.remaining());
+					assertThat(dataBuffer.asByteBuffer()).isEqualTo(buffer);
+				}).verifyComplete();
 	}
 
 	@Test // DATAMONGO-2392

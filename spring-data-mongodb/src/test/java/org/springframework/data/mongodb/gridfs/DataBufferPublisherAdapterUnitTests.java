@@ -44,7 +44,7 @@ public class DataBufferPublisherAdapterUnitTests {
 		when(asyncInput.read(any())).thenReturn(Mono.just(1), Mono.error(new IllegalStateException()));
 		when(asyncInput.close()).thenReturn(Mono.empty());
 
-		Flux<DataBuffer> binaryStream = DataBufferPublisherAdapter.createBinaryStream(asyncInput, factory);
+		Flux<DataBuffer> binaryStream = DataBufferPublisherAdapter.createBinaryStream(asyncInput, factory, 256);
 
 		StepVerifier.create(binaryStream, 0) //
 				.thenRequest(1) //

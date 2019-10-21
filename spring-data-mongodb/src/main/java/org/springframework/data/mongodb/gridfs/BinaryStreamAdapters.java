@@ -42,12 +42,14 @@ class BinaryStreamAdapters {
 	 *
 	 * @param inputStream must not be {@literal null}.
 	 * @param dataBufferFactory must not be {@literal null}.
+	 * @param bufferSize read {@code n} bytes per iteration.
 	 * @return {@link Flux} emitting {@link DataBuffer}s.
 	 * @see DataBufferFactory#allocateBuffer()
 	 */
-	static Flux<DataBuffer> toPublisher(AsyncInputStream inputStream, DataBufferFactory dataBufferFactory) {
+	static Flux<DataBuffer> toPublisher(AsyncInputStream inputStream, DataBufferFactory dataBufferFactory,
+			int bufferSize) {
 
-		return DataBufferPublisherAdapter.createBinaryStream(inputStream, dataBufferFactory) //
+		return DataBufferPublisherAdapter.createBinaryStream(inputStream, dataBufferFactory, bufferSize) //
 				.filter(it -> {
 
 					if (it.readableByteCount() == 0) {
