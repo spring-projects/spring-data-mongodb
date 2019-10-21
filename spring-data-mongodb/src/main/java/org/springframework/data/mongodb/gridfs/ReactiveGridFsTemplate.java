@@ -223,9 +223,11 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 
 		return Mono.fromSupplier(() -> {
 
-			GridFSDownloadStream stream = getGridFs().openDownloadStream(file.getId());
+			return new ReactiveGridFsResource(file, chunkSize -> {
 
-			return new ReactiveGridFsResource(file, BinaryStreamAdapters.toPublisher(stream, dataBufferFactory));
+				GridFSDownloadStream stream = getGridFs().openDownloadStream(file.getId());
+				return BinaryStreamAdapters.toPublisher(stream, dataBufferFactory, chunkSize);
+			});
 		});
 	}
 
