@@ -20,6 +20,7 @@ import reactor.core.publisher.Flux;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.function.IntFunction;
 
 import org.reactivestreams.Publisher;
 
@@ -41,20 +42,19 @@ public class ReactiveGridFsResource extends AbstractResource {
 
 	private final @Nullable GridFSFile file;
 	private final String filename;
-	private final Flux<DataBuffer> content;
+	private final IntFunction<Flux<DataBuffer>> contentFunction;
 
 	/**
 	 * Creates a new, absent {@link ReactiveGridFsResource}.
 	 *
 	 * @param filename filename of the absent resource.
 	 * @param content
-	 * @since 2.1
 	 */
 	private ReactiveGridFsResource(String filename, Publisher<DataBuffer> content) {
 
 		this.file = null;
 		this.filename = filename;
-		this.content = Flux.from(content);
+		this.contentFunction = any -> Flux.from(content);
 	}
 
 	/**
@@ -64,10 +64,21 @@ public class ReactiveGridFsResource extends AbstractResource {
 	 * @param content
 	 */
 	public ReactiveGridFsResource(GridFSFile file, Publisher<DataBuffer> content) {
+		this(file, (IntFunction<Flux<DataBuffer>>) any -> Flux.from(content));
+	}
+
+	/**
+	 * Creates a new {@link ReactiveGridFsResource} from the given {@link GridFSFile}.
+	 *
+	 * @param file must not be {@literal null}.
+	 * @param contentFunction
+	 * @since 2.2.1
+	 */
+	ReactiveGridFsResource(GridFSFile file, IntFunction<Flux<DataBuffer>> contentFunction) {
 
 		this.file = file;
 		this.filename = file.getFilename();
-		this.content = Flux.from(content);
+		this.contentFunction = contentFunction;
 	}
 
 	/**
@@ -165,16 +176,28 @@ public class ReactiveGridFsResource extends AbstractResource {
 	}
 
 	/**
-	 * Retrieve the download stream.
+	 * Retrieve the download stream using the default chunk size of 256kb.
 	 *
 	 * @return
 	 */
 	public Flux<DataBuffer> getDownloadStream() {
+		return getDownloadStream(256 * 1024); // 256kb buffers
+	}
+
+	/**
+	 * Retrieve the download stream.
+	 *
+	 * @param chunkSize chunk size in bytes to use.
+	 * @return
+	 * @since 2.2.1
+	 */
+	public Flux<DataBuffer> getDownloadStream(int chunkSize) {
 
 		if (!exists()) {
 			return Flux.error(new FileNotFoundException(String.format("%s does not exist.", getDescription())));
 		}
-		return this.content;
+
+		return contentFunction.apply(chunkSize);
 	}
 
 	private void verifyExists() throws FileNotFoundException {

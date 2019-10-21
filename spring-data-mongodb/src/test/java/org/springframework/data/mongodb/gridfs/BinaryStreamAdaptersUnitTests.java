@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import org.junit.Test;
+
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
@@ -49,7 +50,7 @@ public class BinaryStreamAdaptersUnitTests {
 		byte[] content = StreamUtils.copyToByteArray(resource.getInputStream());
 		AsyncInputStream inputStream = AsyncStreamHelper.toAsyncInputStream(resource.getInputStream());
 
-		Flux<DataBuffer> dataBuffers = BinaryStreamAdapters.toPublisher(inputStream, new DefaultDataBufferFactory());
+		Flux<DataBuffer> dataBuffers = BinaryStreamAdapters.toPublisher(inputStream, new DefaultDataBufferFactory(), 256);
 
 		DataBufferUtils.join(dataBuffers) //
 				.as(StepVerifier::create) //
