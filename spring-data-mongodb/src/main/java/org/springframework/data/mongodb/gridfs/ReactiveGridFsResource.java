@@ -23,7 +23,6 @@ import java.io.InputStream;
 import java.util.function.IntFunction;
 
 import org.reactivestreams.Publisher;
-
 import org.springframework.core.io.AbstractResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -36,9 +35,12 @@ import com.mongodb.client.gridfs.model.GridFSFile;
  * Reactive {@link GridFSFile} based {@link Resource} implementation.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.2
  */
 public class ReactiveGridFsResource extends AbstractResource {
+
+	private static final Integer DEFAULT_CHUNK_SIZE = 256 * 1024;
 
 	private final @Nullable GridFSFile file;
 	private final String filename;
@@ -176,19 +178,23 @@ public class ReactiveGridFsResource extends AbstractResource {
 	}
 
 	/**
-	 * Retrieve the download stream using the default chunk size of 256kb.
+	 * Retrieve the download stream using the default chunk size of 256 kB.
 	 *
-	 * @return
+	 * @return a {@link Flux} emitting data chunks one by one. Please make sure to
+	 *         {@link org.springframework.core.io.buffer.DataBufferUtils#release(DataBuffer) release} all
+	 *         {@link DataBuffer buffers} when done.
 	 */
 	public Flux<DataBuffer> getDownloadStream() {
-		return getDownloadStream(256 * 1024); // 256kb buffers
+		return getDownloadStream(DEFAULT_CHUNK_SIZE);
 	}
 
 	/**
 	 * Retrieve the download stream.
 	 *
 	 * @param chunkSize chunk size in bytes to use.
-	 * @return
+	 * @return a {@link Flux} emitting data chunks one by one. Please make sure to
+	 *         {@link org.springframework.core.io.buffer.DataBufferUtils#release(DataBuffer) release} all
+	 *         {@link DataBuffer buffers} when done.
 	 * @since 2.2.1
 	 */
 	public Flux<DataBuffer> getDownloadStream(int chunkSize) {
