@@ -29,10 +29,10 @@ import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
-
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 
+import com.mongodb.reactivestreams.client.Success;
 import com.mongodb.reactivestreams.client.gridfs.AsyncInputStream;
 
 /**
@@ -56,34 +56,98 @@ class DataBufferPublisherAdapter {
 	static Flux<DataBuffer> createBinaryStream(AsyncInputStream inputStream, DataBufferFactory dataBufferFactory,
 			int bufferSize) {
 
-		State state = new State(inputStream, dataBufferFactory, bufferSize);
+		return Flux.usingWhen(Mono.just(new DelegatingAsyncInputStream(inputStream, dataBufferFactory, bufferSize)),
+				DataBufferPublisherAdapter::doRead, AsyncInputStream::close, (it, err) -> it.close(), AsyncInputStream::close);
+	}
 
-		return Flux.usingWhen(Mono.just(inputStream), it -> {
+	/**
+	 * Use an {@link AsyncInputStreamHandler} to read data from the given {@link AsyncInputStream}.
+	 * 
+	 * @param inputStream the source stream.
+	 * @return a {@link Flux} emitting data chunks one by one.
+	 * @since 2.2.1
+	 */
+	private static Flux<DataBuffer> doRead(DelegatingAsyncInputStream inputStream) {
 
-			return Flux.<DataBuffer> create((sink) -> {
+		AsyncInputStreamHandler streamHandler = new AsyncInputStreamHandler(inputStream, inputStream.dataBufferFactory,
+				inputStream.bufferSize);
 
-				sink.onDispose(state::close);
-				sink.onCancel(state::close);
+		return Flux.create((sink) -> {
 
-				sink.onRequest(n -> {
-					state.request(sink, n);
-				});
+			sink.onDispose(streamHandler::close);
+			sink.onCancel(streamHandler::close);
+
+			sink.onRequest(n -> {
+				streamHandler.request(sink, n);
 			});
-		}, AsyncInputStream::close, (it, err) -> it.close(), AsyncInputStream::close) //
-				.concatMap(Flux::just, 1);
+		});
+	}
+
+	/**
+	 * An {@link AsyncInputStream} also holding a {@link DataBufferFactory} and default {@literal bufferSize} for reading
+	 * from it, delegating operations on the {@link AsyncInputStream} to the reference instance. <br />
+	 * Used to pass on the {@link AsyncInputStream} and parameters to avoid capturing lambdas.
+	 * 
+	 * @author Christoph Strobl
+	 * @since 2.2.1
+	 */
+	private static class DelegatingAsyncInputStream implements AsyncInputStream {
+
+		private final AsyncInputStream inputStream;
+		private final DataBufferFactory dataBufferFactory;
+		private int bufferSize;
+
+		/**
+		 * @param inputStream the source input stream.
+		 * @param dataBufferFactory
+		 * @param bufferSize
+		 */
+		DelegatingAsyncInputStream(AsyncInputStream inputStream, DataBufferFactory dataBufferFactory, int bufferSize) {
+
+			this.inputStream = inputStream;
+			this.dataBufferFactory = dataBufferFactory;
+			this.bufferSize = bufferSize;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see com.mongodb.reactivestreams.client.gridfs.AsyncInputStream#read(java.nio.ByteBuffer)
+		 */
+		@Override
+		public Publisher<Integer> read(ByteBuffer dst) {
+			return inputStream.read(dst);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see com.mongodb.reactivestreams.client.gridfs.AsyncInputStream#skip(long)
+		 */
+		@Override
+		public Publisher<Long> skip(long bytesToSkip) {
+			return inputStream.skip(bytesToSkip);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see com.mongodb.reactivestreams.client.gridfs.AsyncInputStream#close()
+		 */
+		@Override
+		public Publisher<Success> close() {
+			return inputStream.close();
+		}
 	}
 
 	@RequiredArgsConstructor
-	static class State {
+	static class AsyncInputStreamHandler {
 
-		private static final AtomicLongFieldUpdater<State> DEMAND = AtomicLongFieldUpdater.newUpdater(State.class,
-				"demand");
+		private static final AtomicLongFieldUpdater<AsyncInputStreamHandler> DEMAND = AtomicLongFieldUpdater
+				.newUpdater(AsyncInputStreamHandler.class, "demand");
 
-		private static final AtomicIntegerFieldUpdater<State> STATE = AtomicIntegerFieldUpdater.newUpdater(State.class,
-				"state");
+		private static final AtomicIntegerFieldUpdater<AsyncInputStreamHandler> STATE = AtomicIntegerFieldUpdater
+				.newUpdater(AsyncInputStreamHandler.class, "state");
 
-		private static final AtomicIntegerFieldUpdater<State> READ = AtomicIntegerFieldUpdater.newUpdater(State.class,
-				"read");
+		private static final AtomicIntegerFieldUpdater<AsyncInputStreamHandler> READ = AtomicIntegerFieldUpdater
+				.newUpdater(AsyncInputStreamHandler.class, "read");
 
 		private static final int STATE_OPEN = 0;
 		private static final int STATE_CLOSED = 1;
@@ -188,6 +252,7 @@ class DataBufferPublisherAdapter {
 
 			@Override
 			public void onSubscribe(Subscription s) {
+
 				this.subscription = s;
 				s.request(1);
 			}
@@ -203,14 +268,8 @@ class DataBufferPublisherAdapter {
 
 				if (bytes > 0) {
 
-					transport.flip();
-
-					DataBuffer dataBuffer = factory.allocateBuffer(transport.remaining());
-					dataBuffer.write(transport);
-
-					transport.clear();
-					sink.next(dataBuffer);
-
+					DataBuffer buffer = readNextChunk();
+					sink.next(buffer);
 					decrementDemand();
 				}
 
@@ -224,6 +283,18 @@ class DataBufferPublisherAdapter {
 				}
 
 				subscription.request(1);
+			}
+
+			private DataBuffer readNextChunk() {
+
+				transport.flip();
+
+				DataBuffer dataBuffer = factory.allocateBuffer(transport.remaining());
+				dataBuffer.write(transport);
+
+				transport.clear();
+
+				return dataBuffer;
 			}
 
 			@Override
