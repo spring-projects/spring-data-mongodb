@@ -33,7 +33,6 @@ import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -101,13 +100,10 @@ public class ReactiveGridFsTemplateTests {
 	@Test // DATAMONGO-1855
 	public void storesAndLoadsLargeFileCorrectly() {
 
-		ByteBuffer buffer = ByteBuffer.allocate(1000 * 1000 * 1); // 1 mb
-
+		ByteBuffer buffer = ByteBuffer.allocate(1000 * 1000); // 1 mb
 		int i = 0;
 		while (buffer.remaining() != 0) {
-			byte b = (byte) (i++ % 16);
-			String string = HexUtils.toHex(new byte[] { b });
-			buffer.put(string.getBytes());
+			buffer.put(HexUtils.toHex(new byte[] { (byte) (i++ % 16) }).getBytes());
 		}
 		buffer.flip();
 
