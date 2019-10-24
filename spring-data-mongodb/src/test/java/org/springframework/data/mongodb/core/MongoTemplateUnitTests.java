@@ -37,15 +37,15 @@ import org.assertj.core.api.Assertions;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
@@ -122,7 +122,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Mark Paluch
  * @author Michael J. Simons
  */
-@RunWith(MockitoJUnitRunner.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 	MongoTemplate template;
@@ -146,8 +146,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	MappingMongoConverter converter;
 	MongoMappingContext mappingContext;
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	public void beforeEach() {
 
 		when(findIterable.iterator()).thenReturn(cursor);
 		when(factory.getDb()).thenReturn(db);
@@ -209,34 +209,36 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 				.isThrownBy(() -> new MongoTemplate((com.mongodb.client.MongoClient) null, "database"));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1870
-	public void removeHandlesMongoExceptionProperly() throws Exception {
+	@Test // DATAMONGO-1870
+	public void removeHandlesMongoExceptionProperly() {
 
 		MongoTemplate template = mockOutGetDb();
 
-		template.remove(null, "collection");
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> template.remove(null, "collection"));
 	}
 
 	@Test
-	public void defaultsConverterToMappingMongoConverter() throws Exception {
+	public void defaultsConverterToMappingMongoConverter() {
 		MongoTemplate template = new MongoTemplate(mongo, "database");
 		assertThat(ReflectionTestUtils.getField(template, "mongoConverter") instanceof MappingMongoConverter).isTrue();
 	}
 
-	@Test(expected = InvalidDataAccessApiUsageException.class)
+	@Test
 	public void rejectsNotFoundMapReduceResource() {
 
 		GenericApplicationContext ctx = new GenericApplicationContext();
 		ctx.refresh();
 		template.setApplicationContext(ctx);
-		template.mapReduce("foo", "classpath:doesNotExist.js", "function() {}", Person.class);
+
+		assertThatExceptionOfType(InvalidDataAccessApiUsageException.class)
+				.isThrownBy(() -> template.mapReduce("foo", "classpath:doesNotExist.js", "function() {}", Person.class));
 	}
 
-	@Test(expected = InvalidDataAccessApiUsageException.class) // DATAMONGO-322
+	@Test // DATAMONGO-322
 	public void rejectsEntityWithNullIdIfNotSupportedIdType() {
 
 		Object entity = new NotAutogenerateableId();
-		template.save(entity);
+		assertThatExceptionOfType(InvalidDataAccessApiUsageException.class).isThrownBy(() -> template.save(entity));
 	}
 
 	@Test // DATAMONGO-322
@@ -466,7 +468,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1334
-	@Ignore("TODO: mongo3 - a bit hard to tests with the immutable object stuff")
+	@Disabled("TODO: mongo3 - a bit hard to tests with the immutable object stuff")
 	public void mapReduceShouldUseZeroAsDefaultLimit() {
 
 		MongoCursor cursor = mock(MongoCursor.class);
@@ -1323,7 +1325,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("de_AT");
 	}
 
-	@Test // DATAMONGO-18545
+	@Test // DATAMONGO-1854
 	public void findAndReplaceShouldUseCollationEvenIfDefaultCollationIsPresent() {
 
 		template.findAndReplace(new BasicQuery("{}").collation(Collation.of("fr")), new Sith());
@@ -1822,7 +1824,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Override
 	protected MongoOperations getOperationsForExceptionHandling() {
 		MongoTemplate template = spy(this.template);
-		when(template.getDb()).thenThrow(new MongoException("Error!"));
+		lenient().when(template.getDb()).thenThrow(new MongoException("Error!"));
 		return template;
 	}
 
