@@ -1192,7 +1192,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			LOGGER.debug("Executing count: {} in collection: {}", serializeToJsonSafely(filter), collectionName);
 		}
 
-		return execute(collectionName, collection -> collection.countDocuments(QueryMapper.processCountFilter(filter), options));
+		return execute(collectionName,
+				collection -> collection.countDocuments(CountQuery.of(filter).toQueryDocument(), options));
 	}
 
 	/*

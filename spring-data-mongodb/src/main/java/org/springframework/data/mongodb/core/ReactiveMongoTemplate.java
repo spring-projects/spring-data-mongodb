@@ -1301,7 +1301,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	protected Mono<Long> doCount(String collectionName, Document filter, CountOptions options) {
 
 		return createMono(collectionName,
-				collection -> collection.countDocuments(QueryMapper.processCountFilter(filter), options));
+				collection -> collection.countDocuments(CountQuery.of(filter).toQueryDocument(), options));
 	}
 
 	/*
