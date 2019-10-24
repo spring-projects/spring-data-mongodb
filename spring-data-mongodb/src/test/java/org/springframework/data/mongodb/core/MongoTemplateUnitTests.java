@@ -22,6 +22,7 @@ import static org.springframework.data.mongodb.test.util.Assertions.*;
 import lombok.Data;
 
 import java.math.BigInteger;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -29,6 +30,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import org.assertj.core.api.Assertions;
@@ -177,6 +179,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(aggregateIterable.allowDiskUse(any())).thenReturn(aggregateIterable);
 		when(aggregateIterable.batchSize(anyInt())).thenReturn(aggregateIterable);
 		when(aggregateIterable.map(any())).thenReturn(aggregateIterable);
+		when(aggregateIterable.maxTime(anyLong(), any())).thenReturn(aggregateIterable);
 		when(aggregateIterable.into(any())).thenReturn(Collections.emptyList());
 		when(distinctIterable.collation(any())).thenReturn(distinctIterable);
 		when(distinctIterable.map(any())).thenReturn(distinctIterable);
@@ -1259,6 +1262,27 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 				newAggregationOptions().collation(Collation.of("fr")).build()), AutogenerateableId.class, Document.class);
 
 		verify(aggregateIterable).collation(eq(com.mongodb.client.model.Collation.builder().locale("fr").build()));
+	}
+
+	@Test // DATAMONGO-2390
+	public void aggregateShouldNoApplyZeroOrNegativeMaxTime() {
+
+		template.aggregate(
+				newAggregation(Sith.class, project("id")).withOptions(newAggregationOptions().maxTime(Duration.ZERO).build()),
+				AutogenerateableId.class, Document.class);
+		template.aggregate(newAggregation(Sith.class, project("id")).withOptions(
+				newAggregationOptions().maxTime(Duration.ofSeconds(-1)).build()), AutogenerateableId.class, Document.class);
+
+		verify(aggregateIterable, never()).maxTime(anyLong(), any());
+	}
+
+	@Test // DATAMONGO-2390
+	public void aggregateShouldApplyMaxTimeIfSet() {
+
+		template.aggregate(newAggregation(Sith.class, project("id")).withOptions(
+				newAggregationOptions().maxTime(Duration.ofSeconds(10)).build()), AutogenerateableId.class, Document.class);
+
+		verify(aggregateIterable).maxTime(eq(10000L), eq(TimeUnit.MILLISECONDS));
 	}
 
 	@Test // DATAMONGO-1854

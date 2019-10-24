@@ -2190,6 +2190,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			options.getComment().ifPresent(aggregateIterable::comment);
 
+			if(options.hasExecutionTimeLimit()) {
+				aggregateIterable = aggregateIterable.maxTime(options.getMaxTime().toMillis(), TimeUnit.MILLISECONDS);
+			}
+
 			MongoIterable<O> iterable = aggregateIterable.map(val -> {
 
 				rawResult.add(val);

@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import java.time.Duration;
 import java.util.Optional;
 
 import org.bson.Document;
@@ -45,12 +46,14 @@ public class AggregationOptions {
 	private static final String ALLOW_DISK_USE = "allowDiskUse";
 	private static final String COLLATION = "collation";
 	private static final String COMMENT = "comment";
+	private static final String MAX_TIME = "maxTimeMS";
 
 	private final boolean allowDiskUse;
 	private final boolean explain;
 	private final Optional<Document> cursor;
 	private final Optional<Collation> collation;
 	private final Optional<String> comment;
+	private Duration maxTime = Duration.ZERO;
 
 	/**
 	 * Creates a new {@link AggregationOptions}.
@@ -129,7 +132,11 @@ public class AggregationOptions {
 				: null;
 		String comment = document.getString(COMMENT);
 
-		return new AggregationOptions(allowDiskUse, explain, cursor, collation, comment);
+		AggregationOptions options = new AggregationOptions(allowDiskUse, explain, cursor, collation, comment);
+		if (document.containsKey(MAX_TIME)) {
+			options.maxTime = Duration.ofMillis(document.getLong(MAX_TIME));
+		}
+		return options;
 	}
 
 	/**
@@ -207,6 +214,14 @@ public class AggregationOptions {
 	}
 
 	/**
+	 * @return the time limit for processing. {@link Duration#ZERO} is used for the default unbounded behavior.
+	 * @since 2.3
+	 */
+	public Duration getMaxTime() {
+		return maxTime;
+	}
+
+	/**
 	 * Returns a new potentially adjusted copy for the given {@code aggregationCommandObject} with the configuration
 	 * applied.
 	 *
@@ -233,6 +248,10 @@ public class AggregationOptions {
 			collation.map(Collation::toDocument).ifPresent(val -> result.append(COLLATION, val));
 		}
 
+		if (hasExecutionTimeLimit() && !result.containsKey(MAX_TIME)) {
+			result.append(MAX_TIME, maxTime.toMillis());
+		}
+
 		return result;
 	}
 
@@ -251,7 +270,15 @@ public class AggregationOptions {
 		collation.ifPresent(val -> document.append(COLLATION, val.toDocument()));
 		comment.ifPresent(val -> document.append(COMMENT, val));
 
+		if (hasExecutionTimeLimit()) {
+			document.append(MAX_TIME, maxTime.toMillis());
+		}
+
 		return document;
+	}
+
+	public boolean hasExecutionTimeLimit() {
+		return !maxTime.isZero() && !maxTime.isNegative();
 	}
 
 	/* (non-Javadoc)
@@ -279,6 +306,7 @@ public class AggregationOptions {
 		private @Nullable Document cursor;
 		private @Nullable Collation collation;
 		private @Nullable String comment;
+		private @Nullable Duration maxTime;
 
 		/**
 		 * Defines whether to off-load intensive sort-operations to disk.
@@ -356,12 +384,32 @@ public class AggregationOptions {
 		}
 
 		/**
+		 * Set the time limit for processing.
+		 *
+		 * @param maxTime {@link Duration#ZERO} is used for the default unbounded behavior. {@link Duration#isNegative()
+		 *          Negative} values will be ignored.
+		 * @return this.
+		 * @sinve 2.3
+		 */
+		public Builder maxTime(@Nullable Duration maxTime) {
+
+			this.maxTime = maxTime;
+			return this;
+		}
+
+		/**
 		 * Returns a new {@link AggregationOptions} instance with the given configuration.
 		 *
 		 * @return
 		 */
 		public AggregationOptions build() {
-			return new AggregationOptions(allowDiskUse, explain, cursor, collation, comment);
+
+			AggregationOptions options = new AggregationOptions(allowDiskUse, explain, cursor, collation, comment);
+			if (maxTime != null) {
+				options.maxTime = maxTime;
+			}
+
+			return options;
 		}
 	}
 }
