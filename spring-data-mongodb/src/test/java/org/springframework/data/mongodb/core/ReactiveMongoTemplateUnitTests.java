@@ -35,12 +35,14 @@ import org.assertj.core.api.Assertions;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.reactivestreams.Publisher;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -91,7 +93,8 @@ import com.mongodb.reactivestreams.client.Success;
  * @author Mark Paluch
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.Silent.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class ReactiveMongoTemplateUnitTests {
 
 	ReactiveMongoTemplate template;
@@ -114,8 +117,8 @@ public class ReactiveMongoTemplateUnitTests {
 	MappingMongoConverter converter;
 	MongoMappingContext mappingContext;
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	public void beforeEach() {
 
 		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslator);
 		when(factory.getMongoDatabase()).thenReturn(db);
@@ -615,7 +618,7 @@ public class ReactiveMongoTemplateUnitTests {
 		verify(aggregatePublisher).maxTime(eq(10000L), eq(TimeUnit.MILLISECONDS));
 	}
 
-	@Test // DATAMONGO-18545
+	@Test // DATAMONGO-1854
 	public void findAndReplaceShouldUseCollationWhenPresent() {
 
 		template.findAndReplace(new BasicQuery("{}").collation(Collation.of("fr")), new Jedi()).subscribe();
@@ -626,7 +629,7 @@ public class ReactiveMongoTemplateUnitTests {
 		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("fr");
 	}
 
-	@Test // DATAMONGO-18545
+	@Test // DATAMONGO-1854
 	public void findAndReplaceShouldUseDefaultCollationWhenPresent() {
 
 		template.findAndReplace(new BasicQuery("{}"), new Sith()).subscribe();
@@ -637,7 +640,7 @@ public class ReactiveMongoTemplateUnitTests {
 		assertThat(options.getValue().getCollation().getLocale()).isEqualTo("de_AT");
 	}
 
-	@Test // DATAMONGO-18545
+	@Test // DATAMONGO-1854
 	public void findAndReplaceShouldUseCollationEvenIfDefaultCollationIsPresent() {
 
 		template.findAndReplace(new BasicQuery("{}").collation(Collation.of("fr")), new MongoTemplateUnitTests.Sith())
