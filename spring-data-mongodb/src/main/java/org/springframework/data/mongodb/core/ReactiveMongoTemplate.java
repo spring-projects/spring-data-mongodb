@@ -1073,6 +1073,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				.map(Collation::toMongoCollation) //
 				.ifPresent(cursor::collation);
 
+		if(options.hasExecutionTimeLimit()) {
+			cursor = cursor.maxTime(options.getMaxTime().toMillis(), TimeUnit.MILLISECONDS);
+		}
+
 		return Flux.from(cursor).map(readCallback::doWith);
 	}
 

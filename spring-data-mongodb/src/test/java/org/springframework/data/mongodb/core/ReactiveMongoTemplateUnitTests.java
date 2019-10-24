@@ -23,11 +23,13 @@ import lombok.Data;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.assertj.core.api.Assertions;
 import org.bson.Document;
@@ -147,6 +149,7 @@ public class ReactiveMongoTemplateUnitTests {
 		when(findPublisher.first()).thenReturn(findPublisher);
 		when(aggregatePublisher.allowDiskUse(anyBoolean())).thenReturn(aggregatePublisher);
 		when(aggregatePublisher.collation(any())).thenReturn(aggregatePublisher);
+		when(aggregatePublisher.maxTime(anyLong(), any())).thenReturn(aggregatePublisher);
 		when(aggregatePublisher.first()).thenReturn(findPublisher);
 
 		this.mappingContext = new MongoMappingContext();
@@ -580,6 +583,36 @@ public class ReactiveMongoTemplateUnitTests {
 				Document.class).subscribe();
 
 		verify(aggregatePublisher).comment("expensive");
+	}
+
+	@Test // DATAMONGO-2390
+	public void aggregateShouldNoApplyZeroOrNegativeMaxTime() {
+
+		template
+				.aggregate(newAggregation(MongoTemplateUnitTests.Sith.class, project("id")).withOptions(
+						newAggregationOptions().maxTime(Duration.ZERO).build()), AutogenerateableId.class, Document.class)
+				.subscribe();
+		template
+				.aggregate(
+						newAggregation(MongoTemplateUnitTests.Sith.class, project("id"))
+								.withOptions(newAggregationOptions().maxTime(Duration.ofSeconds(-1)).build()),
+						AutogenerateableId.class, Document.class)
+				.subscribe();
+
+		verify(aggregatePublisher, never()).maxTime(anyLong(), any());
+	}
+
+	@Test // DATAMONGO-2390
+	public void aggregateShouldApplyMaxTimeIfSet() {
+
+		template
+				.aggregate(
+						newAggregation(MongoTemplateUnitTests.Sith.class, project("id"))
+								.withOptions(newAggregationOptions().maxTime(Duration.ofSeconds(10)).build()),
+						AutogenerateableId.class, Document.class)
+				.subscribe();
+
+		verify(aggregatePublisher).maxTime(eq(10000L), eq(TimeUnit.MILLISECONDS));
 	}
 
 	@Test // DATAMONGO-18545
