@@ -237,13 +237,13 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 						criteria.near(pointToUse);
 					}
 
-					if(pointToUse instanceof GeoJson) { // using GeoJson distance is in meters.
+					if (pointToUse instanceof GeoJson) { // using GeoJson distance is in meters.
 
 						criteria.maxDistance(MetricConversion.getDistanceInMeters(it));
-						minDistance.map(MetricConversion::getDistanceInMeters).ifPresent(min -> criteria.minDistance(min));
+						minDistance.map(MetricConversion::getDistanceInMeters).ifPresent(criteria::minDistance);
 					} else {
 						criteria.maxDistance(it.getNormalizedValue());
-						minDistance.ifPresent(min -> criteria.minDistance(min.getNormalizedValue()));
+						minDistance.map(Distance::getNormalizedValue).ifPresent(criteria::minDistance);
 					}
 
 					return criteria;
