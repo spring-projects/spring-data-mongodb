@@ -15,16 +15,10 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.stream.Collectors;
 
-import org.bson.Document;
-import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
-import org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.SetOperation.FieldAppender.ValueAppender;
 import org.springframework.lang.Nullable;
 
@@ -41,10 +35,7 @@ import org.springframework.lang.Nullable;
  * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/set/">MongoDB Aggregation Framework:
  *      $set</a>
  */
-public class SetOperation implements InheritsFieldsAggregationOperation {
-
-	private Map<Object, Object> valueMap;
-	private ExposedFields exposedFields = ExposedFields.empty();
+public class SetOperation extends DocumentEnhancingOperation {
 
 	/**
 	 * Create new instance of {@link SetOperation} adding map keys as exposed fields.
@@ -52,11 +43,7 @@ public class SetOperation implements InheritsFieldsAggregationOperation {
 	 * @param source must not be {@literal null}.
 	 */
 	private SetOperation(Map<Object, Object> source) {
-
-		this.valueMap = new LinkedHashMap<>(source);
-		for (Object key : source.keySet()) {
-			this.exposedFields = add(key);
-		}
+		super(source);
 	}
 
 	/**
@@ -97,7 +84,7 @@ public class SetOperation implements InheritsFieldsAggregationOperation {
 	 */
 	public SetOperation set(Object field, Object value) {
 
-		LinkedHashMap<Object, Object> target = new LinkedHashMap<>(this.valueMap);
+		LinkedHashMap<Object, Object> target = new LinkedHashMap<>(getValueMap());
 		target.put(field, value);
 
 		return new SetOperation(target);
@@ -109,73 +96,12 @@ public class SetOperation implements InheritsFieldsAggregationOperation {
 	 * @return new instance of {@link FieldAppender}.
 	 */
 	public FieldAppender and() {
-		return new FieldAppender(this.valueMap);
+		return new FieldAppender(getValueMap());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-	 */
 	@Override
-	public Document toDocument(AggregationOperationContext context) {
-
-		InheritingExposedFieldsAggregationOperationContext operationContext = new InheritingExposedFieldsAggregationOperationContext(
-				exposedFields, context);
-
-		if (valueMap.size() == 1) {
-			return context
-					.getMappedObject(new Document("$set", toSetEntry(valueMap.entrySet().iterator().next(), operationContext)));
-		}
-
-		Document $set = new Document();
-		valueMap.entrySet().stream().map(it -> toSetEntry(it, operationContext)).forEach($set::putAll);
-		return context.getMappedObject(new Document("$set", $set));
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation#getFields()
-	 */
-	@Override
-	public ExposedFields getFields() {
-		return exposedFields;
-	}
-
-	private ExposedFields add(Object field) {
-
-		if (field instanceof Field) {
-			return exposedFields.and(new ExposedField((Field) field, true));
-		}
-		if (field instanceof String) {
-			return exposedFields.and(new ExposedField(Fields.field((String) field), true));
-		}
-
-		throw new IllegalArgumentException(String.format("Expected %s to be a field/property.", field));
-	}
-
-	private static Document toSetEntry(Entry<Object, Object> entry, AggregationOperationContext context) {
-
-		String field = entry.getKey() instanceof String ? context.getReference((String) entry.getKey()).getRaw()
-				: context.getReference((Field) entry.getKey()).getRaw();
-
-		Object value = computeValue(entry.getValue(), context);
-
-		return new Document(field, value);
-	}
-
-	private static Object computeValue(Object value, AggregationOperationContext context) {
-
-		if (value instanceof Field) {
-			return context.getReference((Field) value).toString();
-		}
-		if (value instanceof AggregationExpression) {
-			return ((AggregationExpression) value).toDocument(context);
-		}
-		if (value instanceof Collection) {
-			return ((Collection) value).stream().map(it -> computeValue(it, context)).collect(Collectors.toList());
-		}
-
-		return value;
+	protected String mongoOperator() {
+		return "$set";
 	}
 
 	/**

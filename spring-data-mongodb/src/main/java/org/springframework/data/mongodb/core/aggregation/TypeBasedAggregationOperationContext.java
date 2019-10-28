@@ -127,6 +127,15 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 		return Fields.fields(fields.toArray(new String[0]));
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#continueOnMissingFieldReference()
+	 */
+	@Override
+	public AggregationOperationContext continueOnMissingFieldReference() {
+		return new RelaxedTypeBasedAggregationOperationContext(type, mappingContext, mapper);
+	}
+
 	protected FieldReference getReferenceFor(Field field) {
 
 		PersistentPropertyPath<MongoPersistentProperty> propertyPath = mappingContext

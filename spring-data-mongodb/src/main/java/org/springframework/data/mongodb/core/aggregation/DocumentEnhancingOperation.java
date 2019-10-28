@@ -1,0 +1,125 @@
+/*
+ * Copyright 2020 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.springframework.data.mongodb.core.aggregation;
+
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
+
+import org.bson.Document;
+import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
+import org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation;
+
+/**
+ * Base class for common taks required by {@link SetOperation} and {@link AddFieldsOperation}.
+ *
+ * @author Christoph Strobl
+ * @since 3.0
+ */
+abstract class DocumentEnhancingOperation implements InheritsFieldsAggregationOperation {
+
+	private Map<Object, Object> valueMap;
+	private ExposedFields exposedFields = ExposedFields.empty();
+
+	protected DocumentEnhancingOperation(Map<Object, Object> source) {
+
+		this.valueMap = new LinkedHashMap<>(source);
+		for (Object key : source.keySet()) {
+			this.exposedFields = add(key);
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+	 */
+	@Override
+	public Document toDocument(AggregationOperationContext context) {
+
+		InheritingExposedFieldsAggregationOperationContext operationContext = new InheritingExposedFieldsAggregationOperationContext(
+				exposedFields, context);
+
+		if (valueMap.size() == 1) {
+			return context.getMappedObject(
+					new Document(mongoOperator(), toSetEntry(valueMap.entrySet().iterator().next(), operationContext)));
+		}
+
+		Document $set = new Document();
+		valueMap.entrySet().stream().map(it -> toSetEntry(it, operationContext)).forEach($set::putAll);
+		return context.getMappedObject(new Document(mongoOperator(), $set));
+	}
+
+	/**
+	 * @return the String representation of the native MongoDB operator.
+	 */
+	protected abstract String mongoOperator();
+
+	/**
+	 * @return the raw value map
+	 */
+	protected Map<Object, Object> getValueMap() {
+		return this.valueMap;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation#getFields()
+	 */
+	@Override
+	public ExposedFields getFields() {
+		return exposedFields;
+	}
+
+	private ExposedFields add(Object field) {
+
+		if (field instanceof Field) {
+			return exposedFields.and(new ExposedField((Field) field, true));
+		}
+		if (field instanceof String) {
+			return exposedFields.and(new ExposedField(Fields.field((String) field), true));
+		}
+
+		throw new IllegalArgumentException(String.format("Expected %s to be a field/property.", field));
+	}
+
+	private static Document toSetEntry(Entry<Object, Object> entry, AggregationOperationContext context) {
+
+		String field = entry.getKey() instanceof String ? context.getReference((String) entry.getKey()).getRaw()
+				: context.getReference((Field) entry.getKey()).getRaw();
+
+		Object value = computeValue(entry.getValue(), context);
+
+		return new Document(field, value);
+	}
+
+	private static Object computeValue(Object value, AggregationOperationContext context) {
+
+		if (value instanceof Field) {
+			return context.getReference((Field) value).toString();
+		}
+		if (value instanceof AggregationExpression) {
+			return ((AggregationExpression) value).toDocument(context);
+		}
+		if (value instanceof Collection) {
+			return ((Collection) value).stream().map(it -> computeValue(it, context)).collect(Collectors.toList());
+		}
+
+		return value;
+	}
+
+}
