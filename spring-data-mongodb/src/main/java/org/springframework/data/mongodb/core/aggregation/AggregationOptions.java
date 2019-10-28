@@ -277,6 +277,10 @@ public class AggregationOptions {
 		return document;
 	}
 
+	/**
+	 * @return
+	 * @since 2.3
+	 */
 	public boolean hasExecutionTimeLimit() {
 		return !maxTime.isZero() && !maxTime.isNegative();
 	}

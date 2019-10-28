@@ -35,6 +35,7 @@ import org.bson.codecs.Codec;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -53,7 +54,6 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Metric;
-import org.springframework.data.geo.Point;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.data.mapping.callback.EntityCallbacks;
@@ -2188,7 +2188,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			options.getComment().ifPresent(aggregateIterable::comment);
 
-			if(options.hasExecutionTimeLimit()) {
+			if (options.hasExecutionTimeLimit()) {
 				aggregateIterable = aggregateIterable.maxTime(options.getMaxTime().toMillis(), TimeUnit.MILLISECONDS);
 			}
 
