@@ -19,14 +19,15 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.json.JsonParseException;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
@@ -155,12 +156,13 @@ public class BsonUtils {
 
 	/**
 	 * Serialize the given {@link Document} as Json applying default codecs if necessary.
-	 * 
+	 *
 	 * @param source
 	 * @return
-	 * @since 2.1.1
+	 * @since 2.2.1
 	 */
-	public static String toJson(Document source) {
+	@Nullable
+	public static String toJson(@Nullable Document source) {
 
 		if (source == null) {
 			return null;
@@ -173,7 +175,8 @@ public class BsonUtils {
 		}
 	}
 
-	private static String toJson(Object value) {
+	@Nullable
+	private static String toJson(@Nullable Object value) {
 
 		if (value == null) {
 			return null;
@@ -218,12 +221,13 @@ public class BsonUtils {
 		return iterableToDelimitedString(source, "[ ", " ]", BsonUtils::toJson);
 	}
 
-	private static <T> String iterableToDelimitedString(Iterable<T> source, String prefix, String postfix,
-			Converter<? super T, Object> transformer) {
+	private static <T> String iterableToDelimitedString(Iterable<T> source, String prefix, String suffix,
+			Converter<? super T, String> transformer) {
 
-		return prefix
-				+ StringUtils.collectionToCommaDelimitedString(
-						StreamSupport.stream(source.spliterator(), false).map(transformer::convert).collect(Collectors.toList()))
-				+ postfix;
+		StringJoiner joiner = new StringJoiner(", ", prefix, suffix);
+
+		StreamSupport.stream(source.spliterator(), false).map(transformer::convert).forEach(joiner::add);
+
+		return joiner.toString();
 	}
 }
