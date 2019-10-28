@@ -296,7 +296,7 @@ public class VariableOperators {
 			return toLet(ExposedFields.synthetic(Fields.fields(getVariableNames())), context);
 		}
 
-		private String[] getVariableNames() {
+		String[] getVariableNames() {
 
 			String[] varNames = new String[this.vars.size()];
 			for (int i = 0; i < this.vars.size(); i++) {

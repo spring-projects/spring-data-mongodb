@@ -20,7 +20,6 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 
 import org.bson.Document;
-
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.lang.Nullable;
@@ -102,5 +101,17 @@ public interface AggregationOperationContext {
 				}) //
 				.map(PropertyDescriptor::getName) //
 				.toArray(String[]::new));
+	}
+
+	/**
+	 * This toggle allows the {@link AggregationOperationContext context} to use any given field name without checking for
+	 * its existence. Typically the {@link AggregationOperationContext} fails when referencing unknown fields, those that
+	 * are not present in one of the previous stages or the input source, throughout the pipeline.
+	 * 
+	 * @return a more relaxed {@link AggregationOperationContext}.
+	 * @since 3.0
+	 */
+	default AggregationOperationContext continueOnMissingFieldReference() {
+		return this;
 	}
 }

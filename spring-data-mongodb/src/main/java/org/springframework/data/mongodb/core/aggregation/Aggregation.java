@@ -23,9 +23,11 @@ import java.util.List;
 import org.bson.Document;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.mongodb.core.aggregation.AddFieldsOperation.AddFieldsOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.CountOperation.CountOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.FacetOperation.FacetOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.GraphLookupOperation.StartWithBuilder;
+import org.springframework.data.mongodb.core.aggregation.MergeOperation.MergeOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.ReplaceRootDocumentOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.ReplaceRootOperationBuilder;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -645,6 +647,28 @@ public class Aggregation {
 	 */
 	public static GeoNearOperation geoNear(NearQuery query, String distanceField) {
 		return new GeoNearOperation(query, distanceField);
+	}
+
+	/**
+	 * Obtain a {@link MergeOperationBuilder builder} instance to create a new {@link MergeOperation}.
+	 *
+	 * @return new instance of {@link MergeOperationBuilder}.
+	 * @see MergeOperation
+	 * @since 3.0
+	 */
+	public static MergeOperationBuilder merge() {
+		return MergeOperation.builder();
+	}
+
+	/**
+	 * Obtain an {@link AddFieldsOperationBuilder builder} instance to create a new {@link AddFieldsOperation}.
+	 * 
+	 * @return new instance of {@link AddFieldsOperationBuilder}.
+	 * @see AddFieldsOperation
+	 * @since 3.0
+	 */
+	public static AddFieldsOperationBuilder addFields() {
+		return AddFieldsOperation.builder();
 	}
 
 	/**
