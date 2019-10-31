@@ -57,11 +57,6 @@ public class NamedMongoScriptConvertsUnitTests {
 		NamedMongoScriptToDocumentConverter converter = NamedMongoScriptToDocumentConverter.INSTANCE;
 
 		@Test // DATAMONGO-479
-		public void convertShouldReturnEmptyDocWhenScriptIsNull() {
-			assertThat(converter.convert(null)).isEqualTo(new Document());
-		}
-
-		@Test // DATAMONGO-479
 		public void convertShouldConvertScriptNameCorreclty() {
 
 			Document document = converter.convert(ECHO_SCRIPT);
@@ -87,9 +82,9 @@ public class NamedMongoScriptConvertsUnitTests {
 
 		DocumentToNamedMongoScriptConverter converter = DocumentToNamedMongoScriptConverter.INSTANCE;
 
-		@Test // DATAMONGO-479
-		public void convertShouldReturnNullIfSourceIsNull() {
-			assertThat(converter.convert(null)).isNull();
+		@Test // DATAMONGO-479, DATAMONGO-2385
+		public void convertShouldReturnNullIfSourceIsEmpty() {
+			assertThat(converter.convert(new Document())).isNull();
 		}
 
 		@Test // DATAMONGO-479
