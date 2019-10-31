@@ -110,7 +110,7 @@ abstract class MongoConverters {
 		INSTANCE;
 
 		public String convert(ObjectId id) {
-			return id == null ? null : id.toString();
+			return id.toString();
 		}
 	}
 
@@ -136,7 +136,7 @@ abstract class MongoConverters {
 		INSTANCE;
 
 		public BigInteger convert(ObjectId source) {
-			return source == null ? null : new BigInteger(source.toString(), 16);
+			return new BigInteger(source.toString(), 16);
 		}
 	}
 
@@ -149,7 +149,7 @@ abstract class MongoConverters {
 		INSTANCE;
 
 		public ObjectId convert(BigInteger source) {
-			return source == null ? null : new ObjectId(source.toString(16));
+			return new ObjectId(source.toString(16));
 		}
 	}
 
@@ -157,7 +157,7 @@ abstract class MongoConverters {
 		INSTANCE;
 
 		public String convert(BigDecimal source) {
-			return source == null ? null : source.toString();
+			return source.toString();
 		}
 	}
 
@@ -168,7 +168,7 @@ abstract class MongoConverters {
 		INSTANCE;
 
 		public Decimal128 convert(BigDecimal source) {
-			return source == null ? null : new Decimal128(source);
+			return new Decimal128(source);
 		}
 	}
 
@@ -195,7 +195,7 @@ abstract class MongoConverters {
 		INSTANCE;
 
 		public String convert(BigInteger source) {
-			return source == null ? null : source.toString();
+			return source.toString();
 		}
 	}
 
@@ -238,11 +238,6 @@ abstract class MongoConverters {
 
 		@Override
 		public String convert(Document source) {
-
-			if (source == null) {
-				return null;
-			}
-
 			return source.toJson();
 		}
 	}
@@ -258,7 +253,7 @@ abstract class MongoConverters {
 
 		@Override
 		public String convert(Term source) {
-			return source == null ? null : source.getFormatted();
+			return source.getFormatted();
 		}
 	}
 
@@ -273,7 +268,7 @@ abstract class MongoConverters {
 		@Override
 		public NamedMongoScript convert(Document source) {
 
-			if (source == null) {
+			if(source.isEmpty()) {
 				return null;
 			}
 
@@ -294,10 +289,6 @@ abstract class MongoConverters {
 
 		@Override
 		public Document convert(NamedMongoScript source) {
-
-			if (source == null) {
-				return new Document();
-			}
 
 			Document document = new Document();
 
@@ -325,7 +316,7 @@ abstract class MongoConverters {
 		 */
 		@Override
 		public String convert(Currency source) {
-			return source == null ? null : source.getCurrencyCode();
+			return source.getCurrencyCode();
 		}
 	}
 
@@ -461,7 +452,7 @@ abstract class MongoConverters {
 
 		@Override
 		public AtomicLong convert(Long source) {
-			return source != null ? new AtomicLong(source) : null;
+			return new AtomicLong(source);
 		}
 	}
 
@@ -477,7 +468,7 @@ abstract class MongoConverters {
 
 		@Override
 		public AtomicInteger convert(Integer source) {
-			return source != null ? new AtomicInteger(source) : null;
+			return new AtomicInteger(source);
 		}
 	}
 
