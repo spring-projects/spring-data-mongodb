@@ -1,6 +1,16 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.2.1.RELEASE (2019-11-04)
+---------------------------------------------
+* DATAMONGO-2399 - Upgrade to mongo-java-driver 3.11.1.
+* DATAMONGO-2394 - nearSphere query wrongly generated with radian parameter instead of meters.
+* DATAMONGO-2393 - Reading large file from ReactiveGridFsTemplate causes a stackoverflow and the code to hang.
+* DATAMONGO-2392 - Reading GridFS files written with old api and custom id fails on ReactiveGridFsTemplate.
+* DATAMONGO-2388 - IndexOperations.getIndexInfo() fails for index that has partialFilterExpression containing DBRef.
+* DATAMONGO-2382 - Release 2.2.1 (Moore SR1).
+
+
 Changes in version 2.1.12.RELEASE (2019-11-04)
 ----------------------------------------------
 * DATAMONGO-2388 - IndexOperations.getIndexInfo() fails for index that has partialFilterExpression containing DBRef.
