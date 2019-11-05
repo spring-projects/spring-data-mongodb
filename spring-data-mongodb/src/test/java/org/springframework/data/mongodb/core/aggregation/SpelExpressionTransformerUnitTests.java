@@ -20,9 +20,9 @@ import static org.assertj.core.api.Assertions.*;
 import java.util.Arrays;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.Person;
 
 /**
@@ -38,8 +38,8 @@ public class SpelExpressionTransformerUnitTests {
 
 	Data data;
 
-	@Before
-	public void setup() {
+	@BeforeEach
+	public void beforeEach() {
 
 		this.data = new Data();
 		this.data.primitiveLongValue = 42;
@@ -108,7 +108,7 @@ public class SpelExpressionTransformerUnitTests {
 	}
 
 	@Test // DATAMONGO-774
-	@Ignore
+	@Disabled
 	public void shouldRenderNestedIndexedFieldReference() {
 
 		// TODO add support for rendering nested indexed field references
@@ -161,23 +161,25 @@ public class SpelExpressionTransformerUnitTests {
 	}
 
 	@Test // DATAMONGO-774
-	@Ignore("TODO: mongo3 renders this a bit strange")
 	public void shouldRenderNestedParameterExpressionResults() {
 
 		assertThat(
 				((Document) transform("[0].primitiveLongValue + [0].primitiveDoubleValue + [0].doubleValue.longValue()", data))
-						.toJson()).isEqualTo(Document.parse("{ \"$add\" : [ 42 , 1.2345 , 23]}").toJson());
+						.toJson())
+								.isEqualTo(Document
+										.parse("{ \"$add\" : [ { $numberLong : \"42\"} , 1.2345 , { $numberLong : \"23\" } ]}").toJson());
 	}
 
 	@Test // DATAMONGO-774
-	@Ignore("TODO: mongo3 renders this a bit strange")
 	public void shouldRenderNestedParameterExpressionResultsInNestedExpressions() {
 
 		assertThat(
 				((Document) transform("((1 + [0].primitiveLongValue) + [0].primitiveDoubleValue) * [0].doubleValue.longValue()",
-						data)).toJson()).isEqualTo(
-								new Document("$multiply", Arrays.asList(new Document("$add", Arrays.asList(1, 42L, 1.2345D, 23L))))
-										.toJson());
+						data)).toJson())
+								.isEqualTo(new Document("$multiply",
+										Arrays.<Object> asList(
+												new Document("$add", Arrays.<Object> asList(1, new Document("$numberLong", "42"), 1.2345D)),
+												new Document("$numberLong", "23"))).toJson());
 	}
 
 	@Test // DATAMONGO-840
@@ -680,9 +682,8 @@ public class SpelExpressionTransformerUnitTests {
 	}
 
 	@Test // DATAMONGO-1548
-	@Ignore("Document API cannot render String[]")
 	public void shouldRenderMethodReferenceReduce() {
-		assertThat(transform("reduce(field, '', {'$concat':new String[]{'$$value','$$this'}})")).isEqualTo(Document.parse(
+		assertThat(transform("reduce(field, '', {'$concat':{'$$value','$$this'}})")).isEqualTo(Document.parse(
 				"{ \"$reduce\" : { \"input\" : \"$field\" , \"initialValue\" : \"\" , \"in\" : { \"$concat\" : [ \"$$value\" , \"$$this\"]}}}"));
 	}
 
