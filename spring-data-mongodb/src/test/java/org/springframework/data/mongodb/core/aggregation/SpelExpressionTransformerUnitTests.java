@@ -23,7 +23,6 @@ import org.bson.Document;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-
 import org.springframework.data.mongodb.core.Person;
 
 /**
@@ -933,6 +932,16 @@ public class SpelExpressionTransformerUnitTests {
 	public void shouldRenderRange() {
 
 		assertThat(transform("range(0, 10, 2)")).isEqualTo(Document.parse("{ \"$range\" : [0, 10, 2 ]}"));
+	}
+
+	@Test // DATAMONGO-2370
+	public void shouldRenderRound() {
+		assertThat(transform("round(field)")).isEqualTo(Document.parse("{ \"$round\" : [\"$field\"]}"));
+	}
+
+	@Test // DATAMONGO-2370
+	public void shouldRenderRoundWithPlace() {
+		assertThat(transform("round(field, 2)")).isEqualTo(Document.parse("{ \"$round\" : [\"$field\", 2]}"));
 	}
 
 	private Object transform(String expression, Object... params) {
