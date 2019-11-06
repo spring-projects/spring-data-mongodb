@@ -16,11 +16,11 @@
 package org.springframework.data.mongodb.repository.query;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 
 import org.bson.Document;
-
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
@@ -95,7 +95,8 @@ public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 		Flux<?> flux = reactiveMongoOperations.aggregate(aggregation, targetType);
 
 		if (isSimpleReturnType && !isRawReturnType) {
-			flux = flux.map(it -> AggregationUtils.extractSimpleTypeResult((Document) it, typeToRead, mongoConverter));
+			flux = flux.flatMap(
+					it -> Mono.justOrEmpty(AggregationUtils.extractSimpleTypeResult((Document) it, typeToRead, mongoConverter)));
 		}
 
 		if (method.isCollectionQuery()) {
