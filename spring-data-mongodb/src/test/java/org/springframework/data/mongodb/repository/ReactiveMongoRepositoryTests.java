@@ -27,6 +27,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
@@ -36,7 +37,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.reactivestreams.Publisher;
-
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -535,6 +535,46 @@ public class ReactiveMongoRepositoryTests {
 				}).verifyComplete();
 	}
 
+	@Test // DATAMONGO-2153
+	public void annotatedAggregationWithAggregationResultAsMap() {
+
+		repository.sumAgeAndReturnSumAsMap() //
+				.as(StepVerifier::create) //
+				.consumeNextWith(it -> {
+					assertThat(it).isInstanceOf(Map.class);
+				}).verifyComplete();
+	}
+
+	@Test // DATAMONGO-2403
+	public void annotatedAggregationExtractingSimpleValueEmitsEmptyMonoForEmptyDocument() {
+
+		Person p = new Person("project-on-lastanme", null);
+		repository.save(p).then().as(StepVerifier::create).verifyComplete();
+
+		repository.projectToLastnameAndRemoveId(p.getFirstname()) //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-2403
+	public void annotatedAggregationSkipsEmptyDocumentsWhenExtractingSimpleValue() {
+
+		String firstname = "project-on-lastanme";
+
+		Person p1 = new Person(firstname, null);
+		p1.setEmail("p1@example.com");
+		Person p2 = new Person(firstname, "lastname");
+		p2.setEmail("p2@example.com");
+		Person p3 = new Person(firstname, null);
+		p3.setEmail("p3@example.com");
+
+		repository.saveAll(Arrays.asList(p1, p2, p3)).then().as(StepVerifier::create).verifyComplete();
+
+		repository.projectToLastnameAndRemoveId(firstname) //
+				.as(StepVerifier::create) //
+				.expectNext("lastname").verifyComplete();
+	}
+
 	interface ReactivePersonRepository
 			extends ReactiveMongoRepository<Person, String>, ReactiveQuerydslPredicateExecutor<Person> {
 
@@ -595,6 +635,13 @@ public class ReactiveMongoRepositoryTests {
 
 		@Aggregation(pipeline = "{ '$group' : { '_id' : null, 'total' : { $sum: '$age' } } }")
 		Mono<SumAge> sumAgeAndReturnSumWrapper();
+
+		@Aggregation(pipeline = "{ '$group' : { '_id' : null, 'total' : { $sum: '$age' } } }")
+		Mono<Map> sumAgeAndReturnSumAsMap();
+
+		@Aggregation(
+				pipeline = { "{ '$match' : { 'firstname' : '?0' } }", "{ '$project' : { '_id' : 0, 'lastname' : 1 } }" })
+		Mono<String> projectToLastnameAndRemoveId(String firstname);
 
 		@Query(value = "{_id:?0}")
 		Mono<org.bson.Document> findDocumentById(String id);

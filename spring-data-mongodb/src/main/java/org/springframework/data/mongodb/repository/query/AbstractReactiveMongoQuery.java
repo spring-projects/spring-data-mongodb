@@ -123,6 +123,10 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 		ResultProcessor processor = method.getResultProcessor().withDynamicProjection(convertingParamterAccessor);
 		Class<?> typeToRead = processor.getReturnedType().getTypeToRead();
 
+		if(typeToRead == null && method.getReturnType().getComponentType() != null) {
+			typeToRead = method.getReturnType().getComponentType().getType();
+		}
+
 		return doExecute(method, processor, convertingParamterAccessor, typeToRead);
 	}
 
