@@ -76,7 +76,7 @@ fun <T : Any> ReactiveFindOperation.DistinctWithProjection.asType(resultType: KC
  * @author Christoph Strobl
  * @since 2.1
  */
-inline fun <reified T : Any> ReactiveFindOperation.DistinctWithProjection.asType(): ReactiveFindOperation.DistinctWithProjection =
+inline fun <reified T : Any> ReactiveFindOperation.DistinctWithProjection.asType(): ReactiveFindOperation.TerminatingDistinct<T> =
 		`as`(T::class.java)
 
 /**
