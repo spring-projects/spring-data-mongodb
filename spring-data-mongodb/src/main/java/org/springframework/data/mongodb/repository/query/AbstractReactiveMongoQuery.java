@@ -36,6 +36,7 @@ import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -117,17 +118,18 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 
 	private Object execute(MongoParameterAccessor parameterAccessor) {
 
-		ConvertingParameterAccessor convertingParamterAccessor = new ConvertingParameterAccessor(operations.getConverter(),
+		ConvertingParameterAccessor accessor = new ConvertingParameterAccessor(operations.getConverter(),
 				parameterAccessor);
 
-		ResultProcessor processor = method.getResultProcessor().withDynamicProjection(convertingParamterAccessor);
+		TypeInformation<?> returnType = method.getReturnType();
+		ResultProcessor processor = method.getResultProcessor().withDynamicProjection(accessor);
 		Class<?> typeToRead = processor.getReturnedType().getTypeToRead();
 
-		if(typeToRead == null && method.getReturnType().getComponentType() != null) {
-			typeToRead = method.getReturnType().getComponentType().getType();
+		if (typeToRead == null && returnType.getComponentType() != null) {
+			typeToRead = returnType.getComponentType().getType();
 		}
 
-		return doExecute(method, processor, convertingParamterAccessor, typeToRead);
+		return doExecute(method, processor, accessor, typeToRead);
 	}
 
 	/**

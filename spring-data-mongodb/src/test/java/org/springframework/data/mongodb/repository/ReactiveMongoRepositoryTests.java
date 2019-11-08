@@ -546,7 +546,7 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-2403
-	public void annotatedAggregationExtractingSimpleValueEmitsEmptyMonoForEmptyDocument() {
+	public void annotatedAggregationExtractingSimpleValueIsEmptyForEmptyDocument() {
 
 		Person p = new Person("project-on-lastanme", null);
 		repository.save(p).then().as(StepVerifier::create).verifyComplete();
