@@ -50,6 +50,7 @@ import com.mongodb.reactivestreams.client.gridfs.GridFSFindPublisher;
  *
  * @author Mark Paluch
  * @author Nick Stolwijk
+ * @author Denis Zavedeev
  * @since 2.2
  */
 public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements ReactiveGridFsOperations {
@@ -261,7 +262,12 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 		Document sortObject = getMappedQuery(query.getSortObject());
 
 		GridFSFindPublisher publisherToUse = getGridFs().find(queryObject).sort(sortObject);
-
+		if (query.getLimit() > 0) {
+			publisherToUse = publisherToUse.limit(query.getLimit());
+		}
+		if (query.getSkip() > 0) {
+			publisherToUse = publisherToUse.skip(Math.toIntExact(query.getSkip()));
+		}
 		Integer cursorBatchSize = query.getMeta().getCursorBatchSize();
 		if (cursorBatchSize != null) {
 			publisherToUse = publisherToUse.batchSize(cursorBatchSize);

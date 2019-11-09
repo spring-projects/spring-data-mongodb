@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.bson.BsonObjectId;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.core.io.support.ResourcePatternResolver;
@@ -51,6 +50,7 @@ import com.mongodb.client.gridfs.model.GridFSFile;
  * @author Mark Paluch
  * @author Hartmut Lang
  * @author Niklas Helge Hanft
+ * @author Denis Zavedeev
  */
 public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOperations, ResourcePatternResolver {
 
@@ -166,7 +166,14 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 		Document queryObject = getMappedQuery(query.getQueryObject());
 		Document sortObject = getMappedQuery(query.getSortObject());
 
-		return getGridFs().find(queryObject).sort(sortObject);
+		GridFSFindIterable iterable = getGridFs().find(queryObject).sort(sortObject);
+		if (query.getSkip() > 0) {
+			iterable = iterable.skip(Math.toIntExact(query.getSkip()));
+		}
+		if (query.getLimit() > 0) {
+			iterable = iterable.limit(query.getLimit());
+		}
+		return iterable;
 	}
 
 	/*

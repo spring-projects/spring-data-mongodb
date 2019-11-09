@@ -20,6 +20,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.gridfs.GridFsCriteria.*;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -27,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import org.bson.BsonObjectId;
 import org.bson.Document;
@@ -38,6 +40,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
@@ -61,6 +64,7 @@ import com.mongodb.gridfs.GridFSInputFile;
  * @author Martin Baumgartner
  * @author Hartmut Lang
  * @author Mark Paluch
+ * @author Denis Zavedeev
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:gridfs/gridfs.xml")
@@ -287,6 +291,23 @@ public class GridFsTemplateIntegrationTests {
 
 			assertThat(content).isEqualTo(StreamUtils.copyToByteArray(entry.getValue().getInputStream()));
 		}
+	}
+
+	@Test // DATAMONGO-2411
+	public void considersSkipLimitWhenQueryingFiles() {
+		Stream.of( //
+				"a", "aa", "aaa", //
+				"b", "bb", "bb", //
+				"c", "cc", "ccc", //
+				"d", "dd", "ddd") //
+				.forEach(filename -> operations.store(new ByteArrayInputStream(new byte[0]), filename));
+
+		PageRequest pageRequest = PageRequest.of(2, 3, Direction.ASC, "filename");
+		List<String> filenames = operations.find(new Query().with(pageRequest)) //
+				.map(GridFSFile::getFilename) //
+				.into(new ArrayList<>());
+
+		assertThat(filenames).containsExactly("c", "cc", "ccc");
 	}
 
 	class Metadata {
