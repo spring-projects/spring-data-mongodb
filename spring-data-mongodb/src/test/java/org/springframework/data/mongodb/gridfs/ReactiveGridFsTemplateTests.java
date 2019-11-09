@@ -21,6 +21,7 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.gridfs.GridFsCriteria.*;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
@@ -36,10 +37,14 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.core.io.buffer.DefaultDataBuffer;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -48,6 +53,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.StreamUtils;
 
+import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.gridfs.GridFS;
 import com.mongodb.gridfs.GridFSInputFile;
 import com.mongodb.internal.HexUtils;
@@ -60,6 +66,7 @@ import com.mongodb.reactivestreams.client.gridfs.helpers.AsyncStreamHelper;
  * @author Mark Paluch
  * @author Christoph Strobl
  * @author Nick Stolwijk
+ * @author Denis Zavedeev
  */
 @RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:gridfs/reactive-gridfs.xml")
@@ -279,6 +286,26 @@ public class ReactiveGridFsTemplateTests {
 
 					assertThat(actual).isEqualTo(content);
 				}) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-2411
+	public void considersSkipLimitWhenQueryingFiles() {
+		DataBufferFactory bufferFactory = new DefaultDataBufferFactory();
+		DataBuffer buffer = bufferFactory.allocateBuffer(0);
+		Flux.just( //
+				"a", "aa", "aaa", //
+				"b", "bb", "bbb", //
+				"c", "cc", "ccc", //
+				"d", "dd", "ddd") //
+				.flatMap(fileName -> operations.store(Mono.just(buffer), fileName)) //
+				.blockLast();
+
+		PageRequest pageRequest = PageRequest.of(2, 3, Sort.Direction.ASC, "filename");
+		operations.find(new Query().with(pageRequest)) //
+				.map(GridFSFile::getFilename) //
+				.as(StepVerifier::create) //
+				.expectNext("c", "cc", "ccc") //
 				.verifyComplete();
 	}
 
