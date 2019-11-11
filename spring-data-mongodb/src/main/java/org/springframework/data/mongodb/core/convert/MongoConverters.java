@@ -211,7 +211,7 @@ abstract class MongoConverters {
 		INSTANCE;
 
 		public String convert(URL source) {
-			return source == null ? null : source.toString();
+			return source.toString();
 		}
 	}
 
@@ -224,7 +224,7 @@ abstract class MongoConverters {
 		public URL convert(String source) {
 
 			try {
-				return source == null ? null : new URL(source);
+				return new URL(source);
 			} catch (MalformedURLException e) {
 				throw new ConversionFailedException(SOURCE, TARGET, source, e);
 			}
@@ -483,7 +483,6 @@ abstract class MongoConverters {
 
 		INSTANCE;
 
-		@Nullable
 		@Override
 		public byte[] convert(Binary source) {
 			return source.getData();
@@ -501,7 +500,6 @@ abstract class MongoConverters {
 
 		INSTANCE;
 
-		@Nullable
 		@Override
 		public Instant convert(BsonTimestamp source) {
 			return Instant.ofEpochSecond(source.getTime(), 0);
