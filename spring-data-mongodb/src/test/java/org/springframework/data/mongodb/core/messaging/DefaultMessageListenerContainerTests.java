@@ -31,21 +31,18 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
-
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
-import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.mongodb.test.util.ReplicaSet;
 import org.springframework.test.annotation.IfProfileValue;
 import org.springframework.util.ErrorHandler;
 
-import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
@@ -60,6 +57,8 @@ public class DefaultMessageListenerContainerTests {
 	public static final String DATABASE_NAME = "change-stream-events";
 	public static final String COLLECTION_NAME = "collection-1";
 	public static final String COLLECTION_2_NAME = "collection-2";
+
+	public static final Duration TIMEOUT = Duration.ofSeconds(2);
 
 	public @Rule TestRule replSet = ReplicaSet.none();
 
@@ -94,12 +93,12 @@ public class DefaultMessageListenerContainerTests {
 				Person.class);
 		container.start();
 
-		awaitSubscription(subscription, Duration.ofMillis(500));
+		awaitSubscription(subscription, TIMEOUT);
 
 		collection.insertOne(new Document("_id", "id-1").append("firstname", "foo"));
 		collection.insertOne(new Document("_id", "id-2").append("firstname", "bar"));
 
-		awaitMessages(messageListener, 2, Duration.ofMillis(500));
+		awaitMessages(messageListener, 2, TIMEOUT);
 
 		assertThat(messageListener.getMessages().stream().map(Message::getBody).collect(Collectors.toList()))
 				.containsExactly(new Person("id-1", "foo"), new Person("id-2", "bar"));
@@ -125,12 +124,12 @@ public class DefaultMessageListenerContainerTests {
 		}, () -> COLLECTION_NAME), Person.class, errorHandler);
 		container.start();
 
-		awaitSubscription(subscription, Duration.ofMillis(500));
+		awaitSubscription(subscription, TIMEOUT);
 
 		collection.insertOne(new Document("_id", "id-1").append("firstname", "foo"));
 		collection.insertOne(new Document("_id", "id-2").append("firstname", "bar"));
 
-		awaitMessages(messageListener, 2, Duration.ofMillis(500));
+		awaitMessages(messageListener, 2, TIMEOUT);
 
 		verify(errorHandler, atLeast(1)).handleError(any(IllegalStateException.class));
 		assertThat(messageListener.getTotalNumberMessagesReceived()).isEqualTo(2);
@@ -145,12 +144,12 @@ public class DefaultMessageListenerContainerTests {
 				Document.class);
 		container.start();
 
-		awaitSubscription(subscription, Duration.ofMillis(500));
+		awaitSubscription(subscription, TIMEOUT);
 
 		collection.insertOne(new Document("_id", "id-1").append("value", "foo"));
 		collection.insertOne(new Document("_id", "id-2").append("value", "bar"));
 
-		awaitMessages(messageListener, 2, Duration.ofMillis(500));
+		awaitMessages(messageListener, 2, TIMEOUT);
 
 		container.stop();
 
@@ -174,12 +173,12 @@ public class DefaultMessageListenerContainerTests {
 		Subscription subscription = container.register(new ChangeStreamRequest(messageListener, () -> COLLECTION_NAME),
 				Document.class);
 
-		awaitSubscription(subscription, Duration.ofMillis(500));
+		awaitSubscription(subscription, TIMEOUT);
 
 		Document expected = new Document("_id", "id-2").append("value", "bar");
 		collection.insertOne(expected);
 
-		awaitMessages(messageListener, 1, Duration.ofMillis(500));
+		awaitMessages(messageListener, 1, TIMEOUT);
 		container.stop();
 
 		assertThat(messageListener.getMessages().stream().map(Message::getBody).collect(Collectors.toList()))
@@ -226,11 +225,11 @@ public class DefaultMessageListenerContainerTests {
 
 		awaitSubscription(
 				container.register(new TailableCursorRequest(messageListener, () -> COLLECTION_NAME), Document.class),
-				Duration.ofMillis(500));
+				TIMEOUT);
 
 		collection.insertOne(new Document("_id", "id-2").append("value", "bar"));
 
-		awaitMessages(messageListener, 2, Duration.ofSeconds(2));
+		awaitMessages(messageListener, 2, TIMEOUT);
 		container.stop();
 
 		assertThat(messageListener.getTotalNumberMessagesReceived()).isEqualTo(2);
@@ -247,12 +246,12 @@ public class DefaultMessageListenerContainerTests {
 
 		awaitSubscription(
 				container.register(new TailableCursorRequest(messageListener, () -> COLLECTION_NAME), Document.class),
-				Duration.ofMillis(500));
+				TIMEOUT);
 
 		collection.insertOne(new Document("_id", "id-1").append("value", "foo"));
 		collection.insertOne(new Document("_id", "id-2").append("value", "bar"));
 
-		awaitMessages(messageListener, 2, Duration.ofSeconds(2));
+		awaitMessages(messageListener, 2, TIMEOUT);
 		container.stop();
 
 		assertThat(messageListener.getTotalNumberMessagesReceived()).isEqualTo(2);
@@ -359,7 +358,7 @@ public class DefaultMessageListenerContainerTests {
 
 		container.start();
 
-		awaitSubscription(subscription, Duration.ofMillis(500));
+		awaitSubscription(subscription, TIMEOUT);
 
 		collection.insertOne(new Document("_id", "col-1-id-1").append("firstname", "foo"));
 		collection.insertOne(new Document("_id", "col-1-id-2").append("firstname", "bar"));
@@ -367,7 +366,7 @@ public class DefaultMessageListenerContainerTests {
 		collection2.insertOne(new Document("_id", "col-2-id-1").append("firstname", "bar"));
 		collection2.insertOne(new Document("_id", "col-2-id-2").append("firstname", "foo"));
 
-		awaitMessages(messageListener, 4, Duration.ofMillis(500));
+		awaitMessages(messageListener, 4, TIMEOUT);
 
 		assertThat(messageListener.getMessages().stream().map(Message::getBody).collect(Collectors.toList()))
 				.containsExactly(new Person("col-1-id-1", "foo"), new Person("col-1-id-2", "bar"),
