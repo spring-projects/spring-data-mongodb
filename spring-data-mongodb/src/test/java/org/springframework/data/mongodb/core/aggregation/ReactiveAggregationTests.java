@@ -15,9 +15,9 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.assertj.core.api.AssertionsForInterfaceTypes.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import reactor.test.StepVerifier;
 
@@ -28,6 +28,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Point;
@@ -59,15 +60,11 @@ public class ReactiveAggregationTests {
 		cleanDb();
 	}
 
-	@After
-	public void cleanUp() {
-		cleanDb();
-	}
-
 	private void cleanDb() {
 
 		reactiveMongoTemplate.dropCollection(INPUT_COLLECTION) //
 				.then(reactiveMongoTemplate.dropCollection(OUTPUT_COLLECTION)) //
+				.then(reactiveMongoTemplate.dropCollection(WithCompositeId.class)) //
 				.then(reactiveMongoTemplate.dropCollection(Product.class)) //
 				.then(reactiveMongoTemplate.dropCollection(City.class)) //
 				.then(reactiveMongoTemplate.dropCollection(Venue.class)).as(StepVerifier::create) //
@@ -93,6 +90,24 @@ public class ReactiveAggregationTests {
 			assertThat(actual).containsEntry("name", product.name);
 			assertThat(actual).containsEntry("salesPrice", product.netPrice * 10);
 		}).verifyComplete();
+	}
+
+	@Test // DATAMONGO-2237
+	public void shouldNotUnwrapCompositeId() {
+
+		WithCompositeId doc = new WithCompositeId();
+		doc.id = new Point(2, 4);
+		doc.name = "Hello";
+		reactiveMongoTemplate.save(doc).as(StepVerifier::create).expectNextCount(1).verifyComplete();
+
+		Aggregation agg = newAggregation( //
+				project(WithCompositeId.class));
+
+		reactiveMongoTemplate.aggregate(agg, WithCompositeId.class, Document.class) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(actual -> {
+					assertThat(actual).containsOnlyKeys("_id", "name");
+				}).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1646
@@ -164,4 +179,11 @@ public class ReactiveAggregationTests {
 		reactiveMongoTemplate.aggregate(aggregation, "newyork", Document.class).as(StepVerifier::create).expectNextCount(4)
 				.verifyComplete();
 	}
+
+	static class WithCompositeId {
+
+		Point id;
+		String name;
+	}
+
 }

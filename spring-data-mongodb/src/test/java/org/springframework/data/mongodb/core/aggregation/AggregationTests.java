@@ -137,6 +137,7 @@ public class AggregationTests {
 		mongoTemplate.dropCollection(Art.class);
 		mongoTemplate.dropCollection("personQueryTemp");
 		mongoTemplate.dropCollection(Venue.class);
+		mongoTemplate.dropCollection(WithCompositeId.class);
 	}
 
 	/**
@@ -227,6 +228,23 @@ public class AggregationTests {
 		assertTagCount("spring", 3, tagCount.get(0));
 		assertTagCount("mongodb", 2, tagCount.get(1));
 		assertTagCount("nosql", 1, tagCount.get(2));
+	}
+
+	@Test // DATAMONGO-2237
+	public void shouldNotUnwrapCompositeId() {
+
+		WithCompositeId doc = new WithCompositeId();
+		doc.id = new Point(2, 4);
+		doc.name = "Hello";
+		mongoTemplate.save(doc);
+
+		Aggregation agg = newAggregation( //
+				project(WithCompositeId.class));
+
+		AggregationResults<Document> results = mongoTemplate.aggregate(agg, WithCompositeId.class, Document.class);
+		Document document = results.getMappedResults().get(0);
+
+		assertThat(document).containsOnlyKeys("_id", "name");
 	}
 
 	@Test // DATAMONGO-1637
@@ -1823,7 +1841,7 @@ public class AggregationTests {
 		assertThat((Double) bound100.get("sum")).isCloseTo(3672.9, Offset.offset(0.1D));
 	}
 
-	@Test // DATAMONGO-1552
+	@Test // DATAMONGO-1552, DATAMONGO-2237
 	@MongoVersion(asOf = "3.4")
 	public void bucketAutoShouldCollectDocumentsIntoABucket() {
 
@@ -1846,12 +1864,12 @@ public class AggregationTests {
 
 		// { "min" : 680.0 , "max" : 820.0 , "count" : 1 , "titles" : [ "Dancer"] , "sum" : 760.4000000000001}
 		Document bound0 = result.getMappedResults().get(0);
-		assertThat(bound0).containsEntry("count", 1).containsEntry("titles.[0]", "Dancer").containsEntry("min", 680.0)
-				.containsKey("max");
+		assertThat(bound0).containsEntry("count", 1).containsEntry("titles.[0]", "Dancer").containsEntry("_id.min", 680.0)
+				.containsKey("_id.max");
 
 		// { "min" : 820.0 , "max" : 1800.0 , "count" : 1 , "titles" : [ "The Great Wave off Kanagawa"] , "sum" : 1673.0}
 		Document bound1 = result.getMappedResults().get(1);
-		assertThat(bound1).containsEntry("count", 1).containsEntry("min", 820.0);
+		assertThat(bound1).containsEntry("count", 1).containsEntry("_id.min", 820.0);
 		assertThat((List<String>) bound1.get("titles")).contains("The Great Wave off Kanagawa");
 		assertThat((Double) bound1.get("sum")).isCloseTo(1673.0, Offset.offset(0.1D));
 	}
@@ -2006,6 +2024,12 @@ public class AggregationTests {
 		}
 
 		return result;
+	}
+
+	static class WithCompositeId {
+
+		Point id;
+		String name;
 	}
 
 	static class DATAMONGO753 {

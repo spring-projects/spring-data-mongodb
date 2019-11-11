@@ -1,6 +1,11 @@
 [[new-features]]
 = New & Noteworthy
 
+[[new-features.2-3-0]]
+== What's New in Spring Data MongoDB 2.3
+
+* Removal of `_id` flattening for composite Id's when using `MongoTemplate` aggregations.
+
 [[new-features.2-2-0]]
 == What's New in Spring Data MongoDB 2.2
 * Compatibility with MongoDB 4.2 deprecating `eval`, `group` and `geoNear` Template API methods.

@@ -2143,7 +2143,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	protected <O> AggregationResults<O> doAggregate(Aggregation aggregation, String collectionName, Class<O> outputType,
 			AggregationOperationContext context) {
 
-		DocumentCallback<O> callback = new UnwrapAndReadDocumentCallback<>(mongoConverter, outputType, collectionName);
+		DocumentCallback<O> callback = new ReadDocumentCallback<>(mongoConverter, outputType, collectionName);
 
 		AggregationOptions options = aggregation.getOptions();
 		AggregationUtil aggregationUtil = new AggregationUtil(queryMapper, mappingContext);
@@ -3214,39 +3214,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			}
 
 			return (T) result;
-		}
-	}
-
-	class UnwrapAndReadDocumentCallback<T> extends ReadDocumentCallback<T> {
-
-		public UnwrapAndReadDocumentCallback(EntityReader<? super T, Bson> reader, Class<T> type, String collectionName) {
-			super(reader, type, collectionName);
-		}
-
-		@Override
-		public T doWith(@Nullable Document object) {
-
-			if (object == null) {
-				return null;
-			}
-
-			Object idField = object.get(Fields.UNDERSCORE_ID);
-
-			if (!(idField instanceof Document)) {
-				return super.doWith(object);
-			}
-
-			Document toMap = new Document();
-			Document nested = (Document) idField;
-			toMap.putAll(nested);
-
-			for (String key : object.keySet()) {
-				if (!Fields.UNDERSCORE_ID.equals(key)) {
-					toMap.put(key, object.get(key));
-				}
-			}
-
-			return super.doWith(toMap);
 		}
 	}
 
