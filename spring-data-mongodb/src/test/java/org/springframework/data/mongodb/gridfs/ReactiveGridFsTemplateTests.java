@@ -20,6 +20,7 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.gridfs.GridFsCriteria.*;
 
+import org.junit.Ignore;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
@@ -63,6 +64,7 @@ import com.mongodb.reactivestreams.client.gridfs.helpers.AsyncStreamHelper;
  */
 @RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:gridfs/reactive-gridfs.xml")
+@Ignore("Do not merge")
 public class ReactiveGridFsTemplateTests {
 
 	Resource resource = new ClassPathResource("gridfs/gridfs.xml");
