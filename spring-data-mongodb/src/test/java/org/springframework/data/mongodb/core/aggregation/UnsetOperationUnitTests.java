@@ -32,6 +32,8 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.lang.Nullable;
 
 /**
+ * Unit tests for {@link UnsetOperation}.
+ *
  * @author Christoph Strobl
  */
 public class UnsetOperationUnitTests {

@@ -21,6 +21,8 @@ import org.bson.Document;
 import org.junit.Test;
 
 /**
+ * Unit tests for {@link AggregationUpdate}.
+ *
  * @author Christoph Strobl
  */
 public class AggregationUpdateUnitTests {
@@ -36,6 +38,4 @@ public class AggregationUpdateUnitTests {
 						.containsExactly(new Document("$set", new Document("stage-1", "value-1")),
 								new Document("$unset", "stage-2"), new Document("$set", new Document("stage-3", "value-3")));
 	}
-
-
 }

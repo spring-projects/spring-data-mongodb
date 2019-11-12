@@ -1157,6 +1157,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			Class<T> entityClass, String collectionName) {
 
 		Assert.notNull(options, "Options must not be null! ");
+		Assert.notNull(entityClass, "Entity class must not be null!");
 
 		FindAndModifyOptions optionsToUse = FindAndModifyOptions.of(options);
 
@@ -1788,7 +1789,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			queryObj.put("$isolated", 1);
 		}
 
-		Flux<UpdateResult> result = Flux.empty();
+		Flux<UpdateResult> result;
 
 		if (update instanceof AggregationUpdate) {
 
@@ -1796,10 +1797,15 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 					? new RelaxedTypeBasedAggregationOperationContext(entityClass, mappingContext, queryMapper)
 					: Aggregation.DEFAULT_CONTEXT;
 
-			AggregationUpdate aUppdate = ((AggregationUpdate) update);
-			List<Document> pipeline = new AggregationUtil(queryMapper, mappingContext).createPipeline(aUppdate, context);
+			List<Document> pipeline = new AggregationUtil(queryMapper, mappingContext)
+					.createPipeline((AggregationUpdate) update, context);
 
 			result = execute(collectionName, collection -> {
+
+				if (LOGGER.isDebugEnabled()) {
+					LOGGER.debug(String.format("Calling update using query: %s and update: %s in collection: %s",
+							serializeToJsonSafely(queryObj), serializeToJsonSafely(pipeline), collectionName));
+				}
 
 				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.UPDATE, collectionName,
 						entityClass, update.getUpdateObject(), queryObj);
@@ -1807,18 +1813,14 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 				collection = writeConcernToUse != null ? collection.withWriteConcern(writeConcernToUse) : collection;
 
-				if (multi) {
-					return collection.updateMany(queryObj, pipeline, updateOptions);
-				}
-
-				return collection.updateOne(queryObj, pipeline, updateOptions);
+				return multi ? collection.updateMany(queryObj, pipeline, updateOptions)
+						: collection.updateOne(queryObj, pipeline, updateOptions);
 			});
 		} else {
 
 			result = execute(collectionName, collection -> {
 
-				Document updateObj = update == null ? new Document()
-						: updateMapper.getMappedObject(update.getUpdateObject(), entity);
+				Document updateObj = updateMapper.getMappedObject(update.getUpdateObject(), entity);
 
 				if (LOGGER.isDebugEnabled()) {
 					LOGGER.debug(String.format("Calling update using query: %s and update: %s in collection: %s",
@@ -1838,10 +1840,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 					return collectionToUse.replaceOne(queryObj, updateObj, replaceOptions);
 				}
-				if (multi) {
-					return collectionToUse.updateMany(queryObj, updateObj, updateOptions);
-				}
-				return collectionToUse.updateOne(queryObj, updateObj, updateOptions);
+
+				return multi ? collectionToUse.updateMany(queryObj, updateObj, updateOptions)
+						: collectionToUse.updateOne(queryObj, updateObj, updateOptions);
 			});
 		}
 
@@ -1850,8 +1851,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			if (entity != null && entity.hasVersionProperty() && !multi) {
 				if (updateResult.wasAcknowledged() && updateResult.getMatchedCount() == 0) {
 
-					Document updateObj = update == null ? new Document()
-							: updateMapper.getMappedObject(update.getUpdateObject(), entity);
+					Document updateObj = updateMapper.getMappedObject(update.getUpdateObject(), entity);
 					if (containsVersionProperty(queryObj, entity))
 						throw new OptimisticLockingFailureException("Optimistic lock exception on saving entity: "
 								+ updateObj.toString() + " to collection " + collectionName);
@@ -2085,8 +2085,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		if (query == null) {
 
-			// TODO: clean up
-			LOGGER.debug(String.format("find for class: %s in collection: %s", entityClass, collectionName));
+			LOGGER.debug(String.format("Tail for class: %s in collection: %s", entityClass, collectionName));
 
 			return executeFindMultiInternal(
 					collection -> new FindCallback(null).doInCollection(collection).cursorType(CursorType.TailableAwait),
@@ -2586,12 +2585,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			Document mappedQuery = queryMapper.getMappedObject(query, entity);
 
-			Object mappedUpdate = new Document();
+			Object mappedUpdate;
 			if (update instanceof AggregationUpdate) {
 
-				AggregationOperationContext context = entityClass != null
-						? new RelaxedTypeBasedAggregationOperationContext(entityClass, mappingContext, queryMapper)
-						: Aggregation.DEFAULT_CONTEXT;
+				AggregationOperationContext context = new RelaxedTypeBasedAggregationOperationContext(entityClass,
+						mappingContext, queryMapper);
 
 				mappedUpdate = new AggregationUtil(queryMapper, mappingContext).createPipeline((Aggregation) update, context);
 			} else {
@@ -2997,7 +2995,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			} else if (update instanceof List) {
 				return collection.findOneAndUpdate(query, (List<Document>) update, findOneAndUpdateOptions);
 			}
-			return Flux.error(new IllegalArgumentException("doh - that does not work"));
+
+			return Flux
+					.error(new IllegalArgumentException(String.format("Using %s is not supported in findOneAndUpdate", update)));
 		}
 
 		private static FindOneAndUpdateOptions convertToFindOneAndUpdateOptions(FindAndModifyOptions options,

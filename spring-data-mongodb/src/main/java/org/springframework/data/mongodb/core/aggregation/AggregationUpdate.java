@@ -21,22 +21,22 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
+
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
-import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 /**
- * Abstraction for an {@code db.collection.update()} using an aggregation pipeline for a more expressive update
- * statement expressing conditional updates based on current field values or updating one field using the value of
- * another field(s).
- * 
+ * Abstraction for {@code db.collection.update()} using an aggregation pipeline. Aggregation pipeline updates use a more
+ * expressive update statement expressing conditional updates based on current field values or updating one field using
+ * the value of another field(s).
+ *
  * <pre class="code">
  * AggregationUpdate update = AggregationUpdate.update().set("average")
  * 		.toValue(ArithmeticOperators.valueOf("tests").avg()).set("grade")
@@ -47,9 +47,9 @@ import org.springframework.util.StringUtils;
  * 						CaseOperator.when(Gte.valueOf("average").greaterThanEqualToValue(60)).then("D"))
  * 				.defaultTo("F"));
  * </pre>
- * 
- * The above sample is equivalent to the JSON update statement
- * 
+ *
+ * The above sample is equivalent to the JSON update statement:
+ *
  * <pre class="code">
  * db.collection.update(
  *    { },
@@ -70,6 +70,7 @@ import org.springframework.util.StringUtils;
  * </pre>
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @see <a href=
  *      "https://docs.mongodb.com/manual/reference/method/db.collection.update/#update-with-aggregation-pipeline">MongoDB
  *      Reference Documentation</a>
@@ -83,7 +84,7 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 	/**
 	 * Create new {@link AggregationUpdate}.
 	 */
-	public AggregationUpdate() {
+	protected AggregationUpdate() {
 		this(new ArrayList<>());
 	}
 
@@ -92,18 +93,14 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 	 *
 	 * @param pipeline must not be {@literal null}.
 	 */
-	private AggregationUpdate(List<AggregationOperation> pipeline) {
+	protected AggregationUpdate(List<AggregationOperation> pipeline) {
 
 		super(pipeline);
 
 		for (AggregationOperation operation : pipeline) {
 			if (operation instanceof FieldsExposingAggregationOperation) {
 				((FieldsExposingAggregationOperation) operation).getFields().forEach(it -> {
-					if (it instanceof Field) {
-						keysTouched.add(((Field) it).getName());
-					} else {
-						keysTouched.add(it.toString());
-					}
+					keysTouched.add(it.getName());
 				});
 			}
 		}
@@ -140,11 +137,7 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 		Assert.notNull(setOperation, "SetOperation must not be null!");
 
 		setOperation.getFields().forEach(it -> {
-			if (it instanceof Field) {
-				keysTouched.add(((Field) it).getName());
-			} else {
-				keysTouched.add(it.toString());
-			}
+			keysTouched.add(it.getName());
 		});
 		operations.add(setOperation);
 		return this;
@@ -240,7 +233,7 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 	/**
 	 * Prevents a write operation that affects <strong>multiple</strong> documents from yielding to other reads or writes
 	 * once the first document is written. <br />
-	 * Use with {@link org.springframework.data.mongodb.core.MongoOperations#updateMulti(Query, Update, Class)}.
+	 * Use with {@link org.springframework.data.mongodb.core.MongoOperations#updateMulti(Query, UpdateDefinition, Class)}.
 	 *
 	 * @return never {@literal null}.
 	 */
@@ -260,6 +253,8 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 	}
 
 	/*
+	 * Returns a update document containing the update pipeline.
+	 * The resulting document needs to be unwrapped to be used with update operations.
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#getUpdateObject()
 	 */
@@ -298,18 +293,16 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 	@Override
 	public String toString() {
 
-		String target = "[\n";
-		target += StringUtils.collectionToDelimitedString(toPipeline(Aggregation.DEFAULT_CONTEXT).stream()
-				.map(SerializationUtils::serializeToJsonSafely).collect(Collectors.toList()), ",\n");
-		target += "\n]";
-		return target;
+		StringJoiner joiner = new StringJoiner(",\n", "[\n", "\n]");
+		toPipeline(Aggregation.DEFAULT_CONTEXT).stream().map(SerializationUtils::serializeToJsonSafely)
+				.forEach(joiner::add);
+		return joiner.toString();
 	}
 
 	/**
 	 * Fluent API AggregationUpdate builder.
 	 *
 	 * @author Christoph Strobl
-	 * @since 2.3
 	 */
 	public interface SetValueAppender {
 

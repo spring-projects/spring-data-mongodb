@@ -1723,7 +1723,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-2331
 	public void updateShouldAllowAggregationExpressions() {
 
-		AggregationUpdate update = new AggregationUpdate().set("total")
+		AggregationUpdate update = AggregationUpdate.update().set("total")
 				.toValue(ArithmeticOperators.valueOf("val1").sum().and("val2"));
 
 		template.updateFirst(new BasicQuery("{}"), update, Wrapper.class);
@@ -1739,7 +1739,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-2331
 	public void updateShouldAllowMultipleAggregationExpressions() {
 
-		AggregationUpdate update = new AggregationUpdate() //
+		AggregationUpdate update = AggregationUpdate.update() //
 				.set("average").toValue(ArithmeticOperators.valueOf("tests").avg()) //
 				.set("grade").toValue(ConditionalOperators.switchCases( //
 						CaseOperator.when(Gte.valueOf("average").greaterThanEqualToValue(90)).then("A"), //
@@ -1767,7 +1767,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-2331
 	public void updateShouldMapAggregationExpressionToDomainType() {
 
-		AggregationUpdate update = new AggregationUpdate().set("name")
+		AggregationUpdate update = AggregationUpdate.update().set("name")
 				.toValue(ArithmeticOperators.valueOf("val1").sum().and("val2"));
 
 		template.updateFirst(new BasicQuery("{}"), update, Jedi.class);
@@ -1785,7 +1785,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		SetOperation setOperation = SetOperation.builder().set("status").toValue("Modified").and().set("comments")
 				.toValue(Fields.fields("misc1").and("misc2").asList());
-		AggregationUpdate update = new AggregationUpdate();
+		AggregationUpdate update = AggregationUpdate.update();
 		update.set(setOperation);
 		update.unset("misc1", "misc2");
 
@@ -1803,7 +1803,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-2331
 	public void updateShouldMapAggregationUnsetToDomainType() {
 
-		AggregationUpdate update = new AggregationUpdate();
+		AggregationUpdate update = AggregationUpdate.update();
 		update.unset("name");
 
 		template.updateFirst(new BasicQuery("{}"), update, Jedi.class);

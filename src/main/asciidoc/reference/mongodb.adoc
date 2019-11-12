@@ -999,8 +999,9 @@ assertThat(p.getAge(), is(1));
 [[mongo-template.aggregation-update]]
 === Aggregation Pipeline Updates
 
-The update methods exposed by `MongoOperations` and `ReactiveMongoOperations` also accept an <<mongo.aggregation, Aggregation Pipeline>> via `AggregationUpdate`.
-This allows to leverage https://docs.mongodb.com/manual/reference/method/db.collection.update/#update-with-aggregation-pipeline[MongoDB 4.2 aggregations] in an update operation.
+Update methods exposed by `MongoOperations` and `ReactiveMongoOperations` also accept an <<mongo.aggregation, Aggregation Pipeline>> via `AggregationUpdate`.
+Using `AggregationUpdate` allows leveraging https://docs.mongodb.com/manual/reference/method/db.collection.update/#update-with-aggregation-pipeline[MongoDB 4.2 aggregations] in an update operation.
+Using aggregations in an update allows updating one or more fields by expressing multiple stages and multiple conditions with a single operation.
 
 The update can consist of the following stages:
 
@@ -1048,7 +1049,7 @@ db.students.update(                                                         <3>
 <1> The 1st `$set` stage calculates a new field _average_ based on the average of the _tests_ field.
 <2> The 2nd `$set` stage calculates a new field _grade_ based on the _average_ field calculated by the first aggregation stage.
 <3> The pipeline is executed on the _students_ collection and uses `Student` for the aggregation field mapping.
-<4> Apply the update to all documents within the collection.
+<4> Apply the update to all matching documents in the collection.
 ====
 
 [[mongo-template.find-and-replace]]

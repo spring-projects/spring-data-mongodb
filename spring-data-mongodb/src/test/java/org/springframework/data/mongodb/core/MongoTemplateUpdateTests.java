@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import com.mongodb.client.MongoClient;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Ignore;
@@ -39,7 +40,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
 
-import com.mongodb.MongoClient;
 import com.mongodb.client.MongoCollection;
 
 /**
@@ -58,7 +58,7 @@ public class MongoTemplateUpdateTests {
 	public void setUp() {
 
 		client = MongoTestUtils.replSetClient();
-		template = new MongoTemplate(new SimpleMongoDbFactory(client, DB_NAME));
+		template = new MongoTemplate(new SimpleMongoClientDbFactory(client, DB_NAME));
 
 		MongoTestUtils.createOrReplaceCollection(DB_NAME, template.getCollectionName(Score.class), client);
 		MongoTestUtils.createOrReplaceCollection(DB_NAME, template.getCollectionName(Versioned.class), client);
@@ -73,7 +73,7 @@ public class MongoTemplateUpdateTests {
 
 		template.insertAll(Arrays.asList(score1, score2));
 
-		AggregationUpdate update = new AggregationUpdate().set(SetOperation.builder() //
+		AggregationUpdate update = AggregationUpdate.update().set(SetOperation.builder() //
 				.set("totalHomework").toValueOf(ArithmeticOperators.valueOf("homework").sum()).and() //
 				.set("totalQuiz").toValueOf(ArithmeticOperators.valueOf("quiz").sum())) //
 				.set(SetOperation.builder() //
@@ -98,7 +98,7 @@ public class MongoTemplateUpdateTests {
 
 		template.insertAll(Arrays.asList(one));
 
-		AggregationUpdate update = new AggregationUpdate().set("author").toValue(new Author("Ada", "Lovelace"));
+		AggregationUpdate update = AggregationUpdate.update().set("author").toValue(new Author("Ada", "Lovelace"));
 
 		template.update(Book.class).matching(Query.query(Criteria.where("id").is(one.id))).apply(update).all();
 
@@ -111,7 +111,7 @@ public class MongoTemplateUpdateTests {
 
 		Versioned source = template.insert(Versioned.class).one(new Versioned("id-1", "value-0"));
 
-		AggregationUpdate update = new AggregationUpdate().set("value").toValue("changed");
+		AggregationUpdate update = AggregationUpdate.update().set("value").toValue("changed");
 		template.update(Versioned.class).matching(Query.query(Criteria.where("id").is(source.id))).apply(update).first();
 
 		assertThat(
@@ -125,7 +125,7 @@ public class MongoTemplateUpdateTests {
 
 		Versioned source = template.insert(Versioned.class).one(new Versioned("id-1", "value-0"));
 
-		AggregationUpdate update = new AggregationUpdate()
+		AggregationUpdate update = AggregationUpdate.update()
 				.set(SetOperation.builder().set("value").toValue("changed").and().set("version").toValue(10L));
 		template.update(Versioned.class).matching(Query.query(Criteria.where("id").is(source.id))).apply(update).first();
 
@@ -158,7 +158,7 @@ public class MongoTemplateUpdateTests {
 
 		template.insertAll(Arrays.asList(antelopeAntics, beesBabble));
 
-		AggregationUpdate update = new AggregationUpdate().unset("isbn", "stock");
+		AggregationUpdate update = AggregationUpdate.update().unset("isbn", "stock");
 		template.update(Book.class).apply(update).all();
 
 		assertThat(all(Book.class)).containsExactlyInAnyOrder( //
@@ -181,7 +181,8 @@ public class MongoTemplateUpdateTests {
 
 		template.insertAll(Arrays.asList(one, two));
 
-		AggregationUpdate update = new AggregationUpdate().replaceWith(ReplaceWithOperation.replaceWithValueOf("author"));
+		AggregationUpdate update = AggregationUpdate.update()
+				.replaceWith(ReplaceWithOperation.replaceWithValueOf("author"));
 
 		template.update(Book.class).apply(update).all();
 
@@ -203,7 +204,7 @@ public class MongoTemplateUpdateTests {
 
 		template.insertAll(Arrays.asList(one, two));
 
-		AggregationUpdate update = new AggregationUpdate().replaceWith(new Author("Ada", "Lovelace"));
+		AggregationUpdate update = AggregationUpdate.update().replaceWith(new Author("Ada", "Lovelace"));
 
 		template.update(Book.class).matching(Query.query(Criteria.where("id").is(one.id))).apply(update).all();
 

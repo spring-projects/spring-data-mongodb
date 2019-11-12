@@ -79,7 +79,7 @@ public class ReactiveMongoTemplateUpdateTests {
 
 		template.insertAll(Arrays.asList(score1, score2)).then().as(StepVerifier::create).verifyComplete();
 
-		AggregationUpdate update = new AggregationUpdate().set(SetOperation.builder() //
+		AggregationUpdate update = AggregationUpdate.update().set(SetOperation.builder() //
 				.set("totalHomework").toValueOf(ArithmeticOperators.valueOf("homework").sum()).and() //
 				.set("totalQuiz").toValueOf(ArithmeticOperators.valueOf("quiz").sum())) //
 				.set(SetOperation.builder() //
@@ -105,7 +105,7 @@ public class ReactiveMongoTemplateUpdateTests {
 		Versioned source = new Versioned("id-1", "value-0");
 		template.insert(Versioned.class).one(source).then().as(StepVerifier::create).verifyComplete();
 
-		AggregationUpdate update = new AggregationUpdate().set("value").toValue("changed");
+		AggregationUpdate update = AggregationUpdate.update().set("value").toValue("changed");
 		template.update(Versioned.class).matching(Query.query(Criteria.where("id").is(source.id))).apply(update).first()
 				.then().as(StepVerifier::create).verifyComplete();
 
@@ -123,7 +123,7 @@ public class ReactiveMongoTemplateUpdateTests {
 		Versioned source = new Versioned("id-1", "value-0");
 		template.insert(Versioned.class).one(source).then().as(StepVerifier::create).verifyComplete();
 
-		AggregationUpdate update = new AggregationUpdate()
+		AggregationUpdate update = AggregationUpdate.update()
 				.set(SetOperation.builder().set("value").toValue("changed").and().set("version").toValue(10L));
 
 		template.update(Versioned.class).matching(Query.query(Criteria.where("id").is(source.id))).apply(update).first()
@@ -160,7 +160,7 @@ public class ReactiveMongoTemplateUpdateTests {
 
 		template.insertAll(Arrays.asList(antelopeAntics, beesBabble)).then().as(StepVerifier::create).verifyComplete();
 
-		AggregationUpdate update = new AggregationUpdate().unset("isbn", "stock");
+		AggregationUpdate update = AggregationUpdate.update().unset("isbn", "stock");
 		template.update(Book.class).apply(update).all().then().as(StepVerifier::create).verifyComplete();
 
 		all(Book.class).collectList().as(StepVerifier::create).consumeNextWith(it -> {
@@ -187,7 +187,8 @@ public class ReactiveMongoTemplateUpdateTests {
 		template.insertAll(Arrays.asList(one, two)).then().as(StepVerifier::create).verifyComplete();
 		;
 
-		AggregationUpdate update = new AggregationUpdate().replaceWith(ReplaceWithOperation.replaceWithValueOf("author"));
+		AggregationUpdate update = AggregationUpdate.update()
+				.replaceWith(ReplaceWithOperation.replaceWithValueOf("author"));
 
 		template.update(Book.class).apply(update).all().then().as(StepVerifier::create).verifyComplete();
 

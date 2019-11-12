@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import java.util.Optional;
 
+import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
@@ -157,21 +158,11 @@ public interface ExecutableUpdateOperation {
 		 * @param update must not be {@literal null}.
 		 * @return new instance of {@link TerminatingUpdate}.
 		 * @throws IllegalArgumentException if update is {@literal null}.
+		 * @since 2.3
+		 * @see Update
+		 * @see AggregationUpdate
 		 */
 		TerminatingUpdate<T> apply(UpdateDefinition update);
-
-		/**
-		 * Set the {@link Update} to be applied.
-		 *
-		 * @param update must not be {@literal null}.
-		 * @return new instance of {@link TerminatingUpdate}.
-		 * @throws IllegalArgumentException if update is {@literal null}.
-		 * @deprecated since 2.3 in favor of {@link #apply(UpdateDefinition)}.
-		 */
-		@Deprecated
-		default TerminatingUpdate<T> apply(Update update) {
-			return apply((UpdateDefinition) update);
-		}
 
 		/**
 		 * Specify {@code replacement} object.
