@@ -19,8 +19,10 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.Duration;
+import java.util.List;
 
 import org.bson.Document;
+import org.springframework.data.util.Version;
 
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
@@ -41,6 +43,8 @@ public class MongoTestUtils {
 	public static final String CONNECTION_STRING = "mongodb://localhost:27017/?replicaSet=rs0"; // &readPreference=primary&w=majority
 
 	private static final String CONNECTION_STRING_PATTERN = "mongodb://%s:%s/";
+
+	private static final Version ANY = new Version(9999, 9999, 9999);
 
 	/**
 	 * Create a new {@link com.mongodb.client.MongoClient} with defaults.
@@ -193,4 +197,35 @@ public class MongoTestUtils {
 		return MongoClients.create(CONNECTION_STRING);
 	}
 
+	/**
+	 * @return the server version extracted from buildInfo.
+	 * @since 2.3.0
+	 */
+	public static Version serverVersion() {
+
+		try (MongoClient client = client()) {
+
+			MongoDatabase database = client.getDatabase("test");
+			Document result = database.runCommand(new Document("buildInfo", 1));
+
+			return Version.parse(result.get("version", String.class));
+		} catch (Exception e) {
+			return ANY;
+		}
+	}
+
+	/**
+	 * @return check if the server is running as part of a replica set.
+	 * @since 2.3.0
+	 */
+	public static boolean serverIsReplSet() {
+
+		try (MongoClient client = MongoTestUtils.client()) {
+
+			return client.getDatabase("admin").runCommand(new Document("getCmdLineOpts", "1")).get("argv", List.class)
+					.contains("--replSet");
+		} catch (Exception e) {
+			return false;
+		}
+	}
 }

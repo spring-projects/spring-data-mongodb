@@ -25,10 +25,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
@@ -39,8 +39,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
+import org.springframework.data.mongodb.test.util.MongoServerCondition;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
 
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoCollection;
@@ -48,19 +49,19 @@ import com.mongodb.reactivestreams.client.MongoCollection;
 /**
  * @author Christoph Strobl
  */
+@ExtendWith(MongoServerCondition.class)
+@EnableIfMongoServerVersion(isGreaterThanEqual = "4.2")
 public class ReactiveMongoTemplateUpdateTests {
-
-	public static @ClassRule MongoVersionRule REQUIRES_AT_LEAST_4_2 = MongoVersionRule.REQUIRES_4_2;
 
 	static final String DB_NAME = "reactive-update-test";
 
 	MongoClient client;
 	ReactiveMongoTemplate template;
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	void beforeEach() {
 
-		client = MongoTestUtils.reactiveReplSetClient();
+		client = MongoTestUtils.reactiveClient();
 		template = new ReactiveMongoTemplate(new SimpleReactiveMongoDatabaseFactory(client, DB_NAME));
 
 		MongoTestUtils.createOrReplaceCollection(DB_NAME, template.getCollectionName(Score.class), client).then()
@@ -239,7 +240,7 @@ public class ReactiveMongoTemplateUpdateTests {
 	}
 
 	@Test // DATAMONGO-2331
-	@Ignore("https://jira.mongodb.org/browse/JAVA-3432")
+	@Disabled("https://jira.mongodb.org/browse/JAVA-3432")
 	public void findAndModifyAppliesAggregationUpdateCorrectly() {
 
 		Book one = new Book();

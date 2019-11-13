@@ -38,7 +38,9 @@ import com.mongodb.client.MongoDatabase;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @since 1.6
+ * @deprecated Use {@link MongoServerCondition} instead.
  */
+@Deprecated
 public class MongoVersionRule implements TestRule {
 
 	private static final Version ANY = new Version(9999, 9999, 9999);

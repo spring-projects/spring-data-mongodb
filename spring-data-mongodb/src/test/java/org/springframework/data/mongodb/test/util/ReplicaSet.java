@@ -31,7 +31,9 @@ import com.mongodb.client.MongoClient;
  * {@link TestRule} evaluating if MongoDB Server is running with {@code --replSet} flag.
  *
  * @author Christoph Strobl
+ * @deprecated Use {@link MongoServerCondition} with {@link EnableIfReplicaSetAvailable} instead.
  */
+@Deprecated
 public class ReplicaSet implements TestRule {
 
 	boolean required = false;

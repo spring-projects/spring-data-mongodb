@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,36 +21,29 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.springframework.core.annotation.AliasFor;
+import org.junit.jupiter.api.Tag;
 
 /**
- * {@link MongoVersion} allows specifying an version range of mongodb that is applicable for a specific test method. To
- * be used along with {@link MongoVersionRule} or {@link MongoServerCondition}.
- *
  * @author Christoph Strobl
- * @since 2.1
- * @deprecated Use {@link EnableIfMongoServerVersion} instead.
+ * @since 2.3
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE, ElementType.METHOD })
 @Documented
-@EnableIfMongoServerVersion
-@Deprecated
-public @interface MongoVersion {
+@Tag("version-specific")
+public @interface EnableIfMongoServerVersion {
 
 	/**
 	 * Inclusive lower bound of MongoDB server range.
 	 *
 	 * @return {@code 0.0.0} by default.
 	 */
-	@AliasFor(annotation = EnableIfMongoServerVersion.class, attribute = "isGreaterThanEqual")
-	String asOf() default "0.0.0";
+	String isGreaterThanEqual() default "0.0.0";
 
 	/**
 	 * Exclusive upper bound of MongoDB server range.
 	 *
 	 * @return {@code 9999.9999.9999} by default.
 	 */
-	@AliasFor(annotation = EnableIfMongoServerVersion.class, attribute = "isLessThan")
-	String until() default "9999.9999.9999";
+	String isLessThan() default "9999.9999.9999";
 }
