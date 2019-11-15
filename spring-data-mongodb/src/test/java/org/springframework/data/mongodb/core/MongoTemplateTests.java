@@ -32,6 +32,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -3669,7 +3670,8 @@ public class MongoTemplateTests {
 
 		ImmutableAudited read = template.findOne(query(where("id").is(result.getId())), ImmutableAudited.class);
 
-		assertThat(read.modified).isEqualTo(result.modified).describedAs("Expected auditing information to be read!");
+		assertThat(read.modified).isEqualTo(result.modified.truncatedTo(ChronoUnit.MILLIS))
+				.describedAs("Expected auditing information to be read!");
 	}
 
 	@Test // DATAMONGO-1798

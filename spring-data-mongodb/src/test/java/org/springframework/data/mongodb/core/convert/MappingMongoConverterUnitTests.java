@@ -28,6 +28,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URL;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import org.bson.types.Code;
@@ -1663,7 +1664,8 @@ public class MappingMongoConverterUnitTests {
 		converter.write(source, result);
 
 		assertThat(result.get("date")).isInstanceOf(Date.class);
-		assertThat(converter.read(TypeWithLocalDateTime.class, result).date).isEqualTo(reference);
+		assertThat(converter.read(TypeWithLocalDateTime.class, result).date)
+				.isEqualTo(reference.truncatedTo(ChronoUnit.MILLIS));
 	}
 
 	@Test // DATAMONGO-1128

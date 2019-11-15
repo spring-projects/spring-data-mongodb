@@ -22,6 +22,7 @@ import reactor.util.function.Tuples;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -96,7 +97,8 @@ public class ReactiveMongoTemplateAuditingTests {
 
 					assertThat(tuple3.getT2().modificationDate).isAfter(tuple3.getT1().modificationDate);
 					assertThat(tuple3.getT3().modificationDate).isAfter(tuple3.getT1().modificationDate);
-					assertThat(tuple3.getT3().modificationDate).isEqualTo(tuple3.getT2().modificationDate);
+					assertThat(tuple3.getT3().modificationDate)
+							.isEqualTo(tuple3.getT2().modificationDate.truncatedTo(ChronoUnit.MILLIS));
 				}) //
 				.verifyComplete();
 	}
@@ -117,7 +119,8 @@ public class ReactiveMongoTemplateAuditingTests {
 
 					assertThat(tuple3.getT2().getModificationDate()).isAfter(tuple3.getT1().getModificationDate());
 					assertThat(tuple3.getT3().getModificationDate()).isAfter(tuple3.getT1().getModificationDate());
-					assertThat(tuple3.getT3().getModificationDate()).isEqualTo(tuple3.getT2().getModificationDate());
+					assertThat(tuple3.getT3().getModificationDate())
+							.isEqualTo(tuple3.getT2().getModificationDate().truncatedTo(ChronoUnit.MILLIS));
 				}) //
 				.verifyComplete();
 	}

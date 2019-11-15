@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.auditing;
 import static org.assertj.core.api.Assertions.*;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Test;
@@ -80,7 +81,7 @@ public class MongoTemplateAuditingTests {
 
 		assertThat(updated.modificationDate).isAfter(inserted.modificationDate);
 		assertThat(fetched.modificationDate).isAfter(inserted.modificationDate);
-		assertThat(fetched.modificationDate).isEqualTo(updated.modificationDate);
+		assertThat(fetched.modificationDate).isEqualTo(updated.modificationDate.truncatedTo(ChronoUnit.MILLIS));
 	}
 
 	@Test // DATAMONGO-2346
@@ -101,7 +102,7 @@ public class MongoTemplateAuditingTests {
 
 		assertThat(updated.getModificationDate()).isAfter(inserted.getModificationDate());
 		assertThat(fetched.getModificationDate()).isAfter(inserted.getModificationDate());
-		assertThat(fetched.getModificationDate()).isEqualTo(updated.getModificationDate());
+		assertThat(fetched.getModificationDate()).isEqualTo(updated.getModificationDate().truncatedTo(ChronoUnit.MILLIS));
 	}
 
 	static class ImmutableAuditableEntityWithVersion {

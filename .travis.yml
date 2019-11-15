@@ -1,8 +1,5 @@
 language: java
 
-jdk:
-  - oraclejdk8
-
 before_install:
   - mkdir -p downloads
   - mkdir -p var/db var/log
@@ -14,6 +11,14 @@ before_install:
     downloads/mongodb-linux-x86_64-ubuntu1604-${MONGO_VERSION}/bin/mongo --eval "rs.initiate({_id: 'rs0', members:[{_id: 0, host: '127.0.0.1:27017'}]});"
     sleep 15
 
+jdk:
+  - openjdk13
+  - openjdk-ea
+
+matrix:
+  allow_failures:
+    - jdk: openjdk-ea
+
 env:
   matrix:
     - MONGO_VERSION=4.1.10
@@ -23,11 +28,6 @@ env:
   global:
     - PROFILE=ci
 
-addons:
-  apt:
-    packages:
-      - oracle-java8-installer
-
 sudo: false
 
 cache:
@@ -35,4 +35,7 @@ cache:
     - $HOME/.m2
     - downloads
 
-script: "mvn clean dependency:list test -P${PROFILE} -Dsort"
+install: true
+
+script:
+  - "./mvnw clean dependency:list test -Pjava11 -Dsort -U"
