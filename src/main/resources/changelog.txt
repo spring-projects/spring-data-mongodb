@@ -1,6 +1,14 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.2.2.RELEASE (2019-11-18)
+---------------------------------------------
+* DATAMONGO-2414 - ReactiveGridFsResource.getDownloadStream(…) hang if completion happens on event loop.
+* DATAMONGO-2409 - Extension Function ReactiveFindOperation.DistinctWithProjection.asType() has wrong return type.
+* DATAMONGO-2403 - ReactiveStringBasedAggregation / AggregationUtils fails on NPE because source or value is null.
+* DATAMONGO-2402 - Release 2.2.2 (Moore SR2).
+
+
 Changes in version 2.1.13.RELEASE (2019-11-18)
 ----------------------------------------------
 * DATAMONGO-2409 - Extension Function ReactiveFindOperation.DistinctWithProjection.asType() has wrong return type.
