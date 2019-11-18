@@ -1,6 +1,12 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.1.13.RELEASE (2019-11-18)
+----------------------------------------------
+* DATAMONGO-2409 - Extension Function ReactiveFindOperation.DistinctWithProjection.asType() has wrong return type.
+* DATAMONGO-2401 - Release 2.1.13 (Lovelace SR13).
+
+
 Changes in version 2.2.1.RELEASE (2019-11-04)
 ---------------------------------------------
 * DATAMONGO-2399 - Upgrade to mongo-java-driver 3.11.1.
