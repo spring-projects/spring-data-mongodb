@@ -26,6 +26,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -95,6 +96,15 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 
 	public ParameterBindingJsonReader(String json, ValueProvider accessor, SpelExpressionParser spelExpressionParser,
 			EvaluationContext evaluationContext) {
+
+		this(json, accessor, spelExpressionParser, () -> evaluationContext);
+	}
+
+	/**
+	 * 	@since 2.2.3
+	 */
+	public ParameterBindingJsonReader(String json, ValueProvider accessor, SpelExpressionParser spelExpressionParser,
+			Supplier<EvaluationContext> evaluationContext) {
 
 		this.scanner = new JsonScanner(json);
 		setContext(new Context(null, BsonContextType.TOP_LEVEL));

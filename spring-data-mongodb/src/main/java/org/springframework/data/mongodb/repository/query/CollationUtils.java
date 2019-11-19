@@ -73,7 +73,7 @@ class CollationUtils {
 		if (StringUtils.trimLeadingWhitespace(collationExpression).startsWith("{")) {
 
 			ParameterBindingContext bindingContext = new ParameterBindingContext((accessor::getBindableValue),
-					expressionParser, evaluationContextProvider.getEvaluationContext(parameters, accessor.getValues()));
+					expressionParser, () -> evaluationContextProvider.getEvaluationContext(parameters, accessor.getValues()));
 
 			return Collation.from(CODEC.decode(collationExpression, bindingContext));
 		}
