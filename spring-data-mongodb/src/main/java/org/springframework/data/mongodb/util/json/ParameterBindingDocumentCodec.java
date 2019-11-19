@@ -162,7 +162,7 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 	public Document decode(@Nullable String json, Object[] values) {
 
 		return decode(json, new ParameterBindingContext((index) -> values[index], new SpelExpressionParser(),
-				EvaluationContextProvider.DEFAULT.getEvaluationContext(values)));
+				() -> EvaluationContextProvider.DEFAULT.getEvaluationContext(values)));
 	}
 
 	public Document decode(@Nullable String json, ParameterBindingContext bindingContext) {

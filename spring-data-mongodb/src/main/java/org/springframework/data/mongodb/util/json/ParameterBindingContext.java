@@ -15,28 +15,54 @@
  */
 package org.springframework.data.mongodb.util.json;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import java.util.function.Supplier;
 
+import org.springframework.data.util.Lazy;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 
 /**
- * Reusable context for binding parameters to an placeholder or a SpEL expression within a JSON structure. <br />
+ * Reusable context for binding parameters to a placeholder or a SpEL expression within a JSON structure. <br />
  * To be used along with {@link ParameterBindingDocumentCodec#decode(String, ParameterBindingContext)}.
  *
  * @author Christoph Strobl
  * @since 2.2
  */
-@RequiredArgsConstructor
-@Getter
 public class ParameterBindingContext {
 
 	private final ValueProvider valueProvider;
 	private final SpelExpressionParser expressionParser;
-	private final EvaluationContext evaluationContext;
+	private final Lazy<EvaluationContext> evaluationContext;
+
+	/**
+	 * @param valueProvider
+	 * @param expressionParser
+	 * @param evaluationContext
+	 * @deprecated since 2.2.3 - Please use
+	 *             {@link #ParameterBindingContext(ValueProvider, SpelExpressionParser, Supplier)} instead.
+	 */
+	@Deprecated
+	public ParameterBindingContext(ValueProvider valueProvider, SpelExpressionParser expressionParser,
+			EvaluationContext evaluationContext) {
+
+		this(valueProvider, expressionParser, () -> evaluationContext);
+	}
+
+	/**
+	 * @param valueProvider
+	 * @param expressionParser
+	 * @param evaluationContext a {@link Supplier} for {@link Lazy} context retrieval.
+	 * @since 2.2.3
+	 */
+	public ParameterBindingContext(ValueProvider valueProvider, SpelExpressionParser expressionParser,
+			Supplier<EvaluationContext> evaluationContext) {
+
+		this.valueProvider = valueProvider;
+		this.expressionParser = expressionParser;
+		this.evaluationContext = evaluationContext instanceof Lazy ? (Lazy) evaluationContext : Lazy.of(evaluationContext);
+	}
 
 	@Nullable
 	public Object bindableValueForIndex(int index) {
@@ -47,6 +73,18 @@ public class ParameterBindingContext {
 	public Object evaluateExpression(String expressionString) {
 
 		Expression expression = expressionParser.parseExpression(expressionString);
-		return expression.getValue(this.evaluationContext, Object.class);
+		return expression.getValue(getEvaluationContext(), Object.class);
+	}
+
+	public EvaluationContext getEvaluationContext() {
+			return this.evaluationContext.get();
+	}
+
+	public SpelExpressionParser getExpressionParser() {
+		return expressionParser;
+	}
+
+	public ValueProvider getValueProvider() {
+		return valueProvider;
 	}
 }

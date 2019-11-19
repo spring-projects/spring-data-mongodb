@@ -117,7 +117,7 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	protected Query createQuery(ConvertingParameterAccessor accessor) {
 
 		ParameterBindingContext bindingContext = new ParameterBindingContext((accessor::getBindableValue), expressionParser,
-				evaluationContextProvider.getEvaluationContext(getQueryMethod().getParameters(), accessor.getValues()));
+				() -> evaluationContextProvider.getEvaluationContext(getQueryMethod().getParameters(), accessor.getValues()));
 
 		Document queryObject = CODEC.decode(this.query, bindingContext);
 		Document fieldsObject = CODEC.decode(this.fieldSpec, bindingContext);
