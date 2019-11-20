@@ -516,7 +516,7 @@ public class ArithmeticOperators {
 		 * place.
 		 *
 		 * @return new instance of {@link Round}.
-		 * @since 3.0
+		 * @since 2.3
 		 */
 		public Round round() {
 			return usesFieldRef() ? Round.roundValueOf(fieldReference) : Round.roundValueOf(expression);
@@ -526,7 +526,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link AggregationExpression} that rounds a number to a specified decimal place.
 		 *
 		 * @return new instance of {@link Round}.
-		 * @since 3.0
+		 * @since 2.3
 		 */
 		public Round roundToPlace(int place) {
 			return round().place(place);
@@ -1445,7 +1445,7 @@ public class ArithmeticOperators {
 	}
 
 	/**
-	 * {@link Round} rounds a number to a whole integer or to a specified decimal place. <br />
+	 * {@link Round} rounds a number to a whole integer or to a specified decimal place.
 	 * <ul>
 	 * <li>If {@link Round#place(int)} resolves to a positive integer, {@code $round} rounds to the given decimal
 	 * places.</li>
@@ -1455,7 +1455,7 @@ public class ArithmeticOperators {
 	 * decimal.</li>
 	 * </ul>
 	 *
-	 * @since 3.0
+	 * @since 2.3
 	 */
 	public static class Round extends AbstractAggregationExpression {
 

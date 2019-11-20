@@ -25,9 +25,10 @@ import org.bson.Document;
 import org.junit.jupiter.api.Test;
 
 /**
+ * Unit tests for {@link Round}.
+ *
  * @author Christoph Strobl
  */
-
 public class ArithmeticOperatorsUnitTests {
 
 	@Test // DATAMONGO-2370
@@ -41,7 +42,7 @@ public class ArithmeticOperatorsUnitTests {
 	void roundShouldWithPlace() {
 
 		assertThat(valueOf("field").roundToPlace(3).toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo(new Document("$round", Arrays.asList("$field", Integer.valueOf(3))));
+				.isEqualTo(new Document("$round", Arrays.asList("$field", 3)));
 	}
 
 	@Test // DATAMONGO-2370
