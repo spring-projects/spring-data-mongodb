@@ -42,6 +42,10 @@ class ReactiveFindOperationExtensionsTests {
 
 	val distinctWithProjection = mockk<ReactiveFindOperation.DistinctWithProjection>(relaxed = true)
 
+	val findDistinct = mockk<ReactiveFindOperation.FindDistinct>(relaxed = true)
+
+	val reactiveFind = mockk<ReactiveFindOperation.ReactiveFind<KotlinUser>>(relaxed = true)
+
 	@Test // DATAMONGO-1719
 	@Suppress("DEPRECATION")
 	fun `ReactiveFind#query(KClass) extension should call its Java counterpart`() {
@@ -85,6 +89,25 @@ class ReactiveFindOperationExtensionsTests {
 
 		distinctWithProjection.asType<User>()
 		verify { distinctWithProjection.`as`(User::class.java) }
+	}
+
+	@Test // DATAMONGO-2417
+	fun `ReactiveFind#distrinct() using KProperty1 should call its Java counterpart`() {
+
+		every { operation.query(KotlinUser::class.java) } returns reactiveFind
+
+		operation.distinct(KotlinUser::username)
+		verify {
+			operation.query(KotlinUser::class.java)
+			reactiveFind.distinct("username")
+		}
+	}
+
+	@Test // DATAMONGO-2417
+	fun `ReactiveFind#FindDistinct#field() using KProperty should call its Java counterpart`() {
+
+		findDistinct.distinct(KotlinUser::username)
+		verify { findDistinct.distinct("username") }
 	}
 
 	@Test // DATAMONGO-2209
@@ -299,4 +322,6 @@ class ReactiveFindOperationExtensionsTests {
 			spec.all()
 		}
 	}
+
+	data class KotlinUser(val username: String)
 }

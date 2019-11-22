@@ -20,7 +20,10 @@ import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
 import org.springframework.data.geo.GeoResult
+import org.springframework.data.mongodb.core.query.asString
 import kotlin.reflect.KClass
+import kotlin.reflect.KProperty
+import kotlin.reflect.KProperty1
 
 /**
  * Extension for [ReactiveFindOperation.query] providing a [KClass] based variant.
@@ -40,6 +43,15 @@ fun <T : Any> ReactiveFindOperation.query(entityClass: KClass<T>): ReactiveFindO
  */
 inline fun <reified T : Any> ReactiveFindOperation.query(): ReactiveFindOperation.ReactiveFind<T> =
 		query(T::class.java)
+
+/**
+ * Extension for [ReactiveFindOperation.query] for a type-safe projection of distinct values.
+ *
+ * @author Mark Paluch
+ * @since 2.3
+ */
+inline fun <reified T : Any> ReactiveFindOperation.distinct(field : KProperty1<T, *>): ReactiveFindOperation.TerminatingDistinct<Any> =
+		query(T::class.java).distinct(field.name)
 
 /**
  * Extension for [ReactiveFindOperation.FindWithProjection.as] providing a [KClass] based variant.
@@ -78,6 +90,15 @@ fun <T : Any> ReactiveFindOperation.DistinctWithProjection.asType(resultType: KC
  */
 inline fun <reified T : Any> ReactiveFindOperation.DistinctWithProjection.asType(): ReactiveFindOperation.TerminatingDistinct<T> =
 		`as`(T::class.java)
+
+/**
+ * Extension for [ReactiveFindOperation.FindDistinct.distinct] leveraging KProperty.
+ *
+ * @author Mark Paluch
+ * @since 2.3
+ */
+fun ReactiveFindOperation.FindDistinct.distinct(key: KProperty<*>): ReactiveFindOperation.TerminatingDistinct<Any> =
+		distinct(asString(key))
 
 /**
  * Non-nullable Coroutines variant of [ReactiveFindOperation.TerminatingFind.one].

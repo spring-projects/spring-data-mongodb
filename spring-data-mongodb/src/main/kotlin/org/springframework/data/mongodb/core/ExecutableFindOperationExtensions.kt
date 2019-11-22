@@ -15,7 +15,10 @@
  */
 package org.springframework.data.mongodb.core
 
+import org.springframework.data.mongodb.core.query.asString
 import kotlin.reflect.KClass
+import kotlin.reflect.KProperty
+import kotlin.reflect.KProperty1
 
 /**
  * Extension for [ExecutableFindOperation.query] providing a [KClass] based variant.
@@ -37,6 +40,15 @@ fun <T : Any> ExecutableFindOperation.query(entityClass: KClass<T>): ExecutableF
  */
 inline fun <reified T : Any> ExecutableFindOperation.query(): ExecutableFindOperation.ExecutableFind<T> =
 		query(T::class.java)
+
+/**
+ * Extension for [ExecutableFindOperation.query] for a type-safe projection of distinct values.
+ *
+ * @author Mark Paluch
+ * @since 2.3
+ */
+inline fun <reified T : Any> ExecutableFindOperation.distinct(field : KProperty1<T, *>): ExecutableFindOperation.TerminatingDistinct<Any> =
+		query(T::class.java).distinct(field.name)
 
 /**
  * Extension for [ExecutableFindOperation.FindWithProjection.as] providing a [KClass] based variant.
@@ -78,3 +90,12 @@ fun <T : Any> ExecutableFindOperation.DistinctWithProjection.asType(resultType: 
  */
 inline fun <reified T : Any> ExecutableFindOperation.DistinctWithProjection.asType(): ExecutableFindOperation.TerminatingDistinct<T> =
 		`as`(T::class.java)
+
+/**
+ * Extension for [ExecutableFindOperation.FindDistinct.distinct] leveraging KProperty.
+ *
+ * @author Mark Paluch
+ * @since 2.3
+ */
+fun ExecutableFindOperation.FindDistinct.distinct(key: KProperty<*>): ExecutableFindOperation.TerminatingDistinct<Any> =
+		distinct(asString(key))

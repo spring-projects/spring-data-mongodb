@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core
 
 import example.first.First
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Test
@@ -31,6 +32,10 @@ class ExecutableFindOperationExtensionsTests {
 	val operationWithProjection = mockk<ExecutableFindOperation.FindWithProjection<First>>(relaxed = true)
 
 	val distinctWithProjection = mockk<ExecutableFindOperation.DistinctWithProjection>(relaxed = true)
+
+	val findDistinct = mockk<ExecutableFindOperation.FindDistinct>(relaxed = true)
+
+	val executableFind = mockk<ExecutableFindOperation.ExecutableFind<KotlinUser>>(relaxed = true)
 
 	@Test // DATAMONGO-1689
 	@Suppress("DEPRECATION")
@@ -76,4 +81,25 @@ class ExecutableFindOperationExtensionsTests {
 		distinctWithProjection.asType<User>()
 		verify { distinctWithProjection.`as`(User::class.java) }
 	}
+
+	@Test // DATAMONGO-2417
+	fun `ExecutableFindOperation#distrinct() using KProperty1 should call its Java counterpart`() {
+
+		every { operation.query(KotlinUser::class.java) } returns executableFind
+
+		operation.distinct(KotlinUser::username)
+		verify {
+			operation.query(KotlinUser::class.java)
+			executableFind.distinct("username")
+		}
+	}
+
+	@Test // DATAMONGO-2417
+	fun `ExecutableFindOperation#FindDistinct#field() using KProperty should call its Java counterpart`() {
+
+		findDistinct.distinct(KotlinUser::username)
+		verify { findDistinct.distinct("username") }
+	}
+
+	data class KotlinUser(val username: String)
 }
