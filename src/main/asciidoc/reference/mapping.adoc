@@ -177,14 +177,24 @@ calling `get()` before the actual conversion
 | converter
 | `{"currencyCode" : "EUR"}`
 
+| `Instant` +
+(Java 8)
+| native
+| `{"date" : ISODate("2019-11-12T23:00:00.809Z")}`
+
+| `Instant` +
+(Joda, JSR310-BackPort)
+| converter
+| `{"date" : ISODate("2019-11-12T23:00:00.809Z")}`
+
 | `LocalDate` +
 (Joda, Java 8, JSR310-BackPort)
-| converter
+| converter / native (Java8)footnote:[Uses UTC zone offset. Configure via <<mapping-configuration,MongoConverterConfigurationAdapter>>]
 | `{"date" : ISODate("2019-11-12T00:00:00.000Z")}`
 
-| `LocalDateTime`, `LocalTime`, `Instant` +
+| `LocalDateTime`, `LocalTime` +
 (Joda, Java 8, JSR310-BackPort)
-| converter
+| converter / native (Java8)footnote:[Uses UTC zone offset. Configure via <<mapping-configuration,MongoConverterConfigurationAdapter>>]
 | `{"date" : ISODate("2019-11-12T23:00:00.809Z")}`
 
 | `DateTime` (Joda)
@@ -258,6 +268,8 @@ You can configure the `MappingMongoConverter` as well as `com.mongodb.client.Mon
 ====
 [source,java]
 ----
+import com.mongodb.client.MongoClients;
+
 @Configuration
 public class GeoSpatialAppConfig extends AbstractMongoClientConfiguration {
 
@@ -271,6 +283,8 @@ public class GeoSpatialAppConfig extends AbstractMongoClientConfiguration {
     return "database";
   }
 
+  // the following are optional
+
   @Override
   public String getMappingBasePackage() {
     return "com.bigbank.domain";
@@ -278,13 +292,11 @@ public class GeoSpatialAppConfig extends AbstractMongoClientConfiguration {
 
   // the following are optional
 
-  @Bean
   @Override
-  public CustomConversions customConversions() throws Exception {
-    List<Converter<?, ?>> converterList = new ArrayList<Converter<?, ?>>();
-    converterList.add(new org.springframework.data.mongodb.test.PersonReadConverter());
-    converterList.add(new org.springframework.data.mongodb.test.PersonWriteConverter());
-    return new CustomConversions(converterList);
+  void customConversionsConfiguration(MongoConverterConfigurationAdapter adapter) {
+
+  	adapter.registerConverter(new org.springframework.data.mongodb.test.PersonReadConverter());
+  	adapter.registerConverter(new org.springframework.data.mongodb.test.PersonWriteConverter());
   }
 
   @Bean
@@ -297,7 +309,8 @@ public class GeoSpatialAppConfig extends AbstractMongoClientConfiguration {
 
 `AbstractMongoClientConfiguration` requires you to implement methods that define a `com.mongodb.client.MongoClient` as well as provide a database name. `AbstractMongoClientConfiguration` also has a method named  `getMappingBasePackage(…)` that you can override to tell the converter where to scan for classes annotated with the `@Document` annotation.
 
-You can add additional converters to the converter by overriding the `customConversions` method. Also shown in the preceding example is a `LoggingEventListener`, which logs `MongoMappingEvent` instances that are posted onto Spring's `ApplicationContextEvent` infrastructure.
+You can add additional converters to the converter by overriding the `customConversionsConfiguration` method.
+Also shown in the preceding example is a `LoggingEventListener`, which logs `MongoMappingEvent` instances that are posted onto Spring's `ApplicationContextEvent` infrastructure.
 
 NOTE: `AbstractMongoClientConfiguration` creates a `MongoTemplate` instance and registers it with the container under the name `mongoTemplate`.
 

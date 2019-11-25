@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.mapping;
 
 import java.math.BigInteger;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -71,6 +72,7 @@ public abstract class MongoSimpleTypes {
 		simpleTypes.add(Pattern.class);
 		simpleTypes.add(Symbol.class);
 		simpleTypes.add(UUID.class);
+		simpleTypes.add(Instant.class);
 
 		simpleTypes.add(BsonBinary.class);
 		simpleTypes.add(BsonBoolean.class);

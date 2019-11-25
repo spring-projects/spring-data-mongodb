@@ -32,6 +32,7 @@ import org.springframework.data.mapping.model.CamelCaseAbbreviatingFieldNamingSt
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.util.ClassUtils;
@@ -92,14 +93,35 @@ public abstract class MongoConfigurationSupport {
 
 	/**
 	 * Register custom {@link Converter}s in a {@link CustomConversions} object if required. These
-	 * {@link CustomConversions} will be registered with the {@link #mappingMongoConverter()} and
-	 * {@link #mongoMappingContext()}. Returns an empty {@link MongoCustomConversions} instance by default.
+	 * {@link CustomConversions} will be registered with the
+	 * {@link org.springframework.data.mongodb.core.convert.MappingMongoConverter} and {@link #mongoMappingContext()}.
+	 * Returns an empty {@link MongoCustomConversions} instance by default. <br />
+	 * <strong>NOTE:</strong> Use {@link #customConversionsConfiguration(MongoConverterConfigurationAdapter)} to configure
+	 * MongoDB native simple types and register custom {@link Converter converters}.
 	 *
 	 * @return must not be {@literal null}.
 	 */
 	@Bean
 	public CustomConversions customConversions() {
-		return new MongoCustomConversions(Collections.emptyList());
+		return new MongoCustomConversions(this::customConversionsConfiguration);
+	}
+
+	/**
+	 * Configuration hook for {@link MongoCustomConversions} creation.
+	 *
+	 * @param converterConfigurationAdapter never {@literal null}.
+	 * @since 2.3
+	 */
+	protected void customConversionsConfiguration(MongoConverterConfigurationAdapter converterConfigurationAdapter) {
+
+		/*
+		 * In case you want to use the MongoDB Java Driver native Codecs for java.time types instead of the converters SpringData 
+		 * ships with, then you may want to call the following here.
+		 *     
+		 * converterConfigurationAdapter.useNativeDriverJavaTimeCodecs() 
+		 * 
+		 * But please, be careful! LocalDate, LocalTime and LocalDateTime will be stored with different values by doing so.
+		 */
 	}
 
 	/**
