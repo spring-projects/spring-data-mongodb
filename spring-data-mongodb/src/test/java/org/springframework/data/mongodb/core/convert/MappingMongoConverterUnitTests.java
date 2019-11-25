@@ -1068,6 +1068,27 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.attributes).isNotNull();
 	}
 
+	@Test // DATAMONGO-2400
+	public void writeJavaTimeValuesViaCodec() {
+
+		configureConverterWithNativeJavaTimeCodec();
+		TypeWithLocalDateTime source = new TypeWithLocalDateTime();
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(source, target);
+
+		assertThat(target).containsEntry("date", source.date);
+	}
+
+	void configureConverterWithNativeJavaTimeCodec() {
+
+		converter = new MappingMongoConverter(resolver, mappingContext);
+		converter.setCustomConversions(new MongoCustomConversions(config -> {
+			config.useNativeDriverJavaTimeCodecs();
+		}));
+		converter.afterPropertiesSet();
+	}
+
 	private static void assertSyntheticFieldValueOf(Object target, Object expected) {
 
 		for (int i = 0; i < 10; i++) {

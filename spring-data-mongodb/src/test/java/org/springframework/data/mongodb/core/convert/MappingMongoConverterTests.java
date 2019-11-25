@@ -24,6 +24,11 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.List;
 
@@ -38,7 +43,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
 import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
 
 /**
  * Integration tests for {@link MappingMongoConverter}.
@@ -47,6 +52,7 @@ import com.mongodb.client.MongoClients;
  */
 public class MappingMongoConverterTests {
 
+	public static final String DATABASE = "mapping-converter-tests";
 	MongoClient client;
 
 	MappingMongoConverter converter;
@@ -57,21 +63,22 @@ public class MappingMongoConverterTests {
 	public void setUp() {
 
 		client = MongoTestUtils.client();
-		client.getDatabase("mapping-converter-tests").drop();
+		client.getDatabase(DATABASE).drop();
 
-		MongoDbFactory factory = new SimpleMongoClientDbFactory(client, "mapping-converter-tests");
+		MongoDbFactory factory = new SimpleMongoClientDbFactory(client, DATABASE);
 
 		dbRefResolver = spy(new DefaultDbRefResolver(factory));
 		mappingContext = new MongoMappingContext();
 		mappingContext.afterPropertiesSet();
 
 		converter = new MappingMongoConverter(dbRefResolver, mappingContext);
+		converter.afterPropertiesSet();
 	}
 
 	@Test // DATAMONGO-2004
 	public void resolvesLazyDBRefOnAccess() {
 
-		client.getDatabase("mapping-converter-tests").getCollection("samples")
+		client.getDatabase(DATABASE).getCollection("samples")
 				.insertMany(Arrays.asList(new Document("_id", "sample-1").append("value", "one"),
 						new Document("_id", "sample-2").append("value", "two")));
 
@@ -92,7 +99,7 @@ public class MappingMongoConverterTests {
 	@Test // DATAMONGO-2004
 	public void resolvesLazyDBRefConstructorArgOnAccess() {
 
-		client.getDatabase("mapping-converter-tests").getCollection("samples")
+		client.getDatabase(DATABASE).getCollection("samples")
 				.insertMany(Arrays.asList(new Document("_id", "sample-1").append("value", "one"),
 						new Document("_id", "sample-2").append("value", "two")));
 
@@ -108,6 +115,31 @@ public class MappingMongoConverterTests {
 		assertThat(target.getLazyList()).contains(new Sample("sample-1", "one"), new Sample("sample-2", "two"));
 
 		verify(dbRefResolver).bulkFetch(any());
+	}
+
+	@Test // DATAMONGO-2400
+	public void readJavaTimeValuesWrittenViaCodec() {
+
+		configureConverterWithNativeJavaTimeCodec();
+		MongoCollection<Document> mongoCollection = client.getDatabase(DATABASE).getCollection("java-time-types");
+
+		Instant now = Instant.now();
+		WithJavaTimeTypes source = WithJavaTimeTypes.withJavaTimeTypes(now);
+		source.id = "id-1";
+
+		mongoCollection.insertOne(source.toDocument());
+
+		assertThat(converter.read(WithJavaTimeTypes.class, mongoCollection.find(new Document("_id", source.id)).first()))
+				.isEqualTo(source);
+	}
+
+	void configureConverterWithNativeJavaTimeCodec() {
+
+		converter = new MappingMongoConverter(dbRefResolver, mappingContext);
+		converter.setCustomConversions(new MongoCustomConversions(config -> {
+			config.useNativeDriverJavaTimeCodecs();
+		}));
+		converter.afterPropertiesSet();
 	}
 
 	public static class WithLazyDBRef {
@@ -143,5 +175,30 @@ public class MappingMongoConverterTests {
 
 		@Id String id;
 		String value;
+	}
+
+	@Data
+	static class WithJavaTimeTypes {
+
+		@Id String id;
+		LocalDate localDate;
+		LocalTime localTime;
+		LocalDateTime localDateTime;
+
+		static WithJavaTimeTypes withJavaTimeTypes(Instant instant) {
+
+			WithJavaTimeTypes instance = new WithJavaTimeTypes();
+
+			instance.localDate = LocalDate.from(instant.atZone(ZoneId.of("CET")));
+			instance.localTime = LocalTime.from(instant.atZone(ZoneId.of("CET")));
+			instance.localDateTime = LocalDateTime.from(instant.atZone(ZoneId.of("CET")));
+
+			return instance;
+		}
+
+		Document toDocument() {
+			return new Document("_id", id).append("localDate", localDate).append("localTime", localTime)
+					.append("localDateTime", localDateTime);
+		}
 	}
 }
