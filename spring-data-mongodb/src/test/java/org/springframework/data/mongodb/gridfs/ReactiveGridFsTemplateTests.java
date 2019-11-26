@@ -289,17 +289,19 @@ public class ReactiveGridFsTemplateTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAMONGO-2411
+	@Test // DATAMONGO-765
 	public void considersSkipLimitWhenQueryingFiles() {
+
 		DataBufferFactory bufferFactory = new DefaultDataBufferFactory();
 		DataBuffer buffer = bufferFactory.allocateBuffer(0);
-		Flux.just( //
-				"a", "aa", "aaa", //
+		Flux.just("a", "aa", "aaa", //
 				"b", "bb", "bbb", //
 				"c", "cc", "ccc", //
 				"d", "dd", "ddd") //
 				.flatMap(fileName -> operations.store(Mono.just(buffer), fileName)) //
-				.blockLast();
+				.as(StepVerifier::create) //
+				.expectNextCount(12) //
+				.verifyComplete();
 
 		PageRequest pageRequest = PageRequest.of(2, 3, Sort.Direction.ASC, "filename");
 		operations.find(new Query().with(pageRequest)) //

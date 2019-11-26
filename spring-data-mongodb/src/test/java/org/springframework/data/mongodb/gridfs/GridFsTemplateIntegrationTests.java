@@ -293,10 +293,10 @@ public class GridFsTemplateIntegrationTests {
 		}
 	}
 
-	@Test // DATAMONGO-2411
+	@Test // DATAMONGO-765
 	public void considersSkipLimitWhenQueryingFiles() {
-		Stream.of( //
-				"a", "aa", "aaa", //
+
+		Stream.of("a", "aa", "aaa", //
 				"b", "bb", "bb", //
 				"c", "cc", "ccc", //
 				"d", "dd", "ddd") //

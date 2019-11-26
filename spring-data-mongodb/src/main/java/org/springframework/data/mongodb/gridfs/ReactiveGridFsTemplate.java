@@ -262,12 +262,15 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 		Document sortObject = getMappedQuery(query.getSortObject());
 
 		GridFSFindPublisher publisherToUse = getGridFs().find(queryObject).sort(sortObject);
+
 		if (query.getLimit() > 0) {
 			publisherToUse = publisherToUse.limit(query.getLimit());
 		}
+
 		if (query.getSkip() > 0) {
 			publisherToUse = publisherToUse.skip(Math.toIntExact(query.getSkip()));
 		}
+
 		Integer cursorBatchSize = query.getMeta().getCursorBatchSize();
 		if (cursorBatchSize != null) {
 			publisherToUse = publisherToUse.batchSize(cursorBatchSize);

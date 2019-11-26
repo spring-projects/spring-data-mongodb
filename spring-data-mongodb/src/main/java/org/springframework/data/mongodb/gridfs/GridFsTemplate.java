@@ -167,12 +167,15 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 		Document sortObject = getMappedQuery(query.getSortObject());
 
 		GridFSFindIterable iterable = getGridFs().find(queryObject).sort(sortObject);
+
 		if (query.getSkip() > 0) {
 			iterable = iterable.skip(Math.toIntExact(query.getSkip()));
 		}
+
 		if (query.getLimit() > 0) {
 			iterable = iterable.limit(query.getLimit());
 		}
+
 		return iterable;
 	}
 
