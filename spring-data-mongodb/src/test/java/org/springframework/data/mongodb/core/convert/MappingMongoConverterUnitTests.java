@@ -84,6 +84,7 @@ import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBRef;
 
 /**
@@ -1924,6 +1925,13 @@ public class MappingMongoConverterUnitTests {
 		Order order = converter.read(Order.class, orderDocument);
 
 		assertThat(order.items).hasSize(3);
+	}
+
+	@Test // DATAMONGO-2410
+	public void shouldAllowReadingBackDbObject() {
+
+		assertThat(converter.read(BasicDBObject.class, new org.bson.Document("property", "value")))
+				.isEqualTo(new BasicDBObject("property", "value"));
 	}
 
 	static class GenericType<T> {

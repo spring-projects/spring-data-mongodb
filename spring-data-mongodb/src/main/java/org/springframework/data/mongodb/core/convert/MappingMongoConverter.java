@@ -211,12 +211,21 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return conversionService.convert(bson, rawType);
 		}
 
-		if (DBObject.class.isAssignableFrom(rawType)) {
+		if (Document.class.isAssignableFrom(rawType)) {
 			return (S) bson;
 		}
 
-		if (Document.class.isAssignableFrom(rawType)) {
-			return (S) bson;
+		if (DBObject.class.isAssignableFrom(rawType)) {
+
+			if (bson instanceof DBObject) {
+				return (S) bson;
+			}
+
+			if (bson instanceof Document) {
+				return (S) new BasicDBObject((Document) bson);
+			}
+
+			return (S) DBObject.class.cast(bson);
 		}
 
 		if (typeToUse.isCollectionLike() && bson instanceof List) {
@@ -1648,7 +1657,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	/**
 	 * Returns whether the given type is a sub type of the given reference, i.e. assignable but not the exact same type.
-	 * 
+	 *
 	 * @param type must not be {@literal null}.
 	 * @param reference must not be {@literal null}.
 	 * @return
