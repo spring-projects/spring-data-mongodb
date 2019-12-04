@@ -1,6 +1,12 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.1.14.RELEASE (2019-12-04)
+----------------------------------------------
+* DATAMONGO-2421 - Release 2.1.14 (Lovelace SR14).
+* DATAMONGO-2410 - Using BasicDBObject as an entity caused java.lang.ClassCastException in runtime.
+
+
 Changes in version 2.2.2.RELEASE (2019-11-18)
 ---------------------------------------------
 * DATAMONGO-2414 - ReactiveGridFsResource.getDownloadStream(…) hang if completion happens on event loop.
@@ -2813,4 +2819,5 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
