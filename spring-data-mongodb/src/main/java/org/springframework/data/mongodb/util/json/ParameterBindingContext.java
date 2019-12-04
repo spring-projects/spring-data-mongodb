@@ -77,7 +77,7 @@ public class ParameterBindingContext {
 	}
 
 	public EvaluationContext getEvaluationContext() {
-			return this.evaluationContext.get();
+		return this.evaluationContext.get();
 	}
 
 	public SpelExpressionParser getExpressionParser() {
