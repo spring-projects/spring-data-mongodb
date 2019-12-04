@@ -202,7 +202,7 @@ public class ParameterBindingJsonReaderUnitTests {
 	}
 
 	@Test // DATAMONGO-2418
-	public void shouldNotAccessSpElEveluationContextWhenNoSpelPresentInBindableTarget() {
+	public void shouldNotAccessSpElEvaluationContextWhenNoSpElPresentInBindableTarget() {
 
 		Object[] args = new Object[] { "value" };
 		EvaluationContext evaluationContext = new StandardEvaluationContext() {
