@@ -48,6 +48,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.ConversionNotSupportedException;
 import org.springframework.beans.factory.annotation.Value;
@@ -85,6 +86,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 
 /**
@@ -1932,6 +1934,8 @@ public class MappingMongoConverterUnitTests {
 
 		assertThat(converter.read(BasicDBObject.class, new org.bson.Document("property", "value")))
 				.isEqualTo(new BasicDBObject("property", "value"));
+		assertThat(converter.read(DBObject.class, new org.bson.Document("property", "value")))
+				.isEqualTo(new BasicDBObject("property", "value"));
 	}
 
 	static class GenericType<T> {
@@ -1955,7 +1959,7 @@ public class MappingMongoConverterUnitTests {
 			@Override
 			void method() {
 
-		}
+			}
 		};
 
 		abstract void method();

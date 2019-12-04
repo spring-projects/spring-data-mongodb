@@ -225,7 +225,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				return (S) new BasicDBObject((Document) bson);
 			}
 
-			return (S) DBObject.class.cast(bson);
+			return (S) bson;
 		}
 
 		if (typeToUse.isCollectionLike() && bson instanceof List) {
