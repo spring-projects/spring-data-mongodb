@@ -17,6 +17,8 @@ package org.springframework.data.mongodb.config;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.util.concurrent.TimeUnit;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.support.BeanDefinitionReader;
@@ -25,11 +27,14 @@ import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.test.util.ReflectionTestUtils;
 
-import com.mongodb.MongoClient;
+import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCredential;
 import com.mongodb.ReadPreference;
+import com.mongodb.ServerAddress;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.MongoClient;
 
 /**
  * Integration tests for {@link MongoClientParser}.
@@ -62,17 +67,13 @@ public class MongoClientParserIntegrationTests {
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongoClient-bean.xml"));
 
-		AbstractApplicationContext context = new GenericApplicationContext(factory);
-		context.refresh();
+		try (AbstractApplicationContext context = new GenericApplicationContext(factory)) {
+			context.refresh();
 
-		try {
-			MongoClient client = context.getBean("mongo-client-with-options-for-write-concern-and-read-preference",
-					MongoClient.class);
-
-			assertThat(client.getReadPreference()).isEqualTo(ReadPreference.secondary());
-			assertThat(client.getWriteConcern()).isEqualTo(WriteConcern.UNACKNOWLEDGED);
-		} finally {
-			context.close();
+			MongoClientSettings settings = extractClientSettingsFromBean(context,
+					"mongo-client-with-options-for-write-concern-and-read-preference");
+			assertThat(settings.getReadPreference()).isEqualTo(ReadPreference.secondary());
+			assertThat(settings.getWriteConcern()).isEqualTo(WriteConcern.UNACKNOWLEDGED);
 		}
 	}
 
@@ -81,16 +82,12 @@ public class MongoClientParserIntegrationTests {
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongoClient-bean.xml"));
 
-		AbstractApplicationContext context = new GenericApplicationContext(factory);
-		context.refresh();
+		try (AbstractApplicationContext context = new GenericApplicationContext(factory)) {
 
-		try {
+			context.refresh();
+
 			MongoClient client = context.getBean("mongoClient", MongoClient.class);
-
-			assertThat(client.getAddress().getHost()).isEqualTo("127.0.0.1");
-			assertThat(client.getAddress().getPort()).isEqualTo(27017);
-		} finally {
-			context.close();
+			assertThat(client.getClusterDescription().getClusterSettings().getHosts()).containsExactly(new ServerAddress());
 		}
 	}
 
@@ -99,16 +96,14 @@ public class MongoClientParserIntegrationTests {
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongoClient-bean.xml"));
 
-		AbstractApplicationContext context = new GenericApplicationContext(factory);
-		context.refresh();
+		try (AbstractApplicationContext context = new GenericApplicationContext(factory)) {
 
-		try {
-			MongoClient client = context.getBean("mongo-client-with-credentials", MongoClient.class);
+			context.refresh();
 
-			assertThat(client.getCredentialsList())
-					.contains(MongoCredential.createPlainCredential("jon", "snow", "warg".toCharArray()));
-		} finally {
-			context.close();
+			MongoClientSettings settings = extractClientSettingsFromBean(context, "mongo-client-with-credentials");
+
+			assertThat(settings.getCredential())
+					.isEqualTo(MongoCredential.createPlainCredential("jon", "snow", "warg".toCharArray()));
 		}
 	}
 
@@ -117,15 +112,20 @@ public class MongoClientParserIntegrationTests {
 
 		reader.loadBeanDefinitions(new ClassPathResource("namespace/mongoClient-bean.xml"));
 
-		AbstractApplicationContext context = new GenericApplicationContext(factory);
-		context.refresh();
+		try (AbstractApplicationContext context = new GenericApplicationContext(factory)) {
+			context.refresh();
 
-		try {
-
-			MongoClient client = context.getBean("mongo-client-with-server-selection-timeout", MongoClient.class);
-			assertThat(client.getMongoClientOptions().getServerSelectionTimeout()).isEqualTo(100);
-		} finally {
-			context.close();
+			MongoClientSettings settings = extractClientSettingsFromBean(context,
+					"mongo-client-with-server-selection-timeout");
+			assertThat(settings.getClusterSettings().getServerSelectionTimeout(TimeUnit.MILLISECONDS)).isEqualTo(100);
 		}
+	}
+
+	private MongoClientSettings extractClientSettingsFromBean(AbstractApplicationContext context, String beanName) {
+		return extractClientSettings(context.getBean(beanName, MongoClient.class));
+	}
+
+	private MongoClientSettings extractClientSettings(MongoClient client) {
+		return (MongoClientSettings) ReflectionTestUtils.getField(client, "settings");
 	}
 }

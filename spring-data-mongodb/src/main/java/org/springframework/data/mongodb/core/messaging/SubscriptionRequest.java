@@ -57,7 +57,7 @@ public interface SubscriptionRequest<S, T, O extends RequestOptions> {
 		 * Get the database name of the db.
 		 *
 		 * @return the name of the database to subscribe to. Can be {@literal null} in which case the default
-		 *         {@link MongoDbFactory#getDb() database} is used.
+		 *         {@link MongoDbFactory#getMongoDatabase() database} is used.
 		 */
 		@Nullable
 		default String getDatabaseName() {

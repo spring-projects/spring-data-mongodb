@@ -32,7 +32,6 @@ import org.reactivestreams.Subscription;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 
-import com.mongodb.reactivestreams.client.Success;
 import com.mongodb.reactivestreams.client.gridfs.AsyncInputStream;
 
 /**
@@ -131,7 +130,7 @@ class DataBufferPublisherAdapter {
 		 * @see com.mongodb.reactivestreams.client.gridfs.AsyncInputStream#close()
 		 */
 		@Override
-		public Publisher<Success> close() {
+		public Publisher<Void> close() {
 			return inputStream.close();
 		}
 	}

@@ -29,13 +29,13 @@
 				schemaLocation="https://www.springframework.org/schema/data/repository/spring-repository.xsd" />
 
 	<xsd:element name="mongo-client" type="mongoClientType">
-	  <xsd:annotation>
-		<xsd:documentation source="org.springframework.data.mongodb.core.MongoClientFactoryBean"><![CDATA[
-Defines a MongoClient instance used for accessing MongoDB.
+		<xsd:annotation>
+			<xsd:documentation source="org.springframework.data.mongodb.core.MongoClientFactoryBean"><![CDATA[
+Defines a com.mongodb.client.MongoClient instance used for accessing MongoDB.
 			]]></xsd:documentation>
 			<xsd:appinfo>
 				<tool:annotation>
-					<tool:exports type="com.mongodb.MongoClient"/>
+					<tool:exports type="com.mongodb.client.MongoClient"/>
 				</tool:annotation>
 			</xsd:appinfo>
 		</xsd:annotation>
@@ -54,10 +54,10 @@ Defines a MongoDbFactory for connecting to a specific database
 The name of the MongoDbFactory definition (by default "mongoDbFactory").]]></xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
-			<xsd:attribute name="mongo-ref" type="mongoRef" use="optional">
+			<xsd:attribute name="mongo-client-ref" type="mongoRef" use="optional">
 				<xsd:annotation>
 					<xsd:documentation><![CDATA[
-The reference to a MongoClient instance. If not configured a default com.mongodb.MongoClient instance will be created.
+The reference to a com.mongodb.client.MongoClient instance.
 					]]>
 					</xsd:documentation>
 				</xsd:annotation>
@@ -72,7 +72,20 @@ The name of the database to connect to. Default is 'db'.
 			<xsd:attribute name="client-uri" type="xsd:string" use="optional">
 				<xsd:annotation>
 					<xsd:documentation><![CDATA[
-The MongoClientURI string.]]></xsd:documentation>
+The MongoClientURI string.
+@Deprecated since 3.0 - Use connection-string instead.
+                    ]]>
+					</xsd:documentation>
+				</xsd:annotation>
+			</xsd:attribute>
+			<xsd:attribute name="connection-string" type="xsd:string" use="optional">
+				<xsd:annotation>
+					<xsd:documentation><![CDATA[
+The MongoDB Connection String. Supersedes client-uri.
+See https://docs.mongodb.com/manual/reference/connection-string/ for full documentation.
+@Since 3.0
+                    ]]>
+					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 			<xsd:attribute name="write-concern">
@@ -325,14 +338,24 @@ Reference to FactoryBean for com.mongodb.AutoEncryptionSettings - @since 2.2
 		<xsd:union memberTypes="xsd:string"/>
 	</xsd:simpleType>
 
+	<xsd:simpleType name="readConcernEnumeration">
+		<xsd:restriction base="xsd:token">
+			<xsd:enumeration value="DEFAULT" />
+			<xsd:enumeration value="LOCAL" />
+			<xsd:enumeration value="MAJORITY" />
+			<xsd:enumeration value="LINEARIZABLE" />
+			<xsd:enumeration value="AVAILABLE" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
 	<xsd:simpleType name="writeConcernEnumeration">
 		<xsd:restriction base="xsd:token">
-			<xsd:enumeration value="NONE" />
-			<xsd:enumeration value="NORMAL" />
-			<xsd:enumeration value="SAFE" />
-			<xsd:enumeration value="FSYNC_SAFE" />
-			<xsd:enumeration value="REPLICAS_SAFE" />
-			<xsd:enumeration value="JOURNAL_SAFE" />
+			<xsd:enumeration value="ACKNOWLEDGED" />
+			<xsd:enumeration value="W1" />
+			<xsd:enumeration value="W2" />
+			<xsd:enumeration value="W3" />
+			<xsd:enumeration value="UNACKNOWLEDGED" />
+			<xsd:enumeration value="JOURNALED" />
 			<xsd:enumeration value="MAJORITY" />
 		</xsd:restriction>
 	</xsd:simpleType>
@@ -347,6 +370,22 @@ Reference to FactoryBean for com.mongodb.AutoEncryptionSettings - @since 2.2
 		</xsd:restriction>
 	</xsd:simpleType>
 
+	<xsd:simpleType name="clusterConnectionModeEnumeration">
+		<xsd:restriction base="xsd:token">
+			<xsd:enumeration value="SINGLE" />
+			<xsd:enumeration value="MULTIPLE" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
+	<xsd:simpleType name="clusterTypeEnumeration">
+		<xsd:restriction base="xsd:token">
+			<xsd:enumeration value="STANDALONE" />
+			<xsd:enumeration value="REPLICA_SET" />
+			<xsd:enumeration value="SHARDED" />
+			<xsd:enumeration value="UNKNOWN" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
 	<xsd:simpleType name="booleanType">
 		<xsd:restriction base="xsd:token">
 			<xsd:enumeration value="true" />
@@ -357,18 +396,18 @@ Reference to FactoryBean for com.mongodb.AutoEncryptionSettings - @since 2.2
 	<xsd:complexType name="mongoClientType">
 		<xsd:annotation>
 			<xsd:documentation><![CDATA[
-Configuration options for 'MongoClient' - @since 1.7
+Configuration options for 'com.mongodb.client.MongoClient'
 			]]></xsd:documentation>
 		</xsd:annotation>
 		<xsd:sequence minOccurs="0" maxOccurs="1">
-			<xsd:element name="client-options" type="clientOptionsType">
+			<xsd:element name="client-settings" type="clientSettingsType">
 				<xsd:annotation>
 					<xsd:documentation><![CDATA[
-The Mongo driver options
+The Mongo driver settings
 							]]></xsd:documentation>
 					<xsd:appinfo>
 						<tool:annotation>
-							<tool:exports type="com.mongodb.MongoClientOptions"/>
+							<tool:exports type="com.mongodb.MongoClientSettings"/>
 						</tool:annotation>
 					</xsd:appinfo>
 				</xsd:annotation>
@@ -378,6 +417,14 @@ The Mongo driver options
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
 The name of the MongoClient definition (by default "mongoClient").]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="connection-string" type="xsd:string" use="optional">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+The mongodb connection string. E.g. 'mongodb://localhost:27017?replicaSet=rs0'
+See https://docs.mongodb.com/manual/reference/connection-string/ for full documentation.
+							]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
 		<xsd:attribute name="port" type="xsd:string" use="optional">
@@ -397,173 +444,255 @@ The host to connect to a MongoDB server.  Default is localhost
 		<xsd:attribute name="replica-set" type="xsd:string" use="optional">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
-The comma delimited list of host:port entries to use for replica set/pairs.
+The replica set name when connecting to a cluster.
 							]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
-		<xsd:attribute name="credentials" type="xsd:string" use="optional">
+		<xsd:attribute name="credential" type="xsd:string" use="optional">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
+NOTE: Best way of setting up a connection is by providing the 'connection-string'.
 The comma delimited list of username:password@database entries to use for authentication. Appending ?uri.authMechanism allows to specify the authentication challenge mechanism. If the credential you're trying to pass contains a comma itself, quote it with single quotes: '…'.
 							]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
 	</xsd:complexType>
 
-	<xsd:complexType name="clientOptionsType">
+	<xsd:complexType name="clientSettingsType">
 		<xsd:annotation>
 			<xsd:documentation><![CDATA[
-Configuration options for 'MongoClientOptions' - @since 1.7
+Configuration options for 'MongoClientSettings' - @since 3.0
 			]]></xsd:documentation>
 		</xsd:annotation>
-		<xsd:attribute name="description" type="xsd:string">
+		<xsd:attribute name="application-name" type="xsd:string" use="optional">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
-The MongoClient description.
+The application name to use when connecting to MongoDB. Mainly used to identify an operation in server logs, query logs and other profiling features.
 				]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
-		<xsd:attribute name="min-connections-per-host" type="xsd:string">
+		<xsd:attribute name="read-preference" use="optional">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
-The minimum number of connections per host.
-				]]></xsd:documentation>
-			</xsd:annotation>
-		</xsd:attribute>
-		<xsd:attribute name="connections-per-host" type="xsd:string">
-			<xsd:annotation>
-				<xsd:documentation><![CDATA[
-The number of connections allowed per host.  Will block if run out.	 Default is 100.
-				]]></xsd:documentation>
-			</xsd:annotation>
-		</xsd:attribute>
-		<xsd:attribute name="threads-allowed-to-block-for-connection-multiplier" type="xsd:string">
-			<xsd:annotation>
-				<xsd:documentation><![CDATA[
-The multiplier for connectionsPerHost for # of threads that can block.  Default is 5.
-If connectionsPerHost is 10, and threadsAllowedToBlockForConnectionMultiplier is 5,
-then 50 threads can block more than that and an exception will be thrown.
-				]]></xsd:documentation>
-			</xsd:annotation>
-		</xsd:attribute>
-		<xsd:attribute name="max-wait-time" type="xsd:string">
-			<xsd:annotation>
-				<xsd:documentation><![CDATA[
-The max wait time of a blocking thread for a connection. Default is 120000 ms (2 minutes).
-				]]></xsd:documentation>
-			</xsd:annotation>
-		</xsd:attribute>
-		<xsd:attribute name="max-connection-idle-time" type="xsd:string">
-			<xsd:annotation>
-				<xsd:documentation><![CDATA[
-The maximum idle time for a pooled connection.
-				]]></xsd:documentation>
-			</xsd:annotation>
-		</xsd:attribute>
-		<xsd:attribute name="max-connection-life-time" type="xsd:string">
-			<xsd:annotation>
-				<xsd:documentation><![CDATA[
-The maximum life time for a pooled connection.
-				]]></xsd:documentation>
-			</xsd:annotation>
-		</xsd:attribute>
-		<xsd:attribute name="connect-timeout" type="xsd:string">
-			<xsd:annotation>
-				<xsd:documentation><![CDATA[
-The connect timeout in milliseconds. 0 is default and infinite.
-				]]></xsd:documentation>
-			</xsd:annotation>
-		</xsd:attribute>
-		<xsd:attribute name="socket-timeout" type="xsd:string">
-			<xsd:annotation>
-				<xsd:documentation><![CDATA[
-The socket timeout.  0 is default and infinite.
-				]]></xsd:documentation>
-			</xsd:annotation>
-		</xsd:attribute>
-		<xsd:attribute name="socket-keep-alive" type="xsd:string">
-			<xsd:annotation>
-				<xsd:documentation><![CDATA[
-The keep alive flag, controls whether or not to have socket keep alive timeout. Defaults to false.
-				]]></xsd:documentation>
-			</xsd:annotation>
-		</xsd:attribute>
-		<xsd:attribute name="server-selection-timeout" type="xsd:string">
-			<xsd:annotation>
-				<xsd:documentation><![CDATA[
-The server selection timeout in milliseconds, which defines how long the driver will wait for server selection to succeed before throwing an exception. Default is 30 seconds.
-				]]></xsd:documentation>
-			</xsd:annotation>
-		</xsd:attribute>
-		<xsd:attribute name="read-preference">
-			<xsd:annotation>
-				<xsd:documentation><![CDATA[
-The read preference.
+The read preference to use for quries, map-reduce, aggregation and count operations.
 				]]></xsd:documentation>
 			</xsd:annotation>
 			<xsd:simpleType>
 				<xsd:union memberTypes="readPreferenceEnumeration xsd:string"/>
 			</xsd:simpleType>
 		</xsd:attribute>
+		<xsd:attribute name="read-concern" use="optional">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+Set the global read isolation level.
+				]]></xsd:documentation>
+			</xsd:annotation>
+			<xsd:simpleType>
+				<xsd:union memberTypes="readConcernEnumeration xsd:string"/>
+			</xsd:simpleType>
+		</xsd:attribute>
 		<xsd:attribute name="write-concern">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
-The WriteConcern that will be the default value used when asking the MongoDbFactory for a DB object
+Set the default 'WriteConcern' that is controls the acknowledgment of write operations.
 				]]></xsd:documentation>
 			</xsd:annotation>
 			<xsd:simpleType>
 				<xsd:union memberTypes="writeConcernEnumeration xsd:string"/>
 			</xsd:simpleType>
 		</xsd:attribute>
-		<xsd:attribute name="heartbeat-frequency" type="xsd:string">
+		<xsd:attribute name="retry-reads" use="optional">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
-This is the frequency that the driver will attempt to determine the current state of each server in the cluster.
-				]]></xsd:documentation>
-			</xsd:annotation>
-		</xsd:attribute>
-		<xsd:attribute name="min-heartbeat-frequency" type="xsd:string">
-			<xsd:annotation>
-				<xsd:documentation><![CDATA[
-In the event that the driver has to frequently re-check a server's availability, it will wait at least this long since the previous check to avoid wasted effort.
-				]]></xsd:documentation>
-			</xsd:annotation>
-		</xsd:attribute>
-		<xsd:attribute name="heartbeat-connect-timeout" type="xsd:string">
-			<xsd:annotation>
-				<xsd:documentation><![CDATA[
-The connect timeout for connections used for the cluster heartbeat.
-				]]></xsd:documentation>
-			</xsd:annotation>
-		</xsd:attribute>
-		<xsd:attribute name="heartbeat-socket-timeout" type="xsd:string">
-			<xsd:annotation>
-				<xsd:documentation><![CDATA[
-The socket timeout for connections used for the cluster heartbeat.
-				]]></xsd:documentation>
-			</xsd:annotation>
-		</xsd:attribute>
-		<xsd:attribute name="ssl" default="false">
-			<xsd:annotation>
-				<xsd:documentation><![CDATA[
-This controls if the driver should us an SSL connection.  Defaults to false.
+Sets whether reads should be retried if they fail due to a network error.
 				]]></xsd:documentation>
 			</xsd:annotation>
 			<xsd:simpleType>
 				<xsd:union memberTypes="booleanType xsd:string" />
 			</xsd:simpleType>
 		</xsd:attribute>
-		<xsd:attribute name="ssl-socket-factory-ref" type="sslSocketFactoryRef" use="optional">
+		<xsd:attribute name="retry-writes" use="optional">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
-The SSLSocketFactory to use for the SSL connection. If none is configured here, SSLSocketFactory#getDefault() will be used.
+Sets whether writes should be retried if they fail due to a network error.
+				]]></xsd:documentation>
+			</xsd:annotation>
+			<xsd:simpleType>
+				<xsd:union memberTypes="booleanType xsd:string" />
+			</xsd:simpleType>
+		</xsd:attribute>
+		<xsd:attribute name="socket-connect-timeout" type="xsd:string" use="optional">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+Sets the socket connect timeout (msec).
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="socket-read-timeout" type="xsd:string" use="optional">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+Sets the socket read timeoutn (msec).
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="socket-receive-buffer-size" type="xsd:string" use="optional">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+Sets the receive buffer size.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="socket-send-buffer-size" type="xsd:string" use="optional">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+Sets the send buffer size.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="server-heartbeat-frequency" type="xsd:string" use="optional">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+This is the frequency that the driver will attempt to determine the current state of each server in the cluster.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="server-min-heartbeat-frequency" type="xsd:string" use="optional">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+In the event that the driver has to frequently re-check a server's availability, it will wait at least this long since the previous check to avoid wasted effort.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="cluster-srv-host" type="xsd:string" use="optional">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+Sets the host name to use in order to look up an SRV DNS record to find the MongoDB hosts.
+NOTE: do not use along with cluster-hosts.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="cluster-hosts" type="xsd:string" use="optional">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+Sets the hosts for the cluster. Any duplicate server addresses are removed from the list.
+NOTE: do not use along with cluster-srv-host
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="cluster-connection-mode" use="optional">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+Sets the cluster connection mode to either single node direct or multiple servers.
+				]]></xsd:documentation>
+			</xsd:annotation>
+			<xsd:simpleType>
+				<xsd:union memberTypes="clusterConnectionModeEnumeration xsd:string"/>
+			</xsd:simpleType>
+		</xsd:attribute>
+		<xsd:attribute name="cluster-type" use="optional">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+Sets the cluster type (eg. SHARDED, REPLICA_SET,...).
+				]]></xsd:documentation>
+			</xsd:annotation>
+			<xsd:simpleType>
+				<xsd:union memberTypes="clusterTypeEnumeration xsd:string"/>
+			</xsd:simpleType>
+		</xsd:attribute>
+		<xsd:attribute name="cluster-local-threshold" type="xsd:string" use="optional">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+Sets the local threshold when selecting a server based on fastes ping time.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="cluster-server-selection-timeout" type="xsd:string" use="optional">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+Sets the timeout to apply when selecting a server.
+Zero indicates an immediate timeout while a negative value means indefinitely wait.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="connection-pool-max-size" type="xsd:string" use="optional">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+Sets the maximum number of connections allowed.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="connection-pool-min-size" type="xsd:string" use="optional">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+Sets the minimum number of connections.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="connection-pool-max-wait-time" type="xsd:string" use="optional">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+Sets the maximum time a thread may wait for a connection to become available.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="connection-pool-max-connection-life-time" type="xsd:string" use="optional">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+The maximum time a pooled connection can live for.
+Zero indicates no limit.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="connection-pool-max-connection-idle-time" type="xsd:string" use="optional">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+Sets the maximum idle time of a pooled connection.
+Zero indicates no limit.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="connection-pool-maintenance-initial-delay" type="xsd:string" use="optional">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+Sets the period of time to wait before running the first maintenance job on the connection pool.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="connection-pool-maintenance-frequency" type="xsd:string" use="optional">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+Sets the time period between runs of the maintenance job.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="ssl-enabled" default="false">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+Set whether SSL should be enabled or not.
+				]]></xsd:documentation>
+			</xsd:annotation>
+			<xsd:simpleType>
+				<xsd:union memberTypes="booleanType xsd:string" />
+			</xsd:simpleType>
+		</xsd:attribute>
+		<xsd:attribute name="ssl-invalid-host-name-allowed" type="xsd:string" use="optional">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+Set whether invalid host names should be allowed.
+				]]></xsd:documentation>
+			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="ssl-provider" type="xsd:string" use="optional">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+Set the SSL Context instance provider.
 				]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
 		<xsd:attribute name="encryption-settings-ref" type="encryptionSettingsRef" use="optional">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
-AutoEncryptionSettings for MongoDB 4.2+ - @since 2.2
+AutoEncryptionSettings for MongoDB 4.2+
 				]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>

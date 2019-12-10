@@ -21,7 +21,7 @@ import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.jmx.support.MetricType;
 import org.springframework.util.NumberUtils;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 
 /**
  * JMX Metrics for Operation counters
@@ -33,18 +33,9 @@ public class OperationCounters extends AbstractMonitor {
 
 	/**
 	 * @param mongoClient
-	 * @deprecated since 2.2 in favor of {@link #OperationCounters(com.mongodb.client.MongoClient)}
-	 */
-	@Deprecated
-	public OperationCounters(MongoClient mongoClient) {
-		super(mongoClient);
-	}
-
-	/**
-	 * @param mongoClient
 	 * @since 2.2
 	 */
-	public OperationCounters(com.mongodb.client.MongoClient mongoClient) {
+	public OperationCounters(MongoClient mongoClient) {
 		super(mongoClient);
 	}
 

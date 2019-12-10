@@ -6,9 +6,11 @@
 		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd">
 
 	<mongo:mongo-client id="mongoClient" host="localhost" port="42">
-		<mongo:client-options write-concern="SAFE"/>
+		<mongo:client-settings write-concern="ACKNOWLEDGED"/>
 	</mongo:mongo-client>
 	
-	<mongo:mongo-client id="mongo2" replica-set="127.0.0.1:4711,127.0.0.1:4712" />
+	<mongo:mongo-client id="mongo2" replica-set="rs0">
+		<mongo:client-settings cluster-hosts="127.0.0.1:4711,127.0.0.1:4712" />
+	</mongo:mongo-client>
 
 </beans>

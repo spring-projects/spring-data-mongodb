@@ -8,16 +8,16 @@
 	<mongo:mongo-client id="mongo-client-with-host-and-port" host="localhost" port="42" />
 	
 	<mongo:mongo-client id="mongo-client-with-options-for-write-concern-and-read-preference">
-		<mongo:client-options write-concern="UNACKNOWLEDGED" read-preference="SECONDARY" />
+		<mongo:client-settings write-concern="UNACKNOWLEDGED" read-preference="SECONDARY" />
 	</mongo:mongo-client>
 	
-	<mongo:mongo-client id="mongo-client-with-credentials" credentials="jon:warg@snow?uri.authMechanism=PLAIN" />
-	
+	<mongo:mongo-client id="mongo-client-with-credentials" credential="jon:warg@snow?uri.authMechanism=PLAIN" />
+
 	<mongo:mongo-client />
 
 	<!-- DATAMONGO-1620 -->
 	<mongo:mongo-client id="mongo-client-with-server-selection-timeout">
-		<mongo:client-options server-selection-timeout="100" />
+		<mongo:client-settings cluster-server-selection-timeout="100" />
 	</mongo:mongo-client>
 
 </beans>

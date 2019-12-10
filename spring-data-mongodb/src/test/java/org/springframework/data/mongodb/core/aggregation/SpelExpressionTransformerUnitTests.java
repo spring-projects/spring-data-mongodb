@@ -173,13 +173,14 @@ public class SpelExpressionTransformerUnitTests {
 	@Test // DATAMONGO-774
 	public void shouldRenderNestedParameterExpressionResultsInNestedExpressions() {
 
+		Document target = ((Document) transform(
+				"((1 + [0].primitiveLongValue) + [0].primitiveDoubleValue) * [0].doubleValue.longValue()", data));
+
 		assertThat(
 				((Document) transform("((1 + [0].primitiveLongValue) + [0].primitiveDoubleValue) * [0].doubleValue.longValue()",
-						data)).toJson())
+						data)))
 								.isEqualTo(new Document("$multiply",
-										Arrays.<Object> asList(
-												new Document("$add", Arrays.<Object> asList(1, new Document("$numberLong", "42"), 1.2345D)),
-												new Document("$numberLong", "23"))).toJson());
+										Arrays.<Object> asList(new Document("$add", Arrays.<Object> asList(1, 42L, 1.2345D)), 23L)));
 	}
 
 	@Test // DATAMONGO-840

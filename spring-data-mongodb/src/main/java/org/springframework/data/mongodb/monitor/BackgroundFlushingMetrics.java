@@ -22,7 +22,7 @@ import org.springframework.jmx.export.annotation.ManagedMetric;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.jmx.support.MetricType;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 
 /**
  * JMX Metrics for Background Flushing
@@ -34,18 +34,9 @@ public class BackgroundFlushingMetrics extends AbstractMonitor {
 
 	/**
 	 * @param mongoClient
-	 * @deprecated since 2.2 in favor of {@link #BackgroundFlushingMetrics(com.mongodb.client.MongoClient)}
-	 */
-	@Deprecated
-	public BackgroundFlushingMetrics(MongoClient mongoClient) {
-		super(mongoClient);
-	}
-
-	/**
-	 * @param mongoClient
 	 * @since 2.2
 	 */
-	public BackgroundFlushingMetrics(com.mongodb.client.MongoClient mongoClient) {
+	public BackgroundFlushingMetrics(MongoClient mongoClient) {
 		super(mongoClient);
 	}
 

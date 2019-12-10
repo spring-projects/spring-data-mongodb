@@ -50,11 +50,11 @@ public class MyService {
 
 @Configuration
 @EnableMongoRepositories
-class ApplicationConfig extends AbstractMongoConfiguration {
+class ApplicationConfig extends AbstractMongoClientConfiguration {
 
   @Override
   public MongoClient mongoClient() {
-    return new MongoClient();
+    return MongoClients.create();
   }
 
   @Override
@@ -93,6 +93,120 @@ If you'd rather like the latest snapshots of the upcoming major version, use our
   <url>https://repo.spring.io/libs-snapshot</url>
 </repository>
 ----
+
+== Upgrading from 2.x
+
+The 4.0 MongoDB Java Driver does no longer support certain features that have already been deprecated in one of the last minor versions.
+Some of the changes affect the initial setup configuration as well as compile/runtime features. We summarized the most typical changes one might encounter.
+
+=== XML Namespace
+
+.Changed XML Namespace Elements and Attributes:
+|===
+Element / Attribute | 2.x | 3.x
+
+| `<mongo:mongo-client />`
+| Used to create a `com.mongodb.MongoClient`
+| Now exposes a `com.mongodb.client.MongoClient`
+
+| `<mongo:mongo-client replica-set="..." />`
+| Was a comma delimited list of replica set members (host/port)
+| Now defines the replica set name. +
+Use `<mongo:client-settings cluster-hosts="..." />` instead
+
+| `<mongo:db-factory writeConcern="..." />`
+| NONE, NORMAL, SAFE, FSYNC_SAFE, REPLICAS_SAFE, MAJORITY
+| W1, W2, W3, UNAKNOWLEDGED, AKNOWLEDGED, JOURNALED, MAJORITY
+|===
+
+.Removed XML Namespace Elements and Attributes:
+|===
+Element / Attribute | Replacement in 3.x | Comment
+
+| `<mongo:db-factory mongo-ref="..." />`
+| `<mongo:db-factory mongo-client-ref="..." />`
+| Referencing a `com.mongodb.client.MongoClient`.
+
+| `<mongo:mongo-client credentials="..." />`
+| `<mongo:mongo-client credential="..." />`
+| Single authentication data instead of list.
+
+| `<mongo:client-options />`
+| `<mongo:client-settings />`
+| See `com.mongodb.MongoClientSettings` for details.
+|===
+
+.New XML Namespace Elements and Attributes:
+|===
+Element | Comment
+
+| `<mongo:db-factory mongo-client-ref="..." />`
+| Replacement for `<mongo:db-factory mongo-ref="..." />`
+
+| `<mongo:db-factory connection-string="..." />`
+| Replacement for `uri` and `client-uri`.
+
+| `<mongo:mongo-client connection-string="..." />`
+| Replacement for `uri` and `client-uri`.
+
+| `<mongo:client-settings />`
+| Namespace element for `com.mongodb.MongoClientSettings`.
+
+|===
+
+=== Java Configuration
+
+.Java API changes
+|===
+Type | Comment
+
+| `MongoClientFactoryBean`
+| Creates `com.mongodb.client.MongoClient` instead of `com.mongodb.MongoClient` +
+Uses `MongoClientSettings` instead of `MongoClientOptions`.
+
+| `MongoDataIntegrityViolationException`
+| Uses `WriteConcernResult` instead of `WriteResult`.
+
+| `BulkOperationException`
+| Uses `MongoBulkWriteException` and `com.mongodb.bulk.BulkWriteError` instead of `BulkWriteException` and `com.mongodb.BulkWriteError`
+
+| `ReactiveMongoClientFactoryBean`
+| Uses `com.mongodb.MongoClientSettings` instead of `com.mongodb.async.client.MongoClientSettings`
+
+| `ReactiveMongoClientSettingsFactoryBean`
+| Now produces `com.mongodb.MongoClientSettings` instead of `com.mongodb.async.client.MongoClientSettings`
+|===
+
+.Removed Java API:
+|===
+2.x | Replacement in 3.x | Comment
+
+| `MongoClientOptionsFactoryBean`
+| `MongoClientSettingsFactoryBean`
+| Creating a `com.mongodb.MongoClientSettings`.
+
+| `AbstractMongoConfiguration`
+| `AbstractMongoClientConfiguration` +
+(Available since 2.1)
+| Using `com.mongodb.client.MongoClient`.
+
+| `MongoDbFactory#getLegacyDb()`
+| -
+| -
+
+| `SimpleMongoDbFactory`
+| `SimpleMongoClientDbFactory` +
+(Available since 2.1)
+|
+
+| `MapReduceOptions#getOutputType()`
+| `MapReduceOptions#getMapReduceAction()`
+| Returns `MapReduceAction` instead of `MapReduceCommand.OutputType`.
+
+| `Meta\|Query` maxScan & snapshot
+|
+|
+|===
 
 == Getting Help
 

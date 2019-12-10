@@ -127,7 +127,6 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 		when(findPublisher.collation(any())).thenReturn(findPublisher);
 		when(findPublisher.first()).thenReturn(resultPublisher);
 		when(aggregatePublisher.allowDiskUse(anyBoolean())).thenReturn(aggregatePublisher);
-		when(aggregatePublisher.useCursor(anyBoolean())).thenReturn(aggregatePublisher);
 
 		factory = new SimpleReactiveMongoDatabaseFactory(client, "foo");
 

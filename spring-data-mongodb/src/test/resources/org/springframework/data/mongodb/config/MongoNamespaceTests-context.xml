@@ -13,19 +13,15 @@
 			location="classpath:/org/springframework/data/mongodb/config/mongo.properties"/>
 
 	<mongo:mongo-client host="${mongo.host}" port="${mongo.port}">
-			<mongo:client-options
-					connections-per-host="${mongo.connectionsPerHost}"
-					threads-allowed-to-block-for-connection-multiplier="${mongo.threadsAllowedToBlockForConnectionMultiplier}"
-					connect-timeout="${mongo.connectTimeout}"
-					max-wait-time="${mongo.maxWaitTime}"					
-					socket-keep-alive="${mongo.socketKeepAlive}"
-					socket-timeout="${mongo.socketTimeout}" />
+
+		<mongo:client-settings socket-read-timeout="${mongo.socketTimeout}"
+							  />
 	</mongo:mongo-client>
 	
-	<mongo:db-factory dbname="database" mongo-ref="mongoClient"/>
+	<mongo:db-factory dbname="database" mongo-client-ref="mongoClient"/>
 
 	<mongo:mongo-client id="mongoClientSsl">
-		<mongo:client-options ssl="${mongoSsl.ssl}" />
+		<mongo:client-settings ssl-enabled="${mongoSsl.ssl}" />
 	</mongo:mongo-client>
 
 	<mongo:db-factory id="secondMongoDbFactory"
@@ -37,15 +33,13 @@
 	<mongo:mongo-client id="defaultMongo" host="localhost" port="27017"/>
 
 	<mongo:mongo-client id="mongoSsl" host="localhost" port="27017">
-		<mongo:client-options ssl="${mongoSsl.ssl}"/>
+		<mongo:client-settings ssl-enabled="${mongoSsl.ssl}"/>
 	</mongo:mongo-client>
 
 	<mongo:mongo-client id="mongoSslWithCustomSslFactory" host="localhost" port="27017">
 		<!-- setting a non-null ssl-socket-factory implicitly sets ssl=true -->
-		<mongo:client-options ssl-socket-factory-ref="customSslSocketFactory"/>
+		<mongo:client-settings ssl-enabled="true" ssl-provider="Default"/>
 	</mongo:mongo-client>
-
-	<bean id="customSslSocketFactory" class="javax.net.ssl.SSLSocketFactory" factory-method="getDefault" scope="singleton"/>
 
 	<mongo:mongo-client id="noAttrMongo"/>
 
@@ -61,7 +55,7 @@
 	<bean id="readConverter" class="org.springframework.data.mongodb.core.PersonReadConverter"/>
 
 	<mongo:template id="mongoTemplate" db-factory-ref="mongoDbFactory" converter-ref="mappingConverter"/>
-	<mongo:template id="anotherMongoTemplate" db-factory-ref="mongoDbFactory" write-concern="SAFE" />
+	<mongo:template id="anotherMongoTemplate" db-factory-ref="mongoDbFactory" write-concern="ACKNOWLEDGED" />
 	
 	<mongo:gridFsTemplate/>
 	<mongo:gridFsTemplate id="secondGridFsTemplate" db-factory-ref="mongoDbFactory" converter-ref="mappingConverter"/>

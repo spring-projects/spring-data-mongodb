@@ -34,7 +34,7 @@ import com.mongodb.WriteConcern;
 public class WriteConcernPropertyEditor extends PropertyEditorSupport {
 
 	/**
-	 * Parse a string to a List<ServerAddress>
+	 * Parse a string to a {@link WriteConcern}.
 	 */
 	@Override
 	public void setAsText(@Nullable String writeConcernString) {
@@ -51,6 +51,5 @@ public class WriteConcernPropertyEditor extends PropertyEditorSupport {
 			// pass on the string to the constructor
 			setValue(new WriteConcern(writeConcernString));
 		}
-
 	}
 }

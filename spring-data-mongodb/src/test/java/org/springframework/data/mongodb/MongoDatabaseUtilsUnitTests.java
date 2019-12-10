@@ -59,7 +59,7 @@ public class MongoDatabaseUtilsUnitTests {
 
 		when(dbFactory.withSession(session)).thenReturn(dbFactory);
 
-		when(dbFactory.getDb()).thenReturn(db);
+		when(dbFactory.getMongoDatabase()).thenReturn(db);
 
 		when(session.getServerSession()).thenReturn(serverSession);
 		when(session.hasActiveTransaction()).thenReturn(true);

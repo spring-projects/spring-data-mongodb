@@ -30,20 +30,20 @@ import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.mongodb.MongoClientURI;
+import com.mongodb.ConnectionString;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 
 /**
- * Unit tests for {@link SimpleMongoDbFactory}.
+ * Unit tests for {@link SimpleMongoClientDbFactory}.
  *
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Mark Paluch
  */
 @RunWith(MockitoJUnitRunner.class)
-public class SimpleMongoDbFactoryUnitTests {
+public class SimpleMongoClientDbFactoryUnitTests {
 
 	@Mock MongoClient mongo;
 	@Mock ClientSession clientSession;
@@ -72,8 +72,9 @@ public class SimpleMongoDbFactoryUnitTests {
 	@SuppressWarnings("deprecation")
 	public void mongoUriConstructor() {
 
-		MongoClientURI mongoURI = new MongoClientURI("mongodb://myUsername:myPassword@localhost/myDatabase.myCollection");
-		MongoDbFactory mongoDbFactory = new SimpleMongoDbFactory(mongoURI);
+		ConnectionString mongoURI = new ConnectionString(
+				"mongodb://myUsername:myPassword@localhost/myDatabase.myCollection");
+		MongoDbFactory mongoDbFactory = new SimpleMongoClientDbFactory(mongoURI);
 
 		assertThat(getField(mongoDbFactory, "databaseName").toString()).isEqualTo("myDatabase");
 	}
@@ -81,8 +82,9 @@ public class SimpleMongoDbFactoryUnitTests {
 	@Test // DATAMONGO-1158
 	public void constructsMongoClientAccordingToMongoUri() {
 
-		MongoClientURI uri = new MongoClientURI("mongodb://myUserName:myPassWord@127.0.0.1:27017/myDataBase.myCollection");
-		SimpleMongoDbFactory factory = new SimpleMongoDbFactory(uri);
+		ConnectionString uri = new ConnectionString(
+				"mongodb://myUserName:myPassWord@127.0.0.1:27017/myDataBase.myCollection");
+		SimpleMongoClientDbFactory factory = new SimpleMongoClientDbFactory(uri);
 
 		assertThat(getField(factory, "databaseName").toString()).isEqualTo("myDataBase");
 	}
@@ -95,7 +97,7 @@ public class SimpleMongoDbFactoryUnitTests {
 		MongoDbFactory factory = new SimpleMongoClientDbFactory(mongo, "foo");
 		MongoDbFactory wrapped = factory.withSession(clientSession).withSession(clientSession);
 
-		InvocationHandler invocationHandler = Proxy.getInvocationHandler(wrapped.getDb());
+		InvocationHandler invocationHandler = Proxy.getInvocationHandler(wrapped.getMongoDatabase());
 
 		Object singletonTarget = AopProxyUtils
 				.getSingletonTarget(ReflectionTestUtils.getField(invocationHandler, "advised"));
