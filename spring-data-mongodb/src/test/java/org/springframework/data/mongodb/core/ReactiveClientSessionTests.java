@@ -39,7 +39,6 @@ import org.springframework.data.util.Version;
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.reactivestreams.client.ClientSession;
 import com.mongodb.reactivestreams.client.MongoClient;
-import com.mongodb.reactivestreams.client.Success;
 
 /**
  * @author Christoph Strobl
@@ -66,7 +65,6 @@ public class ReactiveClientSessionTests {
 
 		MongoTestUtils.createOrReplaceCollection(DATABASE_NAME, COLLECTION_NAME, client) //
 				.as(StepVerifier::create) //
-				.expectNext(Success.SUCCESS) //
 				.verifyComplete();
 
 		template.insert(new Document("_id", "id-1").append("value", "spring"), COLLECTION_NAME) //

@@ -105,17 +105,17 @@ public class MongoDatabaseUtils {
 		Assert.notNull(factory, "Factory must not be null!");
 
 		if (!TransactionSynchronizationManager.isSynchronizationActive()) {
-			return StringUtils.hasText(dbName) ? factory.getDb(dbName) : factory.getDb();
+			return StringUtils.hasText(dbName) ? factory.getMongoDatabase(dbName) : factory.getMongoDatabase();
 		}
 
 		ClientSession session = doGetSession(factory, sessionSynchronization);
 
 		if (session == null) {
-			return StringUtils.hasText(dbName) ? factory.getDb(dbName) : factory.getDb();
+			return StringUtils.hasText(dbName) ? factory.getMongoDatabase(dbName) : factory.getMongoDatabase();
 		}
 
 		MongoDbFactory factoryToUse = factory.withSession(session);
-		return StringUtils.hasText(dbName) ? factoryToUse.getDb(dbName) : factoryToUse.getDb();
+		return StringUtils.hasText(dbName) ? factoryToUse.getMongoDatabase(dbName) : factoryToUse.getMongoDatabase();
 	}
 
 	/**

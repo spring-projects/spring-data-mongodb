@@ -1564,28 +1564,9 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		return oid;
 	}
 
-	@Deprecated
-	@Override
-	public void mark() {
-		if (mark != null) {
-			throw new BSONException("A mark already exists; it needs to be reset before creating a new one");
-		}
-		mark = new Mark();
-	}
-
 	@Override
 	public BsonReaderMark getMark() {
 		return new Mark();
-	}
-
-	@Deprecated
-	@Override
-	public void reset() {
-		if (mark == null) {
-			throw new BSONException("trying to reset a mark before creating it");
-		}
-		mark.reset();
-		mark = null;
 	}
 
 	@Override

@@ -151,7 +151,7 @@ When you run the main program, the preceding examples produce the following outp
 
 Even in this simple example, there are few things to notice:
 
-* You can instantiate the central helper class of Spring Mongo, <<mongo-template,`MongoTemplate`>>, by using the standard `com.mongodb.MongoClient` object and the name of the database to use.
+* You can instantiate the central helper class of Spring Mongo, <<mongo-template,`MongoTemplate`>>, by using the standard `com.mongodb.client.MongoClient` object and the name of the database to use.
 * The mapper works against standard POJO objects without the need for any additional metadata (though you can optionally provide that information. See <<mapping-chapter,here>>.).
 * Conventions are used for handling the `id` field, converting it to be an `ObjectId` when stored in the database.
 * Mapping conventions can use field access. Notice that the `Person` class has only getters.
@@ -165,16 +165,16 @@ There is a https://github.com/spring-projects/spring-data-examples[GitHub reposi
 [[mongodb-connectors]]
 == Connecting to MongoDB with Spring
 
-One of the first tasks when using MongoDB and Spring is to create a `com.mongodb.MongoClient` or `com.mongodb.client.MongoClient` object using the IoC container. There are two main ways to do this, either by using Java-based bean metadata or by using XML-based bean metadata. Both are discussed in the following sections.
+One of the first tasks when using MongoDB and Spring is to create a `com.mongodb.client.MongoClient` or `com.mongodb.client.MongoClient` object using the IoC container. There are two main ways to do this, either by using Java-based bean metadata or by using XML-based bean metadata. Both are discussed in the following sections.
 
 NOTE: For those not familiar with how to configure the Spring container using Java-based bean metadata instead of XML-based metadata, see the high-level introduction in the reference docs https://docs.spring.io/spring/docs/3.2.x/spring-framework-reference/html/new-in-3.0.html#new-java-configuration[here] as well as the detailed documentation https://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/core.html#beans-java-instantiating-container[here].
 
 [[mongo.mongo-java-config]]
 === Registering a Mongo Instance by using Java-based Metadata
 
-The following example shows an example of using Java-based bean metadata to register an instance of a `com.mongodb.MongoClient`:
+The following example shows an example of using Java-based bean metadata to register an instance of a `com.mongodb.client.MongoClient`:
 
-.Registering a `com.mongodb.MongoClient` object using Java-based bean metadata
+.Registering a `com.mongodb.client.MongoClient` object using Java-based bean metadata
 ====
 [source,java]
 ----
@@ -182,20 +182,20 @@ The following example shows an example of using Java-based bean metadata to regi
 public class AppConfig {
 
   /*
-   * Use the standard Mongo driver API to create a com.mongodb.MongoClient instance.
+   * Use the standard Mongo driver API to create a com.mongodb.client.MongoClient instance.
    */
    public @Bean MongoClient mongoClient() {
-       return new MongoClient("localhost");
+       return MongoClients.create("mongodb://localhost:27017");
    }
 }
 ----
 ====
 
-This approach lets you use the standard `com.mongodb.MongoClient` instance, with the container using Spring's `MongoClientFactoryBean`. As compared to instantiating a `com.mongodb.MongoClient` instance directly, the `FactoryBean` has the added advantage of also providing the container with an `ExceptionTranslator` implementation that translates MongoDB exceptions to exceptions in Spring's portable `DataAccessException` hierarchy for data access classes annotated with the `@Repository` annotation. This hierarchy and the use of `@Repository` is described in https://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/data-access.html[Spring's DAO support features].
+This approach lets you use the standard `com.mongodb.client.MongoClient` instance, with the container using Spring's `MongoClientFactoryBean`. As compared to instantiating a `com.mongodb.client.MongoClient` instance directly, the `FactoryBean` has the added advantage of also providing the container with an `ExceptionTranslator` implementation that translates MongoDB exceptions to exceptions in Spring's portable `DataAccessException` hierarchy for data access classes annotated with the `@Repository` annotation. This hierarchy and the use of `@Repository` is described in https://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/data-access.html[Spring's DAO support features].
 
 The following example shows an example of a Java-based bean metadata that supports exception translation on `@Repository` annotated classes:
 
-.Registering a `com.mongodb.MongoClient` object by using Spring's MongoClientFactoryBean and enabling Spring's exception translation support
+.Registering a `com.mongodb.client.MongoClient` object by using Spring's `MongoClientFactoryBean` and enabling Spring's exception translation support
 ====
 [source,java]
 ----
@@ -203,7 +203,7 @@ The following example shows an example of a Java-based bean metadata that suppor
 public class AppConfig {
 
     /*
-     * Factory bean that creates the com.mongodb.MongoClient instance
+     * Factory bean that creates the com.mongodb.client.MongoClient instance
      */
      public @Bean MongoClientFactoryBean mongo() {
           MongoClientFactoryBean mongo = new MongoClientFactoryBean();
@@ -214,12 +214,12 @@ public class AppConfig {
 ----
 ====
 
-To access the `com.mongodb.MongoClient` object created by the `MongoClientFactoryBean` in other `@Configuration` classes or your own classes, use a `private @Autowired Mongo mongo;` field.
+To access the `com.mongodb.client.MongoClient` object created by the `MongoClientFactoryBean` in other `@Configuration` classes or your own classes, use a `private @Autowired Mongo mongo;` field.
 
 [[mongo.mongo-xml-config]]
 === Registering a Mongo Instance by Using XML-based Metadata
 
-While you can use Spring's traditional `<beans/>` XML namespace to register an instance of `com.mongodb.MongoClient` with the container, the XML can be quite verbose, as it is general-purpose. XML namespaces are a better alternative to configuring commonly used objects, such as the Mongo instance. The mongo namespace lets you create a Mongo instance server location, replica-sets, and options.
+While you can use Spring's traditional `<beans/>` XML namespace to register an instance of `com.mongodb.client.MongoClient` with the container, the XML can be quite verbose, as it is general-purpose. XML namespaces are a better alternative to configuring commonly used objects, such as the Mongo instance. The mongo namespace lets you create a Mongo instance server location, replica-sets, and options.
 
 To use the Mongo namespace elements, you need to reference the Mongo schema, as follows:
 
@@ -246,26 +246,22 @@ To use the Mongo namespace elements, you need to reference the Mongo schema, as 
 ----
 ====
 
-The following example shows a more advanced configuration with `MongoClientOptions` (note that these are not recommended values):
+The following example shows a more advanced configuration with `MongoClientSettings` (note that these are not recommended values):
 
-.XML schema to configure a com.mongodb.MongoClient object with MongoClientOptions
+.XML schema to configure a `com.mongodb.client.MongoClient` object with `MongoClientSettings`
 ====
 [source,xml]
 ----
 <beans>
 
   <mongo:mongo-client host="localhost" port="27017">
-    <mongo:client-options connections-per-host="8"
-                   threads-allowed-to-block-for-connection-multiplier="4"
-                   connect-timeout="1000"
-                   max-wait-time="1500}"
-                   auto-connect-retry="true"
-                   socket-keep-alive="true"
-                   socket-timeout="1500"
-                   slave-ok="true"
-                   write-number="1"
-                   write-timeout="0"
-                   write-fsync="true"/>
+    <mongo:client-settings connection-pool-max-connection-life-time="10"
+        connection-pool-min-size="10"
+		connection-pool-max-size="20"
+		connection-pool-maintenance-frequency="10"
+		connection-pool-maintenance-initial-delay="11"
+		connection-pool-max-connection-idle-time="30"
+		connection-pool-max-wait-time="15" />
   </mongo:mongo-client>
 
 </beans>
@@ -274,18 +270,20 @@ The following example shows a more advanced configuration with `MongoClientOptio
 
 The following example shows a configuration using replica sets:
 
-.XML schema to configure a `com.mongodb.MongoClient` object with Replica Sets
+.XML schema to configure a `com.mongodb.client.MongoClient` object with Replica Sets
 ====
 [source,xml]
 ----
-<mongo:mongo-client id="replicaSetMongo" replica-set="127.0.0.1:27017,localhost:27018"/>
+<mongo:mongo-client id="replicaSetMongo" replica-set="rs0">
+    <mongo:client-settings cluster-hosts="127.0.0.1:27017,localhost:27018" />
+</mongo:mongo-client>
 ----
 ====
 
 [[mongo.mongo-db-factory]]
 === The MongoDbFactory Interface
 
-While `com.mongodb.MongoClient` is the entry point to the MongoDB driver API, connecting to a specific MongoDB database instance requires additional information, such as the database name and an optional username and password. With that information, you can obtain a `com.mongodb.client.MongoDatabase` object and access all the functionality of a specific MongoDB database instance. Spring provides the `org.springframework.data.mongodb.core.MongoDbFactory` interface, shown in the following listing, to bootstrap connectivity to the database:
+While `com.mongodb.client.MongoClient` is the entry point to the MongoDB driver API, connecting to a specific MongoDB database instance requires additional information, such as the database name and an optional username and password. With that information, you can obtain a `com.mongodb.client.MongoDatabase` object and access all the functionality of a specific MongoDB database instance. Spring provides the `org.springframework.data.mongodb.core.MongoDbFactory` interface, shown in the following listing, to bootstrap connectivity to the database:
 
 [source,java]
 ----
@@ -309,7 +307,7 @@ public class MongoApp {
 
   public static void main(String[] args) throws Exception {
 
-    MongoOperations mongoOps = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), "database"));
+    MongoOperations mongoOps = new MongoTemplate(new SimpleMongoClientDbFactory(MongoClients.create(), "database"));
 
     mongoOps.insert(new Person("Joe", 34));
 
@@ -320,7 +318,7 @@ public class MongoApp {
 }
 ----
 
-The code in bold highlights the use of `SimpleMongoDbFactory` and is the only difference between the listing shown in the <<mongodb-getting-started,getting started section>>.
+The code in bold highlights the use of `SimpleMongoClientDbFactory` and is the only difference between the listing shown in the <<mongodb-getting-started,getting started section>>.
 
 NOTE: Use `SimpleMongoClientDbFactory` when choosing `com.mongodb.client.MongoClient` as the entrypoint of choice.
 
@@ -335,7 +333,7 @@ To register a `MongoDbFactory` instance with the container, you write code much 
 public class MongoConfiguration {
 
   public @Bean MongoDbFactory mongoDbFactory() {
-    return new SimpleMongoDbFactory(new MongoClient(), "database");
+    return new SimpleMongoClientDbFactory(MongoClients.create(), "database");
   }
 }
 ----
@@ -345,7 +343,7 @@ MongoDB Server generation 3 changed the authentication model when connecting to 
 [source,java]
 ----
 @Configuration
-public class ApplicationContextEventTestsAppConfig extends AbstractMongoConfiguration {
+public class ApplicationContextEventTestsAppConfig extends AbstractMongoClientConfiguration {
 
   @Override
   public String getDatabaseName() {
@@ -355,23 +353,25 @@ public class ApplicationContextEventTestsAppConfig extends AbstractMongoConfigur
   @Override
   @Bean
   public MongoClient mongoClient() {
-    return new MongoClient(singletonList(new ServerAddress("127.0.0.1", 27017)),
-      singletonList(MongoCredential.createCredential("name", "db", "pwd".toCharArray())));
+
+  	MongoClientSettings settings = MongoClientSettings.builder()
+  	    .credential(MongoCredential.createCredential("name", "db", "pwd".toCharArray()))
+  	    .applyToClusterSettings(settings  -> {
+  	    	settings.hosts(singletonList(new ServerAddress("127.0.0.1", 27017)));
+  	    })
+  	    .build();
+
+    return MongoClients.create(settings);
   }
 }
 ----
 
-In order to use authentication with XML-based configuration, use the `credentials` attribute on the `<mongo-client>` element.
+In order to use authentication with XML-based configuration, use the `credential` attribute on the `<mongo-client>` element.
 
 NOTE: Username and password credentials used in XML-based configuration must be URL-encoded when these contain reserved characters, such as `:`, `%`, `@`, or `,`.
 The following example shows encoded credentials:
 `m0ng0@dmin:mo_res:bw6},Qsdxx@admin@database` -> `m0ng0%40dmin:mo_res%3Abw6%7D%2CQsdxx%40admin@database`
 See https://tools.ietf.org/html/rfc3986#section-2.2[section 2.2 of RFC 3986] for further details.
-
-As of MongoDB java driver 3.7.0 there is an alternative entry point to `MongoClient` via the https://search.maven.org/beta/search?q=a:mongodb-driver-sync[mongodb-driver-sync] artifact.
-`com.mongodb.client.MongoClient` is *not* compatible with `com.mongodb.MongoClient` and does not longer support
-the legacy `DBObject` codec. Therefore, it cannot be used with `Querydsl` and requires a different configuration.
-You can use `AbstractMongoClientConfiguration` to leverage the new `MongoClients` builder API.
 
 [source,java]
 ----
@@ -393,32 +393,27 @@ public class MongoClientConfiguration extends AbstractMongoClientConfiguration {
 [[mongo.mongo-db-factory-xml]]
 === Registering a `MongoDbFactory` Instance by Using XML-based Metadata
 
-The `mongo` namespace provides a convenient way to create a `SimpleMongoDbFactory`, as compared to using the `<beans/>` namespace, as shown in the following example:
+The `mongo` namespace provides a convenient way to create a `SimpleMongoClientDbFactory`, as compared to using the `<beans/>` namespace, as shown in the following example:
 
 [source,xml]
 ----
 <mongo:db-factory dbname="database">
 ----
 
-If you need to configure additional options on the `com.mongodb.MongoClient` instance that is used to create a `SimpleMongoDbFactory`, you can refer to an existing bean by using the `mongo-ref` attribute as shown in the following example. To show another common usage pattern, the following listing shows the use of a property placeholder, which lets you parametrize the configuration and the creation of a `MongoTemplate`:
+If you need to configure additional options on the `com.mongodb.client.MongoClient` instance that is used to create a `SimpleMongoClientDbFactory`, you can refer to an existing bean by using the `mongo-ref` attribute as shown in the following example. To show another common usage pattern, the following listing shows the use of a property placeholder, which lets you parametrize the configuration and the creation of a `MongoTemplate`:
 
 [source,xml]
 ----
 <context:property-placeholder location="classpath:/com/myapp/mongodb/config/mongo.properties"/>
 
 <mongo:mongo-client host="${mongo.host}" port="${mongo.port}">
-  <mongo:client-options
-     connections-per-host="${mongo.connectionsPerHost}"
-     threads-allowed-to-block-for-connection-multiplier="${mongo.threadsAllowedToBlockForConnectionMultiplier}"
-     connect-timeout="${mongo.connectTimeout}"
-     max-wait-time="${mongo.maxWaitTime}"
-     auto-connect-retry="${mongo.autoConnectRetry}"
-     socket-keep-alive="${mongo.socketKeepAlive}"
-     socket-timeout="${mongo.socketTimeout}"
-     slave-ok="${mongo.slaveOk}"
-     write-number="1"
-     write-timeout="0"
-     write-fsync="true"/>
+  <mongo:client-settings connection-pool-max-connection-life-time="${mongo.pool-max-life-time}"
+    connection-pool-min-size="${mongo.pool-min-size}"
+    connection-pool-max-size="${mongo.pool-max-size}"
+	connection-pool-maintenance-frequency="10"
+	connection-pool-maintenance-initial-delay="11"
+	connection-pool-max-connection-idle-time="30"
+	connection-pool-max-wait-time="15" />
 </mongo:mongo-client>
 
 <mongo:db-factory dbname="database" mongo-ref="mongoClient"/>
@@ -454,7 +449,7 @@ The next section contains an example of how to work with the `MongoTemplate` in 
 
 You can use Java to create and register an instance of `MongoTemplate`, as the following example shows:
 
-.Registering a `com.mongodb.MongoClient` object and enabling Spring's exception translation support
+.Registering a `com.mongodb.client.MongoClient` object and enabling Spring's exception translation support
 ====
 [source,java]
 ----
@@ -462,7 +457,7 @@ You can use Java to create and register an instance of `MongoTemplate`, as the f
 public class AppConfig {
 
   public @Bean MongoClient mongoClient() {
-      return new MongoClient("localhost");
+      return MongoClients.create("mongodb://localhost:27017");
   }
 
   public @Bean MongoTemplate mongoTemplate() {
@@ -502,7 +497,7 @@ When in development, it is handy to either log or throw an exception if the `com
 [[mongo-template.writeconcern]]
 === `WriteConcern`
 
-If it has not yet been specified through the driver at a higher level (such as `com.mongodb.MongoClient`), you can set the `com.mongodb.WriteConcern` property that the `MongoTemplate` uses for write operations. If the `WriteConcern` property is not set, it defaults to the one set in the MongoDB driver's DB or Collection setting.
+If it has not yet been specified through the driver at a higher level (such as `com.mongodb.client.MongoClient`), you can set the `com.mongodb.WriteConcern` property that the `MongoTemplate` uses for write operations. If the `WriteConcern` property is not set, it defaults to the one set in the MongoDB driver's DB or Collection setting.
 
 [[mongo-template.writeconcernresolver]]
 === `WriteConcernResolver`
@@ -589,7 +584,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
+import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
 
 import com.mongodb.client.MongoClients;
 
@@ -701,7 +696,6 @@ MongoDB collections can contain documents that represent instances of a variety 
 
 To achieve that, the `MappingMongoConverter` uses a `MongoTypeMapper` abstraction with `DefaultMongoTypeMapper` as its main implementation. Its default behavior to store the fully qualified classname under `_class` inside the document. Type hints are written for top-level documents as well as for every value (if it is a complex type and a subtype of the declared property type). The following example (with a JSON representation at the end) shows how the mapping works:
 
-
 .Type mapping
 ====
 [source,java]
@@ -762,7 +756,7 @@ class CustomMongoTypeMapper extends DefaultMongoTypeMapper {
 [source,java]
 ----
 @Configuration
-class SampleMongoConfiguration extends AbstractMongoConfiguration {
+class SampleMongoConfiguration extends AbstractMongoClientConfiguration {
 
   @Override
   protected String getDatabaseName() {
@@ -771,7 +765,7 @@ class SampleMongoConfiguration extends AbstractMongoConfiguration {
 
   @Override
   public MongoClient mongoClient() {
-    return new MongoClient();
+    return MongoClients.create();
   }
 
   @Bean
@@ -790,7 +784,7 @@ class SampleMongoConfiguration extends AbstractMongoConfiguration {
 ----
 ====
 
-Note that the preceding example extends the `AbstractMongoConfiguration` class and overrides the bean definition of the `MappingMongoConverter` where we configured our custom `MongoTypeMapper`.
+Note that the preceding example extends the `AbstractMongoClientConfiguration` class and overrides the bean definition of the `MappingMongoConverter` where we configured our custom `MongoTypeMapper`.
 
 The following example shows how to use XML to configure a custom `MongoTypeMapper`:
 
@@ -3282,7 +3276,7 @@ MongoDB supports storing binary files inside its filesystem, GridFS. Spring Data
 ====
 [source,java]
 ----
-class GridFsConfiguration extends AbstractMongoConfiguration {
+class GridFsConfiguration extends AbstractMongoClientConfiguration {
 
   // … further configuration omitted
 

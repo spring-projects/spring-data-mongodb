@@ -31,11 +31,9 @@ import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscription;
-
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 
-import com.mongodb.reactivestreams.client.Success;
 import com.mongodb.reactivestreams.client.gridfs.AsyncInputStream;
 
 /**
@@ -127,7 +125,7 @@ class AsyncInputStreamAdapter implements AsyncInputStream {
 	 * @see com.mongodb.reactivestreams.client.gridfs.AsyncInputStream#close()
 	 */
 	@Override
-	public Publisher<Success> close() {
+	public Publisher<Void> close() {
 
 		return Mono.create(sink -> {
 
@@ -140,7 +138,7 @@ class AsyncInputStreamAdapter implements AsyncInputStream {
 			}
 
 			terminatePendingReads();
-			sink.success(Success.SUCCESS);
+			sink.success();
 		});
 	}
 

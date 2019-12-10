@@ -23,8 +23,6 @@ import org.bson.Document;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.lang.Nullable;
 
-import com.mongodb.MapReduceCommand;
-import com.mongodb.MapReduceCommand.OutputType;
 import com.mongodb.client.model.MapReduceAction;
 
 /**
@@ -38,7 +36,7 @@ public class MapReduceOptions {
 	private @Nullable String outputCollection;
 
 	private Optional<String> outputDatabase = Optional.empty();
-	private MapReduceCommand.OutputType outputType = MapReduceCommand.OutputType.REPLACE;
+	private @Nullable MapReduceAction mapReduceAction = MapReduceAction.REPLACE;
 	private Map<String, Object> scopeVariables = new HashMap<>();
 	private Map<String, Object> extraOptions = new HashMap<>();
 	private @Nullable Boolean jsMode;
@@ -103,10 +101,24 @@ public class MapReduceOptions {
 	 * the result set fits within the 16MB limit of a single document.
 	 *
 	 * @return MapReduceOptions so that methods can be chained in a fluent API style
+	 * @deprecated since 3.0 - Use {@link #actionInline()} instead.
 	 */
+	@Deprecated
 	public MapReduceOptions outputTypeInline() {
+		return actionInline();
+	}
 
-		this.outputType = MapReduceCommand.OutputType.INLINE;
+	/**
+	 * With this option, no collection will be created, and the whole map-reduce operation will happen in RAM. Also, the
+	 * results of the map-reduce will be returned within the result object. Note that this option is possible only when
+	 * the result set fits within the 16MB limit of a single document.
+	 *
+	 * @return this.
+	 * @since 3.0
+	 */
+	public MapReduceOptions actionInline() {
+
+		this.mapReduceAction = null;
 		return this;
 	}
 
@@ -115,10 +127,23 @@ public class MapReduceOptions {
 	 * result set and the old collection, the new key will overwrite the old one.
 	 *
 	 * @return MapReduceOptions so that methods can be chained in a fluent API style
+	 * @deprecated since 3.0 - use {@link #actionMerge()} instead.
 	 */
+	@Deprecated
 	public MapReduceOptions outputTypeMerge() {
+		return actionMerge();
+	}
 
-		this.outputType = MapReduceCommand.OutputType.MERGE;
+	/**
+	 * This option will merge new data into the old output collection. In other words, if the same key exists in both the
+	 * result set and the old collection, the new key will overwrite the old one.
+	 *
+	 * @return this.
+	 * @since 3.0
+	 */
+	public MapReduceOptions actionMerge() {
+
+		this.mapReduceAction = MapReduceAction.MERGE;
 		return this;
 	}
 
@@ -127,22 +152,50 @@ public class MapReduceOptions {
 	 * specified reduce function) will be performed on the two values and the result will be written to the output
 	 * collection. If a finalize function was provided, this will be run after the reduce as well.
 	 *
-	 * @return
+	 * @return this.
+	 * @deprecated since 3.0 - use {@link #actionReduce()} instead.
 	 */
+	@Deprecated
 	public MapReduceOptions outputTypeReduce() {
-		this.outputType = MapReduceCommand.OutputType.REDUCE;
+		return actionReduce();
+	}
+
+	/**
+	 * If documents exists for a given key in the result set and in the old collection, then a reduce operation (using the
+	 * specified reduce function) will be performed on the two values and the result will be written to the output
+	 * collection. If a finalize function was provided, this will be run after the reduce as well.
+	 *
+	 * @return this.
+	 * @since 3.0
+	 */
+	public MapReduceOptions actionReduce() {
+
+		this.mapReduceAction = MapReduceAction.REDUCE;
 		return this;
 	}
 
 	/**
 	 * The output will be inserted into a collection which will atomically replace any existing collection with the same
-	 * name. Note, the default is MapReduceCommand.OutputType.REPLACE
+	 * name. Note, the default is {@link MapReduceAction#REPLACE}.
 	 *
 	 * @return MapReduceOptions so that methods can be chained in a fluent API style
+	 * @deprecated since 3.0 - Use {@link #actionReplace()} instead.
 	 */
+	@Deprecated
 	public MapReduceOptions outputTypeReplace() {
+		return this.actionReplace();
+	}
 
-		this.outputType = MapReduceCommand.OutputType.REPLACE;
+	/**
+	 * The output will be inserted into a collection which will atomically replace any existing collection with the same
+	 * name. Note, the default is {@link MapReduceAction#REPLACE}.
+	 *
+	 * @return MapReduceOptions so that methods can be chained in a fluent API style
+	 * @since 3.0
+	 */
+	public MapReduceOptions actionReplace() {
+
+		this.mapReduceAction = MapReduceAction.REPLACE;
 		return this;
 	}
 
@@ -269,10 +322,6 @@ public class MapReduceOptions {
 		return this.outputSharded;
 	}
 
-	public MapReduceCommand.OutputType getOutputType() {
-		return this.outputType;
-	}
-
 	public Map<String, Object> getScopeVariables() {
 		return this.scopeVariables;
 	}
@@ -298,34 +347,22 @@ public class MapReduceOptions {
 	}
 
 	/**
-	 * Return the {@link MapReduceAction} derived from {@link com.mongodb.MapReduceCommand.OutputType}.
+	 * Return the {@link MapReduceAction}.
 	 *
 	 * @return the mapped action or {@literal null} if the action maps to inline output.
 	 * @since 2.0.10
 	 */
 	@Nullable
 	public MapReduceAction getMapReduceAction() {
-
-		switch (outputType) {
-			case MERGE:
-				return MapReduceAction.MERGE;
-			case REDUCE:
-				return MapReduceAction.REDUCE;
-			case REPLACE:
-				return MapReduceAction.REPLACE;
-			case INLINE:
-				return null;
-			default:
-				throw new IllegalStateException(String.format("Unknown output type %s for map reduce command.", outputType));
-		}
+		return mapReduceAction;
 	}
 
 	/**
-	 * @return {@literal true} if {@link OutputType#INLINE} is used.
+	 * @return {@literal true} if {@literal inline} output shall is used.
 	 * @since 2.0.10
 	 */
 	public boolean usesInlineOutput() {
-		return OutputType.INLINE.equals(outputType);
+		return null == mapReduceAction;
 	}
 
 	public Document getOptionsObject() {
@@ -361,19 +398,20 @@ public class MapReduceOptions {
 
 		Document out = new Document();
 
-		switch (getOutputType()) {
-			case INLINE:
-				out.put("inline", 1);
-				break;
-			case REPLACE:
-				out.put("replace", outputCollection);
-				break;
-			case MERGE:
-				out.put("merge", outputCollection);
-				break;
-			case REDUCE:
-				out.put("reduce", outputCollection);
-				break;
+		if (getMapReduceAction() == null) {
+			out.put("inline", 1);
+		} else {
+			switch (getMapReduceAction()) {
+				case REPLACE:
+					out.put("replace", outputCollection);
+					break;
+				case MERGE:
+					out.put("merge", outputCollection);
+					break;
+				case REDUCE:
+					out.put("reduce", outputCollection);
+					break;
+			}
 		}
 
 		outputDatabase.ifPresent(val -> out.append("db", val));

@@ -5,10 +5,10 @@
 	xsi:schemaLocation="http://www.springframework.org/schema/data/mongo https://www.springframework.org/schema/data/mongo/spring-mongo.xsd
 		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd">
 
-	<mongo:db-factory id="first" mongo-ref="mongo" write-concern="rack1" />
+	<mongo:db-factory id="first" mongo-client-ref="mongo" write-concern="rack1" />
 
 	<mongo:mongo-client id="mongo">
-		<mongo:client-options />
+		<mongo:client-settings />
 	</mongo:mongo-client>
 	
 	<mongo:db-factory id="second" write-concern="W2" />

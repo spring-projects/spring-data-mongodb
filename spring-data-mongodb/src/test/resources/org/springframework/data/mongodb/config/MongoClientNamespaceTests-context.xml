@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:mongo="http://www.springframework.org/schema/data/mongo"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/data/mongo https://www.springframework.org/schema/data/mongo/spring-mongo.xsd
+		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/util https://www.springframework.org/schema/util/spring-util.xsd
+		http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd">
+
+	<context:property-placeholder
+			location="classpath:/org/springframework/data/mongodb/config/mongo.properties"/>
+
+	<mongo:mongo-client id="client-with-just-host-port" host="${mongo.host}" port="${mongo.port}" />
+
+	<mongo:mongo-client id="client-with-connection-string" connection-string="mongodb://${mongo.host}:${mongo.port}/?replicaSet=rs0" />
+
+	<mongo:mongo-client id="client-with-replica-set" replica-set="${replicaSetName}" />
+
+	<mongo:mongo-client id="client-with-auth" credential="${credential}" />
+
+	<mongo:mongo-client id="client-with-cluster-settings" replica-set="rs0">
+		<mongo:client-settings cluster-connection-mode="MULTIPLE"
+							   cluster-type="REPLICA_SET"
+							   cluster-server-selection-timeout="10"
+							   cluster-local-threshold="5"
+							   cluster-hosts="localhost:27018,localhost:27019,localhost:27020" />
+	</mongo:mongo-client>
+
+	<mongo:mongo-client id="client-with-connection-pool-settings" replica-set="rs0">
+		<mongo:client-settings connection-pool-max-connection-life-time="10"
+							   connection-pool-min-size="10"
+							   connection-pool-max-size="20"
+							   connection-pool-maintenance-frequency="10"
+							   connection-pool-maintenance-initial-delay="11"
+							   connection-pool-max-connection-idle-time="30"
+							   connection-pool-max-wait-time="15" />
+	</mongo:mongo-client>
+</beans>

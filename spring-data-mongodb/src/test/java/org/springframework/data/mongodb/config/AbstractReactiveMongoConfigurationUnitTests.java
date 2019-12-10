@@ -26,7 +26,6 @@ import java.util.Collections;
 import java.util.Set;
 
 import org.junit.Test;
-
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -43,9 +42,7 @@ import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.spel.ExtensionAwareEvaluationContextProvider;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.mongodb.Mongo;
 import com.mongodb.reactivestreams.client.MongoClient;
-import com.mongodb.reactivestreams.client.MongoClients;
 
 /**
  * Unit tests for {@link AbstractReactiveMongoConfiguration}.
@@ -81,7 +78,8 @@ public class AbstractReactiveMongoConfigurationUnitTests {
 		AbstractApplicationContext context = new AnnotationConfigApplicationContext(SampleMongoConfiguration.class);
 
 		assertThat(context.getBean(SimpleReactiveMongoDatabaseFactory.class)).isNotNull();
-		assertThatExceptionOfType(NoSuchBeanDefinitionException.class).isThrownBy(() -> context.getBean(Mongo.class));
+		assertThatExceptionOfType(NoSuchBeanDefinitionException.class)
+				.isThrownBy(() -> context.getBean(com.mongodb.client.MongoClient.class));
 
 		context.close();
 	}

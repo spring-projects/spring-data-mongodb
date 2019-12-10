@@ -43,15 +43,6 @@ public @interface Meta {
 	long maxExecutionTimeMs() default -1;
 
 	/**
-	 * Only scan the specified number of documents.
-	 *
-	 * @return
-	 * @deprecated since 2.2. {@code $maxScan} has been removed without replacement in MongoDB 4.2.
-	 */
-	@Deprecated
-	long maxScanDocuments() default -1;
-
-	/**
 	 * Sets the number of documents to return per batch. <br />
 	 * Use {@literal 0 (zero)} for no limit. A <strong>negative limit</strong> closes the cursor after returning a single
 	 * batch indicating to the server that the client will not ask for a subsequent one.
@@ -67,13 +58,6 @@ public @interface Meta {
 	 * @return
 	 */
 	String comment() default "";
-
-	/**
-	 * Using snapshot prevents the cursor from returning a document more than once.
-	 *
-	 * @return
-	 */
-	boolean snapshot() default false;
 
 	/**
 	 * Set {@link org.springframework.data.mongodb.core.query.Meta.CursorOption} to be used when executing query.

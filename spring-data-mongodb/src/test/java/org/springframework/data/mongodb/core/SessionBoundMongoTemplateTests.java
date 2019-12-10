@@ -100,9 +100,9 @@ public class SessionBoundMongoTemplateTests {
 		MongoDbFactory factory = new SimpleMongoClientDbFactory(client, "session-bound-mongo-template-tests") {
 
 			@Override
-			public MongoDatabase getDb() throws DataAccessException {
+			public MongoDatabase getMongoDatabase() throws DataAccessException {
 
-				MongoDatabase spiedDatabse = Mockito.spy(super.getDb());
+				MongoDatabase spiedDatabse = Mockito.spy(super.getMongoDatabase());
 				spiedDatabases.add(spiedDatabse);
 				return spiedDatabse;
 			}

@@ -59,7 +59,7 @@ public class DefaultDbRefResolverUnitTests {
 	@Before
 	public void setUp() {
 
-		when(factoryMock.getDb()).thenReturn(dbMock);
+		when(factoryMock.getMongoDatabase()).thenReturn(dbMock);
 		when(dbMock.getCollection(anyString(), any(Class.class))).thenReturn(collectionMock);
 		when(collectionMock.find(any(Document.class))).thenReturn(cursorMock);
 

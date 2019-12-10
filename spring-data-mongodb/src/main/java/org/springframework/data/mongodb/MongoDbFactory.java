@@ -21,7 +21,6 @@ import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 
 import com.mongodb.ClientSessionOptions;
-import com.mongodb.DB;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoDatabase;
 
@@ -39,17 +38,40 @@ public interface MongoDbFactory extends CodecRegistryProvider, MongoSessionProvi
 	 *
 	 * @return
 	 * @throws DataAccessException
+	 * @deprecated since 3.0. Use {@link #getMongoDatabase()} instead.
 	 */
-	MongoDatabase getDb() throws DataAccessException;
+	@Deprecated
+	default MongoDatabase getDb() throws DataAccessException {
+		return getMongoDatabase();
+	}
 
 	/**
-	 * Creates a {@link DB} instance to access the database with the given name.
+	 * Obtain a {@link MongoDatabase} from the underlying factory.
+	 * 
+	 * @return never {@literal null}.
+	 * @throws DataAccessException
+	 */
+	MongoDatabase getMongoDatabase() throws DataAccessException;
+
+	/**
+	 * Creates a {@link MongoDatabase} instance to access the database with the given name.
 	 *
 	 * @param dbName must not be {@literal null} or empty.
 	 * @return
 	 * @throws DataAccessException
+	 * @deprecated since 3.0. Use {@link #getMongoDatabase(String)} instead.
 	 */
-	MongoDatabase getDb(String dbName) throws DataAccessException;
+	@Deprecated
+	default MongoDatabase getDb(String dbName) throws DataAccessException {
+		return getMongoDatabase(dbName);
+	}
+
+	/**
+	 * @param dbName
+	 * @return never {@literal null}.
+	 * @throws DataAccessException
+	 */
+	MongoDatabase getMongoDatabase(String dbName) throws DataAccessException;
 
 	/**
 	 * Exposes a shared {@link MongoExceptionTranslator}.
@@ -59,23 +81,13 @@ public interface MongoDbFactory extends CodecRegistryProvider, MongoSessionProvi
 	PersistenceExceptionTranslator getExceptionTranslator();
 
 	/**
-	 * Get the legacy database entry point. Please consider {@link #getDb()} instead.
-	 *
-	 * @return
-	 * @deprecated since 2.1, use {@link #getDb()}. This method will be removed with a future version as it works only
-	 *             with the legacy MongoDB driver.
-	 */
-	@Deprecated
-	DB getLegacyDb();
-
-	/**
 	 * Get the underlying {@link CodecRegistry} used by the MongoDB Java driver.
 	 *
 	 * @return never {@literal null}.
 	 */
 	@Override
 	default CodecRegistry getCodecRegistry() {
-		return getDb().getCodecRegistry();
+		return getMongoDatabase().getCodecRegistry();
 	}
 
 	/**

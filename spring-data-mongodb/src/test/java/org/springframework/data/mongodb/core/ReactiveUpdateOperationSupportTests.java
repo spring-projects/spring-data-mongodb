@@ -20,7 +20,6 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
 import lombok.Data;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import reactor.test.StepVerifier;
 
 import org.bson.BsonString;
@@ -30,9 +29,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-
-import com.mongodb.MongoClient;
-import com.mongodb.reactivestreams.client.MongoClients;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
 /**
  * Integration tests for {@link ReactiveUpdateOperationSupport}.
@@ -51,7 +48,8 @@ public class ReactiveUpdateOperationSupportTests {
 	@Before
 	public void setUp() {
 
-		blocking = new MongoTemplate(new SimpleMongoClientDbFactory(MongoTestUtils.client(), "ExecutableUpdateOperationSupportTests"));
+		blocking = new MongoTemplate(
+				new SimpleMongoClientDbFactory(MongoTestUtils.client(), "ExecutableUpdateOperationSupportTests"));
 		blocking.dropCollection(STAR_WARS);
 
 		han = new Person();
@@ -116,8 +114,7 @@ public class ReactiveUpdateOperationSupportTests {
 	public void updateAllMatching() {
 
 		template.update(Person.class).matching(queryHan()).apply(new Update().set("firstname", "Han")).all()
-				.as(StepVerifier::create)
-				.consumeNextWith(actual -> {
+				.as(StepVerifier::create).consumeNextWith(actual -> {
 
 					assertThat(actual.getModifiedCount()).isEqualTo(1L);
 					assertThat(actual.getUpsertedId()).isNull();
@@ -128,8 +125,7 @@ public class ReactiveUpdateOperationSupportTests {
 	public void updateWithDifferentDomainClassAndCollection() {
 
 		template.update(Jedi.class).inCollection(STAR_WARS).matching(query(where("_id").is(han.getId())))
-				.apply(new Update().set("name", "Han")).all().as(StepVerifier::create)
-				.consumeNextWith(actual -> {
+				.apply(new Update().set("name", "Han")).all().as(StepVerifier::create).consumeNextWith(actual -> {
 
 					assertThat(actual.getModifiedCount()).isEqualTo(1L);
 					assertThat(actual.getUpsertedId()).isNull();
@@ -143,8 +139,7 @@ public class ReactiveUpdateOperationSupportTests {
 	public void findAndModify() {
 
 		template.update(Person.class).matching(queryHan()).apply(new Update().set("firstname", "Han")).findAndModify()
-				.as(StepVerifier::create)
-				.expectNext(han).verifyComplete();
+				.as(StepVerifier::create).expectNext(han).verifyComplete();
 
 		assertThat(blocking.findOne(queryHan(), Person.class)).isNotEqualTo(han).hasFieldOrPropertyWithValue("firstname",
 				"Han");
