@@ -14,7 +14,7 @@
 	<bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
 		<constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/>
 		<property name="writeConcern">
-			<util:constant static-field="com.mongodb.WriteConcern.SAFE" />
+			<util:constant static-field="com.mongodb.WriteConcern.ACKNOWLEDGED" />
 		</property>
 	</bean>
 

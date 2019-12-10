@@ -48,7 +48,6 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
 import com.mongodb.ClientSessionOptions;
-import com.mongodb.Cursor;
 import com.mongodb.ReadPreference;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoCollection;
@@ -224,9 +223,10 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Executes the given {@link Query} on the entity collection of the specified {@code entityType} backed by a Mongo DB
-	 * {@link Cursor}.
+	 * {@link com.mongodb.client.FindIterable}.
 	 * <p>
-	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link Cursor} that needs to be closed.
+	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.client.FindIterable} that needs to
+	 * be closed.
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification. Must not be {@literal null}.
@@ -239,9 +239,10 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Executes the given {@link Query} on the entity collection of the specified {@code entityType} and collection backed
-	 * by a Mongo DB {@link Cursor}.
+	 * by a Mongo DB {@link com.mongodb.client.FindIterable}.
 	 * <p>
-	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link Cursor} that needs to be closed.
+	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.client.FindIterable} that needs to
+	 * be closed.
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification. Must not be {@literal null}.
@@ -360,7 +361,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	IndexOperations indexOps(Class<?> entityClass);
 
 	/**
-	 * Returns the {@link ScriptOperations} that can be performed on {@link com.mongodb.DB} level.
+	 * Returns the {@link ScriptOperations} that can be performed on {@link com.mongodb.client.MongoDatabase} level.
 	 *
 	 * @return
 	 * @since 1.7
@@ -518,11 +519,11 @@ public interface MongoOperations extends FluentMongoOperations {
 	<O> AggregationResults<O> aggregate(Aggregation aggregation, String collectionName, Class<O> outputType);
 
 	/**
-	 * Execute an aggregation operation backed by a Mongo DB {@link Cursor}.
+	 * Execute an aggregation operation backed by a Mongo DB {@link com.mongodb.client.AggregateIterable}.
 	 * <p>
-	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link Cursor} that needs to be closed. The raw
-	 * results will be mapped to the given entity class. The name of the inputCollection is derived from the inputType of
-	 * the aggregation.
+	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.client.AggregateIterable} that
+	 * needs to be closed. The raw results will be mapped to the given entity class. The name of the inputCollection is
+	 * derived from the inputType of the aggregation.
 	 * <p>
 	 * Aggregation streaming can't be used with {@link AggregationOptions#isExplain() aggregation explain}. Enabling
 	 * explanation mode will throw an {@link IllegalArgumentException}.
@@ -537,11 +538,11 @@ public interface MongoOperations extends FluentMongoOperations {
 	<O> CloseableIterator<O> aggregateStream(TypedAggregation<?> aggregation, String collectionName, Class<O> outputType);
 
 	/**
-	 * Execute an aggregation operation backed by a Mongo DB {@link Cursor}.
+	 * Execute an aggregation operation backed by a Mongo DB {@link com.mongodb.client.AggregateIterable}.
 	 * <p/>
-	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link Cursor} that needs to be closed. The raw
-	 * results will be mapped to the given entity class and are returned as stream. The name of the inputCollection is
-	 * derived from the inputType of the aggregation.
+	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.client.AggregateIterable} that
+	 * needs to be closed. The raw results will be mapped to the given entity class and are returned as stream. The name
+	 * of the inputCollection is derived from the inputType of the aggregation.
 	 * <p/>
 	 * Aggregation streaming can't be used with {@link AggregationOptions#isExplain() aggregation explain}. Enabling
 	 * explanation mode will throw an {@link IllegalArgumentException}.
@@ -555,10 +556,10 @@ public interface MongoOperations extends FluentMongoOperations {
 	<O> CloseableIterator<O> aggregateStream(TypedAggregation<?> aggregation, Class<O> outputType);
 
 	/**
-	 * Execute an aggregation operation backed by a Mongo DB {@link Cursor}.
+	 * Execute an aggregation operation backed by a Mongo DB {@link com.mongodb.client.AggregateIterable}.
 	 * <p/>
-	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link Cursor} that needs to be closed. The raw
-	 * results will be mapped to the given entity class.
+	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.client.AggregateIterable} that
+	 * needs to be closed. The raw results will be mapped to the given entity class.
 	 * <p/>
 	 * Aggregation streaming can't be used with {@link AggregationOptions#isExplain() aggregation explain}. Enabling
 	 * explanation mode will throw an {@link IllegalArgumentException}.
@@ -574,10 +575,10 @@ public interface MongoOperations extends FluentMongoOperations {
 	<O> CloseableIterator<O> aggregateStream(Aggregation aggregation, Class<?> inputType, Class<O> outputType);
 
 	/**
-	 * Execute an aggregation operation backed by a Mongo DB {@link Cursor}.
+	 * Execute an aggregation operation backed by a Mongo DB {@link com.mongodb.client.AggregateIterable}.
 	 * <p/>
-	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link Cursor} that needs to be closed. The raw
-	 * results will be mapped to the given entity class.
+	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.client.AggregateIterable} that
+	 * needs to be closed. The raw results will be mapped to the given entity class.
 	 * <p/>
 	 * Aggregation streaming can't be used with {@link AggregationOptions#isExplain() aggregation explain}. Enabling
 	 * explanation mode will throw an {@link IllegalArgumentException}.
@@ -888,7 +889,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param update the {@link UpdateDefinition} to apply on matching documents. Must not be {@literal null}.
 	 * @param entityClass the parametrized type. Must not be {@literal null}.
 	 * @return the converted object that was updated before it was updated or {@literal null}, if not found.
-	 * @since 2.3
+	 * @since 3.0
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
@@ -905,7 +906,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param entityClass the parametrized type. Must not be {@literal null}.
 	 * @param collectionName the collection to query. Must not be {@literal null}.
 	 * @return the converted object that was updated before it was updated or {@literal null}, if not found.
-	 * @since 2.3
+	 * @since 3.0
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
@@ -925,7 +926,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @return the converted object that was updated or {@literal null}, if not found. Depending on the value of
 	 *         {@link FindAndModifyOptions#isReturnNew()} this will either be the object as it was before the update or as
 	 *         it is after the update.
-	 * @since 2.3
+	 * @since 3.0
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
@@ -946,7 +947,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @return the converted object that was updated or {@literal null}, if not found. Depending on the value of
 	 *         {@link FindAndModifyOptions#isReturnNew()} this will either be the object as it was before the update or as
 	 *         it is after the update.
-	 * @since 2.3
+	 * @since 3.0
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
@@ -1308,7 +1309,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *          the existing object. Must not be {@literal null}.
 	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
-	 * @since 2.3
+	 * @since 3.0
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
@@ -1329,7 +1330,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *          the existing object. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
-	 * @since 2.3
+	 * @since 3.0
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
@@ -1346,7 +1347,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
-	 * @since 2.3
+	 * @since 3.0
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
@@ -1362,7 +1363,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *          the existing. Must not be {@literal null}.
 	 * @param entityClass class that determines the collection to use.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
-	 * @since 2.3
+	 * @since 3.0
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
@@ -1373,10 +1374,9 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * the provided updated document. <br />
 	 * <strong>NOTE:</strong> Any additional support for field mapping, versions, etc. is not available due to the lack of
 	 * domain type information. Use {@link #updateFirst(Query, UpdateDefinition, Class, String)} to get full type specific
-	 * support.
-	 * <br />
+	 * support. <br />
 	 * <strong>NOTE:</strong> {@link Query#getSortObject() sorting} is not supported by {@code db.collection.updateOne}.
-	 * Use {@link #findAndModify(Query, Update, Class, String)} instead.
+	 * Use {@link #findAndModify(Query, UpdateDefinition, Class, String)} instead.
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
 	 *          {@literal null}.
@@ -1384,7 +1384,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *          the existing. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
-	 * @since 2.3
+	 * @since 3.0
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
@@ -1401,7 +1401,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
-	 * @since 2.3
+	 * @since 3.0
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
@@ -1417,7 +1417,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *          the existing. Must not be {@literal null}.
 	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
-	 * @since 2.3
+	 * @since 3.0
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
@@ -1436,7 +1436,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *          the existing. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
-	 * @since 2.3
+	 * @since 3.0
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
@@ -1453,7 +1453,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
-	 * @since 2.3
+	 * @since 3.0
 	 * @see Update
 	 * @see AggregationUpdate
 	 */

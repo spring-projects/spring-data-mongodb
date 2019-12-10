@@ -99,7 +99,7 @@ public class DefaultBulkOperationsUnitTests {
 	@Before
 	public void setUp() {
 
-		when(factory.getDb()).thenReturn(database);
+		when(factory.getMongoDatabase()).thenReturn(database);
 		when(factory.getExceptionTranslator()).thenReturn(new NullExceptionTranslator());
 		when(database.getCollection(anyString(), eq(Document.class))).thenReturn(collection);
 

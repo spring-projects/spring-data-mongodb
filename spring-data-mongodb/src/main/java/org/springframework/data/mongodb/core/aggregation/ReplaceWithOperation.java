@@ -27,7 +27,7 @@ import org.springframework.util.Assert;
  * possible to promote an embedded document to the top-level or specify a new document.
  *
  * @author Christoph Strobl
- * @since 2.3
+ * @since 3.0
  * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/replaceWith/">MongoDB Aggregation
  *      Framework: $replaceWith</a>
  */

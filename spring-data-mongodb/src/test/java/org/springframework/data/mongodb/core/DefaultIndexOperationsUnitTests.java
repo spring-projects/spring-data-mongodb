@@ -62,7 +62,7 @@ public class DefaultIndexOperationsUnitTests {
 	@Before
 	public void setUp() {
 
-		when(factory.getDb()).thenReturn(db);
+		when(factory.getMongoDatabase()).thenReturn(db);
 		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslator);
 		when(db.getCollection(any(), any(Class.class))).thenReturn(collection);
 		when(collection.createIndex(any(), any(IndexOptions.class))).thenReturn("OK");

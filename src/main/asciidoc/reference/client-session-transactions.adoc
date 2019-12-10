@@ -302,7 +302,7 @@ The following example shows how to create and use transactions with a `ReactiveM
 [source,java]
 ----
 @Configuration
-static class Config extends AbstractMongoConfiguration {
+static class Config extends AbstractMongoClientConfiguration {
 
     @Bean
     ReactiveMongoTransactionManager transactionManager(ReactiveDatabaseFactory factory) {  <1>

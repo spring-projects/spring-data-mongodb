@@ -24,7 +24,6 @@ import java.util.List;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
-
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoPage;
@@ -177,30 +176,12 @@ public class MongoQueryMethodUnitTests {
 	}
 
 	@Test // DATAMONGO-957
-	public void createsMongoQueryMethodWithMaxScanCorrectly() throws Exception {
-
-		MongoQueryMethod method = queryMethod(PersonRepository.class, "metaWithMaxScan");
-
-		assertThat(method.hasQueryMetaAttributes()).isTrue();
-		assertThat(method.getQueryMetaAttributes().getMaxScan()).isEqualTo(10L);
-	}
-
-	@Test // DATAMONGO-957
 	public void createsMongoQueryMethodWithCommentCorrectly() throws Exception {
 
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "metaWithComment");
 
 		assertThat(method.hasQueryMetaAttributes()).isTrue();
 		assertThat(method.getQueryMetaAttributes().getComment()).isEqualTo("foo bar");
-	}
-
-	@Test // DATAMONGO-957
-	public void createsMongoQueryMethodWithSnapshotCorrectly() throws Exception {
-
-		MongoQueryMethod method = queryMethod(PersonRepository.class, "metaWithSnapshotUsage");
-
-		assertThat(method.hasQueryMetaAttributes()).isTrue();
-		assertThat(method.getQueryMetaAttributes().getSnapshot()).isTrue();
 	}
 
 	@Test // DATAMONGO-1480
@@ -285,14 +266,8 @@ public class MongoQueryMethodUnitTests {
 		@Meta(maxExecutionTimeMs = 100)
 		List<User> metaWithSpellFixedMaxExecutionTime();
 
-		@Meta(maxScanDocuments = 10)
-		List<User> metaWithMaxScan();
-
 		@Meta(comment = "foo bar")
 		List<User> metaWithComment();
-
-		@Meta(snapshot = true)
-		List<User> metaWithSnapshotUsage();
 
 		@Meta(flags = { org.springframework.data.mongodb.core.query.Meta.CursorOption.NO_TIMEOUT })
 		List<User> metaWithNoCursorTimeout();

@@ -30,7 +30,7 @@ import org.springframework.util.CollectionUtils;
  * Removes fields from documents.
  *
  * @author Christoph Strobl
- * @since 2.3
+ * @since 3.0
  * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/unset/">MongoDB Aggregation Framework:
  *      $unset</a>
  */

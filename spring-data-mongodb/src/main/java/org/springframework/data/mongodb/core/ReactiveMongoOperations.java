@@ -683,7 +683,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param update the {@link UpdateDefinition} to apply on matching documents. Must not be {@literal null}.
 	 * @param entityClass the parametrized type. Must not be {@literal null}.
 	 * @return the converted object that was updated before it was updated.
-	 * @since 2.3
+	 * @since 3.0
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
@@ -699,7 +699,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param entityClass the parametrized type. Must not be {@literal null}.
 	 * @param collectionName the collection to query. Must not be {@literal null}.
 	 * @return the converted object that was updated before it was updated.
-	 * @since 2.3
+	 * @since 3.0
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
@@ -717,7 +717,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param entityClass the parametrized type.
 	 * @return the converted object that was updated. Depending on the value of {@link FindAndModifyOptions#isReturnNew()}
 	 *         this will either be the object as it was before the update or as it is after the update.
-	 * @since 2.3
+	 * @since 3.0
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
@@ -736,7 +736,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param collectionName the collection to query. Must not be {@literal null}.
 	 * @return the converted object that was updated. Depending on the value of {@link FindAndModifyOptions#isReturnNew()}
 	 *         this will either be the object as it was before the update or as it is after the update.
-	 * @since 2.3
+	 * @since 3.0
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
@@ -1171,7 +1171,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *          the existing object. Must not be {@literal null}.
 	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
-	 * @since 2.3
+	 * @since 3.0
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
@@ -1190,7 +1190,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *          the existing object. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
-	 * @since 2.3
+	 * @since 3.0
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
@@ -1207,7 +1207,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
-	 * @since 2.3
+	 * @since 3.0
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
@@ -1225,7 +1225,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *          the existing. Must not be {@literal null}.
 	 * @param entityClass class that determines the collection to use.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
-	 * @since 2.3
+	 * @since 3.0
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
@@ -1246,7 +1246,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *          the existing. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
-	 * @since 2.3
+	 * @since 3.0
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
@@ -1263,7 +1263,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
-	 * @since 2.3
+	 * @since 3.0
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
@@ -1279,7 +1279,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *          the existing. Must not be {@literal null}.
 	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
-	 * @since 2.3
+	 * @since 3.0
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
@@ -1298,7 +1298,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *          the existing. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
-	 * @since 2.3
+	 * @since 3.0
 	 * @see Update
 	 * @see AggregationUpdate
 	 */
@@ -1315,7 +1315,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
-	 * @since 2.3
+	 * @since 3.0
 	 * @see Update
 	 * @see AggregationUpdate
 	 */

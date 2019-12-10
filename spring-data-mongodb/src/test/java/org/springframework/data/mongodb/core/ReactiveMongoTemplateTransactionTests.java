@@ -41,7 +41,6 @@ import org.springframework.data.util.Version;
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.reactivestreams.client.ClientSession;
 import com.mongodb.reactivestreams.client.MongoClient;
-import com.mongodb.reactivestreams.client.Success;
 
 /**
  * Integration tests for Mongo Transactions using {@link ReactiveMongoTemplate}.
@@ -76,15 +75,12 @@ public class ReactiveMongoTemplateTransactionTests {
 		template = new ReactiveMongoTemplate(client, DATABASE_NAME);
 
 		MongoTestUtils.createOrReplaceCollection(DATABASE_NAME, COLLECTION_NAME, client).as(StepVerifier::create) //
-				.expectNext(Success.SUCCESS) //
 				.verifyComplete();
 
-		MongoTestUtils.createOrReplaceCollection(DATABASE_NAME, "person", client).as(StepVerifier::create)
-				.expectNext(Success.SUCCESS) //
-				.verifyComplete();
+		MongoTestUtils.createOrReplaceCollection(DATABASE_NAME, "person", client).as(StepVerifier::create).verifyComplete();
 
 		MongoTestUtils.createOrReplaceCollection(DATABASE_NAME, "personWithVersionPropertyOfTypeInteger", client)
-				.as(StepVerifier::create).expectNext(Success.SUCCESS) //
+				.as(StepVerifier::create) //
 				.verifyComplete();
 
 		template.insert(DOCUMENT, COLLECTION_NAME).as(StepVerifier::create).expectNextCount(1).verifyComplete();

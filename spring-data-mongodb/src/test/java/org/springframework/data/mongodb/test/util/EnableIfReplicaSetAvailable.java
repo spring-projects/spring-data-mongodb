@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Tag;
  * replicaSet mode. Intended to be used along with {@link MongoServerCondition}.
  *
  * @author Christoph Strobl
- * @since 2.3
+ * @since 3.0
  */
 @Target({ ElementType.TYPE, ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)

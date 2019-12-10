@@ -26,15 +26,14 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.ClientSessionOptions;
-import com.mongodb.DB;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
 /**
- * Common base class for usage with both {@link com.mongodb.client.MongoClients} and {@link com.mongodb.MongoClient}
- * defining common properties such as database name and exception translator.
+ * Common base class for usage with both {@link com.mongodb.client.MongoClients} defining common properties such as
+ * database name and exception translator.
  * <p/>
  * Not intended to be used directly.
  *
@@ -42,7 +41,6 @@ import com.mongodb.client.MongoDatabase;
  * @author Mark Paluch
  * @param <C> Client type.
  * @since 2.1
- * @see SimpleMongoDbFactory
  * @see SimpleMongoClientDbFactory
  */
 public abstract class MongoDbFactorySupport<C> implements MongoDbFactory {
@@ -89,18 +87,18 @@ public abstract class MongoDbFactorySupport<C> implements MongoDbFactory {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.MongoDbFactory#getDb()
+	 * @see org.springframework.data.mongodb.MongoDbFactory#getMongoDatabase()
 	 */
-	public MongoDatabase getDb() throws DataAccessException {
-		return getDb(databaseName);
+	public MongoDatabase getMongoDatabase() throws DataAccessException {
+		return getMongoDatabase(getDefaultDatabaseName());
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.MongoDbFactory#getDb(java.lang.String)
+	 * @see org.springframework.data.mongodb.MongoDbFactory#getMongoDatabase(java.lang.String)
 	 */
 	@Override
-	public MongoDatabase getDb(String dbName) throws DataAccessException {
+	public MongoDatabase getMongoDatabase(String dbName) throws DataAccessException {
 
 		Assert.hasText(dbName, "Database name must not be empty!");
 
@@ -181,20 +179,20 @@ public abstract class MongoDbFactorySupport<C> implements MongoDbFactory {
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.MongoDbFactory#getDb()
+		 * @see org.springframework.data.mongodb.MongoDbFactory#getMongoDatabase()
 		 */
 		@Override
-		public MongoDatabase getDb() throws DataAccessException {
-			return proxyMongoDatabase(delegate.getDb());
+		public MongoDatabase getMongoDatabase() throws DataAccessException {
+			return proxyMongoDatabase(delegate.getMongoDatabase());
 		}
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.MongoDbFactory#getDb(java.lang.String)
+		 * @see org.springframework.data.mongodb.MongoDbFactory#getMongoDatabase(java.lang.String)
 		 */
 		@Override
-		public MongoDatabase getDb(String dbName) throws DataAccessException {
-			return proxyMongoDatabase(delegate.getDb(dbName));
+		public MongoDatabase getMongoDatabase(String dbName) throws DataAccessException {
+			return proxyMongoDatabase(delegate.getMongoDatabase(dbName));
 		}
 
 		/*
@@ -204,15 +202,6 @@ public abstract class MongoDbFactorySupport<C> implements MongoDbFactory {
 		@Override
 		public PersistenceExceptionTranslator getExceptionTranslator() {
 			return delegate.getExceptionTranslator();
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.MongoDbFactory#getLegacyDb()
-		 */
-		@Override
-		public DB getLegacyDb() {
-			return delegate.getLegacyDb();
 		}
 
 		/*

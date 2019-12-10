@@ -19,7 +19,6 @@ import org.springframework.beans.factory.DisposableBean;
 
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.ConnectionString;
-import com.mongodb.DB;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
@@ -73,18 +72,6 @@ public class SimpleMongoClientDbFactory extends MongoDbFactorySupport<MongoClien
 	 */
 	private SimpleMongoClientDbFactory(MongoClient mongoClient, String databaseName, boolean mongoInstanceCreated) {
 		super(mongoClient, databaseName, mongoInstanceCreated, new MongoExceptionTranslator());
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.MongoDbFactory#getLegacyDb()
-	 */
-	@Override
-	public DB getLegacyDb() {
-
-		throw new UnsupportedOperationException(String.format(
-				"%s does not support legacy DBObject API! Please consider using SimpleMongoDbFactory for that purpose.",
-				MongoClient.class));
 	}
 
 	/*

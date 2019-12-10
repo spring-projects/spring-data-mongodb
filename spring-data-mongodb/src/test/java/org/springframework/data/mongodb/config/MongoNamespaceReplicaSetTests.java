@@ -22,11 +22,11 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.mongodb.MongoClientSettings;
 import org.bson.Document;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.mongodb.core.MongoClientFactoryBean;
@@ -35,11 +35,10 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.mongodb.MongoClient;
 import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoClient;
 
 /**
- *
  * @author Mark Pollack
  * @author Oliver Gierke
  * @author Thomas Darimont
@@ -58,7 +57,8 @@ public class MongoNamespaceReplicaSetTests {
 		assertThat(ctx.containsBean("replicaSetMongo")).isTrue();
 		MongoClientFactoryBean mfb = (MongoClientFactoryBean) ctx.getBean("&replicaSetMongo");
 
-		List<ServerAddress> replicaSetSeeds = (List<ServerAddress>) ReflectionTestUtils.getField(mfb, "replicaSetSeeds");
+		MongoClientSettings settings = (MongoClientSettings) ReflectionTestUtils.getField(mfb, "mongoClientSettings");
+		List<ServerAddress> replicaSetSeeds = settings.getClusterSettings().getHosts();
 
 		assertThat(replicaSetSeeds).isNotNull();
 		assertThat(replicaSetSeeds).contains(new ServerAddress(InetAddress.getByName("127.0.0.1"), 10001),
@@ -72,7 +72,8 @@ public class MongoNamespaceReplicaSetTests {
 		assertThat(ctx.containsBean("manyReplicaSetMongo")).isTrue();
 		MongoClientFactoryBean mfb = (MongoClientFactoryBean) ctx.getBean("&manyReplicaSetMongo");
 
-		List<ServerAddress> replicaSetSeeds = (List<ServerAddress>) ReflectionTestUtils.getField(mfb, "replicaSetSeeds");
+		MongoClientSettings settings = (MongoClientSettings) ReflectionTestUtils.getField(mfb, "mongoClientSettings");
+		List<ServerAddress> replicaSetSeeds = settings.getClusterSettings().getHosts();
 
 		assertThat(replicaSetSeeds).isNotNull();
 		assertThat(replicaSetSeeds).hasSize(3);
@@ -90,8 +91,8 @@ public class MongoNamespaceReplicaSetTests {
 	public void testMongoWithReplicaSets() {
 
 		MongoClient mongo = ctx.getBean(MongoClient.class);
-		assertThat(mongo.getAllAddress().size()).isEqualTo(2);
-		List<ServerAddress> servers = mongo.getAllAddress();
+		assertThat(mongo.getClusterDescription().getClusterSettings().getHosts()).isEqualTo(2);
+		List<ServerAddress> servers = mongo.getClusterDescription().getClusterSettings().getHosts();
 		assertThat(servers.get(0).getHost()).isEqualTo("127.0.0.1");
 		assertThat(servers.get(1).getHost()).isEqualTo("localhost");
 		assertThat(servers.get(0).getPort()).isEqualTo(10001);

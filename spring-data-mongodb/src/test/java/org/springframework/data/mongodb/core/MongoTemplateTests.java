@@ -44,7 +44,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.convert.converter.Converter;
@@ -100,12 +99,12 @@ import org.springframework.util.StringUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
-import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.ListIndexesIterable;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.Filters;
@@ -410,7 +409,7 @@ public class MongoTemplateTests {
 
 		assertThat(template.indexOps(Person.class).getIndexInfo().isEmpty()).isTrue();
 
-		factory.getDb().getCollection(template.getCollectionName(Person.class))
+		factory.getMongoDatabase().getCollection(template.getCollectionName(Person.class))
 				.createIndex(new org.bson.Document("age", -1), new IndexOptions().name("age_-1").unique(true).sparse(true));
 
 		ListIndexesIterable<org.bson.Document> indexInfo = template.getCollection(template.getCollectionName(Person.class))

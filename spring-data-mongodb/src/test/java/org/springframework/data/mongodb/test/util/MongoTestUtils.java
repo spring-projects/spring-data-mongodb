@@ -30,7 +30,6 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.reactivestreams.client.MongoClients;
-import com.mongodb.reactivestreams.client.Success;
 
 /**
  * Utility to create (and reuse) imperative and reactive {@code MongoClient} instances.
@@ -109,7 +108,7 @@ public class MongoTestUtils {
 	 * @param collectionName must not be {@literal null}.
 	 * @param client must not be {@literal null}.
 	 */
-	public static Mono<Success> createOrReplaceCollection(String dbName, String collectionName,
+	public static Mono<Void> createOrReplaceCollection(String dbName, String collectionName,
 			com.mongodb.reactivestreams.client.MongoClient client) {
 
 		com.mongodb.reactivestreams.client.MongoDatabase database = client.getDatabase(dbName)
@@ -134,7 +133,6 @@ public class MongoTestUtils {
 
 		createOrReplaceCollection(dbName, collectionName, client) //
 				.as(StepVerifier::create) //
-				.expectNext(Success.SUCCESS) //
 				.verifyComplete();
 	}
 
@@ -155,7 +153,6 @@ public class MongoTestUtils {
 		Mono.from(database.getCollection(collectionName).drop()) //
 				.retryBackoff(3, Duration.ofMillis(250)) //
 				.as(StepVerifier::create) //
-				.expectNext(Success.SUCCESS) //
 				.verifyComplete();
 	}
 
@@ -180,9 +177,9 @@ public class MongoTestUtils {
 	}
 
 	/**
-	 * Create a new {@link com.mongodb.MongoClient} with defaults suitable for replica set usage.
+	 * Create a new {@link com.mongodb.client.MongoClient} with defaults suitable for replica set usage.
 	 *
-	 * @return new instance of {@link com.mongodb.MongoClient}.
+	 * @return new instance of {@link com.mongodb.client.MongoClient}.
 	 */
 	public static com.mongodb.client.MongoClient replSetClient() {
 		return com.mongodb.client.MongoClients.create(CONNECTION_STRING);
@@ -199,7 +196,7 @@ public class MongoTestUtils {
 
 	/**
 	 * @return the server version extracted from buildInfo.
-	 * @since 2.3.0
+	 * @since 3.0.0
 	 */
 	public static Version serverVersion() {
 
@@ -216,7 +213,7 @@ public class MongoTestUtils {
 
 	/**
 	 * @return check if the server is running as part of a replica set.
-	 * @since 2.3.0
+	 * @since 3.0.0
 	 */
 	public static boolean serverIsReplSet() {
 

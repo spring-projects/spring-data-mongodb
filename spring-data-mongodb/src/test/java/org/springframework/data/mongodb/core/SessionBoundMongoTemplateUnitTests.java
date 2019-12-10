@@ -112,7 +112,6 @@ public class SessionBoundMongoTemplateUnitTests {
 		when(aggregateIterable.allowDiskUse(anyBoolean())).thenReturn(aggregateIterable);
 		when(aggregateIterable.batchSize(anyInt())).thenReturn(aggregateIterable);
 		when(aggregateIterable.map(any())).thenReturn(aggregateIterable);
-		when(aggregateIterable.useCursor(anyBoolean())).thenReturn(aggregateIterable);
 		when(aggregateIterable.into(any())).thenReturn(Collections.emptyList());
 		when(mongoIterable.iterator()).thenReturn(cursor);
 		when(distinctIterable.map(any())).thenReturn(distinctIterable);

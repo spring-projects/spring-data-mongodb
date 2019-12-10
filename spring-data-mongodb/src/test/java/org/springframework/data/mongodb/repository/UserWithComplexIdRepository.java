@@ -60,7 +60,7 @@ public interface UserWithComplexIdRepository extends CrudRepository<UserWithComp
 	@Meta
 	@interface ComposedMetaAnnotation {
 
-		@AliasFor(annotation = Meta.class, attribute = "maxScanDocuments")
-		long scanDocuments() default 1;
+		@AliasFor(annotation = Meta.class, attribute = "maxExecutionTimeMs")
+		long execTime() default -1;
 	}
 }

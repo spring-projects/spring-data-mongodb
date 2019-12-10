@@ -28,6 +28,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.mongodb.MongoClientSettings;
+import com.mongodb.client.model.Filters;
+import org.bson.conversions.Bson;
 import org.bson.types.Code;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
@@ -58,7 +61,6 @@ import org.springframework.data.mongodb.core.query.Query;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import com.mongodb.QueryBuilder;
 
 /**
  * Unit tests for {@link QueryMapper}.
@@ -181,8 +183,8 @@ public class QueryMapperUnitTests {
 	@Test // DATAMONGO-373
 	public void handlesNativelyBuiltQueryCorrectly() {
 
-		DBObject query = new QueryBuilder().or(new BasicDBObject("foo", "bar")).get();
-		mapper.getMappedObject(new org.bson.Document(query.toMap()), Optional.empty());
+		Bson query = new BasicDBObject(Filters.or(new BasicDBObject("foo", "bar")).toBsonDocument(org.bson.Document.class, MongoClientSettings.getDefaultCodecRegistry()));
+		mapper.getMappedObject(query, Optional.empty());
 	}
 
 	@Test // DATAMONGO-369

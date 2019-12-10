@@ -213,7 +213,7 @@ public class DefaultMessageListenerContainerTests {
 	@Test // DATAMONGO-1803
 	public void tailableCursor() throws InterruptedException {
 
-		dbFactory.getDb().createCollection(COLLECTION_NAME,
+		dbFactory.getMongoDatabase().createCollection(COLLECTION_NAME,
 				new CreateCollectionOptions().capped(true).maxDocuments(10000).sizeInBytes(10000));
 
 		collection.insertOne(new Document("_id", "id-1").append("value", "foo"));
@@ -235,7 +235,7 @@ public class DefaultMessageListenerContainerTests {
 	@Test // DATAMONGO-1803
 	public void tailableCursorOnEmptyCollection() throws InterruptedException {
 
-		dbFactory.getDb().createCollection(COLLECTION_NAME,
+		dbFactory.getMongoDatabase().createCollection(COLLECTION_NAME,
 				new CreateCollectionOptions().capped(true).maxDocuments(10000).sizeInBytes(10000));
 
 		MessageListenerContainer container = new DefaultMessageListenerContainer(template);
@@ -256,7 +256,7 @@ public class DefaultMessageListenerContainerTests {
 	@Test // DATAMONGO-1803
 	public void abortsSubscriptionOnError() throws InterruptedException {
 
-		dbFactory.getDb().createCollection(COLLECTION_NAME,
+		dbFactory.getMongoDatabase().createCollection(COLLECTION_NAME,
 				new CreateCollectionOptions().capped(true).maxDocuments(10000).sizeInBytes(10000));
 
 		MessageListenerContainer container = new DefaultMessageListenerContainer(template);
@@ -284,7 +284,7 @@ public class DefaultMessageListenerContainerTests {
 	@Test // DATAMONGO-1803
 	public void callsDefaultErrorHandlerOnError() throws InterruptedException {
 
-		dbFactory.getDb().createCollection(COLLECTION_NAME,
+		dbFactory.getMongoDatabase().createCollection(COLLECTION_NAME,
 				new CreateCollectionOptions().capped(true).maxDocuments(10000).sizeInBytes(10000));
 
 		collection.insertOne(new Document("_id", "id-1").append("value", "foo"));
@@ -316,7 +316,7 @@ public class DefaultMessageListenerContainerTests {
 	@EnableIfReplicaSetAvailable
 	public void runsMoreThanOneTaskAtOnce() throws InterruptedException {
 
-		dbFactory.getDb().createCollection(COLLECTION_NAME,
+		dbFactory.getMongoDatabase().createCollection(COLLECTION_NAME,
 				new CreateCollectionOptions().capped(true).maxDocuments(10000).sizeInBytes(10000));
 
 		MessageListenerContainer container = new DefaultMessageListenerContainer(template);

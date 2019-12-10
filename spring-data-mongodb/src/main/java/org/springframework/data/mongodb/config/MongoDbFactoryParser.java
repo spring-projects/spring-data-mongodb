@@ -32,14 +32,12 @@ import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.data.config.BeanComponentDefinitionBuilder;
 import org.springframework.data.mongodb.core.MongoClientFactoryBean;
-import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
+import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;
 
-import com.mongodb.Mongo;
-import com.mongodb.MongoClientURI;
-import com.mongodb.MongoURI;
+import com.mongodb.ConnectionString;
 
 /**
  * {@link BeanDefinitionParser} to parse {@code db-factory} elements into {@link BeanDefinition}s.
@@ -84,10 +82,11 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 	protected AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
 
 		// Common setup
-		BeanDefinitionBuilder dbFactoryBuilder = BeanDefinitionBuilder.genericBeanDefinition(SimpleMongoDbFactory.class);
+		BeanDefinitionBuilder dbFactoryBuilder = BeanDefinitionBuilder
+				.genericBeanDefinition(SimpleMongoClientDbFactory.class);
 		setPropertyValue(dbFactoryBuilder, element, "write-concern", "writeConcern");
 
-		BeanDefinition mongoUri = getMongoUri(element, parserContext);
+		BeanDefinition mongoUri = getConnectionString(element, parserContext);
 
 		if (mongoUri != null) {
 
@@ -97,7 +96,8 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 
 		BeanComponentDefinitionBuilder helper = new BeanComponentDefinitionBuilder(element, parserContext);
 
-		String mongoRef = element.getAttribute("mongo-ref");
+		String mongoRef = element.getAttribute("mongo-client-ref");
+
 		String dbname = element.getAttribute("dbname");
 
 		// Defaulting
@@ -119,8 +119,8 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 	}
 
 	/**
-	 * Registers a default {@link BeanDefinition} of a {@link Mongo} instance and returns the name under which the
-	 * {@link Mongo} instance was registered under.
+	 * Registers a default {@link BeanDefinition} of a {@link com.mongodb.client.MongoClient} instance and returns the
+	 * name under which the {@link com.mongodb.client.MongoClient} instance was registered under.
 	 *
 	 * @param element must not be {@literal null}.
 	 * @param parserContext must not be {@literal null}.
@@ -136,8 +136,7 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 	}
 
 	/**
-	 * Creates a {@link BeanDefinition} for a {@link MongoURI} or {@link MongoClientURI} depending on configured
-	 * attributes. <br />
+	 * Creates a {@link BeanDefinition} for a {@link ConnectionString} depending on configured attributes. <br />
 	 * Errors when configured element contains {@literal uri} or {@literal client-uri} along with other attributes except
 	 * {@literal write-concern} and/or {@literal id}.
 	 *
@@ -146,11 +145,19 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 	 * @return {@literal null} in case no client-/uri defined.
 	 */
 	@Nullable
-	private BeanDefinition getMongoUri(Element element, ParserContext parserContext) {
+	private BeanDefinition getConnectionString(Element element, ParserContext parserContext) {
 
-		boolean hasClientUri = element.hasAttribute("client-uri");
+		String type = null;
 
-		if (!hasClientUri && !element.hasAttribute("uri")) {
+		if (element.hasAttribute("client-uri")) {
+			type = "client-uri";
+		} else if (element.hasAttribute("connection-string")) {
+			type = "connection-string";
+		} else if (element.hasAttribute("uri")) {
+			type = "uri";
+		}
+
+		if (!StringUtils.hasText(type)) {
 			return null;
 		}
 
@@ -164,16 +171,12 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 
 		if (element.getAttributes().getLength() > allowedAttributesCount) {
 
-			parserContext.getReaderContext().error(
-					"Configure either " + (hasClientUri ? "Mongo Client URI" : "Mongo URI") + " or details individually!",
+			parserContext.getReaderContext().error("Configure either MongoDB " + type + " or details individually!",
 					parserContext.extractSource(element));
 		}
 
-		Class<?> type = MongoClientURI.class;
-		String uri = hasClientUri ? element.getAttribute("client-uri") : element.getAttribute("uri");
-
-		BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(type);
-		builder.addConstructorArgValue(uri);
+		BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(ConnectionString.class);
+		builder.addConstructorArgValue(element.getAttribute(type));
 
 		return builder.getBeanDefinition();
 	}

@@ -109,27 +109,6 @@ public class Meta {
 	}
 
 	/**
-	 * @return {@literal null} if not set.
-	 * @deprecated since 2.2. {@code $maxScan} has been removed without replacement in MongoDB 4.2.
-	 */
-	@Nullable
-	@Deprecated
-	public Long getMaxScan() {
-		return getValue(MetaKey.MAX_SCAN.key);
-	}
-
-	/**
-	 * Only scan the specified number of documents.
-	 *
-	 * @param maxScan
-	 * @deprecated since 2.1. {@code $maxScan} has been removed without replacement in MongoDB 4.2.
-	 */
-	@Deprecated
-	public void setMaxScan(long maxScan) {
-		setValue(MetaKey.MAX_SCAN.key, maxScan);
-	}
-
-	/**
 	 * Add a comment to the query that is propagated to the profile log.
 	 *
 	 * @param comment
@@ -144,24 +123,6 @@ public class Meta {
 	@Nullable
 	public String getComment() {
 		return getValue(MetaKey.COMMENT.key);
-	}
-
-	/**
-	 * Using snapshot prevents the cursor from returning a document more than once.
-	 *
-	 * @param useSnapshot
-	 * @deprecated since 2.1 due to deprecation as of MongoDB 3.6
-	 */
-	@Deprecated
-	public void setSnapshot(boolean useSnapshot) {
-		setValue(MetaKey.SNAPSHOT.key, useSnapshot);
-	}
-
-	/**
-	 * @return {@literal null} if not set.
-	 */
-	public boolean getSnapshot() {
-		return getValue(MetaKey.SNAPSHOT.key, false);
 	}
 
 	/**
@@ -186,7 +147,7 @@ public class Meta {
 	}
 
 	/**
-	 * Add {@link CursorOption} influencing behavior of the {@link com.mongodb.DBCursor}.
+	 * Add {@link CursorOption} influencing behavior of the {@link com.mongodb.client.FindIterable}.
 	 *
 	 * @param option must not be {@literal null}.
 	 * @return

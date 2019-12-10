@@ -360,20 +360,6 @@ public class Query {
 	}
 
 	/**
-	 * @param maxScan
-	 * @return this.
-	 * @see Meta#setMaxScan(long)
-	 * @since 1.6
-	 * @deprecated since 2.1 due to deprecation in MongoDB 4.0.
-	 */
-	@Deprecated
-	public Query maxScan(long maxScan) {
-
-		meta.setMaxScan(maxScan);
-		return this;
-	}
-
-	/**
 	 * Add a comment to the query that is propagated to the profile log.
 	 *
 	 * @param comment
@@ -384,19 +370,6 @@ public class Query {
 	public Query comment(String comment) {
 
 		meta.setComment(comment);
-		return this;
-	}
-
-	/**
-	 * @return this.
-	 * @see Meta#setSnapshot(boolean)
-	 * @since 1.6
-	 * @deprecated since 2.1 due to deprecation as of MongoDB 3.6
-	 */
-	@Deprecated
-	public Query useSnapshot() {
-
-		meta.setSnapshot(true);
 		return this;
 	}
 

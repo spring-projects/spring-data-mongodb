@@ -1,0 +1,61 @@
+[[migrating]]
+= Migrating
+
+This chapter coverts major changes and outlines migration steps.
+
+[[migrating-2.x-to-3.0]]
+== 2.x to 3.0
+
+=== Dependency Changes
+
+* `org.mongodb:mongo-java-driver` (uber jar) got replaced with:
+** bson-jar
+** core-jar
+** sync-jar
+
+
+This allows to include eg. just the reactive bits without having to pull in all the sync stuff.
+NOTE: The new sync driver does no longer support `com.mongodb.DBObject`. Please use `org.bson.Document` instead.
+
+=== Signature Changes
+
+* `MongoTemplate` no longer supports `com.mongodb.MongoClient` and `com.mongodb.MongoClientOptions`.
+Please use `com.mongodb.client.MongoClient` and `com.mongodb.MongoClientSettings` instead.
+
+In case you're using `AbstractMongoConfiguration` please switch to `AbstractMongoClientInformation`.
+
+=== Namespace Changes
+
+The switch to `com.mongodb.client.MongoClient` requires an update of your configuration XML if you have one.
+The best way to provide required connection information is by using a connection string.
+Please see the https://docs.mongodb.com/manual/reference/connection-string/[MongoDB Documentation] for details.
+
+[source,xml]
+====
+----
+<mongo:mongo.mongo-client id="with-defaults" />
+----
+
+----
+<context:property-placeholder location="classpath:..."/>
+
+<mongo:mongo.mongo-client id="client-just-host-port"
+                          host="${mongo.host}" port="${mongo.port}" />
+
+<mongo:mongo.mongo-client id="client-using-connection-string"
+                          connection-string="mongodb://${mongo.host}:${mongo.port}/?replicaSet=rs0" />
+----
+
+----
+<mongo:mongo.mongo-client id="client-with-settings" replica-set="rs0">
+		<mongo:client-settings cluster-connection-mode="MULTIPLE"
+							   cluster-type="REPLICA_SET"
+							   cluster-server-selection-timeout="300"
+							   cluster-local-threshold="100"
+							   cluster-hosts="localhost:27018,localhost:27019,localhost:27020" />
+	</mongo:mongo.mongo-client>
+----
+====
+
+
+

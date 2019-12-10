@@ -93,7 +93,6 @@ import com.mongodb.reactivestreams.client.MapReducePublisher;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
-import com.mongodb.reactivestreams.client.Success;
 
 /**
  * Unit tests for {@link ReactiveMongoTemplate}.
@@ -116,7 +115,7 @@ public class ReactiveMongoTemplateUnitTests {
 	@Mock Publisher runCommandPublisher;
 	@Mock Publisher<UpdateResult> updateResultPublisher;
 	@Mock Publisher findAndUpdatePublisher;
-	@Mock Publisher<Success> successPublisher;
+	@Mock Publisher<Void> successPublisher;
 	@Mock DistinctPublisher distinctPublisher;
 	@Mock Publisher deletePublisher;
 	@Mock MapReducePublisher mapReducePublisher;

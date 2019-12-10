@@ -24,8 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import com.mongodb.DB;
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 
 /**
  * This test class assumes that you are already running the MongoDB server.
@@ -37,8 +36,6 @@ import com.mongodb.MongoClient;
 public class MongoAdminIntegrationTests {
 
 	private static final Log logger = LogFactory.getLog(MongoAdminIntegrationTests.class);
-
-	@SuppressWarnings("unused") private DB testAdminDb;
 
 	@Autowired MongoClient mongoClient;
 

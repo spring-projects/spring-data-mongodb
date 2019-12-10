@@ -65,6 +65,12 @@
 			<artifactId>querydsl-mongodb</artifactId>
 			<version>${querydsl}</version>
 			<optional>true</optional>
+			<exclusions>
+				<exclusion>
+					<groupId>org.mongodb</groupId>
+					<artifactId>mongo-java-driver</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<dependency>
@@ -82,28 +88,19 @@
 		</dependency>
 
 		<!-- reactive -->
+
 		<dependency>
 			<groupId>org.mongodb</groupId>
-			<artifactId>mongodb-driver-reactivestreams</artifactId>
-			<version>${mongo.reactivestreams}</version>
+			<artifactId>mongodb-driver-sync</artifactId>
+			<version>${mongo}</version>
 			<optional>true</optional>
 		</dependency>
 
 		<dependency>
 			<groupId>org.mongodb</groupId>
-			<artifactId>mongodb-driver-async</artifactId>
-			<version>${mongo}</version>
+			<artifactId>mongodb-driver-reactivestreams</artifactId>
+			<version>${mongo.reactivestreams}</version>
 			<optional>true</optional>
-			<exclusions>
-				<exclusion>
-					<groupId>org.mongodb</groupId>
-					<artifactId>mongodb-driver-core</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.mongodb</groupId>
-					<artifactId>bson</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 
 		<dependency>

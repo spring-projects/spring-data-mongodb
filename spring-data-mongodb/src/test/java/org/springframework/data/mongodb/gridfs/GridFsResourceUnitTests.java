@@ -39,7 +39,7 @@ public class GridFsResourceUnitTests {
 	public void shouldReadContentTypeCorrectly() {
 
 		Document metadata = new Document(GridFsResource.CONTENT_TYPE_FIELD, "text/plain");
-		GridFSFile file = new GridFSFile(new BsonObjectId(), "foo", 0, 0, new Date(), "foo", metadata);
+		GridFSFile file = new GridFSFile(new BsonObjectId(), "foo", 0, 0, new Date(), metadata);
 		GridFsResource resource = new GridFsResource(file);
 
 		assertThat(resource.getContentType()).isEqualTo("text/plain");
@@ -48,7 +48,7 @@ public class GridFsResourceUnitTests {
 	@Test // DATAMONGO-2240
 	public void shouldReturnGridFSFile() {
 
-		GridFSFile file = new GridFSFile(new BsonObjectId(), "foo", 0, 0, new Date(), "foo", new Document());
+		GridFSFile file = new GridFSFile(new BsonObjectId(), "foo", 0, 0, new Date(), new Document());
 		GridFsResource resource = new GridFsResource(file);
 
 		assertThat(resource.getGridFSFile()).isSameAs(file);
@@ -57,7 +57,7 @@ public class GridFsResourceUnitTests {
 	@Test // DATAMONGO-1850
 	public void shouldThrowExceptionOnEmptyContentType() {
 
-		GridFSFile file = new GridFSFile(new BsonObjectId(), "foo", 0, 0, new Date(), "foo", null);
+		GridFSFile file = new GridFSFile(new BsonObjectId(), "foo", 0, 0, new Date(), null);
 		GridFsResource resource = new GridFsResource(file);
 
 		assertThatThrownBy(resource::getContentType).isInstanceOf(MongoGridFSException.class);
@@ -66,7 +66,7 @@ public class GridFsResourceUnitTests {
 	@Test // DATAMONGO-1850
 	public void shouldThrowExceptionOnEmptyContentTypeInMetadata() {
 
-		GridFSFile file = new GridFSFile(new BsonObjectId(), "foo", 0, 0, new Date(), "foo", new Document());
+		GridFSFile file = new GridFSFile(new BsonObjectId(), "foo", 0, 0, new Date(), new Document());
 		GridFsResource resource = new GridFsResource(file);
 
 		assertThatThrownBy(resource::getContentType).isInstanceOf(MongoGridFSException.class);

@@ -111,7 +111,7 @@ public class DbRefMappingMongoConverterUnitTests {
 
 		MongoDatabase dbMock = mock(MongoDatabase.class);
 		MongoCollection collectionMock = mock(MongoCollection.class);
-		when(dbFactory.getDb()).thenReturn(dbMock);
+		when(dbFactory.getMongoDatabase()).thenReturn(dbMock);
 		when(dbMock.getCollection(anyString(), eq(Document.class))).thenReturn(collectionMock);
 
 		FindIterable fi = mock(FindIterable.class);

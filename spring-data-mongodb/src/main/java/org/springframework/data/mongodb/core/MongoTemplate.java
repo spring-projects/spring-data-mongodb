@@ -35,7 +35,6 @@ import org.bson.codecs.Codec;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -128,11 +127,6 @@ import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.ClientSessionOptions;
-import com.mongodb.Cursor;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.Mongo;
-import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
@@ -174,7 +168,6 @@ import com.mongodb.client.result.UpdateResult;
  * @author Cimon Lucas
  * @author Michael J. Simons
  */
-@SuppressWarnings("deprecation")
 public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(MongoTemplate.class);
@@ -212,18 +205,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	private @Nullable MongoPersistentEntityIndexCreator indexCreator;
 
 	private SessionSynchronization sessionSynchronization = SessionSynchronization.ON_ACTUAL_TRANSACTION;
-
-	/**
-	 * Constructor used for a basic template configuration.
-	 *
-	 * @param mongoClient must not be {@literal null}.
-	 * @param databaseName must not be {@literal null} or empty.
-	 * @deprecated since 2.2 in favor of {@link #MongoTemplate(com.mongodb.client.MongoClient, String)}.
-	 */
-	@Deprecated
-	public MongoTemplate(MongoClient mongoClient, String databaseName) {
-		this(new SimpleMongoDbFactory(mongoClient, databaseName), (MongoConverter) null);
-	}
 
 	/**
 	 * Constructor used for a basic template configuration.
@@ -316,8 +297,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	/**
 	 * Configures the {@link WriteConcern} to be used with the template. If none is configured the {@link WriteConcern}
-	 * configured on the {@link MongoDbFactory} will apply. If you configured a {@link Mongo} instance no
-	 * {@link WriteConcern} will be used.
+	 * configured on the {@link MongoDbFactory} will apply.
 	 *
 	 * @param writeConcern
 	 */
@@ -524,8 +504,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 *          specification, must not be {@literal null}.
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @param documentCallbackHandler the handler that will extract results, one document at a time
-	 * @param preparer allows for customization of the {@link DBCursor} used when iterating over the result set, (apply
-	 *          limits, skips and so on).
+	 * @param preparer allows for customization of the {@link FindIterable} used when iterating over the result set,
+	 *          (apply limits, skips and so on).
 	 */
 	protected void executeQuery(Query query, String collectionName, DocumentCallbackHandler documentCallbackHandler,
 			@Nullable CursorPreparer preparer) {
@@ -2527,8 +2507,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param query the query document that specifies the criteria used to find a record.
 	 * @param fields the document that specifies the fields to be returned.
 	 * @param entityClass the parameterized type of the returned list.
-	 * @param preparer allows for customization of the {@link DBCursor} used when iterating over the result set, (apply
-	 *          limits, skips and so on).
+	 * @param preparer allows for customization of the {@link FindIterable} used when iterating over the result set,
+	 *          (apply limits, skips and so on).
 	 * @return the {@link List} of converted objects.
 	 */
 	protected <T> List<T> doFind(String collectionName, Document query, Document fields, Class<T> entityClass,
@@ -2797,16 +2777,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * Internal method using callback to do queries against the datastore that requires reading a collection of objects.
 	 * It will take the following steps
 	 * <ol>
-	 * <li>Execute the given {@link ConnectionCallback} for a {@link DBCursor}.</li>
-	 * <li>Prepare that {@link DBCursor} with the given {@link CursorPreparer} (will be skipped if {@link CursorPreparer}
-	 * is {@literal null}</li>
-	 * <li>Iterate over the {@link DBCursor} and applies the given {@link DocumentCallback} to each of the
+	 * <li>Execute the given {@link ConnectionCallback} for a {@link FindIterable}.</li>
+	 * <li>Prepare that {@link FindIterable} with the given {@link CursorPreparer} (will be skipped if
+	 * {@link CursorPreparer} is {@literal null}</li>
+	 * <li>Iterate over the {@link FindIterable} and applies the given {@link DocumentCallback} to each of the
 	 * {@link Document}s collecting the actual result {@link List}.</li>
 	 * <ol>
 	 *
 	 * @param <T>
-	 * @param collectionCallback the callback to retrieve the {@link DBCursor} with
-	 * @param preparer the {@link CursorPreparer} to potentially modify the {@link DBCursor} before iterating over it
+	 * @param collectionCallback the callback to retrieve the {@link FindIterable} with
+	 * @param preparer the {@link CursorPreparer} to potentially modify the {@link FindIterable} before iterating over it
 	 * @param objectCallback the {@link DocumentCallback} to transform {@link Document}s into the actual domain type
 	 * @param collectionName the collection to be queried
 	 * @return
@@ -2939,7 +2919,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	/**
 	 * Simple {@link CollectionCallback} that takes a query {@link Document} plus an optional fields specification
-	 * {@link Document} and executes that against the {@link DBCollection}.
+	 * {@link Document} and executes that against the {@link MongoCollection}.
 	 *
 	 * @author Oliver Gierke
 	 * @author Thomas Risberg
@@ -2980,7 +2960,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	/**
 	 * Simple {@link CollectionCallback} that takes a query {@link Document} plus an optional fields specification
-	 * {@link Document} and executes that against the {@link DBCollection}.
+	 * {@link Document} and executes that against the {@link MongoCollection}.
 	 *
 	 * @author Oliver Gierke
 	 * @author Thomas Risberg
@@ -3037,7 +3017,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	/**
 	 * Simple {@link CollectionCallback} that takes a query {@link Document} plus an optional fields specification
-	 * {@link Document} and executes that against the {@link DBCollection}.
+	 * {@link Document} and executes that against the {@link MongoCollection}.
 	 *
 	 * @author Thomas Risberg
 	 */
@@ -3337,14 +3317,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 						cursorToUse = cursorToUse.comment(meta.getComment());
 					}
 
-					if (meta.getSnapshot()) {
-						cursorToUse = cursorToUse.snapshot(meta.getSnapshot());
-					}
-
-					if (meta.getMaxScan() != null) {
-						cursorToUse = cursorToUse.maxScan(meta.getMaxScan());
-					}
-
 					if (meta.getMaxTimeMsec() != null) {
 						cursorToUse = cursorToUse.maxTime(meta.getMaxTimeMsec(), TimeUnit.MILLISECONDS);
 					}
@@ -3429,7 +3401,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	/**
-	 * A {@link CloseableIterator} that is backed by a MongoDB {@link Cursor}.
+	 * A {@link CloseableIterator} that is backed by a MongoDB {@link MongoCollection}.
 	 *
 	 * @author Thomas Darimont
 	 * @since 1.7
@@ -3442,7 +3414,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		private DocumentCallback<T> objectReadCallback;
 
 		/**
-		 * Creates a new {@link CloseableIterableCursorAdapter} backed by the given {@link Cursor}.
+		 * Creates a new {@link CloseableIterableCursorAdapter} backed by the given {@link MongoCollection}.
 		 *
 		 * @param cursor
 		 * @param exceptionTranslator

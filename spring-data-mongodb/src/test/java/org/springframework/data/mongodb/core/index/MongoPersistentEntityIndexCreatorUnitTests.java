@@ -74,7 +74,7 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		optionsCaptor = ArgumentCaptor.forClass(IndexOptions.class);
 		collectionCaptor = ArgumentCaptor.forClass(String.class);
 
-		when(factory.getDb()).thenReturn(db);
+		when(factory.getMongoDatabase()).thenReturn(db);
 		when(factory.getExceptionTranslator()).thenReturn(new MongoExceptionTranslator());
 		when(db.getCollection(collectionCaptor.capture(), eq(org.bson.Document.class)))
 				.thenReturn((MongoCollection) collection);

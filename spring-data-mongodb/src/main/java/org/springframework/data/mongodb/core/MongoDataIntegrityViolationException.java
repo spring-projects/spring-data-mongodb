@@ -16,10 +16,9 @@
 package org.springframework.data.mongodb.core;
 
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
-import com.mongodb.WriteResult;
+import com.mongodb.WriteConcernResult;
 
 /**
  * Mongo-specific {@link DataIntegrityViolationException}.
@@ -30,18 +29,18 @@ public class MongoDataIntegrityViolationException extends DataIntegrityViolation
 
 	private static final long serialVersionUID = -186980521176764046L;
 
-	private final WriteResult writeResult;
+	private final WriteConcernResult writeResult;
 	private final MongoActionOperation actionOperation;
 
 	/**
-	 * Creates a new {@link MongoDataIntegrityViolationException} using the given message and {@link WriteResult}.
+	 * Creates a new {@link MongoDataIntegrityViolationException} using the given message and {@link WriteConcernResult}.
 	 *
 	 * @param message the exception message
-	 * @param writeResult the {@link WriteResult} that causes the exception, must not be {@literal null}.
+	 * @param writeResult the {@link WriteConcernResult} that causes the exception, must not be {@literal null}.
 	 * @param actionOperation the {@link MongoActionOperation} that caused the exception, must not be {@literal null}.
 	 */
-	public MongoDataIntegrityViolationException(String message, WriteResult writeResult,
-												MongoActionOperation actionOperation) {
+	public MongoDataIntegrityViolationException(String message, WriteConcernResult writeResult,
+			MongoActionOperation actionOperation) {
 
 		super(message);
 
@@ -53,11 +52,11 @@ public class MongoDataIntegrityViolationException extends DataIntegrityViolation
 	}
 
 	/**
-	 * Returns the {@link WriteResult} that caused the exception.
+	 * Returns the {@link WriteConcernResult} that caused the exception.
 	 *
 	 * @return the writeResult
 	 */
-	public WriteResult getWriteResult() {
+	public WriteConcernResult getWriteResult() {
 		return writeResult;
 	}
 

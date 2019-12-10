@@ -21,7 +21,6 @@ import org.springframework.data.mongodb.core.script.ExecutableMongoScript;
 import org.springframework.data.mongodb.core.script.NamedMongoScript;
 import org.springframework.lang.Nullable;
 
-import com.mongodb.DB;
 
 /**
  * Script operations on {@link com.mongodb.DB} level. Allows interaction with server side JavaScript functions.

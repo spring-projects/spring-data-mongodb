@@ -96,7 +96,6 @@ import org.springframework.lang.Nullable;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.CollectionUtils;
 
-import com.mongodb.DB;
 import com.mongodb.MongoException;
 import com.mongodb.MongoNamespace;
 import com.mongodb.ReadPreference;
@@ -157,7 +156,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	public void beforeEach() {
 
 		when(findIterable.iterator()).thenReturn(cursor);
-		when(factory.getDb()).thenReturn(db);
+		when(factory.getMongoDatabase()).thenReturn(db);
 		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslator);
 		when(db.getCollection(any(String.class), eq(Document.class))).thenReturn(collection);
 		when(db.runCommand(any(), any(Class.class))).thenReturn(commandResultDocument);

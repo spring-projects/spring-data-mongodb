@@ -23,7 +23,6 @@ import java.util.Optional;
 
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
-import org.springframework.data.util.Optionals;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -184,7 +183,7 @@ public class GridFsResource extends InputStreamResource {
 	 *
 	 * @return never {@literal null}.
 	 * @throws com.mongodb.MongoGridFSException in case no content type declared on {@link GridFSFile#getMetadata()} nor
-	 *           provided via {@link GridFSFile#getContentType()}.
+	 *           provided via {@link GridFSFile}.
 	 * @throws IllegalStateException if the file does not {@link #exists()}.
 	 */
 	@SuppressWarnings("deprecation")
@@ -192,11 +191,7 @@ public class GridFsResource extends InputStreamResource {
 
 		Assert.state(exists(), () -> String.format("%s does not exist.", getDescription()));
 
-		return Optionals
-				.firstNonEmpty(
-						() -> Optional.ofNullable(getGridFSFile().getMetadata())
-								.map(it -> it.get(CONTENT_TYPE_FIELD, String.class)),
-						() -> Optional.ofNullable(getGridFSFile().getContentType()))
+		return Optional.ofNullable(getGridFSFile().getMetadata()).map(it -> it.get(CONTENT_TYPE_FIELD, String.class))
 				.orElseThrow(() -> new MongoGridFSException("No contentType data for this GridFS file"));
 	}
 

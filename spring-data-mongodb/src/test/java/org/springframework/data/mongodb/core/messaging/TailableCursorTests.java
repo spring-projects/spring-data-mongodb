@@ -38,8 +38,6 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.messaging.Message.MessageProperties;
 import org.springframework.data.mongodb.core.messaging.TailableCursorRequest.TailableCursorRequestOptions;
-
-import com.mongodb.MongoClient;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
 /**

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,10 +50,11 @@ public class MongoClientParser implements BeanDefinitionParser {
 
 		ParsingUtils.setPropertyValue(builder, element, "port", "port");
 		ParsingUtils.setPropertyValue(builder, element, "host", "host");
-		ParsingUtils.setPropertyValue(builder, element, "credentials", "credentials");
+		ParsingUtils.setPropertyValue(builder, element, "credential", "credential");
+		ParsingUtils.setPropertyValue(builder, element, "replica-set", "replicaSet");
+		ParsingUtils.setPropertyValue(builder, element, "connection-string", "connectionString");
 
-		MongoParsingUtils.parseMongoClientOptions(element, builder);
-		MongoParsingUtils.parseReplicaSet(element, builder);
+		MongoParsingUtils.parseMongoClientSettings(element, builder);
 
 		String defaultedId = StringUtils.hasText(id) ? id : BeanNames.MONGO_BEAN_NAME;
 
@@ -62,20 +63,28 @@ public class MongoClientParser implements BeanDefinitionParser {
 		BeanComponentDefinition mongoComponent = helper.getComponent(builder, defaultedId);
 		parserContext.registerBeanComponent(mongoComponent);
 
-		BeanComponentDefinition serverAddressPropertyEditor = helper.getComponent(MongoParsingUtils
-				.getServerAddressPropertyEditorBuilder());
+		BeanComponentDefinition connectionStringPropertyEditor = helper
+				.getComponent(MongoParsingUtils.getConnectionStringPropertyEditorBuilder());
+		parserContext.registerBeanComponent(connectionStringPropertyEditor);
+
+		BeanComponentDefinition serverAddressPropertyEditor = helper
+				.getComponent(MongoParsingUtils.getServerAddressPropertyEditorBuilder());
 		parserContext.registerBeanComponent(serverAddressPropertyEditor);
 
-		BeanComponentDefinition writeConcernEditor = helper.getComponent(MongoParsingUtils
-				.getWriteConcernPropertyEditorBuilder());
+		BeanComponentDefinition writeConcernEditor = helper
+				.getComponent(MongoParsingUtils.getWriteConcernPropertyEditorBuilder());
 		parserContext.registerBeanComponent(writeConcernEditor);
 
-		BeanComponentDefinition readPreferenceEditor = helper.getComponent(MongoParsingUtils
-				.getReadPreferencePropertyEditorBuilder());
+		BeanComponentDefinition readConcernEditor = helper
+				.getComponent(MongoParsingUtils.getReadConcernPropertyEditorBuilder());
+		parserContext.registerBeanComponent(readConcernEditor);
+
+		BeanComponentDefinition readPreferenceEditor = helper
+				.getComponent(MongoParsingUtils.getReadPreferencePropertyEditorBuilder());
 		parserContext.registerBeanComponent(readPreferenceEditor);
 
-		BeanComponentDefinition credentialsEditor = helper.getComponent(MongoParsingUtils
-				.getMongoCredentialPropertyEditor());
+		BeanComponentDefinition credentialsEditor = helper
+				.getComponent(MongoParsingUtils.getMongoCredentialPropertyEditor());
 		parserContext.registerBeanComponent(credentialsEditor);
 
 		parserContext.popAndRegisterContainingComponent();

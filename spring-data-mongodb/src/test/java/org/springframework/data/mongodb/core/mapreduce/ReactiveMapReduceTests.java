@@ -40,7 +40,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.reactivestreams.client.MongoCollection;
-import com.mongodb.reactivestreams.client.Success;
 
 /**
  * @author Christoph Strobl
@@ -125,8 +124,7 @@ public class ReactiveMapReduceTests {
 		template
 				.mapReduce(new Query(), ValueObject.class, "jmr1", ValueObject.class, mapFunction, reduceFunction,
 						MapReduceOptions.options().outputCollection("jmr1_out"))
-				.as(StepVerifier::create)
-				.expectNextCount(4).verifyComplete();
+				.as(StepVerifier::create).expectNextCount(4).verifyComplete();
 
 		template.find(new Query(), ValueObject.class, "jmr1_out").buffer(4).as(StepVerifier::create) //
 				.consumeNextWith(result -> {
@@ -144,8 +142,7 @@ public class ReactiveMapReduceTests {
 		template
 				.mapReduce(new Query(), ValueObject.class, "jmr1", ValueObject.class, mapFunction, reduceFunction,
 						MapReduceOptions.options().outputDatabase("reactive-jrm1-out-db").outputCollection("jmr1_out"))
-				.as(StepVerifier::create)
-				.expectNextCount(4).verifyComplete();
+				.as(StepVerifier::create).expectNextCount(4).verifyComplete();
 
 		Flux.from(factory.getMongoDatabase("reactive-jrm1-out-db").listCollectionNames()).buffer(10)
 				.map(list -> list.contains("jmr1_out")).as(StepVerifier::create).expectNext(true).verifyComplete();
@@ -186,8 +183,8 @@ public class ReactiveMapReduceTests {
 	@Test // DATAMONGO-1890
 	public void throwsExceptionWhenTryingToLoadFunctionsFromDisk() {
 
-		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> template.mapReduce(new Query(), Person.class,
-				"foo", ValueObject.class, "classpath:map.js", "classpath:reduce.js", MapReduceOptions.options()))
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> template.mapReduce(new Query(),
+				Person.class, "foo", ValueObject.class, "classpath:map.js", "classpath:reduce.js", MapReduceOptions.options()))
 				.withMessageContaining("classpath:map.js");
 	}
 
@@ -198,7 +195,8 @@ public class ReactiveMapReduceTests {
 		StepVerifier
 				.create(collection.insertMany(Arrays.asList(new Document("x", Arrays.asList("a", "b")),
 						new Document("x", Arrays.asList("b", "c")), new Document("x", Arrays.asList("c", "d")))))
-				.expectNext(Success.SUCCESS).verifyComplete();
+				.expectNextCount(1) //
+				.verifyComplete();
 	}
 
 	@org.springframework.data.mongodb.core.mapping.Document("jmr1")

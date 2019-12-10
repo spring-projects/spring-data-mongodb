@@ -89,7 +89,7 @@ public class DefaultReactiveIndexOperationsTests {
 		this.indexOps = new DefaultReactiveIndexOperations(template, collectionName,
 				new QueryMapper(template.getConverter()));
 
-		StepVerifier.create(this.collection.dropIndexes()).expectNextCount(1).verifyComplete();
+		StepVerifier.create(this.collection.dropIndexes()).verifyComplete();
 	}
 
 	private void queryMongoVersionIfNecessary() {

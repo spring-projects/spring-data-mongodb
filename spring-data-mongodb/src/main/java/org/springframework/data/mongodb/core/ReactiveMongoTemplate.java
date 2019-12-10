@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
+import com.mongodb.client.result.InsertOneResult;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -123,9 +124,6 @@ import org.springframework.util.StringUtils;
 
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.CursorType;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
@@ -151,7 +149,6 @@ import com.mongodb.reactivestreams.client.MapReducePublisher;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
-import com.mongodb.reactivestreams.client.Success;
 
 /**
  * Primary implementation of {@link ReactiveMongoOperations}. It simplifies the use of Reactive MongoDB usage and helps
@@ -1605,7 +1602,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		Document document = new Document(dbDoc);
 
-		Flux<Success> execute = execute(collectionName, collection -> {
+		Flux<InsertOneResult> execute = execute(collectionName, collection -> {
 
 			MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.INSERT, collectionName, entityClass,
 					dbDoc, null);
@@ -1781,6 +1778,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				.ifPresent(updateOptions::collation);
 
 		if (update.hasArrayFilters()) {
+
 			updateOptions.arrayFilters(update.getArrayFilters().stream().map(ArrayFilter::asDocument)
 					.map(it -> queryMapper.getMappedObject(it, entity)).collect(Collectors.toList()));
 		}
@@ -2357,14 +2355,16 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	protected Mono<MongoCollection<Document>> doCreateCollection(String collectionName,
 			CreateCollectionOptions collectionOptions) {
 
-		return createMono(db -> db.createCollection(collectionName, collectionOptions)).map(success -> {
+		return createMono(db -> db.createCollection(collectionName, collectionOptions)).doOnSuccess(it -> {
 
-			// TODO: Emit a collection created event
-			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug("Created collection [{}]", collectionName);
-			}
-			return getCollection(collectionName);
-		});
+
+				// TODO: Emit a collection created event
+				if (LOGGER.isDebugEnabled()) {
+					LOGGER.debug("Created collection [{}]", collectionName);
+				}
+
+
+		}).thenReturn(getCollection(collectionName));
 	}
 
 	/**
@@ -3280,14 +3280,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 					if (StringUtils.hasText(meta.getComment())) {
 						findPublisherToUse = findPublisherToUse.comment(meta.getComment());
-					}
-
-					if (meta.getSnapshot()) {
-						findPublisherToUse = findPublisherToUse.snapshot(meta.getSnapshot());
-					}
-
-					if (meta.getMaxScan() != null) {
-						findPublisherToUse = findPublisherToUse.maxScan(meta.getMaxScan());
 					}
 
 					if (meta.getMaxTimeMsec() != null) {

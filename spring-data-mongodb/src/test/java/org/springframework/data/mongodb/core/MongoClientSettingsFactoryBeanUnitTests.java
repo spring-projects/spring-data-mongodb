@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,25 +18,26 @@ package org.springframework.data.mongodb.core;
 import static org.assertj.core.api.Assertions.*;
 
 import org.junit.Test;
-
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.support.RootBeanDefinition;
+import org.springframework.data.mongodb.config.ReadConcernPropertyEditor;
 import org.springframework.data.mongodb.config.ReadPreferencePropertyEditor;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 
 /**
- * Integration tests for {@link MongoClientOptionsFactoryBean}.
+ * Integration tests for {@link MongoClientSettingsFactoryBean}.
  *
  * @author Christoph Strobl
  */
-public class MongoClientOptionsFactoryBeanIntegrationTests {
+public class MongoClientSettingsFactoryBeanUnitTests {
 
-	@Test // DATAMONGO-1158
+	@Test // DATAMONGO-2384
 	public void convertsReadPreferenceConcernCorrectly() {
 
-		RootBeanDefinition definition = new RootBeanDefinition(MongoClientOptionsFactoryBean.class);
+		RootBeanDefinition definition = new RootBeanDefinition(MongoClientSettingsFactoryBean.class);
 		definition.getPropertyValues().addPropertyValue("readPreference", "NEAREST");
 
 		DefaultListableBeanFactory factory = new DefaultListableBeanFactory();
@@ -44,7 +45,22 @@ public class MongoClientOptionsFactoryBeanIntegrationTests {
 
 		factory.registerBeanDefinition("factory", definition);
 
-		MongoClientOptionsFactoryBean bean = factory.getBean("&factory", MongoClientOptionsFactoryBean.class);
-		assertThat(ReflectionTestUtils.getField(bean, "readPreference")).isEqualTo((Object) ReadPreference.nearest());
+		MongoClientSettingsFactoryBean bean = factory.getBean("&factory", MongoClientSettingsFactoryBean.class);
+		assertThat(ReflectionTestUtils.getField(bean, "readPreference")).isEqualTo(ReadPreference.nearest());
+	}
+
+	@Test // DATAMONGO-2384
+	public void convertsReadConcernConcernCorrectly() {
+
+		RootBeanDefinition definition = new RootBeanDefinition(MongoClientSettingsFactoryBean.class);
+		definition.getPropertyValues().addPropertyValue("readConcern", "MAJORITY");
+
+		DefaultListableBeanFactory factory = new DefaultListableBeanFactory();
+		factory.registerCustomEditor(ReadPreference.class, ReadConcernPropertyEditor.class);
+
+		factory.registerBeanDefinition("factory", definition);
+
+		MongoClientSettingsFactoryBean bean = factory.getBean("&factory", MongoClientSettingsFactoryBean.class);
+		assertThat(ReflectionTestUtils.getField(bean, "readConcern")).isEqualTo(ReadConcern.MAJORITY);
 	}
 }

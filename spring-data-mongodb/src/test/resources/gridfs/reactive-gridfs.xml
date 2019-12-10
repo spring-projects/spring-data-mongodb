@@ -32,7 +32,7 @@
 		<property name="port" value="27017"/>
 	</bean>
 
-	<bean id="mongoDbFactory" class="org.springframework.data.mongodb.core.SimpleMongoDbFactory">
+	<bean id="mongoDbFactory" class="org.springframework.data.mongodb.core.SimpleMongoClientDbFactory">
 		<constructor-arg name="mongoClient" ref="mongoClient"/>
 		<constructor-arg name="databaseName" value="reactive_gridfs"/>
 	</bean>

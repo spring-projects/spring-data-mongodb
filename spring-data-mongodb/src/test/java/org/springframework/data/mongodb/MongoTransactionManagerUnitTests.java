@@ -60,8 +60,8 @@ public class MongoTransactionManagerUnitTests {
 		when(dbFactory.withSession(session)).thenReturn(dbFactory);
 		when(dbFactory.withSession(session2)).thenReturn(dbFactory2);
 
-		when(dbFactory.getDb()).thenReturn(db);
-		when(dbFactory2.getDb()).thenReturn(db2);
+		when(dbFactory.getMongoDatabase()).thenReturn(db);
+		when(dbFactory2.getMongoDatabase()).thenReturn(db2);
 
 		when(session.getServerSession()).thenReturn(serverSession);
 		when(session2.getServerSession()).thenReturn(serverSession);

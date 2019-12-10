@@ -257,7 +257,7 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 
 	private GridFSBucket getGridFs() {
 
-		MongoDatabase db = dbFactory.getDb();
+		MongoDatabase db = dbFactory.getMongoDatabase();
 		return bucket == null ? GridFSBuckets.create(db) : GridFSBuckets.create(db, bucket);
 	}
 }

@@ -45,7 +45,7 @@ import com.mongodb.client.ClientSession;
  * commit} or {@link ClientSession#abortTransaction() abort} a transaction.
  * <p />
  * Application code is required to retrieve the {@link com.mongodb.client.MongoDatabase} via
- * {@link MongoDatabaseUtils#getDatabase(MongoDbFactory)} instead of a standard {@link MongoDbFactory#getDb()} call.
+ * {@link MongoDatabaseUtils#getDatabase(MongoDbFactory)} instead of a standard {@link MongoDbFactory#getMongoDatabase()} call.
  * Spring classes such as {@link org.springframework.data.mongodb.core.MongoTemplate} use this strategy implicitly.
  * <p />
  * By default failure of a {@literal commit} operation raises a {@link TransactionSystemException}. One may override

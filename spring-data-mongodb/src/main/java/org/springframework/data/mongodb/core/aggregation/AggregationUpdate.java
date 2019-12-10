@@ -74,7 +74,7 @@ import org.springframework.util.Assert;
  * @see <a href=
  *      "https://docs.mongodb.com/manual/reference/method/db.collection.update/#update-with-aggregation-pipeline">MongoDB
  *      Reference Documentation</a>
- * @since 2.3
+ * @since 3.0
  */
 public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 

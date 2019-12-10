@@ -215,7 +215,7 @@ public class AggregationOptions {
 
 	/**
 	 * @return the time limit for processing. {@link Duration#ZERO} is used for the default unbounded behavior.
-	 * @since 2.3
+	 * @since 3.0
 	 */
 	public Duration getMaxTime() {
 		return maxTime;
@@ -279,7 +279,7 @@ public class AggregationOptions {
 
 	/**
 	 * @return
-	 * @since 2.3
+	 * @since 3.0
 	 */
 	public boolean hasExecutionTimeLimit() {
 		return !maxTime.isZero() && !maxTime.isNegative();

@@ -116,7 +116,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 
 		if (LOGGER.isTraceEnabled()) {
 			LOGGER.trace("Fetching DBRef '{}' from {}.{}.", dbRef.getId(),
-					StringUtils.hasText(dbRef.getDatabaseName()) ? dbRef.getDatabaseName() : mongoDbFactory.getDb().getName(),
+					StringUtils.hasText(dbRef.getDatabaseName()) ? dbRef.getDatabaseName() : mongoDbFactory.getMongoDatabase().getName(),
 					dbRef.getCollectionName());
 		}
 
@@ -156,7 +156,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		if (LOGGER.isTraceEnabled()) {
 			LOGGER.trace("Bulk fetching DBRefs {} from {}.{}.", ids,
 					StringUtils.hasText(databaseSource.getDatabaseName()) ? databaseSource.getDatabaseName()
-							: mongoDbFactory.getDb().getName(),
+							: mongoDbFactory.getMongoDatabase().getName(),
 					databaseSource.getCollectionName());
 		}
 
@@ -498,6 +498,6 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	protected MongoCollection<Document> getCollection(DBRef dbref) {
 
 		return (StringUtils.hasText(dbref.getDatabaseName()) ? mongoDbFactory.getDb(dbref.getDatabaseName())
-				: mongoDbFactory.getDb()).getCollection(dbref.getCollectionName(), Document.class);
+				: mongoDbFactory.getMongoDatabase()).getCollection(dbref.getCollectionName(), Document.class);
 	}
 }

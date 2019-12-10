@@ -29,7 +29,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
  * {@link InvalidPersistentPropertyPath} exceptions when resolving mapped field names.
  *
  * @author Christoph Strobl
- * @since 2.3
+ * @since 3.0
  */
 public class RelaxedTypeBasedAggregationOperationContext extends TypeBasedAggregationOperationContext {
 
