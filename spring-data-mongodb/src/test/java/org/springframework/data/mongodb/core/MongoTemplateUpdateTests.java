@@ -48,8 +48,7 @@ import com.mongodb.client.MongoCollection;
  * @author Christoph Strobl
  */
 @ExtendWith(MongoServerCondition.class)
-@EnableIfMongoServerVersion(isGreaterThanEqual = "4.2")
-public class MongoTemplateUpdateTests {
+class MongoTemplateUpdateTests {
 
 	static final String DB_NAME = "update-test";
 
@@ -68,7 +67,8 @@ public class MongoTemplateUpdateTests {
 	}
 
 	@Test // DATAMONGO-2331
-	public void aggregateUpdateWithSet() {
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.2")
+	void aggregateUpdateWithSet() {
 
 		Score score1 = new Score(1, "Maya", Arrays.asList(10, 5, 10), Arrays.asList(10, 8), 0);
 		Score score2 = new Score(2, "Ryan", Arrays.asList(5, 6, 5), Arrays.asList(8, 8), 8);
@@ -92,7 +92,8 @@ public class MongoTemplateUpdateTests {
 	}
 
 	@Test // DATAMONGO-2331
-	public void aggregateUpdateWithSetToValue() {
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.2")
+	void aggregateUpdateWithSetToValue() {
 
 		Book one = new Book();
 		one.id = 1;
@@ -109,7 +110,8 @@ public class MongoTemplateUpdateTests {
 	}
 
 	@Test // DATAMONGO-2331
-	public void versionedAggregateUpdateWithSet() {
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.2")
+	void versionedAggregateUpdateWithSet() {
 
 		Versioned source = template.insert(Versioned.class).one(new Versioned("id-1", "value-0"));
 
@@ -123,7 +125,8 @@ public class MongoTemplateUpdateTests {
 	}
 
 	@Test // DATAMONGO-2331
-	public void versionedAggregateUpdateTouchingVersionProperty() {
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.2")
+	void versionedAggregateUpdateTouchingVersionProperty() {
 
 		Versioned source = template.insert(Versioned.class).one(new Versioned("id-1", "value-0"));
 
@@ -138,7 +141,8 @@ public class MongoTemplateUpdateTests {
 	}
 
 	@Test // DATAMONGO-2331
-	public void aggregateUpdateWithUnset() {
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.2")
+	void aggregateUpdateWithUnset() {
 
 		Book antelopeAntics = new Book();
 		antelopeAntics.id = 1;
@@ -171,7 +175,8 @@ public class MongoTemplateUpdateTests {
 	}
 
 	@Test // DATAMONGO-2331
-	public void aggregateUpdateWithReplaceWith() {
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.2")
+	void aggregateUpdateWithReplaceWith() {
 
 		Book one = new Book();
 		one.id = 1;
@@ -194,7 +199,8 @@ public class MongoTemplateUpdateTests {
 	}
 
 	@Test // DATAMONGO-2331
-	public void aggregateUpdateWithReplaceWithNewObject() {
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.2")
+	void aggregateUpdateWithReplaceWithNewObject() {
 
 		Book one = new Book();
 		one.id = 1;
@@ -217,7 +223,8 @@ public class MongoTemplateUpdateTests {
 	}
 
 	@Test // DATAMONGO-2331
-	public void aggregationUpdateUpsertsCorrectly() {
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.2")
+	void aggregationUpdateUpsertsCorrectly() {
 
 		AggregationUpdate update = AggregationUpdate.update().set("title").toValue("The Burning White");
 
@@ -228,7 +235,8 @@ public class MongoTemplateUpdateTests {
 	}
 
 	@Test // DATAMONGO-2331
-	public void aggregateUpdateFirstMatch() {
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.2")
+	void aggregateUpdateFirstMatch() {
 
 		Book one = new Book();
 		one.id = 1;
@@ -250,7 +258,7 @@ public class MongoTemplateUpdateTests {
 
 	@Test // DATAMONGO-2331
 	@Disabled("https://jira.mongodb.org/browse/JAVA-3432")
-	public void findAndModifyAppliesAggregationUpdateCorrectly() {
+	void findAndModifyAppliesAggregationUpdateCorrectly() {
 
 		Book one = new Book();
 		one.id = 1;
