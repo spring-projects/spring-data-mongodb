@@ -30,7 +30,7 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 
 	private @Nullable Boolean isIdProperty;
 	private @Nullable Boolean isAssociation;
-	private @Nullable boolean dbRefResolved;
+	private boolean dbRefResolved;
 	private @Nullable DBRef dbref;
 	private @Nullable String fieldName;
 	private @Nullable Class<?> fieldType;

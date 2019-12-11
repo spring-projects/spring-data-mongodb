@@ -101,6 +101,7 @@ public class MapReduceResults<T> implements Iterable<T> {
 		return outputCollection;
 	}
 
+	@Nullable
 	public Document getRawResults() {
 		return rawResults;
 	}
