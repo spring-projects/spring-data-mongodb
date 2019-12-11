@@ -184,7 +184,6 @@ public class GeospatialIndex implements IndexDefinition {
 		return document;
 	}
 
-	@Nullable
 	public Document getIndexOptions() {
 
 		Document document = new Document();
