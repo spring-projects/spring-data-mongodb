@@ -65,7 +65,7 @@ public class Update implements UpdateDefinition {
 	 * @param key
 	 * @return
 	 */
-	public static Update update(String key, Object value) {
+	public static Update update(String key, @Nullable Object value) {
 		return new Update().set(key, value);
 	}
 
@@ -107,11 +107,12 @@ public class Update implements UpdateDefinition {
 	 * Update using the {@literal $set} update modifier
 	 *
 	 * @param key
-	 * @param value
-	 * @return
+	 * @param value can be {@literal null}. In this case the property remains in the db with a {@literal null} value. To
+	 *          remove it use {@link #unset(String)}.
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/update/set/">MongoDB Update operator: $set</a>
 	 */
-	public Update set(String key, Object value) {
+	public Update set(String key, @Nullable Object value) {
 		addMultiFieldOperation("$set", key, value);
 		return this;
 	}
@@ -120,12 +121,12 @@ public class Update implements UpdateDefinition {
 	 * Update using the {@literal $setOnInsert} update modifier
 	 *
 	 * @param key
-	 * @param value
+	 * @param value can be {@literal null}.
 	 * @return
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/setOnInsert/">MongoDB Update operator:
 	 *      $setOnInsert</a>
 	 */
-	public Update setOnInsert(String key, Object value) {
+	public Update setOnInsert(String key, @Nullable Object value) {
 		addMultiFieldOperation("$setOnInsert", key, value);
 		return this;
 	}
@@ -172,7 +173,7 @@ public class Update implements UpdateDefinition {
 	 * @return
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/push/">MongoDB Update operator: $push</a>
 	 */
-	public Update push(String key, Object value) {
+	public Update push(String key, @Nullable Object value) {
 		addMultiFieldOperation("$push", key, value);
 		return this;
 	}
@@ -235,7 +236,7 @@ public class Update implements UpdateDefinition {
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/addToSet/">MongoDB Update operator:
 	 *      $addToSet</a>
 	 */
-	public Update addToSet(String key, Object value) {
+	public Update addToSet(String key, @Nullable Object value) {
 		addMultiFieldOperation("$addToSet", key, value);
 		return this;
 	}
@@ -261,7 +262,7 @@ public class Update implements UpdateDefinition {
 	 * @return
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/pull/">MongoDB Update operator: $pull</a>
 	 */
-	public Update pull(String key, Object value) {
+	public Update pull(String key, @Nullable Object value) {
 		addMultiFieldOperation("$pull", key, value);
 		return this;
 	}
@@ -432,7 +433,7 @@ public class Update implements UpdateDefinition {
 		this.keysToUpdate.add(key);
 	}
 
-	protected void addMultiFieldOperation(String operator, String key, Object value) {
+	protected void addMultiFieldOperation(String operator, String key, @Nullable Object value) {
 
 		Assert.hasText(key, "Key/Path for update must not be null or blank.");
 		Object existingValue = this.modifierOps.get(operator);
