@@ -36,6 +36,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.MongoServerCondition;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
@@ -270,6 +271,22 @@ public class MongoTemplateUpdateTests {
 				org.bson.Document.parse(
 						"{\"_id\" : 2, \"title\" : \"The Broken Eye\", \"_class\" : \"org.springframework.data.mongodb.core.MongoTemplateUpdateTests$Book\"}"));
 
+	}
+
+	@Test // DATAMMONGO-2423
+	void nullValueShouldBePropagatedToDatabase() {
+
+		Book currentRead = new Book();
+		currentRead.id = 1;
+		currentRead.author = new Author("Brent", "Weeks");
+		currentRead.title = "The Burning White";
+
+		template.save(currentRead);
+
+		template.update(Book.class).apply(new Update().set("title", null)).first();
+
+		assertThat(collection(Book.class).find(new org.bson.Document("_id", currentRead.id)).first()).containsEntry("title",
+				null);
 	}
 
 	private List<org.bson.Document> all(Class<?> type) {
