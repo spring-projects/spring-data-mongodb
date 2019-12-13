@@ -37,7 +37,7 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.geo.Shape;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.Venue;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
@@ -77,7 +77,7 @@ public class MongoQueryCreatorUnitTests {
 
 		context = new MongoMappingContext();
 
-		DbRefResolver resolver = new DefaultDbRefResolver(mock(MongoDbFactory.class));
+		DbRefResolver resolver = new DefaultDbRefResolver(mock(MongoDatabaseFactory.class));
 		converter = new MappingMongoConverter(resolver, context);
 	}
 

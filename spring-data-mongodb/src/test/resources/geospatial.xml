@@ -5,20 +5,20 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans-3.0.xsd
        http://www.springframework.org/schema/data/mongo https://www.springframework.org/schema/data/mongo/spring-mongo.xsd">
 
-  <mongo:mongo host="localhost" port="27017"/>
-  
-  <bean id="mongoDbFactory" class="org.springframework.data.mongodb.core.SimpleMongoDbFactory">
+  <mongo:mongo-client host="localhost" port="27017"/>
+
+  <bean id="mongoDbFactory" class="org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory">
   	<constructor-arg name="mongo" ref="mongo"/>
   	<constructor-arg name="databaseName" value="database"/>
   </bean>
-  
+
   <mongo:mapping-converter base-package="org.springframework.data.mongodb.core"/>
-  
+
   <bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
     <constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/>
     <constructor-arg name="mongoConverter" ref="mappingConverter"/>
   </bean>
 
-  <bean class="org.springframework.data.mongodb.core.mapping.event.MappingEventListener"/>
+  <bean class="org.springframework.data.mongodb.core.mapping.event.SimpleMappingEventListener"/>
 
 </beans>

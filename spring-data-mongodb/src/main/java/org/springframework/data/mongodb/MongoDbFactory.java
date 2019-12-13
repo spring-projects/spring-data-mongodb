@@ -15,13 +15,8 @@
  */
 package org.springframework.data.mongodb;
 
-import org.bson.codecs.configuration.CodecRegistry;
 import org.springframework.dao.DataAccessException;
-import org.springframework.dao.support.PersistenceExceptionTranslator;
-import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 
-import com.mongodb.ClientSessionOptions;
-import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoDatabase;
 
 /**
@@ -30,8 +25,10 @@ import com.mongodb.client.MongoDatabase;
  * @author Mark Pollack
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @deprecated since 3.0, use {@link MongoDatabaseFactory} instead.
  */
-public interface MongoDbFactory extends CodecRegistryProvider, MongoSessionProvider {
+@Deprecated
+public interface MongoDbFactory extends MongoDatabaseFactory {
 
 	/**
 	 * Creates a default {@link MongoDatabase} instance.
@@ -46,15 +43,7 @@ public interface MongoDbFactory extends CodecRegistryProvider, MongoSessionProvi
 	}
 
 	/**
-	 * Obtain a {@link MongoDatabase} from the underlying factory.
-	 * 
-	 * @return never {@literal null}.
-	 * @throws DataAccessException
-	 */
-	MongoDatabase getMongoDatabase() throws DataAccessException;
-
-	/**
-	 * Creates a {@link MongoDatabase} instance to access the database with the given name.
+	 * Obtain a {@link MongoDatabase} instance to access the database with the given name.
 	 *
 	 * @param dbName must not be {@literal null} or empty.
 	 * @return
@@ -64,71 +53,5 @@ public interface MongoDbFactory extends CodecRegistryProvider, MongoSessionProvi
 	@Deprecated
 	default MongoDatabase getDb(String dbName) throws DataAccessException {
 		return getMongoDatabase(dbName);
-	}
-
-	/**
-	 * @param dbName
-	 * @return never {@literal null}.
-	 * @throws DataAccessException
-	 */
-	MongoDatabase getMongoDatabase(String dbName) throws DataAccessException;
-
-	/**
-	 * Exposes a shared {@link MongoExceptionTranslator}.
-	 *
-	 * @return will never be {@literal null}.
-	 */
-	PersistenceExceptionTranslator getExceptionTranslator();
-
-	/**
-	 * Get the underlying {@link CodecRegistry} used by the MongoDB Java driver.
-	 *
-	 * @return never {@literal null}.
-	 */
-	@Override
-	default CodecRegistry getCodecRegistry() {
-		return getMongoDatabase().getCodecRegistry();
-	}
-
-	/**
-	 * Obtain a {@link ClientSession} for given ClientSessionOptions.
-	 *
-	 * @param options must not be {@literal null}.
-	 * @return never {@literal null}.
-	 * @since 2.1
-	 */
-	ClientSession getSession(ClientSessionOptions options);
-
-	/**
-	 * Obtain a {@link ClientSession} bound instance of {@link MongoDbFactory} returning {@link MongoDatabase} instances
-	 * that are aware and bound to a new session with given {@link ClientSessionOptions options}.
-	 *
-	 * @param options must not be {@literal null}.
-	 * @return never {@literal null}.
-	 * @since 2.1
-	 */
-	default MongoDbFactory withSession(ClientSessionOptions options) {
-		return withSession(getSession(options));
-	}
-
-	/**
-	 * Obtain a {@link ClientSession} bound instance of {@link MongoDbFactory} returning {@link MongoDatabase} instances
-	 * that are aware and bound to the given session.
-	 *
-	 * @param session must not be {@literal null}.
-	 * @return never {@literal null}.
-	 * @since 2.1
-	 */
-	MongoDbFactory withSession(ClientSession session);
-
-	/**
-	 * Returns if the given {@link MongoDbFactory} is bound to a {@link ClientSession} that has an
-	 * {@link ClientSession#hasActiveTransaction() active transaction}.
-	 *
-	 * @return {@literal true} if there's an active transaction, {@literal false} otherwise.
-	 * @since 2.1.3
-	 */
-	default boolean isTransactionActive() {
-		return false;
 	}
 }

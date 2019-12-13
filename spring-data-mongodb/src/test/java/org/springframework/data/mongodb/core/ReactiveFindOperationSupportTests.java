@@ -50,8 +50,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
-import com.mongodb.reactivestreams.client.MongoClients;
-
 /**
  * Integration tests for {@link ReactiveFindOperationSupport}.
  *
@@ -71,7 +69,7 @@ public class ReactiveFindOperationSupportTests {
 	public void setUp() {
 
 		blocking = new MongoTemplate(
-				new SimpleMongoClientDbFactory(MongoTestUtils.client(), "ExecutableFindOperationSupportTests"));
+				new SimpleMongoClientDatabaseFactory(MongoTestUtils.client(), "ExecutableFindOperationSupportTests"));
 		recreateCollection(STAR_WARS, false);
 
 		insertObjects();

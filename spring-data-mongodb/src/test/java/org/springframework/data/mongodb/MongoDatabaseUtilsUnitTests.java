@@ -47,7 +47,7 @@ public class MongoDatabaseUtilsUnitTests {
 
 	@Mock ClientSession session;
 	@Mock ServerSession serverSession;
-	@Mock MongoDbFactory dbFactory;
+	@Mock MongoDatabaseFactory dbFactory;
 	@Mock MongoDatabase db;
 
 	@Mock UserTransaction userTransaction;

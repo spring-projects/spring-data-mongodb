@@ -23,7 +23,7 @@ import org.junit.runner.RunWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mapping.context.InvalidPersistentPropertyPath;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -41,7 +41,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @ContextConfiguration("classpath:infrastructure.xml")
 public class SpelExpressionTransformerIntegrationTests {
 
-	@Autowired MongoDbFactory mongoDbFactory;
+	@Autowired MongoDatabaseFactory mongoDbFactory;
 
 	SpelExpressionTransformer transformer;
 	DbRefResolver dbRefResolver;

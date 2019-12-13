@@ -49,7 +49,7 @@ public class ReactiveUpdateOperationSupportTests {
 	public void setUp() {
 
 		blocking = new MongoTemplate(
-				new SimpleMongoClientDbFactory(MongoTestUtils.client(), "ExecutableUpdateOperationSupportTests"));
+				new SimpleMongoClientDatabaseFactory(MongoTestUtils.client(), "ExecutableUpdateOperationSupportTests"));
 		blocking.dropCollection(STAR_WARS);
 
 		han = new Person();

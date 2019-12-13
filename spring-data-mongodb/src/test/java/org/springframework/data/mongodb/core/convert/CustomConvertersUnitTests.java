@@ -31,7 +31,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.convert.CustomConversions;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 /**
@@ -46,7 +46,7 @@ public class CustomConvertersUnitTests {
 
 	@Mock BarToDocumentConverter barToDocumentConverter;
 	@Mock DocumentToBarConverter documentToBarConverter;
-	@Mock MongoDbFactory mongoDbFactory;
+	@Mock MongoDatabaseFactory mongoDbFactory;
 
 	MongoMappingContext context;
 

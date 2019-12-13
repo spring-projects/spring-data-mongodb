@@ -24,7 +24,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoClientFactoryBean;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -117,7 +117,7 @@ public class MongoNamespaceTests {
 	public void testSecondMongoDbFactory() {
 
 		assertThat(ctx.containsBean("secondMongoDbFactory")).isTrue();
-		MongoDbFactory dbf = (MongoDbFactory) ctx.getBean("secondMongoDbFactory");
+		MongoDatabaseFactory dbf = (MongoDatabaseFactory) ctx.getBean("secondMongoDbFactory");
 
 		MongoClient mongo = (MongoClient) getField(dbf, "mongoClient");
 		assertThat(mongo.getClusterDescription().getClusterSettings().getHosts()).containsExactly(new ServerAddress());
@@ -129,7 +129,7 @@ public class MongoNamespaceTests {
 
 		assertThat(ctx.containsBean("thirdMongoDbFactory")).isTrue();
 
-		MongoDbFactory dbf = (MongoDbFactory) ctx.getBean("thirdMongoDbFactory");
+		MongoDatabaseFactory dbf = (MongoDatabaseFactory) ctx.getBean("thirdMongoDbFactory");
 		MongoClient mongo = (MongoClient) getField(dbf, "mongoClient");
 
 		assertThat(mongo.getClusterDescription().getClusterSettings().getHosts()).containsExactly(new ServerAddress());
@@ -142,7 +142,7 @@ public class MongoNamespaceTests {
 		assertThat(ctx.containsBean("mongoTemplate")).isTrue();
 		MongoOperations operations = (MongoOperations) ctx.getBean("mongoTemplate");
 
-		MongoDbFactory dbf = (MongoDbFactory) getField(operations, "mongoDbFactory");
+		MongoDatabaseFactory dbf = (MongoDatabaseFactory) getField(operations, "mongoDbFactory");
 		assertThat(getField(dbf, "databaseName")).isEqualTo("database");
 
 		MongoConverter converter = (MongoConverter) getField(operations, "mongoConverter");
@@ -155,7 +155,7 @@ public class MongoNamespaceTests {
 		assertThat(ctx.containsBean("anotherMongoTemplate")).isTrue();
 		MongoOperations operations = (MongoOperations) ctx.getBean("anotherMongoTemplate");
 
-		MongoDbFactory dbf = (MongoDbFactory) getField(operations, "mongoDbFactory");
+		MongoDatabaseFactory dbf = (MongoDatabaseFactory) getField(operations, "mongoDbFactory");
 		assertThat(getField(dbf, "databaseName")).isEqualTo("database");
 
 		WriteConcern writeConcern = (WriteConcern) getField(operations, "writeConcern");
@@ -168,7 +168,7 @@ public class MongoNamespaceTests {
 		assertThat(ctx.containsBean("gridFsTemplate")).isTrue();
 		GridFsOperations operations = (GridFsOperations) ctx.getBean("gridFsTemplate");
 
-		MongoDbFactory dbf = (MongoDbFactory) getField(operations, "dbFactory");
+		MongoDatabaseFactory dbf = (MongoDatabaseFactory) getField(operations, "dbFactory");
 		assertThat(getField(dbf, "databaseName")).isEqualTo("database");
 
 		MongoConverter converter = (MongoConverter) getField(operations, "converter");
@@ -181,7 +181,7 @@ public class MongoNamespaceTests {
 		assertThat(ctx.containsBean("secondGridFsTemplate")).isTrue();
 		GridFsOperations operations = (GridFsOperations) ctx.getBean("secondGridFsTemplate");
 
-		MongoDbFactory dbf = (MongoDbFactory) getField(operations, "dbFactory");
+		MongoDatabaseFactory dbf = (MongoDatabaseFactory) getField(operations, "dbFactory");
 		assertThat(getField(dbf, "databaseName")).isEqualTo("database");
 		assertThat(getField(operations, "bucket")).isEqualTo(null);
 
@@ -195,7 +195,7 @@ public class MongoNamespaceTests {
 		assertThat(ctx.containsBean("thirdGridFsTemplate")).isTrue();
 		GridFsOperations operations = (GridFsOperations) ctx.getBean("thirdGridFsTemplate");
 
-		MongoDbFactory dbf = (MongoDbFactory) getField(operations, "dbFactory");
+		MongoDatabaseFactory dbf = (MongoDatabaseFactory) getField(operations, "dbFactory");
 		assertThat(getField(dbf, "databaseName")).isEqualTo("database");
 		assertThat(getField(operations, "bucket")).isEqualTo("bucketString");
 

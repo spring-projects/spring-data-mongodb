@@ -26,7 +26,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.MappingContextEvent;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.IndexDefinitionHolder;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -62,7 +62,7 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 
 	/**
 	 * Creates a new {@link MongoPersistentEntityIndexCreator} for the given {@link MongoMappingContext} and
-	 * {@link MongoDbFactory}.
+	 * {@link MongoDatabaseFactory}.
 	 *
 	 * @param mappingContext must not be {@literal null}.
 	 * @param indexOperationsProvider must not be {@literal null}.
@@ -74,7 +74,7 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 
 	/**
 	 * Creates a new {@link MongoPersistentEntityIndexCreator} for the given {@link MongoMappingContext} and
-	 * {@link MongoDbFactory}.
+	 * {@link MongoDatabaseFactory}.
 	 *
 	 * @param mappingContext must not be {@literal null}.
 	 * @param mongoDbFactory must not be {@literal null}.

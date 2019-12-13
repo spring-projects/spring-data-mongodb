@@ -17,9 +17,9 @@ package org.springframework.data.mongodb.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
+import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -57,7 +57,7 @@ public abstract class AbstractMongoClientConfiguration extends MongoConfiguratio
 	}
 
 	/**
-	 * Creates a {@link org.springframework.data.mongodb.core.SimpleMongoDbFactory;} to be used by the
+	 * Creates a {@link org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory} to be used by the
 	 * {@link MongoTemplate}. Will use the {@link MongoClient} instance configured in {@link #mongoClient()}.
 	 *
 	 * @see #mongoClient()
@@ -65,8 +65,8 @@ public abstract class AbstractMongoClientConfiguration extends MongoConfiguratio
 	 * @return
 	 */
 	@Bean
-	public MongoDbFactory mongoDbFactory() {
-		return new SimpleMongoClientDbFactory(mongoClient(), getDatabaseName());
+	public MongoDatabaseFactory mongoDbFactory() {
+		return new SimpleMongoClientDatabaseFactory(mongoClient(), getDatabaseName());
 	}
 
 	/**

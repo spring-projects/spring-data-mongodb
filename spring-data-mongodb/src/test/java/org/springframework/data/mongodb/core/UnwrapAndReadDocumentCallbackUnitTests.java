@@ -25,7 +25,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoTemplate.UnwrapAndReadDocumentCallback;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -40,7 +40,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 @RunWith(MockitoJUnitRunner.class)
 public class UnwrapAndReadDocumentCallbackUnitTests {
 
-	@Mock MongoDbFactory factory;
+	@Mock MongoDatabaseFactory factory;
 	@Mock MongoExceptionTranslator exceptionTranslatorMock;
 
 	UnwrapAndReadDocumentCallback<Target> callback;

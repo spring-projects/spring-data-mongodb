@@ -51,7 +51,7 @@ Defines a MongoDbFactory for connecting to a specific database
 			<xsd:attribute name="id" type="xsd:string" use="optional">
 				<xsd:annotation>
 					<xsd:documentation><![CDATA[
-The name of the MongoDbFactory definition (by default "mongoDbFactory").]]></xsd:documentation>
+The name of the MongoDatabaseFactory definition (by default "mongoDbFactory").]]></xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
 			<xsd:attribute name="mongo-client-ref" type="mongoRef" use="optional">
@@ -91,7 +91,7 @@ See https://docs.mongodb.com/manual/reference/connection-string/ for full docume
 			<xsd:attribute name="write-concern">
 				<xsd:annotation>
 					<xsd:documentation>
-					The WriteConcern that will be the default value used when asking the MongoDbFactory for a DB object
+					The WriteConcern that will be the default value used when asking the MongoDatabaseFactory for a DB object
 					</xsd:documentation>
 				</xsd:annotation>
 				<xsd:simpleType>
@@ -173,11 +173,11 @@ The base package in which to scan for entities annotated with @Document
 			<xsd:attribute name="db-factory-ref" type="xsd:string" use="optional">
 				<xsd:annotation>
 					<xsd:documentation>
-						The reference to a DbFactory.
+						The reference to a MongoDatabaseFactory.
 					</xsd:documentation>
 					<xsd:appinfo>
 						<tool:annotation kind="ref">
-							<tool:assignable-to type="org.springframework.data.mongodb.MongoDbFactory" />
+							<tool:assignable-to type="org.springframework.data.mongodb.MongoDatabaseFactory" />
 						</tool:annotation>
 					</xsd:appinfo>
 				</xsd:annotation>
@@ -765,12 +765,12 @@ The reference to a MappingMongoConverter instance.
 				use="optional">
 				<xsd:annotation>
 					<xsd:documentation>
-						The reference to a DbFactory.
+						The reference to a MongoDatabaseFactory.
 					</xsd:documentation>
 					<xsd:appinfo>
 						<tool:annotation kind="ref">
 							<tool:assignable-to
-								type="org.springframework.data.mongodb.MongoDbFactory" />
+								type="org.springframework.data.mongodb.MongoDatabaseFactory" />
 						</tool:annotation>
 					</xsd:appinfo>
 				</xsd:annotation>
@@ -778,7 +778,7 @@ The reference to a MappingMongoConverter instance.
 			<xsd:attribute name="write-concern">
 				<xsd:annotation>
 					<xsd:documentation>
-					The WriteConcern that will be the default value used when asking the MongoDbFactory for a DB object
+					The WriteConcern that will be the default value used when asking the MongoDatabaseFactory for a DB object
 					</xsd:documentation>
 				</xsd:annotation>
 				<xsd:simpleType>
@@ -817,11 +817,11 @@ The reference to a MappingMongoConverter instance.
 			<xsd:attribute name="db-factory-ref" type="xsd:string" use="optional">
 				<xsd:annotation>
 					<xsd:documentation>
-						The reference to a DbFactory.
+						The reference to a MongoDatabaseFactory.
 					</xsd:documentation>
 					<xsd:appinfo>
 						<tool:annotation kind="ref">
-							<tool:assignable-to type="org.springframework.data.mongodb.MongoDbFactory" />
+							<tool:assignable-to type="org.springframework.data.mongodb.MongoDatabaseFactory" />
 						</tool:annotation>
 					</xsd:appinfo>
 				</xsd:annotation>

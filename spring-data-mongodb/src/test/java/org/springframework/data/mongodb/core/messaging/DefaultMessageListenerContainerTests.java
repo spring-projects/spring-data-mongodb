@@ -33,9 +33,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
+import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
 import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
 import org.springframework.data.mongodb.test.util.MongoServerCondition;
@@ -60,7 +60,7 @@ public class DefaultMessageListenerContainerTests {
 
 	public static final Duration TIMEOUT = Duration.ofSeconds(2);
 
-	MongoDbFactory dbFactory;
+	MongoDatabaseFactory dbFactory;
 	MongoCollection<Document> collection;
 	MongoCollection<Document> collection2;
 
@@ -70,7 +70,7 @@ public class DefaultMessageListenerContainerTests {
 	@BeforeEach
 	void beforeEach() {
 
-		dbFactory = new SimpleMongoClientDbFactory(MongoTestUtils.client(), DATABASE_NAME);
+		dbFactory = new SimpleMongoClientDatabaseFactory(MongoTestUtils.client(), DATABASE_NAME);
 		template = new MongoTemplate(dbFactory);
 
 		template.dropCollection(COLLECTION_NAME);

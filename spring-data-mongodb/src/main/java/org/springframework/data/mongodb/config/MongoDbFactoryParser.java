@@ -32,7 +32,7 @@ import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.springframework.data.config.BeanComponentDefinitionBuilder;
 import org.springframework.data.mongodb.core.MongoClientFactoryBean;
-import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
+import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;
@@ -83,7 +83,7 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 
 		// Common setup
 		BeanDefinitionBuilder dbFactoryBuilder = BeanDefinitionBuilder
-				.genericBeanDefinition(SimpleMongoClientDbFactory.class);
+				.genericBeanDefinition(SimpleMongoClientDatabaseFactory.class);
 		setPropertyValue(dbFactoryBuilder, element, "write-concern", "writeConcern");
 
 		BeanDefinition mongoUri = getConnectionString(element, parserContext);

@@ -45,7 +45,7 @@ import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
-import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
+import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.context.ContextConfiguration;
@@ -72,7 +72,7 @@ public class ReactiveGridFsTemplateTests {
 	Resource resource = new ClassPathResource("gridfs/gridfs.xml");
 
 	@Autowired ReactiveGridFsOperations operations;
-	@Autowired SimpleMongoClientDbFactory mongoClient;
+	@Autowired SimpleMongoClientDatabaseFactory mongoClient;
 	@Autowired ReactiveMongoDatabaseFactory dbFactory;
 	@Autowired MongoConverter mongoConverter;
 

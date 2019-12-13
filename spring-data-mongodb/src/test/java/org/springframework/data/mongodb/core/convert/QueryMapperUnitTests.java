@@ -42,7 +42,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.geo.Point;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
@@ -60,7 +60,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 
 /**
  * Unit tests for {@link QueryMapper}.
@@ -78,7 +77,7 @@ public class QueryMapperUnitTests {
 	MongoMappingContext context;
 	MappingMongoConverter converter;
 
-	@Mock MongoDbFactory factory;
+	@Mock MongoDatabaseFactory factory;
 
 	@BeforeEach
 	public void beforeEach() {

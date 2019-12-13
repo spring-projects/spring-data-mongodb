@@ -27,7 +27,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoTemplate.QueryCursorPreparer;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
@@ -45,7 +45,7 @@ import com.mongodb.client.FindIterable;
 @RunWith(MockitoJUnitRunner.class)
 public class QueryCursorPreparerUnitTests {
 
-	@Mock MongoDbFactory factory;
+	@Mock MongoDatabaseFactory factory;
 	@Mock MongoExceptionTranslator exceptionTranslatorMock;
 	@Mock FindIterable<Document> cursor;
 

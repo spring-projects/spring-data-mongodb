@@ -41,7 +41,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -91,7 +91,7 @@ public class AbstractMongoQueryUnitTests {
 		doReturn(persitentEntityMock).when(mappingContextMock).getRequiredPersistentEntity(Mockito.any(Class.class));
 		doReturn(Person.class).when(persitentEntityMock).getType();
 
-		DbRefResolver dbRefResolver = new DefaultDbRefResolver(mock(MongoDbFactory.class));
+		DbRefResolver dbRefResolver = new DefaultDbRefResolver(mock(MongoDatabaseFactory.class));
 		MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, mappingContextMock);
 		converter.afterPropertiesSet();
 

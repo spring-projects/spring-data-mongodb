@@ -7,7 +7,7 @@ Some of the changes affect the initial setup configuration as well as compile/ru
 
 == Dependency Changes
 
-Instead of the single artifact uber jar `mongo-java-driver`, imports are now split to include separate artifacts:
+Instead of the single artifact uber-jar `mongo-java-driver`, imports are now split to include separate artifacts:
 
 * `org.mongodb:mongodb-driver-core` (required)
 * `org.mongodb:mongodb-driver-sync` (optional)
@@ -121,3 +121,22 @@ Element | Comment
 | Namespace element for `com.mongodb.MongoClientSettings`.
 
 |===
+
+.Deprecations:
+|===
+2.x | Replacement in 3.x | Comment
+
+| `MongoDbFactorySupport`
+| `MongoDatabaseFactorySupport`
+|
+
+| `SimpleMongoClientDbFactory`
+| `SimpleMongoClientDatabaseFactory`
+|
+
+| `MongoDbFactory`
+| `MongoDatabaseFactory`
+|
+
+|===
+

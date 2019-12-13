@@ -133,12 +133,11 @@ public class ComplexIdRepositoryIntegrationTests {
 	}
 
 	@Test // DATAMONGO-1373
-	@MongoVersion(until = "4.0.999")
 	public void composedAnnotationFindMetaShouldWorkWhenUsingComplexId() {
 
 		repo.save(userWithId);
 
-		assertThat(repo.findUsersUsingComposedMetaAnnotationByUserIds(Arrays.asList(id))).hasSize(0);
+		assertThat(repo.findUsersUsingComposedMetaAnnotationByUserIds(Arrays.asList(id))).hasSize(1);
 	}
 
 }

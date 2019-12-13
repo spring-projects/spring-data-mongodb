@@ -46,7 +46,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mapping.MappingException;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -69,7 +69,7 @@ import com.mongodb.DBRef;
 @RunWith(MockitoJUnitRunner.class)
 public class UpdateMapperUnitTests {
 
-	@Mock MongoDbFactory factory;
+	@Mock MongoDatabaseFactory factory;
 	MappingMongoConverter converter;
 	MongoMappingContext context;
 	UpdateMapper mapper;

@@ -39,7 +39,6 @@ import org.bson.Document;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.rules.TestRule;
 import org.mockito.Mockito;
@@ -50,7 +49,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.ClientSessionException;
 import org.springframework.data.mongodb.LazyLoadingException;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.SessionAwareMethodInterceptor;
 import org.springframework.data.mongodb.core.MongoTemplate.SessionBoundMongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -97,7 +96,7 @@ public class SessionBoundMongoTemplateTests {
 
 		client = MongoTestUtils.replSetClient();
 
-		MongoDbFactory factory = new SimpleMongoClientDbFactory(client, "session-bound-mongo-template-tests") {
+		MongoDatabaseFactory factory = new SimpleMongoClientDatabaseFactory(client, "session-bound-mongo-template-tests") {
 
 			@Override
 			public MongoDatabase getMongoDatabase() throws DataAccessException {
@@ -393,7 +392,7 @@ public class SessionBoundMongoTemplateTests {
 		return spiedDatabases.get(index);
 	}
 
-	private MongoConverter getDefaultMongoConverter(MongoDbFactory factory) {
+	private MongoConverter getDefaultMongoConverter(MongoDatabaseFactory factory) {
 
 		DbRefResolver dbRefResolver = new DefaultDbRefResolver(factory);
 		MongoCustomConversions conversions = new MongoCustomConversions(Collections.emptyList());

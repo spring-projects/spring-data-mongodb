@@ -28,8 +28,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
-import com.mongodb.reactivestreams.client.MongoClients;
-
 /**
  * Integration tests for {@link ReactiveRemoveOperationSupport}.
  *
@@ -48,7 +46,7 @@ public class ReactiveRemoveOperationSupportTests {
 	public void setUp() {
 
 		blocking = new MongoTemplate(
-				new SimpleMongoClientDbFactory(MongoTestUtils.client(), "ExecutableRemoveOperationSupportTests"));
+				new SimpleMongoClientDatabaseFactory(MongoTestUtils.client(), "ExecutableRemoveOperationSupportTests"));
 		blocking.dropCollection(STAR_WARS);
 
 		han = new Person();

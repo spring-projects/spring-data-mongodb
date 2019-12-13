@@ -36,15 +36,15 @@ import com.mongodb.client.ClientSession;
 class MongoResourceHolder extends ResourceHolderSupport {
 
 	private @Nullable ClientSession session;
-	private MongoDbFactory dbFactory;
+	private MongoDatabaseFactory dbFactory;
 
 	/**
 	 * Create a new {@link MongoResourceHolder} for a given {@link ClientSession session}.
 	 *
 	 * @param session the associated {@link ClientSession}. Can be {@literal null}.
-	 * @param dbFactory the associated {@link MongoDbFactory}. must not be {@literal null}.
+	 * @param dbFactory the associated {@link MongoDatabaseFactory}. must not be {@literal null}.
 	 */
-	MongoResourceHolder(@Nullable ClientSession session, MongoDbFactory dbFactory) {
+	MongoResourceHolder(@Nullable ClientSession session, MongoDatabaseFactory dbFactory) {
 
 		this.session = session;
 		this.dbFactory = dbFactory;
@@ -75,9 +75,9 @@ class MongoResourceHolder extends ResourceHolderSupport {
 	}
 
 	/**
-	 * @return the associated {@link MongoDbFactory}.
+	 * @return the associated {@link MongoDatabaseFactory}.
 	 */
-	public MongoDbFactory getDbFactory() {
+	public MongoDatabaseFactory getDbFactory() {
 		return dbFactory;
 	}
 

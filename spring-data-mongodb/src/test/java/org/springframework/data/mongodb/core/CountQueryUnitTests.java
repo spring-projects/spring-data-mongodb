@@ -24,7 +24,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.springframework.data.geo.Point;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
@@ -45,7 +45,7 @@ public class CountQueryUnitTests {
 	MongoMappingContext context;
 	MappingMongoConverter converter;
 
-	MongoDbFactory factory = mock(MongoDbFactory.class);
+	MongoDatabaseFactory factory = mock(MongoDatabaseFactory.class);
 
 	@Before
 	public void setUp() {

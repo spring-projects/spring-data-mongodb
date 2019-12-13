@@ -33,7 +33,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 
 import com.mongodb.DBRef;
@@ -50,7 +50,7 @@ import com.mongodb.client.MongoDatabase;
 @RunWith(MockitoJUnitRunner.class)
 public class DefaultDbRefResolverUnitTests {
 
-	@Mock MongoDbFactory factoryMock;
+	@Mock MongoDatabaseFactory factoryMock;
 	@Mock MongoDatabase dbMock;
 	@Mock MongoCollection<Document> collectionMock;
 	@Mock FindIterable<Document> cursorMock;

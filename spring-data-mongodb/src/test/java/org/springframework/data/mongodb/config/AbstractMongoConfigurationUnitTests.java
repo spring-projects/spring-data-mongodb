@@ -31,7 +31,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.AbstractApplicationContext;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoTypeMapper;
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
@@ -79,7 +79,7 @@ public class AbstractMongoConfigurationUnitTests {
 
 		AbstractApplicationContext context = new AnnotationConfigApplicationContext(SampleMongoConfiguration.class);
 
-		assertThat(context.getBean(MongoDbFactory.class)).isNotNull();
+		assertThat(context.getBean(MongoDatabaseFactory.class)).isNotNull();
 		assertThatExceptionOfType(NoSuchBeanDefinitionException.class).isThrownBy(() -> context.getBean(MongoClient.class));
 
 		context.close();
