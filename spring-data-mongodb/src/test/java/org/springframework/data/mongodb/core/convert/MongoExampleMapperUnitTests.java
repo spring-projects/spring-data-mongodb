@@ -38,7 +38,7 @@ import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.ExampleMatcher.*;
 import org.springframework.data.geo.Point;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.QueryMapperUnitTests.ClassWithGeoTypes;
 import org.springframework.data.mongodb.core.convert.QueryMapperUnitTests.WithDBRef;
 import org.springframework.data.mongodb.core.mapping.DBRef;
@@ -59,7 +59,7 @@ public class MongoExampleMapperUnitTests {
 	MongoMappingContext context;
 	MappingMongoConverter converter;
 
-	@Mock MongoDbFactory factory;
+	@Mock MongoDatabaseFactory factory;
 
 	@Before
 	public void setUp() {

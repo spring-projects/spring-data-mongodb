@@ -27,7 +27,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -40,7 +40,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 @RunWith(MockitoJUnitRunner.class)
 public class FilterExpressionUnitTests {
 
-	@Mock MongoDbFactory mongoDbFactory;
+	@Mock MongoDatabaseFactory mongoDbFactory;
 
 	private AggregationOperationContext aggregationContext;
 	private MongoMappingContext mappingContext;

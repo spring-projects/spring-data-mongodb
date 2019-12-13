@@ -49,7 +49,7 @@ public class ExecutableRemoveOperationSupportTests {
 	public void setUp() {
 
 		template = new MongoTemplate(
-				new SimpleMongoClientDbFactory(MongoTestUtils.client(), "ExecutableRemoveOperationSupportTests"));
+				new SimpleMongoClientDatabaseFactory(MongoTestUtils.client(), "ExecutableRemoveOperationSupportTests"));
 		template.dropCollection(STAR_WARS);
 
 		han = new Person();

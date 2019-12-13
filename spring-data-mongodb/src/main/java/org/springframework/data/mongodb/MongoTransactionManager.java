@@ -36,17 +36,18 @@ import com.mongodb.client.ClientSession;
 
 /**
  * A {@link org.springframework.transaction.PlatformTransactionManager} implementation that manages
- * {@link ClientSession} based transactions for a single {@link MongoDbFactory}.
+ * {@link ClientSession} based transactions for a single {@link MongoDatabaseFactory}.
  * <p />
- * Binds a {@link ClientSession} from the specified {@link MongoDbFactory} to the thread.
+ * Binds a {@link ClientSession} from the specified {@link MongoDatabaseFactory} to the thread.
  * <p />
  * {@link TransactionDefinition#isReadOnly() Readonly} transactions operate on a {@link ClientSession} and enable causal
  * consistency, and also {@link ClientSession#startTransaction() start}, {@link ClientSession#commitTransaction()
  * commit} or {@link ClientSession#abortTransaction() abort} a transaction.
  * <p />
  * Application code is required to retrieve the {@link com.mongodb.client.MongoDatabase} via
- * {@link MongoDatabaseUtils#getDatabase(MongoDbFactory)} instead of a standard {@link MongoDbFactory#getMongoDatabase()} call.
- * Spring classes such as {@link org.springframework.data.mongodb.core.MongoTemplate} use this strategy implicitly.
+ * {@link MongoDatabaseUtils#getDatabase(MongoDatabaseFactory)} instead of a standard
+ * {@link MongoDatabaseFactory#getMongoDatabase()} call. Spring classes such as
+ * {@link org.springframework.data.mongodb.core.MongoTemplate} use this strategy implicitly.
  * <p />
  * By default failure of a {@literal commit} operation raises a {@link TransactionSystemException}. One may override
  * {@link #doCommit(MongoTransactionObject)} to implement the
@@ -58,46 +59,46 @@ import com.mongodb.client.ClientSession;
  * @currentRead Shadow's Edge - Brent Weeks
  * @since 2.1
  * @see <a href="https://www.mongodb.com/transactions">MongoDB Transaction Documentation</a>
- * @see MongoDatabaseUtils#getDatabase(MongoDbFactory, SessionSynchronization)
+ * @see MongoDatabaseUtils#getDatabase(MongoDatabaseFactory, SessionSynchronization)
  */
 public class MongoTransactionManager extends AbstractPlatformTransactionManager
 		implements ResourceTransactionManager, InitializingBean {
 
-	private @Nullable MongoDbFactory dbFactory;
+	private @Nullable MongoDatabaseFactory dbFactory;
 	private @Nullable TransactionOptions options;
 
 	/**
 	 * Create a new {@link MongoTransactionManager} for bean-style usage.
 	 * <p />
-	 * <strong>Note:</strong>The {@link MongoDbFactory db factory} has to be {@link #setDbFactory(MongoDbFactory) set}
-	 * before using the instance. Use this constructor to prepare a {@link MongoTransactionManager} via a
-	 * {@link org.springframework.beans.factory.BeanFactory}.
+	 * <strong>Note:</strong>The {@link MongoDatabaseFactory db factory} has to be
+	 * {@link #setDbFactory(MongoDatabaseFactory) set} before using the instance. Use this constructor to prepare a
+	 * {@link MongoTransactionManager} via a {@link org.springframework.beans.factory.BeanFactory}.
 	 * <p />
 	 * Optionally it is possible to set default {@link TransactionOptions transaction options} defining
 	 * {@link com.mongodb.ReadConcern} and {@link com.mongodb.WriteConcern}.
 	 *
-	 * @see #setDbFactory(MongoDbFactory)
+	 * @see #setDbFactory(MongoDatabaseFactory)
 	 * @see #setTransactionSynchronization(int)
 	 */
 	public MongoTransactionManager() {}
 
 	/**
-	 * Create a new {@link MongoTransactionManager} obtaining sessions from the given {@link MongoDbFactory}.
+	 * Create a new {@link MongoTransactionManager} obtaining sessions from the given {@link MongoDatabaseFactory}.
 	 *
 	 * @param dbFactory must not be {@literal null}.
 	 */
-	public MongoTransactionManager(MongoDbFactory dbFactory) {
+	public MongoTransactionManager(MongoDatabaseFactory dbFactory) {
 		this(dbFactory, null);
 	}
 
 	/**
-	 * Create a new {@link MongoTransactionManager} obtaining sessions from the given {@link MongoDbFactory} applying the
-	 * given {@link TransactionOptions options}, if present, when starting a new transaction.
+	 * Create a new {@link MongoTransactionManager} obtaining sessions from the given {@link MongoDatabaseFactory}
+	 * applying the given {@link TransactionOptions options}, if present, when starting a new transaction.
 	 *
 	 * @param dbFactory must not be {@literal null}.
 	 * @param options can be {@literal null}.
 	 */
-	public MongoTransactionManager(MongoDbFactory dbFactory, @Nullable TransactionOptions options) {
+	public MongoTransactionManager(MongoDatabaseFactory dbFactory, @Nullable TransactionOptions options) {
 
 		Assert.notNull(dbFactory, "DbFactory must not be null!");
 
@@ -295,11 +296,11 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 	}
 
 	/**
-	 * Set the {@link MongoDbFactory} that this instance should manage transactions for.
+	 * Set the {@link MongoDatabaseFactory} that this instance should manage transactions for.
 	 *
 	 * @param dbFactory must not be {@literal null}.
 	 */
-	public void setDbFactory(MongoDbFactory dbFactory) {
+	public void setDbFactory(MongoDatabaseFactory dbFactory) {
 
 		Assert.notNull(dbFactory, "DbFactory must not be null!");
 		this.dbFactory = dbFactory;
@@ -315,12 +316,12 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 	}
 
 	/**
-	 * Get the {@link MongoDbFactory} that this instance manages transactions for.
+	 * Get the {@link MongoDatabaseFactory} that this instance manages transactions for.
 	 *
 	 * @return can be {@literal null}.
 	 */
 	@Nullable
-	public MongoDbFactory getDbFactory() {
+	public MongoDatabaseFactory getDbFactory() {
 		return dbFactory;
 	}
 
@@ -329,7 +330,7 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 	 * @see org.springframework.transaction.support.ResourceTransactionManager#getResourceFactory()
 	 */
 	@Override
-	public MongoDbFactory getResourceFactory() {
+	public MongoDatabaseFactory getResourceFactory() {
 		return getRequiredDbFactory();
 	}
 
@@ -344,7 +345,7 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 
 	private MongoResourceHolder newResourceHolder(TransactionDefinition definition, ClientSessionOptions options) {
 
-		MongoDbFactory dbFactory = getResourceFactory();
+		MongoDatabaseFactory dbFactory = getResourceFactory();
 
 		MongoResourceHolder resourceHolder = new MongoResourceHolder(dbFactory.getSession(options), dbFactory);
 		resourceHolder.setTimeoutIfNotDefaulted(determineTimeout(definition));
@@ -355,7 +356,7 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 	/**
 	 * @throws IllegalStateException if {@link #dbFactory} is {@literal null}.
 	 */
-	private MongoDbFactory getRequiredDbFactory() {
+	private MongoDatabaseFactory getRequiredDbFactory() {
 
 		Assert.state(dbFactory != null,
 				"MongoTransactionManager operates upon a MongoDbFactory. Did you forget to provide one? It's required.");

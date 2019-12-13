@@ -36,7 +36,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.MongoCollectionUtils;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -65,7 +65,7 @@ import com.mongodb.client.MongoClient;
 public class IndexingIntegrationTests {
 
 	@Autowired MongoOperations operations;
-	@Autowired MongoDbFactory mongoDbFactory;
+	@Autowired MongoDatabaseFactory mongoDbFactory;
 	@Autowired ConfigurableApplicationContext context;
 
 	@Configuration

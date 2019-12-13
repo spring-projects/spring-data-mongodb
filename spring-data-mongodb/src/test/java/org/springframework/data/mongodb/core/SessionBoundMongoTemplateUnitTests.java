@@ -33,7 +33,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.MongoTemplate.SessionBoundMongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -78,7 +78,7 @@ public class SessionBoundMongoTemplateUnitTests {
 
 	SessionBoundMongoTemplate template;
 
-	MongoDbFactory factory;
+	MongoDatabaseFactory factory;
 
 	@Mock(answer = Answers.RETURNS_DEEP_STUBS) MongoCollection collection;
 	@Mock MongoDatabase database;
@@ -123,7 +123,7 @@ public class SessionBoundMongoTemplateUnitTests {
 		when(cursor.hasNext()).thenReturn(false);
 		when(findIterable.projection(any())).thenReturn(findIterable);
 
-		factory = new SimpleMongoClientDbFactory(client, "foo");
+		factory = new SimpleMongoClientDatabaseFactory(client, "foo");
 
 		this.mappingContext = new MongoMappingContext();
 		this.converter = new MappingMongoConverter(new DefaultDbRefResolver(factory), mappingContext);

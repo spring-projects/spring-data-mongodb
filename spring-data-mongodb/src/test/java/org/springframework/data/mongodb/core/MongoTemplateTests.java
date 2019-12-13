@@ -65,7 +65,7 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.LazyLoadingProxy;
@@ -132,7 +132,7 @@ import com.mongodb.client.result.UpdateResult;
 public class MongoTemplateTests {
 
 	@Autowired MongoTemplate template;
-	@Autowired MongoDbFactory factory;
+	@Autowired MongoDatabaseFactory factory;
 
 	ConfigurableApplicationContext context;
 	MongoTemplate mappingTemplate;

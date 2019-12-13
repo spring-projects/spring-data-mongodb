@@ -59,7 +59,7 @@ class MongoTemplateUpdateTests {
 	void setUp() {
 
 		client = MongoTestUtils.client();
-		template = new MongoTemplate(new SimpleMongoClientDbFactory(client, DB_NAME));
+		template = new MongoTemplate(new SimpleMongoClientDatabaseFactory(client, DB_NAME));
 
 		MongoTestUtils.createOrReplaceCollection(DB_NAME, template.getCollectionName(Score.class), client);
 		MongoTestUtils.createOrReplaceCollection(DB_NAME, template.getCollectionName(Versioned.class), client);

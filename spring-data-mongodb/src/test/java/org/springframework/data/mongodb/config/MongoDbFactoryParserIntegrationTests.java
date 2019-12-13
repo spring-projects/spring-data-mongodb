@@ -28,8 +28,8 @@ import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -58,7 +58,8 @@ public class MongoDbFactoryParserIntegrationTests {
 	@Test // DATAMONGO-2199
 	public void testWriteConcern() throws Exception {
 
-		SimpleMongoClientDbFactory dbFactory = new SimpleMongoClientDbFactory(MongoTestUtils.client(), "database");
+		SimpleMongoClientDatabaseFactory dbFactory = new SimpleMongoClientDatabaseFactory(MongoTestUtils.client(),
+				"database");
 		dbFactory.setWriteConcern(WriteConcern.ACKNOWLEDGED);
 		dbFactory.getMongoDatabase();
 
@@ -85,7 +86,7 @@ public class MongoDbFactoryParserIntegrationTests {
 
 		AbstractApplicationContext ctx = new ClassPathXmlApplicationContext(
 				"namespace/db-factory-bean-custom-write-concern.xml");
-		MongoDbFactory factory = ctx.getBean("second", MongoDbFactory.class);
+		MongoDatabaseFactory factory = ctx.getBean("second", MongoDatabaseFactory.class);
 		MongoDatabase db = factory.getMongoDatabase();
 
 		assertThat(db.getWriteConcern()).isEqualTo(WriteConcern.W2);
@@ -120,7 +121,7 @@ public class MongoDbFactoryParserIntegrationTests {
 		ValueHolder argument = constructorArguments.getArgumentValue(0, ConnectionString.class);
 		assertThat(argument).isNotNull();
 
-		MongoDbFactory dbFactory = factory.getBean("mongoDbFactory", MongoDbFactory.class);
+		MongoDatabaseFactory dbFactory = factory.getBean("mongoDbFactory", MongoDatabaseFactory.class);
 		MongoDatabase db = dbFactory.getMongoDatabase();
 		assertThat(db.getName()).isEqualTo("database");
 	}
@@ -166,8 +167,8 @@ public class MongoDbFactoryParserIntegrationTests {
 
 		ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("namespace/db-factory-bean.xml");
 
-		MongoDbFactory dbFactory = ctx.getBean("with-connection-string", MongoDbFactory.class);
-		assertThat(dbFactory).isInstanceOf(SimpleMongoClientDbFactory.class);
+		MongoDatabaseFactory dbFactory = ctx.getBean("with-connection-string", MongoDatabaseFactory.class);
+		assertThat(dbFactory).isInstanceOf(SimpleMongoClientDatabaseFactory.class);
 		assertThat(ReflectionTestUtils.getField(dbFactory, "mongoClient"))
 				.isInstanceOf(com.mongodb.client.MongoClient.class);
 	}
@@ -177,15 +178,15 @@ public class MongoDbFactoryParserIntegrationTests {
 
 		ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("namespace/db-factory-bean.xml");
 
-		MongoDbFactory dbFactory = ctx.getBean("with-mongo-client-client-ref", MongoDbFactory.class);
-		assertThat(dbFactory).isInstanceOf(SimpleMongoClientDbFactory.class);
+		MongoDatabaseFactory dbFactory = ctx.getBean("with-mongo-client-client-ref", MongoDatabaseFactory.class);
+		assertThat(dbFactory).isInstanceOf(SimpleMongoClientDatabaseFactory.class);
 		assertThat(ReflectionTestUtils.getField(dbFactory, "mongoClient"))
 				.isInstanceOf(com.mongodb.client.MongoClient.class);
 	}
 
 	private static void assertWriteConcern(ClassPathXmlApplicationContext ctx, WriteConcern expectedWriteConcern) {
 
-		SimpleMongoClientDbFactory dbFactory = ctx.getBean("first", SimpleMongoClientDbFactory.class);
+		SimpleMongoClientDatabaseFactory dbFactory = ctx.getBean("first", SimpleMongoClientDatabaseFactory.class);
 		MongoDatabase db = dbFactory.getMongoDatabase();
 		assertThat(db.getName()).isEqualTo("db");
 

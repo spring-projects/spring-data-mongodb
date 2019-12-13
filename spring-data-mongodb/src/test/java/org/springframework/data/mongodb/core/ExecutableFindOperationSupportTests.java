@@ -67,7 +67,7 @@ public class ExecutableFindOperationSupportTests {
 	public void setUp() {
 
 		template = new MongoTemplate(
-				new SimpleMongoClientDbFactory(MongoTestUtils.client(), "ExecutableFindOperationSupportTests"));
+				new SimpleMongoClientDatabaseFactory(MongoTestUtils.client(), "ExecutableFindOperationSupportTests"));
 		template.dropCollection(STAR_WARS);
 		template.dropCollection(STAR_WARS_PLANETS);
 

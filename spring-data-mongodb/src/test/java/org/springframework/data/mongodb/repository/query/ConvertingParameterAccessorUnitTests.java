@@ -27,7 +27,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -48,7 +48,7 @@ import com.mongodb.BasicDBList;
 @RunWith(MockitoJUnitRunner.class)
 public class ConvertingParameterAccessorUnitTests {
 
-	@Mock MongoDbFactory factory;
+	@Mock MongoDatabaseFactory factory;
 	@Mock MongoParameterAccessor accessor;
 
 	MongoMappingContext context;

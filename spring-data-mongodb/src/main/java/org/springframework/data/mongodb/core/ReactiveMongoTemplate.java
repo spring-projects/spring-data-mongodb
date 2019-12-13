@@ -62,7 +62,7 @@ import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.MappingContextEvent;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseUtils;
 import org.springframework.data.mongodb.SessionSynchronization;
@@ -320,7 +320,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	/**
 	 * Configures the {@link WriteConcern} to be used with the template. If none is configured the {@link WriteConcern}
-	 * configured on the {@link MongoDbFactory} will apply. If you configured a {@link Mongo} instance no
+	 * configured on the {@link MongoDatabaseFactory} will apply. If you configured a {@link Mongo} instance no
 	 * {@link WriteConcern} will be used.
 	 *
 	 * @param writeConcern can be {@literal null}.

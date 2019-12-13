@@ -37,7 +37,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Persistable;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.test.util.AfterTransactionAssertion;
@@ -91,7 +91,7 @@ public class MongoTemplateTransactionTests {
 		}
 
 		@Bean
-		MongoTransactionManager txManager(MongoDbFactory dbFactory) {
+		MongoTransactionManager txManager(MongoDatabaseFactory dbFactory) {
 			return new MongoTransactionManager(dbFactory);
 		}
 	}
