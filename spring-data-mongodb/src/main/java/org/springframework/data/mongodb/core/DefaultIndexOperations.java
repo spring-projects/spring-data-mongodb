@@ -21,7 +21,7 @@ import java.util.List;
 
 import org.bson.Document;
 import org.springframework.dao.DataAccessException;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexInfo;
@@ -64,7 +64,7 @@ public class DefaultIndexOperations implements IndexOperations {
 	 *             {@link DefaultIndexOperations#DefaultIndexOperations(MongoOperations, String, Class)}.
 	 */
 	@Deprecated
-	public DefaultIndexOperations(MongoDbFactory mongoDbFactory, String collectionName, QueryMapper queryMapper) {
+	public DefaultIndexOperations(MongoDatabaseFactory mongoDbFactory, String collectionName, QueryMapper queryMapper) {
 		this(mongoDbFactory, collectionName, queryMapper, null);
 	}
 
@@ -80,7 +80,7 @@ public class DefaultIndexOperations implements IndexOperations {
 	 *             {@link DefaultIndexOperations#DefaultIndexOperations(MongoOperations, String, Class)}.
 	 */
 	@Deprecated
-	public DefaultIndexOperations(MongoDbFactory mongoDbFactory, String collectionName, QueryMapper queryMapper,
+	public DefaultIndexOperations(MongoDatabaseFactory mongoDbFactory, String collectionName, QueryMapper queryMapper,
 			@Nullable Class<?> type) {
 
 		Assert.notNull(mongoDbFactory, "MongoDbFactory must not be null!");

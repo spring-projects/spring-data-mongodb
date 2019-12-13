@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2020 the original author or authors.
+ * Copyright 2011-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,30 +15,29 @@
  */
 package org.springframework.data.mongodb;
 
-import reactor.core.publisher.Mono;
-
 import org.bson.codecs.configuration.CodecRegistry;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 
 import com.mongodb.ClientSessionOptions;
-import com.mongodb.reactivestreams.client.ClientSession;
-import com.mongodb.reactivestreams.client.MongoDatabase;
+import com.mongodb.client.ClientSession;
+import com.mongodb.client.MongoDatabase;
 
 /**
- * Interface for factories creating reactive {@link MongoDatabase} instances.
+ * Interface for factories creating {@link MongoDatabase} instances.
  *
- * @author Mark Paluch
+ * @author Mark Pollack
+ * @author Thomas Darimont
  * @author Christoph Strobl
- * @since 2.0
+ * @since 3.0
  */
-public interface ReactiveMongoDatabaseFactory extends CodecRegistryProvider {
+public interface MongoDatabaseFactory extends CodecRegistryProvider, MongoSessionProvider {
 
 	/**
-	 * Creates a default {@link MongoDatabase} instance.
+	 * Obtain a {@link MongoDatabase} from the underlying factory.
 	 *
-	 * @return
+	 * @return never {@literal null}.
 	 * @throws DataAccessException
 	 */
 	MongoDatabase getMongoDatabase() throws DataAccessException;
@@ -46,8 +45,8 @@ public interface ReactiveMongoDatabaseFactory extends CodecRegistryProvider {
 	/**
 	 * Obtain a {@link MongoDatabase} instance to access the database with the given name.
 	 *
-	 * @param dbName must not be {@literal null} or empty.
-	 * @return
+	 * @param dbName
+	 * @return never {@literal null}.
 	 * @throws DataAccessException
 	 */
 	MongoDatabase getMongoDatabase(String dbName) throws DataAccessException;
@@ -60,7 +59,7 @@ public interface ReactiveMongoDatabaseFactory extends CodecRegistryProvider {
 	PersistenceExceptionTranslator getExceptionTranslator();
 
 	/**
-	 * Get the underlying {@link CodecRegistry} used by the reactive MongoDB Java driver.
+	 * Get the underlying {@link CodecRegistry} used by the MongoDB Java driver.
 	 *
 	 * @return never {@literal null}.
 	 */
@@ -70,31 +69,42 @@ public interface ReactiveMongoDatabaseFactory extends CodecRegistryProvider {
 	}
 
 	/**
-	 * Obtain a {@link Mono} emitting a {@link ClientSession} for given {@link ClientSessionOptions options}.
+	 * Obtain a {@link ClientSession} for given ClientSessionOptions.
 	 *
 	 * @param options must not be {@literal null}.
 	 * @return never {@literal null}.
 	 * @since 2.1
 	 */
-	Mono<ClientSession> getSession(ClientSessionOptions options);
+	ClientSession getSession(ClientSessionOptions options);
 
 	/**
-	 * Obtain a {@link ClientSession} bound instance of {@link ReactiveMongoDatabaseFactory} returning
-	 * {@link MongoDatabase} instances that are aware and bound to the given session.
+	 * Obtain a {@link ClientSession} bound instance of {@link MongoDatabaseFactory} returning {@link MongoDatabase}
+	 * instances that are aware and bound to a new session with given {@link ClientSessionOptions options}.
+	 *
+	 * @param options must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 2.1
+	 */
+	default MongoDatabaseFactory withSession(ClientSessionOptions options) {
+		return withSession(getSession(options));
+	}
+
+	/**
+	 * Obtain a {@link ClientSession} bound instance of {@link MongoDatabaseFactory} returning {@link MongoDatabase}
+	 * instances that are aware and bound to the given session.
 	 *
 	 * @param session must not be {@literal null}.
 	 * @return never {@literal null}.
 	 * @since 2.1
 	 */
-	ReactiveMongoDatabaseFactory withSession(ClientSession session);
+	MongoDatabaseFactory withSession(ClientSession session);
 
 	/**
-	 * Returns if the given {@link ReactiveMongoDatabaseFactory} is bound to a
-	 * {@link com.mongodb.reactivestreams.client.ClientSession} that has an
-	 * {@link com.mongodb.reactivestreams.client.ClientSession#hasActiveTransaction() active transaction}.
+	 * Returns if the given {@link MongoDatabaseFactory} is bound to a {@link ClientSession} that has an
+	 * {@link ClientSession#hasActiveTransaction() active transaction}.
 	 *
 	 * @return {@literal true} if there's an active transaction, {@literal false} otherwise.
-	 * @since 2.2
+	 * @since 2.1.3
 	 */
 	default boolean isTransactionActive() {
 		return false;

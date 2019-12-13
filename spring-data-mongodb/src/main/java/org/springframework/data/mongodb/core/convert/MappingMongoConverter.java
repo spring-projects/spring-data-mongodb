@@ -60,7 +60,7 @@ import org.springframework.data.mapping.model.SpELContext;
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mapping.model.SpELExpressionParameterValueProvider;
 import org.springframework.data.mongodb.CodecRegistryProvider;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertEvent;
@@ -135,14 +135,14 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	/**
-	 * Creates a new {@link MappingMongoConverter} given the new {@link MongoDbFactory} and {@link MappingContext}.
+	 * Creates a new {@link MappingMongoConverter} given the new {@link MongoDatabaseFactory} and {@link MappingContext}.
 	 *
 	 * @deprecated use the constructor taking a {@link DbRefResolver} instead.
 	 * @param mongoDbFactory must not be {@literal null}.
 	 * @param mappingContext must not be {@literal null}.
 	 */
 	@Deprecated
-	public MappingMongoConverter(MongoDbFactory mongoDbFactory,
+	public MappingMongoConverter(MongoDatabaseFactory mongoDbFactory,
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 		this(new DefaultDbRefResolver(mongoDbFactory), mappingContext);
 		setCodecRegistryProvider(mongoDbFactory);
@@ -1671,12 +1671,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	/**
-	 * Create a new {@link MappingMongoConverter} using the given {@link MongoDbFactory} when loading {@link DBRef}.
+	 * Create a new {@link MappingMongoConverter} using the given {@link MongoDatabaseFactory} when loading {@link DBRef}.
 	 *
 	 * @return new instance of {@link MappingMongoConverter}. Never {@literal null}.
 	 * @since 2.1.6
 	 */
-	public MappingMongoConverter with(MongoDbFactory dbFactory) {
+	public MappingMongoConverter with(MongoDatabaseFactory dbFactory) {
 
 		MappingMongoConverter target = new MappingMongoConverter(new DefaultDbRefResolver(dbFactory), mappingContext);
 		target.applicationContext = applicationContext;

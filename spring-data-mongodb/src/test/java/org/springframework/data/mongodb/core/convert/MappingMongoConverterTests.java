@@ -31,14 +31,13 @@ import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
 import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
 
 /**
  * Integration tests for {@link MappingMongoConverter}.
@@ -59,7 +58,7 @@ public class MappingMongoConverterTests {
 		client = MongoTestUtils.client();
 		client.getDatabase("mapping-converter-tests").drop();
 
-		MongoDbFactory factory = new SimpleMongoClientDbFactory(client, "mapping-converter-tests");
+		MongoDatabaseFactory factory = new SimpleMongoClientDatabaseFactory(client, "mapping-converter-tests");
 
 		dbRefResolver = spy(new DefaultDbRefResolver(factory));
 		mappingContext = new MongoMappingContext();

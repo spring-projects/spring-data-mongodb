@@ -61,7 +61,7 @@ import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mapping.callback.EntityCallbacks;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
@@ -133,7 +133,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 	MongoTemplate template;
 
-	@Mock MongoDbFactory factory;
+	@Mock MongoDatabaseFactory factory;
 	@Mock MongoClient mongo;
 	@Mock MongoDatabase db;
 	@Mock MongoCollection<Document> collection;

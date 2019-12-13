@@ -43,7 +43,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.callback.EntityCallbacks;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.DefaultBulkOperations.BulkOperationContext;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
@@ -89,7 +89,7 @@ public class DefaultBulkOperationsUnitTests {
 	MongoTemplate template;
 	@Mock MongoDatabase database;
 	@Mock(answer = Answers.RETURNS_DEEP_STUBS) MongoCollection<Document> collection;
-	@Mock MongoDbFactory factory;
+	@Mock MongoDatabaseFactory factory;
 	@Mock DbRefResolver dbRefResolver;
 	@Captor ArgumentCaptor<List<WriteModel<Document>>> captor;
 	MongoConverter converter;

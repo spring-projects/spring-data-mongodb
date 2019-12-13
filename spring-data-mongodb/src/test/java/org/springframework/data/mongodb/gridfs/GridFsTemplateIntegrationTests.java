@@ -41,7 +41,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
+import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -69,7 +69,7 @@ public class GridFsTemplateIntegrationTests {
 	Resource resource = new ClassPathResource("gridfs/gridfs.xml");
 
 	@Autowired GridFsOperations operations;
-	@Autowired SimpleMongoClientDbFactory mongoClient;
+	@Autowired SimpleMongoClientDatabaseFactory mongoClient;
 
 	@Before
 	public void setUp() {

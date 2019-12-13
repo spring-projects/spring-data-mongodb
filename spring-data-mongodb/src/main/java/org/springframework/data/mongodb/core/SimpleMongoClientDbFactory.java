@@ -15,11 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
-import org.springframework.beans.factory.DisposableBean;
-
-import com.mongodb.ClientSessionOptions;
 import com.mongodb.ConnectionString;
-import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
@@ -29,8 +25,10 @@ import com.mongodb.client.MongoDatabase;
  *
  * @author Christoph Strobl
  * @since 2.1
+ * @deprecated since 3.0, use {@link SimpleMongoClientDatabaseFactory} instead.
  */
-public class SimpleMongoClientDbFactory extends MongoDbFactorySupport<MongoClient> implements DisposableBean {
+@Deprecated
+public class SimpleMongoClientDbFactory extends SimpleMongoClientDatabaseFactory {
 
 	/**
 	 * Creates a new {@link SimpleMongoClientDbFactory} instance for the given {@code connectionString}.
@@ -71,33 +69,6 @@ public class SimpleMongoClientDbFactory extends MongoDbFactorySupport<MongoClien
 	 * @param mongoInstanceCreated
 	 */
 	private SimpleMongoClientDbFactory(MongoClient mongoClient, String databaseName, boolean mongoInstanceCreated) {
-		super(mongoClient, databaseName, mongoInstanceCreated, new MongoExceptionTranslator());
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.MongoDbFactory#getSession(com.mongodb.ClientSessionOptions)
-	 */
-	@Override
-	public ClientSession getSession(ClientSessionOptions options) {
-		return getMongoClient().startSession(options);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoDbFactoryBase#closeClient()
-	 */
-	@Override
-	protected void closeClient() {
-		getMongoClient().close();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoDbFactoryBase#doGetMongoDatabase(java.lang.String)
-	 */
-	@Override
-	protected MongoDatabase doGetMongoDatabase(String dbName) {
-		return getMongoClient().getDatabase(dbName);
+		super(mongoClient, databaseName, mongoInstanceCreated);
 	}
 }

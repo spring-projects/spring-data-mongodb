@@ -31,7 +31,7 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
@@ -70,7 +70,7 @@ public class PartTreeMongoQueryUnitTests {
 	public void setUp() {
 
 		mappingContext = new MongoMappingContext();
-		DbRefResolver dbRefResolver = new DefaultDbRefResolver(mock(MongoDbFactory.class));
+		DbRefResolver dbRefResolver = new DefaultDbRefResolver(mock(MongoDatabaseFactory.class));
 		MongoConverter converter = new MappingMongoConverter(dbRefResolver, mappingContext);
 
 		doReturn(converter).when(mongoOperationsMock).getConverter();

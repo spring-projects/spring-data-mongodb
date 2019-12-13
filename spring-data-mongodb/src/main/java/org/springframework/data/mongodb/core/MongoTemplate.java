@@ -58,7 +58,7 @@ import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.MongoDatabaseUtils;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.SessionSynchronization;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.DefaultBulkOperations.BulkOperationContext;
@@ -186,7 +186,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	private final MongoConverter mongoConverter;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
-	private final MongoDbFactory mongoDbFactory;
+	private final MongoDatabaseFactory mongoDbFactory;
 	private final PersistenceExceptionTranslator exceptionTranslator;
 	private final QueryMapper queryMapper;
 	private final UpdateMapper updateMapper;
@@ -214,7 +214,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @since 2.1
 	 */
 	public MongoTemplate(com.mongodb.client.MongoClient mongoClient, String databaseName) {
-		this(new SimpleMongoClientDbFactory(mongoClient, databaseName), (MongoConverter) null);
+		this(new SimpleMongoClientDatabaseFactory(mongoClient, databaseName), (MongoConverter) null);
 	}
 
 	/**
@@ -222,7 +222,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 *
 	 * @param mongoDbFactory must not be {@literal null}.
 	 */
-	public MongoTemplate(MongoDbFactory mongoDbFactory) {
+	public MongoTemplate(MongoDatabaseFactory mongoDbFactory) {
 		this(mongoDbFactory, (MongoConverter) null);
 	}
 
@@ -232,7 +232,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param mongoDbFactory must not be {@literal null}.
 	 * @param mongoConverter
 	 */
-	public MongoTemplate(MongoDbFactory mongoDbFactory, @Nullable MongoConverter mongoConverter) {
+	public MongoTemplate(MongoDatabaseFactory mongoDbFactory, @Nullable MongoConverter mongoConverter) {
 
 		Assert.notNull(mongoDbFactory, "MongoDbFactory must not be null!");
 
@@ -262,7 +262,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 	}
 
-	private MongoTemplate(MongoDbFactory dbFactory, MongoTemplate that) {
+	private MongoTemplate(MongoDatabaseFactory dbFactory, MongoTemplate that) {
 
 		this.mongoDbFactory = dbFactory;
 		this.exceptionTranslator = that.exceptionTranslator;
@@ -297,7 +297,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	/**
 	 * Configures the {@link WriteConcern} to be used with the template. If none is configured the {@link WriteConcern}
-	 * configured on the {@link MongoDbFactory} will apply.
+	 * configured on the {@link MongoDatabaseFactory} will apply.
 	 *
 	 * @param writeConcern
 	 */
@@ -2858,7 +2858,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return type != null ? mappingContext.getPersistentEntity(type) : null;
 	}
 
-	private static MongoConverter getDefaultMongoConverter(MongoDbFactory factory) {
+	private static MongoConverter getDefaultMongoConverter(MongoDatabaseFactory factory) {
 
 		DbRefResolver dbRefResolver = new DefaultDbRefResolver(factory);
 		MongoCustomConversions conversions = new MongoCustomConversions(Collections.emptyList());
@@ -3448,7 +3448,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 	}
 
-	public MongoDbFactory getMongoDbFactory() {
+	public MongoDatabaseFactory getMongoDbFactory() {
 		return mongoDbFactory;
 	}
 

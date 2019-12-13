@@ -52,7 +52,7 @@ public class ExecutableUpdateOperationSupportTests {
 	public void setUp() {
 
 		template = new MongoTemplate(
-				new SimpleMongoClientDbFactory(MongoTestUtils.client(), "ExecutableUpdateOperationSupportTests"));
+				new SimpleMongoClientDatabaseFactory(MongoTestUtils.client(), "ExecutableUpdateOperationSupportTests"));
 		template.dropCollection(STAR_WARS);
 
 		han = new Person();

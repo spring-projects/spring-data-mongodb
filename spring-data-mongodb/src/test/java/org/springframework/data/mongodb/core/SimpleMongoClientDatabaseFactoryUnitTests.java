@@ -27,7 +27,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.aop.framework.AopProxyUtils;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.ConnectionString;
@@ -36,14 +36,14 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 
 /**
- * Unit tests for {@link SimpleMongoClientDbFactory}.
+ * Unit tests for {@link SimpleMongoClientDatabaseFactory}.
  *
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Mark Paluch
  */
 @RunWith(MockitoJUnitRunner.class)
-public class SimpleMongoClientDbFactoryUnitTests {
+public class SimpleMongoClientDatabaseFactoryUnitTests {
 
 	@Mock MongoClient mongo;
 	@Mock ClientSession clientSession;
@@ -63,9 +63,9 @@ public class SimpleMongoClientDbFactoryUnitTests {
 	@Test // DATADOC-254
 	@SuppressWarnings("deprecation")
 	public void allowsDatabaseNames() {
-		new SimpleMongoClientDbFactory(mongo, "foo-bar");
-		new SimpleMongoClientDbFactory(mongo, "foo_bar");
-		new SimpleMongoClientDbFactory(mongo, "foo01231bar");
+		new SimpleMongoClientDatabaseFactory(mongo, "foo-bar");
+		new SimpleMongoClientDatabaseFactory(mongo, "foo_bar");
+		new SimpleMongoClientDatabaseFactory(mongo, "foo01231bar");
 	}
 
 	@Test // DATADOC-295
@@ -74,7 +74,7 @@ public class SimpleMongoClientDbFactoryUnitTests {
 
 		ConnectionString mongoURI = new ConnectionString(
 				"mongodb://myUsername:myPassword@localhost/myDatabase.myCollection");
-		MongoDbFactory mongoDbFactory = new SimpleMongoClientDbFactory(mongoURI);
+		MongoDatabaseFactory mongoDbFactory = new SimpleMongoClientDatabaseFactory(mongoURI);
 
 		assertThat(getField(mongoDbFactory, "databaseName").toString()).isEqualTo("myDatabase");
 	}
@@ -84,7 +84,7 @@ public class SimpleMongoClientDbFactoryUnitTests {
 
 		ConnectionString uri = new ConnectionString(
 				"mongodb://myUserName:myPassWord@127.0.0.1:27017/myDataBase.myCollection");
-		SimpleMongoClientDbFactory factory = new SimpleMongoClientDbFactory(uri);
+		SimpleMongoClientDatabaseFactory factory = new SimpleMongoClientDatabaseFactory(uri);
 
 		assertThat(getField(factory, "databaseName").toString()).isEqualTo("myDataBase");
 	}
@@ -94,8 +94,8 @@ public class SimpleMongoClientDbFactoryUnitTests {
 
 		when(mongo.getDatabase("foo")).thenReturn(database);
 
-		MongoDbFactory factory = new SimpleMongoClientDbFactory(mongo, "foo");
-		MongoDbFactory wrapped = factory.withSession(clientSession).withSession(clientSession);
+		MongoDatabaseFactory factory = new SimpleMongoClientDatabaseFactory(mongo, "foo");
+		MongoDatabaseFactory wrapped = factory.withSession(clientSession).withSession(clientSession);
 
 		InvocationHandler invocationHandler = Proxy.getInvocationHandler(wrapped.getMongoDatabase());
 
@@ -106,7 +106,7 @@ public class SimpleMongoClientDbFactoryUnitTests {
 	}
 
 	private void rejectsDatabaseName(String databaseName) {
-		assertThatThrownBy(() -> new SimpleMongoClientDbFactory(mongo, databaseName))
+		assertThatThrownBy(() -> new SimpleMongoClientDatabaseFactory(mongo, databaseName))
 				.isInstanceOf(IllegalArgumentException.class);
 	}
 }

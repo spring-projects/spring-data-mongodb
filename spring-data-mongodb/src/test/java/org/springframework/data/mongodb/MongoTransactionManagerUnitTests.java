@@ -47,8 +47,8 @@ public class MongoTransactionManagerUnitTests {
 	@Mock ClientSession session;
 	@Mock ClientSession session2;
 	@Mock ServerSession serverSession;
-	@Mock MongoDbFactory dbFactory;
-	@Mock MongoDbFactory dbFactory2;
+	@Mock MongoDatabaseFactory dbFactory;
+	@Mock MongoDatabaseFactory dbFactory2;
 	@Mock MongoDatabase db;
 	@Mock MongoDatabase db2;
 
