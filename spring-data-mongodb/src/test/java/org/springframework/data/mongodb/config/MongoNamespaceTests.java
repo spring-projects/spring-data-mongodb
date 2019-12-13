@@ -204,8 +204,7 @@ public class MongoNamespaceTests {
 	}
 
 	@Test
-	@SuppressWarnings("deprecation")
-	public void testMongoSingletonWithPropertyPlaceHolders() throws Exception {
+	public void testMongoSingletonWithPropertyPlaceHolders() {
 
 		assertThat(ctx.containsBean("mongoClient")).isTrue();
 		MongoClientFactoryBean mfb = (MongoClientFactoryBean) ctx.getBean("&mongoClient");
@@ -215,20 +214,5 @@ public class MongoNamespaceTests {
 
 		assertThat(host).isEqualTo("127.0.0.1");
 		assertThat(port).isEqualTo(new Integer(27017));
-
-		// MongoClient mongo = mfb.getObject();
-		// MongoClientSettings mongoOpts = mongo.getClusterDescription()..getMongoClientSettings();
-		//
-		// assertThat(mongoOpts.getConnectionsPerHost()).isEqualTo(8);
-		// assertThat(mongoOpts.getConnectTimeout()).isEqualTo(1000);
-		// assertThat(mongoOpts.getMaxWaitTime()).isEqualTo(1500);
-		//
-		// assertThat(mongoOpts.getSocketTimeout()).isEqualTo(1500);
-		// assertThat(mongoOpts.getThreadsAllowedToBlockForConnectionMultiplier()).isEqualTo(4);
-
-		// TODO: check the damned defaults
-		// assertEquals("w", mongoOpts.getWriteConcern().getW());
-		// assertEquals(0, mongoOpts.getWriteConcern().getWtimeout());
-		// assertEquals(true, mongoOpts.getWriteConcern().fsync());
 	}
 }

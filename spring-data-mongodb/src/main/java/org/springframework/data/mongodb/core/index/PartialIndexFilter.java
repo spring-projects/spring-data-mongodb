@@ -26,7 +26,7 @@ import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import com.mongodb.DBObject;
 
 /**
- * {@link IndexFilter} implementation for usage with plain {@link DBObject} as well as {@link CriteriaDefinition} filter
+ * {@link IndexFilter} implementation for usage with plain {@link Document} as well as {@link CriteriaDefinition} filter
  * expressions.
  *
  * @author Christoph Strobl
@@ -38,7 +38,7 @@ public class PartialIndexFilter implements IndexFilter {
 	private final @NonNull Object filterExpression;
 
 	/**
-	 * Create new {@link PartialIndexFilter} for given {@link DBObject filter expression}.
+	 * Create new {@link PartialIndexFilter} for given {@link Document filter expression}.
 	 *
 	 * @param where must not be {@literal null}.
 	 * @return

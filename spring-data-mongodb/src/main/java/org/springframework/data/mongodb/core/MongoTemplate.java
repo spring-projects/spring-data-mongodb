@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
+import com.mongodb.client.MongoClient;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
@@ -213,7 +214,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param databaseName must not be {@literal null} or empty.
 	 * @since 2.1
 	 */
-	public MongoTemplate(com.mongodb.client.MongoClient mongoClient, String databaseName) {
+	public MongoTemplate(MongoClient mongoClient, String databaseName) {
 		this(new SimpleMongoClientDatabaseFactory(mongoClient, databaseName), (MongoConverter) null);
 	}
 

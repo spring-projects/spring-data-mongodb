@@ -23,8 +23,6 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
-import com.mongodb.DBObject;
-
 /**
  * Holds a set of configurable aggregation options that can be used within an aggregation pipeline. A list of support
  * aggregation options can be found in the MongoDB reference documentation
@@ -115,7 +113,7 @@ public class AggregationOptions {
 	}
 
 	/**
-	 * Creates new {@link AggregationOptions} given {@link DBObject} containing aggregation options.
+	 * Creates new {@link AggregationOptions} given {@link Document} containing aggregation options.
 	 *
 	 * @param document must not be {@literal null}.
 	 * @return the {@link AggregationOptions}.
@@ -393,7 +391,7 @@ public class AggregationOptions {
 		 * @param maxTime {@link Duration#ZERO} is used for the default unbounded behavior. {@link Duration#isNegative()
 		 *          Negative} values will be ignored.
 		 * @return this.
-		 * @sinve 2.3
+		 * @since 3.0
 		 */
 		public Builder maxTime(@Nullable Duration maxTime) {
 

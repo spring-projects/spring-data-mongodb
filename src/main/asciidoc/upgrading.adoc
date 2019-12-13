@@ -1,4 +1,4 @@
-[[upgrading]]
+[[upgrading.2-3]]
 = Upgrading from 2.x to 3.x
 
 Spring Data MongoDB 3.x requires the MongoDB Java Driver 4.x. +

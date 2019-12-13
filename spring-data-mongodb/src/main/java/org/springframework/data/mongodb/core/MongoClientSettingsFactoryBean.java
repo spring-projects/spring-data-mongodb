@@ -24,10 +24,10 @@ import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLContext;
 
 import org.bson.codecs.configuration.CodecRegistry;
+
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.lang.Nullable;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.AutoEncryptionSettings;
@@ -45,6 +45,7 @@ import com.mongodb.connection.StreamFactoryFactory;
  * A factory bean for construction of a {@link MongoClientSettings} instance to be used with a MongoDB driver.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 3.0
  */
 public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoClientSettings> {
@@ -65,67 +66,11 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 
 	// --> Socket Settings
 
-	private Integer socketConnectTimeoutMS = DEFAULT_MONGO_SETTINGS.getSocketSettings()
+	private int socketConnectTimeoutMS = DEFAULT_MONGO_SETTINGS.getSocketSettings()
 			.getConnectTimeout(TimeUnit.MILLISECONDS);
-	private Integer socketReadTimeoutMS = DEFAULT_MONGO_SETTINGS.getSocketSettings()
-			.getReadTimeout(TimeUnit.MILLISECONDS);
-	private Integer socketReceiveBufferSize = DEFAULT_MONGO_SETTINGS.getSocketSettings().getReceiveBufferSize();
-	private Integer socketSendBufferSize = DEFAULT_MONGO_SETTINGS.getSocketSettings().getSendBufferSize();
-
-	/**
-	 * @param socketConnectTimeoutMS in msec
-	 * @see com.mongodb.connection.SocketSettings.Builder#connectTimeout(int, TimeUnit)
-	 */
-	public void setSocketConnectTimeoutMS(Integer socketConnectTimeoutMS) {
-		this.socketConnectTimeoutMS = socketConnectTimeoutMS;
-	}
-
-	/**
-	 * @param socketReadTimeoutMS in msec
-	 * @see com.mongodb.connection.SocketSettings.Builder#readTimeout(int, TimeUnit)
-	 */
-	public void setSocketReadTimeoutMS(Integer socketReadTimeoutMS) {
-		this.socketReadTimeoutMS = socketReadTimeoutMS;
-	}
-
-	/**
-	 * @param socketReceiveBufferSize
-	 * @see com.mongodb.connection.SocketSettings.Builder#receiveBufferSize(int)
-	 */
-	public void setSocketReceiveBufferSize(Integer socketReceiveBufferSize) {
-		this.socketReceiveBufferSize = socketReceiveBufferSize;
-	}
-
-	/**
-	 * @param socketSendBufferSize
-	 * @see com.mongodb.connection.SocketSettings.Builder#sendBufferSize(int)
-	 */
-	public void setSocketSendBufferSize(Integer socketSendBufferSize) {
-		this.socketSendBufferSize = socketSendBufferSize;
-	}
-
-	// --> Server Settings
-
-	private Long serverHeartbeatFrequencyMS = DEFAULT_MONGO_SETTINGS.getServerSettings()
-			.getHeartbeatFrequency(TimeUnit.MILLISECONDS);
-	private Long serverMinHeartbeatFrequencyMS = DEFAULT_MONGO_SETTINGS.getServerSettings()
-			.getMinHeartbeatFrequency(TimeUnit.MILLISECONDS);
-
-	/**
-	 * @param serverHeartbeatFrequencyMS in msec
-	 * @see com.mongodb.connection.ServerSettings.Builder#heartbeatFrequency(long, TimeUnit)
-	 */
-	public void setServerHeartbeatFrequencyMS(Long serverHeartbeatFrequencyMS) {
-		this.serverHeartbeatFrequencyMS = serverHeartbeatFrequencyMS;
-	}
-
-	/**
-	 * @param serverMinHeartbeatFrequencyMS in msec
-	 * @see com.mongodb.connection.ServerSettings.Builder#minHeartbeatFrequency(long, TimeUnit)
-	 */
-	public void setServerMinHeartbeatFrequencyMS(Long serverMinHeartbeatFrequencyMS) {
-		this.serverMinHeartbeatFrequencyMS = serverMinHeartbeatFrequencyMS;
-	}
+	private int socketReadTimeoutMS = DEFAULT_MONGO_SETTINGS.getSocketSettings().getReadTimeout(TimeUnit.MILLISECONDS);
+	private int socketReceiveBufferSize = DEFAULT_MONGO_SETTINGS.getSocketSettings().getReceiveBufferSize();
+	private int socketSendBufferSize = DEFAULT_MONGO_SETTINGS.getSocketSettings().getSendBufferSize();
 
 	// --> Cluster Settings
 
@@ -139,6 +84,90 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 			.getLocalThreshold(TimeUnit.MILLISECONDS);
 	private long clusterServerSelectionTimeoutMS = DEFAULT_MONGO_SETTINGS.getClusterSettings()
 			.getServerSelectionTimeout(TimeUnit.MILLISECONDS);
+
+	// --> ConnectionPoolSettings
+
+	private int poolMaxSize = DEFAULT_MONGO_SETTINGS.getConnectionPoolSettings().getMaxSize();
+	private int poolMinSize = DEFAULT_MONGO_SETTINGS.getConnectionPoolSettings().getMinSize();
+	private long poolMaxWaitTimeMS = DEFAULT_MONGO_SETTINGS.getConnectionPoolSettings()
+			.getMaxWaitTime(TimeUnit.MILLISECONDS);
+	private long poolMaxConnectionLifeTimeMS = DEFAULT_MONGO_SETTINGS.getConnectionPoolSettings()
+			.getMaxConnectionLifeTime(TimeUnit.MILLISECONDS);
+	private long poolMaxConnectionIdleTimeMS = DEFAULT_MONGO_SETTINGS.getConnectionPoolSettings()
+			.getMaxConnectionIdleTime(TimeUnit.MILLISECONDS);
+	private long poolMaintenanceInitialDelayMS = DEFAULT_MONGO_SETTINGS.getConnectionPoolSettings()
+			.getMaintenanceInitialDelay(TimeUnit.MILLISECONDS);
+	private long poolMaintenanceFrequencyMS = DEFAULT_MONGO_SETTINGS.getConnectionPoolSettings()
+			.getMaintenanceFrequency(TimeUnit.MILLISECONDS);
+
+	// --> SSL Settings
+
+	private boolean sslEnabled = DEFAULT_MONGO_SETTINGS.getSslSettings().isEnabled();
+	private boolean sslInvalidHostNameAllowed = DEFAULT_MONGO_SETTINGS.getSslSettings().isInvalidHostNameAllowed();
+	private String sslProvider = DEFAULT_MONGO_SETTINGS.getSslSettings().isEnabled()
+			? DEFAULT_MONGO_SETTINGS.getSslSettings().getContext().getProvider().getName()
+			: "";
+
+	// encryption and retry
+
+	private @Nullable AutoEncryptionSettings autoEncryptionSettings;
+
+	/**
+	 * @param socketConnectTimeoutMS in msec
+	 * @see com.mongodb.connection.SocketSettings.Builder#connectTimeout(int, TimeUnit)
+	 */
+	public void setSocketConnectTimeoutMS(int socketConnectTimeoutMS) {
+		this.socketConnectTimeoutMS = socketConnectTimeoutMS;
+	}
+
+	/**
+	 * @param socketReadTimeoutMS in msec
+	 * @see com.mongodb.connection.SocketSettings.Builder#readTimeout(int, TimeUnit)
+	 */
+	public void setSocketReadTimeoutMS(int socketReadTimeoutMS) {
+		this.socketReadTimeoutMS = socketReadTimeoutMS;
+	}
+
+	/**
+	 * @param socketReceiveBufferSize
+	 * @see com.mongodb.connection.SocketSettings.Builder#receiveBufferSize(int)
+	 */
+	public void setSocketReceiveBufferSize(int socketReceiveBufferSize) {
+		this.socketReceiveBufferSize = socketReceiveBufferSize;
+	}
+
+	/**
+	 * @param socketSendBufferSize
+	 * @see com.mongodb.connection.SocketSettings.Builder#sendBufferSize(int)
+	 */
+	public void setSocketSendBufferSize(int socketSendBufferSize) {
+		this.socketSendBufferSize = socketSendBufferSize;
+	}
+
+	// --> Server Settings
+
+	private long serverHeartbeatFrequencyMS = DEFAULT_MONGO_SETTINGS.getServerSettings()
+			.getHeartbeatFrequency(TimeUnit.MILLISECONDS);
+	private long serverMinHeartbeatFrequencyMS = DEFAULT_MONGO_SETTINGS.getServerSettings()
+			.getMinHeartbeatFrequency(TimeUnit.MILLISECONDS);
+
+	/**
+	 * @param serverHeartbeatFrequencyMS in msec
+	 * @see com.mongodb.connection.ServerSettings.Builder#heartbeatFrequency(long, TimeUnit)
+	 */
+	public void setServerHeartbeatFrequencyMS(long serverHeartbeatFrequencyMS) {
+		this.serverHeartbeatFrequencyMS = serverHeartbeatFrequencyMS;
+	}
+
+	/**
+	 * @param serverMinHeartbeatFrequencyMS in msec
+	 * @see com.mongodb.connection.ServerSettings.Builder#minHeartbeatFrequency(long, TimeUnit)
+	 */
+	public void setServerMinHeartbeatFrequencyMS(long serverMinHeartbeatFrequencyMS) {
+		this.serverMinHeartbeatFrequencyMS = serverMinHeartbeatFrequencyMS;
+	}
+
+	// --> Cluster Settings
 
 	/**
 	 * @param clusterSrvHost
@@ -158,7 +187,7 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 
 	/**
 	 * ????
-	 * 
+	 *
 	 * @param clusterConnectionMode
 	 * @see com.mongodb.connection.ClusterSettings.Builder#mode(ClusterConnectionMode)
 	 */
@@ -200,24 +229,11 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 
 	// --> ConnectionPoolSettings
 
-	private Integer poolMaxSize = DEFAULT_MONGO_SETTINGS.getConnectionPoolSettings().getMaxSize();
-	private Integer poolMinSize = DEFAULT_MONGO_SETTINGS.getConnectionPoolSettings().getMinSize();
-	private Long poolMaxWaitTimeMS = DEFAULT_MONGO_SETTINGS.getConnectionPoolSettings()
-			.getMaxWaitTime(TimeUnit.MILLISECONDS);
-	private Long poolMaxConnectionLifeTimeMS = DEFAULT_MONGO_SETTINGS.getConnectionPoolSettings()
-			.getMaxConnectionLifeTime(TimeUnit.MILLISECONDS);
-	private Long poolMaxConnectionIdleTimeMS = DEFAULT_MONGO_SETTINGS.getConnectionPoolSettings()
-			.getMaxConnectionIdleTime(TimeUnit.MILLISECONDS);
-	private Long poolMaintenanceInitialDelayMS = DEFAULT_MONGO_SETTINGS.getConnectionPoolSettings()
-			.getMaintenanceInitialDelay(TimeUnit.MILLISECONDS);
-	private Long poolMaintenanceFrequencyMS = DEFAULT_MONGO_SETTINGS.getConnectionPoolSettings()
-			.getMaintenanceFrequency(TimeUnit.MILLISECONDS);
-
 	/**
 	 * @param poolMaxSize
 	 * @see com.mongodb.connection.ConnectionPoolSettings.Builder#maxSize(int)
 	 */
-	public void setPoolMaxSize(Integer poolMaxSize) {
+	public void setPoolMaxSize(int poolMaxSize) {
 		this.poolMaxSize = poolMaxSize;
 	}
 
@@ -225,7 +241,7 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 	 * @param poolMinSize
 	 * @see com.mongodb.connection.ConnectionPoolSettings.Builder#minSize(int)
 	 */
-	public void setPoolMinSize(Integer poolMinSize) {
+	public void setPoolMinSize(int poolMinSize) {
 		this.poolMinSize = poolMinSize;
 	}
 
@@ -233,7 +249,7 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 	 * @param poolMaxWaitTimeMS in mesec
 	 * @see com.mongodb.connection.ConnectionPoolSettings.Builder#maxWaitTime(long, TimeUnit)
 	 */
-	public void setPoolMaxWaitTimeMS(Long poolMaxWaitTimeMS) {
+	public void setPoolMaxWaitTimeMS(long poolMaxWaitTimeMS) {
 		this.poolMaxWaitTimeMS = poolMaxWaitTimeMS;
 	}
 
@@ -241,7 +257,7 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 	 * @param poolMaxConnectionLifeTimeMS in msec
 	 * @see com.mongodb.connection.ConnectionPoolSettings.Builder#maxConnectionLifeTime(long, TimeUnit)
 	 */
-	public void setPoolMaxConnectionLifeTimeMS(Long poolMaxConnectionLifeTimeMS) {
+	public void setPoolMaxConnectionLifeTimeMS(long poolMaxConnectionLifeTimeMS) {
 		this.poolMaxConnectionLifeTimeMS = poolMaxConnectionLifeTimeMS;
 	}
 
@@ -249,7 +265,7 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 	 * @param poolMaxConnectionIdleTimeMS in msec
 	 * @see com.mongodb.connection.ConnectionPoolSettings.Builder#maxConnectionIdleTime(long, TimeUnit)
 	 */
-	public void setPoolMaxConnectionIdleTimeMS(Long poolMaxConnectionIdleTimeMS) {
+	public void setPoolMaxConnectionIdleTimeMS(long poolMaxConnectionIdleTimeMS) {
 		this.poolMaxConnectionIdleTimeMS = poolMaxConnectionIdleTimeMS;
 	}
 
@@ -257,7 +273,7 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 	 * @param poolMaintenanceInitialDelayMS in msec
 	 * @see com.mongodb.connection.ConnectionPoolSettings.Builder#maintenanceInitialDelay(long, TimeUnit)
 	 */
-	public void setPoolMaintenanceInitialDelayMS(Long poolMaintenanceInitialDelayMS) {
+	public void setPoolMaintenanceInitialDelayMS(long poolMaintenanceInitialDelayMS) {
 		this.poolMaintenanceInitialDelayMS = poolMaintenanceInitialDelayMS;
 	}
 
@@ -265,17 +281,11 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 	 * @param poolMaintenanceFrequencyMS in msec
 	 * @see com.mongodb.connection.ConnectionPoolSettings.Builder#maintenanceFrequency(long, TimeUnit)
 	 */
-	public void setPoolMaintenanceFrequencyMS(Long poolMaintenanceFrequencyMS) {
+	public void setPoolMaintenanceFrequencyMS(long poolMaintenanceFrequencyMS) {
 		this.poolMaintenanceFrequencyMS = poolMaintenanceFrequencyMS;
 	}
 
 	// --> SSL Settings
-
-	private Boolean sslEnabled = DEFAULT_MONGO_SETTINGS.getSslSettings().isEnabled();
-	private Boolean sslInvalidHostNameAllowed = DEFAULT_MONGO_SETTINGS.getSslSettings().isInvalidHostNameAllowed();
-	private String sslProvider = DEFAULT_MONGO_SETTINGS.getSslSettings().isEnabled()
-			? DEFAULT_MONGO_SETTINGS.getSslSettings().getContext().getProvider().getName()
-			: "";
 
 	/**
 	 * @param sslEnabled
@@ -303,8 +313,6 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 	}
 
 	// encryption and retry
-
-	private @Nullable AutoEncryptionSettings autoEncryptionSettings;
 
 	/**
 	 * @param applicationName
@@ -392,11 +400,11 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 				.readConcern(readConcern) //
 				.codecRegistry(codecRegistry) //
 				.applicationName(applicationName) //
-				.autoEncryptionSettings(autoEncryptionSettings)//
+				.autoEncryptionSettings(autoEncryptionSettings) //
 				.applyToClusterSettings((settings) -> {
 
 					settings.serverSelectionTimeout(clusterServerSelectionTimeoutMS, TimeUnit.MILLISECONDS);
-					if(clusterConnectionMode != null) {
+					if (clusterConnectionMode != null) {
 						settings.mode(clusterConnectionMode);
 					}
 					settings.requiredReplicaSetName(clusterRequiredReplicaSetName);
@@ -405,7 +413,7 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 						settings.hosts(clusterHosts);
 					}
 					settings.localThreshold(clusterLocalThresholdMS, TimeUnit.MILLISECONDS);
-//					settings.maxWaitQueueSize(clusterMaxWaitQueueSize);
+					// settings.maxWaitQueueSize(clusterMaxWaitQueueSize);
 					settings.requiredClusterType(custerRequiredClusterType);
 
 					if (StringUtils.hasText(clusterSrvHost)) {
@@ -419,7 +427,7 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 					settings.maxConnectionIdleTime(poolMaxConnectionIdleTimeMS, TimeUnit.MILLISECONDS);
 					settings.maxWaitTime(poolMaxWaitTimeMS, TimeUnit.MILLISECONDS);
 					settings.maxConnectionLifeTime(poolMaxConnectionLifeTimeMS, TimeUnit.MILLISECONDS);
-//					settings.maxWaitQueueSize(poolMaxWaitQueueSize);
+					// settings.maxWaitQueueSize(poolMaxWaitQueueSize);
 					settings.maintenanceFrequency(poolMaintenanceFrequencyMS, TimeUnit.MILLISECONDS);
 					settings.maintenanceInitialDelay(poolMaintenanceInitialDelayMS, TimeUnit.MILLISECONDS);
 				}) //
@@ -430,19 +438,20 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 				}) //
 				.applyToSocketSettings((settings) -> {
 
-					settings.connectTimeout(socketConnectTimeoutMS.intValue(), TimeUnit.MILLISECONDS);
-					settings.readTimeout(socketReadTimeoutMS.intValue(), TimeUnit.MILLISECONDS);
+					settings.connectTimeout(socketConnectTimeoutMS, TimeUnit.MILLISECONDS);
+					settings.readTimeout(socketReadTimeoutMS, TimeUnit.MILLISECONDS);
 					settings.receiveBufferSize(socketReceiveBufferSize);
 					settings.sendBufferSize(socketSendBufferSize);
 				}) //
 				.applyToSslSettings((settings) -> {
 
 					settings.enabled(sslEnabled);
-					if (ObjectUtils.nullSafeEquals(Boolean.TRUE, sslEnabled)) {
+					if (sslEnabled) {
 
 						settings.invalidHostNameAllowed(sslInvalidHostNameAllowed);
 						try {
-							settings.context(StringUtils.hasText(sslProvider) ? SSLContext.getInstance(sslProvider) : SSLContext.getDefault());
+							settings.context(
+									StringUtils.hasText(sslProvider) ? SSLContext.getInstance(sslProvider) : SSLContext.getDefault());
 						} catch (NoSuchAlgorithmException e) {
 							throw new IllegalArgumentException(e.getMessage(), e);
 						}

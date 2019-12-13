@@ -28,7 +28,7 @@ import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 
 /**
- * Integration tests for {@link MongoClientSettingsFactoryBean}.
+ * Unit tests for {@link MongoClientSettingsFactoryBean}.
  *
  * @author Christoph Strobl
  */

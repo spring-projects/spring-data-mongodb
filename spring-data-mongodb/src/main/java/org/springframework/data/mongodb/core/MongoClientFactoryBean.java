@@ -144,11 +144,13 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 	}
 
 	/**
-	 * Create {@link MongoClientSettings} based on configuration and priority (lower is better). <br />
-	 * 1. {@link MongoClientFactoryBean#mongoClientSettings} <br />
-	 * 2. {@link MongoClientFactoryBean#connectionString} <br />
-	 * 3. default {@link MongoClientSettings}
-	 * 
+	 * Create {@link MongoClientSettings} based on configuration and priority (lower is better).
+	 * <ol>
+	 * <li>{@link MongoClientFactoryBean#mongoClientSettings}</li>
+	 * <li>{@link MongoClientFactoryBean#connectionString}</li>
+	 * <li>default {@link MongoClientSettings}</li>
+	 * </ol>
+	 *
 	 * @since 3.0
 	 */
 	protected MongoClientSettings computeClientSetting() {
@@ -220,7 +222,7 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 					}) //
 					.applyToConnectionPoolSettings(settings -> {
 
-						applySettings(it -> settings.maintenanceFrequency(it.longValue(), TimeUnit.MILLISECONDS),
+						applySettings(it -> settings.maintenanceFrequency(it, TimeUnit.MILLISECONDS),
 								computeSettingsValue((ConnectionPoolSettings it) -> it.getMaintenanceFrequency(TimeUnit.MILLISECONDS),
 										defaultSettings.getConnectionPoolSettings(), connectionPoolSettings, null));
 
@@ -239,7 +241,7 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 										defaultSettings.getConnectionPoolSettings(), connectionPoolSettings,
 										connectionString.getMaxWaitTime()));
 
-						applySettings(it -> settings.maintenanceInitialDelay(it.longValue(), TimeUnit.MILLISECONDS),
+						applySettings(it -> settings.maintenanceInitialDelay(it, TimeUnit.MILLISECONDS),
 								computeSettingsValue(
 										(ConnectionPoolSettings it) -> it.getMaintenanceInitialDelay(TimeUnit.MILLISECONDS),
 										defaultSettings.getConnectionPoolSettings(), connectionPoolSettings, null));
@@ -253,11 +255,11 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 					}) //
 					.applyToSocketSettings(settings -> {
 
-						applySettings(it -> settings.connectTimeout(it.intValue(), TimeUnit.MILLISECONDS),
+						applySettings(it -> settings.connectTimeout(it, TimeUnit.MILLISECONDS),
 								computeSettingsValue((SocketSettings it) -> it.getConnectTimeout(TimeUnit.MILLISECONDS),
 										defaultSettings.getSocketSettings(), socketSettings, connectionString.getConnectTimeout()));
 
-						applySettings(it -> settings.readTimeout(it.intValue(), TimeUnit.MILLISECONDS),
+						applySettings(it -> settings.readTimeout(it, TimeUnit.MILLISECONDS),
 								computeSettingsValue((SocketSettings it) -> it.getReadTimeout(TimeUnit.MILLISECONDS),
 										defaultSettings.getSocketSettings(), socketSettings, connectionString.getSocketTimeout()));
 						applySettings(settings::receiveBufferSize, computeSettingsValue(SocketSettings::getReceiveBufferSize,

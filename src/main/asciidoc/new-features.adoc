@@ -1,9 +1,10 @@
 [[new-features]]
 = New & Noteworthy
 
-[[new-features.2-3-0]]
-== What's New in Spring Data MongoDB 2.3
+[[new-features.3-0-0]]
+== What's New in Spring Data MongoDB 3.0
 
+* Upgrade to MongoDB Driver 4.0. See <<upgrading.2-3>> for further details.
 * Support for <<mongo-template.aggregation-update,aggregation pipelines in update operations>>.
 * Apply pagination when using GridFS `find(Query)`.
 
