@@ -13,8 +13,7 @@ This chapter coverts major changes and outlines migration steps.
 ** core-jar
 ** sync-jar
 
-
-This allows to include eg. just the reactive bits without having to pull in all the sync stuff.
+The change in dependencies allows usage of the reactive support without having to pull the synchronous driver.
 NOTE: The new sync driver does no longer support `com.mongodb.DBObject`. Please use `org.bson.Document` instead.
 
 === Signature Changes
@@ -22,7 +21,7 @@ NOTE: The new sync driver does no longer support `com.mongodb.DBObject`. Please 
 * `MongoTemplate` no longer supports `com.mongodb.MongoClient` and `com.mongodb.MongoClientOptions`.
 Please use `com.mongodb.client.MongoClient` and `com.mongodb.MongoClientSettings` instead.
 
-In case you're using `AbstractMongoConfiguration` please switch to `AbstractMongoClientInformation`.
+In case you're using `AbstractMongoConfiguration` please switch to `AbstractMongoClientConfiguration`.
 
 === Namespace Changes
 

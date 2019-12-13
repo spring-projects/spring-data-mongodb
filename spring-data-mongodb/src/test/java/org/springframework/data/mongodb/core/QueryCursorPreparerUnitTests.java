@@ -79,6 +79,7 @@ public class QueryCursorPreparerUnitTests {
 		verify(cursor).hint(new Document("age", 1));
 	}
 
+	// TODO
 //	@Test // DATAMONGO-957
 //	public void doesNotApplyMetaWhenEmpty() {
 //
@@ -117,6 +118,7 @@ public class QueryCursorPreparerUnitTests {
 		verify(cursor).comment("spring data");
 	}
 
+	// TODO
 //	@Test // DATAMONGO-957
 //	public void appliesSnapshotCorrectly() {
 //

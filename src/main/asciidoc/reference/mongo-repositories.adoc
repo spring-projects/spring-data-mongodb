@@ -112,7 +112,7 @@ Because our domain repository extends `PagingAndSortingRepository`, it provides 
 ====
 [source,java]
 ----
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration
 public class PersonRepositoryTests {
 
@@ -601,7 +601,7 @@ class MongoTemplateProducer {
     @ApplicationScoped
     public MongoOperations createMongoTemplate() {
 
-        MongoDbFactory factory = new SimpleMongoClientDbFactory(MongoClients.create(), "database");
+        MongoDatabaseFactory factory = new SimpleMongoClientDatabaseFactory(MongoClients.create(), "database");
         return new MongoTemplate(factory);
     }
 }
