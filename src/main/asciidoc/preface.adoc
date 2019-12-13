@@ -39,20 +39,23 @@ The starting point for learning about MongoDB is https://www.mongodb.org/[www.mo
 [[requirements]]
 == Requirements
 
-The Spring Data MongoDB 2.x binaries require JDK level 8.0 and above and https://spring.io/docs[Spring Framework] {springVersion} and above.
+The Spring Data MongoDB 3.x binaries require JDK level 8.0 and above and https://spring.io/docs[Spring Framework] {springVersion} and above.
 
 In terms of document stores, you need at least version 2.6 of https://www.mongodb.org/[MongoDB].
 
 [[get-started:help]]
 == Additional Help Resources
 
-Learning a new framework is not always straightforward. In this section, we try to provide what we think is an easy-to-follow guide for starting with the Spring Data MongoDB module. However, if you encounter issues or you need advice, feel free to use one of the following links:
+Learning a new framework is not always straightforward.
+In this section, we try to provide what we think is an easy-to-follow guide for starting with the Spring Data MongoDB module.
+However, if you encounter issues or you need advice, feel free to use one of the following links:
 
 [[get-started:help:community]]
-Community Forum :: Spring Data on https://stackoverflow.com/questions/tagged/spring-data[Stack Overflow] is a tag for all Spring Data (not just Document) users to share information and help each other. Note that registration is needed only for posting.
+Community Forum :: Spring Data on https://stackoverflow.com/questions/tagged/spring-data[Stack Overflow] is a tag for all Spring Data (not just Document) users to share information and help each other.
+Note that registration is needed only for posting.
 
 [[get-started:help:professional]]
-Professional Support :: Professional, from-the-source support, with guaranteed response time, is available from https://pivotal.io/[Pivotal Sofware, Inc.], the company behind Spring Data and Spring.
+Professional Support :: Professional, from-the-source support, with guaranteed response time, is available from https://pivotal.io/[Pivotal Software, Inc.], the company behind Spring Data and Spring.
 
 [[get-started:up-to-date]]
 == Following Development

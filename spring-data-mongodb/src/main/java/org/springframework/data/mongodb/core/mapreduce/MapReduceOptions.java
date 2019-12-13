@@ -358,7 +358,7 @@ public class MapReduceOptions {
 	}
 
 	/**
-	 * @return {@literal true} if {@literal inline} output shall is used.
+	 * @return {@literal true} if {@literal inline} output is used.
 	 * @since 2.0.10
 	 */
 	public boolean usesInlineOutput() {

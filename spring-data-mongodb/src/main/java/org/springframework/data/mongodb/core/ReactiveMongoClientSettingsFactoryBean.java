@@ -21,6 +21,7 @@ import com.mongodb.MongoClientSettings;
  * A factory bean for construction of a {@link MongoClientSettings} instance to be used with the async MongoDB driver.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.0
  * @deprecated since 3.0 - Use {@link MongoClientSettingsFactoryBean} instead.
  */

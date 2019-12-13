@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.util.ReflectionTestUtils.*;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
@@ -26,6 +25,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -61,7 +61,6 @@ public class SimpleMongoClientDatabaseFactoryUnitTests {
 	}
 
 	@Test // DATADOC-254
-	@SuppressWarnings("deprecation")
 	public void allowsDatabaseNames() {
 		new SimpleMongoClientDatabaseFactory(mongo, "foo-bar");
 		new SimpleMongoClientDatabaseFactory(mongo, "foo_bar");
@@ -69,14 +68,13 @@ public class SimpleMongoClientDatabaseFactoryUnitTests {
 	}
 
 	@Test // DATADOC-295
-	@SuppressWarnings("deprecation")
 	public void mongoUriConstructor() {
 
 		ConnectionString mongoURI = new ConnectionString(
 				"mongodb://myUsername:myPassword@localhost/myDatabase.myCollection");
 		MongoDatabaseFactory mongoDbFactory = new SimpleMongoClientDatabaseFactory(mongoURI);
 
-		assertThat(getField(mongoDbFactory, "databaseName").toString()).isEqualTo("myDatabase");
+		assertThat(mongoDbFactory).hasFieldOrPropertyWithValue("databaseName", "myDatabase");
 	}
 
 	@Test // DATAMONGO-1158
@@ -86,7 +84,7 @@ public class SimpleMongoClientDatabaseFactoryUnitTests {
 				"mongodb://myUserName:myPassWord@127.0.0.1:27017/myDataBase.myCollection");
 		SimpleMongoClientDatabaseFactory factory = new SimpleMongoClientDatabaseFactory(uri);
 
-		assertThat(getField(factory, "databaseName").toString()).isEqualTo("myDataBase");
+		assertThat(factory).hasFieldOrPropertyWithValue("databaseName", "myDataBase");
 	}
 
 	@Test // DATAMONGO-1880

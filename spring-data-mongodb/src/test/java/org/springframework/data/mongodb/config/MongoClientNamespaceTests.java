@@ -140,5 +140,4 @@ public class MongoClientNamespaceTests {
 		assertThat(settings.getConnectionPoolSettings().getMaxConnectionIdleTime(TimeUnit.MILLISECONDS)).isEqualTo(30);
 		assertThat(settings.getConnectionPoolSettings().getMaxWaitTime(TimeUnit.MILLISECONDS)).isEqualTo(15);
 	}
-
 }
