@@ -41,9 +41,9 @@ import com.mongodb.reactivestreams.client.MongoClients;
  */
 public class MongoTestUtils {
 
-	public static final String CONNECTION_STRING = "mongodb://localhost:27017/?replicaSet=rs0"; // &readPreference=primary&w=majority
+	public static final String CONNECTION_STRING = "mongodb://localhost:27017/?replicaSet=rs0&w=majority";
 
-	private static final String CONNECTION_STRING_PATTERN = "mongodb://%s:%s/";
+	private static final String CONNECTION_STRING_PATTERN = "mongodb://%s:%s/?w=majority";
 
 	private static final Version ANY = new Version(9999, 9999, 9999);
 

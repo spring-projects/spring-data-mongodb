@@ -132,7 +132,7 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 		uploadOptions.metadata(metadata);
 
 		GridFSUploadPublisher<ObjectId> publisher = getGridFs().uploadFromPublisher(filename,
-				Flux.from(content).map(this::dataBufferToByteBuffer), uploadOptions);
+				Flux.from(content).map(DataBuffer::asByteBuffer), uploadOptions);
 		return Mono.from(publisher);
 	}
 
@@ -209,7 +209,7 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 		Assert.notNull(file, "GridFSFile must not be null!");
 
 		return Mono.fromSupplier(() -> {
-			return new ReactiveGridFsResource(file.getFilename(), getGridFs().downloadToPublisher(file.getId()));
+			return new ReactiveGridFsResource(file.getFilename(), getGridFs().downloadToPublisher(file.getId()), dataBufferFactory);
 		});
 	}
 
@@ -264,15 +264,5 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 
 		MongoDatabase db = dbFactory.getMongoDatabase();
 		return bucket == null ? GridFSBuckets.create(db) : GridFSBuckets.create(db, bucket);
-	}
-
-	private ByteBuffer dataBufferToByteBuffer(DataBuffer buffer) {
-
-		ByteBuffer byteBuffer = buffer.asByteBuffer();
-		ByteBuffer copy = ByteBuffer.allocate(byteBuffer.remaining());
-		byteBuffer.put(copy);
-		copy.flip();
-
-		return copy;
 	}
 }

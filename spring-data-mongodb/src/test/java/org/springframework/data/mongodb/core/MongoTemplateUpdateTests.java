@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import lombok.EqualsAndHashCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -257,7 +258,7 @@ class MongoTemplateUpdateTests {
 	}
 
 	@Test // DATAMONGO-2331
-	@Disabled("https://jira.mongodb.org/browse/JAVA-3432")
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.2")
 	void findAndModifyAppliesAggregationUpdateCorrectly() {
 
 		Book one = new Book();
@@ -336,6 +337,7 @@ class MongoTemplateUpdateTests {
 		}
 	}
 
+	@EqualsAndHashCode
 	static class Book {
 
 		@Id Integer id;

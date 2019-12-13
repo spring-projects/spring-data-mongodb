@@ -3014,7 +3014,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			}
 
 			result = options.getCollation().map(Collation::toMongoCollation).map(result::collation).orElse(result);
-			result.arrayFilters(arrayFilters);
+
+			if(!CollectionUtils.isEmpty(arrayFilters)) {
+				result.arrayFilters(arrayFilters);
+			}
 
 			return result;
 		}

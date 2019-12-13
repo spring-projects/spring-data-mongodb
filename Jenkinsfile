@@ -30,64 +30,32 @@ pipeline {
 						}
 					}
 				}
-				stage('Publish JDK 8 + MongoDB 4.1') {
-					when {
-						changeset "ci/openjdk8-mongodb-4.1/**"
-					}
-					agent { label 'data' }
-					options { timeout(time: 30, unit: 'MINUTES') }
-
-					steps {
-						script {
-							def image = docker.build("springci/spring-data-openjdk8-with-mongodb-4.1", "ci/openjdk8-mongodb-4.1/")
-							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
-								image.push()
-							}
-						}
-					}
-				}
 				stage('Publish JDK 8 + MongoDB 4.2') {
-                	when {
-                		changeset "ci/openjdk8-mongodb-4.2/**"
-                	}
-                	agent { label 'data' }
-                	options { timeout(time: 30, unit: 'MINUTES') }
-
-                	steps {
-                		script {
-                			def image = docker.build("springci/spring-data-openjdk8-with-mongodb-4.2", "ci/openjdk8-mongodb-4.2/")
-                			docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
-                				image.push()
-                			}
-                		}
-                	}
-                }
-				stage('Publish JDK 11 + MongoDB 4.0') {
 					when {
-						changeset "ci/openjdk11-mongodb-4.0/**"
+						changeset "ci/openjdk8-mongodb-4.2/**"
 					}
 					agent { label 'data' }
 					options { timeout(time: 30, unit: 'MINUTES') }
 
 					steps {
 						script {
-							def image = docker.build("springci/spring-data-openjdk11-with-mongodb-4.0", "ci/openjdk11-mongodb-4.0/")
+							def image = docker.build("springci/spring-data-openjdk8-with-mongodb-4.2", "ci/openjdk8-mongodb-4.2/")
 							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
 								image.push()
 							}
 						}
 					}
 				}
-				stage('Publish JDK 11 + MongoDB 4.1') {
+				stage('Publish JDK 8 + MongoDB 4.3') {
 					when {
-						changeset "ci/openjdk11-mongodb-4.1/**"
+						changeset "ci/openjdk8-mongodb-4.3/**"
 					}
 					agent { label 'data' }
 					options { timeout(time: 30, unit: 'MINUTES') }
 
 					steps {
 						script {
-							def image = docker.build("springci/spring-data-openjdk11-with-mongodb-4.1", "ci/openjdk11-mongodb-4.1/")
+							def image = docker.build("springci/spring-data-openjdk8-with-mongodb-4.3", "ci/openjdk8-mongodb-4.3/")
 							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
 								image.push()
 							}
@@ -104,38 +72,6 @@ pipeline {
 					steps {
 						script {
 							def image = docker.build("springci/spring-data-openjdk11-with-mongodb-4.2", "ci/openjdk11-mongodb-4.2/")
-							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
-								image.push()
-							}
-						}
-					}
-				}
-				stage('Publish JDK 13 + MongoDB 4.0') {
-					when {
-						changeset "ci/openjdk13-mongodb-4.0/**"
-					}
-					agent { label 'data' }
-					options { timeout(time: 30, unit: 'MINUTES') }
-
-					steps {
-						script {
-							def image = docker.build("springci/spring-data-openjdk13-with-mongodb-4.0", "ci/openjdk13-mongodb-4.0/")
-							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
-								image.push()
-							}
-						}
-					}
-				}
-				stage('Publish JDK 13 + MongoDB 4.1') {
-					when {
-						changeset "ci/openjdk13-mongodb-4.1/**"
-					}
-					agent { label 'data' }
-					options { timeout(time: 30, unit: 'MINUTES') }
-
-					steps {
-						script {
-							def image = docker.build("springci/spring-data-openjdk13-with-mongodb-4.1", "ci/openjdk13-mongodb-4.1/")
 							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
 								image.push()
 							}
@@ -170,7 +106,7 @@ pipeline {
 			}
 			agent {
 				docker {
-					image 'springci/spring-data-openjdk8-with-mongodb-4.2:latest'
+					image 'springci/spring-data-openjdk8-with-mongodb-4.3:latest'
 					label 'data'
 					args '-v $HOME:/tmp/jenkins-home'
 				}
@@ -195,6 +131,46 @@ pipeline {
 				}
 			}
 			parallel {
+				stage("test: mongodb 4.0 (jdk8)") {
+					agent {
+						docker {
+							image 'springci/spring-data-openjdk8-with-mongodb-4.0:latest'
+							label 'data'
+							args '-v $HOME:/tmp/jenkins-home'
+						}
+					}
+					options { timeout(time: 30, unit: 'MINUTES') }
+					steps {
+						sh 'rm -rf ?'
+						sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
+						sh 'mongod --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
+						sh 'sleep 10'
+						sh 'mongo --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
+						sh 'sleep 15'
+						sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw clean dependency:list test -Dsort -U -B'
+					}
+				}
+
+				stage("test: mongodb 4.2 (jdk8)") {
+					agent {
+						docker {
+							image 'springci/spring-data-openjdk8-with-mongodb-4.2:latest'
+							label 'data'
+							args '-v $HOME:/tmp/jenkins-home'
+						}
+					}
+					options { timeout(time: 30, unit: 'MINUTES') }
+					steps {
+						sh 'rm -rf ?'
+						sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
+						sh 'mongod --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
+						sh 'sleep 10'
+						sh 'mongo --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
+						sh 'sleep 15'
+						sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw clean dependency:list test -Dsort -U -B'
+					}
+				}
+
 				stage("test: baseline (jdk11)") {
 					agent {
 						docker {
@@ -219,126 +195,6 @@ pipeline {
 					agent {
 						docker {
 							image 'springci/spring-data-openjdk13-with-mongodb-4.2:latest'
-							label 'data'
-							args '-v $HOME:/tmp/jenkins-home'
-						}
-					}
-					options { timeout(time: 30, unit: 'MINUTES') }
-					steps {
-						sh 'rm -rf ?'
-						sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
-						sh 'mongod --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
-						sh 'sleep 10'
-						sh 'mongo --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
-						sh 'sleep 15'
-						sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -Pjava11 clean dependency:list test -Dsort -U -B'
-					}
-				}
-
-				stage("test: mongodb 4.0 (jdk8)") {
-					agent {
-						docker {
-							image 'springci/spring-data-openjdk8-with-mongodb-4.0:latest'
-							label 'data'
-							args '-v $HOME:/tmp/jenkins-home'
-						}
-					}
-					options { timeout(time: 30, unit: 'MINUTES') }
-					steps {
-						sh 'rm -rf ?'
-						sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
-						sh 'mongod --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
-						sh 'sleep 10'
-						sh 'mongo --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
-						sh 'sleep 15'
-						sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw clean dependency:list test -Dsort -U -B'
-					}
-				}
-
-				stage("test: mongodb 4.0 (jdk11)") {
-					agent {
-						docker {
-							image 'springci/spring-data-openjdk11-with-mongodb-4.0:latest'
-							label 'data'
-							args '-v $HOME:/tmp/jenkins-home'
-						}
-					}
-					options { timeout(time: 30, unit: 'MINUTES') }
-					steps {
-						sh 'rm -rf ?'
-						sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
-						sh 'mongod --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
-						sh 'sleep 10'
-						sh 'mongo --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
-						sh 'sleep 15'
-						sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -Pjava11 clean dependency:list test -Dsort -U -B'
-					}
-				}
-
-				stage("test: mongodb 4.0 (jdk13)") {
-					agent {
-						docker {
-							image 'springci/spring-data-openjdk13-with-mongodb-4.0:latest'
-							label 'data'
-							args '-v $HOME:/tmp/jenkins-home'
-						}
-					}
-					options { timeout(time: 30, unit: 'MINUTES') }
-					steps {
-						sh 'rm -rf ?'
-						sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
-						sh 'mongod --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
-						sh 'sleep 10'
-						sh 'mongo --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
-						sh 'sleep 15'
-						sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -Pjava11 clean dependency:list test -Dsort -U -B'
-					}
-				}
-
-				stage("test: mongodb 4.1 (jdk8)") {
-					agent {
-						docker {
-							image 'springci/spring-data-openjdk8-with-mongodb-4.1:latest'
-							label 'data'
-							args '-v $HOME:/tmp/jenkins-home'
-						}
-					}
-					options { timeout(time: 30, unit: 'MINUTES') }
-					steps {
-						sh 'rm -rf ?'
-						sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
-						sh 'mongod --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
-						sh 'sleep 10'
-						sh 'mongo --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
-						sh 'sleep 15'
-						sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw clean dependency:list test -Dsort -U -B'
-					}
-				}
-
-				stage("test: mongodb 4.1 (jdk11)") {
-					agent {
-						docker {
-							image 'springci/spring-data-openjdk11-with-mongodb-4.1:latest'
-							label 'data'
-							args '-v $HOME:/tmp/jenkins-home'
-						}
-					}
-					options { timeout(time: 30, unit: 'MINUTES') }
-					steps {
-						sh 'rm -rf ?'
-						sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
-						sh 'mongod --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
-						sh 'sleep 10'
-						sh 'mongo --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
-						sh 'sleep 15'
-						sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -Pjava11 clean dependency:list test -Dsort -U -B'
-					}
-				}
-
-				stage("test: mongodb 4.1 (jdk13)") {
-					agent {
-						docker {
-							image 'springci/spring-data-openjdk13-with-mongodb-4.1:latest'
 							label 'data'
 							args '-v $HOME:/tmp/jenkins-home'
 						}

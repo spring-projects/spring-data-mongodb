@@ -8,7 +8,7 @@ RUN echo "deb [ arch=amd64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-
 
 RUN apt-get update
 
-RUN apt-get install -y mongodb-org=4.0.9 mongodb-org-server=4.0.9 mongodb-org-shell=4.0.9 mongodb-org-mongos=4.0.9 mongodb-org-tools=4.0.9
+RUN apt-get install -y mongodb-org=4.0.14 mongodb-org-server=4.0.14 mongodb-org-shell=4.0.14 mongodb-org-mongos=4.0.14 mongodb-org-tools=4.0.14
 
 RUN apt-get clean \
  && rm -rf /var/lib/apt/lists/*
