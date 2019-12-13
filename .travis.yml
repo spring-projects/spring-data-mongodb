@@ -21,10 +21,10 @@ matrix:
 
 env:
   matrix:
-    - MONGO_VERSION=4.1.10
-    - MONGO_VERSION=4.0.4
-    - MONGO_VERSION=3.6.12
-    - MONGO_VERSION=3.4.20
+    - MONGO_VERSION=4.2.2
+    - MONGO_VERSION=4.0.14
+    - MONGO_VERSION=3.6.16
+    - MONGO_VERSION=3.4.23
   global:
     - PROFILE=ci
 

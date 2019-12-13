@@ -25,6 +25,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -32,7 +33,6 @@ import org.bson.BsonObjectId;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.reactivestreams.Publisher;
@@ -53,14 +53,11 @@ import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.util.StreamUtils;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.internal.HexUtils;
-import com.mongodb.internal.connection.tlschannel.impl.ByteBufferUtil;
-import com.mongodb.reactivestreams.client.gridfs.GridFSBucket;
-import com.mongodb.reactivestreams.client.gridfs.GridFSBuckets;
-import com.mongodb.reactivestreams.client.gridfs.GridFSUploadPublisher;
 import com.mongodb.reactivestreams.client.internal.Publishers;
 
 /**
@@ -91,7 +88,6 @@ public class ReactiveGridFsTemplateTests {
 	}
 
 	@Test // DATAMONGO-1855
-	@Ignore("https://jira.mongodb.org/browse/JAVARS-224")
 	public void storesAndFindsSimpleDocument() {
 
 		DefaultDataBufferFactory factory = new DefaultDataBufferFactory();
@@ -109,7 +105,6 @@ public class ReactiveGridFsTemplateTests {
 	}
 
 	@Test // DATAMONGO-1855
-	@Ignore("https://jira.mongodb.org/browse/JAVARS-224")
 	public void storesAndLoadsLargeFileCorrectly() {
 
 		ByteBuffer buffer = ByteBuffer.allocate(1000 * 1000); // 1 mb
@@ -148,34 +143,12 @@ public class ReactiveGridFsTemplateTests {
 				}).verifyComplete();
 	}
 
-	// @Test // DATAMONGO-2392
-	// public void storesAndFindsByUUID() throws IOException {
-	//
-	// UUID uuid = UUID.randomUUID();
-	//
-	// GridFS fs = new GridFS(mongoClient.getLegacyDb());
-	// GridFSInputFile in = fs.createFile(resource.getInputStream(), "gridfs.xml");
-	//
-	// in.put("_id", uuid);
-	// in.put("contentType", "application/octet-stream");
-	// in.save();
-	//
-	// operations.findOne(query(where("_id").is(uuid))).flatMap(operations::getResource)
-	// .flatMapMany(ReactiveGridFsResource::getDownloadStream) //
-	// .transform(DataBufferUtils::join) //
-	// .doOnNext(DataBufferUtils::release).as(StepVerifier::create) //
-	// .expectNextCount(1).verifyComplete();
-	// }
-
 	@Test // DATAMONGO-1855
-	@Ignore("https://jira.mongodb.org/browse/JAVARS-224")
 	public void writesMetadataCorrectly() throws IOException {
 
 		Document metadata = new Document("key", "value");
 
 		Flux<DataBuffer> source = DataBufferUtils.read(resource, new DefaultDataBufferFactory(), 256);
-		// AsyncInputStream stream = AsyncStreamHelper.toAsyncInputStream(resource.getInputStream());
-
 		ObjectId reference = operations.store(source, "foo.xml", "binary/octet-stream", metadata).block();
 
 		operations.find(query(whereMetaData("key").is("value"))) //
@@ -187,8 +160,7 @@ public class ReactiveGridFsTemplateTests {
 	}
 
 	@Test // DATAMONGO-1855
-	@Ignore("https://jira.mongodb.org/browse/JAVARS-224")
-	public void marshalsComplexMetadata() throws IOException {
+	public void marshalsComplexMetadata() {
 
 		Metadata metadata = new Metadata();
 		metadata.version = "1.0";
@@ -206,7 +178,6 @@ public class ReactiveGridFsTemplateTests {
 	}
 
 	@Test // DATAMONGO-1855
-	@Ignore("https://jira.mongodb.org/browse/JAVARS-224")
 	public void getResourceShouldRetrieveContentByIdentity() throws IOException {
 
 		byte[] content = StreamUtils.copyToByteArray(resource.getInputStream());
@@ -228,7 +199,6 @@ public class ReactiveGridFsTemplateTests {
 	}
 
 	@Test // DATAMONGO-1855, DATAMONGO-2240
-	@Ignore("https://jira.mongodb.org/browse/JAVARS-224")
 	public void shouldEmitFirstEntryWhenFindFirstRetrievesMoreThanOneResult() throws IOException {
 
 		Flux<DataBuffer> upload1 = DataBufferUtils.read(resource, new DefaultDataBufferFactory(), 256);
@@ -260,7 +230,6 @@ public class ReactiveGridFsTemplateTests {
 	}
 
 	@Test // DATAMONGO-1855
-	@Ignore("https://jira.mongodb.org/browse/JAVARS-224")
 	public void shouldEmitErrorWhenFindOneRetrievesMoreThanOneResult() throws IOException {
 
 		Flux<DataBuffer> upload1 = DataBufferUtils.read(resource, new DefaultDataBufferFactory(), 256);
@@ -277,7 +246,6 @@ public class ReactiveGridFsTemplateTests {
 	}
 
 	@Test // DATAMONGO-1855
-	@Ignore("https://jira.mongodb.org/browse/JAVARS-224")
 	public void getResourcesByPattern() throws IOException {
 
 		byte[] content = StreamUtils.copyToByteArray(resource.getInputStream());
@@ -300,7 +268,6 @@ public class ReactiveGridFsTemplateTests {
 	}
 
 	@Test // DATAMONGO-765
-	@Ignore("https://jira.mongodb.org/browse/JAVARS-224")
 	public void considersSkipLimitWhenQueryingFiles() {
 
 		DataBufferFactory bufferFactory = new DefaultDataBufferFactory();
@@ -326,56 +293,15 @@ public class ReactiveGridFsTemplateTests {
 		String version;
 	}
 
-	@Test //
-	@Ignore("https://jira.mongodb.org/browse/JAVARS-224")
-	public void xxx() {
-
-		GridFSBucket buckets = GridFSBuckets.create(dbFactory.getMongoDatabase());
-
-		DefaultDataBufferFactory factory = new DefaultDataBufferFactory();
-		DefaultDataBuffer first = factory.wrap("first".getBytes());
-		// DefaultDataBuffer second = factory.wrap("second".getBytes());
-
-		Flux<DefaultDataBuffer> source = Flux.just(first);
-
-		// GridFSUploadPublisher<ObjectId> objectIdGridFSUploadPublisher = buckets.uploadFromPublisher("foo.xml",
-		// Mono.just(ByteBuffer.wrap("hello".getBytes())));
-		GridFSUploadPublisher<ObjectId> objectIdGridFSUploadPublisher = buckets.uploadFromPublisher("foo.xml",
-				source.map(DataBuffer::asByteBuffer));
-		Mono<ObjectId> idPublisher = Mono.from(objectIdGridFSUploadPublisher);
-		idPublisher.as(StepVerifier::create).expectNextCount(1).verifyComplete();
-	}
-
-	@Test
-	@Ignore("https://jira.mongodb.org/browse/JAVARS-224")
-	public void xxx2() {
-
-		GridFSBucket buckets = GridFSBuckets.create(dbFactory.getMongoDatabase());
-
-		Flux<ByteBuffer> source = Flux.just(ByteBuffer.wrap("first".getBytes()), ByteBuffer.wrap("second".getBytes()));
-		Publisher<ByteBuffer> rawSource = toPublisher(ByteBuffer.wrap("first".getBytes()),
-				ByteBuffer.wrap("second".getBytes()));
-
-		// GridFSUploadPublisher<ObjectId> objectIdGridFSUploadPublisher = buckets.uploadFromPublisher("foo.xml",
-		// Mono.just(ByteBuffer.wrap("hello".getBytes())));
-		// GridFSUploadPublisher<ObjectId> objectIdGridFSUploadPublisher = buckets.uploadFromPublisher("foo.xml", source);
-		GridFSUploadPublisher<ObjectId> objectIdGridFSUploadPublisher = buckets.uploadFromPublisher("foo.xml", rawSource);
-		Mono.from(objectIdGridFSUploadPublisher).as(StepVerifier::create).expectNextCount(1).verifyComplete();
-
-		// idPublisher;
-	}
-
 	private static Publisher<ByteBuffer> toPublisher(final ByteBuffer... byteBuffers) {
 		return Publishers.publishAndFlatten(callback -> callback.onResult(Arrays.asList(byteBuffers), null));
 	}
 
-	private ByteBuffer hack(DataBuffer buffer) {
-
-		ByteBuffer byteBuffer = buffer.asByteBuffer();
-		ByteBuffer copy = ByteBuffer.allocate(byteBuffer.remaining());
-		ByteBufferUtil.copy(byteBuffer, copy, byteBuffer.arrayOffset());
-		copy.flip();
-
-		return copy;
+	public static String readToString(DataBuffer dataBuffer) {
+		try {
+			return FileCopyUtils.copyToString(new InputStreamReader(dataBuffer.asInputStream()));
+		} catch (IOException e) {
+			return e.getMessage();
+		}
 	}
 }

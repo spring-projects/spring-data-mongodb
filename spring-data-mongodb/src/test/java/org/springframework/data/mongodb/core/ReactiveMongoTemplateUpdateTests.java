@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
 
+import lombok.EqualsAndHashCode;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
@@ -240,7 +241,6 @@ public class ReactiveMongoTemplateUpdateTests {
 	}
 
 	@Test // DATAMONGO-2331
-	@Disabled("https://jira.mongodb.org/browse/JAVA-3432")
 	public void findAndModifyAppliesAggregationUpdateCorrectly() {
 
 		Book one = new Book();
@@ -310,6 +310,7 @@ public class ReactiveMongoTemplateUpdateTests {
 		}
 	}
 
+	@EqualsAndHashCode
 	static class Book {
 
 		@Id Integer id;
