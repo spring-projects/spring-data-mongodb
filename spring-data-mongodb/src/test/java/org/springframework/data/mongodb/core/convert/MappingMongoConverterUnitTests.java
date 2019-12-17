@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 
+import com.mongodb.DBObject;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 
@@ -77,6 +78,7 @@ import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBRef;
 
 /**
@@ -2065,6 +2067,15 @@ public class MappingMongoConverterUnitTests {
 				new org.bson.Document("dateAsObjectId", reference));
 
 		assertThat(target.dateAsObjectId).isEqualTo(new Date(reference.getTimestamp()));
+	}
+
+	@Test // DATAMONGO-2410
+	public void shouldAllowReadingBackDbObject() {
+
+		assertThat(converter.read(BasicDBObject.class, new org.bson.Document("property", "value")))
+				.isEqualTo(new BasicDBObject("property", "value"));
+		assertThat(converter.read(DBObject.class, new org.bson.Document("property", "value")))
+				.isEqualTo(new BasicDBObject("property", "value"));
 	}
 
 	static class GenericType<T> {

@@ -26,6 +26,10 @@ import java.util.List;
 import org.bson.Document;
 import org.bson.codecs.DecoderContext;
 import org.junit.Test;
+import org.springframework.expression.EvaluationContext;
+import org.springframework.expression.TypedValue;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 /**
  * Unit tests for {@link ParameterBindingJsonReader}.
@@ -195,6 +199,25 @@ public class ParameterBindingJsonReaderUnitTests {
 		Document target = parse("{ 'end_date' : { $gte : { $date : ?0 } } }", time);
 
 		assertThat(target).isEqualTo(Document.parse("{ 'end_date' : { $gte : { $date : " + time + " } } } "));
+	}
+
+	@Test // DATAMONGO-2418
+	public void shouldNotAccessSpElEvaluationContextWhenNoSpElPresentInBindableTarget() {
+
+		Object[] args = new Object[] { "value" };
+		EvaluationContext evaluationContext = new StandardEvaluationContext() {
+
+			@Override
+			public TypedValue getRootObject() {
+				throw new RuntimeException("o_O");
+			}
+		};
+
+		ParameterBindingJsonReader reader = new ParameterBindingJsonReader("{ 'name':'?0' }",
+				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), evaluationContext));
+		Document target = new ParameterBindingDocumentCodec().decode(reader, DecoderContext.builder().build());
+
+		assertThat(target).isEqualTo(new Document("name", "value"));
 	}
 
 	private static Document parse(String json, Object... args) {

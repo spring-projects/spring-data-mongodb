@@ -113,7 +113,7 @@ class AggregationUtils {
 			SpelExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
 
 		ParameterBindingContext bindingContext = new ParameterBindingContext((accessor::getBindableValue), expressionParser,
-				evaluationContextProvider.getEvaluationContext(method.getParameters(), accessor.getValues()));
+				() -> evaluationContextProvider.getEvaluationContext(method.getParameters(), accessor.getValues()));
 
 		List<AggregationOperation> target = new ArrayList<>(method.getAnnotatedAggregation().length);
 		for (String source : method.getAnnotatedAggregation()) {

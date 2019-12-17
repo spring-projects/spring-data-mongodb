@@ -239,11 +239,20 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return conversionService.convert(bson, rawType);
 		}
 
-		if (DBObject.class.isAssignableFrom(rawType)) {
+		if (Document.class.isAssignableFrom(rawType)) {
 			return (S) bson;
 		}
 
-		if (Document.class.isAssignableFrom(rawType)) {
+		if (DBObject.class.isAssignableFrom(rawType)) {
+
+			if (bson instanceof DBObject) {
+				return (S) bson;
+			}
+
+			if (bson instanceof Document) {
+				return (S) new BasicDBObject((Document) bson);
+			}
+
 			return (S) bson;
 		}
 
@@ -273,9 +282,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			if (codecRegistryProvider != null) {
 
 				Optional<? extends Codec<? extends S>> codec = codecRegistryProvider.getCodecFor(rawType);
-				if(codec.isPresent()) {
-					return codec.get().decode(new JsonReader(target.toJson()),
-							DecoderContext.builder().build());
+				if (codec.isPresent()) {
+					return codec.get().decode(new JsonReader(target.toJson()), DecoderContext.builder().build());
 				}
 			}
 
