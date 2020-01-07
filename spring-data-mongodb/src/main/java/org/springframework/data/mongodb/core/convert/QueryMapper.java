@@ -15,19 +15,11 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.bson.BsonValue;
 import org.bson.Document;
@@ -328,18 +320,14 @@ public class QueryMapper {
 	 * {@link MongoPersistentProperty}.
 	 *
 	 * @param documentField the key the value will be bound to eventually
-	 * @param value the source object to be mapped
+	 * @param sourceValue the source object to be mapped
 	 * @return
 	 */
 	@Nullable
 	@SuppressWarnings("unchecked")
-	protected Object getMappedValue(Field documentField, Object value) {
+	protected Object getMappedValue(Field documentField, Object sourceValue) {
 
-		if (documentField.getProperty() != null && documentField.getProperty().hasExplicitWriteTarget()) {
-			if (conversionService.canConvert(value.getClass(), documentField.getProperty().getFieldType())) {
-				value = conversionService.convert(value, documentField.getProperty().getFieldType());
-			}
-		}
+		Object value = applyFieldTargetTypeHintToValue(documentField, sourceValue);
 
 		if (documentField.isIdField() && !documentField.isAssociation()) {
 
@@ -678,6 +666,35 @@ public class QueryMapper {
 	 */
 	protected boolean isKeyword(String candidate) {
 		return candidate.startsWith("$");
+	}
+
+	/**
+	 * Convert the given field value into its desired
+	 * {@link org.springframework.data.mongodb.core.mapping.Field#targetType() target type} before applying further
+	 * conversions. In case of a {@link Collection} (used eg. for {@code $in} queries) the individual values will be
+	 * converted one by one.
+	 *
+	 * @param documentField the field and its meta data
+	 * @param value the actual value
+	 * @return the potentially converted target value.
+	 */
+	private Object applyFieldTargetTypeHintToValue(Field documentField, Object value) {
+
+		if (documentField.getProperty() == null || !documentField.getProperty().hasExplicitWriteTarget()) {
+			return value;
+		}
+
+		if (!conversionService.canConvert(value.getClass(), documentField.getProperty().getFieldType())) {
+			return value;
+		}
+
+		if (value instanceof Collection) {
+
+			return ((Collection<Object>) value).stream()
+					.map(it -> conversionService.convert(it, documentField.getProperty().getFieldType()))
+					.collect(Collectors.toList());
+		}
+		return conversionService.convert(value, documentField.getProperty().getFieldType());
 	}
 
 	/**

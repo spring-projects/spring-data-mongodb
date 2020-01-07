@@ -901,6 +901,32 @@ public class QueryMapperUnitTests {
 		assertThat(document).containsEntry("geoJsonPoint.$near.$maxDistance", 1000.0D);
 	}
 
+	@Test // DATAMONGO-2440
+	public void convertsInWithNonIdFieldAndObjectIdTypeHintCorrectly() {
+
+		String id = new ObjectId().toHexString();
+		NonIdFieldWithObjectIdTargetType source = new NonIdFieldWithObjectIdTargetType();
+
+		source.stringAsOid = id;
+
+		org.bson.Document target = mapper.getMappedObject(query(where("stringAsOid").in(id)).getQueryObject(),
+				context.getPersistentEntity(NonIdFieldWithObjectIdTargetType.class));
+		assertThat(target).isEqualTo(org.bson.Document.parse("{\"stringAsOid\": {\"$in\": [{\"$oid\": \"" + id + "\"}]}}"));
+	}
+
+	@Test // DATAMONGO-2440
+	public void convertsInWithIdFieldAndObjectIdTypeHintCorrectly() {
+
+		String id = new ObjectId().toHexString();
+		NonIdFieldWithObjectIdTargetType source = new NonIdFieldWithObjectIdTargetType();
+
+		source.id = id;
+
+		org.bson.Document target = mapper.getMappedObject(query(where("id").in(id)).getQueryObject(),
+				context.getPersistentEntity(NonIdFieldWithObjectIdTargetType.class));
+		assertThat(target).isEqualTo(org.bson.Document.parse("{\"_id\": {\"$in\": [{\"$oid\": \"" + id + "\"}]}}"));
+	}
+
 	@Document
 	public class Foo {
 		@Id private ObjectId id;
@@ -1036,5 +1062,11 @@ public class QueryMapperUnitTests {
 
 	static class WithIdPropertyContainingUnderscore {
 		@Id String with_underscore;
+	}
+
+	static class NonIdFieldWithObjectIdTargetType {
+
+		String id;
+		@Field(targetType = FieldType.OBJECT_ID) String stringAsOid;
 	}
 }
