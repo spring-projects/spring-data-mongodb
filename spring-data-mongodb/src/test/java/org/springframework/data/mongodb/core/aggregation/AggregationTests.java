@@ -1823,7 +1823,7 @@ public class AggregationTests {
 		assertThat((Double) bound100.get("sum")).isCloseTo(3672.9, Offset.offset(0.1D));
 	}
 
-	@Test // DATAMONGO-1552
+	@Test // DATAMONGO-1552, DATAMONGO-2437
 	@MongoVersion(asOf = "3.4")
 	public void bucketAutoShouldCollectDocumentsIntoABucket() {
 
@@ -1844,14 +1844,14 @@ public class AggregationTests {
 		AggregationResults<Document> result = mongoTemplate.aggregate(aggregation, Document.class);
 		assertThat(result.getMappedResults().size()).isEqualTo(3);
 
-		// { "min" : 680.0 , "max" : 820.0 , "count" : 1 , "titles" : [ "Dancer"] , "sum" : 760.4000000000001}
+		// { "_id" : { "min" : 680.0 , "max" : 820.0 }, "count" : 1 , "titles" : [ "Dancer"] , "sum" : 760.4000000000001}
 		Document bound0 = result.getMappedResults().get(0);
-		assertThat(bound0).containsEntry("count", 1).containsEntry("titles.[0]", "Dancer").containsEntry("min", 680.0)
-				.containsKey("max");
+		assertThat(bound0).containsEntry("count", 1).containsEntry("titles.[0]", "Dancer").containsEntry("_id.min", 680.0)
+				.containsKey("_id.max");
 
-		// { "min" : 820.0 , "max" : 1800.0 , "count" : 1 , "titles" : [ "The Great Wave off Kanagawa"] , "sum" : 1673.0}
+		// { "_id" : { "min" : 820.0 , "max" : 1800.0 }, "count" : 1 , "titles" : [ "The Great Wave off Kanagawa"] , "sum" : 1673.0}
 		Document bound1 = result.getMappedResults().get(1);
-		assertThat(bound1).containsEntry("count", 1).containsEntry("min", 820.0);
+		assertThat(bound1).containsEntry("count", 1).containsEntry("_id.min", 820.0);
 		assertThat((List<String>) bound1.get("titles")).contains("The Great Wave off Kanagawa");
 		assertThat((Double) bound1.get("sum")).isCloseTo(1673.0, Offset.offset(0.1D));
 	}
@@ -1928,6 +1928,21 @@ public class AggregationTests {
 		AggregationResults<Document> groupResults = mongoTemplate.aggregate(aggregation, "newyork", Document.class);
 
 		assertThat(groupResults.getMappedResults().size()).isEqualTo(4);
+	}
+
+	@Test // DATAMONGO-2437
+	public void shouldReadComplexIdValueCorrectly() {
+
+		WithComplexId source = new WithComplexId();
+		source.id = new ComplexId();
+		source.id.p1 = "v1";
+		source.id.p2 = "v2";
+
+		mongoTemplate.save(source);
+
+		AggregationResults<WithComplexId> result = mongoTemplate.aggregate(newAggregation(project("id")),
+				WithComplexId.class, WithComplexId.class);
+		assertThat(result.getMappedResults()).containsOnly(source);
 	}
 
 	private void createUsersWithReferencedPersons() {
@@ -2230,5 +2245,16 @@ public class AggregationTests {
 		String artist;
 		Integer year;
 		double price;
+	}
+
+	@lombok.Data
+	static class WithComplexId {
+		@Id ComplexId id;
+	}
+
+	@lombok.Data
+	static class ComplexId {
+		String p1;
+		String p2;
 	}
 }
