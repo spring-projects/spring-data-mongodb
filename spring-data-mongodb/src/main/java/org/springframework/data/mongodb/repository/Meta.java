@@ -83,4 +83,13 @@ public @interface Meta {
 	 */
 	org.springframework.data.mongodb.core.query.Meta.CursorOption[] flags() default {};
 
+	/**
+	 * When set to true, aggregation stages can write data to disk.
+	 *
+	 * @return {@literal false} by default.
+	 * @since 3.0
+	 * @see Aggregation
+	 */
+	boolean allowDiskUse() default false;
+
 }

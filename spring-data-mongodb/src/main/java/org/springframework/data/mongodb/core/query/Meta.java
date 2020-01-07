@@ -52,6 +52,7 @@ public class Meta {
 	private final Map<String, Object> values = new LinkedHashMap<>(2);
 	private final Set<CursorOption> flags = new LinkedHashSet<>();
 	private Integer cursorBatchSize;
+	private Boolean allowDiskUse;
 
 	public Meta() {}
 
@@ -65,6 +66,7 @@ public class Meta {
 		this.values.putAll(source.values);
 		this.flags.addAll(source.flags);
 		this.cursorBatchSize = source.cursorBatchSize;
+		this.allowDiskUse = source.allowDiskUse;
 	}
 
 	/**
@@ -282,6 +284,27 @@ public class Meta {
 			return false;
 		}
 		return ObjectUtils.nullSafeEquals(this.flags, other.flags);
+	}
+
+	/**
+	 * When set to true, aggregation stages can write data to disk.
+	 *
+	 * @return {@literal null} if not set.
+	 * @since 3.0
+	 */
+	@Nullable
+	public Boolean getAllowDiskUse() {
+		return allowDiskUse;
+	}
+
+	/**
+	 * Set to true, to allow aggregation stages to write data to disk.
+	 *
+	 * @param allowDiskUse use {@literal null} for server defaults.
+	 * @since 3.0
+	 */
+	public void setAllowDiskUse(@Nullable Boolean allowDiskUse) {
+		this.allowDiskUse = allowDiskUse;
 	}
 
 	/**
