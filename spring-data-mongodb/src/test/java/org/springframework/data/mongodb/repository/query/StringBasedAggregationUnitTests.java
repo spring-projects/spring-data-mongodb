@@ -22,6 +22,7 @@ import static org.mockito.Mockito.*;
 import lombok.Value;
 
 import java.lang.reflect.Method;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -33,7 +34,6 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -102,18 +102,19 @@ public class StringBasedAggregationUnitTests {
 		assertThat(pipelineOf(invocation)).containsExactly(GROUP_BY_LASTNAME, SORT);
 	}
 
-	@Test // DATAMONGO-2153
+	@Test // DATAMONGO-2153, DATAMONGO-2449
 	public void plainStringAggregationConsidersMeta() {
 
 		AggregationInvocation invocation = executeAggregation("plainStringAggregation");
-
 		AggregationOptions options = invocation.aggregation.getOptions();
 
 		assertThat(options.getComment()).contains("expensive-aggregation");
 		assertThat(options.getCursorBatchSize()).isEqualTo(42);
+		assertThat(options.isAllowDiskUse()).isTrue();
+		assertThat(options.getMaxTime()).isEqualTo(Duration.ofMillis(100));
 	}
 
-	@Test // DATAMONGO-2153
+	@Test // DATAMONGO-2153, DATAMONGO-2449
 	public void returnSingleObject() {
 
 		PersonAggregate expected = new PersonAggregate();
@@ -126,6 +127,8 @@ public class StringBasedAggregationUnitTests {
 
 		assertThat(options.getComment()).isEmpty();
 		assertThat(options.getCursorBatchSize()).isNull();
+		assertThat(options.isAllowDiskUse()).isFalse();
+		assertThat(options.getMaxTime()).isEqualTo(Duration.ZERO);
 	}
 
 	@Test // DATAMONGO-2153
@@ -246,7 +249,7 @@ public class StringBasedAggregationUnitTests {
 
 	private interface SampleRepository extends Repository<Person, Long> {
 
-		@Meta(cursorBatchSize = 42, comment = "expensive-aggregation")
+		@Meta(cursorBatchSize = 42, comment = "expensive-aggregation", allowDiskUse = true, maxExecutionTimeMs = 100)
 		@Aggregation({ RAW_GROUP_BY_LASTNAME_STRING, RAW_SORT_STRING })
 		PersonAggregate plainStringAggregation();
 

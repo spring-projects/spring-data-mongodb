@@ -293,6 +293,10 @@ public class MongoQueryMethod extends QueryMethod {
 			}
 		}
 
+		if(meta.allowDiskUse()) {
+			metaAttributes.setAllowDiskUse(meta.allowDiskUse());
+		}
+
 		return metaAttributes;
 	}
 
