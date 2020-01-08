@@ -27,7 +27,6 @@ import java.util.List;
 
 import org.bson.Document;
 import org.junit.Test;
-
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -438,14 +437,14 @@ public class AggregationUnitTests {
 		assertThat(getAsDocument(project, "color")).containsEntry("$cond", expectedCondition);
 	}
 
-	@Test // DATAMONGO-861
+	@Test // DATAMONGO-861, DATAMONGO-2242
 	public void referencingProjectionAliasesShouldRenderProjectionConditionalWithFieldReferenceCorrectly() {
 
 		Document agg = Aggregation.newAggregation(//
 				project().and("color").as("chroma"), project().and("luminosity") //
 						.applyCondition(ConditionalOperators //
 								.when("chroma") //
-								.thenValueOf("bright") //
+								.then("bright") //
 								.otherwise("dark"))) //
 				.toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
