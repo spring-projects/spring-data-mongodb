@@ -34,28 +34,28 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class CondExpressionUnitTests {
 
 	@Test // DATAMONGO-861
-	public void builderRejectsEmptyFieldName() {
+	void builderRejectsEmptyFieldName() {
 		assertThatIllegalArgumentException().isThrownBy(() -> newBuilder().when(""));
 	}
 
 	@Test // DATAMONGO-861
-	public void builderRejectsNullFieldName() {
+	void builderRejectsNullFieldName() {
 		assertThatIllegalArgumentException().isThrownBy(() -> newBuilder().when((Document) null));
 	}
 
 	@Test // DATAMONGO-861
-	public void builderRejectsNullCriteriaName() {
+	void builderRejectsNullCriteriaName() {
 		assertThatIllegalArgumentException().isThrownBy(() -> newBuilder().when((Criteria) null));
 	}
 
 	@Test // DATAMONGO-861
-	public void builderRejectsBuilderAsThenValue() {
+	void builderRejectsBuilderAsThenValue() {
 		assertThatIllegalArgumentException().isThrownBy(
 				() -> newBuilder().when("isYellow").then(newBuilder().when("field").then("then-value")).otherwise("otherwise"));
 	}
 
 	@Test // DATAMONGO-861, DATAMONGO-1542, DATAMONGO-2242
-	public void simpleBuilderShouldRenderCorrectly() {
+	void simpleBuilderShouldRenderCorrectly() {
 
 		Cond operator = ConditionalOperators.when("isYellow").thenValueOf("bright").otherwise("dark");
 		Document document = operator.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -69,7 +69,7 @@ public class CondExpressionUnitTests {
 	}
 
 	@Test // DATAMONGO-861, DATAMONGO-1542, DATAMONGO-2242
-	public void simpleCriteriaShouldRenderCorrectly() {
+	void simpleCriteriaShouldRenderCorrectly() {
 
 		Cond operator = ConditionalOperators.when(Criteria.where("luminosity").gte(100)).thenValueOf("bright")
 				.otherwise("dark");
@@ -84,7 +84,7 @@ public class CondExpressionUnitTests {
 	}
 
 	@Test // DATAMONGO-861, DATAMONGO-2242
-	public void andCriteriaShouldRenderCorrectly() {
+	void andCriteriaShouldRenderCorrectly() {
 
 		Cond operator = ConditionalOperators.when(Criteria.where("luminosity").gte(100) //
 				.andOperator(Criteria.where("hue").is(50), //
@@ -106,7 +106,7 @@ public class CondExpressionUnitTests {
 	}
 
 	@Test // DATAMONGO-861, DATAMONGO-1542, DATAMONGO-2242
-	public void twoArgsCriteriaShouldRenderCorrectly() {
+	void twoArgsCriteriaShouldRenderCorrectly() {
 
 		Criteria criteria = Criteria.where("luminosity").gte(100) //
 				.and("saturation").and("chroma").is(200);
@@ -126,7 +126,7 @@ public class CondExpressionUnitTests {
 	}
 
 	@Test // DATAMONGO-861, DATAMONGO-1542
-	public void nestedCriteriaShouldRenderCorrectly() {
+	void nestedCriteriaShouldRenderCorrectly() {
 
 		Cond operator = ConditionalOperators.when(Criteria.where("luminosity").gte(100)) //
 				.thenValueOf(newBuilder() //
