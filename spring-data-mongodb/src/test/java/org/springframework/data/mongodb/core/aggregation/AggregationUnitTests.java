@@ -26,7 +26,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.bson.Document;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond;
 import org.springframework.data.mongodb.core.query.Criteria;
