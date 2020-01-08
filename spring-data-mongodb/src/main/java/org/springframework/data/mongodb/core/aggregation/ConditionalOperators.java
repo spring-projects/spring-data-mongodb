@@ -207,7 +207,7 @@ public class ConditionalOperators {
 		public OtherwiseBuilder thenValueOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
-			return createThenBuilder().then(fieldReference);
+			return createThenBuilder().thenValueOf(fieldReference);
 		}
 
 		private ThenBuilder createThenBuilder() {
