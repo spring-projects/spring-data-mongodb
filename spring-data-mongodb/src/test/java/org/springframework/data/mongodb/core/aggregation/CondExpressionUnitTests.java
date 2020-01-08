@@ -54,7 +54,7 @@ public class CondExpressionUnitTests {
 		newBuilder().when("isYellow").then(newBuilder().when("field").then("then-value")).otherwise("otherwise");
 	}
 
-	@Test // DATAMONGO-861, DATAMONGO-1542
+	@Test // DATAMONGO-861, DATAMONGO-1542, DATAMONGO-2242
 	public void simpleBuilderShouldRenderCorrectly() {
 
 		Cond operator = ConditionalOperators.when("isYellow").thenValueOf("bright").otherwise("dark");
@@ -62,13 +62,13 @@ public class CondExpressionUnitTests {
 
 		Document expectedCondition = new Document() //
 				.append("if", "$isYellow") //
-				.append("then", "bright") //
+				.append("then", "$bright") //
 				.append("else", "dark");
 
 		assertThat(document, isBsonObject().containing("$cond", expectedCondition));
 	}
 
-	@Test // DATAMONGO-861, DATAMONGO-1542
+	@Test // DATAMONGO-861, DATAMONGO-1542, DATAMONGO-2242
 	public void simpleCriteriaShouldRenderCorrectly() {
 
 		Cond operator = ConditionalOperators.when(Criteria.where("luminosity").gte(100)).thenValueOf("bright")
@@ -77,13 +77,13 @@ public class CondExpressionUnitTests {
 
 		Document expectedCondition = new Document() //
 				.append("if", new Document("$gte", Arrays.<Object> asList("$luminosity", 100))) //
-				.append("then", "bright") //
+				.append("then", "$bright") //
 				.append("else", "dark");
 
 		assertThat(document, isBsonObject().containing("$cond", expectedCondition));
 	}
 
-	@Test // DATAMONGO-861
+	@Test // DATAMONGO-861, DATAMONGO-2242
 	public void andCriteriaShouldRenderCorrectly() {
 
 		Cond operator = ConditionalOperators.when(Criteria.where("luminosity").gte(100) //
@@ -99,13 +99,13 @@ public class CondExpressionUnitTests {
 
 		Document expectedCondition = new Document() //
 				.append("if", Arrays.<Object> asList(luminosity, new Document("$and", Arrays.asList(hue, saturation)))) //
-				.append("then", "bright") //
+				.append("then", "$bright") //
 				.append("else", "$dark-field");
 
 		assertThat(document, isBsonObject().containing("$cond", expectedCondition));
 	}
 
-	@Test // DATAMONGO-861, DATAMONGO-1542
+	@Test // DATAMONGO-861, DATAMONGO-1542, DATAMONGO-2242
 	public void twoArgsCriteriaShouldRenderCorrectly() {
 
 		Criteria criteria = Criteria.where("luminosity").gte(100) //
@@ -119,7 +119,7 @@ public class CondExpressionUnitTests {
 
 		Document expectedCondition = new Document() //
 				.append("if", Arrays.asList(gte, is)) //
-				.append("then", "bright") //
+				.append("then", "$bright") //
 				.append("else", "dark");
 
 		assertThat(document, isBsonObject().containing("$cond", expectedCondition));
