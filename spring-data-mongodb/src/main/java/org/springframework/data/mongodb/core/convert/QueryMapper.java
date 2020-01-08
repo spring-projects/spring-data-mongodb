@@ -19,12 +19,12 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
+
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.domain.Example;
@@ -642,7 +642,7 @@ public class QueryMapper {
 			return false;
 		}
 
-		return isKeyword(keys.iterator().next().toString());
+		return isKeyword(keys.iterator().next());
 	}
 
 	/**
@@ -690,10 +690,16 @@ public class QueryMapper {
 
 		if (value instanceof Collection) {
 
-			return ((Collection<Object>) value).stream()
-					.map(it -> conversionService.convert(it, documentField.getProperty().getFieldType()))
-					.collect(Collectors.toList());
+			Collection<Object> source = (Collection<Object>) value;
+			Collection<Object> converted = new ArrayList<>(source.size());
+
+			for (Object o : source) {
+				converted.add(conversionService.convert(o, documentField.getProperty().getFieldType()));
+			}
+
+			return converted;
 		}
+
 		return conversionService.convert(value, documentField.getProperty().getFieldType());
 	}
 
