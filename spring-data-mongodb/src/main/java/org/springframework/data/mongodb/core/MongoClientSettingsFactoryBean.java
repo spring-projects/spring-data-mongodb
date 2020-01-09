@@ -23,8 +23,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 
+import org.bson.UuidRepresentation;
 import org.bson.codecs.configuration.CodecRegistry;
-
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.lang.Nullable;
 import org.springframework.util.CollectionUtils;
@@ -63,6 +63,8 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 	private @Nullable Boolean retryWrites = null;
 
 	private @Nullable String applicationName = null;
+
+	private @Nullable UuidRepresentation uUidRepresentation = null;
 
 	// --> Socket Settings
 
@@ -379,6 +381,13 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 	}
 
 	/**
+	 * @param uUidRepresentation
+	 */
+	public void setuUidRepresentation(@Nullable UuidRepresentation uUidRepresentation) {
+		this.uUidRepresentation = uUidRepresentation;
+	}
+
+	/**
 	 * @param autoEncryptionSettings can be {@literal null}.
 	 * @see MongoClientSettings.Builder#autoEncryptionSettings(AutoEncryptionSettings)
 	 */
@@ -466,6 +475,10 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 		}
 		if (retryWrites != null) {
 			builder = builder.retryWrites(retryWrites);
+		}
+
+		if (uUidRepresentation != null) {
+			builder.uuidRepresentation(uUidRepresentation);
 		}
 
 		return builder.build();

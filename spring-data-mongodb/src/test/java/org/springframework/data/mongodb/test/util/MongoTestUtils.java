@@ -22,8 +22,10 @@ import java.time.Duration;
 import java.util.List;
 
 import org.bson.Document;
+import org.springframework.data.mongodb.SpringDataMongoDB;
 import org.springframework.data.util.Version;
 
+import com.mongodb.ConnectionString;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoClient;
@@ -55,7 +57,9 @@ public class MongoTestUtils {
 	}
 
 	public static MongoClient client(String host, int port) {
-		return com.mongodb.client.MongoClients.create(String.format(CONNECTION_STRING_PATTERN, host, port));
+
+		ConnectionString connectionString = new ConnectionString(String.format(CONNECTION_STRING_PATTERN, host, port));
+		return com.mongodb.client.MongoClients.create(connectionString, SpringDataMongoDB.driverInformation());
 	}
 
 	/**
@@ -68,7 +72,9 @@ public class MongoTestUtils {
 	}
 
 	public static com.mongodb.reactivestreams.client.MongoClient reactiveClient(String host, int port) {
-		return MongoClients.create(String.format(CONNECTION_STRING_PATTERN, host, port));
+
+		ConnectionString connectionString = new ConnectionString(String.format(CONNECTION_STRING_PATTERN, host, port));
+		return MongoClients.create(connectionString, SpringDataMongoDB.driverInformation());
 	}
 
 	/**

@@ -23,9 +23,11 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.bson.UuidRepresentation;
 import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
+import org.springframework.data.mongodb.SpringDataMongoDB;
 import org.springframework.lang.Nullable;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -164,6 +166,7 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 						getOrDefault(port, "" + ServerAddress.defaultPort())));
 
 		Builder builder = MongoClientSettings.builder().applyConnectionString(connectionString);
+		builder.uuidRepresentation(UuidRepresentation.JAVA_LEGACY);
 
 		if (mongoClientSettings != null) {
 
@@ -291,6 +294,8 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 					mongoClientSettings.getRetryReads(), connectionString.getRetryReads()));
 			applySettings(builder::retryWrites, computeSettingsValue(defaultSettings.getRetryWrites(),
 					mongoClientSettings.getRetryWrites(), connectionString.getRetryWritesValue()));
+			applySettings(builder::uuidRepresentation,
+					computeSettingsValue(null, mongoClientSettings.getUuidRepresentation(), UuidRepresentation.JAVA_LEGACY));
 		}
 
 		if (!CollectionUtils.isEmpty(credential)) {
@@ -344,7 +349,7 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 	}
 
 	private MongoClient createMongoClient(MongoClientSettings settings) throws UnknownHostException {
-		return MongoClients.create(settings);
+		return MongoClients.create(settings, SpringDataMongoDB.driverInformation());
 	}
 
 	private String getOrDefault(Object value, String defaultValue) {

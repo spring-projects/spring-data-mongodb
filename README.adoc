@@ -208,6 +208,29 @@ Uses `MongoClientSettings` instead of `MongoClientOptions`.
 |
 |===
 
+=== Other Changes
+
+==== UUID Types
+
+The MongoDB UUID representation can now be configured with different formats.
+This has to be done via `MongoClientSettings` as shown in the snippet below.
+
+.UUID Codec Configuration
+====
+[source,java]
+----
+static class Config extends AbstractMongoClientConfiguration {
+
+    @Override
+    public void configureClientSettings(MongoClientSettings.Builder builder) {
+        builder.uuidRepresentation(UuidRepresentation.STANDARD);
+    }
+
+    // ...
+}
+----
+====
+
 == Getting Help
 
 Having trouble with Spring Data? We’d love to help!

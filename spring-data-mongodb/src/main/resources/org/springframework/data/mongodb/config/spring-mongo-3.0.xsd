@@ -370,6 +370,16 @@ Reference to FactoryBean for com.mongodb.AutoEncryptionSettings - @since 2.2
 		</xsd:restriction>
 	</xsd:simpleType>
 
+	<xsd:simpleType name="uuidRepresentationEnumeration">
+		<xsd:restriction base="xsd:token">
+			<xsd:enumeration value="UNSPECIFIED" />
+			<xsd:enumeration value="STANDARD" />
+			<xsd:enumeration value="C_SHARP_LEGACY" />
+			<xsd:enumeration value="JAVA_LEGACY" />
+			<xsd:enumeration value="PYTHON_LEGACY" />
+		</xsd:restriction>
+	</xsd:simpleType>
+
 	<xsd:simpleType name="clusterConnectionModeEnumeration">
 		<xsd:restriction base="xsd:token">
 			<xsd:enumeration value="SINGLE" />
@@ -470,6 +480,16 @@ Configuration options for 'MongoClientSettings' - @since 3.0
 The application name to use when connecting to MongoDB. Mainly used to identify an operation in server logs, query logs and other profiling features.
 				]]></xsd:documentation>
 			</xsd:annotation>
+		</xsd:attribute>
+		<xsd:attribute name="uuid-representation" use="optional">
+			<xsd:annotation>
+				<xsd:documentation><![CDATA[
+The storage format of UUID types.
+				]]></xsd:documentation>
+			</xsd:annotation>
+			<xsd:simpleType>
+				<xsd:union memberTypes="uuidRepresentationEnumeration xsd:string"/>
+			</xsd:simpleType>
 		</xsd:attribute>
 		<xsd:attribute name="read-preference" use="optional">
 			<xsd:annotation>
