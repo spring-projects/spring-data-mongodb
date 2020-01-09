@@ -17,11 +17,13 @@ package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
 
+import org.bson.UuidRepresentation;
 import org.junit.Test;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.data.mongodb.config.ReadConcernPropertyEditor;
 import org.springframework.data.mongodb.config.ReadPreferencePropertyEditor;
+import org.springframework.data.mongodb.config.UUidRepresentationPropertyEditor;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.ReadConcern;
@@ -62,5 +64,20 @@ public class MongoClientSettingsFactoryBeanUnitTests {
 
 		MongoClientSettingsFactoryBean bean = factory.getBean("&factory", MongoClientSettingsFactoryBean.class);
 		assertThat(ReflectionTestUtils.getField(bean, "readConcern")).isEqualTo(ReadConcern.MAJORITY);
+	}
+
+	@Test // DATAMONGO-2427
+	public void convertsUuidRepresentationCorrectly() {
+
+		RootBeanDefinition definition = new RootBeanDefinition(MongoClientSettingsFactoryBean.class);
+		definition.getPropertyValues().addPropertyValue("uUidRepresentation", "STANDARD");
+
+		DefaultListableBeanFactory factory = new DefaultListableBeanFactory();
+		factory.registerCustomEditor(ReadPreference.class, UUidRepresentationPropertyEditor.class);
+
+		factory.registerBeanDefinition("factory", definition);
+
+		MongoClientSettingsFactoryBean bean = factory.getBean("&factory", MongoClientSettingsFactoryBean.class);
+		assertThat(ReflectionTestUtils.getField(bean, "uUidRepresentation")).isEqualTo(UuidRepresentation.STANDARD);
 	}
 }

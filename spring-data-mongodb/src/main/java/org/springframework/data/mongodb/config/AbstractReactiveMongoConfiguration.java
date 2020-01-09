@@ -18,13 +18,17 @@ package org.springframework.data.mongodb.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
+import org.springframework.data.mongodb.SpringDataMongoDB;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 
+import com.mongodb.MongoClientSettings;
+import com.mongodb.MongoClientSettings.Builder;
 import com.mongodb.reactivestreams.client.MongoClient;
+import com.mongodb.reactivestreams.client.MongoClients;
 
 /**
  * Base class for reactive Spring Data MongoDB configuration using JavaConfig.
@@ -39,11 +43,16 @@ public abstract class AbstractReactiveMongoConfiguration extends MongoConfigurat
 
 	/**
 	 * Return the Reactive Streams {@link MongoClient} instance to connect to. Annotate with {@link Bean} in case you want
-	 * to expose a {@link MongoClient} instance to the {@link org.springframework.context.ApplicationContext}.
+	 * to expose a {@link MongoClient} instance to the {@link org.springframework.context.ApplicationContext}. <br />
+	 * Override {@link #mongoClientSettings()} to configure connection details.
 	 *
 	 * @return never {@literal null}.
+	 * @see #mongoClientSettings()
+	 * @see #configureClientSettings(Builder)
 	 */
-	public abstract MongoClient reactiveMongoClient();
+	public MongoClient reactiveMongoClient() {
+		return createReactiveMongoClient(mongoClientSettings());
+	}
 
 	/**
 	 * Creates {@link ReactiveMongoOperations}.
@@ -86,5 +95,15 @@ public abstract class AbstractReactiveMongoConfiguration extends MongoConfigurat
 		converter.setCodecRegistryProvider(reactiveMongoDbFactory());
 
 		return converter;
+	}
+
+	/**
+	 * Create the Reactive Streams {@link MongoClient} instance with given {@link MongoClientSettings}.
+	 *
+	 * @return never {@literal null}.
+	 * @since 3.0
+	 */
+	protected MongoClient createReactiveMongoClient(MongoClientSettings settings) {
+		return MongoClients.create(settings, SpringDataMongoDB.driverInformation());
 	}
 }

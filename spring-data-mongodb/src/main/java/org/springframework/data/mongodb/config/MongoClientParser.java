@@ -87,6 +87,10 @@ public class MongoClientParser implements BeanDefinitionParser {
 				.getComponent(MongoParsingUtils.getMongoCredentialPropertyEditor());
 		parserContext.registerBeanComponent(credentialsEditor);
 
+		BeanComponentDefinition uuidRepresentationEditor = helper
+				.getComponent(MongoParsingUtils.getUUidRepresentationEditorBuilder());
+		parserContext.registerBeanComponent(uuidRepresentationEditor);
+
 		parserContext.popAndRegisterContainingComponent();
 
 		return mongoComponent.getBeanDefinition();

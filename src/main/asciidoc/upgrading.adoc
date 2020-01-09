@@ -13,6 +13,9 @@ Instead of the single artifact uber-jar `mongo-java-driver`, imports are now spl
 * `org.mongodb:mongodb-driver-sync` (optional)
 * `org.mongodb:mongodb-driver-reactivestreams` (optional)
 
+Depending on the application one of the `mongodb-driver-sync`, `mongodb-driver-reactivestreams` artifacts is is required next to the mandatory `mongodb-driver-core`.
+It is possible to combine the sync and reactive drivers in one application if needed.
+
 == Java Configuration
 
 .Java API changes
@@ -140,3 +143,26 @@ Element | Comment
 
 |===
 
+== Other Changes
+
+=== UUID Types
+
+The MongoDB UUID representation can now be configured with different formats.
+This has to be done via `MongoClientSettings` as shown in the snippet below.
+
+.UUid Codec Configuration
+====
+[source,java]
+----
+
+static class Config extends AbstractMongoClientConfiguration {
+
+    @Override
+    public void configureClientSettings(MongoClientSettings.Builder builder) {
+        builder.uuidRepresentation(UuidRepresentation.STANDARD);
+    }
+
+    // ...
+}
+----
+====

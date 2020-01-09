@@ -16,20 +16,17 @@
 package org.springframework.data.mongodb.gridfs;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.function.IntFunction;
-
-import org.reactivestreams.Publisher;
-import org.springframework.core.io.AbstractResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferFactory;
+import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
+import com.mongodb.reactivestreams.client.gridfs.GridFSDownloadPublisher;
 
 /**
  * Reactive {@link GridFSFile} based {@link Resource} implementation.
@@ -38,13 +35,10 @@ import com.mongodb.client.gridfs.model.GridFSFile;
  * @author Christoph Strobl
  * @since 2.2
  */
-public class ReactiveGridFsResource extends AbstractResource {
+public class ReactiveGridFsResource {
 
-	private static final Integer DEFAULT_CHUNK_SIZE = 256 * 1024;
-
-	private final @Nullable GridFSFile file;
+	private final GridFSDownloadPublisher content;
 	private final String filename;
-	private final IntFunction<Flux<DataBuffer>> contentFunction;
 
 	/**
 	 * Creates a new, absent {@link ReactiveGridFsResource}.
@@ -52,35 +46,10 @@ public class ReactiveGridFsResource extends AbstractResource {
 	 * @param filename filename of the absent resource.
 	 * @param content
 	 */
-	private ReactiveGridFsResource(String filename, Publisher<DataBuffer> content) {
+	public ReactiveGridFsResource(String filename, @Nullable GridFSDownloadPublisher content) {
 
-		this.file = null;
+		this.content = content;
 		this.filename = filename;
-		this.contentFunction = any -> Flux.from(content);
-	}
-
-	/**
-	 * Creates a new {@link ReactiveGridFsResource} from the given {@link GridFSFile}.
-	 *
-	 * @param file must not be {@literal null}.
-	 * @param content
-	 */
-	public ReactiveGridFsResource(GridFSFile file, Publisher<DataBuffer> content) {
-		this(file, (IntFunction<Flux<DataBuffer>>) any -> Flux.from(content));
-	}
-
-	/**
-	 * Creates a new {@link ReactiveGridFsResource} from the given {@link GridFSFile}.
-	 *
-	 * @param file must not be {@literal null}.
-	 * @param contentFunction
-	 * @since 2.2.1
-	 */
-	ReactiveGridFsResource(GridFSFile file, IntFunction<Flux<DataBuffer>> contentFunction) {
-
-		this.file = file;
-		this.filename = file.getFilename();
-		this.contentFunction = contentFunction;
 	}
 
 	/**
@@ -93,123 +62,54 @@ public class ReactiveGridFsResource extends AbstractResource {
 	public static ReactiveGridFsResource absent(String filename) {
 
 		Assert.notNull(filename, "Filename must not be null");
-
-		return new ReactiveGridFsResource(filename, Flux.empty());
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.core.io.InputStreamResource#getInputStream()
-	 */
-	@Override
-	public InputStream getInputStream() throws IllegalStateException {
-		throw new UnsupportedOperationException();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.core.io.AbstractResource#contentLength()
-	 */
-	@Override
-	public long contentLength() throws IOException {
-
-		verifyExists();
-		return getGridFSFile().getLength();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.core.io.AbstractResource#getFilename()
-	 */
-	@Override
-	public String getFilename() throws IllegalStateException {
-		return this.filename;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.core.io.AbstractResource#exists()
-	 */
-	@Override
-	public boolean exists() {
-		return this.file != null;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.core.io.AbstractResource#lastModified()
-	 */
-	@Override
-	public long lastModified() throws IOException {
-
-		verifyExists();
-		return getGridFSFile().getUploadDate().getTime();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.core.io.AbstractResource#getDescription()
-	 */
-	@Override
-	public String getDescription() {
-		return String.format("GridFs resource [%s]", this.getFilename());
+		return new ReactiveGridFsResource(filename, null);
 	}
 
 	/**
-	 * Returns the {@link Resource}'s id.
-	 *
-	 * @return never {@literal null}.
-	 * @throws IllegalStateException if the file does not {@link #exists()}.
+	 * @see org.springframework.core.io.AbstractResource#getFilename()
 	 */
-	public Object getId() {
-
-		Assert.state(exists(), () -> String.format("%s does not exist.", getDescription()));
-
-		return getGridFSFile().getId();
+	public String getFilename() throws IllegalStateException {
+		return this.filename;
 	}
 
 	/**
 	 * @return the underlying {@link GridFSFile}. Can be {@literal null} if absent.
 	 * @since 2.2
 	 */
-	@Nullable
-	public GridFSFile getGridFSFile() {
-		return file;
+	public Mono<GridFSFile> getGridFSFile() {
+		return content != null ? Mono.from(content.getGridFSFile()) : Mono.empty();
 	}
 
 	/**
-	 * Retrieve the download stream using the default chunk size of 256 kB.
-	 *
-	 * @return a {@link Flux} emitting data chunks one by one. Please make sure to
-	 *         {@link org.springframework.core.io.buffer.DataBufferUtils#release(DataBuffer) release} all
-	 *         {@link DataBuffer buffers} when done.
 	 */
 	public Flux<DataBuffer> getDownloadStream() {
-		return getDownloadStream(DEFAULT_CHUNK_SIZE);
+
+		if (content == null) {
+			return Flux.empty();
+		}
+
+		return createDownloadStream(content);
 	}
 
 	/**
-	 * Retrieve the download stream.
-	 *
-	 * @param chunkSize chunk size in bytes to use.
-	 * @return a {@link Flux} emitting data chunks one by one. Please make sure to
-	 *         {@link org.springframework.core.io.buffer.DataBufferUtils#release(DataBuffer) release} all
-	 *         {@link DataBuffer buffers} when done.
-	 * @since 2.2.1
 	 */
 	public Flux<DataBuffer> getDownloadStream(int chunkSize) {
 
-		if (!exists()) {
-			return Flux.error(new FileNotFoundException(String.format("%s does not exist.", getDescription())));
+		if (content == null) {
+			return Flux.empty();
+
 		}
 
-		return contentFunction.apply(chunkSize);
+		return createDownloadStream(content.bufferSizeBytes(chunkSize));
 	}
 
-	private void verifyExists() throws FileNotFoundException {
+	private Flux<DataBuffer> createDownloadStream(GridFSDownloadPublisher publisher) {
 
-		if (!exists()) {
-			throw new FileNotFoundException(String.format("%s does not exist.", getDescription()));
-		}
+		DataBufferFactory bufferFactory = new DefaultDataBufferFactory();
+		return Flux.from(publisher).map(bufferFactory::wrap);
+	}
+
+	public boolean exists() {
+		return content != null;
 	}
 }

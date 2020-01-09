@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.bson.UuidRepresentation;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
@@ -35,6 +36,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
+
+import com.mongodb.MongoClientSettings;
+import com.mongodb.MongoClientSettings.Builder;
 
 /**
  * Base class for Spring Data MongoDB to be extended for JavaConfiguration usage.
@@ -183,5 +187,29 @@ public abstract class MongoConfigurationSupport {
 	 */
 	protected boolean autoIndexCreation() {
 		return true;
+	}
+
+	/**
+	 * Return the {@link MongoClientSettings} used to create the actual {@literal MongoClient}. <br />
+	 * Override either this method, or use {@link #configureClientSettings(Builder)} to alter the setup.
+	 *
+	 * @return never {@literal null}.
+	 * @since 3.0
+	 */
+	protected MongoClientSettings mongoClientSettings() {
+
+		MongoClientSettings.Builder builder = MongoClientSettings.builder();
+		configureClientSettings(builder);
+		return builder.build();
+	}
+
+	/**
+	 * Configure {@link MongoClientSettings} via its {@link Builder} API.
+	 *
+	 * @param builder never {@literal null}.
+	 * @since 3.0
+	 */
+	protected void configureClientSettings(MongoClientSettings.Builder builder) {
+		builder.uuidRepresentation(UuidRepresentation.JAVA_LEGACY);
 	}
 }

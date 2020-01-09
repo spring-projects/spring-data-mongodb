@@ -16,9 +16,9 @@
 package org.springframework.data.mongodb.repository.query;
 
 import org.bson.Document;
+import org.bson.codecs.configuration.CodecRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -27,6 +27,9 @@ import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
+
+import com.mongodb.MongoClientSettings;
+import com.mongodb.client.MongoDatabase;
 
 /**
  * Query to use a plain JSON String to create the {@link Query} to actually execute.
@@ -40,11 +43,11 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 
 	private static final String COUNT_EXISTS_AND_DELETE = "Manually defined query for %s cannot be a count and exists or delete query at the same time!";
 	private static final Logger LOG = LoggerFactory.getLogger(StringBasedMongoQuery.class);
-	private static final ParameterBindingDocumentCodec CODEC = new ParameterBindingDocumentCodec();
 
 	private final String query;
 	private final String fieldSpec;
 
+	private final ParameterBindingDocumentCodec codec;
 	private final SpelExpressionParser expressionParser;
 	private final QueryMethodEvaluationContextProvider evaluationContextProvider;
 
@@ -106,6 +109,10 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 			this.isExistsQuery = false;
 			this.isDeleteQuery = false;
 		}
+
+		CodecRegistry codecRegistry = mongoOperations.execute(MongoDatabase::getCodecRegistry);
+		this.codec = new ParameterBindingDocumentCodec(
+				codecRegistry != null ? codecRegistry : MongoClientSettings.getDefaultCodecRegistry());
 	}
 
 	/*
@@ -118,8 +125,8 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		ParameterBindingContext bindingContext = new ParameterBindingContext((accessor::getBindableValue), expressionParser,
 				() -> evaluationContextProvider.getEvaluationContext(getQueryMethod().getParameters(), accessor.getValues()));
 
-		Document queryObject = CODEC.decode(this.query, bindingContext);
-		Document fieldsObject = CODEC.decode(this.fieldSpec, bindingContext);
+		Document queryObject = codec.decode(this.query, bindingContext);
+		Document fieldsObject = codec.decode(this.fieldSpec, bindingContext);
 
 		Query query = new BasicQuery(queryObject, fieldsObject).with(accessor.getSort());
 

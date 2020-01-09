@@ -21,6 +21,7 @@ import static org.springframework.test.util.ReflectionTestUtils.*;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
+import org.bson.UuidRepresentation;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -139,5 +140,16 @@ public class MongoClientNamespaceTests {
 		assertThat(settings.getConnectionPoolSettings().getMaintenanceInitialDelay(TimeUnit.MILLISECONDS)).isEqualTo(11);
 		assertThat(settings.getConnectionPoolSettings().getMaxConnectionIdleTime(TimeUnit.MILLISECONDS)).isEqualTo(30);
 		assertThat(settings.getConnectionPoolSettings().getMaxWaitTime(TimeUnit.MILLISECONDS)).isEqualTo(15);
+	}
+
+	@Test // DATAMONGO-2427
+	public void clientWithUUidSettings() {
+
+		assertThat(ctx.containsBean("client-with-uuid-settings")).isTrue();
+		MongoClientFactoryBean factoryBean = ctx.getBean("&client-with-uuid-settings",
+				MongoClientFactoryBean.class);
+
+		MongoClientSettings settings = (MongoClientSettings) getField(factoryBean, "mongoClientSettings");
+		assertThat(settings.getUuidRepresentation()).isEqualTo(UuidRepresentation.STANDARD);
 	}
 }
