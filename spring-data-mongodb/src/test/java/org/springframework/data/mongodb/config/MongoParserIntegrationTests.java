@@ -60,7 +60,6 @@ public class MongoParserIntegrationTests {
 
 		List<PropertyValue> values = definition.getPropertyValues().getPropertyValueList();
 
-		values.forEach(System.out::println);
 		assertThat(values.get(2).getValue()).isInstanceOf(BeanDefinition.class);
 		BeanDefinition x = (BeanDefinition) values.get(2).getValue();
 

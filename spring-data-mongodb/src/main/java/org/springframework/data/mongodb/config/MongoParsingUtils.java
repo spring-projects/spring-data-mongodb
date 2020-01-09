@@ -67,6 +67,7 @@ abstract class MongoParsingUtils {
 		setPropertyValue(clientOptionsDefBuilder, settingsElement, "write-concern", "writeConcern");
 		setPropertyValue(clientOptionsDefBuilder, settingsElement, "retry-reads", "retryReads");
 		setPropertyValue(clientOptionsDefBuilder, settingsElement, "retry-writes", "retryWrites");
+		setPropertyValue(clientOptionsDefBuilder, settingsElement, "uuid-representation", "uUidRepresentation");
 
 		// SocketSettings
 		setPropertyValue(clientOptionsDefBuilder, settingsElement, "socket-connect-timeout", "socketConnectTimeoutMS");
@@ -216,6 +217,24 @@ abstract class MongoParsingUtils {
 
 		Map<String, Class<?>> customEditors = new ManagedMap<>();
 		customEditors.put("com.mongodb.ConnectionString", ConnectionStringPropertyEditor.class);
+
+		BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(CustomEditorConfigurer.class);
+		builder.addPropertyValue("customEditors", customEditors);
+
+		return builder;
+	}
+
+	/**
+	 * Returns the {@link BeanDefinitionBuilder} to build a {@link BeanDefinition} for a
+	 * {@link ConnectionStringPropertyEditor}.
+	 *
+	 * @return
+	 * @since 3.0
+	 */
+	static BeanDefinitionBuilder getUUidRepresentationEditorBuilder() {
+
+		Map<String, Class<?>> customEditors = new ManagedMap<>();
+		customEditors.put("org.bson.UuidRepresentation", UUidRepresentationPropertyEditor.class);
 
 		BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(CustomEditorConfigurer.class);
 		builder.addPropertyValue("customEditors", customEditors);

@@ -37,4 +37,8 @@
 							   connection-pool-max-connection-idle-time="30"
 							   connection-pool-max-wait-time="15" />
 	</mongo:mongo-client>
+
+	<mongo:mongo-client id="client-with-uuid-settings" replica-set="rs0">
+		<mongo:client-settings uuid-representation="STANDARD" />
+	</mongo:mongo-client>
 </beans>
