@@ -158,7 +158,7 @@ public interface ExecutableUpdateOperation {
 		 * @param update must not be {@literal null}.
 		 * @return new instance of {@link TerminatingUpdate}.
 		 * @throws IllegalArgumentException if update is {@literal null}.
-		 * @since 2.3
+		 * @since 3.0
 		 * @see Update
 		 * @see AggregationUpdate
 		 */

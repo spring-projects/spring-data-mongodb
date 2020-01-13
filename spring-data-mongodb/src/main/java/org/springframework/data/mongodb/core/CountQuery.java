@@ -34,7 +34,7 @@ import org.springframework.util.ObjectUtils;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
- * @since 2.3
+ * @since 3.0
  */
 class CountQuery {
 
