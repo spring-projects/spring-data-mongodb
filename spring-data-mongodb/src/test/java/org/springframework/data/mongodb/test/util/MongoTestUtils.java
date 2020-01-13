@@ -199,7 +199,7 @@ public class MongoTestUtils {
 
 	/**
 	 * @return the server version extracted from buildInfo.
-	 * @since 2.3.0
+	 * @since 3.0
 	 */
 	public static Version serverVersion() {
 
@@ -216,7 +216,7 @@ public class MongoTestUtils {
 
 	/**
 	 * @return check if the server is running as part of a replica set.
-	 * @since 2.3.0
+	 * @since 3.0
 	 */
 	public static boolean serverIsReplSet() {
 

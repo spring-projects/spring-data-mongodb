@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Tag;
 
 /**
  * @author Christoph Strobl
- * @since 2.3
+ * @since 3.0
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE, ElementType.METHOD })

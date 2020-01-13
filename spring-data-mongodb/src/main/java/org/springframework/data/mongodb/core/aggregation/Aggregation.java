@@ -120,7 +120,7 @@ public class Aggregation {
 	 * 
 	 * @param operations can be {@literal empty} but must not be {@literal null}.
 	 * @return new instance of {@link AggregationUpdate}.
-	 * @since 2.3
+	 * @since 3.0
 	 */
 	public static AggregationUpdate newUpdate(AggregationOperation... operations) {
 		return AggregationUpdate.from(Arrays.asList(operations));

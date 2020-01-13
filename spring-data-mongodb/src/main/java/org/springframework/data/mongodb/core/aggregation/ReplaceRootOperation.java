@@ -98,7 +98,7 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 	 * Obtain the {@link Replacement}.
 	 *
 	 * @return never {@literal null}.
-	 * @since 2.3
+	 * @since 3.0
 	 */
 	protected Replacement getReplacement() {
 		return replacement;

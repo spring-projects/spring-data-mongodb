@@ -37,7 +37,7 @@ import org.springframework.lang.Nullable;
  * </pre>
  *
  * @author Christoph Strobl
- * @since 2.3
+ * @since 3.0
  * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/set/">MongoDB Aggregation Framework:
  *      $set</a>
  */
@@ -180,7 +180,7 @@ public class SetOperation implements InheritsFieldsAggregationOperation {
 
 	/**
 	 * @author Christoph Strobl
-	 * @since 2.3
+	 * @since 3.0
 	 */
 	public static class FieldAppender {
 
@@ -226,7 +226,7 @@ public class SetOperation implements InheritsFieldsAggregationOperation {
 
 		/**
 		 * @author Christoph Strobl
-		 * @since 2.3
+		 * @since 3.0
 		 */
 		public interface ValueAppender {
 
