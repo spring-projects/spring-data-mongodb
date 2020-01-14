@@ -15,6 +15,9 @@
  */
 package org.springframework.data.mongodb.core;
 
+import lombok.NonNull;
+import lombok.Value;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -38,6 +41,8 @@ import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
+import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.util.Pair;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -46,9 +51,6 @@ import com.mongodb.WriteConcern;
 import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.*;
-
-import lombok.NonNull;
-import lombok.Value;
 
 /**
  * Default implementation for {@link BulkOperations}.
@@ -349,9 +351,7 @@ class DefaultBulkOperations implements BulkOperations {
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(update, "Update must not be null!");
 
-		UpdateOptions options = new UpdateOptions();
-		options.upsert(upsert);
-		query.getCollation().map(Collation::toMongoCollation).ifPresent(options::collation);
+		UpdateOptions options = computeUpdateOptions(query, update, upsert);
 
 		if (multi) {
 			addModel(update, new UpdateManyModel<>(query.getQueryObject(), update.getUpdateObject(), options));
@@ -487,6 +487,25 @@ class DefaultBulkOperations implements BulkOperations {
 		}
 
 		throw new IllegalStateException("BulkMode was null!");
+	}
+
+	/**
+	 * @param filterQuery The {@link Query} to read a potential {@link Collation} from. Must not be {@literal null}.
+	 * @param update The {@link Update} to apply
+	 * @param upsert flag to indicate if document should be upserted.
+	 * @return new instance of {@link UpdateOptions}.
+	 */
+	private static UpdateOptions computeUpdateOptions(Query filterQuery, UpdateDefinition update, boolean upsert) {
+
+		UpdateOptions options = new UpdateOptions();
+		options.upsert(upsert);
+
+		if (update.hasArrayFilters()) {
+			options.arrayFilters(update.getArrayFilters().stream().map(ArrayFilter::asDocument).collect(Collectors.toList()));
+		}
+
+		filterQuery.getCollation().map(Collation::toMongoCollation).ifPresent(options::collation);
+		return options;
 	}
 
 	/**

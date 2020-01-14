@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyList;
@@ -60,6 +60,7 @@ import org.springframework.data.mongodb.core.mapping.event.BeforeSaveCallback;
 import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
 
 import com.mongodb.MongoWriteException;
@@ -318,6 +319,18 @@ public class DefaultBulkOperationsUnitTests {
 				.execute();
 
 		verify(collection).withWriteConcern(eq(WriteConcern.MAJORITY));
+	}
+
+	@Test // DATAMONGO-2450
+	public void appliesArrayFilterWhenPresent() {
+
+		ops.updateOne(new BasicQuery("{}"), new Update().filterArray(Criteria.where("element").gte(100))).execute();
+
+		verify(collection).bulkWrite(captor.capture(), any());
+
+		UpdateOneModel<Document> updateModel = (UpdateOneModel<Document>) captor.getValue().get(0);
+		assertThat(updateModel.getOptions().getArrayFilters().get(0))
+				.isEqualTo(new org.bson.Document("element", new Document("$gte", 100)));
 	}
 
 	class SomeDomainType {
