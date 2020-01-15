@@ -501,7 +501,11 @@ class DefaultBulkOperations implements BulkOperations {
 		options.upsert(upsert);
 
 		if (update.hasArrayFilters()) {
-			options.arrayFilters(update.getArrayFilters().stream().map(ArrayFilter::asDocument).collect(Collectors.toList()));
+			List<Document> list = new ArrayList<>(update.getArrayFilters().size());
+			for (ArrayFilter arrayFilter : update.getArrayFilters()) {
+				list.add(arrayFilter.asDocument());
+			}
+			options.arrayFilters(list);
 		}
 
 		filterQuery.getCollation().map(Collation::toMongoCollation).ifPresent(options::collation);
