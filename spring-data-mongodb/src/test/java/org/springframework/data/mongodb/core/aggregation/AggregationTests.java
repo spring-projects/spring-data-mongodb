@@ -73,7 +73,7 @@ import org.springframework.data.mongodb.test.util.MongoVersion;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import com.mongodb.MongoException;
 import com.mongodb.client.MongoCollection;
@@ -91,7 +91,7 @@ import com.mongodb.client.MongoCollection;
  * @author Sergey Shcherbakov
  * @author Minsu Kim
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
 public class AggregationTests {
 
@@ -1849,7 +1849,8 @@ public class AggregationTests {
 		assertThat(bound0).containsEntry("count", 1).containsEntry("titles.[0]", "Dancer").containsEntry("_id.min", 680.0)
 				.containsKey("_id.max");
 
-		// { "_id" : { "min" : 820.0 , "max" : 1800.0 }, "count" : 1 , "titles" : [ "The Great Wave off Kanagawa"] , "sum" : 1673.0}
+		// { "_id" : { "min" : 820.0 , "max" : 1800.0 }, "count" : 1 , "titles" : [ "The Great Wave off Kanagawa"] , "sum" :
+		// 1673.0}
 		Document bound1 = result.getMappedResults().get(1);
 		assertThat(bound1).containsEntry("count", 1).containsEntry("_id.min", 820.0);
 		assertThat((List<String>) bound1.get("titles")).contains("The Great Wave off Kanagawa");
