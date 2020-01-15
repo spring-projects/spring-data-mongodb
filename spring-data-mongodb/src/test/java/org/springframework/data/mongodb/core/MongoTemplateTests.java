@@ -44,7 +44,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.convert.converter.Converter;
@@ -3711,6 +3710,20 @@ public class MongoTemplateTests {
 		assertThat(target.inner.id).isEqualTo(innerId);
 	}
 
+	@Test // DATAMONGO-2451
+	public void sortOnIdFieldWithExplicitTypeShouldWork() {
+
+		template.dropCollection(WithIdAndFieldAnnotation.class);
+
+		WithIdAndFieldAnnotation f = new WithIdAndFieldAnnotation();
+		f.id = new ObjectId().toHexString();
+		f.value = "value";
+
+		template.save(f);
+
+		assertThat(template.find(new BasicQuery("{}").with(Sort.by("id")), WithIdAndFieldAnnotation.class)).isNotEmpty();
+	}
+
 	private AtomicReference<ImmutableVersioned> createAfterSaveReference() {
 
 		AtomicReference<ImmutableVersioned> saved = new AtomicReference<>();
@@ -4244,5 +4257,15 @@ public class MongoTemplateTests {
 
 		@Field("id") String id;
 		String value;
+	}
+
+	@Data
+	static class WithIdAndFieldAnnotation {
+
+		@Id //
+		@Field(name = "_id") //
+		String id;
+		String value;
+
 	}
 }
