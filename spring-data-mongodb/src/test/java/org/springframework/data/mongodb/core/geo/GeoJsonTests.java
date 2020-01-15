@@ -49,7 +49,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.BasicDbListBuilder;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import com.mongodb.MongoException;
 import com.mongodb.WriteConcern;
@@ -60,7 +60,7 @@ import com.mongodb.client.MongoCollection;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration
 public class GeoJsonTests {
 

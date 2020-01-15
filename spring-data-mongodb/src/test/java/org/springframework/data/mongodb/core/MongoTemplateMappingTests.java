@@ -32,7 +32,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.annotation.Id;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import com.mongodb.MongoException;
 import com.mongodb.client.MongoCollection;
@@ -48,7 +48,7 @@ import com.mongodb.client.model.geojson.Position;
  * @author Thomas Risberg
  * @author Mark Paluch
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:template-mapping.xml")
 public class MongoTemplateMappingTests {
 

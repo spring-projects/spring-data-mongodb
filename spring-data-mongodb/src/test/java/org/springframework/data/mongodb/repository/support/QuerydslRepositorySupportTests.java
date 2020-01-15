@@ -38,7 +38,7 @@ import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.QPerson;
 import org.springframework.data.mongodb.repository.User;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.StringUtils;
 
 /**
@@ -48,7 +48,7 @@ import org.springframework.util.StringUtils;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
 public class QuerydslRepositorySupportTests {
 

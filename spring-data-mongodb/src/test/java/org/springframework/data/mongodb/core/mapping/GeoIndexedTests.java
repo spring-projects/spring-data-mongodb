@@ -32,7 +32,7 @@ import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import com.mongodb.MongoException;
 import com.mongodb.client.MongoClient;
@@ -44,7 +44,7 @@ import com.mongodb.client.MongoDatabase;
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration(classes = GeoIndexedAppConfig.class)
 public class GeoIndexedTests {
 

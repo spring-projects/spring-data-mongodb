@@ -50,7 +50,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import com.mongodb.client.MongoClient;
 
@@ -62,7 +62,7 @@ import com.mongodb.client.MongoClient;
  * @author Jordi Llach
  * @author Mark Paluch
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration
 public class IndexingIntegrationTests {
 

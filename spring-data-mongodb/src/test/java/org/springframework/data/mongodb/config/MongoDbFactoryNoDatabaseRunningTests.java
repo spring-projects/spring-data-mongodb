@@ -25,7 +25,7 @@ import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * Integration tests for {@link MongoDbFactory}.
@@ -33,7 +33,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Thomas Risberg
  * @author Oliver Gierke
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration
 public class MongoDbFactoryNoDatabaseRunningTests {
 

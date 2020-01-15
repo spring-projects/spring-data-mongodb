@@ -63,7 +63,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.mongodb.repository.SampleEvaluationContextExtension.SampleSecurityContextHolder;
 import org.springframework.data.querydsl.QSort;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
@@ -76,7 +76,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  * @author Fırat KÜÇÜK
  * @author Edward Prentice
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 public abstract class AbstractPersonRepositoryIntegrationTests {
 
 	@Autowired protected PersonRepository repository;

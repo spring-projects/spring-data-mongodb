@@ -41,7 +41,7 @@ import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.util.Version;
 import org.springframework.lang.Nullable;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.model.ValidationAction;
@@ -55,7 +55,7 @@ import com.mongodb.client.model.ValidationLevel;
  * @author Andreas Zink
  * @author Christoph Strobl
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 public class MongoTemplateValidationTests {
 
 	public static @ClassRule MongoVersionRule REQUIRES_AT_LEAST_3_2_0 = MongoVersionRule.atLeast(Version.parse("3.2.0"));

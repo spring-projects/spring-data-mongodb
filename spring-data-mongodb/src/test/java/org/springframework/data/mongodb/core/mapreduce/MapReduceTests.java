@@ -36,7 +36,7 @@ import org.springframework.data.geo.Box;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import com.mongodb.client.MongoCollection;
 
@@ -48,7 +48,7 @@ import com.mongodb.client.MongoCollection;
  * @author Mark Paluch
  * @author Christoph Strobl
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
 public class MapReduceTests {
 
@@ -326,7 +326,7 @@ public class MapReduceTests {
 		{ "_id" : 3, "document_id" : "Resume", "author" : "Author", "content" : "...", "version" : 6 }
 		{ "_id" : 4, "document_id" : "Schema", "author" : "Someone Else", "content" : "...", "version" : 0.9 }
 		{ "_id" : 5, "document_id" : "Schema", "author" : "Someone Else", "content" : "...", "version" : 1 }
-		
+
 		 */
 		ContentAndVersion cv1 = new ContentAndVersion();
 		cv1.setDocumentId("mongoDB How-To");

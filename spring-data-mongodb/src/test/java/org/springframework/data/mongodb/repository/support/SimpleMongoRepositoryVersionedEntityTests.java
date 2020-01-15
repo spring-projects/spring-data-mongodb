@@ -38,7 +38,7 @@ import org.springframework.data.mongodb.test.util.MongoVersion;
 import org.springframework.data.mongodb.test.util.ReplicaSet;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.mongodb.client.MongoClient;
@@ -48,7 +48,7 @@ import com.mongodb.client.MongoClients;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration
 public class SimpleMongoRepositoryVersionedEntityTests {
 

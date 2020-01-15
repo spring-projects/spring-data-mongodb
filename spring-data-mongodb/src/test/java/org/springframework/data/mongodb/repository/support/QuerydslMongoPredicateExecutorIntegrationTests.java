@@ -40,7 +40,7 @@ import org.springframework.data.mongodb.repository.QUser;
 import org.springframework.data.mongodb.repository.User;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import com.mongodb.MongoException;
 import com.mongodb.client.MongoDatabase;
@@ -54,7 +54,7 @@ import com.mongodb.client.MongoDatabase;
  */
 @ContextConfiguration(
 		locations = "/org/springframework/data/mongodb/repository/PersonRepositoryIntegrationTests-context.xml")
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 public class QuerydslMongoPredicateExecutorIntegrationTests {
 
 	@Autowired MongoOperations operations;

@@ -40,7 +40,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoClients;
@@ -48,7 +48,7 @@ import com.mongodb.reactivestreams.client.MongoClients;
 /**
  * @author Christoph Strobl
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 public class ReactiveMongoTemplateAuditingTests {
 
 	static final String DB_NAME = "mongo-template-audit-tests";

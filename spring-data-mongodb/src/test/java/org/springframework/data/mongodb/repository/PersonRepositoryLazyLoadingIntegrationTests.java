@@ -29,7 +29,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * Integration test for {@link PersonRepository} for lazy loading support.
@@ -38,7 +38,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Oliver Gierke
  */
 @ContextConfiguration(locations = "PersonRepositoryIntegrationTests-context.xml")
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 public class PersonRepositoryLazyLoadingIntegrationTests {
 
 	@Autowired PersonRepository repository;

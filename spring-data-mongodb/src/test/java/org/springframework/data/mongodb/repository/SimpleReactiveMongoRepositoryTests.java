@@ -46,7 +46,7 @@ import org.springframework.data.mongodb.repository.support.ReactiveMongoReposito
 import org.springframework.data.mongodb.repository.support.SimpleReactiveMongoRepository;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -56,7 +56,7 @@ import org.springframework.util.ClassUtils;
  * @author Christoph Strobl
  * @author Ruben J Garcia
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:reactive-infrastructure.xml")
 public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanFactoryAware {
 

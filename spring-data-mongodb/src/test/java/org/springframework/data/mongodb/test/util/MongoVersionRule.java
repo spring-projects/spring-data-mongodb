@@ -25,15 +25,15 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.springframework.data.util.Version;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 
 /**
  * {@link TestRule} verifying server tests are executed against match a given version. This one can be used as
- * {@link ClassRule} eg. in context depending tests run with {@link SpringJUnit4ClassRunner} when the context would fail
- * to start in case of invalid version, or as simple {@link Rule} on specific tests.
+ * {@link ClassRule} eg. in context depending tests run with {@link SpringRunner} when the context would fail to start
+ * in case of invalid version, or as simple {@link Rule} on specific tests.
  *
  * @author Christoph Strobl
  * @author Mark Paluch

@@ -46,7 +46,7 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.StreamUtils;
 
 import com.mongodb.MongoGridFSException;
@@ -66,7 +66,7 @@ import com.mongodb.gridfs.GridFSInputFile;
  * @author Mark Paluch
  * @author Denis Zavedeev
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:gridfs/gridfs.xml")
 public class GridFsTemplateIntegrationTests {
 

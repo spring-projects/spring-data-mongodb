@@ -46,7 +46,7 @@ import org.springframework.data.util.Version;
 import org.springframework.lang.Nullable;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.context.transaction.AfterTransaction;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,7 +61,7 @@ import com.mongodb.client.model.Filters;
  * @author Christoph Strobl
  * @currentRead Shadow's Edge - Brent Weeks
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration
 @Transactional(transactionManager = "txManager")
 public class PersonRepositoryTransactionalTests {

@@ -92,7 +92,7 @@ import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -127,7 +127,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Laszlo Csontos
  * @author duozhilin
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
 public class MongoTemplateTests {
 

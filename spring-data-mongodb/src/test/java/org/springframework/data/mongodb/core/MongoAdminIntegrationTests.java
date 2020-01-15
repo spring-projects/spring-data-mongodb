@@ -22,7 +22,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import com.mongodb.DB;
 import com.mongodb.MongoClient;
@@ -32,7 +32,7 @@ import com.mongodb.MongoClient;
  *
  * @author Mark Pollack
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
 public class MongoAdminIntegrationTests {
 

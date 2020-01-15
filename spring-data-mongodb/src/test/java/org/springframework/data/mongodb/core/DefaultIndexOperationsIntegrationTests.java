@@ -36,7 +36,7 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Collation.CaseFirst;
 import org.springframework.data.util.Version;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.ObjectUtils;
 
 import com.mongodb.client.MongoCollection;
@@ -49,7 +49,7 @@ import com.mongodb.client.model.IndexOptions;
  * @author Oliver Gierke
  * @author Mark Paluch
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
 public class DefaultIndexOperationsIntegrationTests {
 

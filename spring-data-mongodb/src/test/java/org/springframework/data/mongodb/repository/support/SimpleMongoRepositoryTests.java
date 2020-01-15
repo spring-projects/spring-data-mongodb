@@ -52,7 +52,7 @@ import org.springframework.data.mongodb.test.util.MongoVersion;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.mongodb.test.util.ReplicaSet;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -62,7 +62,7 @@ import org.springframework.transaction.support.TransactionTemplate;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
 public class SimpleMongoRepositoryTests {
 

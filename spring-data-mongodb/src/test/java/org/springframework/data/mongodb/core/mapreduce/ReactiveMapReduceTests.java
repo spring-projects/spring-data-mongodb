@@ -37,7 +37,7 @@ import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.Success;
@@ -47,7 +47,7 @@ import com.mongodb.reactivestreams.client.Success;
  * @author Mark Paluch
  * @currentRead Beyond the Shadows - Brent Weeks
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:reactive-infrastructure.xml")
 public class ReactiveMapReduceTests {
 

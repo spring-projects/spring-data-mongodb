@@ -23,14 +23,14 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.repository.config.lazy.ClassWithNestedRepository.NestedUserRepository;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * Integration test for repository namespace configuration with nested repositories.
  *
  * @author Thomas Darimont
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration("AllowNestedMongoRepositoriesRepositoryConfigTests-context.xml")
 public class AllowNestedMongoRepositoriesRepositoryConfigTests {
 

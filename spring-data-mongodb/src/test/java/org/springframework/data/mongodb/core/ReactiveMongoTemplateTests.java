@@ -82,7 +82,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.test.util.ReplicaSet;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import com.mongodb.WriteConcern;
 
@@ -92,7 +92,7 @@ import com.mongodb.WriteConcern;
  * @author Mark Paluch
  * @author Christoph Strobl
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:reactive-infrastructure.xml")
 public class ReactiveMongoTemplateTests {
 

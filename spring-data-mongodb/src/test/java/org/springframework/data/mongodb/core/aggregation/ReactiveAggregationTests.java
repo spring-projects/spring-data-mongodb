@@ -37,7 +37,7 @@ import org.springframework.data.mongodb.core.Venue;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * Integration test for aggregation via {@link org.springframework.data.mongodb.core.ReactiveMongoTemplate}.
@@ -45,7 +45,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Mark Paluch
  * @author Christoph Strobl
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:reactive-infrastructure.xml")
 public class ReactiveAggregationTests {
 

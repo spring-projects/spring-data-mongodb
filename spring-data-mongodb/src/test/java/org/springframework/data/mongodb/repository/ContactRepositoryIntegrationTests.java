@@ -23,7 +23,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * Integration tests for {@link ContactRepository}. Mostly related to mapping inheritance.
@@ -32,7 +32,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Mark Paluch
  * @author Christoph Strobl
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration("config/MongoNamespaceIntegrationTests-context.xml")
 public class ContactRepositoryIntegrationTests {
 

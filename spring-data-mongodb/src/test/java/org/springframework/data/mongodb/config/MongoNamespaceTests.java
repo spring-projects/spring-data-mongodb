@@ -31,7 +31,7 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
@@ -46,7 +46,7 @@ import com.mongodb.WriteConcern;
  * @author Thomas Darimont
  * @author Christoph Strobl
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration
 public class MongoNamespaceTests {
 

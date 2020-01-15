@@ -47,14 +47,14 @@ import org.springframework.data.repository.reactive.ReactiveSortingRepository;
 import org.springframework.data.repository.reactive.RxJava2SortingRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * Test for {@link ReactiveMongoRepository} using reactive wrapper type conversion.
  *
  * @author Mark Paluch
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration(classes = ConvertingReactiveMongoRepositoryTests.Config.class)
 public class ConvertingReactiveMongoRepositoryTests {
 
