@@ -174,7 +174,13 @@ public class QueryMapper {
 			return new Document();
 		}
 
-		Document mappedSort = getMappedObject(sortObject, entity);
+		Document mappedSort = new Document();
+		for(Map.Entry<String,Object> entry : BsonUtils.asMap(sortObject).entrySet()) {
+
+			Field field = createPropertyField(entity, entry.getKey(), mappingContext);
+			mappedSort.put(field.getMappedKey(), entry.getValue());
+		}
+
 		mapMetaAttributes(mappedSort, entity, MetaMapping.WHEN_PRESENT);
 		return mappedSort;
 	}
