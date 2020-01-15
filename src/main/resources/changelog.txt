@@ -1,6 +1,14 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.1.15.RELEASE (2020-01-15)
+----------------------------------------------
+* DATAMONGO-2444 - Update copyright years to 2020.
+* DATAMONGO-2442 - Cond.thenValueOf(String fieldReference) does not concat fieldRef with "$" prefix.
+* DATAMONGO-2431 - Release 2.1.15 (Lovelace SR15).
+* DATAMONGO-2423 - @NonNullApi restricts update with null.
+
+
 Changes in version 2.2.3.RELEASE (2019-12-04)
 ---------------------------------------------
 * DATAMONGO-2430 - Upgrade to mongo-java-driver 3.11.2.
@@ -2827,6 +2835,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
