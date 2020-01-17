@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -120,7 +120,7 @@ public class Aggregation {
 	 * 
 	 * @param operations can be {@literal empty} but must not be {@literal null}.
 	 * @return new instance of {@link AggregationUpdate}.
-	 * @since 2.3
+	 * @since 3.0
 	 */
 	public static AggregationUpdate newUpdate(AggregationOperation... operations) {
 		return AggregationUpdate.from(Arrays.asList(operations));

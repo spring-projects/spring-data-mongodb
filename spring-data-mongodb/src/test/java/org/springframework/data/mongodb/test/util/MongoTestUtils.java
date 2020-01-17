@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -199,7 +199,7 @@ public class MongoTestUtils {
 
 	/**
 	 * @return the server version extracted from buildInfo.
-	 * @since 2.3.0
+	 * @since 3.0
 	 */
 	public static Version serverVersion() {
 
@@ -216,7 +216,7 @@ public class MongoTestUtils {
 
 	/**
 	 * @return check if the server is running as part of a replica set.
-	 * @since 2.3.0
+	 * @since 3.0
 	 */
 	public static boolean serverIsReplSet() {
 

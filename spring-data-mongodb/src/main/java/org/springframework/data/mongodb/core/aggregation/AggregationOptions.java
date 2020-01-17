@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -215,7 +215,7 @@ public class AggregationOptions {
 
 	/**
 	 * @return the time limit for processing. {@link Duration#ZERO} is used for the default unbounded behavior.
-	 * @since 2.3
+	 * @since 3.0
 	 */
 	public Duration getMaxTime() {
 		return maxTime;
@@ -279,7 +279,7 @@ public class AggregationOptions {
 
 	/**
 	 * @return
-	 * @since 2.3
+	 * @since 3.0
 	 */
 	public boolean hasExecutionTimeLimit() {
 		return !maxTime.isZero() && !maxTime.isNegative();
@@ -393,7 +393,7 @@ public class AggregationOptions {
 		 * @param maxTime {@link Duration#ZERO} is used for the default unbounded behavior. {@link Duration#isNegative()
 		 *          Negative} values will be ignored.
 		 * @return this.
-		 * @sinve 2.3
+		 * @since 3.0
 		 */
 		public Builder maxTime(@Nullable Duration maxTime) {
 

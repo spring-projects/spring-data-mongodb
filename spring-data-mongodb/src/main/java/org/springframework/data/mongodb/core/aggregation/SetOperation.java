@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ import org.springframework.lang.Nullable;
  * </pre>
  *
  * @author Christoph Strobl
- * @since 2.3
+ * @since 3.0
  * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/set/">MongoDB Aggregation Framework:
  *      $set</a>
  */
@@ -180,7 +180,7 @@ public class SetOperation implements InheritsFieldsAggregationOperation {
 
 	/**
 	 * @author Christoph Strobl
-	 * @since 2.3
+	 * @since 3.0
 	 */
 	public static class FieldAppender {
 
@@ -226,7 +226,7 @@ public class SetOperation implements InheritsFieldsAggregationOperation {
 
 		/**
 		 * @author Christoph Strobl
-		 * @since 2.3
+		 * @since 3.0
 		 */
 		public interface ValueAppender {
 

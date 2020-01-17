@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.convert.converter.Converter;
@@ -92,7 +91,7 @@ import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -127,7 +126,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Laszlo Csontos
  * @author duozhilin
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
 public class MongoTemplateTests {
 
@@ -3711,6 +3710,20 @@ public class MongoTemplateTests {
 		assertThat(target.inner.id).isEqualTo(innerId);
 	}
 
+	@Test // DATAMONGO-2451
+	public void sortOnIdFieldWithExplicitTypeShouldWork() {
+
+		template.dropCollection(WithIdAndFieldAnnotation.class);
+
+		WithIdAndFieldAnnotation f = new WithIdAndFieldAnnotation();
+		f.id = new ObjectId().toHexString();
+		f.value = "value";
+
+		template.save(f);
+
+		assertThat(template.find(new BasicQuery("{}").with(Sort.by("id")), WithIdAndFieldAnnotation.class)).isNotEmpty();
+	}
+
 	private AtomicReference<ImmutableVersioned> createAfterSaveReference() {
 
 		AtomicReference<ImmutableVersioned> saved = new AtomicReference<>();
@@ -4244,5 +4257,15 @@ public class MongoTemplateTests {
 
 		@Field("id") String id;
 		String value;
+	}
+
+	@Data
+	static class WithIdAndFieldAnnotation {
+
+		@Id //
+		@Field(name = "_id") //
+		String id;
+		String value;
+
 	}
 }

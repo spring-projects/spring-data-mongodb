@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -127,7 +127,7 @@ public class DefaultIndexOperations implements IndexOperations {
 			indexOptions = addPartialFilterIfPresent(indexOptions, indexDefinition.getIndexOptions(), entity);
 			indexOptions = addDefaultCollationIfRequired(indexOptions, entity);
 
-			Document mappedKeys = mapper.getMappedObject(indexDefinition.getIndexKeys(), entity);
+			Document mappedKeys = mapper.getMappedSort(indexDefinition.getIndexKeys(), entity);
 			return collection.createIndex(mappedKeys, indexOptions);
 		});
 	}
@@ -223,7 +223,7 @@ public class DefaultIndexOperations implements IndexOperations {
 
 		Assert.isInstanceOf(Document.class, sourceOptions.get(PARTIAL_FILTER_EXPRESSION_KEY));
 		return ops.partialFilterExpression(
-				mapper.getMappedObject((Document) sourceOptions.get(PARTIAL_FILTER_EXPRESSION_KEY), entity));
+				mapper.getMappedSort((Document) sourceOptions.get(PARTIAL_FILTER_EXPRESSION_KEY), entity));
 	}
 
 	private static IndexOptions addDefaultCollationIfRequired(IndexOptions ops, MongoPersistentEntity<?> entity) {

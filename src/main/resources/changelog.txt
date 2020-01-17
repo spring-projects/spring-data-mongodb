@@ -1,6 +1,56 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.0.0.M1 (2020-01-16)
+----------------------------------------
+* DATAMONGO-2451 - Value of sort direction converted to String for id fields (query, index creation).
+* DATAMONGO-2450 - Bulk Operations do not support filterArray in update operations.
+* DATAMONGO-2448 - Bump Version to 3.0.
+* DATAMONGO-2447 - Upgrade MongoDB Drivers to 3.12.0 and 1.13.0.
+* DATAMONGO-2444 - Update copyright years to 2020.
+* DATAMONGO-2442 - Cond.thenValueOf(String fieldReference) does not concat fieldRef with "$" prefix.
+* DATAMONGO-2440 - Unable to use MongoTemplate to perform query with 'in' condition by field annotated with @Field(targetType = FieldType.OBJECT_ID).
+* DATAMONGO-2437 - Grouping after aggregation returns NULL _id when mapping to a class with compound key.
+* DATAMONGO-2430 - Upgrade to mongo-java-driver 3.11.2.
+* DATAMONGO-2423 - @NonNullApi restricts update with null.
+* DATAMONGO-2418 - Application Context Doesn't start with @Query.
+* DATAMONGO-2414 - ReactiveGridFsResource.getDownloadStream(…) hang if completion happens on event loop.
+* DATAMONGO-2410 - Using BasicDBObject as an entity caused java.lang.ClassCastException in runtime.
+* DATAMONGO-2409 - Extension Function ReactiveFindOperation.DistinctWithProjection.asType() has wrong return type.
+* DATAMONGO-2403 - ReactiveStringBasedAggregation / AggregationUtils fails on NPE because source or value is null.
+* DATAMONGO-2399 - Upgrade to mongo-java-driver 3.11.1.
+* DATAMONGO-2394 - nearSphere query wrongly generated with radian parameter instead of meters.
+* DATAMONGO-2393 - Reading large file from ReactiveGridFsTemplate causes a stackoverflow and the code to hang.
+* DATAMONGO-2392 - Reading GridFS files written with old api and custom id fails on ReactiveGridFsTemplate.
+* DATAMONGO-2390 - Add maxTimeMS to AggregationOptions.
+* DATAMONGO-2388 - IndexOperations.getIndexInfo() fails for index that has partialFilterExpression containing DBRef.
+* DATAMONGO-2385 - Unnecessary null checks in MongoConverters.
+* DATAMONGO-2383 - Release 3.0 M1 (Neumann).
+* DATAMONGO-2370 - Add support for  $round aggregation expression.
+* DATAMONGO-2331 - Add support for Aggregations in Update.
+* DATAMONGO-2059 - Replace usage of deprecated collection.count() with collection.countDocuments().
+* DATAMONGO-765 - Add support for paging and sorting on GridFSTemplate.
+
+
+Changes in version 2.2.4.RELEASE (2020-01-15)
+---------------------------------------------
+* DATAMONGO-2451 - Value of sort direction converted to String for id fields (query, index creation).
+* DATAMONGO-2450 - Bulk Operations do not support filterArray in update operations.
+* DATAMONGO-2444 - Update copyright years to 2020.
+* DATAMONGO-2442 - Cond.thenValueOf(String fieldReference) does not concat fieldRef with "$" prefix.
+* DATAMONGO-2440 - Unable to use MongoTemplate to perform query with 'in' condition by field annotated with @Field(targetType = FieldType.OBJECT_ID).
+* DATAMONGO-2432 - Release 2.2.4 (Moore SR4).
+* DATAMONGO-2423 - @NonNullApi restricts update with null.
+
+
+Changes in version 2.1.15.RELEASE (2020-01-15)
+----------------------------------------------
+* DATAMONGO-2444 - Update copyright years to 2020.
+* DATAMONGO-2442 - Cond.thenValueOf(String fieldReference) does not concat fieldRef with "$" prefix.
+* DATAMONGO-2431 - Release 2.1.15 (Lovelace SR15).
+* DATAMONGO-2423 - @NonNullApi restricts update with null.
+
+
 Changes in version 2.2.3.RELEASE (2019-12-04)
 ---------------------------------------------
 * DATAMONGO-2430 - Upgrade to mongo-java-driver 3.11.2.
@@ -2827,6 +2877,9 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
+
+
 
 
 

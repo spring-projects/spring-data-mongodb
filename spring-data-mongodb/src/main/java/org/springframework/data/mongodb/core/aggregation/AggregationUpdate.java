@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,7 +74,7 @@ import org.springframework.util.Assert;
  * @see <a href=
  *      "https://docs.mongodb.com/manual/reference/method/db.collection.update/#update-with-aggregation-pipeline">MongoDB
  *      Reference Documentation</a>
- * @since 2.3
+ * @since 3.0
  */
 public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 
