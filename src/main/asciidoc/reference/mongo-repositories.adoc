@@ -291,14 +291,21 @@ The keywords in the preceding table can be used in conjunction with `delete…By
 ----
 public interface PersonRepository extends MongoRepository<Person, String> {
 
-  List <Person> deleteByLastname(String lastname);
+  List <Person> deleteByLastname(String lastname); <1>
 
-  Long deletePersonByLastname(String lastname);
+  Long deletePersonByLastname(String lastname); <2>
+
+  @Nullable
+  Person deleteSingleByLastname(String lastname); <3>
+
+  Optional<Person> deleteByBirthdate(Date birthdate); <4>
 }
 ----
+<1> Using a return type of `List` retrieves and returns all matching documents before actually deleting them.
+<2> A numeric return type directly removes the matching documents, returning the total number of documents removed.
+<3> A single domain type result retrieves and removes the first matching document.
+<4> Same as in 3 but wrapped in an `Optional` type.
 ====
-
-Using a return type of `List` retrieves and returns all matching documents before actually deleting them. A numeric return type directly removes the matching documents, returning the total number of documents removed.
 
 [[mongodb.repositories.queries.geo-spatial]]
 === Geo-spatial Repository Queries

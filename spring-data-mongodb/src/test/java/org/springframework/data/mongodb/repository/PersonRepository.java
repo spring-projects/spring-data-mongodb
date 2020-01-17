@@ -264,6 +264,9 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	// DATAMONGO-566
 	Long deletePersonByLastname(String lastname);
 
+	// DATAMONGO-1997
+	Optional<Person> deleteOptionalByLastname(String lastname);
+
 	// DATAMONGO-566
 	@Query(value = "{ 'lastname' : ?0 }", delete = true)
 	List<Person> removeByLastnameUsingAnnotatedQuery(String lastname);
