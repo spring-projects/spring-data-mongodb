@@ -1,6 +1,11 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.0.0.M2 (2020-01-17)
+----------------------------------------
+* DATAMONGO-2454 - Release 3.0 M2 (Neumann).
+
+
 Changes in version 3.0.0.M1 (2020-01-16)
 ----------------------------------------
 * DATAMONGO-2451 - Value of sort direction converted to String for id fields (query, index creation).
@@ -2877,6 +2882,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
