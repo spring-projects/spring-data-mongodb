@@ -19,6 +19,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 
+import org.reactivestreams.Publisher;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.domain.Pageable;
@@ -168,6 +169,10 @@ interface ReactiveMongoQueryExecution {
 
 			ReturnedType returnedType = processor.getReturnedType();
 
+			if (returnsMonoVoid(returnedType)) {
+				return Flux.from((Publisher) source).then();
+			}
+
 			if (ClassUtils.isPrimitiveOrWrapper(returnedType.getReturnedType())) {
 				return source;
 			}
@@ -181,5 +186,9 @@ interface ReactiveMongoQueryExecution {
 
 			return processor.processResult(source, converter);
 		}
+	}
+
+	static boolean returnsMonoVoid(ReturnedType returnedType) {
+		return returnedType.getReturnedType() == Void.class;
 	}
 }
