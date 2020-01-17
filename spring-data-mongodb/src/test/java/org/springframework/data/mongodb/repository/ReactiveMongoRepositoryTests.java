@@ -17,6 +17,8 @@ package org.springframework.data.mongodb.repository;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.domain.Sort.Direction.*;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
 import lombok.Data;
@@ -575,6 +577,18 @@ public class ReactiveMongoRepositoryTests {
 				.expectNext("lastname").verifyComplete();
 	}
 
+	@Test // DATAMONGO-2406
+	public void deleteByShouldHandleVoidResultTypeCorrectly() {
+
+		repository.deleteByLastname(dave.getLastname()) //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+
+		template.find(query(where("lastname").is(dave.getLastname())), Person.class) //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+	}
+
 	interface ReactivePersonRepository
 			extends ReactiveMongoRepository<Person, String>, ReactiveQuerydslPredicateExecutor<Person> {
 
@@ -645,6 +659,8 @@ public class ReactiveMongoRepositoryTests {
 
 		@Query(value = "{_id:?0}")
 		Mono<org.bson.Document> findDocumentById(String id);
+
+		Mono<Void> deleteByLastname(String lastname);
 	}
 
 	interface ReactiveContactRepository extends ReactiveMongoRepository<Contact, String> {}
