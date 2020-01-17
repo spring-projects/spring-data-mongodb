@@ -741,6 +741,13 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(repository.deletePersonByLastname("Beauford")).isEqualTo(1L);
 	}
 
+	@Test // DATAMONGO-1997
+	public void deleteByShouldResultWrappedInOptionalCorrectly() {
+
+		assertThat(repository.deleteOptionalByLastname("Beauford")).isPresent();
+		assertThat(repository.deleteOptionalByLastname("dorfuaeB")).isNotPresent();
+	}
+
 	@Test // DATAMONGO-566
 	public void deleteByShouldReturnZeroInCaseNoDocumentHasBeenRemovedAndReturnTypeIsNumber() {
 		assertThat(repository.deletePersonByLastname("dorfuaeB")).isEqualTo(0L);

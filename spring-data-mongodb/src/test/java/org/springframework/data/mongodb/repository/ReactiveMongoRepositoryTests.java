@@ -589,6 +589,28 @@ public class ReactiveMongoRepositoryTests {
 				.verifyComplete();
 	}
 
+	@Test // DATAMONGO-1997
+	public void deleteByShouldAllowDeletedCountAsResult() {
+
+		repository.deleteCountByLastname(dave.getLastname()) //
+				.as(StepVerifier::create) //
+				.expectNext(2L) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-1997
+	public void deleteByShouldAllowSingleDocumentRemovalCorrectly() {
+
+		repository.deleteSinglePersonByLastname(carter.getLastname()) //
+				.as(StepVerifier::create) //
+				.expectNext(carter) //
+				.verifyComplete();
+
+		repository.deleteSinglePersonByLastname("dorfuaeB") //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+	}
+
 	interface ReactivePersonRepository
 			extends ReactiveMongoRepository<Person, String>, ReactiveQuerydslPredicateExecutor<Person> {
 
@@ -661,6 +683,10 @@ public class ReactiveMongoRepositoryTests {
 		Mono<org.bson.Document> findDocumentById(String id);
 
 		Mono<Void> deleteByLastname(String lastname);
+
+		Mono<Long> deleteCountByLastname(String lastname);
+
+		Mono<Person> deleteSinglePersonByLastname(String lastname);
 	}
 
 	interface ReactiveContactRepository extends ReactiveMongoRepository<Contact, String> {}

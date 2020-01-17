@@ -129,6 +129,10 @@ interface ReactiveMongoQueryExecution {
 				return operations.findAllAndRemove(query, type, collection);
 			}
 
+			if(method.isQueryForEntity() && !ClassUtils.isPrimitiveOrWrapper(method.getReturnedObjectType())) {
+				return operations.findAndRemove(query, type, collection);
+			}
+
 			return operations.remove(query, type, collection)
 					.map(deleteResult -> deleteResult.wasAcknowledged() ? deleteResult.getDeletedCount() : 0L);
 		}
