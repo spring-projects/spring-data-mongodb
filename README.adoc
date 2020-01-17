@@ -71,6 +71,11 @@ Add the Maven dependency:
 [source,xml]
 ----
 <dependency>
+    <groupId>org.springframework.data</groupId>
+    <artifactId>spring-data-jpa</artifactId>
+    <version>${version}.RELEASE</version>
+</dependency>
+<dependency>
   <groupId>org.springframework.data</groupId>
   <artifactId>spring-data-mongodb</artifactId>
   <version>${version}.RELEASE</version>
