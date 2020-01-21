@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
+import com.mongodb.MongoClientSettings;
 import lombok.Data;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -128,6 +129,7 @@ public class ReactiveMongoTemplateUnitTests {
 	public void beforeEach() {
 
 		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslator);
+		when(factory.getCodecRegistry()).thenReturn(MongoClientSettings.getDefaultCodecRegistry());
 		when(factory.getMongoDatabase()).thenReturn(db);
 		when(db.getCollection(any())).thenReturn(collection);
 		when(db.getCollection(any(), any())).thenReturn(collection);
@@ -432,6 +434,17 @@ public class ReactiveMongoTemplateUnitTests {
 		verify(collection).countDocuments(any(), options.capture());
 
 		assertThat(options.getValue().getHint()).isEqualTo(queryHint);
+	}
+
+	@Test // DATAMONGO-2365
+	public void countShouldApplyQueryHintAsIndexNameIfPresent() {
+
+		template.count(new Query().withHint("idx-1"), Person.class, "star-wars").subscribe();
+
+		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
+		verify(collection).countDocuments(any(), options.capture());
+
+		assertThat(options.getValue().getHintString()).isEqualTo("idx-1");
 	}
 
 	@Test // DATAMONGO-2215

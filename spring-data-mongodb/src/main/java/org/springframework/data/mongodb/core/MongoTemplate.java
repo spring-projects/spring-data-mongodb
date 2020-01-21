@@ -114,6 +114,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.mongodb.core.validation.Validator;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.Optionals;
@@ -1156,7 +1157,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			options.skip((int) query.getSkip());
 		}
 		if (StringUtils.hasText(query.getHint())) {
-			options.hint(Document.parse(query.getHint()));
+
+			String hint = query.getHint();
+			if(BsonUtils.isJsonDocument(hint)) {
+				options = options.hint(BsonUtils.parse(hint, mongoDbFactory));
+			} else {
+				options = options.hintString(hint);
+			}
 		}
 
 		Document document = queryMapper.getMappedObject(query.getQueryObject(),
@@ -3276,7 +3283,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				}
 
 				if (StringUtils.hasText(query.getHint())) {
-					cursorToUse = cursorToUse.hint(Document.parse(query.getHint()));
+
+					String hint = query.getHint();
+
+					if(BsonUtils.isJsonDocument(hint)) {
+						cursorToUse = cursorToUse.hint(BsonUtils.parse(hint, mongoDbFactory));
+					} else {
+						cursorToUse = cursorToUse.hintString(hint);
+					}
 				}
 
 				if (meta.hasValues()) {

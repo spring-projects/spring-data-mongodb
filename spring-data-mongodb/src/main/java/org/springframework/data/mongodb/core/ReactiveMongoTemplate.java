@@ -21,6 +21,7 @@ import com.mongodb.client.result.InsertOneResult;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.mongodb.util.BsonUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -1279,7 +1280,13 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				options.skip((int) query.getSkip());
 			}
 			if (StringUtils.hasText(query.getHint())) {
-				options.hint(Document.parse(query.getHint()));
+
+				String hint = query.getHint();
+				if(BsonUtils.isJsonDocument(hint)) {
+					options = options.hint(BsonUtils.parse(hint, mongoDatabaseFactory));
+				} else {
+					options = options.hintString(hint);
+				}
 			}
 
 			operations.forType(entityClass).getCollation(query).map(Collation::toMongoCollation) //
@@ -3276,7 +3283,14 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				}
 
 				if (StringUtils.hasText(query.getHint())) {
-					findPublisherToUse = findPublisherToUse.hint(Document.parse(query.getHint()));
+
+					String hint = query.getHint();
+
+					if(BsonUtils.isJsonDocument(hint)) {
+						findPublisherToUse = findPublisherToUse.hint(BsonUtils.parse(hint, mongoDatabaseFactory));
+					} else {
+						findPublisherToUse = findPublisherToUse.hintString(hint);
+					}
 				}
 
 				if (meta.hasValues()) {
