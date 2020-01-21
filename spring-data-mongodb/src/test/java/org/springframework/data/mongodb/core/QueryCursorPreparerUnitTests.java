@@ -21,6 +21,7 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 
 import java.util.concurrent.TimeUnit;
 
+import com.mongodb.MongoClientSettings;
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
@@ -54,6 +55,7 @@ public class QueryCursorPreparerUnitTests {
 	public void setUp() {
 
 		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslatorMock);
+		when(factory.getCodecRegistry()).thenReturn(MongoClientSettings.getDefaultCodecRegistry());
 		when(cursor.batchSize(anyInt())).thenReturn(cursor);
 		when(cursor.comment(anyString())).thenReturn(cursor);
 		when(cursor.maxTime(anyLong(), any())).thenReturn(cursor);
@@ -71,6 +73,15 @@ public class QueryCursorPreparerUnitTests {
 		prepare(query);
 
 		verify(cursor).hint(new Document("age", 1));
+	}
+
+	@Test // DATAMONGO-2365
+	public void appliesIndexNameAsHintCorrectly() {
+
+		Query query = query(where("foo").is("bar")).withHint("idx-1");
+		prepare(query);
+
+		verify(cursor).hintString("idx-1");
 	}
 
 	@Test // DATAMONGO-2319

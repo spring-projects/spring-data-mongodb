@@ -25,11 +25,13 @@ import java.util.stream.StreamSupport;
 
 import org.bson.BsonValue;
 import org.bson.Document;
+import org.bson.codecs.DocumentCodec;
 import org.bson.conversions.Bson;
 import org.bson.json.JsonParseException;
-
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
@@ -173,6 +175,50 @@ public class BsonUtils {
 		} catch (Exception e) {
 			return toJson((Object) source);
 		}
+	}
+
+	/**
+	 * Check if a given String looks like {@link Document#parse(String) parsable} json.
+	 *
+	 * @param value can be {@literal null}.
+	 * @return {@literal true} if the given value looks like a json document.
+	 * @since 3.0
+	 */
+	public static boolean isJsonDocument(@Nullable String value) {
+		return StringUtils.hasText(value) && (value.startsWith("{") && value.endsWith("}"));
+	}
+
+	/**
+	 * Check if a given String looks like {@link org.bson.BsonArray#parse(String) parsable} json array.
+	 *
+	 * @param value can be {@literal null}.
+	 * @return {@literal true} if the given value looks like a json array.
+	 * @since 3.0
+	 */
+	public static boolean isJsonArray(@Nullable String value) {
+		return StringUtils.hasText(value) && (value.startsWith("[") && value.endsWith("]"));
+	}
+
+	/**
+	 * Parse the given {@literal json} to {@link Document} applying transformations as specified by a potentially given
+	 * {@link org.bson.codecs.Codec}.
+	 *
+	 * @param json must not be {@literal null}.
+	 * @param codecRegistryProvider can be {@literal null}. In that case the default {@link DocumentCodec} is used.
+	 * @return never {@literal null}.
+	 * @throws IllegalArgumentException if the required argument is {@literal null}.
+	 * @since 3.0
+	 */
+	public static Document parse(String json, @Nullable CodecRegistryProvider codecRegistryProvider) {
+
+		Assert.notNull(json, "Json must not be null!");
+
+		if (codecRegistryProvider == null) {
+			return Document.parse(json);
+		}
+
+		return Document.parse(json, codecRegistryProvider.getCodecFor(Document.class)
+				.orElseGet(() -> new DocumentCodec(codecRegistryProvider.getCodecRegistry())));
 	}
 
 	@Nullable

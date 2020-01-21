@@ -19,6 +19,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
+import com.mongodb.MongoClientSettings;
 import lombok.Data;
 
 import java.math.BigInteger;
@@ -159,6 +160,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(findIterable.iterator()).thenReturn(cursor);
 		when(factory.getDb()).thenReturn(db);
 		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslator);
+		when(factory.getCodecRegistry()).thenReturn(MongoClientSettings.getDefaultCodecRegistry());
 		when(db.getCollection(any(String.class), eq(Document.class))).thenReturn(collection);
 		when(db.runCommand(any(), any(Class.class))).thenReturn(commandResultDocument);
 		when(collection.find(any(org.bson.Document.class), any(Class.class))).thenReturn(findIterable);
@@ -954,6 +956,17 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(collection).countDocuments(any(), options.capture());
 
 		assertThat(options.getValue().getHint()).isEqualTo(queryHint);
+	}
+
+	@Test // DATAMONGO-2365
+	public void countShouldApplyQueryHintAsIndexNameIfPresent() {
+
+		template.count(new BasicQuery("{}").withHint("idx-1"), AutogenerateableId.class);
+
+		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
+		verify(collection).countDocuments(any(), options.capture());
+
+		assertThat(options.getValue().getHintString()).isEqualTo("idx-1");
 	}
 
 	@Test // DATAMONGO-1733
