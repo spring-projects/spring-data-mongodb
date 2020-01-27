@@ -39,23 +39,7 @@ pipeline {
 
 					steps {
 						script {
-							def image = docker.build("springci/spring-data-openjdk8-with-mongodb-4.2", "ci/openjdk8-mongodb-4.2/")
-							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
-								image.push()
-							}
-						}
-					}
-				}
-				stage('Publish JDK 8 + MongoDB 4.3') {
-					when {
-						changeset "ci/openjdk8-mongodb-4.3/**"
-					}
-					agent { label 'data' }
-					options { timeout(time: 30, unit: 'MINUTES') }
-
-					steps {
-						script {
-							def image = docker.build("springci/spring-data-openjdk8-with-mongodb-4.3", "ci/openjdk8-mongodb-4.3/")
+							def image = docker.build("springci/spring-data-openjdk8-with-mongodb-4.2.0", "ci/openjdk8-mongodb-4.2/")
 							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
 								image.push()
 							}
@@ -71,7 +55,7 @@ pipeline {
 
 					steps {
 						script {
-							def image = docker.build("springci/spring-data-openjdk11-with-mongodb-4.2", "ci/openjdk11-mongodb-4.2/")
+							def image = docker.build("springci/spring-data-openjdk11-with-mongodb-4.2.0", "ci/openjdk11-mongodb-4.2/")
 							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
 								image.push()
 							}
@@ -87,7 +71,7 @@ pipeline {
 
 					steps {
 						script {
-							def image = docker.build("springci/spring-data-openjdk13-with-mongodb-4.2", "ci/openjdk13-mongodb-4.2/")
+							def image = docker.build("springci/spring-data-openjdk13-with-mongodb-4.2.0", "ci/openjdk13-mongodb-4.2/")
 							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
 								image.push()
 							}
@@ -106,7 +90,7 @@ pipeline {
 			}
 			agent {
 				docker {
-					image 'springci/spring-data-openjdk8-with-mongodb-4.3:latest'
+					image 'springci/spring-data-openjdk8-with-mongodb-4.2.0:latest'
 					label 'data'
 					args '-v $HOME:/tmp/jenkins-home'
 				}
@@ -154,7 +138,7 @@ pipeline {
 				stage("test: mongodb 4.2 (jdk8)") {
 					agent {
 						docker {
-							image 'springci/spring-data-openjdk8-with-mongodb-4.2:latest'
+							image 'springci/spring-data-openjdk8-with-mongodb-4.2.0:latest'
 							label 'data'
 							args '-v $HOME:/tmp/jenkins-home'
 						}
@@ -174,7 +158,7 @@ pipeline {
 				stage("test: baseline (jdk11)") {
 					agent {
 						docker {
-							image 'springci/spring-data-openjdk11-with-mongodb-4.2:latest'
+							image 'springci/spring-data-openjdk11-with-mongodb-4.2.0:latest'
 							label 'data'
 							args '-v $HOME:/tmp/jenkins-home'
 						}
@@ -194,7 +178,7 @@ pipeline {
 				stage("test: baseline (jdk13)") {
 					agent {
 						docker {
-							image 'springci/spring-data-openjdk13-with-mongodb-4.2:latest'
+							image 'springci/spring-data-openjdk13-with-mongodb-4.2.0:latest'
 							label 'data'
 							args '-v $HOME:/tmp/jenkins-home'
 						}
