@@ -41,7 +41,10 @@ public class Person {
 ----
 ====
 
-Note that the entity defined in the preceding example has a property named `id` of type `ObjectId`. The default serialization mechanism used in `MongoTemplate` (which backs the repository support) regards properties named `id` as the document ID. Currently, we support `String`, `ObjectId`, and `BigInteger` as id-types. The following example shows how to create an interface that defines queries against the `Person` object from the preceding example:
+Note that the entity defined in the preceding example has a property named `id` of type `String`. The default serialization mechanism used in `MongoTemplate` (which backs the repository support) regards properties named `id` as the document ID. Currently, we support `String`, `ObjectId`, and `BigInteger` as id-types.
+Please see <<mongo-template.id-handling, ID mapping>> for more information about on how the `id` field is handled in the mapping layer.
+
+The following example shows how to create an interface that defines queries against the `Person` object from the preceding example:
 
 .Basic repository interface to persist Person entities
 ====
