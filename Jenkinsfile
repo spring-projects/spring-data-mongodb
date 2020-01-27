@@ -100,7 +100,7 @@ pipeline {
 		stage("test: baseline (jdk8)") {
 			when {
 				anyOf {
-					branch 'master'
+					branch 'issue/DATAMONGO-2427'
 					not { triggeredBy 'UpstreamCause' }
 				}
 			}
@@ -126,7 +126,7 @@ pipeline {
 		stage("Test other configurations") {
 			when {
 				anyOf {
-					branch 'master'
+					branch 'issue/DATAMONGO-2427'
 					not { triggeredBy 'UpstreamCause' }
 				}
 			}
