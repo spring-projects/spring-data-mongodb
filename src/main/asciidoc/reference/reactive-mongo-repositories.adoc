@@ -120,6 +120,19 @@ public class PersonRepositoryTests {
 ----
 ====
 
+The `Page` return type is not supported by reactive repositories as one is able to use the flow controls of the returned reactive types.
+Still it is possible to use `Pageable` in derived finder methods, to pass on `sort`, `limit` and `offset` to the database to reduce load and network traffic.
+The returned `Flux` will then only emitt data within the declared range.
+
+.Limit and Offset with reactive repositories
+====
+[source,java]
+----
+Pageable page = PageRequest.of(1, 10, Sort.by("lastname"));
+Flux<Person> persons = repository.findByFirstnameOrderByLastname("luke", page);
+----
+====
+
 [[mongo.reactive.repositories.features]]
 == Features
 
