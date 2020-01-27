@@ -27,7 +27,6 @@ import reactor.test.StepVerifier;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 
 import org.bson.BsonObjectId;
 import org.bson.Document;
@@ -35,7 +34,7 @@ import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.reactivestreams.Publisher;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -58,7 +57,6 @@ import org.springframework.util.StreamUtils;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.internal.HexUtils;
-import com.mongodb.reactivestreams.client.internal.Publishers;
 
 /**
  * Integration tests for {@link ReactiveGridFsTemplate}.
@@ -291,10 +289,6 @@ public class ReactiveGridFsTemplateTests {
 
 	static class Metadata {
 		String version;
-	}
-
-	private static Publisher<ByteBuffer> toPublisher(final ByteBuffer... byteBuffers) {
-		return Publishers.publishAndFlatten(callback -> callback.onResult(Arrays.asList(byteBuffers), null));
 	}
 
 	public static String readToString(DataBuffer dataBuffer) {

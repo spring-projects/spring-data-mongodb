@@ -39,6 +39,7 @@ import org.bson.Document;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
 import org.mockito.Mockito;
@@ -63,6 +64,7 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
+import org.springframework.data.mongodb.test.util.MongoVersion;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.mongodb.test.util.ReplicaSet;
 import org.springframework.data.util.Version;
@@ -81,8 +83,9 @@ import com.mongodb.client.MongoDatabase;
  */
 public class SessionBoundMongoTemplateTests {
 
-	public static @ClassRule MongoVersionRule REQUIRES_AT_LEAST_3_6_0 = MongoVersionRule.atLeast(Version.parse("3.6.0"));
 	public static @ClassRule TestRule replSet = ReplicaSet.required();
+
+	public @Rule MongoVersionRule REQUIRES_AT_LEAST_3_6_0 = MongoVersionRule.atLeast(Version.parse("3.6.0"));
 
 	MongoClient client;
 	MongoTemplate template;
@@ -259,6 +262,7 @@ public class SessionBoundMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-2001
+	@MongoVersion(asOf = "4.0")
 	public void countShouldWorkInTransactions() {
 
 		if (!template.collectionExists(Person.class)) {
@@ -283,6 +287,7 @@ public class SessionBoundMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-2012
+	@MongoVersion(asOf = "4.0")
 	public void countWithGeoInTransaction() {
 
 		if (!template.collectionExists(Person.class)) {
@@ -307,6 +312,7 @@ public class SessionBoundMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-2001
+	@MongoVersion(asOf = "4.0")
 	public void countShouldReturnIsolatedCount() throws InterruptedException {
 
 		if (!template.collectionExists(Person.class)) {

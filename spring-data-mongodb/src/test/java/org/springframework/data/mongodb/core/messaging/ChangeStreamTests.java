@@ -39,6 +39,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestRule;
 import org.springframework.data.annotation.Id;
@@ -50,7 +51,10 @@ import org.springframework.data.mongodb.core.messaging.SubscriptionUtils.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
+import org.springframework.data.mongodb.test.util.MongoVersion;
+import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.mongodb.test.util.ReplicaSet;
+import org.springframework.data.util.Version;
 
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
@@ -65,6 +69,7 @@ import com.mongodb.client.model.changestream.FullDocument;
 public class ChangeStreamTests {
 
 	public static @ClassRule TestRule replSet = ReplicaSet.required();
+	@Rule public MongoVersionRule mongoVersion = MongoVersionRule.atLeast(Version.parse("3.6"));
 
 	static ThreadPoolExecutor executor;
 	MongoTemplate template;
@@ -161,6 +166,7 @@ public class ChangeStreamTests {
 	}
 
 	@Test // DATAMONGO-1803
+	@MongoVersion(asOf = "4.0")
 	public void useAggregationToFilterMessages() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
@@ -406,6 +412,7 @@ public class ChangeStreamTests {
 	}
 
 	@Test // DATAMONGO-2012, DATAMONGO-2113
+	@MongoVersion(asOf = "4.0")
 	public void resumeAtTimestampCorrectly() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener1 = new CollectingMessageListener<>();

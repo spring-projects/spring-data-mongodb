@@ -24,6 +24,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Wither;
+import org.junit.Rule;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -79,6 +80,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.test.util.MongoVersion;
+import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.mongodb.test.util.ReplicaSet;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
@@ -99,6 +102,7 @@ public class ReactiveMongoTemplateTests {
 	@Autowired SimpleReactiveMongoDatabaseFactory factory;
 	@Autowired ReactiveMongoTemplate template;
 	@Autowired ConfigurableApplicationContext context;
+	@Rule public MongoVersionRule mongoVersion = MongoVersionRule.any();
 
 	@Before
 	public void setUp() {
@@ -1614,6 +1618,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-2012
+	@MongoVersion(asOf = "4.0")
 	public void watchesDatabaseCorrectly() throws InterruptedException {
 
 		Assumptions.assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
@@ -1655,6 +1660,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-2012, DATAMONGO-2113
+	@MongoVersion(asOf = "4.0")
 	public void resumesAtTimestampCorrectly() throws InterruptedException {
 
 		Assumptions.assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
@@ -1705,6 +1711,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-2115
+	@MongoVersion(asOf = "4.0")
 	public void resumesAtBsonTimestampCorrectly() throws InterruptedException {
 
 		Assumptions.assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
