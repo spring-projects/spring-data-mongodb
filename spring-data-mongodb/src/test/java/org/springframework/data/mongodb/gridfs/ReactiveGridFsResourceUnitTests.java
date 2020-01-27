@@ -31,6 +31,8 @@ import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.reactivestreams.client.gridfs.GridFSDownloadPublisher;
 
 /**
+ * Unit tests for {@link ReactiveGridFsResource}.
+ *
  * @author Christoph Strobl
  */
 class ReactiveGridFsResourceUnitTests {
@@ -91,7 +93,6 @@ class ReactiveGridFsResourceUnitTests {
 
 				}
 			});
-
 		}
 	}
 }

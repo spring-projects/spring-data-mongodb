@@ -34,7 +34,8 @@ import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.reactivestreams.client.gridfs.GridFSDownloadPublisher;
 
 /**
- * Reactive {@link GridFSFile} based {@link Resource} implementation.
+ * Reactive {@link GridFSFile} based {@link Resource} implementation. Note that the {@link #getDownloadStream() content}
+ * can be consumed only once.
  *
  * @author Mark Paluch
  * @author Christoph Strobl
@@ -63,6 +64,8 @@ public class ReactiveGridFsResource {
 	 *
 	 * @param filename filename of the absent resource.
 	 * @param downloadPublisher
+	 * @param dataBufferFactory
+	 * @since 3.0
 	 */
 	ReactiveGridFsResource(String filename, @Nullable GridFSDownloadPublisher downloadPublisher,
 			DataBufferFactory dataBufferFactory) {
