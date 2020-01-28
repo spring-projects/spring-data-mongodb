@@ -27,6 +27,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -37,11 +41,14 @@ import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
+import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoServerCondition;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.util.ErrorHandler;
 
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
@@ -51,7 +58,7 @@ import com.mongodb.client.model.changestream.ChangeStreamDocument;
  *
  * @author Christoph Strobl
  */
-@ExtendWith(MongoServerCondition.class)
+@ExtendWith({MongoClientExtension.class, MongoServerCondition.class})
 public class DefaultMessageListenerContainerTests {
 
 	public static final String DATABASE_NAME = "change-stream-events";
@@ -59,6 +66,8 @@ public class DefaultMessageListenerContainerTests {
 	public static final String COLLECTION_2_NAME = "collection-2";
 
 	public static final Duration TIMEOUT = Duration.ofSeconds(2);
+
+	static @Client MongoClient client;
 
 	MongoDatabaseFactory dbFactory;
 	MongoCollection<Document> collection;
@@ -70,7 +79,7 @@ public class DefaultMessageListenerContainerTests {
 	@BeforeEach
 	void beforeEach() {
 
-		dbFactory = new SimpleMongoClientDatabaseFactory(MongoTestUtils.client(), DATABASE_NAME);
+		dbFactory = new SimpleMongoClientDatabaseFactory(client, DATABASE_NAME);
 		template = new MongoTemplate(dbFactory);
 
 		template.dropCollection(COLLECTION_NAME);

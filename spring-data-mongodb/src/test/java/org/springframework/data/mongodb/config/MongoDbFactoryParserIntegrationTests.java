@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.config;
 
 import static org.assertj.core.api.Assertions.*;
 
+import com.mongodb.client.MongoClient;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -58,12 +59,14 @@ public class MongoDbFactoryParserIntegrationTests {
 	@Test // DATAMONGO-2199
 	public void testWriteConcern() throws Exception {
 
-		SimpleMongoClientDatabaseFactory dbFactory = new SimpleMongoClientDatabaseFactory(MongoTestUtils.client(),
-				"database");
-		dbFactory.setWriteConcern(WriteConcern.ACKNOWLEDGED);
-		dbFactory.getMongoDatabase();
+		try(MongoClient client = MongoTestUtils.client()) {
+			SimpleMongoClientDatabaseFactory dbFactory = new SimpleMongoClientDatabaseFactory(client,
+					"database");
+			dbFactory.setWriteConcern(WriteConcern.ACKNOWLEDGED);
+			dbFactory.getMongoDatabase();
 
-		assertThat(ReflectionTestUtils.getField(dbFactory, "writeConcern")).isEqualTo(WriteConcern.ACKNOWLEDGED);
+			assertThat(ReflectionTestUtils.getField(dbFactory, "writeConcern")).isEqualTo(WriteConcern.ACKNOWLEDGED);
+		}
 	}
 
 	@Test // DATAMONGO-2199

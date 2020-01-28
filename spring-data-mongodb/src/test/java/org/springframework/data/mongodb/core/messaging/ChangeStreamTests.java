@@ -34,14 +34,12 @@ import java.util.stream.Collectors;
 
 import org.bson.BsonDocument;
 import org.bson.Document;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestRule;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -50,12 +48,12 @@ import org.springframework.data.mongodb.core.messaging.Message.MessageProperties
 import org.springframework.data.mongodb.core.messaging.SubscriptionUtils.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
+import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoVersion;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
-import org.springframework.data.mongodb.test.util.ReplicaSet;
-import org.springframework.data.util.Version;
+import org.springframework.data.mongodb.test.util.ReplSetClient;
 
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
 
@@ -66,10 +64,11 @@ import com.mongodb.client.model.changestream.FullDocument;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
+@ExtendWith({ MongoClientExtension.class })
+@EnableIfReplicaSetAvailable
 public class ChangeStreamTests {
 
-	public static @ClassRule TestRule replSet = ReplicaSet.required();
-	@Rule public MongoVersionRule mongoVersion = MongoVersionRule.atLeast(Version.parse("3.6"));
+	static @ReplSetClient MongoClient mongoClient;
 
 	static ThreadPoolExecutor executor;
 	MongoTemplate template;
@@ -79,15 +78,15 @@ public class ChangeStreamTests {
 	User huffyFluffy;
 	User sugarSplashy;
 
-	@BeforeClass
+	@BeforeAll
 	public static void beforeClass() {
 		executor = new ThreadPoolExecutor(2, 2, 1, TimeUnit.SECONDS, new LinkedBlockingDeque<>());
 	}
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
-		template = new MongoTemplate(MongoTestUtils.replSetClient(), "change-stream-tests");
+		template = new MongoTemplate(mongoClient, "change-stream-tests");
 		template.dropCollection(User.class);
 
 		container = new DefaultMessageListenerContainer(template, executor);
@@ -109,12 +108,12 @@ public class ChangeStreamTests {
 		sugarSplashy.age = 5;
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
 		container.stop();
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void afterClass() {
 		executor.shutdown();
 	}

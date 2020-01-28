@@ -36,12 +36,10 @@ import java.util.stream.IntStream;
 
 import org.aopalliance.aop.Advice;
 import org.bson.Document;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestRule;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.aop.Advisor;
 import org.springframework.aop.framework.Advised;
@@ -63,11 +61,10 @@ import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
+import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoVersion;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
-import org.springframework.data.mongodb.test.util.ReplicaSet;
-import org.springframework.data.util.Version;
+import org.springframework.data.mongodb.test.util.ReplSetClient;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.ClientSessionOptions;
@@ -81,23 +78,20 @@ import com.mongodb.client.MongoDatabase;
  *
  * @author Christoph Strobl
  */
+@ExtendWith(MongoClientExtension.class)
+@EnableIfReplicaSetAvailable
 public class SessionBoundMongoTemplateTests {
 
-	public static @ClassRule TestRule replSet = ReplicaSet.required();
+	static @ReplSetClient MongoClient client;
 
-	public @Rule MongoVersionRule REQUIRES_AT_LEAST_3_6_0 = MongoVersionRule.atLeast(Version.parse("3.6.0"));
-
-	MongoClient client;
 	MongoTemplate template;
 	SessionBoundMongoTemplate sessionBoundTemplate;
 	ClientSession session;
 	volatile List<MongoCollection<Document>> spiedCollections = new ArrayList<>();
 	volatile List<MongoDatabase> spiedDatabases = new ArrayList<>();
 
-	@Before
+	@BeforeEach
 	public void setUp() {
-
-		client = MongoTestUtils.replSetClient();
 
 		MongoDatabaseFactory factory = new SimpleMongoClientDatabaseFactory(client, "session-bound-mongo-template-tests") {
 
@@ -147,7 +141,7 @@ public class SessionBoundMongoTemplateTests {
 		};
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
 
 		session.close();

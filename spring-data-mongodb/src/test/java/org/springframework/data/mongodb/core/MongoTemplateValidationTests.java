@@ -25,10 +25,9 @@ import lombok.Data;
 import java.util.List;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -36,11 +35,10 @@ import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.CollectionOptions.ValidationOptions;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
-import org.springframework.data.util.Version;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.lang.Nullable;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.model.ValidationAction;
@@ -54,19 +52,18 @@ import com.mongodb.client.model.ValidationLevel;
  * @author Andreas Zink
  * @author Christoph Strobl
  */
-@RunWith(SpringRunner.class)
+@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 public class MongoTemplateValidationTests {
 
-	public static @ClassRule MongoVersionRule REQUIRES_AT_LEAST_3_2_0 = MongoVersionRule.atLeast(Version.parse("3.2.0"));
-
 	static final String COLLECTION_NAME = "validation-1";
+	static @Client MongoClient mongoClient;
 
 	@Configuration
 	static class Config extends AbstractMongoClientConfiguration {
 
 		@Override
 		public MongoClient mongoClient() {
-			return MongoTestUtils.client();
+			return mongoClient;
 		}
 
 		@Override
@@ -82,7 +79,7 @@ public class MongoTemplateValidationTests {
 
 	@Autowired MongoTemplate template;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		template.dropCollection(COLLECTION_NAME);
 	}

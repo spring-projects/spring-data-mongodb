@@ -35,8 +35,9 @@ import java.util.function.Consumer;
 import org.bson.BsonString;
 import org.bson.BsonValue;
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -48,7 +49,10 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
+
+import com.mongodb.client.MongoClient;
 
 /**
  * Integration tests for {@link ReactiveFindOperationSupport}.
@@ -56,25 +60,28 @@ import org.springframework.data.mongodb.test.util.MongoTestUtils;
  * @author Mark Paluch
  * @author Christoph Strobl
  */
+@ExtendWith(MongoClientExtension.class)
 public class ReactiveFindOperationSupportTests {
 
 	private static final String STAR_WARS = "star-wars";
 	MongoTemplate blocking;
 	ReactiveMongoTemplate template;
 
+	static @Client MongoClient client;
+	static @Client com.mongodb.reactivestreams.client.MongoClient reactiveClient;
+
 	Person han;
 	Person luke;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
-		blocking = new MongoTemplate(
-				new SimpleMongoClientDatabaseFactory(MongoTestUtils.client(), "ExecutableFindOperationSupportTests"));
+		blocking = new MongoTemplate(new SimpleMongoClientDatabaseFactory(client, "ExecutableFindOperationSupportTests"));
 		recreateCollection(STAR_WARS, false);
 
 		insertObjects();
 
-		template = new ReactiveMongoTemplate(MongoTestUtils.reactiveClient(), "ExecutableFindOperationSupportTests");
+		template = new ReactiveMongoTemplate(reactiveClient, "ExecutableFindOperationSupportTests");
 	}
 
 	void insertObjects() {

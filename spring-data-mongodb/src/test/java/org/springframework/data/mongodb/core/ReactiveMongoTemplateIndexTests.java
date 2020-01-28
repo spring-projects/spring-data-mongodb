@@ -28,11 +28,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junitpioneer.jupiter.RepeatFailedTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort.Direction;
@@ -40,9 +40,9 @@ import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import com.mongodb.client.model.IndexOptions;
 import com.mongodb.reactivestreams.client.ListIndexesPublisher;
@@ -54,26 +54,30 @@ import com.mongodb.reactivestreams.client.MongoClient;
  * @author Mark Paluch
  * @author Christoph Strobl
  */
-@RunWith(SpringRunner.class)
-@ContextConfiguration("classpath:reactive-infrastructure.xml")
+@ExtendWith(MongoClientExtension.class)
 public class ReactiveMongoTemplateIndexTests {
 
-	@Autowired SimpleReactiveMongoDatabaseFactory factory;
-	@Autowired ReactiveMongoTemplate template;
-	@Autowired MongoClient client;
+	static @Client MongoClient client;
 
-	@Before
+	SimpleReactiveMongoDatabaseFactory factory;
+	ReactiveMongoTemplate template;
+
+	@BeforeEach
 	public void setUp() {
+
+		factory = new SimpleReactiveMongoDatabaseFactory(client, "reactive-template-index-tests");
+		template = new ReactiveMongoTemplate(factory);
 
 		MongoTestUtils.dropCollectionNow(template.getMongoDatabase().getName(), "person", client);
 		MongoTestUtils.dropCollectionNow(template.getMongoDatabase().getName(), "indexfail", client);
 		MongoTestUtils.dropCollectionNow(template.getMongoDatabase().getName(), "indexedSample", client);
 	}
 
-	@After
+	@AfterEach
 	public void cleanUp() {}
 
 	@Test // DATAMONGO-1444
+	@RepeatFailedTest(3)
 	public void testEnsureIndexShouldCreateIndex() {
 
 		Person p1 = new Person("Oliver");
@@ -109,6 +113,7 @@ public class ReactiveMongoTemplateIndexTests {
 	}
 
 	@Test // DATAMONGO-1444
+	@RepeatFailedTest(3)
 	public void getIndexInfoShouldReturnCorrectIndex() {
 
 		Person p1 = new Person("Oliver");
@@ -139,6 +144,7 @@ public class ReactiveMongoTemplateIndexTests {
 	}
 
 	@Test // DATAMONGO-1444, DATAMONGO-2264
+	@RepeatFailedTest(3)
 	public void testReadIndexInfoForIndicesCreatedViaMongoShellCommands() {
 
 		template.indexOps(Person.class).dropAllIndexes() //
@@ -190,6 +196,7 @@ public class ReactiveMongoTemplateIndexTests {
 	}
 
 	@Test // DATAMONGO-1928
+	@RepeatFailedTest(3)
 	public void shouldCreateIndexOnAccess() {
 
 		StepVerifier.create(template.getCollection("indexedSample").listIndexes(Document.class)).expectNextCount(0)
@@ -205,6 +212,7 @@ public class ReactiveMongoTemplateIndexTests {
 	}
 
 	@Test // DATAMONGO-1928, DATAMONGO-2264
+	@RepeatFailedTest(3)
 	public void indexCreationShouldFail() throws InterruptedException {
 
 		Flux.from(factory.getMongoDatabase().getCollection("indexfail") //

@@ -19,6 +19,7 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.*;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
@@ -57,7 +58,7 @@ public class AbstractReactiveMongoConfigurationIntegrationTests {
 
 		@Override
 		public MongoClient reactiveMongoClient() {
-			return MongoTestUtils.reactiveClient();
+			return Mockito.mock(MongoClient.class);
 		}
 
 		@Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the original author or authors.
+ * Copyright 2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,31 +21,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.extension.ExtendWith;
-
 /**
  * @author Christoph Strobl
- * @since 3.0
  */
+@Target({ ElementType.FIELD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.TYPE, ElementType.METHOD })
 @Documented
-@Tag("version-specific")
-@ExtendWith(MongoServerCondition.class)
-public @interface EnableIfMongoServerVersion {
+public @interface ReplSetClient {
 
-	/**
-	 * Inclusive lower bound of MongoDB server range.
-	 *
-	 * @return {@code 0.0.0} by default.
-	 */
-	String isGreaterThanEqual() default "0.0.0";
-
-	/**
-	 * Exclusive upper bound of MongoDB server range.
-	 *
-	 * @return {@code 9999.9999.9999} by default.
-	 */
-	String isLessThan() default "9999.9999.9999";
 }

@@ -54,7 +54,7 @@ public class MongoVersionRule implements TestRule {
 	private final Version minVersion;
 	private final Version maxVersion;
 
-	private String host = "localhost";
+	private String host = "127.0.0.1";
 	private int port = 27017;
 
 	public MongoVersionRule(Version min, Version max) {

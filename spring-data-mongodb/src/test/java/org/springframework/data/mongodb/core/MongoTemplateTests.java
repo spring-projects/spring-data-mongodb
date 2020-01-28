@@ -232,6 +232,7 @@ public class MongoTemplateTests {
 		template.dropCollection(ImmutableAudited.class);
 		template.dropCollection(RawStringId.class);
 		template.dropCollection(Outer.class);
+		template.dropCollection(Message.class);
 	}
 
 	@Test

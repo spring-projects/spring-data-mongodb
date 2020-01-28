@@ -22,8 +22,9 @@ import lombok.ToString;
 
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
@@ -32,7 +33,10 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UntypedExampleMatcher;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
+
+import com.mongodb.client.MongoClient;
 
 /**
  * Integration tests for Query-by-example.
@@ -41,15 +45,18 @@ import org.springframework.data.mongodb.test.util.MongoTestUtils;
  * @author Mark Paluch
  * @author Oliver Gierke
  */
+@ExtendWith(MongoClientExtension.class)
 public class QueryByExampleTests {
+
+	static @Client MongoClient mongoClient;
 
 	MongoOperations operations;
 	Person p1, p2, p3;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
-		operations = new MongoTemplate(MongoTestUtils.client(), "query-by-example");
+		operations = new MongoTemplate(mongoClient, "query-by-example");
 		operations.remove(new Query(), Person.class);
 
 		p1 = new Person();

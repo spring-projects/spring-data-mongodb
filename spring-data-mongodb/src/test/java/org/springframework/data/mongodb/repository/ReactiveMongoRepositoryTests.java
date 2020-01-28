@@ -34,10 +34,10 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.reactivestreams.Publisher;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,12 +61,13 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.mongodb.repository.support.ReactiveMongoRepositoryFactory;
 import org.springframework.data.mongodb.repository.support.SimpleReactiveMongoRepository;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.mongodb.reactivestreams.client.MongoClient;
 
@@ -76,9 +77,10 @@ import com.mongodb.reactivestreams.client.MongoClient;
  * @author Mark Paluch
  * @author Christoph Strobl
  */
-@RunWith(SpringRunner.class)
-@ContextConfiguration
+@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 public class ReactiveMongoRepositoryTests {
+
+	static @Client MongoClient mongoClient;
 
 	@Autowired ReactiveMongoTemplate template;
 
@@ -95,7 +97,7 @@ public class ReactiveMongoRepositoryTests {
 		@Bean
 		@Override
 		public MongoClient reactiveMongoClient() {
-			return MongoTestUtils.reactiveClient();
+			return mongoClient;
 		}
 
 		@Override
@@ -131,16 +133,14 @@ public class ReactiveMongoRepositoryTests {
 		}
 	}
 
-	@BeforeClass
+	@BeforeAll
 	public static void cleanDb() {
 
-		MongoClient client = MongoTestUtils.reactiveClient();
-
-		MongoTestUtils.createOrReplaceCollectionNow("reactive", "person", client);
-		MongoTestUtils.createOrReplaceCollectionNow("reactive", "capped", client);
+		MongoTestUtils.createOrReplaceCollectionNow("reactive", "person", mongoClient);
+		MongoTestUtils.createOrReplaceCollectionNow("reactive", "capped", mongoClient);
 	}
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 
 		repository.deleteAll().as(StepVerifier::create).verifyComplete();

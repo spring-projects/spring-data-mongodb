@@ -26,16 +26,19 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.bson.types.ObjectId;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.convert.LazyLoadingProxy;
 import org.springframework.data.mongodb.core.convert.LazyLoadingTestUtils;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoId;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.model.Filters;
 
 /**
@@ -44,15 +47,18 @@ import com.mongodb.client.model.Filters;
  *
  * @author Christoph Strobl
  */
+@ExtendWith(MongoClientExtension.class)
 public class MongoTemplateDbRefTests {
+
+	static @Client MongoClient mongoClient;
 
 	MongoTemplate template;
 	MongoTemplate otherDbTemplate;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
-		template = new MongoTemplate(MongoTestUtils.client(), "mongo-template-dbref-tests");
+		template = new MongoTemplate(mongoClient, "mongo-template-dbref-tests");
 
 		template.dropCollection(RefCycleLoadingIntoDifferentTypeRoot.class);
 		template.dropCollection(RefCycleLoadingIntoDifferentTypeIntermediate.class);
@@ -64,7 +70,7 @@ public class MongoTemplateDbRefTests {
 		template.dropCollection(WithListRefToAnotherDb.class);
 		template.dropCollection(WithLazyListRefToAnotherDb.class);
 
-		otherDbTemplate = new MongoTemplate(MongoTestUtils.client(), "mongo-template-dbref-tests-other-db");
+		otherDbTemplate = new MongoTemplate(mongoClient, "mongo-template-dbref-tests-other-db");
 		otherDbTemplate.dropCollection(JustSomeType.class);
 	}
 

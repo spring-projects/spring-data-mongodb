@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.Set;
 
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -182,7 +183,7 @@ public class AbstractReactiveMongoConfigurationUnitTests {
 
 		@Override
 		public MongoClient reactiveMongoClient() {
-			return MongoTestUtils.reactiveClient();
+			return Mockito.mock(MongoClient.class);
 		}
 
 		@Override

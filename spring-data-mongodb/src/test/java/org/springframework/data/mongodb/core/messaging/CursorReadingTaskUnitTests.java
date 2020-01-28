@@ -46,7 +46,7 @@ import com.mongodb.client.MongoDatabase;
  *
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(MockitoJUnitRunner.Silent.class)
 public class CursorReadingTaskUnitTests {
 
 	@Mock MongoDatabase db;

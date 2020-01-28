@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.*;
 import java.util.Arrays;
 import java.util.List;
 
+import com.mongodb.client.MongoClient;
 import org.hamcrest.core.IsInstanceOf;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -98,16 +99,18 @@ public class MongoPersistentEntityIndexCreatorIntegrationTests {
 		expectedException.expectMessage("lastname");
 		expectedException.expectCause(IsInstanceOf.<Throwable> instanceOf(MongoCommandException.class));
 
-		MongoTemplate mongoTemplate = new MongoTemplate(MongoTestUtils.client(), "issue");
+		try(MongoClient client = MongoTestUtils.client()) {
+			MongoTemplate mongoTemplate = new MongoTemplate(client, "issue");
 
-		MongoPersistentEntityIndexCreator indexCreator = new MongoPersistentEntityIndexCreator(new MongoMappingContext(),
-				mongoTemplate);
+			MongoPersistentEntityIndexCreator indexCreator = new MongoPersistentEntityIndexCreator(new MongoMappingContext(),
+					mongoTemplate);
 
-		indexCreator.createIndex(new IndexDefinitionHolder("dalinar.kohlin",
-				new Index().named("stormlight").on("lastname", Direction.ASC).unique(), "datamongo-1125"));
+			indexCreator.createIndex(new IndexDefinitionHolder("dalinar.kohlin",
+					new Index().named("stormlight").on("lastname", Direction.ASC).unique(), "datamongo-1125"));
 
-		indexCreator.createIndex(new IndexDefinitionHolder("dalinar.kohlin",
-				new Index().named("stormlight").on("lastname", Direction.ASC).sparse(), "datamongo-1125"));
+			indexCreator.createIndex(new IndexDefinitionHolder("dalinar.kohlin",
+					new Index().named("stormlight").on("lastname", Direction.ASC).sparse(), "datamongo-1125"));
+		}
 	}
 
 	@Document(RECURSIVE_TYPE_COLLECTION_NAME)

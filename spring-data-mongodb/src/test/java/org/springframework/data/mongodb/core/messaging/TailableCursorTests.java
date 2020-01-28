@@ -27,18 +27,22 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.CollectionOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.messaging.Message.MessageProperties;
 import org.springframework.data.mongodb.core.messaging.TailableCursorRequest.TailableCursorRequestOptions;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
+
+import com.mongodb.client.MongoClient;
 
 /**
  * Integration test for subscribing to a capped {@link com.mongodb.client.MongoCollection} inside the
@@ -47,10 +51,12 @@ import org.springframework.data.mongodb.test.util.MongoTestUtils;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
+@ExtendWith({ MongoClientExtension.class })
 public class TailableCursorTests {
 
 	static final String COLLECTION_NAME = "user";
 
+	static @Client MongoClient mongoClient;
 	static ThreadPoolExecutor executor;
 	MongoTemplate template;
 	MessageListenerContainer container;
@@ -59,15 +65,15 @@ public class TailableCursorTests {
 	User huffyFluffy;
 	User sugarSplashy;
 
-	@BeforeClass
+	@BeforeAll
 	public static void beforeClass() {
 		executor = new ThreadPoolExecutor(2, 2, 1, TimeUnit.SECONDS, new LinkedBlockingDeque<>());
 	}
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
-		template = new MongoTemplate(MongoTestUtils.client(), "tailable-cursor-tests");
+		template = new MongoTemplate(mongoClient, "tailable-cursor-tests");
 
 		template.dropCollection(User.class);
 		template.createCollection(User.class, CollectionOptions.empty().capped().maxDocuments(10000).size(10000));
@@ -91,12 +97,12 @@ public class TailableCursorTests {
 		sugarSplashy.age = 5;
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
 		container.stop();
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void afterClass() {
 		executor.shutdown();
 	}

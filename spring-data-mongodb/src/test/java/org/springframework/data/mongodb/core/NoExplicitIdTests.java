@@ -22,17 +22,18 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 import java.util.Map;
 import java.util.Optional;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.mongodb.client.MongoClient;
 
@@ -42,9 +43,11 @@ import com.mongodb.client.MongoClient;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@RunWith(SpringRunner.class)
+@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 @ContextConfiguration
 public class NoExplicitIdTests {
+
+	static @Client MongoClient mongoClient;
 
 	@Configuration
 	@EnableMongoRepositories(considerNestedRepositories = true)
@@ -57,7 +60,7 @@ public class NoExplicitIdTests {
 
 		@Override
 		public MongoClient mongoClient() {
-			return MongoTestUtils.client();
+			return mongoClient;
 		}
 
 		@Override
@@ -69,7 +72,7 @@ public class NoExplicitIdTests {
 	@Autowired MongoOperations mongoOps;
 	@Autowired TypeWithoutExplicitIdPropertyRepository repo;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		mongoOps.dropCollection(TypeWithoutIdProperty.class);
 	}
