@@ -79,8 +79,14 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		this.fieldNamingStrategy = fieldNamingStrategy == null ? PropertyNameFieldNamingStrategy.INSTANCE
 				: fieldNamingStrategy;
 
-		if (isIdProperty() && getFieldName() != ID_FIELD_NAME) {
-			LOG.warn("Customizing field name for id property not allowed! Custom name will not be considered!");
+		if (isIdProperty() && hasExplicitFieldName()) {
+
+			String annotatedName = getAnnotatedFieldName();
+			if (!ID_FIELD_NAME.equals(annotatedName)) {
+				LOG.warn(
+						"Customizing field name for id property '{}.{}' is not allowed! Custom name ('{}') will not be considered!",
+						owner.getName(), getName(), annotatedName);
+			}
 		}
 	}
 
@@ -167,6 +173,11 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 		FieldType fieldType = fieldAnnotation.targetType();
 		if (fieldType == FieldType.IMPLICIT) {
+
+			if (isEntity()) {
+				return org.bson.Document.class;
+			}
+
 			return getType();
 		}
 

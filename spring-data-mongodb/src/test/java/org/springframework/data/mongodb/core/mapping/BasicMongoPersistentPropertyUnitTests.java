@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
@@ -223,6 +224,13 @@ public class BasicMongoPersistentPropertyUnitTests {
 		assertThat(property.getFieldType()).isEqualTo(ObjectId.class);
 	}
 
+	@Test // DATAMONGO-2460
+	public void fieldTypeShouldBeDocumentForPropertiesAnnotatedIdWhenAComplexTypeAndFieldTypeImplicit() {
+
+		MongoPersistentProperty property = getPropertyFor(WithComplexId.class, "id");
+		assertThat(property.getFieldType()).isEqualTo(Document.class);
+	}
+
 	private MongoPersistentProperty getPropertyFor(Field field) {
 		return getPropertyFor(entity, field);
 	}
@@ -328,5 +336,17 @@ public class BasicMongoPersistentPropertyUnitTests {
 	static class WithStringMongoIdMappedToObjectId {
 
 		@MongoId(FieldType.OBJECT_ID) String id;
+	}
+
+	static class ComplexId {
+
+		String value;
+	}
+
+	static class WithComplexId {
+
+		@Id
+		@org.springframework.data.mongodb.core.mapping.Field
+		ComplexId id;
 	}
 }
