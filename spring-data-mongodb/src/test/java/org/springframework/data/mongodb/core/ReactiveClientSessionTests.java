@@ -26,15 +26,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.rules.TestRule;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
-import org.springframework.data.mongodb.test.util.ReplicaSet;
-import org.springframework.data.util.Version;
 
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.reactivestreams.client.ClientSession;
@@ -45,21 +44,19 @@ import com.mongodb.reactivestreams.client.MongoClient;
  * @author Mark Paluch
  * @currentRead Beyond the Shadows - Brent Weeks
  */
+@ExtendWith(MongoClientExtension.class)
+@EnableIfReplicaSetAvailable
 public class ReactiveClientSessionTests {
-
-	public static @ClassRule MongoVersionRule REQUIRES_AT_LEAST_3_6_0 = MongoVersionRule.atLeast(Version.parse("3.6.0"));
-	public static @ClassRule TestRule replSet = ReplicaSet.required();
 
 	static final String DATABASE_NAME = "reflective-client-session-tests";
 	static final String COLLECTION_NAME = "test";
 
-	MongoClient client;
+	static @Client MongoClient client;
+
 	ReactiveMongoTemplate template;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
-
-		client = MongoTestUtils.reactiveReplSetClient();
 
 		template = new ReactiveMongoTemplate(client, DATABASE_NAME);
 

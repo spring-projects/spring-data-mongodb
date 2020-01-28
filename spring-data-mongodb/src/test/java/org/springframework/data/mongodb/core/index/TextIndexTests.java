@@ -42,8 +42,6 @@ import com.mongodb.WriteConcern;
  */
 public class TextIndexTests extends AbstractIntegrationTests {
 
-	public static @ClassRule MongoVersionRule version = MongoVersionRule.atLeast(new Version(2, 6));
-
 	private @Autowired MongoTemplate template;
 	private IndexOperations indexOps;
 

@@ -24,11 +24,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,14 +37,12 @@ import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.data.mongodb.test.util.AfterTransactionAssertion;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
-import org.springframework.data.mongodb.test.util.ReplicaSet;
-import org.springframework.data.util.Version;
+import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
+import org.springframework.data.mongodb.test.util.ReplSetClient;
 import org.springframework.lang.Nullable;
 import org.springframework.test.annotation.Rollback;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.transaction.AfterTransaction;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,15 +57,13 @@ import com.mongodb.client.model.Filters;
  * @author Christoph Strobl
  * @currentRead Shadow's Edge - Brent Weeks
  */
-@RunWith(SpringRunner.class)
-@ContextConfiguration
+@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
+@EnableIfReplicaSetAvailable
 @Transactional(transactionManager = "txManager")
 public class PersonRepositoryTransactionalTests {
 
-	public static @ClassRule RuleChain TEST_RULES = RuleChain.outerRule(MongoVersionRule.atLeast(Version.parse("3.7.3")))
-			.around(ReplicaSet.required());
-
 	static final String DB_NAME = "repository-tx-tests";
+	static @ReplSetClient MongoClient mongoClient;
 
 	@Configuration
 	@EnableMongoRepositories
@@ -77,7 +71,7 @@ public class PersonRepositoryTransactionalTests {
 
 		@Bean
 		public MongoClient mongoClient() {
-			return MongoTestUtils.replSetClient();
+			return mongoClient;
 		}
 
 		@Override
@@ -101,7 +95,7 @@ public class PersonRepositoryTransactionalTests {
 
 	List<AfterTransactionAssertion<? extends Persistable<?>>> assertionList;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		assertionList = new CopyOnWriteArrayList<>();
 	}

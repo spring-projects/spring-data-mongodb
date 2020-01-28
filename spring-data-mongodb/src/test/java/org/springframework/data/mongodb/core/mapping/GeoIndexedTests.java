@@ -66,11 +66,13 @@ public class GeoIndexedTests {
 
 	private void cleanDb() {
 
-		MongoClient mongo = MongoTestUtils.client();
-		MongoDatabase db = mongo.getDatabase(GeoIndexedAppConfig.GEO_DB);
+		try(MongoClient mongo = MongoTestUtils.client()) {
 
-		for (String coll : collectionsToDrop) {
-			db.getCollection(coll).drop();
+			MongoDatabase db = mongo.getDatabase(GeoIndexedAppConfig.GEO_DB);
+
+			for (String coll : collectionsToDrop) {
+				db.getCollection(coll).drop();
+			}
 		}
 	}
 

@@ -129,6 +129,7 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 			} else if (MongoDbErrorCodes.isTransactionFailureCode(code)) {
 				return new MongoTransactionException(ex.getMessage(), ex);
 			}
+
 			return new UncategorizedMongoDbException(ex.getMessage(), ex);
 		}
 

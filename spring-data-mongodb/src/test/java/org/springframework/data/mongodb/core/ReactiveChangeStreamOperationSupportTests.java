@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import lombok.SneakyThrows;
+import org.springframework.data.mongodb.test.util.ReplSetClient;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
@@ -29,13 +30,14 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
-import org.springframework.data.mongodb.test.util.ReplicaSet;
 
 import com.mongodb.reactivestreams.client.MongoClient;
 
@@ -45,26 +47,26 @@ import com.mongodb.reactivestreams.client.MongoClient;
  * @author Christoph Strobl
  * @currentRead Dawn Cook - The Decoy Princess
  */
+@ExtendWith(MongoClientExtension.class)
+@EnableIfReplicaSetAvailable
 public class ReactiveChangeStreamOperationSupportTests {
 
-	public static @ClassRule ReplicaSet REPL_SET_REQUIRED = ReplicaSet.required();
 	static final String DATABASE_NAME = "rx-change-stream";
+	static @ReplSetClient MongoClient mongoClient;
 
-	MongoClient client;
 	ReactiveMongoTemplate template;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
-		client = MongoTestUtils.reactiveReplSetClient();
-		template = new ReactiveMongoTemplate(client, DATABASE_NAME);
+		template = new ReactiveMongoTemplate(mongoClient, DATABASE_NAME);
 
-		MongoTestUtils.createOrReplaceCollectionNow(DATABASE_NAME, "person", client);
+		MongoTestUtils.createOrReplaceCollectionNow(DATABASE_NAME, "person", mongoClient);
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
-		MongoTestUtils.dropCollectionNow(DATABASE_NAME, "person", client);
+		MongoTestUtils.dropCollectionNow(DATABASE_NAME, "person", mongoClient);
 	}
 
 	@SneakyThrows
@@ -125,8 +127,8 @@ public class ReactiveChangeStreamOperationSupportTests {
 		Thread.sleep(500); // just give it some time to link receive all events
 
 		try {
-			assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
-					.containsOnly(person1, person2, person3);
+			assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList())).containsOnly(person1,
+					person2, person3);
 		} finally {
 			disposable.dispose();
 		}

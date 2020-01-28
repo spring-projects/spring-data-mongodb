@@ -28,14 +28,16 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 
 import com.mongodb.client.MongoClient;
 
@@ -44,18 +46,18 @@ import com.mongodb.client.MongoClient;
  *
  * @author Christoph Strobl
  */
+@ExtendWith(MongoClientExtension.class)
 public class MappingMongoConverterTests {
 
-	MongoClient client;
+	static @Client MongoClient client;
 
 	MappingMongoConverter converter;
 	MongoMappingContext mappingContext;
 	DbRefResolver dbRefResolver;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
-		client = MongoTestUtils.client();
 		client.getDatabase("mapping-converter-tests").drop();
 
 		MongoDatabaseFactory factory = new SimpleMongoClientDatabaseFactory(client, "mapping-converter-tests");

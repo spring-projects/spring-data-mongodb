@@ -22,8 +22,11 @@ import java.time.Duration;
 import java.util.List;
 
 import org.bson.Document;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.data.mongodb.SpringDataMongoDB;
 import org.springframework.data.util.Version;
+import org.springframework.util.ObjectUtils;
 
 import com.mongodb.ConnectionString;
 import com.mongodb.ReadPreference;
@@ -41,7 +44,10 @@ import com.mongodb.reactivestreams.client.MongoClients;
  */
 public class MongoTestUtils {
 
-	public static final String CONNECTION_STRING = "mongodb://localhost:27017/?replicaSet=rs0&w=majority";
+	private static final Environment ENV = new StandardEnvironment();
+	private static final Duration DEFAULT_TIMEOUT = Duration.ofMillis(10);
+
+	public static final String CONNECTION_STRING = "mongodb://127.0.0.1:27017/?replicaSet=rs0&w=majority";
 
 	private static final String CONNECTION_STRING_PATTERN = "mongodb://%s:%s/?w=majority";
 
@@ -53,7 +59,7 @@ public class MongoTestUtils {
 	 * @return new instance of {@link com.mongodb.client.MongoClient}.
 	 */
 	public static MongoClient client() {
-		return client("localhost", 27017);
+		return client("127.0.0.1", 27017);
 	}
 
 	public static MongoClient client(String host, int port) {
@@ -68,7 +74,7 @@ public class MongoTestUtils {
 	 * @return new instance of {@link com.mongodb.reactivestreams.client.MongoClient}.
 	 */
 	public static com.mongodb.reactivestreams.client.MongoClient reactiveClient() {
-		return reactiveClient("localhost", 27017);
+		return reactiveClient("127.0.0.1", 27017);
 	}
 
 	public static com.mongodb.reactivestreams.client.MongoClient reactiveClient(String host, int port) {
@@ -93,16 +99,13 @@ public class MongoTestUtils {
 		boolean collectionExists = database.listCollections().filter(new Document("name", collectionName)).first() != null;
 
 		if (collectionExists) {
+
 			database.getCollection(collectionName).drop();
+			giveTheServerALittleTimeToThink();
 		}
 
 		database.createCollection(collectionName);
-
-		try {
-			Thread.sleep(10); // server replication time
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+		giveTheServerALittleTimeToThink();
 
 		return database.getCollection(collectionName);
 	}
@@ -121,9 +124,9 @@ public class MongoTestUtils {
 				.withWriteConcern(WriteConcern.MAJORITY).withReadPreference(ReadPreference.primary());
 
 		return Mono.from(database.getCollection(collectionName).drop()) //
-				.delayElement(Duration.ofMillis(10)) // server replication time
+				.delayElement(getTimeout()) // server replication time
 				.then(Mono.from(database.createCollection(collectionName))) //
-				.delayElement(Duration.ofMillis(10)); // server replication time
+				.delayElement(getTimeout()); // server replication time
 	}
 
 	/**
@@ -157,7 +160,7 @@ public class MongoTestUtils {
 				.withWriteConcern(WriteConcern.MAJORITY).withReadPreference(ReadPreference.primary());
 
 		Mono.from(database.getCollection(collectionName).drop()) //
-				.retryBackoff(3, Duration.ofMillis(250)) //
+				.delayElement(getTimeout()).retryBackoff(3, Duration.ofMillis(250)) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 	}
@@ -177,7 +180,7 @@ public class MongoTestUtils {
 				.withWriteConcern(WriteConcern.MAJORITY).withReadPreference(ReadPreference.primary());
 
 		Mono.from(database.getCollection(collectionName).deleteMany(new Document())) //
-				.then() //
+				.delayElement(getTimeout()).then() //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 	}
@@ -229,6 +232,21 @@ public class MongoTestUtils {
 					.contains("--replSet");
 		} catch (Exception e) {
 			return false;
+		}
+	}
+
+	public static Duration getTimeout() {
+
+		return ObjectUtils.nullSafeEquals("jenkins", ENV.getProperty("user.name")) ? Duration.ofMillis(100)
+				: DEFAULT_TIMEOUT;
+	}
+
+	private static void giveTheServerALittleTimeToThink() {
+
+		try {
+			Thread.sleep(getTimeout().toMillis()); // server replication time
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 	}
 }

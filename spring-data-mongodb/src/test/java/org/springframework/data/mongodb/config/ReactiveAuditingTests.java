@@ -25,8 +25,8 @@ import java.util.Collections;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,21 +38,23 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.mongodb.reactivestreams.client.MongoClient;
-import com.mongodb.reactivestreams.client.MongoClients;
 
 /**
  * Integration test for the auditing support via {@link org.springframework.data.mongodb.core.ReactiveMongoTemplate}.
  *
  * @author Mark Paluch
  */
-@RunWith(SpringRunner.class)
+@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 @ContextConfiguration
 public class ReactiveAuditingTests {
+
+	static @Client MongoClient mongoClient;
 
 	@Autowired ReactiveAuditablePersonRepository auditablePersonRepository;
 	@Autowired AuditorAware<AuditablePerson> auditorAware;
@@ -71,7 +73,7 @@ public class ReactiveAuditingTests {
 
 		@Override
 		public MongoClient reactiveMongoClient() {
-			return MongoTestUtils.reactiveClient();
+			return mongoClient;
 		}
 
 		@Bean

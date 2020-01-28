@@ -47,8 +47,6 @@ import org.springframework.data.util.Version;
  */
 public class TextQueryTests extends AbstractIntegrationTests {
 
-	public static @ClassRule MongoVersionRule version = MongoVersionRule.atLeast(new Version(2, 6));
-
 	private static final FullTextDoc BAKE = new FullTextDocBuilder().headline("bake").build();
 	private static final FullTextDoc COFFEE = new FullTextDocBuilder().subHeadline("coffee").build();
 	private static final FullTextDoc CAKE = new FullTextDocBuilder().body("cake").build();

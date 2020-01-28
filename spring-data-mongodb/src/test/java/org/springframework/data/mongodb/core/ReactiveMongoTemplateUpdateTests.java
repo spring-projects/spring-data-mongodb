@@ -27,7 +27,6 @@ import java.util.Collection;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
@@ -40,8 +39,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
-import org.springframework.data.mongodb.test.util.MongoServerCondition;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
 import com.mongodb.reactivestreams.client.MongoClient;
@@ -50,19 +50,18 @@ import com.mongodb.reactivestreams.client.MongoCollection;
 /**
  * @author Christoph Strobl
  */
-@ExtendWith(MongoServerCondition.class)
+@ExtendWith(MongoClientExtension.class)
 @EnableIfMongoServerVersion(isGreaterThanEqual = "4.2")
 public class ReactiveMongoTemplateUpdateTests {
 
 	static final String DB_NAME = "reactive-update-test";
 
-	MongoClient client;
+	static @Client MongoClient client;
 	ReactiveMongoTemplate template;
 
 	@BeforeEach
 	void beforeEach() {
 
-		client = MongoTestUtils.reactiveClient();
 		template = new ReactiveMongoTemplate(new SimpleReactiveMongoDatabaseFactory(client, DB_NAME));
 
 		MongoTestUtils.createOrReplaceCollection(DB_NAME, template.getCollectionName(Score.class), client).then()
