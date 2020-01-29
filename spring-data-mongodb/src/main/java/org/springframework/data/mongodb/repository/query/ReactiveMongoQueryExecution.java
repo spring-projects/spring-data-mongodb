@@ -23,12 +23,12 @@ import reactor.core.publisher.Mono;
 import org.reactivestreams.Publisher;
 
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mapping.model.EntityInstantiators;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;

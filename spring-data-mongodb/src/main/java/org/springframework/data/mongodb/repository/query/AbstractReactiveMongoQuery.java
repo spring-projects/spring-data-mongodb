@@ -21,7 +21,7 @@ import reactor.core.publisher.Mono;
 import org.bson.Document;
 import org.reactivestreams.Publisher;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.convert.EntityInstantiators;
+import org.springframework.data.mapping.model.EntityInstantiators;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.ReactiveFindOperation.FindWithProjection;
 import org.springframework.data.mongodb.core.ReactiveFindOperation.FindWithQuery;
