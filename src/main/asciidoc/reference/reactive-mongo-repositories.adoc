@@ -96,7 +96,7 @@ class ApplicationConfig extends AbstractReactiveMongoConfiguration {
 
   @Override
   protected String getMappingBasePackage() {
-    return "com.oreilly.springdata.mongodb"
+    return "com.oreilly.springdata.mongodb";
   }
 }
 ----
@@ -120,9 +120,10 @@ public class PersonRepositoryTests {
 ----
 ====
 
-The `Page` return type is not supported by reactive repositories as one is able to use the flow controls of the returned reactive types.
-Still it is possible to use `Pageable` in derived finder methods, to pass on `sort`, `limit` and `offset` to the database to reduce load and network traffic.
-The returned `Flux` will then only emitt data within the declared range.
+WARNING: The `Page` return type (as in `Mono<Page>`) is not supported by reactive repositories.
+
+It is possible to use `Pageable` in derived finder methods, to pass on `sort`, `limit` and `offset` parameters to the query to reduce load and network traffic.
+The returned `Flux` will only emit data within the declared range.
 
 .Limit and Offset with reactive repositories
 ====

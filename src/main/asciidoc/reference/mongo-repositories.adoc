@@ -96,7 +96,7 @@ class ApplicationConfig extends AbstractMongoConfiguration {
 
   @Override
   protected String getMappingBasePackage() {
-    return "com.oreilly.springdata.mongodb"
+    return "com.oreilly.springdata.mongodb";
   }
 }
 ----
