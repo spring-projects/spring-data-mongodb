@@ -18,8 +18,10 @@ package org.springframework.data.mongodb.repository.query;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import org.reactivestreams.Publisher;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.domain.Pageable;
@@ -169,8 +171,15 @@ interface ReactiveMongoQueryExecution {
 
 			ReturnedType returnedType = processor.getReturnedType();
 
-			if (returnsMonoVoid(returnedType)) {
-				return Flux.from((Publisher) source).then();
+			if (isVoid(returnedType)) {
+
+				if (source instanceof Mono) {
+					return ((Mono<?>) source).then();
+				}
+
+				if (source instanceof Publisher) {
+					return Flux.from((Publisher<?>) source).then();
+				}
 			}
 
 			if (ClassUtils.isPrimitiveOrWrapper(returnedType.getReturnedType())) {
@@ -188,7 +197,7 @@ interface ReactiveMongoQueryExecution {
 		}
 	}
 
-	static boolean returnsMonoVoid(ReturnedType returnedType) {
-		return returnedType.getReturnedType() == Void.class;
+	static boolean isVoid(ReturnedType returnedType) {
+		return returnedType.getReturnedType().equals(Void.class);
 	}
 }
