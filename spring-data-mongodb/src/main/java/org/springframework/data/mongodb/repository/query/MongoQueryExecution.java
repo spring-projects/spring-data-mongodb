@@ -37,9 +37,9 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.util.ClassUtils;
 
 import com.mongodb.client.result.DeleteResult;
-import org.springframework.util.ClassUtils;
 
 /**
  * Set of classes to contain query execution strategies. Depending (mostly) on the return type of a
@@ -256,7 +256,7 @@ interface MongoQueryExecution {
 				return operations.findAllAndRemove(query, type, collectionName);
 			}
 
-			if(method.isQueryForEntity() && !ClassUtils.isPrimitiveOrWrapper(method.getReturnedObjectType())) {
+			if (method.isQueryForEntity() && !ClassUtils.isPrimitiveOrWrapper(method.getReturnedObjectType())) {
 				return operations.findAndRemove(query, type, collectionName);
 			}
 

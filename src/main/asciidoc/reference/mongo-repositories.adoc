@@ -301,14 +301,14 @@ The keywords in the preceding table can be used in conjunction with `delete…By
 ----
 public interface PersonRepository extends MongoRepository<Person, String> {
 
-  List <Person> deleteByLastname(String lastname); <1>
+  List <Person> deleteByLastname(String lastname);      <1>
 
-  Long deletePersonByLastname(String lastname); <2>
+  Long deletePersonByLastname(String lastname);         <2>
 
   @Nullable
-  Person deleteSingleByLastname(String lastname); <3>
+  Person deleteSingleByLastname(String lastname);       <3>
 
-  Optional<Person> deleteByBirthdate(Date birthdate); <4>
+  Optional<Person> deleteByBirthdate(Date birthdate);   <4>
 }
 ----
 <1> Using a return type of `List` retrieves and returns all matching documents before actually deleting them.

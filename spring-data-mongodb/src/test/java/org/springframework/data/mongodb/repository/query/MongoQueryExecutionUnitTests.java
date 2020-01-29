@@ -22,13 +22,13 @@ import static org.mockito.Mockito.*;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Optional;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.geo.Distance;
@@ -215,18 +215,6 @@ public class MongoQueryExecutionUnitTests {
 
 		assertThat(new DeleteExecution(mongoOperationsMock, queryMethod).execute(new Query())).isEqualTo(person);
 	}
-//	@Test // DATAMONGO-1997
-//	public void deleteExecutionWrapsEmptyResultInOptionalCorrectly() {
-//
-//		Method method = ReflectionUtils.findMethod(PersonRepository.class, "deleteByLastname", String.class);
-//		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
-//
-//		Person person = new Person();
-//
-//		when(mongoOperationsMock.findAndRemove(any(Query.class), any(Class.class), anyString())).thenReturn(null);
-//
-//		assertThat(new DeleteExecution(mongoOperationsMock, queryMethod).execute(new Query())).isEqualTo(Optional.empty());
-//	}
 
 	interface PersonRepository extends Repository<Person, Long> {
 
@@ -235,7 +223,5 @@ public class MongoQueryExecutionUnitTests {
 		Long deleteAllByLastname(String lastname);
 
 		Person deleteByLastname(String lastname);
-
-		Optional<Person> deletePersonByLastname(String lastname);
 	}
 }
