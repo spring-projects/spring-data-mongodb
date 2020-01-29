@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.core;
 
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
-import com.mongodb.client.result.InsertOneResult;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -40,6 +39,7 @@ import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -140,6 +140,7 @@ import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.ValidationOptions;
 import com.mongodb.client.model.changestream.FullDocument;
 import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.InsertOneResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.reactivestreams.client.AggregatePublisher;
 import com.mongodb.reactivestreams.client.ChangeStreamPublisher;
@@ -922,7 +923,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Assert.notNull(resultClass, "ResultClass must not be null!");
 
 		MongoPersistentEntity<?> entity = getPersistentEntity(entityClass);
-		DistinctQueryContext distinctQueryContext = queryOperations.distincQueryContext(query, field);
+		DistinctQueryContext distinctQueryContext = queryOperations.distinctQueryContext(query, field);
 
 		Document mappedQuery = distinctQueryContext.getMappedQuery(entity);
 		String mappedFieldName = distinctQueryContext.getMappedFieldName(entity);
@@ -2284,12 +2285,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		return createMono(db -> db.createCollection(collectionName, collectionOptions)).doOnSuccess(it -> {
 
-
-				// TODO: Emit a collection created event
-				if (LOGGER.isDebugEnabled()) {
-					LOGGER.debug("Created collection [{}]", collectionName);
-				}
-
+			// TODO: Emit a collection created event
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug("Created collection [{}]", collectionName);
+			}
 
 		}).thenReturn(getCollection(collectionName));
 	}
@@ -2934,7 +2933,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			result = options.getCollation().map(Collation::toMongoCollation).map(result::collation).orElse(result);
 
-			if(!CollectionUtils.isEmpty(arrayFilters)) {
+			if (!CollectionUtils.isEmpty(arrayFilters)) {
 				result.arrayFilters(arrayFilters);
 			}
 

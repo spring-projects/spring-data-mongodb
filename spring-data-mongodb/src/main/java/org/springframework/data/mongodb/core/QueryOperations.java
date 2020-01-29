@@ -56,7 +56,7 @@ import com.mongodb.client.model.UpdateOptions;
  * {@link QueryOperations} centralizes common operations required before an operation is actually ready to be executed.
  * This involves mapping {@link Query queries} into their respective MongoDB representation, computing execution options
  * for {@literal count}, {@literal remove}, ... <br />
- * 
+ *
  * @author Christoph Strobl
  * @since 3.0
  */
@@ -104,7 +104,7 @@ class QueryOperations {
 	 * @param query must not be {@literal null}.
 	 * @return new instance of {@link DistinctQueryContext}.
 	 */
-	DistinctQueryContext distincQueryContext(Query query, String fieldName) {
+	DistinctQueryContext distinctQueryContext(Query query, String fieldName) {
 		return new DistinctQueryContext(query, fieldName);
 	}
 
@@ -203,7 +203,7 @@ class QueryOperations {
 
 		/**
 		 * Extract the raw {@link Query#getQueryObject() unmapped document} from the {@link Query}.
-		 * 
+		 *
 		 * @return
 		 */
 		Document getQueryObject() {
@@ -212,20 +212,21 @@ class QueryOperations {
 
 		/**
 		 * Get the already mapped MongoDB query representation.
-		 * 
+		 *
 		 * @param domainType can be {@literal null}.
 		 * @param entityLookup the {@link Function lookup} used to provide the {@link MongoPersistentEntity} for the
 		 *          given{@literal domainType}
 		 * @param <T>
 		 * @return never {@literal null}.
 		 */
-		<T> Document getMappedQuery(@Nullable Class domainType, Function<Class<T>, MongoPersistentEntity> entityLookup) {
+		<T> Document getMappedQuery(@Nullable Class<T> domainType,
+				Function<Class<T>, MongoPersistentEntity<?>> entityLookup) {
 			return getMappedQuery(domainType == null ? null : entityLookup.apply(domainType));
 		}
 
 		/**
 		 * Get the already mapped MongoDB query representation.
-		 * 
+		 *
 		 * @param entity the Entity to map field names to. Can be {@literal null}.
 		 * @param <T>
 		 * @return never {@literal null}.
@@ -259,7 +260,7 @@ class QueryOperations {
 		 * Apply the {@link com.mongodb.client.model.Collation} if present extracted from the {@link Query} or fall back to
 		 * the {@literal domain types} default {@link org.springframework.data.mongodb.core.mapping.Document#collation()
 		 * collation}.
-		 * 
+		 *
 		 * @param domainType can be {@literal null}.
 		 * @param consumer must not be {@literal null}.
 		 */
@@ -271,7 +272,7 @@ class QueryOperations {
 		 * Get the {@link com.mongodb.client.model.Collation} extracted from the {@link Query} if present or fall back to
 		 * the {@literal domain types} default {@link org.springframework.data.mongodb.core.mapping.Document#collation()
 		 * collation}.
-		 * 
+		 *
 		 * @param domainType can be {@literal null}.
 		 * @return never {@literal null}.
 		 */
@@ -284,7 +285,7 @@ class QueryOperations {
 
 	/**
 	 * A {@link QueryContext} that encapsulates common tasks required when running {@literal distinct} queries.
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 */
 	class DistinctQueryContext extends QueryContext {
@@ -325,6 +326,7 @@ class QueryOperations {
 		 * @param <T>
 		 * @return never {@literal null}.
 		 */
+		@SuppressWarnings("unchecked")
 		<T> Class<T> getDriverCompatibleClass(Class<T> type) {
 
 			return codecRegistryProvider.getCodecFor(type) //
@@ -369,7 +371,7 @@ class QueryOperations {
 
 		/**
 		 * Creates a new {@link CountContext} instance.
-		 * 
+		 *
 		 * @param query can be {@literal null}.
 		 */
 		CountContext(@Nullable Query query) {
@@ -431,7 +433,7 @@ class QueryOperations {
 	 */
 	class DeleteContext extends QueryContext {
 
-		private boolean multi;
+		private final boolean multi;
 
 		/**
 		 * Crate a new {@link DeleteContext} instance.
@@ -602,7 +604,7 @@ class QueryOperations {
 
 		/**
 		 * Get the already mapped aggregation pipeline to use with an {@link #isAggregationUpdate()}.
-		 * 
+		 *
 		 * @param domainType must not be {@literal null}.
 		 * @return never {@literal null}.
 		 */
@@ -630,7 +632,7 @@ class QueryOperations {
 		/**
 		 * Increase a potential {@link MongoPersistentEntity#getVersionProperty() version property} prior to update if not
 		 * already done in the actual {@link UpdateDefinition}
-		 * 
+		 *
 		 * @param persistentEntity can be {@literal null}.
 		 */
 		void increaseVersionForUpdateIfNecessary(@Nullable MongoPersistentEntity<?> persistentEntity) {

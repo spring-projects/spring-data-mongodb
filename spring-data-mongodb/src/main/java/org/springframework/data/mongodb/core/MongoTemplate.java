@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.core;
 
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
-import com.mongodb.client.MongoClient;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
@@ -34,6 +33,7 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -54,8 +54,8 @@ import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Metric;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mongodb.MongoDatabaseUtils;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.data.mongodb.MongoDatabaseUtils;
 import org.springframework.data.mongodb.SessionSynchronization;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.DefaultBulkOperations.BulkOperationContext;
@@ -134,6 +134,7 @@ import com.mongodb.client.ClientSession;
 import com.mongodb.client.DistinctIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MapReduceIterable;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
@@ -904,7 +905,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(resultClass, "ResultClass must not be null!");
 
 		MongoPersistentEntity<?> entity = entityClass != Object.class ? getPersistentEntity(entityClass) : null;
-		DistinctQueryContext distinctQueryContext = queryOperations.distincQueryContext(query, field);
+		DistinctQueryContext distinctQueryContext = queryOperations.distinctQueryContext(query, field);
 
 		Document mappedQuery = distinctQueryContext.getMappedQuery(entity);
 		String mappedFieldName = distinctQueryContext.getMappedFieldName(entity);
@@ -1668,7 +1669,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		MongoPersistentEntity<?> entity = getPersistentEntity(entityClass);
 
-		DeleteContext deleteContext = multi ?  queryOperations.deleteQueryContext(query) : queryOperations.deleteSingleContext(query);
+		DeleteContext deleteContext = multi ? queryOperations.deleteQueryContext(query)
+				: queryOperations.deleteSingleContext(query);
 		Document queryObject = deleteContext.getMappedQuery(entity);
 		DeleteOptions options = deleteContext.getDeleteOptions(entityClass);
 
