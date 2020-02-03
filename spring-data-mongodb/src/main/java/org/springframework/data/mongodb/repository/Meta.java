@@ -46,7 +46,7 @@ public @interface Meta {
 	 * Sets the number of documents to return per batch. <br />
 	 * Use {@literal 0 (zero)} for no limit. A <strong>negative limit</strong> closes the cursor after returning a single
 	 * batch indicating to the server that the client will not ask for a subsequent one.
-	 * 
+	 *
 	 * @return {@literal 0 (zero)} by default.
 	 * @since 2.1
 	 */
@@ -68,7 +68,7 @@ public @interface Meta {
 	org.springframework.data.mongodb.core.query.Meta.CursorOption[] flags() default {};
 
 	/**
-	 * When set to true, aggregation stages can write data to disk.
+	 * When set to {@literal true}, aggregation stages can write data to disk.
 	 *
 	 * @return {@literal false} by default.
 	 * @since 3.0

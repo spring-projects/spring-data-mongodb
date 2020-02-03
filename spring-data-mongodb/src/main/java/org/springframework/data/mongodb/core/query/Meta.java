@@ -170,10 +170,31 @@ public class Meta {
 	}
 
 	/**
+	 * When set to {@literal true}, aggregation stages can write data to disk.
+	 *
+	 * @return {@literal null} if not set.
+	 * @since 3.0
+	 */
+	@Nullable
+	public Boolean getAllowDiskUse() {
+		return allowDiskUse;
+	}
+
+	/**
+	 * Set to {@literal true}, to allow aggregation stages to write data to disk.
+	 *
+	 * @param allowDiskUse use {@literal null} for server defaults.
+	 * @since 3.0
+	 */
+	public void setAllowDiskUse(@Nullable Boolean allowDiskUse) {
+		this.allowDiskUse = allowDiskUse;
+	}
+
+	/**
 	 * @return
 	 */
 	public boolean hasValues() {
-		return !this.values.isEmpty() || !this.flags.isEmpty() || this.cursorBatchSize != null;
+		return !this.values.isEmpty() || !this.flags.isEmpty() || this.cursorBatchSize != null || this.allowDiskUse != null;
 	}
 
 	/**
@@ -245,27 +266,6 @@ public class Meta {
 			return false;
 		}
 		return ObjectUtils.nullSafeEquals(this.flags, other.flags);
-	}
-
-	/**
-	 * When set to true, aggregation stages can write data to disk.
-	 *
-	 * @return {@literal null} if not set.
-	 * @since 3.0
-	 */
-	@Nullable
-	public Boolean getAllowDiskUse() {
-		return allowDiskUse;
-	}
-
-	/**
-	 * Set to true, to allow aggregation stages to write data to disk.
-	 *
-	 * @param allowDiskUse use {@literal null} for server defaults.
-	 * @since 3.0
-	 */
-	public void setAllowDiskUse(@Nullable Boolean allowDiskUse) {
-		this.allowDiskUse = allowDiskUse;
 	}
 
 	/**

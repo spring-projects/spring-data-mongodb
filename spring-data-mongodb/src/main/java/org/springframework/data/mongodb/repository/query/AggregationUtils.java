@@ -94,7 +94,7 @@ class AggregationUtils {
 			builder.cursorBatchSize(meta.getCursorBatchSize());
 		}
 
-		if(meta.getMaxTimeMsec() != null && meta.getMaxTimeMsec() > 0) {
+		if (meta.getMaxTimeMsec() != null && meta.getMaxTimeMsec() > 0) {
 			builder.maxTime(Duration.ofMillis(meta.getMaxTimeMsec()));
 		}
 
