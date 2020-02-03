@@ -55,7 +55,7 @@ public class BasicMongoPersistentPropertyUnitTests {
 
 	@Before
 	public void setup() {
-		entity = new BasicMongoPersistentEntity<Person>(ClassTypeInformation.from(Person.class));
+		entity = new BasicMongoPersistentEntity<>(ClassTypeInformation.from(Person.class));
 	}
 
 	@Test
@@ -236,7 +236,7 @@ public class BasicMongoPersistentPropertyUnitTests {
 	}
 
 	private static <T> MongoPersistentProperty getPropertyFor(Class<T> type, String fieldname) {
-		return getPropertyFor(new BasicMongoPersistentEntity<T>(ClassTypeInformation.from(type)), fieldname);
+		return getPropertyFor(new BasicMongoPersistentEntity<>(ClassTypeInformation.from(type)), fieldname);
 	}
 
 	private static MongoPersistentProperty getPropertyFor(MongoPersistentEntity<?> entity, String fieldname) {
@@ -345,8 +345,6 @@ public class BasicMongoPersistentPropertyUnitTests {
 
 	static class WithComplexId {
 
-		@Id
-		@org.springframework.data.mongodb.core.mapping.Field
-		ComplexId id;
+		@Id @org.springframework.data.mongodb.core.mapping.Field ComplexId id;
 	}
 }
