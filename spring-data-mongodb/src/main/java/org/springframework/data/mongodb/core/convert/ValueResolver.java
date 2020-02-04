@@ -19,12 +19,14 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.lang.Nullable;
 
 /**
  * Internal API to trigger the resolution of properties.
  *
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 interface ValueResolver {
 
@@ -38,6 +40,6 @@ interface ValueResolver {
 	 * @param parent
 	 * @return
 	 */
-	Object getValueInternal(MongoPersistentProperty prop, Bson bson, SpELExpressionEvaluator evaluator,
-			ObjectPath path);
+	@Nullable
+	Object getValueInternal(MongoPersistentProperty prop, Bson bson, SpELExpressionEvaluator evaluator, ObjectPath path);
 }
