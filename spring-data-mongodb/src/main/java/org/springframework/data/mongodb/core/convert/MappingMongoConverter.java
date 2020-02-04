@@ -77,7 +77,7 @@ import com.mongodb.DBRef;
  * @author Jordi Llach
  * @author Mark Paluch
  */
-public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware, ValueResolver {
+public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware {
 
 	private static final String INCOMPATIBLE_TYPES = "Cannot convert %1$s of type %2$s into an instance of %3$s! Implement a custom Converter<%2$s, %3$s> and register it with the CustomConversions. Parent object was: %4$s";
 	private static final String INVALID_TYPE_TO_READ = "Expected to read Document %s into type %s but didn't find a PersistentEntity for the latter!";
@@ -115,7 +115,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		this.idMapper = new QueryMapper(this);
 
 		this.spELContext = new SpELContext(DocumentPropertyAccessor.INSTANCE);
-		this.dbRefProxyHandler = new DefaultDbRefProxyHandler(spELContext, mappingContext, MappingMongoConverter.this);
+		this.dbRefProxyHandler = new DefaultDbRefProxyHandler(spELContext, mappingContext,
+				MappingMongoConverter.this::getValueInternal);
 	}
 
 	/**
@@ -394,7 +395,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			SpELExpressionEvaluator evaluator) {
 
 		return new DefaultDbRefResolverCallback(documentAccessor.getDocument(), currentPath, evaluator,
-				MappingMongoConverter.this);
+				MappingMongoConverter.this::getValueInternal);
 	}
 
 	private void readAssociation(Association<MongoPersistentProperty> association, PersistentPropertyAccessor<?> accessor,
@@ -996,7 +997,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.convert.ValueResolver#getValueInternal(org.springframework.data.mongodb.core.mapping.MongoPersistentProperty, com.mongodb.Document, org.springframework.data.mapping.model.SpELExpressionEvaluator, java.lang.Object)
 	 */
-	@Override
+	@Nullable
 	public Object getValueInternal(MongoPersistentProperty prop, Bson bson, SpELExpressionEvaluator evaluator,
 			ObjectPath path) {
 		return new MongoDbPropertyValueProvider(bson, evaluator, path).getPropertyValue(prop);
@@ -1440,7 +1441,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				}
 
 				DbRefResolverCallback callback = new DefaultDbRefResolverCallback(accessor.getDocument(), path, evaluator,
-						MappingMongoConverter.this);
+						MappingMongoConverter.this::getValueInternal);
 
 				DBRef dbref = rawRefValue instanceof DBRef ? (DBRef) rawRefValue : null;
 				return (T) dbRefResolver.resolveDbRef(property, dbref, callback, dbRefProxyHandler);
