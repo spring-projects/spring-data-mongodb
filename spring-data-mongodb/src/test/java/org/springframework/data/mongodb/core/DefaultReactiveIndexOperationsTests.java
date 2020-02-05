@@ -28,6 +28,7 @@ import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.Sort.Direction;
@@ -45,7 +46,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.mongodb.reactivestreams.client.MongoClient;
-import com.mongodb.reactivestreams.client.MongoClients;
 import com.mongodb.reactivestreams.client.MongoCollection;
 
 /**
@@ -146,7 +146,8 @@ public class DefaultReactiveIndexOperationsTests {
 
 		indexOps.getIndexInfo().filter(this.indexByName("partial-with-criteria")).as(StepVerifier::create) //
 				.consumeNextWith(indexInfo -> {
-					assertThat(Document.parse(indexInfo.getPartialFilterExpression())).isEqualTo(Document.parse("{ \"q-t-y\" : { \"$gte\" : 10 } }"));
+					assertThat(Document.parse(indexInfo.getPartialFilterExpression()))
+							.isEqualTo(Document.parse("{ \"q-t-y\" : { \"$gte\" : 10 } }"));
 				}) //
 				.verifyComplete();
 	}
@@ -163,7 +164,8 @@ public class DefaultReactiveIndexOperationsTests {
 
 		indexOps.getIndexInfo().filter(this.indexByName("partial-with-mapped-criteria")).as(StepVerifier::create) //
 				.consumeNextWith(indexInfo -> {
-					assertThat(Document.parse(indexInfo.getPartialFilterExpression())).isEqualTo(Document.parse("{ \"qty\" : { \"$gte\" : 10 } }"));
+					assertThat(Document.parse(indexInfo.getPartialFilterExpression()))
+							.isEqualTo(Document.parse("{ \"qty\" : { \"$gte\" : 10 } }"));
 				}).verifyComplete();
 	}
 
@@ -179,7 +181,8 @@ public class DefaultReactiveIndexOperationsTests {
 
 		indexOps.getIndexInfo().filter(this.indexByName("partial-with-dbo")).as(StepVerifier::create) //
 				.consumeNextWith(indexInfo -> {
-					assertThat(Document.parse(indexInfo.getPartialFilterExpression())).isEqualTo(Document.parse("{ \"qty\" : { \"$gte\" : 10 } }"));
+					assertThat(Document.parse(indexInfo.getPartialFilterExpression()))
+							.isEqualTo(Document.parse("{ \"qty\" : { \"$gte\" : 10 } }"));
 				}) //
 				.verifyComplete();
 
@@ -201,7 +204,8 @@ public class DefaultReactiveIndexOperationsTests {
 
 		indexOps.getIndexInfo().filter(this.indexByName("partial-with-inheritance")).as(StepVerifier::create) //
 				.consumeNextWith(indexInfo -> {
-					assertThat(Document.parse(indexInfo.getPartialFilterExpression())).isEqualTo(Document.parse("{ \"a_g_e\" : { \"$gte\" : 10 } }"));
+					assertThat(Document.parse(indexInfo.getPartialFilterExpression()))
+							.isEqualTo(Document.parse("{ \"a_g_e\" : { \"$gte\" : 10 } }"));
 				}) //
 				.verifyComplete();
 	}

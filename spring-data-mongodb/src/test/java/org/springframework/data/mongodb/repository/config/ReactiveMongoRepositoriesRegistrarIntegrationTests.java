@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository.config;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -28,8 +29,6 @@ import org.springframework.data.mongodb.repository.ReactivePersonRepository;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
-
-import com.mongodb.reactivestreams.client.MongoClients;
 
 /**
  * Integration tests for {@link ReactiveMongoRepositoriesRegistrar}.

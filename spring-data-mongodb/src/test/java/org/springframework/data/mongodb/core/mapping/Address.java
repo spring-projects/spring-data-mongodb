@@ -20,8 +20,7 @@ package org.springframework.data.mongodb.core.mapping;
  */
 public class Address implements Comparable<Address> {
 
-	@SuppressWarnings("unused")
-	private String id;
+	@SuppressWarnings("unused") private String id;
 	private String[] lines;
 	private String city;
 	private String provinceOrState;

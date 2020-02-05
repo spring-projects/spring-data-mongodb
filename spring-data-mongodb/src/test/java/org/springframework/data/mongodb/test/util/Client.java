@@ -21,12 +21,22 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.junit.jupiter.api.extension.ExtendWith;
+
 /**
+ * Marks a field or method as to be autowired by JUnit's dependency injection facilities for injection of a MongoDB
+ * client instance. Depends on {@link MongoClientExtension}.
+ *
  * @author Christoph Strobl
+ * @see com.mongodb.client.MongoClient
+ * @see com.mongodb.reactivestreams.client.MongoClient
+ * @see ReplSetClient
+ * @see MongoClientExtension
  */
 @Target({ ElementType.FIELD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
+@ExtendWith(MongoClientExtension.class)
 public @interface Client {
 
 }

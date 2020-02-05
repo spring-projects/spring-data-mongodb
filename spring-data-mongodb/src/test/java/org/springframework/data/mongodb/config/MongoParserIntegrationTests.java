@@ -19,7 +19,6 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
 
-import com.mongodb.client.MongoClient;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -33,6 +32,7 @@ import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.io.ClassPathResource;
 
+import com.mongodb.client.MongoClient;
 
 /**
  * Integration tests for {@link MongoClientParser}.

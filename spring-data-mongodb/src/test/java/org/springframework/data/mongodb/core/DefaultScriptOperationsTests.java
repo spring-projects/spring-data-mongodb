@@ -23,6 +23,7 @@ import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,9 +35,9 @@ import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.mongodb.client.MongoClient;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 /**
  * Integration tests for {@link DefaultScriptOperations}.
@@ -45,7 +46,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
  * @author Oliver Gierke
  * @since 1.7
  */
-@ExtendWith({MongoClientExtension.class, SpringExtension.class})
+@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 @EnableIfMongoServerVersion(isLessThan = "4.1.0")
 @ContextConfiguration
 public class DefaultScriptOperationsTests {

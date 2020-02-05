@@ -22,7 +22,6 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 
 import java.util.List;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import org.springframework.data.domain.Sort.Direction;

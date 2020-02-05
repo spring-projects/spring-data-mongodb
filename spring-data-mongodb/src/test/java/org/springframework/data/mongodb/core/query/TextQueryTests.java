@@ -24,7 +24,6 @@ import java.util.List;
 
 import org.bson.Document;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,8 +37,6 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.Language;
 import org.springframework.data.mongodb.core.mapping.TextScore;
 import org.springframework.data.mongodb.core.query.TextQueryTests.FullTextDoc.FullTextDocBuilder;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
-import org.springframework.data.util.Version;
 
 /**
  * @author Christoph Strobl
@@ -201,8 +198,8 @@ public class TextQueryTests extends AbstractIntegrationTests {
 		initWithDefaultDocuments();
 
 		// page 1
-		List<FullTextDoc> result = template
-				.find(new TextQuery("bake coffee cake").sortByScore().with(PageRequest.of(0, 2)), FullTextDoc.class);
+		List<FullTextDoc> result = template.find(new TextQuery("bake coffee cake").sortByScore().with(PageRequest.of(0, 2)),
+				FullTextDoc.class);
 		assertThat(result).hasSize(2);
 		assertThat(result).containsExactly(BAKE, COFFEE);
 

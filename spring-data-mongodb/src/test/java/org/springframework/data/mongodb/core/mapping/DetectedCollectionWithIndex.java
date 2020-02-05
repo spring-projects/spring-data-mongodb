@@ -24,10 +24,8 @@ import org.springframework.data.mongodb.core.index.Indexed;
 @Document
 public class DetectedCollectionWithIndex {
 
-	@Id
-	private String id;
-	@Indexed
-	private String name;
+	@Id private String id;
+	@Indexed private String name;
 
 	public DetectedCollectionWithIndex(String name) {
 		this.name = name;

@@ -33,6 +33,7 @@ import org.reactivestreams.Publisher;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
@@ -50,6 +51,7 @@ import com.mongodb.reactivestreams.client.MongoClient;
  */
 @ExtendWith(MongoClientExtension.class)
 @EnableIfReplicaSetAvailable
+@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
 public class ReactiveMongoTemplateTransactionTests {
 
 	static final String DATABASE_NAME = "reactive-template-tx-tests";

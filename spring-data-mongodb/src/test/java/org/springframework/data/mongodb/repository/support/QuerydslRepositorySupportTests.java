@@ -272,14 +272,12 @@ public class QuerydslRepositorySupportTests {
 				.isEqualTo("find({\"lastname\":\"Matthews\",\"coworker\":{\"$ref\":\"user\",\"$id\":\"id\"}})");
 
 		query = query.orderBy(p.firstname.asc());
-		assertThat(StringUtils.trimAllWhitespace(query.toString()))
-				.isEqualTo(
-						"find({\"lastname\":\"Matthews\",\"coworker\":{\"$ref\":\"user\",\"$id\":\"id\"}}).sort({\"firstname\":1})");
+		assertThat(StringUtils.trimAllWhitespace(query.toString())).isEqualTo(
+				"find({\"lastname\":\"Matthews\",\"coworker\":{\"$ref\":\"user\",\"$id\":\"id\"}}).sort({\"firstname\":1})");
 
 		query = query.offset(1).limit(5);
-		assertThat(StringUtils.trimAllWhitespace(query.toString()))
-				.isEqualTo(
-						"find({\"lastname\":\"Matthews\",\"coworker\":{\"$ref\":\"user\",\"$id\":\"id\"}}).sort({\"firstname\":1}).skip(1).limit(5)");
+		assertThat(StringUtils.trimAllWhitespace(query.toString())).isEqualTo(
+				"find({\"lastname\":\"Matthews\",\"coworker\":{\"$ref\":\"user\",\"$id\":\"id\"}}).sort({\"firstname\":1}).skip(1).limit(5)");
 	}
 
 	@Data

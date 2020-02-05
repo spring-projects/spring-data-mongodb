@@ -66,13 +66,12 @@ public class FacetOperationUnitTests {
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1552
 	public void shouldRejectNonExistingFields() {
 
-		FacetOperation facetOperation = new FacetOperation()
-				.and(project("price"), //
-						bucket("price") //
-								.withBoundaries(0, 150, 200, 300, 400) //
-								.withDefaultBucket("Other") //
-								.andOutputCount().as("count") //
-								.andOutput("title").push().as("titles")) //
+		FacetOperation facetOperation = new FacetOperation().and(project("price"), //
+				bucket("price") //
+						.withBoundaries(0, 150, 200, 300, 400) //
+						.withDefaultBucket("Other") //
+						.andOutputCount().as("count") //
+						.andOutput("title").push().as("titles")) //
 				.as("categorizedByPrice");
 
 		Document agg = facetOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -87,18 +86,16 @@ public class FacetOperationUnitTests {
 	@Test // DATAMONGO-1552
 	public void shouldHonorProjectedFields() {
 
-		FacetOperation facetOperation = new FacetOperation()
-				.and(project("price").and("title").as("name"), //
-						bucketAuto("price", 5) //
-								.andOutput("name").push().as("titles")) //
+		FacetOperation facetOperation = new FacetOperation().and(project("price").and("title").as("name"), //
+				bucketAuto("price", 5) //
+						.andOutput("name").push().as("titles")) //
 				.as("categorizedByPrice");
 
 		Document agg = facetOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg).isEqualTo(Document.parse("{ $facet: { categorizedByPrice: ["
-				+ "{ $project: { price: 1, name: \"$title\" } }, "
-						+ "{ $bucketAuto: {  buckets: 5, groupBy: \"$price\", "
-						+ "output: { titles: { $push: \"$name\" } } } } ] } }"));
+				+ "{ $project: { price: 1, name: \"$title\" } }, " + "{ $bucketAuto: {  buckets: 5, groupBy: \"$price\", "
+				+ "output: { titles: { $push: \"$name\" } } } } ] } }"));
 	}
 
 	@Test // DATAMONGO-1553

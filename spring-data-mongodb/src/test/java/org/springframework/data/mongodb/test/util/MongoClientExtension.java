@@ -19,7 +19,6 @@ import static org.junit.platform.commons.util.AnnotationUtils.*;
 import static org.junit.platform.commons.util.ReflectionUtils.*;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.function.Predicate;
 
@@ -37,10 +36,17 @@ import org.junit.platform.commons.util.ExceptionUtils;
 import org.junit.platform.commons.util.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.util.ClassUtils;
 
+import com.mongodb.client.MongoClient;
+
 /**
+ * JUnit {@link Extension} providing parameter resolution for synchronous and reactive MongoDB client instances.
+ *
  * @author Christoph Strobl
+ * @see Client
+ * @see ReplSetClient
  */
 public class MongoClientExtension implements Extension, BeforeAllCallback, AfterAllCallback, ParameterResolver {
 
@@ -53,9 +59,7 @@ public class MongoClientExtension implements Extension, BeforeAllCallback, After
 	private static final String REACTIVE_REPLSET_KEY = "mongo.client.replset.reactive";
 
 	@Override
-	public void afterAll(ExtensionContext extensionContext) throws Exception {
-		closeClients(extensionContext);
-	}
+	public void afterAll(ExtensionContext extensionContext) throws Exception {}
 
 	@Override
 	public void beforeAll(ExtensionContext context) throws Exception {
@@ -91,29 +95,29 @@ public class MongoClientExtension implements Extension, BeforeAllCallback, After
 
 			LOGGER.debug("Obtaining sync client from store.");
 			return store.getOrComputeIfAbsent(replSet ? SYNC_REPLSET_KEY : SYNC_KEY, it -> syncClient(replSet),
-					com.mongodb.client.MongoClient.class);
+					SyncClientHolder.class).client;
 		}
 
 		if (ClassUtils.isAssignable(com.mongodb.reactivestreams.client.MongoClient.class, type)) {
 
 			LOGGER.debug("Obtaining reactive client from store.");
 			return store.getOrComputeIfAbsent(replSet ? REACTIVE_REPLSET_KEY : REACTIVE_KEY, key -> reactiveClient(replSet),
-					com.mongodb.reactivestreams.client.MongoClient.class);
+					ReactiveClientHolder.class).client;
 		}
 
 		throw new IllegalStateException("Damn - something went wrong.");
 	}
 
-	private com.mongodb.reactivestreams.client.MongoClient reactiveClient(boolean replSet) {
+	private ReactiveClientHolder reactiveClient(boolean replSet) {
 
 		LOGGER.debug("Creating new reactive {}client.", replSet ? "replica set " : "");
-		return replSet ? MongoTestUtils.reactiveReplSetClient() : MongoTestUtils.reactiveClient();
+		return new ReactiveClientHolder(replSet ? MongoTestUtils.reactiveReplSetClient() : MongoTestUtils.reactiveClient());
 	}
 
-	private com.mongodb.client.MongoClient syncClient(boolean replSet) {
+	private SyncClientHolder syncClient(boolean replSet) {
 
 		LOGGER.debug("Creating new sync {}client.", replSet ? "replica set " : "");
-		return replSet ? MongoTestUtils.replSetClient() : MongoTestUtils.client();
+		return new SyncClientHolder(replSet ? MongoTestUtils.replSetClient() : MongoTestUtils.client());
 	}
 
 	private void assertValidFieldCandidate(Field field) {
@@ -133,29 +137,11 @@ public class MongoClientExtension implements Extension, BeforeAllCallback, After
 		}
 	}
 
-	private void closeClients(ExtensionContext extensionContext) {
-
-		Store store = extensionContext.getStore(NAMESPACE);
-
-		closeClient(store, SYNC_KEY);
-		closeClient(store, SYNC_REPLSET_KEY);
-		closeClient(store, REACTIVE_KEY);
-		closeClient(store, REACTIVE_REPLSET_KEY);
-	}
-
 	private void closeClient(Store store, String key) {
 
 		Closeable client = store.remove(key, Closeable.class);
 		if (client != null) {
 
-			LOGGER.debug("Closing {} {}client.", key.contains("reactive") ? "reactive" : "sync",
-					key.contains("replset") ? "replset " : "");
-
-			try {
-				client.close();
-			} catch (IOException e) {
-				// so what?
-			}
 		}
 	}
 
@@ -172,5 +158,42 @@ public class MongoClientExtension implements Extension, BeforeAllCallback, After
 		Class<?> parameterType = parameterContext.getParameter().getType();
 		boolean replSet = parameterContext.getParameter().getAnnotation(ReplSetClient.class) != null;
 		return getMongoClient(parameterType, extensionContext, replSet);
+	}
+
+	static class SyncClientHolder implements Store.CloseableResource {
+
+		final MongoClient client;
+
+		public SyncClientHolder(MongoClient client) {
+			this.client = client;
+		}
+
+		@Override
+		public void close() {
+			try {
+				client.close();
+			} catch (RuntimeException e) {
+				// so what?
+			}
+		}
+	}
+
+	static class ReactiveClientHolder implements Store.CloseableResource {
+
+		final com.mongodb.reactivestreams.client.MongoClient client;
+
+		public ReactiveClientHolder(com.mongodb.reactivestreams.client.MongoClient client) {
+			this.client = client;
+		}
+
+		@Override
+		public void close() {
+
+			try {
+				client.close();
+			} catch (RuntimeException e) {
+				// so what?
+			}
+		}
 	}
 }

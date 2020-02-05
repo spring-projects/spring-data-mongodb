@@ -16,8 +16,8 @@
 package org.springframework.data.mongodb.core.mapping;
 
 import org.bson.types.ObjectId;
+
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
@@ -25,11 +25,9 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document
 public class PersonNullProperties extends BasePerson {
 
-	@Id
-	private ObjectId id;
+	@Id private ObjectId id;
 
-	public PersonNullProperties() {
-	}
+	public PersonNullProperties() {}
 
 	public ObjectId getId() {
 		return id;

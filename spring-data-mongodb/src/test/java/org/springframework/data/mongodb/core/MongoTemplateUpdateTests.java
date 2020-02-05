@@ -27,6 +27,7 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
@@ -41,7 +42,6 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
-import org.springframework.data.mongodb.test.util.MongoServerCondition;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
 import com.mongodb.client.MongoClient;
@@ -50,7 +50,7 @@ import com.mongodb.client.MongoCollection;
 /**
  * @author Christoph Strobl
  */
-@ExtendWith({ MongoClientExtension.class, MongoServerCondition.class })
+@ExtendWith({ MongoClientExtension.class })
 class MongoTemplateUpdateTests {
 
 	static final String DB_NAME = "update-test";

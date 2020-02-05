@@ -27,13 +27,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.annotation.Id;
@@ -42,10 +39,10 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
 import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoServerCondition;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.util.ErrorHandler;
 
 import com.mongodb.client.MongoClient;
@@ -58,7 +55,7 @@ import com.mongodb.client.model.changestream.ChangeStreamDocument;
  *
  * @author Christoph Strobl
  */
-@ExtendWith({MongoClientExtension.class, MongoServerCondition.class})
+@ExtendWith({ MongoClientExtension.class, MongoServerCondition.class })
 public class DefaultMessageListenerContainerTests {
 
 	public static final String DATABASE_NAME = "change-stream-events";
@@ -93,6 +90,7 @@ public class DefaultMessageListenerContainerTests {
 
 	@Test // DATAMONGO-1803
 	@EnableIfReplicaSetAvailable
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
 	public void shouldCollectMappedChangeStreamMessagesCorrectly() throws InterruptedException {
 
 		MessageListenerContainer container = new DefaultMessageListenerContainer(template);
@@ -355,6 +353,7 @@ public class DefaultMessageListenerContainerTests {
 
 	@Test // DATAMONGO-2012
 	@EnableIfReplicaSetAvailable
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
 	public void databaseLevelWatch() throws InterruptedException {
 
 		MessageListenerContainer container = new DefaultMessageListenerContainer(template);

@@ -108,8 +108,9 @@ public class GeoNearOperationUnitTests {
 
 		NearQuery query = NearQuery.near(10.0, 20.0);
 
-		assertThat(new GeoNearOperation(query, "distance").useIndex("index-1").toPipelineStages(Aggregation.DEFAULT_CONTEXT))
-				.containsExactly($geoNear().near(10.0, 20.0).key("index-1").doc());
+		assertThat(
+				new GeoNearOperation(query, "distance").useIndex("index-1").toPipelineStages(Aggregation.DEFAULT_CONTEXT))
+						.containsExactly($geoNear().near(10.0, 20.0).key("index-1").doc());
 	}
 
 	@Test // DATAMONGO-2264
