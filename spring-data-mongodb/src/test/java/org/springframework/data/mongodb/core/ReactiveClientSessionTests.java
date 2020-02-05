@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
@@ -135,6 +136,7 @@ public class ReactiveClientSessionTests {
 	}
 
 	@Test // DATAMONGO-2001
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
 	public void countInTransactionShouldReturnCount() {
 
 		ClientSession session = Mono

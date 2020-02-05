@@ -216,8 +216,8 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 		ReactiveStringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameAsBinary", byte[].class);
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
-		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : { '$binary' : '"
-				+ Base64Utils.encodeToString(binaryData) + "', '$type' : '" + 0 + "'}}");
+		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery(
+				"{'lastname' : { '$binary' : '" + Base64Utils.encodeToString(binaryData) + "', '$type' : '" + 0 + "'}}");
 
 		assertThat(query.getQueryObject().toJson()).isEqualTo(reference.getQueryObject().toJson());
 	}

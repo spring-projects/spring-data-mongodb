@@ -66,7 +66,7 @@ public class GeoIndexedTests {
 
 	private void cleanDb() {
 
-		try(MongoClient mongo = MongoTestUtils.client()) {
+		try (MongoClient mongo = MongoTestUtils.client()) {
 
 			MongoDatabase db = mongo.getDatabase(GeoIndexedAppConfig.GEO_DB);
 

@@ -20,7 +20,6 @@ import static org.assertj.core.api.Assertions.*;
 import java.util.Arrays;
 import java.util.List;
 
-import com.mongodb.client.MongoClient;
 import org.hamcrest.core.IsInstanceOf;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -28,6 +27,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -46,6 +46,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.mongodb.MongoCommandException;
+import com.mongodb.client.MongoClient;
 
 /**
  * Integration tests for {@link MongoPersistentEntityIndexCreator}.
@@ -99,7 +100,7 @@ public class MongoPersistentEntityIndexCreatorIntegrationTests {
 		expectedException.expectMessage("lastname");
 		expectedException.expectCause(IsInstanceOf.<Throwable> instanceOf(MongoCommandException.class));
 
-		try(MongoClient client = MongoTestUtils.client()) {
+		try (MongoClient client = MongoTestUtils.client()) {
 			MongoTemplate mongoTemplate = new MongoTemplate(client, "issue");
 
 			MongoPersistentEntityIndexCreator indexCreator = new MongoPersistentEntityIndexCreator(new MongoMappingContext(),

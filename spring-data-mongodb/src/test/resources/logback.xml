@@ -12,7 +12,7 @@
 	 -->
 
 	<logger name="org.springframework.data.mongodb.core" level="error"/>
-	<logger name="org.springframework.data.mongodb.test.util" level="debug"/>
+	<logger name="org.springframework.data.mongodb.test.util" level="info"/>
 
 	<root level="error">
 		<appender-ref ref="console" />

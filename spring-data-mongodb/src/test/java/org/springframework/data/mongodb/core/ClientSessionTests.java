@@ -29,6 +29,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
@@ -45,6 +46,7 @@ import com.mongodb.client.MongoClient;
  */
 @ExtendWith({ MongoClientExtension.class })
 @EnableIfReplicaSetAvailable
+@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
 public class ClientSessionTests {
 
 	private static final String DB_NAME = "client-session-tests";

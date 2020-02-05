@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import org.springframework.data.mongodb.repository.MongoRepository;
-
 /**
  * Simple repository interface managing {@link Contact}s.
  *

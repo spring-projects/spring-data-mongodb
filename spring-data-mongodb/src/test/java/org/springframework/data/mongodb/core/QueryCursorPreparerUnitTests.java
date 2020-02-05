@@ -21,19 +21,20 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 
 import java.util.concurrent.TimeUnit;
 
-import com.mongodb.MongoClientSettings;
 import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoTemplate.QueryCursorPreparer;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
 
+import com.mongodb.MongoClientSettings;
 import com.mongodb.client.FindIterable;
 
 /**
@@ -91,16 +92,16 @@ public class QueryCursorPreparerUnitTests {
 	}
 
 	// TODO
-//	@Test // DATAMONGO-957
-//	public void doesNotApplyMetaWhenEmpty() {
-//
-//		Query query = query(where("foo").is("bar"));
-//		query.setMeta(new Meta());
-//
-//		prepare(query);
-//
-//		verify(cursor, never()).modifiers(any(Document.class));
-//	}
+	// @Test // DATAMONGO-957
+	// public void doesNotApplyMetaWhenEmpty() {
+	//
+	// Query query = query(where("foo").is("bar"));
+	// query.setMeta(new Meta());
+	//
+	// prepare(query);
+	//
+	// verify(cursor, never()).modifiers(any(Document.class));
+	// }
 
 	// @Test // DATAMONGO-957
 	// public void appliesMaxScanCorrectly() {
@@ -130,14 +131,14 @@ public class QueryCursorPreparerUnitTests {
 	}
 
 	// TODO
-//	@Test // DATAMONGO-957
-//	public void appliesSnapshotCorrectly() {
-//
-//		Query query = query(where("foo").is("bar")).useSnapshot();
-//		prepare(query);
-//
-//		verify(cursor).snapshot(true);
-//	}
+	// @Test // DATAMONGO-957
+	// public void appliesSnapshotCorrectly() {
+	//
+	// Query query = query(where("foo").is("bar")).useSnapshot();
+	// prepare(query);
+	//
+	// verify(cursor).snapshot(true);
+	// }
 
 	@Test // DATAMONGO-1480
 	public void appliesNoCursorTimeoutCorrectly() {

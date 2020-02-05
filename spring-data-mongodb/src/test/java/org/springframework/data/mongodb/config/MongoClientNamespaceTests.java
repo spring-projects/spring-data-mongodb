@@ -51,8 +51,7 @@ public class MongoClientNamespaceTests {
 	public void clientWithJustHostAndPort() {
 
 		assertThat(ctx.containsBean("client-with-just-host-port")).isTrue();
-		MongoClientFactoryBean factoryBean = ctx.getBean("&client-with-just-host-port",
-				MongoClientFactoryBean.class);
+		MongoClientFactoryBean factoryBean = ctx.getBean("&client-with-just-host-port", MongoClientFactoryBean.class);
 
 		assertThat(getField(factoryBean, "host")).isEqualTo("127.0.0.1");
 		assertThat(getField(factoryBean, "port")).isEqualTo(27017);
@@ -66,8 +65,7 @@ public class MongoClientNamespaceTests {
 	public void clientWithConnectionString() {
 
 		assertThat(ctx.containsBean("client-with-connection-string")).isTrue();
-		MongoClientFactoryBean factoryBean = ctx.getBean("&client-with-connection-string",
-				MongoClientFactoryBean.class);
+		MongoClientFactoryBean factoryBean = ctx.getBean("&client-with-connection-string", MongoClientFactoryBean.class);
 
 		assertThat(getField(factoryBean, "host")).isNull();
 		assertThat(getField(factoryBean, "port")).isNull();
@@ -82,8 +80,7 @@ public class MongoClientNamespaceTests {
 	public void clientWithReplicaSet() {
 
 		assertThat(ctx.containsBean("client-with-replica-set")).isTrue();
-		MongoClientFactoryBean factoryBean = ctx.getBean("&client-with-replica-set",
-				MongoClientFactoryBean.class);
+		MongoClientFactoryBean factoryBean = ctx.getBean("&client-with-replica-set", MongoClientFactoryBean.class);
 
 		assertThat(getField(factoryBean, "host")).isNull();
 		assertThat(getField(factoryBean, "port")).isNull();
@@ -112,8 +109,7 @@ public class MongoClientNamespaceTests {
 	public void clientWithClusterSettings() {
 
 		assertThat(ctx.containsBean("client-with-cluster-settings")).isTrue();
-		MongoClientFactoryBean factoryBean = ctx.getBean("&client-with-cluster-settings",
-				MongoClientFactoryBean.class);
+		MongoClientFactoryBean factoryBean = ctx.getBean("&client-with-cluster-settings", MongoClientFactoryBean.class);
 
 		MongoClientSettings settings = (MongoClientSettings) getField(factoryBean, "mongoClientSettings");
 
@@ -146,8 +142,7 @@ public class MongoClientNamespaceTests {
 	public void clientWithUUidSettings() {
 
 		assertThat(ctx.containsBean("client-with-uuid-settings")).isTrue();
-		MongoClientFactoryBean factoryBean = ctx.getBean("&client-with-uuid-settings",
-				MongoClientFactoryBean.class);
+		MongoClientFactoryBean factoryBean = ctx.getBean("&client-with-uuid-settings", MongoClientFactoryBean.class);
 
 		MongoClientSettings settings = (MongoClientSettings) getField(factoryBean, "mongoClientSettings");
 		assertThat(settings.getUuidRepresentation()).isEqualTo(UuidRepresentation.STANDARD);

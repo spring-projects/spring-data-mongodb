@@ -26,11 +26,9 @@ import javax.validation.constraints.Size;
  */
 public class User {
 
-	@Size(min = 10)
-	private String name;
+	@Size(min = 10) private String name;
 
-	@Min(18)
-	private Integer age;
+	@Min(18) private Integer age;
 
 	public User(String name, Integer age) {
 		this.name = name;

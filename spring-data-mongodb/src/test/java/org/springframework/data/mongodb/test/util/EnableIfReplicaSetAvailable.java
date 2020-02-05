@@ -25,8 +25,8 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
- * {@link EnableIfReplicaSetAvailable} marks a specific test class or method to be only executed against a server running in
- * replicaSet mode. Intended to be used along with {@link MongoServerCondition}.
+ * {@link EnableIfReplicaSetAvailable} marks a specific test class or method to be only executed against a server
+ * running in replicaSet mode. Intended to be used along with {@link MongoServerCondition}.
  *
  * @author Christoph Strobl
  * @since 3.0

@@ -37,6 +37,7 @@ import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.data.mongodb.test.util.AfterTransactionAssertion;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.ReplSetClient;
@@ -59,6 +60,7 @@ import com.mongodb.client.model.Filters;
  */
 @ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 @EnableIfReplicaSetAvailable
+@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
 @Transactional(transactionManager = "txManager")
 public class PersonRepositoryTransactionalTests {
 

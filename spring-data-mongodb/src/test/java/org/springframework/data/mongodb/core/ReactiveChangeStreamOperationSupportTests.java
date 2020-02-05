@@ -19,7 +19,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import lombok.SneakyThrows;
-import org.springframework.data.mongodb.test.util.ReplSetClient;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
@@ -34,10 +33,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.data.mongodb.test.util.Client;
+
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
+import org.springframework.data.mongodb.test.util.ReplSetClient;
 
 import com.mongodb.reactivestreams.client.MongoClient;
 
@@ -104,6 +105,7 @@ public class ReactiveChangeStreamOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1803
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
 	public void changeStreamEventsShouldBeConvertedCorrectly() throws InterruptedException {
 
 		BlockingQueue<ChangeStreamEvent<Person>> documents = new LinkedBlockingQueue<>(100);

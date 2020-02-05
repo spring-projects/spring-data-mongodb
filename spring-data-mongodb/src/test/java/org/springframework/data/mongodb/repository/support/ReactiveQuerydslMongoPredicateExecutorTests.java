@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import org.springframework.data.mongodb.core.query.BasicQuery;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -39,6 +38,7 @@ import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.config.AbstractReactiveMongoConfiguration;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.repository.Address;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.QAddress;
@@ -52,7 +52,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.mongodb.MongoException;
 import com.mongodb.reactivestreams.client.MongoClient;
-import com.mongodb.reactivestreams.client.MongoClients;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 
 /**

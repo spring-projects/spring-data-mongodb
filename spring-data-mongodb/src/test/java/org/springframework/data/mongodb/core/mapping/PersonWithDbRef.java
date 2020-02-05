@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
-
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
  */

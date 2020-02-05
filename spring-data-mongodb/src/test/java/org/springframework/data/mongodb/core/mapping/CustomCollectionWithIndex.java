@@ -24,10 +24,8 @@ import org.springframework.data.mongodb.core.index.Indexed;
 @Document("foobar")
 public class CustomCollectionWithIndex {
 
-	@Id
-	private String id;
-	@Indexed
-	private String name;
+	@Id private String id;
+	@Indexed private String name;
 
 	public CustomCollectionWithIndex(String name) {
 		this.name = name;

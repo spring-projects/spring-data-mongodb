@@ -15,13 +15,13 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
-
-import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * @author Thomas Darimont

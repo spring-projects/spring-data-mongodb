@@ -67,10 +67,9 @@ public class ObjectOperatorsUnitTests {
 	@Test // DATAMONGO-2053
 	public void mergeMixed() {
 
-		assertThat(
-				ObjectOperators.valueOf("kettricken").mergeWithValuesOf(EXPRESSION).mergeWithValuesOf("verity")
-						.toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo(
-								Document.parse("{ $mergeObjects: [ \"$kettricken\", " + EXPRESSION_STRING + ", \"$verity\" ] } "));
+		assertThat(ObjectOperators.valueOf("kettricken").mergeWithValuesOf(EXPRESSION).mergeWithValuesOf("verity")
+				.toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo(
+						Document.parse("{ $mergeObjects: [ \"$kettricken\", " + EXPRESSION_STRING + ", \"$verity\" ] } "));
 	}
 
 	@Test // DATAMONGO-2053

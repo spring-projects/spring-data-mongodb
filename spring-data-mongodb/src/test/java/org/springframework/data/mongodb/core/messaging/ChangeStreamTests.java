@@ -48,6 +48,7 @@ import org.springframework.data.mongodb.core.messaging.Message.MessageProperties
 import org.springframework.data.mongodb.core.messaging.SubscriptionUtils.*;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoVersion;
@@ -387,6 +388,7 @@ public class ChangeStreamTests {
 	}
 
 	@Test // DATAMONGO-1803
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
 	public void readsFullDocumentForUpdateWhenNotMappedToDomainTypeButLookupSpecified() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, Document> messageListener = new CollectingMessageListener<>();

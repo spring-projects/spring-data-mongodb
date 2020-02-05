@@ -25,6 +25,10 @@ import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
+ * {@code @EnableIfMongoServerVersion} is used to signal that the annotated test class or test method is only
+ * <em>enabled</em> if the value of the specified version boundaries {@link #isGreaterThanEqual()} and
+ * {@link #isLessThan()} match the connected MongoDB server version.
+ *
  * @author Christoph Strobl
  * @since 3.0
  */
