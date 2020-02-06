@@ -39,7 +39,6 @@ import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -1638,9 +1637,31 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 					? collection //
 					: collection.withWriteConcern(writeConcernToUse);
 
-			Publisher<?> publisher = !mapped.hasId() //
-					? collectionToUse.insertOne(document) //
-					: collectionToUse.replaceOne(mapped.getIdFilter(), document, new ReplaceOptions().upsert(true));
+			Publisher<?> publisher = null;
+			if (!mapped.hasId()) {
+				publisher = collectionToUse.insertOne(document);
+			} else {
+
+				MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
+				UpdateContext updateContext = queryOperations.replaceSingleContext(mapped, true);
+				Document filter = updateContext.getMappedQuery(entity);
+				Document replacement = updateContext.getMappedUpdate(entity);
+
+				Mono<Document> theFilter = Mono.just(filter);
+
+				if(updateContext.requiresShardKey(filter, entity)) {
+					if (entity.getShardKey().isImmutable()) {
+						theFilter = Mono.just(updateContext.applyShardKey(entity, filter, null));
+					} else {
+						theFilter = Mono.from(
+								collection.find(filter, Document.class).projection(updateContext.getMappedShardKey(entity)).first())
+								.defaultIfEmpty(replacement).map(it -> updateContext.applyShardKey(entity, filter, it));
+					}
+				}
+
+				publisher = theFilter.flatMap(
+						it -> Mono.from(collectionToUse.replaceOne(it, replacement, updateContext.getReplaceOptions(entityClass))));
+			}
 
 			return Mono.from(publisher).map(o -> mapped.getId());
 		});
@@ -1778,8 +1799,21 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 				if (!UpdateMapper.isUpdateObject(updateObj)) {
 
+					Document filter = new Document(queryObj);
+					Mono<Document> theFilter = Mono.just(filter);
+
+					if(updateContext.requiresShardKey(filter, entity)) {
+						if (entity.getShardKey().isImmutable()) {
+							theFilter = Mono.just(updateContext.applyShardKey(entity, filter, null));
+						} else {
+							theFilter = Mono.from(
+									collection.find(filter, Document.class).projection(updateContext.getMappedShardKey(entity)).first())
+									.defaultIfEmpty(updateObj).map(it -> updateContext.applyShardKey(entity, filter, it));
+						}
+					}
+
 					ReplaceOptions replaceOptions = updateContext.getReplaceOptions(entityClass);
-					return collectionToUse.replaceOne(queryObj, updateObj, replaceOptions);
+					return theFilter.flatMap(it -> Mono.from(collectionToUse.replaceOne(it, updateObj, replaceOptions)));
 				}
 
 				return multi ? collectionToUse.updateMany(queryObj, updateObj, updateOptions)

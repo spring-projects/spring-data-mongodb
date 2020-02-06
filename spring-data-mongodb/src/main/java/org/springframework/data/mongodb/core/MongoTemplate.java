@@ -33,7 +33,6 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -1480,23 +1479,38 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		return execute(collectionName, collection -> {
+
 			MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.SAVE, collectionName, entityClass,
 					dbDoc, null);
 			WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
 
 			MappedDocument mapped = MappedDocument.of(dbDoc);
 
+			MongoCollection<Document> collectionToUse = writeConcernToUse == null //
+					? collection //
+					: collection.withWriteConcern(writeConcernToUse);
+
 			if (!mapped.hasId()) {
-				if (writeConcernToUse == null) {
-					collection.insertOne(dbDoc);
-				} else {
-					collection.withWriteConcern(writeConcernToUse).insertOne(dbDoc);
-				}
-			} else if (writeConcernToUse == null) {
-				collection.replaceOne(mapped.getIdFilter(), dbDoc, new ReplaceOptions().upsert(true));
+				collectionToUse.insertOne(dbDoc);
 			} else {
-				collection.withWriteConcern(writeConcernToUse).replaceOne(mapped.getIdFilter(), dbDoc,
-						new ReplaceOptions().upsert(true));
+
+				MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
+				UpdateContext updateContext = queryOperations.replaceSingleContext(mapped, true);
+				Document replacement = updateContext.getMappedUpdate(entity);
+
+				Document filter = updateContext.getMappedQuery(entity);
+
+				if (updateContext.requiresShardKey(filter, entity)) {
+
+					if (entity.getShardKey().isImmutable()) {
+						filter = updateContext.applyShardKey(entity, filter, null);
+					} else {
+						filter = updateContext.applyShardKey(entity, filter,
+								collection.find(filter, Document.class).projection(updateContext.getMappedShardKey(entity)).first());
+					}
+				}
+
+				collectionToUse.replaceOne(filter, replacement, new ReplaceOptions().upsert(true));
 			}
 			return mapped.getId();
 		});
@@ -1615,8 +1629,20 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			if (!UpdateMapper.isUpdateObject(updateObj)) {
 
+				Document filter = new Document(queryObj);
+
+				if (updateContext.requiresShardKey(filter, entity)) {
+
+					if (entity.getShardKey().isImmutable()) {
+						filter = updateContext.applyShardKey(entity, filter, null);
+					} else {
+						filter = updateContext.applyShardKey(entity, filter,
+								collection.find(filter, Document.class).projection(updateContext.getMappedShardKey(entity)).first());
+					}
+				}
+				
 				ReplaceOptions replaceOptions = updateContext.getReplaceOptions(entityClass);
-				return collection.replaceOne(queryObj, updateObj, replaceOptions);
+				return collection.replaceOne(filter, updateObj, replaceOptions);
 			} else {
 				return multi ? collection.updateMany(queryObj, updateObj, opts)
 						: collection.updateOne(queryObj, updateObj, opts);

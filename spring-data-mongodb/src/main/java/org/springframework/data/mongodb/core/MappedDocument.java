@@ -80,7 +80,11 @@ public class MappedDocument {
 	}
 
 	public Bson getIdFilter() {
-		return Filters.eq(ID_FIELD, document.get(ID_FIELD));
+		return new Document(ID_FIELD, document.get(ID_FIELD));
+	}
+
+	public Object get(String key) {
+		return document.get(key);
 	}
 
 	public UpdateDefinition updateWithoutId() {

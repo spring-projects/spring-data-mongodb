@@ -255,6 +255,38 @@ public class BasicMongoPersistentEntityUnitTests {
 		assertThat(entity.getCollation()).isEqualTo(org.springframework.data.mongodb.core.query.Collation.of("en_US"));
 	}
 
+	@Test // DATAMONGO-2341
+	public void detectsShardedEntityCorrectly() {
+
+		assertThat(entityOf(WithDefaultShardKey.class).isSharded()).isTrue();
+		assertThat(entityOf(Contact.class).isSharded()).isFalse();
+	}
+
+	@Test // DATAMONGO-2341
+	public void readsDefaultShardKey() {
+
+		assertThat(entityOf(WithDefaultShardKey.class).getShardKey().getDocument())
+				.isEqualTo(new org.bson.Document("_id", 1));
+	}
+
+	@Test // DATAMONGO-2341
+	public void readsSingleShardKey() {
+
+		assertThat(entityOf(WithSingleShardKey.class).getShardKey().getDocument())
+				.isEqualTo(new org.bson.Document("country", 1));
+	}
+
+	@Test // DATAMONGO-2341
+	public void readsMultiShardKey() {
+
+		assertThat(entityOf(WithMultiShardKey.class).getShardKey().getDocument())
+				.isEqualTo(new org.bson.Document("country", 1).append("userid", 1));
+	}
+
+	static <T> BasicMongoPersistentEntity<T> entityOf(Class<T> type) {
+		return new BasicMongoPersistentEntity<>(ClassTypeInformation.from(type));
+	}
+
 	@Document("contacts")
 	class Contact {}
 
@@ -312,6 +344,15 @@ public class BasicMongoPersistentEntityUnitTests {
 
 	@Document(collation = "{ 'locale' : 'en_US' }")
 	class WithDocumentCollation {}
+
+	@Sharded
+	class WithDefaultShardKey {}
+
+	@Sharded("country")
+	class WithSingleShardKey {}
+
+	@Sharded({ "country", "userid" })
+	class WithMultiShardKey {}
 
 	static class SampleExtension implements EvaluationContextExtension {
 

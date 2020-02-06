@@ -54,13 +54,15 @@ public class BsonUtils {
 	}
 
 	public static Map<String, Object> asMap(Bson bson) {
+
 		if (bson instanceof Document) {
 			return (Document) bson;
 		}
 		if (bson instanceof BasicDBObject) {
 			return ((BasicDBObject) bson);
 		}
-		throw new IllegalArgumentException("o_O what's that? Cannot read values from " + bson.getClass());
+
+		return (Map) bson.toBsonDocument(Document.class, MongoClientSettings.getDefaultCodecRegistry());
 	}
 
 	public static void addToMap(Bson bson, String key, @Nullable Object value) {
