@@ -1829,6 +1829,95 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		assertThat(captor.getValue()).isEqualTo(Collections.singletonList(Document.parse("{ $unset : \"firstname\" }")));
 	}
 
+	@Test // DATAMONGO-2341
+	void saveShouldAppendNonDefaultShardKeyIfNotPresentInFilter() {
+
+		template.save(new ShardedEntityWithNonDefaultShardKey("id-1", "AT", 4230));
+
+		ArgumentCaptor<Bson> filter = ArgumentCaptor.forClass(Bson.class);
+		verify(collection).replaceOne(filter.capture(), any(), any());
+
+		assertThat(filter.getValue()).isEqualTo(new Document("_id", "id-1").append("country", "AT").append("userid", 4230));
+	}
+
+	@Test // DATAMONGO-2341
+	void saveShouldAppendNonDefaultShardKeyToVersionedEntityIfNotPresentInFilter() {
+
+		when(collection.replaceOne(any(), any(), any(ReplaceOptions.class))).thenReturn(UpdateResult.acknowledged(1, 1L, null));
+
+		template.save(new ShardedVersionedEntityWithNonDefaultShardKey("id-1", 1L, "AT", 4230));
+
+		ArgumentCaptor<Bson> filter = ArgumentCaptor.forClass(Bson.class);
+		verify(collection).replaceOne(filter.capture(), any(), any());
+
+		assertThat(filter.getValue()).isEqualTo(new Document("_id", "id-1").append("version", 1L).append("country", "AT").append("userid", 4230));
+	}
+
+	@Test // DATAMONGO-2341
+	void saveShouldAppendNonDefaultShardKeyFromExistingDocumentIfNotPresentInFilter() {
+
+		when(findIterable.first()).thenReturn(new Document("_id", "id-1").append("country", "US").append("userid", 4230));
+
+		template.save(new ShardedEntityWithNonDefaultShardKey("id-1", "AT", 4230));
+
+		ArgumentCaptor<Bson> filter = ArgumentCaptor.forClass(Bson.class);
+		ArgumentCaptor<Document> replacement = ArgumentCaptor.forClass(Document.class);
+
+		verify(collection).replaceOne(filter.capture(), replacement.capture(), any());
+
+		assertThat(filter.getValue()).isEqualTo(new Document("_id", "id-1").append("country", "US").append("userid", 4230));
+		assertThat(replacement.getValue()).containsEntry("country", "AT").containsEntry("userid", 4230);
+	}
+
+	@Test // DATAMONGO-2341
+	void saveShouldAppendNonDefaultShardKeyFromGivenDocumentIfShardKeyIsImmutable() {
+
+		template.save(new ShardedEntityWithNonDefaultImmutableShardKey("id-1", "AT", 4230));
+
+		ArgumentCaptor<Bson> filter = ArgumentCaptor.forClass(Bson.class);
+		ArgumentCaptor<Document> replacement = ArgumentCaptor.forClass(Document.class);
+
+		verify(collection).replaceOne(filter.capture(), replacement.capture(), any());
+
+		assertThat(filter.getValue()).isEqualTo(new Document("_id", "id-1").append("country", "AT").append("userid", 4230));
+		assertThat(replacement.getValue()).containsEntry("country", "AT").containsEntry("userid", 4230);
+
+		verifyNoInteractions(findIterable);
+	}
+
+	@Test // DATAMONGO-2341
+	void saveShouldAppendDefaultShardKeyIfNotPresentInFilter() {
+
+		template.save(new ShardedEntityWithDefaultShardKey("id-1", "AT", 4230));
+
+		ArgumentCaptor<Bson> filter = ArgumentCaptor.forClass(Bson.class);
+		verify(collection).replaceOne(filter.capture(), any(), any());
+
+		assertThat(filter.getValue()).isEqualTo(new Document("_id", "id-1"));
+		verify(findIterable, never()).first();
+	}
+
+	@Test // DATAMONGO-2341
+	void saveShouldProjectOnShardKeyWhenLoadingExistingDocument() {
+
+		when(findIterable.first()).thenReturn(new Document("_id", "id-1").append("country", "US").append("userid", 4230));
+
+		template.save(new ShardedEntityWithNonDefaultShardKey("id-1", "AT", 4230));
+
+		verify(findIterable).projection(new Document("country", 1).append("userid", 1));
+	}
+
+	@Test // DATAMONGO-2341
+	void saveVersionedShouldProjectOnShardKeyWhenLoadingExistingDocument() {
+
+		when(collection.replaceOne(any(), any(), any(ReplaceOptions.class))).thenReturn(UpdateResult.acknowledged(1, 1L, null));
+		when(findIterable.first()).thenReturn(new Document("_id", "id-1").append("country", "US").append("userid", 4230));
+
+		template.save(new ShardedVersionedEntityWithNonDefaultShardKey("id-1", 1L, "AT", 4230));
+
+		verify(findIterable).projection(new Document("country", 1).append("userid", 1));
+	}
+
 	class AutogenerateableId {
 
 		@Id BigInteger id;

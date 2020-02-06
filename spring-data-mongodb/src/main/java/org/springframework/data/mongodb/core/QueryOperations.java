@@ -16,7 +16,10 @@
 package org.springframework.data.mongodb.core;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -155,6 +158,15 @@ class QueryOperations {
 	}
 
 	/**
+	 * @param replacement the {@link MappedDocument mapped replacement} document.
+	 * @param upsert use {@literal true} to insert diff when no existing document found.
+	 * @return new instance of {@link UpdateContext}.
+	 */
+	UpdateContext replaceSingleContext(MappedDocument replacement, boolean upsert) {
+		return new UpdateContext(replacement, upsert);
+	}
+
+	/**
 	 * Create a new {@link DeleteContext} instance removing all matching documents.
 	 *
 	 * @param query must not be {@literal null}.
@@ -253,7 +265,6 @@ class QueryOperations {
 		 */
 		Document getMappedSort(@Nullable MongoPersistentEntity<?> entity) {
 			return queryMapper.getMappedSort(query.getSortObject(), entity);
-
 		}
 
 		/**
@@ -353,7 +364,6 @@ class QueryOperations {
 				if (ClassUtils.isAssignable(requestedTargetType, propertyType)) {
 					conversionTargetType = propertyType;
 				}
-
 			} catch (PropertyReferenceException e) {
 				// just don't care about it as we default to Object.class anyway.
 			}
@@ -491,7 +501,9 @@ class QueryOperations {
 
 		private final boolean multi;
 		private final boolean upsert;
-		private final UpdateDefinition update;
+		private final @Nullable UpdateDefinition update;
+		private final @Nullable MappedDocument mappedDocument;
+		private final Map<Class<?>, Document> mappedShardKey = new ConcurrentHashMap<>(1);
 
 		/**
 		 * Create a new {@link UpdateContext} instance.
@@ -520,6 +532,16 @@ class QueryOperations {
 			this.multi = multi;
 			this.upsert = upsert;
 			this.update = update;
+			this.mappedDocument = null;
+		}
+
+		UpdateContext(MappedDocument update, boolean upsert) {
+
+			super(new BasicQuery(new Document(BsonUtils.asMap(update.getIdFilter()))));
+			this.multi = false;
+			this.upsert = upsert;
+			this.mappedDocument = update;
+			this.update = null;
 		}
 
 		/**
@@ -544,7 +566,7 @@ class QueryOperations {
 			UpdateOptions options = new UpdateOptions();
 			options.upsert(upsert);
 
-			if (update.hasArrayFilters()) {
+			if (update != null && update.hasArrayFilters()) {
 				options
 						.arrayFilters(update.getArrayFilters().stream().map(ArrayFilter::asDocument).collect(Collectors.toList()));
 			}
@@ -602,6 +624,45 @@ class QueryOperations {
 			return mappedQuery;
 		}
 
+		<T> Document applyShardKey(@Nullable MongoPersistentEntity<T> domainType, Document filter,
+				@Nullable Document existing) {
+
+			Document shardKeySource = existing != null ? existing
+					: mappedDocument != null ? mappedDocument.getDocument() : getMappedUpdate(domainType);
+
+			Document filterWithShardKey = new Document(filter);
+			for (String key : getMappedShardKeyFields(domainType)) {
+				if (!filterWithShardKey.containsKey(key)) {
+					filterWithShardKey.append(key, shardKeySource.get(key));
+				}
+			}
+
+			return filterWithShardKey;
+		}
+
+		<T> boolean requiresShardKey(Document filter, @Nullable MongoPersistentEntity<T> domainType) {
+
+			if (multi || domainType == null || !domainType.isSharded() || domainType.idPropertyIsShardKey()) {
+				return false;
+			}
+
+			if (filter.keySet().containsAll(getMappedShardKeyFields(domainType))) {
+				return false;
+			}
+
+			return true;
+		}
+
+		Set<String> getMappedShardKeyFields(@Nullable MongoPersistentEntity<?> entity) {
+			return getMappedShardKey(entity).keySet();
+		}
+
+		Document getMappedShardKey(@Nullable MongoPersistentEntity<?> entity) {
+
+			return mappedShardKey.computeIfAbsent(entity.getType(),
+					key -> queryMapper.getMappedFields(entity.getShardKey().getDocument(), entity));
+		}
+
 		/**
 		 * Get the already mapped aggregation pipeline to use with an {@link #isAggregationUpdate()}.
 		 *
@@ -625,8 +686,11 @@ class QueryOperations {
 		 */
 		Document getMappedUpdate(@Nullable MongoPersistentEntity<?> entity) {
 
-			return update instanceof MappedUpdate ? update.getUpdateObject()
-					: updateMapper.getMappedObject(update.getUpdateObject(), entity);
+			if (update != null) {
+				return update instanceof MappedUpdate ? update.getUpdateObject()
+						: updateMapper.getMappedObject(update.getUpdateObject(), entity);
+			}
+			return mappedDocument.getDocument();
 		}
 
 		/**

@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
 import lombok.Data;
 import reactor.core.publisher.Mono;
@@ -997,6 +998,101 @@ public class ReactiveMongoTemplateUnitTests {
 		verify(collection, times(1)).updateOne(any(org.bson.Document.class), captor.capture(), any(UpdateOptions.class));
 
 		assertThat(captor.getValue()).isEqualTo(Collections.singletonList(Document.parse("{ $unset : \"firstname\" }")));
+	}
+
+	@Test // DATAMONGO-2341
+	void saveShouldAppendNonDefaultShardKeyIfNotPresentInFilter() {
+
+		when(findPublisher.first()).thenReturn(Mono.empty());
+
+		template.save(new ShardedEntityWithNonDefaultShardKey("id-1", "AT", 4230)).subscribe();
+
+		ArgumentCaptor<Bson> filter = ArgumentCaptor.forClass(Bson.class);
+		verify(collection).replaceOne(filter.capture(), any(), any());
+
+		assertThat(filter.getValue()).isEqualTo(new Document("_id", "id-1").append("country", "AT").append("userid", 4230));
+	}
+
+	@Test // DATAMONGO-2341
+	void saveShouldAppendNonDefaultShardKeyFromGivenDocumentIfShardKeyIsImmutable() {
+
+		template.save(new ShardedEntityWithNonDefaultImmutableShardKey("id-1", "AT", 4230)).subscribe();
+
+		ArgumentCaptor<Bson> filter = ArgumentCaptor.forClass(Bson.class);
+		ArgumentCaptor<Document> replacement = ArgumentCaptor.forClass(Document.class);
+
+		verify(collection).replaceOne(filter.capture(), replacement.capture(), any());
+
+		assertThat(filter.getValue()).isEqualTo(new Document("_id", "id-1").append("country", "AT").append("userid", 4230));
+		assertThat(replacement.getValue()).containsEntry("country", "AT").containsEntry("userid", 4230);
+
+		verifyNoInteractions(findPublisher);
+	}
+
+	@Test // DATAMONGO-2341
+	void saveShouldAppendNonDefaultShardKeyToVersionedEntityIfNotPresentInFilter() {
+
+		when(collection.replaceOne(any(Bson.class), any(Document.class), any(ReplaceOptions.class)))
+				.thenReturn(Mono.just(UpdateResult.acknowledged(1, 1L, null)));
+		when(findPublisher.first()).thenReturn(Mono.empty());
+
+		template.save(new ShardedVersionedEntityWithNonDefaultShardKey("id-1", 1L, "AT", 4230)).subscribe();
+
+		ArgumentCaptor<Bson> filter = ArgumentCaptor.forClass(Bson.class);
+		verify(collection).replaceOne(filter.capture(), any(), any());
+
+		assertThat(filter.getValue())
+				.isEqualTo(new Document("_id", "id-1").append("version", 1L).append("country", "AT").append("userid", 4230));
+	}
+
+	@Test // DATAMONGO-2341
+	void saveShouldAppendNonDefaultShardKeyFromExistingDocumentIfNotPresentInFilter() {
+
+		when(findPublisher.first())
+				.thenReturn(Mono.just(new Document("_id", "id-1").append("country", "US").append("userid", 4230)));
+
+		template.save(new ShardedEntityWithNonDefaultShardKey("id-1", "AT", 4230)).subscribe();
+
+		ArgumentCaptor<Bson> filter = ArgumentCaptor.forClass(Bson.class);
+		ArgumentCaptor<Document> replacement = ArgumentCaptor.forClass(Document.class);
+
+		verify(collection).replaceOne(filter.capture(), replacement.capture(), any());
+
+		assertThat(filter.getValue()).isEqualTo(new Document("_id", "id-1").append("country", "US").append("userid", 4230));
+		assertThat(replacement.getValue()).containsEntry("country", "AT").containsEntry("userid", 4230);
+	}
+
+	@Test // DATAMONGO-2341
+	void saveShouldAppendDefaultShardKeyIfNotPresentInFilter() {
+
+		template.save(new ShardedEntityWithDefaultShardKey("id-1", "AT", 4230)).subscribe();
+
+		ArgumentCaptor<Bson> filter = ArgumentCaptor.forClass(Bson.class);
+		verify(collection).replaceOne(filter.capture(), any(), any());
+
+		assertThat(filter.getValue()).isEqualTo(new Document("_id", "id-1"));
+	}
+
+	@Test // DATAMONGO-2341
+	void saveShouldProjectOnShardKeyWhenLoadingExistingDocument() {
+
+		when(findPublisher.first()).thenReturn(Mono.just(new Document("_id", "id-1").append("country", "US").append("userid", 4230)));
+
+		template.save(new ShardedEntityWithNonDefaultShardKey("id-1", "AT", 4230)).subscribe();
+
+		verify(findPublisher).projection(new Document("country", 1).append("userid", 1));
+	}
+
+	@Test // DATAMONGO-2341
+	void saveVersionedShouldProjectOnShardKeyWhenLoadingExistingDocument() {
+
+		when(collection.replaceOne(any(Bson.class), any(Document.class), any(ReplaceOptions.class)))
+				.thenReturn(Mono.just(UpdateResult.acknowledged(1, 1L, null)));
+		when(findPublisher.first()).thenReturn(Mono.empty());
+
+		template.save(new ShardedVersionedEntityWithNonDefaultShardKey("id-1", 1L, "AT", 4230)).subscribe();
+
+		verify(findPublisher).projection(new Document("country", 1).append("userid", 1));
 	}
 
 	@Data

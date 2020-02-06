@@ -37,6 +37,7 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -62,6 +63,8 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 	private final @Nullable String collation;
 	private final @Nullable Expression collationExpression;
+
+	private final ShardKey shardKey;
 
 	/**
 	 * Creates a new {@link BasicMongoPersistentEntity} with the given {@link TypeInformation}. Will default the
@@ -92,6 +95,8 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 			this.collation = null;
 			this.collationExpression = null;
 		}
+
+		this.shardKey = detectShardKey(this);
 	}
 
 	/*
@@ -158,6 +163,11 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		return StringUtils.hasText(collationValue.toString())
 				? org.springframework.data.mongodb.core.query.Collation.parse(collationValue.toString())
 				: null;
+	}
+
+	@Override
+	public ShardKey getShardKey() {
+		return shardKey;
 	}
 
 	/*
@@ -295,6 +305,26 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 		Expression expression = PARSER.parseExpression(potentialExpression, ParserContext.TEMPLATE_EXPRESSION);
 		return expression instanceof LiteralExpression ? null : expression;
+	}
+
+	@Nullable
+	private static ShardKey detectShardKey(BasicMongoPersistentEntity<?> entity) {
+
+		if (!entity.isAnnotationPresent(Sharded.class)) {
+			return ShardKey.none();
+		}
+
+		Sharded sharded = entity.getRequiredAnnotation(Sharded.class);
+
+		String[] keyProperties = sharded.shardKey();
+		if (ObjectUtils.isEmpty(keyProperties)) {
+			keyProperties = new String[] { "_id" };
+		}
+
+		ShardKey shardKey = ShardingStrategy.HASH.equals(sharded.shardingStrategy()) ? ShardKey.hash(keyProperties)
+				: ShardKey.range(keyProperties);
+
+		return sharded.immutableKey() ? ShardKey.immutable(shardKey) : shardKey;
 	}
 
 	/**
