@@ -22,14 +22,11 @@ import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity.
 @RunWith(MockitoJUnitRunner.class)
 public class MongoPersistentPropertyComparatorUnitTests {
 
-	@Mock
-	MongoPersistentProperty firstName;
+	@Mock MongoPersistentProperty firstName;
 
-	@Mock
-	MongoPersistentProperty lastName;
+	@Mock MongoPersistentProperty lastName;
 
-	@Mock
-	MongoPersistentProperty ssn;
+	@Mock MongoPersistentProperty ssn;
 
 	@Test
 	public void ordersPropertiesCorrectly() {

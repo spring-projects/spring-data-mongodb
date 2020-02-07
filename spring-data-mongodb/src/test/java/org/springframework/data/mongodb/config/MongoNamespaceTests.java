@@ -22,10 +22,9 @@ import javax.net.ssl.SSLSocketFactory;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoClientFactoryBean;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -33,9 +32,10 @@ import org.springframework.data.mongodb.gridfs.GridFsOperations;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoClientSettings;
+import com.mongodb.ServerAddress;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.MongoClient;
 
 /**
  * Integration tests for the MongoDB namespace.
@@ -74,9 +74,8 @@ public class MongoNamespaceTests {
 		assertThat(host).isEqualTo("localhost");
 		assertThat(port).isEqualTo(new Integer(27017));
 
-		MongoClientOptions options = (MongoClientOptions) getField(mfb, "mongoClientOptions");
-		assertThat(options.getSocketFactory() instanceof SSLSocketFactory)
-				.as("By default socketFactory should not be a SSLSocketFactory").isFalse();
+		MongoClientSettings options = (MongoClientSettings) getField(mfb, "mongoClientSettings");
+		assertThat(options).isNull();
 	}
 
 	@Test // DATAMONGO-764
@@ -85,9 +84,9 @@ public class MongoNamespaceTests {
 		assertThat(ctx.containsBean("mongoSsl")).isTrue();
 		MongoClientFactoryBean mfb = (MongoClientFactoryBean) ctx.getBean("&mongoSsl");
 
-		MongoClientOptions options = (MongoClientOptions) getField(mfb, "mongoClientOptions");
-		assertThat(options.getSocketFactory() instanceof SSLSocketFactory).as("socketFactory should be a SSLSocketFactory")
-				.isTrue();
+		MongoClientSettings options = (MongoClientSettings) getField(mfb, "mongoClientSettings");
+		assertThat(options.getSslSettings().getContext().getSocketFactory() instanceof SSLSocketFactory)
+				.as("socketFactory should be a SSLSocketFactory").isTrue();
 	}
 
 	@Test // DATAMONGO-1490
@@ -96,9 +95,9 @@ public class MongoNamespaceTests {
 		assertThat(ctx.containsBean("mongoClientSsl")).isTrue();
 		MongoClientFactoryBean mfb = (MongoClientFactoryBean) ctx.getBean("&mongoClientSsl");
 
-		MongoClientOptions options = (MongoClientOptions) getField(mfb, "mongoClientOptions");
-		assertThat(options.getSocketFactory() instanceof SSLSocketFactory).as("socketFactory should be a SSLSocketFactory")
-				.isTrue();
+		MongoClientSettings options = (MongoClientSettings) getField(mfb, "mongoClientSettings");
+		assertThat(options.getSslSettings().getContext().getSocketFactory() instanceof SSLSocketFactory)
+				.as("socketFactory should be a SSLSocketFactory").isTrue();
 	}
 
 	@Test // DATAMONGO-764
@@ -107,23 +106,21 @@ public class MongoNamespaceTests {
 		assertThat(ctx.containsBean("mongoSslWithCustomSslFactory")).isTrue();
 		MongoClientFactoryBean mfb = (MongoClientFactoryBean) ctx.getBean("&mongoSslWithCustomSslFactory");
 
-		SSLSocketFactory customSslSocketFactory = ctx.getBean("customSslSocketFactory", SSLSocketFactory.class);
-		MongoClientOptions options = (MongoClientOptions) getField(mfb, "mongoClientOptions");
+		MongoClientSettings options = (MongoClientSettings) getField(mfb, "mongoClientSettings");
 
-		assertThat(options.getSocketFactory() instanceof SSLSocketFactory).as("socketFactory should be a SSLSocketFactory")
-				.isTrue();
-		assertThat(options.getSocketFactory()).isSameAs(customSslSocketFactory);
+		assertThat(options.getSslSettings().getContext().getSocketFactory() instanceof SSLSocketFactory)
+				.as("socketFactory should be a SSLSocketFactory").isTrue();
+		assertThat(options.getSslSettings().getContext().getProvider().getName()).isEqualTo("SunJSSE");
 	}
 
 	@Test
 	public void testSecondMongoDbFactory() {
 
 		assertThat(ctx.containsBean("secondMongoDbFactory")).isTrue();
-		MongoDbFactory dbf = (MongoDbFactory) ctx.getBean("secondMongoDbFactory");
+		MongoDatabaseFactory dbf = (MongoDatabaseFactory) ctx.getBean("secondMongoDbFactory");
 
 		MongoClient mongo = (MongoClient) getField(dbf, "mongoClient");
-		assertThat(mongo.getAddress().getHost()).isEqualTo("127.0.0.1");
-		assertThat(mongo.getAddress().getPort()).isEqualTo(27017);
+		assertThat(mongo.getClusterDescription().getClusterSettings().getHosts()).containsExactly(new ServerAddress());
 		assertThat(getField(dbf, "databaseName")).isEqualTo("database");
 	}
 
@@ -132,11 +129,10 @@ public class MongoNamespaceTests {
 
 		assertThat(ctx.containsBean("thirdMongoDbFactory")).isTrue();
 
-		MongoDbFactory dbf = (MongoDbFactory) ctx.getBean("thirdMongoDbFactory");
+		MongoDatabaseFactory dbf = (MongoDatabaseFactory) ctx.getBean("thirdMongoDbFactory");
 		MongoClient mongo = (MongoClient) getField(dbf, "mongoClient");
 
-		assertThat(mongo.getAddress().getHost()).isEqualTo("127.0.0.1");
-		assertThat(mongo.getAddress().getPort()).isEqualTo(27017);
+		assertThat(mongo.getClusterDescription().getClusterSettings().getHosts()).containsExactly(new ServerAddress());
 		assertThat(getField(dbf, "databaseName")).isEqualTo("database");
 	}
 
@@ -146,7 +142,7 @@ public class MongoNamespaceTests {
 		assertThat(ctx.containsBean("mongoTemplate")).isTrue();
 		MongoOperations operations = (MongoOperations) ctx.getBean("mongoTemplate");
 
-		MongoDbFactory dbf = (MongoDbFactory) getField(operations, "mongoDbFactory");
+		MongoDatabaseFactory dbf = (MongoDatabaseFactory) getField(operations, "mongoDbFactory");
 		assertThat(getField(dbf, "databaseName")).isEqualTo("database");
 
 		MongoConverter converter = (MongoConverter) getField(operations, "mongoConverter");
@@ -159,11 +155,11 @@ public class MongoNamespaceTests {
 		assertThat(ctx.containsBean("anotherMongoTemplate")).isTrue();
 		MongoOperations operations = (MongoOperations) ctx.getBean("anotherMongoTemplate");
 
-		MongoDbFactory dbf = (MongoDbFactory) getField(operations, "mongoDbFactory");
+		MongoDatabaseFactory dbf = (MongoDatabaseFactory) getField(operations, "mongoDbFactory");
 		assertThat(getField(dbf, "databaseName")).isEqualTo("database");
 
 		WriteConcern writeConcern = (WriteConcern) getField(operations, "writeConcern");
-		assertThat(writeConcern).isEqualTo(WriteConcern.SAFE);
+		assertThat(writeConcern).isEqualTo(WriteConcern.ACKNOWLEDGED);
 	}
 
 	@Test // DATAMONGO-628
@@ -172,7 +168,7 @@ public class MongoNamespaceTests {
 		assertThat(ctx.containsBean("gridFsTemplate")).isTrue();
 		GridFsOperations operations = (GridFsOperations) ctx.getBean("gridFsTemplate");
 
-		MongoDbFactory dbf = (MongoDbFactory) getField(operations, "dbFactory");
+		MongoDatabaseFactory dbf = (MongoDatabaseFactory) getField(operations, "dbFactory");
 		assertThat(getField(dbf, "databaseName")).isEqualTo("database");
 
 		MongoConverter converter = (MongoConverter) getField(operations, "converter");
@@ -185,7 +181,7 @@ public class MongoNamespaceTests {
 		assertThat(ctx.containsBean("secondGridFsTemplate")).isTrue();
 		GridFsOperations operations = (GridFsOperations) ctx.getBean("secondGridFsTemplate");
 
-		MongoDbFactory dbf = (MongoDbFactory) getField(operations, "dbFactory");
+		MongoDatabaseFactory dbf = (MongoDatabaseFactory) getField(operations, "dbFactory");
 		assertThat(getField(dbf, "databaseName")).isEqualTo("database");
 		assertThat(getField(operations, "bucket")).isEqualTo(null);
 
@@ -199,7 +195,7 @@ public class MongoNamespaceTests {
 		assertThat(ctx.containsBean("thirdGridFsTemplate")).isTrue();
 		GridFsOperations operations = (GridFsOperations) ctx.getBean("thirdGridFsTemplate");
 
-		MongoDbFactory dbf = (MongoDbFactory) getField(operations, "dbFactory");
+		MongoDatabaseFactory dbf = (MongoDatabaseFactory) getField(operations, "dbFactory");
 		assertThat(getField(dbf, "databaseName")).isEqualTo("database");
 		assertThat(getField(operations, "bucket")).isEqualTo("bucketString");
 
@@ -208,8 +204,7 @@ public class MongoNamespaceTests {
 	}
 
 	@Test
-	@SuppressWarnings("deprecation")
-	public void testMongoSingletonWithPropertyPlaceHolders() throws Exception {
+	public void testMongoSingletonWithPropertyPlaceHolders() {
 
 		assertThat(ctx.containsBean("mongoClient")).isTrue();
 		MongoClientFactoryBean mfb = (MongoClientFactoryBean) ctx.getBean("&mongoClient");
@@ -219,20 +214,5 @@ public class MongoNamespaceTests {
 
 		assertThat(host).isEqualTo("127.0.0.1");
 		assertThat(port).isEqualTo(new Integer(27017));
-
-		MongoClient mongo = mfb.getObject();
-		MongoClientOptions mongoOpts = mongo.getMongoClientOptions();
-
-		assertThat(mongoOpts.getConnectionsPerHost()).isEqualTo(8);
-		assertThat(mongoOpts.getConnectTimeout()).isEqualTo(1000);
-		assertThat(mongoOpts.getMaxWaitTime()).isEqualTo(1500);
-
-		assertThat(mongoOpts.getSocketTimeout()).isEqualTo(1500);
-		assertThat(mongoOpts.getThreadsAllowedToBlockForConnectionMultiplier()).isEqualTo(4);
-
-		// TODO: check the damned defaults
-		// assertEquals("w", mongoOpts.getWriteConcern().getW());
-		// assertEquals(0, mongoOpts.getWriteConcern().getWtimeout());
-		// assertEquals(true, mongoOpts.getWriteConcern().fsync());
 	}
 }

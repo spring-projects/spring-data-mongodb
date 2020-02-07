@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.messaging;
 
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -57,7 +57,7 @@ public interface SubscriptionRequest<S, T, O extends RequestOptions> {
 		 * Get the database name of the db.
 		 *
 		 * @return the name of the database to subscribe to. Can be {@literal null} in which case the default
-		 *         {@link MongoDbFactory#getDb() database} is used.
+		 *         {@link MongoDatabaseFactory#getMongoDatabase() database} is used.
 		 */
 		@Nullable
 		default String getDatabaseName() {

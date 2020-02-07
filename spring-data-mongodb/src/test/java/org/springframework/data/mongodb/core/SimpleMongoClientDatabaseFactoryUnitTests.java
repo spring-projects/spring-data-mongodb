@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.util.ReflectionTestUtils.*;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
@@ -26,24 +25,25 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.aop.framework.AopProxyUtils;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.mongodb.MongoClientURI;
+import com.mongodb.ConnectionString;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 
 /**
- * Unit tests for {@link SimpleMongoDbFactory}.
+ * Unit tests for {@link SimpleMongoClientDatabaseFactory}.
  *
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Mark Paluch
  */
 @RunWith(MockitoJUnitRunner.class)
-public class SimpleMongoDbFactoryUnitTests {
+public class SimpleMongoClientDatabaseFactoryUnitTests {
 
 	@Mock MongoClient mongo;
 	@Mock ClientSession clientSession;
@@ -61,30 +61,30 @@ public class SimpleMongoDbFactoryUnitTests {
 	}
 
 	@Test // DATADOC-254
-	@SuppressWarnings("deprecation")
 	public void allowsDatabaseNames() {
-		new SimpleMongoClientDbFactory(mongo, "foo-bar");
-		new SimpleMongoClientDbFactory(mongo, "foo_bar");
-		new SimpleMongoClientDbFactory(mongo, "foo01231bar");
+		new SimpleMongoClientDatabaseFactory(mongo, "foo-bar");
+		new SimpleMongoClientDatabaseFactory(mongo, "foo_bar");
+		new SimpleMongoClientDatabaseFactory(mongo, "foo01231bar");
 	}
 
 	@Test // DATADOC-295
-	@SuppressWarnings("deprecation")
 	public void mongoUriConstructor() {
 
-		MongoClientURI mongoURI = new MongoClientURI("mongodb://myUsername:myPassword@localhost/myDatabase.myCollection");
-		MongoDbFactory mongoDbFactory = new SimpleMongoDbFactory(mongoURI);
+		ConnectionString mongoURI = new ConnectionString(
+				"mongodb://myUsername:myPassword@localhost/myDatabase.myCollection");
+		MongoDatabaseFactory mongoDbFactory = new SimpleMongoClientDatabaseFactory(mongoURI);
 
-		assertThat(getField(mongoDbFactory, "databaseName").toString()).isEqualTo("myDatabase");
+		assertThat(mongoDbFactory).hasFieldOrPropertyWithValue("databaseName", "myDatabase");
 	}
 
 	@Test // DATAMONGO-1158
 	public void constructsMongoClientAccordingToMongoUri() {
 
-		MongoClientURI uri = new MongoClientURI("mongodb://myUserName:myPassWord@127.0.0.1:27017/myDataBase.myCollection");
-		SimpleMongoDbFactory factory = new SimpleMongoDbFactory(uri);
+		ConnectionString uri = new ConnectionString(
+				"mongodb://myUserName:myPassWord@127.0.0.1:27017/myDataBase.myCollection");
+		SimpleMongoClientDatabaseFactory factory = new SimpleMongoClientDatabaseFactory(uri);
 
-		assertThat(getField(factory, "databaseName").toString()).isEqualTo("myDataBase");
+		assertThat(factory).hasFieldOrPropertyWithValue("databaseName", "myDataBase");
 	}
 
 	@Test // DATAMONGO-1880
@@ -92,10 +92,10 @@ public class SimpleMongoDbFactoryUnitTests {
 
 		when(mongo.getDatabase("foo")).thenReturn(database);
 
-		MongoDbFactory factory = new SimpleMongoClientDbFactory(mongo, "foo");
-		MongoDbFactory wrapped = factory.withSession(clientSession).withSession(clientSession);
+		MongoDatabaseFactory factory = new SimpleMongoClientDatabaseFactory(mongo, "foo");
+		MongoDatabaseFactory wrapped = factory.withSession(clientSession).withSession(clientSession);
 
-		InvocationHandler invocationHandler = Proxy.getInvocationHandler(wrapped.getDb());
+		InvocationHandler invocationHandler = Proxy.getInvocationHandler(wrapped.getMongoDatabase());
 
 		Object singletonTarget = AopProxyUtils
 				.getSingletonTarget(ReflectionTestUtils.getField(invocationHandler, "advised"));
@@ -104,7 +104,7 @@ public class SimpleMongoDbFactoryUnitTests {
 	}
 
 	private void rejectsDatabaseName(String databaseName) {
-		assertThatThrownBy(() -> new SimpleMongoClientDbFactory(mongo, databaseName))
+		assertThatThrownBy(() -> new SimpleMongoClientDatabaseFactory(mongo, databaseName))
 				.isInstanceOf(IllegalArgumentException.class);
 	}
 }

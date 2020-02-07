@@ -22,10 +22,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 /**
- * {@link EnableIfReplicaSetAvailable} marks a specific test class or method to be only executed against a server running in
- * replicaSet mode. Intended to be used along with {@link MongoServerCondition}.
+ * {@link EnableIfReplicaSetAvailable} marks a specific test class or method to be only executed against a server
+ * running in replicaSet mode. Intended to be used along with {@link MongoServerCondition}.
  *
  * @author Christoph Strobl
  * @since 3.0
@@ -34,6 +35,7 @@ import org.junit.jupiter.api.Tag;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Tag("replSet")
+@ExtendWith(MongoServerCondition.class)
 public @interface EnableIfReplicaSetAvailable {
 
 }

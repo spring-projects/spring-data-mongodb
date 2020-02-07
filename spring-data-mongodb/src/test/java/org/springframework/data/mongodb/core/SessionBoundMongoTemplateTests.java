@@ -36,12 +36,10 @@ import java.util.stream.IntStream;
 
 import org.aopalliance.aop.Advice;
 import org.bson.Document;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.rules.TestRule;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.aop.Advisor;
 import org.springframework.aop.framework.Advised;
@@ -50,7 +48,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.ClientSessionException;
 import org.springframework.data.mongodb.LazyLoadingException;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.SessionAwareMethodInterceptor;
 import org.springframework.data.mongodb.core.MongoTemplate.SessionBoundMongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -63,10 +61,10 @@ import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
-import org.springframework.data.mongodb.test.util.ReplicaSet;
-import org.springframework.data.util.Version;
+import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
+import org.springframework.data.mongodb.test.util.MongoVersion;
+import org.springframework.data.mongodb.test.util.ReplSetClient;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.ClientSessionOptions;
@@ -80,29 +78,27 @@ import com.mongodb.client.MongoDatabase;
  *
  * @author Christoph Strobl
  */
+@ExtendWith(MongoClientExtension.class)
+@EnableIfReplicaSetAvailable
 public class SessionBoundMongoTemplateTests {
 
-	public static @ClassRule MongoVersionRule REQUIRES_AT_LEAST_3_6_0 = MongoVersionRule.atLeast(Version.parse("3.6.0"));
-	public static @ClassRule TestRule replSet = ReplicaSet.required();
+	static @ReplSetClient MongoClient client;
 
-	MongoClient client;
 	MongoTemplate template;
 	SessionBoundMongoTemplate sessionBoundTemplate;
 	ClientSession session;
 	volatile List<MongoCollection<Document>> spiedCollections = new ArrayList<>();
 	volatile List<MongoDatabase> spiedDatabases = new ArrayList<>();
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
-		client = MongoTestUtils.replSetClient();
-
-		MongoDbFactory factory = new SimpleMongoClientDbFactory(client, "session-bound-mongo-template-tests") {
+		MongoDatabaseFactory factory = new SimpleMongoClientDatabaseFactory(client, "session-bound-mongo-template-tests") {
 
 			@Override
-			public MongoDatabase getDb() throws DataAccessException {
+			public MongoDatabase getMongoDatabase() throws DataAccessException {
 
-				MongoDatabase spiedDatabse = Mockito.spy(super.getDb());
+				MongoDatabase spiedDatabse = Mockito.spy(super.getMongoDatabase());
 				spiedDatabases.add(spiedDatabse);
 				return spiedDatabse;
 			}
@@ -145,7 +141,7 @@ public class SessionBoundMongoTemplateTests {
 		};
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
 
 		session.close();
@@ -260,6 +256,7 @@ public class SessionBoundMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-2001
+	@MongoVersion(asOf = "4.0")
 	public void countShouldWorkInTransactions() {
 
 		if (!template.collectionExists(Person.class)) {
@@ -284,6 +281,7 @@ public class SessionBoundMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-2012
+	@MongoVersion(asOf = "4.0")
 	public void countWithGeoInTransaction() {
 
 		if (!template.collectionExists(Person.class)) {
@@ -308,6 +306,7 @@ public class SessionBoundMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-2001
+	@MongoVersion(asOf = "4.0")
 	public void countShouldReturnIsolatedCount() throws InterruptedException {
 
 		if (!template.collectionExists(Person.class)) {
@@ -393,7 +392,7 @@ public class SessionBoundMongoTemplateTests {
 		return spiedDatabases.get(index);
 	}
 
-	private MongoConverter getDefaultMongoConverter(MongoDbFactory factory) {
+	private MongoConverter getDefaultMongoConverter(MongoDatabaseFactory factory) {
 
 		DbRefResolver dbRefResolver = new DefaultDbRefResolver(factory);
 		MongoCustomConversions conversions = new MongoCustomConversions(Collections.emptyList());

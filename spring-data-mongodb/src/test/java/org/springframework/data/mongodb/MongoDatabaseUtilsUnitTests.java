@@ -47,7 +47,7 @@ public class MongoDatabaseUtilsUnitTests {
 
 	@Mock ClientSession session;
 	@Mock ServerSession serverSession;
-	@Mock MongoDbFactory dbFactory;
+	@Mock MongoDatabaseFactory dbFactory;
 	@Mock MongoDatabase db;
 
 	@Mock UserTransaction userTransaction;
@@ -59,7 +59,7 @@ public class MongoDatabaseUtilsUnitTests {
 
 		when(dbFactory.withSession(session)).thenReturn(dbFactory);
 
-		when(dbFactory.getDb()).thenReturn(db);
+		when(dbFactory.getMongoDatabase()).thenReturn(db);
 
 		when(session.getServerSession()).thenReturn(serverSession);
 		when(session.hasActiveTransaction()).thenReturn(true);

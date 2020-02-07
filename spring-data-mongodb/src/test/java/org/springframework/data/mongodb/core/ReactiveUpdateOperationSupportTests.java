@@ -20,38 +20,43 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
 import lombok.Data;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import reactor.test.StepVerifier;
 
 import org.bson.BsonString;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 
-import com.mongodb.MongoClient;
-import com.mongodb.reactivestreams.client.MongoClients;
+import com.mongodb.client.MongoClient;
 
 /**
  * Integration tests for {@link ReactiveUpdateOperationSupport}.
  *
  * @author Mark Paluch
  */
+@ExtendWith(MongoClientExtension.class)
 public class ReactiveUpdateOperationSupportTests {
 
 	private static final String STAR_WARS = "star-wars";
+	static @Client MongoClient client;
+	static @Client com.mongodb.reactivestreams.client.MongoClient reactiveClient;
+
 	MongoTemplate blocking;
 	ReactiveMongoTemplate template;
 
 	Person han;
 	Person luke;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
-		blocking = new MongoTemplate(new SimpleMongoClientDbFactory(MongoTestUtils.client(), "ExecutableUpdateOperationSupportTests"));
+		blocking = new MongoTemplate(new SimpleMongoClientDatabaseFactory(client, "ExecutableUpdateOperationSupportTests"));
 		blocking.dropCollection(STAR_WARS);
 
 		han = new Person();
@@ -65,7 +70,7 @@ public class ReactiveUpdateOperationSupportTests {
 		blocking.save(han);
 		blocking.save(luke);
 
-		template = new ReactiveMongoTemplate(MongoTestUtils.reactiveClient(), "ExecutableUpdateOperationSupportTests");
+		template = new ReactiveMongoTemplate(reactiveClient, "ExecutableUpdateOperationSupportTests");
 	}
 
 	@Test // DATAMONGO-1719
@@ -116,8 +121,7 @@ public class ReactiveUpdateOperationSupportTests {
 	public void updateAllMatching() {
 
 		template.update(Person.class).matching(queryHan()).apply(new Update().set("firstname", "Han")).all()
-				.as(StepVerifier::create)
-				.consumeNextWith(actual -> {
+				.as(StepVerifier::create).consumeNextWith(actual -> {
 
 					assertThat(actual.getModifiedCount()).isEqualTo(1L);
 					assertThat(actual.getUpsertedId()).isNull();
@@ -128,8 +132,7 @@ public class ReactiveUpdateOperationSupportTests {
 	public void updateWithDifferentDomainClassAndCollection() {
 
 		template.update(Jedi.class).inCollection(STAR_WARS).matching(query(where("_id").is(han.getId())))
-				.apply(new Update().set("name", "Han")).all().as(StepVerifier::create)
-				.consumeNextWith(actual -> {
+				.apply(new Update().set("name", "Han")).all().as(StepVerifier::create).consumeNextWith(actual -> {
 
 					assertThat(actual.getModifiedCount()).isEqualTo(1L);
 					assertThat(actual.getUpsertedId()).isNull();
@@ -143,8 +146,7 @@ public class ReactiveUpdateOperationSupportTests {
 	public void findAndModify() {
 
 		template.update(Person.class).matching(queryHan()).apply(new Update().set("firstname", "Han")).findAndModify()
-				.as(StepVerifier::create)
-				.expectNext(han).verifyComplete();
+				.as(StepVerifier::create).expectNext(han).verifyComplete();
 
 		assertThat(blocking.findOne(queryHan(), Person.class)).isNotEqualTo(han).hasFieldOrPropertyWithValue("firstname",
 				"Han");

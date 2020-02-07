@@ -16,9 +16,10 @@
  */
 
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
+import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 
 /**
  * Sample configuration class in default package.
@@ -26,11 +27,11 @@ import com.mongodb.MongoClient;
  * @author Oliver Gierke
  */
 @Configuration
-public class ConfigClassInDefaultPackage extends AbstractMongoConfiguration {
+public class ConfigClassInDefaultPackage extends AbstractMongoClientConfiguration {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.config.AbstractMongoConfiguration#getDatabaseName()
+	 * @see org.springframework.data.mongodb.config.AbstractMongoClientConfiguration#getDatabaseName()
 	 */
 	@Override
 	protected String getDatabaseName() {
@@ -39,10 +40,10 @@ public class ConfigClassInDefaultPackage extends AbstractMongoConfiguration {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.config.AbstractMongoConfiguration#mongo()
+	 * @see org.springframework.data.mongodb.config.AbstractMongoClientConfiguration#mongoClient()
 	 */
 	@Override
 	public MongoClient mongoClient() {
-		return new MongoClient();
+		return MongoClients.create();
 	}
 }

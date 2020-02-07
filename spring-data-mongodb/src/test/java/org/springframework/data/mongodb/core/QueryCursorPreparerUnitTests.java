@@ -27,13 +27,14 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.data.mongodb.MongoDbFactory;
+
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoTemplate.QueryCursorPreparer;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
-import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.Query;
 
+import com.mongodb.MongoClientSettings;
 import com.mongodb.client.FindIterable;
 
 /**
@@ -46,7 +47,7 @@ import com.mongodb.client.FindIterable;
 @RunWith(MockitoJUnitRunner.class)
 public class QueryCursorPreparerUnitTests {
 
-	@Mock MongoDbFactory factory;
+	@Mock MongoDatabaseFactory factory;
 	@Mock MongoExceptionTranslator exceptionTranslatorMock;
 	@Mock FindIterable<Document> cursor;
 
@@ -54,12 +55,11 @@ public class QueryCursorPreparerUnitTests {
 	public void setUp() {
 
 		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslatorMock);
+		when(factory.getCodecRegistry()).thenReturn(MongoClientSettings.getDefaultCodecRegistry());
 		when(cursor.batchSize(anyInt())).thenReturn(cursor);
 		when(cursor.comment(anyString())).thenReturn(cursor);
 		when(cursor.maxTime(anyLong(), any())).thenReturn(cursor);
-		when(cursor.maxScan(anyLong())).thenReturn(cursor);
 		when(cursor.hint(any())).thenReturn(cursor);
-		when(cursor.snapshot(anyBoolean())).thenReturn(cursor);
 		when(cursor.noCursorTimeout(anyBoolean())).thenReturn(cursor);
 		when(cursor.collation(any())).thenReturn(cursor);
 	}
@@ -73,6 +73,15 @@ public class QueryCursorPreparerUnitTests {
 		verify(cursor).hint(new Document("age", 1));
 	}
 
+	@Test // DATAMONGO-2365
+	public void appliesIndexNameAsHintCorrectly() {
+
+		Query query = query(where("foo").is("bar")).withHint("idx-1");
+		prepare(query);
+
+		verify(cursor).hintString("idx-1");
+	}
+
 	@Test // DATAMONGO-2319
 	public void appliesDocumentHintsCorrectly() {
 
@@ -82,25 +91,26 @@ public class QueryCursorPreparerUnitTests {
 		verify(cursor).hint(new Document("age", 1));
 	}
 
-	@Test // DATAMONGO-957
-	public void doesNotApplyMetaWhenEmpty() {
+	// TODO
+	// @Test // DATAMONGO-957
+	// public void doesNotApplyMetaWhenEmpty() {
+	//
+	// Query query = query(where("foo").is("bar"));
+	// query.setMeta(new Meta());
+	//
+	// prepare(query);
+	//
+	// verify(cursor, never()).modifiers(any(Document.class));
+	// }
 
-		Query query = query(where("foo").is("bar"));
-		query.setMeta(new Meta());
-
-		prepare(query);
-
-		verify(cursor, never()).modifiers(any(Document.class));
-	}
-
-	@Test // DATAMONGO-957
-	public void appliesMaxScanCorrectly() {
-
-		Query query = query(where("foo").is("bar")).maxScan(100);
-		prepare(query);
-
-		verify(cursor).maxScan(100);
-	}
+	// @Test // DATAMONGO-957
+	// public void appliesMaxScanCorrectly() {
+	//
+	// Query query = query(where("foo").is("bar")).maxScan(100);
+	// prepare(query);
+	//
+	// verify(cursor).maxScan(100);
+	// }
 
 	@Test // DATAMONGO-957
 	public void appliesMaxTimeCorrectly() {
@@ -120,14 +130,15 @@ public class QueryCursorPreparerUnitTests {
 		verify(cursor).comment("spring data");
 	}
 
-	@Test // DATAMONGO-957
-	public void appliesSnapshotCorrectly() {
-
-		Query query = query(where("foo").is("bar")).useSnapshot();
-		prepare(query);
-
-		verify(cursor).snapshot(true);
-	}
+	// TODO
+	// @Test // DATAMONGO-957
+	// public void appliesSnapshotCorrectly() {
+	//
+	// Query query = query(where("foo").is("bar")).useSnapshot();
+	// prepare(query);
+	//
+	// verify(cursor).snapshot(true);
+	// }
 
 	@Test // DATAMONGO-1480
 	public void appliesNoCursorTimeoutCorrectly() {

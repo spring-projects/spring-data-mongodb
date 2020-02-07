@@ -26,7 +26,7 @@ import java.util.Optional;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.core.io.support.ResourcePatternResolver;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.lang.Nullable;
@@ -54,28 +54,28 @@ import com.mongodb.client.gridfs.model.GridFSFile;
  */
 public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOperations, ResourcePatternResolver {
 
-	private final MongoDbFactory dbFactory;
+	private final MongoDatabaseFactory dbFactory;
 
 	private final @Nullable String bucket;
 
 	/**
-	 * Creates a new {@link GridFsTemplate} using the given {@link MongoDbFactory} and {@link MongoConverter}.
+	 * Creates a new {@link GridFsTemplate} using the given {@link MongoDatabaseFactory} and {@link MongoConverter}.
 	 *
 	 * @param dbFactory must not be {@literal null}.
 	 * @param converter must not be {@literal null}.
 	 */
-	public GridFsTemplate(MongoDbFactory dbFactory, MongoConverter converter) {
+	public GridFsTemplate(MongoDatabaseFactory dbFactory, MongoConverter converter) {
 		this(dbFactory, converter, null);
 	}
 
 	/**
-	 * Creates a new {@link GridFsTemplate} using the given {@link MongoDbFactory} and {@link MongoConverter}.
+	 * Creates a new {@link GridFsTemplate} using the given {@link MongoDatabaseFactory} and {@link MongoConverter}.
 	 *
 	 * @param dbFactory must not be {@literal null}.
 	 * @param converter must not be {@literal null}.
 	 * @param bucket
 	 */
-	public GridFsTemplate(MongoDbFactory dbFactory, MongoConverter converter, @Nullable String bucket) {
+	public GridFsTemplate(MongoDatabaseFactory dbFactory, MongoConverter converter, @Nullable String bucket) {
 
 		super(converter);
 
@@ -257,7 +257,7 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 
 	private GridFSBucket getGridFs() {
 
-		MongoDatabase db = dbFactory.getDb();
+		MongoDatabase db = dbFactory.getMongoDatabase();
 		return bucket == null ? GridFSBuckets.create(db) : GridFSBuckets.create(db, bucket);
 	}
 }

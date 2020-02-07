@@ -19,7 +19,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
-import com.mongodb.client.MongoClients;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -27,8 +26,11 @@ import lombok.EqualsAndHashCode;
 import java.util.Arrays;
 
 import org.bson.types.Binary;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -45,8 +47,8 @@ import com.mongodb.client.MongoClient;
  */
 public class CriteriaTests {
 
+	static MongoClient client;
 	MongoOperations ops;
-	MongoClient client;
 
 	static final DocumentWithBitmask FIFTY_FOUR/*00110110*/ = new DocumentWithBitmask("1", Integer.valueOf(54),
 			Integer.toBinaryString(54));
@@ -57,10 +59,19 @@ public class CriteriaTests {
 	static final DocumentWithBitmask ONE_HUNDRED_TWO/*01100110*/ = new DocumentWithBitmask("4",
 			new Binary(Base64Utils.decodeFromString("Zg==")), "01100110");
 
+	@BeforeClass
+	public static void beforeClass() {
+		client = MongoTestUtils.client();
+	}
+
+	@AfterClass
+	public static void afterClass() {
+		client.close();
+	}
+
 	@Before
 	public void setUp() {
 
-		client = MongoTestUtils.client();
 		ops = new MongoTemplate(client, "criteria-tests");
 
 		ops.dropCollection(DocumentWithBitmask.class);

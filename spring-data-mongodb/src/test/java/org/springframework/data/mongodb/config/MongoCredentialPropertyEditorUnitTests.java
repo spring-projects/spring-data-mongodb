@@ -83,8 +83,6 @@ public class MongoCredentialPropertyEditorUnitTests {
 
 	static final MongoCredential USER_2_CREDENTIALS = MongoCredential.createCredential(USER_2_NAME, USER_2_DB,
 			USER_2_PWD.toCharArray());
-	static final MongoCredential USER_2_CREDENTIALS_CR_AUTH = MongoCredential.createMongoCRCredential(USER_2_NAME,
-			USER_2_DB, USER_2_PWD.toCharArray());
 
 	static final MongoCredential USER_3_CREDENTIALS_X509_AUTH = MongoCredential.createMongoX509Credential(USER_3_NAME);
 
@@ -174,16 +172,6 @@ public class MongoCredentialPropertyEditorUnitTests {
 				.setAsText(StringUtils.collectionToCommaDelimitedString(Arrays.asList(USER_1_AUTH_STRING, USER_2_AUTH_STRING)));
 
 		assertThat(getValue()).contains(USER_1_CREDENTIALS, USER_2_CREDENTIALS);
-	}
-
-	@Test // DATAMONGO-1158
-	@SuppressWarnings("unchecked")
-	public void shouldReturnCredentialsValueCorrectlyWhenGivenMultipleUserNamePasswordStringWithDatabaseAndAuthOptions() {
-
-		editor.setAsText(StringUtils.collectionToCommaDelimitedString(Arrays
-				.asList(USER_1_AUTH_STRING_WITH_PLAIN_AUTH_MECHANISM, USER_2_AUTH_STRING_WITH_MONGODB_CR_AUTH_MECHANISM)));
-
-		assertThat(getValue()).contains(USER_1_CREDENTIALS_PLAIN_AUTH, USER_2_CREDENTIALS_CR_AUTH);
 	}
 
 	@Test // DATAMONGO-1158

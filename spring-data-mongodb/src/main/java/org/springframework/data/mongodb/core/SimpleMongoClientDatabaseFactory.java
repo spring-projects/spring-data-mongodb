@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2020 the original author or authors.
+ * Copyright 2018-2019 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,64 +18,61 @@ package org.springframework.data.mongodb.core;
 import org.springframework.beans.factory.DisposableBean;
 
 import com.mongodb.ClientSessionOptions;
-import com.mongodb.DB;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
+import com.mongodb.ConnectionString;
 import com.mongodb.client.ClientSession;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 
 /**
  * Factory to create {@link MongoDatabase} instances from a {@link MongoClient} instance.
  *
- * @author Mark Pollack
- * @author Oliver Gierke
- * @author Thomas Darimont
  * @author Christoph Strobl
- * @author George Moraitis
- * @author Mark Paluch
- * @deprecated since 2.2 in favor of {@link SimpleMongoClientDbFactory}.
+ * @since 3.0
  */
-@Deprecated
-public class SimpleMongoDbFactory extends MongoDbFactorySupport<MongoClient> implements DisposableBean {
+public class SimpleMongoClientDatabaseFactory extends MongoDatabaseFactorySupport<MongoClient>
+		implements DisposableBean {
 
 	/**
-	 * Creates a new {@link SimpleMongoDbFactory} instance from the given {@link MongoClientURI}.
+	 * Creates a new {@link SimpleMongoClientDatabaseFactory} instance for the given {@code connectionString}.
 	 *
-	 * @param uri coordinates for a database connection. Must contain a database name and must not be {@literal null}.
-	 * @since 1.7
+	 * @param connectionString connection coordinates for a database connection. Must contain a database name and must not
+	 *          be {@literal null} or empty.
+	 * @see <a href="https://docs.mongodb.com/manual/reference/connection-string/">MongoDB Connection String reference</a>
 	 */
-	public SimpleMongoDbFactory(MongoClientURI uri) {
-		this(new MongoClient(uri), uri.getDatabase(), true);
+	public SimpleMongoClientDatabaseFactory(String connectionString) {
+		this(new ConnectionString(connectionString));
 	}
 
 	/**
-	 * Creates a new {@link SimpleMongoDbFactory} instance from the given {@link MongoClient}.
+	 * Creates a new {@link SimpleMongoClientDatabaseFactory} instance from the given {@link MongoClient}.
+	 *
+	 * @param connectionString connection coordinates for a database connection. Must contain also a database name and not
+	 *          be {@literal null}.
+	 */
+	public SimpleMongoClientDatabaseFactory(ConnectionString connectionString) {
+		this(MongoClients.create(connectionString), connectionString.getDatabase(), true);
+	}
+
+	/**
+	 * Creates a new {@link SimpleMongoClientDatabaseFactory} instance from the given {@link MongoClient}.
 	 *
 	 * @param mongoClient must not be {@literal null}.
 	 * @param databaseName must not be {@literal null} or empty.
-	 * @since 1.7
 	 */
-	public SimpleMongoDbFactory(MongoClient mongoClient, String databaseName) {
+	public SimpleMongoClientDatabaseFactory(MongoClient mongoClient, String databaseName) {
 		this(mongoClient, databaseName, false);
 	}
 
 	/**
-	 * @param mongoClient
-	 * @param databaseName
+	 * Creates a new {@link SimpleMongoClientDatabaseFactory} instance from the given {@link MongoClient}.
+	 *
+	 * @param mongoClient must not be {@literal null}.
+	 * @param databaseName must not be {@literal null} or empty.
 	 * @param mongoInstanceCreated
-	 * @since 1.7
 	 */
-	private SimpleMongoDbFactory(MongoClient mongoClient, String databaseName, boolean mongoInstanceCreated) {
+	SimpleMongoClientDatabaseFactory(MongoClient mongoClient, String databaseName, boolean mongoInstanceCreated) {
 		super(mongoClient, databaseName, mongoInstanceCreated, new MongoExceptionTranslator());
-	}
-
-	/* 
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.MongoDbFactory#getLegacyDb()
-	 */
-	@Override
-	public DB getLegacyDb() {
-		return getMongoClient().getDB(getDefaultDatabaseName());
 	}
 
 	/*
@@ -87,7 +84,7 @@ public class SimpleMongoDbFactory extends MongoDbFactorySupport<MongoClient> imp
 		return getMongoClient().startSession(options);
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.MongoDbFactoryBase#closeClient()
 	 */
@@ -96,7 +93,7 @@ public class SimpleMongoDbFactory extends MongoDbFactorySupport<MongoClient> imp
 		getMongoClient().close();
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.MongoDbFactoryBase#doGetMongoDatabase(java.lang.String)
 	 */

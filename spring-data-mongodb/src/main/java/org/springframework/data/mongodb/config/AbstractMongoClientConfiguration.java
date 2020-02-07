@@ -15,19 +15,22 @@
  */
 package org.springframework.data.mongodb.config;
 
+import com.mongodb.MongoClientSettings.Builder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.data.mongodb.SpringDataMongoDB;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
-import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
+import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.lang.Nullable;
 
+import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 
 /**
  * Base class for Spring Data MongoDB configuration using JavaConfig with {@link com.mongodb.client.MongoClient}.
@@ -35,18 +38,22 @@ import com.mongodb.client.MongoClient;
  * @author Christoph Strobl
  * @since 2.1
  * @see MongoConfigurationSupport
- * @see AbstractMongoConfiguration
  */
 @Configuration
 public abstract class AbstractMongoClientConfiguration extends MongoConfigurationSupport {
 
 	/**
 	 * Return the {@link MongoClient} instance to connect to. Annotate with {@link Bean} in case you want to expose a
-	 * {@link MongoClient} instance to the {@link org.springframework.context.ApplicationContext}.
+	 * {@link MongoClient} instance to the {@link org.springframework.context.ApplicationContext}. <br />
+	 * Override {@link #mongoClientSettings()} to configure connection details.
 	 *
-	 * @return
+	 * @return never {@literal null}.
+	 * @see #mongoClientSettings()
+	 * @see #configureClientSettings(Builder)
 	 */
-	public abstract MongoClient mongoClient();
+	public MongoClient mongoClient() {
+		return createMongoClient(mongoClientSettings());
+	}
 
 	/**
 	 * Creates a {@link MongoTemplate}.
@@ -59,16 +66,16 @@ public abstract class AbstractMongoClientConfiguration extends MongoConfiguratio
 	}
 
 	/**
-	 * Creates a {@link SimpleMongoDbFactory} to be used by the {@link MongoTemplate}. Will use the {@link MongoClient}
-	 * instance configured in {@link #mongoClient()}.
+	 * Creates a {@link org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory} to be used by the
+	 * {@link MongoTemplate}. Will use the {@link MongoClient} instance configured in {@link #mongoClient()}.
 	 *
 	 * @see #mongoClient()
 	 * @see #mongoTemplate()
 	 * @return
 	 */
 	@Bean
-	public MongoDbFactory mongoDbFactory() {
-		return new SimpleMongoClientDbFactory(mongoClient(), getDatabaseName());
+	public MongoDatabaseFactory mongoDbFactory() {
+		return new SimpleMongoClientDatabaseFactory(mongoClient(), getDatabaseName());
 	}
 
 	/**
@@ -108,5 +115,16 @@ public abstract class AbstractMongoClientConfiguration extends MongoConfiguratio
 		converter.setCodecRegistryProvider(mongoDbFactory());
 
 		return converter;
+	}
+
+	/**
+	 * Create the Reactive Streams {@link com.mongodb.reactivestreams.client.MongoClient} instance with given
+	 * {@link MongoClientSettings}.
+	 *
+	 * @return never {@literal null}.
+	 * @since 3.0
+	 */
+	protected MongoClient createMongoClient(MongoClientSettings settings) {
+		return MongoClients.create(settings, SpringDataMongoDB.driverInformation());
 	}
 }

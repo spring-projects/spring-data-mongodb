@@ -20,7 +20,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 
-import com.mongodb.DBObject;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 
@@ -28,6 +27,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URL;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import org.bson.types.Code;
@@ -41,6 +41,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.ConversionNotSupportedException;
 import org.springframework.beans.factory.annotation.Value;
@@ -79,6 +80,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import com.mongodb.DBRef;
 
 /**
@@ -1663,7 +1665,8 @@ public class MappingMongoConverterUnitTests {
 		converter.write(source, result);
 
 		assertThat(result.get("date")).isInstanceOf(Date.class);
-		assertThat(converter.read(TypeWithLocalDateTime.class, result).date).isEqualTo(reference);
+		assertThat(converter.read(TypeWithLocalDateTime.class, result).date)
+				.isEqualTo(reference.truncatedTo(ChronoUnit.MILLIS));
 	}
 
 	@Test // DATAMONGO-1128

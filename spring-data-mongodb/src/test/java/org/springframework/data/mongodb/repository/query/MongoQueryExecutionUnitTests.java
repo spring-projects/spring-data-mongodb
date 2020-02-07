@@ -16,8 +16,7 @@
 package org.springframework.data.mongodb.repository.query;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Method;
@@ -29,6 +28,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.geo.Distance;
@@ -68,6 +68,7 @@ import com.mongodb.client.result.DeleteResult;
  * @author Mark Paluch
  * @author Oliver Gierke
  * @author Artyom Gabeev
+ * @author Christoph Strobl
  * @soundtrack U Can't Touch This - MC Hammer
  */
 @RunWith(MockitoJUnitRunner.class)
@@ -181,6 +182,9 @@ public class MongoQueryExecutionUnitTests {
 	@Test // DATAMONGO-2351
 	public void acknowledgedDeleteReturnsDeletedCount() {
 
+		Method method = ReflectionUtils.findMethod(PersonRepository.class, "deleteAllByLastname", String.class);
+		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
+
 		when(mongoOperationsMock.remove(any(Query.class), any(Class.class), anyString()))
 				.thenReturn(DeleteResult.acknowledged(10));
 
@@ -190,14 +194,34 @@ public class MongoQueryExecutionUnitTests {
 	@Test // DATAMONGO-2351
 	public void unacknowledgedDeleteReturnsZeroDeletedCount() {
 
+		Method method = ReflectionUtils.findMethod(PersonRepository.class, "deleteAllByLastname", String.class);
+		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
+
 		when(mongoOperationsMock.remove(any(Query.class), any(Class.class), anyString()))
 				.thenReturn(DeleteResult.unacknowledged());
 
 		assertThat(new DeleteExecution(mongoOperationsMock, queryMethod).execute(new Query())).isEqualTo(0L);
 	}
 
+	@Test // DATAMONGO-1997
+	public void deleteExecutionWithEntityReturnTypeTriggersFindAndRemove() {
+
+		Method method = ReflectionUtils.findMethod(PersonRepository.class, "deleteByLastname", String.class);
+		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
+
+		Person person = new Person();
+
+		when(mongoOperationsMock.findAndRemove(any(Query.class), any(Class.class), anyString())).thenReturn(person);
+
+		assertThat(new DeleteExecution(mongoOperationsMock, queryMethod).execute(new Query())).isEqualTo(person);
+	}
+
 	interface PersonRepository extends Repository<Person, Long> {
 
 		GeoPage<Person> findByLocationNear(Point point, Distance distance, Pageable pageable);
+
+		Long deleteAllByLastname(String lastname);
+
+		Person deleteByLastname(String lastname);
 	}
 }

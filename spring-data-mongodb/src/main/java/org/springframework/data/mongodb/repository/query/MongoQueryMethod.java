@@ -278,11 +278,6 @@ public class MongoQueryMethod extends QueryMethod {
 			metaAttributes.setMaxTimeMsec(meta.maxExecutionTimeMs());
 		}
 
-		if (meta.maxScanDocuments() > 0) {
-			// TODO: Mongo 4 - removal
-			metaAttributes.setMaxScan(meta.maxScanDocuments());
-		}
-
 		if (meta.cursorBatchSize() != 0) {
 			metaAttributes.setCursorBatchSize(meta.cursorBatchSize());
 		}
@@ -291,17 +286,15 @@ public class MongoQueryMethod extends QueryMethod {
 			metaAttributes.setComment(meta.comment());
 		}
 
-		if (meta.snapshot()) {
-
-			// TODO: Mongo 4 - removal
-			metaAttributes.setSnapshot(meta.snapshot());
-		}
-
 		if (!ObjectUtils.isEmpty(meta.flags())) {
 
 			for (org.springframework.data.mongodb.core.query.Meta.CursorOption option : meta.flags()) {
 				metaAttributes.addFlag(option);
 			}
+		}
+
+		if (meta.allowDiskUse()) {
+			metaAttributes.setAllowDiskUse(meta.allowDiskUse());
 		}
 
 		return metaAttributes;

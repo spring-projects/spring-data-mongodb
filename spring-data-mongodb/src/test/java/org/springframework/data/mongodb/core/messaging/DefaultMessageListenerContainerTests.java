@@ -30,18 +30,22 @@ import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
+import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoServerCondition;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.util.ErrorHandler;
 
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
@@ -51,7 +55,7 @@ import com.mongodb.client.model.changestream.ChangeStreamDocument;
  *
  * @author Christoph Strobl
  */
-@ExtendWith(MongoServerCondition.class)
+@ExtendWith({ MongoClientExtension.class, MongoServerCondition.class })
 public class DefaultMessageListenerContainerTests {
 
 	public static final String DATABASE_NAME = "change-stream-events";
@@ -60,7 +64,9 @@ public class DefaultMessageListenerContainerTests {
 
 	public static final Duration TIMEOUT = Duration.ofSeconds(2);
 
-	MongoDbFactory dbFactory;
+	static @Client MongoClient client;
+
+	MongoDatabaseFactory dbFactory;
 	MongoCollection<Document> collection;
 	MongoCollection<Document> collection2;
 
@@ -70,7 +76,7 @@ public class DefaultMessageListenerContainerTests {
 	@BeforeEach
 	void beforeEach() {
 
-		dbFactory = new SimpleMongoClientDbFactory(MongoTestUtils.client(), DATABASE_NAME);
+		dbFactory = new SimpleMongoClientDatabaseFactory(client, DATABASE_NAME);
 		template = new MongoTemplate(dbFactory);
 
 		template.dropCollection(COLLECTION_NAME);
@@ -84,6 +90,7 @@ public class DefaultMessageListenerContainerTests {
 
 	@Test // DATAMONGO-1803
 	@EnableIfReplicaSetAvailable
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
 	public void shouldCollectMappedChangeStreamMessagesCorrectly() throws InterruptedException {
 
 		MessageListenerContainer container = new DefaultMessageListenerContainer(template);
@@ -213,7 +220,7 @@ public class DefaultMessageListenerContainerTests {
 	@Test // DATAMONGO-1803
 	public void tailableCursor() throws InterruptedException {
 
-		dbFactory.getDb().createCollection(COLLECTION_NAME,
+		dbFactory.getMongoDatabase().createCollection(COLLECTION_NAME,
 				new CreateCollectionOptions().capped(true).maxDocuments(10000).sizeInBytes(10000));
 
 		collection.insertOne(new Document("_id", "id-1").append("value", "foo"));
@@ -235,7 +242,7 @@ public class DefaultMessageListenerContainerTests {
 	@Test // DATAMONGO-1803
 	public void tailableCursorOnEmptyCollection() throws InterruptedException {
 
-		dbFactory.getDb().createCollection(COLLECTION_NAME,
+		dbFactory.getMongoDatabase().createCollection(COLLECTION_NAME,
 				new CreateCollectionOptions().capped(true).maxDocuments(10000).sizeInBytes(10000));
 
 		MessageListenerContainer container = new DefaultMessageListenerContainer(template);
@@ -256,7 +263,7 @@ public class DefaultMessageListenerContainerTests {
 	@Test // DATAMONGO-1803
 	public void abortsSubscriptionOnError() throws InterruptedException {
 
-		dbFactory.getDb().createCollection(COLLECTION_NAME,
+		dbFactory.getMongoDatabase().createCollection(COLLECTION_NAME,
 				new CreateCollectionOptions().capped(true).maxDocuments(10000).sizeInBytes(10000));
 
 		MessageListenerContainer container = new DefaultMessageListenerContainer(template);
@@ -284,7 +291,7 @@ public class DefaultMessageListenerContainerTests {
 	@Test // DATAMONGO-1803
 	public void callsDefaultErrorHandlerOnError() throws InterruptedException {
 
-		dbFactory.getDb().createCollection(COLLECTION_NAME,
+		dbFactory.getMongoDatabase().createCollection(COLLECTION_NAME,
 				new CreateCollectionOptions().capped(true).maxDocuments(10000).sizeInBytes(10000));
 
 		collection.insertOne(new Document("_id", "id-1").append("value", "foo"));
@@ -316,7 +323,7 @@ public class DefaultMessageListenerContainerTests {
 	@EnableIfReplicaSetAvailable
 	public void runsMoreThanOneTaskAtOnce() throws InterruptedException {
 
-		dbFactory.getDb().createCollection(COLLECTION_NAME,
+		dbFactory.getMongoDatabase().createCollection(COLLECTION_NAME,
 				new CreateCollectionOptions().capped(true).maxDocuments(10000).sizeInBytes(10000));
 
 		MessageListenerContainer container = new DefaultMessageListenerContainer(template);
@@ -346,6 +353,7 @@ public class DefaultMessageListenerContainerTests {
 
 	@Test // DATAMONGO-2012
 	@EnableIfReplicaSetAvailable
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
 	public void databaseLevelWatch() throws InterruptedException {
 
 		MessageListenerContainer container = new DefaultMessageListenerContainer(template);

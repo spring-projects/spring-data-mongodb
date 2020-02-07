@@ -31,7 +31,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mapping.context.MappingContextEvent;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -58,7 +58,7 @@ import com.mongodb.client.model.IndexOptions;
 @RunWith(MockitoJUnitRunner.class)
 public class MongoPersistentEntityIndexCreatorUnitTests {
 
-	private @Mock MongoDbFactory factory;
+	private @Mock MongoDatabaseFactory factory;
 	private @Mock MongoDatabase db;
 	private @Mock MongoCollection<org.bson.Document> collection;
 	private MongoTemplate mongoTemplate;
@@ -74,7 +74,7 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 		optionsCaptor = ArgumentCaptor.forClass(IndexOptions.class);
 		collectionCaptor = ArgumentCaptor.forClass(String.class);
 
-		when(factory.getDb()).thenReturn(db);
+		when(factory.getMongoDatabase()).thenReturn(db);
 		when(factory.getExceptionTranslator()).thenReturn(new MongoExceptionTranslator());
 		when(db.getCollection(collectionCaptor.capture(), eq(org.bson.Document.class)))
 				.thenReturn((MongoCollection) collection);

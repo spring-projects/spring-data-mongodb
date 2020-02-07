@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.repository.query;
 
 import lombok.experimental.UtilityClass;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -91,6 +92,14 @@ class AggregationUtils {
 
 		if (meta.getCursorBatchSize() != null) {
 			builder.cursorBatchSize(meta.getCursorBatchSize());
+		}
+
+		if (meta.getMaxTimeMsec() != null && meta.getMaxTimeMsec() > 0) {
+			builder.maxTime(Duration.ofMillis(meta.getMaxTimeMsec()));
+		}
+
+		if (meta.getAllowDiskUse() != null) {
+			builder.allowDiskUse(meta.getAllowDiskUse());
 		}
 
 		return builder;

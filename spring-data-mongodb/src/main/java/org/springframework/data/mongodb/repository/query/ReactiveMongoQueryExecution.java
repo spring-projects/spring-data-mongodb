@@ -18,14 +18,17 @@ package org.springframework.data.mongodb.repository.query;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import org.reactivestreams.Publisher;
 
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mapping.model.EntityInstantiators;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -126,6 +129,10 @@ interface ReactiveMongoQueryExecution {
 				return operations.findAllAndRemove(query, type, collection);
 			}
 
+			if (method.isQueryForEntity() && !ClassUtils.isPrimitiveOrWrapper(method.getReturnedObjectType())) {
+				return operations.findAndRemove(query, type, collection);
+			}
+
 			return operations.remove(query, type, collection)
 					.map(deleteResult -> deleteResult.wasAcknowledged() ? deleteResult.getDeletedCount() : 0L);
 		}
@@ -168,6 +175,17 @@ interface ReactiveMongoQueryExecution {
 
 			ReturnedType returnedType = processor.getReturnedType();
 
+			if (isVoid(returnedType)) {
+
+				if (source instanceof Mono) {
+					return ((Mono<?>) source).then();
+				}
+
+				if (source instanceof Publisher) {
+					return Flux.from((Publisher<?>) source).then();
+				}
+			}
+
 			if (ClassUtils.isPrimitiveOrWrapper(returnedType.getReturnedType())) {
 				return source;
 			}
@@ -181,5 +199,9 @@ interface ReactiveMongoQueryExecution {
 
 			return processor.processResult(source, converter);
 		}
+	}
+
+	static boolean isVoid(ReturnedType returnedType) {
+		return returnedType.getReturnedType().equals(Void.class);
 	}
 }

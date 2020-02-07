@@ -18,13 +18,10 @@ package org.springframework.data.mongodb.repository.cdi;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
 
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
-import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
-
-import com.mongodb.MongoClient;
+import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
 /**
@@ -38,7 +35,7 @@ class MongoTemplateProducer {
 	@ApplicationScoped
 	public MongoOperations createMongoTemplate() {
 
-		MongoDbFactory factory = new SimpleMongoClientDbFactory(MongoTestUtils.client(), "database");
+		MongoDatabaseFactory factory = new SimpleMongoClientDatabaseFactory(MongoTestUtils.client(), "database");
 		return new MongoTemplate(factory);
 	}
 }

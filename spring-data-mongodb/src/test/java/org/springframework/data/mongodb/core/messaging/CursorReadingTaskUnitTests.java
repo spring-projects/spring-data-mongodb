@@ -30,10 +30,11 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
 import org.springframework.data.mongodb.core.messaging.Task.State;
+import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
 import org.springframework.util.ErrorHandler;
 
 import com.mongodb.ServerAddress;
@@ -46,7 +47,7 @@ import com.mongodb.client.MongoDatabase;
  *
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(MockitoJUnitRunner.Silent.class)
 public class CursorReadingTaskUnitTests {
 
 	@Mock MongoDatabase db;

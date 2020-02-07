@@ -659,7 +659,8 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			assertThat(indexDefinitions).hasSize(2);
 			assertIndexPathAndCollection(new String[] { "firstname", "lastname" }, "repeatedCompoundIndex",
 					indexDefinitions.get(0));
-			assertIndexPathAndCollection(new String[] { "address.city", "address.street" }, "repeatedCompoundIndex", indexDefinitions.get(1));
+			assertIndexPathAndCollection(new String[] { "address.city", "address.street" }, "repeatedCompoundIndex",
+					indexDefinitions.get(1));
 		}
 
 		@Document("CompoundIndexOnLevelOne")

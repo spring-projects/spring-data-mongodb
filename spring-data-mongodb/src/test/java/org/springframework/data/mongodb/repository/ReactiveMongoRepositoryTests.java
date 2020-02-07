@@ -17,6 +17,8 @@ package org.springframework.data.mongodb.repository;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.domain.Sort.Direction.*;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
 import lombok.Data;
@@ -32,10 +34,10 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.reactivestreams.Publisher;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,12 +61,13 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.mongodb.repository.support.ReactiveMongoRepositoryFactory;
 import org.springframework.data.mongodb.repository.support.SimpleReactiveMongoRepository;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.mongodb.reactivestreams.client.MongoClient;
 
@@ -74,9 +77,10 @@ import com.mongodb.reactivestreams.client.MongoClient;
  * @author Mark Paluch
  * @author Christoph Strobl
  */
-@RunWith(SpringRunner.class)
-@ContextConfiguration
+@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 public class ReactiveMongoRepositoryTests {
+
+	static @Client MongoClient mongoClient;
 
 	@Autowired ReactiveMongoTemplate template;
 
@@ -93,7 +97,7 @@ public class ReactiveMongoRepositoryTests {
 		@Bean
 		@Override
 		public MongoClient reactiveMongoClient() {
-			return MongoTestUtils.reactiveClient();
+			return mongoClient;
 		}
 
 		@Override
@@ -129,16 +133,14 @@ public class ReactiveMongoRepositoryTests {
 		}
 	}
 
-	@BeforeClass
+	@BeforeAll
 	public static void cleanDb() {
 
-		MongoClient client = MongoTestUtils.reactiveClient();
-
-		MongoTestUtils.createOrReplaceCollectionNow("reactive", "person", client);
-		MongoTestUtils.createOrReplaceCollectionNow("reactive", "capped", client);
+		MongoTestUtils.createOrReplaceCollectionNow("reactive", "person", mongoClient);
+		MongoTestUtils.createOrReplaceCollectionNow("reactive", "capped", mongoClient);
 	}
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 
 		repository.deleteAll().as(StepVerifier::create).verifyComplete();
@@ -575,6 +577,40 @@ public class ReactiveMongoRepositoryTests {
 				.expectNext("lastname").verifyComplete();
 	}
 
+	@Test // DATAMONGO-2406
+	public void deleteByShouldHandleVoidResultTypeCorrectly() {
+
+		repository.deleteByLastname(dave.getLastname()) //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+
+		template.find(query(where("lastname").is(dave.getLastname())), Person.class) //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-1997
+	public void deleteByShouldAllowDeletedCountAsResult() {
+
+		repository.deleteCountByLastname(dave.getLastname()) //
+				.as(StepVerifier::create) //
+				.expectNext(2L) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-1997
+	public void deleteByShouldAllowSingleDocumentRemovalCorrectly() {
+
+		repository.deleteSinglePersonByLastname(carter.getLastname()) //
+				.as(StepVerifier::create) //
+				.expectNext(carter) //
+				.verifyComplete();
+
+		repository.deleteSinglePersonByLastname("dorfuaeB") //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+	}
+
 	interface ReactivePersonRepository
 			extends ReactiveMongoRepository<Person, String>, ReactiveQuerydslPredicateExecutor<Person> {
 
@@ -645,6 +681,12 @@ public class ReactiveMongoRepositoryTests {
 
 		@Query(value = "{_id:?0}")
 		Mono<org.bson.Document> findDocumentById(String id);
+
+		Mono<Void> deleteByLastname(String lastname);
+
+		Mono<Long> deleteCountByLastname(String lastname);
+
+		Mono<Person> deleteSinglePersonByLastname(String lastname);
 	}
 
 	interface ReactiveContactRepository extends ReactiveMongoRepository<Contact, String> {}

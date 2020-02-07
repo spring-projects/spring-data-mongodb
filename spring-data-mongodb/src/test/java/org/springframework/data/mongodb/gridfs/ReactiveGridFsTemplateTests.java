@@ -25,8 +25,8 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
-import java.util.UUID;
 
 import org.bson.BsonObjectId;
 import org.bson.Document;
@@ -34,6 +34,7 @@ import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -46,19 +47,16 @@ import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
-import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
+import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.util.StreamUtils;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
-import com.mongodb.gridfs.GridFS;
-import com.mongodb.gridfs.GridFSInputFile;
 import com.mongodb.internal.HexUtils;
-import com.mongodb.reactivestreams.client.gridfs.AsyncInputStream;
-import com.mongodb.reactivestreams.client.gridfs.helpers.AsyncStreamHelper;
 
 /**
  * Integration tests for {@link ReactiveGridFsTemplate}.
@@ -75,7 +73,7 @@ public class ReactiveGridFsTemplateTests {
 	Resource resource = new ClassPathResource("gridfs/gridfs.xml");
 
 	@Autowired ReactiveGridFsOperations operations;
-	@Autowired SimpleMongoDbFactory mongoClient;
+	@Autowired SimpleMongoClientDatabaseFactory mongoClient;
 	@Autowired ReactiveMongoDatabaseFactory dbFactory;
 	@Autowired MongoConverter mongoConverter;
 
@@ -143,33 +141,13 @@ public class ReactiveGridFsTemplateTests {
 				}).verifyComplete();
 	}
 
-	@Test // DATAMONGO-2392
-	public void storesAndFindsByUUID() throws IOException {
-
-		UUID uuid = UUID.randomUUID();
-
-		GridFS fs = new GridFS(mongoClient.getLegacyDb());
-		GridFSInputFile in = fs.createFile(resource.getInputStream(), "gridfs.xml");
-
-		in.put("_id", uuid);
-		in.put("contentType", "application/octet-stream");
-		in.save();
-
-		operations.findOne(query(where("_id").is(uuid))).flatMap(operations::getResource)
-				.flatMapMany(ReactiveGridFsResource::getDownloadStream) //
-				.transform(DataBufferUtils::join) //
-				.doOnNext(DataBufferUtils::release).as(StepVerifier::create) //
-				.expectNextCount(1).verifyComplete();
-	}
-
 	@Test // DATAMONGO-1855
 	public void writesMetadataCorrectly() throws IOException {
 
 		Document metadata = new Document("key", "value");
 
-		AsyncInputStream stream = AsyncStreamHelper.toAsyncInputStream(resource.getInputStream());
-
-		ObjectId reference = operations.store(stream, "foo.xml", "binary/octet-stream", metadata).block();
+		Flux<DataBuffer> source = DataBufferUtils.read(resource, new DefaultDataBufferFactory(), 256);
+		ObjectId reference = operations.store(source, "foo.xml", "binary/octet-stream", metadata).block();
 
 		operations.find(query(whereMetaData("key").is("value"))) //
 				.as(StepVerifier::create) //
@@ -180,14 +158,13 @@ public class ReactiveGridFsTemplateTests {
 	}
 
 	@Test // DATAMONGO-1855
-	public void marshalsComplexMetadata() throws IOException {
+	public void marshalsComplexMetadata() {
 
 		Metadata metadata = new Metadata();
 		metadata.version = "1.0";
 
-		AsyncInputStream stream = AsyncStreamHelper.toAsyncInputStream(resource.getInputStream());
-
-		ObjectId reference = operations.store(stream, "foo.xml", "binary/octet-stream", metadata).block();
+		Flux<DataBuffer> source = DataBufferUtils.read(resource, new DefaultDataBufferFactory(), 256);
+		ObjectId reference = operations.store(source, "foo.xml", "binary/octet-stream", metadata).block();
 
 		operations.find(query(whereMetaData("version").is("1.0"))) //
 				.as(StepVerifier::create) //
@@ -202,9 +179,8 @@ public class ReactiveGridFsTemplateTests {
 	public void getResourceShouldRetrieveContentByIdentity() throws IOException {
 
 		byte[] content = StreamUtils.copyToByteArray(resource.getInputStream());
-		AsyncInputStream upload = AsyncStreamHelper.toAsyncInputStream(resource.getInputStream());
-
-		ObjectId reference = operations.store(upload, "foo.xml", null, null).block();
+		Flux<DataBuffer> source = DataBufferUtils.read(resource, new DefaultDataBufferFactory(), 256);
+		ObjectId reference = operations.store(source, "foo.xml", null, null).block();
 
 		operations.findOne(query(where("_id").is(reference))).flatMap(operations::getResource)
 				.flatMapMany(ReactiveGridFsResource::getDownloadStream) //
@@ -223,9 +199,9 @@ public class ReactiveGridFsTemplateTests {
 	@Test // DATAMONGO-1855, DATAMONGO-2240
 	public void shouldEmitFirstEntryWhenFindFirstRetrievesMoreThanOneResult() throws IOException {
 
-		AsyncInputStream upload1 = AsyncStreamHelper.toAsyncInputStream(resource.getInputStream());
-		AsyncInputStream upload2 = AsyncStreamHelper
-				.toAsyncInputStream(new ClassPathResource("gridfs/another-resource.xml").getInputStream());
+		Flux<DataBuffer> upload1 = DataBufferUtils.read(resource, new DefaultDataBufferFactory(), 256);
+		Flux<DataBuffer> upload2 = DataBufferUtils.read(new ClassPathResource("gridfs/another-resource.xml"),
+				new DefaultDataBufferFactory(), 256);
 
 		operations.store(upload1, "foo.xml", null, null).block();
 		operations.store(upload2, "foo2.xml", null, null).block();
@@ -247,16 +223,16 @@ public class ReactiveGridFsTemplateTests {
 				.assertNext(actual -> {
 
 					assertThat(actual.exists()).isFalse();
-					assertThat(actual.getGridFSFile()).isNull();
+					assertThat(actual.getGridFSFile()).isEqualTo(Mono.empty());
 				}).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1855
 	public void shouldEmitErrorWhenFindOneRetrievesMoreThanOneResult() throws IOException {
 
-		AsyncInputStream upload1 = AsyncStreamHelper.toAsyncInputStream(resource.getInputStream());
-		AsyncInputStream upload2 = AsyncStreamHelper
-				.toAsyncInputStream(new ClassPathResource("gridfs/another-resource.xml").getInputStream());
+		Flux<DataBuffer> upload1 = DataBufferUtils.read(resource, new DefaultDataBufferFactory(), 256);
+		Flux<DataBuffer> upload2 = DataBufferUtils.read(new ClassPathResource("gridfs/another-resource.xml"),
+				new DefaultDataBufferFactory(), 256);
 
 		operations.store(upload1, "foo.xml", null, null).block();
 		operations.store(upload2, "foo2.xml", null, null).block();
@@ -271,7 +247,7 @@ public class ReactiveGridFsTemplateTests {
 	public void getResourcesByPattern() throws IOException {
 
 		byte[] content = StreamUtils.copyToByteArray(resource.getInputStream());
-		AsyncInputStream upload = AsyncStreamHelper.toAsyncInputStream(resource.getInputStream());
+		Flux<DataBuffer> upload = DataBufferUtils.read(resource, new DefaultDataBufferFactory(), 256);
 
 		operations.store(upload, "foo.xml", null, null).block();
 
@@ -313,5 +289,13 @@ public class ReactiveGridFsTemplateTests {
 
 	static class Metadata {
 		String version;
+	}
+
+	public static String readToString(DataBuffer dataBuffer) {
+		try {
+			return FileCopyUtils.copyToString(new InputStreamReader(dataBuffer.asInputStream()));
+		} catch (IOException e) {
+			return e.getMessage();
+		}
 	}
 }

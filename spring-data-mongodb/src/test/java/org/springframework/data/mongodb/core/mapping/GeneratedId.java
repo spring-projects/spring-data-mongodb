@@ -16,8 +16,8 @@
 package org.springframework.data.mongodb.core.mapping;
 
 import org.bson.types.ObjectId;
+
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
@@ -25,10 +25,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document
 public class GeneratedId {
 
-	@Id
-	private ObjectId id;
-	@SuppressWarnings("unused")
-	private String name;
+	@Id private ObjectId id;
+	@SuppressWarnings("unused") private String name;
 
 	public GeneratedId(String name) {
 		this.name = name;

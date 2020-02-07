@@ -20,7 +20,6 @@ import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
-import com.mongodb.client.MongoClients;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -29,11 +28,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.data.annotation.Id;
@@ -46,7 +45,8 @@ import org.springframework.data.mongodb.repository.QPerson;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactory;
 import org.springframework.data.mongodb.repository.support.QuerydslMongoPredicateExecutor;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 
 import com.mongodb.WriteConcern;
 import com.mongodb.client.MongoClient;
@@ -60,6 +60,7 @@ import com.mongodb.client.MongoDatabase;
  * @author Jordi Llach
  * @author Mark Paluch
  */
+@ExtendWith({ MongoClientExtension.class })
 public class ApplicationContextEventTests {
 
 	private static final String COLLECTION_NAME = "personPojoStringId";
@@ -69,17 +70,13 @@ public class ApplicationContextEventTests {
 	private final String[] collectionsToDrop = new String[] { COLLECTION_NAME, ROOT_COLLECTION_NAME,
 			RELATED_COLLECTION_NAME };
 
-	private static MongoClient mongo;
+	static @Client MongoClient mongoClient;
+
 	private ApplicationContext applicationContext;
 	private MongoTemplate template;
 	private SimpleMappingEventListener listener;
 
-	@BeforeClass
-	public static void beforeClass() {
-		mongo = MongoTestUtils.client();
-	}
-
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		cleanDb();
@@ -90,14 +87,14 @@ public class ApplicationContextEventTests {
 		listener = applicationContext.getBean(SimpleMappingEventListener.class);
 	}
 
-	@After
+	@AfterEach
 	public void cleanUp() {
 		cleanDb();
 	}
 
 	private void cleanDb() {
 
-		MongoDatabase db = mongo.getDatabase("database");
+		MongoDatabase db = mongoClient.getDatabase("database");
 		for (String coll : collectionsToDrop) {
 			db.getCollection(coll).drop();
 		}

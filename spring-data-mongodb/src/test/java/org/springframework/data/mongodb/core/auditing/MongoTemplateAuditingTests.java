@@ -18,32 +18,35 @@ package org.springframework.data.mongodb.core.auditing;
 import static org.assertj.core.api.Assertions.*;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
-import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.config.EnableMongoAuditing;
 import org.springframework.data.mongodb.core.KAuditableVersionedEntity;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.mongodb.client.MongoClient;
 
 /**
  * @author Christoph Strobl
  */
-@RunWith(SpringRunner.class)
+@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 public class MongoTemplateAuditingTests {
+
+	static @Client MongoClient mongoClient;
 
 	@Configuration
 	@EnableMongoAuditing
@@ -51,7 +54,7 @@ public class MongoTemplateAuditingTests {
 
 		@Override
 		public MongoClient mongoClient() {
-			return MongoTestUtils.client();
+			return mongoClient;
 		}
 
 		@Override
@@ -80,7 +83,7 @@ public class MongoTemplateAuditingTests {
 
 		assertThat(updated.modificationDate).isAfter(inserted.modificationDate);
 		assertThat(fetched.modificationDate).isAfter(inserted.modificationDate);
-		assertThat(fetched.modificationDate).isEqualTo(updated.modificationDate);
+		assertThat(fetched.modificationDate).isEqualTo(updated.modificationDate.truncatedTo(ChronoUnit.MILLIS));
 	}
 
 	@Test // DATAMONGO-2346
@@ -101,7 +104,7 @@ public class MongoTemplateAuditingTests {
 
 		assertThat(updated.getModificationDate()).isAfter(inserted.getModificationDate());
 		assertThat(fetched.getModificationDate()).isAfter(inserted.getModificationDate());
-		assertThat(fetched.getModificationDate()).isEqualTo(updated.getModificationDate());
+		assertThat(fetched.getModificationDate()).isEqualTo(updated.getModificationDate().truncatedTo(ChronoUnit.MILLIS));
 	}
 
 	static class ImmutableAuditableEntityWithVersion {

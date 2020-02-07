@@ -15,14 +15,12 @@
  */
 package org.springframework.data.mongodb.monitor;
 
-import com.mongodb.MongoClient;
 import org.bson.Document;
 import org.springframework.jmx.export.annotation.ManagedMetric;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.jmx.support.MetricType;
 
-import com.mongodb.DBObject;
-import com.mongodb.Mongo;
+import com.mongodb.client.MongoClient;
 
 /**
  * JMX Metrics for assertions
@@ -33,21 +31,10 @@ import com.mongodb.Mongo;
 public class AssertMetrics extends AbstractMonitor {
 
 	/**
-	 *
-	 * @param mongoClient
-	 * @deprecated since 2.2 in favor of {@link #AssertMetrics(com.mongodb.client.MongoClient)}
-	 */
-	@Deprecated
-	public AssertMetrics(MongoClient mongoClient) {
-		super(mongoClient);
-	}
-
-	/**
-	 *
 	 * @param mongoClient
 	 * @since 2.2
 	 */
-	public AssertMetrics(com.mongodb.client.MongoClient mongoClient) {
+	public AssertMetrics(MongoClient mongoClient) {
 		super(mongoClient);
 	}
 

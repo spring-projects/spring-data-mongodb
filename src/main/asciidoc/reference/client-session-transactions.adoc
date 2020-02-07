@@ -185,10 +185,10 @@ The `MongoTransactionManager` binds a `ClientSession` to the thread. `MongoTempl
 [source,java]
 ----
 @Configuration
-static class Config extends AbstractMongoConfiguration {
+static class Config extends AbstractMongoClientConfiguration {
 
     @Bean
-    MongoTransactionManager transactionManager(MongoDbFactory dbFactory) {  <1>
+    MongoTransactionManager transactionManager(MongoDatabaseFactory dbFactory) {  <1>
         return new MongoTransactionManager(dbFactory);
     }
 
@@ -199,7 +199,7 @@ static class Config extends AbstractMongoConfiguration {
 public class StateService {
 
     @Transactional
-    void someBusinessFunction(Step step) {                                  <2>
+    void someBusinessFunction(Step step) {                                        <2>
 
         template.insert(step);
 
@@ -302,7 +302,7 @@ The following example shows how to create and use transactions with a `ReactiveM
 [source,java]
 ----
 @Configuration
-static class Config extends AbstractMongoConfiguration {
+static class Config extends AbstractMongoClientConfiguration {
 
     @Bean
     ReactiveMongoTransactionManager transactionManager(ReactiveDatabaseFactory factory) {  <1>

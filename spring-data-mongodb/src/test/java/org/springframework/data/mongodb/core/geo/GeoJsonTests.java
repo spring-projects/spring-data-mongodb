@@ -25,10 +25,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.assertj.core.data.Percentage;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataAccessException;
@@ -47,9 +48,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.BasicDbListBuilder;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.mongodb.MongoException;
 import com.mongodb.WriteConcern;
@@ -60,9 +62,11 @@ import com.mongodb.client.MongoCollection;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@RunWith(SpringRunner.class)
+@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 @ContextConfiguration
 public class GeoJsonTests {
+
+	static @Client MongoClient mongoClient;
 
 	@Configuration
 	static class TestConfig extends AbstractMongoClientConfiguration {
@@ -74,13 +78,13 @@ public class GeoJsonTests {
 
 		@Override
 		public MongoClient mongoClient() {
-			return MongoTestUtils.client();
+			return mongoClient;
 		}
 	}
 
 	@Autowired MongoTemplate template;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		template.setWriteConcern(WriteConcern.JOURNALED);
@@ -89,7 +93,7 @@ public class GeoJsonTests {
 		addVenues();
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
 
 		dropIndex();

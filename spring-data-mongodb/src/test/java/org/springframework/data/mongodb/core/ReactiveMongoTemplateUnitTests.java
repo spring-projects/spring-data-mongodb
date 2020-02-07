@@ -45,6 +45,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.reactivestreams.Publisher;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.StaticApplicationContext;
@@ -76,6 +77,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.CollectionUtils;
 
+import com.mongodb.MongoClientSettings;
 import com.mongodb.ReadPreference;
 import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.CreateCollectionOptions;
@@ -93,7 +95,6 @@ import com.mongodb.reactivestreams.client.MapReducePublisher;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
-import com.mongodb.reactivestreams.client.Success;
 
 /**
  * Unit tests for {@link ReactiveMongoTemplate}.
@@ -116,7 +117,7 @@ public class ReactiveMongoTemplateUnitTests {
 	@Mock Publisher runCommandPublisher;
 	@Mock Publisher<UpdateResult> updateResultPublisher;
 	@Mock Publisher findAndUpdatePublisher;
-	@Mock Publisher<Success> successPublisher;
+	@Mock Publisher<Void> successPublisher;
 	@Mock DistinctPublisher distinctPublisher;
 	@Mock Publisher deletePublisher;
 	@Mock MapReducePublisher mapReducePublisher;
@@ -129,6 +130,7 @@ public class ReactiveMongoTemplateUnitTests {
 	public void beforeEach() {
 
 		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslator);
+		when(factory.getCodecRegistry()).thenReturn(MongoClientSettings.getDefaultCodecRegistry());
 		when(factory.getMongoDatabase()).thenReturn(db);
 		when(db.getCollection(any())).thenReturn(collection);
 		when(db.getCollection(any(), any())).thenReturn(collection);
@@ -433,6 +435,17 @@ public class ReactiveMongoTemplateUnitTests {
 		verify(collection).countDocuments(any(), options.capture());
 
 		assertThat(options.getValue().getHint()).isEqualTo(queryHint);
+	}
+
+	@Test // DATAMONGO-2365
+	public void countShouldApplyQueryHintAsIndexNameIfPresent() {
+
+		template.count(new Query().withHint("idx-1"), Person.class, "star-wars").subscribe();
+
+		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
+		verify(collection).countDocuments(any(), options.capture());
+
+		assertThat(options.getValue().getHintString()).isEqualTo("idx-1");
 	}
 
 	@Test // DATAMONGO-2215

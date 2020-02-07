@@ -76,7 +76,7 @@ public class MapReduceTests {
 		template.dropCollection("jmr1_out");
 		template.dropCollection("jmr1");
 		template.dropCollection("jmrWithGeo");
-		template.getMongoDbFactory().getDb("jmr1-out-db").drop();
+		template.getMongoDbFactory().getMongoDatabase("jmr1-out-db").drop();
 	}
 
 	@Test // DATADOC-7
@@ -167,8 +167,9 @@ public class MapReduceTests {
 		mongoTemplate.mapReduce("jmr1", MAP_FUNCTION, REDUCE_FUNCTION,
 				options().outputDatabase("jmr1-out-db").outputCollection("jmr1-out"), ValueObject.class);
 
-		assertThat(template.getMongoDbFactory().getDb("jmr1-out-db").listCollectionNames().into(new ArrayList<>()))
-				.contains("jmr1-out");
+		assertThat(
+				template.getMongoDbFactory().getMongoDatabase("jmr1-out-db").listCollectionNames().into(new ArrayList<>()))
+						.contains("jmr1-out");
 	}
 
 	@Test // DATADOC-7

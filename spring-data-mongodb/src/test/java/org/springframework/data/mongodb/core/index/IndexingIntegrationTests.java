@@ -28,18 +28,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.junit.After;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.MongoCollectionUtils;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
-import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -47,10 +45,11 @@ import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.mongodb.client.MongoClient;
 
@@ -62,12 +61,14 @@ import com.mongodb.client.MongoClient;
  * @author Jordi Llach
  * @author Mark Paluch
  */
-@RunWith(SpringRunner.class)
+@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 @ContextConfiguration
 public class IndexingIntegrationTests {
 
+	static @Client MongoClient mongoClient;
+
 	@Autowired MongoOperations operations;
-	@Autowired MongoDbFactory mongoDbFactory;
+	@Autowired MongoDatabaseFactory mongoDbFactory;
 	@Autowired ConfigurableApplicationContext context;
 
 	@Configuration
@@ -75,7 +76,7 @@ public class IndexingIntegrationTests {
 
 		@Override
 		public MongoClient mongoClient() {
-			return MongoTestUtils.client();
+			return mongoClient;
 		}
 
 		@Override
@@ -89,7 +90,7 @@ public class IndexingIntegrationTests {
 		}
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
 		operations.dropCollection(IndexedPerson.class);
 	}

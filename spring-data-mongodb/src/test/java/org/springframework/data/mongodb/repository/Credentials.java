@@ -16,7 +16,6 @@
 package org.springframework.data.mongodb.repository;
 
 /**
- *
  * @author Oliver Gierke
  */
 public interface Credentials {

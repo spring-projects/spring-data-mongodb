@@ -27,16 +27,16 @@ import org.springframework.test.util.ReflectionTestUtils;
 import com.mongodb.ReadPreference;
 
 /**
- * Integration tests for {@link MongoClientOptionsFactoryBean}.
+ * Integration tests for {@link MongoClientSettingsFactoryBean}.
  *
  * @author Christoph Strobl
  */
-public class MongoClientOptionsFactoryBeanIntegrationTests {
+public class MongoClientSettingsFactoryBeanIntegrationTests {
 
 	@Test // DATAMONGO-1158
 	public void convertsReadPreferenceConcernCorrectly() {
 
-		RootBeanDefinition definition = new RootBeanDefinition(MongoClientOptionsFactoryBean.class);
+		RootBeanDefinition definition = new RootBeanDefinition(MongoClientSettingsFactoryBean.class);
 		definition.getPropertyValues().addPropertyValue("readPreference", "NEAREST");
 
 		DefaultListableBeanFactory factory = new DefaultListableBeanFactory();
@@ -44,7 +44,7 @@ public class MongoClientOptionsFactoryBeanIntegrationTests {
 
 		factory.registerBeanDefinition("factory", definition);
 
-		MongoClientOptionsFactoryBean bean = factory.getBean("&factory", MongoClientOptionsFactoryBean.class);
+		MongoClientSettingsFactoryBean bean = factory.getBean("&factory", MongoClientSettingsFactoryBean.class);
 		assertThat(ReflectionTestUtils.getField(bean, "readPreference")).isEqualTo((Object) ReadPreference.nearest());
 	}
 }

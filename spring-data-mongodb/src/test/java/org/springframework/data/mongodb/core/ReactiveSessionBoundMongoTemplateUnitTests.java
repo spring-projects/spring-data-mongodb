@@ -111,7 +111,8 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 		when(collection.deleteMany(any(ClientSession.class), any(), any())).thenReturn(resultPublisher);
 		when(collection.insertOne(any(ClientSession.class), any(Document.class))).thenReturn(resultPublisher);
 		when(collection.aggregate(any(ClientSession.class), anyList(), any(Class.class))).thenReturn(aggregatePublisher);
-		when(collection.countDocuments(any(ClientSession.class), any(), any(CountOptions.class))).thenReturn(resultPublisher);
+		when(collection.countDocuments(any(ClientSession.class), any(), any(CountOptions.class)))
+				.thenReturn(resultPublisher);
 		when(collection.drop(any(ClientSession.class))).thenReturn(resultPublisher);
 		when(collection.findOneAndUpdate(any(ClientSession.class), any(), any(Bson.class), any()))
 				.thenReturn(resultPublisher);
@@ -127,7 +128,6 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 		when(findPublisher.collation(any())).thenReturn(findPublisher);
 		when(findPublisher.first()).thenReturn(resultPublisher);
 		when(aggregatePublisher.allowDiskUse(anyBoolean())).thenReturn(aggregatePublisher);
-		when(aggregatePublisher.useCursor(anyBoolean())).thenReturn(aggregatePublisher);
 
 		factory = new SimpleReactiveMongoDatabaseFactory(client, "foo");
 

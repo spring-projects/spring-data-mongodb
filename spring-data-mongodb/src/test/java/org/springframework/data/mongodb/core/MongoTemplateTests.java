@@ -32,6 +32,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -44,6 +45,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.convert.converter.Converter;
@@ -64,7 +66,7 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.LazyLoadingProxy;
@@ -99,12 +101,12 @@ import org.springframework.util.StringUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
-import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.ListIndexesIterable;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.Filters;
@@ -131,7 +133,7 @@ import com.mongodb.client.result.UpdateResult;
 public class MongoTemplateTests {
 
 	@Autowired MongoTemplate template;
-	@Autowired MongoDbFactory factory;
+	@Autowired MongoDatabaseFactory factory;
 
 	ConfigurableApplicationContext context;
 	MongoTemplate mappingTemplate;
@@ -230,6 +232,7 @@ public class MongoTemplateTests {
 		template.dropCollection(ImmutableAudited.class);
 		template.dropCollection(RawStringId.class);
 		template.dropCollection(Outer.class);
+		template.dropCollection(Message.class);
 	}
 
 	@Test
@@ -409,7 +412,7 @@ public class MongoTemplateTests {
 
 		assertThat(template.indexOps(Person.class).getIndexInfo().isEmpty()).isTrue();
 
-		factory.getDb().getCollection(template.getCollectionName(Person.class))
+		factory.getMongoDatabase().getCollection(template.getCollectionName(Person.class))
 				.createIndex(new org.bson.Document("age", -1), new IndexOptions().name("age_-1").unique(true).sparse(true));
 
 		ListIndexesIterable<org.bson.Document> indexInfo = template.getCollection(template.getCollectionName(Person.class))
@@ -3669,7 +3672,8 @@ public class MongoTemplateTests {
 
 		ImmutableAudited read = template.findOne(query(where("id").is(result.getId())), ImmutableAudited.class);
 
-		assertThat(read.modified).isEqualTo(result.modified).describedAs("Expected auditing information to be read!");
+		assertThat(read.modified).isEqualTo(result.modified.truncatedTo(ChronoUnit.MILLIS))
+				.describedAs("Expected auditing information to be read!");
 	}
 
 	@Test // DATAMONGO-1798

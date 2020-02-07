@@ -86,12 +86,10 @@ public class ReactiveAggregationUnitTests {
 
 	@Test // DATAMONGO-1646
 	public void errorsOnExplainUsage() {
-		assertThatIllegalArgumentException().isThrownBy(() -> template
-				.aggregate(newAggregation(Product.class, //
-						project("name", "netPrice")) //
-								.withOptions(AggregationOptions.builder().explain(true).build()),
-						INPUT_COLLECTION, TagCount.class)
-				.subscribe());
+		assertThatIllegalArgumentException().isThrownBy(() -> template.aggregate(newAggregation(Product.class, //
+				project("name", "netPrice")) //
+						.withOptions(AggregationOptions.builder().explain(true).build()),
+				INPUT_COLLECTION, TagCount.class).subscribe());
 	}
 
 	@Test // DATAMONGO-1646, DATAMONGO-1311
@@ -111,10 +109,9 @@ public class ReactiveAggregationUnitTests {
 	@Test // DATAMONGO-1646
 	public void appliesCollationCorrectlyWhenPresent() {
 
-		template.aggregate(
-				newAggregation(Product.class, //
-						project("name", "netPrice")) //
-								.withOptions(AggregationOptions.builder().collation(Collation.of("en_US")).build()),
+		template.aggregate(newAggregation(Product.class, //
+				project("name", "netPrice")) //
+						.withOptions(AggregationOptions.builder().collation(Collation.of("en_US")).build()),
 				INPUT_COLLECTION, TagCount.class).subscribe();
 
 		verify(publisher).collation(eq(com.mongodb.client.model.Collation.builder().locale("en_US").build()));
@@ -134,13 +131,10 @@ public class ReactiveAggregationUnitTests {
 	@Test // DATAMONGO-1646
 	public void appliesDiskUsageCorrectly() {
 
-		template
-				.aggregate(
-						newAggregation(Product.class, //
-								project("name", "netPrice")) //
-										.withOptions(AggregationOptions.builder().allowDiskUse(true).build()),
-						INPUT_COLLECTION, TagCount.class)
-				.subscribe();
+		template.aggregate(newAggregation(Product.class, //
+				project("name", "netPrice")) //
+						.withOptions(AggregationOptions.builder().allowDiskUse(true).build()),
+				INPUT_COLLECTION, TagCount.class).subscribe();
 
 		verify(publisher).allowDiskUse(eq(true));
 	}

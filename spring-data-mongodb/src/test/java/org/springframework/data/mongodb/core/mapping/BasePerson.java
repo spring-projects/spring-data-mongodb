@@ -19,7 +19,8 @@ import com.querydsl.core.annotations.QuerySupertype;
 
 /**
  * {@link QuerySupertype} is necessary for Querydsl 2.2.0-beta4 to compile the query classes directly. Can be removed as
- * soon as <a href="https://bugs.launchpad.net/querydsl/+bug/776219">https://bugs.launchpad.net/querydsl/+bug/776219</a> is fixed.
+ * soon as <a href="https://bugs.launchpad.net/querydsl/+bug/776219">https://bugs.launchpad.net/querydsl/+bug/776219</a>
+ * is fixed.
  *
  * @see <a href="https://bugs.launchpad.net/querydsl/+bug/776219">https://bugs.launchpad.net/querydsl/+bug/776219</a>
  * @author Jon Brisbin

@@ -122,7 +122,7 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 		}
 
 		MongoDatabase db = StringUtils.hasText(options.getDatabaseName())
-				? template.getMongoDbFactory().getDb(options.getDatabaseName())
+				? template.getMongoDbFactory().getMongoDatabase(options.getDatabaseName())
 				: template.getDb();
 
 		ChangeStreamIterable<Document> iterable;

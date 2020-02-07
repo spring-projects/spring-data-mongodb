@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.bson.conversions.Bson;
 import org.bson.types.Code;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,11 +36,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.geo.Point;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
@@ -57,8 +59,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import com.mongodb.QueryBuilder;
+import com.mongodb.MongoClientSettings;
+import com.mongodb.client.model.Filters;
 
 /**
  * Unit tests for {@link QueryMapper}.
@@ -76,7 +78,7 @@ public class QueryMapperUnitTests {
 	MongoMappingContext context;
 	MappingMongoConverter converter;
 
-	@Mock MongoDbFactory factory;
+	@Mock MongoDatabaseFactory factory;
 
 	@BeforeEach
 	void beforeEach() {
@@ -179,8 +181,9 @@ public class QueryMapperUnitTests {
 	@Test // DATAMONGO-373
 	void handlesNativelyBuiltQueryCorrectly() {
 
-		DBObject query = new QueryBuilder().or(new BasicDBObject("foo", "bar")).get();
-		mapper.getMappedObject(new org.bson.Document(query.toMap()), Optional.empty());
+		Bson query = new BasicDBObject(Filters.or(new BasicDBObject("foo", "bar")).toBsonDocument(org.bson.Document.class,
+				MongoClientSettings.getDefaultCodecRegistry()));
+		mapper.getMappedObject(query, Optional.empty());
 	}
 
 	@Test // DATAMONGO-369

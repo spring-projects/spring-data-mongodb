@@ -26,7 +26,7 @@ import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.convert.ConverterBuilder;
 import org.springframework.data.convert.CustomConversions;
-import org.springframework.data.convert.EntityInstantiators;
+import org.springframework.data.mapping.model.EntityInstantiators;
 import org.springframework.data.mongodb.core.convert.MongoConverters.BigIntegerToObjectIdConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.ObjectIdToBigIntegerConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.ObjectIdToStringConverter;
@@ -107,9 +107,8 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 
 		if (!conversionService.canConvert(ObjectId.class, Date.class)) {
 
-			conversionService.addConverter(
-					ConverterBuilder.reading(ObjectId.class, Date.class, objectId -> new Date(objectId.getTimestamp()))
-							.getReadingConverter());
+			conversionService.addConverter(ConverterBuilder
+					.reading(ObjectId.class, Date.class, objectId -> new Date(objectId.getTimestamp())).getReadingConverter());
 		}
 
 		conversionService

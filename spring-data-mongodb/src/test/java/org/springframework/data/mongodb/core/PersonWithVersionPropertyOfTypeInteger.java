@@ -23,8 +23,7 @@ public class PersonWithVersionPropertyOfTypeInteger {
 	String firstName;
 	int age;
 
-	@Version
-	Integer version;
+	@Version Integer version;
 
 	@Override
 	public String toString() {

@@ -29,9 +29,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import org.bson.BsonValue;
 import org.bson.Document;
-import org.bson.codecs.Codec;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,24 +52,23 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Metric;
-import org.springframework.data.mapping.PropertyPath;
-import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoDatabaseUtils;
-import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.SessionSynchronization;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.DefaultBulkOperations.BulkOperationContext;
 import org.springframework.data.mongodb.core.EntityOperations.AdaptibleEntity;
-import org.springframework.data.mongodb.core.MappedDocument.MappedUpdate;
+import org.springframework.data.mongodb.core.QueryOperations.CountContext;
+import org.springframework.data.mongodb.core.QueryOperations.DeleteContext;
+import org.springframework.data.mongodb.core.QueryOperations.DistinctQueryContext;
+import org.springframework.data.mongodb.core.QueryOperations.QueryContext;
+import org.springframework.data.mongodb.core.QueryOperations.UpdateContext;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
-import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
-import org.springframework.data.mongodb.core.aggregation.Fields;
-import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
@@ -114,6 +111,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.mongodb.core.validation.Validator;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.Optionals;
@@ -128,11 +126,6 @@ import org.springframework.util.ResourceUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.ClientSessionOptions;
-import com.mongodb.Cursor;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.Mongo;
-import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
@@ -141,6 +134,7 @@ import com.mongodb.client.ClientSession;
 import com.mongodb.client.DistinctIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MapReduceIterable;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
@@ -174,7 +168,6 @@ import com.mongodb.client.result.UpdateResult;
  * @author Cimon Lucas
  * @author Michael J. Simons
  */
-@SuppressWarnings("deprecation")
 public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(MongoTemplate.class);
@@ -193,7 +186,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	private final MongoConverter mongoConverter;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
-	private final MongoDbFactory mongoDbFactory;
+	private final MongoDatabaseFactory mongoDbFactory;
 	private final PersistenceExceptionTranslator exceptionTranslator;
 	private final QueryMapper queryMapper;
 	private final UpdateMapper updateMapper;
@@ -201,6 +194,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	private final SpelAwareProxyProjectionFactory projectionFactory;
 	private final EntityOperations operations;
 	private final PropertyOperations propertyOperations;
+	private final QueryOperations queryOperations;
 
 	private @Nullable WriteConcern writeConcern;
 	private WriteConcernResolver writeConcernResolver = DefaultWriteConcernResolver.INSTANCE;
@@ -218,22 +212,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 *
 	 * @param mongoClient must not be {@literal null}.
 	 * @param databaseName must not be {@literal null} or empty.
-	 * @deprecated since 2.2 in favor of {@link #MongoTemplate(com.mongodb.client.MongoClient, String)}.
-	 */
-	@Deprecated
-	public MongoTemplate(MongoClient mongoClient, String databaseName) {
-		this(new SimpleMongoDbFactory(mongoClient, databaseName), (MongoConverter) null);
-	}
-
-	/**
-	 * Constructor used for a basic template configuration.
-	 *
-	 * @param mongoClient must not be {@literal null}.
-	 * @param databaseName must not be {@literal null} or empty.
 	 * @since 2.1
 	 */
-	public MongoTemplate(com.mongodb.client.MongoClient mongoClient, String databaseName) {
-		this(new SimpleMongoClientDbFactory(mongoClient, databaseName), (MongoConverter) null);
+	public MongoTemplate(MongoClient mongoClient, String databaseName) {
+		this(new SimpleMongoClientDatabaseFactory(mongoClient, databaseName), (MongoConverter) null);
 	}
 
 	/**
@@ -241,7 +223,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 *
 	 * @param mongoDbFactory must not be {@literal null}.
 	 */
-	public MongoTemplate(MongoDbFactory mongoDbFactory) {
+	public MongoTemplate(MongoDatabaseFactory mongoDbFactory) {
 		this(mongoDbFactory, (MongoConverter) null);
 	}
 
@@ -251,7 +233,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param mongoDbFactory must not be {@literal null}.
 	 * @param mongoConverter
 	 */
-	public MongoTemplate(MongoDbFactory mongoDbFactory, @Nullable MongoConverter mongoConverter) {
+	public MongoTemplate(MongoDatabaseFactory mongoDbFactory, @Nullable MongoConverter mongoConverter) {
 
 		Assert.notNull(mongoDbFactory, "MongoDbFactory must not be null!");
 
@@ -264,6 +246,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		this.projectionFactory = new SpelAwareProxyProjectionFactory();
 		this.operations = new EntityOperations(this.mongoConverter.getMappingContext());
 		this.propertyOperations = new PropertyOperations(this.mongoConverter.getMappingContext());
+		this.queryOperations = new QueryOperations(queryMapper, updateMapper, operations, mongoDbFactory);
 
 		// We always have a mapping context in the converter, whether it's a simple one or not
 		mappingContext = this.mongoConverter.getMappingContext();
@@ -281,7 +264,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 	}
 
-	private MongoTemplate(MongoDbFactory dbFactory, MongoTemplate that) {
+	private MongoTemplate(MongoDatabaseFactory dbFactory, MongoTemplate that) {
 
 		this.mongoDbFactory = dbFactory;
 		this.exceptionTranslator = that.exceptionTranslator;
@@ -302,6 +285,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		this.mappingContext = that.mappingContext;
 		this.operations = that.operations;
 		this.propertyOperations = that.propertyOperations;
+		this.queryOperations = that.queryOperations;
 	}
 
 	/**
@@ -316,8 +300,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	/**
 	 * Configures the {@link WriteConcern} to be used with the template. If none is configured the {@link WriteConcern}
-	 * configured on the {@link MongoDbFactory} will apply. If you configured a {@link Mongo} instance no
-	 * {@link WriteConcern} will be used.
+	 * configured on the {@link MongoDatabaseFactory} will apply.
 	 *
 	 * @param writeConcern
 	 */
@@ -524,8 +507,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 *          specification, must not be {@literal null}.
 	 * @param collectionName name of the collection to retrieve the objects from
 	 * @param documentCallbackHandler the handler that will extract results, one document at a time
-	 * @param preparer allows for customization of the {@link DBCursor} used when iterating over the result set, (apply
-	 *          limits, skips and so on).
+	 * @param preparer allows for customization of the {@link FindIterable} used when iterating over the result set,
+	 *          (apply limits, skips and so on).
 	 */
 	protected void executeQuery(Query query, String collectionName, DocumentCallbackHandler documentCallbackHandler,
 			@Nullable CursorPreparer preparer) {
@@ -845,10 +828,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 		Assert.notNull(collectionName, "CollectionName must not be null!");
 
-		Document mappedQuery = queryMapper.getMappedObject(query.getQueryObject(), getPersistentEntity(entityClass));
+		QueryContext queryContext = queryOperations.createQueryContext(query);
+		Document mappedQuery = queryContext.getMappedQuery(entityClass, this::getPersistentEntity);
 
-		return execute(collectionName, new ExistsCallback(mappedQuery,
-				operations.forType(entityClass).getCollation(query).map(Collation::toMongoCollation).orElse(null)));
+		return execute(collectionName,
+				new ExistsCallback(mappedQuery, queryContext.getCollation(entityClass).orElse(null)));
 	}
 
 	// Find methods that take a Query to express the query and that return a List of objects.
@@ -921,13 +905,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(resultClass, "ResultClass must not be null!");
 
 		MongoPersistentEntity<?> entity = entityClass != Object.class ? getPersistentEntity(entityClass) : null;
+		DistinctQueryContext distinctQueryContext = queryOperations.distinctQueryContext(query, field);
 
-		Document mappedQuery = queryMapper.getMappedObject(query.getQueryObject(), entity);
-		String mappedFieldName = queryMapper.getMappedFields(new Document(field, 1), entity).keySet().iterator().next();
-
-		Class<T> mongoDriverCompatibleType = getMongoDbFactory().getCodecFor(resultClass) //
-				.map(Codec::getEncoderClass) //
-				.orElse((Class<T>) BsonValue.class);
+		Document mappedQuery = distinctQueryContext.getMappedQuery(entity);
+		String mappedFieldName = distinctQueryContext.getMappedFieldName(entity);
+		Class<T> mongoDriverCompatibleType = distinctQueryContext.getDriverCompatibleClass(resultClass);
 
 		MongoIterable<?> result = execute(collectionName, (collection) -> {
 
@@ -942,12 +924,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			}
 
 			DistinctIterable<T> iterable = collection.distinct(mappedFieldName, mappedQuery, mongoDriverCompatibleType);
+			distinctQueryContext.applyCollation(entityClass, iterable::collation);
 
-			return operations.forType(entityClass) //
-					.getCollation(query) //
-					.map(Collation::toMongoCollation) //
-					.map(iterable::collation) //
-					.orElse(iterable);
+			return iterable;
 		});
 
 		if (resultClass == Object.class || mongoDriverCompatibleType != resultClass) {
@@ -956,7 +935,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			DefaultDbRefResolver dbRefResolver = new DefaultDbRefResolver(mongoDbFactory);
 
 			result = result.map((source) -> converter.mapValueToTargetType(source,
-					getMostSpecificConversionTargetType(resultClass, entityClass, field), dbRefResolver));
+					distinctQueryContext.getMostSpecificConversionTargetType(resultClass, entityClass), dbRefResolver));
 		}
 
 		try {
@@ -964,32 +943,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		} catch (RuntimeException e) {
 			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
 		}
-	}
-
-	/**
-	 * @param userType must not be {@literal null}.
-	 * @param domainType must not be {@literal null}.
-	 * @param field must not be {@literal null}.
-	 * @return the most specific conversion target type depending on user preference and domain type property.
-	 * @since 2.1
-	 */
-	private static Class<?> getMostSpecificConversionTargetType(Class<?> userType, Class<?> domainType, String field) {
-
-		Class<?> conversionTargetType = userType;
-		try {
-
-			Class<?> propertyType = PropertyPath.from(field, domainType).getLeafProperty().getLeafType();
-
-			// use the more specific type but favor UserType over property one
-			if (ClassUtils.isAssignable(userType, propertyType)) {
-				conversionTargetType = propertyType;
-			}
-
-		} catch (PropertyReferenceException e) {
-			// just don't care about it as we default to Object.class anyway.
-		}
-
-		return conversionTargetType;
 	}
 
 	@Override
@@ -1106,10 +1059,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.isTrue(query.getSkip() <= 0, "Query must not define skip.");
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityType);
+		QueryContext queryContext = queryOperations.createQueryContext(query);
 
-		Document mappedQuery = queryMapper.getMappedObject(query.getQueryObject(), entity);
-		Document mappedFields = queryMapper.getMappedFields(query.getFieldsObject(), entity);
-		Document mappedSort = queryMapper.getMappedSort(query.getSortObject(), entity);
+		Document mappedQuery = queryContext.getMappedQuery(entity);
+		Document mappedFields = queryContext.getMappedFields(entity);
+		Document mappedSort = queryContext.getMappedSort(entity);
 
 		replacement = maybeCallBeforeConvert(replacement, collectionName);
 		Document mappedReplacement = operations.forEntity(replacement).toMappedDocument(this.mongoConverter).getDocument();
@@ -1118,8 +1072,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		maybeCallBeforeSave(replacement, mappedReplacement, collectionName);
 
 		return doFindAndReplace(collectionName, mappedQuery, mappedFields, mappedSort,
-				operations.forType(entityType).getCollation(query).map(Collation::toMongoCollation).orElse(null), entityType,
-				mappedReplacement, options, resultType);
+				queryContext.getCollation(entityType).orElse(null), entityType, mappedReplacement, options, resultType);
 	}
 
 	// Find methods that take a Query to express the query and that return a single object that is also removed from the
@@ -1165,23 +1118,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(query, "Query must not be null!");
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 
-		CountOptions options = new CountOptions();
-		query.getCollation().map(Collation::toMongoCollation).ifPresent(options::collation);
+		CountContext countContext = queryOperations.countQueryContext(query);
 
-		if (query.getLimit() > 0) {
-			options.limit(query.getLimit());
-		}
-		if (query.getSkip() > 0) {
-			options.skip((int) query.getSkip());
-		}
-		if (StringUtils.hasText(query.getHint())) {
-			options.hint(Document.parse(query.getHint()));
-		}
+		CountOptions options = countContext.getCountOptions(entityClass);
+		Document mappedQuery = countContext.getMappedQuery(entityClass, mappingContext::getPersistentEntity);
 
-		Document document = queryMapper.getMappedObject(query.getQueryObject(),
-				Optional.ofNullable(entityClass).map(it -> mappingContext.getPersistentEntity(entityClass)));
-
-		return doCount(collectionName, document, options);
+		return doCount(collectionName, mappedQuery, options);
 	}
 
 	@SuppressWarnings("ConstantConditions")
@@ -1629,33 +1571,20 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		MongoPersistentEntity<?> entity = entityClass == null ? null : getPersistentEntity(entityClass);
-		increaseVersionForUpdateIfNecessary(entity, update);
 
-		UpdateOptions opts = new UpdateOptions();
-		opts.upsert(upsert);
+		UpdateContext updateContext = multi ? queryOperations.updateContext(update, query, upsert)
+				: queryOperations.updateSingleContext(update, query, upsert);
+		updateContext.increaseVersionForUpdateIfNecessary(entity);
 
-		if (update.hasArrayFilters()) {
-			opts.arrayFilters(update.getArrayFilters().stream().map(ArrayFilter::asDocument).collect(Collectors.toList()));
-		}
+		Document queryObj = updateContext.getMappedQuery(entity);
+		UpdateOptions opts = updateContext.getUpdateOptions(entityClass);
 
-		Document queryObj = new Document();
+		if (updateContext.isAggregationUpdate()) {
 
-		if (query != null) {
-			queryObj.putAll(queryMapper.getMappedObject(query.getQueryObject(), entity));
-		}
-
-		if (multi && update.isIsolated() && !queryObj.containsKey("$isolated")) {
-			queryObj.put("$isolated", 1);
-		}
-
-		if (update instanceof AggregationUpdate) {
-
-			AggregationOperationContext context = entityClass != null
-					? new RelaxedTypeBasedAggregationOperationContext(entityClass, mappingContext, queryMapper)
-					: Aggregation.DEFAULT_CONTEXT;
-
-			List<Document> pipeline = new AggregationUtil(queryMapper, mappingContext)
-					.createPipeline((AggregationUpdate) update, context);
+			List<Document> pipeline = updateContext.getUpdatePipeline(entityClass);
+			MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.UPDATE, collectionName, entityClass,
+					update.getUpdateObject(), queryObj);
+			WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
 
 			return execute(collectionName, collection -> {
 
@@ -1664,60 +1593,35 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 							serializeToJsonSafely(queryObj), serializeToJsonSafely(pipeline), collectionName);
 				}
 
-				MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.UPDATE, collectionName,
-						entityClass, update.getUpdateObject(), queryObj);
-				WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
-
 				collection = writeConcernToUse != null ? collection.withWriteConcern(writeConcernToUse) : collection;
 
 				return multi ? collection.updateMany(queryObj, pipeline, opts) : collection.updateOne(queryObj, pipeline, opts);
 			});
 		}
 
+		Document updateObj = updateContext.getMappedUpdate(entity);
+		MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.UPDATE, collectionName, entityClass,
+				updateObj, queryObj);
+		WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
+
 		return execute(collectionName, collection -> {
-
-			operations.forType(entityClass) //
-					.getCollation(query) //
-					.map(Collation::toMongoCollation) //
-					.ifPresent(opts::collation);
-
-			Document updateObj = update instanceof MappedUpdate ? update.getUpdateObject()
-					: updateMapper.getMappedObject(update.getUpdateObject(), entity);
 
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("Calling update using query: {} and update: {} in collection: {}", serializeToJsonSafely(queryObj),
 						serializeToJsonSafely(updateObj), collectionName);
 			}
 
-			MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.UPDATE, collectionName, entityClass,
-					updateObj, queryObj);
-			WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
-
 			collection = writeConcernToUse != null ? collection.withWriteConcern(writeConcernToUse) : collection;
 
 			if (!UpdateMapper.isUpdateObject(updateObj)) {
 
-				ReplaceOptions replaceOptions = new ReplaceOptions();
-				replaceOptions.collation(opts.getCollation());
-				replaceOptions.upsert(opts.isUpsert());
-
+				ReplaceOptions replaceOptions = updateContext.getReplaceOptions(entityClass);
 				return collection.replaceOne(queryObj, updateObj, replaceOptions);
 			} else {
 				return multi ? collection.updateMany(queryObj, updateObj, opts)
 						: collection.updateOne(queryObj, updateObj, opts);
 			}
 		});
-	}
-
-	private void increaseVersionForUpdateIfNecessary(@Nullable MongoPersistentEntity<?> persistentEntity,
-			UpdateDefinition update) {
-
-		if (persistentEntity != null && persistentEntity.hasVersionProperty()) {
-			String versionFieldName = persistentEntity.getRequiredVersionProperty().getFieldName();
-			if (!update.modifies(versionFieldName)) {
-				update.inc(versionFieldName);
-			}
-		}
 	}
 
 	@Override
@@ -1764,25 +1668,22 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 
 		MongoPersistentEntity<?> entity = getPersistentEntity(entityClass);
-		Document queryObject = queryMapper.getMappedObject(query.getQueryObject(), entity);
+
+		DeleteContext deleteContext = multi ? queryOperations.deleteQueryContext(query)
+				: queryOperations.deleteSingleContext(query);
+		Document queryObject = deleteContext.getMappedQuery(entity);
+		DeleteOptions options = deleteContext.getDeleteOptions(entityClass);
+
+		MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.REMOVE, collectionName, entityClass,
+				null, queryObject);
+
+		WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
 
 		return execute(collectionName, collection -> {
 
 			maybeEmitEvent(new BeforeDeleteEvent<>(queryObject, entityClass, collectionName));
 
 			Document removeQuery = queryObject;
-
-			DeleteOptions options = new DeleteOptions();
-
-			operations.forType(entityClass) //
-					.getCollation(query) //
-					.map(Collation::toMongoCollation) //
-					.ifPresent(options::collation);
-
-			MongoAction mongoAction = new MongoAction(writeConcern, MongoActionOperation.REMOVE, collectionName, entityClass,
-					null, queryObject);
-
-			WriteConcern writeConcernToUse = prepareWriteConcern(mongoAction);
 
 			if (LOGGER.isDebugEnabled()) {
 				LOGGER.debug("Remove using query: {} in collection: {}.",
@@ -2491,6 +2392,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			Class<T> entityClass) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
+
 		Document mappedQuery = queryMapper.getMappedObject(query, entity);
 		Document mappedFields = queryMapper.getMappedObject(fields, entity);
 
@@ -2527,8 +2429,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param query the query document that specifies the criteria used to find a record.
 	 * @param fields the document that specifies the fields to be returned.
 	 * @param entityClass the parameterized type of the returned list.
-	 * @param preparer allows for customization of the {@link DBCursor} used when iterating over the result set, (apply
-	 *          limits, skips and so on).
+	 * @param preparer allows for customization of the {@link FindIterable} used when iterating over the result set,
+	 *          (apply limits, skips and so on).
 	 * @return the {@link List} of converted objects.
 	 */
 	protected <T> List<T> doFind(String collectionName, Document query, Document fields, Class<T> entityClass,
@@ -2682,21 +2584,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
-		increaseVersionForUpdateIfNecessary(entity, update);
+		UpdateContext updateContext = queryOperations.updateSingleContext(update, query, false);
+		updateContext.increaseVersionForUpdateIfNecessary(entity);
 
-		Document mappedQuery = queryMapper.getMappedObject(query, entity);
-
-		Object mappedUpdate;
-		if (update instanceof AggregationUpdate) {
-
-			AggregationOperationContext context = entityClass != null
-					? new RelaxedTypeBasedAggregationOperationContext(entityClass, mappingContext, queryMapper)
-					: Aggregation.DEFAULT_CONTEXT;
-
-			mappedUpdate = new AggregationUtil(queryMapper, mappingContext).createPipeline((Aggregation) update, context);
-		} else {
-			mappedUpdate = updateMapper.getMappedObject(update.getUpdateObject(), entity);
-		}
+		Document mappedQuery = updateContext.getMappedQuery(entity);
+		Object mappedUpdate = updateContext.isAggregationUpdate() ? updateContext.getUpdatePipeline(entityClass)
+				: updateContext.getMappedUpdate(entity);
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(
@@ -2797,16 +2690,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * Internal method using callback to do queries against the datastore that requires reading a collection of objects.
 	 * It will take the following steps
 	 * <ol>
-	 * <li>Execute the given {@link ConnectionCallback} for a {@link DBCursor}.</li>
-	 * <li>Prepare that {@link DBCursor} with the given {@link CursorPreparer} (will be skipped if {@link CursorPreparer}
-	 * is {@literal null}</li>
-	 * <li>Iterate over the {@link DBCursor} and applies the given {@link DocumentCallback} to each of the
+	 * <li>Execute the given {@link ConnectionCallback} for a {@link FindIterable}.</li>
+	 * <li>Prepare that {@link FindIterable} with the given {@link CursorPreparer} (will be skipped if
+	 * {@link CursorPreparer} is {@literal null}</li>
+	 * <li>Iterate over the {@link FindIterable} and applies the given {@link DocumentCallback} to each of the
 	 * {@link Document}s collecting the actual result {@link List}.</li>
 	 * <ol>
 	 *
 	 * @param <T>
-	 * @param collectionCallback the callback to retrieve the {@link DBCursor} with
-	 * @param preparer the {@link CursorPreparer} to potentially modify the {@link DBCursor} before iterating over it
+	 * @param collectionCallback the callback to retrieve the {@link FindIterable} with
+	 * @param preparer the {@link CursorPreparer} to potentially modify the {@link FindIterable} before iterating over it
 	 * @param objectCallback the {@link DocumentCallback} to transform {@link Document}s into the actual domain type
 	 * @param collectionName the collection to be queried
 	 * @return
@@ -2878,7 +2771,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return type != null ? mappingContext.getPersistentEntity(type) : null;
 	}
 
-	private static MongoConverter getDefaultMongoConverter(MongoDbFactory factory) {
+	private static MongoConverter getDefaultMongoConverter(MongoDatabaseFactory factory) {
 
 		DbRefResolver dbRefResolver = new DefaultDbRefResolver(factory);
 		MongoCustomConversions conversions = new MongoCustomConversions(Collections.emptyList());
@@ -2939,7 +2832,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	/**
 	 * Simple {@link CollectionCallback} that takes a query {@link Document} plus an optional fields specification
-	 * {@link Document} and executes that against the {@link DBCollection}.
+	 * {@link Document} and executes that against the {@link MongoCollection}.
 	 *
 	 * @author Oliver Gierke
 	 * @author Thomas Risberg
@@ -2980,7 +2873,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	/**
 	 * Simple {@link CollectionCallback} that takes a query {@link Document} plus an optional fields specification
-	 * {@link Document} and executes that against the {@link DBCollection}.
+	 * {@link Document} and executes that against the {@link MongoCollection}.
 	 *
 	 * @author Oliver Gierke
 	 * @author Thomas Risberg
@@ -3037,7 +2930,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	/**
 	 * Simple {@link CollectionCallback} that takes a query {@link Document} plus an optional fields specification
-	 * {@link Document} and executes that against the {@link DBCollection}.
+	 * {@link Document} and executes that against the {@link MongoCollection}.
 	 *
 	 * @author Thomas Risberg
 	 */
@@ -3295,21 +3188,20 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				}
 
 				if (StringUtils.hasText(query.getHint())) {
-					cursorToUse = cursorToUse.hint(Document.parse(query.getHint()));
+
+					String hint = query.getHint();
+
+					if (BsonUtils.isJsonDocument(hint)) {
+						cursorToUse = cursorToUse.hint(BsonUtils.parse(hint, mongoDbFactory));
+					} else {
+						cursorToUse = cursorToUse.hintString(hint);
+					}
 				}
 
 				if (meta.hasValues()) {
 
 					if (StringUtils.hasText(meta.getComment())) {
 						cursorToUse = cursorToUse.comment(meta.getComment());
-					}
-
-					if (meta.getSnapshot()) {
-						cursorToUse = cursorToUse.snapshot(meta.getSnapshot());
-					}
-
-					if (meta.getMaxScan() != null) {
-						cursorToUse = cursorToUse.maxScan(meta.getMaxScan());
 					}
 
 					if (meta.getMaxTimeMsec() != null) {
@@ -3396,7 +3288,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	/**
-	 * A {@link CloseableIterator} that is backed by a MongoDB {@link Cursor}.
+	 * A {@link CloseableIterator} that is backed by a MongoDB {@link MongoCollection}.
 	 *
 	 * @author Thomas Darimont
 	 * @since 1.7
@@ -3409,7 +3301,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		private DocumentCallback<T> objectReadCallback;
 
 		/**
-		 * Creates a new {@link CloseableIterableCursorAdapter} backed by the given {@link Cursor}.
+		 * Creates a new {@link CloseableIterableCursorAdapter} backed by the given {@link MongoCollection}.
 		 *
 		 * @param cursor
 		 * @param exceptionTranslator
@@ -3476,7 +3368,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 	}
 
-	public MongoDbFactory getMongoDbFactory() {
+	public MongoDatabaseFactory getMongoDbFactory() {
 		return mongoDbFactory;
 	}
 

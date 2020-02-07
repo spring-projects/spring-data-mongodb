@@ -34,7 +34,8 @@ public class PersonExample {
 	@Autowired private MongoOperations mongoOps;
 
 	public static void main(String[] args) {
-		AbstractApplicationContext applicationContext = new AnnotationConfigApplicationContext(PersonExampleAppConfig.class);
+		AbstractApplicationContext applicationContext = new AnnotationConfigApplicationContext(
+				PersonExampleAppConfig.class);
 		PersonExample example = applicationContext.getBean(PersonExample.class);
 		example.doWork();
 		applicationContext.close();

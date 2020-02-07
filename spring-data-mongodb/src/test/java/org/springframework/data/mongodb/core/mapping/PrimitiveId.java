@@ -16,7 +16,6 @@
 package org.springframework.data.mongodb.core.mapping;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
@@ -24,8 +23,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document
 public class PrimitiveId {
 
-	@Id
-	int id;
+	@Id int id;
 	String text;
 
 	public PrimitiveId(Integer id) {

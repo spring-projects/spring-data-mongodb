@@ -47,7 +47,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.PropertyPath;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverterUnitTests.Person;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -75,7 +75,7 @@ public class DbRefMappingMongoConverterUnitTests {
 	MappingMongoConverter converter;
 	MongoMappingContext mappingContext;
 
-	@Mock MongoDbFactory dbFactory;
+	@Mock MongoDatabaseFactory dbFactory;
 	DefaultDbRefResolver dbRefResolver;
 
 	@Before
@@ -111,7 +111,7 @@ public class DbRefMappingMongoConverterUnitTests {
 
 		MongoDatabase dbMock = mock(MongoDatabase.class);
 		MongoCollection collectionMock = mock(MongoCollection.class);
-		when(dbFactory.getDb()).thenReturn(dbMock);
+		when(dbFactory.getMongoDatabase()).thenReturn(dbMock);
 		when(dbMock.getCollection(anyString(), eq(Document.class))).thenReturn(collectionMock);
 
 		FindIterable fi = mock(FindIterable.class);

@@ -24,43 +24,33 @@ import lombok.Data;
 import reactor.test.StepVerifier;
 
 import org.bson.Document;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
-import org.springframework.data.util.Version;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 
 import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
-
 
 /**
  * @author Christoph Strobl
  * @author Mark Paluch
  */
+@ExtendWith(MongoClientExtension.class)
 public class JsonSchemaQueryTests {
 
 	public static final String DATABASE_NAME = "json-schema-query-tests";
 
-	public static @ClassRule MongoVersionRule REQUIRES_AT_LEAST_3_6_0 = MongoVersionRule.atLeast(Version.parse("3.6.0"));
+	static @Client MongoClient client;
+	static @Client com.mongodb.reactivestreams.client.MongoClient reactiveClient;
 
-	static MongoClient client = MongoTestUtils.client();
 	MongoTemplate template;
 	Person jellyBelly, roseSpringHeart, kazmardBoombub;
 
-	@BeforeClass
-	public static void beforeClass() {
-		client = MongoTestUtils.client();
-	}
-
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		template = new MongoTemplate(client, DATABASE_NAME);
@@ -108,10 +98,9 @@ public class JsonSchemaQueryTests {
 
 		MongoJsonSchema schema = MongoJsonSchema.builder().required("address").build();
 
-		com.mongodb.reactivestreams.client.MongoClient mongoClient = MongoTestUtils.reactiveClient();
-
-		new ReactiveMongoTemplate(mongoClient, DATABASE_NAME).find(query(matchingDocumentStructure(schema)), Person.class)
-				.as(StepVerifier::create).expectNextCount(2).verifyComplete();
+		new ReactiveMongoTemplate(reactiveClient, DATABASE_NAME)
+				.find(query(matchingDocumentStructure(schema)), Person.class).as(StepVerifier::create).expectNextCount(2)
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1835
@@ -198,8 +187,8 @@ public class JsonSchemaQueryTests {
 
 		MongoJsonSchema schema = MongoJsonSchema.builder().required("address").build();
 
-		assertThat(template.find(query(matchingDocumentStructure(schema)), Document.class, template.getCollectionName(Person.class)))
-				.hasSize(2);
+		assertThat(template.find(query(matchingDocumentStructure(schema)), Document.class,
+				template.getCollectionName(Person.class))).hasSize(2);
 	}
 
 	@Data

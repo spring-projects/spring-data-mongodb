@@ -22,10 +22,11 @@ import reactor.util.function.Tuples;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,19 +40,22 @@ import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.mongodb.reactivestreams.client.MongoClient;
-import com.mongodb.reactivestreams.client.MongoClients;
 
 /**
  * @author Christoph Strobl
  */
-@RunWith(SpringRunner.class)
+@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 public class ReactiveMongoTemplateAuditingTests {
 
 	static final String DB_NAME = "mongo-template-audit-tests";
+
+	static @Client MongoClient mongoClient;
 
 	@Configuration
 	@EnableMongoAuditing
@@ -60,7 +64,7 @@ public class ReactiveMongoTemplateAuditingTests {
 		@Bean
 		@Override
 		public MongoClient reactiveMongoClient() {
-			return MongoTestUtils.reactiveClient();
+			return mongoClient;
 		}
 
 		@Override
@@ -72,7 +76,7 @@ public class ReactiveMongoTemplateAuditingTests {
 	@Autowired ReactiveMongoTemplate template;
 	@Autowired MongoClient client;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		MongoTestUtils.flushCollection(DB_NAME, template.getCollectionName(ImmutableAuditableEntityWithVersion.class),
@@ -96,7 +100,8 @@ public class ReactiveMongoTemplateAuditingTests {
 
 					assertThat(tuple3.getT2().modificationDate).isAfter(tuple3.getT1().modificationDate);
 					assertThat(tuple3.getT3().modificationDate).isAfter(tuple3.getT1().modificationDate);
-					assertThat(tuple3.getT3().modificationDate).isEqualTo(tuple3.getT2().modificationDate);
+					assertThat(tuple3.getT3().modificationDate)
+							.isEqualTo(tuple3.getT2().modificationDate.truncatedTo(ChronoUnit.MILLIS));
 				}) //
 				.verifyComplete();
 	}
@@ -117,7 +122,8 @@ public class ReactiveMongoTemplateAuditingTests {
 
 					assertThat(tuple3.getT2().getModificationDate()).isAfter(tuple3.getT1().getModificationDate());
 					assertThat(tuple3.getT3().getModificationDate()).isAfter(tuple3.getT1().getModificationDate());
-					assertThat(tuple3.getT3().getModificationDate()).isEqualTo(tuple3.getT2().getModificationDate());
+					assertThat(tuple3.getT3().getModificationDate())
+							.isEqualTo(tuple3.getT2().getModificationDate().truncatedTo(ChronoUnit.MILLIS));
 				}) //
 				.verifyComplete();
 	}

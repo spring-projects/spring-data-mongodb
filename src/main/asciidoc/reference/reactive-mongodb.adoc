@@ -145,7 +145,7 @@ One of the first tasks when using MongoDB and Spring is to create a `com.mongodb
 
 The following example shows how to use Java-based bean metadata to register an instance of a `com.mongodb.reactivestreams.client.MongoClient`:
 
-.Registering a com.mongodb.MongoClient object using Java based bean metadata
+.Registering a `com.mongodb.reactivestreams.client.MongoClient` object using Java based bean metadata
 ====
 [source,java]
 ----
@@ -168,7 +168,7 @@ An alternative is to register an instance of `com.mongodb.reactivestreams.client
 
 The following example shows Java-based bean metadata that supports exception translation on `@Repository` annotated classes:
 
-.Registering a com.mongodb.MongoClient object using Spring's MongoClientFactoryBean and enabling Spring's exception translation support
+.Registering a `com.mongodb.reactivestreams.client.MongoClient` object using Spring's MongoClientFactoryBean and enabling Spring's exception translation support
 ====
 [source,java]
 ----
@@ -250,7 +250,7 @@ public class MongoApp {
 }
 ----
 
-The use of `SimpleMongoDbFactory` is the only difference between the listing shown in the <<mongodb-reactive-getting-started,getting started section>>.
+The use of `SimpleReactiveMongoDatabaseFactory` is the only difference between the listing shown in the <<mongodb-reactive-getting-started,getting started section>>.
 
 [[mongo.reactive.mongo-db-factory-java]]
 === Registering a ReactiveMongoDatabaseFactory Instance by Using Java-based Metadata
@@ -329,7 +329,7 @@ public class AppConfig {
 
 There are several overloaded constructors of `ReactiveMongoTemplate`, including:
 
-* `ReactiveMongoTemplate(MongoClient mongo, String databaseName)`: Takes the `com.mongodb.MongoClient` object and the default database name to operate against.
+* `ReactiveMongoTemplate(MongoClient mongo, String databaseName)`: Takes the `com.mongodb.reactivestreams.client.MongoClient` object and the default database name to operate against.
 * `ReactiveMongoTemplate(ReactiveMongoDatabaseFactory mongoDatabaseFactory)`: Takes a `ReactiveMongoDatabaseFactory` object that encapsulated the `com.mongodb.reactivestreams.client.MongoClient` object and database name.
 * `ReactiveMongoTemplate(ReactiveMongoDatabaseFactory mongoDatabaseFactory, MongoConverter mongoConverter)`: Adds a `MongoConverter` to use for mapping.
 

@@ -20,7 +20,6 @@ import static org.assertj.core.api.Assertions.*;
 import java.util.List;
 
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,8 +30,6 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Language;
 import org.springframework.data.mongodb.core.query.Collation;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
-import org.springframework.data.util.Version;
 
 import com.mongodb.WriteConcern;
 
@@ -41,8 +38,6 @@ import com.mongodb.WriteConcern;
  * @author Mark Paluch
  */
 public class TextIndexTests extends AbstractIntegrationTests {
-
-	public static @ClassRule MongoVersionRule version = MongoVersionRule.atLeast(new Version(2, 6));
 
 	private @Autowired MongoTemplate template;
 	private IndexOperations indexOps;

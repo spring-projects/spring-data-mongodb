@@ -22,10 +22,9 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.function.Function;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -38,10 +37,12 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.stereotype.Repository;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.mongodb.client.MongoClient;
 
@@ -52,9 +53,11 @@ import com.mongodb.client.MongoClient;
  * @author Oliver Gierke
  * @author Mark Paluch
  */
-@RunWith(SpringRunner.class)
+@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 @ContextConfiguration
 public class AuditingViaJavaConfigRepositoriesTests {
+
+	static @Client MongoClient mongoClient;
 
 	@Autowired AuditablePersonRepository auditablePersonRepository;
 	@Autowired AuditorAware<AuditablePerson> auditorAware;
@@ -75,7 +78,7 @@ public class AuditingViaJavaConfigRepositoriesTests {
 
 		@Override
 		public MongoClient mongoClient() {
-			return MongoTestUtils.client();
+			return mongoClient;
 		}
 
 		@Bean
@@ -85,7 +88,7 @@ public class AuditingViaJavaConfigRepositoriesTests {
 		}
 	}
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		auditablePersonRepository.deleteAll();
 		this.auditor = auditablePersonRepository.save(new AuditablePerson("auditor"));

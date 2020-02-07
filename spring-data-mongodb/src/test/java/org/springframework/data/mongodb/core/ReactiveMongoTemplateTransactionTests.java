@@ -26,22 +26,21 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.rules.TestRule;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.reactivestreams.Publisher;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
+import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
-import org.springframework.data.mongodb.test.util.ReplicaSet;
-import org.springframework.data.util.Version;
 
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.reactivestreams.client.ClientSession;
 import com.mongodb.reactivestreams.client.MongoClient;
-import com.mongodb.reactivestreams.client.Success;
 
 /**
  * Integration tests for Mongo Transactions using {@link ReactiveMongoTemplate}.
@@ -50,10 +49,10 @@ import com.mongodb.reactivestreams.client.Success;
  * @author Mark Paluch
  * @currentRead The Core - Peter V. Brett
  */
+@ExtendWith(MongoClientExtension.class)
+@EnableIfReplicaSetAvailable
+@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
 public class ReactiveMongoTemplateTransactionTests {
-
-	public static @ClassRule MongoVersionRule REQUIRES_AT_LEAST_3_7_5 = MongoVersionRule.atLeast(Version.parse("3.7.5"));
-	public static @ClassRule TestRule replSet = ReplicaSet.required();
 
 	static final String DATABASE_NAME = "reactive-template-tx-tests";
 	static final String COLLECTION_NAME = "test";
@@ -65,26 +64,21 @@ public class ReactiveMongoTemplateTransactionTests {
 	static final Person LEESHA = new Person("leesha", 22);
 	static final Person RENNA = new Person("renna", 22);
 
-	MongoClient client;
+	static @Client MongoClient client;
 	ReactiveMongoTemplate template;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
-
-		client = MongoTestUtils.reactiveReplSetClient();
 
 		template = new ReactiveMongoTemplate(client, DATABASE_NAME);
 
 		MongoTestUtils.createOrReplaceCollection(DATABASE_NAME, COLLECTION_NAME, client).as(StepVerifier::create) //
-				.expectNext(Success.SUCCESS) //
 				.verifyComplete();
 
-		MongoTestUtils.createOrReplaceCollection(DATABASE_NAME, "person", client).as(StepVerifier::create)
-				.expectNext(Success.SUCCESS) //
-				.verifyComplete();
+		MongoTestUtils.createOrReplaceCollection(DATABASE_NAME, "person", client).as(StepVerifier::create).verifyComplete();
 
 		MongoTestUtils.createOrReplaceCollection(DATABASE_NAME, "personWithVersionPropertyOfTypeInteger", client)
-				.as(StepVerifier::create).expectNext(Success.SUCCESS) //
+				.as(StepVerifier::create) //
 				.verifyComplete();
 
 		template.insert(DOCUMENT, COLLECTION_NAME).as(StepVerifier::create).expectNextCount(1).verifyComplete();

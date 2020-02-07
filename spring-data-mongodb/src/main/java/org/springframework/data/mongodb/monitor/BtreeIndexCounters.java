@@ -20,7 +20,7 @@ import org.springframework.jmx.export.annotation.ManagedMetric;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.jmx.support.MetricType;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 
 /**
  * JMX Metrics for B-tree index counters
@@ -32,18 +32,9 @@ public class BtreeIndexCounters extends AbstractMonitor {
 
 	/**
 	 * @param mongoClient
-	 * @deprecated since 2.2 in favor of {@link #BtreeIndexCounters(com.mongodb.client.MongoClient)}
-	 */
-	@Deprecated
-	public BtreeIndexCounters(MongoClient mongoClient) {
-		super(mongoClient);
-	}
-
-	/**
-	 * @param mongoClient
 	 * @since 2.2
 	 */
-	public BtreeIndexCounters(com.mongodb.client.MongoClient mongoClient) {
+	public BtreeIndexCounters(MongoClient mongoClient) {
 		super(mongoClient);
 	}
 

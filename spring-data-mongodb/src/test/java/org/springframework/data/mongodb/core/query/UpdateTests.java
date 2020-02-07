@@ -479,8 +479,7 @@ public class UpdateTests {
 	@Test // DATAMONGO-1777, DATAMONGO-2198
 	public void toStringConsidersIsolated() {
 
-		assertThat(new Update().set("key", "value").isolated().toString())
-				.contains("\"$isolated\"");
+		assertThat(new Update().set("key", "value").isolated().toString()).contains("\"$isolated\"");
 	}
 
 	@Test // DATAMONGO-1778

@@ -24,14 +24,17 @@ import lombok.Data;
 import java.util.Optional;
 
 import org.bson.BsonString;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.result.UpdateResult;
 
 /**
@@ -40,19 +43,21 @@ import com.mongodb.client.result.UpdateResult;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
+@ExtendWith(MongoClientExtension.class)
 public class ExecutableUpdateOperationSupportTests {
 
 	private static final String STAR_WARS = "star-wars";
+	static @Client MongoClient mongoClient;
 	MongoTemplate template;
 
 	Person han;
 	Person luke;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		template = new MongoTemplate(
-				new SimpleMongoClientDbFactory(MongoTestUtils.client(), "ExecutableUpdateOperationSupportTests"));
+				new SimpleMongoClientDatabaseFactory(mongoClient, "ExecutableUpdateOperationSupportTests"));
 		template.dropCollection(STAR_WARS);
 
 		han = new Person();

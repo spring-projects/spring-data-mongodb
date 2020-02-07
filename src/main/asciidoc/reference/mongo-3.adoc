@@ -1,11 +1,9 @@
 [[mongo.mongo-3]]
 = MongoDB 3.0 Support
 
-Spring Data MongoDB requires MongoDB Java driver generations 3 when connecting to a MongoDB 2.6/3.0 server running MMap.v1 or a MongoDB server 3.0 using MMap.v1 or the WiredTiger storage engine.
+Spring Data MongoDB requires MongoDB Java driver generations 4 when connecting to a MongoDB 2.6/3.0 server running MMap.v1 or a MongoDB server 3.0 using MMap.v1 or the WiredTiger storage engine.
 
 NOTE: See the driver- and database-specific documentation for major differences between those engines.
-
-NOTE: Operations that are no longer valid when using a 3.x MongoDB Java driver have been deprecated within Spring Data and will be removed in a subsequent release.
 
 == Using Spring Data MongoDB with MongoDB 3.0
 
@@ -51,7 +49,7 @@ MongoDB Server generation 3 changed the authentication model when connecting to 
 [source,java]
 ----
 @Configuration
-public class ApplicationContextEventTestsAppConfig extends AbstractMongoConfiguration {
+public class ApplicationContextEventTestsAppConfig extends AbstractMongoClientConfiguration {
 
   @Override
   public String getDatabaseName() {
@@ -118,11 +116,12 @@ NOTE: The field names used within the query expression are mapped to the domain 
 [[mongo.mongo-3.misc]]
 === Miscellaneous Details
 
-This section covers briefly lists additional things to keep in mind when using the 3.0 driver:
+This section covers briefly lists additional things to keep in mind when using the 4.0 driver:
 
 * `IndexOperations.resetIndexCache()` is no longer supported.
 * Any `MapReduceOptions.extraOption` is silently ignored.
 * `WriteResult` no longer holds error information but, instead, throws an `Exception`.
 * `MongoOperations.executeInSession(…)` no longer calls `requestStart` and `requestDone`.
-* Index name generation has become a driver-internal operation. Spring Data MongoDB still uses the 2.x schema to generate names.
+* Index name generation has become a driver-internal operation.
+Spring Data MongoDB still uses the 2.x schema to generate names.
 * Some `Exception` messages differ between the generation 2 and 3 servers as well as between the MMap.v1 and WiredTiger storage engines.

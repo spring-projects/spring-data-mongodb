@@ -46,6 +46,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
@@ -61,7 +62,7 @@ import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mapping.callback.EntityCallbacks;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
@@ -96,7 +97,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.CollectionUtils;
 
-import com.mongodb.DB;
+import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoException;
 import com.mongodb.MongoNamespace;
 import com.mongodb.ReadPreference;
@@ -134,7 +135,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 	MongoTemplate template;
 
-	@Mock MongoDbFactory factory;
+	@Mock MongoDatabaseFactory factory;
 	@Mock MongoClient mongo;
 	@Mock MongoDatabase db;
 	@Mock MongoCollection<Document> collection;
@@ -157,13 +158,15 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	public void beforeEach() {
 
 		when(findIterable.iterator()).thenReturn(cursor);
-		when(factory.getDb()).thenReturn(db);
+		when(factory.getMongoDatabase()).thenReturn(db);
 		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslator);
+		when(factory.getCodecRegistry()).thenReturn(MongoClientSettings.getDefaultCodecRegistry());
 		when(db.getCollection(any(String.class), eq(Document.class))).thenReturn(collection);
 		when(db.runCommand(any(), any(Class.class))).thenReturn(commandResultDocument);
 		when(collection.find(any(org.bson.Document.class), any(Class.class))).thenReturn(findIterable);
 		when(collection.mapReduce(any(), any(), eq(Document.class))).thenReturn(mapReduceIterable);
-		when(collection.countDocuments(any(Bson.class), any(CountOptions.class))).thenReturn(1L); // TODO: MongoDB 4 - fix me
+		when(collection.countDocuments(any(Bson.class), any(CountOptions.class))).thenReturn(1L); // TODO: MongoDB 4 - fix
+																																															// me
 		when(collection.getNamespace()).thenReturn(new MongoNamespace("db.mock-collection"));
 		when(collection.aggregate(any(List.class), any())).thenReturn(aggregateIterable);
 		when(collection.withReadPreference(any())).thenReturn(collection);
@@ -954,6 +957,17 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(collection).countDocuments(any(), options.capture());
 
 		assertThat(options.getValue().getHint()).isEqualTo(queryHint);
+	}
+
+	@Test // DATAMONGO-2365
+	public void countShouldApplyQueryHintAsIndexNameIfPresent() {
+
+		template.count(new BasicQuery("{}").withHint("idx-1"), AutogenerateableId.class);
+
+		ArgumentCaptor<CountOptions> options = ArgumentCaptor.forClass(CountOptions.class);
+		verify(collection).countDocuments(any(), options.capture());
+
+		assertThat(options.getValue().getHintString()).isEqualTo("idx-1");
 	}
 
 	@Test // DATAMONGO-1733

@@ -52,8 +52,8 @@ public class GeoJsonModuleUnitTests {
 	}
 
 	@Test // DATAMONGO-1181
-	public void shouldDeserializeGeoJsonLineStringCorrectly() throws JsonParseException, JsonMappingException,
-			IOException {
+	public void shouldDeserializeGeoJsonLineStringCorrectly()
+			throws JsonParseException, JsonMappingException, IOException {
 
 		String json = "{ \"type\": \"LineString\", \"coordinates\": [ [10.0, 20.0], [30.0, 40.0], [50.0, 60.0] ]}";
 
@@ -62,8 +62,8 @@ public class GeoJsonModuleUnitTests {
 	}
 
 	@Test // DATAMONGO-1181
-	public void shouldDeserializeGeoJsonMultiPointCorrectly() throws JsonParseException, JsonMappingException,
-			IOException {
+	public void shouldDeserializeGeoJsonMultiPointCorrectly()
+			throws JsonParseException, JsonMappingException, IOException {
 
 		String json = "{ \"type\": \"MultiPoint\", \"coordinates\": [ [10.0, 20.0], [30.0, 40.0], [50.0, 60.0] ]}";
 
@@ -73,8 +73,8 @@ public class GeoJsonModuleUnitTests {
 
 	@Test // DATAMONGO-1181
 	@SuppressWarnings("unchecked")
-	public void shouldDeserializeGeoJsonMultiLineStringCorrectly() throws JsonParseException, JsonMappingException,
-			IOException {
+	public void shouldDeserializeGeoJsonMultiLineStringCorrectly()
+			throws JsonParseException, JsonMappingException, IOException {
 
 		String json = "{ \"type\": \"MultiLineString\", \"coordinates\": [ [ [10.0, 20.0], [30.0, 40.0] ], [ [50.0, 60.0] , [70.0, 80.0] ] ]}";
 
@@ -92,8 +92,8 @@ public class GeoJsonModuleUnitTests {
 	}
 
 	@Test // DATAMONGO-1181
-	public void shouldDeserializeGeoJsonMultiPolygonCorrectly() throws JsonParseException, JsonMappingException,
-			IOException {
+	public void shouldDeserializeGeoJsonMultiPolygonCorrectly()
+			throws JsonParseException, JsonMappingException, IOException {
 
 		String json = "{ \"type\": \"Polygon\", \"coordinates\": ["
 				+ "[[[102.0, 2.0], [103.0, 2.0], [103.0, 3.0], [102.0, 3.0], [102.0, 2.0]]],"

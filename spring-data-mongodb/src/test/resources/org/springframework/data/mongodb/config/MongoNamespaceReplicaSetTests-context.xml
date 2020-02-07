@@ -10,9 +10,13 @@
 	
     <context:property-placeholder location="classpath:replicaSet.properties"/>
 
-    <mongo:mongo-client id="manyReplicaSetMongo" replica-set="${mongo.hosts}"/>
+    <mongo:mongo-client id="manyReplicaSetMongo" replica-set="${mongo.hosts}">
+			<mongo:client-settings cluster-hosts="${mongo.hosts}" />
+	</mongo:mongo-client>
     
-	<mongo:mongo-client id="replicaSetMongo" replica-set="127.0.0.1:10001,localhost:10002"/>
+	<mongo:mongo-client id="replicaSetMongo">
+		<mongo:client-settings cluster-hosts="127.0.0.1:10001,localhost:10002" />
+	</mongo:mongo-client>
 
 <!-- 
 	<mongo:db-factory dbname="database">

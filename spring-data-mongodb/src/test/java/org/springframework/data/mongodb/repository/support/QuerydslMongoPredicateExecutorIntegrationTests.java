@@ -29,7 +29,7 @@ import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.repository.Address;
@@ -58,7 +58,7 @@ import com.mongodb.client.MongoDatabase;
 public class QuerydslMongoPredicateExecutorIntegrationTests {
 
 	@Autowired MongoOperations operations;
-	@Autowired MongoDbFactory dbFactory;
+	@Autowired MongoDatabaseFactory dbFactory;
 
 	QuerydslMongoPredicateExecutor<Person> repository;
 

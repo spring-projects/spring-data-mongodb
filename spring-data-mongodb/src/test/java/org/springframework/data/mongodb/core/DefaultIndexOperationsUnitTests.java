@@ -28,7 +28,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.index.HashedIndex;
@@ -51,7 +51,7 @@ public class DefaultIndexOperationsUnitTests {
 
 	MongoTemplate template;
 
-	@Mock MongoDbFactory factory;
+	@Mock MongoDatabaseFactory factory;
 	@Mock MongoDatabase db;
 	@Mock MongoCollection<Document> collection;
 
@@ -62,7 +62,7 @@ public class DefaultIndexOperationsUnitTests {
 	@Before
 	public void setUp() {
 
-		when(factory.getDb()).thenReturn(db);
+		when(factory.getMongoDatabase()).thenReturn(db);
 		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslator);
 		when(db.getCollection(any(), any(Class.class))).thenReturn(collection);
 		when(collection.createIndex(any(), any(IndexOptions.class))).thenReturn("OK");

@@ -26,13 +26,12 @@ import java.util.Collections;
 import java.util.Set;
 
 import org.junit.Test;
-
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.AbstractApplicationContext;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoTypeMapper;
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
@@ -42,10 +41,11 @@ import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.spel.ExtensionAwareEvaluationContextProvider;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 
 /**
- * Unit tests for {@link AbstractMongoConfiguration}.
+ * Unit tests for {@link AbstractMongoClientConfiguration}.
  *
  * @author Oliver Gierke
  * @author Thomas Darimont
@@ -56,7 +56,7 @@ public class AbstractMongoConfigurationUnitTests {
 	@Test // DATAMONGO-496
 	public void usesConfigClassPackageAsBaseMappingPackage() throws ClassNotFoundException {
 
-		AbstractMongoConfiguration configuration = new SampleMongoConfiguration();
+		AbstractMongoClientConfiguration configuration = new SampleMongoConfiguration();
 		assertThat(configuration.getMappingBasePackage()).isEqualTo(SampleMongoConfiguration.class.getPackage().getName());
 		assertThat(configuration.getInitialEntitySet()).hasSize(2);
 		assertThat(configuration.getInitialEntitySet()).contains(Entity.class);
@@ -79,7 +79,7 @@ public class AbstractMongoConfigurationUnitTests {
 
 		AbstractApplicationContext context = new AnnotationConfigApplicationContext(SampleMongoConfiguration.class);
 
-		assertThat(context.getBean(MongoDbFactory.class)).isNotNull();
+		assertThat(context.getBean(MongoDatabaseFactory.class)).isNotNull();
 		assertThatExceptionOfType(NoSuchBeanDefinitionException.class).isThrownBy(() -> context.getBean(MongoClient.class));
 
 		context.close();
@@ -134,7 +134,7 @@ public class AbstractMongoConfigurationUnitTests {
 
 	private static void assertScanningDisabled(final String value) throws ClassNotFoundException {
 
-		AbstractMongoConfiguration configuration = new SampleMongoConfiguration() {
+		AbstractMongoClientConfiguration configuration = new SampleMongoConfiguration() {
 			@Override
 			protected Collection<String> getMappingBasePackages() {
 				return Collections.singleton(value);
@@ -146,7 +146,7 @@ public class AbstractMongoConfigurationUnitTests {
 	}
 
 	@Configuration
-	static class SampleMongoConfiguration extends AbstractMongoConfiguration {
+	static class SampleMongoConfiguration extends AbstractMongoClientConfiguration {
 
 		@Override
 		protected String getDatabaseName() {
@@ -155,7 +155,7 @@ public class AbstractMongoConfigurationUnitTests {
 
 		@Override
 		public MongoClient mongoClient() {
-			return new MongoClient();
+			return MongoClients.create();
 		}
 
 		@Bean
@@ -174,7 +174,7 @@ public class AbstractMongoConfigurationUnitTests {
 		}
 	}
 
-	static class ConfigurationWithMultipleBasePackages extends AbstractMongoConfiguration {
+	static class ConfigurationWithMultipleBasePackages extends AbstractMongoClientConfiguration {
 
 		@Override
 		protected String getDatabaseName() {
@@ -183,7 +183,7 @@ public class AbstractMongoConfigurationUnitTests {
 
 		@Override
 		public MongoClient mongoClient() {
-			return new MongoClient();
+			return MongoClients.create();
 		}
 
 		@Override

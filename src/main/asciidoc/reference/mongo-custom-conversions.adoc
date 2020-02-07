@@ -85,6 +85,32 @@ public class PersonReadConverter implements Converter<Document, Person> {
 [[mongo.custom-converters.xml]]
 === Registering Spring Converters with the `MongoConverter`
 
+[source,java]
+----
+class MyMongoConfiguration extends AbstractMongoClientConfiguration {
+
+	@Override
+	public String getDatabaseName() {
+		return "database";
+	}
+
+	@Override
+	@Bean
+	public MongoClient mongoClient() {
+		return MongoClients.create();
+	}
+
+	@Override
+	public CustomConversions customConversions() {
+
+		List<Converter<?, ?>> converters = new ArrayList<>(2);
+		converters.add(new com.example.PersonReadConverter());
+		converters.add(new com.example.PersonWriteConverter());
+		return new MongoCustomConversions(converters);
+	}
+}
+----
+
 The Mongo Spring namespace provides a convenient way to register Spring `Converter` instances with the `MappingMongoConverter`. The following configuration snippet shows how to manually register converter beans as well as configure the wrapping `MappingMongoConverter` into a `MongoTemplate`:
 
 [source,xml]
@@ -95,12 +121,12 @@ The Mongo Spring namespace provides a convenient way to register Spring `Convert
   <mongo:custom-converters>
     <mongo:converter ref="readConverter"/>
     <mongo:converter>
-      <bean class="org.springframework.data.mongodb.test.PersonWriteConverter"/>
+      <bean class="com.example.PersonWriteConverter"/>
     </mongo:converter>
   </mongo:custom-converters>
 </mongo:mapping-converter>
 
-<bean id="readConverter" class="org.springframework.data.mongodb.test.PersonReadConverter"/>
+<bean id="readConverter" class="com.example.PersonReadConverter"/>
 
 <bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
   <constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/>

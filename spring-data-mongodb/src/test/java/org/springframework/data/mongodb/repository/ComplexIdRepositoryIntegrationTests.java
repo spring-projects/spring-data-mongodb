@@ -22,20 +22,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
-import org.springframework.data.mongodb.test.util.MongoVersion;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.mongodb.client.MongoClient;
 
@@ -44,11 +41,10 @@ import com.mongodb.client.MongoClient;
  * @author Oliver Gierke
  * @author Mark Paluch
  */
-@RunWith(SpringRunner.class)
-@ContextConfiguration
+@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 public class ComplexIdRepositoryIntegrationTests {
 
-	public @Rule MongoVersionRule mongoVersionRule = MongoVersionRule.any();
+	static @Client MongoClient mongoClient;
 
 	@Configuration
 	@EnableMongoRepositories
@@ -61,7 +57,7 @@ public class ComplexIdRepositoryIntegrationTests {
 
 		@Override
 		public MongoClient mongoClient() {
-			return MongoTestUtils.client();
+			return mongoClient;
 		}
 
 	}
@@ -72,7 +68,7 @@ public class ComplexIdRepositoryIntegrationTests {
 	MyId id;
 	UserWithComplexId userWithId;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		repo.deleteAll();
@@ -133,12 +129,11 @@ public class ComplexIdRepositoryIntegrationTests {
 	}
 
 	@Test // DATAMONGO-1373
-	@MongoVersion(until = "4.0.999")
 	public void composedAnnotationFindMetaShouldWorkWhenUsingComplexId() {
 
 		repo.save(userWithId);
 
-		assertThat(repo.findUsersUsingComposedMetaAnnotationByUserIds(Arrays.asList(id))).hasSize(0);
+		assertThat(repo.findUsersUsingComposedMetaAnnotationByUserIds(Arrays.asList(id))).hasSize(1);
 	}
 
 }

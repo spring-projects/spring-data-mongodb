@@ -20,7 +20,7 @@ import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.util.Assert;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 
 /**
@@ -34,24 +34,13 @@ import com.mongodb.client.MongoDatabase;
 @ManagedResource(description = "Mongo Admin Operations")
 public class MongoAdmin implements MongoAdminOperations {
 
-	private final Object mongoClient;
-
-	/**
-	 * @param mongoClient
-	 * @deprecated since 2.2 in favor of {@link MongoAdmin#MongoAdmin(com.mongodb.client.MongoClient)}.
-	 */
-	@Deprecated
-	public MongoAdmin(MongoClient mongoClient) {
-
-		Assert.notNull(mongoClient, "MongoClient must not be null!");
-		this.mongoClient = mongoClient;
-	}
+	private final MongoClient mongoClient;
 
 	/**
 	 * @param client the underlying {@link com.mongodb.client.MongoClient} used for data access.
 	 * @since 2.2
 	 */
-	public MongoAdmin(com.mongodb.client.MongoClient client) {
+	public MongoAdmin(MongoClient client) {
 
 		Assert.notNull(client, "Client must not be null!");
 		this.mongoClient = client;
@@ -88,11 +77,6 @@ public class MongoAdmin implements MongoAdminOperations {
 	}
 
 	MongoDatabase getDB(String databaseName) {
-
-		if (mongoClient instanceof MongoClient) {
-			return ((MongoClient) mongoClient).getDatabase(databaseName);
-		}
-
-		return ((com.mongodb.client.MongoClient) mongoClient).getDatabase(databaseName);
+		return mongoClient.getDatabase(databaseName);
 	}
 }

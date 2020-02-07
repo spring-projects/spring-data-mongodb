@@ -27,6 +27,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -45,6 +46,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.mongodb.MongoCommandException;
+import com.mongodb.client.MongoClient;
 
 /**
  * Integration tests for {@link MongoPersistentEntityIndexCreator}.
@@ -98,16 +100,18 @@ public class MongoPersistentEntityIndexCreatorIntegrationTests {
 		expectedException.expectMessage("lastname");
 		expectedException.expectCause(IsInstanceOf.<Throwable> instanceOf(MongoCommandException.class));
 
-		MongoTemplate mongoTemplate = new MongoTemplate(MongoTestUtils.client(), "issue");
+		try (MongoClient client = MongoTestUtils.client()) {
+			MongoTemplate mongoTemplate = new MongoTemplate(client, "issue");
 
-		MongoPersistentEntityIndexCreator indexCreator = new MongoPersistentEntityIndexCreator(new MongoMappingContext(),
-				mongoTemplate);
+			MongoPersistentEntityIndexCreator indexCreator = new MongoPersistentEntityIndexCreator(new MongoMappingContext(),
+					mongoTemplate);
 
-		indexCreator.createIndex(new IndexDefinitionHolder("dalinar.kohlin",
-				new Index().named("stormlight").on("lastname", Direction.ASC).unique(), "datamongo-1125"));
+			indexCreator.createIndex(new IndexDefinitionHolder("dalinar.kohlin",
+					new Index().named("stormlight").on("lastname", Direction.ASC).unique(), "datamongo-1125"));
 
-		indexCreator.createIndex(new IndexDefinitionHolder("dalinar.kohlin",
-				new Index().named("stormlight").on("lastname", Direction.ASC).sparse(), "datamongo-1125"));
+			indexCreator.createIndex(new IndexDefinitionHolder("dalinar.kohlin",
+					new Index().named("stormlight").on("lastname", Direction.ASC).sparse(), "datamongo-1125"));
+		}
 	}
 
 	@Document(RECURSIVE_TYPE_COLLECTION_NAME)

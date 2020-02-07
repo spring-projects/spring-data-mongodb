@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.schema;
 import static org.springframework.data.domain.Range.from;
 import static org.springframework.data.domain.Range.Bound.*;
 import static org.springframework.data.mongodb.core.schema.JsonSchemaObject.*;
+import static org.springframework.data.mongodb.core.schema.JsonSchemaObject.array;
 import static org.springframework.data.mongodb.core.schema.JsonSchemaObject.of;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
@@ -31,6 +32,7 @@ import java.util.Set;
 
 import org.bson.Document;
 import org.junit.Test;
+
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.*;
 

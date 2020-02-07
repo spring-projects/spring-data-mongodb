@@ -28,7 +28,10 @@ public class Person {
 ----
 ====
 
-Note that the domain type shown in the preceding example has a property named `id` of type `ObjectId`. The default serialization mechanism used in `MongoTemplate` (which backs the repository support) regards properties named `id` as the document ID. Currently, we support `String`, `ObjectId`, and `BigInteger` as ID types. Now that we have a domain object, we can define an interface that uses it, as follows:
+Note that the domain type shown in the preceding example has a property named `id` of type `String`. The default serialization mechanism used in `MongoTemplate` (which backs the repository support) regards properties named `id` as the document ID. Currently, we support `String`, `ObjectId`, and `BigInteger` as ID types.
+Please see <<mongo-template.id-handling, ID mapping>> for more information about on how the `id` field is handled in the mapping layer.
+
+Now that we have a domain object, we can define an interface that uses it, as follows:
 
 .Basic repository interface to persist Person entities
 ====
@@ -41,9 +44,42 @@ public interface PersonRepository extends PagingAndSortingRepository<Person, Str
 ----
 ====
 
-Right now this interface serves only to provide type information, but we can add additional methods to it later. To do so, in your Spring configuration, add the following content:
 
-.General MongoDB repository Spring configuration
+
+Right now this interface serves only to provide type information, but we can add additional methods to it later.
+
+To start using the repository, use the `@EnableMongoRepositories` annotation.
+That annotation carries the same attributes as the namespace element. If no base package is configured, the infrastructure scans the package of the annotated configuration class. The following example shows how to use Java configuration for a repository:
+
+.Java configuration for repositories
+====
+[source,java]
+----
+@Configuration
+@EnableMongoRepositories
+class ApplicationConfig extends AbstractMongoClientConfiguration {
+
+  @Override
+  protected String getDatabaseName() {
+    return "e-store";
+  }
+
+  @Override
+  public MongoClient mongoClient() {
+    return MongoClients.create();
+  }
+
+  @Override
+  protected String getMappingBasePackage() {
+    return "com.oreilly.springdata.mongodb";
+  }
+}
+----
+====
+
+If you would rather go with XML based configuration add the following content:
+
+.General MongoDB repository Spring XML configuration
 ====
 [source,xml]
 ----
@@ -71,33 +107,7 @@ Right now this interface serves only to provide type information, but we can add
 
 This namespace element causes the base packages to be scanned for interfaces that extend `MongoRepository` and create Spring beans for each one found. By default, the repositories get a `MongoTemplate` Spring bean wired that is called `mongoTemplate`, so you only need to configure `mongo-template-ref` explicitly if you deviate from this convention.
 
-If you would rather go with Java-based configuration, use the `@EnableMongoRepositories` annotation. That annotation carries the same attributes as the namespace element. If no base package is configured, the infrastructure scans the package of the annotated configuration class. The following example shows how to use Java configuration for a repository:
 
-.Java configuration for repositories
-====
-[source,java]
-----
-@Configuration
-@EnableMongoRepositories
-class ApplicationConfig extends AbstractMongoConfiguration {
-
-  @Override
-  protected String getDatabaseName() {
-    return "e-store";
-  }
-
-  @Override
-  public MongoClient mongoClient() {
-    return new MongoClient();
-  }
-
-  @Override
-  protected String getMappingBasePackage() {
-    return "com.oreilly.springdata.mongodb"
-  }
-}
-----
-====
 
 Because our domain repository extends `PagingAndSortingRepository`, it provides you with CRUD operations as well as methods for paginated and sorted access to the entities. Working with the repository instance is just a matter of dependency injecting it into a client. Consequently, accessing the second page of `Person` objects at a page size of 10 would resemble the following code:
 
@@ -105,7 +115,7 @@ Because our domain repository extends `PagingAndSortingRepository`, it provides 
 ====
 [source,java]
 ----
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration
 public class PersonRepositoryTests {
 
@@ -291,14 +301,21 @@ The keywords in the preceding table can be used in conjunction with `delete…By
 ----
 public interface PersonRepository extends MongoRepository<Person, String> {
 
-  List <Person> deleteByLastname(String lastname);
+  List <Person> deleteByLastname(String lastname);      <1>
 
-  Long deletePersonByLastname(String lastname);
+  Long deletePersonByLastname(String lastname);         <2>
+
+  @Nullable
+  Person deleteSingleByLastname(String lastname);       <3>
+
+  Optional<Person> deleteByBirthdate(Date birthdate);   <4>
 }
 ----
+<1> Using a return type of `List` retrieves and returns all matching documents before actually deleting them.
+<2> A numeric return type directly removes the matching documents, returning the total number of documents removed.
+<3> A single domain type result retrieves and removes the first matching document.
+<4> Same as in 3 but wrapped in an `Optional` type.
 ====
-
-Using a return type of `List` retrieves and returns all matching documents before actually deleting them. A numeric return type directly removes the matching documents, returning the total number of documents removed.
 
 [[mongodb.repositories.queries.geo-spatial]]
 === Geo-spatial Repository Queries
@@ -311,7 +328,7 @@ The following example shows how to define a `near` query that finds all persons 
 ====
 [source,java]
 ----
-public interface PersonRepository extends MongoRepository<Person, String>
+public interface PersonRepository extends MongoRepository<Person, String> {
 
   // { 'location' : { '$near' : [point.x, point.y], '$maxDistance' : distance}}
   List<Person> findByLocationNear(Point location, Distance distance);
@@ -344,7 +361,7 @@ Spring Data MongoDb supports geo-near queries, as the following example shows:
 
 [source,java]
 ----
-public interface PersonRepository extends MongoRepository<Person, String>
+public interface PersonRepository extends MongoRepository<Person, String> {
 
   // {'geoNear' : 'location', 'near' : [x, y] }
   GeoResults<Person> findByLocationNear(Point location);
@@ -371,7 +388,7 @@ By adding the `org.springframework.data.mongodb.repository.Query` annotation to 
 
 [source,java]
 ----
-public interface PersonRepository extends MongoRepository<Person, String>
+public interface PersonRepository extends MongoRepository<Person, String> {
 
   @Query("{ 'firstname' : ?0 }")
   List<Person> findByThePersonsFirstname(String firstname);
@@ -387,7 +404,7 @@ You can also use the filter property to restrict the set of properties that is m
 
 [source,java]
 ----
-public interface PersonRepository extends MongoRepository<Person, String>
+public interface PersonRepository extends MongoRepository<Person, String> {
 
   @Query(value="{ 'firstname' : ?0 }", fields="{ 'firstname' : 1, 'lastname' : 1}")
   List<Person> findByThePersonsFirstname(String firstname);
@@ -438,7 +455,7 @@ to declare the predicate value for `lastname` (which is equivalent to the `?0` p
 
 [source,java]
 ----
-public interface PersonRepository extends MongoRepository<Person, String>
+public interface PersonRepository extends MongoRepository<Person, String> {
 
   @Query("{'lastname': ?#{[0]} }")
   List<Person> findByQueryWithExpression(String param0);
@@ -450,7 +467,7 @@ used in conjunction with JSON reveal a side-effect, because Map-like declaration
 
 [source,java]
 ----
-public interface PersonRepository extends MongoRepository<Person, String>
+public interface PersonRepository extends MongoRepository<Person, String> {
 
   @Query("{'id': ?#{ [0] ? {$exists :true} : [1] }}")
   List<Person> findByQueryWithExpressionAndNestedObject(boolean param0, String param1);
@@ -594,7 +611,7 @@ class MongoTemplateProducer {
     @ApplicationScoped
     public MongoOperations createMongoTemplate() {
 
-        MongoDbFactory factory = new SimpleMongoDbFactory(new MongoClient(), "database");
+        MongoDatabaseFactory factory = new SimpleMongoClientDatabaseFactory(MongoClients.create(), "database");
         return new MongoTemplate(factory);
     }
 }
