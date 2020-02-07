@@ -1087,9 +1087,9 @@ public class MappingMongoConverterUnitTests {
 	void configureConverterWithNativeJavaTimeCodec() {
 
 		converter = new MappingMongoConverter(resolver, mappingContext);
-		converter.setCustomConversions(new MongoCustomConversions(config -> {
-			config.useNativeDriverJavaTimeCodecs();
-		}));
+
+		converter.setCustomConversions(MongoCustomConversions
+				.create(MongoCustomConversions.MongoConverterConfigurationAdapter::useNativeDriverJavaTimeCodecs));
 		converter.afterPropertiesSet();
 	}
 

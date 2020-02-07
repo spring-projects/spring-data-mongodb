@@ -29,6 +29,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 
@@ -39,6 +40,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.test.util.Client;
@@ -125,7 +127,7 @@ public class MappingMongoConverterTests {
 		configureConverterWithNativeJavaTimeCodec();
 		MongoCollection<Document> mongoCollection = client.getDatabase(DATABASE).getCollection("java-time-types");
 
-		Instant now = Instant.now();
+		Instant now = Instant.now().truncatedTo(ChronoUnit.MILLIS);
 		WithJavaTimeTypes source = WithJavaTimeTypes.withJavaTimeTypes(now);
 		source.id = "id-1";
 
@@ -138,9 +140,8 @@ public class MappingMongoConverterTests {
 	void configureConverterWithNativeJavaTimeCodec() {
 
 		converter = new MappingMongoConverter(dbRefResolver, mappingContext);
-		converter.setCustomConversions(new MongoCustomConversions(config -> {
-			config.useNativeDriverJavaTimeCodecs();
-		}));
+		converter.setCustomConversions(
+				MongoCustomConversions.create(MongoConverterConfigurationAdapter::useNativeDriverJavaTimeCodecs));
 		converter.afterPropertiesSet();
 	}
 

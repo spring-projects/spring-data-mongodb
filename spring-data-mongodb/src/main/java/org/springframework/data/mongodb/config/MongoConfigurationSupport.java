@@ -95,15 +95,16 @@ public abstract class MongoConfigurationSupport {
 	 * Register custom {@link Converter}s in a {@link CustomConversions} object if required. These
 	 * {@link CustomConversions} will be registered with the
 	 * {@link org.springframework.data.mongodb.core.convert.MappingMongoConverter} and {@link #mongoMappingContext()}.
-	 * Returns an empty {@link MongoCustomConversions} instance by default. <br />
-	 * <strong>NOTE:</strong> Use {@link #customConversionsConfiguration(MongoConverterConfigurationAdapter)} to configure
-	 * MongoDB native simple types and register custom {@link Converter converters}.
+	 * Returns an empty {@link MongoCustomConversions} instance by default.
+	 * <p>
+	 * <strong>NOTE:</strong> Use {@link #configureConverters(MongoConverterConfigurationAdapter)} to configure MongoDB
+	 * native simple types and register custom {@link Converter converters}.
 	 *
 	 * @return must not be {@literal null}.
 	 */
 	@Bean
 	public CustomConversions customConversions() {
-		return new MongoCustomConversions(this::customConversionsConfiguration);
+		return MongoCustomConversions.create(this::configureConverters);
 	}
 
 	/**
@@ -111,17 +112,11 @@ public abstract class MongoConfigurationSupport {
 	 *
 	 * @param converterConfigurationAdapter never {@literal null}.
 	 * @since 2.3
+	 * @see MongoConverterConfigurationAdapter#useNativeDriverJavaTimeCodecs()
+	 * @see MongoConverterConfigurationAdapter#useSpringDataJavaTimeCodecs()
 	 */
-	protected void customConversionsConfiguration(MongoConverterConfigurationAdapter converterConfigurationAdapter) {
+	protected void configureConverters(MongoConverterConfigurationAdapter converterConfigurationAdapter) {
 
-		/*
-		 * In case you want to use the MongoDB Java Driver native Codecs for java.time types instead of the converters SpringData 
-		 * ships with, then you may want to call the following here.
-		 *     
-		 * converterConfigurationAdapter.useNativeDriverJavaTimeCodecs() 
-		 * 
-		 * But please, be careful! LocalDate, LocalTime and LocalDateTime will be stored with different values by doing so.
-		 */
 	}
 
 	/**

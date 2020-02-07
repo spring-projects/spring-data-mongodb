@@ -31,13 +31,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.core.convert.converter.GenericConverter;
-import org.springframework.core.convert.converter.GenericConverter.ConvertiblePair;
 import org.springframework.data.convert.JodaTimeConverters;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
@@ -87,12 +85,17 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 	 * @param converters must not be {@literal null}.
 	 */
 	public MongoCustomConversions(List<?> converters) {
+		this(MongoConverterConfigurationAdapter.from(converters));
+	}
 
-		this(converterConfigurationAdapter -> {
-
-			converterConfigurationAdapter.useSpringDataJavaTimeCodecs();
-			converterConfigurationAdapter.registerConverters(converters);
-		});
+	/**
+	 * Create a new {@link MongoCustomConversions} given {@link MongoConverterConfigurationAdapter}.
+	 *
+	 * @param conversionConfiguration must not be {@literal null}.
+	 * @since 2.3
+	 */
+	protected MongoCustomConversions(MongoConverterConfigurationAdapter conversionConfiguration) {
+		super(conversionConfiguration.createConverterConfiguration());
 	}
 
 	/**
@@ -100,17 +103,15 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 	 * of configuring store specific capabilities by providing deferred hooks to what will be configured when creating the
 	 * {@link org.springframework.data.convert.CustomConversions#CustomConversions(ConverterConfiguration) instance}.
 	 *
-	 * @param conversionConfiguration must not be {@literal null}.
+	 * @param configurer must not be {@literal null}.
 	 * @since 2.3
 	 */
-	public MongoCustomConversions(Consumer<MongoConverterConfigurationAdapter> conversionConfiguration) {
+	public static MongoCustomConversions create(Consumer<MongoConverterConfigurationAdapter> configurer) {
 
-		super(() -> {
+		MongoConverterConfigurationAdapter adapter = new MongoConverterConfigurationAdapter();
+		configurer.accept(adapter);
 
-			MongoConverterConfigurationAdapter adapter = new MongoConverterConfigurationAdapter();
-			conversionConfiguration.accept(adapter);
-			return adapter.createConverterConfiguration();
-		});
+		return new MongoCustomConversions(adapter);
 	}
 
 	@WritingConverter
@@ -152,14 +153,32 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		 * List of {@literal java.time} types having different representation when rendered via the native
 		 * {@link org.bson.codecs.Codec} than the Spring Data {@link Converter}.
 		 */
-		private static final List<Class<?>> JAVA_DRIVER_TIME_SIMPLE_TYPES = Arrays.asList(LocalDate.class, LocalTime.class,
-				LocalDateTime.class);
+		private static final Set<Class<?>> JAVA_DRIVER_TIME_SIMPLE_TYPES = new HashSet<>(
+				Arrays.asList(LocalDate.class, LocalTime.class, LocalDateTime.class));
 
 		private boolean useNativeDriverJavaTimeCodecs = false;
-		private List<Object> customConverters = new ArrayList<>();
+		private final List<Object> customConverters = new ArrayList<>();
 
 		/**
-		 * Set wether or not to use the native MongoDB Java Driver {@link org.bson.codecs.Codec codes} for
+		 * Create a {@link MongoConverterConfigurationAdapter} using the provided {@code converters} and our own codecs for
+		 * JSR-310 types.
+		 *
+		 * @param converters must not be {@literal null}.
+		 * @return
+		 */
+		public static MongoConverterConfigurationAdapter from(List<?> converters) {
+
+			Assert.notNull(converters, "Converters must not be null");
+
+			MongoConverterConfigurationAdapter converterConfigurationAdapter = new MongoConverterConfigurationAdapter();
+			converterConfigurationAdapter.useSpringDataJavaTimeCodecs();
+			converterConfigurationAdapter.registerConverters(converters);
+
+			return converterConfigurationAdapter;
+		}
+
+		/**
+		 * Set whether or not to use the native MongoDB Java Driver {@link org.bson.codecs.Codec codes} for
 		 * {@link org.bson.codecs.jsr310.LocalDateCodec LocalDate}, {@link org.bson.codecs.jsr310.LocalTimeCodec LocalTime}
 		 * and {@link org.bson.codecs.jsr310.LocalDateTimeCodec LocalDateTime} using a {@link ZoneOffset#UTC}.
 		 *
@@ -232,7 +251,9 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		 */
 		public MongoConverterConfigurationAdapter registerConverters(Collection<?> converters) {
 
+			Assert.notNull(converters, "Converters must not be null");
 			Assert.noNullElements(converters, "Converters must not be null nor contain null values!");
+
 			customConverters.addAll(converters);
 			return this;
 		}
@@ -246,23 +267,26 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 			/*
 			 * We need to have those converters using UTC as the default ones would go on with the systemDefault.
 			 */
-			List<Object> converters = new ArrayList<>();
+			List<Object> converters = new ArrayList<>(STORE_CONVERTERS.size() + 3);
 			converters.add(DateToUtcLocalDateConverter.INSTANCE);
 			converters.add(DateToUtcLocalTimeConverter.INSTANCE);
 			converters.add(DateToUtcLocalDateTimeConverter.INSTANCE);
 			converters.addAll(STORE_CONVERTERS);
 
-			/*
-			 * Right, good catch! We also need to make sure to remove default writing converters for java.time types.
-			 */
-			List<ConvertiblePair> skipConverterRegistrationFor = JAVA_DRIVER_TIME_SIMPLE_TYPES.stream() //
-					.map(it -> new ConvertiblePair(it, Date.class)) //
-					.collect(Collectors.toList()); //
-
 			StoreConversions storeConversions = StoreConversions
-					.of(new SimpleTypeHolder(new HashSet<>(JAVA_DRIVER_TIME_SIMPLE_TYPES), MongoSimpleTypes.HOLDER), converters);
+					.of(new SimpleTypeHolder(JAVA_DRIVER_TIME_SIMPLE_TYPES, MongoSimpleTypes.HOLDER), converters);
 
-			return new ConverterConfiguration(storeConversions, this.customConverters, skipConverterRegistrationFor);
+			return new ConverterConfiguration(storeConversions, this.customConverters, convertiblePair -> {
+
+				// Avoid default registrations
+
+				if (JAVA_DRIVER_TIME_SIMPLE_TYPES.contains(convertiblePair.getSourceType())
+						&& Date.class.isAssignableFrom(convertiblePair.getTargetType())) {
+					return false;
+				}
+
+				return true;
+			});
 		}
 
 		private enum DateToUtcLocalDateTimeConverter implements Converter<Date, LocalDateTime> {
