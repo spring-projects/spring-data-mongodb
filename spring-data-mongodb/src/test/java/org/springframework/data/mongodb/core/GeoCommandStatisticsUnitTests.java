@@ -24,6 +24,7 @@ import org.junit.Test;
  * Unit tests for {@link GeoCommandStatistics}.
  *
  * @author Oliver Gierke
+ * @author Mark Paluch
  * @soundtrack Fruitcake - Jeff Coffin (The Inside of the Outside)
  */
 public class GeoCommandStatisticsUnitTests {
@@ -37,10 +38,10 @@ public class GeoCommandStatisticsUnitTests {
 	public void fallsBackToNanIfNoAverageDistanceIsAvailable() {
 
 		GeoCommandStatistics statistics = GeoCommandStatistics.from(new Document("stats", null));
-		assertThat(statistics.getAverageDistance()).isEqualTo(Double.NaN);
+		assertThat(statistics.getAverageDistance()).isNaN();
 
 		statistics = GeoCommandStatistics.from(new Document("stats", new Document()));
-		assertThat(statistics.getAverageDistance()).isEqualTo(Double.NaN);
+		assertThat(statistics.getAverageDistance()).isNaN();
 	}
 
 	@Test // DATAMONGO-1361
