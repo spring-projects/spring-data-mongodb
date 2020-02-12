@@ -1,6 +1,27 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.0.0.M3 (2020-02-12)
+----------------------------------------
+* DATAMONGO-2470 - Adapt tests to AssertJ 3.15.0.
+* DATAMONGO-2464 - Fix code examples in reference documentation.
+* DATAMONGO-2462 - Move off deprecated EntityInstantiators.
+* DATAMONGO-2461 - Fix Jenkins build.
+* DATAMONGO-2460 - @Field annotation behaviour changed.
+* DATAMONGO-2459 - Update Documentation of Reactive Repositories to mention usage of PageRequest.
+* DATAMONGO-2457 - Reference documentation: Text does not match with code example.
+* DATAMONGO-2456 - Release 3.0 M3 (Neumann).
+* DATAMONGO-2449 - Add aggregation options parameters to @Aggregation annotation.
+* DATAMONGO-2427 - Switch to 4.0-beta1 MongoDB driver.
+* DATAMONGO-2417 - Typesafe Extension Function for ReactiveFindOperation.FindDistinct.
+* DATAMONGO-2406 - Allow Mono<Void> as return type for derived deleteBy queries.
+* DATAMONGO-2400 - Read/write converters not working.
+* DATAMONGO-2365 - Parameter hint in Query#hint is not index name.
+* DATAMONGO-2249 - Query hint leads to error when executed via reactive template.
+* DATAMONGO-2079 - MappingMongoConverter cannot be proxied because it implements the package-private ValueResolver interface.
+* DATAMONGO-1997 - Add support to return the single deleted item for a deleteBy query method.
+
+
 Changes in version 3.0.0.M2 (2020-01-17)
 ----------------------------------------
 * DATAMONGO-2454 - Release 3.0 M2 (Neumann).
@@ -2882,6 +2903,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
