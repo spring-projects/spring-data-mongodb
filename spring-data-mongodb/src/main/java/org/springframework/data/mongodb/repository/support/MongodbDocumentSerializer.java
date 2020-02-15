@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository.support;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -49,6 +50,7 @@ import com.querydsl.mongodb.MongodbOps;
  * @author Mark Paluch
  * @author Christoph Strobl
  * @author Mikhail Kaduchka
+ * @author Enrique Leon Molina
  * @since 2.1
  */
 abstract class MongodbDocumentSerializer implements Visitor<Object, Void> {
@@ -181,19 +183,43 @@ abstract class MongodbDocumentSerializer implements Visitor<Object, Void> {
 			return asDocument(asDBKey(expr, 0), "");
 		} else if (op == Ops.AND) {
 
-			Map<Object, Object> lhs = (Map<Object, Object>) handle(expr.getArg(0));
-			Map<Object, Object> rhs = (Map<Object, Object>) handle(expr.getArg(1));
+			List<Map<Object, Object>> pendingDocuments = new LinkedList<>();
+			for (int i = 0; i < 2; i++) {
+				Map<Object, Object> document = (Map<Object, Object>) handle(expr.getArg(i));
+				if (document.keySet().size() == 1 && document.containsKey("$and")) {
+					pendingDocuments.addAll((Collection<Map<Object, Object>>) document.get("$and"));
+				} else {
+					pendingDocuments.add(document);
+				}
+			}
 
-			LinkedHashSet<Object> lhs2 = new LinkedHashSet<>(lhs.keySet());
-			lhs2.retainAll(rhs.keySet());
+			List<Map<Object, Object>> unmergeableDocuments = new LinkedList<>();
 
-			if (lhs2.isEmpty()) {
-				lhs.putAll(rhs);
-				return lhs;
+			List<Map<Object, Object>> generatedDocuments = new LinkedList<>();
+
+			do {
+				Map<Object, Object> lhs = pendingDocuments.remove(0);
+
+				for (Map<Object, Object> rhs : pendingDocuments) {
+					LinkedHashSet<Object> lhs2 = new LinkedHashSet<>(lhs.keySet());
+					lhs2.retainAll(rhs.keySet());
+					if (lhs2.isEmpty()) {
+						lhs.putAll(rhs);
+					} else {
+						unmergeableDocuments.add(rhs);
+					}
+				}
+
+				generatedDocuments.add(lhs);
+				pendingDocuments = unmergeableDocuments;
+				unmergeableDocuments = new LinkedList<>();
+			} while(!pendingDocuments.isEmpty());
+
+			if (generatedDocuments.size() == 1) {
+				return generatedDocuments.get(0);
 			} else {
-				List<Object> list = new ArrayList<>(2);
-				list.add(handle(expr.getArg(0)));
-				list.add(handle(expr.getArg(1)));
+				List<Object> list = new ArrayList<>(expr.getArgs().size());
+				list.addAll(generatedDocuments);
 				return asDocument("$and", list);
 			}
 
@@ -212,9 +238,15 @@ abstract class MongodbDocumentSerializer implements Visitor<Object, Void> {
 
 		} else if (op == Ops.OR) {
 
-			List<Object> list = new ArrayList<>(2);
-			list.add(handle(expr.getArg(0)));
-			list.add(handle(expr.getArg(1)));
+			List<Object> list = new LinkedList<>();
+			for (int i = 0; i < 2; i++) {
+				Map<Object, Object> document = (Map<Object, Object>) handle(expr.getArg(i));
+				if (document.keySet().size() == 1 && document.containsKey("$or")) {
+					list.addAll((Collection<Object>) document.get("$or"));
+				} else {
+					list.add(document);
+				}
+			}
 			return asDocument("$or", list);
 
 		} else if (op == Ops.NE) {

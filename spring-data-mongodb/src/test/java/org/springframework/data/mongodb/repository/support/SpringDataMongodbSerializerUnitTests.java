@@ -43,6 +43,7 @@ import org.springframework.data.mongodb.repository.QAddress;
 import org.springframework.data.mongodb.repository.QPerson;
 
 import com.querydsl.core.types.Ops;
+import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.PredicateOperation;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.BooleanOperation;
@@ -57,6 +58,7 @@ import com.querydsl.core.types.dsl.StringPath;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Mikhail Kaduchka
+ * @author Enrique Leon Molina
  */
 @ExtendWith(MockitoExtension.class)
 public class SpringDataMongodbSerializerUnitTests {
@@ -172,6 +174,28 @@ public class SpringDataMongodbSerializerUnitTests {
 
 		assertThat(serializer.handle(testExpression)).isEqualTo(Document.parse(
 				"{\"$and\": [{\"$or\": [{\"firstname\": \"John\"}, {\"firstname\": \"Sarah\"}]}, {\"$or\": [{\"lastname\": \"Smith\"}, {\"lastname\": \"Connor\"}]}]}"));
+	}
+
+	@Test // DATAMONGO-2475
+	public void chainedOrsInSameDocument() {
+
+		Predicate predicate = QPerson.person.firstname.eq("firstname_value").or(
+				QPerson.person.lastname.eq("lastname_value")).or(QPerson.person.age.goe(30)).or(
+						QPerson.person.age.loe(20)).or(QPerson.person.uniqueId.isNull());
+
+		assertThat(serializer.handle(predicate)).isEqualTo(Document.parse(
+				"{\"$or\": [{\"firstname\": \"firstname_value\"}, {\"lastname\": \"lastname_value\"}, {\"age\": {\"$gte\": 30}}, {\"age\": {\"$lte\": 20}}, {\"uniqueId\": {\"$exists\": false}}]}"));
+	}
+
+	@Test // DATAMONGO-2475
+	public void chainedAndsInSameDocument() {
+
+		Predicate predicate = QPerson.person.firstname.eq("firstname_value").and(
+				QPerson.person.lastname.eq("lastname_value")).and(QPerson.person.age.goe(30)).and(
+						QPerson.person.age.loe(20)).and(QPerson.person.uniqueId.isNull());
+
+		assertThat(serializer.handle(predicate)).isEqualTo(Document.parse(
+				"{\"$and\": [{\"firstname\": \"firstname_value\", \"lastname\": \"lastname_value\", \"age\": {\"$gte\": 30}, \"uniqueId\": {\"$exists\": false}}, {\"age\": {\"$lte\": 20}}]}"));
 	}
 
 	class Address {
