@@ -4272,4 +4272,46 @@ public class MongoTemplateTests {
 		String value;
 
 	}
+
+	@Data
+	static class UserActivity {
+		String id;
+		String userId;
+		Likes likes;
+	}
+
+	static class Likes {
+		List<Video> videos;
+	}
+
+	static class Video {
+		String id;
+		String title;
+
+		Video(String id, String title) {
+			this.id = id;
+			this.title = title;
+		}
+	}
+
+	@Test
+	public void removeVideoLike() {
+
+		template.dropCollection(UserActivity.class);
+
+		UserActivity userActivity = new UserActivity();
+		userActivity.userId = "123";
+		userActivity.likes = new Likes();
+		userActivity.likes.videos = new ArrayList<>();
+		userActivity.likes.videos.add(new Video("abc", "test"));
+
+		template.save(userActivity);
+
+		Query queryUser = Query.query( Criteria.where("userId").is("123") );
+		Query queryVideo = Query.query( Criteria.where("id").is("abc") );
+		Update update = new Update().pull("likes.videos", queryVideo );
+
+		UpdateResult result = template.updateFirst(queryUser, update, UserActivity.class);
+		assertThat(result.getModifiedCount()).isOne();
+	}
 }
