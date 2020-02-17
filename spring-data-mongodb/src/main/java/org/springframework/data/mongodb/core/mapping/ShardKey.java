@@ -28,12 +28,13 @@ import org.springframework.util.ObjectUtils;
  * Value object representing an entities <a href="https://docs.mongodb.com/manual/core/sharding-shard-key/">Shard
  * Key</a> used to distribute documents across a sharded MongoDB cluster.
  * <p />
- * {@link ShardKey#isImmutable() Immutable} shard keys indicate a fixed value that is not updated (see
+ * {@link ShardKey#isImmutable() Immutable} shard keys indicates a fixed value that is not updated (see
  * <a href="https://docs.mongodb.com/manual/core/sharding-shard-key/#change-a-document-s-shard-key-value">MongoDB
- * Reference: Change a Document’s Shard Key Value</a>), which allows to skip server round trips in cases where a
+ * Reference: Change a Document's Shard Key Value</a>), which allows to skip server round trips in cases where a
  * potential shard key change might have occurred.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 3.0
  */
 public class ShardKey {
@@ -68,14 +69,23 @@ public class ShardKey {
 	/**
 	 * @return {@literal true} if the shard key of an document does not change.
 	 * @see <a href="https://docs.mongodb.com/manual/core/sharding-shard-key/#change-a-document-s-shard-key-value">MongoDB
-	 *      Reference: Change a Document’s Shard Key Value</a>
+	 *      Reference: Change a Document's Shard Key Value</a>
 	 */
 	public boolean isImmutable() {
 		return immutable;
 	}
 
 	/**
-	 * Get the unmapped MongoDB representation of the {@link ShardKey}.
+	 * Return whether the shard key represents a sharded key. Return {@literal false} if the key is not sharded.
+	 *
+	 * @return {@literal true} if the key is sharded; {@literal false} otherwise.
+	 */
+	public boolean isSharded() {
+		return !propertyNames.isEmpty();
+	}
+
+	/**
+	 * Get the raw MongoDB representation of the {@link ShardKey}.
 	 *
 	 * @return never {@literal null}.
 	 */

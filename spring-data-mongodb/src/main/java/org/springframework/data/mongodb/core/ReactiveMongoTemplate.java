@@ -1637,7 +1637,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 					? collection //
 					: collection.withWriteConcern(writeConcernToUse);
 
-			Publisher<?> publisher = null;
+			Publisher<?> publisher;
 			if (!mapped.hasId()) {
 				publisher = collectionToUse.insertOne(document);
 			} else {
@@ -1647,20 +1647,23 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				Document filter = updateContext.getMappedQuery(entity);
 				Document replacement = updateContext.getMappedUpdate(entity);
 
-				Mono<Document> theFilter = Mono.just(filter);
+				Mono<Document> deferredFilter;
 
-				if(updateContext.requiresShardKey(filter, entity)) {
+				if (updateContext.requiresShardKey(filter, entity)) {
 					if (entity.getShardKey().isImmutable()) {
-						theFilter = Mono.just(updateContext.applyShardKey(entity, filter, null));
+						deferredFilter = Mono.just(updateContext.applyShardKey(entity, filter, null));
 					} else {
-						theFilter = Mono.from(
-								collection.find(filter, Document.class).projection(updateContext.getMappedShardKey(entity)).first())
+						deferredFilter = Mono
+								.from(
+										collection.find(filter, Document.class).projection(updateContext.getMappedShardKey(entity)).first())
 								.defaultIfEmpty(replacement).map(it -> updateContext.applyShardKey(entity, filter, it));
 					}
+				} else {
+					deferredFilter = Mono.just(filter);
 				}
 
-				publisher = theFilter.flatMap(
-						it -> Mono.from(collectionToUse.replaceOne(it, replacement, updateContext.getReplaceOptions(entityClass))));
+				publisher = deferredFilter.flatMapMany(
+						it -> collectionToUse.replaceOne(it, replacement, updateContext.getReplaceOptions(entityClass)));
 			}
 
 			return Mono.from(publisher).map(o -> mapped.getId());
@@ -1800,20 +1803,22 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				if (!UpdateMapper.isUpdateObject(updateObj)) {
 
 					Document filter = new Document(queryObj);
-					Mono<Document> theFilter = Mono.just(filter);
+					Mono<Document> deferredFilter;
 
-					if(updateContext.requiresShardKey(filter, entity)) {
+					if (updateContext.requiresShardKey(filter, entity)) {
 						if (entity.getShardKey().isImmutable()) {
-							theFilter = Mono.just(updateContext.applyShardKey(entity, filter, null));
+							deferredFilter = Mono.just(updateContext.applyShardKey(entity, filter, null));
 						} else {
-							theFilter = Mono.from(
+							deferredFilter = Mono.from(
 									collection.find(filter, Document.class).projection(updateContext.getMappedShardKey(entity)).first())
 									.defaultIfEmpty(updateObj).map(it -> updateContext.applyShardKey(entity, filter, it));
 						}
+					} else {
+						deferredFilter = Mono.just(filter);
 					}
 
 					ReplaceOptions replaceOptions = updateContext.getReplaceOptions(entityClass);
-					return theFilter.flatMap(it -> Mono.from(collectionToUse.replaceOne(it, updateObj, replaceOptions)));
+					return deferredFilter.flatMap(it -> Mono.from(collectionToUse.replaceOne(it, updateObj, replaceOptions)));
 				}
 
 				return multi ? collectionToUse.updateMany(queryObj, updateObj, updateOptions)

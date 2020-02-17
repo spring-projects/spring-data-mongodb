@@ -96,7 +96,26 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 			this.collationExpression = null;
 		}
 
-		this.shardKey = detectShardKey(this);
+		this.shardKey = detectShardKey();
+	}
+
+	private ShardKey detectShardKey() {
+
+		if (!isAnnotationPresent(Sharded.class)) {
+			return ShardKey.none();
+		}
+
+		Sharded sharded = getRequiredAnnotation(Sharded.class);
+
+		String[] keyProperties = sharded.shardKey();
+		if (ObjectUtils.isEmpty(keyProperties)) {
+			keyProperties = new String[] { "_id" };
+		}
+
+		ShardKey shardKey = ShardingStrategy.HASH.equals(sharded.shardingStrategy()) ? ShardKey.hash(keyProperties)
+				: ShardKey.range(keyProperties);
+
+		return sharded.immutableKey() ? ShardKey.immutable(shardKey) : shardKey;
 	}
 
 	/*
@@ -305,26 +324,6 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 		Expression expression = PARSER.parseExpression(potentialExpression, ParserContext.TEMPLATE_EXPRESSION);
 		return expression instanceof LiteralExpression ? null : expression;
-	}
-
-	@Nullable
-	private static ShardKey detectShardKey(BasicMongoPersistentEntity<?> entity) {
-
-		if (!entity.isAnnotationPresent(Sharded.class)) {
-			return ShardKey.none();
-		}
-
-		Sharded sharded = entity.getRequiredAnnotation(Sharded.class);
-
-		String[] keyProperties = sharded.shardKey();
-		if (ObjectUtils.isEmpty(keyProperties)) {
-			keyProperties = new String[] { "_id" };
-		}
-
-		ShardKey shardKey = ShardingStrategy.HASH.equals(sharded.shardingStrategy()) ? ShardKey.hash(keyProperties)
-				: ShardKey.range(keyProperties);
-
-		return sharded.immutableKey() ? ShardKey.immutable(shardKey) : shardKey;
 	}
 
 	/**

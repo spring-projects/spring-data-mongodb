@@ -40,6 +40,7 @@ import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.mapping.ShardKey;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
@@ -58,9 +59,10 @@ import com.mongodb.client.model.UpdateOptions;
 /**
  * {@link QueryOperations} centralizes common operations required before an operation is actually ready to be executed.
  * This involves mapping {@link Query queries} into their respective MongoDB representation, computing execution options
- * for {@literal count}, {@literal remove}, ... <br />
+ * for {@literal count}, {@literal remove}, and other methods.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 3.0
  */
 class QueryOperations {
@@ -71,6 +73,7 @@ class QueryOperations {
 	private final CodecRegistryProvider codecRegistryProvider;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private final AggregationUtil aggregationUtil;
+	private final Map<Class<?>, Document> mappedShardKey = new ConcurrentHashMap<>(1);
 
 	/**
 	 * Create a new instance of {@link QueryOperations}.
@@ -503,7 +506,6 @@ class QueryOperations {
 		private final boolean upsert;
 		private final @Nullable UpdateDefinition update;
 		private final @Nullable MappedDocument mappedDocument;
-		private final Map<Class<?>, Document> mappedShardKey = new ConcurrentHashMap<>(1);
 
 		/**
 		 * Create a new {@link UpdateContext} instance.
@@ -624,41 +626,49 @@ class QueryOperations {
 			return mappedQuery;
 		}
 
-		<T> Document applyShardKey(@Nullable MongoPersistentEntity<T> domainType, Document filter,
-				@Nullable Document existing) {
+		<T> Document applyShardKey(MongoPersistentEntity<T> domainType, Document filter, @Nullable Document existing) {
 
 			Document shardKeySource = existing != null ? existing
 					: mappedDocument != null ? mappedDocument.getDocument() : getMappedUpdate(domainType);
 
 			Document filterWithShardKey = new Document(filter);
-			for (String key : getMappedShardKeyFields(domainType)) {
-				if (!filterWithShardKey.containsKey(key)) {
-					filterWithShardKey.append(key, shardKeySource.get(key));
-				}
-			}
+			getMappedShardKeyFields(domainType).forEach(key -> filterWithShardKey.putIfAbsent(key, shardKeySource.get(key)));
 
 			return filterWithShardKey;
 		}
 
-		<T> boolean requiresShardKey(Document filter, @Nullable MongoPersistentEntity<T> domainType) {
+		boolean requiresShardKey(Document filter, @Nullable MongoPersistentEntity<?> domainType) {
 
-			if (multi || domainType == null || !domainType.isSharded() || domainType.idPropertyIsShardKey()) {
-				return false;
-			}
-
-			if (filter.keySet().containsAll(getMappedShardKeyFields(domainType))) {
-				return false;
-			}
-
-			return true;
+			return !multi && domainType != null && domainType.isSharded() && !shardedById(domainType)
+					&& !filter.keySet().containsAll(getMappedShardKeyFields(domainType));
 		}
 
-		Set<String> getMappedShardKeyFields(@Nullable MongoPersistentEntity<?> entity) {
+		/**
+		 * @return {@literal true} if the {@link MongoPersistentEntity#getShardKey() shard key} is the entities
+		 *         {@literal id} property.
+		 * @since 3.0
+		 */
+		private boolean shardedById(MongoPersistentEntity<?> domainType) {
+
+			ShardKey shardKey = domainType.getShardKey();
+			if (shardKey.size() != 1) {
+				return false;
+			}
+
+			String key = shardKey.getPropertyNames().iterator().next();
+			if ("_id".equals(key)) {
+				return true;
+			}
+
+			MongoPersistentProperty idProperty = domainType.getIdProperty();
+			return idProperty != null && idProperty.getName().equals(key);
+		}
+
+		Set<String> getMappedShardKeyFields(MongoPersistentEntity<?> entity) {
 			return getMappedShardKey(entity).keySet();
 		}
 
-		Document getMappedShardKey(@Nullable MongoPersistentEntity<?> entity) {
-
+		Document getMappedShardKey(MongoPersistentEntity<?> entity) {
 			return mappedShardKey.computeIfAbsent(entity.getType(),
 					key -> queryMapper.getMappedFields(entity.getShardKey().getDocument(), entity));
 		}

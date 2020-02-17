@@ -8,6 +8,7 @@
 * Support for <<mongo-template.aggregation-update,aggregation pipelines in update operations>>.
 * Removal of `_id` flattening for composite Id's when using `MongoTemplate` aggregations.
 * Apply pagination when using GridFS `find(Query)`.
+* <<sharding,Sharding key derivation>> via `@Sharded`.
 
 [[new-features.2-2-0]]
 == What's New in Spring Data MongoDB 2.2

@@ -1076,7 +1076,8 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-2341
 	void saveShouldProjectOnShardKeyWhenLoadingExistingDocument() {
 
-		when(findPublisher.first()).thenReturn(Mono.just(new Document("_id", "id-1").append("country", "US").append("userid", 4230)));
+		when(findPublisher.first())
+				.thenReturn(Mono.just(new Document("_id", "id-1").append("country", "US").append("userid", 4230)));
 
 		template.save(new ShardedEntityWithNonDefaultShardKey("id-1", "AT", 4230)).subscribe();
 

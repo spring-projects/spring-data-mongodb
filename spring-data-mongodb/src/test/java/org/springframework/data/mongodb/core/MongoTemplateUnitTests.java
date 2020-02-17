@@ -1843,14 +1843,16 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-2341
 	void saveShouldAppendNonDefaultShardKeyToVersionedEntityIfNotPresentInFilter() {
 
-		when(collection.replaceOne(any(), any(), any(ReplaceOptions.class))).thenReturn(UpdateResult.acknowledged(1, 1L, null));
+		when(collection.replaceOne(any(), any(), any(ReplaceOptions.class)))
+				.thenReturn(UpdateResult.acknowledged(1, 1L, null));
 
 		template.save(new ShardedVersionedEntityWithNonDefaultShardKey("id-1", 1L, "AT", 4230));
 
 		ArgumentCaptor<Bson> filter = ArgumentCaptor.forClass(Bson.class);
 		verify(collection).replaceOne(filter.capture(), any(), any());
 
-		assertThat(filter.getValue()).isEqualTo(new Document("_id", "id-1").append("version", 1L).append("country", "AT").append("userid", 4230));
+		assertThat(filter.getValue())
+				.isEqualTo(new Document("_id", "id-1").append("version", 1L).append("country", "AT").append("userid", 4230));
 	}
 
 	@Test // DATAMONGO-2341
@@ -1910,7 +1912,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-2341
 	void saveVersionedShouldProjectOnShardKeyWhenLoadingExistingDocument() {
 
-		when(collection.replaceOne(any(), any(), any(ReplaceOptions.class))).thenReturn(UpdateResult.acknowledged(1, 1L, null));
+		when(collection.replaceOne(any(), any(), any(ReplaceOptions.class)))
+				.thenReturn(UpdateResult.acknowledged(1, 1L, null));
 		when(findIterable.first()).thenReturn(new Document("_id", "id-1").append("country", "US").append("userid", 4230));
 
 		template.save(new ShardedVersionedEntityWithNonDefaultShardKey("id-1", 1L, "AT", 4230));

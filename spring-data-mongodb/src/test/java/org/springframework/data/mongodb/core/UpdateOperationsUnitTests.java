@@ -35,6 +35,8 @@ import org.springframework.lang.Nullable;
 import com.mongodb.MongoClientSettings;
 
 /**
+ * Unit test for {@link com.mongodb.internal.operation.UpdateOperation}.
+ *
  * @author Christoph Strobl
  */
 class UpdateOperationsUnitTests {
@@ -141,10 +143,9 @@ class UpdateOperationsUnitTests {
 				super(update, upsert);
 			}
 
-			<T> Document applyShardKey(@Nullable Class<T> domainType, Document filter, @Nullable Document existing) {
+			<T> Document applyShardKey(Class<T> domainType, Document filter, @Nullable Document existing) {
 				return applyShardKey(entityOf(domainType), filter, existing);
 			}
 		}
-
 	}
 }

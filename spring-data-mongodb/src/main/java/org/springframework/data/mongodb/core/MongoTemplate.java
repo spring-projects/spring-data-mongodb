@@ -1640,7 +1640,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 								collection.find(filter, Document.class).projection(updateContext.getMappedShardKey(entity)).first());
 					}
 				}
-				
+
 				ReplaceOptions replaceOptions = updateContext.getReplaceOptions(entityClass);
 				return collection.replaceOne(filter, updateObj, replaceOptions);
 			} else {

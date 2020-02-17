@@ -86,29 +86,11 @@ public interface MongoPersistentEntity<T> extends PersistentEntity<T, MongoPersi
 	ShardKey getShardKey();
 
 	/**
-	 * @return {@literal true} if the {@link #getShardKey() shard key} does not match {@link ShardKey#none()}.
+	 * @return {@literal true} if the {@link #getShardKey() shard key} is sharded.
 	 * @since 3.0
 	 */
 	default boolean isSharded() {
-		return !ShardKey.none().equals(getShardKey());
+		return getShardKey().isSharded();
 	}
 
-	/**
-	 * @return {@literal true} if the {@link #getShardKey() shard key} is the entities {@literal id} property.
-	 * @since 3.0
-	 */
-	default boolean idPropertyIsShardKey() {
-
-		ShardKey shardKey = getShardKey();
-		if (shardKey.size() != 1) {
-			return false;
-		}
-		String key = shardKey.getPropertyNames().iterator().next();
-		if ("_id".equals(key)) {
-			return true;
-		}
-
-		MongoPersistentProperty idProperty = getIdProperty();
-		return idProperty != null && idProperty.getName().equals(key);
-	}
 }
