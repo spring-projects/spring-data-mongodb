@@ -87,16 +87,7 @@ import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCre
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.data.mongodb.core.mapping.event.AfterConvertEvent;
-import org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent;
-import org.springframework.data.mongodb.core.mapping.event.AfterLoadEvent;
-import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
-import org.springframework.data.mongodb.core.mapping.event.BeforeConvertCallback;
-import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
-import org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent;
-import org.springframework.data.mongodb.core.mapping.event.BeforeSaveCallback;
-import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
-import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
+import org.springframework.data.mongodb.core.mapping.event.*;
 import org.springframework.data.mongodb.core.mapreduce.GroupBy;
 import org.springframework.data.mongodb.core.mapreduce.GroupByResults;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
@@ -166,6 +157,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Andreas Zink
  * @author Cimon Lucas
  * @author Michael J. Simons
+ * @author Roman Puchkovskiy
  */
 public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider {
 
@@ -2312,7 +2304,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return event;
 	}
 
-	@SuppressWarnings("unchecked")
 	protected <T> T maybeCallBeforeConvert(T object, String collection) {
 
 		if (null != entityCallbacks) {
@@ -2322,11 +2313,19 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return object;
 	}
 
-	@SuppressWarnings("unchecked")
 	protected <T> T maybeCallBeforeSave(T object, Document document, String collection) {
 
 		if (null != entityCallbacks) {
 			return entityCallbacks.callback(BeforeSaveCallback.class, object, document, collection);
+		}
+
+		return object;
+	}
+
+	protected <T> T maybeCallAfterConvert(T object, Document document, String collection) {
+
+		if (null != entityCallbacks) {
+			return entityCallbacks.callback(AfterConvertCallback.class, object, document, collection);
 		}
 
 		return object;
@@ -3101,6 +3100,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 *
 	 * @author Oliver Gierke
 	 * @author Christoph Strobl
+	 * @author Roman Puchkovskiy
 	 */
 	@RequiredArgsConstructor
 	private class ReadDocumentCallback<T> implements DocumentCallback<T> {
@@ -3110,16 +3110,17 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		private final String collectionName;
 
 		@Nullable
-		public T doWith(@Nullable Document object) {
+		public T doWith(@Nullable Document document) {
 
-			if (null != object) {
-				maybeEmitEvent(new AfterLoadEvent<>(object, type, collectionName));
+			if (null != document) {
+				maybeEmitEvent(new AfterLoadEvent<>(document, type, collectionName));
 			}
 
-			T source = reader.read(type, object);
+			T source = reader.read(type, document);
 
 			if (null != source) {
-				maybeEmitEvent(new AfterConvertEvent<>(object, source, collectionName));
+				maybeEmitEvent(new AfterConvertEvent<>(document, source, collectionName));
+				source = maybeCallAfterConvert(source, document, collectionName);
 			}
 
 			return source;
@@ -3148,24 +3149,25 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		 */
 		@SuppressWarnings("unchecked")
 		@Nullable
-		public T doWith(@Nullable Document object) {
+		public T doWith(@Nullable Document document) {
 
-			if (object == null) {
+			if (document == null) {
 				return null;
 			}
 
 			Class<?> typeToRead = targetType.isInterface() || targetType.isAssignableFrom(entityType) ? entityType
 					: targetType;
 
-			if (null != object) {
-				maybeEmitEvent(new AfterLoadEvent<>(object, targetType, collectionName));
+			if (null != document) {
+				maybeEmitEvent(new AfterLoadEvent<>(document, targetType, collectionName));
 			}
 
-			Object source = reader.read(typeToRead, object);
+			Object source = reader.read(typeToRead, document);
 			Object result = targetType.isInterface() ? projectionFactory.createProjection(targetType, source) : source;
 
 			if (null != result) {
-				maybeEmitEvent(new AfterConvertEvent<>(object, result, collectionName));
+				maybeEmitEvent(new AfterConvertEvent<>(document, result, collectionName));
+				result = maybeCallAfterConvert(result, document, collectionName);
 			}
 
 			return (T) result;

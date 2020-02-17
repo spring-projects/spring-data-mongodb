@@ -21,6 +21,7 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
 import lombok.Data;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -37,6 +38,7 @@ import org.assertj.core.api.Assertions;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -65,6 +67,7 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.event.ReactiveAfterConvertCallback;
 import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeConvertCallback;
 import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeSaveCallback;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
@@ -78,6 +81,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.CollectionUtils;
 
+import com.google.common.collect.ImmutableMap;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.ReadPreference;
 import com.mongodb.client.model.CountOptions;
@@ -88,6 +92,7 @@ import com.mongodb.client.model.FindOneAndReplaceOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.reactivestreams.client.AggregatePublisher;
 import com.mongodb.reactivestreams.client.DistinctPublisher;
@@ -102,6 +107,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Roman Puchkovskiy
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -830,8 +836,13 @@ public class ReactiveMongoTemplateUnitTests {
 
 		ValueCapturingBeforeConvertCallback beforeConvertCallback = spy(new ValueCapturingBeforeConvertCallback());
 		ValueCapturingBeforeSaveCallback beforeSaveCallback = spy(new ValueCapturingBeforeSaveCallback());
+		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
 
-		template.setEntityCallbacks(ReactiveEntityCallbacks.create(beforeConvertCallback, beforeSaveCallback));
+		template.setEntityCallbacks(ReactiveEntityCallbacks.create(beforeConvertCallback, beforeSaveCallback,
+				afterConvertCallback));
+
+		when(collection.findOneAndReplace(any(Bson.class), any(Document.class), any()))
+				.thenReturn(findPublisherWithJust(lukeDocument()));
 
 		Person entity = new Person();
 		entity.id = "init";
@@ -841,6 +852,7 @@ public class ReactiveMongoTemplateUnitTests {
 
 		verify(beforeConvertCallback).onBeforeConvert(eq(entity), anyString());
 		verify(beforeSaveCallback).onBeforeSave(eq(entity), any(), anyString());
+		verify(afterConvertCallback).onAfterConvert(eq(entity), any(), anyString());
 	}
 
 	@Test // DATAMONGO-2261
@@ -998,6 +1010,141 @@ public class ReactiveMongoTemplateUnitTests {
 		verify(collection, times(1)).updateOne(any(org.bson.Document.class), captor.capture(), any(UpdateOptions.class));
 
 		assertThat(captor.getValue()).isEqualTo(Collections.singletonList(Document.parse("{ $unset : \"firstname\" }")));
+	}
+	
+	@Test // DATAMONGO-2479
+	public void findShouldInvokeCallbacks() {
+
+		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
+
+		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
+
+		Document document = lukeDocument();
+		when(collection.find(Document.class))
+				.thenReturn(findPublisherWithJust(document));
+
+		template.find(new Query(), Person.class).subscribe();
+		
+		verify(afterConvertCallback).onAfterConvert(eq(luke()), eq(document), anyString());
+	}
+
+	@NotNull
+	private Document lukeDocument() {
+		return new Document(ImmutableMap.of(
+				"_id", "init",
+				"firstname", "luke"
+		));
+	}
+
+	@NotNull
+	private Person luke() {
+		Person expectedEnitty = new Person();
+		expectedEnitty.id = "init";
+		expectedEnitty.firstname = "luke";
+		return expectedEnitty;
+	}
+
+	@Test // DATAMONGO-2479
+	public void findByIdShouldInvokeCallbacks() {
+
+		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
+
+		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
+
+		Document document = lukeDocument();
+		when(collection.find(any(Bson.class), eq(Document.class)))
+				.thenReturn(findPublisherWithJust(document));
+
+		template.findById("init", Person.class).subscribe();
+
+		verify(afterConvertCallback).onAfterConvert(eq(luke()), eq(document), anyString());
+	}
+
+	@Test // DATAMONGO-2479
+	public void findOneShouldInvokeCallbacks() {
+
+		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
+
+		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
+
+		Document document = lukeDocument();
+		when(collection.find(any(Bson.class), eq(Document.class)))
+				.thenReturn(findPublisherWithJust(document));
+
+		template.findOne(new Query(), Person.class).subscribe();
+
+		verify(afterConvertCallback).onAfterConvert(eq(luke()), eq(document), anyString());
+	}
+
+	@Test // DATAMONGO-2479
+	public void findAllShouldInvokeCallbacks() {
+
+		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
+
+		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
+
+		Document document = lukeDocument();
+		when(collection.find(Document.class))
+				.thenReturn(findPublisherWithJust(document));
+
+		template.findAll(Person.class).subscribe();
+
+		verify(afterConvertCallback).onAfterConvert(eq(luke()), eq(document), anyString());
+	}
+
+	@Test // DATAMONGO-2479
+	public void findAndModifyShouldInvokeCallbacks() {
+
+		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
+
+		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
+
+		Document document = lukeDocument();
+		when(collection.findOneAndUpdate(any(Bson.class), any(Bson.class), any()))
+				.thenReturn(findPublisherWithJust(document));
+
+		template.findAndModify(new Query(), new Update(), Person.class).subscribe();
+
+		verify(afterConvertCallback).onAfterConvert(eq(luke()), eq(document), anyString());
+	}
+
+	@Test // DATAMONGO-2479
+	public void findAndRemoveShouldInvokeCallbacks() {
+
+		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
+
+		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
+
+		Document document = lukeDocument();
+		when(collection.findOneAndDelete(any(Bson.class), any()))
+				.thenReturn(findPublisherWithJust(document));
+
+		template.findAndRemove(new Query(), Person.class).subscribe();
+
+		verify(afterConvertCallback).onAfterConvert(eq(luke()), eq(document), anyString());
+	}
+
+	@Test // DATAMONGO-2479
+	public void findAllAndRemoveShouldInvokeCallbacks() {
+
+		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
+
+		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
+
+		Document document = lukeDocument();
+		when(collection.find(Document.class))
+				.thenReturn(findPublisherWithJust(document));
+		when(collection.deleteMany(any(Bson.class), any(DeleteOptions.class)))
+				.thenReturn(Mono.just(spy(DeleteResult.class)));
+
+		template.findAllAndRemove(new Query(), Person.class).subscribe();
+
+		verify(afterConvertCallback).onAfterConvert(eq(luke()), eq(document), anyString());
+	}
+
+	@NotNull
+	private UncustomizableFindPublisher<Document> findPublisherWithJust(Document document) {
+		return new UncustomizableFindPublisher<>(Flux.just(document));
 	}
 
 	@Test // DATAMONGO-2341
@@ -1179,4 +1326,16 @@ public class ReactiveMongoTemplateUnitTests {
 			return Mono.just(entity);
 		}
 	}
+	
+	static class ValueCapturingAfterConvertCallback extends ValueCapturingEntityCallback<Person>
+			implements ReactiveAfterConvertCallback<Person> {
+
+		@Override
+		public Mono<Person> onAfterConvert(Person entity, Document document, String collection) {
+
+			capture(entity);
+			return Mono.just(entity);
+		}
+	}
+
 }

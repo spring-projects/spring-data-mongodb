@@ -30,6 +30,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+import org.assertj.core.api.Assertions;
 import org.bson.types.Code;
 import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
@@ -41,11 +42,11 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
-
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.ConversionNotSupportedException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.core.convert.ConverterNotFoundException;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
@@ -62,6 +63,7 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.geo.Shape;
 import org.springframework.data.mapping.MappingException;
+import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mapping.model.MappingInstantiationException;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.convert.DocumentAccessorUnitTests.NestedType;
@@ -75,6 +77,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.PersonPojoStringId;
 import org.springframework.data.mongodb.core.mapping.TextScore;
+import org.springframework.data.mongodb.core.mapping.event.AfterConvertCallback;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -90,6 +93,7 @@ import com.mongodb.DBRef;
  * @author Patrik Wasik
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Roman Puchkovskiy
  */
 @RunWith(MockitoJUnitRunner.class)
 public class MappingMongoConverterUnitTests {
@@ -2102,6 +2106,62 @@ public class MappingMongoConverterUnitTests {
 				.isEqualTo(new BasicDBObject("property", "value"));
 	}
 
+	@Test // DATAMONGO-2479
+	public void entityCallbacksAreNotSetByDefault() {
+		Assertions.assertThat(ReflectionTestUtils.getField(converter, "entityCallbacks")).isNull();
+	}
+
+	@Test // DATAMONGO-2479
+	public void entityCallbacksShouldBeInitiatedOnSettingApplicationContext() {
+
+		ApplicationContext ctx = new StaticApplicationContext();
+		converter.setApplicationContext(ctx);
+
+		Assertions.assertThat(ReflectionTestUtils.getField(converter, "entityCallbacks")).isNotNull();
+	}
+
+	@Test // DATAMONGO-2479
+	public void setterForEntityCallbackOverridesContextInitializedOnes() {
+
+		ApplicationContext ctx = new StaticApplicationContext();
+		converter.setApplicationContext(ctx);
+
+		EntityCallbacks callbacks = EntityCallbacks.create();
+		converter.setEntityCallbacks(callbacks);
+
+		Assertions.assertThat(ReflectionTestUtils.getField(converter, "entityCallbacks")).isSameAs(callbacks);
+	}
+
+	@Test // DATAMONGO-2479
+	public void setterForApplicationContextShouldNotOverrideAlreadySetEntityCallbacks() {
+
+		EntityCallbacks callbacks = EntityCallbacks.create();
+		ApplicationContext ctx = new StaticApplicationContext();
+
+		converter.setEntityCallbacks(callbacks);
+		converter.setApplicationContext(ctx);
+
+		Assertions.assertThat(ReflectionTestUtils.getField(converter, "entityCallbacks")).isSameAs(callbacks);
+	}
+
+	@Test // DATAMONGO-2479
+	public void resolveDBRefMapValueShouldInvokeCallbacks() {
+
+		AfterConvertCallback<Person> afterConvertCallback = spy(new ReturningAfterConvertCallback());
+		converter.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
+
+		when(resolver.fetch(Mockito.any(DBRef.class))).thenReturn(new org.bson.Document());
+		DBRef dbRef = mock(DBRef.class);
+
+		org.bson.Document refMap = new org.bson.Document("foo", dbRef);
+		org.bson.Document document = new org.bson.Document("personMap", refMap);
+
+		DBRefWrapper result = converter.read(DBRefWrapper.class, document);
+		
+		verify(afterConvertCallback).onAfterConvert(eq(result.personMap.get("foo")),
+				eq(new org.bson.Document()), any());
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -2564,4 +2624,12 @@ public class MappingMongoConverterUnitTests {
 		Date dateAsObjectId;
 	}
 
+	static class ReturningAfterConvertCallback implements AfterConvertCallback<Person> {
+
+		@Override
+		public Person onAfterConvert(Person entity, org.bson.Document document, String collection) {
+
+			return entity;
+		}
+	}
 }
