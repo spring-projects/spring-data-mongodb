@@ -50,6 +50,7 @@ import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.PreferredConstructor;
 import org.springframework.data.mapping.PreferredConstructor.Parameter;
+import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mapping.model.DefaultSpELExpressionEvaluator;
@@ -64,6 +65,7 @@ import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.mapping.event.AfterConvertCallback;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterLoadEvent;
 import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
@@ -91,6 +93,7 @@ import com.mongodb.DBRef;
  * @author Christoph Strobl
  * @author Jordi Llach
  * @author Mark Paluch
+ * @author Roman Puchkovskiy
  */
 public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware {
 
@@ -110,6 +113,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	protected @Nullable CodecRegistryProvider codecRegistryProvider;
 
 	private SpELContext spELContext;
+	private @Nullable EntityCallbacks entityCallbacks;
 
 	/**
 	 * Creates a new {@link MappingMongoConverter} given the new {@link DbRefResolver} and {@link MappingContext}.
@@ -212,6 +216,26 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		this.applicationContext = applicationContext;
 		this.spELContext = new SpELContext(this.spELContext, applicationContext);
+
+		if (entityCallbacks == null) {
+			setEntityCallbacks(EntityCallbacks.create(applicationContext));
+		}
+	}
+
+	/**
+	 * Set the {@link EntityCallbacks} instance to use when invoking
+	 * {@link org.springframework.data.mapping.callback.EntityCallback callbacks} like the {@link AfterConvertCallback}.
+	 * <p />
+	 * Overrides potentially existing {@link EntityCallbacks}.
+	 *
+	 * @param entityCallbacks must not be {@literal null}.
+	 * @throws IllegalArgumentException if the given instance is {@literal null}.
+	 * @since 3.0
+	 */
+	public void setEntityCallbacks(EntityCallbacks entityCallbacks) {
+
+		Assert.notNull(entityCallbacks, "EntityCallbacks must not be null!");
+		this.entityCallbacks = entityCallbacks;
 	}
 
 	/*
@@ -1605,7 +1629,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				: bulkReadRefs(dbrefs);
 		String collectionName = dbrefs.iterator().next().getCollectionName();
 
-		List<T> targeList = new ArrayList<>(dbrefs.size());
+		List<T> targetList = new ArrayList<>(dbrefs.size());
 
 		for (Document document : referencedRawDocuments) {
 
@@ -1613,15 +1637,17 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				maybeEmitEvent(new AfterLoadEvent<>(document, (Class<T>) rawType, collectionName));
 			}
 
-			final T target = (T) read(type, document, path);
-			targeList.add(target);
+			T target = (T) read(type, document, path);
 
 			if (target != null) {
 				maybeEmitEvent(new AfterConvertEvent<>(document, target, collectionName));
+				target = maybeCallAfterConvert(target, document, collectionName);
 			}
+
+			targetList.add(target);
 		}
 
-		return targeList;
+		return targetList;
 	}
 
 	private void maybeEmitEvent(MongoMappingEvent<?> event) {
@@ -1633,6 +1659,15 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	private boolean canPublishEvent() {
 		return this.applicationContext != null;
+	}
+
+	protected <T> T maybeCallAfterConvert(T object, Document document, String collection) {
+
+		if (null != entityCallbacks) {
+			return entityCallbacks.callback(AfterConvertCallback.class, object, document, collection);
+		}
+
+		return object;
 	}
 
 	/**
