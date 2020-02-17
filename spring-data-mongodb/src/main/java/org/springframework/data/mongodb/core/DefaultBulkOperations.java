@@ -32,6 +32,7 @@ import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveCallback;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertCallback;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
@@ -62,6 +63,7 @@ import com.mongodb.client.model.*;
  * @author Minsu Kim
  * @author Jens Schauder
  * @author Michail Nikolaev
+ * @author Roman Puchkovskiy
  * @since 1.9
  */
 class DefaultBulkOperations implements BulkOperations {
@@ -300,6 +302,7 @@ class DefaultBulkOperations implements BulkOperations {
 			Assert.state(result != null, "Result must not be null.");
 
 			models.forEach(this::maybeEmitAfterSaveEvent);
+			models.forEach(this::maybeInvokeAfterSaveCallback);
 
 			return result;
 		} finally {
@@ -447,6 +450,19 @@ class DefaultBulkOperations implements BulkOperations {
 		}
 	}
 
+	private void maybeInvokeAfterSaveCallback(SourceAwareWriteModelHolder it) {
+
+		if (it.getModel() instanceof InsertOneModel) {
+
+			Document target = ((InsertOneModel<Document>) it.getModel()).getDocument();
+			maybeInvokeAfterSaveCallback(it.getSource(), target);
+		} else if (it.getModel() instanceof ReplaceOneModel) {
+
+			Document target = ((ReplaceOneModel<Document>) it.getModel()).getReplacement();
+			maybeInvokeAfterSaveCallback(it.getSource(), target);
+		}
+	}
+
 	private <E extends MongoMappingEvent<T>, T> E maybeEmitEvent(E event) {
 
 		if (null != bulkOperationContext.getEventPublisher()) {
@@ -472,6 +488,16 @@ class DefaultBulkOperations implements BulkOperations {
 		}
 
 		return bulkOperationContext.getEntityCallbacks().callback(BeforeSaveCallback.class, value, mappedDocument,
+				collectionName);
+	}
+
+	private Object maybeInvokeAfterSaveCallback(Object value, Document mappedDocument) {
+
+		if (bulkOperationContext.getEntityCallbacks() == null) {
+			return value;
+		}
+
+		return bulkOperationContext.getEntityCallbacks().callback(AfterSaveCallback.class, value, mappedDocument,
 				collectionName);
 	}
 

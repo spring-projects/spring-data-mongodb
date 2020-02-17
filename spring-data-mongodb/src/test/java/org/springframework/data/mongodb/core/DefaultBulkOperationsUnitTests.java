@@ -54,6 +54,7 @@ import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveCallback;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertCallback;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
@@ -84,6 +85,7 @@ import com.mongodb.client.model.WriteModel;
  * @author Mark Paluch
  * @author Minsu Kim
  * @author Jens Schauder
+ * @author Roman Puchkovskiy
  */
 @ExtendWith(MockitoExtension.class)
 class DefaultBulkOperationsUnitTests {
@@ -208,16 +210,17 @@ class DefaultBulkOperationsUnitTests {
 		assertThat(updateModel.getReplacement().getString("lastName")).isEqualTo("Kim");
 	}
 
-	@Test // DATAMONGO-2261
+	@Test // DATAMONGO-2261, DATAMONGO-2479
 	void bulkInsertInvokesEntityCallbacks() {
 
 		BeforeConvertPersonCallback beforeConvertCallback = spy(new BeforeConvertPersonCallback());
 		BeforeSavePersonCallback beforeSaveCallback = spy(new BeforeSavePersonCallback());
+		AfterSavePersonCallback afterSaveCallback = spy(new AfterSavePersonCallback());
 
 		ops = new DefaultBulkOperations(template, "collection-1",
 				new BulkOperationContext(BulkMode.ORDERED, Optional.of(mappingContext.getPersistentEntity(Person.class)),
 						new QueryMapper(converter), new UpdateMapper(converter), null,
-						EntityCallbacks.create(beforeConvertCallback, beforeSaveCallback)));
+						EntityCallbacks.create(beforeConvertCallback, beforeSaveCallback, afterSaveCallback)));
 
 		Person entity = new Person("init");
 		ops.insert(entity);
@@ -229,11 +232,13 @@ class DefaultBulkOperationsUnitTests {
 		ops.execute();
 
 		verify(beforeSaveCallback).onBeforeSave(personArgumentCaptor.capture(), any(), eq("collection-1"));
-		assertThat(personArgumentCaptor.getAllValues()).extracting("firstName").containsExactly("init", "before-convert");
+		verify(afterSaveCallback).onAfterSave(personArgumentCaptor.capture(), any(), eq("collection-1"));
+		assertThat(personArgumentCaptor.getAllValues()).extracting("firstName")
+				.containsExactly("init", "before-convert", "before-convert");
 		verify(collection).bulkWrite(captor.capture(), any());
 
 		InsertOneModel<Document> updateModel = (InsertOneModel<Document>) captor.getValue().get(0);
-		assertThat(updateModel.getDocument()).containsEntry("firstName", "before-save");
+		assertThat(updateModel.getDocument()).containsEntry("firstName", "after-save");
 	}
 
 	@Test // DATAMONGO-2290
@@ -362,6 +367,16 @@ class DefaultBulkOperationsUnitTests {
 
 			document.put("firstName", "before-save");
 			return new Person("before-save");
+		}
+	}
+
+	static class AfterSavePersonCallback implements AfterSaveCallback<Person> {
+
+		@Override
+		public Person onAfterSave(Person entity, Document document, String collection) {
+
+			document.put("firstName", "after-save");
+			return new Person("after-save");
 		}
 	}
 

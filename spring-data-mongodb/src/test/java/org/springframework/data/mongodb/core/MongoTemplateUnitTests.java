@@ -25,7 +25,9 @@ import java.math.BigInteger;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +39,7 @@ import org.assertj.core.api.Assertions;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -81,6 +84,9 @@ import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCre
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
+import org.springframework.data.mongodb.core.mapping.event.AfterConvertCallback;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveCallback;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertCallback;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeSaveCallback;
@@ -97,10 +103,13 @@ import org.springframework.lang.Nullable;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.CollectionUtils;
 
+import com.google.common.collect.ImmutableMap;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoException;
 import com.mongodb.MongoNamespace;
 import com.mongodb.ReadPreference;
+import com.mongodb.ServerAddress;
+import com.mongodb.ServerCursor;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.DistinctIterable;
@@ -129,6 +138,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Michael J. Simons
+ * @author Roman Puchkovskiy
  */
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
@@ -1921,6 +1931,241 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(findIterable).projection(new Document("country", 1).append("userid", 1));
 	}
 
+	@Test // DATAMONGO-2479
+	public void findShouldInvokeAfterConvertCallback() {
+
+		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
+
+		template.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
+
+		Document document = initialLukeDocument();
+		when(findIterable.iterator()).thenReturn(new OneElementCursor<>(document));
+
+		template.find(new Query(), Person.class);
+
+		verify(afterConvertCallback).onAfterConvert(eq(initialLuke()), eq(document), anyString());
+	}
+
+	private Document initialLukeDocument() {
+		return new Document(ImmutableMap.of(
+				"_id", "init",
+				"firstname", "luke"
+		));
+	}
+
+	private Person initialLuke() {
+		Person expectedEnitty = new Person();
+		expectedEnitty.id = "init";
+		expectedEnitty.firstname = "luke";
+		return expectedEnitty;
+	}
+
+	@Test // DATAMONGO-2479
+	public void findByIdShouldInvokeAfterConvertCallback() {
+
+		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
+
+		template.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
+
+		Document document = initialLukeDocument();
+		when(findIterable.first()).thenReturn(document);
+
+		template.findById("init", Person.class);
+
+		verify(afterConvertCallback).onAfterConvert(eq(initialLuke()), eq(document), anyString());
+	}
+
+	@Test // DATAMONGO-2479
+	public void findOneShouldInvokeAfterConvertCallback() {
+
+		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
+
+		template.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
+
+		Document document = initialLukeDocument();
+		when(findIterable.first()).thenReturn(document);
+
+		template.findOne(new Query(), Person.class);
+
+		verify(afterConvertCallback).onAfterConvert(eq(initialLuke()), eq(document), anyString());
+	}
+
+	@Test // DATAMONGO-2479
+	public void findAllShouldInvokeAfterConvertCallback() {
+
+		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
+
+		template.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
+
+		Document document = initialLukeDocument();
+		when(findIterable.iterator()).thenReturn(new OneElementCursor<>(document));
+
+		template.findAll(Person.class);
+
+		verify(afterConvertCallback).onAfterConvert(eq(initialLuke()), eq(document), anyString());
+	}
+
+	@Test // DATAMONGO-2479
+	public void findAndModifyShouldInvokeAfterConvertCallback() {
+
+		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
+
+		template.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
+
+		Document document = initialLukeDocument();
+		when(collection.findOneAndUpdate(any(Bson.class), any(Bson.class), any())).thenReturn(document);
+
+		template.findAndModify(new Query(), new Update(), Person.class);
+
+		verify(afterConvertCallback).onAfterConvert(eq(initialLuke()), eq(document), anyString());
+	}
+
+	@Test // DATAMONGO-2479
+	public void findAndRemoveShouldInvokeAfterConvertCallback() {
+
+		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
+
+		template.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
+
+		Document document = initialLukeDocument();
+		when(collection.findOneAndDelete(any(Bson.class), any())).thenReturn(document);
+
+		template.findAndRemove(new Query(), Person.class);
+
+		verify(afterConvertCallback).onAfterConvert(eq(initialLuke()), eq(document), anyString());
+	}
+
+	@Test // DATAMONGO-2479
+	public void findAllAndRemoveShouldInvokeAfterConvertCallback() {
+
+		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
+
+		template.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
+
+		Document document = initialLukeDocument();
+		when(findIterable.iterator()).thenReturn(new OneElementCursor<>(document));
+
+		template.findAllAndRemove(new Query(), Person.class);
+
+		verify(afterConvertCallback).onAfterConvert(eq(initialLuke()), eq(document), anyString());
+	}
+
+	@Test // DATAMONGO-2479
+	public void findAndReplaceShouldInvokeAfterConvertCallbacks() {
+
+		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
+
+		template.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
+
+		Person entity = initialLuke();
+
+		Document document = initialLukeDocument();
+		when(collection.findOneAndReplace(any(Bson.class), any(Document.class), any())).thenReturn(document);
+
+		Person saved = template.findAndReplace(new Query(), entity);
+
+		verify(afterConvertCallback).onAfterConvert(eq(initialLuke()), eq(document), anyString());
+		assertThat(saved.id).isEqualTo("after-convert");
+	}
+
+	@Test // DATAMONGO-2479
+	public void saveShouldInvokeAfterSaveCallbacks() {
+
+		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
+
+		template.setEntityCallbacks(EntityCallbacks.create(afterSaveCallback));
+
+		Person entity = initialLuke();
+
+		Person saved = template.save(entity);
+
+		verify(afterSaveCallback).onAfterSave(eq(entity), any(), anyString());
+		assertThat(saved.id).isEqualTo("after-save");
+	}
+
+	@Test // DATAMONGO-2479
+	public void insertShouldInvokeAfterSaveCallbacks() {
+
+		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
+
+		template.setEntityCallbacks(EntityCallbacks.create(afterSaveCallback));
+
+		Person entity = initialLuke();
+
+		Person saved = template.insert(entity);
+
+		verify(afterSaveCallback).onAfterSave(eq(entity), any(), anyString());
+		assertThat(saved.id).isEqualTo("after-save");
+	}
+
+	@Test // DATAMONGO-2479
+	public void insertAllShouldInvokeAfterSaveCallbacks() {
+
+		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
+
+		template.setEntityCallbacks(EntityCallbacks.create(afterSaveCallback));
+
+		Person entity1 = new Person();
+		entity1.id = "1";
+		entity1.firstname = "luke";
+
+		Person entity2 = new Person();
+		entity1.id = "2";
+		entity1.firstname = "luke";
+
+		Collection<Person> saved = template.insertAll(Arrays.asList(entity1, entity2));
+
+		verify(afterSaveCallback, times(2)).onAfterSave(any(), any(), anyString());
+		assertThat(saved.iterator().next().getId()).isEqualTo("after-save");
+	}
+
+	@Test // DATAMONGO-2479
+	public void findAndReplaceShouldInvokeAfterSaveCallbacks() {
+
+		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
+
+		template.setEntityCallbacks(EntityCallbacks.create(afterSaveCallback));
+
+		Person entity = initialLuke();
+
+		Document document = initialLukeDocument();
+		when(collection.findOneAndReplace(any(Bson.class), any(Document.class), any())).thenReturn(document);
+
+		Person saved = template.findAndReplace(new Query(), entity);
+
+		verify(afterSaveCallback).onAfterSave(eq(initialLuke()), any(), anyString());
+		assertThat(saved.id).isEqualTo("after-save");
+	}
+
+	@Test // DATAMONGO-2479
+	public void findAndReplaceShouldEmitAfterSaveEvent() {
+
+		AbstractMongoEventListener<Person> eventListener = new AbstractMongoEventListener<Person>() {
+
+			@Override
+			public void onAfterSave(AfterSaveEvent<Person> event) {
+
+				assertThat(event.getSource().id).isEqualTo("init");
+				event.getSource().id = "after-save-event";
+			}
+		};
+
+		StaticApplicationContext ctx = new StaticApplicationContext();
+		ctx.registerBean(ApplicationListener.class, () -> eventListener);
+		ctx.refresh();
+
+		template.setApplicationContext(ctx);
+
+		Person entity = initialLuke();
+
+		Document document = initialLukeDocument();
+		when(collection.findOneAndReplace(any(Bson.class), any(Document.class), any())).thenReturn(document);
+
+		Person saved = template.findAndReplace(new Query(), entity);
+
+		assertThat(saved.id).isEqualTo("after-save-event");
+	}
+
 	class AutogenerateableId {
 
 		@Id BigInteger id;
@@ -2095,6 +2340,76 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 			capture(entity);
 			return entity;
+		}
+	}
+
+	static class ValueCapturingAfterSaveCallback extends ValueCapturingEntityCallback<Person>
+			implements AfterSaveCallback<Person> {
+
+		@Override
+		public Person onAfterSave(Person entity, Document document, String collection) {
+
+			capture(entity);
+			return new Person() {{
+				id = "after-save";
+				firstname = entity.firstname;
+			}};
+		}
+	}
+
+	static class ValueCapturingAfterConvertCallback extends ValueCapturingEntityCallback<Person>
+			implements AfterConvertCallback<Person> {
+
+		@Override
+		public Person onAfterConvert(Person entity, Document document, String collection) {
+
+			capture(entity);
+			return new Person() {{
+				id = "after-convert";
+				firstname = entity.firstname;
+			}};
+		}
+	}
+
+	static class OneElementCursor<T> implements MongoCursor<T> {
+		private final Iterator<T> iterator;
+
+		OneElementCursor(T element) {
+			iterator = Collections.singletonList(element).iterator();
+		}
+
+		@Override
+		public void close() {
+			// nothing to close
+		}
+
+		@Override
+		public boolean hasNext() {
+			return iterator.hasNext();
+		}
+
+		@Override
+		public T next() {
+			return iterator.next();
+		}
+
+		@Override
+		public T tryNext() {
+			if (iterator.hasNext()) {
+				return iterator.next();
+			} else {
+				return null;
+			}
+		}
+
+		@Override
+		public ServerCursor getServerCursor() {
+			throw new IllegalStateException("Not implemented");
+		}
+
+		@Override
+		public ServerAddress getServerAddress() {
+			throw new IllegalStateException("Not implemented");
 		}
 	}
 }

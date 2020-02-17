@@ -21,6 +21,7 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
 import lombok.Data;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -32,6 +33,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import org.assertj.core.api.Assertions;
 import org.bson.Document;
@@ -46,9 +48,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
@@ -65,6 +69,10 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
+import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
+import org.springframework.data.mongodb.core.mapping.event.ReactiveAfterConvertCallback;
+import org.springframework.data.mongodb.core.mapping.event.ReactiveAfterSaveCallback;
 import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeConvertCallback;
 import org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeSaveCallback;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
@@ -78,6 +86,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.CollectionUtils;
 
+import com.google.common.collect.ImmutableMap;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.ReadPreference;
 import com.mongodb.client.model.CountOptions;
@@ -88,6 +97,9 @@ import com.mongodb.client.model.FindOneAndReplaceOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.InsertManyResult;
+import com.mongodb.client.result.InsertOneResult;
 import com.mongodb.client.result.UpdateResult;
 import com.mongodb.reactivestreams.client.AggregatePublisher;
 import com.mongodb.reactivestreams.client.DistinctPublisher;
@@ -102,6 +114,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Roman Puchkovskiy
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -1096,6 +1109,286 @@ public class ReactiveMongoTemplateUnitTests {
 		verify(findPublisher).projection(new Document("country", 1).append("userid", 1));
 	}
 
+	@Test // DATAMONGO-2479
+	public void findShouldInvokeAfterConvertCallbacks() {
+
+		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
+
+		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
+
+		Document document = initialLukeDocument();
+		when(collection.find(Document.class)).thenReturn(findPublisher);
+		makeFindPublisherPublishJust(document);
+
+		List<Person> results = template.find(new Query(), Person.class).timeout(Duration.ofSeconds(1))
+				.toStream().collect(Collectors.toList());
+
+		verify(afterConvertCallback).onAfterConvert(eq(initialLuke()), eq(document), anyString());
+		assertThat(results.get(0).id).isEqualTo("after-convert");
+	}
+
+	private Document initialLukeDocument() {
+		return new Document(ImmutableMap.of(
+				"_id", "init",
+				"firstname", "luke"
+		));
+	}
+
+	private Person initialLuke() {
+		Person expectedEnitty = new Person();
+		expectedEnitty.id = "init";
+		expectedEnitty.firstname = "luke";
+		return expectedEnitty;
+	}
+
+	@Test // DATAMONGO-2479
+	public void findByIdShouldInvokeAfterConvertCallbacks() {
+
+		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
+
+		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
+
+		Document document = initialLukeDocument();
+		when(collection.find(any(Bson.class), eq(Document.class))).thenReturn(findPublisher);
+		makeFindPublisherPublishJust(document);
+
+		Person result = template.findById("init", Person.class).block(Duration.ofSeconds(1));
+
+		verify(afterConvertCallback).onAfterConvert(eq(initialLuke()), eq(document), anyString());
+		assertThat(result.id).isEqualTo("after-convert");
+	}
+
+	@Test // DATAMONGO-2479
+	public void findOneShouldInvokeAfterConvertCallbacks() {
+
+		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
+
+		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
+
+		Document document = initialLukeDocument();
+		when(collection.find(any(Bson.class), eq(Document.class))).thenReturn(findPublisher);
+		makeFindPublisherPublishJust(document);
+
+		Person result = template.findOne(new Query(), Person.class).block(Duration.ofSeconds(1));
+
+		verify(afterConvertCallback).onAfterConvert(eq(initialLuke()), eq(document), anyString());
+		assertThat(result.id).isEqualTo("after-convert");
+	}
+
+	@Test // DATAMONGO-2479
+	public void findAllShouldInvokeAfterConvertCallbacks() {
+
+		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
+
+		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
+
+		Document document = initialLukeDocument();
+		when(collection.find(Document.class)).thenReturn(findPublisher);
+		makeFindPublisherPublishJust(document);
+
+		List<Person> results = template.findAll(Person.class).timeout(Duration.ofSeconds(1))
+				.toStream().collect(Collectors.toList());
+
+		verify(afterConvertCallback).onAfterConvert(eq(initialLuke()), eq(document), anyString());
+		assertThat(results.get(0).id).isEqualTo("after-convert");
+	}
+
+	@Test // DATAMONGO-2479
+	public void findAndModifyShouldInvokeAfterConvertCallbacks() {
+
+		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
+
+		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
+
+		Document document = initialLukeDocument();
+		when(collection.findOneAndUpdate(any(Bson.class), any(Bson.class), any())).thenReturn(findPublisher);
+		makeFindPublisherPublishJust(document);
+
+		Person result = template.findAndModify(new Query(), new Update(), Person.class).block(Duration.ofSeconds(1));
+
+		verify(afterConvertCallback).onAfterConvert(eq(initialLuke()), eq(document), anyString());
+		assertThat(result.id).isEqualTo("after-convert");
+	}
+
+	@Test // DATAMONGO-2479
+	public void findAndRemoveShouldInvokeAfterConvertCallbacks() {
+
+		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
+
+		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
+
+		Document document = initialLukeDocument();
+		when(collection.findOneAndDelete(any(Bson.class), any())).thenReturn(findPublisher);
+		makeFindPublisherPublishJust(document);
+
+		Person result = template.findAndRemove(new Query(), Person.class).block(Duration.ofSeconds(1));
+
+		verify(afterConvertCallback).onAfterConvert(eq(initialLuke()), eq(document), anyString());
+		assertThat(result.id).isEqualTo("after-convert");
+	}
+
+	@Test // DATAMONGO-2479
+	public void findAllAndRemoveShouldInvokeAfterConvertCallbacks() {
+
+		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
+
+		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
+
+		Document document = initialLukeDocument();
+		when(collection.find(Document.class)).thenReturn(findPublisher);
+		makeFindPublisherPublishJust(document);
+		when(collection.deleteMany(any(Bson.class), any(DeleteOptions.class)))
+				.thenReturn(Mono.just(spy(DeleteResult.class)));
+
+		List<Person> results = template.findAllAndRemove(new Query(), Person.class).timeout(Duration.ofSeconds(1))
+				.toStream().collect(Collectors.toList());
+
+		verify(afterConvertCallback).onAfterConvert(eq(initialLuke()), eq(document), anyString());
+		assertThat(results.get(0).id).isEqualTo("after-convert");
+	}
+
+	private void makeFindPublisherPublishJust(Document document) {
+
+		Publisher<Document> realPublisher = Flux.just(document);
+
+		doAnswer(invocation -> {
+			Subscriber<Document> subscriber = invocation.getArgument(0);
+			realPublisher.subscribe(subscriber);
+			return null;
+		}).when(findPublisher).subscribe(any());
+	}
+
+	@Test // DATAMONGO-2479
+	public void findAndReplaceShouldInvokeAfterConvertCallbacks() {
+
+		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
+
+		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
+
+		when(collection.findOneAndReplace(any(Bson.class), any(Document.class), any())).thenReturn(findPublisher);
+		makeFindPublisherPublishJust(initialLukeDocument());
+
+		Person entity = new Person();
+		entity.id = "init";
+		entity.firstname = "luke";
+
+		Person saved = template.findAndReplace(new Query(), entity).block(Duration.ofSeconds(1));
+
+		verify(afterConvertCallback).onAfterConvert(eq(entity), any(), anyString());
+		assertThat(saved.id).isEqualTo("after-convert");
+	}
+
+	@Test // DATAMONGO-2479
+	public void saveShouldInvokeAfterSaveCallbacks() {
+
+		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
+
+		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterSaveCallback));
+
+		when(collection.replaceOne(any(Bson.class), any(Document.class), any(ReplaceOptions.class)))
+				.thenReturn(Mono.just(mock(UpdateResult.class)));
+
+		Person entity = initialLuke();
+
+		Person saved = template.save(entity).block(Duration.ofSeconds(1));
+
+		verify(afterSaveCallback).onAfterSave(eq(entity), any(), anyString());
+		assertThat(saved.id).isEqualTo("after-save");
+	}
+
+	@Test // DATAMONGO-2479
+	public void insertShouldInvokeAfterSaveCallbacks() {
+
+		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
+
+		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterSaveCallback));
+
+		when(collection.insertOne(any())).thenReturn(Mono.just(mock(InsertOneResult.class)));
+
+		Person entity = initialLuke();
+
+		Person saved = template.insert(entity).block(Duration.ofSeconds(1));
+
+		verify(afterSaveCallback).onAfterSave(eq(entity), any(), anyString());
+		assertThat(saved.id).isEqualTo("after-save");
+	}
+
+	@Test // DATAMONGO-2479
+	public void insertAllShouldInvokeAfterSaveCallbacks() {
+
+		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
+
+		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterSaveCallback));
+
+		Person entity1 = new Person();
+		entity1.id = "1";
+		entity1.firstname = "luke";
+
+		Person entity2 = new Person();
+		entity1.id = "2";
+		entity1.firstname = "luke";
+
+		when(collection.insertMany(anyList())).then(invocation -> {
+			List<?> list = invocation.getArgument(0);
+			return Flux.fromIterable(list).map(i -> mock(InsertManyResult.class));
+		});
+
+		List<Person> saved = template.insertAll(Arrays.asList(entity1, entity2))
+				.timeout(Duration.ofSeconds(1))
+				.toStream().collect(Collectors.toList());
+
+		verify(afterSaveCallback, times(2)).onAfterSave(any(), any(), anyString());
+		assertThat(saved.get(0).id).isEqualTo("after-save");
+		assertThat(saved.get(1).id).isEqualTo("after-save");
+	}
+
+	@Test // DATAMONGO-2479
+	public void findAndReplaceShouldInvokeAfterSaveCallbacks() {
+
+		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
+
+		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterSaveCallback));
+
+		when(collection.findOneAndReplace(any(Bson.class), any(Document.class), any())).thenReturn(findPublisher);
+		makeFindPublisherPublishJust(initialLukeDocument());
+
+		Person entity = initialLuke();
+
+		Person saved = template.findAndReplace(new Query(), entity).block(Duration.ofSeconds(1));
+
+		verify(afterSaveCallback).onAfterSave(eq(entity), any(), anyString());
+		assertThat(saved.id).isEqualTo("after-save");
+	}
+
+	@Test // DATAMONGO-2479
+	public void findAndReplaceShouldEmitAfterSaveEvent() {
+
+		AbstractMongoEventListener<Person> eventListener = new AbstractMongoEventListener<Person>() {
+
+			@Override
+			public void onAfterSave(AfterSaveEvent<Person> event) {
+
+				assertThat(event.getSource().id).isEqualTo("init");
+				event.getSource().id = "after-save-event";
+			}
+		};
+
+		StaticApplicationContext ctx = new StaticApplicationContext();
+		ctx.registerBean(ApplicationListener.class, () -> eventListener);
+		ctx.refresh();
+
+		template.setApplicationContext(ctx);
+
+		Person entity = initialLuke();
+
+		Document document = initialLukeDocument();
+		when(collection.findOneAndReplace(any(Bson.class), any(Document.class), any())).thenReturn(Mono.just(document));
+
+		Person saved = template.findAndReplace(new Query(), entity).block(Duration.ofSeconds(1));
+
+		assertThat(saved.id).isEqualTo("after-save-event");
+	}
+
 	@Data
 	@org.springframework.data.mongodb.core.mapping.Document(collection = "star-wars")
 	static class Person {
@@ -1179,4 +1472,33 @@ public class ReactiveMongoTemplateUnitTests {
 			return Mono.just(entity);
 		}
 	}
+	
+	static class ValueCapturingAfterConvertCallback extends ValueCapturingEntityCallback<Person>
+			implements ReactiveAfterConvertCallback<Person> {
+
+		@Override
+		public Mono<Person> onAfterConvert(Person entity, Document document, String collection) {
+
+			capture(entity);
+			return Mono.just(new Person() {{
+				id = "after-convert";
+				firstname = entity.firstname;
+			}});
+		}
+	}
+
+	static class ValueCapturingAfterSaveCallback extends ValueCapturingEntityCallback<Person>
+			implements ReactiveAfterSaveCallback<Person> {
+
+		@Override
+		public Mono<Person> onAfterSave(Person entity, Document document, String collection) {
+
+			capture(entity);
+			return Mono.just(new Person() {{
+				id = "after-save";
+				firstname = entity.firstname;
+			}});
+		}
+	}
+
 }
