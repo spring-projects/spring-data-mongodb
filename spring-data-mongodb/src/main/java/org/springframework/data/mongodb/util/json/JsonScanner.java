@@ -219,7 +219,7 @@ class JsonScanner {
 		boolean isExpression = false;
 		int parenthesisCount = 0;
 
-		while (c == '$' || c == '_' || Character.isLetterOrDigit(c) || c == '#' || c == '{' || c == '[' || c == ']'
+		while (c == '$' || c == '_' || Character.isLetterOrDigit(c) || c == '#' || c == '{' || c == '['
 				|| (isExpression && isExpressionAllowedChar(c))) {
 
 			if (charCount == 0 && c == '#') {

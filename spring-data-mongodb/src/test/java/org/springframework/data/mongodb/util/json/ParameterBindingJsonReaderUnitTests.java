@@ -220,6 +220,41 @@ public class ParameterBindingJsonReaderUnitTests {
 		assertThat(target).isEqualTo(new Document("name", "value"));
 	}
 
+	@Test // DATAMONGO-2476
+	public void bindUnquotedParameterInArray() {
+
+		Document target = parse("{ 'name' : { $in : [?0] } }", "kohlin");
+		assertThat(target).isEqualTo(new Document("name", new Document("$in", Collections.singletonList("kohlin"))));
+	}
+
+	@Test // DATAMONGO-2476
+	public void bindMultipleUnquotedParameterInArray() {
+
+		Document target = parse("{ 'name' : { $in : [?0,?1] } }", "dalinar", "kohlin");
+		assertThat(target).isEqualTo(new Document("name", new Document("$in",Arrays.asList("dalinar", "kohlin"))));
+	}
+
+	@Test // DATAMONGO-2476
+	public void bindUnquotedParameterInArrayWithSpaces() {
+
+		Document target = parse("{ 'name' : { $in : [ ?0 ] } }", "kohlin");
+		assertThat(target).isEqualTo(new Document("name", new Document("$in", Collections.singletonList("kohlin"))));
+	}
+
+	@Test // DATAMONGO-2476
+	public void bindQuotedParameterInArray() {
+
+		Document target = parse("{ 'name' : { $in : ['?0'] } }", "kohlin");
+		assertThat(target).isEqualTo(new Document("name", new Document("$in", Collections.singletonList("kohlin"))));
+	}
+
+	@Test // DATAMONGO-2476
+	public void bindQuotedMulitParameterInArray() {
+
+		Document target = parse("{ 'name' : { $in : ['?0,?1'] } }", "dalinar", "kohlin");
+		assertThat(target).isEqualTo(new Document("name", new Document("$in", Collections.singletonList("dalinar,kohlin"))));
+	}
+
 	private static Document parse(String json, Object... args) {
 
 		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json, args);
