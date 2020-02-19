@@ -21,7 +21,7 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 
 import org.bson.Document;
 import org.junit.Test;
-
+import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
@@ -335,6 +335,19 @@ public class QueryTests {
 		target.addCriteria(where("one").is("10"));
 		assertThat(target.getQueryObject()).isEqualTo(new Document("foo", "bar").append("one", "10"))
 				.isNotEqualTo(source.getQueryObject());
+	}
+
+	@Test // DATAMONGO-2478
+	public void queryOfShouldWorkOnProxiedObjects() {
+
+		BasicQuery source = new BasicQuery("{ 'foo' : 'bar'}", "{ '_id' : -1, 'foo' : 1 }");
+		source.withHint("the hint");
+		source.limit(10);
+		source.setSortObject(new Document("_id", 1));
+
+		Query target = Query.of((Query) new ProxyFactory(source).getProxy());
+
+		compareQueries(target, source);
 	}
 
 	private void compareQueries(Query actual, Query expected) {
