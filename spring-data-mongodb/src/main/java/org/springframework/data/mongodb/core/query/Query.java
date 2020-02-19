@@ -517,13 +517,11 @@ public class Query {
 			}
 		};
 
-		target.criteria.putAll(source.criteria);
-		target.skip = source.skip;
-		target.limit = source.limit;
-		target.sort = Sort.unsorted().and(source.sort);
-		target.hint = source.hint;
-		target.collation = source.collation;
-		target.restrictedTypes.addAll(source.restrictedTypes);
+		target.skip = source.getSkip();
+		target.limit = source.getLimit();
+		target.hint = source.getHint();
+		target.collation = source.getCollation();
+		target.restrictedTypes.addAll(source.getRestrictedTypes());
 
 		if (source.getMeta().hasValues()) {
 			target.setMeta(new Meta(source.getMeta()));
