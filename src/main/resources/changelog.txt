@@ -1,6 +1,19 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.2.5.RELEASE (2020-02-26)
+---------------------------------------------
+* DATAMONGO-2478 - NPE when using Query annotation and with sort and pageable.
+* DATAMONGO-2476 - JsonParseException: JSON reader was expecting a value but found '}'.
+* DATAMONGO-2464 - Fix code examples in reference documentation.
+* DATAMONGO-2460 - @Field annotation behaviour changed.
+* DATAMONGO-2459 - Update Documentation of Reactive Repositories to mention usage of PageRequest.
+* DATAMONGO-2457 - Reference documentation: Text does not match with code example.
+* DATAMONGO-2453 - Release 2.2.5 (Moore SR5).
+* DATAMONGO-2406 - Allow Mono<Void> as return type for derived deleteBy queries.
+* DATAMONGO-2079 - MappingMongoConverter cannot be proxied because it implements the package-private ValueResolver interface.
+
+
 Changes in version 2.1.16.RELEASE (2020-02-26)
 ----------------------------------------------
 * DATAMONGO-2464 - Fix code examples in reference documentation.
@@ -2912,6 +2925,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
