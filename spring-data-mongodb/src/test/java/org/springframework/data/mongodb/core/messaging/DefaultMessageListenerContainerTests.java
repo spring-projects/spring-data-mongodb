@@ -30,22 +30,21 @@ import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.data.mongodb.core.ChangeStreamOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
+import org.springframework.data.mongodb.core.messaging.ChangeStreamRequest.ChangeStreamRequestOptions;
 import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
-import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoServerCondition;
+import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
+import org.springframework.data.mongodb.test.util.Template;
 import org.springframework.util.ErrorHandler;
 
-import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
@@ -55,35 +54,30 @@ import com.mongodb.client.model.changestream.ChangeStreamDocument;
  *
  * @author Christoph Strobl
  */
-@ExtendWith({ MongoClientExtension.class, MongoServerCondition.class })
+@ExtendWith({ MongoTemplateExtension.class, MongoServerCondition.class })
 public class DefaultMessageListenerContainerTests {
 
-	public static final String DATABASE_NAME = "change-stream-events";
-	public static final String COLLECTION_NAME = "collection-1";
-	public static final String COLLECTION_2_NAME = "collection-2";
+	static final String DATABASE_NAME = "change-stream-events";
+	static final String COLLECTION_NAME = "collection-1";
+	static final String COLLECTION_2_NAME = "collection-2";
 
-	public static final Duration TIMEOUT = Duration.ofSeconds(2);
+	static final Duration TIMEOUT = Duration.ofSeconds(2);
 
-	static @Client MongoClient client;
+	@Template(database = DATABASE_NAME, initialEntitySet = Person.class) //
+	static MongoTemplate template;
 
-	MongoDatabaseFactory dbFactory;
-	MongoCollection<Document> collection;
-	MongoCollection<Document> collection2;
+	MongoDatabaseFactory dbFactory = template.getMongoDbFactory();
+
+	MongoCollection<Document> collection = template.getCollection(COLLECTION_NAME);
+	MongoCollection<Document> collection2 = template.getCollection(COLLECTION_2_NAME);
 
 	private CollectingMessageListener<Object, Object> messageListener;
-	private MongoTemplate template;
 
 	@BeforeEach
 	void beforeEach() {
 
-		dbFactory = new SimpleMongoClientDatabaseFactory(client, DATABASE_NAME);
-		template = new MongoTemplate(dbFactory);
-
 		template.dropCollection(COLLECTION_NAME);
 		template.dropCollection(COLLECTION_2_NAME);
-
-		collection = template.getCollection(COLLECTION_NAME);
-		collection2 = template.getCollection(COLLECTION_2_NAME);
 
 		messageListener = new CollectingMessageListener<>();
 	}
@@ -94,8 +88,7 @@ public class DefaultMessageListenerContainerTests {
 	public void shouldCollectMappedChangeStreamMessagesCorrectly() throws InterruptedException {
 
 		MessageListenerContainer container = new DefaultMessageListenerContainer(template);
-		Subscription subscription = container.register(new ChangeStreamRequest(messageListener, () -> COLLECTION_NAME),
-				Person.class);
+		Subscription subscription = container.register(new ChangeStreamRequest(messageListener, options()), Person.class);
 		container.start();
 
 		awaitSubscription(subscription, TIMEOUT);
@@ -126,7 +119,7 @@ public class DefaultMessageListenerContainerTests {
 				messageListener.onMessage(message);
 			}
 
-		}, () -> COLLECTION_NAME), Person.class, errorHandler);
+		}, options()), Person.class, errorHandler);
 		container.start();
 
 		awaitSubscription(subscription, TIMEOUT);
@@ -145,8 +138,7 @@ public class DefaultMessageListenerContainerTests {
 	public void shouldNoLongerReceiveMessagesWhenContainerStopped() throws InterruptedException {
 
 		MessageListenerContainer container = new DefaultMessageListenerContainer(template);
-		Subscription subscription = container.register(new ChangeStreamRequest(messageListener, () -> COLLECTION_NAME),
-				Document.class);
+		Subscription subscription = container.register(new ChangeStreamRequest(messageListener, options()), Document.class);
 		container.start();
 
 		awaitSubscription(subscription, TIMEOUT);
@@ -175,8 +167,7 @@ public class DefaultMessageListenerContainerTests {
 		Document unexpected = new Document("_id", "id-1").append("value", "foo");
 		collection.insertOne(unexpected);
 
-		Subscription subscription = container.register(new ChangeStreamRequest(messageListener, () -> COLLECTION_NAME),
-				Document.class);
+		Subscription subscription = container.register(new ChangeStreamRequest(messageListener, options()), Document.class);
 
 		awaitSubscription(subscription, TIMEOUT);
 
@@ -195,8 +186,7 @@ public class DefaultMessageListenerContainerTests {
 	public void shouldStartReceivingMessagesWhenContainerStarts() throws InterruptedException {
 
 		MessageListenerContainer container = new DefaultMessageListenerContainer(template);
-		Subscription subscription = container.register(new ChangeStreamRequest(messageListener, () -> COLLECTION_NAME),
-				Document.class);
+		Subscription subscription = container.register(new ChangeStreamRequest(messageListener, options()), Document.class);
 
 		collection.insertOne(new Document("_id", "id-1").append("value", "foo"));
 
@@ -228,8 +218,8 @@ public class DefaultMessageListenerContainerTests {
 		MessageListenerContainer container = new DefaultMessageListenerContainer(template);
 		container.start();
 
-		awaitSubscription(
-				container.register(new TailableCursorRequest(messageListener, () -> COLLECTION_NAME), Document.class), TIMEOUT);
+		awaitSubscription(container.register(new TailableCursorRequest(messageListener, options()), Document.class),
+				TIMEOUT);
 
 		collection.insertOne(new Document("_id", "id-2").append("value", "bar"));
 
@@ -248,8 +238,8 @@ public class DefaultMessageListenerContainerTests {
 		MessageListenerContainer container = new DefaultMessageListenerContainer(template);
 		container.start();
 
-		awaitSubscription(
-				container.register(new TailableCursorRequest(messageListener, () -> COLLECTION_NAME), Document.class), TIMEOUT);
+		awaitSubscription(container.register(new TailableCursorRequest(messageListener, options()), Document.class),
+				TIMEOUT);
 
 		collection.insertOne(new Document("_id", "id-1").append("value", "foo"));
 		collection.insertOne(new Document("_id", "id-2").append("value", "bar"));
@@ -271,7 +261,7 @@ public class DefaultMessageListenerContainerTests {
 
 		collection.insertOne(new Document("_id", "id-1").append("value", "foo"));
 
-		Subscription subscription = container.register(new TailableCursorRequest(messageListener, () -> COLLECTION_NAME),
+		Subscription subscription = container.register(new TailableCursorRequest(messageListener, options()),
 				Document.class);
 
 		awaitSubscription(subscription);
@@ -304,7 +294,7 @@ public class DefaultMessageListenerContainerTests {
 		try {
 			container.start();
 
-			Subscription subscription = container.register(new TailableCursorRequest(messageListener, () -> COLLECTION_NAME),
+			Subscription subscription = container.register(new TailableCursorRequest(messageListener, options()),
 					Document.class);
 
 			SubscriptionUtils.awaitSubscription(subscription);
@@ -330,12 +320,12 @@ public class DefaultMessageListenerContainerTests {
 		container.start();
 
 		CollectingMessageListener<Document, Document> tailableListener = new CollectingMessageListener<>();
-		Subscription tailableSubscription = container
-				.register(new TailableCursorRequest(tailableListener, () -> COLLECTION_NAME), Document.class);
+		Subscription tailableSubscription = container.register(new TailableCursorRequest(tailableListener, options()),
+				Document.class);
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, Document> changeStreamListener = new CollectingMessageListener<>();
-		Subscription changeStreamSubscription = container
-				.register(new ChangeStreamRequest(changeStreamListener, () -> COLLECTION_NAME), Document.class);
+		Subscription changeStreamSubscription = container.register(new ChangeStreamRequest(changeStreamListener, options()),
+				Document.class);
 
 		awaitSubscriptions(tailableSubscription, changeStreamSubscription);
 
@@ -389,5 +379,10 @@ public class DefaultMessageListenerContainerTests {
 			this.id = id;
 			this.firstname = firstname;
 		}
+	}
+
+	static ChangeStreamRequestOptions options() {
+		return new ChangeStreamRequestOptions(DATABASE_NAME, COLLECTION_NAME, Duration.ofMillis(10),
+				ChangeStreamOptions.builder().build());
 	}
 }

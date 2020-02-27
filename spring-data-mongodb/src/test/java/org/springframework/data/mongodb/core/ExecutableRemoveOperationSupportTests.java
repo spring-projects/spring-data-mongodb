@@ -28,10 +28,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.test.util.Client;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
+import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
+import org.springframework.data.mongodb.test.util.MongoTestTemplate;
+import org.springframework.data.mongodb.test.util.Template;
 
-import com.mongodb.client.MongoClient;
 import com.mongodb.client.result.DeleteResult;
 
 /**
@@ -40,13 +40,13 @@ import com.mongodb.client.result.DeleteResult;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@ExtendWith(MongoClientExtension.class)
+@ExtendWith(MongoTemplateExtension.class)
 public class ExecutableRemoveOperationSupportTests {
 
 	private static final String STAR_WARS = "star-wars";
-	static @Client MongoClient mongoClient;
 
-	MongoTemplate template;
+	@Template(initialEntitySet = Person.class) //
+	static MongoTestTemplate template;
 
 	Person han;
 	Person luke;
@@ -54,9 +54,7 @@ public class ExecutableRemoveOperationSupportTests {
 	@BeforeEach
 	public void setUp() {
 
-		template = new MongoTemplate(
-				new SimpleMongoClientDatabaseFactory(mongoClient, "ExecutableRemoveOperationSupportTests"));
-		template.dropCollection(STAR_WARS);
+		template.flush();
 
 		han = new Person();
 		han.firstname = "han";

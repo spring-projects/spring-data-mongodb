@@ -44,10 +44,9 @@ import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.NearQuery;
-import org.springframework.data.mongodb.test.util.Client;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
-
-import com.mongodb.client.MongoClient;
+import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
+import org.springframework.data.mongodb.test.util.MongoTestTemplate;
+import org.springframework.data.mongodb.test.util.Template;
 
 /**
  * Integration tests for {@link ExecutableFindOperationSupport}.
@@ -55,13 +54,14 @@ import com.mongodb.client.MongoClient;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@ExtendWith(MongoClientExtension.class)
+@ExtendWith(MongoTemplateExtension.class)
 public class ExecutableFindOperationSupportTests {
 
 	private static final String STAR_WARS = "star-wars";
 	private static final String STAR_WARS_PLANETS = "star-wars-universe";
-	static @Client MongoClient mongoClient;
-	MongoTemplate template;
+
+	@Template(database = "executable-find-operation-support-tests", initialEntitySet = { Person.class, Planet.class }) //
+	static MongoTestTemplate template;
 
 	Person han;
 	Person luke;
@@ -72,10 +72,7 @@ public class ExecutableFindOperationSupportTests {
 	@BeforeEach
 	public void setUp() {
 
-		template = new MongoTemplate(
-				new SimpleMongoClientDatabaseFactory(mongoClient, "ExecutableFindOperationSupportTests"));
-		template.dropCollection(STAR_WARS);
-		template.dropCollection(STAR_WARS_PLANETS);
+		template.flush();
 
 		template.indexOps(Planet.class).ensureIndex(
 				new GeospatialIndex("coordinates").typed(GeoSpatialIndexType.GEO_2DSPHERE).named("planet-coordinate-idx"));

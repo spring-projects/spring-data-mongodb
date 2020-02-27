@@ -172,6 +172,7 @@ public class AbstractMongoConfigurationUnitTests {
 		public MongoTypeMapper typeMapper() {
 			return new CustomMongoTypeMapper();
 		}
+
 	}
 
 	static class ConfigurationWithMultipleBasePackages extends AbstractMongoClientConfiguration {

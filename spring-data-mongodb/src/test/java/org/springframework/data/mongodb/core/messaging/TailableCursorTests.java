@@ -162,7 +162,7 @@ public class TailableCursorTests {
 		template.save(sugarSplashy);
 		template.save(huffyFluffy);
 
-		awaitMessages(messageListener);
+		awaitMessages(messageListener, 2);
 
 		assertThat(messageListener.getMessages().stream().map(Message::getBody)).hasSize(2).doesNotContain(sugarSplashy);
 	}
@@ -183,7 +183,7 @@ public class TailableCursorTests {
 		template.save(sugarSplashy);
 		template.save(huffyFluffy);
 
-		awaitMessages(messageListener);
+		awaitMessages(messageListener, 1);
 
 		assertThat(messageListener.getMessages().stream().map(Message::getBody)).hasSize(1).containsExactly(sugarSplashy);
 	}
@@ -201,7 +201,7 @@ public class TailableCursorTests {
 
 		template.save(sugarSplashy);
 
-		awaitMessages(messageListener);
+		awaitMessages(messageListener, 3);
 
 		assertThat(messageListener.getMessages().stream().map(Message::getBody)).hasSize(3).containsExactly(jellyBelly,
 				huffyFluffy, sugarSplashy);

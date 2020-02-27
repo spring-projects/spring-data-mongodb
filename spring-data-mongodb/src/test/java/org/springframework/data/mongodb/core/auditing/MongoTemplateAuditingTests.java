@@ -19,6 +19,10 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
@@ -60,6 +64,11 @@ public class MongoTemplateAuditingTests {
 		@Override
 		protected String getDatabaseName() {
 			return "mongo-template-audit-tests";
+		}
+
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+			return new HashSet<>(Arrays.asList(ImmutableAuditableEntityWithVersion.class, KAuditableVersionedEntity.class));
 		}
 	}
 

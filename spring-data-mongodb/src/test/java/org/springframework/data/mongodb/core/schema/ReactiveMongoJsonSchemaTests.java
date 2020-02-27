@@ -21,7 +21,9 @@ import lombok.Data;
 import reactor.test.StepVerifier;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
@@ -64,6 +66,11 @@ public class ReactiveMongoJsonSchemaTests {
 		@Override
 		protected String getDatabaseName() {
 			return "json-schema-tests";
+		}
+
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() {
+			return Collections.emptySet();
 		}
 	}
 

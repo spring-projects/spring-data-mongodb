@@ -21,7 +21,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
@@ -60,6 +62,11 @@ public class ReactiveMongoTemplateCollationTests {
 		@Override
 		protected String getDatabaseName() {
 			return "collation-tests";
+		}
+
+		@Override
+		protected Set<Class<?>> getInitialEntitySet()  {
+			return Collections.emptySet();
 		}
 	}
 

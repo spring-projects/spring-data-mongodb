@@ -19,36 +19,37 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.mongodb.config.AbstractIntegrationTests;
 import org.springframework.data.mongodb.core.CollectionOptions;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Language;
 import org.springframework.data.mongodb.core.query.Collation;
-
-import com.mongodb.WriteConcern;
+import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
+import org.springframework.data.mongodb.test.util.MongoTestTemplate;
+import org.springframework.data.mongodb.test.util.Template;
 
 /**
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-public class TextIndexTests extends AbstractIntegrationTests {
+@ExtendWith(MongoTemplateExtension.class)
+public class TextIndexTests {
 
-	private @Autowired MongoTemplate template;
+	@Template(initialEntitySet = TextIndexedDocumentRoot.class)
+	static MongoTestTemplate template;
+
 	private IndexOperations indexOps;
 
-	@Before
-	public void setUp() throws Exception {
+	@BeforeEach
+	public void beforeEach() throws Exception {
 
-		template.setWriteConcern(WriteConcern.JOURNALED);
 		this.indexOps = template.indexOps(TextIndexedDocumentRoot.class);
 
-		template.dropCollection(TextIndexedDocumentRoot.class);
+		template.dropDatabase();
+
 		template.createCollection(TextIndexedDocumentRoot.class,
 				CollectionOptions.empty().collation(Collation.of("de_AT")));
 	}

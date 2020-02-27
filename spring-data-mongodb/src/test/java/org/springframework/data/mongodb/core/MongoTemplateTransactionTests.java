@@ -23,7 +23,9 @@ import static org.springframework.data.mongodb.test.util.MongoTestUtils.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.bson.Document;
@@ -92,6 +94,11 @@ public class MongoTemplateTransactionTests {
 		@Bean
 		MongoTransactionManager txManager(MongoDatabaseFactory dbFactory) {
 			return new MongoTransactionManager(dbFactory);
+		}
+
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+			return Collections.emptySet();
 		}
 	}
 

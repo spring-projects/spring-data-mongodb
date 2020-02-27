@@ -20,7 +20,9 @@ import static org.assertj.core.api.Assertions.*;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.ImportResource;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.test.context.ContextConfiguration;
@@ -36,7 +38,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 public class ComposedRepositoryImplementationTests {
 
 	@Configuration
-	@EnableMongoRepositories
+	@EnableMongoRepositories(includeFilters=@Filter(type = FilterType.ASSIGNABLE_TYPE, classes = ComposedRepository.class))
 	@ImportResource("classpath:infrastructure.xml")
 	static class Config {}
 

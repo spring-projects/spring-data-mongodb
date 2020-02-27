@@ -23,10 +23,9 @@ import java.util.List;
 import java.util.Optional;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.DefaultBulkOperations.BulkOperationContext;
@@ -36,9 +35,10 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
+import org.springframework.data.mongodb.test.util.MongoTestTemplate;
+import org.springframework.data.mongodb.test.util.Template;
 import org.springframework.data.util.Pair;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import com.mongodb.MongoBulkWriteException;
 import com.mongodb.WriteConcern;
@@ -52,21 +52,17 @@ import com.mongodb.client.MongoCollection;
  * @author Christoph Strobl
  * @author Minsu Kim
  */
-@RunWith(SpringRunner.class)
-@ContextConfiguration("classpath:infrastructure.xml")
+@ExtendWith(MongoTemplateExtension.class)
 public class DefaultBulkOperationsIntegrationTests {
 
 	static final String COLLECTION_NAME = "bulk_ops";
 
-	@Autowired MongoOperations operations;
+	@Template(initialEntitySet = BaseDoc.class) //
+	static MongoTestTemplate operations;
 
-	MongoCollection<Document> collection;
-
-	@Before
+	@BeforeEach
 	public void setUp() {
-
-		this.collection = this.operations.getCollection(COLLECTION_NAME);
-		this.collection.deleteMany(new Document());
+		operations.flush(COLLECTION_NAME);
 	}
 
 	@Test // DATAMONGO-934

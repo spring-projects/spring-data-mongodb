@@ -21,7 +21,10 @@ import static org.mockito.Mockito.*;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
@@ -29,7 +32,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.mongodb.core.AuditablePerson;
@@ -63,7 +68,8 @@ public class ReactiveAuditingTests {
 
 	@Configuration
 	@EnableMongoAuditing(auditorAwareRef = "auditorProvider")
-	@EnableReactiveMongoRepositories(basePackageClasses = ReactiveAuditingTests.class, considerNestedRepositories = true)
+	@EnableReactiveMongoRepositories(basePackageClasses = ReactiveAuditingTests.class, considerNestedRepositories = true,
+			includeFilters = @Filter(type = FilterType.ASSIGNABLE_TYPE, classes = ReactiveAuditablePersonRepository.class))
 	static class Config extends AbstractReactiveMongoConfiguration {
 
 		@Override
@@ -74,6 +80,12 @@ public class ReactiveAuditingTests {
 		@Override
 		public MongoClient reactiveMongoClient() {
 			return mongoClient;
+		}
+
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() {
+			return new HashSet<>(
+					Arrays.asList(AuditablePerson.class, VersionedAuditablePerson.class, SimpleVersionedAuditablePerson.class));
 		}
 
 		@Bean

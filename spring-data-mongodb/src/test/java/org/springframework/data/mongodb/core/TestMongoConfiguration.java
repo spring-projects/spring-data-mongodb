@@ -16,7 +16,9 @@
 package org.springframework.data.mongodb.core;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.converter.Converter;
@@ -53,5 +55,10 @@ public class TestMongoConfiguration extends AbstractMongoClientConfiguration {
 		converters.add(new org.springframework.data.mongodb.core.PersonReadConverter());
 		converters.add(new org.springframework.data.mongodb.core.PersonWriteConverter());
 		return new MongoCustomConversions(converters);
+	}
+
+	@Override
+	protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+		return Collections.emptySet();
 	}
 }

@@ -16,7 +16,6 @@
 package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.Assume.*;
 import static org.springframework.data.mongodb.core.index.PartialIndexFilter.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
@@ -25,14 +24,10 @@ import reactor.test.StepVerifier;
 import java.util.function.Predicate;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.mongodb.config.AbstractReactiveMongoConfiguration;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
@@ -40,70 +35,35 @@ import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Collation.CaseFirst;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
-import org.springframework.data.util.Version;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
+import org.springframework.data.mongodb.test.util.ReactiveMongoTestTemplate;
+import org.springframework.data.mongodb.test.util.Template;
 
-import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoCollection;
 
 /**
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@RunWith(SpringRunner.class)
-@ContextConfiguration
+@ExtendWith(MongoTemplateExtension.class)
 public class DefaultReactiveIndexOperationsTests {
 
-	@Configuration
-	static class Config extends AbstractReactiveMongoConfiguration {
+	@Template(initialEntitySet = DefaultIndexOperationsIntegrationTestsSample.class)
+	static ReactiveMongoTestTemplate template;
 
-		@Override
-		public MongoClient reactiveMongoClient() {
-			return MongoTestUtils.reactiveClient();
-		}
+	String collectionName = template.getCollectionName(DefaultIndexOperationsIntegrationTestsSample.class);
 
-		@Override
-		protected String getDatabaseName() {
-			return "index-ops-tests";
-		}
-	}
+	MongoCollection<Document> collection = template.getCollection(collectionName);
+	DefaultReactiveIndexOperations indexOps = new DefaultReactiveIndexOperations(template, collectionName,
+			new QueryMapper(template.getConverter()));
 
-	private static final Version THREE_DOT_TWO = new Version(3, 2);
-	private static final Version THREE_DOT_FOUR = new Version(3, 4);
-	private static Version mongoVersion;
-
-	@Autowired ReactiveMongoTemplate template;
-
-	MongoCollection<Document> collection;
-	DefaultReactiveIndexOperations indexOps;
-
-	@Before
+	@BeforeEach
 	public void setUp() {
-
-		queryMongoVersionIfNecessary();
-		String collectionName = this.template.getCollectionName(DefaultIndexOperationsIntegrationTestsSample.class);
-
-		this.collection = this.template.getMongoDatabase().getCollection(collectionName, Document.class);
-		this.indexOps = new DefaultReactiveIndexOperations(template, collectionName,
-				new QueryMapper(template.getConverter()));
-
 		StepVerifier.create(this.collection.dropIndexes()).verifyComplete();
-	}
-
-	private void queryMongoVersionIfNecessary() {
-
-		if (mongoVersion == null) {
-			Document result = template.executeCommand("{ buildInfo: 1 }").block();
-			mongoVersion = Version.parse(result.get("version").toString());
-		}
 	}
 
 	@Test // DATAMONGO-1518
 	public void shouldCreateIndexWithCollationCorrectly() {
-
-		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_FOUR));
 
 		IndexDefinition id = new Index().named("with-collation").on("xyz", Direction.ASC)
 				.collation(Collation.of("de_AT").caseFirst(CaseFirst.off()));
@@ -137,8 +97,6 @@ public class DefaultReactiveIndexOperationsTests {
 	@Test // DATAMONGO-1682, DATAMONGO-2198
 	public void shouldApplyPartialFilterCorrectly() {
 
-		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO));
-
 		IndexDefinition id = new Index().named("partial-with-criteria").on("k3y", Direction.ASC)
 				.partial(of(where("q-t-y").gte(10)));
 
@@ -155,8 +113,6 @@ public class DefaultReactiveIndexOperationsTests {
 	@Test // DATAMONGO-1682, DATAMONGO-2198
 	public void shouldApplyPartialFilterWithMappedPropertyCorrectly() {
 
-		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO));
-
 		IndexDefinition id = new Index().named("partial-with-mapped-criteria").on("k3y", Direction.ASC)
 				.partial(of(where("quantity").gte(10)));
 
@@ -171,8 +127,6 @@ public class DefaultReactiveIndexOperationsTests {
 
 	@Test // DATAMONGO-1682, DATAMONGO-2198
 	public void shouldApplyPartialDBOFilterCorrectly() {
-
-		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO));
 
 		IndexDefinition id = new Index().named("partial-with-dbo").on("k3y", Direction.ASC)
 				.partial(of(new org.bson.Document("qty", new org.bson.Document("$gte", 10))));
@@ -190,8 +144,6 @@ public class DefaultReactiveIndexOperationsTests {
 
 	@Test // DATAMONGO-1682, DATAMONGO-2198
 	public void shouldFavorExplicitMappingHintViaClass() {
-
-		assumeTrue(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO));
 
 		IndexDefinition id = new Index().named("partial-with-inheritance").on("k3y", Direction.ASC)
 				.partial(of(where("age").gte(10)));

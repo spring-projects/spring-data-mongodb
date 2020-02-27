@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.bson.BsonDocument;
 import org.bson.BsonTimestamp;
@@ -133,6 +134,10 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 
 		} else {
 			iterable = filter.isEmpty() ? db.watch(Document.class) : db.watch(filter, Document.class);
+		}
+
+		if (!options.maxAwaitTime().isZero()) {
+			iterable = iterable.maxAwaitTime(options.maxAwaitTime().toMillis(), TimeUnit.MILLISECONDS);
 		}
 
 		if (!resumeToken.isEmpty()) {

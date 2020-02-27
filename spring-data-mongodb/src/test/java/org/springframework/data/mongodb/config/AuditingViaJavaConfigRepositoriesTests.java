@@ -18,8 +18,11 @@ package org.springframework.data.mongodb.config;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -28,7 +31,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.mongodb.core.AuditablePerson;
@@ -68,7 +73,8 @@ public class AuditingViaJavaConfigRepositoriesTests {
 
 	@Configuration
 	@EnableMongoAuditing(auditorAwareRef = "auditorProvider")
-	@EnableMongoRepositories(basePackageClasses = AuditablePersonRepository.class, considerNestedRepositories = true)
+	@EnableMongoRepositories(basePackageClasses = AuditablePersonRepository.class, considerNestedRepositories = true,
+			includeFilters = @Filter(type = FilterType.ASSIGNABLE_TYPE, classes = AuditablePersonRepository.class))
 	static class Config extends AbstractMongoClientConfiguration {
 
 		@Override
@@ -85,6 +91,12 @@ public class AuditingViaJavaConfigRepositoriesTests {
 		@SuppressWarnings("unchecked")
 		public AuditorAware<AuditablePerson> auditorProvider() {
 			return mock(AuditorAware.class);
+		}
+
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+			return new HashSet<>(
+					Arrays.asList(AuditablePerson.class, VersionedAuditablePerson.class, SimpleVersionedAuditablePerson.class));
 		}
 	}
 
@@ -211,6 +223,11 @@ public class AuditingViaJavaConfigRepositoriesTests {
 		@Override
 		protected String getDatabaseName() {
 			return "database";
+		}
+
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+			return Collections.emptySet();
 		}
 	}
 

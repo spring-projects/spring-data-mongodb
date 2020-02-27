@@ -20,6 +20,11 @@ import static org.assertj.core.api.Assumptions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -63,6 +68,11 @@ public class SimpleMongoRepositoryVersionedEntityTests {
 		@Override
 		protected String getDatabaseName() {
 			return "database";
+		}
+
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+			return new HashSet<>(Arrays.asList(VersionedPerson.class));
 		}
 	}
 

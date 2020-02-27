@@ -69,6 +69,8 @@ public class MongoJsonSchemaTests {
 		protected String getDatabaseName() {
 			return "json-schema-tests";
 		}
+
+
 	}
 
 	@Autowired MongoTemplate template;

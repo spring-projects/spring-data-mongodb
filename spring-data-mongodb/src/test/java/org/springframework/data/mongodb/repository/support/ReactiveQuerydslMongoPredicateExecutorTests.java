@@ -20,7 +20,9 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.Set;
 
 import org.junit.After;
 import org.junit.Before;
@@ -83,6 +85,11 @@ public class ReactiveQuerydslMongoPredicateExecutorTests {
 		@Override
 		protected String getDatabaseName() {
 			return "reactive";
+		}
+
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() {
+			return Collections.singleton(Person.class);
 		}
 	}
 

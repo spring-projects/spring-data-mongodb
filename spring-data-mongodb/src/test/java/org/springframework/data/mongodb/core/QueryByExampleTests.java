@@ -33,10 +33,9 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UntypedExampleMatcher;
-import org.springframework.data.mongodb.test.util.Client;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
-
-import com.mongodb.client.MongoClient;
+import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
+import org.springframework.data.mongodb.test.util.MongoTestTemplate;
+import org.springframework.data.mongodb.test.util.Template;
 
 /**
  * Integration tests for Query-by-example.
@@ -45,19 +44,18 @@ import com.mongodb.client.MongoClient;
  * @author Mark Paluch
  * @author Oliver Gierke
  */
-@ExtendWith(MongoClientExtension.class)
+@ExtendWith(MongoTemplateExtension.class)
 public class QueryByExampleTests {
 
-	static @Client MongoClient mongoClient;
+	@Template(initialEntitySet = Person.class) //
+	static MongoTestTemplate operations;
 
-	MongoOperations operations;
 	Person p1, p2, p3;
 
 	@BeforeEach
 	public void setUp() {
 
-		operations = new MongoTemplate(mongoClient, "query-by-example");
-		operations.remove(new Query(), Person.class);
+		operations.flush();
 
 		p1 = new Person();
 		p1.firstname = "bran";

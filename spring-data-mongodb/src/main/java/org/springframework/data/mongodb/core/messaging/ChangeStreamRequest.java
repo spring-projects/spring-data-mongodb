@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.messaging;
 
+import java.time.Duration;
 import java.time.Instant;
 
 import org.bson.BsonValue;
@@ -167,21 +168,37 @@ public class ChangeStreamRequest<T>
 
 		private final @Nullable String databaseName;
 		private final @Nullable String collectionName;
+		private final @Nullable Duration maxAwaitTime;
 		private final ChangeStreamOptions options;
 
 		/**
 		 * Create new {@link ChangeStreamRequestOptions}.
 		 *
+		 * @param databaseName can be {@literal null}.
 		 * @param collectionName can be {@literal null}.
 		 * @param options must not be {@literal null}.
 		 */
 		public ChangeStreamRequestOptions(@Nullable String databaseName, @Nullable String collectionName,
 				ChangeStreamOptions options) {
+			this(databaseName, collectionName, null, options);
+		}
+
+		/**
+		 * Create new {@link ChangeStreamRequestOptions}.
+		 *
+		 * @param databaseName can be {@literal null}.
+		 * @param collectionName can be {@literal null}.
+		 * @param maxAwaitTime can be {@literal null}.
+		 * @param options must not be {@literal null}.
+		 */
+		public ChangeStreamRequestOptions(@Nullable String databaseName, @Nullable String collectionName,
+				@Nullable Duration maxAwaitTime, ChangeStreamOptions options) {
 
 			Assert.notNull(options, "Options must not be null!");
 
 			this.collectionName = collectionName;
 			this.databaseName = databaseName;
+			this.maxAwaitTime = maxAwaitTime;
 			this.options = options;
 		}
 
@@ -219,6 +236,15 @@ public class ChangeStreamRequest<T>
 		public String getDatabaseName() {
 			return databaseName;
 		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.monitor.SubscriptionRequest.RequestOptions#maxAwaitTime()
+		 */
+		@Override
+		public Duration maxAwaitTime() {
+			return maxAwaitTime != null ? maxAwaitTime : RequestOptions.super.maxAwaitTime();
+		}
 	}
 
 	/**
@@ -232,6 +258,7 @@ public class ChangeStreamRequest<T>
 
 		private @Nullable String databaseName;
 		private @Nullable String collectionName;
+		private @Nullable Duration maxAwaitTime;
 		private @Nullable MessageListener<ChangeStreamDocument<Document>, ? super T> listener;
 		private ChangeStreamOptionsBuilder delegate = ChangeStreamOptions.builder();
 
@@ -418,6 +445,20 @@ public class ChangeStreamRequest<T>
 		}
 
 		/**
+		 * Set the cursors maximum wait time on the server (for a new Document to be emitted).
+		 *
+		 * @param timeout must not be {@literal null}.
+		 * @since 3.0
+		 */
+		public ChangeStreamRequestBuilder<T> maxAwaitTime(Duration timeout) {
+
+			Assert.notNull(timeout, "timeout not be null!");
+
+			this.maxAwaitTime = timeout;
+			return this;
+		}
+
+		/**
 		 * @return the build {@link ChangeStreamRequest}.
 		 */
 		public ChangeStreamRequest<T> build() {
@@ -425,7 +466,7 @@ public class ChangeStreamRequest<T>
 			Assert.notNull(listener, "MessageListener must not be null!");
 
 			return new ChangeStreamRequest<>(listener,
-					new ChangeStreamRequestOptions(databaseName, collectionName, delegate.build()));
+					new ChangeStreamRequestOptions(databaseName, collectionName, maxAwaitTime, delegate.build()));
 		}
 	}
 }

@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.messaging;
 
+import java.time.Duration;
+
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
 import org.springframework.lang.Nullable;
@@ -71,6 +73,16 @@ public interface SubscriptionRequest<S, T, O extends RequestOptions> {
 		 */
 		@Nullable
 		String getCollectionName();
+
+		/**
+		 * Get the maximum wait time (the time till the next Document is emitted) to apply when reading from the collection.
+		 *
+		 * @return never {@literal null}. {@link Duration#ZERO} by default.
+		 * @since 3.0
+		 */
+		default Duration maxAwaitTime() {
+			return Duration.ZERO;
+		}
 
 		/**
 		 * Create empty options.

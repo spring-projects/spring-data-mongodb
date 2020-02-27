@@ -15,6 +15,9 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
+import java.util.Collections;
+import java.util.Set;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.mapping.event.LoggingEventListener;
@@ -46,5 +49,10 @@ public class GeoIndexedAppConfig extends AbstractMongoClientConfiguration {
 	@Bean
 	public LoggingEventListener mappingEventsListener() {
 		return new LoggingEventListener();
+	}
+
+	@Override
+	protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+		return Collections.emptySet();
 	}
 }

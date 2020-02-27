@@ -40,14 +40,11 @@ import java.util.stream.IntStream;
 
 import org.bson.types.ObjectId;
 import org.joda.time.DateTime;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -64,13 +61,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mapping.MappingException;
-import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
-import org.springframework.data.mongodb.core.convert.DbRefResolver;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.LazyLoadingProxy;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.index.Index;
@@ -78,22 +71,20 @@ import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoId;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
-import org.springframework.data.mongodb.core.mapping.event.AuditingEventListener;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
+import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.MongoVersion;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -128,111 +119,72 @@ import com.mongodb.client.result.UpdateResult;
  * @author Laszlo Csontos
  * @author duozhilin
  */
-@RunWith(SpringRunner.class)
-@ContextConfiguration("classpath:infrastructure.xml")
+@ExtendWith(MongoClientExtension.class)
 public class MongoTemplateTests {
 
-	@Autowired MongoTemplate template;
-	@Autowired MongoDatabaseFactory factory;
+	public static final String DB_NAME = "mongo-template-tests";
 
-	ConfigurableApplicationContext context;
-	MongoTemplate mappingTemplate;
+	static @Client MongoClient client;
 
-	@Rule public MongoVersionRule mongoVersion = MongoVersionRule.any();
+	ConfigurableApplicationContext context = new GenericApplicationContext();
 
-	@Autowired
-	public void setApplicationContext(ConfigurableApplicationContext context) {
+	MongoTestTemplate template = new MongoTestTemplate(cfg -> {
 
-		this.context = context;
+		cfg.configureDatabaseFactory(it -> {
 
-		context.addApplicationListener(new PersonWithIdPropertyOfTypeUUIDListener());
+			it.client(client);
+			it.defaultDb(DB_NAME);
+		});
 
-		PersistentEntities entities = PersistentEntities.of(template.getConverter().getMappingContext());
+		cfg.configureMappingContext(it -> {
+			it.autocreateIndex(false);
+			it.intitalEntitySet(AuditablePerson.class);
 
-		context.addApplicationListener(new AuditingEventListener(() -> new IsNewAwareAuditingHandler(entities)));
-	}
+		});
 
-	@Autowired
-	public void setMongoClient(MongoClient mongo) throws Exception {
+		cfg.configureApplicationContext(it -> {
+			it.applicationContext(context);
+			it.addEventListener(new PersonWithIdPropertyOfTypeUUIDListener());
+		});
 
-		CustomConversions conversions = new MongoCustomConversions(
-				Arrays.asList(DateToDateTimeConverter.INSTANCE, DateTimeToDateConverter.INSTANCE));
+		cfg.configureAuditing(it -> {
+			it.auditingHandler(IsNewAwareAuditingHandler::new);
+		});
+	});
 
-		MongoMappingContext mappingContext = new MongoMappingContext();
-		mappingContext.setInitialEntitySet(
-				new HashSet<>(Arrays.asList(PersonWith_idPropertyOfTypeObjectId.class, PersonWith_idPropertyOfTypeString.class,
-						PersonWithIdPropertyOfTypeObjectId.class, PersonWithIdPropertyOfTypeString.class,
-						PersonWithIdPropertyOfTypeInteger.class, PersonWithIdPropertyOfTypeBigInteger.class,
-						PersonWithIdPropertyOfPrimitiveInt.class, PersonWithIdPropertyOfTypeLong.class,
-						PersonWithIdPropertyOfPrimitiveLong.class, PersonWithIdPropertyOfTypeUUID.class)));
-		mappingContext.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
-		mappingContext.initialize();
+	MongoTestTemplate mappingTemplate = new MongoTestTemplate(cfg -> {
 
-		DbRefResolver dbRefResolver = new DefaultDbRefResolver(factory);
-		MappingMongoConverter mappingConverter = new MappingMongoConverter(dbRefResolver, mappingContext);
-		mappingConverter.setCustomConversions(conversions);
-		mappingConverter.afterPropertiesSet();
+		cfg.configureDatabaseFactory(it -> {
 
-		this.mappingTemplate = new MongoTemplate(factory, mappingConverter);
-	}
+			it.client(client);
+			it.defaultDb(DB_NAME);
+		});
 
-	@Before
-	public void setUp() {
+		cfg.configureConversion(it -> {
+			it.customConverters(DateToDateTimeConverter.INSTANCE, DateTimeToDateConverter.INSTANCE);
+		});
 
-		cleanDb();
+		cfg.configureMappingContext(it -> {
+			it.autocreateIndex(false);
+		});
 
-		this.mappingTemplate.setApplicationContext(context);
-	}
+		cfg.configureApplicationContext(it -> {
+			it.applicationContext(new GenericApplicationContext());
+			it.addEventListener(new PersonWithIdPropertyOfTypeUUIDListener());
+		});
+	});
 
-	@After
+	MongoDatabaseFactory factory = template.getMongoDbFactory();
+
+	@AfterEach
 	public void cleanUp() {
-		cleanDb();
-	}
 
-	protected void cleanDb() {
+		template.flush();
+		template.flush("collection", "personX", "findandreplace");
+
+		mappingTemplate.flush();
+
 		template.dropCollection(Person.class);
-		template.dropCollection(PersonWithAList.class);
-		template.dropCollection(PersonWith_idPropertyOfTypeObjectId.class);
-		template.dropCollection(PersonWith_idPropertyOfTypeString.class);
-		template.dropCollection(PersonWithIdPropertyOfTypeObjectId.class);
-		template.dropCollection(PersonWithIdPropertyOfTypeString.class);
-		template.dropCollection(PersonWithIdPropertyOfTypeInteger.class);
-		template.dropCollection(PersonWithIdPropertyOfTypeBigInteger.class);
-		template.dropCollection(PersonWithIdPropertyOfPrimitiveInt.class);
-		template.dropCollection(PersonWithIdPropertyOfTypeLong.class);
-		template.dropCollection(PersonWithIdPropertyOfPrimitiveLong.class);
-		template.dropCollection(PersonWithIdPropertyOfTypeUUID.class);
-		template.dropCollection(PersonWithVersionPropertyOfTypeInteger.class);
-		template.dropCollection(TestClass.class);
-		template.dropCollection(Sample.class);
-		template.dropCollection(MyPerson.class);
-		template.dropCollection(TypeWithFieldAnnotation.class);
-		template.dropCollection(TypeWithDate.class);
-		template.dropCollection("collection");
-		template.dropCollection("personX");
-		template.dropCollection("findandreplace");
-		template.dropCollection(Document.class);
-		template.dropCollection(ObjectWith3AliasedFields.class);
-		template.dropCollection(ObjectWith3AliasedFieldsAndNestedAddress.class);
-		template.dropCollection(BaseDoc.class);
-		template.dropCollection(ObjectWithEnumValue.class);
-		template.dropCollection(DocumentWithCollection.class);
-		template.dropCollection(DocumentWithCollectionOfSimpleType.class);
-		template.dropCollection(DocumentWithMultipleCollections.class);
-		template.dropCollection(DocumentWithNestedCollection.class);
-		template.dropCollection(DocumentWithEmbeddedDocumentWithCollection.class);
-		template.dropCollection(DocumentWithNestedList.class);
-		template.dropCollection(DocumentWithDBRefCollection.class);
-		template.dropCollection(SomeContent.class);
-		template.dropCollection(SomeTemplate.class);
-		template.dropCollection(Address.class);
-		template.dropCollection(DocumentWithCollectionOfSamples.class);
-		template.dropCollection(WithGeoJson.class);
-		template.dropCollection(DocumentWithNestedTypeHavingStringIdProperty.class);
-		template.dropCollection(ImmutableAudited.class);
-		template.dropCollection(RawStringId.class);
-		template.dropCollection(Outer.class);
-		template.dropCollection(Message.class);
 	}
 
 	@Test
@@ -408,7 +360,7 @@ public class MongoTemplateTests {
 	@Test // DATAMONGO-746, DATAMONGO-2264
 	public void testReadIndexInfoForIndicesCreatedViaMongoShellCommands() throws Exception {
 
-		template.indexOps(Person.class).dropAllIndexes();
+		template.dropCollection(Person.class);
 
 		assertThat(template.indexOps(Person.class).getIndexInfo().isEmpty()).isTrue();
 
@@ -1314,6 +1266,7 @@ public class MongoTemplateTests {
 
 	@Test // DATADOC-202
 	public void executeDocument() {
+
 		template.insert(new Person("Tom"));
 		template.insert(new Person("Dick"));
 		template.insert(new Person("Harry"));
@@ -1487,7 +1440,7 @@ public class MongoTemplateTests {
 		assertThat(result.get(0).getName()).isEqualTo("Oleg");
 	}
 
-	@Test(expected = OptimisticLockingFailureException.class) // DATAMONGO-279
+	@Test // DATAMONGO-279
 	public void optimisticLockingHandling() {
 
 		// Init version
@@ -1519,7 +1472,9 @@ public class MongoTemplateTests {
 		person.version = 0;
 		person.firstName = "Patryk3";
 
-		template.save(person);
+		final PersonWithVersionPropertyOfTypeInteger toBeSaved = person;
+
+		assertThatExceptionOfType(OptimisticLockingFailureException.class).isThrownBy(() -> template.save(toBeSaved));
 	}
 
 	@Test // DATAMONGO-562
@@ -1595,13 +1550,14 @@ public class MongoTemplateTests {
 		assertThat(document.containsKey("_id")).isTrue();
 	}
 
-	@Test(expected = MappingException.class) // DATAMONGO-550, DATAMONGO-1730
+	@Test // DATAMONGO-550, DATAMONGO-1730
 	public void rejectsPlainObjectWithOutExplicitCollection() {
 
 		org.bson.Document document = new org.bson.Document("foo", "bar");
 		template.save(document, "collection");
 
-		template.findById(document.get("_id"), org.bson.Document.class);
+		assertThatExceptionOfType(MappingException.class)
+				.isThrownBy(() -> template.findById(document.get("_id"), org.bson.Document.class));
 	}
 
 	@Test // DATAMONGO-550
@@ -1709,7 +1665,7 @@ public class MongoTemplateTests {
 		assertThat(person.version).isEqualTo(0L);
 	}
 
-	@Test(expected = DuplicateKeyException.class) // DATAMONGO-622
+	@Test // DATAMONGO-622
 	public void preventsDuplicateInsert() {
 
 		template.setWriteConcern(WriteConcern.ACKNOWLEDGED);
@@ -1721,7 +1677,7 @@ public class MongoTemplateTests {
 		assertThat(person.version).isEqualTo(0);
 
 		person.version = null;
-		template.save(person);
+		assertThatExceptionOfType(DuplicateKeyException.class).isThrownBy(() -> template.save(person));
 	}
 
 	@Test // DATAMONGO-629

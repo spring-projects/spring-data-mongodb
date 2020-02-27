@@ -19,14 +19,18 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
@@ -50,7 +54,7 @@ public class NoExplicitIdTests {
 	static @Client MongoClient mongoClient;
 
 	@Configuration
-	@EnableMongoRepositories(considerNestedRepositories = true)
+	@EnableMongoRepositories(considerNestedRepositories = true, includeFilters=@Filter(type = FilterType.ASSIGNABLE_TYPE, classes = TypeWithoutExplicitIdPropertyRepository.class))
 	static class Config extends AbstractMongoClientConfiguration {
 
 		@Override
@@ -66,6 +70,11 @@ public class NoExplicitIdTests {
 		@Override
 		protected boolean autoIndexCreation() {
 			return false;
+		}
+
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+			return Collections.emptySet();
 		}
 	}
 

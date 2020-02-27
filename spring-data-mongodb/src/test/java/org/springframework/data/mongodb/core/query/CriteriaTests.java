@@ -26,18 +26,14 @@ import lombok.EqualsAndHashCode;
 import java.util.Arrays;
 
 import org.bson.types.Binary;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
+import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
+import org.springframework.data.mongodb.test.util.MongoTestTemplate;
+import org.springframework.data.mongodb.test.util.Template;
 import org.springframework.util.Base64Utils;
-
-import com.mongodb.client.MongoClient;
 
 /**
  * Integration tests for {@link Criteria} usage as part of a {@link Query}.
@@ -45,10 +41,11 @@ import com.mongodb.client.MongoClient;
  * @author Christoph Strobl
  * @author Andreas Zink
  */
-public class CriteriaTests {
+@ExtendWith(MongoTemplateExtension.class)
+class CriteriaTests {
 
-	static MongoClient client;
-	MongoOperations ops;
+	@Template(initialEntitySet = { DocumentWithBitmask.class }) //
+	static MongoTestTemplate ops;
 
 	static final DocumentWithBitmask FIFTY_FOUR/*00110110*/ = new DocumentWithBitmask("1", Integer.valueOf(54),
 			Integer.toBinaryString(54));
@@ -59,22 +56,10 @@ public class CriteriaTests {
 	static final DocumentWithBitmask ONE_HUNDRED_TWO/*01100110*/ = new DocumentWithBitmask("4",
 			new Binary(Base64Utils.decodeFromString("Zg==")), "01100110");
 
-	@BeforeClass
-	public static void beforeClass() {
-		client = MongoTestUtils.client();
-	}
+	@BeforeEach
+	void beforeEach() {
 
-	@AfterClass
-	public static void afterClass() {
-		client.close();
-	}
-
-	@Before
-	public void setUp() {
-
-		ops = new MongoTemplate(client, "criteria-tests");
-
-		ops.dropCollection(DocumentWithBitmask.class);
+		ops.flush();
 
 		ops.insert(FIFTY_FOUR);
 		ops.insert(TWENTY_INT);
