@@ -23,26 +23,27 @@ import lombok.ToString;
 import java.util.List;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.mongodb.config.AbstractIntegrationTests;
-import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.Language;
 import org.springframework.data.mongodb.core.mapping.TextScore;
 import org.springframework.data.mongodb.core.query.TextQueryTests.FullTextDoc.FullTextDocBuilder;
+import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
+import org.springframework.data.mongodb.test.util.MongoTestTemplate;
+import org.springframework.data.mongodb.test.util.Template;
 
 /**
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-public class TextQueryTests extends AbstractIntegrationTests {
+@ExtendWith(MongoTemplateExtension.class)
+public class TextQueryTests {
 
 	private static final FullTextDoc BAKE = new FullTextDocBuilder().headline("bake").build();
 	private static final FullTextDoc COFFEE = new FullTextDocBuilder().subHeadline("coffee").build();
@@ -53,10 +54,13 @@ public class TextQueryTests extends AbstractIntegrationTests {
 	private static final FullTextDoc FRENCH_MILK = new FullTextDocBuilder().headline("leche").lanugage("french").build();
 	private static final FullTextDoc MILK_AND_SUGAR = new FullTextDocBuilder().headline("milk and sugar").build();
 
-	private @Autowired MongoOperations template;
+	@Template(initialEntitySet = FullTextDoc.class) //
+	static MongoTestTemplate template;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
+
+		template.flush();
 
 		IndexOperations indexOps = template.indexOps(FullTextDoc.class);
 		indexOps.dropAllIndexes();

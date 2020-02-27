@@ -19,12 +19,10 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.net.UnknownHostException;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 
 import com.mongodb.client.MongoClient;
 
@@ -35,11 +33,10 @@ import com.mongodb.client.MongoClient;
  * @author Thomas Darimont
  * @author Mark Paluch
  */
-@RunWith(SpringRunner.class)
-@ContextConfiguration("classpath:infrastructure.xml")
+@ExtendWith(MongoClientExtension.class)
 public class MongoMonitorIntegrationTests {
 
-	@Autowired MongoClient mongoClient;
+	static @Client MongoClient mongoClient;
 
 	@Test
 	public void serverInfo() {

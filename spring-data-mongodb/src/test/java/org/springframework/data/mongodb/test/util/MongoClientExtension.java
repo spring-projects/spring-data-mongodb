@@ -18,7 +18,6 @@ package org.springframework.data.mongodb.test.util;
 import static org.junit.platform.commons.util.AnnotationUtils.*;
 import static org.junit.platform.commons.util.ReflectionUtils.*;
 
-import java.io.Closeable;
 import java.lang.reflect.Field;
 import java.util.function.Predicate;
 
@@ -36,7 +35,6 @@ import org.junit.platform.commons.util.ExceptionUtils;
 import org.junit.platform.commons.util.ReflectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.util.ClassUtils;
 
 import com.mongodb.client.MongoClient;
@@ -52,14 +50,17 @@ public class MongoClientExtension implements Extension, BeforeAllCallback, After
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(MongoClientExtension.class);
 
-	private static final Namespace NAMESPACE = Namespace.create(MongoClientExtension.class);
-	private static final String SYNC_KEY = "mongo.client.sync";
-	private static final String REACTIVE_KEY = "mongo.client.reactive";
-	private static final String SYNC_REPLSET_KEY = "mongo.client.replset.sync";
-	private static final String REACTIVE_REPLSET_KEY = "mongo.client.replset.reactive";
+	private static final Namespace NAMESPACE = MongoExtensions.Client.NAMESPACE;
+
+	private static final String SYNC_KEY = MongoExtensions.Client.SYNC_KEY;
+	private static final String REACTIVE_KEY = MongoExtensions.Client.REACTIVE_KEY;
+	private static final String SYNC_REPLSET_KEY = MongoExtensions.Client.SYNC_REPLSET_KEY;
+	private static final String REACTIVE_REPLSET_KEY = MongoExtensions.Client.REACTIVE_REPLSET_KEY;
 
 	@Override
-	public void afterAll(ExtensionContext extensionContext) throws Exception {}
+	public void afterAll(ExtensionContext extensionContext) throws Exception {
+
+	}
 
 	@Override
 	public void beforeAll(ExtensionContext context) throws Exception {
@@ -87,7 +88,7 @@ public class MongoClientExtension implements Extension, BeforeAllCallback, After
 		});
 	}
 
-	private Object getMongoClient(Class<?> type, ExtensionContext extensionContext, boolean replSet) {
+	protected Object getMongoClient(Class<?> type, ExtensionContext extensionContext, boolean replSet) {
 
 		Store store = extensionContext.getStore(NAMESPACE);
 
@@ -120,6 +121,12 @@ public class MongoClientExtension implements Extension, BeforeAllCallback, After
 		return new SyncClientHolder(replSet ? MongoTestUtils.replSetClient() : MongoTestUtils.client());
 	}
 
+	protected boolean holdsReplSetClient(ExtensionContext context) {
+
+		Store store = context.getStore(NAMESPACE);
+		return store.get(SYNC_REPLSET_KEY) != null || store.get(REACTIVE_REPLSET_KEY) != null;
+	}
+
 	private void assertValidFieldCandidate(Field field) {
 
 		assertSupportedType("field", field.getType());
@@ -134,14 +141,6 @@ public class MongoClientExtension implements Extension, BeforeAllCallback, After
 			throw new ExtensionConfigurationException("Can only resolve @MongoClient " + target + " of type "
 					+ com.mongodb.client.MongoClient.class.getName() + " or "
 					+ com.mongodb.reactivestreams.client.MongoClient.class.getName() + " but was: " + type.getName());
-		}
-	}
-
-	private void closeClient(Store store, String key) {
-
-		Closeable client = store.remove(key, Closeable.class);
-		if (client != null) {
-
 		}
 	}
 
@@ -164,7 +163,7 @@ public class MongoClientExtension implements Extension, BeforeAllCallback, After
 
 		final MongoClient client;
 
-		public SyncClientHolder(MongoClient client) {
+		SyncClientHolder(MongoClient client) {
 			this.client = client;
 		}
 
@@ -182,7 +181,7 @@ public class MongoClientExtension implements Extension, BeforeAllCallback, After
 
 		final com.mongodb.reactivestreams.client.MongoClient client;
 
-		public ReactiveClientHolder(com.mongodb.reactivestreams.client.MongoClient client) {
+		ReactiveClientHolder(com.mongodb.reactivestreams.client.MongoClient client) {
 			this.client = client;
 		}
 

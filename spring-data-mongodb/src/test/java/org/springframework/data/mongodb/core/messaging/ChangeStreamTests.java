@@ -25,6 +25,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -41,8 +42,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.ChangeStreamOptions;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.messaging.ChangeStreamRequest.ChangeStreamRequestOptions;
 import org.springframework.data.mongodb.core.messaging.ChangeStreamTask.ChangeStreamEventMessage;
 import org.springframework.data.mongodb.core.messaging.Message.MessageProperties;
 import org.springframework.data.mongodb.core.messaging.SubscriptionUtils.*;
@@ -50,11 +52,11 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
+import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
+import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.MongoVersion;
-import org.springframework.data.mongodb.test.util.ReplSetClient;
+import org.springframework.data.mongodb.test.util.Template;
 
-import com.mongodb.client.MongoClient;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
 
@@ -65,14 +67,15 @@ import com.mongodb.client.model.changestream.FullDocument;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@ExtendWith({ MongoClientExtension.class })
+@ExtendWith({ MongoTemplateExtension.class })
 @EnableIfReplicaSetAvailable
 public class ChangeStreamTests {
 
-	static @ReplSetClient MongoClient mongoClient;
-
 	static ThreadPoolExecutor executor;
-	MongoTemplate template;
+
+	@Template(initialEntitySet = User.class, replicaSet = true) //
+	static MongoTestTemplate template;
+
 	MessageListenerContainer container;
 
 	User jellyBelly;
@@ -87,7 +90,6 @@ public class ChangeStreamTests {
 	@BeforeEach
 	public void setUp() {
 
-		template = new MongoTemplate(mongoClient, "change-stream-tests");
 		template.dropCollection(User.class);
 
 		container = new DefaultMessageListenerContainer(template, executor);
@@ -123,7 +125,8 @@ public class ChangeStreamTests {
 	public void readsPlainDocumentMessageCorrectly() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, Document> messageListener = new CollectingMessageListener<>();
-		ChangeStreamRequest<Document> request = new ChangeStreamRequest<>(messageListener, () -> "user");
+		ChangeStreamRequest<Document> request = new ChangeStreamRequest<>(messageListener,
+				new ChangeStreamRequestOptions(null, "user", Duration.ofMillis(10), ChangeStreamOptions.builder().build()));
 
 		Subscription subscription = container.register(request, Document.class);
 		awaitSubscription(subscription);
@@ -148,6 +151,7 @@ public class ChangeStreamTests {
 		ChangeStreamRequest<User> request = ChangeStreamRequest.builder(messageListener) //
 				.collection("user") //
 				.filter(newAggregation(match(where("age").is(7)))) //
+				.maxAwaitTime(Duration.ofMillis(10)) //
 				.build();
 
 		Subscription subscription = container.register(request, User.class);
@@ -174,6 +178,7 @@ public class ChangeStreamTests {
 				.collection("user") //
 				.filter(newAggregation(match(
 						new Criteria().orOperator(where("user_name").is("huffyFluffy"), where("user_name").is("jellyBelly"))))) //
+				.maxAwaitTime(Duration.ofMillis(10)) //
 				.build();
 
 		Subscription subscription = container.register(request, User.class);
@@ -200,6 +205,7 @@ public class ChangeStreamTests {
 				.publishTo(messageListener) //
 				.filter(newAggregation(User.class,
 						match(new Criteria().orOperator(where("userName").is("huffyFluffy"), where("userName").is("jellyBelly"))))) //
+				.maxAwaitTime(Duration.ofMillis(10)) //
 				.build();
 
 		Subscription subscription = container.register(request, User.class);
@@ -209,7 +215,7 @@ public class ChangeStreamTests {
 		template.save(sugarSplashy);
 		template.save(huffyFluffy);
 
-		awaitMessages(messageListener);
+		awaitMessages(messageListener, 2);
 
 		List<User> messageBodies = messageListener.getMessages().stream().map(Message::getBody)
 				.collect(Collectors.toList());
@@ -225,6 +231,7 @@ public class ChangeStreamTests {
 				.collection("user") //
 				.publishTo(messageListener) //
 				.filter(newAggregation(User.class, match(where("operationType").is("replace")))) //
+				.maxAwaitTime(Duration.ofMillis(10)) //
 				.build();
 
 		Subscription subscription = container.register(request, User.class);
@@ -240,7 +247,7 @@ public class ChangeStreamTests {
 
 		template.save(replacement);
 
-		awaitMessages(messageListener);
+		awaitMessages(messageListener, 1);
 
 		List<User> messageBodies = messageListener.getMessages().stream().map(Message::getBody)
 				.collect(Collectors.toList());
@@ -256,6 +263,7 @@ public class ChangeStreamTests {
 				.collection("user") //
 				.publishTo(messageListener) //
 				.filter(new Document("$match", new Document("fullDocument.user_name", "sugarSplashy"))) //
+				.maxAwaitTime(Duration.ofMillis(10)) //
 				.build();
 
 		Subscription subscription = container.register(request, User.class);
@@ -265,7 +273,7 @@ public class ChangeStreamTests {
 		template.save(sugarSplashy);
 		template.save(huffyFluffy);
 
-		awaitMessages(messageListener);
+		awaitMessages(messageListener, 1);
 
 		List<User> messageBodies = messageListener.getMessages().stream().map(Message::getBody)
 				.collect(Collectors.toList());
@@ -277,7 +285,9 @@ public class ChangeStreamTests {
 	public void resumesCorrectly() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener1 = new CollectingMessageListener<>();
-		Subscription subscription1 = container.register(new ChangeStreamRequest<>(messageListener1, () -> "user"),
+		Subscription subscription1 = container.register(
+				new ChangeStreamRequest<>(messageListener1,
+						new ChangeStreamRequestOptions(null, "user", Duration.ofMillis(10), ChangeStreamOptions.builder().build())),
 				User.class);
 
 		awaitSubscription(subscription1);
@@ -292,12 +302,12 @@ public class ChangeStreamTests {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener2 = new CollectingMessageListener<>();
 		ChangeStreamRequest<User> subSequentRequest = ChangeStreamRequest.builder().collection("user")
-				.publishTo(messageListener2).resumeToken(resumeToken).build();
+				.publishTo(messageListener2).resumeToken(resumeToken).maxAwaitTime(Duration.ofMillis(10)).build();
 
 		Subscription subscription2 = container.register(subSequentRequest, User.class);
 		awaitSubscription(subscription2);
 
-		awaitMessages(messageListener2);
+		awaitMessages(messageListener2, 2);
 
 		List<User> messageBodies = messageListener2.getMessages().stream().map(Message::getBody)
 				.collect(Collectors.toList());
@@ -309,7 +319,8 @@ public class ChangeStreamTests {
 	public void readsAndConvertsMessageBodyCorrectly() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
-		ChangeStreamRequest<User> request = new ChangeStreamRequest<>(messageListener, () -> "user");
+		ChangeStreamRequest<User> request = new ChangeStreamRequest<>(messageListener,
+				new ChangeStreamRequestOptions(null, "user", Duration.ofMillis(10), ChangeStreamOptions.builder().build()));
 
 		Subscription subscription = container.register(request, User.class);
 		awaitSubscription(subscription);
@@ -330,7 +341,8 @@ public class ChangeStreamTests {
 	public void readsAndConvertsUpdateMessageBodyCorrectly() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
-		ChangeStreamRequest<User> request = new ChangeStreamRequest<>(messageListener, () -> "user");
+		ChangeStreamRequest<User> request = new ChangeStreamRequest<>(messageListener,
+				new ChangeStreamRequestOptions(null, "user", Duration.ofMillis(10), ChangeStreamOptions.builder().build()));
 
 		Subscription subscription = container.register(request, User.class);
 		awaitSubscription(subscription);
@@ -349,7 +361,8 @@ public class ChangeStreamTests {
 	public void readsOnlyDiffForUpdateWhenNotMappedToDomainType() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, Document> messageListener = new CollectingMessageListener<>();
-		ChangeStreamRequest<Document> request = new ChangeStreamRequest<>(messageListener, () -> "user");
+		ChangeStreamRequest<Document> request = new ChangeStreamRequest<>(messageListener,
+				new ChangeStreamRequestOptions(null, "user", Duration.ofMillis(10), ChangeStreamOptions.builder().build()));
 
 		Subscription subscription = container.register(request, Document.class);
 		awaitSubscription(subscription);
@@ -372,6 +385,7 @@ public class ChangeStreamTests {
 		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
 				.collection("user") //
 				.fullDocumentLookup(FullDocument.DEFAULT) //
+				.maxAwaitTime(Duration.ofMillis(10)) //
 				.publishTo(messageListener).build();
 
 		Subscription subscription = container.register(request, User.class);
@@ -395,6 +409,7 @@ public class ChangeStreamTests {
 		ChangeStreamRequest<Document> request = ChangeStreamRequest.builder() //
 				.collection("user") //
 				.fullDocumentLookup(FullDocument.UPDATE_LOOKUP) //
+				.maxAwaitTime(Duration.ofMillis(10)) //
 				.publishTo(messageListener).build();
 
 		Subscription subscription = container.register(request, Document.class);
@@ -417,7 +432,9 @@ public class ChangeStreamTests {
 	public void resumeAtTimestampCorrectly() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener1 = new CollectingMessageListener<>();
-		Subscription subscription1 = container.register(new ChangeStreamRequest<>(messageListener1, () -> "user"),
+		Subscription subscription1 = container.register(
+				new ChangeStreamRequest<>(messageListener1,
+						new ChangeStreamRequestOptions(null, "user", Duration.ofMillis(10), ChangeStreamOptions.builder().build())),
 				User.class);
 
 		awaitSubscription(subscription1);
@@ -441,12 +458,13 @@ public class ChangeStreamTests {
 				.collection("user") //
 				.resumeAt(resumeAt) //
 				.publishTo(messageListener2) //
+				.maxAwaitTime(Duration.ofMillis(10)) //
 				.build();
 
 		Subscription subscription2 = container.register(subSequentRequest, User.class);
 		awaitSubscription(subscription2);
 
-		awaitMessages(messageListener2);
+		awaitMessages(messageListener2, 2);
 
 		List<User> messageBodies = messageListener2.getMessages().stream().map(Message::getBody)
 				.collect(Collectors.toList());
@@ -461,6 +479,7 @@ public class ChangeStreamTests {
 		ChangeStreamRequest<User> request = ChangeStreamRequest.builder(messageListener) //
 				.collection("user") //
 				.filter(newAggregation(User.class, match(where("address.street").is("flower street")))) //
+				.maxAwaitTime(Duration.ofMillis(10)) //
 				.build();
 
 		Subscription subscription = container.register(request, User.class);
@@ -495,6 +514,7 @@ public class ChangeStreamTests {
 		ChangeStreamRequest<User> request = ChangeStreamRequest.builder(messageListener) //
 				.collection("user") //
 				.filter(newAggregation(User.class, match(where("updateDescription.updatedFields.address").exists(true)))) //
+				.maxAwaitTime(Duration.ofMillis(10)) //
 				.fullDocumentLookup(FullDocument.UPDATE_LOOKUP).build();
 
 		Subscription subscription = container.register(request, User.class);

@@ -22,7 +22,9 @@ import static org.springframework.data.mongodb.core.validation.Validator.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
@@ -74,6 +76,11 @@ public class MongoTemplateValidationTests {
 		@Override
 		protected boolean autoIndexCreation() {
 			return false;
+		}
+
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+			return Collections.emptySet();
 		}
 	}
 

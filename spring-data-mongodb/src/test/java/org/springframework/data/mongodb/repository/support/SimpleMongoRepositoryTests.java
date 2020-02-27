@@ -16,7 +16,6 @@
 package org.springframework.data.mongodb.repository.support;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.assertj.core.api.Assumptions.*;
 import static org.springframework.data.domain.ExampleMatcher.*;
 
 import java.util.ArrayList;
@@ -28,18 +27,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.ExampleMatcher.*;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.MongoTransactionManager;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.query.Collation;
@@ -48,11 +44,12 @@ import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.mongodb.repository.User;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
-import org.springframework.data.mongodb.test.util.MongoVersion;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
-import org.springframework.data.mongodb.test.util.ReplicaSet;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
+import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
+import org.springframework.data.mongodb.test.util.MongoServerCondition;
+import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
+import org.springframework.data.mongodb.test.util.MongoTestTemplate;
+import org.springframework.data.mongodb.test.util.Template;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -62,22 +59,22 @@ import org.springframework.transaction.support.TransactionTemplate;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@RunWith(SpringRunner.class)
-@ContextConfiguration("classpath:infrastructure.xml")
+@ExtendWith({ MongoTemplateExtension.class, MongoServerCondition.class })
 public class SimpleMongoRepositoryTests {
 
-	@Autowired private MongoTemplate template;
-	public @Rule MongoVersionRule mongoVersion = MongoVersionRule.any();
+	@Template(initialEntitySet = Person.class) //
+	static MongoTestTemplate template;
 
 	private Person oliver, dave, carter, boyd, stefan, leroi, alicia;
 	private List<Person> all;
 
 	private MongoEntityInformation<Person, String> personEntityInformation = new CustomizedPersonInformation();
-	private SimpleMongoRepository<Person, String> repository;
+	private SimpleMongoRepository<Person, String> repository = new SimpleMongoRepository<>(personEntityInformation,
+			template);
 
-	@Before
+	@BeforeEach
 	public void setUp() {
-		repository = new SimpleMongoRepository<Person, String>(personEntityInformation, template);
+
 		repository.deleteAll();
 
 		oliver = new Person("Oliver August", "Matthews", 4);
@@ -393,10 +390,9 @@ public class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-2130
-	@MongoVersion(asOf = "4.0")
+	@EnableIfReplicaSetAvailable
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
 	public void countShouldBePossibleInTransaction() {
-
-		assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
 
 		MongoTransactionManager txmgr = new MongoTransactionManager(template.getMongoDbFactory());
 		TransactionTemplate tt = new TransactionTemplate(txmgr);
@@ -418,10 +414,9 @@ public class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-2130
-	@MongoVersion(asOf = "4.0")
+	@EnableIfReplicaSetAvailable
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
 	public void existsShouldBePossibleInTransaction() {
-
-		assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
 
 		MongoTransactionManager txmgr = new MongoTransactionManager(template.getMongoDbFactory());
 		TransactionTemplate tt = new TransactionTemplate(txmgr);

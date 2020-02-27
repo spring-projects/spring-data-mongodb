@@ -21,12 +21,15 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
@@ -47,7 +50,7 @@ public class ComplexIdRepositoryIntegrationTests {
 	static @Client MongoClient mongoClient;
 
 	@Configuration
-	@EnableMongoRepositories
+	@EnableMongoRepositories(includeFilters=@Filter(type = FilterType.ASSIGNABLE_TYPE, classes = UserWithComplexIdRepository.class))
 	static class Config extends AbstractMongoClientConfiguration {
 
 		@Override
@@ -60,6 +63,10 @@ public class ComplexIdRepositoryIntegrationTests {
 			return mongoClient;
 		}
 
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+			return Collections.emptySet();
+		}
 	}
 
 	@Autowired UserWithComplexIdRepository repo;

@@ -20,34 +20,25 @@ import static org.assertj.core.api.Assertions.*;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.index.TextIndexDefinition.TextIndexDefinitionBuilder;
 import org.springframework.data.mongodb.core.index.TextIndexed;
 import org.springframework.data.mongodb.core.mapping.TextScore;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactory;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
-import org.springframework.data.util.Version;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.util.ClassUtils;
+import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
+import org.springframework.data.mongodb.test.util.MongoTestTemplate;
+import org.springframework.data.mongodb.test.util.Template;
 import org.springframework.util.ObjectUtils;
-
-import com.mongodb.client.MongoClient;
 
 /**
  * Integration tests for text searches on repository.
@@ -56,11 +47,8 @@ import com.mongodb.client.MongoClient;
  * @author Oliver Gierke
  * @author Mark Paluch
  */
-@RunWith(SpringRunner.class)
-@ContextConfiguration
+@ExtendWith(MongoTemplateExtension.class)
 public class MongoRepositoryTextSearchIntegrationTests {
-
-	public static @ClassRule MongoVersionRule versionRule = MongoVersionRule.atLeast(new Version(2, 6, 0));
 
 	private static final FullTextDocument PASSENGER_57 = new FullTextDocument("1", "Passenger 57",
 			"Passenger 57 is an action film that stars Wesley Snipes and Bruce Payne.");
@@ -69,20 +57,21 @@ public class MongoRepositoryTextSearchIntegrationTests {
 	private static final FullTextDocument DROP_ZONE = new FullTextDocument("3", "Drop Zone",
 			"Drop Zone is an action film featuring Wesley Snipes and Gary Busey.");
 
-	@Autowired MongoTemplate template;
-	FullTextRepository repo;
+	@Template(initialEntitySet = FullTextDocument.class) //
+	static MongoTestTemplate template;
 
-	@Before
+	FullTextRepository repo = new MongoRepositoryFactory(this.template).getRepository(FullTextRepository.class);
+
+	@BeforeEach
 	public void setUp() {
 
 		template.indexOps(FullTextDocument.class)
 				.ensureIndex(new TextIndexDefinitionBuilder().onField("title").onField("content").build());
-		this.repo = new MongoRepositoryFactory(this.template).getRepository(FullTextRepository.class);
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
-		template.dropCollection(FullTextDocument.class);
+		template.flush();
 	}
 
 	@Test // DATAMONGO-973
@@ -191,21 +180,6 @@ public class MongoRepositoryTextSearchIntegrationTests {
 
 	private void initRepoWithDefaultDocuments() {
 		repo.saveAll(Arrays.asList(PASSENGER_57, DEMOLITION_MAN, DROP_ZONE));
-	}
-
-	@org.springframework.context.annotation.Configuration
-	public static class Configuration extends AbstractMongoClientConfiguration {
-
-		@Override
-		protected String getDatabaseName() {
-			return ClassUtils.getShortNameAsProperty(MongoRepositoryTextSearchIntegrationTests.class);
-		}
-
-		@Override
-		public MongoClient mongoClient() {
-			return MongoTestUtils.client();
-		}
-
 	}
 
 	static class FullTextDocument {

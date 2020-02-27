@@ -23,7 +23,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.ImportResource;
 import org.springframework.data.mongodb.repository.User;
 import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
@@ -40,7 +42,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 public class CustomReactiveRepositoryImplementationTests {
 
 	@Configuration
-	@EnableReactiveMongoRepositories
+	@EnableReactiveMongoRepositories(includeFilters=@Filter(type = FilterType.ASSIGNABLE_TYPE, classes = CustomReactiveMongoRepository.class))
 	@ImportResource("classpath:reactive-infrastructure.xml")
 	static class Config {}
 

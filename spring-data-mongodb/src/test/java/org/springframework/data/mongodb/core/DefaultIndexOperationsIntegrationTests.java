@@ -16,27 +16,26 @@
 package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.assertj.core.api.Assumptions.*;
 import static org.springframework.data.mongodb.core.index.PartialIndexFilter.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import org.bson.BsonDocument;
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
 import org.springframework.data.mongodb.core.index.IndexInfo;
+import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Collation.CaseFirst;
-import org.springframework.data.util.Version;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
+import org.springframework.data.mongodb.test.util.MongoTestTemplate;
+import org.springframework.data.mongodb.test.util.Template;
 import org.springframework.util.ObjectUtils;
 
 import com.mongodb.client.MongoCollection;
@@ -49,43 +48,27 @@ import com.mongodb.client.model.IndexOptions;
  * @author Oliver Gierke
  * @author Mark Paluch
  */
-@RunWith(SpringRunner.class)
-@ContextConfiguration("classpath:infrastructure.xml")
+@ExtendWith(MongoTemplateExtension.class)
 public class DefaultIndexOperationsIntegrationTests {
 
-	private static final Version THREE_DOT_TWO = new Version(3, 2);
-	private static final Version THREE_DOT_FOUR = new Version(3, 4);
-	private static Version mongoVersion;
+	static final String COLLECTION_NAME = "default-index-operations-tests";
 	static final org.bson.Document GEO_SPHERE_2D = new org.bson.Document("loaction", "2dsphere");
 
-	@Autowired MongoTemplate template;
-	DefaultIndexOperations indexOps;
-	MongoCollection<org.bson.Document> collection;
+	@Template //
+	static MongoTestTemplate template;
 
-	@Before
+	MongoCollection<org.bson.Document> collection = template.getCollection(COLLECTION_NAME);
+	IndexOperations indexOps = template.indexOps(COLLECTION_NAME);
+
+	@BeforeEach
 	public void setUp() {
-
-		queryMongoVersionIfNecessary();
-		String collectionName = this.template.getCollectionName(DefaultIndexOperationsIntegrationTestsSample.class);
-
-		this.collection = this.template.getDb().getCollection(collectionName, Document.class);
-		this.collection.dropIndexes();
-		this.indexOps = new DefaultIndexOperations(template.getMongoDbFactory(), collectionName,
-				new QueryMapper(template.getConverter()));
-	}
-
-	private void queryMongoVersionIfNecessary() {
-
-		if (mongoVersion == null) {
-			Document result = template.executeCommand("{ buildInfo: 1 }");
-			mongoVersion = Version.parse(result.get("version").toString());
-		}
+		template.dropIndexes(COLLECTION_NAME);
 	}
 
 	@Test // DATAMONGO-1008
 	public void getIndexInfoShouldBeAbleToRead2dsphereIndex() {
 
-		collection.createIndex(GEO_SPHERE_2D);
+		template.getCollection(COLLECTION_NAME).createIndex(GEO_SPHERE_2D);
 
 		IndexInfo info = findAndReturnIndexInfo(GEO_SPHERE_2D);
 		assertThat(info.getIndexFields().get(0).isGeo()).isEqualTo(true);
@@ -93,8 +76,6 @@ public class DefaultIndexOperationsIntegrationTests {
 
 	@Test // DATAMONGO-1467, DATAMONGO-2198
 	public void shouldApplyPartialFilterCorrectly() {
-
-		assumeThat(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO)).isTrue();
 
 		IndexDefinition id = new Index().named("partial-with-criteria").on("k3y", Direction.ASC)
 				.partial(of(where("q-t-y").gte(10)));
@@ -109,12 +90,10 @@ public class DefaultIndexOperationsIntegrationTests {
 	@Test // DATAMONGO-1467, DATAMONGO-2198
 	public void shouldApplyPartialFilterWithMappedPropertyCorrectly() {
 
-		assumeThat(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO)).isTrue();
-
 		IndexDefinition id = new Index().named("partial-with-mapped-criteria").on("k3y", Direction.ASC)
 				.partial(of(where("quantity").gte(10)));
 
-		indexOps.ensureIndex(id);
+		template.indexOps(DefaultIndexOperationsIntegrationTestsSample.class).ensureIndex(id);
 
 		IndexInfo info = findAndReturnIndexInfo(indexOps.getIndexInfo(), "partial-with-mapped-criteria");
 		assertThat(Document.parse(info.getPartialFilterExpression()))
@@ -123,8 +102,6 @@ public class DefaultIndexOperationsIntegrationTests {
 
 	@Test // DATAMONGO-1467, DATAMONGO-2198
 	public void shouldApplyPartialDBOFilterCorrectly() {
-
-		assumeThat(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO)).isTrue();
 
 		IndexDefinition id = new Index().named("partial-with-dbo").on("k3y", Direction.ASC)
 				.partial(of(new org.bson.Document("qty", new org.bson.Document("$gte", 10))));
@@ -139,13 +116,10 @@ public class DefaultIndexOperationsIntegrationTests {
 	@Test // DATAMONGO-1467, DATAMONGO-2198
 	public void shouldFavorExplicitMappingHintViaClass() {
 
-		assumeThat(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_TWO)).isTrue();
-
 		IndexDefinition id = new Index().named("partial-with-inheritance").on("k3y", Direction.ASC)
 				.partial(of(where("age").gte(10)));
 
-		indexOps = new DefaultIndexOperations(template.getMongoDbFactory(),
-				this.template.getCollectionName(DefaultIndexOperationsIntegrationTestsSample.class),
+		indexOps = new DefaultIndexOperations(template.getMongoDbFactory(), COLLECTION_NAME,
 				new QueryMapper(template.getConverter()), MappingToSameCollection.class);
 
 		indexOps.ensureIndex(id);
@@ -173,14 +147,11 @@ public class DefaultIndexOperationsIntegrationTests {
 	@Test // DATAMONGO-1518
 	public void shouldCreateIndexWithCollationCorrectly() {
 
-		assumeThat(mongoVersion.isGreaterThanOrEqualTo(THREE_DOT_FOUR)).isTrue();
-
 		IndexDefinition id = new Index().named("with-collation").on("xyz", Direction.ASC)
 				.collation(Collation.of("de_AT").caseFirst(CaseFirst.off()));
 
-		new DefaultIndexOperations(template.getMongoDbFactory(),
-				this.template.getCollectionName(DefaultIndexOperationsIntegrationTestsSample.class),
-				new QueryMapper(template.getConverter()), MappingToSameCollection.class);
+		new DefaultIndexOperations(template.getMongoDbFactory(), COLLECTION_NAME, new QueryMapper(template.getConverter()),
+				MappingToSameCollection.class);
 
 		indexOps.ensureIndex(id);
 

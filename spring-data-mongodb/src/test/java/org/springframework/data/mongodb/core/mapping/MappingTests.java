@@ -29,22 +29,26 @@ import java.util.Map;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
-import org.junit.Test;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.MongoCollectionUtils;
-import org.springframework.data.mongodb.config.AbstractIntegrationTests;
 import org.springframework.data.mongodb.core.CollectionCallback;
-import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
+import org.springframework.data.mongodb.test.util.MongoTestTemplate;
+import org.springframework.data.mongodb.test.util.Template;
 
 import com.mongodb.MongoException;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 
 /**
@@ -53,9 +57,23 @@ import com.mongodb.client.MongoCollection;
  * @author Thomas Darimont
  * @author Mark Paluch
  */
-public class MappingTests extends AbstractIntegrationTests {
+@ExtendWith(MongoTemplateExtension.class)
+public class MappingTests {
 
-	@Autowired MongoOperations template;
+	static final String DB_NAME = "mapping-tests";
+
+	static @Client MongoClient client;
+
+	@Template(database = DB_NAME,
+			initialEntitySet = { PersonWithDbRef.class, GeoLocation.class, PersonPojoStringId.class, Account.class,
+					DetectedCollectionWithIndex.class, Item.class, Container.class, Person.class, PersonCustomCollection1.class,
+					GeneratedId.class, PersonWithObjectId.class, PersonCustomIdName.class, PersonMapProperty.class }) //
+	static MongoTestTemplate template;
+
+	@AfterEach
+	void afterEach() {
+		template.flush();
+	}
 
 	@Test
 	public void testGeneratedId() {
@@ -164,9 +182,11 @@ public class MappingTests extends AbstractIntegrationTests {
 		assertThat(result.get(0).getAccounts()).isNotNull();
 	}
 
-	@Test(expected = DuplicateKeyException.class)
+	@Test
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void testUniqueIndex() {
+
+		MongoTemplate template = new MongoTemplate(client, DB_NAME);
 
 		Address addr = new Address();
 		addr.setLines(new String[] { "1234 W. 1st Street", "Apt. 12" });
@@ -177,7 +197,7 @@ public class MappingTests extends AbstractIntegrationTests {
 		Person p1 = new Person(1234567890, "John", "Doe", 37, addr);
 		Person p2 = new Person(1234567890, "Jane", "Doe", 38, addr);
 
-		template.insertAll(Arrays.asList(p1, p2));
+		assertThatExceptionOfType(DuplicateKeyException.class).isThrownBy(() -> template.insertAll(Arrays.asList(p1, p2)));
 	}
 
 	@Test
@@ -206,6 +226,9 @@ public class MappingTests extends AbstractIntegrationTests {
 
 	@Test
 	public void testIndexesCreatedInRightCollection() {
+
+		MongoTemplate template = new MongoTemplate(client, DB_NAME);
+
 		CustomCollectionWithIndex ccwi = new CustomCollectionWithIndex("test");
 		template.insert(ccwi);
 

@@ -23,6 +23,8 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.Duration;
+import java.util.Collections;
+import java.util.Set;
 
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.AfterAll;
@@ -237,6 +239,11 @@ public class ReactiveTransactionIntegrationTests {
 		@Bean
 		public ReactiveMongoTransactionManager transactionManager(ReactiveMongoDatabaseFactory factory) {
 			return new ReactiveMongoTransactionManager(factory);
+		}
+
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() {
+			return Collections.singleton(Person.class);
 		}
 	}
 

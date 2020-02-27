@@ -43,20 +43,16 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.assertj.core.api.Assumptions;
 import org.bson.BsonDocument;
 import org.bson.BsonTimestamp;
 import org.bson.Document;
 import org.bson.types.ObjectId;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -67,6 +63,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.mapping.MappingException;
+import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoTemplateTests.Address;
 import org.springframework.data.mongodb.core.MongoTemplateTests.PersonWithConvertedId;
 import org.springframework.data.mongodb.core.MongoTemplateTests.VersionedPerson;
@@ -80,14 +77,15 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.data.mongodb.test.util.MongoVersion;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
-import org.springframework.data.mongodb.test.util.ReplicaSet;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
+import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
+import org.springframework.data.mongodb.test.util.MongoServerCondition;
+import org.springframework.data.mongodb.test.util.ReactiveMongoTestTemplate;
 
 import com.mongodb.WriteConcern;
+import com.mongodb.reactivestreams.client.MongoClient;
 
 /**
  * Integration test for {@link MongoTemplate}.
@@ -95,33 +93,36 @@ import com.mongodb.WriteConcern;
  * @author Mark Paluch
  * @author Christoph Strobl
  */
-@RunWith(SpringRunner.class)
-@ContextConfiguration("classpath:reactive-infrastructure.xml")
+@ExtendWith({ MongoClientExtension.class, MongoServerCondition.class })
 public class ReactiveMongoTemplateTests {
 
-	@Autowired SimpleReactiveMongoDatabaseFactory factory;
-	@Autowired ReactiveMongoTemplate template;
-	@Autowired ConfigurableApplicationContext context;
-	@Rule public MongoVersionRule mongoVersion = MongoVersionRule.any();
+	public static final String DB_NAME = "reactive-mongo-template-tests";
+	static @Client MongoClient client;
 
-	@Before
+	ConfigurableApplicationContext context = new GenericApplicationContext();
+	ReactiveMongoTestTemplate template = new ReactiveMongoTestTemplate(cfg -> {
+
+		cfg.configureDatabaseFactory(it -> {
+
+			it.client(client);
+			it.defaultDb(DB_NAME);
+		});
+
+		cfg.configureApplicationContext(it -> {
+			it.applicationContext(context);
+		});
+	});
+
+	ReactiveMongoDatabaseFactory factory = template.getDatabaseFactory();
+
+	@AfterEach
 	public void setUp() {
 
-		Flux.merge(template.dropCollection("people"), //
-				template.dropCollection("personX"), //
-				template.dropCollection("collection"), //
-				template.dropCollection(Person.class), //
-				template.dropCollection(Venue.class), //
-				template.dropCollection(PersonWithAList.class), //
-				template.dropCollection(PersonWithIdPropertyOfTypeObjectId.class), //
-				template.dropCollection(PersonWithVersionPropertyOfTypeInteger.class), //
-				template.dropCollection(Sample.class), //
-				template.dropCollection(MyPerson.class)) //
-				.as(StepVerifier::create).verifyComplete();
+		template.flush().as(StepVerifier::create).verifyComplete();
+		template.flush("people", "collection").as(StepVerifier::create).verifyComplete();
+		template.dropCollection(Person.class).as(StepVerifier::create).verifyComplete();
+		template.dropCollection("personX").as(StepVerifier::create).verifyComplete();
 	}
-
-	@After
-	public void cleanUp() {}
 
 	@Test // DATAMONGO-1444
 	public void insertSetsId() {
@@ -952,7 +953,7 @@ public class ReactiveMongoTemplateTests {
 		assertThat(dbObject.containsKey("_id")).isTrue();
 	}
 
-	@Test(expected = MappingException.class) // DATAMONGO-1444, DATAMONGO-1730
+	@Test // DATAMONGO-1444, DATAMONGO-1730
 	public void rejectsPlainObjectWithOutExplicitCollection() {
 
 		Document dbObject = new Document("foo", "bar");
@@ -962,9 +963,8 @@ public class ReactiveMongoTemplateTests {
 				.expectNextCount(1) //
 				.verifyComplete();
 
-		template.findById(dbObject.get("_id"), Document.class) //
-				.as(StepVerifier::create) //
-				.verifyError(MappingException.class);
+		assertThatExceptionOfType(MappingException.class)
+				.isThrownBy(() -> template.findById(dbObject.get("_id"), Document.class));
 	}
 
 	@Test // DATAMONGO-1444
@@ -1363,10 +1363,9 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1803
-	@Ignore("Heavily relying on timing assumptions. Cannot test message resumption properly. Too much race for too little time in between.")
+	@Disabled("Heavily relying on timing assumptions. Cannot test message resumption properly. Too much race for too little time in between.")
+	@EnableIfReplicaSetAvailable
 	public void changeStreamEventsShouldBeEmittedCorrectly() throws InterruptedException {
-
-		Assumptions.assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
 
 		template.createCollection(Person.class).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
@@ -1396,10 +1395,9 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1803
-	@Ignore("Heavily relying on timing assumptions. Cannot test message resumption properly. Too much race for too little time in between.")
+	@Disabled("Heavily relying on timing assumptions. Cannot test message resumption properly. Too much race for too little time in between.")
+	@EnableIfReplicaSetAvailable
 	public void changeStreamEventsShouldBeConvertedCorrectly() throws InterruptedException {
-
-		Assumptions.assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
 
 		template.createCollection(Person.class).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
@@ -1429,10 +1427,9 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1803
-	@Ignore("Heavily relying on timing assumptions. Cannot test message resumption properly. Too much race for too little time in between.")
+	@Disabled("Heavily relying on timing assumptions. Cannot test message resumption properly. Too much race for too little time in between.")
+	@EnableIfReplicaSetAvailable
 	public void changeStreamEventsShouldBeFilteredCorrectly() throws InterruptedException {
-
-		Assumptions.assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
 
 		template.createCollection(Person.class).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
@@ -1463,9 +1460,8 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1803
+	@EnableIfReplicaSetAvailable
 	public void mapsReservedWordsCorrectly() throws InterruptedException {
-
-		Assumptions.assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
 
 		template.createCollection(Person.class).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
@@ -1506,10 +1502,9 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1803
-	@Ignore("Heavily relying on timing assumptions. Cannot test message resumption properly. Too much race for too little time in between.")
+	@Disabled("Heavily relying on timing assumptions. Cannot test message resumption properly. Too much race for too little time in between.")
+	@EnableIfReplicaSetAvailable
 	public void changeStreamEventsShouldBeResumedCorrectly() throws InterruptedException {
-
-		Assumptions.assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
 
 		template.createCollection(Person.class).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
@@ -1586,7 +1581,6 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-2189
-	@DirtiesContext
 	public void afterSaveEventContainsSavedObjectUsingInsert() {
 
 		AtomicReference<ImmutableVersioned> saved = createAfterSaveReference();
@@ -1602,7 +1596,6 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-2189
-	@DirtiesContext
 	public void afterSaveEventContainsSavedObjectUsingInsertAll() {
 
 		AtomicReference<ImmutableVersioned> saved = createAfterSaveReference();
@@ -1618,10 +1611,9 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-2012
-	@MongoVersion(asOf = "4.0")
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
+	@EnableIfReplicaSetAvailable
 	public void watchesDatabaseCorrectly() throws InterruptedException {
-
-		Assumptions.assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
 
 		template.createCollection(Person.class).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 		template.createCollection("personX").as(StepVerifier::create).expectNextCount(1).verifyComplete();
@@ -1660,10 +1652,9 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-2012, DATAMONGO-2113
-	@MongoVersion(asOf = "4.0")
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
+	@EnableIfReplicaSetAvailable
 	public void resumesAtTimestampCorrectly() throws InterruptedException {
-
-		Assumptions.assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
 
 		template.createCollection(Person.class).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
@@ -1711,10 +1702,9 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-2115
-	@MongoVersion(asOf = "4.0")
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
+	@EnableIfReplicaSetAvailable
 	public void resumesAtBsonTimestampCorrectly() throws InterruptedException {
-
-		Assumptions.assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
 
 		template.createCollection(Person.class).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 

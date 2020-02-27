@@ -47,9 +47,9 @@ public class MongoTestUtils {
 	private static final Environment ENV = new StandardEnvironment();
 	private static final Duration DEFAULT_TIMEOUT = Duration.ofMillis(10);
 
-	public static final String CONNECTION_STRING = "mongodb://127.0.0.1:27017/?replicaSet=rs0&w=majority";
+	public static final String CONNECTION_STRING = "mongodb://127.0.0.1:27017/?replicaSet=rs0&w=majority&uuidrepresentation=javaLegacy";
 
-	private static final String CONNECTION_STRING_PATTERN = "mongodb://%s:%s/?w=majority";
+	private static final String CONNECTION_STRING_PATTERN = "mongodb://%s:%s/?w=majority&uuidrepresentation=javaLegacy";
 
 	private static final Version ANY = new Version(9999, 9999, 9999);
 
@@ -183,6 +183,15 @@ public class MongoTestUtils {
 				.delayElement(getTimeout()).then() //
 				.as(StepVerifier::create) //
 				.verifyComplete();
+	}
+
+	public static void flushCollection(String dbName, String collectionName,
+			com.mongodb.client.MongoClient client) {
+
+		com.mongodb.client.MongoDatabase database = client.getDatabase(dbName)
+				.withWriteConcern(WriteConcern.MAJORITY).withReadPreference(ReadPreference.primary());
+
+		database.getCollection(collectionName).deleteMany(new Document());
 	}
 
 	/**

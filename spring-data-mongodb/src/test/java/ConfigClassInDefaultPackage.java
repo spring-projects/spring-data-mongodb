@@ -15,6 +15,9 @@
  * limitations under the License.
  */
 
+import java.util.Collections;
+import java.util.Set;
+
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 
@@ -45,5 +48,10 @@ public class ConfigClassInDefaultPackage extends AbstractMongoClientConfiguratio
 	@Override
 	public MongoClient mongoClient() {
 		return MongoClients.create();
+	}
+
+	@Override
+	protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+		return Collections.emptySet();
 	}
 }

@@ -17,6 +17,9 @@ package org.springframework.data.mongodb.config;
 
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
+import java.util.Collections;
+import java.util.Set;
+
 import org.bson.Document;
 import org.junit.After;
 import org.junit.Before;
@@ -53,6 +56,11 @@ public abstract class AbstractIntegrationTests {
 		@Override
 		public MongoClient mongoClient() {
 			return MongoTestUtils.client();
+		}
+
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+			return Collections.emptySet();
 		}
 	}
 

@@ -31,29 +31,30 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.data.mongodb.test.util.Client;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
-
-import com.mongodb.client.MongoClient;
+import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
+import org.springframework.data.mongodb.test.util.MongoTestTemplate;
+import org.springframework.data.mongodb.test.util.Template;
 
 /**
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@ExtendWith(MongoClientExtension.class)
+@ExtendWith(MongoTemplateExtension.class)
 public class JsonSchemaQueryTests {
 
 	public static final String DATABASE_NAME = "json-schema-query-tests";
 
-	static @Client MongoClient client;
 	static @Client com.mongodb.reactivestreams.client.MongoClient reactiveClient;
 
-	MongoTemplate template;
+	@Template(database = DATABASE_NAME, initialEntitySet = Person.class) //
+	static MongoTestTemplate template;
+
 	Person jellyBelly, roseSpringHeart, kazmardBoombub;
 
 	@BeforeEach
 	public void setUp() {
 
-		template = new MongoTemplate(client, DATABASE_NAME);
+		template.flush();
 
 		jellyBelly = new Person();
 		jellyBelly.id = "1";

@@ -23,8 +23,9 @@ import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import com.mongodb.ServerAddress;
 
@@ -38,12 +39,12 @@ public class ServerAddressPropertyEditorUnitTests {
 
 	ServerAddressPropertyEditor editor;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		editor = new ServerAddressPropertyEditor();
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-454, DATAMONGO-1062
+	@Test // DATAMONGO-454, DATAMONGO-1062
 	public void rejectsAddressConfigWithoutASingleParsableAndResolvableServerAddress() {
 
 		String unknownHost1 = "gugu.nonexistant.example.org";
@@ -51,10 +52,12 @@ public class ServerAddressPropertyEditorUnitTests {
 
 		assertUnresolveableHostnames(unknownHost1, unknownHost2);
 
-		editor.setAsText(unknownHost1 + "," + unknownHost2);
+		assertThatExceptionOfType(IllegalArgumentException.class)
+				.isThrownBy(() -> editor.setAsText(unknownHost1 + "," + unknownHost2));
 	}
 
 	@Test // DATAMONGO-454
+	@EnabledIfSystemProperty(named = "user.name", matches = "jenkins")
 	public void skipsUnparsableAddressIfAtLeastOneIsParsable() throws UnknownHostException {
 
 		editor.setAsText("foo, localhost");

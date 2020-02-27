@@ -18,6 +18,9 @@ package org.springframework.data.mongodb.repository.support;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
+import java.util.Collections;
+import java.util.Set;
+
 import reactor.test.StepVerifier;
 
 import org.junit.Before;
@@ -56,6 +59,11 @@ public class SimpleReactiveMongoRepositoryVersionedEntityTests {
 		@Override
 		protected String getDatabaseName() {
 			return "database";
+		}
+
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() {
+			return Collections.singleton(VersionedPerson.class);
 		}
 	}
 

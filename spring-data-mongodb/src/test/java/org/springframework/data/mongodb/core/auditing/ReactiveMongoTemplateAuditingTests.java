@@ -23,6 +23,8 @@ import reactor.util.function.Tuples;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -70,6 +72,11 @@ public class ReactiveMongoTemplateAuditingTests {
 		@Override
 		protected String getDatabaseName() {
 			return DB_NAME;
+		}
+
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() {
+			return Collections.emptySet();
 		}
 	}
 

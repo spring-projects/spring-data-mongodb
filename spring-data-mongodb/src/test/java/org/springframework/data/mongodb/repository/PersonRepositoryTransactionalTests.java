@@ -19,7 +19,9 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.test.util.MongoTestUtils.*;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.bson.Document;
@@ -29,7 +31,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoTransactionManager;
@@ -68,7 +72,7 @@ public class PersonRepositoryTransactionalTests {
 	static @ReplSetClient MongoClient mongoClient;
 
 	@Configuration
-	@EnableMongoRepositories
+	@EnableMongoRepositories(includeFilters=@Filter(type = FilterType.ASSIGNABLE_TYPE, classes = PersonRepository.class))
 	static class Config extends AbstractMongoClientConfiguration {
 
 		@Bean
@@ -84,6 +88,11 @@ public class PersonRepositoryTransactionalTests {
 		@Bean
 		MongoTransactionManager txManager(MongoDatabaseFactory dbFactory) {
 			return new MongoTransactionManager(dbFactory);
+		}
+
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+			return Collections.singleton(Person.class);
 		}
 	}
 

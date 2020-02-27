@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.messaging;
 
+import java.util.concurrent.TimeUnit;
+
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
@@ -73,6 +75,10 @@ class TailableCursorTask extends CursorReadingTask<Document, Object> {
 
 		if (collation != null) {
 			iterable = iterable.collation(collation);
+		}
+
+		if (!options.maxAwaitTime().isZero()) {
+			iterable = iterable.maxAwaitTime(options.maxAwaitTime().toMillis(), TimeUnit.MILLISECONDS);
 		}
 
 		return iterable.iterator();

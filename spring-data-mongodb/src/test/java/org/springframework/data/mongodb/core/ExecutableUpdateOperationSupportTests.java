@@ -31,10 +31,10 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.data.mongodb.test.util.Client;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
+import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
+import org.springframework.data.mongodb.test.util.MongoTestTemplate;
+import org.springframework.data.mongodb.test.util.Template;
 
-import com.mongodb.client.MongoClient;
 import com.mongodb.client.result.UpdateResult;
 
 /**
@@ -43,12 +43,13 @@ import com.mongodb.client.result.UpdateResult;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@ExtendWith(MongoClientExtension.class)
+@ExtendWith(MongoTemplateExtension.class)
 public class ExecutableUpdateOperationSupportTests {
 
 	private static final String STAR_WARS = "star-wars";
-	static @Client MongoClient mongoClient;
-	MongoTemplate template;
+
+	@Template(initialEntitySet = { Human.class, Jedi.class, Person.class }) //
+	static MongoTestTemplate template;
 
 	Person han;
 	Person luke;
@@ -56,9 +57,7 @@ public class ExecutableUpdateOperationSupportTests {
 	@BeforeEach
 	public void setUp() {
 
-		template = new MongoTemplate(
-				new SimpleMongoClientDatabaseFactory(mongoClient, "ExecutableUpdateOperationSupportTests"));
-		template.dropCollection(STAR_WARS);
+		template.flush();
 
 		han = new Person();
 		han.firstname = "han";

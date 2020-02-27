@@ -27,7 +27,6 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
@@ -39,34 +38,25 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
-import org.springframework.data.mongodb.test.util.MongoClientExtension;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
+import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
+import org.springframework.data.mongodb.test.util.MongoTestTemplate;
+import org.springframework.data.mongodb.test.util.Template;
 
-import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 
 /**
  * @author Christoph Strobl
  */
-@ExtendWith({ MongoClientExtension.class })
+@ExtendWith({ MongoTemplateExtension.class })
 class MongoTemplateUpdateTests {
 
-	static final String DB_NAME = "update-test";
-
-	static @Client MongoClient client;
-
-	MongoTemplate template;
+	@Template(initialEntitySet = { Score.class, Versioned.class, Book.class }) //
+	static MongoTestTemplate template;
 
 	@BeforeEach
 	void setUp() {
-
-		template = new MongoTemplate(new SimpleMongoClientDatabaseFactory(client, DB_NAME));
-
-		MongoTestUtils.createOrReplaceCollection(DB_NAME, template.getCollectionName(Score.class), client);
-		MongoTestUtils.createOrReplaceCollection(DB_NAME, template.getCollectionName(Versioned.class), client);
-		MongoTestUtils.createOrReplaceCollection(DB_NAME, template.getCollectionName(Book.class), client);
+		template.flush();
 	}
 
 	@Test // DATAMONGO-2331
@@ -305,7 +295,7 @@ class MongoTemplateUpdateTests {
 	}
 
 	private MongoCollection<org.bson.Document> collection(Class<?> type) {
-		return client.getDatabase(DB_NAME).getCollection(template.getCollectionName(type));
+		return template.getCollection(template.getCollectionName(type));
 	}
 
 	@Document("scores")

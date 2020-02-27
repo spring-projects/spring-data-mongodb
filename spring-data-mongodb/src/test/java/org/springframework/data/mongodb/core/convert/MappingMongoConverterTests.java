@@ -31,6 +31,7 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 import org.bson.Document;
@@ -48,6 +49,7 @@ import org.springframework.data.mongodb.test.util.MongoClientExtension;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
 
 /**
  * Integration tests for {@link MappingMongoConverter}.
@@ -58,7 +60,10 @@ import com.mongodb.client.MongoCollection;
 public class MappingMongoConverterTests {
 
 	public static final String DATABASE = "mapping-converter-tests";
+
 	static @Client MongoClient client;
+
+	MongoDatabaseFactory factory = new SimpleMongoClientDatabaseFactory(client, DATABASE);
 
 	MappingMongoConverter converter;
 	MongoMappingContext mappingContext;
@@ -67,12 +72,17 @@ public class MappingMongoConverterTests {
 	@BeforeEach
 	public void setUp() {
 
-		client.getDatabase(DATABASE).drop();
+		MongoDatabase database = client.getDatabase(DATABASE);
 
-		MongoDatabaseFactory factory = new SimpleMongoClientDatabaseFactory(client, DATABASE);
+		database.getCollection("samples").deleteMany(new Document());
+		database.getCollection("java-time-types").deleteMany(new Document());
 
 		dbRefResolver = spy(new DefaultDbRefResolver(factory));
+
 		mappingContext = new MongoMappingContext();
+		mappingContext.setInitialEntitySet(new HashSet<>(
+				Arrays.asList(WithLazyDBRefAsConstructorArg.class, WithLazyDBRef.class, WithJavaTimeTypes.class)));
+		mappingContext.setAutoIndexCreation(false);
 		mappingContext.afterPropertiesSet();
 
 		converter = new MappingMongoConverter(dbRefResolver, mappingContext);

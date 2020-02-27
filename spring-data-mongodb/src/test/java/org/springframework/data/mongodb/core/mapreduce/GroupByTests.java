@@ -21,18 +21,15 @@ import static org.springframework.data.mongodb.core.mapreduce.GroupBy.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import org.bson.Document;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
-import org.springframework.data.util.Version;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
+import org.springframework.data.mongodb.test.util.MongoServerCondition;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.mongodb.client.MongoCollection;
 
@@ -43,21 +40,17 @@ import com.mongodb.client.MongoCollection;
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
-@RunWith(SpringRunner.class)
+@ExtendWith({ SpringExtension.class, MongoServerCondition.class })
+@EnableIfMongoServerVersion(isLessThan = "4.1")
 @ContextConfiguration("classpath:infrastructure.xml")
 public class GroupByTests {
 
-	public static @ClassRule MongoVersionRule REQUIRES_AT_MOST_4_0 = MongoVersionRule.atMost(Version.parse("4.0.999"));
+	static final String GROUP_TEST_COLLECTION = "group_test_collection";
 
 	@Autowired MongoTemplate mongoTemplate;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
-		cleanDb();
-	}
-
-	@After
-	public void cleanUp() {
 		cleanDb();
 	}
 
@@ -96,7 +89,7 @@ public class GroupByTests {
 	public void simpleGroupFunction() {
 
 		createGroupByData();
-		GroupByResults<XObject> results = mongoTemplate.group("group_test_collection", GroupBy.key("x")
+		GroupByResults<XObject> results = mongoTemplate.group(GROUP_TEST_COLLECTION, GroupBy.key("x")
 				.initialDocument(new Document("count", 0)).reduceFunction("function(doc, prev) { prev.count += 1 }"),
 				XObject.class);
 
@@ -109,7 +102,7 @@ public class GroupByTests {
 		createGroupByData();
 		GroupByResults<XObject> results = mongoTemplate
 				.group(
-						"group_test_collection", GroupBy.keyFunction("function(doc) { return { x : doc.x }; }")
+						GROUP_TEST_COLLECTION, GroupBy.keyFunction("function(doc) { return { x : doc.x }; }")
 								.initialDocument("{ count: 0 }").reduceFunction("function(doc, prev) { prev.count += 1 }"),
 						XObject.class);
 
@@ -120,7 +113,7 @@ public class GroupByTests {
 	public void simpleGroupWithFunctionsAsResources() {
 
 		createGroupByData();
-		GroupByResults<XObject> results = mongoTemplate.group("group_test_collection",
+		GroupByResults<XObject> results = mongoTemplate.group(GROUP_TEST_COLLECTION,
 				GroupBy.keyFunction("classpath:keyFunction.js").initialDocument("{ count: 0 }")
 						.reduceFunction("classpath:groupReduce.js"),
 				XObject.class);
@@ -132,7 +125,7 @@ public class GroupByTests {
 	public void simpleGroupWithQueryAndFunctionsAsResources() {
 
 		createGroupByData();
-		GroupByResults<XObject> results = mongoTemplate.group(where("x").gt(0), "group_test_collection",
+		GroupByResults<XObject> results = mongoTemplate.group(where("x").gt(0), GROUP_TEST_COLLECTION,
 				keyFunction("classpath:keyFunction.js").initialDocument("{ count: 0 }")
 						.reduceFunction("classpath:groupReduce.js"),
 				XObject.class);
@@ -162,7 +155,7 @@ public class GroupByTests {
 
 	private void createGroupByData() {
 
-		MongoCollection<Document> c = mongoTemplate.getDb().getCollection("group_test_collection", Document.class);
+		MongoCollection<Document> c = mongoTemplate.getDb().getCollection(GROUP_TEST_COLLECTION, Document.class);
 
 		c.insertOne(new Document("x", 1));
 		c.insertOne(new Document("x", 1));

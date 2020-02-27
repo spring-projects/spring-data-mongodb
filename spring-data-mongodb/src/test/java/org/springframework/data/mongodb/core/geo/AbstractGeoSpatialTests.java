@@ -19,7 +19,9 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.joda.time.LocalDate;
 import org.junit.After;
@@ -35,9 +37,11 @@ import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
+import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.TestEntities;
 import org.springframework.data.mongodb.core.Venue;
+import org.springframework.data.mongodb.core.geo.GeoJsonTests.Venue2DSphere;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
@@ -66,6 +70,11 @@ public abstract class AbstractGeoSpatialTests {
 		@Override
 		public MongoClient mongoClient() {
 			return MongoTestUtils.client();
+		}
+
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+			return Collections.emptySet();
 		}
 	}
 
@@ -102,7 +111,10 @@ public abstract class AbstractGeoSpatialTests {
 	}
 
 	protected void addVenues() {
-		template.insertAll(TestEntities.geolocation().newYork());
+
+
+		template.bulkOps(BulkMode.UNORDERED, Venue.class).insert(TestEntities.geolocation().newYork()).execute();
+//		template.insertAll(TestEntities.geolocation().newYork());
 	}
 
 	@Test
