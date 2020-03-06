@@ -27,11 +27,11 @@ import java.util.List;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
@@ -57,7 +57,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
  * @author Mark Paluch
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class TypeBasedAggregationOperationContextUnitTests {
 
 	MongoMappingContext context;
@@ -66,7 +66,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 
 	@Mock DbRefResolver dbRefResolver;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		this.context = new MongoMappingContext();
@@ -283,7 +283,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		assertThat(definition.get("something_totally_different")).isEqualTo(1);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1326
+	@Test // DATAMONGO-1326
 	public void lookupGroupAggregationShouldFailInvalidFieldReference() {
 
 		TypeBasedAggregationOperationContext context = getContext(MeterData.class);
@@ -291,7 +291,7 @@ public class TypeBasedAggregationOperationContextUnitTests {
 				lookup("OtherCollection", "resourceId", "otherId", "lookup"),
 				group().min("lookup.otherkey").as("something_totally_different"), sort(Direction.ASC, "resourceId"));
 
-		agg.toDocument("meterData", context);
+		assertThatIllegalArgumentException().isThrownBy(() -> agg.toDocument("meterData", context));
 	}
 
 	@Test // DATAMONGO-861

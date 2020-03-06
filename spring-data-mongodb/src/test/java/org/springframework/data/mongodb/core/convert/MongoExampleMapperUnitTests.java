@@ -27,11 +27,11 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.bson.conversions.Bson;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Example;
@@ -52,7 +52,7 @@ import org.springframework.data.util.TypeInformation;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class MongoExampleMapperUnitTests {
 
 	MongoExampleMapper mapper;
@@ -61,7 +61,7 @@ public class MongoExampleMapperUnitTests {
 
 	@Mock MongoDatabaseFactory factory;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		this.context = new MongoMappingContext();

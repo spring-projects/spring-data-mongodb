@@ -20,8 +20,8 @@ import static org.assertj.core.api.Assertions.*;
 import java.net.UnknownHostException;
 
 import org.bson.BsonDocument;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.core.NestedRuntimeException;
 import org.springframework.dao.DataAccessException;
@@ -50,7 +50,7 @@ public class MongoExceptionTranslatorUnitTests {
 
 	MongoExceptionTranslator translator;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		translator = new MongoExceptionTranslator();
 	}

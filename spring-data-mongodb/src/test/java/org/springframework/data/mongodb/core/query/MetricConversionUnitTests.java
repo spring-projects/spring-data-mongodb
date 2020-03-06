@@ -19,7 +19,7 @@ package org.springframework.data.mongodb.core.query;
 import static org.assertj.core.api.Assertions.*;
 import static org.assertj.core.data.Offset.offset;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;

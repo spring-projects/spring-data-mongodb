@@ -19,16 +19,13 @@ import static org.assertj.core.api.Assertions.*;
 
 import javax.validation.ConstraintViolationException;
 
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
-import org.springframework.data.util.Version;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 /**
  * Integration test for {@link ValidatingMongoEventListener}.
@@ -37,16 +34,14 @@ import org.springframework.test.context.junit4.SpringRunner;
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration
-public class ValidatingMongoEventListenerTests {
-
-	public static @ClassRule MongoVersionRule version = MongoVersionRule.atLeast(new Version(2, 6));
+class ValidatingMongoEventListenerTests {
 
 	@Autowired MongoTemplate mongoTemplate;
 
 	@Test // DATAMONGO-36
-	public void shouldThrowConstraintViolationException() {
+	void shouldThrowConstraintViolationException() {
 
 		User user = new User("john", 17);
 
@@ -57,7 +52,7 @@ public class ValidatingMongoEventListenerTests {
 	}
 
 	@Test
-	public void shouldNotThrowAnyExceptions() {
+	void shouldNotThrowAnyExceptions() {
 		mongoTemplate.save(new User("john smith", 18));
 	}
 }

@@ -25,8 +25,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 /**
+ * Annotation to inject {@link org.springframework.data.mongodb.core.MongoOperations} and
+ * {@link org.springframework.data.mongodb.core.ReactiveMongoOperations} parameters as method arguments and into
+ * {@code static} fields.
+ *
  * @author Christoph Strobl
  * @since 3.0
+ * @see MongoTemplateExtension
  */
 @Target({ ElementType.FIELD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
@@ -41,15 +46,15 @@ public @interface Template {
 	String database() default "";
 
 	/**
-	 * Pre initilaize the {@link org.springframework.data.mapping.context.MappingContext} with the given entities.
-	 * 
+	 * Pre-initialize the {@link org.springframework.data.mapping.context.MappingContext} with the given entities.
+	 *
 	 * @return empty by default.
 	 */
 	Class<?>[] initialEntitySet() default {};
 
 	/**
 	 * Use a {@link ReplSetClient} if {@literal true}.
-	 * 
+	 *
 	 * @return false by default.
 	 */
 	boolean replicaSet() default false;

@@ -20,11 +20,11 @@ import static org.mockito.Mockito.*;
 
 import java.io.Serializable;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -39,7 +39,7 @@ import org.springframework.data.repository.Repository;
  *
  * @author Oliver Gierke
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class MongoRepositoryFactoryUnitTests {
 
 	@Mock MongoTemplate template;
@@ -50,7 +50,7 @@ public class MongoRepositoryFactoryUnitTests {
 
 	@Mock @SuppressWarnings("rawtypes") MongoPersistentEntity entity;
 
-	@Before
+	@BeforeEach
 	@SuppressWarnings("unchecked")
 	public void setUp() {
 		when(template.getConverter()).thenReturn(converter);

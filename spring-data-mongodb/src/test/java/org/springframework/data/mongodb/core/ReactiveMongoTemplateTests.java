@@ -47,10 +47,11 @@ import org.bson.BsonDocument;
 import org.bson.BsonTimestamp;
 import org.bson.Document;
 import org.bson.types.ObjectId;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -96,11 +97,11 @@ import com.mongodb.reactivestreams.client.MongoClient;
 @ExtendWith({ MongoClientExtension.class, MongoServerCondition.class })
 public class ReactiveMongoTemplateTests {
 
-	public static final String DB_NAME = "reactive-mongo-template-tests";
-	static @Client MongoClient client;
+	private static final String DB_NAME = "reactive-mongo-template-tests";
+	private static @Client MongoClient client;
 
-	ConfigurableApplicationContext context = new GenericApplicationContext();
-	ReactiveMongoTestTemplate template = new ReactiveMongoTestTemplate(cfg -> {
+	private ConfigurableApplicationContext context = new GenericApplicationContext();
+	private ReactiveMongoTestTemplate template = new ReactiveMongoTestTemplate(cfg -> {
 
 		cfg.configureDatabaseFactory(it -> {
 
@@ -113,19 +114,21 @@ public class ReactiveMongoTemplateTests {
 		});
 	});
 
-	ReactiveMongoDatabaseFactory factory = template.getDatabaseFactory();
+	@BeforeEach
+	void setUp() {
 
-	@AfterEach
-	public void setUp() {
+		template
+				.flush(Person.class, MyPerson.class, Sample.class, Venue.class, PersonWithVersionPropertyOfTypeInteger.class) //
+				.as(StepVerifier::create) //
+				.verifyComplete();
 
-		template.flush().as(StepVerifier::create).verifyComplete();
-		template.flush("people", "collection").as(StepVerifier::create).verifyComplete();
-		template.dropCollection(Person.class).as(StepVerifier::create).verifyComplete();
-		template.dropCollection("personX").as(StepVerifier::create).verifyComplete();
+		template.flush("people", "collection", "personX", "unique_person").as(StepVerifier::create).verifyComplete();
 	}
 
+	private ReactiveMongoDatabaseFactory factory = template.getDatabaseFactory();
+
 	@Test // DATAMONGO-1444
-	public void insertSetsId() {
+	void insertSetsId() {
 
 		PersonWithAList person = new PersonWithAList();
 		assert person.getId() == null;
@@ -139,7 +142,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void insertAllSetsId() {
+	void insertAllSetsId() {
 
 		PersonWithAList person = new PersonWithAList();
 
@@ -152,7 +155,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void insertCollectionSetsId() {
+	void insertCollectionSetsId() {
 
 		PersonWithAList person = new PersonWithAList();
 
@@ -165,7 +168,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void saveSetsId() {
+	void saveSetsId() {
 
 		PersonWithAList person = new PersonWithAList();
 		assert person.getId() == null;
@@ -179,7 +182,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void insertsSimpleEntityCorrectly() {
+	void insertsSimpleEntityCorrectly() {
 
 		Person person = new Person("Mark");
 		person.setAge(35);
@@ -195,7 +198,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void simpleInsertDoesNotAllowArrays() {
+	void simpleInsertDoesNotAllowArrays() {
 
 		Person person = new Person("Mark");
 		person.setAge(35);
@@ -204,7 +207,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void simpleInsertDoesNotAllowCollections() {
+	void simpleInsertDoesNotAllowCollections() {
 
 		Person person = new Person("Mark");
 		person.setAge(35);
@@ -213,7 +216,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void insertsSimpleEntityWithSuppliedCollectionNameCorrectly() {
+	void insertsSimpleEntityWithSuppliedCollectionNameCorrectly() {
 
 		Person person = new Person("Homer");
 		person.setAge(35);
@@ -229,7 +232,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void insertBatchCorrectly() {
+	void insertBatchCorrectly() {
 
 		List<Person> people = Arrays.asList(new Person("Dick", 22), new Person("Harry", 23), new Person("Tom", 21));
 
@@ -240,12 +243,12 @@ public class ReactiveMongoTemplateTests {
 
 		template.find(new Query().with(Sort.by("firstname")), Person.class) //
 				.as(StepVerifier::create) //
-				.expectNextSequence(people) //
+				.expectNextCount(3) ///
 				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void insertBatchWithSuppliedCollectionNameCorrectly() {
+	void insertBatchWithSuppliedCollectionNameCorrectly() {
 
 		List<Person> people = Arrays.asList(new Person("Dick", 22), new Person("Harry", 23), new Person("Tom", 21));
 
@@ -256,12 +259,12 @@ public class ReactiveMongoTemplateTests {
 
 		template.find(new Query().with(Sort.by("firstname")), Person.class, "people") //
 				.as(StepVerifier::create) //
-				.expectNextSequence(people) //
+				.expectNextCount(3) //
 				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void insertBatchWithSuppliedEntityTypeCorrectly() {
+	void insertBatchWithSuppliedEntityTypeCorrectly() {
 
 		List<Person> people = Arrays.asList(new Person("Dick", 22), new Person("Harry", 23), new Person("Tom", 21));
 
@@ -272,12 +275,12 @@ public class ReactiveMongoTemplateTests {
 
 		template.find(new Query().with(Sort.by("firstname")), Person.class) //
 				.as(StepVerifier::create) //
-				.expectNextSequence(people) //
+				.expectNextCount(3) //
 				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void testAddingToList() {
+	void testAddingToList() {
 
 		PersonWithAList person = createPersonWithAList("Sven", 22);
 		template.insert(person) //
@@ -322,7 +325,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void testFindOneWithSort() {
+	void testFindOneWithSort() {
 
 		PersonWithAList sven = createPersonWithAList("Sven", 22);
 		PersonWithAList erik = createPersonWithAList("Erik", 21);
@@ -346,7 +349,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void bogusUpdateDoesNotTriggerException() {
+	void bogusUpdateDoesNotTriggerException() {
 
 		ReactiveMongoTemplate mongoTemplate = new ReactiveMongoTemplate(factory);
 		mongoTemplate.setWriteResultChecking(WriteResultChecking.EXCEPTION);
@@ -367,7 +370,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void updateFirstByEntityTypeShouldUpdateObject() {
+	void updateFirstByEntityTypeShouldUpdateObject() {
 
 		Person person = new Person("Oliver2", 25);
 		template.insert(person) //
@@ -381,7 +384,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void updateFirstByCollectionNameShouldUpdateObjects() {
+	void updateFirstByCollectionNameShouldUpdateObjects() {
 
 		Person person = new Person("Oliver2", 25);
 		template.insert(person, "people") //
@@ -395,7 +398,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void updateMultiByEntityTypeShouldUpdateObjects() {
+	void updateMultiByEntityTypeShouldUpdateObjects() {
 
 		Query query = new Query(
 				new Criteria().orOperator(where("firstName").is("Walter Jr"), where("firstName").is("Walter")));
@@ -411,7 +414,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void updateMultiByCollectionNameShouldUpdateObject() {
+	void updateMultiByCollectionNameShouldUpdateObject() {
 
 		Query query = new Query(
 				new Criteria().orOperator(where("firstName").is("Walter Jr"), where("firstName").is("Walter")));
@@ -432,7 +435,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void throwsExceptionForDuplicateIds() {
+	void throwsExceptionForDuplicateIds() {
 
 		ReactiveMongoTemplate template = new ReactiveMongoTemplate(factory);
 		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
@@ -452,7 +455,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void throwsExceptionForUpdateWithInvalidPushOperator() {
+	void throwsExceptionForUpdateWithInvalidPushOperator() {
 
 		ReactiveMongoTemplate template = new ReactiveMongoTemplate(factory);
 		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
@@ -475,7 +478,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void rejectsDuplicateIdInInsertAll() {
+	void rejectsDuplicateIdInInsertAll() {
 
 		ReactiveMongoTemplate template = new ReactiveMongoTemplate(factory);
 		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
@@ -490,7 +493,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void testFindAndUpdate() {
+	void testFindAndUpdate() {
 
 		template.insertAll(Arrays.asList(new Person("Tom", 21), new Person("Dick", 22), new Person("Harry", 23))) //
 				.as(StepVerifier::create) //
@@ -527,7 +530,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1827
-	public void findAndReplaceShouldReplaceDocument() {
+	void findAndReplaceShouldReplaceDocument() {
 
 		org.bson.Document doc = new org.bson.Document("foo", "bar");
 		template.save(doc, "findandreplace").as(StepVerifier::create).expectNextCount(1).verifyComplete();
@@ -548,7 +551,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1827
-	public void findAndReplaceShouldErrorOnIdPresent() {
+	void findAndReplaceShouldErrorOnIdPresent() {
 
 		template.save(new MyPerson("Walter")).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
@@ -561,21 +564,21 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1827
-	public void findAndReplaceShouldErrorOnSkip() {
+	void findAndReplaceShouldErrorOnSkip() {
 
 		assertThatIllegalArgumentException().isThrownBy(() -> template
 				.findAndReplace(query(where("name").is("Walter")).skip(10), new MyPerson("Heisenberg")).subscribe());
 	}
 
 	@Test // DATAMONGO-1827
-	public void findAndReplaceShouldErrorOnLimit() {
+	void findAndReplaceShouldErrorOnLimit() {
 
 		assertThatIllegalArgumentException().isThrownBy(() -> template
 				.findAndReplace(query(where("name").is("Walter")).limit(10), new MyPerson("Heisenberg")).subscribe());
 	}
 
 	@Test // DATAMONGO-1827
-	public void findAndReplaceShouldConsiderSortAndUpdateFirstIfMultipleFound() {
+	void findAndReplaceShouldConsiderSortAndUpdateFirstIfMultipleFound() {
 
 		MyPerson walter1 = new MyPerson("Walter 1");
 		MyPerson walter2 = new MyPerson("Walter 2");
@@ -592,7 +595,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1827
-	public void findAndReplaceShouldReplaceObject() {
+	void findAndReplaceShouldReplaceObject() {
 
 		MyPerson person = new MyPerson("Walter");
 		template.save(person) //
@@ -611,7 +614,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1827
-	public void findAndReplaceShouldConsiderFields() {
+	void findAndReplaceShouldConsiderFields() {
 
 		MyPerson person = new MyPerson("Walter");
 		person.address = new Address("TX", "Austin");
@@ -633,7 +636,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1827
-	public void findAndReplaceNonExistingWithUpsertFalse() {
+	void findAndReplaceNonExistingWithUpsertFalse() {
 
 		template.findAndReplace(query(where("name").is("Walter")), new MyPerson("Heisenberg")) //
 				.as(StepVerifier::create) //
@@ -643,7 +646,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1827
-	public void findAndReplaceNonExistingWithUpsertTrue() {
+	void findAndReplaceNonExistingWithUpsertTrue() {
 
 		template
 				.findAndReplace(query(where("name").is("Walter")), new MyPerson("Heisenberg"),
@@ -655,7 +658,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1827
-	public void findAndReplaceShouldProjectReturnedObjectCorrectly() {
+	void findAndReplaceShouldProjectReturnedObjectCorrectly() {
 
 		MyPerson person = new MyPerson("Walter");
 		template.save(person) //
@@ -673,7 +676,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1827
-	public void findAndReplaceShouldReplaceObjectReturingNew() {
+	void findAndReplaceShouldReplaceObjectReturingNew() {
 
 		MyPerson person = new MyPerson("Walter");
 		template.save(person) //
@@ -691,7 +694,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void testFindAllAndRemoveFullyReturnsAndRemovesDocuments() {
+	void testFindAllAndRemoveFullyReturnsAndRemovesDocuments() {
 
 		Sample spring = new Sample("100", "spring");
 		Sample data = new Sample("200", "data");
@@ -716,7 +719,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-2219
-	public void testFindAllAndRemoveReturnsEmptyWithoutMatches() {
+	void testFindAllAndRemoveReturnsEmptyWithoutMatches() {
 
 		Query qry = query(where("field").in("spring", "mongodb"));
 		template.findAllAndRemove(qry, Sample.class) //
@@ -729,7 +732,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1774
-	public void testFindAllAndRemoveByCollectionReturnsAndRemovesDocuments() {
+	void testFindAllAndRemoveByCollectionReturnsAndRemovesDocuments() {
 
 		Sample spring = new Sample("100", "spring");
 		Sample data = new Sample("200", "data");
@@ -754,12 +757,12 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1774
-	public void removeWithNullShouldThrowError() {
+	void removeWithNullShouldThrowError() {
 		assertThatIllegalArgumentException().isThrownBy(() -> template.remove((Object) null).subscribe());
 	}
 
 	@Test // DATAMONGO-1774
-	public void removeWithEmptyMonoShouldDoNothing() {
+	void removeWithEmptyMonoShouldDoNothing() {
 
 		Sample spring = new Sample("100", "spring");
 		Sample data = new Sample("200", "data");
@@ -778,7 +781,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1774
-	public void removeWithMonoShouldDeleteElement() {
+	void removeWithMonoShouldDeleteElement() {
 
 		Sample spring = new Sample("100", "spring");
 		Sample data = new Sample("200", "data");
@@ -794,7 +797,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1774
-	public void removeWithMonoAndCollectionShouldDeleteElement() {
+	void removeWithMonoAndCollectionShouldDeleteElement() {
 
 		Sample spring = new Sample("100", "spring");
 		Sample data = new Sample("200", "data");
@@ -812,7 +815,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-2195
-	public void removeVersionedEntityConsidersVersion() {
+	void removeVersionedEntityConsidersVersion() {
 
 		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
 		person.firstName = "Dave";
@@ -842,7 +845,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void optimisticLockingHandling() {
+	void optimisticLockingHandling() {
 
 		// Init version
 		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
@@ -887,7 +890,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void doesNotFailOnVersionInitForUnversionedEntity() {
+	void doesNotFailOnVersionInitForUnversionedEntity() {
 
 		Document dbObject = new Document();
 		dbObject.put("firstName", "Oliver");
@@ -900,7 +903,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void removesObjectFromExplicitCollection() {
+	void removesObjectFromExplicitCollection() {
 
 		String collectionName = "explicit";
 		template.remove(new Query(), collectionName).as(StepVerifier::create).expectNextCount(1).verifyComplete();
@@ -923,7 +926,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void savesMapCorrectly() {
+	void savesMapCorrectly() {
 
 		Map<String, String> map = new HashMap<>();
 		map.put("key", "value");
@@ -936,12 +939,12 @@ public class ReactiveMongoTemplateTests {
 
 	@Test
 	// DATAMONGO-1444, DATAMONGO-1730, DATAMONGO-2150
-	public void savesMongoPrimitiveObjectCorrectly() {
+	void savesMongoPrimitiveObjectCorrectly() {
 		assertThatExceptionOfType(MappingException.class).isThrownBy(() -> template.save(new Object(), "collection"));
 	}
 
 	@Test // DATAMONGO-1444
-	public void savesPlainDbObjectCorrectly() {
+	void savesPlainDbObjectCorrectly() {
 
 		Document dbObject = new Document("foo", "bar");
 
@@ -954,7 +957,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444, DATAMONGO-1730
-	public void rejectsPlainObjectWithOutExplicitCollection() {
+	void rejectsPlainObjectWithOutExplicitCollection() {
 
 		Document dbObject = new Document("foo", "bar");
 
@@ -968,7 +971,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void readsPlainDbObjectById() {
+	void readsPlainDbObjectById() {
 
 		Document dbObject = new Document("foo", "bar");
 		template.save(dbObject, "collection") //
@@ -986,7 +989,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void geoNear() {
+	void geoNear() {
 
 		List<Venue> venues = Arrays.asList(TestEntities.geolocation().pennStation(), //
 				TestEntities.geolocation().tenGenOffice(), //
@@ -1017,7 +1020,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void writesPlainString() {
+	void writesPlainString() {
 
 		template.save("{ 'foo' : 'bar' }", "collection") //
 				.as(StepVerifier::create) //
@@ -1026,12 +1029,12 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444, DATAMONGO-2150
-	public void rejectsNonJsonStringForSave() {
+	void rejectsNonJsonStringForSave() {
 		assertThatExceptionOfType(MappingException.class).isThrownBy(() -> template.save("Foobar!", "collection"));
 	}
 
 	@Test // DATAMONGO-1444
-	public void initializesVersionOnInsert() {
+	void initializesVersionOnInsert() {
 
 		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
 		person.firstName = "Dave";
@@ -1045,7 +1048,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void initializesVersionOnBatchInsert() {
+	void initializesVersionOnBatchInsert() {
 
 		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
 		person.firstName = "Dave";
@@ -1059,7 +1062,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1992
-	public void initializesIdAndVersionAndOfImmutableObject() {
+	void initializesIdAndVersionAndOfImmutableObject() {
 
 		ImmutableVersioned versioned = new ImmutableVersioned();
 
@@ -1078,7 +1081,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void queryCanBeNull() {
+	void queryCanBeNull() {
 
 		template.findAll(PersonWithIdPropertyOfTypeObjectId.class) //
 				.as(StepVerifier::create) //
@@ -1090,7 +1093,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void versionsObjectIntoDedicatedCollection() {
+	void versionsObjectIntoDedicatedCollection() {
 
 		PersonWithVersionPropertyOfTypeInteger person = new PersonWithVersionPropertyOfTypeInteger();
 		person.firstName = "Dave";
@@ -1109,7 +1112,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void correctlySetsLongVersionProperty() {
+	void correctlySetsLongVersionProperty() {
 
 		PersonWithVersionPropertyOfTypeLong person = new PersonWithVersionPropertyOfTypeLong();
 		person.firstName = "Dave";
@@ -1122,11 +1125,11 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void throwsExceptionForIndexViolationIfConfigured() {
+	void throwsExceptionForIndexViolationIfConfigured() {
 
 		ReactiveMongoTemplate template = new ReactiveMongoTemplate(factory);
 		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
-		template.indexOps(Person.class) //
+		template.indexOps("unique_person") //
 				.ensureIndex(new Index().on("firstName", Direction.DESC).unique()) //
 				.as(StepVerifier::create) //
 				.expectNextCount(1) //
@@ -1135,7 +1138,7 @@ public class ReactiveMongoTemplateTests {
 		Person person = new Person(new ObjectId(), "Amol");
 		person.setAge(28);
 
-		template.save(person) //
+		template.save(person, "unique_person") //
 				.as(StepVerifier::create) //
 				.expectNextCount(1) //
 				.verifyComplete();
@@ -1143,13 +1146,16 @@ public class ReactiveMongoTemplateTests {
 		person = new Person(new ObjectId(), "Amol");
 		person.setAge(28);
 
-		template.save(person) //
+		template.save(person, "unique_person") //
 				.as(StepVerifier::create) //
 				.verifyError(DataIntegrityViolationException.class);
+
+		// safeguard to clean up previous state
+		template.dropCollection(Person.class).as(StepVerifier::create).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void preventsDuplicateInsert() {
+	void preventsDuplicateInsert() {
 
 		template.setWriteConcern(WriteConcern.MAJORITY);
 
@@ -1169,7 +1175,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void countAndFindWithoutTypeInformation() {
+	void countAndFindWithoutTypeInformation() {
 
 		Person person = new Person();
 		template.save(person) //
@@ -1192,7 +1198,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void nullsPropertiesForVersionObjectUpdates() {
+	void nullsPropertiesForVersionObjectUpdates() {
 
 		VersionedPerson person = new VersionedPerson();
 		person.firstname = "Dave";
@@ -1221,7 +1227,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void nullsValuesForUpdatesOfUnversionedEntity() {
+	void nullsValuesForUpdatesOfUnversionedEntity() {
 
 		Person person = new Person("Dave");
 		template.save(person). //
@@ -1245,7 +1251,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void savesJsonStringCorrectly() {
+	void savesJsonStringCorrectly() {
 
 		Document dbObject = new Document().append("first", "first").append("second", "second");
 
@@ -1264,7 +1270,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void executesExistsCorrectly() {
+	void executesExistsCorrectly() {
 
 		Sample sample = new Sample();
 		template.save(sample).as(StepVerifier::create).expectNextCount(1).verifyComplete();
@@ -1287,7 +1293,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void tailStreamsData() throws InterruptedException {
+	void tailStreamsData() throws InterruptedException {
 
 		template.dropCollection("capped").then(template.createCollection("capped", //
 				CollectionOptions.empty().size(1000).maxDocuments(10).capped()))
@@ -1309,7 +1315,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void tailStreamsDataUntilCancellation() throws InterruptedException {
+	void tailStreamsDataUntilCancellation() throws InterruptedException {
 
 		template.dropCollection("capped").then(template.createCollection("capped", //
 				CollectionOptions.empty().size(1000).maxDocuments(10).capped()))
@@ -1345,7 +1351,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1761
-	public void testDistinct() {
+	void testDistinct() {
 
 		Person person1 = new Person("Christoph", 38);
 		Person person2 = new Person("Christine", 39);
@@ -1365,7 +1371,7 @@ public class ReactiveMongoTemplateTests {
 	@Test // DATAMONGO-1803
 	@Disabled("Heavily relying on timing assumptions. Cannot test message resumption properly. Too much race for too little time in between.")
 	@EnableIfReplicaSetAvailable
-	public void changeStreamEventsShouldBeEmittedCorrectly() throws InterruptedException {
+	void changeStreamEventsShouldBeEmittedCorrectly() throws InterruptedException {
 
 		template.createCollection(Person.class).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
@@ -1397,7 +1403,7 @@ public class ReactiveMongoTemplateTests {
 	@Test // DATAMONGO-1803
 	@Disabled("Heavily relying on timing assumptions. Cannot test message resumption properly. Too much race for too little time in between.")
 	@EnableIfReplicaSetAvailable
-	public void changeStreamEventsShouldBeConvertedCorrectly() throws InterruptedException {
+	void changeStreamEventsShouldBeConvertedCorrectly() throws InterruptedException {
 
 		template.createCollection(Person.class).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
@@ -1429,7 +1435,7 @@ public class ReactiveMongoTemplateTests {
 	@Test // DATAMONGO-1803
 	@Disabled("Heavily relying on timing assumptions. Cannot test message resumption properly. Too much race for too little time in between.")
 	@EnableIfReplicaSetAvailable
-	public void changeStreamEventsShouldBeFilteredCorrectly() throws InterruptedException {
+	void changeStreamEventsShouldBeFilteredCorrectly() throws InterruptedException {
 
 		template.createCollection(Person.class).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
@@ -1461,8 +1467,9 @@ public class ReactiveMongoTemplateTests {
 
 	@Test // DATAMONGO-1803
 	@EnableIfReplicaSetAvailable
-	public void mapsReservedWordsCorrectly() throws InterruptedException {
+	void mapsReservedWordsCorrectly() throws InterruptedException {
 
+		template.dropCollection(Person.class).onErrorResume(it -> Mono.empty()).as(StepVerifier::create).verifyComplete();
 		template.createCollection(Person.class).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
 		BlockingQueue<ChangeStreamEvent<Person>> documents = new LinkedBlockingQueue<>(100);
@@ -1504,7 +1511,7 @@ public class ReactiveMongoTemplateTests {
 	@Test // DATAMONGO-1803
 	@Disabled("Heavily relying on timing assumptions. Cannot test message resumption properly. Too much race for too little time in between.")
 	@EnableIfReplicaSetAvailable
-	public void changeStreamEventsShouldBeResumedCorrectly() throws InterruptedException {
+	void changeStreamEventsShouldBeResumedCorrectly() throws InterruptedException {
 
 		template.createCollection(Person.class).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
@@ -1545,7 +1552,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1870
-	public void removeShouldConsiderLimit() {
+	void removeShouldConsiderLimit() {
 
 		List<Sample> samples = IntStream.range(0, 100) //
 				.mapToObj(i -> new Sample("id-" + i, i % 2 == 0 ? "stark" : "lannister")) //
@@ -1562,7 +1569,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-1870
-	public void removeShouldConsiderSkipAndSort() {
+	void removeShouldConsiderSkipAndSort() {
 
 		List<Sample> samples = IntStream.range(0, 100) //
 				.mapToObj(i -> new Sample("id-" + i, i % 2 == 0 ? "stark" : "lannister")) //
@@ -1581,7 +1588,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-2189
-	public void afterSaveEventContainsSavedObjectUsingInsert() {
+	void afterSaveEventContainsSavedObjectUsingInsert() {
 
 		AtomicReference<ImmutableVersioned> saved = createAfterSaveReference();
 		ImmutableVersioned source = new ImmutableVersioned();
@@ -1596,7 +1603,7 @@ public class ReactiveMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-2189
-	public void afterSaveEventContainsSavedObjectUsingInsertAll() {
+	void afterSaveEventContainsSavedObjectUsingInsertAll() {
 
 		AtomicReference<ImmutableVersioned> saved = createAfterSaveReference();
 		ImmutableVersioned source = new ImmutableVersioned();
@@ -1613,8 +1620,10 @@ public class ReactiveMongoTemplateTests {
 	@Test // DATAMONGO-2012
 	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
 	@EnableIfReplicaSetAvailable
-	public void watchesDatabaseCorrectly() throws InterruptedException {
+	void watchesDatabaseCorrectly() throws InterruptedException {
 
+		template.dropCollection(Person.class).onErrorResume(it -> Mono.empty()).as(StepVerifier::create).verifyComplete();
+		template.dropCollection("personX").onErrorResume(it -> Mono.empty()).as(StepVerifier::create).verifyComplete();
 		template.createCollection(Person.class).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 		template.createCollection("personX").as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
@@ -1654,8 +1663,9 @@ public class ReactiveMongoTemplateTests {
 	@Test // DATAMONGO-2012, DATAMONGO-2113
 	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
 	@EnableIfReplicaSetAvailable
-	public void resumesAtTimestampCorrectly() throws InterruptedException {
+	void resumesAtTimestampCorrectly() throws InterruptedException {
 
+		template.dropCollection(Person.class).onErrorResume(it -> Mono.empty()).as(StepVerifier::create).verifyComplete();
 		template.createCollection(Person.class).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
 		BlockingQueue<ChangeStreamEvent<Person>> documents = new LinkedBlockingQueue<>(100);
@@ -1704,7 +1714,7 @@ public class ReactiveMongoTemplateTests {
 	@Test // DATAMONGO-2115
 	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
 	@EnableIfReplicaSetAvailable
-	public void resumesAtBsonTimestampCorrectly() throws InterruptedException {
+	void resumesAtBsonTimestampCorrectly() throws InterruptedException {
 
 		template.createCollection(Person.class).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
@@ -1774,7 +1784,7 @@ public class ReactiveMongoTemplateTests {
 		final @Id String id;
 		final @Version Long version;
 
-		public ImmutableVersioned() {
+		ImmutableVersioned() {
 			id = null;
 			version = null;
 		}
@@ -1786,9 +1796,9 @@ public class ReactiveMongoTemplateTests {
 		@Id String id;
 		String field;
 
-		public Sample() {}
+		Sample() {}
 
-		public Sample(String id, String field) {
+		Sample(String id, String field) {
 			this.id = id;
 			this.field = field;
 		}
@@ -1803,7 +1813,7 @@ public class ReactiveMongoTemplateTests {
 		String name;
 		Address address;
 
-		public MyPerson(String name) {
+		MyPerson(String name) {
 			this.name = name;
 		}
 	}

@@ -20,10 +20,10 @@ import static org.mockito.Mockito.*;
 
 import java.util.List;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -37,7 +37,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  *
  * @author Oliver Gierke
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class MongoRepositoryFactoryBeanUnitTests {
 
 	@Mock MongoOperations operations;

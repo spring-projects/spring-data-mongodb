@@ -59,6 +59,7 @@ import org.springframework.data.mongodb.test.util.Template;
 
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
+import org.junitpioneer.jupiter.RepeatFailedTest;
 
 /**
  * Integration test for subscribing to a {@link com.mongodb.operation.ChangeStreamBatchCursor} inside the
@@ -69,26 +70,26 @@ import com.mongodb.client.model.changestream.FullDocument;
  */
 @ExtendWith({ MongoTemplateExtension.class })
 @EnableIfReplicaSetAvailable
-public class ChangeStreamTests {
+class ChangeStreamTests {
 
-	static ThreadPoolExecutor executor;
+	private static ThreadPoolExecutor executor;
 
 	@Template(initialEntitySet = User.class, replicaSet = true) //
-	static MongoTestTemplate template;
+	private static MongoTestTemplate template;
 
-	MessageListenerContainer container;
+	private MessageListenerContainer container;
 
-	User jellyBelly;
-	User huffyFluffy;
-	User sugarSplashy;
+	private User jellyBelly;
+	private User huffyFluffy;
+	private User sugarSplashy;
 
 	@BeforeAll
-	public static void beforeClass() {
+	static void beforeClass() {
 		executor = new ThreadPoolExecutor(2, 2, 1, TimeUnit.SECONDS, new LinkedBlockingDeque<>());
 	}
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 
 		template.dropCollection(User.class);
 
@@ -112,17 +113,17 @@ public class ChangeStreamTests {
 	}
 
 	@AfterEach
-	public void tearDown() {
+	void tearDown() {
 		container.stop();
 	}
 
 	@AfterAll
-	public static void afterClass() {
+	static void afterClass() {
 		executor.shutdown();
 	}
 
 	@Test // DATAMONGO-1803
-	public void readsPlainDocumentMessageCorrectly() throws InterruptedException {
+	void readsPlainDocumentMessageCorrectly() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, Document> messageListener = new CollectingMessageListener<>();
 		ChangeStreamRequest<Document> request = new ChangeStreamRequest<>(messageListener,
@@ -145,7 +146,7 @@ public class ChangeStreamTests {
 	}
 
 	@Test // DATAMONGO-1803
-	public void useSimpleAggregationToFilterMessages() throws InterruptedException {
+	void useSimpleAggregationToFilterMessages() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
 		ChangeStreamRequest<User> request = ChangeStreamRequest.builder(messageListener) //
@@ -171,7 +172,7 @@ public class ChangeStreamTests {
 
 	@Test // DATAMONGO-1803
 	@MongoVersion(asOf = "4.0")
-	public void useAggregationToFilterMessages() throws InterruptedException {
+	void useAggregationToFilterMessages() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
 		ChangeStreamRequest<User> request = ChangeStreamRequest.builder(messageListener) //
@@ -197,7 +198,8 @@ public class ChangeStreamTests {
 	}
 
 	@Test // DATAMONGO-1803
-	public void mapsTypedAggregationToFilterMessages() throws InterruptedException {
+	@RepeatFailedTest(3)
+	void mapsTypedAggregationToFilterMessages() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
 		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
@@ -224,7 +226,7 @@ public class ChangeStreamTests {
 	}
 
 	@Test // DATAMONGO-1803
-	public void mapsReservedWordsCorrectly() throws InterruptedException {
+	void mapsReservedWordsCorrectly() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
 		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
@@ -256,7 +258,7 @@ public class ChangeStreamTests {
 	}
 
 	@Test // DATAMONGO-1803
-	public void plainAggregationPipelineToFilterMessages() throws InterruptedException {
+	void plainAggregationPipelineToFilterMessages() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
 		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
@@ -282,7 +284,7 @@ public class ChangeStreamTests {
 	}
 
 	@Test // DATAMONGO-1803
-	public void resumesCorrectly() throws InterruptedException {
+	void resumesCorrectly() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener1 = new CollectingMessageListener<>();
 		Subscription subscription1 = container.register(
@@ -316,7 +318,7 @@ public class ChangeStreamTests {
 	}
 
 	@Test // DATAMONGO-1803
-	public void readsAndConvertsMessageBodyCorrectly() throws InterruptedException {
+	void readsAndConvertsMessageBodyCorrectly() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
 		ChangeStreamRequest<User> request = new ChangeStreamRequest<>(messageListener,
@@ -338,7 +340,7 @@ public class ChangeStreamTests {
 	}
 
 	@Test // DATAMONGO-1803
-	public void readsAndConvertsUpdateMessageBodyCorrectly() throws InterruptedException {
+	void readsAndConvertsUpdateMessageBodyCorrectly() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
 		ChangeStreamRequest<User> request = new ChangeStreamRequest<>(messageListener,
@@ -358,7 +360,7 @@ public class ChangeStreamTests {
 	}
 
 	@Test // DATAMONGO-1803
-	public void readsOnlyDiffForUpdateWhenNotMappedToDomainType() throws InterruptedException {
+	void readsOnlyDiffForUpdateWhenNotMappedToDomainType() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, Document> messageListener = new CollectingMessageListener<>();
 		ChangeStreamRequest<Document> request = new ChangeStreamRequest<>(messageListener,
@@ -379,7 +381,7 @@ public class ChangeStreamTests {
 	}
 
 	@Test // DATAMONGO-1803
-	public void readsOnlyDiffForUpdateWhenOptionsDeclareDefaultExplicitly() throws InterruptedException {
+	void readsOnlyDiffForUpdateWhenOptionsDeclareDefaultExplicitly() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
 		ChangeStreamRequest<User> request = ChangeStreamRequest.builder() //
@@ -403,7 +405,7 @@ public class ChangeStreamTests {
 
 	@Test // DATAMONGO-1803
 	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
-	public void readsFullDocumentForUpdateWhenNotMappedToDomainTypeButLookupSpecified() throws InterruptedException {
+	void readsFullDocumentForUpdateWhenNotMappedToDomainTypeButLookupSpecified() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, Document> messageListener = new CollectingMessageListener<>();
 		ChangeStreamRequest<Document> request = ChangeStreamRequest.builder() //
@@ -429,7 +431,7 @@ public class ChangeStreamTests {
 
 	@Test // DATAMONGO-2012, DATAMONGO-2113
 	@MongoVersion(asOf = "4.0")
-	public void resumeAtTimestampCorrectly() throws InterruptedException {
+	void resumeAtTimestampCorrectly() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener1 = new CollectingMessageListener<>();
 		Subscription subscription1 = container.register(
@@ -473,7 +475,7 @@ public class ChangeStreamTests {
 	}
 
 	@Test // DATAMONGO-1996
-	public void filterOnNestedElementWorksCorrectly() throws InterruptedException {
+	void filterOnNestedElementWorksCorrectly() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();
 		ChangeStreamRequest<User> request = ChangeStreamRequest.builder(messageListener) //
@@ -504,7 +506,7 @@ public class ChangeStreamTests {
 	}
 
 	@Test // DATAMONGO-1996
-	public void filterOnUpdateDescriptionElement() throws InterruptedException {
+	void filterOnUpdateDescriptionElement() throws InterruptedException {
 
 		template.save(jellyBelly);
 		template.save(sugarSplashy);

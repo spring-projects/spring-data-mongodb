@@ -344,12 +344,6 @@
 						<java.util.logging.config.file>src/test/resources/logging.properties</java.util.logging.config.file>
 						<reactor.trace.cancel>true</reactor.trace.cancel>
 					</systemPropertyVariables>
-					<properties>
-						<property>
-							<name>listener</name>
-							<value>org.springframework.data.mongodb.test.util.CleanMongoDBJunitRunListener</value>
-						</property>
-					</properties>
 				</configuration>
 			</plugin>
 

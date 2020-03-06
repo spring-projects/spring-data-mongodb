@@ -21,11 +21,11 @@ import static org.mockito.Mockito.*;
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
@@ -45,7 +45,7 @@ import com.mongodb.BasicDBList;
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ConvertingParameterAccessorUnitTests {
 
 	@Mock MongoDatabaseFactory factory;
@@ -55,7 +55,7 @@ public class ConvertingParameterAccessorUnitTests {
 	MappingMongoConverter converter;
 	DbRefResolver resolver;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		this.context = new MongoMappingContext();

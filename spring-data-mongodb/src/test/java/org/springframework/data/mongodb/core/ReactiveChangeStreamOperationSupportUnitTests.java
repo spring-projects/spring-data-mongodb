@@ -30,12 +30,12 @@ import java.util.Collections;
 import java.util.List;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
@@ -47,20 +47,20 @@ import org.springframework.data.mongodb.core.query.Criteria;
  * @author Christoph Strobl
  * @currentRead Dawn Cook - The Decoy Princess
  */
-@RunWith(MockitoJUnitRunner.class)
-public class ReactiveChangeStreamOperationSupportUnitTests {
+@ExtendWith(MockitoExtension.class)
+class ReactiveChangeStreamOperationSupportUnitTests {
 
 	@Mock ReactiveMongoTemplate template;
-	ReactiveChangeStreamOperationSupport changeStreamSupport;
+	private ReactiveChangeStreamOperationSupport changeStreamSupport;
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	void setUp() {
 		when(template.changeStream(any(), any(), any())).thenReturn(Flux.empty());
 		changeStreamSupport = new ReactiveChangeStreamOperationSupport(template);
 	}
 
 	@Test // DATAMONGO-2089
-	public void listenWithoutDomainTypeUsesDocumentAsDefault() {
+	void listenWithoutDomainTypeUsesDocumentAsDefault() {
 
 		changeStreamSupport.changeStream(Document.class).listen().subscribe();
 
@@ -68,7 +68,7 @@ public class ReactiveChangeStreamOperationSupportUnitTests {
 	}
 
 	@Test // DATAMONGO-2089
-	public void listenWithDomainTypeUsesSourceAsTarget() {
+	void listenWithDomainTypeUsesSourceAsTarget() {
 
 		changeStreamSupport.changeStream(Person.class).listen().subscribe();
 
@@ -76,7 +76,7 @@ public class ReactiveChangeStreamOperationSupportUnitTests {
 	}
 
 	@Test // DATAMONGO-2089
-	public void collectionNameIsPassedOnCorrectly() {
+	void collectionNameIsPassedOnCorrectly() {
 
 		changeStreamSupport.changeStream(Person.class).watchCollection("star-wars").listen().subscribe();
 
@@ -84,7 +84,7 @@ public class ReactiveChangeStreamOperationSupportUnitTests {
 	}
 
 	@Test // DATAMONGO-2089
-	public void listenWithDomainTypeCreatesTypedAggregation() {
+	void listenWithDomainTypeCreatesTypedAggregation() {
 
 		Criteria criteria = where("operationType").is("insert");
 		changeStreamSupport.changeStream(Person.class).filter(criteria).listen().subscribe();
@@ -104,7 +104,7 @@ public class ReactiveChangeStreamOperationSupportUnitTests {
 	}
 
 	@Test // DATAMONGO-2089
-	public void listenWithoutDomainTypeCreatesUntypedAggregation() {
+	void listenWithoutDomainTypeCreatesUntypedAggregation() {
 
 		Criteria criteria = where("operationType").is("insert");
 		changeStreamSupport.changeStream(Document.class).filter(criteria).listen().subscribe();
@@ -125,7 +125,7 @@ public class ReactiveChangeStreamOperationSupportUnitTests {
 	}
 
 	@Test // DATAMONGO-2089
-	public void optionsShouldBePassedOnCorrectly() {
+	void optionsShouldBePassedOnCorrectly() {
 
 		Document filter = new Document("$match", new Document("operationType", "insert"));
 
@@ -142,7 +142,7 @@ public class ReactiveChangeStreamOperationSupportUnitTests {
 	}
 
 	@Test // DATAMONGO-2089
-	public void optionsShouldBeCombinedCorrectly() {
+	void optionsShouldBeCombinedCorrectly() {
 
 		Document filter = new Document("$match", new Document("operationType", "insert"));
 		Instant resumeTimestamp = Instant.now();

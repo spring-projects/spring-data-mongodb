@@ -17,8 +17,8 @@ package org.springframework.data.mongodb.config;
 
 import static org.assertj.core.api.Assertions.*;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.mongodb.ReadPreference;
 
@@ -31,7 +31,7 @@ public class ReadPreferencePropertyEditorUnitTests {
 
 	ReadPreferencePropertyEditor editor;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		editor = new ReadPreferencePropertyEditor();
 	}

@@ -22,7 +22,7 @@ import java.util.Date;
 
 import org.bson.BsonObjectId;
 import org.bson.Document;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.mongodb.MongoGridFSException;
 import com.mongodb.client.gridfs.model.GridFSFile;

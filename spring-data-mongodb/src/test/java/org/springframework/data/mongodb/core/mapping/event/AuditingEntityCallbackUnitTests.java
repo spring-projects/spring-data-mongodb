@@ -27,11 +27,10 @@ import lombok.experimental.Wither;
 import java.util.Arrays;
 import java.util.Date;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.AdditionalAnswers;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.core.Ordered;
 import org.springframework.data.annotation.CreatedDate;
@@ -46,33 +45,30 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
  *
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class AuditingEntityCallbackUnitTests {
 
-	IsNewAwareAuditingHandler handler;
-	AuditingEntityCallback callback;
+	private IsNewAwareAuditingHandler handler;
+	private AuditingEntityCallback callback;
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	void setUp() {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		mappingContext.getPersistentEntity(Sample.class);
 
 		handler = spy(new IsNewAwareAuditingHandler(new PersistentEntities(Arrays.asList(mappingContext))));
 
-		doAnswer(AdditionalAnswers.returnsArgAt(0)).when(handler).markCreated(any());
-		doAnswer(AdditionalAnswers.returnsArgAt(0)).when(handler).markModified(any());
-
 		callback = new AuditingEntityCallback(() -> handler);
 	}
 
 	@Test // DATAMONGO-2261
-	public void rejectsNullAuditingHandler() {
+	void rejectsNullAuditingHandler() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new AuditingEntityCallback(null));
 	}
 
 	@Test // DATAMONGO-2261
-	public void triggersCreationMarkForObjectWithEmptyId() {
+	void triggersCreationMarkForObjectWithEmptyId() {
 
 		Sample sample = new Sample();
 		callback.onBeforeConvert(sample, "foo");
@@ -82,7 +78,7 @@ public class AuditingEntityCallbackUnitTests {
 	}
 
 	@Test // DATAMONGO-2261
-	public void triggersModificationMarkForObjectWithSetId() {
+	void triggersModificationMarkForObjectWithSetId() {
 
 		Sample sample = new Sample();
 		sample.id = "id";
@@ -93,14 +89,14 @@ public class AuditingEntityCallbackUnitTests {
 	}
 
 	@Test // DATAMONGO-2261
-	public void hasExplicitOrder() {
+	void hasExplicitOrder() {
 
 		assertThat(callback).isInstanceOf(Ordered.class);
 		assertThat(callback.getOrder()).isEqualTo(100);
 	}
 
 	@Test // DATAMONGO-2261
-	public void propagatesChangedInstanceToEvent() {
+	void propagatesChangedInstanceToEvent() {
 
 		ImmutableSample sample = new ImmutableSample();
 
@@ -125,7 +121,7 @@ public class AuditingEntityCallbackUnitTests {
 	@Wither
 	@AllArgsConstructor
 	@NoArgsConstructor(force = true)
-	static class ImmutableSample {
+	private static class ImmutableSample {
 
 		@Id String id;
 		@CreatedDate Date created;

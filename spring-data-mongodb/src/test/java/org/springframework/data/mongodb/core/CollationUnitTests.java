@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.*;
 import java.util.Locale;
 
 import org.bson.Document;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Collation.Alternate;
 import org.springframework.data.mongodb.core.query.Collation.CaseFirst;

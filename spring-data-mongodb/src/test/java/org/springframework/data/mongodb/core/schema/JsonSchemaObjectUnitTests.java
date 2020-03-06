@@ -31,7 +31,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.bson.Document;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.*;

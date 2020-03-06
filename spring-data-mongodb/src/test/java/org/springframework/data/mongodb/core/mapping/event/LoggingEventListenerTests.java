@@ -22,9 +22,9 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 
 import org.bson.Document;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -39,7 +39,7 @@ public class LoggingEventListenerTests {
 	ch.qos.logback.classic.Logger logger;
 	LoggingEventListener listener;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		appender = new ListAppender<ILoggingEvent>();
@@ -56,7 +56,7 @@ public class LoggingEventListenerTests {
 		listener = new LoggingEventListener();
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
 
 		// cleanup

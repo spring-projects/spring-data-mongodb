@@ -23,11 +23,11 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -71,8 +71,8 @@ import com.mongodb.client.result.DeleteResult;
  * @author Christoph Strobl
  * @soundtrack U Can't Touch This - MC Hammer
  */
-@RunWith(MockitoJUnitRunner.class)
-public class MongoQueryExecutionUnitTests {
+@ExtendWith(MockitoExtension.class)
+class MongoQueryExecutionUnitTests {
 
 	@Mock MongoOperations mongoOperationsMock;
 	@Mock ExecutableFind<Object> findOperationMock;
@@ -81,28 +81,28 @@ public class MongoQueryExecutionUnitTests {
 	@Mock TerminatingFindNear<Object> terminatingGeoMock;
 	@Mock DbRefResolver dbRefResolver;
 
-	SpelExpressionParser EXPRESSION_PARSER = new SpelExpressionParser();
-	Point POINT = new Point(10, 20);
-	Distance DISTANCE = new Distance(2.5, Metrics.KILOMETERS);
-	RepositoryMetadata metadata = new DefaultRepositoryMetadata(PersonRepository.class);
-	MongoMappingContext context = new MongoMappingContext();
-	ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
-	Method method = ReflectionUtils.findMethod(PersonRepository.class, "findByLocationNear", Point.class, Distance.class,
+	private SpelExpressionParser EXPRESSION_PARSER = new SpelExpressionParser();
+	private Point POINT = new Point(10, 20);
+	private Distance DISTANCE = new Distance(2.5, Metrics.KILOMETERS);
+	private RepositoryMetadata metadata = new DefaultRepositoryMetadata(PersonRepository.class);
+	private MongoMappingContext context = new MongoMappingContext();
+	private ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
+	private Method method = ReflectionUtils.findMethod(PersonRepository.class, "findByLocationNear", Point.class,
+			Distance.class,
 			Pageable.class);
-	MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
-	MappingMongoConverter converter;
+	private MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
+	private MappingMongoConverter converter;
 
-	@Before
+	@BeforeEach
 	@SuppressWarnings("unchecked")
-	public void setUp() {
+	void setUp() {
 
 		converter = new MappingMongoConverter(dbRefResolver, context);
-		when(mongoOperationsMock.getConverter()).thenReturn(converter);
-		when(mongoOperationsMock.query(any(Class.class))).thenReturn(findOperationMock);
+
 	}
 
 	@Test // DATAMONGO-1464
-	public void pagedExecutionShouldNotGenerateCountQueryIfQueryReportedNoResults() {
+	void pagedExecutionShouldNotGenerateCountQueryIfQueryReportedNoResults() {
 
 		doReturn(terminatingMock).when(operationMock).matching(any(Query.class));
 		doReturn(Collections.emptyList()).when(terminatingMock).all();
@@ -115,7 +115,7 @@ public class MongoQueryExecutionUnitTests {
 	}
 
 	@Test // DATAMONGO-1464
-	public void pagedExecutionShouldUseCountFromResultWithOffsetAndResultsWithinPageSize() {
+	void pagedExecutionShouldUseCountFromResultWithOffsetAndResultsWithinPageSize() {
 
 		doReturn(terminatingMock).when(operationMock).matching(any(Query.class));
 		doReturn(Arrays.asList(new Person(), new Person(), new Person(), new Person())).when(terminatingMock).all();
@@ -128,7 +128,7 @@ public class MongoQueryExecutionUnitTests {
 	}
 
 	@Test // DATAMONGO-1464
-	public void pagedExecutionRetrievesObjectsForPageableOutOfRange() {
+	void pagedExecutionRetrievesObjectsForPageableOutOfRange() {
 
 		doReturn(terminatingMock).when(operationMock).matching(any(Query.class));
 		doReturn(Collections.emptyList()).when(terminatingMock).all();
@@ -141,9 +141,11 @@ public class MongoQueryExecutionUnitTests {
 	}
 
 	@Test // DATAMONGO-1464
-	public void pagingGeoExecutionShouldUseCountFromResultWithOffsetAndResultsWithinPageSize() {
+	void pagingGeoExecutionShouldUseCountFromResultWithOffsetAndResultsWithinPageSize() {
 
 		GeoResult<Person> result = new GeoResult<>(new Person(), DISTANCE);
+		when(mongoOperationsMock.getConverter()).thenReturn(converter);
+		when(mongoOperationsMock.query(any(Class.class))).thenReturn(findOperationMock);
 		when(findOperationMock.near(any(NearQuery.class))).thenReturn(terminatingGeoMock);
 		doReturn(new GeoResults<>(Arrays.asList(result, result, result, result))).when(terminatingGeoMock).all();
 
@@ -160,8 +162,10 @@ public class MongoQueryExecutionUnitTests {
 	}
 
 	@Test // DATAMONGO-1464
-	public void pagingGeoExecutionRetrievesObjectsForPageableOutOfRange() {
+	void pagingGeoExecutionRetrievesObjectsForPageableOutOfRange() {
 
+		when(mongoOperationsMock.getConverter()).thenReturn(converter);
+		when(mongoOperationsMock.query(any(Class.class))).thenReturn(findOperationMock);
 		when(findOperationMock.near(any(NearQuery.class))).thenReturn(terminatingGeoMock);
 		doReturn(new GeoResults<>(Collections.emptyList())).when(terminatingGeoMock).all();
 		doReturn(terminatingMock).when(findOperationMock).matching(any(Query.class));
@@ -180,7 +184,7 @@ public class MongoQueryExecutionUnitTests {
 	}
 
 	@Test // DATAMONGO-2351
-	public void acknowledgedDeleteReturnsDeletedCount() {
+	void acknowledgedDeleteReturnsDeletedCount() {
 
 		Method method = ReflectionUtils.findMethod(PersonRepository.class, "deleteAllByLastname", String.class);
 		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
@@ -192,7 +196,7 @@ public class MongoQueryExecutionUnitTests {
 	}
 
 	@Test // DATAMONGO-2351
-	public void unacknowledgedDeleteReturnsZeroDeletedCount() {
+	void unacknowledgedDeleteReturnsZeroDeletedCount() {
 
 		Method method = ReflectionUtils.findMethod(PersonRepository.class, "deleteAllByLastname", String.class);
 		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
@@ -204,7 +208,7 @@ public class MongoQueryExecutionUnitTests {
 	}
 
 	@Test // DATAMONGO-1997
-	public void deleteExecutionWithEntityReturnTypeTriggersFindAndRemove() {
+	void deleteExecutionWithEntityReturnTypeTriggersFindAndRemove() {
 
 		Method method = ReflectionUtils.findMethod(PersonRepository.class, "deleteByLastname", String.class);
 		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);

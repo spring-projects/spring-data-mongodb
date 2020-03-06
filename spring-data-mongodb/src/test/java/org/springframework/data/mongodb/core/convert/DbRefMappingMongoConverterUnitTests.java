@@ -34,12 +34,12 @@ import java.util.Set;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.data.annotation.AccessType;
 import org.springframework.data.annotation.AccessType.Type;
@@ -69,7 +69,7 @@ import com.mongodb.client.MongoDatabase;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class DbRefMappingMongoConverterUnitTests {
 
 	MappingMongoConverter converter;
@@ -78,7 +78,7 @@ public class DbRefMappingMongoConverterUnitTests {
 	@Mock MongoDatabaseFactory dbFactory;
 	DefaultDbRefResolver dbRefResolver;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		when(dbFactory.getExceptionTranslator()).thenReturn(new MongoExceptionTranslator());

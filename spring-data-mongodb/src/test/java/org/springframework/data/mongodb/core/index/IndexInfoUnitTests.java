@@ -21,7 +21,7 @@ import java.time.Duration;
 import java.util.Arrays;
 
 import org.bson.Document;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Sort.Direction;
 
 /**

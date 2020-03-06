@@ -28,7 +28,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.assertj.core.data.TemporalUnitLessThanOffset;
 import org.bson.BsonTimestamp;
 import org.bson.Document;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
 import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.geo.Box;

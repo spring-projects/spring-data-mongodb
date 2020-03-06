@@ -22,7 +22,7 @@ import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 import java.util.Arrays;
 
 import org.bson.Document;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.query.Criteria;

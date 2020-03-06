@@ -17,7 +17,7 @@ package org.springframework.data.mongodb.core.query;
 
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;

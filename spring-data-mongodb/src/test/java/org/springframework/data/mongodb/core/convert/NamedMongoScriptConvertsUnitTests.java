@@ -19,7 +19,7 @@ import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import org.bson.Document;
 import org.bson.types.Code;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;

@@ -20,7 +20,7 @@ import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 import org.bson.Document;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.data.mongodb.core.aggregation.BucketAutoOperation.Granularities;
 

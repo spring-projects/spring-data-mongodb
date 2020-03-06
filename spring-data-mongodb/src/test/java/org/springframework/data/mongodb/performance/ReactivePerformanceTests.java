@@ -28,8 +28,9 @@ import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import org.springframework.core.Constants;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
@@ -82,7 +83,7 @@ public class ReactivePerformanceTests {
 	ReactivePersonRepository repository;
 	MongoConverter converter;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 
 		mongo = MongoClients.create();

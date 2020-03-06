@@ -20,12 +20,12 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 
@@ -34,40 +34,40 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
  *
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ReactiveAggregationOperationSupportUnitTests {
 
 	@Mock ReactiveMongoTemplate template;
-	ReactiveAggregationOperationSupport opSupport;
+	private ReactiveAggregationOperationSupport opSupport;
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	void setUp() {
 		opSupport = new ReactiveAggregationOperationSupport(template);
 	}
 
 	@Test // DATAMONGO-1719
-	public void throwsExceptionOnNullDomainType() {
+	void throwsExceptionOnNullDomainType() {
 		assertThatIllegalArgumentException().isThrownBy(() -> opSupport.aggregateAndReturn(null));
 	}
 
 	@Test // DATAMONGO-1719
-	public void throwsExceptionOnNullCollectionWhenUsed() {
+	void throwsExceptionOnNullCollectionWhenUsed() {
 		assertThatIllegalArgumentException()
 				.isThrownBy(() -> opSupport.aggregateAndReturn(Person.class).inCollection(null));
 	}
 
 	@Test // DATAMONGO-1719
-	public void throwsExceptionOnEmptyCollectionWhenUsed() {
+	void throwsExceptionOnEmptyCollectionWhenUsed() {
 		assertThatIllegalArgumentException().isThrownBy(() -> opSupport.aggregateAndReturn(Person.class).inCollection(""));
 	}
 
 	@Test // DATAMONGO-1719
-	public void throwsExceptionOnNullAggregation() {
+	void throwsExceptionOnNullAggregation() {
 		assertThatIllegalArgumentException().isThrownBy(() -> opSupport.aggregateAndReturn(Person.class).by(null));
 	}
 
 	@Test // DATAMONGO-1719
-	public void aggregateWithUntypedAggregationAndExplicitCollection() {
+	void aggregateWithUntypedAggregationAndExplicitCollection() {
 
 		opSupport.aggregateAndReturn(Person.class).inCollection("star-wars").by(newAggregation(project("foo"))).all();
 
@@ -77,7 +77,7 @@ public class ReactiveAggregationOperationSupportUnitTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void aggregateWithUntypedAggregation() {
+	void aggregateWithUntypedAggregation() {
 
 		when(template.getCollectionName(any(Class.class))).thenReturn("person");
 
@@ -92,7 +92,7 @@ public class ReactiveAggregationOperationSupportUnitTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void aggregateWithTypeAggregation() {
+	void aggregateWithTypeAggregation() {
 
 		when(template.getCollectionName(any(Class.class))).thenReturn("person");
 

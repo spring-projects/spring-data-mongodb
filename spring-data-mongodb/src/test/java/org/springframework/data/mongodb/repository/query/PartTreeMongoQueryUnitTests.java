@@ -24,11 +24,11 @@ import java.util.List;
 
 import org.bson.Document;
 import org.bson.json.JsonParseException;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
@@ -58,7 +58,7 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
  * @author Thomas Darimont
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class PartTreeMongoQueryUnitTests {
 
 	@Mock MongoOperations mongoOperationsMock;
@@ -66,7 +66,7 @@ public class PartTreeMongoQueryUnitTests {
 
 	MongoMappingContext mappingContext;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		mappingContext = new MongoMappingContext();

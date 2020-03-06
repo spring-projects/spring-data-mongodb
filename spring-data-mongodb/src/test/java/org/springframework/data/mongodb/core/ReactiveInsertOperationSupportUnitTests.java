@@ -24,12 +24,12 @@ import lombok.Data;
 
 import java.util.Arrays;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.data.annotation.Id;
 
@@ -38,21 +38,19 @@ import org.springframework.data.annotation.Id;
  *
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ReactiveInsertOperationSupportUnitTests {
 
 	private static final String STAR_WARS = "star-wars";
 
 	@Mock ReactiveMongoTemplate template;
 
-	ReactiveInsertOperationSupport ops;
+	private ReactiveInsertOperationSupport ops;
 
-	Person luke, han;
+	private Person luke, han;
 
-	@Before
-	public void setUp() {
-
-		when(template.getCollectionName(any(Class.class))).thenReturn(STAR_WARS);
+	@BeforeEach
+	void setUp() {
 
 		ops = new ReactiveInsertOperationSupport(template);
 
@@ -66,12 +64,14 @@ public class ReactiveInsertOperationSupportUnitTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void nullCollectionShouldThrowException() {
+	void nullCollectionShouldThrowException() {
 		assertThatIllegalArgumentException().isThrownBy(() -> ops.insert(Person.class).inCollection(null));
 	}
 
 	@Test // DATAMONGO-1719
-	public void insertShouldUseDerivedCollectionName() {
+	void insertShouldUseDerivedCollectionName() {
+
+		when(template.getCollectionName(any(Class.class))).thenReturn(STAR_WARS);
 
 		ops.insert(Person.class).one(luke);
 
@@ -84,7 +84,7 @@ public class ReactiveInsertOperationSupportUnitTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void insertShouldUseExplicitCollectionName() {
+	void insertShouldUseExplicitCollectionName() {
 
 		ops.insert(Person.class).inCollection(STAR_WARS).one(luke);
 
@@ -93,7 +93,9 @@ public class ReactiveInsertOperationSupportUnitTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void insertCollectionShouldDelegateCorrectly() {
+	void insertCollectionShouldDelegateCorrectly() {
+
+		when(template.getCollectionName(any(Class.class))).thenReturn(STAR_WARS);
 
 		ops.insert(Person.class).all(Arrays.asList(luke, han));
 

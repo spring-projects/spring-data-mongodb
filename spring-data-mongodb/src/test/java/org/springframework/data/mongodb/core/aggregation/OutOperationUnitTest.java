@@ -21,7 +21,7 @@ import static org.springframework.data.mongodb.test.util.Assertions.*;
 import java.util.Arrays;
 
 import org.bson.Document;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link OutOperation}.

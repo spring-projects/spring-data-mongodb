@@ -17,8 +17,9 @@ package org.springframework.data.mongodb.core.query;
 
 import static org.assertj.core.api.Assertions.*;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.ExampleMatcher.NullHandler;
 import org.springframework.data.domain.ExampleMatcher.StringMatcher;
@@ -30,7 +31,7 @@ public class UntypedExampleMatcherUnitTests {
 
 	ExampleMatcher matcher;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		matcher = UntypedExampleMatcher.matching();
 	}

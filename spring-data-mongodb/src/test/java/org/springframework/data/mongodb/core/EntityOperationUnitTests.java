@@ -17,8 +17,9 @@ package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.annotation.Id;
@@ -34,7 +35,7 @@ public class EntityOperationUnitTests {
 	MongoMappingContext mappingContext = new MongoMappingContext();
 	ConversionService conversionService = new DefaultConversionService();
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		ops = new EntityOperations(mappingContext);
 	}

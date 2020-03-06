@@ -26,13 +26,15 @@ import java.util.Optional;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -72,8 +74,9 @@ import com.mongodb.client.result.DeleteResult;
  * @author Thomas Darimont
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner.class)
-public class AbstractMongoQueryUnitTests {
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+class AbstractMongoQueryUnitTests {
 
 	@Mock MongoOperations mongoOperationsMock;
 	@Mock ExecutableFind<?> executableFind;
@@ -82,8 +85,8 @@ public class AbstractMongoQueryUnitTests {
 	@Mock MongoMappingContext mappingContextMock;
 	@Mock DeleteResult deleteResultMock;
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	void setUp() {
 
 		doReturn("persons").when(persitentEntityMock).getCollection();
 		doReturn(persitentEntityMock).when(mappingContextMock).getPersistentEntity(Mockito.any(Class.class));
@@ -103,7 +106,7 @@ public class AbstractMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-566
-	public void testDeleteExecutionCallsRemoveCorrectly() {
+	void testDeleteExecutionCallsRemoveCorrectly() {
 
 		createQueryForMethod("deletePersonByLastname", String.class).setDeleteQuery(true).execute(new Object[] { "booh" });
 
@@ -112,7 +115,7 @@ public class AbstractMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-566, DATAMONGO-1040
-	public void testDeleteExecutionLoadsListOfRemovedDocumentsWhenReturnTypeIsCollectionLike() {
+	void testDeleteExecutionLoadsListOfRemovedDocumentsWhenReturnTypeIsCollectionLike() {
 
 		createQueryForMethod("deleteByLastname", String.class).setDeleteQuery(true).execute(new Object[] { "booh" });
 
@@ -120,7 +123,7 @@ public class AbstractMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-566
-	public void testDeleteExecutionReturnsZeroWhenWriteResultIsNull() {
+	void testDeleteExecutionReturnsZeroWhenWriteResultIsNull() {
 
 		MongoQueryFake query = createQueryForMethod("deletePersonByLastname", String.class);
 		query.setDeleteQuery(true);
@@ -129,7 +132,7 @@ public class AbstractMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-566, DATAMONGO-978
-	public void testDeleteExecutionReturnsNrDocumentsDeletedFromWriteResult() {
+	void testDeleteExecutionReturnsNrDocumentsDeletedFromWriteResult() {
 
 		when(deleteResultMock.getDeletedCount()).thenReturn(100L);
 		when(deleteResultMock.wasAcknowledged()).thenReturn(true);
@@ -142,7 +145,7 @@ public class AbstractMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-957
-	public void metadataShouldNotBeAddedToQueryWhenNotPresent() {
+	void metadataShouldNotBeAddedToQueryWhenNotPresent() {
 
 		MongoQueryFake query = createQueryForMethod("findByFirstname", String.class);
 		query.execute(new Object[] { "fake" });
@@ -157,7 +160,7 @@ public class AbstractMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-957
-	public void metadataShouldBeAddedToQueryCorrectly() {
+	void metadataShouldBeAddedToQueryCorrectly() {
 
 		MongoQueryFake query = createQueryForMethod("findByFirstname", String.class, Pageable.class);
 		query.execute(new Object[] { "fake", PageRequest.of(0, 10) });
@@ -171,7 +174,7 @@ public class AbstractMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-957
-	public void metadataShouldBeAddedToCountQueryCorrectly() {
+	void metadataShouldBeAddedToCountQueryCorrectly() {
 
 		MongoQueryFake query = createQueryForMethod("findByFirstname", String.class, Pageable.class);
 		query.execute(new Object[] { "fake", PageRequest.of(1, 10) });
@@ -185,7 +188,7 @@ public class AbstractMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-957, DATAMONGO-1783
-	public void metadataShouldBeAddedToStringBasedQueryCorrectly() {
+	void metadataShouldBeAddedToStringBasedQueryCorrectly() {
 
 		MongoQueryFake query = createQueryForMethod("findByAnnotatedQuery", String.class, Pageable.class);
 		query.execute(new Object[] { "fake", PageRequest.of(0, 10) });
@@ -199,7 +202,7 @@ public class AbstractMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1057
-	public void slicedExecutionShouldRetainNrOfElementsToSkip() {
+	void slicedExecutionShouldRetainNrOfElementsToSkip() {
 
 		MongoQueryFake query = createQueryForMethod("findByLastname", String.class, Pageable.class);
 		Pageable page1 = PageRequest.of(0, 10);
@@ -218,7 +221,7 @@ public class AbstractMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1057
-	public void slicedExecutionShouldIncrementLimitByOne() {
+	void slicedExecutionShouldIncrementLimitByOne() {
 
 		MongoQueryFake query = createQueryForMethod("findByLastname", String.class, Pageable.class);
 		Pageable page1 = PageRequest.of(0, 10);
@@ -237,7 +240,7 @@ public class AbstractMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1057
-	public void slicedExecutionShouldRetainSort() {
+	void slicedExecutionShouldRetainSort() {
 
 		MongoQueryFake query = createQueryForMethod("findByLastname", String.class, Pageable.class);
 		Pageable page1 = PageRequest.of(0, 10, Sort.Direction.DESC, "bar");
@@ -257,7 +260,7 @@ public class AbstractMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1080
-	public void doesNotTryToPostProcessQueryResultIntoWrapperType() {
+	void doesNotTryToPostProcessQueryResultIntoWrapperType() {
 
 		Person reference = new Person();
 
@@ -269,7 +272,7 @@ public class AbstractMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1865
-	public void limitingSingleEntityQueryCallsFirst() {
+	void limitingSingleEntityQueryCallsFirst() {
 
 		Person reference = new Person();
 
@@ -281,7 +284,7 @@ public class AbstractMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1872
-	public void doesNotFixCollectionOnPreparation() {
+	void doesNotFixCollectionOnPreparation() {
 
 		AbstractMongoQuery query = createQueryForMethod(DynamicallyMappedRepository.class, "findBy");
 
@@ -292,7 +295,7 @@ public class AbstractMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1979
-	public void usesAnnotatedSortWhenPresent() {
+	void usesAnnotatedSortWhenPresent() {
 
 		createQueryForMethod("findByAge", Integer.class) //
 				.execute(new Object[] { 1000 });
@@ -303,7 +306,7 @@ public class AbstractMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1979
-	public void usesExplicitSortOverridesAnnotatedSortWhenPresent() {
+	void usesExplicitSortOverridesAnnotatedSortWhenPresent() {
 
 		createQueryForMethod("findByAge", Integer.class, Sort.class) //
 				.execute(new Object[] { 1000, Sort.by(Direction.DESC, "age") });
@@ -314,7 +317,7 @@ public class AbstractMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void shouldApplyStaticAnnotatedCollation() {
+	void shouldApplyStaticAnnotatedCollation() {
 
 		createQueryForMethod("findWithCollationUsingSpimpleStringValueByFirstName", String.class) //
 				.execute(new Object[] { "dalinar" });
@@ -326,7 +329,7 @@ public class AbstractMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void shouldApplyStaticAnnotatedCollationAsDocument() {
+	void shouldApplyStaticAnnotatedCollationAsDocument() {
 
 		createQueryForMethod("findWithCollationUsingDocumentByFirstName", String.class) //
 				.execute(new Object[] { "dalinar" });
@@ -338,7 +341,7 @@ public class AbstractMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void shouldApplyDynamicAnnotatedCollationAsString() {
+	void shouldApplyDynamicAnnotatedCollationAsString() {
 
 		createQueryForMethod("findWithCollationUsingPlaceholderByFirstName", String.class, Object.class) //
 				.execute(new Object[] { "dalinar", "en_US" });
@@ -350,7 +353,7 @@ public class AbstractMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void shouldApplyDynamicAnnotatedCollationAsDocument() {
+	void shouldApplyDynamicAnnotatedCollationAsDocument() {
 
 		createQueryForMethod("findWithCollationUsingPlaceholderByFirstName", String.class, Object.class) //
 				.execute(new Object[] { "dalinar", new Document("locale", "en_US") });
@@ -362,7 +365,7 @@ public class AbstractMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void shouldApplyDynamicAnnotatedCollationAsLocale() {
+	void shouldApplyDynamicAnnotatedCollationAsLocale() {
 
 		createQueryForMethod("findWithCollationUsingPlaceholderByFirstName", String.class, Object.class) //
 				.execute(new Object[] { "dalinar", Locale.US });
@@ -373,20 +376,18 @@ public class AbstractMongoQueryUnitTests {
 				.contains(Collation.of("en_US").toDocument());
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1854
-	public void shouldThrowExceptionOnNonParsableCollation() {
+	@Test // DATAMONGO-1854
+	void shouldThrowExceptionOnNonParsableCollation() {
 
-		createQueryForMethod("findWithCollationUsingPlaceholderByFirstName", String.class, Object.class) //
-				.execute(new Object[] { "dalinar", 100 });
+		assertThatIllegalArgumentException().isThrownBy(() -> {
 
-		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
-		verify(withQueryMock).matching(captor.capture());
-		assertThat(captor.getValue().getCollation().map(Collation::toDocument))
-				.contains(Collation.of("en_US").toDocument());
+			createQueryForMethod("findWithCollationUsingPlaceholderByFirstName", String.class, Object.class) //
+					.execute(new Object[] { "dalinar", 100 });
+		});
 	}
 
 	@Test // DATAMONGO-1854
-	public void shouldApplyDynamicAnnotatedCollationIn() {
+	void shouldApplyDynamicAnnotatedCollationIn() {
 
 		createQueryForMethod("findWithCollationUsingPlaceholderInDocumentByFirstName", String.class, String.class) //
 				.execute(new Object[] { "dalinar", "en_US" });
@@ -398,7 +399,7 @@ public class AbstractMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void shouldApplyCollationParameter() {
+	void shouldApplyCollationParameter() {
 
 		Collation collation = Collation.of("en_US");
 		createQueryForMethod("findWithCollationParameterByFirstName", String.class, Collation.class) //
@@ -410,7 +411,7 @@ public class AbstractMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void collationParameterShouldOverrideAnnotation() {
+	void collationParameterShouldOverrideAnnotation() {
 
 		Collation collation = Collation.of("de_AT");
 		createQueryForMethod("findWithWithCollationParameterAndAnnotationByFirstName", String.class, Collation.class) //
@@ -422,7 +423,7 @@ public class AbstractMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void collationParameterShouldNotBeAppliedWhenNullOverrideAnnotation() {
+	void collationParameterShouldNotBeAppliedWhenNullOverrideAnnotation() {
 
 		createQueryForMethod("findWithWithCollationParameterAndAnnotationByFirstName", String.class, Collation.class) //
 				.execute(new Object[] { "dalinar", null });
@@ -457,7 +458,7 @@ public class AbstractMongoQueryUnitTests {
 		private boolean isDeleteQuery;
 		private boolean isLimitingQuery;
 
-		public MongoQueryFake(MongoQueryMethod method, MongoOperations operations) {
+		MongoQueryFake(MongoQueryMethod method, MongoOperations operations) {
 			super(method, operations, new SpelExpressionParser(), QueryMethodEvaluationContextProvider.DEFAULT);
 		}
 
@@ -486,12 +487,12 @@ public class AbstractMongoQueryUnitTests {
 			return isLimitingQuery;
 		}
 
-		public MongoQueryFake setDeleteQuery(boolean isDeleteQuery) {
+		MongoQueryFake setDeleteQuery(boolean isDeleteQuery) {
 			this.isDeleteQuery = isDeleteQuery;
 			return this;
 		}
 
-		public MongoQueryFake setLimitingQuery(boolean limitingQuery) {
+		MongoQueryFake setLimitingQuery(boolean limitingQuery) {
 
 			isLimitingQuery = limitingQuery;
 			return this;

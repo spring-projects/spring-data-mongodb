@@ -17,7 +17,7 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import static org.assertj.core.api.Assertions.*;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 

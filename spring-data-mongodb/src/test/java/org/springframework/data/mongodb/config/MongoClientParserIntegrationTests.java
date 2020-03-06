@@ -19,8 +19,8 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.support.BeanDefinitionReader;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
@@ -47,7 +47,7 @@ public class MongoClientParserIntegrationTests {
 	DefaultListableBeanFactory factory;
 	BeanDefinitionReader reader;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		this.factory = new DefaultListableBeanFactory();

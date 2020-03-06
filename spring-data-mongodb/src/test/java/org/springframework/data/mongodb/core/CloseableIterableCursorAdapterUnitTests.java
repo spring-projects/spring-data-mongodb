@@ -15,14 +15,16 @@
  */
 package org.springframework.data.mongodb.core;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.core.MongoTemplate.CloseableIterableCursorAdapter;
 import org.springframework.data.mongodb.core.MongoTemplate.DocumentCallback;
@@ -35,40 +37,39 @@ import com.mongodb.client.MongoCursor;
  *
  * @author Oliver Gierke
  */
-@RunWith(MockitoJUnitRunner.class)
-public class CloseableIterableCursorAdapterUnitTests {
+@ExtendWith(MockitoExtension.class)
+class CloseableIterableCursorAdapterUnitTests {
 
 	@Mock PersistenceExceptionTranslator exceptionTranslator;
 	@Mock DocumentCallback<Object> callback;
 
-	MongoCursor<Document> cursor;
-	CloseableIterator<Object> adapter;
+	private MongoCursor<Document> cursor;
+	private CloseableIterator<Object> adapter;
 
-	@Before
-	public void setUp() {
-
-		this.cursor = doThrow(IllegalArgumentException.class).when(mock(MongoCursor.class));
-		this.adapter = new CloseableIterableCursorAdapter<Object>(cursor, exceptionTranslator, callback);
+	@BeforeEach
+	void setUp() {
+		this.cursor = mock(MongoCursor.class);
+		this.adapter = new CloseableIterableCursorAdapter<>(cursor, exceptionTranslator, callback);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1276
-	public void propagatesOriginalExceptionFromAdapterDotNext() {
+	@Test // DATAMONGO-1276
+	void propagatesOriginalExceptionFromAdapterDotNext() {
 
-		cursor.next();
-		adapter.next();
+		doThrow(IllegalArgumentException.class).when(cursor).next();
+		assertThatIllegalArgumentException().isThrownBy(() -> adapter.next());
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1276
-	public void propagatesOriginalExceptionFromAdapterDotHasNext() {
+	@Test // DATAMONGO-1276
+	void propagatesOriginalExceptionFromAdapterDotHasNext() {
 
-		cursor.hasNext();
-		adapter.hasNext();
+		doThrow(IllegalArgumentException.class).when(cursor).hasNext();
+		assertThatIllegalArgumentException().isThrownBy(() -> adapter.hasNext());
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1276
-	public void propagatesOriginalExceptionFromAdapterDotClose() {
+	@Test // DATAMONGO-1276
+	void propagatesOriginalExceptionFromAdapterDotClose() {
 
-		cursor.close();
-		adapter.close();
+		doThrow(IllegalArgumentException.class).when(cursor).close();
+		assertThatIllegalArgumentException().isThrownBy(() -> adapter.close());
 	}
 }

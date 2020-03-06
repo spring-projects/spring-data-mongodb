@@ -20,8 +20,8 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
@@ -47,7 +47,7 @@ public class CountQueryUnitTests {
 
 	MongoDatabaseFactory factory = mock(MongoDatabaseFactory.class);
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		this.context = new MongoMappingContext();

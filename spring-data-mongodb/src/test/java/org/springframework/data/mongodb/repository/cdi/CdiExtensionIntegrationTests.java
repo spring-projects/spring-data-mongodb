@@ -20,9 +20,9 @@ import static org.assertj.core.api.Assertions.*;
 import javax.enterprise.inject.se.SeContainer;
 import javax.enterprise.inject.se.SeContainerInitializer;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.data.mongodb.repository.Person;
 
@@ -36,7 +36,7 @@ public class CdiExtensionIntegrationTests {
 
 	static SeContainer container;
 
-	@BeforeClass
+	@BeforeAll
 	public static void setUp() {
 
 		container = SeContainerInitializer.newInstance() //
@@ -45,7 +45,7 @@ public class CdiExtensionIntegrationTests {
 				.initialize();
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void tearDown() {
 		container.close();
 	}

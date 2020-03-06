@@ -33,11 +33,12 @@ import org.bson.Document;
 import org.bson.UuidRepresentation;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.types.ObjectId;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.data.mongodb.core.DbCallback;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
@@ -70,7 +71,7 @@ import com.mongodb.reactivestreams.client.MongoClients;
  * @author Thomas Darimont
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class StringBasedMongoQueryUnitTests {
 
 	SpelExpressionParser PARSER = new SpelExpressionParser();
@@ -81,7 +82,7 @@ public class StringBasedMongoQueryUnitTests {
 
 	MongoConverter converter;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		this.converter = new MappingMongoConverter(factory, new MongoMappingContext());

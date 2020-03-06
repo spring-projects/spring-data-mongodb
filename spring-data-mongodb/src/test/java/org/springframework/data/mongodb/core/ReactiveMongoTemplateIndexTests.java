@@ -57,13 +57,13 @@ import com.mongodb.reactivestreams.client.MongoClient;
 @ExtendWith(MongoClientExtension.class)
 public class ReactiveMongoTemplateIndexTests {
 
-	static @Client MongoClient client;
+	private static @Client MongoClient client;
 
-	SimpleReactiveMongoDatabaseFactory factory;
-	ReactiveMongoTemplate template;
+	private SimpleReactiveMongoDatabaseFactory factory;
+	private ReactiveMongoTemplate template;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 
 		factory = new SimpleReactiveMongoDatabaseFactory(client, "reactive-template-index-tests");
 		template = new ReactiveMongoTemplate(factory);
@@ -74,11 +74,11 @@ public class ReactiveMongoTemplateIndexTests {
 	}
 
 	@AfterEach
-	public void cleanUp() {}
+	void cleanUp() {}
 
 	@Test // DATAMONGO-1444
 	@RepeatFailedTest(3)
-	public void testEnsureIndexShouldCreateIndex() {
+	void testEnsureIndexShouldCreateIndex() {
 
 		Person p1 = new Person("Oliver");
 		p1.setAge(25);
@@ -114,7 +114,7 @@ public class ReactiveMongoTemplateIndexTests {
 
 	@Test // DATAMONGO-1444
 	@RepeatFailedTest(3)
-	public void getIndexInfoShouldReturnCorrectIndex() {
+	void getIndexInfoShouldReturnCorrectIndex() {
 
 		Person p1 = new Person("Oliver");
 		p1.setAge(25);
@@ -145,7 +145,7 @@ public class ReactiveMongoTemplateIndexTests {
 
 	@Test // DATAMONGO-1444, DATAMONGO-2264
 	@RepeatFailedTest(3)
-	public void testReadIndexInfoForIndicesCreatedViaMongoShellCommands() {
+	void testReadIndexInfoForIndicesCreatedViaMongoShellCommands() {
 
 		template.indexOps(Person.class).dropAllIndexes() //
 				.as(StepVerifier::create) //
@@ -197,7 +197,7 @@ public class ReactiveMongoTemplateIndexTests {
 
 	@Test // DATAMONGO-1928
 	@RepeatFailedTest(3)
-	public void shouldCreateIndexOnAccess() {
+	void shouldCreateIndexOnAccess() {
 
 		StepVerifier.create(template.getCollection("indexedSample").listIndexes(Document.class)).expectNextCount(0)
 				.verifyComplete();
@@ -213,7 +213,7 @@ public class ReactiveMongoTemplateIndexTests {
 
 	@Test // DATAMONGO-1928, DATAMONGO-2264
 	@RepeatFailedTest(3)
-	public void indexCreationShouldFail() throws InterruptedException {
+	void indexCreationShouldFail() throws InterruptedException {
 
 		Flux.from(factory.getMongoDatabase().getCollection("indexfail") //
 				.createIndex(new Document("field", 1), new IndexOptions().name("foo").unique(true).sparse(true)))

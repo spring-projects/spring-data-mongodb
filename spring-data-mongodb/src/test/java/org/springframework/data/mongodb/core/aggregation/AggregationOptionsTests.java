@@ -19,8 +19,8 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link AggregationOptions}.
@@ -34,7 +34,7 @@ public class AggregationOptionsTests {
 
 	AggregationOptions aggregationOptions;
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		aggregationOptions = newAggregationOptions().explain(true) //
 				.cursorBatchSize(1) //
