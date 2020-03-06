@@ -190,6 +190,7 @@ public class ChangeStreamRequest<T>
 		 * @param collectionName can be {@literal null}.
 		 * @param maxAwaitTime can be {@literal null}.
 		 * @param options must not be {@literal null}.
+		 * @since 3.0
 		 */
 		public ChangeStreamRequestOptions(@Nullable String databaseName, @Nullable String collectionName,
 				@Nullable Duration maxAwaitTime, ChangeStreamOptions options) {
@@ -260,7 +261,7 @@ public class ChangeStreamRequest<T>
 		private @Nullable String collectionName;
 		private @Nullable Duration maxAwaitTime;
 		private @Nullable MessageListener<ChangeStreamDocument<Document>, ? super T> listener;
-		private ChangeStreamOptionsBuilder delegate = ChangeStreamOptions.builder();
+		private final ChangeStreamOptionsBuilder delegate = ChangeStreamOptions.builder();
 
 		private ChangeStreamRequestBuilder() {}
 
@@ -357,7 +358,7 @@ public class ChangeStreamRequest<T>
 		 * @see ChangeStreamOptions#getCollation()
 		 * @see ChangeStreamOptionsBuilder#collation(Collation)
 		 */
-		public ChangeStreamRequestBuilder collation(Collation collation) {
+		public ChangeStreamRequestBuilder<T> collation(Collation collation) {
 
 			Assert.notNull(collation, "Collation must not be null!");
 
