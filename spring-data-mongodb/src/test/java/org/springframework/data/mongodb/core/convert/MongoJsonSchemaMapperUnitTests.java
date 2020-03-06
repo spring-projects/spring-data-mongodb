@@ -23,8 +23,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -105,7 +105,7 @@ public class MongoJsonSchemaMapperUnitTests {
 			"         }" + //
 			"      } }";
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		mapper = new MongoJsonSchemaMapper(new MappingMongoConverter(mock(DbRefResolver.class), new MongoMappingContext()));
 	}

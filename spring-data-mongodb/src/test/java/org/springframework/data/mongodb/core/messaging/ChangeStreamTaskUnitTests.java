@@ -22,11 +22,11 @@ import java.util.UUID;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -43,18 +43,18 @@ import com.mongodb.client.model.changestream.ChangeStreamDocument;
 /**
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.class)
-public class ChangeStreamTaskUnitTests {
+@ExtendWith(MockitoExtension.class)
+class ChangeStreamTaskUnitTests {
 
 	ChangeStreamTask task;
 	@Mock MongoTemplate template;
 	@Mock MongoDatabase mongoDatabase;
 	@Mock MongoCollection<Document> mongoCollection;
 	@Mock ChangeStreamIterable<Document> changeStreamIterable;
-	MongoConverter converter;
+	private MongoConverter converter;
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	void setUp() {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext);
@@ -66,15 +66,14 @@ public class ChangeStreamTaskUnitTests {
 
 		when(mongoCollection.watch(eq(Document.class))).thenReturn(changeStreamIterable);
 
-		when(changeStreamIterable.startAfter(any())).thenReturn(changeStreamIterable);
-		when(changeStreamIterable.resumeAfter(any())).thenReturn(changeStreamIterable);
 		when(changeStreamIterable.fullDocument(any())).thenReturn(changeStreamIterable);
 	}
 
 	@Test // DATAMONGO-2258
-	public void shouldNotBreakLovelaceBehavior() {
+	void shouldNotBreakLovelaceBehavior() {
 
 		BsonDocument resumeToken = new BsonDocument("token", new BsonString(UUID.randomUUID().toString()));
+		when(changeStreamIterable.resumeAfter(any())).thenReturn(changeStreamIterable);
 
 		ChangeStreamRequest request = ChangeStreamRequest.builder() //
 				.collection("start-wars") //
@@ -88,7 +87,9 @@ public class ChangeStreamTaskUnitTests {
 	}
 
 	@Test // DATAMONGO-2258
-	public void shouldApplyResumeAfterToChangeStream() {
+	void shouldApplyResumeAfterToChangeStream() {
+
+		when(changeStreamIterable.resumeAfter(any())).thenReturn(changeStreamIterable);
 
 		BsonDocument resumeToken = new BsonDocument("token", new BsonString(UUID.randomUUID().toString()));
 
@@ -104,7 +105,9 @@ public class ChangeStreamTaskUnitTests {
 	}
 
 	@Test // DATAMONGO-2258
-	public void shouldApplyStartAfterToChangeStream() {
+	void shouldApplyStartAfterToChangeStream() {
+
+		when(changeStreamIterable.startAfter(any())).thenReturn(changeStreamIterable);
 
 		BsonDocument resumeToken = new BsonDocument("token", new BsonString(UUID.randomUUID().toString()));
 

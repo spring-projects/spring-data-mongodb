@@ -21,10 +21,10 @@ import static org.mockito.Mockito.*;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
@@ -42,15 +42,15 @@ import com.mongodb.client.MongoDatabase;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner.class)
-public class SimpleMongoClientDatabaseFactoryUnitTests {
+@ExtendWith(MockitoExtension.class)
+class SimpleMongoClientDatabaseFactoryUnitTests {
 
 	@Mock MongoClient mongo;
 	@Mock ClientSession clientSession;
 	@Mock MongoDatabase database;
 
 	@Test // DATADOC-254, DATAMONGO-1903
-	public void rejectsIllegalDatabaseNames() {
+	void rejectsIllegalDatabaseNames() {
 
 		rejectsDatabaseName("foo.bar");
 		rejectsDatabaseName("foo$bar");
@@ -61,14 +61,14 @@ public class SimpleMongoClientDatabaseFactoryUnitTests {
 	}
 
 	@Test // DATADOC-254
-	public void allowsDatabaseNames() {
+	void allowsDatabaseNames() {
 		new SimpleMongoClientDatabaseFactory(mongo, "foo-bar");
 		new SimpleMongoClientDatabaseFactory(mongo, "foo_bar");
 		new SimpleMongoClientDatabaseFactory(mongo, "foo01231bar");
 	}
 
 	@Test // DATADOC-295
-	public void mongoUriConstructor() {
+	void mongoUriConstructor() {
 
 		ConnectionString mongoURI = new ConnectionString(
 				"mongodb://myUsername:myPassword@localhost/myDatabase.myCollection");
@@ -78,7 +78,7 @@ public class SimpleMongoClientDatabaseFactoryUnitTests {
 	}
 
 	@Test // DATAMONGO-1158
-	public void constructsMongoClientAccordingToMongoUri() {
+	void constructsMongoClientAccordingToMongoUri() {
 
 		ConnectionString uri = new ConnectionString(
 				"mongodb://myUserName:myPassWord@127.0.0.1:27017/myDataBase.myCollection");
@@ -88,7 +88,7 @@ public class SimpleMongoClientDatabaseFactoryUnitTests {
 	}
 
 	@Test // DATAMONGO-1880
-	public void cascadedWithSessionUsesRootFactory() {
+	void cascadedWithSessionUsesRootFactory() {
 
 		when(mongo.getDatabase("foo")).thenReturn(database);
 

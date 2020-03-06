@@ -17,55 +17,32 @@ package org.springframework.data.mongodb.core.script;
 
 import static org.assertj.core.api.Assertions.*;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-
-import org.springframework.util.ObjectUtils;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Christoph Strobl
  */
-public class ExecutableMongoScriptUnitTests {
-
-	public @Rule ExpectedException expectedException = ExpectedException.none();
+class ExecutableMongoScriptUnitTests {
 
 	@Test // DATAMONGO-479
-	public void constructorShouldThrowExceptionWhenRawScriptIsNull() {
-
-		expectException(IllegalArgumentException.class, "must not be", "null");
-
-		new ExecutableMongoScript(null);
+	void constructorShouldThrowExceptionWhenRawScriptIsNull() {
+		assertThatIllegalArgumentException().isThrownBy(() -> new ExecutableMongoScript(null))
+				.withMessageContaining("must not be").withMessageContaining("null");
 	}
 
 	@Test // DATAMONGO-479
-	public void constructorShouldThrowExceptionWhenRawScriptIsEmpty() {
-
-		expectException(IllegalArgumentException.class, "must not be", "empty");
-
-		new ExecutableMongoScript("");
+	void constructorShouldThrowExceptionWhenRawScriptIsEmpty() {
+		assertThatIllegalArgumentException().isThrownBy(() -> new ExecutableMongoScript(""))
+				.withMessageContaining("must not be").withMessageContaining("empty");
 	}
 
 	@Test // DATAMONGO-479
-	public void getCodeShouldReturnCodeRepresentationOfRawScript() {
+	void getCodeShouldReturnCodeRepresentationOfRawScript() {
 
 		String jsFunction = "function(x) { return x; }";
 
 		ExecutableMongoScript script = new ExecutableMongoScript(jsFunction);
 
-		assertThat(script.getCode()).isNotNull();
-		assertThat(script.getCode().toString()).isEqualTo(jsFunction);
+		assertThat(script.getCode()).isNotNull().hasToString(jsFunction);
 	}
-
-	private void expectException(Class<?> type, String... messageFragments) {
-
-		expectedException.expect(IllegalArgumentException.class);
-
-		if (!ObjectUtils.isEmpty(messageFragments)) {
-			for (String fragment : messageFragments) {
-				expectedException.expectMessage(fragment);
-			}
-		}
-	}
-
 }

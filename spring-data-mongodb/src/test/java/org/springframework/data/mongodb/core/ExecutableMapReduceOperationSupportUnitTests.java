@@ -23,11 +23,12 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
@@ -40,7 +41,7 @@ import org.springframework.data.mongodb.core.query.Query;
  * @author Christoph Strobl
  * @currentRead Beyond the Shadows - Brent Weeks
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ExecutableMapReduceOperationSupportUnitTests {
 
 	private static final String STAR_WARS = "star-wars";
@@ -49,29 +50,27 @@ public class ExecutableMapReduceOperationSupportUnitTests {
 
 	@Mock MongoTemplate template;
 
-	ExecutableMapReduceOperationSupport mapReduceOpsSupport;
+	private ExecutableMapReduceOperationSupport mapReduceOpsSupport;
 
-	@Before
-	public void setUp() {
-
-		when(template.getCollectionName(eq(Person.class))).thenReturn(STAR_WARS);
-
+	@BeforeEach
+	void setUp() {
 		mapReduceOpsSupport = new ExecutableMapReduceOperationSupport(template);
 	}
 
 	@Test // DATAMONGO-1929
-	public void throwsExceptionOnNullTemplate() {
+	void throwsExceptionOnNullTemplate() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new ExecutableMapReduceOperationSupport(null));
 	}
 
 	@Test // DATAMONGO-1929
-	public void throwsExceptionOnNullDomainType() {
+	void throwsExceptionOnNullDomainType() {
 		assertThatIllegalArgumentException().isThrownBy(() -> mapReduceOpsSupport.mapReduce(null));
 	}
 
 	@Test // DATAMONGO-1929
-	public void usesExtractedCollectionName() {
+	void usesExtractedCollectionName() {
 
+		when(template.getCollectionName(eq(Person.class))).thenReturn(STAR_WARS);
 		mapReduceOpsSupport.mapReduce(Person.class).map(MAP_FUNCTION).reduce(REDUCE_FUNCTION).all();
 
 		verify(template).mapReduce(any(Query.class), eq(Person.class), eq(STAR_WARS), eq(MAP_FUNCTION), eq(REDUCE_FUNCTION),
@@ -79,7 +78,7 @@ public class ExecutableMapReduceOperationSupportUnitTests {
 	}
 
 	@Test // DATAMONGO-1929
-	public void usesExplicitCollectionName() {
+	void usesExplicitCollectionName() {
 
 		mapReduceOpsSupport.mapReduce(Person.class).map(MAP_FUNCTION).reduce(REDUCE_FUNCTION)
 				.inCollection("the-night-angel").all();
@@ -89,8 +88,9 @@ public class ExecutableMapReduceOperationSupportUnitTests {
 	}
 
 	@Test // DATAMONGO-1929
-	public void usesMapReduceOptionsWhenPresent() {
+	void usesMapReduceOptionsWhenPresent() {
 
+		when(template.getCollectionName(eq(Person.class))).thenReturn(STAR_WARS);
 		MapReduceOptions options = MapReduceOptions.options();
 		mapReduceOpsSupport.mapReduce(Person.class).map(MAP_FUNCTION).reduce(REDUCE_FUNCTION).with(options).all();
 
@@ -99,8 +99,9 @@ public class ExecutableMapReduceOperationSupportUnitTests {
 	}
 
 	@Test // DATAMONGO-1929
-	public void usesQueryWhenPresent() {
+	void usesQueryWhenPresent() {
 
+		when(template.getCollectionName(eq(Person.class))).thenReturn(STAR_WARS);
 		Query query = new BasicQuery("{ 'lastname' : 'skywalker' }");
 		mapReduceOpsSupport.mapReduce(Person.class).map(MAP_FUNCTION).reduce(REDUCE_FUNCTION).matching(query).all();
 
@@ -109,8 +110,9 @@ public class ExecutableMapReduceOperationSupportUnitTests {
 	}
 
 	@Test // DATAMONGO-1929
-	public void usesProjectionWhenPresent() {
+	void usesProjectionWhenPresent() {
 
+		when(template.getCollectionName(eq(Person.class))).thenReturn(STAR_WARS);
 		mapReduceOpsSupport.mapReduce(Person.class).map(MAP_FUNCTION).reduce(REDUCE_FUNCTION).as(Jedi.class).all();
 
 		verify(template).mapReduce(any(Query.class), eq(Person.class), eq(STAR_WARS), eq(MAP_FUNCTION), eq(REDUCE_FUNCTION),

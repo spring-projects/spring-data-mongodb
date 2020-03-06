@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import org.bson.BsonDocument;
 import org.bson.Document;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.mapping.Field;

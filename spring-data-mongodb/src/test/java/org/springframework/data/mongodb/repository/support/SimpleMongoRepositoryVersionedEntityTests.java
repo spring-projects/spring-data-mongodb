@@ -21,14 +21,12 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -39,12 +37,11 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.repository.VersionedPerson;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
-import org.springframework.data.mongodb.test.util.MongoVersion;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.mongodb.test.util.ReplicaSet;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.mongodb.client.MongoClient;
@@ -53,7 +50,7 @@ import com.mongodb.client.MongoClient;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration
 public class SimpleMongoRepositoryVersionedEntityTests {
 
@@ -76,17 +73,14 @@ public class SimpleMongoRepositoryVersionedEntityTests {
 		}
 	}
 
-	@Rule public MongoVersionRule mongoVersion = MongoVersionRule.any();
-
-	@Autowired //
-	private MongoTemplate template;
+	@Autowired private MongoTemplate template;
 
 	private MongoEntityInformation<VersionedPerson, String> personEntityInformation;
 	private SimpleMongoRepository<VersionedPerson, String> repository;
 
 	private VersionedPerson sarah;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		MongoPersistentEntity entity = template.getConverter().getMappingContext()
@@ -108,7 +102,7 @@ public class SimpleMongoRepositoryVersionedEntityTests {
 	}
 
 	@Test // DATAMONGO-2195
-	@MongoVersion(asOf = "4.0")
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
 	public void deleteWithMatchingVersionInTx() {
 
 		assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
@@ -137,7 +131,7 @@ public class SimpleMongoRepositoryVersionedEntityTests {
 	}
 
 	@Test // DATAMONGO-2195
-	@MongoVersion(asOf = "4.0")
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
 	public void deleteWithVersionMismatchInTx() {
 
 		assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
@@ -164,7 +158,7 @@ public class SimpleMongoRepositoryVersionedEntityTests {
 	}
 
 	@Test // DATAMONGO-2195
-	@MongoVersion(asOf = "4.0")
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
 	public void deleteNonExistingInTx() {
 
 		assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();

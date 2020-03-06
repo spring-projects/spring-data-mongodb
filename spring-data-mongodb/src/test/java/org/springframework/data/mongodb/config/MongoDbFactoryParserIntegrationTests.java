@@ -17,8 +17,8 @@ package org.springframework.data.mongodb.config;
 
 import static org.assertj.core.api.Assertions.*;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.ConstructorArgumentValues;
@@ -51,7 +51,7 @@ public class MongoDbFactoryParserIntegrationTests {
 	DefaultListableBeanFactory factory;
 	BeanDefinitionReader reader;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		factory = new DefaultListableBeanFactory();
 		reader = new XmlBeanDefinitionReader(factory);

@@ -15,24 +15,21 @@
  */
 package org.springframework.data.mongodb;
 
-import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.mongodb.reactivestreams.client.ClientSession;
 import com.mongodb.reactivestreams.client.MongoDatabase;
@@ -44,8 +41,8 @@ import com.mongodb.session.ServerSession;
  * @author Mark Paluch
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.class)
-public class ReactiveMongoTransactionManagerUnitTests {
+@ExtendWith(MockitoExtension.class)
+class ReactiveMongoTransactionManagerUnitTests {
 
 	@Mock ClientSession session;
 	@Mock ClientSession session2;
@@ -55,30 +52,16 @@ public class ReactiveMongoTransactionManagerUnitTests {
 	@Mock MongoDatabase db;
 	@Mock MongoDatabase db2;
 
-	@Before
-	public void setUp() {
-
+	@BeforeEach
+	void setUp() {
 		when(databaseFactory.getSession(any())).thenReturn(Mono.just(session), Mono.just(session2));
-
 		when(databaseFactory.withSession(session)).thenReturn(databaseFactory);
-		when(databaseFactory.withSession(session2)).thenReturn(databaseFactory2);
-
 		when(databaseFactory.getMongoDatabase()).thenReturn(db);
-		when(databaseFactory2.getMongoDatabase()).thenReturn(db2);
-
 		when(session.getServerSession()).thenReturn(serverSession);
-		when(session2.getServerSession()).thenReturn(serverSession);
-	}
-
-	@After
-	public void verifyTransactionSynchronizationManager() {
-
-		assertThat(TransactionSynchronizationManager.getResourceMap().isEmpty()).isTrue();
-		assertThat(TransactionSynchronizationManager.isSynchronizationActive()).isFalse();
 	}
 
 	@Test // DATAMONGO-2265
-	public void triggerCommitCorrectly() {
+	void triggerCommitCorrectly() {
 
 		ReactiveMongoTransactionManager txManager = new ReactiveMongoTransactionManager(databaseFactory);
 		ReactiveMongoTemplate template = new ReactiveMongoTemplate(databaseFactory);
@@ -103,7 +86,7 @@ public class ReactiveMongoTransactionManagerUnitTests {
 	}
 
 	@Test // DATAMONGO-2265
-	public void participateInOnGoingTransactionWithCommit() {
+	void participateInOnGoingTransactionWithCommit() {
 
 		ReactiveMongoTransactionManager txManager = new ReactiveMongoTransactionManager(databaseFactory);
 		ReactiveMongoTemplate template = new ReactiveMongoTemplate(databaseFactory);
@@ -131,7 +114,7 @@ public class ReactiveMongoTransactionManagerUnitTests {
 	}
 
 	@Test // DATAMONGO-2265
-	public void participateInOnGoingTransactionWithRollbackOnly() {
+	void participateInOnGoingTransactionWithRollbackOnly() {
 
 		ReactiveMongoTransactionManager txManager = new ReactiveMongoTransactionManager(databaseFactory);
 		ReactiveMongoTemplate template = new ReactiveMongoTemplate(databaseFactory);
@@ -156,7 +139,7 @@ public class ReactiveMongoTransactionManagerUnitTests {
 	}
 
 	@Test // DATAMONGO-2265
-	public void suspendTransactionWhilePropagationNotSupported() {
+	void suspendTransactionWhilePropagationNotSupported() {
 
 		ReactiveMongoTransactionManager txManager = new ReactiveMongoTransactionManager(databaseFactory);
 		ReactiveMongoTemplate template = new ReactiveMongoTemplate(databaseFactory);
@@ -195,7 +178,11 @@ public class ReactiveMongoTransactionManagerUnitTests {
 	}
 
 	@Test // DATAMONGO-2265
-	public void suspendTransactionWhilePropagationRequiresNew() {
+	void suspendTransactionWhilePropagationRequiresNew() {
+
+		when(databaseFactory.withSession(session2)).thenReturn(databaseFactory2);
+		when(databaseFactory2.getMongoDatabase()).thenReturn(db2);
+		when(session2.getServerSession()).thenReturn(serverSession);
 
 		ReactiveMongoTransactionManager txManager = new ReactiveMongoTransactionManager(databaseFactory);
 		ReactiveMongoTemplate template = new ReactiveMongoTemplate(databaseFactory);
@@ -237,7 +224,7 @@ public class ReactiveMongoTransactionManagerUnitTests {
 	}
 
 	@Test // DATAMONGO-2265
-	public void readonlyShouldInitiateASessionStartAndCommitTransaction() {
+	void readonlyShouldInitiateASessionStartAndCommitTransaction() {
 
 		ReactiveMongoTransactionManager txManager = new ReactiveMongoTransactionManager(databaseFactory);
 		ReactiveMongoTemplate template = new ReactiveMongoTemplate(databaseFactory);

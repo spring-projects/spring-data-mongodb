@@ -22,11 +22,12 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
@@ -37,16 +38,16 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 /**
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.class)
-public class FilterExpressionUnitTests {
+@ExtendWith(MockitoExtension.class)
+class FilterExpressionUnitTests {
 
 	@Mock MongoDatabaseFactory mongoDbFactory;
 
 	private AggregationOperationContext aggregationContext;
 	private MongoMappingContext mappingContext;
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	void setUp() {
 
 		mappingContext = new MongoMappingContext();
 		aggregationContext = new TypeBasedAggregationOperationContext(Sales.class, mappingContext,
@@ -54,7 +55,7 @@ public class FilterExpressionUnitTests {
 	}
 
 	@Test // DATAMONGO-1491
-	public void shouldConstructFilterExpressionCorrectly() {
+	void shouldConstructFilterExpressionCorrectly() {
 
 		TypedAggregation<Sales> agg = Aggregation.newAggregation(Sales.class,
 				Aggregation.project()
@@ -72,7 +73,7 @@ public class FilterExpressionUnitTests {
 	}
 
 	@Test // DATAMONGO-1491
-	public void shouldConstructFilterExpressionCorrectlyWhenUsingFilterOnProjectionBuilder() {
+	void shouldConstructFilterExpressionCorrectlyWhenUsingFilterOnProjectionBuilder() {
 
 		TypedAggregation<Sales> agg = Aggregation.newAggregation(Sales.class, Aggregation.project().and("items")
 				.filter("item", AggregationFunctionExpressions.GTE.of(Fields.field("item.price"), 100)).as("items"));
@@ -88,7 +89,7 @@ public class FilterExpressionUnitTests {
 	}
 
 	@Test // DATAMONGO-1491
-	public void shouldConstructFilterExpressionCorrectlyWhenInputMapToArray() {
+	void shouldConstructFilterExpressionCorrectlyWhenInputMapToArray() {
 
 		TypedAggregation<Sales> agg = Aggregation.newAggregation(Sales.class,
 				Aggregation.project().and(filter(Arrays.<Object> asList(1, "a", 2, null, 3.1D, 4, "5")).as("num")
@@ -105,7 +106,7 @@ public class FilterExpressionUnitTests {
 	}
 
 	@Test // DATAMONGO-2320
-	public void shouldConstructFilterExpressionCorrectlyWhenConditionContainsFieldReference() {
+	void shouldConstructFilterExpressionCorrectlyWhenConditionContainsFieldReference() {
 
 		Aggregation agg = Aggregation.newAggregation(Aggregation.project().and((ctx) -> new Document()).as("field-1")
 				.and(filter("items").as("item").by(ComparisonOperators.valueOf("item.price").greaterThan("field-1")))

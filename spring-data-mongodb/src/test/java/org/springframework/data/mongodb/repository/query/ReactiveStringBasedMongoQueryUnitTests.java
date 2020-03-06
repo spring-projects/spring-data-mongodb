@@ -27,11 +27,11 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.data.mongodb.core.ReactiveFindOperation.ReactiveFind;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
@@ -58,7 +58,7 @@ import org.springframework.util.Base64Utils;
  * @author Mark Paluch
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ReactiveStringBasedMongoQueryUnitTests {
 
 	SpelExpressionParser PARSER = new SpelExpressionParser();
@@ -69,7 +69,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 
 	MongoConverter converter;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		when(operations.query(any())).thenReturn(reactiveFind);

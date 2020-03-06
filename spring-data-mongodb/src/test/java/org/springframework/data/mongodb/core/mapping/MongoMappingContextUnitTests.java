@@ -22,10 +22,10 @@ import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.annotation.Id;
@@ -43,13 +43,13 @@ import com.mongodb.DBRef;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class MongoMappingContextUnitTests {
 
 	@Mock ApplicationContext applicationContext;
 
 	@Test
-	public void addsSelfReferencingPersistentEntityCorrectly() throws Exception {
+	void addsSelfReferencingPersistentEntityCorrectly() throws Exception {
 
 		MongoMappingContext context = new MongoMappingContext();
 
@@ -58,21 +58,21 @@ public class MongoMappingContextUnitTests {
 	}
 
 	@Test
-	public void doesNotReturnPersistentEntityForMongoSimpleType() {
+	void doesNotReturnPersistentEntityForMongoSimpleType() {
 
 		MongoMappingContext context = new MongoMappingContext();
 		assertThat(context.getPersistentEntity(DBRef.class)).isNull();
 	}
 
 	@Test // DATAMONGO-638
-	public void doesNotCreatePersistentEntityForAbstractMap() {
+	void doesNotCreatePersistentEntityForAbstractMap() {
 
 		MongoMappingContext context = new MongoMappingContext();
 		assertThat(context.getPersistentEntity(AbstractMap.class)).isNull();
 	}
 
 	@Test // DATAMONGO-607
-	public void populatesPersistentPropertyWithCustomFieldNamingStrategy() {
+	void populatesPersistentPropertyWithCustomFieldNamingStrategy() {
 
 		MongoMappingContext context = new MongoMappingContext();
 		context.setApplicationContext(applicationContext);
@@ -88,7 +88,7 @@ public class MongoMappingContextUnitTests {
 	}
 
 	@Test // DATAMONGO-607
-	public void rejectsClassWithAmbiguousFieldMappings() {
+	void rejectsClassWithAmbiguousFieldMappings() {
 
 		MongoMappingContext context = new MongoMappingContext();
 		context.setApplicationContext(applicationContext);
@@ -99,7 +99,7 @@ public class MongoMappingContextUnitTests {
 	}
 
 	@Test // DATAMONGO-694
-	public void doesNotConsiderOverrridenAccessorANewField() {
+	void doesNotConsiderOverrridenAccessorANewField() {
 
 		MongoMappingContext context = new MongoMappingContext();
 		context.setApplicationContext(applicationContext);
@@ -107,7 +107,7 @@ public class MongoMappingContextUnitTests {
 	}
 
 	@Test // DATAMONGO-688
-	public void mappingContextShouldAcceptClassWithImplicitIdProperty() {
+	void mappingContextShouldAcceptClassWithImplicitIdProperty() {
 
 		MongoMappingContext context = new MongoMappingContext();
 		BasicMongoPersistentEntity<?> pe = context.getRequiredPersistentEntity(ClassWithImplicitId.class);
@@ -117,7 +117,7 @@ public class MongoMappingContextUnitTests {
 	}
 
 	@Test // DATAMONGO-688
-	public void mappingContextShouldAcceptClassWithExplicitIdProperty() {
+	void mappingContextShouldAcceptClassWithExplicitIdProperty() {
 
 		MongoMappingContext context = new MongoMappingContext();
 		BasicMongoPersistentEntity<?> pe = context.getRequiredPersistentEntity(ClassWithExplicitId.class);
@@ -127,29 +127,31 @@ public class MongoMappingContextUnitTests {
 	}
 
 	@Test // DATAMONGO-688
-	public void mappingContextShouldAcceptClassWithExplicitAndImplicitIdPropertyByGivingPrecedenceToExplicitIdProperty() {
+	void mappingContextShouldAcceptClassWithExplicitAndImplicitIdPropertyByGivingPrecedenceToExplicitIdProperty() {
 
 		MongoMappingContext context = new MongoMappingContext();
 		BasicMongoPersistentEntity<?> pe = context.getRequiredPersistentEntity(ClassWithExplicitIdAndImplicitId.class);
 		assertThat(pe).isNotNull();
 	}
 
-	@Test(expected = MappingException.class) // DATAMONGO-688
-	public void rejectsClassWithAmbiguousExplicitIdPropertyFieldMappings() {
+	@Test // DATAMONGO-688
+	void rejectsClassWithAmbiguousExplicitIdPropertyFieldMappings() {
 
 		MongoMappingContext context = new MongoMappingContext();
-		context.getPersistentEntity(ClassWithMultipleExplicitIds.class);
+		assertThatThrownBy(() -> context.getPersistentEntity(ClassWithMultipleExplicitIds.class))
+				.isInstanceOf(MappingException.class);
 	}
 
-	@Test(expected = MappingException.class) // DATAMONGO-688
-	public void rejectsClassWithAmbiguousImplicitIdPropertyFieldMappings() {
+	@Test // DATAMONGO-688
+	void rejectsClassWithAmbiguousImplicitIdPropertyFieldMappings() {
 
 		MongoMappingContext context = new MongoMappingContext();
-		context.getPersistentEntity(ClassWithMultipleImplicitIds.class);
+		assertThatThrownBy(() -> context.getPersistentEntity(ClassWithMultipleImplicitIds.class))
+				.isInstanceOf(MappingException.class);
 	}
 
 	@Test // DATAMONGO-976
-	public void shouldRejectClassWithInvalidTextScoreProperty() {
+	void shouldRejectClassWithInvalidTextScoreProperty() {
 
 		MongoMappingContext context = new MongoMappingContext();
 

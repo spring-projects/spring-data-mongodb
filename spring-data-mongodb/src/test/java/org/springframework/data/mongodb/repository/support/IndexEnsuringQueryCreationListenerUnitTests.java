@@ -21,13 +21,15 @@ import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.anyString;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Answers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.index.IndexDefinition;
@@ -44,10 +46,11 @@ import org.springframework.data.util.Streamable;
  *
  * @author Oliver Gierke
  */
-@RunWith(MockitoJUnitRunner.class)
-public class IndexEnsuringQueryCreationListenerUnitTests {
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+class IndexEnsuringQueryCreationListenerUnitTests {
 
-	IndexEnsuringQueryCreationListener listener;
+	private IndexEnsuringQueryCreationListener listener;
 
 	@Mock IndexOperationsProvider provider;
 	@Mock PartTree partTree;
@@ -56,8 +59,8 @@ public class IndexEnsuringQueryCreationListenerUnitTests {
 	@Mock IndexOperations indexOperations;
 	@Mock MongoEntityMetadata entityInformation;
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	void setUp() {
 
 		this.listener = new IndexEnsuringQueryCreationListener(provider);
 
@@ -69,7 +72,7 @@ public class IndexEnsuringQueryCreationListenerUnitTests {
 	}
 
 	@Test // DATAMONGO-1753
-	public void skipsQueryCreationForMethodWithoutPredicate() {
+	void skipsQueryCreationForMethodWithoutPredicate() {
 
 		when(partTree.hasPredicate()).thenReturn(false);
 
@@ -79,7 +82,7 @@ public class IndexEnsuringQueryCreationListenerUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void usesCollationWhenPresentAndFixedValue() {
+	void usesCollationWhenPresentAndFixedValue() {
 
 		when(partTree.hasPredicate()).thenReturn(true);
 		when(partTree.getParts()).thenReturn(Streamable.empty());
@@ -98,7 +101,7 @@ public class IndexEnsuringQueryCreationListenerUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void usesCollationWhenPresentAndFixedDocumentValue() {
+	void usesCollationWhenPresentAndFixedDocumentValue() {
 
 		when(partTree.hasPredicate()).thenReturn(true);
 		when(partTree.getParts()).thenReturn(Streamable.empty());
@@ -117,7 +120,7 @@ public class IndexEnsuringQueryCreationListenerUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void skipsCollationWhenPresentButDynamic() {
+	void skipsCollationWhenPresentButDynamic() {
 
 		when(partTree.hasPredicate()).thenReturn(true);
 		when(partTree.getParts()).thenReturn(Streamable.empty());
@@ -136,7 +139,7 @@ public class IndexEnsuringQueryCreationListenerUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void skipsCollationWhenNotPresent() {
+	void skipsCollationWhenNotPresent() {
 
 		when(partTree.hasPredicate()).thenReturn(true);
 		when(partTree.getParts()).thenReturn(Streamable.empty());

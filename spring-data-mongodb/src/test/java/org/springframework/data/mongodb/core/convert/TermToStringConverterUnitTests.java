@@ -17,7 +17,7 @@ package org.springframework.data.mongodb.core.convert;
 
 import static org.mockito.Mockito.*;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.convert.MongoConverters.TermToStringConverter;
 import org.springframework.data.mongodb.core.query.Term;
 import org.springframework.data.mongodb.core.query.Term.Type;

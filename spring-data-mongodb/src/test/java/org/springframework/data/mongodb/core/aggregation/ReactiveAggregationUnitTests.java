@@ -23,11 +23,13 @@ import static org.mockito.Mockito.anyList;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
@@ -43,20 +45,21 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner.class)
-public class ReactiveAggregationUnitTests {
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+class ReactiveAggregationUnitTests {
 
-	static final String INPUT_COLLECTION = "collection-1";
+	private static final String INPUT_COLLECTION = "collection-1";
 
-	ReactiveMongoTemplate template;
-	ReactiveMongoDatabaseFactory factory;
+	private ReactiveMongoTemplate template;
+	private ReactiveMongoDatabaseFactory factory;
 	@Mock MongoClient mongoClient;
 	@Mock MongoDatabase db;
 	@Mock MongoCollection<Document> collection;
 	@Mock AggregatePublisher<Document> publisher;
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	void setUp() {
 
 		factory = new SimpleReactiveMongoDatabaseFactory(mongoClient, "db");
 		template = new ReactiveMongoTemplate(factory);
@@ -69,23 +72,23 @@ public class ReactiveAggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-1646
-	public void shouldHandleMissingInputCollection() {
+	void shouldHandleMissingInputCollection() {
 		assertThatIllegalArgumentException()
 				.isThrownBy(() -> template.aggregate(newAggregation(), (String) null, TagCount.class));
 	}
 
 	@Test // DATAMONGO-1646
-	public void shouldHandleMissingAggregationPipeline() {
+	void shouldHandleMissingAggregationPipeline() {
 		assertThatIllegalArgumentException().isThrownBy(() -> template.aggregate(null, INPUT_COLLECTION, TagCount.class));
 	}
 
 	@Test // DATAMONGO-1646
-	public void shouldHandleMissingEntityClass() {
+	void shouldHandleMissingEntityClass() {
 		assertThatIllegalArgumentException().isThrownBy(() -> template.aggregate(newAggregation(), INPUT_COLLECTION, null));
 	}
 
 	@Test // DATAMONGO-1646
-	public void errorsOnExplainUsage() {
+	void errorsOnExplainUsage() {
 		assertThatIllegalArgumentException().isThrownBy(() -> template.aggregate(newAggregation(Product.class, //
 				project("name", "netPrice")) //
 						.withOptions(AggregationOptions.builder().explain(true).build()),
@@ -93,7 +96,7 @@ public class ReactiveAggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-1646, DATAMONGO-1311
-	public void appliesBatchSizeWhenPresent() {
+	void appliesBatchSizeWhenPresent() {
 
 		when(publisher.batchSize(anyInt())).thenReturn(publisher);
 
@@ -107,7 +110,7 @@ public class ReactiveAggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-1646
-	public void appliesCollationCorrectlyWhenPresent() {
+	void appliesCollationCorrectlyWhenPresent() {
 
 		template.aggregate(newAggregation(Product.class, //
 				project("name", "netPrice")) //
@@ -118,7 +121,7 @@ public class ReactiveAggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-1646
-	public void doesNotSetCollationWhenNotPresent() {
+	void doesNotSetCollationWhenNotPresent() {
 
 		template.aggregate(newAggregation(Product.class, //
 				project("name", "netPrice")) //
@@ -129,7 +132,7 @@ public class ReactiveAggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-1646
-	public void appliesDiskUsageCorrectly() {
+	void appliesDiskUsageCorrectly() {
 
 		template.aggregate(newAggregation(Product.class, //
 				project("name", "netPrice")) //

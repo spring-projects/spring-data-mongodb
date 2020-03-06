@@ -34,13 +34,14 @@ import org.bson.types.Code;
 import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
 import org.joda.time.LocalDate;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.ConversionNotSupportedException;
 import org.springframework.beans.factory.annotation.Value;
@@ -90,16 +91,16 @@ import com.mongodb.DBRef;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class MappingMongoConverterUnitTests {
 
-	MappingMongoConverter converter;
-	MongoMappingContext mappingContext;
+	private MappingMongoConverter converter;
+	private MongoMappingContext mappingContext;
 	@Mock ApplicationContext context;
 	@Mock DbRefResolver resolver;
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	void setUp() {
 
 		MongoCustomConversions conversions = new MongoCustomConversions();
 
@@ -116,7 +117,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test
-	public void convertsAddressCorrectly() {
+	void convertsAddressCorrectly() {
 
 		Address address = new Address();
 		address.city = "New York";
@@ -131,7 +132,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test
-	public void convertsJodaTimeTypesCorrectly() {
+	void convertsJodaTimeTypesCorrectly() {
 
 		converter = new MappingMongoConverter(resolver, mappingContext);
 		converter.afterPropertiesSet();
@@ -149,7 +150,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test
-	public void convertsCustomTypeOnConvertToMongoType() {
+	void convertsCustomTypeOnConvertToMongoType() {
 
 		converter = new MappingMongoConverter(resolver, mappingContext);
 		converter.afterPropertiesSet();
@@ -159,7 +160,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-130
-	public void writesMapTypeCorrectly() {
+	void writesMapTypeCorrectly() {
 
 		Map<Locale, String> map = Collections.singletonMap(Locale.US, "Foo");
 
@@ -170,7 +171,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-130
-	public void readsMapWithCustomKeyTypeCorrectly() {
+	void readsMapWithCustomKeyTypeCorrectly() {
 
 		org.bson.Document mapObject = new org.bson.Document(Locale.US.toString(), "Value");
 		org.bson.Document document = new org.bson.Document("map", mapObject);
@@ -180,7 +181,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-128
-	public void usesDocumentsStoredTypeIfSubtypeOfRequest() {
+	void usesDocumentsStoredTypeIfSubtypeOfRequest() {
 
 		org.bson.Document document = new org.bson.Document();
 		document.put("birthDate", new LocalDate());
@@ -190,7 +191,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-128
-	public void ignoresDocumentsStoredTypeIfCompletelyDifferentTypeRequested() {
+	void ignoresDocumentsStoredTypeIfCompletelyDifferentTypeRequested() {
 
 		org.bson.Document document = new org.bson.Document();
 		document.put("birthDate", new LocalDate());
@@ -200,7 +201,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test
-	public void writesTypeDiscriminatorIntoRootObject() {
+	void writesTypeDiscriminatorIntoRootObject() {
 
 		Person person = new Person();
 
@@ -212,7 +213,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-136
-	public void writesEnumsCorrectly() {
+	void writesEnumsCorrectly() {
 
 		ClassWithEnumProperty value = new ClassWithEnumProperty();
 		value.sampleEnum = SampleEnum.FIRST;
@@ -225,7 +226,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-209
-	public void writesEnumCollectionCorrectly() {
+	void writesEnumCollectionCorrectly() {
 
 		ClassWithEnumProperty value = new ClassWithEnumProperty();
 		value.enums = Arrays.asList(SampleEnum.FIRST);
@@ -241,7 +242,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-136
-	public void readsEnumsCorrectly() {
+	void readsEnumsCorrectly() {
 		org.bson.Document document = new org.bson.Document("sampleEnum", "FIRST");
 		ClassWithEnumProperty result = converter.read(ClassWithEnumProperty.class, document);
 
@@ -249,7 +250,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-209
-	public void readsEnumCollectionsCorrectly() {
+	void readsEnumCollectionsCorrectly() {
 
 		BasicDBList enums = new BasicDBList();
 		enums.add("FIRST");
@@ -263,7 +264,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-144
-	public void considersFieldNameWhenWriting() {
+	void considersFieldNameWhenWriting() {
 
 		Person person = new Person();
 		person.firstname = "Oliver";
@@ -276,7 +277,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-144
-	public void considersFieldNameWhenReading() {
+	void considersFieldNameWhenReading() {
 
 		org.bson.Document document = new org.bson.Document("foo", "Oliver");
 		Person result = converter.read(Person.class, document);
@@ -285,7 +286,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test
-	public void resolvesNestedComplexTypeForConstructorCorrectly() {
+	void resolvesNestedComplexTypeForConstructorCorrectly() {
 
 		org.bson.Document address = new org.bson.Document("street", "110 Southwark Street");
 		address.put("city", "London");
@@ -301,7 +302,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-145
-	public void writesCollectionWithInterfaceCorrectly() {
+	void writesCollectionWithInterfaceCorrectly() {
 
 		Person person = new Person();
 		person.firstname = "Oliver";
@@ -321,7 +322,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-145
-	public void readsCollectionWithInterfaceCorrectly() {
+	void readsCollectionWithInterfaceCorrectly() {
 
 		org.bson.Document person = new org.bson.Document(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, Person.class.getName());
 		person.put("foo", "Oliver");
@@ -338,7 +339,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test
-	public void convertsLocalesOutOfTheBox() {
+	void convertsLocalesOutOfTheBox() {
 		LocaleWrapper wrapper = new LocaleWrapper();
 		wrapper.locale = Locale.US;
 
@@ -354,7 +355,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-161
-	public void readsNestedMapsCorrectly() {
+	void readsNestedMapsCorrectly() {
 
 		Map<String, String> secondLevel = new HashMap<String, String>();
 		secondLevel.put("key1", "value1");
@@ -378,7 +379,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATACMNS-42, DATAMONGO-171
-	public void writesClassWithBigDecimal() {
+	void writesClassWithBigDecimal() {
 
 		BigDecimalContainer container = new BigDecimalContainer();
 		container.value = BigDecimal.valueOf(2.5d);
@@ -393,7 +394,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATACMNS-42, DATAMONGO-171
-	public void readsClassWithBigDecimal() {
+	void readsClassWithBigDecimal() {
 
 		org.bson.Document document = new org.bson.Document("value", "2.5");
 		document.put("map", new org.bson.Document("foo", "2.5"));
@@ -409,7 +410,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test
-	public void writesNestedCollectionsCorrectly() {
+	void writesNestedCollectionsCorrectly() {
 
 		CollectionWrapper wrapper = new CollectionWrapper();
 		wrapper.strings = Arrays.asList(Arrays.asList("Foo"));
@@ -425,7 +426,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-192
-	public void readsEmptySetsCorrectly() {
+	void readsEmptySetsCorrectly() {
 
 		Person person = new Person();
 		person.addresses = Collections.emptySet();
@@ -436,7 +437,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test
-	public void convertsObjectIdStringsToObjectIdCorrectly() {
+	void convertsObjectIdStringsToObjectIdCorrectly() {
 		PersonPojoStringId p1 = new PersonPojoStringId("1234567890", "Text-1");
 		org.bson.Document doc1 = new org.bson.Document();
 
@@ -451,7 +452,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-207
-	public void convertsCustomEmptyMapCorrectly() {
+	void convertsCustomEmptyMapCorrectly() {
 
 		org.bson.Document map = new org.bson.Document();
 		org.bson.Document wrapper = new org.bson.Document("map", map);
@@ -463,12 +464,12 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-211
-	public void maybeConvertHandlesNullValuesCorrectly() {
+	void maybeConvertHandlesNullValuesCorrectly() {
 		assertThat(converter.convertToMongoType(null)).isNull();
 	}
 
 	@Test // DATAMONGO-1509
-	public void writesGenericTypeCorrectly() {
+	void writesGenericTypeCorrectly() {
 
 		GenericType<Address> type = new GenericType<Address>();
 		type.content = new Address();
@@ -483,7 +484,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test
-	public void readsGenericTypeCorrectly() {
+	void readsGenericTypeCorrectly() {
 
 		org.bson.Document address = new org.bson.Document("_class", Address.class.getName());
 		address.put("city", "London");
@@ -493,7 +494,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-228
-	public void writesNullValuesForMaps() {
+	void writesNullValuesForMaps() {
 
 		ClassWithMapProperty foo = new ClassWithMapProperty();
 		foo.map = Collections.singletonMap(Locale.US, null);
@@ -507,7 +508,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test
-	public void writesBigIntegerIdCorrectly() {
+	void writesBigIntegerIdCorrectly() {
 
 		ClassWithBigIntegerId foo = new ClassWithBigIntegerId();
 		foo.id = BigInteger.valueOf(23L);
@@ -525,7 +526,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-235
-	public void writesMapOfListsCorrectly() {
+	void writesMapOfListsCorrectly() {
 
 		ClassWithMapProperty input = new ClassWithMapProperty();
 		input.mapOfLists = Collections.singletonMap("Foo", Arrays.asList("Bar"));
@@ -546,7 +547,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-235
-	public void readsMapListValuesCorrectly() {
+	void readsMapListValuesCorrectly() {
 
 		BasicDBList list = new BasicDBList();
 		list.add("Bar");
@@ -557,7 +558,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-235
-	public void writesMapsOfObjectsCorrectly() {
+	void writesMapsOfObjectsCorrectly() {
 
 		ClassWithMapProperty input = new ClassWithMapProperty();
 		input.mapOfObjects = new HashMap<String, Object>();
@@ -579,7 +580,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-235
-	public void readsMapOfObjectsListValuesCorrectly() {
+	void readsMapOfObjectsListValuesCorrectly() {
 
 		BasicDBList list = new BasicDBList();
 		list.add("Bar");
@@ -590,7 +591,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-245
-	public void readsMapListNestedValuesCorrectly() {
+	void readsMapListNestedValuesCorrectly() {
 
 		BasicDBList list = new BasicDBList();
 		list.add(new org.bson.Document("Hello", "World"));
@@ -603,7 +604,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-245
-	public void readsMapDoublyNestedValuesCorrectly() {
+	void readsMapDoublyNestedValuesCorrectly() {
 
 		org.bson.Document nested = new org.bson.Document();
 		org.bson.Document doubly = new org.bson.Document();
@@ -620,7 +621,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-245
-	public void readsMapListDoublyNestedValuesCorrectly() {
+	void readsMapListDoublyNestedValuesCorrectly() {
 
 		BasicDBList list = new BasicDBList();
 		org.bson.Document nested = new org.bson.Document();
@@ -639,7 +640,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-259
-	public void writesListOfMapsCorrectly() {
+	void writesListOfMapsCorrectly() {
 
 		Map<String, Locale> map = Collections.singletonMap("Foo", Locale.ENGLISH);
 
@@ -660,7 +661,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-259
-	public void readsListOfMapsCorrectly() {
+	void readsListOfMapsCorrectly() {
 
 		org.bson.Document map = new org.bson.Document("Foo", "en");
 
@@ -678,7 +679,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-259
-	public void writesPlainMapOfCollectionsCorrectly() {
+	void writesPlainMapOfCollectionsCorrectly() {
 
 		Map<String, List<Locale>> map = Collections.singletonMap("Foo", Arrays.asList(Locale.US));
 		org.bson.Document result = new org.bson.Document();
@@ -696,7 +697,7 @@ public class MappingMongoConverterUnitTests {
 
 	@Test // DATAMONGO-285
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public void testSaveMapWithACollectionAsValue() {
+	void testSaveMapWithACollectionAsValue() {
 
 		Map<String, Object> keyValues = new HashMap<String, Object>();
 		keyValues.put("string", "hello");
@@ -721,7 +722,7 @@ public class MappingMongoConverterUnitTests {
 
 	@Test // DATAMONGO-309
 	@SuppressWarnings({ "unchecked" })
-	public void writesArraysAsMapValuesCorrectly() {
+	void writesArraysAsMapValuesCorrectly() {
 
 		ClassWithMapProperty wrapper = new ClassWithMapProperty();
 		wrapper.mapOfObjects = new HashMap<String, Object>();
@@ -743,7 +744,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-324
-	public void writesDocumentCorrectly() {
+	void writesDocumentCorrectly() {
 
 		org.bson.Document document = new org.bson.Document();
 		document.put("foo", "bar");
@@ -757,7 +758,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-324
-	public void readsDocumentCorrectly() {
+	void readsDocumentCorrectly() {
 
 		org.bson.Document document = new org.bson.Document();
 		document.put("foo", "bar");
@@ -768,7 +769,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-329
-	public void writesMapAsGenericFieldCorrectly() {
+	void writesMapAsGenericFieldCorrectly() {
 
 		Map<String, A<String>> objectToSave = new HashMap<String, A<String>>();
 		objectToSave.put("test", new A<String>("testValue"));
@@ -792,7 +793,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test
-	public void writesIntIdCorrectly() {
+	void writesIntIdCorrectly() {
 
 		ClassWithIntId value = new ClassWithIntId();
 		value.id = 5;
@@ -805,7 +806,7 @@ public class MappingMongoConverterUnitTests {
 
 	@Test // DATAMONGO-368
 	@SuppressWarnings("unchecked")
-	public void writesNullValuesForCollection() {
+	void writesNullValuesForCollection() {
 
 		CollectionWrapper wrapper = new CollectionWrapper();
 		wrapper.contacts = Arrays.asList(new Person(), null);
@@ -820,7 +821,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-379
-	public void considersDefaultingExpressionsAtConstructorArguments() {
+	void considersDefaultingExpressionsAtConstructorArguments() {
 
 		org.bson.Document document = new org.bson.Document("foo", "bar");
 		document.put("foobar", 2.5);
@@ -830,7 +831,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-379
-	public void usesDocumentFieldIfReferencedInAtValue() {
+	void usesDocumentFieldIfReferencedInAtValue() {
 
 		org.bson.Document document = new org.bson.Document("foo", "bar");
 		document.put("something", 37);
@@ -840,16 +841,17 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.bar).isEqualTo(37);
 	}
 
-	@Test(expected = MappingInstantiationException.class) // DATAMONGO-379
-	public void rejectsNotFoundConstructorParameterForPrimitiveType() {
+	@Test // DATAMONGO-379
+	void rejectsNotFoundConstructorParameterForPrimitiveType() {
 
 		org.bson.Document document = new org.bson.Document("foo", "bar");
 
-		converter.read(DefaultedConstructorArgument.class, document);
+		assertThatThrownBy(() -> converter.read(DefaultedConstructorArgument.class, document))
+				.isInstanceOf(MappingInstantiationException.class);
 	}
 
 	@Test // DATAMONGO-358
-	public void writesListForObjectPropertyCorrectly() {
+	void writesListForObjectPropertyCorrectly() {
 
 		Attribute attribute = new Attribute();
 		attribute.key = "key";
@@ -875,13 +877,13 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-380
-	public void rejectsMapWithKeyContainingDotsByDefault() {
+	void rejectsMapWithKeyContainingDotsByDefault() {
 		assertThatExceptionOfType(MappingException.class)
 				.isThrownBy(() -> converter.write(Collections.singletonMap("foo.bar", "foobar"), new org.bson.Document()));
 	}
 
 	@Test // DATAMONGO-380
-	public void escapesDotInMapKeysIfReplacementConfigured() {
+	void escapesDotInMapKeysIfReplacementConfigured() {
 
 		converter.setMapKeyDotReplacement("~");
 
@@ -894,7 +896,7 @@ public class MappingMongoConverterUnitTests {
 
 	@Test // DATAMONGO-380
 	@SuppressWarnings("unchecked")
-	public void unescapesDotInMapKeysIfReplacementConfigured() {
+	void unescapesDotInMapKeysIfReplacementConfigured() {
 
 		converter.setMapKeyDotReplacement("~");
 
@@ -906,8 +908,8 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-382
-	@Ignore("mongo3 - no longer supported")
-	public void convertsSetToBasicDBList() {
+	@Disabled("mongo3 - no longer supported")
+	void convertsSetToBasicDBList() {
 
 		Address address = new Address();
 		address.city = "London";
@@ -922,7 +924,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-402
-	public void readsMemberClassCorrectly() {
+	void readsMemberClassCorrectly() {
 
 		org.bson.Document document = new org.bson.Document("inner", new org.bson.Document("value", "FOO!"));
 
@@ -933,7 +935,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-458
-	public void readEmptyCollectionIsModifiable() {
+	void readEmptyCollectionIsModifiable() {
 
 		org.bson.Document document = new org.bson.Document("contactsSet", new BasicDBList());
 		CollectionWrapper wrapper = converter.read(CollectionWrapper.class, document);
@@ -943,7 +945,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-424
-	public void readsPlainDBRefObject() {
+	void readsPlainDBRefObject() {
 
 		DBRef dbRef = new DBRef("foo", 2);
 		org.bson.Document document = new org.bson.Document("ref", dbRef);
@@ -953,7 +955,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-424
-	public void readsCollectionOfDBRefs() {
+	void readsCollectionOfDBRefs() {
 
 		DBRef dbRef = new DBRef("foo", 2);
 		BasicDBList refs = new BasicDBList();
@@ -967,7 +969,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-424
-	public void readsDBRefMap() {
+	void readsDBRefMap() {
 
 		DBRef dbRef = mock(DBRef.class);
 		org.bson.Document refMap = new org.bson.Document("foo", dbRef);
@@ -981,7 +983,7 @@ public class MappingMongoConverterUnitTests {
 
 	@Test // DATAMONGO-424
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public void resolvesDBRefMapValue() {
+	void resolvesDBRefMapValue() {
 
 		when(resolver.fetch(Mockito.any(DBRef.class))).thenReturn(new org.bson.Document());
 		DBRef dbRef = mock(DBRef.class);
@@ -996,7 +998,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-462
-	public void writesURLsAsStringOutOfTheBox() throws Exception {
+	void writesURLsAsStringOutOfTheBox() throws Exception {
 
 		URLWrapper wrapper = new URLWrapper();
 		wrapper.url = new URL("https://springsource.org");
@@ -1008,14 +1010,14 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-462
-	public void readsURLFromStringOutOfTheBox() throws Exception {
+	void readsURLFromStringOutOfTheBox() throws Exception {
 		org.bson.Document document = new org.bson.Document("url", "https://springsource.org");
 		URLWrapper result = converter.read(URLWrapper.class, document);
 		assertThat(result.url).isEqualTo(new URL("https://springsource.org"));
 	}
 
 	@Test // DATAMONGO-485
-	public void writesComplexIdCorrectly() {
+	void writesComplexIdCorrectly() {
 
 		ComplexId id = new ComplexId();
 		id.innerId = 4711L;
@@ -1033,7 +1035,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-485
-	public void readsComplexIdCorrectly() {
+	void readsComplexIdCorrectly() {
 
 		org.bson.Document innerId = new org.bson.Document("innerId", 4711L);
 		org.bson.Document entity = new org.bson.Document("_id", innerId);
@@ -1045,7 +1047,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-489
-	public void readsArraysAsMapValuesCorrectly() {
+	void readsArraysAsMapValuesCorrectly() {
 
 		BasicDBList list = new BasicDBList();
 		list.add("Foo");
@@ -1063,7 +1065,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-497
-	public void readsEmptyCollectionIntoConstructorCorrectly() {
+	void readsEmptyCollectionIntoConstructorCorrectly() {
 
 		org.bson.Document source = new org.bson.Document("attributes", new BasicDBList());
 
@@ -1072,7 +1074,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-2400
-	public void writeJavaTimeValuesViaCodec() {
+	void writeJavaTimeValuesViaCodec() {
 
 		configureConverterWithNativeJavaTimeCodec();
 		TypeWithLocalDateTime source = new TypeWithLocalDateTime();
@@ -1107,7 +1109,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMGONGO-508
-	public void eagerlyReturnsDBRefObjectIfTargetAlreadyIsOne() {
+	void eagerlyReturnsDBRefObjectIfTargetAlreadyIsOne() {
 
 		DBRef dbRef = new DBRef("collection", "id");
 
@@ -1117,7 +1119,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-523, DATAMONGO-1509
-	public void considersTypeAliasAnnotation() {
+	void considersTypeAliasAnnotation() {
 
 		Aliased aliased = new Aliased();
 		aliased.name = "foo";
@@ -1129,7 +1131,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-533
-	public void marshalsThrowableCorrectly() {
+	void marshalsThrowableCorrectly() {
 
 		ThrowableWrapper wrapper = new ThrowableWrapper();
 		wrapper.throwable = new Exception();
@@ -1139,7 +1141,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-592
-	public void recursivelyConvertsSpELReadValue() {
+	void recursivelyConvertsSpELReadValue() {
 
 		org.bson.Document input = org.bson.Document.parse(
 				"{ \"_id\" : { \"$oid\" : \"50ca271c4566a2b08f2d667a\" }, \"_class\" : \"com.recorder.TestRecorder2$ObjectContainer\", \"property\" : { \"property\" : 100 } }");
@@ -1148,7 +1150,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-724
-	public void mappingConsidersCustomConvertersNotWritingTypeInformation() {
+	void mappingConsidersCustomConvertersNotWritingTypeInformation() {
 
 		Person person = new Person();
 		person.firstname = "Dave";
@@ -1206,7 +1208,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-743, DATAMONGO-2198
-	public void readsIntoStringsOutOfTheBox() {
+	void readsIntoStringsOutOfTheBox() {
 
 		String target = converter.read(String.class, new org.bson.Document("firstname", "Dave"));
 
@@ -1217,7 +1219,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-766
-	public void writesProjectingTypeCorrectly() {
+	void writesProjectingTypeCorrectly() {
 
 		NestedType nested = new NestedType();
 		nested.c = "C";
@@ -1237,7 +1239,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-812, DATAMONGO-893, DATAMONGO-1509
-	public void convertsListToBasicDBListAndRetainsTypeInformationForComplexObjects() {
+	void convertsListToBasicDBListAndRetainsTypeInformationForComplexObjects() {
 
 		Address address = new Address();
 		address.city = "London";
@@ -1254,7 +1256,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-812
-	public void convertsListToBasicDBListWithoutTypeInformationForSimpleTypes() {
+	void convertsListToBasicDBListWithoutTypeInformationForSimpleTypes() {
 
 		Object result = converter.convertToMongoType(Collections.singletonList("foo"));
 
@@ -1266,7 +1268,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-812, DATAMONGO-1509
-	public void convertsArrayToBasicDBListAndRetainsTypeInformationForComplexObjects() {
+	void convertsArrayToBasicDBListAndRetainsTypeInformationForComplexObjects() {
 
 		Address address = new Address();
 		address.city = "London";
@@ -1282,7 +1284,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-812
-	public void convertsArrayToBasicDBListWithoutTypeInformationForSimpleTypes() {
+	void convertsArrayToBasicDBListWithoutTypeInformationForSimpleTypes() {
 
 		Object result = converter.convertToMongoType(new String[] { "foo" });
 
@@ -1294,7 +1296,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-833
-	public void readsEnumSetCorrectly() {
+	void readsEnumSetCorrectly() {
 
 		BasicDBList enumSet = new BasicDBList();
 		enumSet.add("SECOND");
@@ -1308,7 +1310,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-833
-	public void readsEnumMapCorrectly() {
+	void readsEnumMapCorrectly() {
 
 		org.bson.Document enumMap = new org.bson.Document("FIRST", "Dave");
 		ClassWithEnumProperty result = converter.read(ClassWithEnumProperty.class,
@@ -1320,7 +1322,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-887
-	public void readsTreeMapCorrectly() {
+	void readsTreeMapCorrectly() {
 
 		org.bson.Document person = new org.bson.Document("foo", "Dave");
 		org.bson.Document treeMapOfPerson = new org.bson.Document("key", person);
@@ -1334,7 +1336,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-887
-	public void writesTreeMapCorrectly() {
+	void writesTreeMapCorrectly() {
 
 		Person person = new Person();
 		person.firstname = "Dave";
@@ -1353,7 +1355,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-858
-	public void shouldWriteEntityWithGeoBoxCorrectly() {
+	void shouldWriteEntityWithGeoBoxCorrectly() {
 
 		ClassWithGeoBox object = new ClassWithGeoBox();
 		object.box = new Box(new Point(1, 2), new Point(3, 4));
@@ -1372,7 +1374,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-858
-	public void shouldReadEntityWithGeoBoxCorrectly() {
+	void shouldReadEntityWithGeoBoxCorrectly() {
 
 		ClassWithGeoBox object = new ClassWithGeoBox();
 		object.box = new Box(new Point(1, 2), new Point(3, 4));
@@ -1387,7 +1389,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-858
-	public void shouldWriteEntityWithGeoPolygonCorrectly() {
+	void shouldWriteEntityWithGeoPolygonCorrectly() {
 
 		ClassWithGeoPolygon object = new ClassWithGeoPolygon();
 		object.polygon = new Polygon(new Point(1, 2), new Point(3, 4), new Point(4, 5));
@@ -1409,7 +1411,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-858
-	public void shouldReadEntityWithGeoPolygonCorrectly() {
+	void shouldReadEntityWithGeoPolygonCorrectly() {
 
 		ClassWithGeoPolygon object = new ClassWithGeoPolygon();
 		object.polygon = new Polygon(new Point(1, 2), new Point(3, 4), new Point(4, 5));
@@ -1424,7 +1426,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-858
-	public void shouldWriteEntityWithGeoCircleCorrectly() {
+	void shouldWriteEntityWithGeoCircleCorrectly() {
 
 		ClassWithGeoCircle object = new ClassWithGeoCircle();
 		Circle circle = new Circle(new Point(1, 2), 3);
@@ -1442,7 +1444,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-858
-	public void shouldReadEntityWithGeoCircleCorrectly() {
+	void shouldReadEntityWithGeoCircleCorrectly() {
 
 		ClassWithGeoCircle object = new ClassWithGeoCircle();
 		object.circle = new Circle(new Point(1, 2), 3);
@@ -1457,7 +1459,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-858
-	public void shouldWriteEntityWithGeoSphereCorrectly() {
+	void shouldWriteEntityWithGeoSphereCorrectly() {
 
 		ClassWithGeoSphere object = new ClassWithGeoSphere();
 		Sphere sphere = new Sphere(new Point(1, 2), 3);
@@ -1475,7 +1477,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-858
-	public void shouldWriteEntityWithGeoSphereWithMetricDistanceCorrectly() {
+	void shouldWriteEntityWithGeoSphereWithMetricDistanceCorrectly() {
 
 		ClassWithGeoSphere object = new ClassWithGeoSphere();
 		Sphere sphere = new Sphere(new Point(1, 2), new Distance(3, Metrics.KILOMETERS));
@@ -1493,7 +1495,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-858
-	public void shouldReadEntityWithGeoSphereCorrectly() {
+	void shouldReadEntityWithGeoSphereCorrectly() {
 
 		ClassWithGeoSphere object = new ClassWithGeoSphere();
 		object.sphere = new Sphere(new Point(1, 2), 3);
@@ -1508,7 +1510,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-858
-	public void shouldWriteEntityWithGeoShapeCorrectly() {
+	void shouldWriteEntityWithGeoShapeCorrectly() {
 
 		ClassWithGeoShape object = new ClassWithGeoShape();
 		Sphere sphere = new Sphere(new Point(1, 2), 3);
@@ -1526,8 +1528,8 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-858
-	@Ignore
-	public void shouldReadEntityWithGeoShapeCorrectly() {
+	@Disabled
+	void shouldReadEntityWithGeoShapeCorrectly() {
 
 		ClassWithGeoShape object = new ClassWithGeoShape();
 		Sphere sphere = new Sphere(new Point(1, 2), 3);
@@ -1543,7 +1545,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-976
-	public void shouldIgnoreTextScorePropertyWhenWriting() {
+	void shouldIgnoreTextScorePropertyWhenWriting() {
 
 		ClassWithTextScoreProperty source = new ClassWithTextScoreProperty();
 		source.score = Float.MAX_VALUE;
@@ -1555,7 +1557,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-976
-	public void shouldIncludeTextScorePropertyWhenReading() {
+	void shouldIncludeTextScorePropertyWhenReading() {
 
 		ClassWithTextScoreProperty entity = converter.read(ClassWithTextScoreProperty.class,
 				new org.bson.Document("score", 5F));
@@ -1563,7 +1565,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1001, DATAMONGO-1509
-	public void shouldWriteCglibProxiedClassTypeInformationCorrectly() {
+	void shouldWriteCglibProxiedClassTypeInformationCorrectly() {
 
 		ProxyFactory factory = new ProxyFactory();
 		factory.setTargetClass(GenericType.class);
@@ -1577,7 +1579,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1001
-	public void shouldUseTargetObjectOfLazyLoadingProxyWhenWriting() {
+	void shouldUseTargetObjectOfLazyLoadingProxyWhenWriting() {
 
 		LazyLoadingProxy mock = mock(LazyLoadingProxy.class);
 
@@ -1588,7 +1590,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1034
-	public void rejectsBasicDbListToBeConvertedIntoComplexType() {
+	void rejectsBasicDbListToBeConvertedIntoComplexType() {
 
 		List<Object> inner = new ArrayList<Object>();
 		inner.add("key");
@@ -1604,7 +1606,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1058
-	public void readShouldRespectExplicitFieldNameForDbRef() {
+	void readShouldRespectExplicitFieldNameForDbRef() {
 
 		org.bson.Document source = new org.bson.Document();
 		source.append("explict-name-for-db-ref", new DBRef("foo", "1"));
@@ -1616,7 +1618,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1050
-	public void writeShouldUseExplicitFieldnameForIdPropertyWhenAnnotated() {
+	void writeShouldUseExplicitFieldnameForIdPropertyWhenAnnotated() {
 
 		RootForClassWithExplicitlyRenamedIdField source = new RootForClassWithExplicitlyRenamedIdField();
 		source.id = "rootId";
@@ -1631,7 +1633,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1050
-	public void readShouldUseExplicitFieldnameForIdPropertyWhenAnnotated() {
+	void readShouldUseExplicitFieldnameForIdPropertyWhenAnnotated() {
 
 		org.bson.Document source = new org.bson.Document().append("_id", "rootId").append("nested",
 				new org.bson.Document("id", "nestedId"));
@@ -1645,7 +1647,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1050
-	public void namedIdFieldShouldExtractValueFromUnderscoreIdField() {
+	void namedIdFieldShouldExtractValueFromUnderscoreIdField() {
 
 		org.bson.Document document = new org.bson.Document().append("_id", "A").append("id", "B");
 
@@ -1655,7 +1657,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1050
-	public void explicitlyRenamedIfFieldShouldExtractValueFromIdField() {
+	void explicitlyRenamedIfFieldShouldExtractValueFromIdField() {
 
 		org.bson.Document document = new org.bson.Document().append("_id", "A").append("id", "B");
 
@@ -1666,7 +1668,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1050
-	public void annotatedIdFieldShouldExtractValueFromUnderscoreIdField() {
+	void annotatedIdFieldShouldExtractValueFromUnderscoreIdField() {
 
 		org.bson.Document document = new org.bson.Document().append("_id", "A").append("id", "B");
 
@@ -1676,7 +1678,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1102
-	public void convertsJava8DateTimeTypesToDateAndBack() {
+	void convertsJava8DateTimeTypesToDateAndBack() {
 
 		TypeWithLocalDateTime source = new TypeWithLocalDateTime();
 		LocalDateTime reference = source.date;
@@ -1690,7 +1692,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1128
-	public void writesOptionalsCorrectly() {
+	void writesOptionalsCorrectly() {
 
 		TypeWithOptional type = new TypeWithOptional();
 		type.localDateTime = Optional.of(LocalDateTime.now());
@@ -1706,8 +1708,8 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1128
-	@Ignore("Broken by DATAMONGO-1992 - In fact, storing Optional fields seems an anti-pattern.")
-	public void readsOptionalsCorrectly() {
+	@Disabled("Broken by DATAMONGO-1992 - In fact, storing Optional fields seems an anti-pattern.")
+	void readsOptionalsCorrectly() {
 
 		LocalDateTime now = LocalDateTime.now();
 		Date reference = Date.from(now.atZone(systemDefault()).toInstant());
@@ -1722,7 +1724,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1118
-	public void convertsMapKeyUsingCustomConverterForAndBackwards() {
+	void convertsMapKeyUsingCustomConverterForAndBackwards() {
 
 		MappingMongoConverter converter = new MappingMongoConverter(resolver, mappingContext);
 		converter.setCustomConversions(
@@ -1740,7 +1742,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1118
-	public void writesMapKeyUsingCustomConverter() {
+	void writesMapKeyUsingCustomConverter() {
 
 		MappingMongoConverter converter = new MappingMongoConverter(resolver, mappingContext);
 		converter.setCustomConversions(new MongoCustomConversions(Arrays.asList(new FooBarEnumToStringConverter())));
@@ -1761,7 +1763,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1118
-	public void readsMapKeyUsingCustomConverter() {
+	void readsMapKeyUsingCustomConverter() {
 
 		MappingMongoConverter converter = new MappingMongoConverter(resolver, mappingContext);
 		converter.setCustomConversions(new MongoCustomConversions(Arrays.asList(new StringToFooNumConverter())));
@@ -1775,12 +1777,12 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1471
-	public void readsDocumentWithPrimitiveIdButNoValue() {
+	void readsDocumentWithPrimitiveIdButNoValue() {
 		assertThat(converter.read(ClassWithIntId.class, new org.bson.Document())).isNotNull();
 	}
 
 	@Test // DATAMONGO-1497
-	public void readsPropertyFromNestedFieldCorrectly() {
+	void readsPropertyFromNestedFieldCorrectly() {
 
 		org.bson.Document source = new org.bson.Document("nested", new org.bson.Document("sample", "value"));
 		TypeWithPropertyInNestedField result = converter.read(TypeWithPropertyInNestedField.class, source);
@@ -1789,7 +1791,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1525
-	public void readsEmptyEnumSet() {
+	void readsEmptyEnumSet() {
 
 		org.bson.Document source = new org.bson.Document("enumSet", Collections.emptyList());
 
@@ -1797,7 +1799,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1757
-	public void failsReadingDocumentIntoSimpleType() {
+	void failsReadingDocumentIntoSimpleType() {
 
 		org.bson.Document nested = new org.bson.Document("key", "value");
 		org.bson.Document source = new org.bson.Document("map", new org.bson.Document("key", nested));
@@ -1807,7 +1809,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1831
-	public void shouldConvertArrayInConstructorCorrectly() {
+	void shouldConvertArrayInConstructorCorrectly() {
 
 		org.bson.Document source = new org.bson.Document("array", Collections.emptyList());
 
@@ -1815,7 +1817,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1831
-	public void shouldConvertNullForArrayInConstructorCorrectly() {
+	void shouldConvertNullForArrayInConstructorCorrectly() {
 
 		org.bson.Document source = new org.bson.Document();
 
@@ -1823,7 +1825,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1898
-	public void writesInterfaceBackedEnumsToSimpleNameByDefault() {
+	void writesInterfaceBackedEnumsToSimpleNameByDefault() {
 
 		org.bson.Document document = new org.bson.Document();
 
@@ -1839,7 +1841,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1898
-	public void rejectsConversionFromStringToEnumBackedInterface() {
+	void rejectsConversionFromStringToEnumBackedInterface() {
 
 		org.bson.Document document = new org.bson.Document("property", InterfacedEnum.INSTANCE.name());
 
@@ -1848,7 +1850,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1898
-	public void readsInterfacedEnumIfConverterIsRegistered() {
+	void readsInterfacedEnumIfConverterIsRegistered() {
 
 		org.bson.Document document = new org.bson.Document("property", InterfacedEnum.INSTANCE.name());
 
@@ -1869,7 +1871,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1904
-	public void readsNestedArraysCorrectly() {
+	void readsNestedArraysCorrectly() {
 
 		List<List<List<Float>>> floats = Arrays.asList(Arrays.asList(Arrays.asList(1.0f, 2.0f)));
 
@@ -1882,7 +1884,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1992
-	public void readsImmutableObjectCorrectly() {
+	void readsImmutableObjectCorrectly() {
 
 		org.bson.Document document = new org.bson.Document("_id", "foo");
 
@@ -1893,7 +1895,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-2026
-	public void readsImmutableObjectWithConstructorIdPropertyCorrectly() {
+	void readsImmutableObjectWithConstructorIdPropertyCorrectly() {
 
 		org.bson.Document source = new org.bson.Document("_id", "spring").append("value", "data");
 
@@ -1905,7 +1907,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-2011
-	public void readsNestedListsToObjectCorrectly() {
+	void readsNestedListsToObjectCorrectly() {
 
 		List<String> values = Arrays.asList("ONE", "TWO");
 		org.bson.Document source = new org.bson.Document("value", Collections.singletonList(values));
@@ -1914,7 +1916,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-2043
-	public void omitsTypeHintWhenWritingSimpleTypes() {
+	void omitsTypeHintWhenWritingSimpleTypes() {
 
 		org.bson.Document target = new org.bson.Document();
 		converter.write(new org.bson.Document("value", "FitzChivalry"), target);
@@ -1923,28 +1925,28 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1798
-	public void convertStringIdThatIsAnObjectIdHexToObjectIdIfTargetIsObjectId() {
+	void convertStringIdThatIsAnObjectIdHexToObjectIdIfTargetIsObjectId() {
 
 		ObjectId source = new ObjectId();
 		assertThat(converter.convertId(source.toHexString(), ObjectId.class)).isEqualTo(source);
 	}
 
 	@Test // DATAMONGO-1798
-	public void donNotConvertStringIdThatIsAnObjectIdHexToObjectIdIfTargetIsString() {
+	void donNotConvertStringIdThatIsAnObjectIdHexToObjectIdIfTargetIsString() {
 
 		ObjectId source = new ObjectId();
 		assertThat(converter.convertId(source.toHexString(), String.class)).isEqualTo(source.toHexString());
 	}
 
 	@Test // DATAMONGO-1798
-	public void donNotConvertStringIdThatIsAnObjectIdHexToObjectIdIfTargetIsObject() {
+	void donNotConvertStringIdThatIsAnObjectIdHexToObjectIdIfTargetIsObject() {
 
 		ObjectId source = new ObjectId();
 		assertThat(converter.convertId(source.toHexString(), Object.class)).isEqualTo(source.toHexString());
 	}
 
 	@Test // DATAMONGO-2135
-	public void addsEqualObjectsToCollection() {
+	void addsEqualObjectsToCollection() {
 
 		org.bson.Document itemDocument = new org.bson.Document("itemKey", "123");
 		org.bson.Document orderDocument = new org.bson.Document("items",
@@ -1956,7 +1958,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1849
-	public void mapsValueToExplicitTargetType() {
+	void mapsValueToExplicitTargetType() {
 
 		WithExplicitTargetTypes source = new WithExplicitTargetTypes();
 		source.script = "if (a > b) a else b";
@@ -1968,7 +1970,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-2328
-	public void readsScriptAsStringWhenAnnotatedWithFieldTargetType() {
+	void readsScriptAsStringWhenAnnotatedWithFieldTargetType() {
 
 		String reference = "if (a > b) a else b";
 		WithExplicitTargetTypes target = converter.read(WithExplicitTargetTypes.class,
@@ -1978,7 +1980,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1849
-	public void mapsCollectionValueToExplicitTargetType() {
+	void mapsCollectionValueToExplicitTargetType() {
 
 		String script = "if (a > b) a else b";
 		WithExplicitTargetTypes source = new WithExplicitTargetTypes();
@@ -1991,7 +1993,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1849
-	public void mapsBigDecimalToDecimal128WhenAnnotatedWithFieldTargetType() {
+	void mapsBigDecimalToDecimal128WhenAnnotatedWithFieldTargetType() {
 
 		WithExplicitTargetTypes source = new WithExplicitTargetTypes();
 		source.bigDecimal = BigDecimal.valueOf(3.14159D);
@@ -2003,7 +2005,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-2328
-	public void mapsDateToLongWhenAnnotatedWithFieldTargetType() {
+	void mapsDateToLongWhenAnnotatedWithFieldTargetType() {
 
 		WithExplicitTargetTypes source = new WithExplicitTargetTypes();
 		source.dateAsLong = new Date();
@@ -2015,7 +2017,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-2328
-	public void readsLongAsDateWhenAnnotatedWithFieldTargetType() {
+	void readsLongAsDateWhenAnnotatedWithFieldTargetType() {
 
 		Date reference = new Date();
 		WithExplicitTargetTypes target = converter.read(WithExplicitTargetTypes.class,
@@ -2025,7 +2027,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-2328
-	public void mapsLongToDateWhenAnnotatedWithFieldTargetType() {
+	void mapsLongToDateWhenAnnotatedWithFieldTargetType() {
 
 		Date date = new Date();
 		WithExplicitTargetTypes source = new WithExplicitTargetTypes();
@@ -2038,7 +2040,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-2328
-	public void readsDateAsLongWhenAnnotatedWithFieldTargetType() {
+	void readsDateAsLongWhenAnnotatedWithFieldTargetType() {
 
 		Date reference = new Date();
 		WithExplicitTargetTypes target = converter.read(WithExplicitTargetTypes.class,
@@ -2048,7 +2050,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-2328
-	public void mapsStringAsBooleanWhenAnnotatedWithFieldTargetType() {
+	void mapsStringAsBooleanWhenAnnotatedWithFieldTargetType() {
 
 		WithExplicitTargetTypes source = new WithExplicitTargetTypes();
 		source.stringAsBoolean = "true";
@@ -2060,7 +2062,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-2328
-	public void readsBooleanAsStringWhenAnnotatedWithFieldTargetType() {
+	void readsBooleanAsStringWhenAnnotatedWithFieldTargetType() {
 
 		WithExplicitTargetTypes target = converter.read(WithExplicitTargetTypes.class,
 				new org.bson.Document("stringAsBoolean", true));
@@ -2069,7 +2071,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-2328
-	public void mapsDateAsObjectIdWhenAnnotatedWithFieldTargetType() {
+	void mapsDateAsObjectIdWhenAnnotatedWithFieldTargetType() {
 
 		WithExplicitTargetTypes source = new WithExplicitTargetTypes();
 		source.dateAsObjectId = new Date();
@@ -2083,7 +2085,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-2328
-	public void readsObjectIdAsDateWhenAnnotatedWithFieldTargetType() {
+	void readsObjectIdAsDateWhenAnnotatedWithFieldTargetType() {
 
 		ObjectId reference = new ObjectId();
 		WithExplicitTargetTypes target = converter.read(WithExplicitTargetTypes.class,
@@ -2093,7 +2095,7 @@ public class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-2410
-	public void shouldAllowReadingBackDbObject() {
+	void shouldAllowReadingBackDbObject() {
 
 		assertThat(converter.read(BasicDBObject.class, new org.bson.Document("property", "value")))
 				.isEqualTo(new BasicDBObject("property", "value"));
@@ -2150,7 +2152,7 @@ public class MappingMongoConverterUnitTests {
 
 		Set<Address> addresses;
 
-		public Person() {
+		Person() {
 
 		}
 
@@ -2207,7 +2209,7 @@ public class MappingMongoConverterUnitTests {
 		String valueType;
 		T value;
 
-		public A(T value) {
+		A(T value) {
 			this.valueType = value.getClass().getName();
 			this.value = value;
 		}

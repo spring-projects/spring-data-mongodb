@@ -18,8 +18,8 @@ package org.springframework.data.mongodb.core.convert;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
@@ -36,7 +36,7 @@ public class ObjectPathUnitTests {
 	MongoPersistentEntity<EntityTwo> two;
 	MongoPersistentEntity<EntityThree> three;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		one = new BasicMongoPersistentEntity<>(ClassTypeInformation.from(EntityOne.class));

@@ -26,11 +26,11 @@ import reactor.test.StepVerifier;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.reactivestreams.Publisher;
 
 import org.springframework.data.domain.PageRequest;
@@ -57,7 +57,7 @@ import com.mongodb.client.result.DeleteResult;
  * @author Mark Paluch
  * @author Artyom Gabeev
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ReactiveMongoQueryExecutionUnitTests {
 
 	@Mock private ReactiveMongoOperations operations;

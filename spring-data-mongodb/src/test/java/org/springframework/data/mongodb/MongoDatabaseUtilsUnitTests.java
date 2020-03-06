@@ -22,12 +22,11 @@ import static org.mockito.Mockito.*;
 import javax.transaction.Status;
 import javax.transaction.UserTransaction;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.jta.JtaTransactionManager;
@@ -42,8 +41,8 @@ import com.mongodb.session.ServerSession;
 /**
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.class)
-public class MongoDatabaseUtilsUnitTests {
+@ExtendWith(MockitoExtension.class)
+class MongoDatabaseUtilsUnitTests {
 
 	@Mock ClientSession session;
 	@Mock ServerSession serverSession;
@@ -52,23 +51,8 @@ public class MongoDatabaseUtilsUnitTests {
 
 	@Mock UserTransaction userTransaction;
 
-	@Before
-	public void setUp() {
-
-		when(dbFactory.getSession(any())).thenReturn(session);
-
-		when(dbFactory.withSession(session)).thenReturn(dbFactory);
-
-		when(dbFactory.getMongoDatabase()).thenReturn(db);
-
-		when(session.getServerSession()).thenReturn(serverSession);
-		when(session.hasActiveTransaction()).thenReturn(true);
-
-		when(serverSession.isClosed()).thenReturn(false);
-	}
-
-	@After
-	public void verifyTransactionSynchronizationManagerState() {
+	@AfterEach
+	void verifyTransactionSynchronizationManagerState() {
 
 		assertThat(TransactionSynchronizationManager.getResourceMap().isEmpty()).isTrue();
 		assertThat(TransactionSynchronizationManager.isSynchronizationActive()).isFalse();
@@ -79,7 +63,7 @@ public class MongoDatabaseUtilsUnitTests {
 	}
 
 	@Test // DATAMONGO-2130
-	public void isTransactionActiveShouldDetectTxViaFactory() {
+	void isTransactionActiveShouldDetectTxViaFactory() {
 
 		when(dbFactory.isTransactionActive()).thenReturn(true);
 
@@ -87,7 +71,7 @@ public class MongoDatabaseUtilsUnitTests {
 	}
 
 	@Test // DATAMONGO-2130
-	public void isTransactionActiveShouldReturnFalseIfNoTxActive() {
+	void isTransactionActiveShouldReturnFalseIfNoTxActive() {
 
 		when(dbFactory.isTransactionActive()).thenReturn(false);
 
@@ -95,7 +79,12 @@ public class MongoDatabaseUtilsUnitTests {
 	}
 
 	@Test // DATAMONGO-2130
-	public void isTransactionActiveShouldLookupTxForActiveTransactionSynchronizationViaTxManager() {
+	void isTransactionActiveShouldLookupTxForActiveTransactionSynchronizationViaTxManager() {
+
+		when(dbFactory.getSession(any())).thenReturn(session);
+		when(session.getServerSession()).thenReturn(serverSession);
+		when(session.hasActiveTransaction()).thenReturn(true);
+		when(serverSession.isClosed()).thenReturn(false);
 
 		when(dbFactory.isTransactionActive()).thenReturn(false);
 
@@ -112,7 +101,7 @@ public class MongoDatabaseUtilsUnitTests {
 	}
 
 	@Test // DATAMONGO-1920
-	public void shouldNotStartSessionWhenNoTransactionOngoing() {
+	void shouldNotStartSessionWhenNoTransactionOngoing() {
 
 		MongoDatabaseUtils.getDatabase(dbFactory, SessionSynchronization.ON_ACTUAL_TRANSACTION);
 
@@ -121,7 +110,14 @@ public class MongoDatabaseUtilsUnitTests {
 	}
 
 	@Test // DATAMONGO-1920
-	public void shouldParticipateInOngoingJtaTransactionWithCommitWhenSessionSychronizationIsAny() throws Exception {
+	void shouldParticipateInOngoingJtaTransactionWithCommitWhenSessionSychronizationIsAny() throws Exception {
+
+		when(dbFactory.getSession(any())).thenReturn(session);
+		when(dbFactory.withSession(session)).thenReturn(dbFactory);
+		when(dbFactory.getMongoDatabase()).thenReturn(db);
+		when(session.getServerSession()).thenReturn(serverSession);
+		when(session.hasActiveTransaction()).thenReturn(true);
+		when(serverSession.isClosed()).thenReturn(false);
 
 		when(userTransaction.getStatus()).thenReturn(Status.STATUS_NO_TRANSACTION, Status.STATUS_ACTIVE,
 				Status.STATUS_ACTIVE);
@@ -152,7 +148,14 @@ public class MongoDatabaseUtilsUnitTests {
 	}
 
 	@Test // DATAMONGO-1920
-	public void shouldParticipateInOngoingJtaTransactionWithRollbackWhenSessionSychronizationIsAny() throws Exception {
+	void shouldParticipateInOngoingJtaTransactionWithRollbackWhenSessionSychronizationIsAny() throws Exception {
+
+		when(dbFactory.getSession(any())).thenReturn(session);
+		when(dbFactory.withSession(session)).thenReturn(dbFactory);
+		when(dbFactory.getMongoDatabase()).thenReturn(db);
+		when(session.getServerSession()).thenReturn(serverSession);
+		when(session.hasActiveTransaction()).thenReturn(true);
+		when(serverSession.isClosed()).thenReturn(false);
 
 		when(userTransaction.getStatus()).thenReturn(Status.STATUS_NO_TRANSACTION, Status.STATUS_ACTIVE,
 				Status.STATUS_ACTIVE);
@@ -185,8 +188,7 @@ public class MongoDatabaseUtilsUnitTests {
 	}
 
 	@Test // DATAMONGO-1920
-	public void shouldNotParticipateInOngoingJtaTransactionWithRollbackWhenSessionSychronizationIsNative()
-			throws Exception {
+	void shouldNotParticipateInOngoingJtaTransactionWithRollbackWhenSessionSychronizationIsNative() throws Exception {
 
 		when(userTransaction.getStatus()).thenReturn(Status.STATUS_NO_TRANSACTION, Status.STATUS_ACTIVE,
 				Status.STATUS_ACTIVE);
@@ -219,7 +221,13 @@ public class MongoDatabaseUtilsUnitTests {
 	}
 
 	@Test // DATAMONGO-1920
-	public void shouldParticipateInOngoingMongoTransactionWhenSessionSychronizationIsNative() {
+	void shouldParticipateInOngoingMongoTransactionWhenSessionSychronizationIsNative() {
+
+		when(dbFactory.getSession(any())).thenReturn(session);
+		when(dbFactory.withSession(session)).thenReturn(dbFactory);
+		when(dbFactory.getMongoDatabase()).thenReturn(db);
+		when(session.getServerSession()).thenReturn(serverSession);
+		when(serverSession.isClosed()).thenReturn(false);
 
 		MongoTransactionManager txManager = new MongoTransactionManager(dbFactory);
 		TransactionTemplate txTemplate = new TransactionTemplate(txManager);
@@ -245,7 +253,13 @@ public class MongoDatabaseUtilsUnitTests {
 	}
 
 	@Test // DATAMONGO-1920
-	public void shouldParticipateInOngoingMongoTransactionWhenSessionSychronizationIsAny() {
+	void shouldParticipateInOngoingMongoTransactionWhenSessionSynchronizationIsAny() {
+
+		when(dbFactory.getSession(any())).thenReturn(session);
+		when(dbFactory.withSession(session)).thenReturn(dbFactory);
+		when(dbFactory.getMongoDatabase()).thenReturn(db);
+		when(session.getServerSession()).thenReturn(serverSession);
+		when(serverSession.isClosed()).thenReturn(false);
 
 		MongoTransactionManager txManager = new MongoTransactionManager(dbFactory);
 		TransactionTemplate txTemplate = new TransactionTemplate(txManager);

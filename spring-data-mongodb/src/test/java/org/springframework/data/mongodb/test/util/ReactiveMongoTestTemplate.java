@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.test.util;
 
-import com.mongodb.reactivestreams.client.MongoClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -25,14 +24,17 @@ import java.util.function.Supplier;
 
 import org.bson.Document;
 import org.reactivestreams.Publisher;
+
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 
+import com.mongodb.reactivestreams.client.MongoClient;
+
 /**
  * A {@link ReactiveMongoTemplate} with configuration hooks and extension suitable for tests.
- * 
+ *
  * @author Christoph Strobl
  * @since 3.0
  */

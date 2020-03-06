@@ -21,10 +21,10 @@ import static org.mockito.Mockito.*;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
@@ -39,15 +39,15 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  *
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner.class)
-public class SimpleReactiveMongoDatabaseFactoryUnitTests {
+@ExtendWith(MockitoExtension.class)
+class SimpleReactiveMongoDatabaseFactoryUnitTests {
 
 	@Mock MongoClient mongoClient;
 	@Mock ClientSession clientSession;
 	@Mock MongoDatabase database;
 
 	@Test // DATAMONGO-1880
-	public void cascadedWithSessionUsesRootFactory() {
+	void cascadedWithSessionUsesRootFactory() {
 
 		when(mongoClient.getDatabase("foo")).thenReturn(database);
 
@@ -63,7 +63,7 @@ public class SimpleReactiveMongoDatabaseFactoryUnitTests {
 	}
 
 	@Test // DATAMONGO-1903
-	public void rejectsIllegalDatabaseNames() {
+	void rejectsIllegalDatabaseNames() {
 
 		rejectsDatabaseName("foo.bar");
 		rejectsDatabaseName("foo$bar");

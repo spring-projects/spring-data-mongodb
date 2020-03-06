@@ -30,14 +30,15 @@ import java.util.Optional;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Answers;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
@@ -83,22 +84,22 @@ import com.mongodb.client.model.WriteModel;
  * @author Minsu Kim
  * @author Jens Schauder
  */
-@RunWith(MockitoJUnitRunner.class)
-public class DefaultBulkOperationsUnitTests {
+@ExtendWith(MockitoExtension.class)
+class DefaultBulkOperationsUnitTests {
 
-	MongoTemplate template;
+	private MongoTemplate template;
 	@Mock MongoDatabase database;
 	@Mock(answer = Answers.RETURNS_DEEP_STUBS) MongoCollection<Document> collection;
 	@Mock MongoDatabaseFactory factory;
 	@Mock DbRefResolver dbRefResolver;
 	@Captor ArgumentCaptor<List<WriteModel<Document>>> captor;
-	MongoConverter converter;
-	MongoMappingContext mappingContext;
+	private MongoConverter converter;
+	private MongoMappingContext mappingContext;
 
-	DefaultBulkOperations ops;
+	private DefaultBulkOperations ops;
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	void setUp() {
 
 		when(factory.getMongoDatabase()).thenReturn(database);
 		when(factory.getExceptionTranslator()).thenReturn(new NullExceptionTranslator());
@@ -117,7 +118,7 @@ public class DefaultBulkOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1518
-	public void updateOneShouldUseCollationWhenPresent() {
+	void updateOneShouldUseCollationWhenPresent() {
 
 		ops.updateOne(new BasicQuery("{}").collation(Collation.of("de")), new Update().set("lastName", "targaryen"))
 				.execute();
@@ -130,7 +131,7 @@ public class DefaultBulkOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1518
-	public void updateManyShouldUseCollationWhenPresent() {
+	void updateManyShouldUseCollationWhenPresent() {
 
 		ops.updateMulti(new BasicQuery("{}").collation(Collation.of("de")), new Update().set("lastName", "targaryen"))
 				.execute();
@@ -143,7 +144,7 @@ public class DefaultBulkOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1518
-	public void removeShouldUseCollationWhenPresent() {
+	void removeShouldUseCollationWhenPresent() {
 
 		ops.remove(new BasicQuery("{}").collation(Collation.of("de"))).execute();
 
@@ -155,7 +156,7 @@ public class DefaultBulkOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2218
-	public void replaceOneShouldUseCollationWhenPresent() {
+	void replaceOneShouldUseCollationWhenPresent() {
 
 		ops.replaceOne(new BasicQuery("{}").collation(Collation.of("de")), new SomeDomainType()).execute();
 
@@ -167,7 +168,7 @@ public class DefaultBulkOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1678
-	public void bulkUpdateShouldMapQueryAndUpdateCorrectly() {
+	void bulkUpdateShouldMapQueryAndUpdateCorrectly() {
 
 		ops.updateOne(query(where("firstName").is("danerys")), Update.update("firstName", "queen danerys")).execute();
 
@@ -179,7 +180,7 @@ public class DefaultBulkOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1678
-	public void bulkRemoveShouldMapQueryCorrectly() {
+	void bulkRemoveShouldMapQueryCorrectly() {
 
 		ops.remove(query(where("firstName").is("danerys"))).execute();
 
@@ -190,7 +191,7 @@ public class DefaultBulkOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2218
-	public void bulkReplaceOneShouldMapQueryCorrectly() {
+	void bulkReplaceOneShouldMapQueryCorrectly() {
 
 		SomeDomainType replacement = new SomeDomainType();
 		replacement.firstName = "Minsu";
@@ -207,7 +208,7 @@ public class DefaultBulkOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2261
-	public void bulkInsertInvokesEntityCallbacks() {
+	void bulkInsertInvokesEntityCallbacks() {
 
 		BeforeConvertPersonCallback beforeConvertCallback = spy(new BeforeConvertPersonCallback());
 		BeforeSavePersonCallback beforeSaveCallback = spy(new BeforeSavePersonCallback());
@@ -235,7 +236,7 @@ public class DefaultBulkOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2290
-	public void bulkReplaceOneEmitsEventsCorrectly() {
+	void bulkReplaceOneEmitsEventsCorrectly() {
 
 		ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
 
@@ -256,7 +257,7 @@ public class DefaultBulkOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2290
-	public void bulkInsertEmitsEventsCorrectly() {
+	void bulkInsertEmitsEventsCorrectly() {
 
 		ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
 
@@ -277,7 +278,7 @@ public class DefaultBulkOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2290
-	public void noAfterSaveEventOnFailure() {
+	void noAfterSaveEventOnFailure() {
 
 		ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
 		when(collection.bulkWrite(anyList(), any())).thenThrow(new MongoWriteException(
@@ -302,7 +303,7 @@ public class DefaultBulkOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2330
-	public void writeConcernNotAppliedWhenNotSet() {
+	void writeConcernNotAppliedWhenNotSet() {
 
 		ops.updateOne(new BasicQuery("{}").collation(Collation.of("de")), new Update().set("lastName", "targaryen"))
 				.execute();
@@ -311,7 +312,7 @@ public class DefaultBulkOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2330
-	public void writeConcernAppliedCorrectlyWhenSet() {
+	void writeConcernAppliedCorrectlyWhenSet() {
 
 		ops.setDefaultWriteConcern(WriteConcern.MAJORITY);
 
@@ -322,7 +323,7 @@ public class DefaultBulkOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2450
-	public void appliesArrayFilterWhenPresent() {
+	void appliesArrayFilterWhenPresent() {
 
 		ops.updateOne(new BasicQuery("{}"), new Update().filterArray(Criteria.where("element").gte(100))).execute();
 

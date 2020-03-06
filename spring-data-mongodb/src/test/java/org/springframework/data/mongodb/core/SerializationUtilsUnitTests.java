@@ -22,7 +22,7 @@ import java.util.Arrays;
 import java.util.Map;
 
 import org.bson.Document;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
 
 import com.mongodb.BasicDBList;

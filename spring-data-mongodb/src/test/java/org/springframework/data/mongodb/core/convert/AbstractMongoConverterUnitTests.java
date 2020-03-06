@@ -18,7 +18,7 @@ package org.springframework.data.mongodb.core.convert;
 import static org.mockito.Mockito.*;
 
 import org.bson.conversions.Bson;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.mapping.context.MappingContext;

@@ -22,8 +22,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.data.convert.ConfigurableTypeInformationMapper;
 import org.springframework.data.convert.SimpleTypeInformationMapper;
@@ -42,7 +42,7 @@ public class DefaultMongoTypeMapperUnitTests {
 
 	DefaultMongoTypeMapper typeMapper;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		configurableTypeInformationMapper = new ConfigurableTypeInformationMapper(

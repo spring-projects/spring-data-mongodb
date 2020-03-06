@@ -121,7 +121,7 @@ public class MongoClientExtension implements Extension, BeforeAllCallback, After
 		return new SyncClientHolder(replSet ? MongoTestUtils.replSetClient() : MongoTestUtils.client());
 	}
 
-	protected boolean holdsReplSetClient(ExtensionContext context) {
+	boolean holdsReplSetClient(ExtensionContext context) {
 
 		Store store = context.getStore(NAMESPACE);
 		return store.get(SYNC_REPLSET_KEY) != null || store.get(REACTIVE_REPLSET_KEY) != null;
@@ -130,9 +130,6 @@ public class MongoClientExtension implements Extension, BeforeAllCallback, After
 	private void assertValidFieldCandidate(Field field) {
 
 		assertSupportedType("field", field.getType());
-		if (isPrivate(field)) {
-			throw new ExtensionConfigurationException("@MongoClient field [" + field + "] must not be private.");
-		}
 	}
 
 	private void assertSupportedType(String target, Class<?> type) {

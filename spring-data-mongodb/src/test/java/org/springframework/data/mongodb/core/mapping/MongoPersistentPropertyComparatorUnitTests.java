@@ -7,10 +7,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity.MongoPersistentPropertyComparator;
 
@@ -19,8 +19,8 @@ import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity.
  *
  * @author Oliver Gierke
  */
-@RunWith(MockitoJUnitRunner.class)
-public class MongoPersistentPropertyComparatorUnitTests {
+@ExtendWith(MockitoExtension.class)
+class MongoPersistentPropertyComparatorUnitTests {
 
 	@Mock MongoPersistentProperty firstName;
 
@@ -29,7 +29,7 @@ public class MongoPersistentPropertyComparatorUnitTests {
 	@Mock MongoPersistentProperty ssn;
 
 	@Test
-	public void ordersPropertiesCorrectly() {
+	void ordersPropertiesCorrectly() {
 
 		when(ssn.getFieldOrder()).thenReturn(10);
 		when(firstName.getFieldOrder()).thenReturn(20);

@@ -24,9 +24,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
@@ -40,7 +40,7 @@ public class DataMongo273Tests {
 
 	MappingMongoConverter converter;
 
-	@Before
+	@BeforeEach
 	public void setupMongoConverter() {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
@@ -74,7 +74,7 @@ public class DataMongo273Tests {
 	}
 
 	@Test // DATAMONGO-294
-	@Ignore("TODO: Mongo3 - this is no longer supported as DBList is no Bson type :/")
+	@Disabled("TODO: Mongo3 - this is no longer supported as DBList is no Bson type :/")
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void convertListOfThings() {
 		Plane plane = new Plane("Boeing", 4);

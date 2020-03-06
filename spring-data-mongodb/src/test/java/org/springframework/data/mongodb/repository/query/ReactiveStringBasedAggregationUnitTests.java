@@ -28,12 +28,12 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
@@ -66,7 +66,7 @@ import org.springframework.util.ClassUtils;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ReactiveStringBasedAggregationUnitTests {
 
 	SpelExpressionParser PARSER = new SpelExpressionParser();
@@ -83,7 +83,7 @@ public class ReactiveStringBasedAggregationUnitTests {
 	private static final Document SORT = Document.parse(RAW_SORT_STRING);
 	private static final Document GROUP_BY_LASTNAME = Document.parse(RAW_GROUP_BY_LASTNAME_STRING);
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		converter = new MappingMongoConverter(dbRefResolver, new MongoMappingContext());

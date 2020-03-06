@@ -18,7 +18,7 @@ package org.springframework.data.mongodb.config;
 import static org.assertj.core.api.Assertions.*;
 
 import org.joda.time.DateTime;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;

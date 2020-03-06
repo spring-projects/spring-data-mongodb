@@ -23,7 +23,7 @@ import java.util.Map;
 
 import org.bson.Document;
 import org.joda.time.DateTime;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.query.Update.Position;
 

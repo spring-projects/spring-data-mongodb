@@ -21,7 +21,8 @@ import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.Date;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
 import org.springframework.core.convert.converter.Converter;
 
 /**
@@ -29,10 +30,10 @@ import org.springframework.core.convert.converter.Converter;
  *
  * @author Christoph Strobl
  */
-public class MongoCustomConversionsUnitTests {
+class MongoCustomConversionsUnitTests {
 
 	@Test // DATAMONGO-2349
-	public void nonAnnotatedConverterForJavaTimeTypeShouldOnlyBeRegisteredAsReadingConverter() {
+	void nonAnnotatedConverterForJavaTimeTypeShouldOnlyBeRegisteredAsReadingConverter() {
 
 		MongoCustomConversions conversions = new MongoCustomConversions(
 				Collections.singletonList(new DateToZonedDateTimeConverter()));

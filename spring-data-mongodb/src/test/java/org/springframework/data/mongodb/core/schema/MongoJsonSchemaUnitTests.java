@@ -23,9 +23,9 @@ import java.util.Collections;
 import java.util.UUID;
 
 import org.bson.Document;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
  * Unit tests for {@link MongoJsonSchema}.
@@ -33,11 +33,11 @@ import org.mockito.junit.MockitoJUnitRunner;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner.class)
-public class MongoJsonSchemaUnitTests {
+@ExtendWith(MockitoExtension.class)
+class MongoJsonSchemaUnitTests {
 
 	@Test // DATAMONGO-1835
-	public void toDocumentRendersSchemaCorrectly() {
+	void toDocumentRendersSchemaCorrectly() {
 
 		MongoJsonSchema schema = MongoJsonSchema.builder() //
 				.required("firstname", "lastname") //
@@ -48,7 +48,7 @@ public class MongoJsonSchemaUnitTests {
 	}
 
 	@Test // DATAMONGO-1835
-	public void rendersDocumentBasedSchemaCorrectly() {
+	void rendersDocumentBasedSchemaCorrectly() {
 
 		Document document = MongoJsonSchema.builder() //
 				.required("firstname", "lastname") //
@@ -61,7 +61,7 @@ public class MongoJsonSchemaUnitTests {
 	}
 
 	@Test // DATAMONGO-1849
-	public void rendersRequiredPropertiesCorrectly() {
+	void rendersRequiredPropertiesCorrectly() {
 
 		MongoJsonSchema schema = MongoJsonSchema.builder() //
 				.required("firstname") //
@@ -75,7 +75,7 @@ public class MongoJsonSchemaUnitTests {
 	}
 
 	@Test // DATAMONGO-2306
-	public void rendersEncryptedPropertyCorrectly() {
+	void rendersEncryptedPropertyCorrectly() {
 
 		MongoJsonSchema schema = MongoJsonSchema.builder().properties( //
 				encrypted(string("ssn")) //
@@ -90,7 +90,7 @@ public class MongoJsonSchemaUnitTests {
 	}
 
 	@Test // DATAMONGO-2306
-	public void rendersEncryptedPropertyWithKeyIdCorrectly() {
+	void rendersEncryptedPropertyWithKeyIdCorrectly() {
 
 		UUID uuid = UUID.randomUUID();
 		MongoJsonSchema schema = MongoJsonSchema.builder().properties( //
@@ -106,12 +106,12 @@ public class MongoJsonSchemaUnitTests {
 	}
 
 	@Test // DATAMONGO-1835
-	public void throwsExceptionOnNullRoot() {
+	void throwsExceptionOnNullRoot() {
 		assertThatIllegalArgumentException().isThrownBy(() -> MongoJsonSchema.of((JsonSchemaObject) null));
 	}
 
 	@Test // DATAMONGO-1835
-	public void throwsExceptionOnNullDocument() {
+	void throwsExceptionOnNullDocument() {
 		assertThatIllegalArgumentException().isThrownBy(() -> MongoJsonSchema.of((Document) null));
 	}
 }

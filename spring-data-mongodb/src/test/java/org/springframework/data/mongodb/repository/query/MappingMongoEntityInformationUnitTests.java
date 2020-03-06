@@ -20,10 +20,10 @@ import static org.mockito.Mockito.*;
 
 import lombok.Value;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
@@ -36,7 +36,7 @@ import org.springframework.data.repository.core.EntityInformation;
  *
  * @author Oliver Gierke
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class MappingMongoEntityInformationUnitTests {
 
 	@Mock MongoPersistentEntity<Person> info;

@@ -20,11 +20,11 @@ import static org.assertj.core.api.Assertions.*;
 import java.util.Collections;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -35,16 +35,16 @@ import org.springframework.data.mongodb.core.convert.MongoConverter;
  *
  * @author Oliver Gierke
  */
-@RunWith(MockitoJUnitRunner.class)
-public class GenericMappingTests {
+@ExtendWith(MockitoExtension.class)
+class GenericMappingTests {
 
-	MongoMappingContext context;
-	MongoConverter converter;
+	private MongoMappingContext context;
+	private MongoConverter converter;
 
 	@Mock DbRefResolver resolver;
 
-	@Before
-	public void setUp() throws Exception {
+	@BeforeEach
+	void setUp() throws Exception {
 
 		context = new MongoMappingContext();
 		context.setInitialEntitySet(Collections.singleton(StringWrapper.class));
@@ -54,7 +54,7 @@ public class GenericMappingTests {
 	}
 
 	@Test
-	public void writesGenericTypeCorrectly() {
+	void writesGenericTypeCorrectly() {
 
 		StringWrapper wrapper = new StringWrapper();
 		wrapper.container = new Container<String>();
@@ -73,7 +73,7 @@ public class GenericMappingTests {
 	}
 
 	@Test
-	public void readsGenericTypeCorrectly() {
+	void readsGenericTypeCorrectly() {
 
 		Document content = new Document("content", "Foo!");
 		Document container = new Document("container", content);
@@ -83,7 +83,7 @@ public class GenericMappingTests {
 		assertThat(result.container.content).isEqualTo("Foo!");
 	}
 
-	static class StringWrapper extends Wrapper<String> {
+	private static class StringWrapper extends Wrapper<String> {
 
 	}
 

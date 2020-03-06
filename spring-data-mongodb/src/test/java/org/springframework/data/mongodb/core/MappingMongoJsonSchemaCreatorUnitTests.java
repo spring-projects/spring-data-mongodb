@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.convert.WritingConverter;
@@ -49,7 +49,7 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 	MongoMappingContext mappingContext;
 	MappingMongoJsonSchemaCreator schemaCreator;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		mappingContext = new MongoMappingContext();

@@ -22,11 +22,10 @@ import static org.mockito.Mockito.*;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.transaction.reactive.TransactionSynchronizationManager;
 import org.springframework.transaction.reactive.TransactionalOperator;
@@ -42,26 +41,16 @@ import com.mongodb.session.ServerSession;
  * @author Mark Paluch
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.class)
-public class ReactiveMongoDatabaseUtilsUnitTests {
+@ExtendWith(MockitoExtension.class)
+class ReactiveMongoDatabaseUtilsUnitTests {
 
 	@Mock ClientSession session;
 	@Mock ServerSession serverSession;
 	@Mock ReactiveMongoDatabaseFactory databaseFactory;
 	@Mock MongoDatabase db;
 
-	@Before
-	public void setUp() {
-
-		when(databaseFactory.getSession(any())).thenReturn(Mono.just(session));
-		when(databaseFactory.getMongoDatabase()).thenReturn(db);
-
-		when(session.getServerSession()).thenReturn(serverSession);
-		when(session.hasActiveTransaction()).thenReturn(true);
-	}
-
 	@Test // DATAMONGO-2265
-	public void isTransactionActiveShouldDetectTxViaFactory() {
+	void isTransactionActiveShouldDetectTxViaFactory() {
 
 		when(databaseFactory.isTransactionActive()).thenReturn(true);
 
@@ -71,7 +60,7 @@ public class ReactiveMongoDatabaseUtilsUnitTests {
 	}
 
 	@Test // DATAMONGO-2265
-	public void isTransactionActiveShouldReturnFalseIfNoTxActive() {
+	void isTransactionActiveShouldReturnFalseIfNoTxActive() {
 
 		when(databaseFactory.isTransactionActive()).thenReturn(false);
 
@@ -81,8 +70,11 @@ public class ReactiveMongoDatabaseUtilsUnitTests {
 	}
 
 	@Test // DATAMONGO-2265
-	public void isTransactionActiveShouldLookupTxForActiveTransactionSynchronizationViaTxManager() {
+	void isTransactionActiveShouldLookupTxForActiveTransactionSynchronizationViaTxManager() {
 
+		when(session.getServerSession()).thenReturn(serverSession);
+		when(session.hasActiveTransaction()).thenReturn(true);
+		when(databaseFactory.getSession(any())).thenReturn(Mono.just(session));
 		when(databaseFactory.isTransactionActive()).thenReturn(false);
 		when(session.commitTransaction()).thenReturn(Mono.empty());
 
@@ -96,7 +88,9 @@ public class ReactiveMongoDatabaseUtilsUnitTests {
 	}
 
 	@Test // DATAMONGO-2265
-	public void shouldNotStartSessionWhenNoTransactionOngoing() {
+	void shouldNotStartSessionWhenNoTransactionOngoing() {
+
+		when(databaseFactory.getMongoDatabase()).thenReturn(db);
 
 		ReactiveMongoDatabaseUtils.getDatabase(databaseFactory, SessionSynchronization.ON_ACTUAL_TRANSACTION) //
 				.as(StepVerifier::create) //
@@ -108,7 +102,10 @@ public class ReactiveMongoDatabaseUtilsUnitTests {
 	}
 
 	@Test // DATAMONGO-2265
-	public void shouldParticipateInOngoingMongoTransactionWhenSessionSychronizationIsNative() {
+	void shouldParticipateInOngoingMongoTransactionWhenSessionSychronizationIsNative() {
+
+		when(session.getServerSession()).thenReturn(serverSession);
+		when(databaseFactory.getSession(any())).thenReturn(Mono.just(session));
 
 		ReactiveMongoTransactionManager txManager = new ReactiveMongoTransactionManager(databaseFactory);
 		when(session.abortTransaction()).thenReturn(Mono.empty());

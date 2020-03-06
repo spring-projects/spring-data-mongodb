@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.*;
 import java.util.Arrays;
 
 import org.bson.Document;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.mongodb.core.DocumentTestUtils;

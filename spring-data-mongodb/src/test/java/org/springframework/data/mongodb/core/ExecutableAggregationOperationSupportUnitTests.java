@@ -20,12 +20,13 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 
 /**
@@ -33,40 +34,40 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
  *
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ExecutableAggregationOperationSupportUnitTests {
 
 	@Mock MongoTemplate template;
-	ExecutableAggregationOperationSupport opSupport;
+	private ExecutableAggregationOperationSupport opSupport;
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	void setUp() {
 		opSupport = new ExecutableAggregationOperationSupport(template);
 	}
 
 	@Test // DATAMONGO-1563
-	public void throwsExceptionOnNullDomainType() {
+	void throwsExceptionOnNullDomainType() {
 		assertThatIllegalArgumentException().isThrownBy(() -> opSupport.aggregateAndReturn(null));
 	}
 
 	@Test // DATAMONGO-1563
-	public void throwsExceptionOnNullCollectionWhenUsed() {
+	void throwsExceptionOnNullCollectionWhenUsed() {
 		assertThatIllegalArgumentException()
 				.isThrownBy(() -> opSupport.aggregateAndReturn(Person.class).inCollection(null));
 	}
 
 	@Test // DATAMONGO-1563
-	public void throwsExceptionOnEmptyCollectionWhenUsed() {
+	void throwsExceptionOnEmptyCollectionWhenUsed() {
 		assertThatIllegalArgumentException().isThrownBy(() -> opSupport.aggregateAndReturn(Person.class).inCollection(""));
 	}
 
 	@Test // DATAMONGO-1563
-	public void throwsExceptionOnNullAggregation() {
+	void throwsExceptionOnNullAggregation() {
 		assertThatIllegalArgumentException().isThrownBy(() -> opSupport.aggregateAndReturn(Person.class).by(null));
 	}
 
 	@Test // DATAMONGO-1563
-	public void aggregateWithUntypedAggregationAndExplicitCollection() {
+	void aggregateWithUntypedAggregationAndExplicitCollection() {
 
 		opSupport.aggregateAndReturn(Person.class).inCollection("star-wars").by(newAggregation(project("foo"))).all();
 
@@ -76,7 +77,7 @@ public class ExecutableAggregationOperationSupportUnitTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void aggregateWithUntypedAggregation() {
+	void aggregateWithUntypedAggregation() {
 
 		when(template.getCollectionName(any(Class.class))).thenReturn("person");
 
@@ -91,7 +92,7 @@ public class ExecutableAggregationOperationSupportUnitTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void aggregateWithTypeAggregation() {
+	void aggregateWithTypeAggregation() {
 
 		when(template.getCollectionName(any(Class.class))).thenReturn("person");
 
@@ -106,7 +107,7 @@ public class ExecutableAggregationOperationSupportUnitTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void aggregateStreamWithUntypedAggregationAndExplicitCollection() {
+	void aggregateStreamWithUntypedAggregationAndExplicitCollection() {
 
 		opSupport.aggregateAndReturn(Person.class).inCollection("star-wars").by(newAggregation(project("foo"))).stream();
 
@@ -116,7 +117,7 @@ public class ExecutableAggregationOperationSupportUnitTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void aggregateStreamWithUntypedAggregation() {
+	void aggregateStreamWithUntypedAggregation() {
 
 		when(template.getCollectionName(any(Class.class))).thenReturn("person");
 
@@ -131,7 +132,7 @@ public class ExecutableAggregationOperationSupportUnitTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void aggregateStreamWithTypeAggregation() {
+	void aggregateStreamWithTypeAggregation() {
 
 		when(template.getCollectionName(any(Class.class))).thenReturn("person");
 

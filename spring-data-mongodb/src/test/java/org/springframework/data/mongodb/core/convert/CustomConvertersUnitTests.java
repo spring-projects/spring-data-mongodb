@@ -22,11 +22,13 @@ import java.util.Arrays;
 import java.util.HashSet;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
@@ -39,20 +41,20 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
  *
  * @author Oliver Gierke
  */
-@RunWith(MockitoJUnitRunner.class)
-public class CustomConvertersUnitTests {
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+class CustomConvertersUnitTests {
 
-	MappingMongoConverter converter;
+	private MappingMongoConverter converter;
 
 	@Mock BarToDocumentConverter barToDocumentConverter;
 	@Mock DocumentToBarConverter documentToBarConverter;
 	@Mock MongoDatabaseFactory mongoDbFactory;
 
-	MongoMappingContext context;
+	private MongoMappingContext context;
 
-	@Before
-	@SuppressWarnings("unchecked")
-	public void setUp() throws Exception {
+	@BeforeEach
+	void setUp() {
 
 		when(barToDocumentConverter.convert(any(Bar.class))).thenReturn(new Document());
 		when(documentToBarConverter.convert(any(Document.class))).thenReturn(new Bar());
@@ -61,7 +63,7 @@ public class CustomConvertersUnitTests {
 				Arrays.asList(barToDocumentConverter, documentToBarConverter));
 
 		context = new MongoMappingContext();
-		context.setInitialEntitySet(new HashSet<Class<?>>(Arrays.asList(Foo.class, Bar.class)));
+		context.setInitialEntitySet(new HashSet<>(Arrays.asList(Foo.class, Bar.class)));
 		context.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
 		context.initialize();
 
@@ -71,7 +73,7 @@ public class CustomConvertersUnitTests {
 	}
 
 	@Test // DATADOC-101
-	public void nestedToDocumentConverterGetsInvoked() {
+	void nestedToDocumentConverterGetsInvoked() {
 
 		Foo foo = new Foo();
 		foo.bar = new Bar();
@@ -81,7 +83,7 @@ public class CustomConvertersUnitTests {
 	}
 
 	@Test // DATADOC-101
-	public void nestedFromDocumentConverterGetsInvoked() {
+	void nestedFromDocumentConverterGetsInvoked() {
 
 		Document document = new Document();
 		document.put("bar", new Document());
@@ -91,25 +93,25 @@ public class CustomConvertersUnitTests {
 	}
 
 	@Test // DATADOC-101
-	public void toDocumentConverterGetsInvoked() {
+	void toDocumentConverterGetsInvoked() {
 
 		converter.write(new Bar(), new Document());
 		verify(barToDocumentConverter).convert(any(Bar.class));
 	}
 
 	@Test // DATADOC-101
-	public void fromDocumentConverterGetsInvoked() {
+	void fromDocumentConverterGetsInvoked() {
 
 		converter.read(Bar.class, new Document());
 		verify(documentToBarConverter).convert(any(Document.class));
 	}
 
 	@Test // DATADOC-101
-	public void foo() {
+	void foo() {
 		Document document = new Document();
 		document.put("foo", null);
 
-		assertThat(document.containsKey("foo")).isEqualTo(true);
+		assertThat(document).containsKey("foo");
 	}
 
 	public static class Foo {
@@ -122,11 +124,7 @@ public class CustomConvertersUnitTests {
 		public String foo;
 	}
 
-	private interface BarToDocumentConverter extends Converter<Bar, Document> {
+	private interface BarToDocumentConverter extends Converter<Bar, Document> {}
 
-	}
-
-	private interface DocumentToBarConverter extends Converter<Document, Bar> {
-
-	}
+	private interface DocumentToBarConverter extends Converter<Document, Bar> {}
 }

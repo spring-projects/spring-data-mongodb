@@ -19,7 +19,8 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import org.bson.Document;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
 import org.springframework.data.mongodb.core.messaging.DefaultMessageListenerContainerTests.Person;
 import org.springframework.data.mongodb.core.query.Query;
 

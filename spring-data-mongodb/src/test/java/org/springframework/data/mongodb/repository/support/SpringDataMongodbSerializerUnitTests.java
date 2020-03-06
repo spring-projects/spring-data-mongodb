@@ -24,11 +24,12 @@ import java.util.Collections;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
@@ -57,14 +58,14 @@ import com.querydsl.core.types.dsl.StringPath;
  * @author Mark Paluch
  * @author Mikhail Kaduchka
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class SpringDataMongodbSerializerUnitTests {
 
 	@Mock DbRefResolver dbFactory;
 	MongoConverter converter;
 	SpringDataMongodbSerializer serializer;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		MongoMappingContext context = new MongoMappingContext();

@@ -21,13 +21,14 @@ import static org.mockito.Mockito.*;
 import lombok.Data;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.reactivestreams.Publisher;
+
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -45,22 +46,22 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
 /**
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class DefaultReactiveIndexOperationsUnitTests {
 
-	ReactiveMongoTemplate template;
+	private ReactiveMongoTemplate template;
 
 	@Mock ReactiveMongoDatabaseFactory factory;
 	@Mock MongoDatabase db;
 	@Mock MongoCollection<Document> collection;
 	@Mock Publisher publisher;
 
-	MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
-	MappingMongoConverter converter;
-	MongoMappingContext mappingContext;
+	private MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
+	private MappingMongoConverter converter;
+	private MongoMappingContext mappingContext;
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	void setUp() {
 
 		when(factory.getMongoDatabase()).thenReturn(db);
 		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslator);
@@ -73,7 +74,7 @@ public class DefaultReactiveIndexOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void ensureIndexDoesNotSetCollectionIfNoDefaultDefined() {
+	void ensureIndexDoesNotSetCollectionIfNoDefaultDefined() {
 
 		indexOpsFor(Jedi.class).ensureIndex(new Index("firstname", Direction.DESC)).subscribe();
 
@@ -84,7 +85,7 @@ public class DefaultReactiveIndexOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void ensureIndexUsesDefaultCollationIfNoneDefinedInOptions() {
+	void ensureIndexUsesDefaultCollationIfNoneDefinedInOptions() {
 
 		indexOpsFor(Sith.class).ensureIndex(new Index("firstname", Direction.DESC)).subscribe();
 
@@ -96,7 +97,7 @@ public class DefaultReactiveIndexOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void ensureIndexDoesNotUseDefaultCollationIfExplicitlySpecifiedInTheIndex() {
+	void ensureIndexDoesNotUseDefaultCollationIfExplicitlySpecifiedInTheIndex() {
 
 		indexOpsFor(Sith.class).ensureIndex(new Index("firstname", Direction.DESC).collation(Collation.of("en_US")))
 				.subscribe();

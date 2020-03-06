@@ -22,11 +22,12 @@ import edu.umd.cs.mtc.MultithreadedTestCase;
 
 import java.time.Duration;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.util.ErrorHandler;
@@ -36,46 +37,46 @@ import org.springframework.util.ErrorHandler;
  *
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.class)
-public class DefaultMessageListenerContainerUnitTests {
+@ExtendWith(MockitoExtension.class)
+class DefaultMessageListenerContainerUnitTests {
 
 	@Mock MongoTemplate template;
 	@Mock ErrorHandler errorHandler;
 
-	DefaultMessageListenerContainer container;
+	private DefaultMessageListenerContainer container;
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	void setUp() {
 		container = new DefaultMessageListenerContainer(template);
 	}
 
 	@Test // DATAMONGO-1803
-	public void throwsErrorOnNullTemplate() {
+	void throwsErrorOnNullTemplate() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new DefaultMessageListenerContainer(null));
 	}
 
 	@Test // DATAMONGO-1803
-	public void startStopContainer() throws Throwable {
+	void startStopContainer() throws Throwable {
 		runOnce(new MultithreadedStartStopContainer(container));
 	}
 
 	@Test // DATAMONGO-1803
-	public void subscribeToContainerBeforeStartup() throws Throwable {
+	void subscribeToContainerBeforeStartup() throws Throwable {
 		runOnce(new MultithreadedSubscribeBeforeStartup(container));
 	}
 
 	@Test // DATAMONGO-1803
-	public void subscribeToContainerAfterStartup() throws Throwable {
+	void subscribeToContainerAfterStartup() throws Throwable {
 		runOnce(new MultithreadedSubscribeAfterStartup(container));
 	}
 
 	@Test // DATAMONGO-1803
-	public void stopSubscriptionWhileRunning() throws Throwable {
+	void stopSubscriptionWhileRunning() throws Throwable {
 		runOnce(new StopSubscriptionWhileRunning(container));
 	}
 
 	@Test // DATAMONGO-1803
-	public void removeSubscriptionWhileRunning() throws Throwable {
+	void removeSubscriptionWhileRunning() throws Throwable {
 		runOnce(new RemoveSubscriptionWhileRunning(container));
 	}
 
@@ -84,7 +85,7 @@ public class DefaultMessageListenerContainerUnitTests {
 		DefaultMessageListenerContainer container;
 		Subscription subscription;
 
-		public RemoveSubscriptionWhileRunning(DefaultMessageListenerContainer container) {
+		RemoveSubscriptionWhileRunning(DefaultMessageListenerContainer container) {
 			this.container = container;
 			subscription = container.register(new MockSubscriptionRequest(), new MockTask());
 		}
@@ -114,7 +115,7 @@ public class DefaultMessageListenerContainerUnitTests {
 		DefaultMessageListenerContainer container;
 		Subscription subscription;
 
-		public StopSubscriptionWhileRunning(DefaultMessageListenerContainer container) {
+		StopSubscriptionWhileRunning(DefaultMessageListenerContainer container) {
 			this.container = container;
 			subscription = container.register(new MockSubscriptionRequest(), new MockTask());
 		}
@@ -144,7 +145,7 @@ public class DefaultMessageListenerContainerUnitTests {
 
 		DefaultMessageListenerContainer container;
 
-		public MultithreadedSubscribeAfterStartup(DefaultMessageListenerContainer container) {
+		MultithreadedSubscribeAfterStartup(DefaultMessageListenerContainer container) {
 			this.container = container;
 		}
 
@@ -174,7 +175,7 @@ public class DefaultMessageListenerContainerUnitTests {
 
 		DefaultMessageListenerContainer container;
 
-		public MultithreadedSubscribeBeforeStartup(DefaultMessageListenerContainer container) {
+		MultithreadedSubscribeBeforeStartup(DefaultMessageListenerContainer container) {
 			this.container = container;
 		}
 
@@ -207,7 +208,7 @@ public class DefaultMessageListenerContainerUnitTests {
 
 		DefaultMessageListenerContainer container;
 
-		public MultithreadedStartStopContainer(DefaultMessageListenerContainer container) {
+		MultithreadedStartStopContainer(DefaultMessageListenerContainer container) {
 			this.container = container;
 		}
 

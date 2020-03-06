@@ -20,8 +20,8 @@ import static org.assertj.core.api.Assertions.*;
 import java.io.IOException;
 import java.util.Arrays;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.data.geo.Point;
 
@@ -36,7 +36,7 @@ public class GeoJsonModuleUnitTests {
 
 	ObjectMapper mapper;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		mapper = new ObjectMapper();

@@ -28,8 +28,8 @@ import java.util.Locale;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.annotation.Id;
@@ -53,7 +53,7 @@ public class BasicMongoPersistentPropertyUnitTests {
 
 	MongoPersistentEntity<Person> entity;
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		entity = new BasicMongoPersistentEntity<>(ClassTypeInformation.from(Person.class));
 	}

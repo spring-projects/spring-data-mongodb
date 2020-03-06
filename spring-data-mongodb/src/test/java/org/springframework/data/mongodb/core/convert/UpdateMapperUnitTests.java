@@ -31,12 +31,12 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
@@ -66,19 +66,19 @@ import com.mongodb.DBRef;
  * @author Mark Paluch
  * @author Pavel Vodrazka
  */
-@RunWith(MockitoJUnitRunner.class)
-public class UpdateMapperUnitTests {
+@ExtendWith(MockitoExtension.class)
+class UpdateMapperUnitTests {
 
 	@Mock MongoDatabaseFactory factory;
-	MappingMongoConverter converter;
-	MongoMappingContext context;
-	UpdateMapper mapper;
+	private MappingMongoConverter converter;
+	private MongoMappingContext context;
+	private UpdateMapper mapper;
 
 	private Converter<NestedEntity, Document> writingConverterSpy;
 
-	@Before
+	@BeforeEach
 	@SuppressWarnings("unchecked")
-	public void setUp() {
+	void setUp() {
 
 		this.writingConverterSpy = Mockito.spy(new NestedEntityWriteConverter());
 		CustomConversions conversions = new MongoCustomConversions(Collections.singletonList(writingConverterSpy));
@@ -95,7 +95,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-721
-	public void updateMapperRetainsTypeInformationForCollectionField() {
+	void updateMapperRetainsTypeInformationForCollectionField() {
 
 		Update update = new Update().push("list", new ConcreteChildClass("2", "BAR"));
 
@@ -109,7 +109,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-807
-	public void updateMapperShouldRetainTypeInformationForNestedEntities() {
+	void updateMapperShouldRetainTypeInformationForNestedEntities() {
 
 		Update update = Update.update("model", new ModelImpl(1));
 		UpdateMapper mapper = new UpdateMapper(converter);
@@ -123,7 +123,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-807
-	public void updateMapperShouldNotPersistTypeInformationForKnownSimpleTypes() {
+	void updateMapperShouldNotPersistTypeInformationForKnownSimpleTypes() {
 
 		Update update = Update.update("model.value", 1);
 		UpdateMapper mapper = new UpdateMapper(converter);
@@ -136,7 +136,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-807
-	public void updateMapperShouldNotPersistTypeInformationForNullValues() {
+	void updateMapperShouldNotPersistTypeInformationForNullValues() {
 
 		Update update = Update.update("model", null);
 		UpdateMapper mapper = new UpdateMapper(converter);
@@ -149,7 +149,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-407
-	public void updateMapperShouldRetainTypeInformationForNestedCollectionElements() {
+	void updateMapperShouldRetainTypeInformationForNestedCollectionElements() {
 
 		Update update = Update.update("list.$", new ConcreteChildClass("42", "bubu"));
 
@@ -163,7 +163,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-407
-	public void updateMapperShouldSupportNestedCollectionElementUpdates() {
+	void updateMapperShouldSupportNestedCollectionElementUpdates() {
 
 		Update update = Update.update("list.$.value", "foo").set("list.$.otherValue", "bar");
 
@@ -177,7 +177,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-407
-	public void updateMapperShouldWriteTypeInformationForComplexNestedCollectionElementUpdates() {
+	void updateMapperShouldWriteTypeInformationForComplexNestedCollectionElementUpdates() {
 
 		Update update = Update.update("list.$.value", "foo").set("list.$.someObject", new ConcreteChildClass("42", "bubu"));
 
@@ -195,7 +195,7 @@ public class UpdateMapperUnitTests {
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test // DATAMONGO-812
-	public void updateMapperShouldConvertPushCorrectlyWhenCalledWithEachUsingSimpleTypes() {
+	void updateMapperShouldConvertPushCorrectlyWhenCalledWithEachUsingSimpleTypes() {
 
 		Update update = new Update().push("values").each("spring", "data", "mongodb");
 		Document mappedObject = mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(Model.class));
@@ -211,7 +211,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-812
-	public void updateMapperShouldConvertPushWhithoutAddingClassInformationWhenUsedWithEvery() {
+	void updateMapperShouldConvertPushWhithoutAddingClassInformationWhenUsedWithEvery() {
 
 		Update update = new Update().push("values").each("spring", "data", "mongodb");
 
@@ -225,7 +225,7 @@ public class UpdateMapperUnitTests {
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test // DATAMONGO-812
-	public void updateMapperShouldConvertPushCorrectlyWhenCalledWithEachUsingCustomTypes() {
+	void updateMapperShouldConvertPushCorrectlyWhenCalledWithEachUsingCustomTypes() {
 
 		Update update = new Update().push("models").each(new ListModel("spring", "data", "mongodb"));
 		Document mappedObject = mapper.getMappedObject(update.getUpdateObject(),
@@ -240,7 +240,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-812
-	public void updateMapperShouldRetainClassInformationForPushCorrectlyWhenCalledWithEachUsingCustomTypes() {
+	void updateMapperShouldRetainClassInformationForPushCorrectlyWhenCalledWithEachUsingCustomTypes() {
 
 		Update update = new Update().push("models").each(new ListModel("spring", "data", "mongodb"));
 		Document mappedObject = mapper.getMappedObject(update.getUpdateObject(),
@@ -254,7 +254,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-812
-	public void testUpdateShouldAllowMultiplePushEachForDifferentFields() {
+	void testUpdateShouldAllowMultiplePushEachForDifferentFields() {
 
 		Update update = new Update().push("category").each("spring", "data").push("type").each("mongodb");
 		Document mappedObject = mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(Object.class));
@@ -265,7 +265,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-943
-	public void updatePushEachAtPositionWorksCorrectlyWhenGivenPositiveIndexParameter() {
+	void updatePushEachAtPositionWorksCorrectlyWhenGivenPositiveIndexParameter() {
 
 		Update update = new Update().push("key").atPosition(2).each(Arrays.asList("Arya", "Arry", "Weasel"));
 
@@ -280,7 +280,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-943, DATAMONGO-2055
-	public void updatePushEachAtNegativePositionWorksCorrectly() {
+	void updatePushEachAtNegativePositionWorksCorrectly() {
 
 		Update update = new Update().push("key").atPosition(-2).each(Arrays.asList("Arya", "Arry", "Weasel"));
 
@@ -294,7 +294,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-943
-	public void updatePushEachAtPositionWorksCorrectlyWhenGivenPositionFirst() {
+	void updatePushEachAtPositionWorksCorrectlyWhenGivenPositionFirst() {
 
 		Update update = new Update().push("key").atPosition(Position.FIRST).each(Arrays.asList("Arya", "Arry", "Weasel"));
 
@@ -309,7 +309,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-943
-	public void updatePushEachAtPositionWorksCorrectlyWhenGivenPositionLast() {
+	void updatePushEachAtPositionWorksCorrectlyWhenGivenPositionLast() {
 
 		Update update = new Update().push("key").atPosition(Position.LAST).each(Arrays.asList("Arya", "Arry", "Weasel"));
 
@@ -323,7 +323,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-943
-	public void updatePushEachAtPositionWorksCorrectlyWhenGivenPositionNull() {
+	void updatePushEachAtPositionWorksCorrectlyWhenGivenPositionNull() {
 
 		Update update = new Update().push("key").atPosition(null).each(Arrays.asList("Arya", "Arry", "Weasel"));
 
@@ -337,7 +337,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-832
-	public void updatePushEachWithSliceShouldRenderCorrectly() {
+	void updatePushEachWithSliceShouldRenderCorrectly() {
 
 		Update update = new Update().push("key").slice(5).each(Arrays.asList("Arya", "Arry", "Weasel"));
 
@@ -351,7 +351,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-832
-	public void updatePushEachWithSliceShouldRenderWhenUsingMultiplePushCorrectly() {
+	void updatePushEachWithSliceShouldRenderWhenUsingMultiplePushCorrectly() {
 
 		Update update = new Update().push("key").slice(5).each(Arrays.asList("Arya", "Arry", "Weasel")).push("key-2")
 				.slice(-2).each("The Beggar King", "Viserys III Targaryen");
@@ -371,7 +371,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1141
-	public void updatePushEachWithValueSortShouldRenderCorrectly() {
+	void updatePushEachWithValueSortShouldRenderCorrectly() {
 
 		Update update = new Update().push("scores").sort(Direction.DESC).each(42, 23, 68);
 
@@ -387,7 +387,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1141
-	public void updatePushEachWithDocumentSortShouldRenderCorrectly() {
+	void updatePushEachWithDocumentSortShouldRenderCorrectly() {
 
 		Update update = new Update().push("list")
 				.sort(Sort.by(new Order(Direction.ASC, "value"), new Order(Direction.ASC, "field")))
@@ -405,7 +405,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1141
-	public void updatePushEachWithSortShouldRenderCorrectlyWhenUsingMultiplePush() {
+	void updatePushEachWithSortShouldRenderCorrectlyWhenUsingMultiplePush() {
 
 		Update update = new Update().push("authors").sort(Direction.ASC).each("Harry").push("chapters")
 				.sort(Sort.by(Direction.ASC, "order")).each(Collections.emptyList());
@@ -427,7 +427,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-410
-	public void testUpdateMapperShouldConsiderCustomWriteTarget() {
+	void testUpdateMapperShouldConsiderCustomWriteTarget() {
 
 		List<NestedEntity> someValues = Arrays.asList(new NestedEntity("spring"), new NestedEntity("data"),
 				new NestedEntity("mongodb"));
@@ -440,7 +440,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-404
-	public void createsDbRefForEntityIdOnPulls() {
+	void createsDbRefForEntityIdOnPulls() {
 
 		Update update = new Update().pull("dbRefAnnotatedList.id", "2");
 
@@ -452,7 +452,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-404
-	public void createsDbRefForEntityOnPulls() {
+	void createsDbRefForEntityOnPulls() {
 
 		Entity entity = new Entity();
 		entity.id = "5";
@@ -465,15 +465,16 @@ public class UpdateMapperUnitTests {
 		assertThat(pullClause.get("dbRefAnnotatedList")).isEqualTo(new DBRef("entity", entity.id));
 	}
 
-	@Test(expected = MappingException.class) // DATAMONGO-404
-	public void rejectsInvalidFieldReferenceForDbRef() {
+	@Test // DATAMONGO-404
+	void rejectsInvalidFieldReferenceForDbRef() {
 
 		Update update = new Update().pull("dbRefAnnotatedList.name", "NAME");
-		mapper.getMappedObject(update.getUpdateObject(), context.getPersistentEntity(DocumentWithDBRefCollection.class));
+		assertThatThrownBy(() -> mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(DocumentWithDBRefCollection.class))).isInstanceOf(MappingException.class);
 	}
 
 	@Test // DATAMONGO-404
-	public void rendersNestedDbRefCorrectly() {
+	void rendersNestedDbRefCorrectly() {
 
 		Update update = new Update().pull("nested.dbRefAnnotatedList.id", "2");
 		Document mappedObject = mapper.getMappedObject(update.getUpdateObject(),
@@ -484,7 +485,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-468
-	public void rendersUpdateOfDbRefPropertyWithDomainObjectCorrectly() {
+	void rendersUpdateOfDbRefPropertyWithDomainObjectCorrectly() {
 
 		Entity entity = new Entity();
 		entity.id = "5";
@@ -498,7 +499,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-862
-	public void rendersUpdateAndPreservesKeyForPathsNotPointingToProperty() {
+	void rendersUpdateAndPreservesKeyForPathsNotPointingToProperty() {
 
 		Update update = new Update().set("listOfInterface.$.value", "expected-value");
 		Document mappedObject = mapper.getMappedObject(update.getUpdateObject(),
@@ -509,7 +510,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-863
-	public void doesNotConvertRawDocuments() {
+	void doesNotConvertRawDocuments() {
 
 		Update update = new Update();
 		update.pull("options",
@@ -528,7 +529,7 @@ public class UpdateMapperUnitTests {
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test // DATAMONG0-471
-	public void testUpdateShouldApply$addToSetCorrectlyWhenUsedWith$each() {
+	void testUpdateShouldApply$addToSetCorrectlyWhenUsedWith$each() {
 
 		Update update = new Update().addToSet("values").each("spring", "data", "mongodb");
 		Document mappedObject = mapper.getMappedObject(update.getUpdateObject(),
@@ -542,7 +543,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONG0-471
-	public void testUpdateShouldRetainClassTypeInformationWhenUsing$addToSetWith$eachForCustomTypes() {
+	void testUpdateShouldRetainClassTypeInformationWhenUsing$addToSetWith$eachForCustomTypes() {
 
 		Update update = new Update().addToSet("models").each(new ModelImpl(2014), new ModelImpl(1), new ModelImpl(28));
 		Document mappedObject = mapper.getMappedObject(update.getUpdateObject(),
@@ -559,7 +560,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-897
-	public void updateOnDbrefPropertyOfInterfaceTypeWithoutExplicitGetterForIdShouldBeMappedCorrectly() {
+	void updateOnDbrefPropertyOfInterfaceTypeWithoutExplicitGetterForIdShouldBeMappedCorrectly() {
 
 		Update update = new Update().set("referencedDocument", new InterfaceDocumentDefinitionImpl("1", "Foo"));
 		Document mappedObject = mapper.getMappedObject(update.getUpdateObject(),
@@ -573,7 +574,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-847
-	public void updateMapperConvertsNestedQueryCorrectly() {
+	void updateMapperConvertsNestedQueryCorrectly() {
 
 		Update update = new Update().pull("list", Query.query(Criteria.where("value").in("foo", "bar")));
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
@@ -588,7 +589,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-847
-	public void updateMapperConvertsPullWithNestedQuerfyOnDBRefCorrectly() {
+	void updateMapperConvertsPullWithNestedQuerfyOnDBRefCorrectly() {
 
 		Update update = new Update().pull("dbRefAnnotatedList", Query.query(Criteria.where("id").is("1")));
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
@@ -601,7 +602,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1077
-	public void shouldNotRemovePositionalParameter() {
+	void shouldNotRemovePositionalParameter() {
 
 		Update update = new Update();
 		update.unset("dbRefAnnotatedList.$");
@@ -615,7 +616,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1210
-	public void mappingEachOperatorShouldNotAddTypeInfoForNonInterfaceNonAbstractTypes() {
+	void mappingEachOperatorShouldNotAddTypeInfoForNonInterfaceNonAbstractTypes() {
 
 		Update update = new Update().addToSet("nestedDocs").each(new NestedDocument("nested-1"),
 				new NestedDocument("nested-2"));
@@ -628,7 +629,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1210
-	public void mappingEachOperatorShouldAddTypeHintForInterfaceTypes() {
+	void mappingEachOperatorShouldAddTypeHintForInterfaceTypes() {
 
 		Update update = new Update().addToSet("models").each(new ModelImpl(1), new ModelImpl(2));
 
@@ -640,7 +641,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1210
-	public void mappingEachOperatorShouldAddTypeHintForAbstractTypes() {
+	void mappingEachOperatorShouldAddTypeHintForAbstractTypes() {
 
 		Update update = new Update().addToSet("list").each(new ConcreteChildClass("foo", "one"),
 				new ConcreteChildClass("bar", "two"));
@@ -653,7 +654,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1210
-	public void mappingShouldOnlyRemoveTypeHintFromTopLevelTypeInCaseOfNestedDocument() {
+	void mappingShouldOnlyRemoveTypeHintFromTopLevelTypeInCaseOfNestedDocument() {
 
 		WrapperAroundInterfaceType wait = new WrapperAroundInterfaceType();
 		wait.interfaceType = new ModelImpl(1);
@@ -670,7 +671,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1210
-	public void mappingShouldRetainTypeInformationOfNestedListWhenUpdatingConcreteyParentType() {
+	void mappingShouldRetainTypeInformationOfNestedListWhenUpdatingConcreteyParentType() {
 
 		ListModelWrapper lmw = new ListModelWrapper();
 		lmw.models = Collections.singletonList(new ModelImpl(1));
@@ -685,7 +686,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1809
-	public void pathShouldIdentifyPositionalParameterWithMoreThanOneDigit() {
+	void pathShouldIdentifyPositionalParameterWithMoreThanOneDigit() {
 
 		Document at2digitPosition = mapper.getMappedObject(new Update()
 				.addToSet("concreteInnerList.10.concreteTypeList", new SomeInterfaceImpl("szeth")).getUpdateObject(),
@@ -702,7 +703,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1236
-	public void mappingShouldRetainTypeInformationForObjectValues() {
+	void mappingShouldRetainTypeInformationForObjectValues() {
 
 		Update update = new Update().set("value", new NestedDocument("kaladin"));
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
@@ -713,7 +714,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1236
-	public void mappingShouldNotRetainTypeInformationForConcreteValues() {
+	void mappingShouldNotRetainTypeInformationForConcreteValues() {
 
 		Update update = new Update().set("concreteValue", new NestedDocument("shallan"));
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
@@ -724,7 +725,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1236
-	public void mappingShouldRetainTypeInformationForObjectValuesWithAlias() {
+	void mappingShouldRetainTypeInformationForObjectValuesWithAlias() {
 
 		Update update = new Update().set("value", new NestedDocument("adolin"));
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
@@ -735,7 +736,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1236
-	public void mappingShouldRetrainTypeInformationWhenValueTypeOfMapDoesNotMatchItsDeclaration() {
+	void mappingShouldRetrainTypeInformationWhenValueTypeOfMapDoesNotMatchItsDeclaration() {
 
 		Map<Object, Object> map = Collections.singletonMap("szeth", new NestedDocument("son-son-vallano"));
 
@@ -748,7 +749,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1236
-	public void mappingShouldNotContainTypeInformationWhenValueTypeOfMapMatchesDeclaration() {
+	void mappingShouldNotContainTypeInformationWhenValueTypeOfMapMatchesDeclaration() {
 
 		Map<Object, NestedDocument> map = Collections.singletonMap("jasnah", new NestedDocument("kholin"));
 
@@ -762,7 +763,7 @@ public class UpdateMapperUnitTests {
 
 	@Test // DATAMONGO-1250
 	@SuppressWarnings("unchecked")
-	public void mapsUpdateWithBothReadingAndWritingConverterRegistered() {
+	void mapsUpdateWithBothReadingAndWritingConverterRegistered() {
 
 		CustomConversions conversions = new MongoCustomConversions(Arrays.asList(
 				ClassWithEnum.AllocationToStringConverter.INSTANCE, ClassWithEnum.StringToAllocationConverter.INSTANCE));
@@ -785,7 +786,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1251
-	public void mapsNullValueCorrectlyForSimpleTypes() {
+	void mapsNullValueCorrectlyForSimpleTypes() {
 
 		Update update = new Update().set("value", null);
 
@@ -797,7 +798,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1251
-	public void mapsNullValueCorrectlyForJava8Date() {
+	void mapsNullValueCorrectlyForJava8Date() {
 
 		Update update = new Update().set("date", null);
 
@@ -809,7 +810,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1251
-	public void mapsNullValueCorrectlyForCollectionTypes() {
+	void mapsNullValueCorrectlyForCollectionTypes() {
 
 		Update update = new Update().set("values", null);
 
@@ -821,7 +822,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1251
-	public void mapsNullValueCorrectlyForPropertyOfNestedDocument() {
+	void mapsNullValueCorrectlyForPropertyOfNestedDocument() {
 
 		Update update = new Update().set("concreteValue.name", null);
 
@@ -834,7 +835,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1288
-	public void mapsAtomicIntegerToIntegerCorrectly() {
+	void mapsAtomicIntegerToIntegerCorrectly() {
 
 		Update update = new Update().set("intValue", new AtomicInteger(10));
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
@@ -845,7 +846,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1288
-	public void mapsAtomicIntegerToPrimitiveIntegerCorrectly() {
+	void mapsAtomicIntegerToPrimitiveIntegerCorrectly() {
 
 		Update update = new Update().set("primIntValue", new AtomicInteger(10));
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
@@ -856,7 +857,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1404
-	public void mapsMinCorrectly() {
+	void mapsMinCorrectly() {
 
 		Update update = new Update().min("minfield", 10);
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
@@ -866,7 +867,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1404
-	public void mapsMaxCorrectly() {
+	void mapsMaxCorrectly() {
 
 		Update update = new Update().max("maxfield", 999);
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
@@ -877,7 +878,7 @@ public class UpdateMapperUnitTests {
 
 	@Test // DATAMONGO-1423, DATAMONGO-2155
 	@SuppressWarnings("unchecked")
-	public void mappingShouldConsiderCustomConvertersForEnumMapKeys() {
+	void mappingShouldConsiderCustomConvertersForEnumMapKeys() {
 
 		CustomConversions conversions = new MongoCustomConversions(Arrays.asList(
 				ClassWithEnum.AllocationToStringConverter.INSTANCE, ClassWithEnum.StringToAllocationConverter.INSTANCE));
@@ -904,7 +905,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1176
-	public void mappingShouldPrepareUpdateObjectForMixedOperatorsAndFields() {
+	void mappingShouldPrepareUpdateObjectForMixedOperatorsAndFields() {
 
 		Document document = new Document("key", "value").append("$set", new Document("a", "b").append("x", "y"));
 
@@ -915,7 +916,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1176
-	public void mappingShouldReturnReplaceObject() {
+	void mappingShouldReturnReplaceObject() {
 
 		Document document = new Document("key", "value").append("a", "b").append("x", "y");
 
@@ -928,7 +929,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1176
-	public void mappingShouldReturnUpdateObject() {
+	void mappingShouldReturnUpdateObject() {
 
 		Document document = new Document("$push", new Document("x", "y")).append("$set", new Document("a", "b"));
 
@@ -940,7 +941,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1486, DATAMONGO-2155
-	public void mappingShouldConvertMapKeysToString() {
+	void mappingShouldConvertMapKeysToString() {
 
 		Update update = new Update().set("map", Collections.singletonMap(25, "#StarTrek50"));
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
@@ -956,7 +957,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1772
-	public void mappingShouldAddTypeKeyInListOfInterfaceTypeContainedInConcreteObjectCorrectly() {
+	void mappingShouldAddTypeKeyInListOfInterfaceTypeContainedInConcreteObjectCorrectly() {
 
 		ConcreteInner inner = new ConcreteInner();
 		inner.interfaceTypeList = Collections.singletonList(new SomeInterfaceImpl());
@@ -970,7 +971,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1772
-	public void mappingShouldAddTypeKeyInListOfAbstractTypeContainedInConcreteObjectCorrectly() {
+	void mappingShouldAddTypeKeyInListOfAbstractTypeContainedInConcreteObjectCorrectly() {
 
 		ConcreteInner inner = new ConcreteInner();
 		inner.abstractTypeList = Collections.singletonList(new SomeInterfaceImpl());
@@ -984,7 +985,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-2155
-	public void shouldPreserveFieldNamesOfMapProperties() {
+	void shouldPreserveFieldNamesOfMapProperties() {
 
 		Update update = Update
 				.fromDocument(new Document("concreteMap", new Document("Name", new Document("name", "fooo"))));
@@ -996,7 +997,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-2155
-	public void shouldPreserveExplicitFieldNamesInsideMapProperties() {
+	void shouldPreserveExplicitFieldNamesInsideMapProperties() {
 
 		Update update = Update
 				.fromDocument(new Document("map", new Document("Value", new Document("renamed-value", "fooo"))));
@@ -1009,7 +1010,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-2155
-	public void shouldMapAliasedFieldNamesInMapsCorrectly() {
+	void shouldMapAliasedFieldNamesInMapsCorrectly() {
 
 		Update update = Update
 				.fromDocument(new Document("map", Collections.singletonMap("Value", new Document("value", "fooo"))));
@@ -1022,7 +1023,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-2174
-	public void mappingUpdateDocumentWithExplicitFieldNameShouldBePossible() {
+	void mappingUpdateDocumentWithExplicitFieldNameShouldBePossible() {
 
 		Document mappedUpdate = mapper.getMappedObject(new Document("AValue", "a value"),
 				context.getPersistentEntity(TypeWithFieldNameThatCannotBeDecapitalized.class));
@@ -1031,7 +1032,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-2054
-	public void mappingShouldAllowPositionAllParameter() {
+	void mappingShouldAllowPositionAllParameter() {
 
 		Update update = new Update().inc("grades.$[]", 10);
 
@@ -1042,7 +1043,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-2054
-	public void mappingShouldAllowPositionAllParameterWhenPropertyHasExplicitFieldName() {
+	void mappingShouldAllowPositionAllParameterWhenPropertyHasExplicitFieldName() {
 
 		Update update = new Update().inc("list.$[]", 10);
 
@@ -1053,7 +1054,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-2215
-	public void mappingShouldAllowPositionParameterWithIdentifier() {
+	void mappingShouldAllowPositionParameterWithIdentifier() {
 
 		Update update = new Update().set("grades.$[element]", 10) //
 				.filterArray(Criteria.where("element").gte(100));
@@ -1065,7 +1066,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-2215
-	public void mappingShouldAllowPositionParameterWithIdentifierWhenFieldHasExplicitFieldName() {
+	void mappingShouldAllowPositionParameterWithIdentifierWhenFieldHasExplicitFieldName() {
 
 		Update update = new Update().set("list.$[element]", 10) //
 				.filterArray(Criteria.where("element").gte(100));
@@ -1077,7 +1078,7 @@ public class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-2215
-	public void mappingShouldAllowNestedPositionParameterWithIdentifierWhenFieldHasExplicitFieldName() {
+	void mappingShouldAllowNestedPositionParameterWithIdentifierWhenFieldHasExplicitFieldName() {
 
 		Update update = new Update().set("list.$[element].value", 10) //
 				.filterArray(Criteria.where("element").gte(100));
@@ -1119,7 +1120,7 @@ public class UpdateMapperUnitTests {
 		@Id String id;
 		String value;
 
-		public InterfaceDocumentDefinitionImpl(String id, String value) {
+		InterfaceDocumentDefinitionImpl(String id, String value) {
 
 			this.id = id;
 			this.value = value;
@@ -1163,7 +1164,7 @@ public class UpdateMapperUnitTests {
 	static class ModelImpl implements Model {
 		public int value;
 
-		public ModelImpl(int value) {
+		ModelImpl(int value) {
 			this.value = value;
 		}
 
@@ -1188,7 +1189,7 @@ public class UpdateMapperUnitTests {
 
 		List<String> values;
 
-		public ListModel(String... values) {
+		ListModel(String... values) {
 			this.values = Arrays.asList(values);
 		}
 	}
@@ -1217,7 +1218,7 @@ public class UpdateMapperUnitTests {
 		String otherValue;
 		AbstractChildClass someObject;
 
-		public AbstractChildClass(String id, String value) {
+		AbstractChildClass(String id, String value) {
 			this.id = id;
 			this.value = value;
 			this.otherValue = "other_" + value;
@@ -1226,7 +1227,7 @@ public class UpdateMapperUnitTests {
 
 	static class ConcreteChildClass extends AbstractChildClass {
 
-		public ConcreteChildClass(String id, String value) {
+		ConcreteChildClass(String id, String value) {
 			super(id, value);
 		}
 	}
@@ -1242,7 +1243,7 @@ public class UpdateMapperUnitTests {
 	static class NestedEntity {
 		String name;
 
-		public NestedEntity(String name) {
+		NestedEntity(String name) {
 			super();
 			this.name = name;
 		}
@@ -1288,7 +1289,7 @@ public class UpdateMapperUnitTests {
 
 		String name;
 
-		public NestedDocument(String name) {
+		NestedDocument(String name) {
 			super();
 			this.name = name;
 		}

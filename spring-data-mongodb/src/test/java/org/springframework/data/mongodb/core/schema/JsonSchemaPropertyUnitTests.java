@@ -17,7 +17,7 @@ package org.springframework.data.mongodb.core.schema;
 
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type;
 
 /**

@@ -24,17 +24,19 @@ import edu.umd.cs.mtc.MultithreadedTestCase;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.messaging.Task.State;
 import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
+import org.springframework.data.mongodb.core.messaging.Task.State;
 import org.springframework.util.ErrorHandler;
 
 import com.mongodb.ServerAddress;
@@ -47,7 +49,8 @@ import com.mongodb.client.MongoDatabase;
  *
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.Silent.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class CursorReadingTaskUnitTests {
 
 	@Mock MongoDatabase db;
@@ -60,7 +63,7 @@ public class CursorReadingTaskUnitTests {
 
 	ValueCapturingTaskStub task;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		when(request.getRequestOptions()).thenReturn(options);

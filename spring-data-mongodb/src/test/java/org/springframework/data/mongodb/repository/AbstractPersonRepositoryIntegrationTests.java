@@ -22,6 +22,7 @@ import static org.springframework.data.geo.Metrics.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -97,17 +98,22 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		oliver = new Person("Oliver August", "Matthews", 4);
 		carter = new Person("Carter", "Beauford", 49);
 		carter.setSkills(Arrays.asList("Drums", "percussion", "vocals"));
-		Thread.sleep(10);
+
 		boyd = new Person("Boyd", "Tinsley", 45);
 		boyd.setSkills(Arrays.asList("Violin", "Electric Violin", "Viola", "Mandolin", "Vocals", "Guitar"));
 		stefan = new Person("Stefan", "Lessard", 34);
 		leroi = new Person("Leroi", "Moore", 41);
-
 		alicia = new Person("Alicia", "Keys", 30, Sex.FEMALE);
-
 		person = new QPerson("person");
 
-		all = repository.saveAll(Arrays.asList(oliver, dave, carter, boyd, stefan, leroi, alicia));
+		Arrays.asList(boyd, stefan, leroi, alicia).forEach(it -> {
+			it.createdAt = new Date(dave.createdAt.getTime() + 1000L);
+		});
+
+		List<Person> toSave = asList(oliver, dave, carter, boyd, stefan, leroi, alicia);
+		toSave.forEach(it -> it.setId(null));
+
+		all = repository.saveAll(toSave);
 	}
 
 	@Test
@@ -142,7 +148,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test
 	public void deletesPersonByIdCorrectly() {
 
-		repository.deleteById(dave.getId().toString());
+		repository.deleteById(dave.getId());
 
 		List<Person> result = repository.findAll();
 

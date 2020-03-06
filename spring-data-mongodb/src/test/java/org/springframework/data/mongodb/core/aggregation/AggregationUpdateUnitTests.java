@@ -18,7 +18,7 @@ package org.springframework.data.mongodb.core.aggregation;
 import static org.assertj.core.api.Assertions.*;
 
 import org.bson.Document;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link AggregationUpdate}.

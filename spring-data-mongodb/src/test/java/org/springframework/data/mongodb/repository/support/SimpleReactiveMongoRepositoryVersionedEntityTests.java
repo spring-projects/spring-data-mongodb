@@ -18,10 +18,10 @@ package org.springframework.data.mongodb.repository.support;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
+import reactor.test.StepVerifier;
+
 import java.util.Collections;
 import java.util.Set;
-
-import reactor.test.StepVerifier;
 
 import org.junit.Before;
 import org.junit.Test;

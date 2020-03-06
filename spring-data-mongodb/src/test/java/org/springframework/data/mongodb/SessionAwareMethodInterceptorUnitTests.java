@@ -24,11 +24,12 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.data.mongodb.SessionAwareMethodInterceptor.MethodCache;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -44,7 +45,7 @@ import com.mongodb.client.MongoDatabase;
  *
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class SessionAwareMethodInterceptorUnitTests {
 
 	@Mock ClientSession session;
@@ -54,7 +55,7 @@ public class SessionAwareMethodInterceptorUnitTests {
 	MongoCollection collection;
 	MongoDatabase database;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		collection = createProxyInstance(session, targetCollection, MongoCollection.class);

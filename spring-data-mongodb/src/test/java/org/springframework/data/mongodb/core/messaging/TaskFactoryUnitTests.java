@@ -18,12 +18,13 @@ package org.springframework.data.mongodb.core.messaging;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.messaging.ChangeStreamRequest.ChangeStreamRequestOptions;
@@ -35,30 +36,30 @@ import org.springframework.util.ErrorHandler;
  *
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.class)
-public class TaskFactoryUnitTests {
+@ExtendWith(MockitoExtension.class)
+class TaskFactoryUnitTests {
 
 	@Mock MongoConverter converter;
 	@Mock MongoTemplate template;
 	@Mock MessageListener<Object, Object> messageListener;
 	@Mock ErrorHandler errorHandler;
 
-	TaskFactory factory;
+	private TaskFactory factory;
 
-	@Before
-	public void setUp() {
-
-		when(template.getConverter()).thenReturn(converter);
+	@BeforeEach
+	void setUp() {
 		factory = new TaskFactory(template);
 	}
 
 	@Test // DATAMONGO-1803
-	public void requestMustNotBeNull() {
+	void requestMustNotBeNull() {
 		assertThatIllegalArgumentException().isThrownBy(() -> factory.forRequest(null, Object.class, errorHandler));
 	}
 
 	@Test // DATAMONGO-1803
-	public void createsChangeStreamRequestCorrectly() {
+	void createsChangeStreamRequestCorrectly() {
+
+		when(template.getConverter()).thenReturn(converter);
 
 		ChangeStreamRequestOptions options = Mockito.mock(ChangeStreamRequestOptions.class);
 		Task task = factory.forRequest(new ChangeStreamRequest(messageListener, options), Object.class, errorHandler);
@@ -67,7 +68,9 @@ public class TaskFactoryUnitTests {
 	}
 
 	@Test // DATAMONGO-1803
-	public void createsTailableRequestCorrectly() {
+	void createsTailableRequestCorrectly() {
+
+		when(template.getConverter()).thenReturn(converter);
 
 		RequestOptions options = Mockito.mock(RequestOptions.class);
 		when(options.getCollectionName()).thenReturn("collection-1");
