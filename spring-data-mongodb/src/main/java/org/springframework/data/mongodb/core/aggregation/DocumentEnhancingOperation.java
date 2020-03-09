@@ -24,16 +24,18 @@ import java.util.stream.Collectors;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation;
+import org.springframework.util.Assert;
 
 /**
- * Base class for common taks required by {@link SetOperation} and {@link AddFieldsOperation}.
+ * Base class for common tasks required by {@link SetOperation} and {@link AddFieldsOperation}.
  *
  * @author Christoph Strobl
  * @since 3.0
  */
 abstract class DocumentEnhancingOperation implements InheritsFieldsAggregationOperation {
 
-	private Map<Object, Object> valueMap;
+	private final Map<Object, Object> valueMap;
+
 	private ExposedFields exposedFields = ExposedFields.empty();
 
 	protected DocumentEnhancingOperation(Map<Object, Object> source) {
@@ -112,14 +114,53 @@ abstract class DocumentEnhancingOperation implements InheritsFieldsAggregationOp
 		if (value instanceof Field) {
 			return context.getReference((Field) value).toString();
 		}
+
+		if (value instanceof ExpressionProjection) {
+			return ((ExpressionProjection) value).toExpression(context);
+		}
+
 		if (value instanceof AggregationExpression) {
 			return ((AggregationExpression) value).toDocument(context);
 		}
+
 		if (value instanceof Collection) {
-			return ((Collection) value).stream().map(it -> computeValue(it, context)).collect(Collectors.toList());
+			return ((Collection<?>) value).stream().map(it -> computeValue(it, context)).collect(Collectors.toList());
 		}
 
 		return value;
+	}
+
+	/**
+	 * A {@link AggregationExpression} based on a SpEL expression.
+	 *
+	 * @author Mark Paluch
+	 */
+	static class ExpressionProjection {
+
+		private static final SpelExpressionTransformer TRANSFORMER = new SpelExpressionTransformer();
+
+		private final String expression;
+		private final Object[] params;
+
+		/**
+		 * Creates a new {@link ProjectionOperation.ExpressionProjectionOperationBuilder.ExpressionProjection} for the given
+		 * field, SpEL expression and parameters.
+		 *
+		 * @param expression must not be {@literal null} or empty.
+		 * @param parameters must not be {@literal null}.
+		 */
+		ExpressionProjection(String expression, Object[] parameters) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			Assert.notNull(parameters, "Parameters must not be null!");
+
+			this.expression = expression;
+			this.params = parameters.clone();
+		}
+
+		Object toExpression(AggregationOperationContext context) {
+			return TRANSFORMER.transform(expression, context, params);
+		}
 	}
 
 }

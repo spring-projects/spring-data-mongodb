@@ -119,7 +119,7 @@ public class Aggregation {
 
 	/**
 	 * Creates a new {@link AggregationUpdate} from the given {@link AggregationOperation}s.
-	 * 
+	 *
 	 * @param operations can be {@literal empty} but must not be {@literal null}.
 	 * @return new instance of {@link AggregationUpdate}.
 	 * @since 3.0
@@ -202,10 +202,15 @@ public class Aggregation {
 		Assert.notNull(aggregationOperations, "AggregationOperations must not be null!");
 		Assert.notNull(options, "AggregationOptions must not be null!");
 
-		// check $out is the last operation if it exists
+		// check $out/$merge is the last operation if it exists
 		for (AggregationOperation aggregationOperation : aggregationOperations) {
+
 			if (aggregationOperation instanceof OutOperation && !isLast(aggregationOperation, aggregationOperations)) {
 				throw new IllegalArgumentException("The $out operator must be the last stage in the pipeline.");
+			}
+
+			if (aggregationOperation instanceof MergeOperation && !isLast(aggregationOperation, aggregationOperations)) {
+				throw new IllegalArgumentException("The $merge operator must be the last stage in the pipeline.");
 			}
 		}
 
@@ -234,6 +239,20 @@ public class Aggregation {
 	 */
 	public static String previousOperation() {
 		return "_id";
+	}
+
+	/**
+	 * Obtain an {@link AddFieldsOperationBuilder builder} instance to create a new {@link AddFieldsOperation}.
+	 * <p/>
+	 * Starting in version 4.2, MongoDB adds a new aggregation pipeline stage {@link AggregationUpdate#set $set} that is
+	 * an alias for {@code $addFields}.
+	 *
+	 * @return new instance of {@link AddFieldsOperationBuilder}.
+	 * @see AddFieldsOperation
+	 * @since 3.0
+	 */
+	public static AddFieldsOperationBuilder addFields() {
+		return AddFieldsOperation.builder();
 	}
 
 	/**
@@ -496,6 +515,30 @@ public class Aggregation {
 	}
 
 	/**
+	 * Creates a new {@link GeoNearOperation} instance from the given {@link NearQuery} and the {@code distanceField}. The
+	 * {@code distanceField} defines output field that contains the calculated distance.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @param distanceField must not be {@literal null} or empty.
+	 * @return
+	 * @since 1.7
+	 */
+	public static GeoNearOperation geoNear(NearQuery query, String distanceField) {
+		return new GeoNearOperation(query, distanceField);
+	}
+
+	/**
+	 * Obtain a {@link MergeOperationBuilder builder} instance to create a new {@link MergeOperation}.
+	 *
+	 * @return new instance of {@link MergeOperationBuilder}.
+	 * @see MergeOperation
+	 * @since 3.0
+	 */
+	public static MergeOperationBuilder merge() {
+		return MergeOperation.builder();
+	}
+
+	/**
 	 * Creates a new {@link OutOperation} using the given collection name. This operation must be the last operation in
 	 * the pipeline.
 	 *
@@ -634,41 +677,6 @@ public class Aggregation {
 	 */
 	public static Fields bind(String name, String target) {
 		return Fields.from(field(name, target));
-	}
-
-	/**
-	 * Creates a new {@link GeoNearOperation} instance from the given {@link NearQuery} and the {@code distanceField}. The
-	 * {@code distanceField} defines output field that contains the calculated distance.
-	 *
-	 * @param query must not be {@literal null}.
-	 * @param distanceField must not be {@literal null} or empty.
-	 * @return
-	 * @since 1.7
-	 */
-	public static GeoNearOperation geoNear(NearQuery query, String distanceField) {
-		return new GeoNearOperation(query, distanceField);
-	}
-
-	/**
-	 * Obtain a {@link MergeOperationBuilder builder} instance to create a new {@link MergeOperation}.
-	 *
-	 * @return new instance of {@link MergeOperationBuilder}.
-	 * @see MergeOperation
-	 * @since 3.0
-	 */
-	public static MergeOperationBuilder merge() {
-		return MergeOperation.builder();
-	}
-
-	/**
-	 * Obtain an {@link AddFieldsOperationBuilder builder} instance to create a new {@link AddFieldsOperation}.
-	 * 
-	 * @return new instance of {@link AddFieldsOperationBuilder}.
-	 * @see AddFieldsOperation
-	 * @since 3.0
-	 */
-	public static AddFieldsOperationBuilder addFields() {
-		return AddFieldsOperation.builder();
 	}
 
 	/**

@@ -29,7 +29,10 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.lang.Nullable;
 
 /**
+ * Unit tests for {@link AddFieldsOperation}.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 class AddFieldsOperationUnitTests {
 
@@ -93,6 +96,17 @@ class AddFieldsOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-2363
+	void appliesSpelExpressionCorrectly() {
+
+		AddFieldsOperation operation = AddFieldsOperation.builder().addField("totalHomework")
+				.withValueOfExpression("sum(homework) * [0]", 2) //
+				.build();
+
+		assertThat(operation.toPipelineStages(contextFor(ScoresWrapper.class))).contains(
+				Document.parse("{\"$addFields\" : {\"totalHomework\": { $multiply : [{ \"$sum\" : [\"$homework\"] }, 2] }}}"));
+	}
+
+	@Test // DATAMONGO-2363
 	void rendersTargetValueExpressionCorrectly() {
 
 		assertThat(AddFieldsOperation.builder().addField("totalHomework")
@@ -105,10 +119,11 @@ class AddFieldsOperationUnitTests {
 
 		ExposedFields fields = AddFieldsOperation.builder().addField("totalHomework").withValue("A+") //
 				.addField("totalQuiz").withValue("B-") //
-				.build().getFields();
+				.addField("computed").withValueOfExpression("totalHomework").build().getFields();
 
 		assertThat(fields.getField("totalHomework")).isNotNull();
 		assertThat(fields.getField("totalQuiz")).isNotNull();
+		assertThat(fields.getField("computed")).isNotNull();
 		assertThat(fields.getField("does-not-exist")).isNull();
 	}
 

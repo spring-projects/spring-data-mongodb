@@ -151,6 +151,13 @@ public class AddFieldsOperation extends DocumentEnhancingOperation {
 					valueMap.put(field, value instanceof String ? Fields.fields((String) value) : value);
 					return AddFieldsOperationBuilder.this;
 				}
+
+				@Override
+				public AddFieldsOperationBuilder withValueOfExpression(String operation, Object... values) {
+
+					valueMap.put(field, new ExpressionProjection(operation, values));
+					return AddFieldsOperationBuilder.this;
+				}
 			};
 		}
 
@@ -179,7 +186,15 @@ public class AddFieldsOperation extends DocumentEnhancingOperation {
 			 * @return new instance of {@link AddFieldsOperation}.
 			 */
 			AddFieldsOperationBuilder withValueOf(Object value);
-		}
 
+			/**
+			 * Adds a generic projection for the current field.
+			 *
+			 * @param operation the operation key, e.g. {@code $add}.
+			 * @param values the values to be set for the projection operation.
+			 * @return new instance of {@link AddFieldsOperation}.
+			 */
+			AddFieldsOperationBuilder withValueOfExpression(String operation, Object... values);
+		}
 	}
 }

@@ -79,7 +79,7 @@ import org.springframework.util.Assert;
 public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 
 	private boolean isolated = false;
-	private Set<String> keysTouched = new HashSet<>();
+	private final Set<String> keysTouched = new HashSet<>();
 
 	/**
 	 * Create new {@link AggregationUpdate}.

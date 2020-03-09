@@ -33,6 +33,8 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.lang.Nullable;
 
 /**
+ * Unit tests for {@link MergeOperation}.
+ *
  * @author Christoph Strobl
  */
 class MergeOperationUnitTests {
@@ -98,7 +100,7 @@ class MergeOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-2363
-	public void mapsFieldNames() {
+	void mapsFieldNames() {
 
 		assertThat(merge().intoCollection("newrestaurants").on("date", "postCode").build()
 				.toDocument(contextFor(Restaurant.class))).isEqualTo(

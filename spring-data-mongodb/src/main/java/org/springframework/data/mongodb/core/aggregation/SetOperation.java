@@ -25,7 +25,7 @@ import org.springframework.lang.Nullable;
 /**
  * Adds new fields to documents. {@code $set} outputs documents that contain all existing fields from the input
  * documents and newly added fields.
- * 
+ *
  * <pre class="code">
  * SetOperation.set("totalHomework").toValue("A+").and().set("totalQuiz").toValue("B-")
  * </pre>
@@ -143,6 +143,13 @@ public class SetOperation extends DocumentEnhancingOperation {
 					valueMap.put(field, value instanceof String ? Fields.fields((String) value) : value);
 					return FieldAppender.this.build();
 				}
+
+				@Override
+				public SetOperation withValueOfExpression(String operation, Object... values) {
+
+					valueMap.put(field, new ExpressionProjection(operation, values));
+					return FieldAppender.this.build();
+				}
 			};
 		}
 
@@ -152,6 +159,7 @@ public class SetOperation extends DocumentEnhancingOperation {
 
 		/**
 		 * @author Christoph Strobl
+		 * @author Mark Paluch
 		 * @since 3.0
 		 */
 		public interface ValueAppender {
@@ -171,6 +179,15 @@ public class SetOperation extends DocumentEnhancingOperation {
 			 * @return new instance of {@link SetOperation}.
 			 */
 			SetOperation toValueOf(Object value);
+
+			/**
+			 * Adds a generic projection for the current field.
+			 *
+			 * @param operation the operation key, e.g. {@code $add}.
+			 * @param values the values to be set for the projection operation.
+			 * @return new instance of {@link SetOperation}.
+			 */
+			SetOperation withValueOfExpression(String operation, Object... values);
 		}
 	}
 }

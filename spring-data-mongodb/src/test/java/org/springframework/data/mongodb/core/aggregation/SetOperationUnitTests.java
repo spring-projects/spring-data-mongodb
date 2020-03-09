@@ -32,30 +32,31 @@ import org.springframework.lang.Nullable;
  * Unit tests for {@link SetOperation}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
-public class SetOperationUnitTests {
+class SetOperationUnitTests {
 
 	@Test // DATAMONGO-2331
-	public void raisesErrorOnNullField() {
+	void raisesErrorOnNullField() {
 		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new SetOperation(null, "value"));
 	}
 
 	@Test // DATAMONGO-2331
-	public void rendersFieldReferenceCorrectly() {
+	void rendersFieldReferenceCorrectly() {
 
 		assertThat(new SetOperation("name", "value").toPipelineStages(contextFor(Scores.class)))
 				.containsExactly(Document.parse("{\"$set\" : {\"name\":\"value\"}}"));
 	}
 
 	@Test // DATAMONGO-2331
-	public void rendersMappedFieldReferenceCorrectly() {
+	void rendersMappedFieldReferenceCorrectly() {
 
 		assertThat(new SetOperation("student", "value").toPipelineStages(contextFor(ScoresWithMappedField.class)))
 				.containsExactly(Document.parse("{\"$set\" : {\"student_name\":\"value\"}}"));
 	}
 
 	@Test // DATAMONGO-2331
-	public void rendersNestedMappedFieldReferenceCorrectly() {
+	void rendersNestedMappedFieldReferenceCorrectly() {
 
 		assertThat(
 				new SetOperation("scoresWithMappedField.student", "value").toPipelineStages(contextFor(ScoresWrapper.class)))
@@ -63,14 +64,14 @@ public class SetOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-2331
-	public void rendersTargetValueFieldReferenceCorrectly() {
+	void rendersTargetValueFieldReferenceCorrectly() {
 
 		assertThat(new SetOperation("name", Fields.field("value")).toPipelineStages(contextFor(Scores.class)))
 				.containsExactly(Document.parse("{\"$set\" : {\"name\":\"$value\"}}"));
 	}
 
 	@Test // DATAMONGO-2331
-	public void rendersMappedTargetValueFieldReferenceCorrectly() {
+	void rendersMappedTargetValueFieldReferenceCorrectly() {
 
 		assertThat(
 				new SetOperation("student", Fields.field("homework")).toPipelineStages(contextFor(ScoresWithMappedField.class)))
@@ -78,7 +79,7 @@ public class SetOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-2331
-	public void rendersNestedMappedTargetValueFieldReferenceCorrectly() {
+	void rendersNestedMappedTargetValueFieldReferenceCorrectly() {
 
 		assertThat(new SetOperation("scoresWithMappedField.student", Fields.field("scoresWithMappedField.homework"))
 				.toPipelineStages(contextFor(ScoresWrapper.class)))
@@ -86,8 +87,18 @@ public class SetOperationUnitTests {
 								.parse("{\"$set\" : {\"scoresWithMappedField.student_name\":\"$scoresWithMappedField.home_work\"}}"));
 	}
 
+	@Test // DATAMONGO-2363
+	void appliesSpelExpressionCorrectly() {
+
+		SetOperation operation = SetOperation.builder().set("totalHomework").withValueOfExpression("sum(homework) * [0]",
+				2);
+
+		assertThat(operation.toPipelineStages(contextFor(AddFieldsOperationUnitTests.ScoresWrapper.class))).contains(
+				Document.parse("{\"$set\" : {\"totalHomework\": { $multiply : [{ \"$sum\" : [\"$homework\"] }, 2] }}}"));
+	}
+
 	@Test // DATAMONGO-2331
-	public void rendersTargetValueExpressionCorrectly() {
+	void rendersTargetValueExpressionCorrectly() {
 
 		assertThat(SetOperation.builder().set("totalHomework").toValueOf(ArithmeticOperators.valueOf("homework").sum())
 				.toPipelineStages(contextFor(Scores.class)))
@@ -95,7 +106,7 @@ public class SetOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-2331
-	public void exposesFieldsCorrectly() {
+	void exposesFieldsCorrectly() {
 
 		ExposedFields fields = SetOperation.builder().set("totalHomework").toValue("A+") //
 				.and() //
@@ -138,5 +149,4 @@ public class SetOperationUnitTests {
 		Scores scores;
 		ScoresWithMappedField scoresWithMappedField;
 	}
-
 }

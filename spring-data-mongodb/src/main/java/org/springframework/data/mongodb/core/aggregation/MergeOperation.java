@@ -33,8 +33,8 @@ import org.springframework.util.StringUtils;
 /**
  * Encapsulates the {@code $merge}-operation.
  * <p>
- * We recommend to use the {@link MergeOperationBuilder builder} via {@link MergeOperation#builder()} instead of creating
- * instances of this class directly.
+ * We recommend to use the {@link MergeOperationBuilder builder} via {@link MergeOperation#builder()} instead of
+ * creating instances of this class directly.
  *
  * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/merge/">MongoDB Documentation</a>
  * @author Christoph Strobl
@@ -42,15 +42,15 @@ import org.springframework.util.StringUtils;
  */
 public class MergeOperation implements FieldsExposingAggregationOperation, InheritsFieldsAggregationOperation {
 
-	private MergeOperationTarget into;
-	private UniqueMergeId on;
-	private @Nullable Let let;
-	private @Nullable WhenDocumentsMatch whenMatched;
-	private @Nullable WhenDocumentsDontMatch whenNotMatched;
+	private final MergeOperationTarget into;
+	private final UniqueMergeId on;
+	private final @Nullable Let let;
+	private final @Nullable WhenDocumentsMatch whenMatched;
+	private final @Nullable WhenDocumentsDontMatch whenNotMatched;
 
 	/**
 	 * Create new instance of {@link MergeOperation}.
-	 * 
+	 *
 	 * @param into the target (collection and database)
 	 * @param on the unique identifier. Can be {@literal null}.
 	 * @param let exposed variables for {@link WhenDocumentsMatch#updateWith(Aggregation)}. Can be {@literal null}.
@@ -63,7 +63,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 			@Nullable WhenDocumentsMatch whenMatched, @Nullable WhenDocumentsDontMatch whenNotMatched) {
 
 		Assert.notNull(into, "Into must not be null! Please provide a target collection.");
-		Assert.notNull(on, "On must not be null! Use Collections.emptySet() instead.");
+		Assert.notNull(on, "On must not be null! Use UniqueMergeId.id() instead.");
 
 		this.into = into;
 		this.on = on;
@@ -93,7 +93,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 	}
 
 	/*
-	 * (non-Javadoc) 
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.aggregation.Aggregation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 	 */
 	@Override
@@ -109,15 +109,17 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 		if (!on.isJustIdField()) {
 			$merge.putAll(on.toDocument(context));
 		}
+
 		if (let != null) {
 			$merge.append("let", let.toDocument(context).get("$let", Document.class).get("vars"));
 		}
+
 		if (whenMatched != null) {
 			$merge.putAll(whenMatched.toDocument(context));
 		}
+
 		if (whenNotMatched != null) {
 			$merge.putAll(whenNotMatched.toDocument(context));
-
 		}
 
 		return new Document("$merge", $merge);
@@ -159,19 +161,20 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 	 * collection.
 	 *
 	 * @author Christoph Strobl
-	 * @since 2.3
 	 */
 	public static class UniqueMergeId {
 
 		private static final UniqueMergeId ID = new UniqueMergeId(Collections.emptyList());
 
-		private Collection<String> uniqueIdentifier;
+		private final Collection<String> uniqueIdentifier;
 
 		private UniqueMergeId(Collection<String> uniqueIdentifier) {
 			this.uniqueIdentifier = uniqueIdentifier;
 		}
 
 		public static UniqueMergeId ofIdFields(String... fields) {
+
+			Assert.noNullElements(fields, "Fields must not contain null values!");
 
 			if (ObjectUtils.isEmpty(fields)) {
 				return id();
@@ -182,7 +185,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 
 		/**
 		 * Merge Documents by using the MongoDB {@literal _id} field.
-		 * 
+		 *
 		 * @return
 		 */
 		public static UniqueMergeId id() {
@@ -206,19 +209,19 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 	 * If not stated explicitly via {@link MergeOperationTarget#inDatabase(String)} the {@literal collection} is created
 	 * in the very same {@literal database}. In this case {@code into} is just a single String holding the collection
 	 * name. <br />
-	 * 
+	 *
 	 * <pre class="code">
 	 *     into: "target-collection-name"
 	 * </pre>
-	 * 
+	 *
 	 * If the collection needs to be in a different database {@code into} will be a {@link Document} like the following
-	 * 
+	 *
 	 * <pre class="code">
 	 * {
 	 * 	into: {}
 	 * }
 	 * </pre>
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 * @since 2.3
 	 */
@@ -267,7 +270,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 	/**
 	 * Value Object specifying how to deal with a result document that matches an existing document in the collection
 	 * based on the fields of the {@code on} property describing the unique identifier.
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 * @since 2.3
 	 */
@@ -354,7 +357,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 	/**
 	 * Value Object specifying how to deal with a result document that do not match an existing document in the collection
 	 * based on the fields of the {@code on} property describing the unique identifier.
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 * @since 2.3
 	 */
@@ -363,9 +366,18 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 		private final String value;
 
 		private WhenDocumentsDontMatch(String value) {
+
+			Assert.notNull(value, "Value must not be null!");
+
 			this.value = value;
 		}
 
+		/**
+		 * Factory method creating {@link WhenDocumentsDontMatch} from a {@code value} literal.
+		 *
+		 * @param value
+		 * @return new instance of {@link WhenDocumentsDontMatch}.
+		 */
 		public static WhenDocumentsDontMatch whenNotMatchedOf(String value) {
 			return new WhenDocumentsDontMatch(value);
 		}
@@ -412,7 +424,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 
 		private String collection;
 		private @Nullable String database;
-		private @Nullable UniqueMergeId id;
+		private UniqueMergeId id = UniqueMergeId.id();
 		private @Nullable Let let;
 		private @Nullable WhenDocumentsMatch whenMatched;
 		private @Nullable WhenDocumentsDontMatch whenNotMatched;
@@ -447,7 +459,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 
 		/**
 		 * Define the target to store results in.
-		 * 
+		 *
 		 * @param into must not be {@literal null}.
 		 * @return this.
 		 */
@@ -484,7 +496,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 		/**
 		 * Set the identifier that determines if a results document matches an already existing document in the output
 		 * collection.
-		 * 
+		 *
 		 * @param id must not be {@literal null}.
 		 * @return this.
 		 */
@@ -497,7 +509,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 		/**
 		 * Expose the variables defined by {@link Let} to the {@link WhenDocumentsMatch#updateWith(Aggregation) update
 		 * aggregation}.
-		 * 
+		 *
 		 * @param let the variable expressions
 		 * @return this.
 		 */
@@ -520,7 +532,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 
 		/**
 		 * The action to take place when documents already exist in the target collection.
-		 * 
+		 *
 		 * @param whenMatched must not be {@literal null}.
 		 * @return this.
 		 */
@@ -576,8 +588,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 		 * @return new instance of {@link MergeOperation}.
 		 */
 		public MergeOperation build() {
-			return new MergeOperation(new MergeOperationTarget(database, collection), id != null ? id : UniqueMergeId.id(),
-					let, whenMatched, whenNotMatched);
+			return new MergeOperation(new MergeOperationTarget(database, collection), id, let, whenMatched, whenNotMatched);
 		}
 	}
 }
