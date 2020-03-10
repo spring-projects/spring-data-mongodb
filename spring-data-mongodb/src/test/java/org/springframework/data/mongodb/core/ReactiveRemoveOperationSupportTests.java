@@ -38,20 +38,20 @@ import com.mongodb.client.MongoClient;
  * @author Mark Paluch
  */
 @ExtendWith(MongoClientExtension.class)
-public class ReactiveRemoveOperationSupportTests {
+class ReactiveRemoveOperationSupportTests {
 
 	private static final String STAR_WARS = "star-wars";
-	static @Client MongoClient client;
-	static @Client com.mongodb.reactivestreams.client.MongoClient reactiveClient;
+	private static @Client MongoClient client;
+	private static @Client com.mongodb.reactivestreams.client.MongoClient reactiveClient;
 
-	MongoTemplate blocking;
-	ReactiveMongoTemplate template;
+	private MongoTemplate blocking;
+	private ReactiveMongoTemplate template;
 
-	Person han;
-	Person luke;
+	private Person han;
+	private Person luke;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 
 		blocking = new MongoTemplate(new SimpleMongoClientDatabaseFactory(client, "ExecutableRemoveOperationSupportTests"));
 		blocking.dropCollection(STAR_WARS);
@@ -71,7 +71,7 @@ public class ReactiveRemoveOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void removeAll() {
+	void removeAll() {
 
 		template.remove(Person.class).all().as(StepVerifier::create).consumeNextWith(actual -> {
 			assertThat(actual.getDeletedCount()).isEqualTo(2L);
@@ -79,21 +79,21 @@ public class ReactiveRemoveOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void removeAllMatching() {
+	void removeAllMatching() {
 
 		template.remove(Person.class).matching(query(where("firstname").is("han"))).all().as(StepVerifier::create)
 				.consumeNextWith(actual -> assertThat(actual.getDeletedCount()).isEqualTo(1L)).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1719
-	public void removeAllMatchingCriteria() {
+	void removeAllMatchingCriteria() {
 
 		template.remove(Person.class).matching(where("firstname").is("han")).all().as(StepVerifier::create)
 				.consumeNextWith(actual -> assertThat(actual.getDeletedCount()).isEqualTo(1L)).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1719
-	public void removeAllMatchingWithAlternateDomainTypeAndCollection() {
+	void removeAllMatchingWithAlternateDomainTypeAndCollection() {
 
 		template.remove(Jedi.class).inCollection(STAR_WARS).matching(query(where("name").is("luke"))).all()
 				.as(StepVerifier::create).consumeNextWith(actual -> assertThat(actual.getDeletedCount()).isEqualTo(1L))
@@ -101,7 +101,7 @@ public class ReactiveRemoveOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void removeAndReturnAllMatching() {
+	void removeAndReturnAllMatching() {
 
 		template.remove(Person.class).matching(query(where("firstname").is("han"))).findAndRemove().as(StepVerifier::create)
 				.expectNext(han).verifyComplete();

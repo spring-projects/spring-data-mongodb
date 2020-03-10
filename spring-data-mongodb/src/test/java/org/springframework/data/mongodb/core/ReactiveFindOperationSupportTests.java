@@ -61,20 +61,20 @@ import com.mongodb.client.MongoClient;
  * @author Christoph Strobl
  */
 @ExtendWith(MongoClientExtension.class)
-public class ReactiveFindOperationSupportTests {
+class ReactiveFindOperationSupportTests {
 
 	private static final String STAR_WARS = "star-wars";
-	MongoTemplate blocking;
-	ReactiveMongoTemplate template;
+	private MongoTemplate blocking;
+	private ReactiveMongoTemplate template;
 
-	static @Client MongoClient client;
-	static @Client com.mongodb.reactivestreams.client.MongoClient reactiveClient;
+	private static @Client MongoClient client;
+	private static @Client com.mongodb.reactivestreams.client.MongoClient reactiveClient;
 
-	Person han;
-	Person luke;
+	private Person han;
+	private Person luke;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 
 		blocking = new MongoTemplate(new SimpleMongoClientDatabaseFactory(client, "ExecutableFindOperationSupportTests"));
 		recreateCollection(STAR_WARS, false);
@@ -113,22 +113,22 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void domainTypeIsRequired() {
+	void domainTypeIsRequired() {
 		assertThatIllegalArgumentException().isThrownBy(() -> template.query(null));
 	}
 
 	@Test // DATAMONGO-1719
-	public void returnTypeIsRequiredOnSet() {
+	void returnTypeIsRequiredOnSet() {
 		assertThatIllegalArgumentException().isThrownBy(() -> template.query(Person.class).as(null));
 	}
 
 	@Test // DATAMONGO-1719
-	public void collectionIsRequiredOnSet() {
+	void collectionIsRequiredOnSet() {
 		assertThatIllegalArgumentException().isThrownBy(() -> template.query(Person.class).inCollection(null));
 	}
 
 	@Test // DATAMONGO-1719
-	public void findAll() {
+	void findAll() {
 
 		template.query(Person.class).all().collectList().as(StepVerifier::create).consumeNextWith(actual -> {
 			assertThat(actual).containsExactlyInAnyOrder(han, luke);
@@ -136,19 +136,19 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void findAllWithCollection() {
+	void findAllWithCollection() {
 		template.query(Human.class).inCollection(STAR_WARS).all().as(StepVerifier::create).expectNextCount(2)
 				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-2323
-	public void findAllAsDocumentDocument() {
+	void findAllAsDocumentDocument() {
 		template.query(Document.class).inCollection(STAR_WARS).all().as(StepVerifier::create).expectNextCount(2)
 				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1719
-	public void findAllWithProjection() {
+	void findAllWithProjection() {
 
 		template.query(Person.class).as(Jedi.class).all().map(it -> it.getClass().getName()).as(StepVerifier::create) //
 				.expectNext(Jedi.class.getName(), Jedi.class.getName()) //
@@ -156,7 +156,7 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void findAllBy() {
+	void findAllBy() {
 
 		template.query(Person.class).matching(query(where("firstname").is("luke"))).all().as(StepVerifier::create) //
 				.expectNext(luke) //
@@ -164,7 +164,7 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-2416
-	public void findAllByCriteria() {
+	void findAllByCriteria() {
 
 		template.query(Person.class).matching(where("firstname").is("luke")).all().as(StepVerifier::create) //
 				.expectNext(luke) //
@@ -172,7 +172,7 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void findAllByWithCollectionUsingMappingInformation() {
+	void findAllByWithCollectionUsingMappingInformation() {
 
 		template.query(Jedi.class).inCollection(STAR_WARS).matching(query(where("name").is("luke"))).all()
 				.as(StepVerifier::create).consumeNextWith(it -> assertThat(it).isInstanceOf(Jedi.class)) //
@@ -180,7 +180,7 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void findAllByWithCollection() {
+	void findAllByWithCollection() {
 
 		template.query(Human.class).inCollection(STAR_WARS).matching(query(where("firstname").is("luke"))).all()
 				.as(StepVerifier::create).expectNextCount(1) //
@@ -188,7 +188,7 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void findAllByWithProjection() {
+	void findAllByWithProjection() {
 
 		template.query(Person.class).as(Jedi.class).matching(query(where("firstname").is("luke"))).all()
 				.as(StepVerifier::create).consumeNextWith(it -> assertThat(it).isInstanceOf(Jedi.class)) //
@@ -196,7 +196,7 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void findAllByWithClosedInterfaceProjection() {
+	void findAllByWithClosedInterfaceProjection() {
 
 		template.query(Person.class).as(PersonProjection.class).matching(query(where("firstname").is("luke"))).all()
 				.as(StepVerifier::create).consumeNextWith(it -> {
@@ -208,7 +208,7 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void findAllByWithOpenInterfaceProjection() {
+	void findAllByWithOpenInterfaceProjection() {
 
 		template.query(Person.class).as(PersonSpELProjection.class).matching(query(where("firstname").is("luke"))).all()
 				.as(StepVerifier::create).consumeNextWith(it -> {
@@ -220,7 +220,7 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void findBy() {
+	void findBy() {
 
 		template.query(Person.class).matching(query(where("firstname").is("luke"))).one().as(StepVerifier::create)
 				.expectNext(luke) //
@@ -228,14 +228,14 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void findByNoMatch() {
+	void findByNoMatch() {
 
 		template.query(Person.class).matching(query(where("firstname").is("spock"))).one().as(StepVerifier::create)
 				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1719
-	public void findByTooManyResults() {
+	void findByTooManyResults() {
 
 		template.query(Person.class).matching(query(where("firstname").in("han", "luke"))).one().as(StepVerifier::create)
 				.expectError(IncorrectResultSizeDataAccessException.class) //
@@ -243,7 +243,7 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void findAllNearBy() {
+	void findAllNearBy() {
 
 		blocking.indexOps(Planet.class).ensureIndex(
 				new GeospatialIndex("coordinates").typed(GeoSpatialIndexType.GEO_2DSPHERE).named("planet-coordinate-idx"));
@@ -263,7 +263,7 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void findAllNearByWithCollectionAndProjection() {
+	void findAllNearByWithCollectionAndProjection() {
 
 		blocking.indexOps(Planet.class).ensureIndex(
 				new GeospatialIndex("coordinates").typed(GeoSpatialIndexType.GEO_2DSPHERE).named("planet-coordinate-idx"));
@@ -286,7 +286,7 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void findAllNearByReturningGeoResultContentAsClosedInterfaceProjection() {
+	void findAllNearByReturningGeoResultContentAsClosedInterfaceProjection() {
 
 		blocking.indexOps(Planet.class).ensureIndex(
 				new GeospatialIndex("coordinates").typed(GeoSpatialIndexType.GEO_2DSPHERE).named("planet-coordinate-idx"));
@@ -309,7 +309,7 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void findAllNearByReturningGeoResultContentAsOpenInterfaceProjection() {
+	void findAllNearByReturningGeoResultContentAsOpenInterfaceProjection() {
 
 		blocking.indexOps(Planet.class).ensureIndex(
 				new GeospatialIndex("coordinates").typed(GeoSpatialIndexType.GEO_2DSPHERE).named("planet-coordinate-idx"));
@@ -332,7 +332,7 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-2080
-	public void tail() throws InterruptedException {
+	void tail() throws InterruptedException {
 
 		recreateCollection(STAR_WARS, true);
 		insertObjects();
@@ -360,7 +360,7 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-2080
-	public void tailWithProjection() {
+	void tailWithProjection() {
 
 		recreateCollection(STAR_WARS, true);
 		insertObjects();
@@ -373,7 +373,7 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-2080
-	public void tailWithClosedInterfaceProjection() {
+	void tailWithClosedInterfaceProjection() {
 
 		recreateCollection(STAR_WARS, true);
 		insertObjects();
@@ -390,7 +390,7 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-2080
-	public void tailWithOpenInterfaceProjection() {
+	void tailWithOpenInterfaceProjection() {
 
 		recreateCollection(STAR_WARS, true);
 		insertObjects();
@@ -407,17 +407,17 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void firstShouldReturnFirstEntryInCollection() {
+	void firstShouldReturnFirstEntryInCollection() {
 		template.query(Person.class).first().as(StepVerifier::create).expectNextCount(1).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1719
-	public void countShouldReturnNrOfElementsInCollectionWhenNoQueryPresent() {
+	void countShouldReturnNrOfElementsInCollectionWhenNoQueryPresent() {
 		template.query(Person.class).count().as(StepVerifier::create).expectNext(2L).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1719
-	public void countShouldReturnNrOfElementsMatchingQuery() {
+	void countShouldReturnNrOfElementsMatchingQuery() {
 
 		template.query(Person.class).matching(query(where("firstname").is(luke.getFirstname()))).count()
 				.as(StepVerifier::create).expectNext(1L) //
@@ -425,12 +425,12 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void existsShouldReturnTrueIfAtLeastOneElementExistsInCollection() {
+	void existsShouldReturnTrueIfAtLeastOneElementExistsInCollection() {
 		template.query(Person.class).exists().as(StepVerifier::create).expectNext(true).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1719
-	public void existsShouldReturnFalseIfNoElementExistsInCollection() {
+	void existsShouldReturnFalseIfNoElementExistsInCollection() {
 
 		blocking.remove(new BasicQuery("{}"), STAR_WARS);
 
@@ -438,7 +438,7 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void existsShouldReturnTrueIfAtLeastOneElementMatchesQuery() {
+	void existsShouldReturnTrueIfAtLeastOneElementMatchesQuery() {
 
 		template.query(Person.class).matching(query(where("firstname").is(luke.getFirstname()))).exists()
 				.as(StepVerifier::create).expectNext(true) //
@@ -446,7 +446,7 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void existsShouldReturnFalseWhenNoElementMatchesQuery() {
+	void existsShouldReturnFalseWhenNoElementMatchesQuery() {
 
 		template.query(Person.class).matching(query(where("firstname").is("spock"))).exists().as(StepVerifier::create)
 				.expectNext(false) //
@@ -454,14 +454,14 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
-	public void distinctReturnsEmptyListIfNoMatchFound() {
+	void distinctReturnsEmptyListIfNoMatchFound() {
 
 		template.query(Person.class).distinct("actually-not-property-in-use").as(String.class).all()
 				.as(StepVerifier::create).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1761
-	public void distinctReturnsSimpleFieldValuesCorrectlyForCollectionHavingReturnTypeSpecifiedThatCanBeConvertedDirectlyByACodec() {
+	void distinctReturnsSimpleFieldValuesCorrectlyForCollectionHavingReturnTypeSpecifiedThatCanBeConvertedDirectlyByACodec() {
 
 		Person anakin = new Person();
 		anakin.firstname = "anakin";
@@ -475,7 +475,7 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
-	public void distinctReturnsSimpleFieldValuesCorrectly() {
+	void distinctReturnsSimpleFieldValuesCorrectly() {
 
 		Person anakin = new Person();
 		anakin.firstname = "anakin";
@@ -503,7 +503,7 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
-	public void distinctReturnsComplexValuesCorrectly() {
+	void distinctReturnsComplexValuesCorrectly() {
 
 		Sith sith = new Sith();
 		sith.rank = "lord";
@@ -520,7 +520,7 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
-	public void distinctReturnsComplexValuesCorrectlyHavingReturnTypeSpecified() {
+	void distinctReturnsComplexValuesCorrectlyHavingReturnTypeSpecified() {
 
 		Sith sith = new Sith();
 		sith.rank = "lord";
@@ -537,7 +537,7 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
-	public void distinctReturnsComplexValuesCorrectlyReturnTypeDocumentSpecified() {
+	void distinctReturnsComplexValuesCorrectlyReturnTypeDocumentSpecified() {
 
 		Sith sith = new Sith();
 		sith.rank = "lord";
@@ -554,7 +554,7 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
-	public void distinctMapsFieldNameCorrectly() {
+	void distinctMapsFieldNameCorrectly() {
 
 		template.query(Jedi.class).inCollection(STAR_WARS).distinct("name").as(String.class).all().as(StepVerifier::create)
 				.assertNext(in("han", "luke")).assertNext(in("han", "luke")) //
@@ -562,7 +562,7 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
-	public void distinctReturnsRawValuesIfReturnTypeIsBsonValue() {
+	void distinctReturnsRawValuesIfReturnTypeIsBsonValue() {
 
 		Consumer<BsonValue> inValues = in(new BsonString("solo"), new BsonString("skywalker"));
 		template.query(Person.class).distinct("lastname").as(BsonValue.class).all().as(StepVerifier::create)
@@ -572,7 +572,7 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
-	public void distinctReturnsValuesMappedToTheirJavaTypeEvenWhenNotExplicitlyDefinedByTheDomainType() {
+	void distinctReturnsValuesMappedToTheirJavaTypeEvenWhenNotExplicitlyDefinedByTheDomainType() {
 
 		blocking.save(new Document("darth", "vader"), STAR_WARS);
 
@@ -582,7 +582,7 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
-	public void distinctReturnsMappedDomainTypeForProjections() {
+	void distinctReturnsMappedDomainTypeForProjections() {
 
 		luke.father = new Person();
 		luke.father.firstname = "anakin";
@@ -595,7 +595,7 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
-	public void distinctAlllowsQueryUsingObjectSourceType() {
+	void distinctAlllowsQueryUsingObjectSourceType() {
 
 		luke.father = new Person();
 		luke.father.firstname = "anakin";
@@ -608,7 +608,7 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
-	public void distinctReturnsMappedDomainTypeExtractedFromPropertyWhenNoExplicitTypePresent() {
+	void distinctReturnsMappedDomainTypeExtractedFromPropertyWhenNoExplicitTypePresent() {
 
 		luke.father = new Person();
 		luke.father.firstname = "anakin";
@@ -624,7 +624,7 @@ public class ReactiveFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
-	public void distinctThrowsExceptionWhenExplicitMappingTypeCannotBeApplied() {
+	void distinctThrowsExceptionWhenExplicitMappingTypeCannotBeApplied() {
 
 		template.query(Person.class).distinct("firstname").as(Long.class).all().as(StepVerifier::create)
 				.expectError(InvalidDataAccessApiUsageException.class) //

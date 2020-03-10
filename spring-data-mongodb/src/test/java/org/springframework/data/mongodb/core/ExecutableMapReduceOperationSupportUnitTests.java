@@ -44,7 +44,7 @@ import org.springframework.data.mongodb.core.query.Query;
  * @currentRead Beyond the Shadows - Brent Weeks
  */
 @ExtendWith(MockitoExtension.class)
-public class ExecutableMapReduceOperationSupportUnitTests {
+class ExecutableMapReduceOperationSupportUnitTests {
 
 	private static final String STAR_WARS = "star-wars";
 	private static final String MAP_FUNCTION = "function() { emit(this.id, this.firstname) }";
