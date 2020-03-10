@@ -41,18 +41,18 @@ import com.mongodb.client.result.DeleteResult;
  * @author Mark Paluch
  */
 @ExtendWith(MongoTemplateExtension.class)
-public class ExecutableRemoveOperationSupportTests {
+class ExecutableRemoveOperationSupportTests {
 
 	private static final String STAR_WARS = "star-wars";
 
 	@Template(initialEntitySet = Person.class) //
-	static MongoTestTemplate template;
+	private static MongoTestTemplate template;
 
-	Person han;
-	Person luke;
+	private Person han;
+	private Person luke;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 
 		template.flush();
 
@@ -69,7 +69,7 @@ public class ExecutableRemoveOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void removeAll() {
+	void removeAll() {
 
 		DeleteResult result = template.remove(Person.class).all();
 
@@ -77,7 +77,7 @@ public class ExecutableRemoveOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void removeAllMatching() {
+	void removeAllMatching() {
 
 		DeleteResult result = template.remove(Person.class).matching(query(where("firstname").is("han"))).all();
 
@@ -85,7 +85,7 @@ public class ExecutableRemoveOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-2416
-	public void removeAllMatchingCriteria() {
+	void removeAllMatchingCriteria() {
 
 		DeleteResult result = template.remove(Person.class).matching(where("firstname").is("han")).all();
 
@@ -93,7 +93,7 @@ public class ExecutableRemoveOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void removeAllMatchingWithAlternateDomainTypeAndCollection() {
+	void removeAllMatchingWithAlternateDomainTypeAndCollection() {
 
 		DeleteResult result = template.remove(Jedi.class).inCollection(STAR_WARS).matching(query(where("name").is("luke")))
 				.all();
@@ -102,7 +102,7 @@ public class ExecutableRemoveOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void removeAndReturnAllMatching() {
+	void removeAndReturnAllMatching() {
 
 		List<Person> result = template.remove(Person.class).matching(query(where("firstname").is("han"))).findAndRemove();
 

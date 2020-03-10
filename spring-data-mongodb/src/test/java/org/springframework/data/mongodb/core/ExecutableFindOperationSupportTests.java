@@ -55,22 +55,22 @@ import org.springframework.data.mongodb.test.util.Template;
  * @author Mark Paluch
  */
 @ExtendWith(MongoTemplateExtension.class)
-public class ExecutableFindOperationSupportTests {
+class ExecutableFindOperationSupportTests {
 
 	private static final String STAR_WARS = "star-wars";
 	private static final String STAR_WARS_PLANETS = "star-wars-universe";
 
 	@Template(database = "executable-find-operation-support-tests", initialEntitySet = { Person.class, Planet.class }) //
-	static MongoTestTemplate template;
+	private static MongoTestTemplate template;
 
-	Person han;
-	Person luke;
+	private Person han;
+	private Person luke;
 
-	Planet alderan;
-	Planet dantooine;
+	private Planet alderan;
+	private Planet dantooine;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 
 		template.flush();
 
@@ -82,37 +82,37 @@ public class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void domainTypeIsRequired() {
+	void domainTypeIsRequired() {
 		assertThatIllegalArgumentException().isThrownBy(() -> template.query(null));
 	}
 
 	@Test // DATAMONGO-1563
-	public void returnTypeIsRequiredOnSet() {
+	void returnTypeIsRequiredOnSet() {
 		assertThatIllegalArgumentException().isThrownBy(() -> template.query(Person.class).as(null));
 	}
 
 	@Test // DATAMONGO-1563
-	public void collectionIsRequiredOnSet() {
+	void collectionIsRequiredOnSet() {
 		assertThatIllegalArgumentException().isThrownBy(() -> template.query(Person.class).inCollection(null));
 	}
 
 	@Test // DATAMONGO-1563
-	public void findAll() {
+	void findAll() {
 		assertThat(template.query(Person.class).all()).containsExactlyInAnyOrder(han, luke);
 	}
 
 	@Test // DATAMONGO-1563
-	public void findAllWithCollection() {
+	void findAllWithCollection() {
 		assertThat(template.query(Human.class).inCollection(STAR_WARS).all()).hasSize(2);
 	}
 
 	@Test // DATAMONGO-1563
-	public void findAllWithProjection() {
+	void findAllWithProjection() {
 		assertThat(template.query(Person.class).as(Jedi.class).all()).hasOnlyElementsOfType(Jedi.class).hasSize(2);
 	}
 
 	@Test // DATAMONGO-2041
-	public void findAllWithProjectionOnEmbeddedType() {
+	void findAllWithProjectionOnEmbeddedType() {
 
 		luke.father = new Person();
 		luke.father.firstname = "anakin";
@@ -124,94 +124,94 @@ public class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1733
-	public void findByReturningAllValuesAsClosedInterfaceProjection() {
+	void findByReturningAllValuesAsClosedInterfaceProjection() {
 
 		assertThat(template.query(Person.class).as(PersonProjection.class).all())
 				.hasOnlyElementsOfTypes(PersonProjection.class);
 	}
 
 	@Test // DATAMONGO-1563
-	public void findAllBy() {
+	void findAllBy() {
 
 		assertThat(template.query(Person.class).matching(query(where("firstname").is("luke"))).all())
 				.containsExactlyInAnyOrder(luke);
 	}
 
 	@Test // DATAMONGO-1563
-	public void findAllByWithCollectionUsingMappingInformation() {
+	void findAllByWithCollectionUsingMappingInformation() {
 
 		assertThat(template.query(Jedi.class).inCollection(STAR_WARS).matching(query(where("name").is("luke"))).all())
 				.hasSize(1).hasOnlyElementsOfType(Jedi.class);
 	}
 
 	@Test // DATAMONGO-1563
-	public void findAllByWithCollection() {
+	void findAllByWithCollection() {
 		assertThat(template.query(Human.class).inCollection(STAR_WARS).matching(query(where("firstname").is("luke"))).all())
 				.hasSize(1);
 	}
 
 	@Test // DATAMONGO-2323
-	public void findAllAsDocument() {
+	void findAllAsDocument() {
 		assertThat(
 				template.query(Document.class).inCollection(STAR_WARS).matching(query(where("firstname").is("luke"))).all())
 						.hasSize(1);
 	}
 
 	@Test // DATAMONGO-1563
-	public void findAllByWithProjection() {
+	void findAllByWithProjection() {
 
 		assertThat(template.query(Person.class).as(Jedi.class).matching(query(where("firstname").is("luke"))).all())
 				.hasOnlyElementsOfType(Jedi.class).hasSize(1);
 	}
 
 	@Test // DATAMONGO-1563
-	public void findBy() {
+	void findBy() {
 		assertThat(template.query(Person.class).matching(query(where("firstname").is("luke"))).one()).contains(luke);
 	}
 
 	@Test // DATAMONGO-2416
-	public void findByCriteria() {
+	void findByCriteria() {
 		assertThat(template.query(Person.class).matching(where("firstname").is("luke")).one()).contains(luke);
 	}
 
 	@Test // DATAMONGO-1563
-	public void findByNoMatch() {
+	void findByNoMatch() {
 		assertThat(template.query(Person.class).matching(query(where("firstname").is("spock"))).one()).isEmpty();
 	}
 
 	@Test // DATAMONGO-1563
-	public void findByTooManyResults() {
+	void findByTooManyResults() {
 		assertThatExceptionOfType(IncorrectResultSizeDataAccessException.class)
 				.isThrownBy(() -> template.query(Person.class).matching(query(where("firstname").in("han", "luke"))).one());
 	}
 
 	@Test // DATAMONGO-1726
-	public void findByReturningOneValue() {
+	void findByReturningOneValue() {
 		assertThat(template.query(Person.class).matching(query(where("firstname").is("luke"))).oneValue()).isEqualTo(luke);
 	}
 
 	@Test // DATAMONGO-1726
-	public void findByReturningOneValueButTooManyResults() {
+	void findByReturningOneValueButTooManyResults() {
 		assertThatExceptionOfType(IncorrectResultSizeDataAccessException.class).isThrownBy(
 				() -> template.query(Person.class).matching(query(where("firstname").in("han", "luke"))).oneValue());
 	}
 
 	@Test // DATAMONGO-1726
-	public void findByReturningFirstValue() {
+	void findByReturningFirstValue() {
 
 		assertThat(template.query(Person.class).matching(query(where("firstname").is("luke"))).firstValue())
 				.isEqualTo(luke);
 	}
 
 	@Test // DATAMONGO-1726
-	public void findByReturningFirstValueForManyResults() {
+	void findByReturningFirstValueForManyResults() {
 
 		assertThat(template.query(Person.class).matching(query(where("firstname").in("han", "luke"))).firstValue())
 				.isIn(han, luke);
 	}
 
 	@Test // DATAMONGO-1733
-	public void findByReturningFirstValueAsClosedInterfaceProjection() {
+	void findByReturningFirstValueAsClosedInterfaceProjection() {
 
 		PersonProjection result = template.query(Person.class).as(PersonProjection.class)
 				.matching(query(where("firstname").is("han"))).firstValue();
@@ -221,7 +221,7 @@ public class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1733
-	public void findByReturningFirstValueAsOpenInterfaceProjection() {
+	void findByReturningFirstValueAsOpenInterfaceProjection() {
 
 		PersonSpELProjection result = template.query(Person.class).as(PersonSpELProjection.class)
 				.matching(query(where("firstname").is("han"))).firstValue();
@@ -231,7 +231,7 @@ public class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void streamAll() {
+	void streamAll() {
 
 		try (Stream<Person> stream = template.query(Person.class).stream()) {
 			assertThat(stream).containsExactlyInAnyOrder(han, luke);
@@ -239,7 +239,7 @@ public class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void streamAllWithCollection() {
+	void streamAllWithCollection() {
 
 		try (Stream<Human> stream = template.query(Human.class).inCollection(STAR_WARS).stream()) {
 			assertThat(stream).hasSize(2);
@@ -247,7 +247,7 @@ public class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void streamAllWithProjection() {
+	void streamAllWithProjection() {
 
 		try (Stream<Jedi> stream = template.query(Person.class).as(Jedi.class).stream()) {
 			assertThat(stream).hasOnlyElementsOfType(Jedi.class).hasSize(2);
@@ -255,7 +255,7 @@ public class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1733
-	public void streamAllReturningResultsAsClosedInterfaceProjection() {
+	void streamAllReturningResultsAsClosedInterfaceProjection() {
 
 		TerminatingFind<PersonProjection> operation = template.query(Person.class).as(PersonProjection.class);
 
@@ -268,7 +268,7 @@ public class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1733
-	public void streamAllReturningResultsAsOpenInterfaceProjection() {
+	void streamAllReturningResultsAsOpenInterfaceProjection() {
 
 		TerminatingFind<PersonSpELProjection> operation = template.query(Person.class).as(PersonSpELProjection.class);
 
@@ -281,7 +281,7 @@ public class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void streamAllBy() {
+	void streamAllBy() {
 
 		try (Stream<Person> stream = template.query(Person.class).matching(query(where("firstname").is("luke"))).stream()) {
 			assertThat(stream).containsExactlyInAnyOrder(luke);
@@ -289,7 +289,7 @@ public class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void findAllNearBy() {
+	void findAllNearBy() {
 
 		GeoResults<Planet> results = template.query(Planet.class).near(NearQuery.near(-73.9667, 40.78).spherical(true))
 				.all();
@@ -298,7 +298,7 @@ public class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void findAllNearByWithCollectionAndProjection() {
+	void findAllNearByWithCollectionAndProjection() {
 
 		GeoResults<Human> results = template.query(Object.class).inCollection(STAR_WARS_PLANETS).as(Human.class)
 				.near(NearQuery.near(-73.9667, 40.78).spherical(true)).all();
@@ -310,7 +310,7 @@ public class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1733
-	public void findAllNearByReturningGeoResultContentAsClosedInterfaceProjection() {
+	void findAllNearByReturningGeoResultContentAsClosedInterfaceProjection() {
 
 		GeoResults<PlanetProjection> results = template.query(Planet.class).as(PlanetProjection.class)
 				.near(NearQuery.near(-73.9667, 40.78).spherical(true)).all();
@@ -323,7 +323,7 @@ public class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1733
-	public void findAllNearByReturningGeoResultContentAsOpenInterfaceProjection() {
+	void findAllNearByReturningGeoResultContentAsOpenInterfaceProjection() {
 
 		GeoResults<PlanetSpELProjection> results = template.query(Planet.class).as(PlanetSpELProjection.class)
 				.near(NearQuery.near(-73.9667, 40.78).spherical(true)).all();
@@ -336,29 +336,29 @@ public class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1728
-	public void firstShouldReturnFirstEntryInCollection() {
+	void firstShouldReturnFirstEntryInCollection() {
 		assertThat(template.query(Person.class).first()).isNotEmpty();
 	}
 
 	@Test // DATAMONGO-1734
-	public void countShouldReturnNrOfElementsInCollectionWhenNoQueryPresent() {
+	void countShouldReturnNrOfElementsInCollectionWhenNoQueryPresent() {
 		assertThat(template.query(Person.class).count()).isEqualTo(2);
 	}
 
 	@Test // DATAMONGO-1734
-	public void countShouldReturnNrOfElementsMatchingQuery() {
+	void countShouldReturnNrOfElementsMatchingQuery() {
 
 		assertThat(template.query(Person.class).matching(query(where("firstname").is(luke.getFirstname()))).count())
 				.isEqualTo(1);
 	}
 
 	@Test // DATAMONGO-1734
-	public void existsShouldReturnTrueIfAtLeastOneElementExistsInCollection() {
+	void existsShouldReturnTrueIfAtLeastOneElementExistsInCollection() {
 		assertThat(template.query(Person.class).exists()).isTrue();
 	}
 
 	@Test // DATAMONGO-1734
-	public void existsShouldReturnFalseIfNoElementExistsInCollection() {
+	void existsShouldReturnFalseIfNoElementExistsInCollection() {
 
 		template.remove(new BasicQuery("{}"), STAR_WARS);
 
@@ -366,29 +366,29 @@ public class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1734
-	public void existsShouldReturnTrueIfAtLeastOneElementMatchesQuery() {
+	void existsShouldReturnTrueIfAtLeastOneElementMatchesQuery() {
 
 		assertThat(template.query(Person.class).matching(query(where("firstname").is(luke.getFirstname()))).exists())
 				.isTrue();
 	}
 
 	@Test // DATAMONGO-1734
-	public void existsShouldReturnFalseWhenNoElementMatchesQuery() {
+	void existsShouldReturnFalseWhenNoElementMatchesQuery() {
 		assertThat(template.query(Person.class).matching(query(where("firstname").is("spock"))).exists()).isFalse();
 	}
 
 	@Test // DATAMONGO-1734
-	public void returnsTargetObjectDirectlyIfProjectionInterfaceIsImplemented() {
+	void returnsTargetObjectDirectlyIfProjectionInterfaceIsImplemented() {
 		assertThat(template.query(Person.class).as(Contact.class).all()).allMatch(it -> it instanceof Person);
 	}
 
 	@Test // DATAMONGO-1761
-	public void distinctReturnsEmptyListIfNoMatchFound() {
+	void distinctReturnsEmptyListIfNoMatchFound() {
 		assertThat(template.query(Person.class).distinct("actually-not-property-in-use").as(String.class).all()).isEmpty();
 	}
 
 	@Test // DATAMONGO-1761
-	public void distinctReturnsSimpleFieldValuesCorrectlyForCollectionHavingReturnTypeSpecifiedThatCanBeConvertedDirectlyByACodec() {
+	void distinctReturnsSimpleFieldValuesCorrectlyForCollectionHavingReturnTypeSpecifiedThatCanBeConvertedDirectlyByACodec() {
 
 		Person anakin = new Person();
 		anakin.firstname = "anakin";
@@ -401,7 +401,7 @@ public class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
-	public void distinctReturnsSimpleFieldValuesCorrectly() {
+	void distinctReturnsSimpleFieldValuesCorrectly() {
 
 		Person anakin = new Person();
 		anakin.firstname = "anakin";
@@ -424,7 +424,7 @@ public class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
-	public void distinctReturnsComplexValuesCorrectly() {
+	void distinctReturnsComplexValuesCorrectly() {
 
 		Sith sith = new Sith();
 		sith.rank = "lord";
@@ -439,7 +439,7 @@ public class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
-	public void distinctReturnsComplexValuesCorrectlyHavingReturnTypeSpecified() {
+	void distinctReturnsComplexValuesCorrectlyHavingReturnTypeSpecified() {
 
 		Sith sith = new Sith();
 		sith.rank = "lord";
@@ -455,7 +455,7 @@ public class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
-	public void distinctReturnsComplexValuesCorrectlyHavingReturnTypeDocumentSpecified() {
+	void distinctReturnsComplexValuesCorrectlyHavingReturnTypeDocumentSpecified() {
 
 		Sith sith = new Sith();
 		sith.rank = "lord";
@@ -471,21 +471,21 @@ public class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
-	public void distinctMapsFieldNameCorrectly() {
+	void distinctMapsFieldNameCorrectly() {
 
 		assertThat(template.query(Jedi.class).inCollection(STAR_WARS).distinct("name").as(String.class).all())
 				.containsExactlyInAnyOrder("han", "luke");
 	}
 
 	@Test // DATAMONGO-1761
-	public void distinctReturnsRawValuesIfReturnTypeIsBsonValue() {
+	void distinctReturnsRawValuesIfReturnTypeIsBsonValue() {
 
 		assertThat(template.query(Person.class).distinct("lastname").as(BsonValue.class).all())
 				.containsExactlyInAnyOrder(new BsonString("solo"), new BsonString("skywalker"));
 	}
 
 	@Test // DATAMONGO-1761
-	public void distinctReturnsValuesMappedToTheirJavaTypeEvenWhenNotExplicitlyDefinedByTheDomainType() {
+	void distinctReturnsValuesMappedToTheirJavaTypeEvenWhenNotExplicitlyDefinedByTheDomainType() {
 
 		template.save(new Document("darth", "vader"), STAR_WARS);
 
@@ -493,7 +493,7 @@ public class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
-	public void distinctReturnsMappedDomainTypeForProjections() {
+	void distinctReturnsMappedDomainTypeForProjections() {
 
 		luke.father = new Person();
 		luke.father.firstname = "anakin";
@@ -505,7 +505,7 @@ public class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
-	public void distinctAlllowsQueryUsingObjectSourceType() {
+	void distinctAlllowsQueryUsingObjectSourceType() {
 
 		luke.father = new Person();
 		luke.father.firstname = "anakin";
@@ -517,7 +517,7 @@ public class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
-	public void distinctReturnsMappedDomainTypeExtractedFromPropertyWhenNoExplicitTypePresent() {
+	void distinctReturnsMappedDomainTypeExtractedFromPropertyWhenNoExplicitTypePresent() {
 
 		luke.father = new Person();
 		luke.father.firstname = "anakin";
@@ -531,7 +531,7 @@ public class ExecutableFindOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1761
-	public void distinctThrowsExceptionWhenExplicitMappingTypeCannotBeApplied() {
+	void distinctThrowsExceptionWhenExplicitMappingTypeCannotBeApplied() {
 		assertThatExceptionOfType(InvalidDataAccessApiUsageException.class)
 				.isThrownBy(() -> template.query(Person.class).distinct("firstname").as(Long.class).all());
 	}
