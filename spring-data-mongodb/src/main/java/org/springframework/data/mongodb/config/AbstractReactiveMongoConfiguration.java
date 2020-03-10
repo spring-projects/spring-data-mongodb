@@ -60,7 +60,7 @@ public abstract class AbstractReactiveMongoConfiguration extends MongoConfigurat
 	 * @return never {@literal null}.
 	 */
 	@Bean
-	public ReactiveMongoOperations reactiveMongoTemplate() throws Exception {
+	public ReactiveMongoTemplate reactiveMongoTemplate() throws Exception {
 		return new ReactiveMongoTemplate(reactiveMongoDbFactory(), mappingMongoConverter());
 	}
 
