@@ -95,6 +95,8 @@ public class Query {
 	 */
 	public Query addCriteria(CriteriaDefinition criteriaDefinition) {
 
+		Assert.notNull(criteriaDefinition, "CriteriaDefinition must not be null!");
+
 		CriteriaDefinition existing = this.criteria.get(criteriaDefinition.getKey());
 		String key = criteriaDefinition.getKey();
 

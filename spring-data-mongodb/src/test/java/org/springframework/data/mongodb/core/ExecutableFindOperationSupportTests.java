@@ -169,6 +169,11 @@ public class ExecutableFindOperationSupportTests {
 		assertThat(template.query(Person.class).matching(query(where("firstname").is("luke"))).one()).contains(luke);
 	}
 
+	@Test // DATAMONGO-2416
+	public void findByCriteria() {
+		assertThat(template.query(Person.class).matching(where("firstname").is("luke")).one()).contains(luke);
+	}
+
 	@Test // DATAMONGO-1563
 	public void findByNoMatch() {
 		assertThat(template.query(Person.class).matching(query(where("firstname").is("spock"))).one()).isEmpty();

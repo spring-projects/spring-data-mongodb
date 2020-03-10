@@ -15,12 +15,13 @@
  */
 package org.springframework.data.mongodb.core;
 
-import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
-import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import reactor.core.publisher.Mono;
 
+import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
+import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 
 import com.mongodb.client.result.UpdateResult;
 
@@ -171,6 +172,18 @@ public interface ReactiveUpdateOperation {
 		 * @throws IllegalArgumentException if query is {@literal null}.
 		 */
 		UpdateWithUpdate<T> matching(Query query);
+
+		/**
+		 * Set the filter {@link CriteriaDefinition criteria} to be used.
+		 *
+		 * @param criteriaDefinition must not be {@literal null}.
+		 * @return new instance of {@link UpdateWithUpdate}.
+		 * @throws IllegalArgumentException if query is {@literal null}.
+		 * @since 3.0
+		 */
+		default UpdateWithUpdate<T> matching(CriteriaDefinition criteriaDefinition) {
+			return matching(Query.query(criteriaDefinition));
+		}
 	}
 
 	/**

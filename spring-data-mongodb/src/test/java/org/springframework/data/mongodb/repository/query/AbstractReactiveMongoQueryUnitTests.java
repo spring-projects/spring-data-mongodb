@@ -52,7 +52,10 @@ import org.springframework.data.repository.query.QueryMethodEvaluationContextPro
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 /**
+ * Unit tests for {@link AbstractReactiveMongoQuery}.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @currentRead Way of Kings - Brandon Sanderson
  */
 @ExtendWith(MockitoExtension.class)
@@ -81,7 +84,7 @@ class AbstractReactiveMongoQueryUnitTests {
 
 		doReturn(executableFind).when(mongoOperationsMock).query(any());
 		doReturn(withQueryMock).when(executableFind).as(any());
-		doReturn(withQueryMock).when(withQueryMock).matching(any());
+		doReturn(withQueryMock).when(withQueryMock).matching(any(Query.class));
 	}
 
 	@Test // DATAMONGO-1854
