@@ -32,8 +32,10 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.AbstractApplicationContext;
+import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.MongoTypeMapper;
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -89,7 +91,7 @@ public class AbstractReactiveMongoConfigurationUnitTests {
 	public void returnsUninitializedMappingContext() throws Exception {
 
 		SampleMongoConfiguration configuration = new SampleMongoConfiguration();
-		MongoMappingContext context = configuration.mongoMappingContext();
+		MongoMappingContext context = configuration.mongoMappingContext(configuration.customConversions());
 
 		assertThat(context.getPersistentEntities()).isEmpty();
 		context.initialize();
@@ -158,11 +160,11 @@ public class AbstractReactiveMongoConfigurationUnitTests {
 			return MongoTestUtils.reactiveClient();
 		}
 
-		@Bean
 		@Override
-		public MappingMongoConverter mappingMongoConverter() throws Exception {
+		public MappingMongoConverter mappingMongoConverter(ReactiveMongoDatabaseFactory databaseFactory,
+				MongoCustomConversions customConversions, MongoMappingContext mappingContext) {
 
-			MappingMongoConverter converter = super.mappingMongoConverter();
+			MappingMongoConverter converter = super.mappingMongoConverter(databaseFactory, customConversions, mappingContext);
 			converter.setTypeMapper(typeMapper());
 
 			return converter;

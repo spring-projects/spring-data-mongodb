@@ -23,7 +23,9 @@ import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoClientSettings.Builder;
@@ -38,7 +40,7 @@ import com.mongodb.reactivestreams.client.MongoClients;
  * @since 2.0
  * @see MongoConfigurationSupport
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public abstract class AbstractReactiveMongoConfiguration extends MongoConfigurationSupport {
 
 	/**
@@ -57,11 +59,14 @@ public abstract class AbstractReactiveMongoConfiguration extends MongoConfigurat
 	/**
 	 * Creates {@link ReactiveMongoOperations}.
 	 *
+	 * @see #reactiveMongoDbFactory()
+	 * @see #mappingMongoConverter(ReactiveMongoDatabaseFactory, MongoCustomConversions, MongoMappingContext)
 	 * @return never {@literal null}.
 	 */
 	@Bean
-	public ReactiveMongoTemplate reactiveMongoTemplate() throws Exception {
-		return new ReactiveMongoTemplate(reactiveMongoDbFactory(), mappingMongoConverter());
+	public ReactiveMongoTemplate reactiveMongoTemplate(ReactiveMongoDatabaseFactory databaseFactory,
+			MappingMongoConverter mongoConverter) {
+		return new ReactiveMongoTemplate(databaseFactory, mongoConverter);
 	}
 
 	/**
@@ -69,7 +74,7 @@ public abstract class AbstractReactiveMongoConfiguration extends MongoConfigurat
 	 * {@link MongoClient} instance configured in {@link #reactiveMongoClient()}.
 	 *
 	 * @see #reactiveMongoClient()
-	 * @see #reactiveMongoTemplate()
+	 * @see #reactiveMongoTemplate(ReactiveMongoDatabaseFactory, MappingMongoConverter)
 	 * @return never {@literal null}.
 	 */
 	@Bean
@@ -79,20 +84,20 @@ public abstract class AbstractReactiveMongoConfiguration extends MongoConfigurat
 
 	/**
 	 * Creates a {@link MappingMongoConverter} using the configured {@link #reactiveMongoDbFactory()} and
-	 * {@link #mongoMappingContext()}. Will get {@link #customConversions()} applied.
+	 * {@link #mongoMappingContext(MongoCustomConversions)}. Will get {@link #customConversions()} applied.
 	 *
 	 * @see #customConversions()
-	 * @see #mongoMappingContext()
+	 * @see #mongoMappingContext(MongoCustomConversions)
 	 * @see #reactiveMongoDbFactory()
 	 * @return never {@literal null}.
-	 * @throws Exception
 	 */
 	@Bean
-	public MappingMongoConverter mappingMongoConverter() throws Exception {
+	public MappingMongoConverter mappingMongoConverter(ReactiveMongoDatabaseFactory databaseFactory,
+			MongoCustomConversions customConversions, MongoMappingContext mappingContext) {
 
-		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mongoMappingContext());
-		converter.setCustomConversions(customConversions());
-		converter.setCodecRegistryProvider(reactiveMongoDbFactory());
+		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext);
+		converter.setCustomConversions(customConversions);
+		converter.setCodecRegistryProvider(databaseFactory);
 
 		return converter;
 	}

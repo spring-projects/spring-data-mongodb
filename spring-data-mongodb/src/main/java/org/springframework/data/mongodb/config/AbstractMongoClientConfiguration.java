@@ -19,13 +19,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.SpringDataMongoDB;
-import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.lang.Nullable;
 
 import com.mongodb.MongoClientSettings;
@@ -40,7 +41,7 @@ import com.mongodb.client.MongoClients;
  * @since 2.1
  * @see MongoConfigurationSupport
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public abstract class AbstractMongoClientConfiguration extends MongoConfigurationSupport {
 
 	/**
@@ -59,11 +60,12 @@ public abstract class AbstractMongoClientConfiguration extends MongoConfiguratio
 	/**
 	 * Creates a {@link MongoTemplate}.
 	 *
-	 * @return
+	 * @see #mongoDbFactory()
+	 * @see #mappingMongoConverter(MongoDatabaseFactory, MongoCustomConversions, MongoMappingContext)
 	 */
 	@Bean
-	public MongoTemplate mongoTemplate() throws Exception {
-		return new MongoTemplate(mongoDbFactory(), mappingMongoConverter());
+	public MongoTemplate mongoTemplate(MongoDatabaseFactory databaseFactory, MappingMongoConverter converter) {
+		return new MongoTemplate(databaseFactory, converter);
 	}
 
 	/**
@@ -71,8 +73,7 @@ public abstract class AbstractMongoClientConfiguration extends MongoConfiguratio
 	 * {@link MongoTemplate}. Will use the {@link MongoClient} instance configured in {@link #mongoClient()}.
 	 *
 	 * @see #mongoClient()
-	 * @see #mongoTemplate()
-	 * @return
+	 * @see #mongoTemplate(MongoDatabaseFactory, MappingMongoConverter)
 	 */
 	@Bean
 	public MongoDatabaseFactory mongoDbFactory() {
@@ -99,21 +100,20 @@ public abstract class AbstractMongoClientConfiguration extends MongoConfiguratio
 
 	/**
 	 * Creates a {@link MappingMongoConverter} using the configured {@link #mongoDbFactory()} and
-	 * {@link #mongoMappingContext()}. Will get {@link #customConversions()} applied.
+	 * {@link #mongoMappingContext(MongoCustomConversions)}. Will get {@link #customConversions()} applied.
 	 *
 	 * @see #customConversions()
-	 * @see #mongoMappingContext()
+	 * @see #mongoMappingContext(MongoCustomConversions)
 	 * @see #mongoDbFactory()
-	 * @return
-	 * @throws Exception
 	 */
 	@Bean
-	public MappingMongoConverter mappingMongoConverter() throws Exception {
+	public MappingMongoConverter mappingMongoConverter(MongoDatabaseFactory databaseFactory,
+			MongoCustomConversions customConversions, MongoMappingContext mappingContext) {
 
-		DbRefResolver dbRefResolver = new DefaultDbRefResolver(mongoDbFactory());
-		MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, mongoMappingContext());
-		converter.setCustomConversions(customConversions());
-		converter.setCodecRegistryProvider(mongoDbFactory());
+		DbRefResolver dbRefResolver = new DefaultDbRefResolver(databaseFactory);
+		MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, mappingContext);
+		converter.setCustomConversions(customConversions);
+		converter.setCodecRegistryProvider(databaseFactory);
 
 		return converter;
 	}

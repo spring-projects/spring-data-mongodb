@@ -80,11 +80,12 @@ public abstract class MongoConfigurationSupport {
 	 * @throws ClassNotFoundException
 	 */
 	@Bean
-	public MongoMappingContext mongoMappingContext() throws ClassNotFoundException {
+	public MongoMappingContext mongoMappingContext(MongoCustomConversions customConversions)
+			throws ClassNotFoundException {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		mappingContext.setInitialEntitySet(getInitialEntitySet());
-		mappingContext.setSimpleTypeHolder(customConversions().getSimpleTypeHolder());
+		mappingContext.setSimpleTypeHolder(customConversions.getSimpleTypeHolder());
 		mappingContext.setFieldNamingStrategy(fieldNamingStrategy());
 		mappingContext.setAutoIndexCreation(autoIndexCreation());
 
@@ -103,7 +104,7 @@ public abstract class MongoConfigurationSupport {
 	 * @return must not be {@literal null}.
 	 */
 	@Bean
-	public CustomConversions customConversions() {
+	public MongoCustomConversions customConversions() {
 		return MongoCustomConversions.create(this::configureConverters);
 	}
 

@@ -21,9 +21,11 @@ import java.util.List;
 import java.util.Set;
 
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.convert.CustomConversions;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
@@ -35,6 +37,14 @@ public class TestMongoConfiguration extends AbstractMongoClientConfiguration {
 	@Override
 	public String getDatabaseName() {
 		return "database";
+	}
+
+	@Primary
+	@Bean
+	@Override
+	public MappingMongoConverter mappingMongoConverter(MongoDatabaseFactory databaseFactory,
+			MongoCustomConversions customConversions, MongoMappingContext mappingContext) {
+		return super.mappingMongoConverter(databaseFactory, customConversions, mappingContext);
 	}
 
 	@Override
@@ -49,7 +59,7 @@ public class TestMongoConfiguration extends AbstractMongoClientConfiguration {
 	}
 
 	@Override
-	public CustomConversions customConversions() {
+	public MongoCustomConversions customConversions() {
 
 		List<Converter<?, ?>> converters = new ArrayList<>(2);
 		converters.add(new org.springframework.data.mongodb.core.PersonReadConverter());

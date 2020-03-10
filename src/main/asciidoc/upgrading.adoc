@@ -37,6 +37,9 @@ Uses `MongoClientSettings` instead of `MongoClientOptions`.
 
 | `ReactiveMongoClientSettingsFactoryBean`
 | Now produces `com.mongodb.MongoClientSettings` instead of `com.mongodb.async.client.MongoClientSettings`
+
+| `AbstractMongoClientConfiguration`, `AbstractReactiveMongoConfiguration`
+| Configuration methods use parameter injection instead of calling local methods to avoid the need for cglib proxies
 |===
 
 .Removed Java API:
