@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import java.util.List;
 
+import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.Query;
 
 import com.mongodb.client.result.DeleteResult;
@@ -119,6 +120,18 @@ public interface ExecutableRemoveOperation {
 		 * @throws IllegalArgumentException if query is {@literal null}.
 		 */
 		TerminatingRemove<T> matching(Query query);
+
+		/**
+		 * Set the filter {@link CriteriaDefinition criteria} to be used.
+		 *
+		 * @param criteriaDefinition must not be {@literal null}.
+		 * @return new instance of {@link TerminatingRemove}.
+		 * @throws IllegalArgumentException if query is {@literal null}.
+		 * @since 3.0
+		 */
+		default TerminatingRemove<T> matching(CriteriaDefinition criteriaDefinition) {
+			return matching(Query.query(criteriaDefinition));
+		}
 	}
 
 	/**

@@ -163,6 +163,14 @@ public class ReactiveFindOperationSupportTests {
 				.verifyComplete();
 	}
 
+	@Test // DATAMONGO-2416
+	public void findAllByCriteria() {
+
+		template.query(Person.class).matching(where("firstname").is("luke")).all().as(StepVerifier::create) //
+				.expectNext(luke) //
+				.verifyComplete();
+	}
+
 	@Test // DATAMONGO-1719
 	public void findAllByWithCollectionUsingMappingInformation() {
 

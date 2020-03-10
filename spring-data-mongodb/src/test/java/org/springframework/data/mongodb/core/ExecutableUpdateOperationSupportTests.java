@@ -120,6 +120,17 @@ public class ExecutableUpdateOperationSupportTests {
 		assertThat(result.getUpsertedId()).isNull();
 	}
 
+	@Test // DATAMONGO-2416
+	public void updateAllMatchingCriteria() {
+
+		UpdateResult result = template.update(Person.class).matching(where("id").is(han.getId()))
+				.apply(new Update().set("firstname", "Han"))
+				.all();
+
+		assertThat(result.getModifiedCount()).isEqualTo(1L);
+		assertThat(result.getUpsertedId()).isNull();
+	}
+
 	@Test // DATAMONGO-1563
 	public void updateWithDifferentDomainClassAndCollection() {
 

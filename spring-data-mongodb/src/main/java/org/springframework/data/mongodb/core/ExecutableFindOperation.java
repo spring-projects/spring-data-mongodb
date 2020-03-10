@@ -21,6 +21,7 @@ import java.util.stream.Stream;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.geo.GeoResults;
+import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.lang.Nullable;
@@ -169,6 +170,18 @@ public interface ExecutableFindOperation {
 		 * @throws IllegalArgumentException if query is {@literal null}.
 		 */
 		TerminatingFind<T> matching(Query query);
+
+		/**
+		 * Set the filter {@link CriteriaDefinition criteria} to be used.
+		 *
+		 * @param criteriaDefinition must not be {@literal null}.
+		 * @return new instance of {@link TerminatingFind}.
+		 * @throws IllegalArgumentException if query is {@literal null}.
+		 * @since 3.0
+		 */
+		default TerminatingFind<T> matching(CriteriaDefinition criteriaDefinition) {
+			return matching(Query.query(criteriaDefinition));
+		}
 
 		/**
 		 * Set the filter query for the geoNear execution.

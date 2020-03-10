@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -39,6 +40,7 @@ import org.springframework.data.mongodb.core.query.Query;
  * Unit tests for {@link ReactiveMapReduceOperationSupport}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @currentRead Beyond the Shadows - Brent Weeks
  */
 @ExtendWith(MockitoExtension.class)
@@ -107,6 +109,19 @@ public class ReactiveMapReduceOperationSupportUnitTests {
 
 		Query query = new BasicQuery("{ 'lastname' : 'skywalker' }");
 		mapReduceOpsSupport.mapReduce(Person.class).map(MAP_FUNCTION).reduce(REDUCE_FUNCTION).matching(query).all();
+
+		verify(template).mapReduce(eq(query), eq(Person.class), eq(STAR_WARS), eq(Person.class), eq(MAP_FUNCTION),
+				eq(REDUCE_FUNCTION), isNull());
+	}
+
+	@Test // DATAMONGO-2416
+	void usesCriteriaWhenPresent() {
+
+		when(template.getCollectionName(eq(Person.class))).thenReturn(STAR_WARS);
+
+		Query query = Query.query(where("lastname").is("skywalker"));
+		mapReduceOpsSupport.mapReduce(Person.class).map(MAP_FUNCTION).reduce(REDUCE_FUNCTION)
+				.matching(where("lastname").is("skywalker")).all();
 
 		verify(template).mapReduce(eq(query), eq(Person.class), eq(STAR_WARS), eq(Person.class), eq(MAP_FUNCTION),
 				eq(REDUCE_FUNCTION), isNull());

@@ -84,6 +84,14 @@ public class ExecutableRemoveOperationSupportTests {
 		assertThat(result.getDeletedCount()).isEqualTo(1L);
 	}
 
+	@Test // DATAMONGO-2416
+	public void removeAllMatchingCriteria() {
+
+		DeleteResult result = template.remove(Person.class).matching(where("firstname").is("han")).all();
+
+		assertThat(result.getDeletedCount()).isEqualTo(1L);
+	}
+
 	@Test // DATAMONGO-1563
 	public void removeAllMatchingWithAlternateDomainTypeAndCollection() {
 

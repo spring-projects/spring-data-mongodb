@@ -100,7 +100,7 @@ class AbstractMongoQueryUnitTests {
 		doReturn(converter).when(mongoOperationsMock).getConverter();
 		doReturn(executableFind).when(mongoOperationsMock).query(any());
 		doReturn(withQueryMock).when(executableFind).as(any());
-		doReturn(withQueryMock).when(withQueryMock).matching(any());
+		doReturn(withQueryMock).when(withQueryMock).matching(any(Query.class));
 
 		when(mongoOperationsMock.remove(any(), any(), anyString())).thenReturn(deleteResultMock);
 	}

@@ -128,6 +128,17 @@ public class ReactiveUpdateOperationSupportTests {
 				}).verifyComplete();
 	}
 
+	@Test // DATAMONGO-2416
+	public void updateAllMatchingCriteria() {
+
+		template.update(Person.class).matching(where("id").is(han.getId())).apply(new Update().set("firstname", "Han"))
+				.all().as(StepVerifier::create).consumeNextWith(actual -> {
+
+					assertThat(actual.getModifiedCount()).isEqualTo(1L);
+					assertThat(actual.getUpsertedId()).isNull();
+				}).verifyComplete();
+	}
+
 	@Test // DATAMONGO-1719
 	public void updateWithDifferentDomainClassAndCollection() {
 
