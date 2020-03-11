@@ -1,6 +1,20 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.0.0.M4 (2020-03-11)
+----------------------------------------
+* DATAMONGO-2491 - Adapt to Mockito 3.3 changes.
+* DATAMONGO-2489 - Upgrade to MongoDB Driver 4.0.
+* DATAMONGO-2481 - Speed up build.
+* DATAMONGO-2478 - NPE when using Query annotation and with sort and pageable.
+* DATAMONGO-2476 - JsonParseException: JSON reader was expecting a value but found '}'.
+* DATAMONGO-2474 - Upgrade to MongoDB Driver 4.0.0-rc0.
+* DATAMONGO-2473 - Release 3.0 M4 (Neumann).
+* DATAMONGO-2363 - Add support for $merge aggregation stage.
+* DATAMONGO-2355 - Revise Abstract…MongoConfiguration to expose more bean detail and avoid proxying.
+* DATAMONGO-2341 - Support shard key derivation.
+
+
 Changes in version 2.2.5.RELEASE (2020-02-26)
 ---------------------------------------------
 * DATAMONGO-2478 - NPE when using Query annotation and with sort and pageable.
@@ -2925,6 +2939,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
