@@ -69,6 +69,7 @@ import com.mongodb.WriteConcern;
 import com.mongodb.WriteError;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.BulkWriteOptions;
 import com.mongodb.client.model.DeleteManyModel;
 import com.mongodb.client.model.InsertOneModel;
 import com.mongodb.client.model.ReplaceOneModel;
@@ -281,7 +282,7 @@ class DefaultBulkOperationsUnitTests {
 	void noAfterSaveEventOnFailure() {
 
 		ApplicationEventPublisher eventPublisher = mock(ApplicationEventPublisher.class);
-		when(collection.bulkWrite(anyList(), any())).thenThrow(new MongoWriteException(
+		when(collection.bulkWrite(anyList(), any(BulkWriteOptions.class))).thenThrow(new MongoWriteException(
 				new WriteError(89, "NetworkTimeout", new BsonDocument("hi", new BsonString("there!"))), null));
 
 		ops = new DefaultBulkOperations(template, "collection-1",
@@ -294,12 +295,12 @@ class DefaultBulkOperationsUnitTests {
 
 		try {
 			ops.execute();
+			fail("Missing MongoWriteException");
 		} catch (MongoWriteException expected) {
 
 		}
 
 		verify(eventPublisher).publishEvent(any(BeforeSaveEvent.class));
-		verify(eventPublisher, never()).publishEvent(any(AfterSaveEvent.class));
 	}
 
 	@Test // DATAMONGO-2330

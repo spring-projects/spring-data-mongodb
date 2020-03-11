@@ -30,6 +30,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
@@ -50,6 +52,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * @author Mark Paluch
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class ReactiveMongoPersistentEntityIndexCreatorUnitTests {
 
 	private ReactiveIndexOperations indexOperations;
