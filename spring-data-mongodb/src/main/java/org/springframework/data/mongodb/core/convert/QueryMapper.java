@@ -1252,14 +1252,13 @@ public class QueryMapper {
 
 					String partial = iterator.next();
 
-					if (depth > 0 && property.isCollectionLike()) {
+					if (depth > 0 && property.isCollectionLike() && property.isEntity() && property.getComponentType() != null) {
 
-						MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(property.getComponentType());
-						if (persistentEntity != null) {
-							MongoPersistentProperty persistentProperty = persistentEntity.getPersistentProperty(partial);
-							if(persistentProperty != null) {
-								partial = mapPropertyName(persistentProperty);
-							}
+						MongoPersistentEntity<?> persistentEntity = mappingContext
+								.getRequiredPersistentEntity(property.getComponentType());
+						MongoPersistentProperty persistentProperty = persistentEntity.getPersistentProperty(partial);
+						if (persistentProperty != null) {
+							partial = mapPropertyName(persistentProperty);
 						}
 					}
 
