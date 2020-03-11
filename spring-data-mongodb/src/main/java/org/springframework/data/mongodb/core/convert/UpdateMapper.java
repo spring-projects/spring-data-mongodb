@@ -308,7 +308,7 @@ public class UpdateMapper extends QueryMapper {
 		 */
 		@Override
 		protected Converter<MongoPersistentProperty, String> getPropertyConverter() {
-			return new PositionParameterRetainingPropertyKeyConverter(key);
+			return new PositionParameterRetainingPropertyKeyConverter(key, getMappingContext());
 		}
 
 		/*
@@ -317,7 +317,7 @@ public class UpdateMapper extends QueryMapper {
 		 */
 		@Override
 		protected Converter<MongoPersistentProperty, String> getAssociationConverter() {
-			return new UpdateAssociationConverter(getAssociation(), key);
+			return new UpdateAssociationConverter(getMappingContext(), getAssociation(), key);
 		}
 
 		/**
@@ -334,10 +334,12 @@ public class UpdateMapper extends QueryMapper {
 			 *
 			 * @param association must not be {@literal null}.
 			 */
-			public UpdateAssociationConverter(Association<MongoPersistentProperty> association, String key) {
+			public UpdateAssociationConverter(
+					MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
+					Association<MongoPersistentProperty> association, String key) {
 
 				super(association);
-				this.mapper = new KeyMapper(key);
+				this.mapper = new KeyMapper(key, mappingContext);
 			}
 
 			/*
