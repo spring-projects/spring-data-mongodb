@@ -24,7 +24,6 @@ import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
-
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.domain.Example;
@@ -175,7 +174,7 @@ public class QueryMapper {
 		}
 
 		Document mappedSort = new Document();
-		for(Map.Entry<String,Object> entry : BsonUtils.asMap(sortObject).entrySet()) {
+		for (Map.Entry<String, Object> entry : BsonUtils.asMap(sortObject).entrySet()) {
 
 			Field field = createPropertyField(entity, entry.getKey(), mappingContext);
 			mappedSort.put(field.getMappedKey(), entry.getValue());
@@ -1158,7 +1157,7 @@ public class QueryMapper {
 		 * @return
 		 */
 		protected Converter<MongoPersistentProperty, String> getPropertyConverter() {
-			return new PositionParameterRetainingPropertyKeyConverter(name);
+			return new PositionParameterRetainingPropertyKeyConverter(name, mappingContext);
 		}
 
 		/**
@@ -1172,6 +1171,10 @@ public class QueryMapper {
 			return new AssociationConverter(getAssociation());
 		}
 
+		protected MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext() {
+			return mappingContext;
+		}
+
 		/**
 		 * @author Christoph Strobl
 		 * @since 1.8
@@ -1180,8 +1183,9 @@ public class QueryMapper {
 
 			private final KeyMapper keyMapper;
 
-			public PositionParameterRetainingPropertyKeyConverter(String rawKey) {
-				this.keyMapper = new KeyMapper(rawKey);
+			public PositionParameterRetainingPropertyKeyConverter(String rawKey,
+					MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> ctx) {
+				this.keyMapper = new KeyMapper(rawKey, ctx);
 			}
 
 			/*
@@ -1222,11 +1226,14 @@ public class QueryMapper {
 		static class KeyMapper {
 
 			private final Iterator<String> iterator;
+			private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
-			public KeyMapper(String key) {
+			public KeyMapper(String key,
+					MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 
 				this.iterator = Arrays.asList(key.split("\\.")).iterator();
 				this.iterator.next();
+				this.mappingContext = mappingContext;
 			}
 
 			/**
@@ -1240,9 +1247,22 @@ public class QueryMapper {
 				StringBuilder mappedName = new StringBuilder(PropertyToFieldNameConverter.INSTANCE.convert(property));
 				boolean inspect = iterator.hasNext();
 
+				int depth = 0;
 				while (inspect) {
 
 					String partial = iterator.next();
+
+					if (depth > 0 && property.isCollectionLike()) {
+
+						MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(property.getComponentType());
+						if (persistentEntity != null) {
+							MongoPersistentProperty persistentProperty = persistentEntity.getPersistentProperty(partial);
+							if(persistentProperty != null) {
+								partial = mapPropertyName(persistentProperty);
+							}
+						}
+					}
+
 					boolean isPositional = (isPositionalParameter(partial) && (property.isMap() || property.isCollectionLike()));
 
 					if (isPositional) {
@@ -1250,6 +1270,7 @@ public class QueryMapper {
 					}
 
 					inspect = isPositional && iterator.hasNext();
+					depth++;
 				}
 
 				return mappedName.toString();

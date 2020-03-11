@@ -36,7 +36,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
@@ -925,6 +924,70 @@ public class QueryMapperUnitTests {
 		org.bson.Document target = mapper.getMappedObject(query(where("id").in(id)).getQueryObject(),
 				context.getPersistentEntity(NonIdFieldWithObjectIdTargetType.class));
 		assertThat(target).isEqualTo(org.bson.Document.parse("{\"_id\": {\"$in\": [{\"$oid\": \"" + id + "\"}]}}"));
+	}
+
+	@Test // DATAMONGO-2488
+	public void mapsNestedArrayPathCorrectlyForNonMatchingPath() {
+
+		org.bson.Document target = mapper.getMappedObject(
+				query(where("array.$[some_item].nested.$[other_item]").is("value")).getQueryObject(),
+				context.getPersistentEntity(Foo.class));
+
+		assertThat(target).isEqualTo(new org.bson.Document("array.$[some_item].nested.$[other_item]", "value"));
+	}
+
+	@Test // DATAMONGO-2488
+	public void mapsNestedArrayPathCorrectlyForObjectTargetArray() {
+
+		org.bson.Document target = mapper.getMappedObject(
+				query(where("arrayObj.$[some_item].nested.$[other_item]").is("value")).getQueryObject(),
+				context.getPersistentEntity(WithNestedArray.class));
+
+		assertThat(target).isEqualTo(new org.bson.Document("arrayObj.$[some_item].nested.$[other_item]", "value"));
+	}
+
+	@Test // DATAMONGO-2488
+	public void mapsNestedArrayPathCorrectlyForStringTargetArray() {
+
+		org.bson.Document target = mapper.getMappedObject(
+				query(where("arrayString.$[some_item].nested.$[other_item]").is("value")).getQueryObject(),
+				context.getPersistentEntity(WithNestedArray.class));
+
+		assertThat(target).isEqualTo(new org.bson.Document("arrayString.$[some_item].nested.$[other_item]", "value"));
+	}
+
+	@Test // DATAMONGO-2488
+	public void mapsCustomFieldNamesForNestedArrayPathCorrectly() {
+
+		org.bson.Document target = mapper.getMappedObject(
+				query(where("arrayCustomName.$[some_item].nested.$[other_item]").is("value")).getQueryObject(),
+				context.getPersistentEntity(WithNestedArray.class));
+
+		assertThat(target).isEqualTo(new org.bson.Document("arrayCustomName.$[some_item].nes-ted.$[other_item]", "value"));
+	}
+
+	class WithNestedArray {
+
+		List<NestedArrayOfObj> arrayObj;
+		List<NestedArrayOfString> arrayString;
+		List<NestedArrayOfObjCustomFieldName> arrayCustomName;
+	}
+
+	class NestedArrayOfObj {
+		List<ArrayObj> nested;
+	}
+
+	class NestedArrayOfObjCustomFieldName {
+
+		@Field("nes-ted") List<ArrayObj> nested;
+	}
+
+	class NestedArrayOfString {
+		List<String> nested;
+	}
+
+	class ArrayObj {
+		String foo;
 	}
 
 	@Document
