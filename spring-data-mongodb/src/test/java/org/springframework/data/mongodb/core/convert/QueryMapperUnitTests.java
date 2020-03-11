@@ -73,9 +73,9 @@ import com.mongodb.client.model.Filters;
 @ExtendWith(MockitoExtension.class)
 public class QueryMapperUnitTests {
 
-	QueryMapper mapper;
-	MongoMappingContext context;
-	MappingMongoConverter converter;
+	private QueryMapper mapper;
+	private MongoMappingContext context;
+	private MappingMongoConverter converter;
 
 	@Mock MongoDatabaseFactory factory;
 
@@ -927,7 +927,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-2488
-	public void mapsNestedArrayPathCorrectlyForNonMatchingPath() {
+	void mapsNestedArrayPathCorrectlyForNonMatchingPath() {
 
 		org.bson.Document target = mapper.getMappedObject(
 				query(where("array.$[some_item].nested.$[other_item]").is("value")).getQueryObject(),
@@ -937,7 +937,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-2488
-	public void mapsNestedArrayPathCorrectlyForObjectTargetArray() {
+	void mapsNestedArrayPathCorrectlyForObjectTargetArray() {
 
 		org.bson.Document target = mapper.getMappedObject(
 				query(where("arrayObj.$[some_item].nested.$[other_item]").is("value")).getQueryObject(),
@@ -947,7 +947,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-2488
-	public void mapsNestedArrayPathCorrectlyForStringTargetArray() {
+	void mapsNestedArrayPathCorrectlyForStringTargetArray() {
 
 		org.bson.Document target = mapper.getMappedObject(
 				query(where("arrayString.$[some_item].nested.$[other_item]").is("value")).getQueryObject(),
@@ -957,7 +957,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-2488
-	public void mapsCustomFieldNamesForNestedArrayPathCorrectly() {
+	void mapsCustomFieldNamesForNestedArrayPathCorrectly() {
 
 		org.bson.Document target = mapper.getMappedObject(
 				query(where("arrayCustomName.$[some_item].nested.$[other_item]").is("value")).getQueryObject(),
