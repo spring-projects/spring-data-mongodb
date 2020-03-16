@@ -22,7 +22,10 @@ import org.bson.types.ObjectId;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.gridfs.GridFsUpload.GridFsUploadBuilder;
 import org.springframework.lang.Nullable;
+import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 import com.mongodb.client.gridfs.GridFSFindIterable;
 
@@ -45,7 +48,9 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	 * @param filename must not be {@literal null} or empty.
 	 * @return the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just created.
 	 */
-	ObjectId store(InputStream content, String filename);
+	default ObjectId store(InputStream content, String filename) {
+		return store(content, filename, null, null);
+	}
 
 	/**
 	 * Stores the given content into a file with the given name.
@@ -63,7 +68,9 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	 * @param metadata can be {@literal null}.
 	 * @return the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just created.
 	 */
-	ObjectId store(InputStream content, @Nullable Document metadata);
+	default ObjectId store(InputStream content, @Nullable Document metadata) {
+		return store(content, null, metadata);
+	}
 
 	/**
 	 * Stores the given content into a file with the given name and content type.
@@ -107,7 +114,9 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	 * @param metadata can be {@literal null}.
 	 * @return the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just created.
 	 */
-	ObjectId store(InputStream content, @Nullable String filename, @Nullable Document metadata);
+	default ObjectId store(InputStream content, @Nullable String filename, @Nullable Document metadata) {
+		return store(content, filename, null, metadata);
+	}
 
 	/**
 	 * Stores the given content into a file with the given name and content type using the given metadata.
@@ -118,8 +127,35 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	 * @param metadata can be {@literal null}.
 	 * @return the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just created.
 	 */
-	ObjectId store(InputStream content, @Nullable String filename, @Nullable String contentType,
-			@Nullable Document metadata);
+	default ObjectId store(InputStream content, @Nullable String filename, @Nullable String contentType,
+			@Nullable Document metadata) {
+
+		GridFsUploadBuilder<ObjectId> uploadBuilder = GridFsUpload.fromStream(content);
+		if (StringUtils.hasText(filename)) {
+			uploadBuilder.filename(filename);
+		}
+		if (StringUtils.hasText(contentType)) {
+			uploadBuilder.contentType(contentType);
+		}
+		if (!ObjectUtils.isEmpty(metadata)) {
+			uploadBuilder.metadata(metadata);
+		}
+
+		return save(uploadBuilder.build());
+	}
+
+	/**
+	 * Stores the given {@link GridFsObject}, likely a {@link GridFsUpload}, into into a file with given
+	 * {@link GridFsObject#getFilename() name}. If the {@link GridFsObject#getFileId()} is set, the file will be stored
+	 * with that id, otherwise the server auto creates a new id. <br />
+	 * 
+	 * @param upload the {@link GridFsObject} (most likely a {@link GridFsUpload}) to be stored.
+	 * @param <T> id type of the underlying {@link com.mongodb.client.gridfs.model.GridFSFile}
+	 * @return the id of the stored file. Either an auto created value or {@link GridFsObject#getFileId()}, but never
+	 *         {@literal null}.
+	 * @since 3.0
+	 */
+	<T> T save(GridFsObject<T, InputStream> upload);
 
 	/**
 	 * Returns all files matching the given query. Note, that currently {@link Sort} criterias defined at the

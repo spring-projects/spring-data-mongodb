@@ -21,8 +21,6 @@ import static org.springframework.data.mongodb.gridfs.GridFsCriteria.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.nio.ByteBuffer;
-
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.reactivestreams.Publisher;
@@ -34,6 +32,7 @@ import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -120,20 +119,29 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.ReactiveGridFsOperations#store(org.reactivestreams.Publisher, java.lang.String, java.lang.String, org.bson.Document)
+	 * @see org.springframework.data.mongodb.gridfs.ReactiveGridFsOperations#save(org.springframework.data.mongodb.gridfs.GridFsObject)
 	 */
-	@Override
-	public Mono<ObjectId> store(Publisher<DataBuffer> content, @Nullable String filename, @Nullable String contentType,
-			@Nullable Document metadata) {
+	public <T> Mono<T> save(GridFsObject<T, Publisher<DataBuffer>> upload) {
 
-		Assert.notNull(content, "Content must not be null!");
+		GridFSUploadOptions uploadOptions = computeUploadOptionsFor(upload.getOptions().getContentType(),
+				upload.getOptions().getMetadata());
 
-		GridFSUploadOptions uploadOptions = new GridFSUploadOptions();
-		uploadOptions.metadata(metadata);
+		if (upload.getOptions().getChunkSize() > 0) {
+			uploadOptions.chunkSizeBytes(upload.getOptions().getChunkSize());
+		}
 
-		GridFSUploadPublisher<ObjectId> publisher = getGridFs().uploadFromPublisher(filename,
-				Flux.from(content).map(DataBuffer::asByteBuffer), uploadOptions);
-		return Mono.from(publisher);
+		if (upload.getFileId() == null) {
+			GridFSUploadPublisher<ObjectId> publisher = getGridFs().uploadFromPublisher(upload.getFilename(),
+					Flux.from(upload.getContent()).map(DataBuffer::asByteBuffer), uploadOptions);
+
+			return (Mono<T>) Mono.from(publisher);
+		}
+
+		GridFSUploadPublisher<Void> publisher = getGridFs().uploadFromPublisher(
+				BsonUtils.simpleToBsonValue(upload.getFileId()), upload.getFilename(),
+				Flux.from(upload.getContent()).map(DataBuffer::asByteBuffer), uploadOptions);
+
+		return Mono.from(publisher).then(Mono.just(upload.getFileId()));
 	}
 
 	/*
@@ -209,7 +217,7 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 		Assert.notNull(file, "GridFSFile must not be null!");
 
 		return Mono.fromSupplier(() -> {
-			return new ReactiveGridFsResource(file.getFilename(), getGridFs().downloadToPublisher(file.getId()), dataBufferFactory);
+			return new ReactiveGridFsResource(file, getGridFs().downloadToPublisher(file.getId()), dataBufferFactory);
 		});
 	}
 

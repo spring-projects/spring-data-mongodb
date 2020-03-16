@@ -21,12 +21,14 @@ import reactor.core.publisher.Mono;
 import java.io.InputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.bson.BsonValue;
 import org.reactivestreams.Publisher;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -41,10 +43,12 @@ import com.mongodb.reactivestreams.client.gridfs.GridFSDownloadPublisher;
  * @author Christoph Strobl
  * @since 2.2
  */
-public class ReactiveGridFsResource {
+public class ReactiveGridFsResource implements GridFsObject<Object, Publisher<DataBuffer>> {
 
 	private final AtomicBoolean consumed = new AtomicBoolean(false);
 
+	private final @Nullable Object id;
+	private final Options options;
 	private final String filename;
 	private final @Nullable GridFSDownloadPublisher downloadPublisher;
 	private final DataBufferFactory dataBufferFactory;
@@ -56,21 +60,43 @@ public class ReactiveGridFsResource {
 	 * @param downloadPublisher
 	 */
 	public ReactiveGridFsResource(String filename, @Nullable GridFSDownloadPublisher downloadPublisher) {
-		this(filename, downloadPublisher, new DefaultDataBufferFactory());
+		this(null, filename, Options.none(), downloadPublisher);
 	}
 
 	/**
 	 * Creates a new, absent {@link ReactiveGridFsResource}.
 	 *
+	 * @param id
 	 * @param filename filename of the absent resource.
+	 * @param options
+	 * @param downloadPublisher
+	 * @since 3.0
+	 */
+	public ReactiveGridFsResource(@Nullable Object id, String filename, Options options,
+			@Nullable GridFSDownloadPublisher downloadPublisher) {
+		this(id, filename, options, downloadPublisher, new DefaultDataBufferFactory());
+	}
+
+	ReactiveGridFsResource(GridFSFile file, @Nullable GridFSDownloadPublisher downloadPublisher, DataBufferFactory dataBufferFactory) {
+		this(file.getId(), file.getFilename(), Options.from(file), downloadPublisher, dataBufferFactory);
+	}
+
+	/**
+	 * Creates a new, absent {@link ReactiveGridFsResource}.
+	 *
+	 * @param id
+	 * @param filename filename of the absent resource.
+	 * @param options
 	 * @param downloadPublisher
 	 * @param dataBufferFactory
 	 * @since 3.0
 	 */
-	ReactiveGridFsResource(String filename, @Nullable GridFSDownloadPublisher downloadPublisher,
-			DataBufferFactory dataBufferFactory) {
+	ReactiveGridFsResource(@Nullable Object id, String filename, Options options,
+			@Nullable GridFSDownloadPublisher downloadPublisher, DataBufferFactory dataBufferFactory) {
 
+		this.id = id;
 		this.filename = filename;
+		this.options = options;
 		this.downloadPublisher = downloadPublisher;
 		this.dataBufferFactory = dataBufferFactory;
 	}
@@ -86,6 +112,15 @@ public class ReactiveGridFsResource {
 
 		Assert.notNull(filename, "Filename must not be null");
 		return new ReactiveGridFsResource(filename, null);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.gridfs.GridFsObject#getFileId()
+	 */
+	@Override
+	public Object getFileId() {
+		return id instanceof BsonValue ? BsonUtils.toJavaType((BsonValue) id) : id;
 	}
 
 	/**
@@ -138,6 +173,24 @@ public class ReactiveGridFsResource {
 		}
 
 		return createDownloadStream(downloadPublisher);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.gridfs.GridFsObject#getContent()
+	 */
+	@Override
+	public Flux<DataBuffer> getContent() {
+		return getDownloadStream();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.gridfs.GridFsObject#getOptions()
+	 */
+	@Override
+	public Options getOptions() {
+		return options;
 	}
 
 	/**

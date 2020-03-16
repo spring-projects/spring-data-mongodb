@@ -24,7 +24,10 @@ import org.reactivestreams.Publisher;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.gridfs.ReactiveGridFsUpload.ReactiveGridFsUploadBuilder;
 import org.springframework.lang.Nullable;
+import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
 
@@ -137,8 +140,36 @@ public interface ReactiveGridFsOperations {
 	 * @return a {@link Mono} emitting the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just
 	 *         created.
 	 */
-	Mono<ObjectId> store(Publisher<DataBuffer> content, @Nullable String filename, @Nullable String contentType,
-			@Nullable Document metadata);
+	default Mono<ObjectId> store(Publisher<DataBuffer> content, @Nullable String filename, @Nullable String contentType,
+			@Nullable Document metadata) {
+
+		ReactiveGridFsUploadBuilder<ObjectId> uploadBuilder = ReactiveGridFsUpload.fromPublisher(content);
+
+		if (StringUtils.hasText(filename)) {
+			uploadBuilder.filename(filename);
+		}
+		if (StringUtils.hasText(contentType)) {
+			uploadBuilder.contentType(contentType);
+		}
+		if (!ObjectUtils.isEmpty(metadata)) {
+			uploadBuilder.metadata(metadata);
+		}
+
+		return save(uploadBuilder.build());
+	}
+
+	/**
+	 * Stores the given {@link GridFsObject}, likely a {@link GridFsUpload}, into into a file with given
+	 * {@link GridFsObject#getFilename() name}. If the {@link GridFsObject#getFileId()} is set, the file will be stored
+	 * with that id, otherwise the server auto creates a new id. <br />
+	 *
+	 * @param upload the {@link GridFsObject} (most likely a {@link GridFsUpload}) to be stored.
+	 * @param <T> id type of the underlying {@link com.mongodb.client.gridfs.model.GridFSFile}
+	 * @return {@link Mono} emitting the id of the stored file which is either an auto created value or
+	 *         {@link GridFsObject#getFileId()}.
+	 * @since 3.0
+	 */
+	<T> Mono<T> save(GridFsObject<T, Publisher<DataBuffer>> upload);
 
 	/**
 	 * Returns a {@link Flux} emitting all files matching the given query. <br />

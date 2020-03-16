@@ -29,12 +29,12 @@ import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 
 import org.bson.BsonObjectId;
+import org.bson.BsonString;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
@@ -263,6 +263,41 @@ public class ReactiveGridFsTemplateTests {
 					assertThat(actual).isEqualTo(content);
 				}) //
 				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-625
+	public void storeSavesGridFsUploadWithGivenIdCorrectly() throws IOException {
+
+		String id = "id-1";
+		byte[] content = StreamUtils.copyToByteArray(resource.getInputStream());
+		Flux<DataBuffer> data = DataBufferUtils.read(resource, new DefaultDataBufferFactory(), 256);
+
+		ReactiveGridFsUpload<String> upload = ReactiveGridFsUpload.fromPublisher(data) //
+				.id(id) //
+				.filename("gridFsUpload.xml") //
+				.contentType("xml") //
+				.build();
+
+		operations.save(upload).as(StepVerifier::create).expectNext(id).verifyComplete();
+
+		operations.findOne(query(where("_id").is(id))).flatMap(operations::getResource)
+				.flatMapMany(ReactiveGridFsResource::getDownloadStream) //
+				.transform(DataBufferUtils::join) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(dataBuffer -> {
+
+					byte[] actual = new byte[dataBuffer.readableByteCount()];
+					dataBuffer.read(actual);
+
+					assertThat(actual).isEqualTo(content);
+				}) //
+				.verifyComplete();
+
+		operations.findOne(query(where("_id").is(id))).as(StepVerifier::create).consumeNextWith(it -> {
+			assertThat(it.getFilename()).isEqualTo("gridFsUpload.xml");
+			assertThat(it.getId()).isEqualTo(new BsonString(id));
+			assertThat(it.getMetadata()).containsValue("xml");
+		}).verifyComplete();
 	}
 
 	@Test // DATAMONGO-765
