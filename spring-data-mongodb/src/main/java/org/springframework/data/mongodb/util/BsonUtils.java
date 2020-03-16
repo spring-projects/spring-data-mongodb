@@ -23,15 +23,24 @@ import java.util.StringJoiner;
 import java.util.function.Function;
 import java.util.stream.StreamSupport;
 
+import org.bson.BsonBinary;
+import org.bson.BsonBoolean;
+import org.bson.BsonDouble;
+import org.bson.BsonInt32;
+import org.bson.BsonInt64;
+import org.bson.BsonObjectId;
+import org.bson.BsonString;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.codecs.DocumentCodec;
 import org.bson.conversions.Bson;
 import org.bson.json.JsonParseException;
+import org.bson.types.ObjectId;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
@@ -118,6 +127,60 @@ public class BsonUtils {
 			default:
 				return value;
 		}
+	}
+
+	/**
+	 * Convert a given simple value (eg. {@link String}, {@link Long}) to its corresponding {@link BsonValue}.
+	 *
+	 * @param source must not be {@literal null}.
+	 * @return the corresponding {@link BsonValue} representation.
+	 * @throws IllegalArgumentException if {@literal source} does not correspond to a {@link BsonValue} type.
+	 * @since 3.0
+	 */
+	public static BsonValue simpleToBsonValue(Object source) {
+
+		if (source instanceof BsonValue) {
+			return (BsonValue) source;
+		}
+
+		if (source instanceof ObjectId) {
+			return new BsonObjectId((ObjectId) source);
+		}
+
+		if (source instanceof String) {
+			return new BsonString((String) source);
+		}
+
+		if (source instanceof Double) {
+			return new BsonDouble((Double) source);
+		}
+
+		if (source instanceof Integer) {
+			return new BsonInt32((Integer) source);
+		}
+
+		if (source instanceof Long) {
+			return new BsonInt64((Long) source);
+		}
+
+		if (source instanceof byte[]) {
+			return new BsonBinary((byte[]) source);
+		}
+
+		if (source instanceof Boolean) {
+			return new BsonBoolean((Boolean) source);
+		}
+
+		if(source instanceof Float) {
+			return new BsonDouble((Float) source);
+		}
+
+		if (source instanceof Double) {
+			return new BsonDouble((Double) source);
+		}
+
+		throw new IllegalArgumentException(
+				String.format("Unable to convert % (%s) to BsonValue.", source, source != null ? source.getClass() : "null"));
 	}
 
 	/**

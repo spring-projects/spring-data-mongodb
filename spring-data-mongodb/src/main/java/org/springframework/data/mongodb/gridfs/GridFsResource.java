@@ -23,6 +23,7 @@ import java.util.Optional;
 
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -37,7 +38,7 @@ import com.mongodb.client.gridfs.model.GridFSFile;
  * @author Hartmut Lang
  * @author Mark Paluch
  */
-public class GridFsResource extends InputStreamResource {
+public class GridFsResource extends InputStreamResource implements GridFsObject<Object, InputStream> {
 
 	static final String CONTENT_TYPE_FIELD = "_contentType";
 	private static final ByteArrayInputStream EMPTY_INPUT_STREAM = new ByteArrayInputStream(new byte[0]);
@@ -169,6 +170,17 @@ public class GridFsResource extends InputStreamResource {
 		return getGridFSFile().getId();
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.gridfs.GridFsObject#getFileId()
+	 */
+	@Override
+	public Object getFileId() {
+
+		Assert.state(exists(), () -> String.format("%s does not exist.", getDescription()));
+		return BsonUtils.toJavaType(getGridFSFile().getId());
+	}
+
 	/**
 	 * @return the underlying {@link GridFSFile}. Can be {@literal null} if absent.
 	 * @since 2.2
@@ -193,6 +205,29 @@ public class GridFsResource extends InputStreamResource {
 
 		return Optional.ofNullable(getGridFSFile().getMetadata()).map(it -> it.get(CONTENT_TYPE_FIELD, String.class))
 				.orElseThrow(() -> new MongoGridFSException("No contentType data for this GridFS file"));
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.gridfs.GridFsObject#getContent()
+	 */
+	@Override
+	public InputStream getContent() {
+
+		try {
+			return getInputStream();
+		} catch (IOException e) {
+			throw new IllegalStateException("Failed to obtain input stream for " + filename, e);
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.gridfs.GridFsObject#getOptions()
+	 */
+	@Override
+	public Options getOptions() {
+		return Options.from(getGridFSFile());
 	}
 
 	private void verifyExists() throws FileNotFoundException {

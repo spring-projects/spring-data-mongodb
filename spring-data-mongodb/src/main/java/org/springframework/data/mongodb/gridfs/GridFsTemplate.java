@@ -29,6 +29,7 @@ import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -38,6 +39,7 @@ import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.client.gridfs.GridFSFindIterable;
 import com.mongodb.client.gridfs.model.GridFSFile;
+import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 
 /**
  * {@link GridFsOperations} implementation to store content into MongoDB GridFS.
@@ -87,27 +89,10 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String)
-	 */
-	public ObjectId store(InputStream content, String filename) {
-		return store(content, filename, (Object) null);
-	}
-
-	/*
-	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.Object)
 	 */
 	@Override
 	public ObjectId store(InputStream content, @Nullable Object metadata) {
-		return store(content, null, metadata);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, com.mongodb.Document)
-	 */
-	@Override
-	public ObjectId store(InputStream content, @Nullable Document metadata) {
 		return store(content, null, metadata);
 	}
 
@@ -138,21 +123,24 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, com.mongodb.Document)
+	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#save(org.springframework.data.mongodb.gridfs.GridFsObject)
 	 */
-	public ObjectId store(InputStream content, @Nullable String filename, @Nullable Document metadata) {
-		return this.store(content, filename, null, metadata);
-	}
+	public <T> T save(GridFsObject<T, InputStream> upload) {
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, com.mongodb.Document)
-	 */
-	public ObjectId store(InputStream content, @Nullable String filename, @Nullable String contentType,
-			@Nullable Document metadata) {
+		GridFSUploadOptions uploadOptions = computeUploadOptionsFor(upload.getOptions().getContentType(),
+				upload.getOptions().getMetadata());
 
-		Assert.notNull(content, "InputStream must not be null!");
-		return getGridFs().uploadFromStream(filename, content, computeUploadOptionsFor(contentType, metadata));
+		if (upload.getOptions().getChunkSize() > 0) {
+			uploadOptions.chunkSizeBytes(upload.getOptions().getChunkSize());
+		}
+
+		if (upload.getFileId() == null) {
+			return (T) getGridFs().uploadFromStream(upload.getFilename(), upload.getContent(), uploadOptions);
+		}
+
+		getGridFs().uploadFromStream(BsonUtils.simpleToBsonValue(upload.getFileId()), upload.getFilename(),
+				upload.getContent(), uploadOptions);
+		return upload.getFileId();
 	}
 
 	/*

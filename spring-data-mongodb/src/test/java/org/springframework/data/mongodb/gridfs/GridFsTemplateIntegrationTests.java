@@ -30,6 +30,7 @@ import java.util.Map.Entry;
 import java.util.stream.Stream;
 
 import org.bson.BsonObjectId;
+import org.bson.BsonString;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.Before;
@@ -287,6 +288,29 @@ public class GridFsTemplateIntegrationTests {
 
 			assertThat(content).isEqualTo(StreamUtils.copyToByteArray(entry.getValue().getInputStream()));
 		}
+	}
+
+	@Test // DATAMONGO-625
+	public void storeSavesGridFsUploadWithGivenIdCorrectly() throws IOException {
+
+		String id = "id-1";
+
+		GridFsUpload<String> upload = GridFsUpload.fromStream(resource.getInputStream()) //
+				.id(id) //
+				.filename("gridFsUpload.xml") //
+				.contentType("xml") //
+				.build();
+
+		assertThat(operations.save(upload)).isEqualTo(id);
+
+		GridFsResource fsFile = operations.getResource(operations.findOne(query(where("_id").is(id))));
+		byte[] content = StreamUtils.copyToByteArray(fsFile.getInputStream());
+
+		assertThat(content).isEqualTo(StreamUtils.copyToByteArray(resource.getInputStream()));
+		assertThat(fsFile.getFilename()).isEqualTo("gridFsUpload.xml");
+		assertThat(fsFile.getId()).isEqualTo(new BsonString(id));
+		assertThat(fsFile.getFileId()).isEqualTo(id);
+		assertThat(fsFile.getContentType()).isEqualTo("xml");
 	}
 
 	@Test // DATAMONGO-765
