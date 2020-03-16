@@ -18,14 +18,13 @@ package org.springframework.data.mongodb.core.mapping.event;
 import org.reactivestreams.Publisher;
 
 import org.springframework.data.mapping.callback.EntityCallback;
-import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
 
 /**
  * Callback being invoked before a domain object is converted to be persisted.
  *
  * @author Mark Paluch
  * @since 2.2
- * @see ReactiveEntityCallbacks
+ * @see org.springframework.data.mapping.callback.ReactiveEntityCallbacks
  */
 @FunctionalInterface
 public interface ReactiveBeforeConvertCallback<T> extends EntityCallback<T> {

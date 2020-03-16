@@ -19,14 +19,13 @@ import org.bson.Document;
 import org.reactivestreams.Publisher;
 
 import org.springframework.data.mapping.callback.EntityCallback;
-import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
 
 /**
  * Entity callback triggered before save of a document.
  *
  * @author Mark Paluch
  * @since 2.2
- * @see ReactiveEntityCallbacks
+ * @see org.springframework.data.mapping.callback.ReactiveEntityCallbacks
  */
 @FunctionalInterface
 public interface ReactiveBeforeSaveCallback<T> extends EntityCallback<T> {

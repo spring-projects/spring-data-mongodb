@@ -19,7 +19,9 @@ import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigInteger;
 import java.time.Duration;
@@ -39,7 +41,6 @@ import org.assertj.core.api.Assertions;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -103,7 +104,6 @@ import org.springframework.lang.Nullable;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.CollectionUtils;
 
-import com.google.common.collect.ImmutableMap;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoException;
 import com.mongodb.MongoNamespace;
@@ -143,7 +143,7 @@ import com.mongodb.client.result.UpdateResult;
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
-	MongoTemplate template;
+	private MongoTemplate template;
 
 	@Mock MongoDatabaseFactory factory;
 	@Mock MongoClient mongo;
@@ -158,14 +158,14 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Mock UpdateResult updateResult;
 	@Mock DeleteResult deleteResult;
 
-	Document commandResultDocument = new Document();
+	private Document commandResultDocument = new Document();
 
-	MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
-	MappingMongoConverter converter;
-	MongoMappingContext mappingContext;
+	private MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
+	private MappingMongoConverter converter;
+	private MongoMappingContext mappingContext;
 
 	@BeforeEach
-	public void beforeEach() {
+	void beforeEach() {
 
 		when(findIterable.iterator()).thenReturn(cursor);
 		when(factory.getMongoDatabase()).thenReturn(db);
@@ -214,23 +214,23 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test
-	public void rejectsNullDatabaseName() {
+	void rejectsNullDatabaseName() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new MongoTemplate(mongo, null));
 	}
 
 	@Test // DATAMONGO-1968
-	public void rejectsNullMongo() {
+	void rejectsNullMongo() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new MongoTemplate((MongoClient) null, "database"));
 	}
 
 	@Test // DATAMONGO-1968
-	public void rejectsNullMongoClient() {
+	void rejectsNullMongoClient() {
 		assertThatIllegalArgumentException()
 				.isThrownBy(() -> new MongoTemplate((com.mongodb.client.MongoClient) null, "database"));
 	}
 
 	@Test // DATAMONGO-1870
-	public void removeHandlesMongoExceptionProperly() {
+	void removeHandlesMongoExceptionProperly() {
 
 		MongoTemplate template = mockOutGetDb();
 
@@ -238,13 +238,13 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test
-	public void defaultsConverterToMappingMongoConverter() {
+	void defaultsConverterToMappingMongoConverter() {
 		MongoTemplate template = new MongoTemplate(mongo, "database");
 		assertThat(ReflectionTestUtils.getField(template, "mongoConverter") instanceof MappingMongoConverter).isTrue();
 	}
 
 	@Test
-	public void rejectsNotFoundMapReduceResource() {
+	void rejectsNotFoundMapReduceResource() {
 
 		GenericApplicationContext ctx = new GenericApplicationContext();
 		ctx.refresh();
@@ -255,14 +255,14 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-322
-	public void rejectsEntityWithNullIdIfNotSupportedIdType() {
+	void rejectsEntityWithNullIdIfNotSupportedIdType() {
 
 		Object entity = new NotAutogenerateableId();
 		assertThatExceptionOfType(InvalidDataAccessApiUsageException.class).isThrownBy(() -> template.save(entity));
 	}
 
 	@Test // DATAMONGO-322
-	public void storesEntityWithSetIdAlthoughNotAutogenerateable() {
+	void storesEntityWithSetIdAlthoughNotAutogenerateable() {
 
 		NotAutogenerateableId entity = new NotAutogenerateableId();
 		entity.id = 1;
@@ -271,7 +271,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-322
-	public void autogeneratesIdForEntityWithAutogeneratableId() {
+	void autogeneratesIdForEntityWithAutogeneratableId() {
 
 		this.converter.afterPropertiesSet();
 
@@ -285,7 +285,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1912
-	public void autogeneratesIdForMap() {
+	void autogeneratesIdForMap() {
 
 		MongoTemplate template = spy(this.template);
 		doReturn(new ObjectId()).when(template).saveDocument(any(String.class), any(Document.class), any(Class.class));
@@ -297,7 +297,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-374
-	public void convertsUpdateConstraintsUsingConverters() {
+	void convertsUpdateConstraintsUsingConverters() {
 
 		CustomConversions conversions = new MongoCustomConversions(Collections.singletonList(MyConverter.INSTANCE));
 		this.converter.setCustomConversions(conversions);
@@ -315,7 +315,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-474
-	public void setsUnpopulatedIdField() {
+	void setsUnpopulatedIdField() {
 
 		NotAutogenerateableId entity = new NotAutogenerateableId();
 
@@ -324,7 +324,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-474
-	public void doesNotSetAlreadyPopulatedId() {
+	void doesNotSetAlreadyPopulatedId() {
 
 		NotAutogenerateableId entity = new NotAutogenerateableId();
 		entity.id = 5;
@@ -334,7 +334,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-868
-	public void findAndModifyShouldBumpVersionByOneWhenVersionFieldNotIncludedInUpdate() {
+	void findAndModifyShouldBumpVersionByOneWhenVersionFieldNotIncludedInUpdate() {
 
 		VersionedEntity v = new VersionedEntity();
 		v.id = 1;
@@ -350,7 +350,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-868
-	public void findAndModifyShouldNotBumpVersionByOneWhenVersionFieldAlreadyIncludedInUpdate() {
+	void findAndModifyShouldNotBumpVersionByOneWhenVersionFieldAlreadyIncludedInUpdate() {
 
 		VersionedEntity v = new VersionedEntity();
 		v.id = 1;
@@ -368,7 +368,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-533
-	public void registersDefaultEntityIndexCreatorIfApplicationContextHasOneForDifferentMappingContext() {
+	void registersDefaultEntityIndexCreatorIfApplicationContextHasOneForDifferentMappingContext() {
 
 		GenericApplicationContext applicationContext = new GenericApplicationContext();
 		applicationContext.getBeanFactory().registerSingleton("foo",
@@ -390,7 +390,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-566
-	public void findAllAndRemoveShouldRetrieveMatchingDocumentsPriorToRemoval() {
+	void findAllAndRemoveShouldRetrieveMatchingDocumentsPriorToRemoval() {
 
 		BasicQuery query = new BasicQuery("{'foo':'bar'}");
 		template.findAllAndRemove(query, VersionedEntity.class);
@@ -398,7 +398,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-566
-	public void findAllAndRemoveShouldRemoveDocumentsReturedByFindQuery() {
+	void findAllAndRemoveShouldRemoveDocumentsReturedByFindQuery() {
 
 		Mockito.when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
 		Mockito.when(cursor.next()).thenReturn(new org.bson.Document("_id", Integer.valueOf(0)))
@@ -415,14 +415,14 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-566
-	public void findAllAndRemoveShouldNotTriggerRemoveIfFindResultIsEmpty() {
+	void findAllAndRemoveShouldNotTriggerRemoveIfFindResultIsEmpty() {
 
 		template.findAllAndRemove(new BasicQuery("{'foo':'bar'}"), VersionedEntity.class);
 		verify(collection, never()).deleteMany(any(org.bson.Document.class));
 	}
 
 	@Test // DATAMONGO-948
-	public void sortShouldBeTakenAsIsWhenExecutingQueryWithoutSpecificTypeInformation() {
+	void sortShouldBeTakenAsIsWhenExecutingQueryWithoutSpecificTypeInformation() {
 
 		Query query = Query.query(Criteria.where("foo").is("bar")).with(Sort.by("foo"));
 		template.executeQuery(query, "collection1", new DocumentCallbackHandler() {
@@ -440,7 +440,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1166, DATAMONGO-1824
-	public void aggregateShouldHonorReadPreferenceWhenSet() {
+	void aggregateShouldHonorReadPreferenceWhenSet() {
 
 		template.setReadPreference(ReadPreference.secondary());
 
@@ -450,7 +450,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1166, DATAMONGO-1824
-	public void aggregateShouldIgnoreReadPreferenceWhenNotSet() {
+	void aggregateShouldIgnoreReadPreferenceWhenNotSet() {
 
 		template.aggregate(newAggregation(Aggregation.unwind("foo")), "collection-1", Wrapper.class);
 
@@ -458,7 +458,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2153
-	public void aggregateShouldHonorOptionsComment() {
+	void aggregateShouldHonorOptionsComment() {
 
 		AggregationOptions options = AggregationOptions.builder().comment("expensive").build();
 
@@ -468,7 +468,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1166, DATAMONGO-2264
-	public void geoNearShouldHonorReadPreferenceWhenSet() {
+	void geoNearShouldHonorReadPreferenceWhenSet() {
 
 		template.setReadPreference(ReadPreference.secondary());
 
@@ -479,7 +479,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1166, DATAMONGO-2264
-	public void geoNearShouldIgnoreReadPreferenceWhenNotSet() {
+	void geoNearShouldIgnoreReadPreferenceWhenNotSet() {
 
 		NearQuery query = NearQuery.near(new Point(1, 1));
 		template.geoNear(query, Wrapper.class);
@@ -489,7 +489,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 	@Test // DATAMONGO-1334
 	@Disabled("TODO: mongo3 - a bit hard to tests with the immutable object stuff")
-	public void mapReduceShouldUseZeroAsDefaultLimit() {
+	void mapReduceShouldUseZeroAsDefaultLimit() {
 
 		MongoCursor cursor = mock(MongoCursor.class);
 		MapReduceIterable output = mock(MapReduceIterable.class);
@@ -509,7 +509,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1334
-	public void mapReduceShouldPickUpLimitFromQuery() {
+	void mapReduceShouldPickUpLimitFromQuery() {
 
 		MongoCursor cursor = mock(MongoCursor.class);
 		MapReduceIterable output = mock(MapReduceIterable.class);
@@ -530,7 +530,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1334
-	public void mapReduceShouldPickUpLimitFromOptions() {
+	void mapReduceShouldPickUpLimitFromOptions() {
 
 		MongoCursor cursor = mock(MongoCursor.class);
 		MapReduceIterable output = mock(MapReduceIterable.class);
@@ -551,7 +551,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1334
-	public void mapReduceShouldPickUpLimitFromOptionsWhenQueryIsNotPresent() {
+	void mapReduceShouldPickUpLimitFromOptionsWhenQueryIsNotPresent() {
 
 		MongoCursor cursor = mock(MongoCursor.class);
 		MapReduceIterable output = mock(MapReduceIterable.class);
@@ -570,7 +570,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1334
-	public void mapReduceShouldPickUpLimitFromOptionsEvenWhenQueryDefinesItDifferently() {
+	void mapReduceShouldPickUpLimitFromOptionsEvenWhenQueryDefinesItDifferently() {
 
 		MongoCursor cursor = mock(MongoCursor.class);
 		MapReduceIterable output = mock(MapReduceIterable.class);
@@ -592,7 +592,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1639
-	public void beforeConvertEventForUpdateSeesNextVersion() {
+	void beforeConvertEventForUpdateSeesNextVersion() {
 
 		when(updateResult.getModifiedCount()).thenReturn(1L);
 
@@ -616,7 +616,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1447
-	public void shouldNotAppend$isolatedToNonMulitUpdate() {
+	void shouldNotAppend$isolatedToNonMulitUpdate() {
 
 		template.updateFirst(new Query(), new Update().isolated().set("jon", "snow"), Wrapper.class);
 
@@ -630,7 +630,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1447
-	public void shouldAppend$isolatedToUpdateMultiEmptyQuery() {
+	void shouldAppend$isolatedToUpdateMultiEmptyQuery() {
 
 		template.updateMulti(new Query(), new Update().isolated().set("jon", "snow"), Wrapper.class);
 
@@ -644,7 +644,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1447
-	public void shouldAppend$isolatedToUpdateMultiQueryIfNotPresentAndUpdateSetsValue() {
+	void shouldAppend$isolatedToUpdateMultiQueryIfNotPresentAndUpdateSetsValue() {
 
 		Update update = new Update().isolated().set("jon", "snow");
 		Query query = new BasicQuery("{'eddard':'stark'}");
@@ -661,7 +661,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1447
-	public void shouldNotAppend$isolatedToUpdateMultiQueryIfNotPresentAndUpdateDoesNotSetValue() {
+	void shouldNotAppend$isolatedToUpdateMultiQueryIfNotPresentAndUpdateDoesNotSetValue() {
 
 		Update update = new Update().set("jon", "snow");
 		Query query = new BasicQuery("{'eddard':'stark'}");
@@ -678,7 +678,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1447
-	public void shouldNotOverwrite$isolatedToUpdateMultiQueryIfPresentAndUpdateDoesNotSetValue() {
+	void shouldNotOverwrite$isolatedToUpdateMultiQueryIfPresentAndUpdateDoesNotSetValue() {
 
 		Update update = new Update().set("jon", "snow");
 		Query query = new BasicQuery("{'eddard':'stark', '$isolated' : 1}");
@@ -695,7 +695,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1447
-	public void shouldNotOverwrite$isolatedToUpdateMultiQueryIfPresentAndUpdateSetsValue() {
+	void shouldNotOverwrite$isolatedToUpdateMultiQueryIfPresentAndUpdateSetsValue() {
 
 		Update update = new Update().isolated().set("jon", "snow");
 		Query query = new BasicQuery("{'eddard':'stark', '$isolated' : 0}");
@@ -712,7 +712,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1311
-	public void executeQueryShouldUseBatchSizeWhenPresent() {
+	void executeQueryShouldUseBatchSizeWhenPresent() {
 
 		when(findIterable.batchSize(anyInt())).thenReturn(findIterable);
 
@@ -723,7 +723,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1518
-	public void executeQueryShouldUseCollationWhenPresent() {
+	void executeQueryShouldUseCollationWhenPresent() {
 
 		template.executeQuery(new BasicQuery("{}").collation(Collation.of("fr")), "collection-1", val -> {});
 
@@ -731,7 +731,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1518
-	public void streamQueryShouldUseCollationWhenPresent() {
+	void streamQueryShouldUseCollationWhenPresent() {
 
 		template.stream(new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class).next();
 
@@ -739,7 +739,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1518
-	public void findShouldUseCollationWhenPresent() {
+	void findShouldUseCollationWhenPresent() {
 
 		template.find(new BasicQuery("{'foo' : 'bar'}").collation(Collation.of("fr")), AutogenerateableId.class);
 
@@ -747,7 +747,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1518
-	public void findOneShouldUseCollationWhenPresent() {
+	void findOneShouldUseCollationWhenPresent() {
 
 		template.findOne(new BasicQuery("{'foo' : 'bar'}").collation(Collation.of("fr")), AutogenerateableId.class);
 
@@ -755,7 +755,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1518
-	public void existsShouldUseCollationWhenPresent() {
+	void existsShouldUseCollationWhenPresent() {
 
 		template.exists(new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class);
 
@@ -767,7 +767,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1518
-	public void findAndModfiyShoudUseCollationWhenPresent() {
+	void findAndModfiyShoudUseCollationWhenPresent() {
 
 		template.findAndModify(new BasicQuery("{}").collation(Collation.of("fr")), new Update(), AutogenerateableId.class);
 
@@ -778,7 +778,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1518
-	public void findAndRemoveShouldUseCollationWhenPresent() {
+	void findAndRemoveShouldUseCollationWhenPresent() {
 
 		template.findAndRemove(new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class);
 
@@ -789,7 +789,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2196
-	public void removeShouldApplyWriteConcern() {
+	void removeShouldApplyWriteConcern() {
 
 		Person person = new Person();
 		person.id = "id-1";
@@ -802,7 +802,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1518
-	public void findAndRemoveManyShouldUseCollationWhenPresent() {
+	void findAndRemoveManyShouldUseCollationWhenPresent() {
 
 		template.doRemove("collection-1", new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class,
 				true);
@@ -814,7 +814,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1518
-	public void updateOneShouldUseCollationWhenPresent() {
+	void updateOneShouldUseCollationWhenPresent() {
 
 		template.updateFirst(new BasicQuery("{}").collation(Collation.of("fr")), new Update().set("foo", "bar"),
 				AutogenerateableId.class);
@@ -826,7 +826,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1518
-	public void updateManyShouldUseCollationWhenPresent() {
+	void updateManyShouldUseCollationWhenPresent() {
 
 		template.updateMulti(new BasicQuery("{}").collation(Collation.of("fr")), new Update().set("foo", "bar"),
 				AutogenerateableId.class);
@@ -838,7 +838,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1518
-	public void replaceOneShouldUseCollationWhenPresent() {
+	void replaceOneShouldUseCollationWhenPresent() {
 
 		template.updateFirst(new BasicQuery("{}").collation(Collation.of("fr")), new Update(), AutogenerateableId.class);
 
@@ -849,7 +849,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1518, DATAMONGO-1824
-	public void aggregateShouldUseCollationWhenPresent() {
+	void aggregateShouldUseCollationWhenPresent() {
 
 		Aggregation aggregation = newAggregation(project("id"))
 				.withOptions(newAggregationOptions().collation(Collation.of("fr")).build());
@@ -859,7 +859,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1824
-	public void aggregateShouldUseBatchSizeWhenPresent() {
+	void aggregateShouldUseBatchSizeWhenPresent() {
 
 		Aggregation aggregation = newAggregation(project("id"))
 				.withOptions(newAggregationOptions().collation(Collation.of("fr")).cursorBatchSize(100).build());
@@ -869,7 +869,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1518
-	public void mapReduceShouldUseCollationWhenPresent() {
+	void mapReduceShouldUseCollationWhenPresent() {
 
 		template.mapReduce("", "", "", MapReduceOptions.options().collation(Collation.of("fr")), AutogenerateableId.class);
 
@@ -877,7 +877,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2027
-	public void mapReduceShouldUseOutputCollectionWhenPresent() {
+	void mapReduceShouldUseOutputCollectionWhenPresent() {
 
 		template.mapReduce("", "", "", MapReduceOptions.options().outputCollection("out-collection"),
 				AutogenerateableId.class);
@@ -886,7 +886,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2027
-	public void mapReduceShouldNotUseOutputCollectionForInline() {
+	void mapReduceShouldNotUseOutputCollectionForInline() {
 
 		template.mapReduce("", "", "", MapReduceOptions.options().outputCollection("out-collection").outputTypeInline(),
 				AutogenerateableId.class);
@@ -895,7 +895,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2027
-	public void mapReduceShouldUseOutputActionWhenPresent() {
+	void mapReduceShouldUseOutputActionWhenPresent() {
 
 		template.mapReduce("", "", "", MapReduceOptions.options().outputCollection("out-collection").outputTypeMerge(),
 				AutogenerateableId.class);
@@ -904,7 +904,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2027
-	public void mapReduceShouldUseOutputDatabaseWhenPresent() {
+	void mapReduceShouldUseOutputDatabaseWhenPresent() {
 
 		template.mapReduce("", "", "",
 				MapReduceOptions.options().outputDatabase("out-database").outputCollection("out-collection").outputTypeMerge(),
@@ -914,7 +914,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2027
-	public void mapReduceShouldNotUseOutputDatabaseForInline() {
+	void mapReduceShouldNotUseOutputDatabaseForInline() {
 
 		template.mapReduce("", "", "", MapReduceOptions.options().outputDatabase("out-database").outputTypeInline(),
 				AutogenerateableId.class);
@@ -923,7 +923,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1518, DATAMONGO-2264
-	public void geoNearShouldUseCollationWhenPresent() {
+	void geoNearShouldUseCollationWhenPresent() {
 
 		NearQuery query = NearQuery.near(0D, 0D).query(new BasicQuery("{}").collation(Collation.of("fr")));
 		template.geoNear(query, AutogenerateableId.class);
@@ -932,7 +932,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1518
-	public void groupShouldUseCollationWhenPresent() {
+	void groupShouldUseCollationWhenPresent() {
 
 		commandResultDocument.append("retval", Collections.emptySet());
 		template.group("collection-1", GroupBy.key("id").reduceFunction("bar").collation(Collation.of("fr")),
@@ -946,7 +946,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1880
-	public void countShouldUseCollationWhenPresent() {
+	void countShouldUseCollationWhenPresent() {
 
 		template.count(new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class);
 
@@ -958,7 +958,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2360
-	public void countShouldApplyQueryHintIfPresent() {
+	void countShouldApplyQueryHintIfPresent() {
 
 		Document queryHint = new Document("age", 1);
 		template.count(new BasicQuery("{}").withHint(queryHint), AutogenerateableId.class);
@@ -970,7 +970,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2365
-	public void countShouldApplyQueryHintAsIndexNameIfPresent() {
+	void countShouldApplyQueryHintAsIndexNameIfPresent() {
 
 		template.count(new BasicQuery("{}").withHint("idx-1"), AutogenerateableId.class);
 
@@ -981,7 +981,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1733
-	public void appliesFieldsWhenInterfaceProjectionIsClosedAndQueryDoesNotDefineFields() {
+	void appliesFieldsWhenInterfaceProjectionIsClosedAndQueryDoesNotDefineFields() {
 
 		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonProjection.class,
 				CursorPreparer.NO_OP_PREPARER);
@@ -990,7 +990,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1733
-	public void doesNotApplyFieldsWhenInterfaceProjectionIsClosedAndQueryDefinesFields() {
+	void doesNotApplyFieldsWhenInterfaceProjectionIsClosedAndQueryDefinesFields() {
 
 		template.doFind("star-wars", new Document(), new Document("bar", 1), Person.class, PersonProjection.class,
 				CursorPreparer.NO_OP_PREPARER);
@@ -999,7 +999,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1733
-	public void doesNotApplyFieldsWhenInterfaceProjectionIsOpen() {
+	void doesNotApplyFieldsWhenInterfaceProjectionIsOpen() {
 
 		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonSpELProjection.class,
 				CursorPreparer.NO_OP_PREPARER);
@@ -1008,7 +1008,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1733, DATAMONGO-2041
-	public void appliesFieldsToDtoProjection() {
+	void appliesFieldsToDtoProjection() {
 
 		template.doFind("star-wars", new Document(), new Document(), Person.class, Jedi.class,
 				CursorPreparer.NO_OP_PREPARER);
@@ -1017,7 +1017,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1733
-	public void doesNotApplyFieldsToDtoProjectionWhenQueryDefinesFields() {
+	void doesNotApplyFieldsToDtoProjectionWhenQueryDefinesFields() {
 
 		template.doFind("star-wars", new Document(), new Document("bar", 1), Person.class, Jedi.class,
 				CursorPreparer.NO_OP_PREPARER);
@@ -1026,7 +1026,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1733
-	public void doesNotApplyFieldsWhenTargetIsNotAProjection() {
+	void doesNotApplyFieldsWhenTargetIsNotAProjection() {
 
 		template.doFind("star-wars", new Document(), new Document(), Person.class, Person.class,
 				CursorPreparer.NO_OP_PREPARER);
@@ -1035,7 +1035,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1733
-	public void doesNotApplyFieldsWhenTargetExtendsDomainType() {
+	void doesNotApplyFieldsWhenTargetExtendsDomainType() {
 
 		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonExtended.class,
 				CursorPreparer.NO_OP_PREPARER);
@@ -1044,7 +1044,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1348, DATAMONGO-2264
-	public void geoNearShouldMapQueryCorrectly() {
+	void geoNearShouldMapQueryCorrectly() {
 
 		NearQuery query = NearQuery.near(new Point(1, 1));
 		query.query(Query.query(Criteria.where("customName").is("rand al'thor")));
@@ -1061,7 +1061,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1348, DATAMONGO-2264
-	public void geoNearShouldMapGeoJsonPointCorrectly() {
+	void geoNearShouldMapGeoJsonPointCorrectly() {
 
 		NearQuery query = NearQuery.near(new GeoJsonPoint(1, 2));
 		query.query(Query.query(Criteria.where("customName").is("rand al'thor")));
@@ -1078,7 +1078,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2155
-	public void saveVersionedEntityShouldCallUpdateCorrectly() {
+	void saveVersionedEntityShouldCallUpdateCorrectly() {
 
 		when(updateResult.getModifiedCount()).thenReturn(1L);
 
@@ -1099,7 +1099,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1783
-	public void usesQueryOffsetForCountOperation() {
+	void usesQueryOffsetForCountOperation() {
 
 		template.count(new BasicQuery("{}").skip(100), AutogenerateableId.class);
 
@@ -1110,7 +1110,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1783
-	public void usesQueryLimitForCountOperation() {
+	void usesQueryLimitForCountOperation() {
 
 		template.count(new BasicQuery("{}").limit(10), AutogenerateableId.class);
 
@@ -1121,7 +1121,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2215
-	public void updateShouldApplyArrayFilters() {
+	void updateShouldApplyArrayFilters() {
 
 		template.updateFirst(new BasicQuery("{}"),
 				new Update().set("grades.$[element]", 100).filterArray(Criteria.where("element").gte(100)),
@@ -1135,7 +1135,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2215
-	public void findAndModifyShouldApplyArrayFilters() {
+	void findAndModifyShouldApplyArrayFilters() {
 
 		template.findAndModify(new BasicQuery("{}"),
 				new Update().set("grades.$[element]", 100).filterArray(Criteria.where("element").gte(100)),
@@ -1149,7 +1149,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void streamQueryShouldUseDefaultCollationWhenPresent() {
+	void streamQueryShouldUseDefaultCollationWhenPresent() {
 
 		template.stream(new BasicQuery("{}"), Sith.class).next();
 
@@ -1157,7 +1157,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void findShouldNotUseCollationWhenNoDefaultPresent() {
+	void findShouldNotUseCollationWhenNoDefaultPresent() {
 
 		template.find(new BasicQuery("{'foo' : 'bar'}"), Jedi.class);
 
@@ -1165,7 +1165,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void findShouldUseDefaultCollationWhenPresent() {
+	void findShouldUseDefaultCollationWhenPresent() {
 
 		template.find(new BasicQuery("{'foo' : 'bar'}"), Sith.class);
 
@@ -1173,7 +1173,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void findOneShouldUseDefaultCollationWhenPresent() {
+	void findOneShouldUseDefaultCollationWhenPresent() {
 
 		template.findOne(new BasicQuery("{'foo' : 'bar'}"), Sith.class);
 
@@ -1181,7 +1181,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void existsShouldUseDefaultCollationWhenPresent() {
+	void existsShouldUseDefaultCollationWhenPresent() {
 
 		template.exists(new BasicQuery("{}"), Sith.class);
 
@@ -1193,7 +1193,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void findAndModfiyShoudUseDefaultCollationWhenPresent() {
+	void findAndModfiyShoudUseDefaultCollationWhenPresent() {
 
 		template.findAndModify(new BasicQuery("{}"), new Update(), Sith.class);
 
@@ -1205,7 +1205,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void findAndRemoveShouldUseDefaultCollationWhenPresent() {
+	void findAndRemoveShouldUseDefaultCollationWhenPresent() {
 
 		template.findAndRemove(new BasicQuery("{}"), Sith.class);
 
@@ -1217,7 +1217,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void createCollectionShouldNotCollationIfNotPresent() {
+	void createCollectionShouldNotCollationIfNotPresent() {
 
 		template.createCollection(AutogenerateableId.class);
 
@@ -1228,7 +1228,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void createCollectionShouldApplyDefaultCollation() {
+	void createCollectionShouldApplyDefaultCollation() {
 
 		template.createCollection(Sith.class);
 
@@ -1240,7 +1240,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void createCollectionShouldFavorExplicitOptionsOverDefaultCollation() {
+	void createCollectionShouldFavorExplicitOptionsOverDefaultCollation() {
 
 		template.createCollection(Sith.class, CollectionOptions.just(Collation.of("en_US")));
 
@@ -1252,7 +1252,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void createCollectionShouldUseDefaultCollationIfCollectionOptionsAreNull() {
+	void createCollectionShouldUseDefaultCollationIfCollectionOptionsAreNull() {
 
 		template.createCollection(Sith.class, null);
 
@@ -1264,7 +1264,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void aggreateShouldUseDefaultCollationIfPresent() {
+	void aggreateShouldUseDefaultCollationIfPresent() {
 
 		template.aggregate(newAggregation(Sith.class, project("id")), AutogenerateableId.class, Document.class);
 
@@ -1272,7 +1272,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void aggreateShouldUseCollationFromOptionsEvenIfDefaultCollationIsPresent() {
+	void aggreateShouldUseCollationFromOptionsEvenIfDefaultCollationIsPresent() {
 
 		template.aggregateStream(newAggregation(Sith.class, project("id")).withOptions(
 				newAggregationOptions().collation(Collation.of("fr")).build()), AutogenerateableId.class, Document.class);
@@ -1281,7 +1281,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void aggreateStreamShouldUseDefaultCollationIfPresent() {
+	void aggreateStreamShouldUseDefaultCollationIfPresent() {
 
 		template.aggregate(newAggregation(Sith.class, project("id")), AutogenerateableId.class, Document.class);
 
@@ -1289,7 +1289,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void aggreateStreamShouldUseCollationFromOptionsEvenIfDefaultCollationIsPresent() {
+	void aggreateStreamShouldUseCollationFromOptionsEvenIfDefaultCollationIsPresent() {
 
 		template.aggregateStream(newAggregation(Sith.class, project("id")).withOptions(
 				newAggregationOptions().collation(Collation.of("fr")).build()), AutogenerateableId.class, Document.class);
@@ -1298,7 +1298,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2390
-	public void aggregateShouldNoApplyZeroOrNegativeMaxTime() {
+	void aggregateShouldNoApplyZeroOrNegativeMaxTime() {
 
 		template.aggregate(
 				newAggregation(Sith.class, project("id")).withOptions(newAggregationOptions().maxTime(Duration.ZERO).build()),
@@ -1310,7 +1310,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2390
-	public void aggregateShouldApplyMaxTimeIfSet() {
+	void aggregateShouldApplyMaxTimeIfSet() {
 
 		template.aggregate(newAggregation(Sith.class, project("id")).withOptions(
 				newAggregationOptions().maxTime(Duration.ofSeconds(10)).build()), AutogenerateableId.class, Document.class);
@@ -1319,7 +1319,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void findAndReplaceShouldUseCollationWhenPresent() {
+	void findAndReplaceShouldUseCollationWhenPresent() {
 
 		template.findAndReplace(new BasicQuery("{}").collation(Collation.of("fr")), new AutogenerateableId());
 
@@ -1330,7 +1330,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void findOneWithSortShouldUseCollationWhenPresent() {
+	void findOneWithSortShouldUseCollationWhenPresent() {
 
 		template.findOne(new BasicQuery("{}").collation(Collation.of("fr")).with(Sort.by("id")), Sith.class);
 
@@ -1338,7 +1338,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void findOneWithSortShouldUseDefaultCollationWhenPresent() {
+	void findOneWithSortShouldUseDefaultCollationWhenPresent() {
 
 		template.findOne(new BasicQuery("{}").with(Sort.by("id")), Sith.class);
 
@@ -1346,7 +1346,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void findAndReplaceShouldUseDefaultCollationWhenPresent() {
+	void findAndReplaceShouldUseDefaultCollationWhenPresent() {
 
 		template.findAndReplace(new BasicQuery("{}"), new Sith());
 
@@ -1357,7 +1357,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void findAndReplaceShouldUseCollationEvenIfDefaultCollationIsPresent() {
+	void findAndReplaceShouldUseCollationEvenIfDefaultCollationIsPresent() {
 
 		template.findAndReplace(new BasicQuery("{}").collation(Collation.of("fr")), new Sith());
 
@@ -1368,7 +1368,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void findDistinctShouldUseDefaultCollationWhenPresent() {
+	void findDistinctShouldUseDefaultCollationWhenPresent() {
 
 		template.findDistinct(new BasicQuery("{}"), "name", Sith.class, String.class);
 
@@ -1376,7 +1376,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void findDistinctPreferCollationFromQueryOverDefaultCollation() {
+	void findDistinctPreferCollationFromQueryOverDefaultCollation() {
 
 		template.findDistinct(new BasicQuery("{}").collation(Collation.of("fr")), "name", Sith.class, String.class);
 
@@ -1384,7 +1384,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void updateFirstShouldUseDefaultCollationWhenPresent() {
+	void updateFirstShouldUseDefaultCollationWhenPresent() {
 
 		template.updateFirst(new BasicQuery("{}"), Update.update("foo", "bar"), Sith.class);
 
@@ -1396,7 +1396,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void updateFirstShouldPreferExplicitCollationOverDefaultCollation() {
+	void updateFirstShouldPreferExplicitCollationOverDefaultCollation() {
 
 		template.updateFirst(new BasicQuery("{}").collation(Collation.of("fr")), Update.update("foo", "bar"), Sith.class);
 
@@ -1408,7 +1408,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void updateMultiShouldUseDefaultCollationWhenPresent() {
+	void updateMultiShouldUseDefaultCollationWhenPresent() {
 
 		template.updateMulti(new BasicQuery("{}"), Update.update("foo", "bar"), Sith.class);
 
@@ -1420,7 +1420,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void updateMultiShouldPreferExplicitCollationOverDefaultCollation() {
+	void updateMultiShouldPreferExplicitCollationOverDefaultCollation() {
 
 		template.updateMulti(new BasicQuery("{}").collation(Collation.of("fr")), Update.update("foo", "bar"), Sith.class);
 
@@ -1432,7 +1432,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void removeShouldUseDefaultCollationWhenPresent() {
+	void removeShouldUseDefaultCollationWhenPresent() {
 
 		template.remove(new BasicQuery("{}"), Sith.class);
 
@@ -1444,7 +1444,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void removeShouldPreferExplicitCollationOverDefaultCollation() {
+	void removeShouldPreferExplicitCollationOverDefaultCollation() {
 
 		template.remove(new BasicQuery("{}").collation(Collation.of("fr")), Sith.class);
 
@@ -1456,7 +1456,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void mapReduceShouldUseDefaultCollationWhenPresent() {
+	void mapReduceShouldUseDefaultCollationWhenPresent() {
 
 		template.mapReduce("", "", "", MapReduceOptions.options(), Sith.class);
 
@@ -1464,7 +1464,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void mapReduceShouldPreferExplicitCollationOverDefaultCollation() {
+	void mapReduceShouldPreferExplicitCollationOverDefaultCollation() {
 
 		template.mapReduce("", "", "", MapReduceOptions.options().collation(Collation.of("fr")), Sith.class);
 
@@ -1472,7 +1472,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2261
-	public void saveShouldInvokeCallbacks() {
+	void saveShouldInvokeCallbacks() {
 
 		ValueCapturingBeforeConvertCallback beforeConvertCallback = spy(new ValueCapturingBeforeConvertCallback());
 		ValueCapturingBeforeSaveCallback beforeSaveCallback = spy(new ValueCapturingBeforeSaveCallback());
@@ -1490,7 +1490,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2261
-	public void insertShouldInvokeCallbacks() {
+	void insertShouldInvokeCallbacks() {
 
 		ValueCapturingBeforeConvertCallback beforeConvertCallback = spy(new ValueCapturingBeforeConvertCallback());
 		ValueCapturingBeforeSaveCallback beforeSaveCallback = spy(new ValueCapturingBeforeSaveCallback());
@@ -1508,7 +1508,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2261
-	public void insertAllShouldInvokeCallbacks() {
+	void insertAllShouldInvokeCallbacks() {
 
 		ValueCapturingBeforeConvertCallback beforeConvertCallback = spy(new ValueCapturingBeforeConvertCallback());
 		ValueCapturingBeforeSaveCallback beforeSaveCallback = spy(new ValueCapturingBeforeSaveCallback());
@@ -1530,7 +1530,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2261
-	public void findAndReplaceShouldInvokeCallbacks() {
+	void findAndReplaceShouldInvokeCallbacks() {
 
 		ValueCapturingBeforeConvertCallback beforeConvertCallback = spy(new ValueCapturingBeforeConvertCallback());
 		ValueCapturingBeforeSaveCallback beforeSaveCallback = spy(new ValueCapturingBeforeSaveCallback());
@@ -1548,7 +1548,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2261
-	public void publishesEventsAndEntityCallbacksInOrder() {
+	void publishesEventsAndEntityCallbacksInOrder() {
 
 		BeforeConvertCallback<Person> beforeConvertCallback = new BeforeConvertCallback<Person>() {
 
@@ -1607,7 +1607,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2261
-	public void beforeSaveCallbackAllowsTargetDocumentModifications() {
+	void beforeSaveCallbackAllowsTargetDocumentModifications() {
 
 		BeforeSaveCallback<Person> beforeSaveCallback = new BeforeSaveCallback<Person>() {
 
@@ -1638,7 +1638,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2307
-	public void beforeSaveCallbackAllowsTargetEntityModificationsUsingSave() {
+	void beforeSaveCallbackAllowsTargetEntityModificationsUsingSave() {
 
 		StaticApplicationContext ctx = new StaticApplicationContext();
 		ctx.registerBean(BeforeSaveCallback.class, this::beforeSaveCallbackReturningNewPersonWithTransientAttribute);
@@ -1656,7 +1656,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2307
-	public void beforeSaveCallbackAllowsTargetEntityModificationsUsingInsert() {
+	void beforeSaveCallbackAllowsTargetEntityModificationsUsingInsert() {
 
 		StaticApplicationContext ctx = new StaticApplicationContext();
 		ctx.registerBean(BeforeSaveCallback.class, this::beforeSaveCallbackReturningNewPersonWithTransientAttribute);
@@ -1676,12 +1676,12 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	// TODO: additional tests for what is when saved.
 
 	@Test // DATAMONGO-2261
-	public void entityCallbacksAreNotSetByDefault() {
+	void entityCallbacksAreNotSetByDefault() {
 		Assertions.assertThat(ReflectionTestUtils.getField(template, "entityCallbacks")).isNull();
 	}
 
 	@Test // DATAMONGO-2261
-	public void entityCallbacksShouldBeInitiatedOnSettingApplicationContext() {
+	void entityCallbacksShouldBeInitiatedOnSettingApplicationContext() {
 
 		ApplicationContext ctx = new StaticApplicationContext();
 		template.setApplicationContext(ctx);
@@ -1690,7 +1690,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2261
-	public void setterForEntityCallbackOverridesContextInitializedOnes() {
+	void setterForEntityCallbackOverridesContextInitializedOnes() {
 
 		ApplicationContext ctx = new StaticApplicationContext();
 		template.setApplicationContext(ctx);
@@ -1702,7 +1702,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2261
-	public void setterForApplicationContextShouldNotOverrideAlreadySetEntityCallbacks() {
+	void setterForApplicationContextShouldNotOverrideAlreadySetEntityCallbacks() {
 
 		EntityCallbacks callbacks = EntityCallbacks.create();
 		ApplicationContext ctx = new StaticApplicationContext();
@@ -1714,7 +1714,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2344
-	public void slaveOkQueryOptionShouldApplyPrimaryPreferredReadPreferenceForFind() {
+	void slaveOkQueryOptionShouldApplyPrimaryPreferredReadPreferenceForFind() {
 
 		template.find(new Query().slaveOk(), AutogenerateableId.class);
 
@@ -1722,7 +1722,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2344
-	public void slaveOkQueryOptionShouldApplyPrimaryPreferredReadPreferenceForFindOne() {
+	void slaveOkQueryOptionShouldApplyPrimaryPreferredReadPreferenceForFindOne() {
 
 		template.findOne(new Query().slaveOk(), AutogenerateableId.class);
 
@@ -1730,7 +1730,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2344
-	public void slaveOkQueryOptionShouldApplyPrimaryPreferredReadPreferenceForFindDistinct() {
+	void slaveOkQueryOptionShouldApplyPrimaryPreferredReadPreferenceForFindDistinct() {
 
 		template.findDistinct(new Query().slaveOk(), "name", AutogenerateableId.class, String.class);
 
@@ -1738,14 +1738,14 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2344
-	public void slaveOkQueryOptionShouldApplyPrimaryPreferredReadPreferenceForStream() {
+	void slaveOkQueryOptionShouldApplyPrimaryPreferredReadPreferenceForStream() {
 
 		template.stream(new Query().slaveOk(), AutogenerateableId.class);
 		verify(collection).withReadPreference(eq(ReadPreference.primaryPreferred()));
 	}
 
 	@Test // DATAMONGO-2331
-	public void updateShouldAllowAggregationExpressions() {
+	void updateShouldAllowAggregationExpressions() {
 
 		AggregationUpdate update = AggregationUpdate.update().set("total")
 				.toValue(ArithmeticOperators.valueOf("val1").sum().and("val2"));
@@ -1761,7 +1761,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2331
-	public void updateShouldAllowMultipleAggregationExpressions() {
+	void updateShouldAllowMultipleAggregationExpressions() {
 
 		AggregationUpdate update = AggregationUpdate.update() //
 				.set("average").toValue(ArithmeticOperators.valueOf("tests").avg()) //
@@ -1789,7 +1789,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2331
-	public void updateShouldMapAggregationExpressionToDomainType() {
+	void updateShouldMapAggregationExpressionToDomainType() {
 
 		AggregationUpdate update = AggregationUpdate.update().set("name")
 				.toValue(ArithmeticOperators.valueOf("val1").sum().and("val2"));
@@ -1805,7 +1805,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2331
-	public void updateShouldPassOnUnsetCorrectly() {
+	void updateShouldPassOnUnsetCorrectly() {
 
 		SetOperation setOperation = SetOperation.builder().set("status").toValue("Modified").and().set("comments")
 				.toValue(Fields.fields("misc1").and("misc2").asList());
@@ -1825,7 +1825,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2331
-	public void updateShouldMapAggregationUnsetToDomainType() {
+	void updateShouldMapAggregationUnsetToDomainType() {
 
 		AggregationUpdate update = AggregationUpdate.update();
 		update.unset("name");
@@ -1932,150 +1932,136 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2479
-	public void findShouldInvokeAfterConvertCallback() {
+	void findShouldInvokeAfterConvertCallback() {
 
 		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
 
 		template.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
 
-		Document document = initialLukeDocument();
+		Document document = new Document("_id", "init").append("firstname", "luke");
 		when(findIterable.iterator()).thenReturn(new OneElementCursor<>(document));
 
 		template.find(new Query(), Person.class);
 
-		verify(afterConvertCallback).onAfterConvert(eq(initialLuke()), eq(document), anyString());
-	}
-
-	private Document initialLukeDocument() {
-		return new Document(ImmutableMap.of(
-				"_id", "init",
-				"firstname", "luke"
-		));
-	}
-
-	private Person initialLuke() {
-		Person expectedEnitty = new Person();
-		expectedEnitty.id = "init";
-		expectedEnitty.firstname = "luke";
-		return expectedEnitty;
+		verify(afterConvertCallback).onAfterConvert(eq(new Person("init", "luke")), eq(document), anyString());
 	}
 
 	@Test // DATAMONGO-2479
-	public void findByIdShouldInvokeAfterConvertCallback() {
+	void findByIdShouldInvokeAfterConvertCallback() {
 
 		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
 
 		template.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
 
-		Document document = initialLukeDocument();
+		Document document = new Document("_id", "init").append("firstname", "luke");
 		when(findIterable.first()).thenReturn(document);
 
 		template.findById("init", Person.class);
 
-		verify(afterConvertCallback).onAfterConvert(eq(initialLuke()), eq(document), anyString());
+		verify(afterConvertCallback).onAfterConvert(eq(new Person("init", "luke")), eq(document), anyString());
 	}
 
 	@Test // DATAMONGO-2479
-	public void findOneShouldInvokeAfterConvertCallback() {
+	void findOneShouldInvokeAfterConvertCallback() {
 
 		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
 
 		template.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
 
-		Document document = initialLukeDocument();
+		Document document = new Document("_id", "init").append("firstname", "luke");
 		when(findIterable.first()).thenReturn(document);
 
 		template.findOne(new Query(), Person.class);
 
-		verify(afterConvertCallback).onAfterConvert(eq(initialLuke()), eq(document), anyString());
+		verify(afterConvertCallback).onAfterConvert(eq(new Person("init", "luke")), eq(document), anyString());
 	}
 
 	@Test // DATAMONGO-2479
-	public void findAllShouldInvokeAfterConvertCallback() {
+	void findAllShouldInvokeAfterConvertCallback() {
 
 		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
 
 		template.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
 
-		Document document = initialLukeDocument();
+		Document document = new Document("_id", "init").append("firstname", "luke");
 		when(findIterable.iterator()).thenReturn(new OneElementCursor<>(document));
 
 		template.findAll(Person.class);
 
-		verify(afterConvertCallback).onAfterConvert(eq(initialLuke()), eq(document), anyString());
+		verify(afterConvertCallback).onAfterConvert(eq(new Person("init", "luke")), eq(document), anyString());
 	}
 
 	@Test // DATAMONGO-2479
-	public void findAndModifyShouldInvokeAfterConvertCallback() {
+	void findAndModifyShouldInvokeAfterConvertCallback() {
 
 		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
 
 		template.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
 
-		Document document = initialLukeDocument();
+		Document document = new Document("_id", "init").append("firstname", "luke");
 		when(collection.findOneAndUpdate(any(Bson.class), any(Bson.class), any())).thenReturn(document);
 
 		template.findAndModify(new Query(), new Update(), Person.class);
 
-		verify(afterConvertCallback).onAfterConvert(eq(initialLuke()), eq(document), anyString());
+		verify(afterConvertCallback).onAfterConvert(eq(new Person("init", "luke")), eq(document), anyString());
 	}
 
 	@Test // DATAMONGO-2479
-	public void findAndRemoveShouldInvokeAfterConvertCallback() {
+	void findAndRemoveShouldInvokeAfterConvertCallback() {
 
 		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
 
 		template.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
 
-		Document document = initialLukeDocument();
+		Document document = new Document("_id", "init").append("firstname", "luke");
 		when(collection.findOneAndDelete(any(Bson.class), any())).thenReturn(document);
 
 		template.findAndRemove(new Query(), Person.class);
 
-		verify(afterConvertCallback).onAfterConvert(eq(initialLuke()), eq(document), anyString());
+		verify(afterConvertCallback).onAfterConvert(eq(new Person("init", "luke")), eq(document), anyString());
 	}
 
 	@Test // DATAMONGO-2479
-	public void findAllAndRemoveShouldInvokeAfterConvertCallback() {
+	void findAllAndRemoveShouldInvokeAfterConvertCallback() {
 
 		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
 
 		template.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
 
-		Document document = initialLukeDocument();
+		Document document = new Document("_id", "init").append("firstname", "luke");
 		when(findIterable.iterator()).thenReturn(new OneElementCursor<>(document));
 
 		template.findAllAndRemove(new Query(), Person.class);
 
-		verify(afterConvertCallback).onAfterConvert(eq(initialLuke()), eq(document), anyString());
+		verify(afterConvertCallback).onAfterConvert(eq(new Person("init", "luke")), eq(document), anyString());
 	}
 
 	@Test // DATAMONGO-2479
-	public void findAndReplaceShouldInvokeAfterConvertCallbacks() {
+	void findAndReplaceShouldInvokeAfterConvertCallbacks() {
 
 		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
 
 		template.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
 
-		Person entity = initialLuke();
+		Person entity = new Person("init", "luke");
 
-		Document document = initialLukeDocument();
+		Document document = new Document("_id", "init").append("firstname", "luke");
 		when(collection.findOneAndReplace(any(Bson.class), any(Document.class), any())).thenReturn(document);
 
 		Person saved = template.findAndReplace(new Query(), entity);
 
-		verify(afterConvertCallback).onAfterConvert(eq(initialLuke()), eq(document), anyString());
+		verify(afterConvertCallback).onAfterConvert(eq(new Person("init", "luke")), eq(document), anyString());
 		assertThat(saved.id).isEqualTo("after-convert");
 	}
 
 	@Test // DATAMONGO-2479
-	public void saveShouldInvokeAfterSaveCallbacks() {
+	void saveShouldInvokeAfterSaveCallbacks() {
 
 		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
 
 		template.setEntityCallbacks(EntityCallbacks.create(afterSaveCallback));
 
-		Person entity = initialLuke();
+		Person entity = new Person("init", "luke");
 
 		Person saved = template.save(entity);
 
@@ -2084,13 +2070,13 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2479
-	public void insertShouldInvokeAfterSaveCallbacks() {
+	void insertShouldInvokeAfterSaveCallbacks() {
 
 		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
 
 		template.setEntityCallbacks(EntityCallbacks.create(afterSaveCallback));
 
-		Person entity = initialLuke();
+		Person entity = new Person("init", "luke");
 
 		Person saved = template.insert(entity);
 
@@ -2099,7 +2085,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2479
-	public void insertAllShouldInvokeAfterSaveCallbacks() {
+	void insertAllShouldInvokeAfterSaveCallbacks() {
 
 		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
 
@@ -2120,25 +2106,25 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2479
-	public void findAndReplaceShouldInvokeAfterSaveCallbacks() {
+	void findAndReplaceShouldInvokeAfterSaveCallbacks() {
 
 		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
 
 		template.setEntityCallbacks(EntityCallbacks.create(afterSaveCallback));
 
-		Person entity = initialLuke();
+		Person entity = new Person("init", "luke");
 
-		Document document = initialLukeDocument();
+		Document document = new Document("_id", "init").append("firstname", "luke");
 		when(collection.findOneAndReplace(any(Bson.class), any(Document.class), any())).thenReturn(document);
 
 		Person saved = template.findAndReplace(new Query(), entity);
 
-		verify(afterSaveCallback).onAfterSave(eq(initialLuke()), any(), anyString());
+		verify(afterSaveCallback).onAfterSave(eq(new Person("init", "luke")), any(), anyString());
 		assertThat(saved.id).isEqualTo("after-save");
 	}
 
 	@Test // DATAMONGO-2479
-	public void findAndReplaceShouldEmitAfterSaveEvent() {
+	void findAndReplaceShouldEmitAfterSaveEvent() {
 
 		AbstractMongoEventListener<Person> eventListener = new AbstractMongoEventListener<Person>() {
 
@@ -2156,9 +2142,9 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		template.setApplicationContext(ctx);
 
-		Person entity = initialLuke();
+		Person entity = new Person("init", "luke");
 
-		Document document = initialLukeDocument();
+		Document document = new Document("_id", "init").append("firstname", "luke");
 		when(collection.findOneAndReplace(any(Bson.class), any(Document.class), any())).thenReturn(document);
 
 		Person saved = template.findAndReplace(new Query(), entity);
@@ -2197,6 +2183,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 	@Data
 	@org.springframework.data.mongodb.core.mapping.Document(collection = "star-wars")
+	@AllArgsConstructor
+	@NoArgsConstructor
 	static class Person {
 
 		@Id String id;
@@ -2350,10 +2338,12 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		public Person onAfterSave(Person entity, Document document, String collection) {
 
 			capture(entity);
-			return new Person() {{
-				id = "after-save";
-				firstname = entity.firstname;
-			}};
+			return new Person() {
+				{
+					id = "after-save";
+					firstname = entity.firstname;
+				}
+			};
 		}
 	}
 
@@ -2364,10 +2354,12 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		public Person onAfterConvert(Person entity, Document document, String collection) {
 
 			capture(entity);
-			return new Person() {{
-				id = "after-convert";
-				firstname = entity.firstname;
-			}};
+			return new Person() {
+				{
+					id = "after-convert";
+					firstname = entity.firstname;
+				}
+			};
 		}
 	}
 

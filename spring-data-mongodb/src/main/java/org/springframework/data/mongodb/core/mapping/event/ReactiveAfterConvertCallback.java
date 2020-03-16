@@ -17,27 +17,28 @@ package org.springframework.data.mongodb.core.mapping.event;
 
 import org.bson.Document;
 import org.reactivestreams.Publisher;
+
 import org.springframework.data.mapping.callback.EntityCallback;
-import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
 
 /**
- * Callback being invoked after a domain object is converted from a Document (when reading from the DB).
+ * Callback being invoked after a domain object is materialized from a {@link Document} when reading results.
  *
  * @author Roman Puchkovskiy
+ * @author Mark Paluch
  * @since 3.0
- * @see ReactiveEntityCallbacks
+ * @see org.springframework.data.mapping.callback.ReactiveEntityCallbacks
  */
 @FunctionalInterface
 public interface ReactiveAfterConvertCallback<T> extends EntityCallback<T> {
 
 	/**
-	 * Entity callback method invoked after a domain object is converted from a Document. Can return either the same
-	 * or a modified instance of the domain object.
+	 * Entity callback method invoked after a domain object is materialized from a {@link Document}. Can return either the
+	 * same or a modified instance of the domain object.
 	 *
 	 * @param entity the domain object (the result of the conversion).
 	 * @param document must not be {@literal null}.
 	 * @param collection name of the collection.
-	 * @return a {@link Publisher} emitting the domain object that is the result of the conversion from the Document.
+	 * @return a {@link Publisher} emitting the domain object that is the result of reading it from the {@link Document}.
 	 */
 	Publisher<T> onAfterConvert(T entity, Document document, String collection);
 }

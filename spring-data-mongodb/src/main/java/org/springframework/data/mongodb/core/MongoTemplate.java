@@ -71,7 +71,16 @@ import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
-import org.springframework.data.mongodb.core.convert.*;
+import org.springframework.data.mongodb.core.convert.DbRefResolver;
+import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
+import org.springframework.data.mongodb.core.convert.JsonSchemaMapper;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
+import org.springframework.data.mongodb.core.convert.MongoWriter;
+import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.convert.UpdateMapper;
 import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.index.IndexOperationsProvider;
 import org.springframework.data.mongodb.core.index.MongoMappingEventPublisher;
@@ -111,7 +120,16 @@ import com.mongodb.ClientSessionOptions;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
-import com.mongodb.client.*;
+import com.mongodb.client.AggregateIterable;
+import com.mongodb.client.ClientSession;
+import com.mongodb.client.DistinctIterable;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MapReduceIterable;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.MongoIterable;
 import com.mongodb.client.model.*;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
@@ -1047,6 +1065,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		T saved = doFindAndReplace(collectionName, mappedQuery, mappedFields, mappedSort,
 				queryContext.getCollation(entityType).orElse(null), entityType, mappedReplacement, options, resultType);
+
 		if (saved != null) {
 			maybeEmitEvent(new AfterSaveEvent<>(saved, mappedReplacement, collectionName));
 			return maybeCallAfterSave(saved, mappedReplacement, collectionName);
@@ -1146,7 +1165,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	protected void ensureNotIterable(@Nullable Object o) {
-		if (null != o) {
+		if (o != null) {
 			if (o.getClass().isArray() || ITERABLE_CLASSES.contains(o.getClass().getName())) {
 				throw new IllegalArgumentException("Cannot use a collection here.");
 			}
@@ -2286,7 +2305,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	protected <E extends MongoMappingEvent<T>, T> E maybeEmitEvent(E event) {
 
-		if (null != eventPublisher) {
+		if (eventPublisher != null) {
 			eventPublisher.publishEvent(event);
 		}
 
@@ -2295,7 +2314,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	protected <T> T maybeCallBeforeConvert(T object, String collection) {
 
-		if (null != entityCallbacks) {
+		if (entityCallbacks != null) {
 			return entityCallbacks.callback(BeforeConvertCallback.class, object, collection);
 		}
 
@@ -2304,7 +2323,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	protected <T> T maybeCallBeforeSave(T object, Document document, String collection) {
 
-		if (null != entityCallbacks) {
+		if (entityCallbacks != null) {
 			return entityCallbacks.callback(BeforeSaveCallback.class, object, document, collection);
 		}
 
@@ -2313,7 +2332,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	protected <T> T maybeCallAfterSave(T object, Document document, String collection) {
 
-		if (null != entityCallbacks) {
+		if (entityCallbacks != null) {
 			return entityCallbacks.callback(AfterSaveCallback.class, object, document, collection);
 		}
 
@@ -2322,7 +2341,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	protected <T> T maybeCallAfterConvert(T object, Document document, String collection) {
 
-		if (null != entityCallbacks) {
+		if (entityCallbacks != null) {
 			return entityCallbacks.callback(AfterConvertCallback.class, object, document, collection);
 		}
 
@@ -3110,13 +3129,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		@Nullable
 		public T doWith(@Nullable Document document) {
 
-			if (null != document) {
+			if (document != null) {
 				maybeEmitEvent(new AfterLoadEvent<>(document, type, collectionName));
 			}
 
 			T source = reader.read(type, document);
 
-			if (null != source) {
+			if (source != null) {
 				maybeEmitEvent(new AfterConvertEvent<>(document, source, collectionName));
 				source = maybeCallAfterConvert(source, document, collectionName);
 			}
@@ -3156,14 +3175,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			Class<?> typeToRead = targetType.isInterface() || targetType.isAssignableFrom(entityType) ? entityType
 					: targetType;
 
-			if (null != document) {
+			if (document != null) {
 				maybeEmitEvent(new AfterLoadEvent<>(document, targetType, collectionName));
 			}
 
 			Object source = reader.read(typeToRead, document);
 			Object result = targetType.isInterface() ? projectionFactory.createProjection(targetType, source) : source;
 
-			if (null != result) {
+			if (result != null) {
 				maybeEmitEvent(new AfterConvertEvent<>(document, result, collectionName));
 				result = maybeCallAfterConvert(result, document, collectionName);
 			}

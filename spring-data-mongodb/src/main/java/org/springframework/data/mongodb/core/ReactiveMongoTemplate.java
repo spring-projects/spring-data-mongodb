@@ -39,6 +39,7 @@ import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -74,7 +75,16 @@ import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.PrefixingDelegatingAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
-import org.springframework.data.mongodb.core.convert.*;
+import org.springframework.data.mongodb.core.convert.DbRefResolver;
+import org.springframework.data.mongodb.core.convert.JsonSchemaMapper;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
+import org.springframework.data.mongodb.core.convert.MongoWriter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
+import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.convert.UpdateMapper;
 import org.springframework.data.mongodb.core.index.MongoMappingEventPublisher;
 import org.springframework.data.mongodb.core.index.ReactiveIndexOperations;
 import org.springframework.data.mongodb.core.index.ReactiveMongoPersistentEntityIndexCreator;
@@ -109,7 +119,16 @@ import com.mongodb.CursorType;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
-import com.mongodb.client.model.*;
+import com.mongodb.client.model.CountOptions;
+import com.mongodb.client.model.CreateCollectionOptions;
+import com.mongodb.client.model.DeleteOptions;
+import com.mongodb.client.model.FindOneAndDeleteOptions;
+import com.mongodb.client.model.FindOneAndReplaceOptions;
+import com.mongodb.client.model.FindOneAndUpdateOptions;
+import com.mongodb.client.model.ReplaceOptions;
+import com.mongodb.client.model.ReturnDocument;
+import com.mongodb.client.model.UpdateOptions;
+import com.mongodb.client.model.ValidationOptions;
 import com.mongodb.client.model.changestream.FullDocument;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.InsertOneResult;
@@ -1145,29 +1164,30 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Document mappedFields = queryContext.getMappedFields(entity);
 		Document mappedSort = queryContext.getMappedSort(entity);
 
-		return Mono.just(PersistableEntityModel.of(replacement, collectionName)) //
-				.doOnNext(it -> maybeEmitEvent(new BeforeConvertEvent<>(it.getSource(), it.getCollection()))) //
-				.flatMap(it -> maybeCallBeforeConvert(it.getSource(), it.getCollection()).map(it::mutate))
-				.map(it -> it
-						.addTargetDocument(operations.forEntity(it.getSource()).toMappedDocument(mongoConverter).getDocument())) //
-				.doOnNext(it -> maybeEmitEvent(new BeforeSaveEvent(it.getSource(), it.getTarget(), it.getCollection()))) //
-				.flatMap(it -> {
+		return Mono.defer(() -> {
 
-					PersistableEntityModel<S> flowObject = (PersistableEntityModel<S>) it;
-					return maybeCallBeforeSave(flowObject.getSource(), flowObject.getTarget(), flowObject.getCollection())
-							.map(potentiallyModified -> PersistableEntityModel.of(potentiallyModified, flowObject.getTarget(),
-									flowObject.getCollection()));
-				}).flatMap(it -> {
+			PersistableEntityModel<S> pem = PersistableEntityModel.of(replacement, collectionName);
 
-					PersistableEntityModel<S> flowObject = (PersistableEntityModel<S>) it;
-					Mono<T> afterFindAndReplace = doFindAndReplace(flowObject.getCollection(), mappedQuery,
-							mappedFields, mappedSort, queryContext.getCollation(entityType).orElse(null),
-							entityType, flowObject.getTarget(), options, resultType);
-					return afterFindAndReplace.flatMap(saved -> {
-						maybeEmitEvent(new AfterSaveEvent<>(saved, flowObject.getTarget(), flowObject.getCollection()));
-						return maybeCallAfterSave(saved, flowObject.getTarget(), flowObject.getCollection());
-					});
+			maybeEmitEvent(new BeforeConvertEvent<>(pem.getSource(), pem.getCollection()));
+
+			return maybeCallBeforeConvert(pem.getSource(), pem.getCollection()).map(pem::mutate).flatMap(it -> {
+				PersistableEntityModel<S> mapped = it
+						.addTargetDocument(operations.forEntity(it.getSource()).toMappedDocument(mongoConverter).getDocument());
+				maybeEmitEvent(new BeforeSaveEvent(mapped.getSource(), mapped.getTarget(), mapped.getCollection()));
+
+				return maybeCallBeforeSave(it.getSource(), mapped.getTarget(), mapped.getCollection())
+						.map(potentiallyModified -> PersistableEntityModel.of(potentiallyModified, mapped.getTarget(),
+								mapped.getCollection()));
+			}).flatMap(it -> {
+
+				Mono<T> afterFindAndReplace = doFindAndReplace(it.getCollection(), mappedQuery, mappedFields, mappedSort,
+						queryContext.getCollation(entityType).orElse(null), entityType, it.getTarget(), options, resultType);
+				return afterFindAndReplace.flatMap(saved -> {
+					maybeEmitEvent(new AfterSaveEvent<>(saved, it.getTarget(), it.getCollection()));
+					return maybeCallAfterSave(saved, it.getTarget(), it.getCollection());
 				});
+			});
+		});
 	}
 
 	/*
@@ -1314,13 +1334,14 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 					AdaptibleEntity<T> entity = operations.forEntity(it.getSource(), mongoConverter.getConversionService());
 					entity.assertUpdateableIdIfNotSet();
 
-					return PersistableEntityModel.of(entity.initializeVersionProperty(),
+					PersistableEntityModel<T> model = PersistableEntityModel.of(entity.initializeVersionProperty(),
 							entity.toMappedDocument(writer).getDocument(), it.getCollection());
-				}).doOnNext(it -> maybeEmitEvent(new BeforeSaveEvent<>(it.getSource(), it.getTarget(), it.getCollection()))) //
+
+					maybeEmitEvent(new BeforeSaveEvent<>(model.getSource(), model.getTarget(), model.getCollection()));
+					return model;
+				})//
 				.flatMap(it -> {
-
 					return maybeCallBeforeSave(it.getSource(), it.getTarget(), it.getCollection()).map(it::mutate);
-
 				}).flatMap(it -> {
 
 					return insertDocument(it.getCollection(), it.getTarget(), it.getSource().getClass()).flatMap(id -> {
@@ -2588,7 +2609,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	protected <E extends MongoMappingEvent<T>, T> E maybeEmitEvent(E event) {
 
-		if (null != eventPublisher) {
+		if (eventPublisher != null) {
 			eventPublisher.publishEvent(event);
 		}
 
@@ -2597,7 +2618,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	protected <T> Mono<T> maybeCallBeforeConvert(T object, String collection) {
 
-		if (null != entityCallbacks) {
+		if (entityCallbacks != null) {
 			return entityCallbacks.callback(ReactiveBeforeConvertCallback.class, object, collection);
 		}
 
@@ -2606,7 +2627,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	protected <T> Mono<T> maybeCallBeforeSave(T object, Document document, String collection) {
 
-		if (null != entityCallbacks) {
+		if (entityCallbacks != null) {
 			return entityCallbacks.callback(ReactiveBeforeSaveCallback.class, object, document, collection);
 		}
 
@@ -2615,7 +2636,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	protected <T> Mono<T> maybeCallAfterSave(T object, Document document, String collection) {
 
-		if (null != entityCallbacks) {
+		if (entityCallbacks != null) {
 			return entityCallbacks.callback(ReactiveAfterSaveCallback.class, object, document, collection);
 		}
 
@@ -2624,7 +2645,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	protected <T> Mono<T> maybeCallAfterConvert(T object, Document document, String collection) {
 
-		if (null != entityCallbacks) {
+		if (entityCallbacks != null) {
 			return entityCallbacks.callback(ReactiveAfterConvertCallback.class, object, document, collection);
 		}
 
@@ -3092,23 +3113,18 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			maybeEmitEvent(new AfterLoadEvent<>(document, type, collectionName));
 
 			T source = reader.read(type, document);
-			if (null != source) {
+			if (source != null) {
 				maybeEmitEvent(new AfterConvertEvent<>(document, source, collectionName));
+				return maybeCallAfterConvert(source, document, collectionName);
 			}
-			return Mono.defer(() -> {
-				if (null != source) {
-					return maybeCallAfterConvert(source, document, collectionName);
-				} else {
-					return Mono.empty();
-				}
-			});
+
+			return Mono.empty();
 		}
 	}
 
 	/**
-	 * {@link DocumentCallback} transforming {@link Document} into the given {@code targetType} or
-	 * decorating the {@code sourceType} with a {@literal projection} in case the {@code targetType} is an
-	 * {@literal interface}.
+	 * {@link DocumentCallback} transforming {@link Document} into the given {@code targetType} or decorating the
+	 * {@code sourceType} with a {@literal projection} in case the {@code targetType} is an {@literal interface}.
 	 *
 	 * @param <S>
 	 * @param <T>
@@ -3137,17 +3153,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			Object result = targetType.isInterface() ? projectionFactory.createProjection(targetType, source) : source;
 
 			T castEntity = (T) result;
-			if (null != castEntity) {
+			if (castEntity != null) {
 				maybeEmitEvent(new AfterConvertEvent<>(document, castEntity, collectionName));
+				return maybeCallAfterConvert(castEntity, document, collectionName);
 			}
 
-			return Mono.defer(() -> {
-				if (null != castEntity) {
-					return maybeCallAfterConvert(castEntity, document, collectionName);
-				} else {
-					return Mono.empty();
-				}
-			});
+			return Mono.empty();
 		}
 	}
 
@@ -3184,15 +3195,18 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		public Mono<GeoResult<T>> doWith(Document object) {
 
-			final double distance;
+			double distance = getDistance(object);
+
+			return delegate.doWith(object).map(doWith -> new GeoResult<>(doWith, new Distance(distance, metric)));
+		}
+
+		double getDistance(Document object) {
+
 			if (object.containsKey(distanceField)) {
-				distance = NumberUtils.convertNumberToTargetClass(object.get(distanceField, Number.class), Double.class);
-			} else {
-				distance = Double.NaN;
+				return NumberUtils.convertNumberToTargetClass(object.get(distanceField, Number.class), Double.class);
 			}
-			
-			return delegate.doWith(object)
-					.map(doWith -> new GeoResult<>(doWith, new Distance(distance, metric)));
+
+			return Double.NaN;
 		}
 	}
 

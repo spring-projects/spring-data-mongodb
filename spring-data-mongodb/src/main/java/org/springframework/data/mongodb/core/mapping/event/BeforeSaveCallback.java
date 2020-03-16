@@ -24,6 +24,7 @@ import org.springframework.data.mapping.callback.EntityCallback;
  * @author Mark Paluch
  * @author Michael J. Simons
  * @since 2.2
+ * @see org.springframework.data.mapping.callback.EntityCallbacks
  */
 @FunctionalInterface
 public interface BeforeSaveCallback<T> extends EntityCallback<T> {

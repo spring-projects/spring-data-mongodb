@@ -19,22 +19,24 @@ import org.bson.Document;
 import org.springframework.data.mapping.callback.EntityCallback;
 
 /**
- * Callback being invoked after a domain object is converted from a Document (when reading from the DB).
+ * Callback being invoked after a domain object is materialized from a {@link Document} when reading results.
  *
  * @author Roman Puchkovskiy
+ * @author Mark Paluch
  * @since 3.0
+ * @see org.springframework.data.mapping.callback.EntityCallbacks
  */
 @FunctionalInterface
 public interface AfterConvertCallback<T> extends EntityCallback<T> {
 
 	/**
-	 * Entity callback method invoked after a domain object is converted from a Document. Can return either the same
-	 * or a modified instance of the domain object.
+	 * Entity callback method invoked after a domain object is materialized from a {@link Document}. Can return either the
+	 * same or a modified instance of the domain object.
 	 *
 	 * @param entity the domain object (the result of the conversion).
 	 * @param document must not be {@literal null}.
 	 * @param collection name of the collection.
-	 * @return the domain object that is the result of the conversion from the Document.
+	 * @return the domain object that is the result of reading it from the {@link Document}.
 	 */
 	T onAfterConvert(T entity, Document document, String collection);
 }

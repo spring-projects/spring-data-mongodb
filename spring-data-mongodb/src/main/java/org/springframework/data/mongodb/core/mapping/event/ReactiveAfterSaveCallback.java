@@ -22,7 +22,7 @@ import org.springframework.data.mapping.callback.EntityCallback;
 import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
 
 /**
- * Entity callback triggered after save of a document.
+ * Entity callback triggered after save of a {@link Document}.
  *
  * @author Roman Puchkovskiy
  * @since 3.0
@@ -32,8 +32,8 @@ import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
 public interface ReactiveAfterSaveCallback<T> extends EntityCallback<T> {
 
 	/**
-	 * Entity callback method invoked after a domain object is saved. Can return either the same or a modified instance
-	 * of the domain object.
+	 * Entity callback method invoked after a domain object is saved. Can return either the same or a modified instance of
+	 * the domain object.
 	 *
 	 * @param entity the domain object that was saved.
 	 * @param document {@link Document} representing the {@code entity}.

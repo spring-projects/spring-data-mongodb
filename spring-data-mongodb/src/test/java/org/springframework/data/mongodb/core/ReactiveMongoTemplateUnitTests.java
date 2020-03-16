@@ -20,7 +20,9 @@ import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -86,7 +88,6 @@ import org.springframework.lang.Nullable;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.CollectionUtils;
 
-import com.google.common.collect.ImmutableMap;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.ReadPreference;
 import com.mongodb.client.model.CountOptions;
@@ -120,7 +121,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class ReactiveMongoTemplateUnitTests {
 
-	ReactiveMongoTemplate template;
+	private ReactiveMongoTemplate template;
 
 	@Mock SimpleReactiveMongoDatabaseFactory factory;
 	@Mock MongoClient mongoClient;
@@ -136,12 +137,12 @@ public class ReactiveMongoTemplateUnitTests {
 	@Mock Publisher deletePublisher;
 	@Mock MapReducePublisher mapReducePublisher;
 
-	MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
-	MappingMongoConverter converter;
-	MongoMappingContext mappingContext;
+	private MongoExceptionTranslator exceptionTranslator = new MongoExceptionTranslator();
+	private MappingMongoConverter converter;
+	private MongoMappingContext mappingContext;
 
 	@BeforeEach
-	public void beforeEach() {
+	void beforeEach() {
 
 		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslator);
 		when(factory.getCodecRegistry()).thenReturn(MongoClientSettings.getDefaultCodecRegistry());
@@ -187,23 +188,23 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void rejectsNullDatabaseName() {
+	void rejectsNullDatabaseName() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new ReactiveMongoTemplate(mongoClient, null));
 	}
 
 	@Test // DATAMONGO-1444
-	public void rejectsNullMongo() {
+	void rejectsNullMongo() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new ReactiveMongoTemplate(null, "database"));
 	}
 
 	@Test // DATAMONGO-1444
-	public void defaultsConverterToMappingMongoConverter() throws Exception {
+	void defaultsConverterToMappingMongoConverter() throws Exception {
 		ReactiveMongoTemplate template = new ReactiveMongoTemplate(mongoClient, "database");
 		assertThat(ReflectionTestUtils.getField(template, "mongoConverter") instanceof MappingMongoConverter).isTrue();
 	}
 
 	@Test // DATAMONGO-1912
-	public void autogeneratesIdForMap() {
+	void autogeneratesIdForMap() {
 
 		ReactiveMongoTemplate template = spy(this.template);
 		doReturn(Mono.just(new ObjectId())).when(template).saveDocument(any(String.class), any(Document.class),
@@ -217,7 +218,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1311
-	public void executeQueryShouldUseBatchSizeWhenPresent() {
+	void executeQueryShouldUseBatchSizeWhenPresent() {
 
 		when(findPublisher.batchSize(anyInt())).thenReturn(findPublisher);
 
@@ -228,7 +229,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1518
-	public void findShouldUseCollationWhenPresent() {
+	void findShouldUseCollationWhenPresent() {
 
 		template.find(new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class).subscribe();
 
@@ -237,7 +238,7 @@ public class ReactiveMongoTemplateUnitTests {
 
 	//
 	@Test // DATAMONGO-1518
-	public void findOneShouldUseCollationWhenPresent() {
+	void findOneShouldUseCollationWhenPresent() {
 
 		template.findOne(new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class).subscribe();
 
@@ -245,7 +246,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1518
-	public void existsShouldUseCollationWhenPresent() {
+	void existsShouldUseCollationWhenPresent() {
 
 		template.exists(new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class).subscribe();
 
@@ -253,7 +254,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1518
-	public void findAndModfiyShoudUseCollationWhenPresent() {
+	void findAndModfiyShoudUseCollationWhenPresent() {
 
 		when(collection.findOneAndUpdate(any(Bson.class), any(Bson.class), any())).thenReturn(Mono.empty());
 
@@ -267,7 +268,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1518
-	public void findAndRemoveShouldUseCollationWhenPresent() {
+	void findAndRemoveShouldUseCollationWhenPresent() {
 
 		when(collection.findOneAndDelete(any(Bson.class), any())).thenReturn(Mono.empty());
 
@@ -280,7 +281,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1518
-	public void findAndRemoveManyShouldUseCollationWhenPresent() {
+	void findAndRemoveManyShouldUseCollationWhenPresent() {
 
 		when(collection.deleteMany(any(Bson.class), any())).thenReturn(Mono.empty());
 
@@ -294,7 +295,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1518
-	public void updateOneShouldUseCollationWhenPresent() {
+	void updateOneShouldUseCollationWhenPresent() {
 
 		when(collection.updateOne(any(Bson.class), any(Bson.class), any())).thenReturn(Mono.empty());
 
@@ -308,7 +309,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1518
-	public void updateManyShouldUseCollationWhenPresent() {
+	void updateManyShouldUseCollationWhenPresent() {
 
 		when(collection.updateMany(any(Bson.class), any(Bson.class), any())).thenReturn(Mono.empty());
 
@@ -323,7 +324,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1518
-	public void replaceOneShouldUseCollationWhenPresent() {
+	void replaceOneShouldUseCollationWhenPresent() {
 
 		when(collection.replaceOne(any(Bson.class), any(), any(ReplaceOptions.class))).thenReturn(Mono.empty());
 
@@ -337,7 +338,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1518, DATAMONGO-2257
-	public void mapReduceShouldUseCollationWhenPresent() {
+	void mapReduceShouldUseCollationWhenPresent() {
 
 		template.mapReduce(new BasicQuery("{}"), AutogenerateableId.class, AutogenerateableId.class, "", "",
 				MapReduceOptions.options().collation(Collation.of("fr"))).subscribe();
@@ -346,7 +347,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1518, DATAMONGO-2264
-	public void geoNearShouldUseCollationWhenPresent() {
+	void geoNearShouldUseCollationWhenPresent() {
 
 		NearQuery query = NearQuery.near(0D, 0D).query(new BasicQuery("{}").collation(Collation.of("fr")));
 		template.geoNear(query, AutogenerateableId.class).subscribe();
@@ -355,7 +356,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void appliesFieldsWhenInterfaceProjectionIsClosedAndQueryDoesNotDefineFields() {
+	void appliesFieldsWhenInterfaceProjectionIsClosedAndQueryDoesNotDefineFields() {
 
 		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonProjection.class,
 				FindPublisherPreparer.NO_OP_PREPARER).subscribe();
@@ -364,7 +365,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void doesNotApplyFieldsWhenInterfaceProjectionIsClosedAndQueryDefinesFields() {
+	void doesNotApplyFieldsWhenInterfaceProjectionIsClosedAndQueryDefinesFields() {
 
 		template.doFind("star-wars", new Document(), new Document("bar", 1), Person.class, PersonProjection.class,
 				FindPublisherPreparer.NO_OP_PREPARER).subscribe();
@@ -373,7 +374,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void doesNotApplyFieldsWhenInterfaceProjectionIsOpen() {
+	void doesNotApplyFieldsWhenInterfaceProjectionIsOpen() {
 
 		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonSpELProjection.class,
 				FindPublisherPreparer.NO_OP_PREPARER).subscribe();
@@ -382,7 +383,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1719, DATAMONGO-2041
-	public void appliesFieldsToDtoProjection() {
+	void appliesFieldsToDtoProjection() {
 
 		template.doFind("star-wars", new Document(), new Document(), Person.class, Jedi.class,
 				FindPublisherPreparer.NO_OP_PREPARER).subscribe();
@@ -391,7 +392,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void doesNotApplyFieldsToDtoProjectionWhenQueryDefinesFields() {
+	void doesNotApplyFieldsToDtoProjectionWhenQueryDefinesFields() {
 
 		template.doFind("star-wars", new Document(), new Document("bar", 1), Person.class, Jedi.class,
 				FindPublisherPreparer.NO_OP_PREPARER).subscribe();
@@ -400,7 +401,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void doesNotApplyFieldsWhenTargetIsNotAProjection() {
+	void doesNotApplyFieldsWhenTargetIsNotAProjection() {
 
 		template.doFind("star-wars", new Document(), new Document(), Person.class, Person.class,
 				FindPublisherPreparer.NO_OP_PREPARER).subscribe();
@@ -409,7 +410,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void doesNotApplyFieldsWhenTargetExtendsDomainType() {
+	void doesNotApplyFieldsWhenTargetExtendsDomainType() {
 
 		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonExtended.class,
 				FindPublisherPreparer.NO_OP_PREPARER).subscribe();
@@ -418,7 +419,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1783
-	public void countShouldUseSkipFromQuery() {
+	void countShouldUseSkipFromQuery() {
 
 		template.count(new Query().skip(10), Person.class, "star-wars").subscribe();
 
@@ -429,7 +430,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1783
-	public void countShouldUseLimitFromQuery() {
+	void countShouldUseLimitFromQuery() {
 
 		template.count(new Query().limit(100), Person.class, "star-wars").subscribe();
 
@@ -440,7 +441,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-2360
-	public void countShouldApplyQueryHintIfPresent() {
+	void countShouldApplyQueryHintIfPresent() {
 
 		Document queryHint = new Document("age", 1);
 		template.count(new Query().withHint(queryHint), Person.class, "star-wars").subscribe();
@@ -452,7 +453,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-2365
-	public void countShouldApplyQueryHintAsIndexNameIfPresent() {
+	void countShouldApplyQueryHintAsIndexNameIfPresent() {
 
 		template.count(new Query().withHint("idx-1"), Person.class, "star-wars").subscribe();
 
@@ -463,7 +464,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-2215
-	public void updateShouldApplyArrayFilters() {
+	void updateShouldApplyArrayFilters() {
 
 		template.updateFirst(new BasicQuery("{}"),
 				new Update().set("grades.$[element]", 100).filterArray(Criteria.where("element").gte(100)),
@@ -477,7 +478,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-2215
-	public void findAndModifyShouldApplyArrayFilters() {
+	void findAndModifyShouldApplyArrayFilters() {
 
 		template.findAndModify(new BasicQuery("{}"),
 				new Update().set("grades.$[element]", 100).filterArray(Criteria.where("element").gte(100)),
@@ -491,7 +492,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void findShouldNotUseCollationWhenNoDefaultPresent() {
+	void findShouldNotUseCollationWhenNoDefaultPresent() {
 
 		template.find(new BasicQuery("{'foo' : 'bar'}"), Jedi.class).subscribe();
 
@@ -499,7 +500,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void findShouldUseDefaultCollationWhenPresent() {
+	void findShouldUseDefaultCollationWhenPresent() {
 
 		template.find(new BasicQuery("{'foo' : 'bar'}"), Sith.class).subscribe();
 
@@ -507,7 +508,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void findOneShouldUseDefaultCollationWhenPresent() {
+	void findOneShouldUseDefaultCollationWhenPresent() {
 
 		template.findOne(new BasicQuery("{'foo' : 'bar'}"), Sith.class).subscribe();
 
@@ -515,7 +516,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void existsShouldUseDefaultCollationWhenPresent() {
+	void existsShouldUseDefaultCollationWhenPresent() {
 
 		template.exists(new BasicQuery("{}"), Sith.class).subscribe();
 
@@ -523,7 +524,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void findAndModfiyShoudUseDefaultCollationWhenPresent() {
+	void findAndModfiyShoudUseDefaultCollationWhenPresent() {
 
 		template.findAndModify(new BasicQuery("{}"), new Update(), Sith.class).subscribe();
 
@@ -535,7 +536,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void findAndRemoveShouldUseDefaultCollationWhenPresent() {
+	void findAndRemoveShouldUseDefaultCollationWhenPresent() {
 
 		template.findAndRemove(new BasicQuery("{}"), Sith.class).subscribe();
 
@@ -547,7 +548,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void createCollectionShouldNotCollationIfNotPresent() {
+	void createCollectionShouldNotCollationIfNotPresent() {
 
 		template.createCollection(AutogenerateableId.class).subscribe();
 
@@ -558,7 +559,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void createCollectionShouldApplyDefaultCollation() {
+	void createCollectionShouldApplyDefaultCollation() {
 
 		template.createCollection(Sith.class).subscribe();
 
@@ -570,7 +571,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void createCollectionShouldFavorExplicitOptionsOverDefaultCollation() {
+	void createCollectionShouldFavorExplicitOptionsOverDefaultCollation() {
 
 		template.createCollection(Sith.class, CollectionOptions.just(Collation.of("en_US"))).subscribe();
 
@@ -582,7 +583,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void createCollectionShouldUseDefaultCollationIfCollectionOptionsAreNull() {
+	void createCollectionShouldUseDefaultCollationIfCollectionOptionsAreNull() {
 
 		template.createCollection(Sith.class, null).subscribe();
 
@@ -594,7 +595,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void aggreateShouldUseDefaultCollationIfPresent() {
+	void aggreateShouldUseDefaultCollationIfPresent() {
 
 		template.aggregate(newAggregation(Sith.class, project("id")), AutogenerateableId.class, Document.class).subscribe();
 
@@ -602,7 +603,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void aggreateShouldUseCollationFromOptionsEvenIfDefaultCollationIsPresent() {
+	void aggreateShouldUseCollationFromOptionsEvenIfDefaultCollationIsPresent() {
 
 		template
 				.aggregate(
@@ -615,7 +616,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-2153
-	public void aggregateShouldHonorOptionsComment() {
+	void aggregateShouldHonorOptionsComment() {
 
 		AggregationOptions options = AggregationOptions.builder().comment("expensive").build();
 
@@ -626,7 +627,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-2390
-	public void aggregateShouldNoApplyZeroOrNegativeMaxTime() {
+	void aggregateShouldNoApplyZeroOrNegativeMaxTime() {
 
 		template
 				.aggregate(newAggregation(MongoTemplateUnitTests.Sith.class, project("id")).withOptions(
@@ -643,7 +644,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-2390
-	public void aggregateShouldApplyMaxTimeIfSet() {
+	void aggregateShouldApplyMaxTimeIfSet() {
 
 		template
 				.aggregate(
@@ -656,7 +657,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void findAndReplaceShouldUseCollationWhenPresent() {
+	void findAndReplaceShouldUseCollationWhenPresent() {
 
 		template.findAndReplace(new BasicQuery("{}").collation(Collation.of("fr")), new Jedi()).subscribe();
 
@@ -667,7 +668,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void findAndReplaceShouldUseDefaultCollationWhenPresent() {
+	void findAndReplaceShouldUseDefaultCollationWhenPresent() {
 
 		template.findAndReplace(new BasicQuery("{}"), new Sith()).subscribe();
 
@@ -678,7 +679,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void findAndReplaceShouldUseCollationEvenIfDefaultCollationIsPresent() {
+	void findAndReplaceShouldUseCollationEvenIfDefaultCollationIsPresent() {
 
 		template.findAndReplace(new BasicQuery("{}").collation(Collation.of("fr")), new MongoTemplateUnitTests.Sith())
 				.subscribe();
@@ -690,7 +691,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void findDistinctShouldUseDefaultCollationWhenPresent() {
+	void findDistinctShouldUseDefaultCollationWhenPresent() {
 
 		template.findDistinct(new BasicQuery("{}"), "name", Sith.class, String.class).subscribe();
 
@@ -698,7 +699,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void findDistinctPreferCollationFromQueryOverDefaultCollation() {
+	void findDistinctPreferCollationFromQueryOverDefaultCollation() {
 
 		template.findDistinct(new BasicQuery("{}").collation(Collation.of("fr")), "name", Sith.class, String.class)
 				.subscribe();
@@ -707,7 +708,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void updateFirstShouldUseDefaultCollationWhenPresent() {
+	void updateFirstShouldUseDefaultCollationWhenPresent() {
 
 		template.updateFirst(new BasicQuery("{}"), Update.update("foo", "bar"), Sith.class).subscribe();
 
@@ -719,7 +720,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void updateFirstShouldPreferExplicitCollationOverDefaultCollation() {
+	void updateFirstShouldPreferExplicitCollationOverDefaultCollation() {
 
 		template.updateFirst(new BasicQuery("{}").collation(Collation.of("fr")), Update.update("foo", "bar"), Sith.class)
 				.subscribe();
@@ -732,7 +733,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void updateMultiShouldUseDefaultCollationWhenPresent() {
+	void updateMultiShouldUseDefaultCollationWhenPresent() {
 
 		template.updateMulti(new BasicQuery("{}"), Update.update("foo", "bar"), Sith.class).subscribe();
 
@@ -744,7 +745,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void updateMultiShouldPreferExplicitCollationOverDefaultCollation() {
+	void updateMultiShouldPreferExplicitCollationOverDefaultCollation() {
 
 		template.updateMulti(new BasicQuery("{}").collation(Collation.of("fr")), Update.update("foo", "bar"), Sith.class)
 				.subscribe();
@@ -757,7 +758,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void removeShouldUseDefaultCollationWhenPresent() {
+	void removeShouldUseDefaultCollationWhenPresent() {
 
 		template.remove(new BasicQuery("{}"), Sith.class).subscribe();
 
@@ -769,7 +770,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void removeShouldPreferExplicitCollationOverDefaultCollation() {
+	void removeShouldPreferExplicitCollationOverDefaultCollation() {
 
 		template.remove(new BasicQuery("{}").collation(Collation.of("fr")), Sith.class).subscribe();
 
@@ -781,7 +782,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-2261
-	public void saveShouldInvokeCallbacks() {
+	void saveShouldInvokeCallbacks() {
 
 		ValueCapturingBeforeConvertCallback beforeConvertCallback = spy(new ValueCapturingBeforeConvertCallback());
 		ValueCapturingBeforeSaveCallback beforeSaveCallback = spy(new ValueCapturingBeforeSaveCallback());
@@ -799,7 +800,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-2261
-	public void insertShouldInvokeCallbacks() {
+	void insertShouldInvokeCallbacks() {
 
 		ValueCapturingBeforeConvertCallback beforeConvertCallback = spy(new ValueCapturingBeforeConvertCallback());
 		ValueCapturingBeforeSaveCallback beforeSaveCallback = spy(new ValueCapturingBeforeSaveCallback());
@@ -817,7 +818,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-2261
-	public void insertAllShouldInvokeCallbacks() {
+	void insertAllShouldInvokeCallbacks() {
 
 		ValueCapturingBeforeConvertCallback beforeConvertCallback = spy(new ValueCapturingBeforeConvertCallback());
 		ValueCapturingBeforeSaveCallback beforeSaveCallback = spy(new ValueCapturingBeforeSaveCallback());
@@ -839,7 +840,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-2261
-	public void findAndReplaceShouldInvokeCallbacks() {
+	void findAndReplaceShouldInvokeCallbacks() {
 
 		ValueCapturingBeforeConvertCallback beforeConvertCallback = spy(new ValueCapturingBeforeConvertCallback());
 		ValueCapturingBeforeSaveCallback beforeSaveCallback = spy(new ValueCapturingBeforeSaveCallback());
@@ -857,12 +858,12 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-2261
-	public void entityCallbacksAreNotSetByDefault() {
+	void entityCallbacksAreNotSetByDefault() {
 		Assertions.assertThat(ReflectionTestUtils.getField(template, "entityCallbacks")).isNull();
 	}
 
 	@Test // DATAMONGO-2261
-	public void entityCallbacksShouldBeInitiatedOnSettingApplicationContext() {
+	void entityCallbacksShouldBeInitiatedOnSettingApplicationContext() {
 
 		ApplicationContext ctx = new StaticApplicationContext();
 		template.setApplicationContext(ctx);
@@ -871,7 +872,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-2261
-	public void setterForEntityCallbackOverridesContextInitializedOnes() {
+	void setterForEntityCallbackOverridesContextInitializedOnes() {
 
 		ApplicationContext ctx = new StaticApplicationContext();
 		template.setApplicationContext(ctx);
@@ -883,7 +884,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-2261
-	public void setterForApplicationContextShouldNotOverrideAlreadySetEntityCallbacks() {
+	void setterForApplicationContextShouldNotOverrideAlreadySetEntityCallbacks() {
 
 		ReactiveEntityCallbacks callbacks = ReactiveEntityCallbacks.create();
 		ApplicationContext ctx = new StaticApplicationContext();
@@ -895,7 +896,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-2344
-	public void slaveOkQueryOptionShouldApplyPrimaryPreferredReadPreferenceForFind() {
+	void slaveOkQueryOptionShouldApplyPrimaryPreferredReadPreferenceForFind() {
 
 		template.find(new Query().slaveOk(), AutogenerateableId.class).subscribe();
 
@@ -903,7 +904,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-2344
-	public void slaveOkQueryOptionShouldApplyPrimaryPreferredReadPreferenceForFindOne() {
+	void slaveOkQueryOptionShouldApplyPrimaryPreferredReadPreferenceForFindOne() {
 
 		template.findOne(new Query().slaveOk(), AutogenerateableId.class).subscribe();
 
@@ -911,7 +912,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-2344
-	public void slaveOkQueryOptionShouldApplyPrimaryPreferredReadPreferenceForFindDistinct() {
+	void slaveOkQueryOptionShouldApplyPrimaryPreferredReadPreferenceForFindDistinct() {
 
 		template.findDistinct(new Query().slaveOk(), "name", AutogenerateableId.class, String.class).subscribe();
 
@@ -919,7 +920,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-2331
-	public void updateShouldAllowAggregationExpressions() {
+	void updateShouldAllowAggregationExpressions() {
 
 		AggregationUpdate update = AggregationUpdate.update().set("total")
 				.toValue(ArithmeticOperators.valueOf("val1").sum().and("val2"));
@@ -935,7 +936,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-2331
-	public void updateShouldAllowMultipleAggregationExpressions() {
+	void updateShouldAllowMultipleAggregationExpressions() {
 
 		AggregationUpdate update = AggregationUpdate.update() //
 				.set("average").toValue(ArithmeticOperators.valueOf("tests").avg()) //
@@ -963,7 +964,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-2331
-	public void updateShouldMapAggregationExpressionToDomainType() {
+	void updateShouldMapAggregationExpressionToDomainType() {
 
 		AggregationUpdate update = AggregationUpdate.update().set("name")
 				.toValue(ArithmeticOperators.valueOf("val1").sum().and("val2"));
@@ -979,7 +980,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-2331
-	public void updateShouldPassOnUnsetCorrectly() {
+	void updateShouldPassOnUnsetCorrectly() {
 
 		SetOperation setOperation = SetOperation.builder().set("status").toValue("Modified").and().set("comments")
 				.toValue(Fields.fields("misc1").and("misc2").asList());
@@ -999,7 +1000,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-2331
-	public void updateShouldMapAggregationUnsetToDomainType() {
+	void updateShouldMapAggregationUnsetToDomainType() {
 
 		AggregationUpdate update = AggregationUpdate.update();
 		update.unset("name");
@@ -1110,163 +1111,138 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-2479
-	public void findShouldInvokeAfterConvertCallbacks() {
+	void findShouldInvokeAfterConvertCallbacks() {
 
 		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
 
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
-		Document document = initialLukeDocument();
+		Document document = new Document("_id", "init").append("firstname", "luke");
 		when(collection.find(Document.class)).thenReturn(findPublisher);
-		makeFindPublisherPublishJust(document);
+		stubFindSubscribe(document);
 
-		List<Person> results = template.find(new Query(), Person.class).timeout(Duration.ofSeconds(1))
-				.toStream().collect(Collectors.toList());
+		List<Person> results = template.find(new Query(), Person.class).timeout(Duration.ofSeconds(1)).toStream()
+				.collect(Collectors.toList());
 
-		verify(afterConvertCallback).onAfterConvert(eq(initialLuke()), eq(document), anyString());
+		verify(afterConvertCallback).onAfterConvert(eq(new Person("init", "luke")), eq(document), anyString());
 		assertThat(results.get(0).id).isEqualTo("after-convert");
 	}
 
-	private Document initialLukeDocument() {
-		return new Document(ImmutableMap.of(
-				"_id", "init",
-				"firstname", "luke"
-		));
-	}
-
-	private Person initialLuke() {
-		Person expectedEnitty = new Person();
-		expectedEnitty.id = "init";
-		expectedEnitty.firstname = "luke";
-		return expectedEnitty;
-	}
-
 	@Test // DATAMONGO-2479
-	public void findByIdShouldInvokeAfterConvertCallbacks() {
+	void findByIdShouldInvokeAfterConvertCallbacks() {
 
 		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
 
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
-		Document document = initialLukeDocument();
+		Document document = new Document("_id", "init").append("firstname", "luke");
 		when(collection.find(any(Bson.class), eq(Document.class))).thenReturn(findPublisher);
-		makeFindPublisherPublishJust(document);
+		stubFindSubscribe(document);
 
 		Person result = template.findById("init", Person.class).block(Duration.ofSeconds(1));
 
-		verify(afterConvertCallback).onAfterConvert(eq(initialLuke()), eq(document), anyString());
+		verify(afterConvertCallback).onAfterConvert(eq(new Person("init", "luke")), eq(document), anyString());
 		assertThat(result.id).isEqualTo("after-convert");
 	}
 
 	@Test // DATAMONGO-2479
-	public void findOneShouldInvokeAfterConvertCallbacks() {
+	void findOneShouldInvokeAfterConvertCallbacks() {
 
 		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
 
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
-		Document document = initialLukeDocument();
+		Document document = new Document("_id", "init").append("firstname", "luke");
 		when(collection.find(any(Bson.class), eq(Document.class))).thenReturn(findPublisher);
-		makeFindPublisherPublishJust(document);
+		stubFindSubscribe(document);
 
 		Person result = template.findOne(new Query(), Person.class).block(Duration.ofSeconds(1));
 
-		verify(afterConvertCallback).onAfterConvert(eq(initialLuke()), eq(document), anyString());
+		verify(afterConvertCallback).onAfterConvert(eq(new Person("init", "luke")), eq(document), anyString());
 		assertThat(result.id).isEqualTo("after-convert");
 	}
 
 	@Test // DATAMONGO-2479
-	public void findAllShouldInvokeAfterConvertCallbacks() {
+	void findAllShouldInvokeAfterConvertCallbacks() {
 
 		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
 
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
-		Document document = initialLukeDocument();
+		Document document = new Document("_id", "init").append("firstname", "luke");
 		when(collection.find(Document.class)).thenReturn(findPublisher);
-		makeFindPublisherPublishJust(document);
+		stubFindSubscribe(document);
 
-		List<Person> results = template.findAll(Person.class).timeout(Duration.ofSeconds(1))
-				.toStream().collect(Collectors.toList());
+		List<Person> results = template.findAll(Person.class).timeout(Duration.ofSeconds(1)).toStream()
+				.collect(Collectors.toList());
 
-		verify(afterConvertCallback).onAfterConvert(eq(initialLuke()), eq(document), anyString());
+		verify(afterConvertCallback).onAfterConvert(eq(new Person("init", "luke")), eq(document), anyString());
 		assertThat(results.get(0).id).isEqualTo("after-convert");
 	}
 
 	@Test // DATAMONGO-2479
-	public void findAndModifyShouldInvokeAfterConvertCallbacks() {
+	void findAndModifyShouldInvokeAfterConvertCallbacks() {
 
 		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
 
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
-		Document document = initialLukeDocument();
+		Document document = new Document("_id", "init").append("firstname", "luke");
 		when(collection.findOneAndUpdate(any(Bson.class), any(Bson.class), any())).thenReturn(findPublisher);
-		makeFindPublisherPublishJust(document);
+		stubFindSubscribe(document);
 
 		Person result = template.findAndModify(new Query(), new Update(), Person.class).block(Duration.ofSeconds(1));
 
-		verify(afterConvertCallback).onAfterConvert(eq(initialLuke()), eq(document), anyString());
+		verify(afterConvertCallback).onAfterConvert(eq(new Person("init", "luke")), eq(document), anyString());
 		assertThat(result.id).isEqualTo("after-convert");
 	}
 
 	@Test // DATAMONGO-2479
-	public void findAndRemoveShouldInvokeAfterConvertCallbacks() {
+	void findAndRemoveShouldInvokeAfterConvertCallbacks() {
 
 		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
 
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
-		Document document = initialLukeDocument();
+		Document document = new Document("_id", "init").append("firstname", "luke");
 		when(collection.findOneAndDelete(any(Bson.class), any())).thenReturn(findPublisher);
-		makeFindPublisherPublishJust(document);
+		stubFindSubscribe(document);
 
 		Person result = template.findAndRemove(new Query(), Person.class).block(Duration.ofSeconds(1));
 
-		verify(afterConvertCallback).onAfterConvert(eq(initialLuke()), eq(document), anyString());
+		verify(afterConvertCallback).onAfterConvert(eq(new Person("init", "luke")), eq(document), anyString());
 		assertThat(result.id).isEqualTo("after-convert");
 	}
 
 	@Test // DATAMONGO-2479
-	public void findAllAndRemoveShouldInvokeAfterConvertCallbacks() {
+	void findAllAndRemoveShouldInvokeAfterConvertCallbacks() {
 
 		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
 
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
-		Document document = initialLukeDocument();
+		Document document = new Document("_id", "init").append("firstname", "luke");
 		when(collection.find(Document.class)).thenReturn(findPublisher);
-		makeFindPublisherPublishJust(document);
+		stubFindSubscribe(document);
 		when(collection.deleteMany(any(Bson.class), any(DeleteOptions.class)))
 				.thenReturn(Mono.just(spy(DeleteResult.class)));
 
 		List<Person> results = template.findAllAndRemove(new Query(), Person.class).timeout(Duration.ofSeconds(1))
 				.toStream().collect(Collectors.toList());
 
-		verify(afterConvertCallback).onAfterConvert(eq(initialLuke()), eq(document), anyString());
+		verify(afterConvertCallback).onAfterConvert(eq(new Person("init", "luke")), eq(document), anyString());
 		assertThat(results.get(0).id).isEqualTo("after-convert");
 	}
 
-	private void makeFindPublisherPublishJust(Document document) {
-
-		Publisher<Document> realPublisher = Flux.just(document);
-
-		doAnswer(invocation -> {
-			Subscriber<Document> subscriber = invocation.getArgument(0);
-			realPublisher.subscribe(subscriber);
-			return null;
-		}).when(findPublisher).subscribe(any());
-	}
-
 	@Test // DATAMONGO-2479
-	public void findAndReplaceShouldInvokeAfterConvertCallbacks() {
+	void findAndReplaceShouldInvokeAfterConvertCallbacks() {
 
 		ValueCapturingAfterConvertCallback afterConvertCallback = spy(new ValueCapturingAfterConvertCallback());
 
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
 		when(collection.findOneAndReplace(any(Bson.class), any(Document.class), any())).thenReturn(findPublisher);
-		makeFindPublisherPublishJust(initialLukeDocument());
+		stubFindSubscribe(new Document("_id", "init").append("firstname", "luke"));
 
 		Person entity = new Person();
 		entity.id = "init";
@@ -1279,7 +1255,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-2479
-	public void saveShouldInvokeAfterSaveCallbacks() {
+	void saveShouldInvokeAfterSaveCallbacks() {
 
 		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
 
@@ -1288,7 +1264,7 @@ public class ReactiveMongoTemplateUnitTests {
 		when(collection.replaceOne(any(Bson.class), any(Document.class), any(ReplaceOptions.class)))
 				.thenReturn(Mono.just(mock(UpdateResult.class)));
 
-		Person entity = initialLuke();
+		Person entity = new Person("init", "luke");
 
 		Person saved = template.save(entity).block(Duration.ofSeconds(1));
 
@@ -1297,7 +1273,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-2479
-	public void insertShouldInvokeAfterSaveCallbacks() {
+	void insertShouldInvokeAfterSaveCallbacks() {
 
 		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
 
@@ -1305,7 +1281,7 @@ public class ReactiveMongoTemplateUnitTests {
 
 		when(collection.insertOne(any())).thenReturn(Mono.just(mock(InsertOneResult.class)));
 
-		Person entity = initialLuke();
+		Person entity = new Person("init", "luke");
 
 		Person saved = template.insert(entity).block(Duration.ofSeconds(1));
 
@@ -1314,7 +1290,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-2479
-	public void insertAllShouldInvokeAfterSaveCallbacks() {
+	void insertAllShouldInvokeAfterSaveCallbacks() {
 
 		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
 
@@ -1333,9 +1309,8 @@ public class ReactiveMongoTemplateUnitTests {
 			return Flux.fromIterable(list).map(i -> mock(InsertManyResult.class));
 		});
 
-		List<Person> saved = template.insertAll(Arrays.asList(entity1, entity2))
-				.timeout(Duration.ofSeconds(1))
-				.toStream().collect(Collectors.toList());
+		List<Person> saved = template.insertAll(Arrays.asList(entity1, entity2)).timeout(Duration.ofSeconds(1)).toStream()
+				.collect(Collectors.toList());
 
 		verify(afterSaveCallback, times(2)).onAfterSave(any(), any(), anyString());
 		assertThat(saved.get(0).id).isEqualTo("after-save");
@@ -1343,16 +1318,16 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-2479
-	public void findAndReplaceShouldInvokeAfterSaveCallbacks() {
+	void findAndReplaceShouldInvokeAfterSaveCallbacks() {
 
 		ValueCapturingAfterSaveCallback afterSaveCallback = spy(new ValueCapturingAfterSaveCallback());
 
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterSaveCallback));
 
 		when(collection.findOneAndReplace(any(Bson.class), any(Document.class), any())).thenReturn(findPublisher);
-		makeFindPublisherPublishJust(initialLukeDocument());
+		stubFindSubscribe(new Document("_id", "init").append("firstname", "luke"));
 
-		Person entity = initialLuke();
+		Person entity = new Person("init", "luke");
 
 		Person saved = template.findAndReplace(new Query(), entity).block(Duration.ofSeconds(1));
 
@@ -1361,7 +1336,7 @@ public class ReactiveMongoTemplateUnitTests {
 	}
 
 	@Test // DATAMONGO-2479
-	public void findAndReplaceShouldEmitAfterSaveEvent() {
+	void findAndReplaceShouldEmitAfterSaveEvent() {
 
 		AbstractMongoEventListener<Person> eventListener = new AbstractMongoEventListener<Person>() {
 
@@ -1379,9 +1354,9 @@ public class ReactiveMongoTemplateUnitTests {
 
 		template.setApplicationContext(ctx);
 
-		Person entity = initialLuke();
+		Person entity = new Person("init", "luke");
 
-		Document document = initialLukeDocument();
+		Document document = new Document("_id", "init").append("firstname", "luke");
 		when(collection.findOneAndReplace(any(Bson.class), any(Document.class), any())).thenReturn(Mono.just(document));
 
 		Person saved = template.findAndReplace(new Query(), entity).block(Duration.ofSeconds(1));
@@ -1389,8 +1364,21 @@ public class ReactiveMongoTemplateUnitTests {
 		assertThat(saved.id).isEqualTo("after-save-event");
 	}
 
+	private void stubFindSubscribe(Document document) {
+
+		Publisher<Document> realPublisher = Flux.just(document);
+
+		doAnswer(invocation -> {
+			Subscriber<Document> subscriber = invocation.getArgument(0);
+			realPublisher.subscribe(subscriber);
+			return null;
+		}).when(findPublisher).subscribe(any());
+	}
+
 	@Data
 	@org.springframework.data.mongodb.core.mapping.Document(collection = "star-wars")
+	@AllArgsConstructor
+	@NoArgsConstructor
 	static class Person {
 
 		@Id String id;
@@ -1472,7 +1460,7 @@ public class ReactiveMongoTemplateUnitTests {
 			return Mono.just(entity);
 		}
 	}
-	
+
 	static class ValueCapturingAfterConvertCallback extends ValueCapturingEntityCallback<Person>
 			implements ReactiveAfterConvertCallback<Person> {
 
@@ -1480,10 +1468,12 @@ public class ReactiveMongoTemplateUnitTests {
 		public Mono<Person> onAfterConvert(Person entity, Document document, String collection) {
 
 			capture(entity);
-			return Mono.just(new Person() {{
-				id = "after-convert";
-				firstname = entity.firstname;
-			}});
+			return Mono.just(new Person() {
+				{
+					id = "after-convert";
+					firstname = entity.firstname;
+				}
+			});
 		}
 	}
 
@@ -1494,10 +1484,12 @@ public class ReactiveMongoTemplateUnitTests {
 		public Mono<Person> onAfterSave(Person entity, Document document, String collection) {
 
 			capture(entity);
-			return Mono.just(new Person() {{
-				id = "after-save";
-				firstname = entity.firstname;
-			}});
+			return Mono.just(new Person() {
+				{
+					id = "after-save";
+					firstname = entity.firstname;
+				}
+			});
 		}
 	}
 
