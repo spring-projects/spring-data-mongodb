@@ -111,7 +111,10 @@ public interface ReactiveGridFsOperations {
 	 * @param metadata can be {@literal null}
 	 * @return a {@link Mono} emitting the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just
 	 *         created.
+	 * @deprecated since 2.2.6. Will be removed in 3.0. Please use {@link #store(Publisher, String, String, Object)}
+	 *             instead.
 	 */
+	@Deprecated
 	Mono<ObjectId> store(AsyncInputStream content, @Nullable String filename, @Nullable String contentType,
 			@Nullable Object metadata);
 
@@ -151,7 +154,10 @@ public interface ReactiveGridFsOperations {
 	 * @param metadata can be {@literal null}.
 	 * @return a {@link Mono} emitting the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just
 	 *         created.
+	 * @deprecated since 2.2.6. Will be removed in 3.0. Please use {@link #store(Publisher, String, String, Document)}
+	 *             instead.
 	 */
+	@Deprecated
 	Mono<ObjectId> store(AsyncInputStream content, @Nullable String filename, @Nullable String contentType,
 			@Nullable Document metadata);
 
