@@ -771,45 +771,4 @@ Events are fired throughout the lifecycle of the mapping process. This is descri
 
 Declaring these beans in your Spring ApplicationContext causes them to be invoked whenever the event is dispatched.
 
-[[mapping-explicit-converters]]
-=== Overriding Mapping with Explicit Converters
-
-When storing and querying your objects, it is convenient to have a `MongoConverter` instance handle the mapping of all Java types to `Document` instances. However, sometimes you may want the `MongoConverter` instances do most of the work but let you selectively handle the conversion for a particular type -- perhaps to optimize performance.
-
-To selectively handle the conversion yourself, register one or more one or more `org.springframework.core.convert.converter.Converter` instances with the `MongoConverter`.
-
-NOTE: Spring 3.0 introduced a core.convert package that provides a general type conversion system. This is described in detail in the Spring reference documentation section entitled https://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/core.html#validation["`Spring Type Conversion`"].
-
-You can use the `customConversions` method in `AbstractMongoClientConfiguration` to configure converters. The examples <<mapping-configuration, at the beginning of this chapter>> show how to perform the configuration using Java and XML.
-
-The following example of a Spring Converter implementation converts from a `Document` to a `Person` POJO:
-
-[source,java]
-----
-@ReadingConverter
- public class PersonReadConverter implements Converter<Document, Person> {
-
-  public Person convert(Document source) {
-    Person p = new Person((ObjectId) source.get("_id"), (String) source.get("name"));
-    p.setAge((Integer) source.get("age"));
-    return p;
-  }
-}
-----
-
-The following example converts from a `Person` to a `Document`:
-
-[source,java]
-----
-@WritingConverter
-public class PersonWriteConverter implements Converter<Person, Document> {
-
-  public Document convert(Person source) {
-    Document document = new Document();
-    document.put("_id", source.getId());
-    document.put("name", source.getFirstName());
-    document.put("age", source.getAge());
-    return document;
-  }
-}
-----
+include::mongo-custom-conversions.adoc[]

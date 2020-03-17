@@ -3072,8 +3072,6 @@ TypedAggregation<Book> agg = Aggregation.newAggregation(Book.class,
 <4> Otherwise, add the field value of `author.middle`.
 ====
 
-include::mongo-custom-conversions.adoc[leveloffset=+1]
-
 [[mongo-template.index-and-collections]]
 == Index and Collection Management
 
