@@ -20,6 +20,7 @@ import static com.querydsl.core.types.ExpressionUtils.predicate;
 import static com.querydsl.core.types.dsl.Expressions.*;
 import static org.assertj.core.api.Assertions.*;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import org.bson.Document;
@@ -29,7 +30,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
@@ -179,23 +179,50 @@ public class SpringDataMongodbSerializerUnitTests {
 	@Test // DATAMONGO-2475
 	public void chainedOrsInSameDocument() {
 
-		Predicate predicate = QPerson.person.firstname.eq("firstname_value").or(
-				QPerson.person.lastname.eq("lastname_value")).or(QPerson.person.age.goe(30)).or(
-						QPerson.person.age.loe(20)).or(QPerson.person.uniqueId.isNull());
+		Predicate predicate = QPerson.person.firstname.eq("firstname_value")
+				.or(QPerson.person.lastname.eq("lastname_value")).or(QPerson.person.age.goe(30)).or(QPerson.person.age.loe(20))
+				.or(QPerson.person.uniqueId.isNull());
 
 		assertThat(serializer.handle(predicate)).isEqualTo(Document.parse(
 				"{\"$or\": [{\"firstname\": \"firstname_value\"}, {\"lastname\": \"lastname_value\"}, {\"age\": {\"$gte\": 30}}, {\"age\": {\"$lte\": 20}}, {\"uniqueId\": {\"$exists\": false}}]}"));
 	}
 
 	@Test // DATAMONGO-2475
+	public void chainedNestedOrsInSameDocument() {
+
+		Predicate predicate = QPerson.person.firstname.eq("firstname_value")
+				.or(QPerson.person.lastname.eq("lastname_value")).or(QPerson.person.address.street.eq("spring"));
+
+		assertThat(serializer.handle(predicate)).isEqualTo(Document.parse(
+				"{\"$or\": [{\"firstname\": \"firstname_value\"}, {\"lastname\": \"lastname_value\"}, {\"add.street\": \"spring\"}]}"));
+	}
+
+	@Test // DATAMONGO-2475
 	public void chainedAndsInSameDocument() {
 
-		Predicate predicate = QPerson.person.firstname.eq("firstname_value").and(
-				QPerson.person.lastname.eq("lastname_value")).and(QPerson.person.age.goe(30)).and(
-						QPerson.person.age.loe(20)).and(QPerson.person.uniqueId.isNull());
+		Predicate predicate = QPerson.person.firstname.eq("firstname_value")
+				.and(QPerson.person.lastname.eq("lastname_value")).and(QPerson.person.age.goe(30))
+				.and(QPerson.person.age.loe(20)).and(QPerson.person.uniqueId.isNull());
 
 		assertThat(serializer.handle(predicate)).isEqualTo(Document.parse(
 				"{\"$and\": [{\"firstname\": \"firstname_value\", \"lastname\": \"lastname_value\", \"age\": {\"$gte\": 30}, \"uniqueId\": {\"$exists\": false}}, {\"age\": {\"$lte\": 20}}]}"));
+	}
+
+	@Test // DATAMONGO-2475
+	void chainMultipleAndFlattensCorrectly() {
+
+		Document p1doc = Document.parse("{ \"$or\" : [ { \"firstname\" : \"fn\"}, { \"lastname\" : \"ln\" } ] }");
+		Document p2doc = Document
+				.parse("{ \"$or\" : [ { \"age\" : { \"$gte\" : 20 } }, { \"age\" : { \"$lte\" : 30} } ] }");
+		Document p3doc = Document.parse("{ \"$or\" : [ { \"add.city\" : \"c\"}, { \"add.zipCode\" : \"0\" } ] }");
+		Document expected = new Document("$and", Arrays.asList(p1doc, p2doc, p3doc));
+
+		Predicate predicate1 = QPerson.person.firstname.eq("fn").or(QPerson.person.lastname.eq("ln"));
+		Predicate predicate2 = QPerson.person.age.goe(20).or(QPerson.person.age.loe(30));
+		Predicate predicate3 = QPerson.person.address.city.eq("c").or(QPerson.person.address.zipCode.eq("0"));
+		PredicateOperation testExpression = predicate(Ops.AND, predicate1, predicate2, predicate3);
+
+		assertThat(serializer.handle(testExpression)).isEqualTo(expected);
 	}
 
 	class Address {
