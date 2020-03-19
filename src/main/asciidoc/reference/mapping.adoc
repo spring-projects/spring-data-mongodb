@@ -391,7 +391,7 @@ The MappingMongoConverter can use metadata to drive the mapping of objects to do
 * `@GeoSpatialIndexed`: Applied at the field level to describe how to geoindex the field.
 * `@TextIndexed`: Applied at the field level to mark the field to be included in the text index.
 * `@Language`: Applied at the field level to set the language override property for text index.
-* `@Transient`: By default all private fields are mapped to the document, this annotation excludes the field where it is applied from being stored in the database
+* `@Transient`: By default, all fields are mapped to the document. This annotation excludes the field where it is applied from being stored in the database. Transient properties cannot be used within a persistence constructor as the converter cannot materialize a value for the constructor argument.
 * `@PersistenceConstructor`: Marks a given constructor - even a package protected one - to use when instantiating the object from the database. Constructor arguments are mapped by name to the key values in the retrieved Document.
 * `@Value`: This annotation is part of the Spring Framework . Within the mapping framework it can be applied to constructor arguments. This lets you use a Spring Expression Language statement to transform a key's value retrieved in the database before it is used to construct a domain object. In order to reference a property of a given document one has to use expressions like: `@Value("#root.myProperty")` where `root` refers to the root of the given document.
 * `@Field`: Applied at the field level and described the name of the field as it will be represented in the MongoDB BSON document thus allowing the name to be different than the fieldname of the class.
