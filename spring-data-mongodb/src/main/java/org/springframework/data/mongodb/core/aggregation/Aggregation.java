@@ -658,6 +658,26 @@ public class Aggregation {
 	}
 
 	/**
+	 * Creates a new {@link RedactOperation} that can restrict the content of a document based on information stored
+	 * within the document itself.
+	 * 
+	 * <pre class="code">
+	 * 
+	 * Aggregation.redact(ConditionalOperators.when(Criteria.where("level").is(5)) //
+	 * 		.then(RedactOperation.PRUNE) //
+	 * 		.otherwise(RedactOperation.DESCEND));
+	 * </pre>
+	 *
+	 * @param condition Any {@link AggregationExpression} that resolves to {@literal $$DESCEND}, {@literal $$PRUNE}, or
+	 *          {@literal $$KEEP}. Must not be {@literal null}.
+	 * @return new instance of {@link RedactOperation}. Never {@literal null}.
+	 * @since 3.0
+	 */
+	public static RedactOperation redact(AggregationExpression condition) {
+		return new RedactOperation(condition);
+	}
+
+	/**
 	 * Creates a new {@link Fields} instance for the given field names.
 	 *
 	 * @param fields must not be {@literal null}.
