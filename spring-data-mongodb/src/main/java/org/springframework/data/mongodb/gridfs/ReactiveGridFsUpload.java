@@ -20,19 +20,35 @@ import org.bson.types.ObjectId;
 import org.reactivestreams.Publisher;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
 
 /**
+ * Upload descriptor for a GridFS file upload.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 3.0
  */
 public class ReactiveGridFsUpload<ID> implements GridFsObject<ID, Publisher<DataBuffer>> {
 
-	private ID id;
-	private Publisher<DataBuffer> dataStream;
-	private String filename;
-	private Options options;
+	private final @Nullable ID id;
+	private final Publisher<DataBuffer> dataStream;
+	private final String filename;
+	private final Options options;
+
+	private ReactiveGridFsUpload(@Nullable ID id, Publisher<DataBuffer> dataStream, String filename, Options options) {
+
+		Assert.notNull(dataStream, "Data Stream must not be null");
+		Assert.notNull(filename, "Filename must not be null");
+		Assert.notNull(options, "Options must not be null");
+
+		this.id = id;
+		this.dataStream = dataStream;
+		this.filename = filename;
+		this.options = options;
+	}
 
 	/**
 	 * The {@link GridFSFile#getId()} value converted into its simple java type. <br />
@@ -42,6 +58,7 @@ public class ReactiveGridFsUpload<ID> implements GridFsObject<ID, Publisher<Data
 	 * @see org.springframework.data.mongodb.gridfs.GridFsObject#getFileId()
 	 */
 	@Override
+	@Nullable
 	public ID getFileId() {
 		return id;
 	}
@@ -80,7 +97,7 @@ public class ReactiveGridFsUpload<ID> implements GridFsObject<ID, Publisher<Data
 	 * @return new instance of {@link GridFsUpload}.
 	 */
 	public static ReactiveGridFsUploadBuilder<ObjectId> fromPublisher(Publisher<DataBuffer> source) {
-		return new ReactiveGridFsUploadBuilder().content(source);
+		return new ReactiveGridFsUploadBuilder<ObjectId>().content(source);
 	}
 
 	/**
@@ -90,13 +107,12 @@ public class ReactiveGridFsUpload<ID> implements GridFsObject<ID, Publisher<Data
 	 */
 	public static class ReactiveGridFsUploadBuilder<T> {
 
-		ReactiveGridFsUpload upload;
+		private @Nullable Object id;
+		private Publisher<DataBuffer> dataStream;
+		private String filename;
+		private Options options = Options.none();
 
-		public ReactiveGridFsUploadBuilder() {
-
-			this.upload = new ReactiveGridFsUpload();
-			this.upload.options = Options.none();
-		}
+		private ReactiveGridFsUploadBuilder() {}
 
 		/**
 		 * Define the content of the file to upload.
@@ -105,7 +121,7 @@ public class ReactiveGridFsUpload<ID> implements GridFsObject<ID, Publisher<Data
 		 * @return this.
 		 */
 		public ReactiveGridFsUploadBuilder<T> content(Publisher<DataBuffer> source) {
-			upload.dataStream = source;
+			this.dataStream = source;
 			return this;
 		}
 
@@ -118,7 +134,7 @@ public class ReactiveGridFsUpload<ID> implements GridFsObject<ID, Publisher<Data
 		 */
 		public <T1> ReactiveGridFsUploadBuilder<T1> id(T1 id) {
 
-			upload.id = id;
+			this.id = id;
 			return (ReactiveGridFsUploadBuilder<T1>) this;
 		}
 
@@ -130,7 +146,7 @@ public class ReactiveGridFsUpload<ID> implements GridFsObject<ID, Publisher<Data
 		 */
 		public ReactiveGridFsUploadBuilder<T> filename(String filename) {
 
-			upload.filename = filename;
+			this.filename = filename;
 			return this;
 		}
 
@@ -142,7 +158,9 @@ public class ReactiveGridFsUpload<ID> implements GridFsObject<ID, Publisher<Data
 		 */
 		public ReactiveGridFsUploadBuilder<T> options(Options options) {
 
-			upload.options = options;
+			Assert.notNull(options, "Options must not be null");
+
+			this.options = options;
 			return this;
 		}
 
@@ -154,7 +172,7 @@ public class ReactiveGridFsUpload<ID> implements GridFsObject<ID, Publisher<Data
 		 */
 		public ReactiveGridFsUploadBuilder<T> metadata(Document metadata) {
 
-			upload.options = upload.options.metadata(metadata);
+			this.options = this.options.metadata(metadata);
 			return this;
 		}
 
@@ -166,7 +184,7 @@ public class ReactiveGridFsUpload<ID> implements GridFsObject<ID, Publisher<Data
 		 */
 		public ReactiveGridFsUploadBuilder<T> chunkSize(int chunkSize) {
 
-			upload.options = upload.options.chunkSize(chunkSize);
+			this.options = this.options.chunkSize(chunkSize);
 			return this;
 		}
 
@@ -178,10 +196,12 @@ public class ReactiveGridFsUpload<ID> implements GridFsObject<ID, Publisher<Data
 		 */
 		public ReactiveGridFsUploadBuilder<T> gridFsFile(GridFSFile gridFSFile) {
 
-			upload.id = gridFSFile.getId();
-			upload.filename = gridFSFile.getFilename();
-			upload.options = upload.options.metadata(gridFSFile.getMetadata());
-			upload.options = upload.options.chunkSize(gridFSFile.getChunkSize());
+			Assert.notNull(gridFSFile, "GridFSFile must not be null");
+
+			this.id = gridFSFile.getId();
+			this.filename = gridFSFile.getFilename();
+			this.options = this.options.metadata(gridFSFile.getMetadata());
+			this.options = this.options.chunkSize(gridFSFile.getChunkSize());
 
 			return this;
 		}
@@ -194,12 +214,12 @@ public class ReactiveGridFsUpload<ID> implements GridFsObject<ID, Publisher<Data
 		 */
 		public ReactiveGridFsUploadBuilder<T> contentType(String contentType) {
 
-			upload.options = upload.options.contentType(contentType);
+			this.options = this.options.contentType(contentType);
 			return this;
 		}
 
 		public ReactiveGridFsUpload<T> build() {
-			return (ReactiveGridFsUpload<T>) upload;
+			return new ReactiveGridFsUpload(id, dataStream, filename, options);
 		}
 	}
 }

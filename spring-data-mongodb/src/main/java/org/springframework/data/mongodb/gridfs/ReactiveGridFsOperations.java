@@ -155,7 +155,7 @@ public interface ReactiveGridFsOperations {
 			uploadBuilder.metadata(metadata);
 		}
 
-		return save(uploadBuilder.build());
+		return store(uploadBuilder.build());
 	}
 
 	/**
@@ -169,7 +169,7 @@ public interface ReactiveGridFsOperations {
 	 *         {@link GridFsObject#getFileId()}.
 	 * @since 3.0
 	 */
-	<T> Mono<T> save(GridFsObject<T, Publisher<DataBuffer>> upload);
+	<T> Mono<T> store(GridFsObject<T, Publisher<DataBuffer>> upload);
 
 	/**
 	 * Returns a {@link Flux} emitting all files matching the given query. <br />

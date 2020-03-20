@@ -36,11 +36,11 @@ import org.bson.codecs.DocumentCodec;
 import org.bson.conversions.Bson;
 import org.bson.json.JsonParseException;
 import org.bson.types.ObjectId;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
@@ -171,16 +171,12 @@ public class BsonUtils {
 			return new BsonBoolean((Boolean) source);
 		}
 
-		if(source instanceof Float) {
+		if (source instanceof Float) {
 			return new BsonDouble((Float) source);
 		}
 
-		if (source instanceof Double) {
-			return new BsonDouble((Double) source);
-		}
-
-		throw new IllegalArgumentException(
-				String.format("Unable to convert % (%s) to BsonValue.", source, source != null ? source.getClass() : "null"));
+		throw new IllegalArgumentException(String.format("Unable to convert %s (%s) to BsonValue.", source,
+				source != null ? source.getClass().getName() : "null"));
 	}
 
 	/**

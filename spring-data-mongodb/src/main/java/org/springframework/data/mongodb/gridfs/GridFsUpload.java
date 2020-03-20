@@ -15,42 +15,54 @@
  */
 package org.springframework.data.mongodb.gridfs;
 
-import java.io.IOException;
 import java.io.InputStream;
+import java.util.function.Supplier;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
+
 import org.springframework.data.util.Lazy;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
+import org.springframework.util.StreamUtils;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
 
 /**
+ * Upload descriptor for a GridFS file upload.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 3.0
  */
 public class GridFsUpload<ID> implements GridFsObject<ID, InputStream> {
 
-	private static final InputStream EMPTY_STREAM = new InputStream() {
-		@Override
-		public int read() throws IOException {
-			return -1;
-		}
-	};
+	private final @Nullable ID id;
+	private final Lazy<InputStream> dataStream;
+	private final String filename;
+	private final Options options;
 
-	private ID id;
-	private Lazy<InputStream> dataStream;
-	private String filename;
-	private Options options;
+	private GridFsUpload(@Nullable ID id, Lazy<InputStream> dataStream, String filename, Options options) {
+
+		Assert.notNull(dataStream, "Data Stream must not be null");
+		Assert.notNull(filename, "Filename must not be null");
+		Assert.notNull(options, "Options must not be null");
+
+		this.id = id;
+		this.dataStream = dataStream;
+		this.filename = filename;
+		this.options = options;
+	}
 
 	/**
 	 * The {@link GridFSFile#getId()} value converted into its simple java type. <br />
 	 * A {@link org.bson.BsonString} will be converted to plain {@link String}.
-	 * 
+	 *
 	 * @return can be {@literal null}.
 	 * @see org.springframework.data.mongodb.gridfs.GridFsObject#getFileId()
 	 */
 	@Override
+	@Nullable
 	public ID getFileId() {
 		return id;
 	}
@@ -70,7 +82,7 @@ public class GridFsUpload<ID> implements GridFsObject<ID, InputStream> {
 	 */
 	@Override
 	public InputStream getContent() {
-		return dataStream.orElse(EMPTY_STREAM);
+		return dataStream.orElse(StreamUtils.emptyInput());
 	}
 
 	/*
@@ -89,22 +101,22 @@ public class GridFsUpload<ID> implements GridFsObject<ID, InputStream> {
 	 * @return new instance of {@link GridFsUpload}.
 	 */
 	public static GridFsUploadBuilder<ObjectId> fromStream(InputStream stream) {
-		return new GridFsUploadBuilder().content(stream);
+		return new GridFsUploadBuilder<ObjectId>().content(stream);
 	}
 
 	/**
 	 * Builder to create {@link GridFsUpload} in a fluent way.
-	 * 
+	 *
 	 * @param <T> the target id type.
 	 */
 	public static class GridFsUploadBuilder<T> {
 
-		private GridFsUpload upload;
+		private Object id;
+		private Lazy<InputStream> dataStream;
+		private String filename;
+		private Options options = Options.none();
 
-		public GridFsUploadBuilder() {
-			this.upload = new GridFsUpload();
-			this.upload.options = Options.none();
-		}
+		private GridFsUploadBuilder() {}
 
 		/**
 		 * Define the content of the file to upload.
@@ -114,7 +126,22 @@ public class GridFsUpload<ID> implements GridFsObject<ID, InputStream> {
 		 */
 		public GridFsUploadBuilder<T> content(InputStream stream) {
 
-			upload.dataStream = Lazy.of(() -> stream);
+			Assert.notNull(stream, "InputStream must not be null");
+
+			return content(() -> stream);
+		}
+
+		/**
+		 * Define the content of the file to upload.
+		 *
+		 * @param stream the upload content.
+		 * @return this.
+		 */
+		public GridFsUploadBuilder<T> content(Supplier<InputStream> stream) {
+
+			Assert.notNull(stream, "InputStream Supplier must not be null");
+
+			this.dataStream = Lazy.of(stream);
 			return this;
 		}
 
@@ -127,7 +154,7 @@ public class GridFsUpload<ID> implements GridFsObject<ID, InputStream> {
 		 */
 		public <T1> GridFsUploadBuilder<T1> id(T1 id) {
 
-			upload.id = id;
+			this.id = id;
 			return (GridFsUploadBuilder<T1>) this;
 		}
 
@@ -139,7 +166,7 @@ public class GridFsUpload<ID> implements GridFsObject<ID, InputStream> {
 		 */
 		public GridFsUploadBuilder<T> filename(String filename) {
 
-			upload.filename = filename;
+			this.filename = filename;
 			return this;
 		}
 
@@ -151,7 +178,9 @@ public class GridFsUpload<ID> implements GridFsObject<ID, InputStream> {
 		 */
 		public GridFsUploadBuilder<T> options(Options options) {
 
-			upload.options = options;
+			Assert.notNull(options, "Options must not be null");
+
+			this.options = options;
 			return this;
 		}
 
@@ -163,7 +192,7 @@ public class GridFsUpload<ID> implements GridFsObject<ID, InputStream> {
 		 */
 		public GridFsUploadBuilder<T> metadata(Document metadata) {
 
-			upload.options = upload.options.metadata(metadata);
+			this.options = this.options.metadata(metadata);
 			return this;
 		}
 
@@ -175,40 +204,42 @@ public class GridFsUpload<ID> implements GridFsObject<ID, InputStream> {
 		 */
 		public GridFsUploadBuilder<T> chunkSize(int chunkSize) {
 
-			upload.options = upload.options.chunkSize(chunkSize);
+			this.options = this.options.chunkSize(chunkSize);
 			return this;
 		}
 
 		/**
 		 * Set id, filename, metadata and chunk size from given file.
-		 * 
+		 *
 		 * @param gridFSFile must not be {@literal null}.
 		 * @return this.
 		 */
 		public GridFsUploadBuilder<T> gridFsFile(GridFSFile gridFSFile) {
 
-			upload.id = gridFSFile.getId();
-			upload.filename = gridFSFile.getFilename();
-			upload.options = upload.options.metadata(gridFSFile.getMetadata());
-			upload.options = upload.options.chunkSize(gridFSFile.getChunkSize());
+			Assert.notNull(gridFSFile, "GridFSFile must not be null");
+
+			this.id = gridFSFile.getId();
+			this.filename = gridFSFile.getFilename();
+			this.options = this.options.metadata(gridFSFile.getMetadata());
+			this.options = this.options.chunkSize(gridFSFile.getChunkSize());
 
 			return this;
 		}
 
 		/**
 		 * Set the content type.
-		 * 
+		 *
 		 * @param contentType must not be {@literal null}.
 		 * @return this.
 		 */
 		public GridFsUploadBuilder<T> contentType(String contentType) {
 
-			upload.options = upload.options.contentType(contentType);
+			this.options = this.options.contentType(contentType);
 			return this;
 		}
 
 		public GridFsUpload<T> build() {
-			return (GridFsUpload<T>) upload;
+			return new GridFsUpload(id, dataStream, filename, options);
 		}
 	}
 }

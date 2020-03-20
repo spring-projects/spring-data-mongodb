@@ -121,7 +121,7 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.gridfs.ReactiveGridFsOperations#save(org.springframework.data.mongodb.gridfs.GridFsObject)
 	 */
-	public <T> Mono<T> save(GridFsObject<T, Publisher<DataBuffer>> upload) {
+	public <T> Mono<T> store(GridFsObject<T, Publisher<DataBuffer>> upload) {
 
 		GridFSUploadOptions uploadOptions = computeUploadOptionsFor(upload.getOptions().getContentType(),
 				upload.getOptions().getMetadata());

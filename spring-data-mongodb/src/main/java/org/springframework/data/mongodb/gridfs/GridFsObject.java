@@ -21,7 +21,7 @@ import org.springframework.lang.Nullable;
 import com.mongodb.client.gridfs.model.GridFSFile;
 
 /**
- * A common interface when dealing with GridFs items using Spring Data.o
+ * A common interface when dealing with GridFs items using Spring Data.
  *
  * @author Christoph Strobl
  * @since 3.0
@@ -31,7 +31,7 @@ public interface GridFsObject<ID, CONTENT> {
 	/**
 	 * The {@link GridFSFile#getId()} value converted into its simple java type. <br />
 	 * A {@link org.bson.BsonString} will be converted to plain {@link String}.
-	 * 
+	 *
 	 * @return can be {@literal null} depending on the implementation.
 	 */
 	@Nullable
@@ -39,34 +39,35 @@ public interface GridFsObject<ID, CONTENT> {
 
 	/**
 	 * The filename.
-	 * 
+	 *
 	 * @return
 	 */
 	String getFilename();
 
 	/**
 	 * The actual file content.
-	 * 
+	 *
 	 * @return
+	 * @throws IllegalStateException if the content cannot be obtained.
 	 */
 	CONTENT getContent();
 
 	/**
 	 * Additional information like file metadata (eg. contentType).
-	 * 
+	 *
 	 * @return never {@literal null}.
 	 */
 	Options getOptions();
 
 	/**
 	 * Additional, context relevant information.
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 */
 	class Options {
 
-		private Document metadata = new Document();
-		private int chunkSize = -1;
+		private final Document metadata;
+		private final int chunkSize;
 
 		private Options(Document metadata, int chunkSize) {
 
@@ -81,16 +82,6 @@ public interface GridFsObject<ID, CONTENT> {
 		 */
 		public static Options none() {
 			return new Options(new Document(), -1);
-		}
-
-		/**
-		 * Static factory method to create {@link Options} with given chunk size.
-		 *
-		 * @param chunkSize
-		 * @return new instance of {@link Options}.
-		 */
-		public static Options chunked(int chunkSize) {
-			return new Options(new Document(), chunkSize);
 		}
 
 		/**
@@ -115,7 +106,7 @@ public interface GridFsObject<ID, CONTENT> {
 
 		/**
 		 * Set the associated content type.
-		 * 
+		 *
 		 * @param contentType must not be {@literal null}.
 		 * @return new instance of {@link Options}.
 		 */
