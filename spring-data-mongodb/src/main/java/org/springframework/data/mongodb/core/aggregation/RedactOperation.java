@@ -23,7 +23,7 @@ import org.springframework.util.Assert;
 /**
  * {@link RedactOperation} allows to restrict the content of a {@link Document} based on information stored within
  * itself.
- * 
+ *
  * <pre class="code">
  * RedactOperation.builder() //
  * 		.when(Criteria.where("level").is(5)) //
@@ -89,7 +89,7 @@ public class RedactOperation implements AggregationOperation {
 
 	/**
 	 * Builder to create new instance of {@link RedactOperation}.
-	 * 
+	 *
 	 * @author Christoph Strobl
 	 */
 	public static class RedactOperationBuilder {
@@ -98,9 +98,13 @@ public class RedactOperation implements AggregationOperation {
 		private Object then;
 		private Object otherwise;
 
+		private RedactOperationBuilder() {
+
+		}
+
 		/**
 		 * Specify the evaluation condition.
-		 * 
+		 *
 		 * @param criteria must not be {@literal null}.
 		 * @return this.
 		 */
@@ -204,7 +208,7 @@ public class RedactOperation implements AggregationOperation {
 		/**
 		 * Define the outcome (anything that resolves to {@literal $$DESCEND}, {@literal $$PRUNE}, or {@literal $$KEEP})
 		 * when the condition is not met.
-		 * 
+		 *
 		 * @param otherwise must not be {@literal null}.
 		 * @return this.
 		 */

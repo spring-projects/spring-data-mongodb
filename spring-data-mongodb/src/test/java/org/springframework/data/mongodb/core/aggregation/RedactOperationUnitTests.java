@@ -32,6 +32,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.lang.Nullable;
 
 /**
+ * Unit tests for {@link RedactOperation}.
+ *
  * @author Christoph Strobl
  */
 class RedactOperationUnitTests {
