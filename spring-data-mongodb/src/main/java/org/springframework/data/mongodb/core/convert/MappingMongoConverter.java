@@ -1121,7 +1121,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				map.put(key, read(defaultedValueType, (BasicDBObject) value, path));
 			} else if (value instanceof DBRef) {
 				map.put(key, DBRef.class.equals(rawValueType) ? value
-						: readAndConvertDBRef((DBRef) value, defaultedValueType, ObjectPath.ROOT, rawValueType != null ? rawValueType : ClassTypeInformation.OBJECT.getType()));
+						: readAndConvertDBRef((DBRef) value, defaultedValueType, ObjectPath.ROOT, rawValueType));
 			} else if (value instanceof List) {
 				map.put(key, readCollectionOrArray(valueType != null ? valueType : ClassTypeInformation.LIST,
 						(List<Object>) value, path));
@@ -1524,7 +1524,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	@Nullable
 	private <T> T readAndConvertDBRef(@Nullable DBRef dbref, TypeInformation<?> type, ObjectPath path,
-			final Class<?> rawType) {
+			@Nullable Class<?> rawType) {
 
 		List<T> result = bulkReadAndConvertDBRefs(Collections.singletonList(dbref), type, path, rawType);
 		return CollectionUtils.isEmpty(result) ? null : result.iterator().next();
@@ -1547,7 +1547,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	@SuppressWarnings("unchecked")
 	private <T> List<T> bulkReadAndConvertDBRefs(List<DBRef> dbrefs, TypeInformation<?> type, ObjectPath path,
-			final Class<?> rawType) {
+			@Nullable Class<?> rawType) {
 
 		if (CollectionUtils.isEmpty(dbrefs)) {
 			return Collections.emptyList();
@@ -1563,7 +1563,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		for (Document document : referencedRawDocuments) {
 
 			if (document != null) {
-				maybeEmitEvent(new AfterLoadEvent<>(document, (Class<T>) rawType, collectionName));
+				maybeEmitEvent(
+						new AfterLoadEvent<>(document, (Class<T>) (rawType != null ? rawType : Object.class), collectionName));
 			}
 
 			final T target = (T) read(type, document, path);
