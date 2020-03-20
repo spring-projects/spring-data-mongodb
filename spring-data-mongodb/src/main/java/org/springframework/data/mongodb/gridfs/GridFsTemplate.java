@@ -89,31 +89,6 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.Object)
-	 */
-	@Override
-	public ObjectId store(InputStream content, @Nullable Object metadata) {
-		return store(content, null, metadata);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, java.lang.String)
-	 */
-	public ObjectId store(InputStream content, @Nullable String filename, @Nullable String contentType) {
-		return store(content, filename, contentType, (Object) null);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, java.lang.Object)
-	 */
-	public ObjectId store(InputStream content, @Nullable String filename, @Nullable Object metadata) {
-		return store(content, filename, null, metadata);
-	}
-
-	/*
-	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, java.lang.String, java.lang.Object)
 	 */
 	public ObjectId store(InputStream content, @Nullable String filename, @Nullable String contentType,
@@ -125,7 +100,7 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#save(org.springframework.data.mongodb.gridfs.GridFsObject)
 	 */
-	public <T> T save(GridFsObject<T, InputStream> upload) {
+	public <T> T store(GridFsObject<T, InputStream> upload) {
 
 		GridFSUploadOptions uploadOptions = computeUploadOptionsFor(upload.getOptions().getContentType(),
 				upload.getOptions().getMetadata());

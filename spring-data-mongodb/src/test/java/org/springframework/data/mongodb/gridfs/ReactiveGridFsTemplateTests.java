@@ -278,7 +278,7 @@ public class ReactiveGridFsTemplateTests {
 				.contentType("xml") //
 				.build();
 
-		operations.save(upload).as(StepVerifier::create).expectNext(id).verifyComplete();
+		operations.store(upload).as(StepVerifier::create).expectNext(id).verifyComplete();
 
 		operations.findOne(query(where("_id").is(id))).flatMap(operations::getResource)
 				.flatMapMany(ReactiveGridFsResource::getDownloadStream) //

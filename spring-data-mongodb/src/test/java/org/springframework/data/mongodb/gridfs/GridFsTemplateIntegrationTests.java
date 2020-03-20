@@ -301,7 +301,7 @@ public class GridFsTemplateIntegrationTests {
 				.contentType("xml") //
 				.build();
 
-		assertThat(operations.save(upload)).isEqualTo(id);
+		assertThat(operations.store(upload)).isEqualTo(id);
 
 		GridFsResource fsFile = operations.getResource(operations.findOne(query(where("_id").is(id))));
 		byte[] content = StreamUtils.copyToByteArray(fsFile.getInputStream());
