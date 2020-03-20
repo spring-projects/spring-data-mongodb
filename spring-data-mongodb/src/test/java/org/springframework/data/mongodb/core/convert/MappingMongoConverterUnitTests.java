@@ -42,7 +42,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.ConversionNotSupportedException;
 import org.springframework.beans.factory.annotation.Value;
@@ -80,7 +79,6 @@ import org.springframework.data.mongodb.core.mapping.PersonPojoStringId;
 import org.springframework.data.mongodb.core.mapping.TextScore;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertCallback;
 import org.springframework.data.util.ClassTypeInformation;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.BasicDBList;
@@ -2162,8 +2160,7 @@ public class MappingMongoConverterUnitTests {
 
 		DBRefWrapper result = converter.read(DBRefWrapper.class, document);
 
-		verify(afterConvertCallback).onAfterConvert(eq(result.personMap.get("foo")),
-				eq(new org.bson.Document()), any());
+		verify(afterConvertCallback).onAfterConvert(eq(result.personMap.get("foo")), eq(new org.bson.Document()), any());
 	}
 
 	@Test // DATAMONGO-2300
