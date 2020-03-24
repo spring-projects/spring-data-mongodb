@@ -131,6 +131,11 @@ public class ReactiveMongoRepositoryTests {
 		ReactiveCappedCollectionRepository reactiveCappedCollectionRepository(ReactiveMongoRepositoryFactory factory) {
 			return factory.getRepository(ReactiveCappedCollectionRepository.class);
 		}
+
+		@Override
+		protected boolean autoIndexCreation() {
+			return true;
+		}
 	}
 
 	@BeforeAll

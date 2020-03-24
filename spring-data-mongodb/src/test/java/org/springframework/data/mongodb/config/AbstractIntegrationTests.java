@@ -62,6 +62,11 @@ public abstract class AbstractIntegrationTests {
 		protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
 			return Collections.emptySet();
 		}
+
+		@Override
+		protected boolean autoIndexCreation() {
+			return true;
+		}
 	}
 
 	@Autowired MongoOperations operations;

@@ -40,6 +40,9 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.MongoCollectionUtils;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.Client;
@@ -186,7 +189,10 @@ public class MappingTests {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void testUniqueIndex() {
 
-		MongoTemplate template = new MongoTemplate(client, DB_NAME);
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		mappingContext.setAutoIndexCreation(true);
+
+		MongoTemplate template = new MongoTemplate(new SimpleMongoClientDatabaseFactory(client, DB_NAME), new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext));
 
 		Address addr = new Address();
 		addr.setLines(new String[] { "1234 W. 1st Street", "Apt. 12" });
@@ -227,7 +233,11 @@ public class MappingTests {
 	@Test
 	public void testIndexesCreatedInRightCollection() {
 
-		MongoTemplate template = new MongoTemplate(client, DB_NAME);
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		mappingContext.setAutoIndexCreation(true);
+
+		MongoTemplate template = new MongoTemplate(new SimpleMongoClientDatabaseFactory(client, DB_NAME), new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext));
+
 
 		CustomCollectionWithIndex ccwi = new CustomCollectionWithIndex("test");
 		template.insert(ccwi);

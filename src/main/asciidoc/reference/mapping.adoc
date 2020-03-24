@@ -392,7 +392,7 @@ Automatic index creation is only done for types annotated with `@Document`.
 
 [NOTE]
 ====
-To turn automatic index creation _OFF_ please override `autoIndexCreation()` in your configuration.
+To turn automatic index creation _ON_ please override `autoIndexCreation()` in your configuration.
 [source,java]
 ----
 @Configuration
@@ -400,7 +400,7 @@ public class Config extends AbstractMongoClientConfiguration {
 
   @Override
   public boolean autoIndexCreation() {
-    return false;
+    return true;
   }
 
   // ...
@@ -408,7 +408,7 @@ public class Config extends AbstractMongoClientConfiguration {
 ----
 ====
 
-IMPORTANT: Automatic index creation will be turned _OFF_ by default with the release of 3.x.
+IMPORTANT: Automatic index creation is turned _OFF_ by default as of the release of 3.x.
 We recommend index creation to happen either out of band or as part of the application startup using
 `IndexOperations`.
 

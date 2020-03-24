@@ -55,4 +55,9 @@ public class GeoIndexedAppConfig extends AbstractMongoClientConfiguration {
 	protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
 		return Collections.emptySet();
 	}
+
+	@Override
+	protected boolean autoIndexCreation() {
+		return true;
+	}
 }

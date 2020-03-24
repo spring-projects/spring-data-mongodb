@@ -19,6 +19,9 @@ import static org.assertj.core.data.Index.atIndex;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import lombok.Data;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
@@ -66,7 +69,10 @@ public class ReactiveMongoTemplateIndexTests {
 	void setUp() {
 
 		factory = new SimpleReactiveMongoDatabaseFactory(client, "reactive-template-index-tests");
-		template = new ReactiveMongoTemplate(factory);
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		mappingContext.setAutoIndexCreation(true);
+		template = new ReactiveMongoTemplate(factory, new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext));
+
 
 		MongoTestUtils.dropCollectionNow(template.getMongoDatabase().getName(), "person", client);
 		MongoTestUtils.dropCollectionNow(template.getMongoDatabase().getName(), "indexfail", client);
