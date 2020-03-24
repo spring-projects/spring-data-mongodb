@@ -199,12 +199,12 @@ public abstract class MongoConfigurationSupport {
 	 * Configure whether to automatically create indices for domain types by deriving the
 	 * {@link org.springframework.data.mongodb.core.index.IndexDefinition} from the entity or not.
 	 *
-	 * @return {@literal true} by default. <br />
-	 *         <strong>INFO</strong>: As of 3.x the default will be set to {@literal false}.
+	 * @return {@literal false} by default. <br />
+	 *         <strong>INFO</strong>: As of 3.x the default will is set to {@literal false} was {@literal true} in 2.x.
 	 * @since 2.2
 	 */
 	protected boolean autoIndexCreation() {
-		return true;
+		return false;
 	}
 
 	/**

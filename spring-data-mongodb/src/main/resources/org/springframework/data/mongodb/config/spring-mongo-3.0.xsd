@@ -224,6 +224,16 @@ The base package in which to scan for entities annotated with @Document
 					</xsd:documentation>
 				</xsd:annotation>
 			</xsd:attribute>
+			<xsd:attribute name="auto-index-creation" use="optional">
+				<xsd:annotation>
+					<xsd:documentation>
+						Enable/Disable index creation for annotated properties/entities.
+					</xsd:documentation>
+				</xsd:annotation>
+				<xsd:simpleType>
+					<xsd:union memberTypes="xsd:boolean xsd:string"/>
+				</xsd:simpleType>
+			</xsd:attribute>
 		</xsd:complexType>
 	</xsd:element>
 

@@ -96,6 +96,9 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		String id = element.getAttribute(AbstractBeanDefinitionParser.ID_ATTRIBUTE);
 		id = StringUtils.hasText(id) ? id : DEFAULT_CONVERTER_BEAN_NAME;
 
+		String autoIndexCreation = element.getAttribute("auto-index-creation");
+		boolean autoIndexCreationEnabled = StringUtils.hasText(autoIndexCreation) && Boolean.valueOf(autoIndexCreation);
+
 		parserContext.pushContainingComponent(new CompositeComponentDefinition("Mapping Mongo Converter", element));
 
 		BeanDefinition conversionsDefinition = getCustomConversions(element, parserContext);
@@ -199,6 +202,11 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 
 	public static String potentiallyCreateMappingContext(Element element, ParserContext parserContext,
 			@Nullable BeanDefinition conversionsDefinition, @Nullable String converterId) {
+		return potentiallyCreateMappingContext(element, parserContext, conversionsDefinition, converterId, false);
+	}
+
+	public static String potentiallyCreateMappingContext(Element element, ParserContext parserContext,
+			@Nullable BeanDefinition conversionsDefinition, @Nullable String converterId, boolean autoIndexCreation) {
 
 		String ctxRef = element.getAttribute("mapping-context-ref");
 
@@ -225,6 +233,8 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 
 			mappingContextBuilder.addPropertyValue("simpleTypeHolder", simpleTypesDefinition);
 		}
+
+		mappingContextBuilder.addPropertyValue("autoIndexCreation", autoIndexCreation);
 
 		parseFieldNamingStrategy(element, parserContext.getReaderContext(), mappingContextBuilder);
 

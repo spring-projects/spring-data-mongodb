@@ -95,6 +95,11 @@ public class IndexingIntegrationTests {
 		protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
 			return Collections.emptySet();
 		}
+
+		@Override
+		protected boolean autoIndexCreation() {
+			return true;
+		}
 	}
 
 	@AfterEach

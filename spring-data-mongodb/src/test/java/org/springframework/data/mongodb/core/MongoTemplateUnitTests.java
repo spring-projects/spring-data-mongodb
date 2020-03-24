@@ -206,6 +206,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(distinctIterable.into(any())).thenReturn(Collections.emptyList());
 
 		this.mappingContext = new MongoMappingContext();
+		mappingContext.setAutoIndexCreation(true);
 		mappingContext.afterPropertiesSet();
 
 		this.converter = spy(new MappingMongoConverter(new DefaultDbRefResolver(factory), mappingContext));

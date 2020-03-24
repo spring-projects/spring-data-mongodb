@@ -18,6 +18,8 @@
 		</property>
 	</bean>
 
+	<mongo:mapping-converter auto-index-creation="true" />
+
 	<mongo:repositories base-package="org.springframework.data.mongodb.repository">
 		<repository:exclude-filter type="regex" expression=".*MongoRepository"/>
 	</mongo:repositories>

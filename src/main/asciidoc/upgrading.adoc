@@ -148,6 +148,52 @@ Element | Comment
 
 == Other Changes
 
+=== Auto Index Creation
+
+Annotation based index creation is now turned **OFF** by default and needs to be enabled eg. when relying on `@GeoSpatialIndexed`.
+
+.Enable Auto Index Creation
+====
+
+.XML Namespace
+[source,xml]
+----
+<mongo:mapping-converter auto-index-creation="true" /> <1>
+----
+
+.Java Config
+[source,java]
+----
+@Configuration
+public class Config extends AbstractMongoClientConfiguration {
+
+	@Override
+    protected boolean autoIndexCreation() { <2>
+        return true;
+    }
+
+    // ...
+}
+----
+
+.Programmatic
+[source,java]
+----
+MongoDatabaseFactory dbFactory = new SimpleMongoClientDatabaseFactory(...);
+DefaultDbRefResolver dbRefResolver = new DefaultDbRefResolver(dbFactory);
+
+MongoMappingContext mappingContext = new MongoMappingContext();
+mappingContext.setAutoIndexCreation(true); <3>
+// ...
+mappingContext.afterPropertiesSet();
+
+MongoTemplate template = new MongoTemplate(dbFactory, new MappingMongoConverter(dbRefResolver, mappingContext));
+----
+<1> Use the XML namespace attribute `auto-index-creation` on `mapping-converter`.
+<2> Overrride `autoIndexCreation` via `AbstractMongoClientConfiguration` or `AbstractReactiveMongoClientConfiguration`.
+<3> Set the flag on `MongoMappingContext`.
+====
+
 === UUID Types
 
 The MongoDB UUID representation can now be configured with different formats.
@@ -157,8 +203,8 @@ This has to be done via `MongoClientSettings` as shown in the snippet below.
 ====
 [source,java]
 ----
-
-static class Config extends AbstractMongoClientConfiguration {
+@Configuration
+public class Config extends AbstractMongoClientConfiguration {
 
     @Override
     public void configureClientSettings(MongoClientSettings.Builder builder) {
