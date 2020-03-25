@@ -1,6 +1,15 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.2.6.RELEASE (2020-03-25)
+---------------------------------------------
+* DATAMONGO-2497 - Update documentation regarding @Transient properties usage in the persistence constructor.
+* DATAMONGO-2488 - KeyMapper.mapPropertyName does not work for nested arrays.
+* DATAMONGO-2485 - Release 2.2.6 (Moore SR6).
+* DATAMONGO-2445 - Deprecate ReactiveGridFs methods using AsyncInputStream.
+* DATAMONGO-2300 - Can't read and convert DBRef when the type is Map.
+
+
 Changes in version 3.0.0.M4 (2020-03-11)
 ----------------------------------------
 * DATAMONGO-2491 - Adapt to Mockito 3.3 changes.
@@ -2939,6 +2948,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
