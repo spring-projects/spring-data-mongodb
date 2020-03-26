@@ -139,8 +139,6 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 
 			for (IndexDefinition indexDefinition : indexResolver.resolveIndexFor(entity.getTypeInformation())) {
 
-				JustOnceLogger.logWarnIndexCreationConfigurationChange(this.getClass().getName());
-
 				IndexDefinitionHolder indexToCreate = indexDefinition instanceof IndexDefinitionHolder
 						? (IndexDefinitionHolder) indexDefinition
 						: new IndexDefinitionHolder("", indexDefinition, collection);

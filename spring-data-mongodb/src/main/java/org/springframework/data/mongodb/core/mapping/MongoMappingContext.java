@@ -42,7 +42,6 @@ public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersis
 	private static final FieldNamingStrategy DEFAULT_NAMING_STRATEGY = PropertyNameFieldNamingStrategy.INSTANCE;
 
 	private FieldNamingStrategy fieldNamingStrategy = DEFAULT_NAMING_STRATEGY;
-	private @Nullable ApplicationContext context;
 	private boolean autoIndexCreation = false;
 
 	/**
@@ -99,8 +98,6 @@ public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersis
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 
 		super.setApplicationContext(applicationContext);
-
-		this.context = applicationContext;
 	}
 
 	/**

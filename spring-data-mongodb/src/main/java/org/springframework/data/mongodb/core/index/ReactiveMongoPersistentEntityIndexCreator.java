@@ -142,8 +142,6 @@ public class ReactiveMongoPersistentEntityIndexCreator {
 
 	Mono<String> createIndex(IndexDefinitionHolder indexDefinition) {
 
-		JustOnceLogger.logWarnIndexCreationConfigurationChange(this.getClass().getName());
-
 		return operationsProvider.indexOps(indexDefinition.getCollection()).ensureIndex(indexDefinition) //
 				.onErrorResume(ReactiveMongoPersistentEntityIndexCreator::isDataIntegrityViolation,
 						e -> translateException(e, indexDefinition));
