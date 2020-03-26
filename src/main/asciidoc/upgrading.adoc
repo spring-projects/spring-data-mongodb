@@ -151,6 +151,7 @@ Element | Comment
 === Auto Index Creation
 
 Annotation based index creation is now turned **OFF** by default and needs to be enabled eg. when relying on `@GeoSpatialIndexed`.
+Please refer to <<mapping.index-creation>> on how to create indexes programmatically.
 
 .Enable Auto Index Creation
 ====
@@ -158,7 +159,7 @@ Annotation based index creation is now turned **OFF** by default and needs to be
 .XML Namespace
 [source,xml]
 ----
-<mongo:mapping-converter auto-index-creation="true" /> <1>
+<mongo:mapping-converter auto-index-creation="true" />    <1>
 ----
 
 .Java Config
@@ -168,7 +169,7 @@ Annotation based index creation is now turned **OFF** by default and needs to be
 public class Config extends AbstractMongoClientConfiguration {
 
 	@Override
-    protected boolean autoIndexCreation() { <2>
+    protected boolean autoIndexCreation() {               <2>
         return true;
     }
 
@@ -183,14 +184,14 @@ MongoDatabaseFactory dbFactory = new SimpleMongoClientDatabaseFactory(...);
 DefaultDbRefResolver dbRefResolver = new DefaultDbRefResolver(dbFactory);
 
 MongoMappingContext mappingContext = new MongoMappingContext();
-mappingContext.setAutoIndexCreation(true); <3>
+mappingContext.setAutoIndexCreation(true);                <3>
 // ...
 mappingContext.afterPropertiesSet();
 
 MongoTemplate template = new MongoTemplate(dbFactory, new MappingMongoConverter(dbRefResolver, mappingContext));
 ----
 <1> Use the XML namespace attribute `auto-index-creation` on `mapping-converter`.
-<2> Overrride `autoIndexCreation` via `AbstractMongoClientConfiguration` or `AbstractReactiveMongoClientConfiguration`.
+<2> Override `autoIndexCreation` via `AbstractMongoClientConfiguration` or `AbstractReactiveMongoClientConfiguration`.
 <3> Set the flag on `MongoMappingContext`.
 ====
 
