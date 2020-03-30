@@ -922,6 +922,7 @@ public class QueryMapper {
 	 */
 	protected static class MetadataBackedField extends Field {
 
+		private static final Pattern POSITIONAL_PARAMETER_PATTERN = Pattern.compile("\\.\\$(\\[.*?\\])?|\\.\\d+");
 		private static final String INVALID_ASSOCIATION_REFERENCE = "Invalid path reference %s! Associations can only be pointed to directly or via their id property!";
 
 		private final MongoPersistentEntity<?> entity;
@@ -963,9 +964,13 @@ public class QueryMapper {
 			this.entity = entity;
 			this.mappingContext = context;
 
-			this.path = getPath(name);
+			this.path = getPath(removePositionalPlaceholders(name));
 			this.property = path == null ? property : path.getLeafProperty();
 			this.association = findAssociation();
+		}
+
+		private static String removePositionalPlaceholders(String raw) {
+			return POSITIONAL_PARAMETER_PATTERN.matcher(raw).replaceAll("");
 		}
 
 		/*
@@ -1168,7 +1173,7 @@ public class QueryMapper {
 		 * @since 1.7
 		 */
 		protected Converter<MongoPersistentProperty, String> getAssociationConverter() {
-			return new AssociationConverter(getAssociation());
+			return new AssociationConverter(name, getAssociation());
 		}
 
 		protected MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext() {
@@ -1247,20 +1252,9 @@ public class QueryMapper {
 				StringBuilder mappedName = new StringBuilder(PropertyToFieldNameConverter.INSTANCE.convert(property));
 				boolean inspect = iterator.hasNext();
 
-				int depth = 0;
 				while (inspect) {
 
 					String partial = iterator.next();
-
-					if (depth > 0 && property.isCollectionLike() && property.isEntity() && property.getComponentType() != null) {
-
-						MongoPersistentEntity<?> persistentEntity = mappingContext
-								.getRequiredPersistentEntity(property.getComponentType());
-						MongoPersistentProperty persistentProperty = persistentEntity.getPersistentProperty(partial);
-						if (persistentProperty != null) {
-							partial = mapPropertyName(persistentProperty);
-						}
-					}
 
 					boolean isPositional = (isPositionalParameter(partial) && (property.isMap() || property.isCollectionLike()));
 
@@ -1269,13 +1263,12 @@ public class QueryMapper {
 					}
 
 					inspect = isPositional && iterator.hasNext();
-					depth++;
 				}
 
 				return mappedName.toString();
 			}
 
-			private static boolean isPositionalParameter(String partial) {
+			static boolean isPositionalParameter(String partial) {
 
 				if ("$".equals(partial)) {
 					return true;
@@ -1303,6 +1296,7 @@ public class QueryMapper {
 	 */
 	protected static class AssociationConverter implements Converter<MongoPersistentProperty, String> {
 
+		private final String name;
 		private final MongoPersistentProperty property;
 		private boolean associationFound;
 
@@ -1311,10 +1305,11 @@ public class QueryMapper {
 		 *
 		 * @param association must not be {@literal null}.
 		 */
-		public AssociationConverter(Association<MongoPersistentProperty> association) {
+		public AssociationConverter(String name, Association<MongoPersistentProperty> association) {
 
 			Assert.notNull(association, "Association must not be null!");
 			this.property = association.getInverse();
+			this.name = name;
 		}
 
 		/*
@@ -1330,6 +1325,12 @@ public class QueryMapper {
 
 			if (property.equals(source)) {
 				associationFound = true;
+			}
+
+			if (associationFound) {
+				if (name.endsWith("$") && property.isCollectionLike()) {
+					return source.getFieldName() + ".$";
+				}
 			}
 
 			return source.getFieldName();

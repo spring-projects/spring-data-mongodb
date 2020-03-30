@@ -272,6 +272,7 @@ public class UpdateMapper extends QueryMapper {
 	 *
 	 * @author Thomas Darimont
 	 * @author Oliver Gierke
+	 * @author Christoph Strobl
 	 */
 	private static class MetadataBackedUpdateField extends MetadataBackedField {
 
@@ -289,7 +290,7 @@ public class UpdateMapper extends QueryMapper {
 		public MetadataBackedUpdateField(MongoPersistentEntity<?> entity, String key,
 				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 
-			super(key.replaceAll("\\.\\$(\\[.*\\])?", ""), entity, mappingContext);
+			super(key, entity, mappingContext);
 			this.key = key;
 		}
 
@@ -338,7 +339,7 @@ public class UpdateMapper extends QueryMapper {
 					MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
 					Association<MongoPersistentProperty> association, String key) {
 
-				super(association);
+				super(key, association);
 				this.mapper = new KeyMapper(key, mappingContext);
 			}
 
