@@ -2122,10 +2122,11 @@ mongoOperations.find<Book>(
 )
 
 mongoOperations.find<Book>(
+Query(
   Criteria().andOperator(
     Book::price gt 5,
     Book::price lt 10
-  )
+  ))
 )
 
 // Binary operators
