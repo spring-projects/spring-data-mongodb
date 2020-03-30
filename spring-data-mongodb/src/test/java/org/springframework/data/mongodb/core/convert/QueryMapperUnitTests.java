@@ -967,6 +967,32 @@ public class QueryMapperUnitTests {
 		assertThat(target).isEqualTo(new org.bson.Document("arrayCustomName.$[some_item].nes-ted.$[other_item]", "value"));
 	}
 
+	@Test // DATAMONGO-2502
+	void shouldAllowDeeplyNestedPlaceholders() {
+
+		org.bson.Document target = mapper.getMappedObject(
+				query(where("level0.$[some_item].arrayObj.$[other_item].nested").is("value")).getQueryObject(),
+				context.getPersistentEntity(WithDeepArrayNesting.class));
+
+		assertThat(target).isEqualTo(new org.bson.Document("level0.$[some_item].arrayObj.$[other_item].nested", "value"));
+	}
+
+	@Test // DATAMONGO-2502
+	void shouldAllowDeeplyNestedPlaceholdersWithCustomName() {
+
+		org.bson.Document target = mapper.getMappedObject(
+				query(where("level0.$[some_item].arrayCustomName.$[other_item].nested").is("value")).getQueryObject(),
+				context.getPersistentEntity(WithDeepArrayNesting.class));
+
+		assertThat(target)
+				.isEqualTo(new org.bson.Document("level0.$[some_item].arrayCustomName.$[other_item].nes-ted", "value"));
+	}
+
+	class WithDeepArrayNesting {
+
+		List<WithNestedArray> level0;
+	}
+
 	class WithNestedArray {
 
 		List<NestedArrayOfObj> arrayObj;

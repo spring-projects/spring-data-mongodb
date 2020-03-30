@@ -333,6 +333,51 @@ public class DefaultBulkOperationsUnitTests {
 				.isEqualTo(new org.bson.Document("element", new Document("$gte", 100)));
 	}
 
+	@Test // DATAMONGO-2502
+	void shouldRetainNestedArrayPathWithPlaceholdersForNoMatchingPaths() {
+
+		ops.updateOne(new BasicQuery("{}"), new Update().set("items.$.documents.0.fileId", "new-id")).execute();
+
+		verify(collection).bulkWrite(captor.capture(), any());
+
+		UpdateOneModel<Document> updateModel = (UpdateOneModel<Document>) captor.getValue().get(0);
+		assertThat(updateModel.getUpdate())
+				.isEqualTo(new Document("$set", new Document("items.$.documents.0.fileId", "new-id")));
+	}
+
+	@Test // DATAMONGO-2502
+	void shouldRetainNestedArrayPathWithPlaceholdersForMappedEntity() {
+
+		DefaultBulkOperations ops = new DefaultBulkOperations(template, "collection-1",
+				new BulkOperationContext(BulkMode.ORDERED, Optional.of(mappingContext.getPersistentEntity(OrderTest.class)),
+						new QueryMapper(converter), new UpdateMapper(converter), null, null));
+
+		ops.updateOne(new BasicQuery("{}"), Update.update("items.$.documents.0.fileId", "file-id")).execute();
+
+		verify(collection).bulkWrite(captor.capture(), any());
+
+		UpdateOneModel<Document> updateModel = (UpdateOneModel<Document>) captor.getValue().get(0);
+		assertThat(updateModel.getUpdate())
+				.isEqualTo(new Document("$set", new Document("items.$.documents.0.fileId", "file-id")));
+	}
+
+	static class OrderTest {
+
+		String id;
+		List<OrderTestItem> items;
+	}
+
+	static class OrderTestItem {
+
+		private String cartId;
+		private List<OrderTestDocument> documents;
+	}
+
+	static class OrderTestDocument {
+
+		private String fileId;
+	}
+
 	class SomeDomainType {
 
 		@Id String id;
