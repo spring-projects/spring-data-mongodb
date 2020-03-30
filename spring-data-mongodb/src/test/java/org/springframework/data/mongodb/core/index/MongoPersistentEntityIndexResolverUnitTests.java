@@ -669,13 +669,13 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					SingleCompoundIndexWithPartialFilter.class);
 
-			assertThat(indexDefinitions, hasSize(1));
-			assertThat(indexDefinitions.get(0).getIndexKeys(), isBsonObject().containing("foo", 1).containing("bar", -1));
-			assertThat(indexDefinitions.get(0).getIndexOptions(), isBsonObject().containing("name", "compound_index_with_partial")
-					.containing("unique", true).containing("background", true).containing("sparse", false));
-			assertThat(indexDefinitions.get(0).getIndexOptions(),
-					isBsonObject().containing("partialFilterExpression",
-							new org.bson.Document().append("bar", new org.bson.Document().append("$exists", true))));
+			assertThat(indexDefinitions).hasSize(1);
+			assertThat(indexDefinitions.get(0).getIndexKeys()).containsEntry("foo", 1).containsEntry("bar", -1);
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("name", "compound_index_with_partial")
+					.containsEntry("unique", true).containsEntry("background", true).containsEntry("sparse", false);
+			assertThat(indexDefinitions.get(0).getIndexOptions()).
+					containsEntry("partialFilterExpression",
+							new org.bson.Document().append("bar", new org.bson.Document().append("$exists", true)));
 		}
 
 
