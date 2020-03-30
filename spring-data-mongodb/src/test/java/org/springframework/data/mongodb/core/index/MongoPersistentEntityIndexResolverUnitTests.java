@@ -672,7 +672,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			assertThat(indexDefinitions).hasSize(1);
 			assertThat(indexDefinitions.get(0).getIndexKeys()).containsEntry("foo", 1).containsEntry("bar", -1);
 			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("name", "compound_index_with_partial")
-					.containsEntry("unique", true).containsEntry("background", true).containsEntry("sparse", false);
+					.containsEntry("unique", true).containsEntry("background", true);
 			assertThat(indexDefinitions.get(0).getIndexOptions()).
 					containsEntry("partialFilterExpression",
 							new org.bson.Document().append("bar", new org.bson.Document().append("$exists", true)));
@@ -742,7 +742,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 				unique = true, partial = "{'bar': {$exists: true}}")
 		static class SingleCompoundIndexWithPartialFilter {}
 
-    @Document
+    	@Document
 		@CompoundIndex(name = "#{'cmp' + 2 + 'name'}", def = "{'foo': 1, 'bar': -1}")
 		static class CompoundIndexWithNameExpression {}
 
