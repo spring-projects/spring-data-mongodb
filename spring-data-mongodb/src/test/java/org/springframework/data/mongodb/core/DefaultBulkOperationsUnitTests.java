@@ -38,7 +38,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
@@ -233,8 +232,8 @@ class DefaultBulkOperationsUnitTests {
 
 		verify(beforeSaveCallback).onBeforeSave(personArgumentCaptor.capture(), any(), eq("collection-1"));
 		verify(afterSaveCallback).onAfterSave(personArgumentCaptor.capture(), any(), eq("collection-1"));
-		assertThat(personArgumentCaptor.getAllValues()).extracting("firstName")
-				.containsExactly("init", "before-convert", "before-convert");
+		assertThat(personArgumentCaptor.getAllValues()).extracting("firstName").containsExactly("init", "before-convert",
+				"before-convert");
 		verify(collection).bulkWrite(captor.capture(), any());
 
 		InsertOneModel<Document> updateModel = (InsertOneModel<Document>) captor.getValue().get(0);
@@ -338,6 +337,51 @@ class DefaultBulkOperationsUnitTests {
 		UpdateOneModel<Document> updateModel = (UpdateOneModel<Document>) captor.getValue().get(0);
 		assertThat(updateModel.getOptions().getArrayFilters().get(0))
 				.isEqualTo(new org.bson.Document("element", new Document("$gte", 100)));
+	}
+
+	@Test // DATAMONGO-2502
+	void shouldRetainNestedArrayPathWithPlaceholdersForNoMatchingPaths() {
+
+		ops.updateOne(new BasicQuery("{}"), new Update().set("items.$.documents.0.fileId", "new-id")).execute();
+
+		verify(collection).bulkWrite(captor.capture(), any());
+
+		UpdateOneModel<Document> updateModel = (UpdateOneModel<Document>) captor.getValue().get(0);
+		assertThat(updateModel.getUpdate())
+				.isEqualTo(new Document("$set", new Document("items.$.documents.0.fileId", "new-id")));
+	}
+
+	@Test // DATAMONGO-2502
+	void shouldRetainNestedArrayPathWithPlaceholdersForMappedEntity() {
+
+		DefaultBulkOperations ops = new DefaultBulkOperations(template, "collection-1",
+				new BulkOperationContext(BulkMode.ORDERED, Optional.of(mappingContext.getPersistentEntity(OrderTest.class)),
+						new QueryMapper(converter), new UpdateMapper(converter), null, null));
+
+		ops.updateOne(new BasicQuery("{}"), Update.update("items.$.documents.0.fileId", "file-id")).execute();
+
+		verify(collection).bulkWrite(captor.capture(), any());
+
+		UpdateOneModel<Document> updateModel = (UpdateOneModel<Document>) captor.getValue().get(0);
+		assertThat(updateModel.getUpdate())
+				.isEqualTo(new Document("$set", new Document("items.$.documents.0.fileId", "file-id")));
+	}
+
+	static class OrderTest {
+
+		String id;
+		List<OrderTestItem> items;
+	}
+
+	static class OrderTestItem {
+
+		private String cartId;
+		private List<OrderTestDocument> documents;
+	}
+
+	static class OrderTestDocument {
+
+		private String fileId;
 	}
 
 	class SomeDomainType {
