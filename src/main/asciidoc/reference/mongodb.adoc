@@ -120,7 +120,7 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClients;
 
 public class MongoApp {
 
@@ -128,7 +128,7 @@ public class MongoApp {
 
   public static void main(String[] args) throws Exception {
 
-    MongoOperations mongoOps = new MongoTemplate(new MongoClient(), "database");
+    MongoOperations mongoOps = new MongoTemplate(MongoClients.create(), "database");
     mongoOps.insert(new Person("Joe", 34));
 
     log.info(mongoOps.findOne(new Query(where("name").is("Joe")), Person.class));
@@ -151,7 +151,7 @@ When you run the main program, the preceding examples produce the following outp
 
 Even in this simple example, there are few things to notice:
 
-* You can instantiate the central helper class of Spring Mongo, <<mongo-template,`MongoTemplate`>>, by using the standard `com.mongodb.MongoClient` object and the name of the database to use.
+* You can instantiate the central helper class of Spring Mongo, <<mongo-template,`MongoTemplate`>>, by using the standard `com.mongodb.client.MongoClient` object and the name of the database to use.
 * The mapper works against standard POJO objects without the need for any additional metadata (though you can optionally provide that information. See <<mapping-chapter,here>>.).
 * Conventions are used for handling the `id` field, converting it to be an `ObjectId` when stored in the database.
 * Mapping conventions can use field access. Notice that the `Person` class has only getters.
@@ -165,16 +165,16 @@ There is a https://github.com/spring-projects/spring-data-examples[GitHub reposi
 [[mongodb-connectors]]
 == Connecting to MongoDB with Spring
 
-One of the first tasks when using MongoDB and Spring is to create a `com.mongodb.MongoClient` or `com.mongodb.client.MongoClient` object using the IoC container. There are two main ways to do this, either by using Java-based bean metadata or by using XML-based bean metadata. Both are discussed in the following sections.
+One of the first tasks when using MongoDB and Spring is to create a `com.mongodb.client.MongoClient` object using the IoC container. There are two main ways to do this, either by using Java-based bean metadata or by using XML-based bean metadata. Both are discussed in the following sections.
 
 NOTE: For those not familiar with how to configure the Spring container using Java-based bean metadata instead of XML-based metadata, see the high-level introduction in the reference docs https://docs.spring.io/spring/docs/3.2.x/spring-framework-reference/html/new-in-3.0.html#new-java-configuration[here] as well as the detailed documentation https://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/core.html#beans-java-instantiating-container[here].
 
 [[mongo.mongo-java-config]]
 === Registering a Mongo Instance by using Java-based Metadata
 
-The following example shows an example of using Java-based bean metadata to register an instance of a `com.mongodb.MongoClient`:
+The following example shows an example of using Java-based bean metadata to register an instance of a `com.mongodb.client.MongoClient`:
 
-.Registering a `com.mongodb.MongoClient` object using Java-based bean metadata
+.Registering a `com.mongodb.client.MongoClient` object using Java-based bean metadata
 ====
 [source,java]
 ----
@@ -182,20 +182,20 @@ The following example shows an example of using Java-based bean metadata to regi
 public class AppConfig {
 
   /*
-   * Use the standard Mongo driver API to create a com.mongodb.MongoClient instance.
+   * Use the standard Mongo driver API to create a com.mongodb.client.MongoClient instance.
    */
    public @Bean MongoClient mongoClient() {
-       return new MongoClient("localhost");
+       return MongoClients.create("mongodb://localhost:27017");
    }
 }
 ----
 ====
 
-This approach lets you use the standard `com.mongodb.MongoClient` instance, with the container using Spring's `MongoClientFactoryBean`. As compared to instantiating a `com.mongodb.MongoClient` instance directly, the `FactoryBean` has the added advantage of also providing the container with an `ExceptionTranslator` implementation that translates MongoDB exceptions to exceptions in Spring's portable `DataAccessException` hierarchy for data access classes annotated with the `@Repository` annotation. This hierarchy and the use of `@Repository` is described in https://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/data-access.html[Spring's DAO support features].
+This approach lets you use the standard `com.mongodb.client.MongoClient` instance, with the container using Spring's `MongoClientFactoryBean`. As compared to instantiating a `com.mongodb.client.MongoClient` instance directly, the `FactoryBean` has the added advantage of also providing the container with an `ExceptionTranslator` implementation that translates MongoDB exceptions to exceptions in Spring's portable `DataAccessException` hierarchy for data access classes annotated with the `@Repository` annotation. This hierarchy and the use of `@Repository` is described in https://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/data-access.html[Spring's DAO support features].
 
 The following example shows an example of a Java-based bean metadata that supports exception translation on `@Repository` annotated classes:
 
-.Registering a `com.mongodb.MongoClient` object by using Spring's MongoClientFactoryBean and enabling Spring's exception translation support
+.Registering a `com.mongodb.client.MongoClient` object by using Spring's `MongoClientFactoryBean` and enabling Spring's exception translation support
 ====
 [source,java]
 ----
@@ -203,7 +203,7 @@ The following example shows an example of a Java-based bean metadata that suppor
 public class AppConfig {
 
     /*
-     * Factory bean that creates the com.mongodb.MongoClient instance
+     * Factory bean that creates the com.mongodb.client.MongoClient instance
      */
      public @Bean MongoClientFactoryBean mongo() {
           MongoClientFactoryBean mongo = new MongoClientFactoryBean();
@@ -214,12 +214,12 @@ public class AppConfig {
 ----
 ====
 
-To access the `com.mongodb.MongoClient` object created by the `MongoClientFactoryBean` in other `@Configuration` classes or your own classes, use a `private @Autowired Mongo mongo;` field.
+To access the `com.mongodb.client.MongoClient` object created by the `MongoClientFactoryBean` in other `@Configuration` classes or your own classes, use a `private @Autowired Mongo mongo;` field.
 
 [[mongo.mongo-xml-config]]
 === Registering a Mongo Instance by Using XML-based Metadata
 
-While you can use Spring's traditional `<beans/>` XML namespace to register an instance of `com.mongodb.MongoClient` with the container, the XML can be quite verbose, as it is general-purpose. XML namespaces are a better alternative to configuring commonly used objects, such as the Mongo instance. The mongo namespace lets you create a Mongo instance server location, replica-sets, and options.
+While you can use Spring's traditional `<beans/>` XML namespace to register an instance of `com.mongodb.client.MongoClient` with the container, the XML can be quite verbose, as it is general-purpose. XML namespaces are a better alternative to configuring commonly used objects, such as the Mongo instance. The mongo namespace lets you create a Mongo instance server location, replica-sets, and options.
 
 To use the Mongo namespace elements, you need to reference the Mongo schema, as follows:
 
@@ -230,11 +230,9 @@ To use the Mongo namespace elements, you need to reference the Mongo schema, as 
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-          xmlns:context="http://www.springframework.org/schema/context"
           xmlns:mongo="http://www.springframework.org/schema/data/mongo"
           xsi:schemaLocation=
-          "http://www.springframework.org/schema/context
-          https://www.springframework.org/schema/context/spring-context.xsd
+          "
           http://www.springframework.org/schema/data/mongo https://www.springframework.org/schema/data/mongo/spring-mongo.xsd
           http://www.springframework.org/schema/beans
           https://www.springframework.org/schema/beans/spring-beans.xsd">
@@ -246,26 +244,22 @@ To use the Mongo namespace elements, you need to reference the Mongo schema, as 
 ----
 ====
 
-The following example shows a more advanced configuration with `MongoClientOptions` (note that these are not recommended values):
+The following example shows a more advanced configuration with `MongoClientSettings` (note that these are not recommended values):
 
-.XML schema to configure a com.mongodb.MongoClient object with MongoClientOptions
+.XML schema to configure a `com.mongodb.client.MongoClient` object with `MongoClientSettings`
 ====
 [source,xml]
 ----
 <beans>
 
   <mongo:mongo-client host="localhost" port="27017">
-    <mongo:client-options connections-per-host="8"
-                   threads-allowed-to-block-for-connection-multiplier="4"
-                   connect-timeout="1000"
-                   max-wait-time="1500}"
-                   auto-connect-retry="true"
-                   socket-keep-alive="true"
-                   socket-timeout="1500"
-                   slave-ok="true"
-                   write-number="1"
-                   write-timeout="0"
-                   write-fsync="true"/>
+    <mongo:client-settings connection-pool-max-connection-life-time="10"
+        connection-pool-min-size="10"
+		connection-pool-max-size="20"
+		connection-pool-maintenance-frequency="10"
+		connection-pool-maintenance-initial-delay="11"
+		connection-pool-max-connection-idle-time="30"
+		connection-pool-max-wait-time="15" />
   </mongo:mongo-client>
 
 </beans>
@@ -274,30 +268,32 @@ The following example shows a more advanced configuration with `MongoClientOptio
 
 The following example shows a configuration using replica sets:
 
-.XML schema to configure a `com.mongodb.MongoClient` object with Replica Sets
+.XML schema to configure a `com.mongodb.client.MongoClient` object with Replica Sets
 ====
 [source,xml]
 ----
-<mongo:mongo-client id="replicaSetMongo" replica-set="127.0.0.1:27017,localhost:27018"/>
+<mongo:mongo-client id="replicaSetMongo" replica-set="rs0">
+    <mongo:client-settings cluster-hosts="127.0.0.1:27017,localhost:27018" />
+</mongo:mongo-client>
 ----
 ====
 
 [[mongo.mongo-db-factory]]
-=== The MongoDbFactory Interface
+=== The MongoDatabaseFactory Interface
 
-While `com.mongodb.MongoClient` is the entry point to the MongoDB driver API, connecting to a specific MongoDB database instance requires additional information, such as the database name and an optional username and password. With that information, you can obtain a `com.mongodb.client.MongoDatabase` object and access all the functionality of a specific MongoDB database instance. Spring provides the `org.springframework.data.mongodb.core.MongoDbFactory` interface, shown in the following listing, to bootstrap connectivity to the database:
+While `com.mongodb.client.MongoClient` is the entry point to the MongoDB driver API, connecting to a specific MongoDB database instance requires additional information, such as the database name and an optional username and password. With that information, you can obtain a `com.mongodb.client.MongoDatabase` object and access all the functionality of a specific MongoDB database instance. Spring provides the `org.springframework.data.mongodb.core.MongoDatabaseFactory` interface, shown in the following listing, to bootstrap connectivity to the database:
 
 [source,java]
 ----
-public interface MongoDbFactory {
+public interface MongoDatabaseFactory {
 
-  MongoDatabase getDb() throws DataAccessException;
+  MongoDatabase getDatabase() throws DataAccessException;
 
-  MongoDatabase getDb(String dbName) throws DataAccessException;
+  MongoDatabase getDatabase(String dbName) throws DataAccessException;
 }
 ----
 
-The following sections show how you can use the container with either Java-based or XML-based metadata to configure an instance of the `MongoDbFactory` interface. In turn, you can use the `MongoDbFactory` instance to configure `MongoTemplate`.
+The following sections show how you can use the container with either Java-based or XML-based metadata to configure an instance of the `MongoDatabaseFactory` interface. In turn, you can use the `MongoDatabaseFactory` instance to configure `MongoTemplate`.
 
 Instead of using the IoC container to create an instance of MongoTemplate, you can use them in standard Java code, as follows:
 
@@ -309,7 +305,7 @@ public class MongoApp {
 
   public static void main(String[] args) throws Exception {
 
-    MongoOperations mongoOps = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), "database"));
+    MongoOperations mongoOps = new MongoTemplate(new SimpleMongoClientDatabaseFactory(MongoClients.create(), "database"));
 
     mongoOps.insert(new Person("Joe", 34));
 
@@ -320,22 +316,22 @@ public class MongoApp {
 }
 ----
 
-The code in bold highlights the use of `SimpleMongoDbFactory` and is the only difference between the listing shown in the <<mongodb-getting-started,getting started section>>.
+The code in bold highlights the use of `SimpleMongoClientDbFactory` and is the only difference between the listing shown in the <<mongodb-getting-started,getting started section>>.
 
 NOTE: Use `SimpleMongoClientDbFactory` when choosing `com.mongodb.client.MongoClient` as the entrypoint of choice.
 
 [[mongo.mongo-db-factory-java]]
-=== Registering a `MongoDbFactory` Instance by Using Java-based Metadata
+=== Registering a `MongoDatabaseFactory` Instance by Using Java-based Metadata
 
-To register a `MongoDbFactory` instance with the container, you write code much like what was highlighted in the previous code listing. The following listing shows a simple example:
+To register a `MongoDatabaseFactory` instance with the container, you write code much like what was highlighted in the previous code listing. The following listing shows a simple example:
 
 [source,java]
 ----
 @Configuration
 public class MongoConfiguration {
 
-  public @Bean MongoDbFactory mongoDbFactory() {
-    return new SimpleMongoDbFactory(new MongoClient(), "database");
+  public @Bean MongoDatabaseFactory mongoDatabaseFactory() {
+    return new SimpleMongoClientDatabaseFactory(MongoClients.create(), "database");
   }
 }
 ----
@@ -345,7 +341,7 @@ MongoDB Server generation 3 changed the authentication model when connecting to 
 [source,java]
 ----
 @Configuration
-public class ApplicationContextEventTestsAppConfig extends AbstractMongoConfiguration {
+public class ApplicationContextEventTestsAppConfig extends AbstractMongoClientConfiguration {
 
   @Override
   public String getDatabaseName() {
@@ -355,23 +351,25 @@ public class ApplicationContextEventTestsAppConfig extends AbstractMongoConfigur
   @Override
   @Bean
   public MongoClient mongoClient() {
-    return new MongoClient(singletonList(new ServerAddress("127.0.0.1", 27017)),
-      singletonList(MongoCredential.createCredential("name", "db", "pwd".toCharArray())));
+
+  	MongoClientSettings settings = MongoClientSettings.builder()
+  	    .credential(MongoCredential.createCredential("name", "db", "pwd".toCharArray()))
+  	    .applyToClusterSettings(settings  -> {
+  	    	settings.hosts(singletonList(new ServerAddress("127.0.0.1", 27017)));
+  	    })
+  	    .build();
+
+    return MongoClients.create(settings);
   }
 }
 ----
 
-In order to use authentication with XML-based configuration, use the `credentials` attribute on the `<mongo-client>` element.
+In order to use authentication with XML-based configuration, use the `credential` attribute on the `<mongo-client>` element.
 
 NOTE: Username and password credentials used in XML-based configuration must be URL-encoded when these contain reserved characters, such as `:`, `%`, `@`, or `,`.
 The following example shows encoded credentials:
 `m0ng0@dmin:mo_res:bw6},Qsdxx@admin@database` -> `m0ng0%40dmin:mo_res%3Abw6%7D%2CQsdxx%40admin@database`
 See https://tools.ietf.org/html/rfc3986#section-2.2[section 2.2 of RFC 3986] for further details.
-
-As of MongoDB java driver 3.7.0 there is an alternative entry point to `MongoClient` via the https://search.maven.org/beta/search?q=a:mongodb-driver-sync[mongodb-driver-sync] artifact.
-`com.mongodb.client.MongoClient` is *not* compatible with `com.mongodb.MongoClient` and does not longer support
-the legacy `DBObject` codec. Therefore, it cannot be used with `Querydsl` and requires a different configuration.
-You can use `AbstractMongoClientConfiguration` to leverage the new `MongoClients` builder API.
 
 [source,java]
 ----
@@ -391,34 +389,29 @@ public class MongoClientConfiguration extends AbstractMongoClientConfiguration {
 ----
 
 [[mongo.mongo-db-factory-xml]]
-=== Registering a `MongoDbFactory` Instance by Using XML-based Metadata
+=== Registering a `MongoDatabaseFactory` Instance by Using XML-based Metadata
 
-The `mongo` namespace provides a convenient way to create a `SimpleMongoDbFactory`, as compared to using the `<beans/>` namespace, as shown in the following example:
+The `mongo` namespace provides a convenient way to create a `SimpleMongoClientDbFactory`, as compared to using the `<beans/>` namespace, as shown in the following example:
 
 [source,xml]
 ----
 <mongo:db-factory dbname="database">
 ----
 
-If you need to configure additional options on the `com.mongodb.MongoClient` instance that is used to create a `SimpleMongoDbFactory`, you can refer to an existing bean by using the `mongo-ref` attribute as shown in the following example. To show another common usage pattern, the following listing shows the use of a property placeholder, which lets you parametrize the configuration and the creation of a `MongoTemplate`:
+If you need to configure additional options on the `com.mongodb.client.MongoClient` instance that is used to create a `SimpleMongoClientDbFactory`, you can refer to an existing bean by using the `mongo-ref` attribute as shown in the following example. To show another common usage pattern, the following listing shows the use of a property placeholder, which lets you parametrize the configuration and the creation of a `MongoTemplate`:
 
 [source,xml]
 ----
 <context:property-placeholder location="classpath:/com/myapp/mongodb/config/mongo.properties"/>
 
 <mongo:mongo-client host="${mongo.host}" port="${mongo.port}">
-  <mongo:client-options
-     connections-per-host="${mongo.connectionsPerHost}"
-     threads-allowed-to-block-for-connection-multiplier="${mongo.threadsAllowedToBlockForConnectionMultiplier}"
-     connect-timeout="${mongo.connectTimeout}"
-     max-wait-time="${mongo.maxWaitTime}"
-     auto-connect-retry="${mongo.autoConnectRetry}"
-     socket-keep-alive="${mongo.socketKeepAlive}"
-     socket-timeout="${mongo.socketTimeout}"
-     slave-ok="${mongo.slaveOk}"
-     write-number="1"
-     write-timeout="0"
-     write-fsync="true"/>
+  <mongo:client-settings connection-pool-max-connection-life-time="${mongo.pool-max-life-time}"
+    connection-pool-min-size="${mongo.pool-min-size}"
+    connection-pool-max-size="${mongo.pool-max-size}"
+	connection-pool-maintenance-frequency="10"
+	connection-pool-maintenance-initial-delay="11"
+	connection-pool-max-connection-idle-time="30"
+	connection-pool-max-wait-time="15" />
 </mongo:mongo-client>
 
 <mongo:db-factory dbname="database" mongo-ref="mongoClient"/>
@@ -454,7 +447,7 @@ The next section contains an example of how to work with the `MongoTemplate` in 
 
 You can use Java to create and register an instance of `MongoTemplate`, as the following example shows:
 
-.Registering a `com.mongodb.MongoClient` object and enabling Spring's exception translation support
+.Registering a `com.mongodb.client.MongoClient` object and enabling Spring's exception translation support
 ====
 [source,java]
 ----
@@ -462,7 +455,7 @@ You can use Java to create and register an instance of `MongoTemplate`, as the f
 public class AppConfig {
 
   public @Bean MongoClient mongoClient() {
-      return new MongoClient("localhost");
+      return MongoClients.create("mongodb://localhost:27017");
   }
 
   public @Bean MongoTemplate mongoTemplate() {
@@ -475,12 +468,12 @@ public class AppConfig {
 There are several overloaded constructors of `MongoTemplate`:
 
 * `MongoTemplate(MongoClient mongo, String databaseName)`: Takes the `MongoClient` object and the default database name to operate against.
-* `MongoTemplate(MongoDbFactory mongoDbFactory)`: Takes a MongoDbFactory object that encapsulated the `MongoClient` object, database name, and username and password.
-* `MongoTemplate(MongoDbFactory mongoDbFactory, MongoConverter mongoConverter)`: Adds a `MongoConverter` to use for mapping.
+* `MongoTemplate(MongoDatabaseFactory mongoDbFactory)`: Takes a MongoDbFactory object that encapsulated the `MongoClient` object, database name, and username and password.
+* `MongoTemplate(MongoDatabaseFactory mongoDbFactory, MongoConverter mongoConverter)`: Adds a `MongoConverter` to use for mapping.
 
 You can also configure a MongoTemplate by using Spring's XML <beans/> schema, as the following example shows:
 
-[source,java]
+[source,xml]
 ----
 <mongo:mongo-client host="localhost" port="27017"/>
 
@@ -502,7 +495,7 @@ When in development, it is handy to either log or throw an exception if the `com
 [[mongo-template.writeconcern]]
 === `WriteConcern`
 
-If it has not yet been specified through the driver at a higher level (such as `com.mongodb.MongoClient`), you can set the `com.mongodb.WriteConcern` property that the `MongoTemplate` uses for write operations. If the `WriteConcern` property is not set, it defaults to the one set in the MongoDB driver's DB or Collection setting.
+If it has not yet been specified through the driver at a higher level (such as `com.mongodb.client.MongoClient`), you can set the `com.mongodb.WriteConcern` property that the `MongoTemplate` uses for write operations. If the `WriteConcern` property is not set, it defaults to the one set in the MongoDB driver's DB or Collection setting.
 
 [[mongo-template.writeconcernresolver]]
 === `WriteConcernResolver`
@@ -589,9 +582,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.SimpleMongoDbFactory;
+import org.springframework.data.mongodb.core.SimpleMongoClientDbFactory;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClients;
 
 public class MongoApp {
 
@@ -599,7 +592,7 @@ public class MongoApp {
 
   public static void main(String[] args) {
 
-    MongoOperations mongoOps = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), "database"));
+    MongoOperations mongoOps = new MongoTemplate(new SimpleMongoClientDbFactory(MongoClients.create(), "database"));
 
     Person p = new Person("Joe", 34);
 
@@ -701,7 +694,6 @@ MongoDB collections can contain documents that represent instances of a variety 
 
 To achieve that, the `MappingMongoConverter` uses a `MongoTypeMapper` abstraction with `DefaultMongoTypeMapper` as its main implementation. Its default behavior to store the fully qualified classname under `_class` inside the document. Type hints are written for top-level documents as well as for every value (if it is a complex type and a subtype of the declared property type). The following example (with a JSON representation at the end) shows how the mapping works:
 
-
 .Type mapping
 ====
 [source,java]
@@ -762,7 +754,7 @@ class CustomMongoTypeMapper extends DefaultMongoTypeMapper {
 [source,java]
 ----
 @Configuration
-class SampleMongoConfiguration extends AbstractMongoConfiguration {
+class SampleMongoConfiguration extends AbstractMongoClientConfiguration {
 
   @Override
   protected String getDatabaseName() {
@@ -771,7 +763,7 @@ class SampleMongoConfiguration extends AbstractMongoConfiguration {
 
   @Override
   public MongoClient mongoClient() {
-    return new MongoClient();
+    return MongoClients.create();
   }
 
   @Bean
@@ -790,7 +782,7 @@ class SampleMongoConfiguration extends AbstractMongoConfiguration {
 ----
 ====
 
-Note that the preceding example extends the `AbstractMongoConfiguration` class and overrides the bean definition of the `MappingMongoConverter` where we configured our custom `MongoTypeMapper`.
+Note that the preceding example extends the `AbstractMongoClientConfiguration` class and overrides the bean definition of the `MappingMongoConverter` where we configured our custom `MongoTypeMapper`.
 
 The following example shows how to use XML to configure a custom `MongoTypeMapper`:
 
@@ -893,6 +885,8 @@ Most methods return the `Update` object to provide a fluent style for the API.
 * *updateFirst*: Updates the first document that matches the query document criteria with the updated document.
 * *updateMulti*: Updates all objects that match the query document criteria with the updated document.
 
+WARNING: `updateFirst` does not support ordering. Please use <<mongo-template.find-and-upsert, findAndModify>> to apply `Sort`.
+
 [[mongodb-template-update.update]]
 ==== Methods in the `Update` Class
 
@@ -944,6 +938,8 @@ Related to performing an `updateFirst` operation, you can also perform an "`upse
 template.upsert(query(where("ssn").is(1111).and("firstName").is("Joe").and("Fraizer").is("Update")), update("address", addr), Person.class);
 ----
 
+WARNING: `upsert` does not support ordering. Please use <<mongo-template.find-and-upsert, findAndModify>> to apply `Sort`.
+
 [[mongo-template.find-and-upsert]]
 === Finding and Upserting Documents in a Collection
 
@@ -991,6 +987,62 @@ p = mongoTemplate.findAndModify(query2, update, new FindAndModifyOptions().retur
 assertThat(p.getFirstName(), is("Mary"));
 assertThat(p.getAge(), is(1));
 ----
+
+[[mongo-template.aggregation-update]]
+=== Aggregation Pipeline Updates
+
+Update methods exposed by `MongoOperations` and `ReactiveMongoOperations` also accept an <<mongo.aggregation, Aggregation Pipeline>> via `AggregationUpdate`.
+Using `AggregationUpdate` allows leveraging https://docs.mongodb.com/manual/reference/method/db.collection.update/#update-with-aggregation-pipeline[MongoDB 4.2 aggregations] in an update operation.
+Using aggregations in an update allows updating one or more fields by expressing multiple stages and multiple conditions with a single operation.
+
+The update can consist of the following stages:
+
+* `AggregationUpdate.set(...).toValue(...)` -> `$set : { ... }`
+* `AggregationUpdate.unset(...)` -> `$unset : [ ... ]`
+* `AggregationUpdate.replaceWith(...)` -> `$replaceWith : { ... }`
+
+.Update Aggregation
+====
+[source,java]
+----
+AggregationUpdate update = Aggregation.newUpdate()
+    .set("average").toValue(ArithmeticOperators.valueOf("tests").avg())     <1>
+    .set("grade").toValue(ConditionalOperators.switchCases(                 <2>
+        when(valueOf("average").greaterThanEqualToValue(90)).then("A"),
+        when(valueOf("average").greaterThanEqualToValue(80)).then("B"),
+        when(valueOf("average").greaterThanEqualToValue(70)).then("C"),
+        when(valueOf("average").greaterThanEqualToValue(60)).then("D"))
+        .defaultTo("F")
+    );
+
+template.update(Student.class)                                              <3>
+    .apply(update)
+    .all();                                                                 <4>
+----
+[source,javascript]
+----
+db.students.update(                                                         <3>
+   { },
+   [
+     { $set: { average : { $avg: "$tests" } } },                            <1>
+     { $set: { grade: { $switch: {                                          <2>
+                           branches: [
+                               { case: { $gte: [ "$average", 90 ] }, then: "A" },
+                               { case: { $gte: [ "$average", 80 ] }, then: "B" },
+                               { case: { $gte: [ "$average", 70 ] }, then: "C" },
+                               { case: { $gte: [ "$average", 60 ] }, then: "D" }
+                           ],
+                           default: "F"
+     } } } }
+   ],
+   { multi: true }                                                          <4>
+)
+----
+<1> The 1st `$set` stage calculates a new field _average_ based on the average of the _tests_ field.
+<2> The 2nd `$set` stage calculates a new field _grade_ based on the _average_ field calculated by the first aggregation stage.
+<3> The pipeline is executed on the _students_ collection and uses `Student` for the aggregation field mapping.
+<4> Apply the update to all matching documents in the collection.
+====
 
 [[mongo-template.find-and-replace]]
 === Finding and Replacing Documents
@@ -1333,6 +1385,33 @@ List<Venue> venues =
 [[mongo.geo-near]]
 ==== Geo-near Queries
 
+[WARNING]
+====
+*Changed in 2.2!* +
+https://docs.mongodb.com/master/release-notes/4.2-compatibility/[MongoDB 4.2] removed support for the
+`geoNear` command which had been previously used to run the `NearQuery`.
+
+Spring Data MongoDB 2.2 `MongoOperations#geoNear` uses the `$geoNear` https://docs.mongodb.com/manual/reference/operator/aggregation/geoNear/[aggregation]
+instead of the `geoNear` command to run a `NearQuery`.
+
+The calculated distance (the `dis` when using a geoNear command) previously returned within a wrapper type now is embedded
+into the resulting document.
+If the given domain type already contains a property with that name, the calculated distance
+is named `calculated-distance` with a potentially random postfix.
+
+Target types may contain a property named after the returned distance to (additionally) read it back directly into the domain type as shown below.
+
+[source,java]
+----
+GeoResults<VenueWithDisField> = template.query(Venue.class) <1>
+    .as(VenueWithDisField.class)                            <2>
+    .near(NearQuery.near(new GeoJsonPoint(-73.99, 40.73), KILOMETERS))
+    .all();
+----
+<1> Domain type used to identify the target collection and potential query mapping.
+<2> Target type containing a `dis` field of type `Number`.
+====
+
 MongoDB supports querying the database for geo locations and calculating the distance from a given origin at the same time. With geo-near queries, you can express queries such as "find all restaurants in the surrounding 10 miles". To let you do so, `MongoOperations` provides `geoNear(…)` methods that take a `NearQuery` as an argument (as well as the already familiar entity type and collection), as shown in the following example:
 
 [source,java]
@@ -1350,11 +1429,11 @@ The geo-near operations return a `GeoResults` wrapper object that encapsulates `
 [[mongo.geo-json]]
 === GeoJSON Support
 
-MongoDB supports http://geojson.org/[GeoJSON] and simple (legacy) coordinate pairs for geospatial data. Those formats can both be used for storing as well as querying data. See the https://docs.mongodb.org/manual/core/2dsphere/#geospatial-indexes-store-geojson/[MongoDB manual on GeoJSON support] to learn about requirements and restrictions.
+MongoDB supports https://geojson.org/[GeoJSON] and simple (legacy) coordinate pairs for geospatial data. Those formats can both be used for storing as well as querying data. See the https://docs.mongodb.org/manual/core/2dsphere/#geospatial-indexes-store-geojson/[MongoDB manual on GeoJSON support] to learn about requirements and restrictions.
 
 ==== GeoJSON Types in Domain Classes
 
-Usage of http://geojson.org/[GeoJSON] types in domain classes is straightforward. The `org.springframework.data.mongodb.core.geo` package contains types such as `GeoJsonPoint`, `GeoJsonPolygon`, and others. These types are extend the existing `org.springframework.data.geo` types. The following example uses a `GeoJsonPoint`:
+Usage of https://geojson.org/[GeoJSON] types in domain classes is straightforward. The `org.springframework.data.mongodb.core.geo` package contains types such as `GeoJsonPoint`, `GeoJsonPolygon`, and others. These types are extend the existing `org.springframework.data.geo` types. The following example uses a `GeoJsonPoint`:
 
 ====
 [source,java]
@@ -1687,7 +1766,15 @@ Collation collation = Collation.of("fr")         <1>
 <6> Specify whether to check whether text requires normalization and whether to perform normalization.
 ====
 
-Collations can be used to create collections and indexes. If you create a collection that specifies a collation, the collation is applied to index creation and queries unless you specify a different collation. A collation is valid for a whole operation and cannot be specified on a per-field basis, as the following example shows:
+Collations can be used to create collections and indexes. If you create a collection that specifies a collation, the
+collation is applied to index creation and queries unless you specify a different collation. A collation is valid for a
+whole operation and cannot be specified on a per-field basis.
+
+Like other metadata, collations can be be derived from the domain type via the `collation` attribute of the `@Document`
+annotation and will be applied directly when executing queries, creating collections or indexes.
+
+NOTE: Annotated collations will not be used when a collection is auto created by MongoDB on first interaction. This would
+require additional store interaction delaying the entire process. Please use `MongoOperations.createCollection` for those cases.
 
 [source,java]
 ----
@@ -1737,6 +1824,225 @@ AggregationResults<TagCount> results = template.aggregate(aggregation, "tags", T
 WARNING: Indexes are only used if the collation used for the operation matches the index collation.
 
 include::./mongo-json-schema.adoc[leveloffset=+1]
+
+<<mongo.repositories>> support `Collations` via the `collation` attribute of the `@Query` annotation.
+
+.Collation support for Repositories
+====
+[source,java]
+----
+public interface PersonRepository extends MongoRepository<Person, String> {
+
+  @Query(collation = "en_US")  <1>
+  List<Person> findByFirstname(String firstname);
+
+  @Query(collation = "{ 'locale' : 'en_US' }") <2>
+  List<Person> findPersonByFirstname(String firstname);
+
+  @Query(collation = "?1") <3>
+  List<Person> findByFirstname(String firstname, Object collation);
+
+  @Query(collation = "{ 'locale' : '?1' }") <4>
+  List<Person> findByFirstname(String firstname, String collation);
+
+  List<Person> findByFirstname(String firstname, Collation collation); <5>
+
+  @Query(collation = "{ 'locale' : 'en_US' }")
+  List<Person> findByFirstname(String firstname, @Nullable Collation collation); <6>
+}
+----
+<1> Static collation definition resulting in `{ 'locale' : 'en_US' }`.
+<2> Static collation definition resulting in `{ 'locale' : 'en_US' }`.
+<3> Dynamic collation depending on 2nd method argument. Allowed types include `String` (eg. 'en_US'), `Locacle` (eg. Locacle.US)
+and `Document` (eg. new Document("locale", "en_US"))
+<4> Dynamic collation depending on 2nd method argument.
+<5> Apply the `Collation` method parameter to the query.
+<6> The `Collation` method parameter overrides the default `collation` from `@Query` if not null.
+
+NOTE: In case you enabled the automatic index creation for repository finder methods a potential static collation definition,
+as shown in (1) and (2), will be included when creating the index.
+
+TIP: The most specifc `Collation` outroules potentially defined others. Which means Method argument over query method annotation over doamin type annotation.
+====
+
+[[mongo.jsonSchema]]
+=== JSON Schema
+
+As of version 3.6, MongoDB supports collections that validate documents against a provided https://docs.mongodb.com/manual/core/schema-validation/#json-schema[JSON Schema].
+The schema itself and both validation action and level can be defined when creating the collection, as the following example shows:
+
+.Sample JSON schema
+====
+[source,json]
+----
+{
+  "type": "object",                                                        <1>
+
+  "required": [ "firstname", "lastname" ],                                 <2>
+
+  "properties": {                                                          <3>
+
+    "firstname": {                                                         <4>
+      "type": "string",
+      "enum": [ "luke", "han" ]
+    },
+    "address": {                                                           <5>
+      "type": "object",
+      "properties": {
+        "postCode": { "type": "string", "minLength": 4, "maxLength": 5 }
+      }
+    }
+  }
+}
+----
+<1> JSON schema documents always describe a whole document from its root. A schema is a schema object itself that can contain
+embedded schema objects that describe properties and subdocuments.
+<2> `required` is a property that describes which properties are required in a document. It can be specified optionally, along with other
+schema constraints. See MongoDB's documentation on https://docs.mongodb.com/manual/reference/operator/query/jsonSchema/#available-keywords[available keywords].
+<3> `properties` is related to a schema object that describes an `object` type. It contains property-specific schema constraints.
+<4> `firstname` specifies constraints for the `firsname` field inside the document. Here, it is a string-based `properties` element declaring
+ possible field values.
+<5> `address` is a subdocument defining a schema for values in its `postCode` field.
+====
+
+You can provide a schema either by specifying a schema document (that is, by using the `Document` API to parse or build a document object) or by building it with Spring Data's JSON schema utilities in `org.springframework.data.mongodb.core.schema`. `MongoJsonSchema` is the entry point for all JSON schema-related operations. The following example shows how use `MongoJsonSchema.builder()` to create a JSON schema:
+
+.Creating a JSON schema
+====
+[source,java]
+----
+MongoJsonSchema.builder()                                                  <1>
+    .required("firstname", "lastname")                                     <2>
+
+    .properties(
+                string("firstname").possibleValues("luke", "han"),         <3>
+
+                object("address")
+                     .properties(string("postCode").minLength(4).maxLength(5)))
+
+    .build();                                                              <4>
+----
+<1> Obtain a schema builder to configure the schema with a fluent API.
+<2> Configure required properties.
+<3> Configure the String-typed `firstname` field, allowing only `luke` and `han` values. Properties can be typed or untyped. Use a static import of  `JsonSchemaProperty` to make the syntax slightly more compact and to get entry points such as `string(…)`.
+<4> Build the schema object. Use the schema to create either a collection or <<mongodb-template-query.criteria,query documents>>.
+====
+
+There are already some predefined and strongly typed schema objects (`JsonSchemaObject` and `JsonSchemaProperty`) available
+through static methods on the gateway interfaces.
+However, you may need to build custom property validation rules, which can be created through the builder API, as the following example shows:
+
+[source,java]
+----
+// "birthdate" : { "bsonType": "date" }
+JsonSchemaProperty.named("birthdate").ofType(Type.dateType());
+
+// "birthdate" : { "bsonType": "date", "description", "Must be a date" }
+JsonSchemaProperty.named("birthdate").with(JsonSchemaObject.of(Type.dateType()).description("Must be a date"));
+----
+
+`CollectionOptions` provides the entry point to schema support for collections, as the following example shows:
+
+.Create collection with `$jsonSchema`
+====
+[source,java]
+----
+MongoJsonSchema schema = MongoJsonSchema.builder().required("firstname", "lastname").build();
+
+template.createCollection(Person.class, CollectionOptions.empty().schema(schema));
+----
+====
+
+You can use a schema to query any collection for documents that match a given structure defined by a JSON schema, as the following example shows:
+
+.Query for Documents matching a `$jsonSchema`
+====
+[source,java]
+----
+MongoJsonSchema schema = MongoJsonSchema.builder().required("firstname", "lastname").build();
+
+template.find(query(matchingDocumentStructure(schema)), Person.class);
+----
+====
+
+The following table shows the supported JSON schema types:
+
+[cols="3,1,6", options="header"]
+.Supported JSON schema types
+|===
+| Schema Type
+| Java Type
+| Schema Properties
+
+| `untyped`
+| -
+| `description`, generated `description`, `enum`, `allOf`, `anyOf`, `oneOf`, `not`
+
+| `object`
+| `Object`
+| `required`, `additionalProperties`, `properties`, `minProperties`, `maxProperties`, `patternProperties`
+
+| `array`
+| any array except `byte[]`
+| `uniqueItems`, `additionalItems`, `items`, `minItems`, `maxItems`
+
+| `string`
+| `String`
+| `minLength`, `maxLentgth`, `pattern`
+
+| `int`
+| `int`, `Integer`
+| `multipleOf`, `minimum`, `exclusiveMinimum`, `maximum`, `exclusiveMaximum`
+
+| `long`
+| `long`, `Long`
+| `multipleOf`, `minimum`, `exclusiveMinimum`, `maximum`, `exclusiveMaximum`
+
+| `double`
+| `float`, `Float`, `double`, `Double`
+| `multipleOf`, `minimum`, `exclusiveMinimum`, `maximum`, `exclusiveMaximum`
+
+| `decimal`
+| `BigDecimal`
+| `multipleOf`, `minimum`, `exclusiveMinimum`, `maximum`, `exclusiveMaximum`
+
+| `number`
+| `Number`
+| `multipleOf`, `minimum`, `exclusiveMinimum`, `maximum`, `exclusiveMaximum`
+
+| `binData`
+| `byte[]`
+| (none)
+
+| `boolean`
+| `boolean`, `Boolean`
+| (none)
+
+| `null`
+| `null`
+| (none)
+
+| `objectId`
+| `ObjectId`
+| (none)
+
+| `date`
+| `java.util.Date`
+| (none)
+
+| `timestamp`
+| `BsonTimestamp`
+| (none)
+
+| `regex`
+| `java.util.regex.Pattern`
+| (none)
+
+|===
+
+NOTE: `untyped` is a generic type that is inherited by all typed schema types. It provides all `untyped` schema properties to typed schema types.
+
+For more information, see https://docs.mongodb.com/manual/reference/operator/query/jsonSchema/#op._S_jsonSchema[$jsonSchema].
 
 [[mongo.query.fluent-template-api]]
 === Fluent Template API
@@ -1999,6 +2305,13 @@ Note that you can specify additional limit and sort values on the query, but you
 [[mongo.server-side-scripts]]
 == Script Operations
 
+[WARNING]
+====
+https://docs.mongodb.com/master/release-notes/4.2-compatibility/[MongoDB 4.2] removed support for the `eval` command used
+by `ScriptOperations`. +
+There is no replacement for the removed functionallity.
+====
+
 MongoDB allows executing JavaScript functions on the server by either directly sending the script or calling a stored one. `ScriptOperations` can be accessed through `MongoTemplate` and provides basic abstraction for `JavaScript` usage. The following example shows how to us the `ScriptOperations` class:
 
 ====
@@ -2130,6 +2443,12 @@ An `Aggregation` represents a MongoDB `aggregate` operation and holds the descri
 +
 The actual aggregate operation is executed by the `aggregate` method of the `MongoTemplate`, which takes the desired output class as a parameter.
 +
+* `TypedAggregation`
++
+A `TypedAggregation`, just like an `Aggregation`, holds the instructions of the aggregation pipeline and a reference to the input type, that is used for mapping domain properties to actual document fields.
++
+On execution field references get checked against the given input type considering potential `@Field` annotations and raising errors when referencing non existing properties.
++
 * `AggregationOperation`
 +
 An `AggregationOperation` represents a MongoDB aggregation pipeline operation and describes the processing that should be performed in this aggregation step. Although you could manually create an `AggregationOperation`, we recommend using the static factory methods provided by the `Aggregate` class to construct an `AggregateOperation`.
@@ -2189,7 +2508,7 @@ At the time of this writing, we provide support for the following Aggregation Op
 | `addToSet`, `first`, `last`, `max`, `min`, `avg`, `push`, `sum`, `(*count)`, `stdDevPop`, `stdDevSamp`
 
 | Arithmetic Aggregation Operators
-| `abs`, `add` (*via `plus`), `ceil`, `divide`, `exp`, `floor`, `ln`, `log`, `log10`, `mod`, `multiply`, `pow`, `sqrt`, `subtract` (*via `minus`), `trunc`
+| `abs`, `add` (*via `plus`), `ceil`, `divide`, `exp`, `floor`, `ln`, `log`, `log10`, `mod`, `multiply`, `pow`, `round`, `sqrt`, `subtract` (*via `minus`), `trunc`
 
 | String Aggregation Operators
 | `concat`, `substr`, `toLower`, `toUpper`, `stcasecmp`, `indexOfBytes`, `indexOfCP`, `split`, `strLenBytes`, `strLenCP`, `substrCP`, `trim`, `ltrim`, `rtim`
@@ -2753,8 +3072,6 @@ TypedAggregation<Book> agg = Aggregation.newAggregation(Book.class,
 <4> Otherwise, add the field value of `author.middle`.
 ====
 
-include::mongo-custom-conversions.adoc[leveloffset=+1]
-
 [[mongo-template.index-and-collections]]
 == Index and Collection Management
 
@@ -2898,6 +3215,11 @@ The following callback methods are present in `AbstractMappingEventListener`:
 
 NOTE: Lifecycle events are only emitted for root level types. Complex types used as properties within a document root are not subject to event publication unless they are document references annotated with `@DBRef`.
 
+WARNING: Lifecycle events depend on an `ApplicationEventMulticaster`, which in case of the `SimpleApplicationEventMulticaster` can be configured with a `TaskExecutor`, and therefore gives no guarantees when an Event is processed.
+
+include::../{spring-data-commons-docs}/entity-callbacks.adoc[leveloffset=+1]
+include::./mongo-entity-callbacks.adoc[leveloffset=+2]
+
 [[mongo.exception]]
 == Exception Translation
 
@@ -2944,13 +3266,13 @@ boolean hasIndex = template.execute("geolocation", new CollectionCallbackBoolean
 [[gridfs]]
 == GridFS Support
 
-MongoDB supports storing binary files inside its filesystem, GridFS. Spring Data MongoDB provides a `GridFsOperations` interface as well as the corresponding implementation, `GridFsTemplate`, to let you interact with the filesystem. You can set up a `GridFsTemplate` instance by handing it a `MongoDbFactory` as well as a `MongoConverter`, as the following example shows:
+MongoDB supports storing binary files inside its filesystem, GridFS. Spring Data MongoDB provides a `GridFsOperations` interface as well as the corresponding implementation, `GridFsTemplate`, to let you interact with the filesystem. You can set up a `GridFsTemplate` instance by handing it a `MongoDatabaseFactory` as well as a `MongoConverter`, as the following example shows:
 
 .JavaConfig setup for a GridFsTemplate
 ====
 [source,java]
 ----
-class GridFsConfiguration extends AbstractMongoConfiguration {
+class GridFsConfiguration extends AbstractMongoClientConfiguration {
 
   // … further configuration omitted
 

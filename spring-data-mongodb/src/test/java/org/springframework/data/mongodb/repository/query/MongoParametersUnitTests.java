@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,20 +15,21 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.lang.reflect.Method;
 import java.util.List;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.data.domain.Range;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.repository.Near;
 import org.springframework.data.mongodb.repository.Person;
@@ -40,101 +41,126 @@ import org.springframework.data.repository.query.Parameter;
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.class)
-public class MongoParametersUnitTests {
+@ExtendWith(MockitoExtension.class)
+class MongoParametersUnitTests {
 
 	@Mock MongoQueryMethod queryMethod;
 
 	@Test
-	public void discoversDistanceParameter() throws NoSuchMethodException, SecurityException {
+	void discoversDistanceParameter() throws NoSuchMethodException, SecurityException {
+
 		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class, Distance.class);
 		MongoParameters parameters = new MongoParameters(method, false);
 
-		assertThat(parameters.getNumberOfParameters(), is(2));
-		assertThat(parameters.getMaxDistanceIndex(), is(1));
-		assertThat(parameters.getBindableParameters().getNumberOfParameters(), is(1));
+		assertThat(parameters.getNumberOfParameters()).isEqualTo(2);
+		assertThat(parameters.getMaxDistanceIndex()).isEqualTo(1);
+		assertThat(parameters.getBindableParameters().getNumberOfParameters()).isOne();
 
 		Parameter parameter = parameters.getParameter(1);
 
-		assertThat(parameter.isSpecialParameter(), is(true));
-		assertThat(parameter.isBindable(), is(false));
+		assertThat(parameter.isSpecialParameter()).isTrue();
+		assertThat(parameter.isBindable()).isFalse();
 	}
 
 	@Test
-	public void doesNotConsiderPointAsNearForSimpleQuery() throws Exception {
+	void doesNotConsiderPointAsNearForSimpleQuery() throws Exception {
 		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class, Distance.class);
 		MongoParameters parameters = new MongoParameters(method, false);
 
-		assertThat(parameters.getNearIndex(), is(-1));
-	}
-
-	@Test(expected = IllegalStateException.class)
-	public void rejectsMultiplePointsForGeoNearMethod() throws Exception {
-		Method method = PersonRepository.class.getMethod("findByLocationNearAndOtherLocation", Point.class, Point.class);
-		new MongoParameters(method, true);
-	}
-
-	@Test(expected = IllegalStateException.class)
-	public void rejectsMultipleDoubleArraysForGeoNearMethod() throws Exception {
-		Method method = PersonRepository.class.getMethod("invalidDoubleArrays", double[].class, double[].class);
-		new MongoParameters(method, true);
+		assertThat(parameters.getNearIndex()).isEqualTo(-1);
 	}
 
 	@Test
-	public void doesNotRejectMultiplePointsForSimpleQueryMethod() throws Exception {
+	void rejectsMultiplePointsForGeoNearMethod() throws Exception {
+
+		Method method = PersonRepository.class.getMethod("findByLocationNearAndOtherLocation", Point.class, Point.class);
+
+		assertThatIllegalStateException().isThrownBy(() -> new MongoParameters(method, true));
+	}
+
+	@Test
+	void rejectsMultipleDoubleArraysForGeoNearMethod() throws Exception {
+
+		Method method = PersonRepository.class.getMethod("invalidDoubleArrays", double[].class, double[].class);
+
+		assertThatIllegalStateException().isThrownBy(() -> new MongoParameters(method, true));
+	}
+
+	@Test
+	void doesNotRejectMultiplePointsForSimpleQueryMethod() throws Exception {
+
 		Method method = PersonRepository.class.getMethod("someOtherMethod", Point.class, Point.class);
 		new MongoParameters(method, false);
 	}
 
 	@Test
-	public void findsAnnotatedPointForGeoNearQuery() throws Exception {
+	void findsAnnotatedPointForGeoNearQuery() throws Exception {
+
 		Method method = PersonRepository.class.getMethod("findByOtherLocationAndLocationNear", Point.class, Point.class);
 		MongoParameters parameters = new MongoParameters(method, true);
-		assertThat(parameters.getNearIndex(), is(1));
+		assertThat(parameters.getNearIndex()).isOne();
 	}
 
 	@Test
-	public void findsAnnotatedDoubleArrayForGeoNearQuery() throws Exception {
+	void findsAnnotatedDoubleArrayForGeoNearQuery() throws Exception {
+
 		Method method = PersonRepository.class.getMethod("validDoubleArrays", double[].class, double[].class);
 		MongoParameters parameters = new MongoParameters(method, true);
-		assertThat(parameters.getNearIndex(), is(1));
+		assertThat(parameters.getNearIndex()).isOne();
 	}
 
 	@Test // DATAMONGO-973
-	public void shouldFindTextCriteriaAtItsIndex() throws SecurityException, NoSuchMethodException {
+	void shouldFindTextCriteriaAtItsIndex() throws SecurityException, NoSuchMethodException {
 
 		Method method = PersonRepository.class.getMethod("findByNameAndText", String.class, TextCriteria.class);
 		MongoParameters parameters = new MongoParameters(method, false);
-		assertThat(parameters.getFullTextParameterIndex(), is(1));
+		assertThat(parameters.getFullTextParameterIndex()).isOne();
 	}
 
 	@Test // DATAMONGO-973
-	public void shouldTreatTextCriteriaParameterAsSpecialParameter() throws SecurityException, NoSuchMethodException {
+	void shouldTreatTextCriteriaParameterAsSpecialParameter() throws SecurityException, NoSuchMethodException {
 
 		Method method = PersonRepository.class.getMethod("findByNameAndText", String.class, TextCriteria.class);
 		MongoParameters parameters = new MongoParameters(method, false);
-		assertThat(parameters.getParameter(parameters.getFullTextParameterIndex()).isSpecialParameter(), is(true));
+		assertThat(parameters.getParameter(parameters.getFullTextParameterIndex()).isSpecialParameter()).isTrue();
 	}
 
 	@Test // DATAMONGO-1110
-	public void shouldFindMinAndMaxDistanceParameters() throws NoSuchMethodException, SecurityException {
+	void shouldFindMinAndMaxDistanceParameters() throws NoSuchMethodException, SecurityException {
 
 		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class, Range.class);
 		MongoParameters parameters = new MongoParameters(method, false);
 
-		assertThat(parameters.getRangeIndex(), is(1));
-		assertThat(parameters.getMaxDistanceIndex(), is(-1));
+		assertThat(parameters.getRangeIndex()).isOne();
+		assertThat(parameters.getMaxDistanceIndex()).isEqualTo(-1);
 	}
 
 	@Test // DATAMONGO-1110
-	public void shouldNotHaveMinDistanceIfOnlyOneDistanceParameterPresent() throws NoSuchMethodException,
-			SecurityException {
+	void shouldNotHaveMinDistanceIfOnlyOneDistanceParameterPresent() throws NoSuchMethodException, SecurityException {
 
 		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class, Distance.class);
 		MongoParameters parameters = new MongoParameters(method, false);
 
-		assertThat(parameters.getRangeIndex(), is(-1));
-		assertThat(parameters.getMaxDistanceIndex(), is(1));
+		assertThat(parameters.getRangeIndex()).isEqualTo(-1);
+		assertThat(parameters.getMaxDistanceIndex()).isOne();
+	}
+
+	@Test // DATAMONGO-1854
+	void shouldReturnMinusOneIfCollationParameterDoesNotExist() throws NoSuchMethodException, SecurityException {
+
+		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class, Distance.class);
+		MongoParameters parameters = new MongoParameters(method, false);
+
+		assertThat(parameters.getCollationParameterIndex()).isEqualTo(-1);
+	}
+
+	@Test // DATAMONGO-1854
+	void shouldReturnIndexOfCollationParameterIfExists() throws NoSuchMethodException, SecurityException {
+
+		Method method = PersonRepository.class.getMethod("findByText", String.class, Collation.class);
+		MongoParameters parameters = new MongoParameters(method, false);
+
+		assertThat(parameters.getCollationParameterIndex()).isOne();
 	}
 
 	interface PersonRepository {
@@ -154,5 +180,7 @@ public class MongoParametersUnitTests {
 		List<Person> findByNameAndText(String name, TextCriteria text);
 
 		List<Person> findByLocationNear(Point point, Range<Distance> range);
+
+		List<Person> findByText(String text, Collation collation);
 	}
 }

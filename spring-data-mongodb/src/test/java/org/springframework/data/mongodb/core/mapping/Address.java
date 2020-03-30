@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,7 @@ package org.springframework.data.mongodb.core.mapping;
  */
 public class Address implements Comparable<Address> {
 
-	@SuppressWarnings("unused")
-	private String id;
+	@SuppressWarnings("unused") private String id;
 	private String[] lines;
 	private String city;
 	private String provinceOrState;

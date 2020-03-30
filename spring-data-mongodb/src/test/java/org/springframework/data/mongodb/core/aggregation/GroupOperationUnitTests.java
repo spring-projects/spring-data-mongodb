@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,15 +15,15 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.aggregation.AggregationFunctionExpressions.*;
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 
 import java.util.Arrays;
 
 import org.bson.Document;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.query.Criteria;
 
@@ -36,9 +36,9 @@ import org.springframework.data.mongodb.core.query.Criteria;
  */
 public class GroupOperationUnitTests {
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void rejectsNullFields() {
-		new GroupOperation((Fields) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> new GroupOperation((Fields) null));
 	}
 
 	@Test // DATAMONGO-759
@@ -48,9 +48,9 @@ public class GroupOperationUnitTests {
 		ExposedFields fields = operation.getFields();
 		Document groupClause = extractDocumentFromGroupOperation(operation);
 
-		assertThat(fields.exposesSingleFieldOnly(), is(true));
-		assertThat(fields.exposesNoFields(), is(false));
-		assertThat(groupClause.get(UNDERSCORE_ID), is(nullValue()));
+		assertThat(fields.exposesSingleFieldOnly()).isTrue();
+		assertThat(fields.exposesNoFields()).isFalse();
+		assertThat(groupClause.get(UNDERSCORE_ID)).isNull();
 	}
 
 	@Test // DATAMONGO-759
@@ -60,11 +60,11 @@ public class GroupOperationUnitTests {
 		ExposedFields fields = operation.getFields();
 		Document groupClause = extractDocumentFromGroupOperation(operation);
 
-		assertThat(fields.exposesSingleFieldOnly(), is(false));
-		assertThat(fields.exposesNoFields(), is(false));
-		assertThat(groupClause.get(UNDERSCORE_ID), is(nullValue()));
-		assertThat((Document) groupClause.get("cnt"), is(new Document("$sum", 1)));
-		assertThat((Document) groupClause.get("foo"), is(new Document("$last", "$foo")));
+		assertThat(fields.exposesSingleFieldOnly()).isFalse();
+		assertThat(fields.exposesNoFields()).isFalse();
+		assertThat(groupClause.get(UNDERSCORE_ID)).isNull();
+		assertThat((Document) groupClause.get("cnt")).isEqualTo(new Document("$sum", 1));
+		assertThat((Document) groupClause.get("foo")).isEqualTo(new Document("$last", "$foo"));
 	}
 
 	@Test
@@ -74,7 +74,7 @@ public class GroupOperationUnitTests {
 
 		Document groupClause = extractDocumentFromGroupOperation(operation);
 
-		assertThat(groupClause.get(UNDERSCORE_ID), is((Object) "$a"));
+		assertThat(groupClause.get(UNDERSCORE_ID)).isEqualTo((Object) "$a");
 	}
 
 	@Test
@@ -85,8 +85,8 @@ public class GroupOperationUnitTests {
 		Document groupClause = extractDocumentFromGroupOperation(operation);
 		Document idClause = DocumentTestUtils.getAsDocument(groupClause, UNDERSCORE_ID);
 
-		assertThat(idClause.get("a"), is((Object) "$a"));
-		assertThat(idClause.get("b"), is((Object) "$c"));
+		assertThat(idClause.get("a")).isEqualTo((Object) "$a");
+		assertThat(idClause.get("b")).isEqualTo((Object) "$c");
 	}
 
 	@Test
@@ -97,7 +97,7 @@ public class GroupOperationUnitTests {
 
 		Document groupClause = extractDocumentFromGroupOperation(groupOperation);
 		Document eOp = DocumentTestUtils.getAsDocument(groupClause, "e");
-		assertThat(eOp, is((Document) new Document("$sum", "$e")));
+		assertThat(eOp).isEqualTo((Document) new Document("$sum", "$e"));
 	}
 
 	@Test
@@ -108,7 +108,7 @@ public class GroupOperationUnitTests {
 
 		Document groupClause = extractDocumentFromGroupOperation(groupOperation);
 		Document eOp = DocumentTestUtils.getAsDocument(groupClause, "ee");
-		assertThat(eOp, is((Document) new Document("$sum", "$e")));
+		assertThat(eOp).isEqualTo((Document) new Document("$sum", "$e"));
 	}
 
 	@Test
@@ -119,7 +119,7 @@ public class GroupOperationUnitTests {
 
 		Document groupClause = extractDocumentFromGroupOperation(groupOperation);
 		Document eOp = DocumentTestUtils.getAsDocument(groupClause, "count");
-		assertThat(eOp, is((Document) new Document("$sum", 1)));
+		assertThat(eOp).isEqualTo((Document) new Document("$sum", 1));
 	}
 
 	@Test
@@ -131,10 +131,10 @@ public class GroupOperationUnitTests {
 
 		Document groupClause = extractDocumentFromGroupOperation(groupOperation);
 		Document sum = DocumentTestUtils.getAsDocument(groupClause, "sum");
-		assertThat(sum, is((Document) new Document("$sum", "$e")));
+		assertThat(sum).isEqualTo((Document) new Document("$sum", "$e"));
 
 		Document min = DocumentTestUtils.getAsDocument(groupClause, "min");
-		assertThat(min, is((Document) new Document("$min", "$e")));
+		assertThat(min).isEqualTo((Document) new Document("$min", "$e"));
 	}
 
 	@Test
@@ -145,7 +145,7 @@ public class GroupOperationUnitTests {
 		Document groupClause = extractDocumentFromGroupOperation(groupOperation);
 		Document push = DocumentTestUtils.getAsDocument(groupClause, "x");
 
-		assertThat(push, is((Document) new Document("$push", 1)));
+		assertThat(push).isEqualTo((Document) new Document("$push", 1));
 	}
 
 	@Test
@@ -156,7 +156,7 @@ public class GroupOperationUnitTests {
 		Document groupClause = extractDocumentFromGroupOperation(groupOperation);
 		Document push = DocumentTestUtils.getAsDocument(groupClause, "x");
 
-		assertThat(push, is((Document) new Document("$push", "$ref")));
+		assertThat(push).isEqualTo((Document) new Document("$push", "$ref"));
 	}
 
 	@Test
@@ -167,7 +167,7 @@ public class GroupOperationUnitTests {
 		Document groupClause = extractDocumentFromGroupOperation(groupOperation);
 		Document push = DocumentTestUtils.getAsDocument(groupClause, "x");
 
-		assertThat(push, is((Document) new Document("$addToSet", "$ref")));
+		assertThat(push).isEqualTo((Document) new Document("$addToSet", "$ref"));
 	}
 
 	@Test
@@ -178,7 +178,7 @@ public class GroupOperationUnitTests {
 		Document groupClause = extractDocumentFromGroupOperation(groupOperation);
 		Document push = DocumentTestUtils.getAsDocument(groupClause, "x");
 
-		assertThat(push, is((Document) new Document("$addToSet", 42)));
+		assertThat(push).isEqualTo((Document) new Document("$addToSet", 42));
 	}
 
 	@Test // DATAMONGO-979
@@ -192,7 +192,7 @@ public class GroupOperationUnitTests {
 		Document groupClause = extractDocumentFromGroupOperation(groupOperation);
 		Document tagsCount = DocumentTestUtils.getAsDocument(groupClause, "tags_count");
 
-		assertThat(tagsCount.get("$first"), is((Object) new Document("$size", Arrays.asList("$tags"))));
+		assertThat(tagsCount.get("$first")).isEqualTo((Object) new Document("$size", Arrays.asList("$tags")));
 	}
 
 	@Test // DATAMONGO-1327
@@ -203,7 +203,7 @@ public class GroupOperationUnitTests {
 		Document groupClause = extractDocumentFromGroupOperation(groupOperation);
 		Document push = DocumentTestUtils.getAsDocument(groupClause, "fieldStdDevSamp");
 
-		assertThat(push, is(new Document("$stdDevSamp", "$field")));
+		assertThat(push).isEqualTo(new Document("$stdDevSamp", "$field"));
 	}
 
 	@Test // DATAMONGO-1327
@@ -214,7 +214,7 @@ public class GroupOperationUnitTests {
 		Document groupClause = extractDocumentFromGroupOperation(groupOperation);
 		Document push = DocumentTestUtils.getAsDocument(groupClause, "fieldStdDevPop");
 
-		assertThat(push, is(new Document("$stdDevPop", "$field")));
+		assertThat(push).isEqualTo(new Document("$stdDevPop", "$field"));
 	}
 
 	@Test // DATAMONGO-1784
@@ -231,13 +231,14 @@ public class GroupOperationUnitTests {
 		Document groupClause = extractDocumentFromGroupOperation(groupOperation);
 		Document foobar = DocumentTestUtils.getAsDocument(groupClause, "foobar");
 
-		assertThat(foobar.get("$sum"), is(new Document("$cond",
-				new Document("if", new Document("$eq", Arrays.asList("$foo", "bar"))).append("then", 1).append("else", -1))));
+		assertThat(foobar.get("$sum")).isEqualTo(new Document("$cond",
+				new Document("if", new Document("$eq", Arrays.asList("$foo", "bar"))).append("then", 1).append("else", -1)));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1784
+	@Test // DATAMONGO-1784
 	public void sumWithNullExpressionShouldThrowException() {
-		Aggregation.group("username").sum((AggregationExpression) null);
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> Aggregation.group("username").sum((AggregationExpression) null));
 	}
 
 	private Document extractDocumentFromGroupOperation(GroupOperation groupOperation) {

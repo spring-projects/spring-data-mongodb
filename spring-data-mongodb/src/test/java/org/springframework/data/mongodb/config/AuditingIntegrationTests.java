@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,27 +15,29 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.joda.time.DateTime;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
+import org.springframework.data.mongodb.core.mapping.event.BeforeConvertCallback;
 
 /**
  * Integration test for the auditing support.
  *
  * @author Oliver Gierke
+ * @author Mark Paluch
  */
 public class AuditingIntegrationTests {
 
-	@Test // DATAMONGO-577, DATAMONGO-800, DATAMONGO-883
+	@Test // DATAMONGO-577, DATAMONGO-800, DATAMONGO-883, DATAMONGO-2261
 	public void enablesAuditingAndSetsPropertiesAccordingly() throws Exception {
 
 		AbstractApplicationContext context = new ClassPathXmlApplicationContext("auditing.xml", getClass());
@@ -43,20 +45,21 @@ public class AuditingIntegrationTests {
 		MongoMappingContext mappingContext = context.getBean(MongoMappingContext.class);
 		mappingContext.getPersistentEntity(Entity.class);
 
-		Entity entity = new Entity();
-		BeforeConvertEvent<Entity> event = new BeforeConvertEvent<Entity>(entity, "collection-1");
-		context.publishEvent(event);
+		EntityCallbacks callbacks = EntityCallbacks.create(context);
 
-		assertThat(entity.created, is(notNullValue()));
-		assertThat(entity.modified, is(entity.created));
+		Entity entity = new Entity();
+		entity = callbacks.callback(BeforeConvertCallback.class, entity, "collection-1");
+
+		assertThat(entity.created).isNotNull();
+		assertThat(entity.modified).isEqualTo(entity.created);
 
 		Thread.sleep(10);
 		entity.id = 1L;
-		event = new BeforeConvertEvent<Entity>(entity, "collection-1");
-		context.publishEvent(event);
 
-		assertThat(entity.created, is(notNullValue()));
-		assertThat(entity.modified, is(not(entity.created)));
+		entity = callbacks.callback(BeforeConvertCallback.class, entity, "collection-1");
+
+		assertThat(entity.created).isNotNull();
+		assertThat(entity.modified).isNotEqualTo(entity.created);
 		context.close();
 	}
 

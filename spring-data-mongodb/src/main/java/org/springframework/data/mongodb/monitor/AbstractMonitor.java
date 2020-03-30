@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,15 @@
  */
 package org.springframework.data.mongodb.monitor;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.bson.Document;
 
-import com.mongodb.MongoClient;
+import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.connection.ServerDescription;
 
 /**
  * Base class to encapsulate common configuration settings when connecting to a database
@@ -31,6 +36,10 @@ public abstract class AbstractMonitor {
 
 	private final MongoClient mongoClient;
 
+	/**
+	 * @param mongoClient
+	 * @since 2.2
+	 */
 	protected AbstractMonitor(MongoClient mongoClient) {
 		this.mongoClient = mongoClient;
 	}
@@ -45,5 +54,11 @@ public abstract class AbstractMonitor {
 
 	protected MongoClient getMongoClient() {
 		return mongoClient;
+	}
+
+	protected List<ServerAddress> hosts() {
+
+		return mongoClient.getClusterDescription().getServerDescriptions().stream().map(ServerDescription::getAddress)
+				.collect(Collectors.toList());
 	}
 }

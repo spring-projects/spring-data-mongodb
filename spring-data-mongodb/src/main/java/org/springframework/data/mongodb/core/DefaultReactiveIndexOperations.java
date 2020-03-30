@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -94,23 +94,16 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 
 		return mongoOperations.execute(collectionName, collection -> {
 
-			Document indexOptions = indexDefinition.getIndexOptions();
+			MongoPersistentEntity<?> entity = type
+					.map(val -> (MongoPersistentEntity) queryMapper.getMappingContext().getRequiredPersistentEntity(val))
+					.orElseGet(() -> lookupPersistentEntity(collectionName));
 
-			IndexOptions ops = IndexConverters.indexDefinitionToIndexOptionsConverter().convert(indexDefinition);
+			IndexOptions indexOptions = IndexConverters.indexDefinitionToIndexOptionsConverter().convert(indexDefinition);
 
-			if (indexOptions.containsKey(PARTIAL_FILTER_EXPRESSION_KEY)) {
+			indexOptions = addPartialFilterIfPresent(indexOptions, indexDefinition.getIndexOptions(), entity);
+			indexOptions = addDefaultCollationIfRequired(indexOptions, entity);
 
-				Assert.isInstanceOf(Document.class, indexOptions.get(PARTIAL_FILTER_EXPRESSION_KEY));
-
-				MongoPersistentEntity<?> entity = type
-						.map(val -> (MongoPersistentEntity) queryMapper.getMappingContext().getRequiredPersistentEntity(val))
-						.orElseGet(() -> lookupPersistentEntity(collectionName));
-
-				ops = ops.partialFilterExpression(
-						queryMapper.getMappedObject(indexOptions.get(PARTIAL_FILTER_EXPRESSION_KEY, Document.class), entity));
-			}
-
-			return collection.createIndex(indexDefinition.getIndexKeys(), ops);
+			return collection.createIndex(indexDefinition.getIndexKeys(), indexOptions);
 
 		}).next();
 	}
@@ -126,26 +119,50 @@ public class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 				.orElse(null);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.index.ReactiveIndexOperations#dropIndex(java.lang.String)
 	 */
 	public Mono<Void> dropIndex(final String name) {
 		return mongoOperations.execute(collectionName, collection -> collection.dropIndex(name)).then();
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.index.ReactiveIndexOperations#dropAllIndexes()
 	 */
 	public Mono<Void> dropAllIndexes() {
 		return dropIndex("*");
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.index.ReactiveIndexOperations#getIndexInfo()
 	 */
 	public Flux<IndexInfo> getIndexInfo() {
 
 		return mongoOperations.execute(collectionName, collection -> collection.listIndexes(Document.class)) //
 				.map(IndexConverters.documentToIndexInfoConverter()::convert);
+	}
+
+	private IndexOptions addPartialFilterIfPresent(IndexOptions ops, Document sourceOptions,
+			@Nullable MongoPersistentEntity<?> entity) {
+
+		if (!sourceOptions.containsKey(PARTIAL_FILTER_EXPRESSION_KEY)) {
+			return ops;
+		}
+
+		Assert.isInstanceOf(Document.class, sourceOptions.get(PARTIAL_FILTER_EXPRESSION_KEY));
+		return ops.partialFilterExpression(
+				queryMapper.getMappedObject((Document) sourceOptions.get(PARTIAL_FILTER_EXPRESSION_KEY), entity));
+	}
+
+	private static IndexOptions addDefaultCollationIfRequired(IndexOptions ops, MongoPersistentEntity<?> entity) {
+
+		if (ops.getCollation() != null || entity == null || !entity.hasCollation()) {
+			return ops;
+		}
+
+		return ops.collation(entity.getCollation().toMongoCollation());
 	}
 }

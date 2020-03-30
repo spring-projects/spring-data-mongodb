@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,13 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
 
+import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.data.domain.Pageable;
@@ -33,6 +33,7 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.User;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.Address;
+import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.Contact;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.Person;
@@ -63,8 +64,8 @@ public class MongoQueryMethodUnitTests {
 		MongoQueryMethod queryMethod = queryMethod(SampleRepository.class, "method");
 		MongoEntityMetadata<?> metadata = queryMethod.getEntityInformation();
 
-		assertThat(metadata.getJavaType(), is(typeCompatibleWith(Address.class)));
-		assertThat(metadata.getCollectionName(), is("contact"));
+		assertThat(metadata.getJavaType()).isAssignableFrom(Address.class);
+		assertThat(metadata.getCollectionName()).isEqualTo("contact");
 	}
 
 	@Test
@@ -73,8 +74,8 @@ public class MongoQueryMethodUnitTests {
 		MongoQueryMethod queryMethod = queryMethod(SampleRepository2.class, "method");
 		MongoEntityMetadata<?> entityInformation = queryMethod.getEntityInformation();
 
-		assertThat(entityInformation.getJavaType(), is(typeCompatibleWith(Person.class)));
-		assertThat(entityInformation.getCollectionName(), is("person"));
+		assertThat(entityInformation.getJavaType()).isAssignableFrom(Person.class);
+		assertThat(entityInformation.getCollectionName()).isEqualTo("person");
 	}
 
 	@Test
@@ -82,25 +83,26 @@ public class MongoQueryMethodUnitTests {
 
 		MongoQueryMethod queryMethod = queryMethod(PersonRepository.class, "findByLocationNear", Point.class,
 				Distance.class, Pageable.class);
-		assertThat(queryMethod.isGeoNearQuery(), is(true));
-		assertThat(queryMethod.isPageQuery(), is(true));
+		assertThat(queryMethod.isGeoNearQuery()).isTrue();
+		assertThat(queryMethod.isPageQuery()).isTrue();
 
 		queryMethod = queryMethod(PersonRepository.class, "findByFirstname", String.class, Point.class);
-		assertThat(queryMethod.isGeoNearQuery(), is(true));
-		assertThat(queryMethod.isPageQuery(), is(false));
-		assertThat(queryMethod.getEntityInformation().getJavaType(), is(typeCompatibleWith(User.class)));
+		assertThat(queryMethod.isGeoNearQuery()).isTrue();
+		assertThat(queryMethod.isPageQuery()).isFalse();
+		assertThat(queryMethod.getEntityInformation().getJavaType()).isAssignableFrom(User.class);
 
-		assertThat(queryMethod(PersonRepository.class, "findByEmailAddress", String.class, Point.class).isGeoNearQuery(),
-				is(true));
-		assertThat(queryMethod(PersonRepository.class, "findByFirstname", String.class, Point.class).isGeoNearQuery(),
-				is(true));
-		assertThat(queryMethod(PersonRepository.class, "findByLastname", String.class, Point.class).isGeoNearQuery(),
-				is(true));
+		assertThat(queryMethod(PersonRepository.class, "findByEmailAddress", String.class, Point.class).isGeoNearQuery())
+				.isTrue();
+		assertThat(queryMethod(PersonRepository.class, "findByFirstname", String.class, Point.class).isGeoNearQuery())
+				.isTrue();
+		assertThat(queryMethod(PersonRepository.class, "findByLastname", String.class, Point.class).isGeoNearQuery())
+				.isTrue();
 	}
 
-	@Test(expected = IllegalArgumentException.class)
-	public void rejectsGeoPageQueryWithoutPageable() throws Exception {
-		queryMethod(PersonRepository.class, "findByLocationNear", Point.class, Distance.class);
+	@Test
+	public void rejectsGeoPageQueryWithoutPageable() {
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> queryMethod(PersonRepository.class, "findByLocationNear", Point.class, Distance.class));
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -118,8 +120,8 @@ public class MongoQueryMethodUnitTests {
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "findByLocationNear", Point.class, Distance.class,
 				Pageable.class);
 
-		assertThat(method.isPageQuery(), is(true));
-		assertThat(method.isCollectionQuery(), is(false));
+		assertThat(method.isPageQuery()).isTrue();
+		assertThat(method.isCollectionQuery()).isFalse();
 	}
 
 	@Test
@@ -133,8 +135,8 @@ public class MongoQueryMethodUnitTests {
 
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "emptyMetaAnnotation");
 
-		assertThat(method.hasQueryMetaAttributes(), is(true));
-		assertThat(method.getQueryMetaAttributes().hasValues(), is(false));
+		assertThat(method.hasQueryMetaAttributes()).isTrue();
+		assertThat(method.getQueryMetaAttributes().hasValues()).isFalse();
 	}
 
 	@Test // DATAMONGO-957
@@ -142,8 +144,8 @@ public class MongoQueryMethodUnitTests {
 
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "metaWithMaxExecutionTime");
 
-		assertThat(method.hasQueryMetaAttributes(), is(true));
-		assertThat(method.getQueryMetaAttributes().getMaxTimeMsec(), is(100L));
+		assertThat(method.hasQueryMetaAttributes()).isTrue();
+		assertThat(method.getQueryMetaAttributes().getMaxTimeMsec()).isEqualTo(100L);
 	}
 
 	@Test // DATAMONGO-1311
@@ -151,8 +153,8 @@ public class MongoQueryMethodUnitTests {
 
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "batchSize");
 
-		assertThat(method.hasQueryMetaAttributes(), is(true));
-		assertThat(method.getQueryMetaAttributes().getCursorBatchSize(), is(100));
+		assertThat(method.hasQueryMetaAttributes()).isTrue();
+		assertThat(method.getQueryMetaAttributes().getCursorBatchSize()).isEqualTo(100);
 	}
 
 	@Test // DATAMONGO-1311
@@ -160,8 +162,8 @@ public class MongoQueryMethodUnitTests {
 
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "negativeBatchSize");
 
-		assertThat(method.hasQueryMetaAttributes(), is(true));
-		assertThat(method.getQueryMetaAttributes().getCursorBatchSize(), is(-200));
+		assertThat(method.hasQueryMetaAttributes()).isTrue();
+		assertThat(method.getQueryMetaAttributes().getCursorBatchSize()).isEqualTo(-200);
 	}
 
 	@Test // DATAMONGO-1403
@@ -169,17 +171,8 @@ public class MongoQueryMethodUnitTests {
 
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "metaWithSpellFixedMaxExecutionTime");
 
-		assertThat(method.hasQueryMetaAttributes(), is(true));
-		assertThat(method.getQueryMetaAttributes().getMaxTimeMsec(), is(100L));
-	}
-
-	@Test // DATAMONGO-957
-	public void createsMongoQueryMethodWithMaxScanCorrectly() throws Exception {
-
-		MongoQueryMethod method = queryMethod(PersonRepository.class, "metaWithMaxScan");
-
-		assertThat(method.hasQueryMetaAttributes(), is(true));
-		assertThat(method.getQueryMetaAttributes().getMaxScan(), is(10L));
+		assertThat(method.hasQueryMetaAttributes()).isTrue();
+		assertThat(method.getQueryMetaAttributes().getMaxTimeMsec()).isEqualTo(100L);
 	}
 
 	@Test // DATAMONGO-957
@@ -187,17 +180,8 @@ public class MongoQueryMethodUnitTests {
 
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "metaWithComment");
 
-		assertThat(method.hasQueryMetaAttributes(), is(true));
-		assertThat(method.getQueryMetaAttributes().getComment(), is("foo bar"));
-	}
-
-	@Test // DATAMONGO-957
-	public void createsMongoQueryMethodWithSnapshotCorrectly() throws Exception {
-
-		MongoQueryMethod method = queryMethod(PersonRepository.class, "metaWithSnapshotUsage");
-
-		assertThat(method.hasQueryMetaAttributes(), is(true));
-		assertThat(method.getQueryMetaAttributes().getSnapshot(), is(true));
+		assertThat(method.hasQueryMetaAttributes()).isTrue();
+		assertThat(method.getQueryMetaAttributes().getComment()).isEqualTo("foo bar");
 	}
 
 	@Test // DATAMONGO-1480
@@ -205,9 +189,9 @@ public class MongoQueryMethodUnitTests {
 
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "metaWithNoCursorTimeout");
 
-		assertThat(method.hasQueryMetaAttributes(), is(true));
-		assertThat(method.getQueryMetaAttributes().getFlags(),
-				containsInAnyOrder(org.springframework.data.mongodb.core.query.Meta.CursorOption.NO_TIMEOUT));
+		assertThat(method.hasQueryMetaAttributes()).isTrue();
+		assertThat(method.getQueryMetaAttributes().getFlags())
+				.contains(org.springframework.data.mongodb.core.query.Meta.CursorOption.NO_TIMEOUT);
 	}
 
 	@Test // DATAMONGO-1480
@@ -215,9 +199,10 @@ public class MongoQueryMethodUnitTests {
 
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "metaWithMultipleFlags");
 
-		assertThat(method.hasQueryMetaAttributes(), is(true));
-		assertThat(method.getQueryMetaAttributes().getFlags(),
-				containsInAnyOrder(org.springframework.data.mongodb.core.query.Meta.CursorOption.NO_TIMEOUT, org.springframework.data.mongodb.core.query.Meta.CursorOption.SLAVE_OK));
+		assertThat(method.hasQueryMetaAttributes()).isTrue();
+		assertThat(method.getQueryMetaAttributes().getFlags()).contains(
+				org.springframework.data.mongodb.core.query.Meta.CursorOption.NO_TIMEOUT,
+				org.springframework.data.mongodb.core.query.Meta.CursorOption.SLAVE_OK);
 	}
 
 	@Test // DATAMONGO-1266
@@ -225,7 +210,25 @@ public class MongoQueryMethodUnitTests {
 
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "deleteByUserName", String.class);
 
-		assertThat(method.getEntityInformation().getJavaType(), is(typeCompatibleWith(User.class)));
+		assertThat(method.getEntityInformation().getJavaType()).isAssignableFrom(User.class);
+	}
+
+	@Test // DATAMONGO-2153
+	public void findsAnnotatedAggregation() throws Exception {
+
+		MongoQueryMethod method = queryMethod(PersonRepository.class, "findByAggregation");
+
+		Assertions.assertThat(method.hasAnnotatedAggregation()).isTrue();
+		Assertions.assertThat(method.getAnnotatedAggregation()).hasSize(1);
+	}
+
+	@Test // DATAMONGO-2153
+	public void detectsCollationForAggregation() throws Exception {
+
+		MongoQueryMethod method = queryMethod(PersonRepository.class, "findByAggregationWithCollation");
+
+		Assertions.assertThat(method.hasAnnotatedCollation()).isTrue();
+		Assertions.assertThat(method.getAnnotatedCollation()).isEqualTo("de_AT");
 	}
 
 	private MongoQueryMethod queryMethod(Class<?> repository, String name, Class<?>... parameters) throws Exception {
@@ -263,23 +266,25 @@ public class MongoQueryMethodUnitTests {
 		@Meta(maxExecutionTimeMs = 100)
 		List<User> metaWithSpellFixedMaxExecutionTime();
 
-		@Meta(maxScanDocuments = 10)
-		List<User> metaWithMaxScan();
-
 		@Meta(comment = "foo bar")
 		List<User> metaWithComment();
-
-		@Meta(snapshot = true)
-		List<User> metaWithSnapshotUsage();
 
 		@Meta(flags = { org.springframework.data.mongodb.core.query.Meta.CursorOption.NO_TIMEOUT })
 		List<User> metaWithNoCursorTimeout();
 
-		@Meta(flags = { org.springframework.data.mongodb.core.query.Meta.CursorOption.NO_TIMEOUT, org.springframework.data.mongodb.core.query.Meta.CursorOption.SLAVE_OK })
+		@Meta(flags = { org.springframework.data.mongodb.core.query.Meta.CursorOption.NO_TIMEOUT,
+				org.springframework.data.mongodb.core.query.Meta.CursorOption.SLAVE_OK })
 		List<User> metaWithMultipleFlags();
 
 		// DATAMONGO-1266
 		void deleteByUserName(String userName);
+
+		@Aggregation("{'$group': { _id: '$templateId', maxVersion : { $max : '$version'} } }")
+		List<User> findByAggregation();
+
+		@Aggregation(pipeline = "{'$group': { _id: '$templateId', maxVersion : { $max : '$version'} } }",
+				collation = "de_AT")
+		List<User> findByAggregationWithCollation();
 	}
 
 	interface SampleRepository extends Repository<Contact, Long> {

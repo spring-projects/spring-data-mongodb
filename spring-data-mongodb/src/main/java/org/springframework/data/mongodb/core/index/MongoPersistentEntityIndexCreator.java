@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.MappingContextEvent;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.IndexDefinitionHolder;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -62,7 +62,7 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 
 	/**
 	 * Creates a new {@link MongoPersistentEntityIndexCreator} for the given {@link MongoMappingContext} and
-	 * {@link MongoDbFactory}.
+	 * {@link MongoDatabaseFactory}.
 	 *
 	 * @param mappingContext must not be {@literal null}.
 	 * @param indexOperationsProvider must not be {@literal null}.
@@ -74,7 +74,7 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 
 	/**
 	 * Creates a new {@link MongoPersistentEntityIndexCreator} for the given {@link MongoMappingContext} and
-	 * {@link MongoDbFactory}.
+	 * {@link MongoDatabaseFactory}.
 	 *
 	 * @param mappingContext must not be {@literal null}.
 	 * @param mongoDbFactory must not be {@literal null}.
@@ -134,16 +134,16 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 	private void checkForAndCreateIndexes(MongoPersistentEntity<?> entity) {
 
 		if (entity.isAnnotationPresent(Document.class)) {
-			for (IndexDefinition indexDefinition : indexResolver.resolveIndexFor(entity.getTypeInformation())) {
 
-				JustOnceLogger.logWarnIndexCreationConfigurationChange(this.getClass().getName());
+			String collection = entity.getCollection();
+
+			for (IndexDefinition indexDefinition : indexResolver.resolveIndexFor(entity.getTypeInformation())) {
 
 				IndexDefinitionHolder indexToCreate = indexDefinition instanceof IndexDefinitionHolder
 						? (IndexDefinitionHolder) indexDefinition
-						: new IndexDefinitionHolder("", indexDefinition, entity.getCollection());
+						: new IndexDefinitionHolder("", indexDefinition, collection);
 
 				createIndex(indexToCreate);
-
 			}
 		}
 	}

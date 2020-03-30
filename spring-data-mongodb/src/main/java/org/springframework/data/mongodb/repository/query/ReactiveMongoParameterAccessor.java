@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,14 +35,12 @@ import org.springframework.data.repository.util.ReactiveWrappers;
  */
 class ReactiveMongoParameterAccessor extends MongoParametersParameterAccessor {
 
-	private final Object[] values;
 	private final List<MonoProcessor<?>> subscriptions;
 
 	public ReactiveMongoParameterAccessor(MongoQueryMethod method, Object[] values) {
 
 		super(method, values);
 
-		this.values = values;
 		this.subscriptions = new ArrayList<>(values.length);
 
 		for (int i = 0; i < values.length; i++) {
@@ -82,7 +80,7 @@ class ReactiveMongoParameterAccessor extends MongoParametersParameterAccessor {
 	@Override
 	public Object[] getValues() {
 
-		Object[] result = new Object[values.length];
+		Object[] result = new Object[super.getValues().length];
 		for (int i = 0; i < result.length; i++) {
 			result[i] = getValue(i);
 		}

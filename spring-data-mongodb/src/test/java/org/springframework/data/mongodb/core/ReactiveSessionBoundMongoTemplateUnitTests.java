@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
@@ -29,13 +29,14 @@ import java.lang.reflect.Proxy;
 import org.bson.Document;
 import org.bson.codecs.BsonValueCodec;
 import org.bson.codecs.configuration.CodecRegistry;
+import org.bson.conversions.Bson;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.reactivestreams.Publisher;
+
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
@@ -44,6 +45,8 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
+import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -56,6 +59,7 @@ import com.mongodb.reactivestreams.client.AggregatePublisher;
 import com.mongodb.reactivestreams.client.ClientSession;
 import com.mongodb.reactivestreams.client.DistinctPublisher;
 import com.mongodb.reactivestreams.client.FindPublisher;
+import com.mongodb.reactivestreams.client.MapReducePublisher;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoCollection;
 import com.mongodb.reactivestreams.client.MongoDatabase;
@@ -85,6 +89,7 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 	@Mock AggregatePublisher aggregatePublisher;
 	@Mock DistinctPublisher distinctPublisher;
 	@Mock Publisher resultPublisher;
+	@Mock MapReducePublisher mapReducePublisher;
 	@Mock MongoClient client;
 	@Mock CodecRegistry codecRegistry;
 
@@ -106,21 +111,23 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 		when(collection.deleteMany(any(ClientSession.class), any(), any())).thenReturn(resultPublisher);
 		when(collection.insertOne(any(ClientSession.class), any(Document.class))).thenReturn(resultPublisher);
 		when(collection.aggregate(any(ClientSession.class), anyList(), any(Class.class))).thenReturn(aggregatePublisher);
-		when(collection.count(any(ClientSession.class), any(), any(CountOptions.class))).thenReturn(resultPublisher);
-		when(collection.drop(any(ClientSession.class))).thenReturn(resultPublisher);
-		when(collection.findOneAndUpdate(any(ClientSession.class), any(), any(), any())).thenReturn(resultPublisher);
-		when(collection.distinct(any(ClientSession.class), any(), any(), any())).thenReturn(distinctPublisher);
-		when(collection.updateOne(any(ClientSession.class), any(), any(), any(UpdateOptions.class)))
+		when(collection.countDocuments(any(ClientSession.class), any(), any(CountOptions.class)))
 				.thenReturn(resultPublisher);
-		when(collection.updateMany(any(ClientSession.class), any(), any(), any(UpdateOptions.class)))
+		when(collection.drop(any(ClientSession.class))).thenReturn(resultPublisher);
+		when(collection.findOneAndUpdate(any(ClientSession.class), any(), any(Bson.class), any()))
+				.thenReturn(resultPublisher);
+		when(collection.distinct(any(ClientSession.class), any(), any(Bson.class), any())).thenReturn(distinctPublisher);
+		when(collection.updateOne(any(ClientSession.class), any(), any(Bson.class), any(UpdateOptions.class)))
+				.thenReturn(resultPublisher);
+		when(collection.updateMany(any(ClientSession.class), any(), any(Bson.class), any(UpdateOptions.class)))
 				.thenReturn(resultPublisher);
 		when(collection.dropIndex(any(ClientSession.class), anyString())).thenReturn(resultPublisher);
+		when(collection.mapReduce(any(ClientSession.class), any(), any(), any())).thenReturn(mapReducePublisher);
 		when(findPublisher.projection(any())).thenReturn(findPublisher);
 		when(findPublisher.limit(anyInt())).thenReturn(findPublisher);
 		when(findPublisher.collation(any())).thenReturn(findPublisher);
 		when(findPublisher.first()).thenReturn(resultPublisher);
 		when(aggregatePublisher.allowDiskUse(anyBoolean())).thenReturn(aggregatePublisher);
-		when(aggregatePublisher.useCursor(anyBoolean())).thenReturn(aggregatePublisher);
 
 		factory = new SimpleReactiveMongoDatabaseFactory(client, "foo");
 
@@ -217,7 +224,7 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 
 		template.count(new Query(), Person.class).subscribe();
 
-		verify(collection).count(eq(clientSession), any(), any(CountOptions.class));
+		verify(collection).countDocuments(eq(clientSession), any(), any(CountOptions.class));
 	}
 
 	@Test // DATAMONGO-1880
@@ -241,7 +248,7 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 
 		template.findAndModify(new Query(), new Update().set("foo", "bar"), Person.class).subscribe();
 
-		verify(collection).findOneAndUpdate(eq(clientSession), any(), any(), any(FindOneAndUpdateOptions.class));
+		verify(collection).findOneAndUpdate(eq(clientSession), any(), any(Bson.class), any(FindOneAndUpdateOptions.class));
 	}
 
 	@Test // DATAMONGO-1880
@@ -252,28 +259,19 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 		verify(collection).distinct(eq(clientSession), anyString(), any(), any());
 	}
 
-	@Test // DATAMONGO-1880
+	@Test // DATAMONGO-1880, DATAMONGO-2264
 	public void geoNearShouldUseProxiedDatabase() {
 
 		template.geoNear(NearQuery.near(new Point(0, 0), Metrics.NEUTRAL), Person.class).subscribe();
 
-		verify(database).runCommand(eq(clientSession), any(), eq(Document.class));
+		verify(collection).aggregate(eq(clientSession), anyList(), eq(Document.class));
 	}
 
-	@Test // DATAMONGO-1880, DATAMONGO-1889
-	@Ignore("No group by yet - DATAMONGO-1889")
-	public void groupShouldUseProxiedDatabase() {
-
-		// template.group(COLLECTION_NAME, GroupBy.key("firstName"), Person.class).subscribe();
-
-		verify(database).runCommand(eq(clientSession), any(), eq(Document.class));
-	}
-
-	@Test // DATAMONGO-1880, DATAMONGO-1890
-	@Ignore("No map reduce yet on template - DATAMONGO-1890")
+	@Test // DATAMONGO-1880, DATAMONGO-1890, DATAMONGO-257
 	public void mapReduceShouldUseProxiedCollection() {
 
-		// template.mapReduce(COLLECTION_NAME, "foo", "bar", Person.class);
+		template.mapReduce(new BasicQuery("{}"), Person.class, COLLECTION_NAME, Person.class, "foo", "bar",
+				MapReduceOptions.options()).subscribe();
 
 		verify(collection).mapReduce(eq(clientSession), anyString(), anyString(), eq(Document.class));
 	}
@@ -283,7 +281,7 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 
 		template.updateFirst(new Query(), Update.update("foo", "bar"), Person.class).subscribe();
 
-		verify(collection).updateOne(eq(clientSession), any(), any(), any(UpdateOptions.class));
+		verify(collection).updateOne(eq(clientSession), any(), any(Bson.class), any(UpdateOptions.class));
 	}
 
 	@Test // DATAMONGO-1880
@@ -291,7 +289,7 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 
 		template.updateMulti(new Query(), Update.update("foo", "bar"), Person.class).subscribe();
 
-		verify(collection).updateMany(eq(clientSession), any(), any(), any(UpdateOptions.class));
+		verify(collection).updateMany(eq(clientSession), any(), any(Bson.class), any(UpdateOptions.class));
 	}
 
 	@Test // DATAMONGO-1880
@@ -299,7 +297,7 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 
 		template.upsert(new Query(), Update.update("foo", "bar"), Person.class).subscribe();
 
-		verify(collection).updateOne(eq(clientSession), any(), any(), any(UpdateOptions.class));
+		verify(collection).updateOne(eq(clientSession), any(), any(Bson.class), any(UpdateOptions.class));
 	}
 
 	@Test // DATAMONGO-1880

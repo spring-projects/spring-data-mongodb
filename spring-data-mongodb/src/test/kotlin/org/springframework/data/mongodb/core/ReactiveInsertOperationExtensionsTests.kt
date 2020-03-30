@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,11 @@ import example.first.First
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
 /**
@@ -33,6 +35,7 @@ class ReactiveInsertOperationExtensionsTests {
 	val operation = mockk<ReactiveInsertOperation>(relaxed = true)
 
 	@Test // DATAMONGO-1719
+	@Suppress("DEPRECATION")
 	fun `insert(KClass) extension should call its Java counterpart`() {
 
 		operation.insert(First::class)
@@ -47,17 +50,33 @@ class ReactiveInsertOperationExtensionsTests {
 	}
 
 	@Test // DATAMONGO-2209
-	fun terminatingFindAwaitOne() {
+	fun terminatingInsertOneAndAwait() {
 
-		val find = mockk<ReactiveInsertOperation.TerminatingInsert<String>>()
-		every { find.one("foo") } returns Mono.just("foo")
+		val insert = mockk<ReactiveInsertOperation.TerminatingInsert<String>>()
+		every { insert.one("foo") } returns Mono.just("foo")
 
 		runBlocking {
-			assertThat(find.oneAndAwait("foo")).isEqualTo("foo")
+			assertThat(insert.oneAndAwait("foo")).isEqualTo("foo")
 		}
 
 		verify {
-			find.one("foo")
+			insert.one("foo")
+		}
+	}
+
+	@Test // DATAMONGO-2255
+	fun terminatingInsertAllAsFlow() {
+
+		val insert = mockk<ReactiveInsertOperation.TerminatingInsert<String>>()
+		val list = listOf("foo", "bar")
+		every { insert.all(any()) } returns Flux.fromIterable(list)
+
+		runBlocking {
+			assertThat(insert.flow(list).toList()).containsAll(list)
+		}
+
+		verify {
+			insert.all(list)
 		}
 	}
 }

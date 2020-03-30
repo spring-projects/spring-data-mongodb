@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the original author or authors.
+ * Copyright 2010-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,8 +27,11 @@ import org.springframework.data.mongodb.repository.query.MongoQueryExecution.Pag
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.PagingGeoNearExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.SlicedExecution;
 import org.springframework.data.repository.query.ParameterAccessor;
+import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -44,17 +47,24 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	private final MongoQueryMethod method;
 	private final MongoOperations operations;
 	private final ExecutableFind<?> executableFind;
+	private final SpelExpressionParser expressionParser;
+	private final QueryMethodEvaluationContextProvider evaluationContextProvider;
 
 	/**
 	 * Creates a new {@link AbstractMongoQuery} from the given {@link MongoQueryMethod} and {@link MongoOperations}.
 	 *
 	 * @param method must not be {@literal null}.
 	 * @param operations must not be {@literal null}.
+	 * @param expressionParser must not be {@literal null}.
+	 * @param evaluationContextProvider must not be {@literal null}.
 	 */
-	public AbstractMongoQuery(MongoQueryMethod method, MongoOperations operations) {
+	public AbstractMongoQuery(MongoQueryMethod method, MongoOperations operations, SpelExpressionParser expressionParser,
+			QueryMethodEvaluationContextProvider evaluationContextProvider) {
 
 		Assert.notNull(operations, "MongoOperations must not be null!");
 		Assert.notNull(method, "MongoQueryMethod must not be null!");
+		Assert.notNull(expressionParser, "SpelExpressionParser must not be null!");
+		Assert.notNull(evaluationContextProvider, "QueryMethodEvaluationContextProvider must not be null!");
 
 		this.method = method;
 		this.operations = operations;
@@ -63,6 +73,8 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		Class<?> type = metadata.getCollectionEntity().getType();
 
 		this.executableFind = operations.query(type);
+		this.expressionParser = expressionParser;
+		this.evaluationContextProvider = evaluationContextProvider;
 	}
 
 	/*
@@ -82,21 +94,36 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 		ConvertingParameterAccessor accessor = new ConvertingParameterAccessor(operations.getConverter(),
 				new MongoParametersParameterAccessor(method, parameters));
+
+		ResultProcessor processor = method.getResultProcessor().withDynamicProjection(accessor);
+		Class<?> typeToRead = processor.getReturnedType().getTypeToRead();
+
+		return processor.processResult(doExecute(method, processor, accessor, typeToRead));
+	}
+
+	/**
+	 * Execute the {@link RepositoryQuery} of the given method with the parameters provided by the
+	 * {@link ConvertingParameterAccessor accessor}
+	 *
+	 * @param method the {@link MongoQueryMethod} invoked. Never {@literal null}.
+	 * @param processor {@link ResultProcessor} for post procession. Never {@literal null}.
+	 * @param accessor for providing invocation arguments. Never {@literal null}.
+	 * @param typeToRead the desired component target type. Can be {@literal null}.
+	 */
+	protected Object doExecute(MongoQueryMethod method, ResultProcessor processor, ConvertingParameterAccessor accessor,
+			@Nullable Class<?> typeToRead) {
+
 		Query query = createQuery(accessor);
 
 		applyQueryMetaAttributesWhenPresent(query);
 		query = applyAnnotatedDefaultSortIfPresent(query);
-
-		ResultProcessor processor = method.getResultProcessor().withDynamicProjection(accessor);
-		Class<?> typeToRead = processor.getReturnedType().getTypeToRead();
+		query = applyAnnotatedCollationIfPresent(query, accessor);
 
 		FindWithQuery<?> find = typeToRead == null //
 				? executableFind //
 				: executableFind.as(typeToRead);
 
-		MongoQueryExecution execution = getExecution(accessor, find);
-
-		return processor.processResult(execution.execute(query));
+		return getExecution(accessor, find).execute(query);
 	}
 
 	private MongoQueryExecution getExecution(ConvertingParameterAccessor accessor, FindWithQuery<?> operation) {
@@ -152,6 +179,21 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		}
 
 		return QueryUtils.decorateSort(query, Document.parse(method.getAnnotatedSort()));
+	}
+
+	/**
+	 * If present apply a {@link org.springframework.data.mongodb.core.query.Collation} derived from the
+	 * {@link org.springframework.data.repository.query.QueryMethod} the given {@link Query}.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @param accessor the {@link ParameterAccessor} used to obtain parameter placeholder replacement values.
+	 * @return
+	 * @since 2.2
+	 */
+	Query applyAnnotatedCollationIfPresent(Query query, ConvertingParameterAccessor accessor) {
+
+		return QueryUtils.applyCollation(query, method.hasAnnotatedCollation() ? method.getAnnotatedCollation() : null,
+				accessor, getQueryMethod().getParameters(), expressionParser, evaluationContextProvider);
 	}
 
 	/**

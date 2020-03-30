@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,13 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.junit.Assert.*;
 import static org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.*;
-import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.util.Arrays;
 
 import org.bson.Document;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond;
 import org.springframework.data.mongodb.core.query.Criteria;
 
@@ -34,42 +33,43 @@ import org.springframework.data.mongodb.core.query.Criteria;
  */
 public class CondExpressionUnitTests {
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-861
-	public void builderRejectsEmptyFieldName() {
-		newBuilder().when("");
+	@Test // DATAMONGO-861
+	void builderRejectsEmptyFieldName() {
+		assertThatIllegalArgumentException().isThrownBy(() -> newBuilder().when(""));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-861
-	public void builderRejectsNullFieldName() {
-		newBuilder().when((Document) null);
+	@Test // DATAMONGO-861
+	void builderRejectsNullFieldName() {
+		assertThatIllegalArgumentException().isThrownBy(() -> newBuilder().when((Document) null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-861
-	public void builderRejectsNullCriteriaName() {
-		newBuilder().when((Criteria) null);
+	@Test // DATAMONGO-861
+	void builderRejectsNullCriteriaName() {
+		assertThatIllegalArgumentException().isThrownBy(() -> newBuilder().when((Criteria) null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-861
-	public void builderRejectsBuilderAsThenValue() {
-		newBuilder().when("isYellow").then(newBuilder().when("field").then("then-value")).otherwise("otherwise");
+	@Test // DATAMONGO-861
+	void builderRejectsBuilderAsThenValue() {
+		assertThatIllegalArgumentException().isThrownBy(
+				() -> newBuilder().when("isYellow").then(newBuilder().when("field").then("then-value")).otherwise("otherwise"));
 	}
 
-	@Test // DATAMONGO-861, DATAMONGO-1542
-	public void simpleBuilderShouldRenderCorrectly() {
+	@Test // DATAMONGO-861, DATAMONGO-1542, DATAMONGO-2242
+	void simpleBuilderShouldRenderCorrectly() {
 
 		Cond operator = ConditionalOperators.when("isYellow").thenValueOf("bright").otherwise("dark");
 		Document document = operator.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		Document expectedCondition = new Document() //
 				.append("if", "$isYellow") //
-				.append("then", "bright") //
+				.append("then", "$bright") //
 				.append("else", "dark");
 
-		assertThat(document, isBsonObject().containing("$cond", expectedCondition));
+		assertThat(document).containsEntry("$cond", expectedCondition);
 	}
 
-	@Test // DATAMONGO-861, DATAMONGO-1542
-	public void simpleCriteriaShouldRenderCorrectly() {
+	@Test // DATAMONGO-861, DATAMONGO-1542, DATAMONGO-2242
+	void simpleCriteriaShouldRenderCorrectly() {
 
 		Cond operator = ConditionalOperators.when(Criteria.where("luminosity").gte(100)).thenValueOf("bright")
 				.otherwise("dark");
@@ -77,14 +77,14 @@ public class CondExpressionUnitTests {
 
 		Document expectedCondition = new Document() //
 				.append("if", new Document("$gte", Arrays.<Object> asList("$luminosity", 100))) //
-				.append("then", "bright") //
+				.append("then", "$bright") //
 				.append("else", "dark");
 
-		assertThat(document, isBsonObject().containing("$cond", expectedCondition));
+		assertThat(document).containsEntry("$cond", expectedCondition);
 	}
 
-	@Test // DATAMONGO-861
-	public void andCriteriaShouldRenderCorrectly() {
+	@Test // DATAMONGO-861, DATAMONGO-2242
+	void andCriteriaShouldRenderCorrectly() {
 
 		Cond operator = ConditionalOperators.when(Criteria.where("luminosity").gte(100) //
 				.andOperator(Criteria.where("hue").is(50), //
@@ -99,14 +99,14 @@ public class CondExpressionUnitTests {
 
 		Document expectedCondition = new Document() //
 				.append("if", Arrays.<Object> asList(luminosity, new Document("$and", Arrays.asList(hue, saturation)))) //
-				.append("then", "bright") //
+				.append("then", "$bright") //
 				.append("else", "$dark-field");
 
-		assertThat(document, isBsonObject().containing("$cond", expectedCondition));
+		assertThat(document).containsEntry("$cond", expectedCondition);
 	}
 
-	@Test // DATAMONGO-861, DATAMONGO-1542
-	public void twoArgsCriteriaShouldRenderCorrectly() {
+	@Test // DATAMONGO-861, DATAMONGO-1542, DATAMONGO-2242
+	void twoArgsCriteriaShouldRenderCorrectly() {
 
 		Criteria criteria = Criteria.where("luminosity").gte(100) //
 				.and("saturation").and("chroma").is(200);
@@ -119,14 +119,14 @@ public class CondExpressionUnitTests {
 
 		Document expectedCondition = new Document() //
 				.append("if", Arrays.asList(gte, is)) //
-				.append("then", "bright") //
+				.append("then", "$bright") //
 				.append("else", "dark");
 
-		assertThat(document, isBsonObject().containing("$cond", expectedCondition));
+		assertThat(document).containsEntry("$cond", expectedCondition);
 	}
 
 	@Test // DATAMONGO-861, DATAMONGO-1542
-	public void nestedCriteriaShouldRenderCorrectly() {
+	void nestedCriteriaShouldRenderCorrectly() {
 
 		Cond operator = ConditionalOperators.when(Criteria.where("luminosity").gte(100)) //
 				.thenValueOf(newBuilder() //
@@ -150,7 +150,7 @@ public class CondExpressionUnitTests {
 				.append("then", "very-dark") //
 				.append("else", "not-so-dark");
 
-		assertThat(document, isBsonObject().containing("$cond.then.$cond", trueCondition));
-		assertThat(document, isBsonObject().containing("$cond.else.$cond", falseCondition));
+		assertThat(document).containsEntry("$cond.then.$cond", trueCondition);
+		assertThat(document).containsEntry("$cond.else.$cond", falseCondition);
 	}
 }

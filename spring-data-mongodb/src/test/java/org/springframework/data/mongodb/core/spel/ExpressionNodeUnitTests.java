@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,17 +15,17 @@
  */
 package org.springframework.data.mongodb.core.spel;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.expression.spel.ExpressionState;
 import org.springframework.expression.spel.SpelNode;
 import org.springframework.expression.spel.ast.OpDivide;
@@ -38,8 +38,8 @@ import org.springframework.expression.spel.ast.OpPlus;
  *
  * @author Oliver Gierke
  */
-@RunWith(MockitoJUnitRunner.class)
-public class ExpressionNodeUnitTests {
+@ExtendWith(MockitoExtension.class)
+class ExpressionNodeUnitTests {
 
 	@Mock ExpressionState state;
 
@@ -48,18 +48,18 @@ public class ExpressionNodeUnitTests {
 	@Mock OpDivide divide;
 	@Mock OpMultiply multiply;
 
-	Collection<? extends SpelNode> operators;
+	private Collection<? extends SpelNode> operators;
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	void setUp() {
 		this.operators = Arrays.asList(minus, plus, divide, multiply);
 	}
 
 	@Test // DATAMONGO-774
-	public void createsOperatorNodeForOperations() {
+	void createsOperatorNodeForOperations() {
 
 		for (SpelNode operator : operators) {
-			assertThat(ExpressionNode.from(operator, state), is(instanceOf(OperatorNode.class)));
+			assertThat(ExpressionNode.from(operator, state)).isInstanceOf(OperatorNode.class);
 		}
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,9 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.hamcrest.core.IsNull.*;
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.convert.MongoConverters.TermToStringConverter;
 import org.springframework.data.mongodb.core.query.Term;
 import org.springframework.data.mongodb.core.query.Term.Type;
@@ -28,11 +26,6 @@ import org.springframework.data.mongodb.core.query.Term.Type;
  * @author Christoph Strobl
  */
 public class TermToStringConverterUnitTests {
-
-	@Test // DATAMONGO-973
-	public void shouldNotConvertNull() {
-		assertThat(TermToStringConverter.INSTANCE.convert(null), nullValue());
-	}
 
 	@Test // DATAMONGO-973
 	public void shouldUseFormattedRepresentationForConversion() {

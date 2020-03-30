@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,8 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import reactor.core.publisher.Flux;
@@ -27,13 +26,13 @@ import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.Map;
 
-import org.bson.BSON;
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.data.mongodb.core.ReactiveFindOperation.ReactiveFind;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
@@ -59,7 +58,7 @@ import org.springframework.util.Base64Utils;
  * @author Mark Paluch
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ReactiveStringBasedMongoQueryUnitTests {
 
 	SpelExpressionParser PARSER = new SpelExpressionParser();
@@ -70,7 +69,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 
 	MongoConverter converter;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		when(operations.query(any())).thenReturn(reactiveFind);
@@ -87,7 +86,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : 'Matthews'}");
 
-		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
+		assertThat(query.getQueryObject()).isEqualTo(reference.getQueryObject());
 	}
 
 	@Test // DATAMONGO-1444
@@ -106,19 +105,19 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 		Document queryObject = new Document("address", dbObject);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery(queryObject);
 
-		assertThat(query.getQueryObject().toJson(), is(reference.getQueryObject().toJson()));
+		assertThat(query.getQueryObject().toJson()).isEqualTo(reference.getQueryObject().toJson());
 	}
 
 	@Test // DATAMONGO-1444
 	public void constructsDeleteQueryCorrectly() throws Exception {
 
 		ReactiveStringBasedMongoQuery mongoQuery = createQueryForMethod("removeByLastname", String.class);
-		assertThat(mongoQuery.isDeleteQuery(), is(true));
+		assertThat(mongoQuery.isDeleteQuery()).isTrue();
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1444
-	public void preventsDeleteAndCountFlagAtTheSameTime() throws Exception {
-		createQueryForMethod("invalidMethod", String.class);
+	@Test // DATAMONGO-1444
+	public void preventsDeleteAndCountFlagAtTheSameTime() {
+		assertThatIllegalArgumentException().isThrownBy(() -> createQueryForMethod("invalidMethod", String.class));
 	}
 
 	@Test // DATAMONGO-2030
@@ -126,7 +125,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 
 		ReactiveStringBasedMongoQuery mongoQuery = createQueryForMethod("existsByLastname", String.class);
 
-		assertThat(mongoQuery.isExistsQuery(), is(true));
+		assertThat(mongoQuery.isExistsQuery()).isTrue();
 	}
 
 	@Test // DATAMONGO-1444
@@ -139,9 +138,9 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 
-		assertThat(query.getQueryObject(),
-				is(new BasicQuery("{ \"firstname\": \"first\", \"lastname\": \"last\"}").getQueryObject()));
-		assertThat(query.getFieldsObject(), is(new BasicQuery(null, "{ \"lastname\": 1}").getFieldsObject()));
+		assertThat(query.getQueryObject())
+				.isEqualTo(new BasicQuery("{ \"firstname\": \"first\", \"lastname\": \"last\"}").getQueryObject());
+		assertThat(query.getFieldsObject()).isEqualTo(new BasicQuery(null, "{ \"lastname\": 1}").getFieldsObject());
 	}
 
 	@Test // DATAMONGO-1444
@@ -153,9 +152,9 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 
-		assertThat(query.getQueryObject(),
-				is(new BasicQuery("{$where: 'return this.date.getUTCMonth() == 3 && this.date.getUTCDay() == 4;'}")
-						.getQueryObject()));
+		assertThat(query.getQueryObject())
+				.isEqualTo(new BasicQuery("{$where: 'return this.date.getUTCMonth() == 3 && this.date.getUTCDay() == 4;'}")
+						.getQueryObject());
 	}
 
 	@Test // DATAMONGO-1444
@@ -167,7 +166,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(parameterAccessor);
 
-		assertThat(query.getQueryObject(), is(new Document().append("key", "value")));
+		assertThat(query.getQueryObject()).isEqualTo(new Document().append("key", "value"));
 	}
 
 	@Test // DATAMONGO-1444
@@ -179,7 +178,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : 'Matthews'}");
 
-		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
+		assertThat(query.getQueryObject()).isEqualTo(reference.getQueryObject());
 	}
 
 	@Test // DATAMONGO-1444
@@ -192,7 +191,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{ \"id\" : { \"$exists\" : true}}");
 
-		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
+		assertThat(query.getQueryObject()).isEqualTo(reference.getQueryObject());
 	}
 
 	@Test // DATAMONGO-1444
@@ -206,7 +205,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery(
 				"{ \"id\" : { \"$exists\" : true} , \"foo\" : 42 , \"bar\" : { \"$exists\" : false}}");
 
-		assertThat(query.getQueryObject(), is(reference.getQueryObject()));
+		assertThat(query.getQueryObject()).isEqualTo(reference.getQueryObject());
 	}
 
 	@Test // DATAMONGO-1444
@@ -217,10 +216,10 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 		ReactiveStringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameAsBinary", byte[].class);
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
-		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : { '$binary' : '"
-				+ Base64Utils.encodeToString(binaryData) + "', '$type' : '" + 0 + "'}}");
+		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery(
+				"{'lastname' : { '$binary' : '" + Base64Utils.encodeToString(binaryData) + "', '$type' : '" + 0 + "'}}");
 
-		assertThat(query.getQueryObject().toJson(), is(reference.getQueryObject().toJson()));
+		assertThat(query.getQueryObject().toJson()).isEqualTo(reference.getQueryObject().toJson());
 	}
 
 	private ReactiveStringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {

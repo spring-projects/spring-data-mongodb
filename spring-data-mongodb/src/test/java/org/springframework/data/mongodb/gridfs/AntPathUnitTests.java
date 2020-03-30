@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,11 @@
  */
 package org.springframework.data.mongodb.gridfs;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.regex.Pattern;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link AntPath}.
@@ -35,8 +34,8 @@ public class AntPathUnitTests {
 		AntPath path = new AntPath("**/foo/*-bar.xml");
 		String regex = path.toRegex();
 
-		assertThat(Pattern.matches(regex, "foo/bar/foo/foo-bar.xml"), is(true));
-		assertThat(Pattern.matches(regex, "foo/bar/foo/bar/foo-bar.xml"), is(false));
-		assertThat(regex, is(".*\\Q/foo/\\E[^/]*\\Q-bar.xml\\E"));
+		assertThat(Pattern.matches(regex, "foo/bar/foo/foo-bar.xml")).isTrue();
+		assertThat(Pattern.matches(regex, "foo/bar/foo/bar/foo-bar.xml")).isFalse();
+		assertThat(regex).isEqualTo(".*\\Q/foo/\\E[^/]*\\Q-bar.xml\\E");
 	}
 }

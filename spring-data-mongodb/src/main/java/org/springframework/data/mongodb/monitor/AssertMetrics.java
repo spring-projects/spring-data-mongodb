@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,12 @@
  */
 package org.springframework.data.mongodb.monitor;
 
-import com.mongodb.MongoClient;
 import org.bson.Document;
 import org.springframework.jmx.export.annotation.ManagedMetric;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.jmx.support.MetricType;
 
-import com.mongodb.DBObject;
-import com.mongodb.Mongo;
+import com.mongodb.client.MongoClient;
 
 /**
  * JMX Metrics for assertions
@@ -32,6 +30,10 @@ import com.mongodb.Mongo;
 @ManagedResource(description = "Assertion Metrics")
 public class AssertMetrics extends AbstractMonitor {
 
+	/**
+	 * @param mongoClient
+	 * @since 2.2
+	 */
 	public AssertMetrics(MongoClient mongoClient) {
 		super(mongoClient);
 	}

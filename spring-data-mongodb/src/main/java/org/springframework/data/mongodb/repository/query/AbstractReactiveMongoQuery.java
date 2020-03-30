@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import reactor.core.publisher.Mono;
 import org.bson.Document;
 import org.reactivestreams.Publisher;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.convert.EntityInstantiators;
+import org.springframework.data.mapping.model.EntityInstantiators;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.ReactiveFindOperation.FindWithProjection;
 import org.springframework.data.mongodb.core.ReactiveFindOperation.FindWithQuery;
@@ -33,8 +33,12 @@ import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecu
 import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.ResultProcessingConverter;
 import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.ResultProcessingExecution;
 import org.springframework.data.repository.query.ParameterAccessor;
+import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
+import org.springframework.data.util.TypeInformation;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -50,6 +54,8 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	private final ReactiveMongoOperations operations;
 	private final EntityInstantiators instantiators;
 	private final FindWithProjection<?> findOperationWithProjection;
+	private final SpelExpressionParser expressionParser;
+	private final QueryMethodEvaluationContextProvider evaluationContextProvider;
 
 	/**
 	 * Creates a new {@link AbstractReactiveMongoQuery} from the given {@link MongoQueryMethod} and
@@ -57,15 +63,22 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	 *
 	 * @param method must not be {@literal null}.
 	 * @param operations must not be {@literal null}.
+	 * @param expressionParser must not be {@literal null}.
+	 * @param evaluationContextProvider must not be {@literal null}.
 	 */
-	public AbstractReactiveMongoQuery(ReactiveMongoQueryMethod method, ReactiveMongoOperations operations) {
+	public AbstractReactiveMongoQuery(ReactiveMongoQueryMethod method, ReactiveMongoOperations operations,
+			SpelExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
 
 		Assert.notNull(method, "MongoQueryMethod must not be null!");
 		Assert.notNull(operations, "ReactiveMongoOperations must not be null!");
+		Assert.notNull(expressionParser, "SpelExpressionParser must not be null!");
+		Assert.notNull(evaluationContextProvider, "QueryMethodEvaluationContextProvider must not be null!");
 
 		this.method = method;
 		this.operations = operations;
 		this.instantiators = new EntityInstantiators();
+		this.expressionParser = expressionParser;
+		this.evaluationContextProvider = evaluationContextProvider;
 
 		MongoEntityMetadata<?> metadata = method.getEntityInformation();
 		Class<?> type = metadata.getCollectionEntity().getType();
@@ -105,13 +118,37 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 
 	private Object execute(MongoParameterAccessor parameterAccessor) {
 
-		Query query = createQuery(new ConvertingParameterAccessor(operations.getConverter(), parameterAccessor));
+		ConvertingParameterAccessor accessor = new ConvertingParameterAccessor(operations.getConverter(),
+				parameterAccessor);
+
+		TypeInformation<?> returnType = method.getReturnType();
+		ResultProcessor processor = method.getResultProcessor().withDynamicProjection(accessor);
+		Class<?> typeToRead = processor.getReturnedType().getTypeToRead();
+
+		if (typeToRead == null && returnType.getComponentType() != null) {
+			typeToRead = returnType.getComponentType().getType();
+		}
+
+		return doExecute(method, processor, accessor, typeToRead);
+	}
+
+	/**
+	 * Execute the {@link RepositoryQuery} of the given method with the parameters provided by the
+	 * {@link ConvertingParameterAccessor accessor}
+	 *
+	 * @param method the {@link ReactiveMongoQueryMethod} invoked. Never {@literal null}.
+	 * @param processor {@link ResultProcessor} for post procession. Never {@literal null}.
+	 * @param accessor for providing invocation arguments. Never {@literal null}.
+	 * @param typeToRead the desired component target type. Can be {@literal null}.
+	 */
+	protected Object doExecute(ReactiveMongoQueryMethod method, ResultProcessor processor,
+			ConvertingParameterAccessor accessor, @Nullable Class<?> typeToRead) {
+
+		Query query = createQuery(accessor);
 
 		applyQueryMetaAttributesWhenPresent(query);
 		query = applyAnnotatedDefaultSortIfPresent(query);
-
-		ResultProcessor processor = method.getResultProcessor().withDynamicProjection(parameterAccessor);
-		Class<?> typeToRead = processor.getReturnedType().getTypeToRead();
+		query = applyAnnotatedCollationIfPresent(query, accessor);
 
 		FindWithQuery<?> find = typeToRead == null //
 				? findOperationWithProjection //
@@ -119,9 +156,8 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 
 		String collection = method.getEntityInformation().getCollectionName();
 
-		ReactiveMongoQueryExecution execution = getExecution(parameterAccessor,
+		ReactiveMongoQueryExecution execution = getExecution(accessor,
 				new ResultProcessingConverter(processor, operations, instantiators), find);
-
 		return execution.execute(query, processor.getReturnedType().getDomainType(), collection);
 	}
 
@@ -193,6 +229,21 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 		}
 
 		return QueryUtils.decorateSort(query, Document.parse(method.getAnnotatedSort()));
+	}
+
+	/**
+	 * If present apply a {@link org.springframework.data.mongodb.core.query.Collation} derived from the
+	 * {@link org.springframework.data.repository.query.QueryMethod} the given {@link Query}.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @param accessor the {@link ParameterAccessor} used to obtain parameter placeholder replacement values.
+	 * @return
+	 * @since 2.2
+	 */
+	Query applyAnnotatedCollationIfPresent(Query query, ConvertingParameterAccessor accessor) {
+
+		return QueryUtils.applyCollation(query, method.hasAnnotatedCollation() ? method.getAnnotatedCollation() : null,
+				accessor, getQueryMethod().getParameters(), expressionParser, evaluationContextProvider);
 	}
 
 	/**

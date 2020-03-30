@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,17 +36,17 @@ public interface MongoPersistentEntity<T> extends PersistentEntity<T, MongoPersi
 	/**
 	 * Returns the default language to be used for this entity.
 	 *
-	 * @since 1.6
 	 * @return
+	 * @since 1.6
 	 */
 	String getLanguage();
 
 	/**
 	 * Returns the property holding text score value.
 	 *
-	 * @since 1.6
-	 * @see #hasTextScoreProperty()
 	 * @return {@literal null} if not present.
+	 * @see #hasTextScoreProperty()
+	 * @since 1.6
 	 */
 	@Nullable
 	MongoPersistentProperty getTextScoreProperty();
@@ -54,9 +54,43 @@ public interface MongoPersistentEntity<T> extends PersistentEntity<T, MongoPersi
 	/**
 	 * Returns whether the entity has a {@link TextScore} property.
 	 *
-	 * @since 1.6
 	 * @return true if property annotated with {@link TextScore} is present.
+	 * @since 1.6
 	 */
 	boolean hasTextScoreProperty();
+
+	/**
+	 * Returns the collation of the entity evaluating a potential SpEL expression within the current context.
+	 *
+	 * @return {@literal null} if not set.
+	 * @since 2.2
+	 */
+	@Nullable
+	org.springframework.data.mongodb.core.query.Collation getCollation();
+
+	/**
+	 * @return {@literal true} if the entity is annotated with
+	 *         {@link org.springframework.data.mongodb.core.mapping.Collation}.
+	 * @since 2.2
+	 */
+	default boolean hasCollation() {
+		return getCollation() != null;
+	}
+
+	/**
+	 * Get the entities shard key if defined.
+	 *
+	 * @return {@link ShardKey#none()} if not not set.
+	 * @since 3.0
+	 */
+	ShardKey getShardKey();
+
+	/**
+	 * @return {@literal true} if the {@link #getShardKey() shard key} is sharded.
+	 * @since 3.0
+	 */
+	default boolean isSharded() {
+		return getShardKey().isSharded();
+	}
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the original author or authors.
+ * Copyright 2010-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.index;
 
+import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -114,6 +115,20 @@ public class Index implements IndexDefinition {
 	 */
 	public Index expire(long value) {
 		return expire(value, TimeUnit.SECONDS);
+	}
+
+	/**
+	 * Specifies the TTL.
+	 *
+	 * @param timeout must not be {@literal null}.
+	 * @return this.
+	 * @throws IllegalArgumentException if given {@literal timeout} is {@literal null}.
+	 * @since 2.2
+	 */
+	public Index expire(Duration timeout) {
+
+		Assert.notNull(timeout, "Timeout must not be null!");
+		return expire(timeout.getSeconds());
 	}
 
 	/**

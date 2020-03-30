@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.lang.Nullable;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
-import com.mongodb.reactivestreams.client.gridfs.AsyncInputStream;
 
 /**
  * Collection of operations to store and read files from MongoDB GridFS using reactive infrastructure.
@@ -112,20 +111,6 @@ public interface ReactiveGridFsOperations {
 	 * @return a {@link Mono} emitting the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just
 	 *         created.
 	 */
-	Mono<ObjectId> store(AsyncInputStream content, @Nullable String filename, @Nullable String contentType,
-			@Nullable Object metadata);
-
-	/**
-	 * Stores the given content into a file with the given name and content type using the given metadata. The metadata
-	 * object will be marshalled before writing.
-	 *
-	 * @param content must not be {@literal null}.
-	 * @param filename must not be {@literal null} or empty.
-	 * @param contentType can be {@literal null}.
-	 * @param metadata can be {@literal null}
-	 * @return a {@link Mono} emitting the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just
-	 *         created.
-	 */
 	Mono<ObjectId> store(Publisher<DataBuffer> content, @Nullable String filename, @Nullable String contentType,
 			@Nullable Object metadata);
 
@@ -141,19 +126,6 @@ public interface ReactiveGridFsOperations {
 	default Mono<ObjectId> store(Publisher<DataBuffer> content, @Nullable String filename, @Nullable Document metadata) {
 		return store(content, filename, null, metadata);
 	}
-
-	/**
-	 * Stores the given content into a file with the given name and content type using the given metadata.
-	 *
-	 * @param content must not be {@literal null}.
-	 * @param filename must not be {@literal null} or empty.
-	 * @param contentType can be {@literal null}.
-	 * @param metadata can be {@literal null}.
-	 * @return a {@link Mono} emitting the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just
-	 *         created.
-	 */
-	Mono<ObjectId> store(AsyncInputStream content, @Nullable String filename, @Nullable String contentType,
-			@Nullable Document metadata);
 
 	/**
 	 * Stores the given content into a file with the given name and content type using the given metadata.

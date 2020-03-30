@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -40,13 +41,13 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
 import com.mongodb.ClientSessionOptions;
-import com.mongodb.Cursor;
 import com.mongodb.ReadPreference;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoCollection;
@@ -57,6 +58,10 @@ import com.mongodb.client.result.UpdateResult;
  * Interface that specifies a basic set of MongoDB operations. Implemented by {@link MongoTemplate}. Not often used but
  * a useful option for extensibility and testability (as it can be easily mocked, stubbed, or be the target of a JDK
  * proxy).
+ * <p/>
+ * <strong>NOTE:</strong> Some operations cannot be executed within a MongoDB transaction. Please refer to the MongoDB
+ * specific documentation to learn more about <a href="https://docs.mongodb.com/manual/core/transactions/">Multi
+ * Document Transactions</a>.
  *
  * @author Thomas Risberg
  * @author Mark Pollack
@@ -171,7 +176,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	/**
 	 * Obtain a {@link ClientSession session} bound instance of {@link SessionScoped} binding the {@link ClientSession}
 	 * provided by the given {@link Supplier} to each and every command issued against MongoDB.
-	 * <p />
+	 * <p/>
 	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle. Use the
 	 * {@link SessionScoped#execute(SessionCallback, Consumer)} hook to potentially close the {@link ClientSession}.
 	 *
@@ -207,7 +212,7 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Obtain a {@link ClientSession} bound instance of {@link MongoOperations}.
-	 * <p />
+	 * <p/>
 	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle.
 	 *
 	 * @param session must not be {@literal null}.
@@ -218,9 +223,10 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Executes the given {@link Query} on the entity collection of the specified {@code entityType} backed by a Mongo DB
-	 * {@link Cursor}.
+	 * {@link com.mongodb.client.FindIterable}.
 	 * <p>
-	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link Cursor} that needs to be closed.
+	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.client.FindIterable} that needs to
+	 * be closed.
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification. Must not be {@literal null}.
@@ -233,9 +239,10 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Executes the given {@link Query} on the entity collection of the specified {@code entityType} and collection backed
-	 * by a Mongo DB {@link Cursor}.
+	 * by a Mongo DB {@link com.mongodb.client.FindIterable}.
 	 * <p>
-	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link Cursor} that needs to be closed.
+	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.client.FindIterable} that needs to
+	 * be closed.
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification. Must not be {@literal null}.
@@ -289,12 +296,15 @@ public interface MongoOperations extends FluentMongoOperations {
 	Set<String> getCollectionNames();
 
 	/**
-	 * Get a collection by name, creating it if it doesn't exist.
+	 * Get a {@link MongoCollection} by its name. The returned collection may not exists yet (except in local memory) and
+	 * is created on first interaction with the server. Collections can be explicitly created via
+	 * {@link #createCollection(Class)}. Please make sure to check if the collection {@link #collectionExists(Class)
+	 * exists} first.
 	 * <p/>
 	 * Translate any exceptions as necessary.
 	 *
 	 * @param collectionName name of the collection. Must not be {@literal null}.
-	 * @return an existing collection or a newly created one.
+	 * @return an existing collection or one created on first server interaction.
 	 */
 	MongoCollection<Document> getCollection(String collectionName);
 
@@ -351,11 +361,13 @@ public interface MongoOperations extends FluentMongoOperations {
 	IndexOperations indexOps(Class<?> entityClass);
 
 	/**
-	 * Returns the {@link ScriptOperations} that can be performed on {@link com.mongodb.DB} level.
+	 * Returns the {@link ScriptOperations} that can be performed on {@link com.mongodb.client.MongoDatabase} level.
 	 *
 	 * @return
 	 * @since 1.7
+	 * @deprecated since 2.2. The {@code eval} command has been removed without replacement in MongoDB Server 4.2.0.
 	 */
+	@Deprecated
 	ScriptOperations scriptOps();
 
 	/**
@@ -427,7 +439,11 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *          reduce function.
 	 * @param entityClass The parametrized type of the returned list
 	 * @return The results of the group operation
+	 * @deprecated since 2.2. The {@code group} command has been removed in MongoDB Server 4.2.0. <br />
+	 *             Please use {@link #aggregate(TypedAggregation, String, Class) } with a
+	 *             {@link org.springframework.data.mongodb.core.aggregation.GroupOperation} instead.
 	 */
+	@Deprecated
 	<T> GroupByResults<T> group(String inputCollectionName, GroupBy groupBy, Class<T> entityClass);
 
 	/**
@@ -442,7 +458,12 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *          reduce function.
 	 * @param entityClass The parametrized type of the returned list
 	 * @return The results of the group operation
+	 * @deprecated since 2.2. The {@code group} command has been removed in MongoDB Server 4.2.0. <br />
+	 *             Please use {@link #aggregate(TypedAggregation, String, Class) } with a
+	 *             {@link org.springframework.data.mongodb.core.aggregation.GroupOperation} and
+	 *             {@link org.springframework.data.mongodb.core.aggregation.MatchOperation} instead.
 	 */
+	@Deprecated
 	<T> GroupByResults<T> group(@Nullable Criteria criteria, String inputCollectionName, GroupBy groupBy,
 			Class<T> entityClass);
 
@@ -498,11 +519,11 @@ public interface MongoOperations extends FluentMongoOperations {
 	<O> AggregationResults<O> aggregate(Aggregation aggregation, String collectionName, Class<O> outputType);
 
 	/**
-	 * Execute an aggregation operation backed by a Mongo DB {@link Cursor}.
+	 * Execute an aggregation operation backed by a Mongo DB {@link com.mongodb.client.AggregateIterable}.
 	 * <p>
-	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link Cursor} that needs to be closed. The raw
-	 * results will be mapped to the given entity class. The name of the inputCollection is derived from the inputType of
-	 * the aggregation.
+	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.client.AggregateIterable} that
+	 * needs to be closed. The raw results will be mapped to the given entity class. The name of the inputCollection is
+	 * derived from the inputType of the aggregation.
 	 * <p>
 	 * Aggregation streaming can't be used with {@link AggregationOptions#isExplain() aggregation explain}. Enabling
 	 * explanation mode will throw an {@link IllegalArgumentException}.
@@ -517,11 +538,11 @@ public interface MongoOperations extends FluentMongoOperations {
 	<O> CloseableIterator<O> aggregateStream(TypedAggregation<?> aggregation, String collectionName, Class<O> outputType);
 
 	/**
-	 * Execute an aggregation operation backed by a Mongo DB {@link Cursor}.
+	 * Execute an aggregation operation backed by a Mongo DB {@link com.mongodb.client.AggregateIterable}.
 	 * <p/>
-	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link Cursor} that needs to be closed. The raw
-	 * results will be mapped to the given entity class and are returned as stream. The name of the inputCollection is
-	 * derived from the inputType of the aggregation.
+	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.client.AggregateIterable} that
+	 * needs to be closed. The raw results will be mapped to the given entity class and are returned as stream. The name
+	 * of the inputCollection is derived from the inputType of the aggregation.
 	 * <p/>
 	 * Aggregation streaming can't be used with {@link AggregationOptions#isExplain() aggregation explain}. Enabling
 	 * explanation mode will throw an {@link IllegalArgumentException}.
@@ -535,10 +556,10 @@ public interface MongoOperations extends FluentMongoOperations {
 	<O> CloseableIterator<O> aggregateStream(TypedAggregation<?> aggregation, Class<O> outputType);
 
 	/**
-	 * Execute an aggregation operation backed by a Mongo DB {@link Cursor}.
+	 * Execute an aggregation operation backed by a Mongo DB {@link com.mongodb.client.AggregateIterable}.
 	 * <p/>
-	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link Cursor} that needs to be closed. The raw
-	 * results will be mapped to the given entity class.
+	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.client.AggregateIterable} that
+	 * needs to be closed. The raw results will be mapped to the given entity class.
 	 * <p/>
 	 * Aggregation streaming can't be used with {@link AggregationOptions#isExplain() aggregation explain}. Enabling
 	 * explanation mode will throw an {@link IllegalArgumentException}.
@@ -554,10 +575,10 @@ public interface MongoOperations extends FluentMongoOperations {
 	<O> CloseableIterator<O> aggregateStream(Aggregation aggregation, Class<?> inputType, Class<O> outputType);
 
 	/**
-	 * Execute an aggregation operation backed by a Mongo DB {@link Cursor}.
+	 * Execute an aggregation operation backed by a Mongo DB {@link com.mongodb.client.AggregateIterable}.
 	 * <p/>
-	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link Cursor} that needs to be closed. The raw
-	 * results will be mapped to the given entity class.
+	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.client.AggregateIterable} that
+	 * needs to be closed. The raw results will be mapped to the given entity class.
 	 * <p/>
 	 * Aggregation streaming can't be used with {@link AggregationOptions#isExplain() aggregation explain}. Enabling
 	 * explanation mode will throw an {@link IllegalArgumentException}.
@@ -630,24 +651,52 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * information to determine the collection the query is ran against. Note, that MongoDB limits the number of results
 	 * by default. Make sure to add an explicit limit to the {@link NearQuery} if you expect a particular number of
 	 * results.
+	 * <p>
+	 * MongoDB 4.2 has removed the {@code geoNear} command. This method uses since version 2.2 aggregations and the
+	 * {@code $geoNear} aggregation command to emulate {@code geoNear} command functionality. We recommend using
+	 * aggregations directly:
+	 * </p>
+	 *
+	 * <pre class="code">
+	 * TypedAggregation&lt;T&gt; geoNear = TypedAggregation.newAggregation(entityClass, Aggregation.geoNear(near, "dis"))
+	 * 		.withOptions(AggregationOptions.builder().collation(near.getCollation()).build());
+	 * AggregationResults&lt;Document&gt; results = aggregate(geoNear, Document.class);
+	 * </pre>
 	 *
 	 * @param near must not be {@literal null}.
 	 * @param entityClass must not be {@literal null}.
 	 * @return
+	 * @deprecated since 2.2. The {@code eval} command has been removed in MongoDB Server 4.2.0. Use Aggregations with
+	 *             {@link Aggregation#geoNear(NearQuery, String)} instead.
 	 */
+	@Deprecated
 	<T> GeoResults<T> geoNear(NearQuery near, Class<T> entityClass);
 
 	/**
 	 * Returns {@link GeoResults} for all entities matching the given {@link NearQuery}. Note, that MongoDB limits the
 	 * number of results by default. Make sure to add an explicit limit to the {@link NearQuery} if you expect a
 	 * particular number of results.
+	 * <p>
+	 * MongoDB 4.2 has removed the {@code geoNear} command. This method uses since version 2.2 aggregations and the
+	 * {@code $geoNear} aggregation command to emulate {@code geoNear} command functionality. We recommend using
+	 * aggregations directly:
+	 * </p>
+	 *
+	 * <pre class="code">
+	 * TypedAggregation&lt;T&gt; geoNear = TypedAggregation.newAggregation(entityClass, Aggregation.geoNear(near, "dis"))
+	 * 		.withOptions(AggregationOptions.builder().collation(near.getCollation()).build());
+	 * AggregationResults&lt;Document&gt; results = aggregate(geoNear, Document.class);
+	 * </pre>
 	 *
 	 * @param near must not be {@literal null}.
 	 * @param entityClass must not be {@literal null}.
 	 * @param collectionName the collection to trigger the query against. If no collection name is given the entity class
 	 *          will be inspected. Must not be {@literal null} nor empty.
 	 * @return
+	 * @deprecated since 2.2. The {@code eval} command has been removed in MongoDB Server 4.2.0. Use Aggregations with
+	 *             {@link Aggregation#geoNear(NearQuery, String)} instead.
 	 */
+	@Deprecated
 	<T> GeoResults<T> geoNear(NearQuery near, Class<T> entityClass, String collectionName);
 
 	/**
@@ -837,12 +886,15 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification. Must not be {@literal null}.
-	 * @param update the {@link Update} to apply on matching documents. Must not be {@literal null}.
+	 * @param update the {@link UpdateDefinition} to apply on matching documents. Must not be {@literal null}.
 	 * @param entityClass the parametrized type. Must not be {@literal null}.
 	 * @return the converted object that was updated before it was updated or {@literal null}, if not found.
+	 * @since 3.0
+	 * @see Update
+	 * @see AggregationUpdate
 	 */
 	@Nullable
-	<T> T findAndModify(Query query, Update update, Class<T> entityClass);
+	<T> T findAndModify(Query query, UpdateDefinition update, Class<T> entityClass);
 
 	/**
 	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify <a/>
@@ -850,13 +902,16 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification. Must not be {@literal null}.
-	 * @param update the {@link Update} to apply on matching documents. Must not be {@literal null}.
+	 * @param update the {@link UpdateDefinition} to apply on matching documents. Must not be {@literal null}.
 	 * @param entityClass the parametrized type. Must not be {@literal null}.
 	 * @param collectionName the collection to query. Must not be {@literal null}.
 	 * @return the converted object that was updated before it was updated or {@literal null}, if not found.
+	 * @since 3.0
+	 * @see Update
+	 * @see AggregationUpdate
 	 */
 	@Nullable
-	<T> T findAndModify(Query query, Update update, Class<T> entityClass, String collectionName);
+	<T> T findAndModify(Query query, UpdateDefinition update, Class<T> entityClass, String collectionName);
 
 	/**
 	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify <a/>
@@ -865,15 +920,18 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification.
-	 * @param update the {@link Update} to apply on matching documents.
+	 * @param update the {@link UpdateDefinition} to apply on matching documents.
 	 * @param options the {@link FindAndModifyOptions} holding additional information.
 	 * @param entityClass the parametrized type.
 	 * @return the converted object that was updated or {@literal null}, if not found. Depending on the value of
 	 *         {@link FindAndModifyOptions#isReturnNew()} this will either be the object as it was before the update or as
 	 *         it is after the update.
+	 * @since 3.0
+	 * @see Update
+	 * @see AggregationUpdate
 	 */
 	@Nullable
-	<T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass);
+	<T> T findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options, Class<T> entityClass);
 
 	/**
 	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify <a/>
@@ -882,16 +940,19 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification. Must not be {@literal null}.
-	 * @param update the {@link Update} to apply on matching documents. Must not be {@literal null}.
+	 * @param update the {@link UpdateDefinition} to apply on matching documents. Must not be {@literal null}.
 	 * @param options the {@link FindAndModifyOptions} holding additional information. Must not be {@literal null}.
 	 * @param entityClass the parametrized type. Must not be {@literal null}.
 	 * @param collectionName the collection to query. Must not be {@literal null}.
 	 * @return the converted object that was updated or {@literal null}, if not found. Depending on the value of
 	 *         {@link FindAndModifyOptions#isReturnNew()} this will either be the object as it was before the update or as
 	 *         it is after the update.
+	 * @since 3.0
+	 * @see Update
+	 * @see AggregationUpdate
 	 */
 	@Nullable
-	<T> T findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass,
+	<T> T findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options, Class<T> entityClass,
 			String collectionName);
 
 	/**
@@ -1144,11 +1205,11 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * <p/>
 	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}.
 	 * <p/>
-	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
+	 * If your object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
-	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's Type
-	 * Conversion"</a> for more details.
+	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's
+	 * Type Conversion"</a> for more details.
 	 * <p/>
 	 * <p/>
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
@@ -1206,11 +1267,11 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}. Unless
 	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
 	 * <p/>
-	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
+	 * If your object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
-	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's Type
-	 * Conversion"</a> for more details.
+	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's
+	 * Type Conversion"</a> for more details.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @return the saved object.
@@ -1224,7 +1285,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}. Unless
 	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
 	 * <p/>
-	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
+	 * If your object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See <a
 	 * https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation">Spring's Type
@@ -1238,31 +1299,42 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
-	 * combining the query document and the update document.
+	 * combining the query document and the update document. <br />
+	 * <strong>NOTE:</strong> {@link Query#getSortObject() sorting} is not supported by {@code db.collection.updateOne}.
+	 * Use {@link #findAndModify(Query, UpdateDefinition, FindAndModifyOptions, Class, String)} instead.
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be upserted. Must not be
 	 *          {@literal null}.
-	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
-	 *          object. Must not be {@literal null}.
+	 * @param update the {@link UpdateDefinition} that contains the updated object or {@code $} operators to manipulate
+	 *          the existing object. Must not be {@literal null}.
 	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 3.0
+	 * @see Update
+	 * @see AggregationUpdate
 	 */
-	UpdateResult upsert(Query query, Update update, Class<?> entityClass);
+	UpdateResult upsert(Query query, UpdateDefinition update, Class<?> entityClass);
 
 	/**
 	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
 	 * combining the query document and the update document. <br />
 	 * <strong>NOTE:</strong> Any additional support for field mapping, versions, etc. is not available due to the lack of
-	 * domain type information. Use {@link #upsert(Query, Update, Class, String)} to get full type specific support.
+	 * domain type information. Use {@link #upsert(Query, UpdateDefinition, Class, String)} to get full type specific
+	 * support. <br />
+	 * <strong>NOTE:</strong> {@link Query#getSortObject() sorting} is not supported by {@code db.collection.updateOne}.
+	 * Use {@link #findAndModify(Query, UpdateDefinition, FindAndModifyOptions, Class, String)} instead.
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be upserted. Must not be
 	 *          {@literal null}.
-	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
-	 *          object. Must not be {@literal null}.
+	 * @param update the {@link UpdateDefinition} that contains the updated object or {@code $} operators to manipulate
+	 *          the existing object. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 3.0
+	 * @see Update
+	 * @see AggregationUpdate
 	 */
-	UpdateResult upsert(Query query, Update update, String collectionName);
+	UpdateResult upsert(Query query, UpdateDefinition update, String collectionName);
 
 	/**
 	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
@@ -1270,13 +1342,16 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be upserted. Must not be
 	 *          {@literal null}.
-	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
-	 *          object. Must not be {@literal null}.
+	 * @param update the {@link UpdateDefinition} that contains the updated object or {@code $} operators to manipulate
+	 *          the existing object. Must not be {@literal null}.
 	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 3.0
+	 * @see Update
+	 * @see AggregationUpdate
 	 */
-	UpdateResult upsert(Query query, Update update, Class<?> entityClass, String collectionName);
+	UpdateResult upsert(Query query, UpdateDefinition update, Class<?> entityClass, String collectionName);
 
 	/**
 	 * Updates the first object that is found in the collection of the entity class that matches the query document with
@@ -1284,27 +1359,36 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
 	 *          {@literal null}.
-	 * @param update the update document that contains the updated object or $ operators to manipulate the existing. Must
-	 *          not be {@literal null}.
+	 * @param update the {@link UpdateDefinition} that contains the updated object or {@code $} operators to manipulate
+	 *          the existing. Must not be {@literal null}.
 	 * @param entityClass class that determines the collection to use.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 3.0
+	 * @see Update
+	 * @see AggregationUpdate
 	 */
-	UpdateResult updateFirst(Query query, Update update, Class<?> entityClass);
+	UpdateResult updateFirst(Query query, UpdateDefinition update, Class<?> entityClass);
 
 	/**
 	 * Updates the first object that is found in the specified collection that matches the query document criteria with
 	 * the provided updated document. <br />
 	 * <strong>NOTE:</strong> Any additional support for field mapping, versions, etc. is not available due to the lack of
-	 * domain type information. Use {@link #updateFirst(Query, Update, Class, String)} to get full type specific support.
+	 * domain type information. Use {@link #updateFirst(Query, UpdateDefinition, Class, String)} to get full type specific
+	 * support. <br />
+	 * <strong>NOTE:</strong> {@link Query#getSortObject() sorting} is not supported by {@code db.collection.updateOne}.
+	 * Use {@link #findAndModify(Query, UpdateDefinition, Class, String)} instead.
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
 	 *          {@literal null}.
-	 * @param update the update document that contains the updated object or $ operators to manipulate the existing. Must
-	 *          not be {@literal null}.
+	 * @param update the {@link UpdateDefinition} that contains the updated object or {@code $} operators to manipulate
+	 *          the existing. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 3.0
+	 * @see Update
+	 * @see AggregationUpdate
 	 */
-	UpdateResult updateFirst(Query query, Update update, String collectionName);
+	UpdateResult updateFirst(Query query, UpdateDefinition update, String collectionName);
 
 	/**
 	 * Updates the first object that is found in the specified collection that matches the query document criteria with
@@ -1312,13 +1396,16 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
 	 *          {@literal null}.
-	 * @param update the update document that contains the updated object or $ operators to manipulate the existing. Must
-	 *          not be {@literal null}.
+	 * @param update the {@link UpdateDefinition} that contains the updated object or {@code $} operators to manipulate
+	 *          the existing. Must not be {@literal null}.
 	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 3.0
+	 * @see Update
+	 * @see AggregationUpdate
 	 */
-	UpdateResult updateFirst(Query query, Update update, Class<?> entityClass, String collectionName);
+	UpdateResult updateFirst(Query query, UpdateDefinition update, Class<?> entityClass, String collectionName);
 
 	/**
 	 * Updates all objects that are found in the collection for the entity class that matches the query document criteria
@@ -1326,27 +1413,34 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
 	 *          {@literal null}.
-	 * @param update the update document that contains the updated object or $ operators to manipulate the existing. Must
-	 *          not be {@literal null}.
+	 * @param update the {@link UpdateDefinition} that contains the updated object or {@code $} operators to manipulate
+	 *          the existing. Must not be {@literal null}.
 	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 3.0
+	 * @see Update
+	 * @see AggregationUpdate
 	 */
-	UpdateResult updateMulti(Query query, Update update, Class<?> entityClass);
+	UpdateResult updateMulti(Query query, UpdateDefinition update, Class<?> entityClass);
 
 	/**
 	 * Updates all objects that are found in the specified collection that matches the query document criteria with the
 	 * provided updated document. <br />
 	 * <strong>NOTE:</strong> Any additional support for field mapping, versions, etc. is not available due to the lack of
-	 * domain type information. Use {@link #updateMulti(Query, Update, Class, String)} to get full type specific support.
+	 * domain type information. Use {@link #updateMulti(Query, UpdateDefinition, Class, String)} to get full type specific
+	 * support.
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
 	 *          {@literal null}.
-	 * @param update the update document that contains the updated object or $ operators to manipulate the existing. Must
-	 *          not be {@literal null}.
+	 * @param update the {@link UpdateDefinition} that contains the updated object or {@code $} operators to manipulate
+	 *          the existing. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 3.0
+	 * @see Update
+	 * @see AggregationUpdate
 	 */
-	UpdateResult updateMulti(Query query, Update update, String collectionName);
+	UpdateResult updateMulti(Query query, UpdateDefinition update, String collectionName);
 
 	/**
 	 * Updates all objects that are found in the collection for the entity class that matches the query document criteria
@@ -1354,13 +1448,16 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
 	 *          {@literal null}.
-	 * @param update the update document that contains the updated object or $ operators to manipulate the existing. Must
-	 *          not be {@literal null}.
+	 * @param update the {@link UpdateDefinition} that contains the updated object or {@code $} operators to manipulate
+	 *          the existing. Must not be {@literal null}.
 	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 3.0
+	 * @see Update
+	 * @see AggregationUpdate
 	 */
-	UpdateResult updateMulti(Query query, Update update, Class<?> entityClass, String collectionName);
+	UpdateResult updateMulti(Query query, UpdateDefinition update, Class<?> entityClass, String collectionName);
 
 	/**
 	 * Remove the given object from the collection by {@literal id} and (if applicable) its

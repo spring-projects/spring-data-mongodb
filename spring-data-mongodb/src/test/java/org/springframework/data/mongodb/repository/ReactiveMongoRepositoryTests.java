@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,10 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static org.assertj.core.api.Assertions.offset;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.domain.Sort.Direction.*;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
+import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
 import lombok.Data;
@@ -27,14 +29,15 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.reactivestreams.Publisher;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,15 +61,15 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.mongodb.repository.support.ReactiveMongoRepositoryFactory;
 import org.springframework.data.mongodb.repository.support.SimpleReactiveMongoRepository;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.mongodb.reactivestreams.client.MongoClient;
-import com.mongodb.reactivestreams.client.MongoClients;
 
 /**
  * Test for {@link ReactiveMongoRepository} query methods.
@@ -74,9 +77,10 @@ import com.mongodb.reactivestreams.client.MongoClients;
  * @author Mark Paluch
  * @author Christoph Strobl
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration
+@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 public class ReactiveMongoRepositoryTests {
+
+	static @Client MongoClient mongoClient;
 
 	@Autowired ReactiveMongoTemplate template;
 
@@ -93,7 +97,7 @@ public class ReactiveMongoRepositoryTests {
 		@Bean
 		@Override
 		public MongoClient reactiveMongoClient() {
-			return MongoClients.create();
+			return mongoClient;
 		}
 
 		@Override
@@ -127,19 +131,21 @@ public class ReactiveMongoRepositoryTests {
 		ReactiveCappedCollectionRepository reactiveCappedCollectionRepository(ReactiveMongoRepositoryFactory factory) {
 			return factory.getRepository(ReactiveCappedCollectionRepository.class);
 		}
-	}
 
-	@BeforeClass
-	public static void cleanDb() {
-
-		try (MongoClient client = MongoClients.create()) {
-
-			MongoTestUtils.createOrReplaceCollectionNow("reactive", "person", client);
-			MongoTestUtils.createOrReplaceCollectionNow("reactive", "capped", client);
+		@Override
+		protected boolean autoIndexCreation() {
+			return true;
 		}
 	}
 
-	@Before
+	@BeforeAll
+	public static void cleanDb() {
+
+		MongoTestUtils.createOrReplaceCollectionNow("reactive", "person", mongoClient);
+		MongoTestUtils.createOrReplaceCollectionNow("reactive", "capped", mongoClient);
+	}
+
+	@BeforeEach
 	public void setUp() throws Exception {
 
 		repository.deleteAll().as(StepVerifier::create).verifyComplete();
@@ -156,29 +162,30 @@ public class ReactiveMongoRepositoryTests {
 
 		alicia = new Person("Alicia", "Keys", 30, Sex.FEMALE);
 
-		StepVerifier.create(repository.saveAll(Arrays.asList(oliver, dave, carter, boyd, stefan, leroi, alicia))) //
+		repository.saveAll(Arrays.asList(oliver, carter, boyd, stefan, leroi, alicia, dave)).as(StepVerifier::create) //
 				.expectNextCount(7) //
 				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void shouldFindByLastName() {
-		StepVerifier.create(repository.findByLastname(dave.getLastname())).expectNextCount(2).verifyComplete();
+		repository.findByLastname(dave.getLastname()).as(StepVerifier::create).expectNextCount(2).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void shouldFindOneByLastName() {
-		StepVerifier.create(repository.findOneByLastname(carter.getLastname())).expectNext(carter).verifyComplete();
+		repository.findOneByLastname(carter.getLastname()).as(StepVerifier::create).expectNext(carter).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void shouldFindOneByPublisherOfLastName() {
-		StepVerifier.create(repository.findByLastname(Mono.just(carter.getLastname()))).expectNext(carter).verifyComplete();
+		repository.findByLastname(Mono.just(carter.getLastname())).as(StepVerifier::create).expectNext(carter)
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
 	public void shouldFindByPublisherOfLastNameIn() {
-		StepVerifier.create(repository.findByLastnameIn(Flux.just(carter.getLastname(), dave.getLastname()))) //
+		repository.findByLastnameIn(Flux.just(carter.getLastname(), dave.getLastname())).as(StepVerifier::create) //
 				.expectNextCount(3) //
 				.verifyComplete();
 	}
@@ -186,8 +193,8 @@ public class ReactiveMongoRepositoryTests {
 	@Test // DATAMONGO-1444
 	public void shouldFindByPublisherOfLastNameInAndAgeGreater() {
 
-		StepVerifier
-				.create(repository.findByLastnameInAndAgeGreaterThan(Flux.just(carter.getLastname(), dave.getLastname()), 41)) //
+		repository.findByLastnameInAndAgeGreaterThan(Flux.just(carter.getLastname(), dave.getLastname()), 41)
+				.as(StepVerifier::create) //
 				.expectNextCount(2) //
 				.verifyComplete();
 	}
@@ -195,7 +202,7 @@ public class ReactiveMongoRepositoryTests {
 	@Test // DATAMONGO-1444
 	public void shouldFindUsingPublishersInStringQuery() {
 
-		StepVerifier.create(repository.findStringQuery(Flux.just("Beauford", "Matthews"), Mono.just(41))) //
+		repository.findStringQuery(Flux.just("Beauford", "Matthews"), Mono.just(41)).as(StepVerifier::create) //
 				.expectNextCount(2) //
 				.verifyComplete();
 	}
@@ -203,11 +210,11 @@ public class ReactiveMongoRepositoryTests {
 	@Test // DATAMONGO-1444
 	public void shouldFindByLastNameAndSort() {
 
-		StepVerifier.create(repository.findByLastname("Matthews", Sort.by(ASC, "age"))) //
+		repository.findByLastname("Matthews", Sort.by(ASC, "age")).as(StepVerifier::create) //
 				.expectNext(oliver, dave) //
 				.verifyComplete();
 
-		StepVerifier.create(repository.findByLastname("Matthews", Sort.by(DESC, "age"))) //
+		repository.findByLastname("Matthews", Sort.by(DESC, "age")).as(StepVerifier::create) //
 				.expectNext(dave, oliver) //
 				.verifyComplete();
 	}
@@ -215,13 +222,14 @@ public class ReactiveMongoRepositoryTests {
 	@Test // DATAMONGO-1444
 	public void shouldUseTailableCursor() throws Exception {
 
-		StepVerifier.create(template.dropCollection(Capped.class) //
+		template.dropCollection(Capped.class) //
 				.then(template.createCollection(Capped.class, //
-						CollectionOptions.empty().size(1000).maxDocuments(100).capped()))) //
+						CollectionOptions.empty().size(1000).maxDocuments(100).capped()))
+				.as(StepVerifier::create) //
 				.expectNextCount(1) //
 				.verifyComplete();
 
-		StepVerifier.create(template.insert(new Capped("value", Math.random()))).expectNextCount(1).verifyComplete();
+		template.insert(new Capped("value", Math.random())).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
 		BlockingQueue<Capped> documents = new LinkedBlockingDeque<>(100);
 
@@ -229,7 +237,7 @@ public class ReactiveMongoRepositoryTests {
 
 		assertThat(documents.poll(5, TimeUnit.SECONDS)).isNotNull();
 
-		StepVerifier.create(template.insert(new Capped("value", Math.random()))).expectNextCount(1).verifyComplete();
+		template.insert(new Capped("value", Math.random())).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 		assertThat(documents.poll(5, TimeUnit.SECONDS)).isNotNull();
 		assertThat(documents).isEmpty();
 
@@ -239,13 +247,14 @@ public class ReactiveMongoRepositoryTests {
 	@Test // DATAMONGO-1444
 	public void shouldUseTailableCursorWithProjection() throws Exception {
 
-		StepVerifier.create(template.dropCollection(Capped.class) //
+		template.dropCollection(Capped.class) //
 				.then(template.createCollection(Capped.class, //
-						CollectionOptions.empty().size(1000).maxDocuments(100).capped()))) //
+						CollectionOptions.empty().size(1000).maxDocuments(100).capped()))
+				.as(StepVerifier::create) //
 				.expectNextCount(1) //
 				.verifyComplete();
 
-		StepVerifier.create(template.insert(new Capped("value", Math.random()))).expectNextCount(1).verifyComplete();
+		template.insert(new Capped("value", Math.random())).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
 		BlockingQueue<CappedProjection> documents = new LinkedBlockingDeque<>(100);
 
@@ -255,7 +264,7 @@ public class ReactiveMongoRepositoryTests {
 		assertThat(projection1).isNotNull();
 		assertThat(projection1.getRandom()).isNotEqualTo(0);
 
-		StepVerifier.create(template.insert(new Capped("value", Math.random()))).expectNextCount(1).verifyComplete();
+		template.insert(new Capped("value", Math.random())).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
 		CappedProjection projection2 = documents.poll(5, TimeUnit.SECONDS);
 		assertThat(projection2).isNotNull();
@@ -284,9 +293,9 @@ public class ReactiveMongoRepositoryTests {
 
 		Point point = new Point(-73.99171, 40.738868);
 		dave.setLocation(point);
-		StepVerifier.create(repository.save(dave)).expectNextCount(1).verifyComplete();
+		repository.save(dave).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
-		StepVerifier.create(repository.findByLocationWithin(new Circle(-78.99171, 45.738868, 170))) //
+		repository.findByLocationWithin(new Circle(-78.99171, 45.738868, 170)).as(StepVerifier::create) //
 				.expectNext(dave) //
 				.verifyComplete();
 	}
@@ -296,10 +305,10 @@ public class ReactiveMongoRepositoryTests {
 
 		Point point = new Point(-73.99171, 40.738868);
 		dave.setLocation(point);
-		StepVerifier.create(repository.save(dave)).expectNextCount(1).verifyComplete();
+		repository.save(dave).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
-		StepVerifier.create(repository.findByLocationWithin(new Circle(-78.99171, 45.738868, 170), //
-				PageRequest.of(0, 10))) //
+		repository.findByLocationWithin(new Circle(-78.99171, 45.738868, 170), //
+				PageRequest.of(0, 10)).as(StepVerifier::create) //
 				.expectNext(dave) //
 				.verifyComplete();
 	}
@@ -309,27 +318,29 @@ public class ReactiveMongoRepositoryTests {
 
 		Point point = new Point(-73.99171, 40.738868);
 		dave.setLocation(point);
-		StepVerifier.create(repository.save(dave)).expectNextCount(1).verifyComplete();
+		repository.save(dave).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
-		StepVerifier.create(repository.findByLocationNear(new Point(-73.99, 40.73), //
-				new Distance(2000, Metrics.KILOMETERS)) //
-		).consumeNextWith(actual -> {
+		repository.findByLocationNear(new Point(-73.99, 40.73), //
+				new Distance(2000, Metrics.KILOMETERS)).as(StepVerifier::create).consumeNextWith(actual -> {
 
-			assertThat(actual.getDistance().getValue()).isCloseTo(1, offset(1d));
-			assertThat(actual.getContent()).isEqualTo(dave);
-		}).verifyComplete();
+					assertThat(actual.getDistance().getValue()).isCloseTo(1, offset(1d));
+					assertThat(actual.getContent()).isEqualTo(dave);
+				}).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void findsPeoplePageableGeoresultByLocationWithinBox() {
+	public void findsPeoplePageableGeoresultByLocationWithinBox() throws InterruptedException {
 
 		Point point = new Point(-73.99171, 40.738868);
 		dave.setLocation(point);
-		StepVerifier.create(repository.save(dave)).expectNextCount(1).verifyComplete();
+		repository.save(dave).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
-		StepVerifier.create(repository.findByLocationNear(new Point(-73.99, 40.73), //
+		// Allow for index creation
+		Thread.sleep(500);
+
+		repository.findByLocationNear(new Point(-73.99, 40.73), //
 				new Distance(2000, Metrics.KILOMETERS), //
-				PageRequest.of(0, 10))) //
+				PageRequest.of(0, 10)).as(StepVerifier::create) //
 				.consumeNextWith(actual -> {
 
 					assertThat(actual.getDistance().getValue()).isCloseTo(1, offset(1d));
@@ -338,32 +349,35 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void findsPeopleByLocationWithinBox() {
+	public void findsPeopleByLocationWithinBox() throws InterruptedException {
 
 		Point point = new Point(-73.99171, 40.738868);
 		dave.setLocation(point);
-		StepVerifier.create(repository.save(dave)).expectNextCount(1).verifyComplete();
+		repository.save(dave).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
-		StepVerifier.create(repository.findPersonByLocationNear(new Point(-73.99, 40.73), //
-				new Distance(2000, Metrics.KILOMETERS))) //
+		// Allow for index creation
+		Thread.sleep(500);
+
+		repository.findPersonByLocationNear(new Point(-73.99, 40.73), //
+				new Distance(2000, Metrics.KILOMETERS)).as(StepVerifier::create) //
 				.expectNext(dave) //
 				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1865
 	public void shouldErrorOnFindOneWithNonUniqueResult() {
-		StepVerifier.create(repository.findOneByLastname(dave.getLastname()))
+		repository.findOneByLastname(dave.getLastname()).as(StepVerifier::create)
 				.expectError(IncorrectResultSizeDataAccessException.class).verify();
 	}
 
 	@Test // DATAMONGO-1865
 	public void shouldReturnFirstFindFirstWithMoreResults() {
-		StepVerifier.create(repository.findFirstByLastname(dave.getLastname())).expectNextCount(1).verifyComplete();
+		repository.findFirstByLastname(dave.getLastname()).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 	}
 
 	@Test // DATAMONGO-2030
 	public void shouldReturnExistsBy() {
-		StepVerifier.create(repository.existsByLastname(dave.getLastname())).expectNext(true).verifyComplete();
+		repository.existsByLastname(dave.getLastname()).as(StepVerifier::create).expectNext(true).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1979
@@ -423,6 +437,185 @@ public class ReactiveMongoRepositoryTests {
 				}).verifyComplete();
 	}
 
+	@Test // DATAMONGO-2153
+	public void findListOfSingleValue() {
+
+		repository.findAllLastnames() //
+				.collectList() //
+				.as(StepVerifier::create) //
+				.assertNext(actual -> {
+					assertThat(actual) //
+							.contains("Lessard") //
+							.contains("Keys") //
+							.contains("Tinsley") //
+							.contains("Beauford") //
+							.contains("Moore") //
+							.contains("Matthews");
+				}).verifyComplete();
+	}
+
+	@Test // DATAMONGO-2153
+	public void annotatedAggregationWithPlaceholderValue() {
+
+		repository.groupByLastnameAnd("firstname") //
+				.collectList() //
+				.as(StepVerifier::create) //
+				.assertNext(actual -> {
+					assertThat(actual) //
+							.contains(new PersonAggregate("Lessard", "Stefan")) //
+							.contains(new PersonAggregate("Keys", "Alicia")) //
+							.contains(new PersonAggregate("Tinsley", "Boyd")) //
+							.contains(new PersonAggregate("Beauford", "Carter")) //
+							.contains(new PersonAggregate("Moore", "Leroi")) //
+							.contains(new PersonAggregate("Matthews", Arrays.asList("Dave", "Oliver August")));
+				}).verifyComplete();
+	}
+
+	@Test // DATAMONGO-2153
+	public void annotatedAggregationWithSort() {
+
+		repository.groupByLastnameAnd("firstname", Sort.by("lastname")) //
+				.collectList() //
+				.as(StepVerifier::create) //
+				.assertNext(actual -> {
+					assertThat(actual) //
+							.containsSequence( //
+									new PersonAggregate("Beauford", "Carter"), //
+									new PersonAggregate("Keys", "Alicia"), //
+									new PersonAggregate("Lessard", "Stefan"), //
+									new PersonAggregate("Matthews", Arrays.asList("Dave", "Oliver August")), //
+									new PersonAggregate("Moore", "Leroi"), //
+									new PersonAggregate("Tinsley", "Boyd"));
+				}) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-2153
+	public void annotatedAggregationWithPageable() {
+
+		repository.groupByLastnameAnd("firstname", PageRequest.of(1, 2, Sort.by("lastname"))) //
+				.collectList() //
+				.as(StepVerifier::create) //
+				.assertNext(actual -> {
+					assertThat(actual) //
+							.containsExactly( //
+									new PersonAggregate("Lessard", "Stefan"), //
+									new PersonAggregate("Matthews", Arrays.asList("Dave", "Oliver August")));
+				}) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-2153
+	public void annotatedAggregationWithSingleSimpleResult() {
+
+		repository.sumAge() //
+				.as(StepVerifier::create) //
+				.expectNext(245L) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-2153
+	public void annotatedAggregationWithAggregationResultAsReturnType() {
+
+		repository.sumAgeAndReturnRawResult() //
+				.as(StepVerifier::create) //
+				.expectNext(new org.bson.Document("_id", null).append("total", 245)) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-2153
+	public void annotatedAggregationWithAggregationResultAsReturnTypeAndProjection() {
+
+		repository.sumAgeAndReturnSumWrapper() //
+				.as(StepVerifier::create) //
+				.expectNext(new SumAge(245L)) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-2374
+	public void findsWithNativeProjection() {
+
+		repository.findDocumentById(dave.getId()) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(it -> {
+					assertThat(it).containsEntry("firstname", dave.getFirstname()).containsEntry("lastname", dave.getLastname());
+				}).verifyComplete();
+	}
+
+	@Test // DATAMONGO-2153
+	public void annotatedAggregationWithAggregationResultAsMap() {
+
+		repository.sumAgeAndReturnSumAsMap() //
+				.as(StepVerifier::create) //
+				.consumeNextWith(it -> {
+					assertThat(it).isInstanceOf(Map.class);
+				}).verifyComplete();
+	}
+
+	@Test // DATAMONGO-2403
+	public void annotatedAggregationExtractingSimpleValueIsEmptyForEmptyDocument() {
+
+		Person p = new Person("project-on-lastanme", null);
+		repository.save(p).then().as(StepVerifier::create).verifyComplete();
+
+		repository.projectToLastnameAndRemoveId(p.getFirstname()) //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-2403
+	public void annotatedAggregationSkipsEmptyDocumentsWhenExtractingSimpleValue() {
+
+		String firstname = "project-on-lastanme";
+
+		Person p1 = new Person(firstname, null);
+		p1.setEmail("p1@example.com");
+		Person p2 = new Person(firstname, "lastname");
+		p2.setEmail("p2@example.com");
+		Person p3 = new Person(firstname, null);
+		p3.setEmail("p3@example.com");
+
+		repository.saveAll(Arrays.asList(p1, p2, p3)).then().as(StepVerifier::create).verifyComplete();
+
+		repository.projectToLastnameAndRemoveId(firstname) //
+				.as(StepVerifier::create) //
+				.expectNext("lastname").verifyComplete();
+	}
+
+	@Test // DATAMONGO-2406
+	public void deleteByShouldHandleVoidResultTypeCorrectly() {
+
+		repository.deleteByLastname(dave.getLastname()) //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+
+		template.find(query(where("lastname").is(dave.getLastname())), Person.class) //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-1997
+	public void deleteByShouldAllowDeletedCountAsResult() {
+
+		repository.deleteCountByLastname(dave.getLastname()) //
+				.as(StepVerifier::create) //
+				.expectNext(2L) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-1997
+	public void deleteByShouldAllowSingleDocumentRemovalCorrectly() {
+
+		repository.deleteSinglePersonByLastname(carter.getLastname()) //
+				.as(StepVerifier::create) //
+				.expectNext(carter) //
+				.verifyComplete();
+
+		repository.deleteSinglePersonByLastname("dorfuaeB") //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+	}
+
 	interface ReactivePersonRepository
 			extends ReactiveMongoRepository<Person, String>, ReactiveQuerydslPredicateExecutor<Person> {
 
@@ -462,6 +655,43 @@ public class ReactiveMongoRepositoryTests {
 
 		@Query(sort = "{ age : -1 }")
 		Flux<Person> findByAgeGreaterThan(int age, Sort sort);
+
+		@Aggregation("{ '$project': { '_id' : '$lastname' } }")
+		Flux<String> findAllLastnames();
+
+		@Aggregation("{ '$group': { '_id' : '$lastname', names : { $addToSet : '$?0' } } }")
+		Flux<PersonAggregate> groupByLastnameAnd(String property);
+
+		@Aggregation("{ '$group': { '_id' : '$lastname', names : { $addToSet : '$?0' } } }")
+		Flux<PersonAggregate> groupByLastnameAnd(String property, Sort sort);
+
+		@Aggregation("{ '$group': { '_id' : '$lastname', names : { $addToSet : '$?0' } } }")
+		Flux<PersonAggregate> groupByLastnameAnd(String property, Pageable page);
+
+		@Aggregation(pipeline = "{ '$group' : { '_id' : null, 'total' : { $sum: '$age' } } }")
+		Mono<Long> sumAge();
+
+		@Aggregation(pipeline = "{ '$group' : { '_id' : null, 'total' : { $sum: '$age' } } }")
+		Mono<org.bson.Document> sumAgeAndReturnRawResult();
+
+		@Aggregation(pipeline = "{ '$group' : { '_id' : null, 'total' : { $sum: '$age' } } }")
+		Mono<SumAge> sumAgeAndReturnSumWrapper();
+
+		@Aggregation(pipeline = "{ '$group' : { '_id' : null, 'total' : { $sum: '$age' } } }")
+		Mono<Map> sumAgeAndReturnSumAsMap();
+
+		@Aggregation(
+				pipeline = { "{ '$match' : { 'firstname' : '?0' } }", "{ '$project' : { '_id' : 0, 'lastname' : 1 } }" })
+		Mono<String> projectToLastnameAndRemoveId(String firstname);
+
+		@Query(value = "{_id:?0}")
+		Mono<org.bson.Document> findDocumentById(String id);
+
+		Mono<Void> deleteByLastname(String lastname);
+
+		Mono<Long> deleteCountByLastname(String lastname);
+
+		Mono<Person> deleteSinglePersonByLastname(String lastname);
 	}
 
 	interface ReactiveContactRepository extends ReactiveMongoRepository<Contact, String> {}

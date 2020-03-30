@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,39 +19,49 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.mongodb.config.AbstractIntegrationTests;
-import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.CollectionOptions;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Language;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
-import org.springframework.data.util.Version;
-
-import com.mongodb.WriteConcern;
+import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
+import org.springframework.data.mongodb.test.util.MongoTestTemplate;
+import org.springframework.data.mongodb.test.util.Template;
 
 /**
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
-public class TextIndexTests extends AbstractIntegrationTests {
+@ExtendWith(MongoTemplateExtension.class)
+public class TextIndexTests {
 
-	public static @ClassRule MongoVersionRule version = MongoVersionRule.atLeast(new Version(2, 6));
+	@Template(initialEntitySet = TextIndexedDocumentRoot.class)
+	static MongoTestTemplate template;
 
-	private @Autowired MongoTemplate template;
 	private IndexOperations indexOps;
 
-	@Before
-	public void setUp() throws Exception {
+	@BeforeEach
+	public void beforeEach() throws Exception {
 
-		template.setWriteConcern(WriteConcern.JOURNALED);
 		this.indexOps = template.indexOps(TextIndexedDocumentRoot.class);
+
+		template.dropDatabase();
+
+		template.createCollection(TextIndexedDocumentRoot.class,
+				CollectionOptions.empty().collation(Collation.of("de_AT")));
 	}
 
-	@Test // DATAMONGO-937
+	@Test // DATAMONGO-937, DATAMONGO-2316
 	public void indexInfoShouldHaveBeenCreatedCorrectly() {
+
+		IndexResolver indexResolver = IndexResolver.create(template.getConverter().getMappingContext());
+
+		for (IndexDefinition indexDefinition : indexResolver.resolveIndexFor(TextIndexedDocumentRoot.class)) {
+			indexOps.ensureIndex(indexDefinition);
+		}
 
 		List<IndexInfo> indexInfos = indexOps.getIndexInfo();
 
@@ -69,16 +79,16 @@ public class TextIndexTests extends AbstractIntegrationTests {
 		assertThat(textIndexInfo.getLanguage()).isEqualTo("spanish");
 	}
 
-	@Document(language = "spanish")
+	@Document(language = "spanish", collation = "de_AT")
 	static class TextIndexedDocumentRoot {
 
 		@TextIndexed String textIndexedPropertyWithDefaultWeight;
 		@TextIndexed(weight = 5) String textIndexedPropertyWithWeight;
 
-		TextIndexedDocumentWihtLanguageOverride nestedDocument;
+		TextIndexedDocumentWithLanguageOverride nestedDocument;
 	}
 
-	static class TextIndexedDocumentWihtLanguageOverride {
+	static class TextIndexedDocumentWithLanguageOverride {
 
 		@Language String lang;
 

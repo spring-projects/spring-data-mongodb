@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,11 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import java.util.Arrays;
-import java.util.List;
-
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Term;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
@@ -40,7 +38,6 @@ import org.springframework.util.ClassUtils;
 public class MongoParametersParameterAccessor extends ParametersParameterAccessor implements MongoParameterAccessor {
 
 	private final MongoQueryMethod method;
-	private final List<Object> values;
 
 	/**
 	 * Creates a new {@link MongoParametersParameterAccessor}.
@@ -53,7 +50,6 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 		super(method.getParameters(), values);
 
 		this.method = method;
-		this.values = Arrays.asList(values);
 	}
 
 	public Range<Distance> getDistanceRange() {
@@ -67,7 +63,8 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 		}
 
 		int maxDistanceIndex = mongoParameters.getMaxDistanceIndex();
-		Bound<Distance> maxDistance = maxDistanceIndex == -1 ? Bound.unbounded() : Bound.inclusive((Distance) getValue(maxDistanceIndex));
+		Bound<Distance> maxDistance = maxDistanceIndex == -1 ? Bound.unbounded()
+				: Bound.inclusive((Distance) getValue(maxDistanceIndex));
 
 		return Range.of(Bound.unbounded(), maxDistance);
 	}
@@ -136,10 +133,24 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getCollation()
+	 */
+	@Override
+	public Collation getCollation() {
+
+		if (method.getParameters().getCollationParameterIndex() == -1) {
+			return null;
+		}
+
+		return getValue(method.getParameters().getCollationParameterIndex());
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getValues()
 	 */
 	@Override
 	public Object[] getValues() {
-		return values.toArray();
+		return super.getValues();
 	}
 }

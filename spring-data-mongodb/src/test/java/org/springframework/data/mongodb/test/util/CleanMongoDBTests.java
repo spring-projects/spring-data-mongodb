@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,18 +22,20 @@ import java.util.Collection;
 import java.util.Collections;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.runner.Description;
-import org.junit.runner.RunWith;
 import org.junit.runners.model.Statement;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import org.springframework.data.mongodb.test.util.CleanMongoDB.Struct;
 
-import com.mongodb.MongoClient;
 import com.mongodb.client.ListDatabasesIterable;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
@@ -41,8 +43,9 @@ import com.mongodb.client.MongoDatabase;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner.class)
-public class CleanMongoDBTests {
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+class CleanMongoDBTests {
 
 	private CleanMongoDB cleaner;
 
@@ -54,12 +57,12 @@ public class CleanMongoDBTests {
 	private @Mock MongoClient mongoClientMock;
 
 	// Some Mock DBs
-	private @Mock MongoDatabase db1mock, db2mock;
+	private @Mock MongoDatabase db1mock, db2mock, admin;
 	private @Mock MongoCollection<Document> db1collection1mock, db1collection2mock, db2collection1mock;
 
 	@SuppressWarnings({ "serial", "unchecked" })
-	@Before
-	public void setUp() {
+	@BeforeEach
+	void setUp() {
 
 		// DB setup
 
@@ -87,63 +90,63 @@ public class CleanMongoDBTests {
 	}
 
 	@Test
-	public void preservesSystemDBsCorrectlyWhenCleaningDatabase() throws Throwable {
+	void preservesSystemDBsCorrectlyWhenCleaningDatabase() throws Throwable {
 
 		cleaner.clean(Struct.DATABASE);
 
 		cleaner.apply(baseStatementMock, descriptionMock).evaluate();
 
-		verify(mongoClientMock, never()).dropDatabase(eq("admin"));
+		verify(admin, never()).drop();
 	}
 
 	@Test
-	public void preservesNamedDBsCorrectlyWhenCleaningDatabase() throws Throwable {
+	void preservesNamedDBsCorrectlyWhenCleaningDatabase() throws Throwable {
 
 		cleaner.clean(Struct.DATABASE);
 		cleaner.preserveDatabases("db1");
 
 		cleaner.apply(baseStatementMock, descriptionMock).evaluate();
 
-		verify(mongoClientMock, never()).dropDatabase(eq("db1"));
+		verify(db1mock, never()).drop();
 	}
 
 	@Test
-	public void dropsAllDBsCorrectlyWhenCleaingDatabaseAndNotExplictDBNamePresent() throws Throwable {
+	void dropsAllDBsCorrectlyWhenCleaingDatabaseAndNotExplictDBNamePresent() throws Throwable {
 
 		cleaner.clean(Struct.DATABASE);
 
 		cleaner.apply(baseStatementMock, descriptionMock).evaluate();
 
-		verify(mongoClientMock, times(1)).dropDatabase(eq("db1"));
-		verify(mongoClientMock, times(1)).dropDatabase(eq("db2"));
+		verify(db1mock).drop();
+		verify(db2mock).drop();
 	}
 
 	@Test
-	public void dropsSpecifiedDBsCorrectlyWhenExplicitNameSet() throws Throwable {
+	void dropsSpecifiedDBsCorrectlyWhenExplicitNameSet() throws Throwable {
 
 		cleaner.clean(Struct.DATABASE);
 		cleaner.useDatabases("db2");
 
 		cleaner.apply(baseStatementMock, descriptionMock).evaluate();
 
-		verify(mongoClientMock, times(1)).dropDatabase(eq("db2"));
-		verify(mongoClientMock, never()).dropDatabase(eq("db1"));
+		verify(db2mock).drop();
+		verify(db1mock, never()).drop();
 	}
 
 	@Test
-	public void doesNotRemoveAnyDBwhenCleaningCollections() throws Throwable {
+	void doesNotRemoveAnyDBwhenCleaningCollections() throws Throwable {
 
 		cleaner.clean(Struct.COLLECTION);
 
 		cleaner.apply(baseStatementMock, descriptionMock).evaluate();
 
-		verify(mongoClientMock, never()).dropDatabase(eq("db1"));
-		verify(mongoClientMock, never()).dropDatabase(eq("db2"));
-		verify(mongoClientMock, never()).dropDatabase(eq("admin"));
+		verify(db1mock, never()).drop();
+		verify(db2mock, never()).drop();
+		verify(admin, never()).drop();
 	}
 
 	@Test
-	public void doesNotDropCollectionsFromPreservedDBs() throws Throwable {
+	void doesNotDropCollectionsFromPreservedDBs() throws Throwable {
 
 		cleaner.clean(Struct.COLLECTION);
 		cleaner.preserveDatabases("db1");
@@ -156,7 +159,7 @@ public class CleanMongoDBTests {
 	}
 
 	@Test
-	public void removesAllCollectionsFromAllDatabasesWhenNotLimitedToSpecificOnes() throws Throwable {
+	void removesAllCollectionsFromAllDatabasesWhenNotLimitedToSpecificOnes() throws Throwable {
 
 		cleaner.clean(Struct.COLLECTION);
 
@@ -168,7 +171,7 @@ public class CleanMongoDBTests {
 	}
 
 	@Test
-	public void removesOnlyNamedCollectionsWhenSpecified() throws Throwable {
+	void removesOnlyNamedCollectionsWhenSpecified() throws Throwable {
 
 		cleaner.clean(Struct.COLLECTION);
 		cleaner.useCollections("db1collection2");
@@ -181,15 +184,15 @@ public class CleanMongoDBTests {
 	}
 
 	@Test
-	public void removesIndexesCorrectly() throws Throwable {
+	void removesIndexesCorrectly() throws Throwable {
 
 		cleaner.clean(Struct.INDEX);
 
 		cleaner.apply(baseStatementMock, descriptionMock).evaluate();
 
-		verify(mongoClientMock, never()).dropDatabase(eq("db1"));
-		verify(mongoClientMock, never()).dropDatabase(eq("db2"));
-		verify(mongoClientMock, never()).dropDatabase(eq("admin"));
+		verify(db1mock, never()).drop();
+		verify(db2mock, never()).drop();
+		verify(admin, never()).drop();
 
 		verify(db1collection1mock, times(1)).dropIndexes();
 	}

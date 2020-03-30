@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,33 +15,34 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -52,6 +53,7 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.BasicQuery;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -59,6 +61,8 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
+import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 import com.mongodb.client.result.DeleteResult;
 
@@ -70,8 +74,9 @@ import com.mongodb.client.result.DeleteResult;
  * @author Thomas Darimont
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner.class)
-public class AbstractMongoQueryUnitTests {
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+class AbstractMongoQueryUnitTests {
 
 	@Mock MongoOperations mongoOperationsMock;
 	@Mock ExecutableFind<?> executableFind;
@@ -80,26 +85,28 @@ public class AbstractMongoQueryUnitTests {
 	@Mock MongoMappingContext mappingContextMock;
 	@Mock DeleteResult deleteResultMock;
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	void setUp() {
 
 		doReturn("persons").when(persitentEntityMock).getCollection();
 		doReturn(persitentEntityMock).when(mappingContextMock).getPersistentEntity(Mockito.any(Class.class));
 		doReturn(persitentEntityMock).when(mappingContextMock).getRequiredPersistentEntity(Mockito.any(Class.class));
 		doReturn(Person.class).when(persitentEntityMock).getType();
 
-		DbRefResolver dbRefResolver = new DefaultDbRefResolver(mock(MongoDbFactory.class));
+		DbRefResolver dbRefResolver = new DefaultDbRefResolver(mock(MongoDatabaseFactory.class));
 		MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, mappingContextMock);
 		converter.afterPropertiesSet();
 
 		doReturn(converter).when(mongoOperationsMock).getConverter();
 		doReturn(executableFind).when(mongoOperationsMock).query(any());
 		doReturn(withQueryMock).when(executableFind).as(any());
-		doReturn(withQueryMock).when(withQueryMock).matching(any());
+		doReturn(withQueryMock).when(withQueryMock).matching(any(Query.class));
+
+		when(mongoOperationsMock.remove(any(), any(), anyString())).thenReturn(deleteResultMock);
 	}
 
 	@Test // DATAMONGO-566
-	public void testDeleteExecutionCallsRemoveCorrectly() {
+	void testDeleteExecutionCallsRemoveCorrectly() {
 
 		createQueryForMethod("deletePersonByLastname", String.class).setDeleteQuery(true).execute(new Object[] { "booh" });
 
@@ -108,7 +115,7 @@ public class AbstractMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-566, DATAMONGO-1040
-	public void testDeleteExecutionLoadsListOfRemovedDocumentsWhenReturnTypeIsCollectionLike() {
+	void testDeleteExecutionLoadsListOfRemovedDocumentsWhenReturnTypeIsCollectionLike() {
 
 		createQueryForMethod("deleteByLastname", String.class).setDeleteQuery(true).execute(new Object[] { "booh" });
 
@@ -116,29 +123,29 @@ public class AbstractMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-566
-	public void testDeleteExecutionReturnsZeroWhenWriteResultIsNull() {
+	void testDeleteExecutionReturnsZeroWhenWriteResultIsNull() {
 
 		MongoQueryFake query = createQueryForMethod("deletePersonByLastname", String.class);
 		query.setDeleteQuery(true);
 
-		assertThat(query.execute(new Object[] { "fake" }), is(0L));
+		assertThat(query.execute(new Object[] { "fake" })).isEqualTo(0L);
 	}
 
 	@Test // DATAMONGO-566, DATAMONGO-978
-	public void testDeleteExecutionReturnsNrDocumentsDeletedFromWriteResult() {
+	void testDeleteExecutionReturnsNrDocumentsDeletedFromWriteResult() {
 
 		when(deleteResultMock.getDeletedCount()).thenReturn(100L);
-		when(mongoOperationsMock.remove(any(), eq(Person.class), eq("persons"))).thenReturn(deleteResultMock);
+		when(deleteResultMock.wasAcknowledged()).thenReturn(true);
 
 		MongoQueryFake query = createQueryForMethod("deletePersonByLastname", String.class);
 		query.setDeleteQuery(true);
 
-		assertThat(query.execute(new Object[] { "fake" }), is(100L));
+		assertThat(query.execute(new Object[] { "fake" })).isEqualTo(100L);
 		verify(mongoOperationsMock, times(1)).remove(any(), eq(Person.class), eq("persons"));
 	}
 
 	@Test // DATAMONGO-957
-	public void metadataShouldNotBeAddedToQueryWhenNotPresent() {
+	void metadataShouldNotBeAddedToQueryWhenNotPresent() {
 
 		MongoQueryFake query = createQueryForMethod("findByFirstname", String.class);
 		query.execute(new Object[] { "fake" });
@@ -148,11 +155,12 @@ public class AbstractMongoQueryUnitTests {
 		verify(executableFind).as(Person.class);
 		verify(withQueryMock).matching(captor.capture());
 
-		assertThat(captor.getValue().getMeta().getComment(), nullValue());
+		assertThat(captor.getValue().getMeta().getComment()).isNull();
+		;
 	}
 
 	@Test // DATAMONGO-957
-	public void metadataShouldBeAddedToQueryCorrectly() {
+	void metadataShouldBeAddedToQueryCorrectly() {
 
 		MongoQueryFake query = createQueryForMethod("findByFirstname", String.class, Pageable.class);
 		query.execute(new Object[] { "fake", PageRequest.of(0, 10) });
@@ -162,11 +170,11 @@ public class AbstractMongoQueryUnitTests {
 		verify(executableFind).as(Person.class);
 		verify(withQueryMock).matching(captor.capture());
 
-		assertThat(captor.getValue().getMeta().getComment(), is("comment"));
+		assertThat(captor.getValue().getMeta().getComment()).isEqualTo("comment");
 	}
 
 	@Test // DATAMONGO-957
-	public void metadataShouldBeAddedToCountQueryCorrectly() {
+	void metadataShouldBeAddedToCountQueryCorrectly() {
 
 		MongoQueryFake query = createQueryForMethod("findByFirstname", String.class, Pageable.class);
 		query.execute(new Object[] { "fake", PageRequest.of(1, 10) });
@@ -176,11 +184,11 @@ public class AbstractMongoQueryUnitTests {
 		verify(executableFind).as(Person.class);
 		verify(withQueryMock, atLeast(1)).matching(captor.capture());
 
-		assertThat(captor.getValue().getMeta().getComment(), is("comment"));
+		assertThat(captor.getValue().getMeta().getComment()).isEqualTo("comment");
 	}
 
 	@Test // DATAMONGO-957, DATAMONGO-1783
-	public void metadataShouldBeAddedToStringBasedQueryCorrectly() {
+	void metadataShouldBeAddedToStringBasedQueryCorrectly() {
 
 		MongoQueryFake query = createQueryForMethod("findByAnnotatedQuery", String.class, Pageable.class);
 		query.execute(new Object[] { "fake", PageRequest.of(0, 10) });
@@ -190,11 +198,11 @@ public class AbstractMongoQueryUnitTests {
 		verify(executableFind).as(Person.class);
 		verify(withQueryMock).matching(captor.capture());
 
-		assertThat(captor.getValue().getMeta().getComment(), is("comment"));
+		assertThat(captor.getValue().getMeta().getComment()).isEqualTo("comment");
 	}
 
 	@Test // DATAMONGO-1057
-	public void slicedExecutionShouldRetainNrOfElementsToSkip() {
+	void slicedExecutionShouldRetainNrOfElementsToSkip() {
 
 		MongoQueryFake query = createQueryForMethod("findByLastname", String.class, Pageable.class);
 		Pageable page1 = PageRequest.of(0, 10);
@@ -208,12 +216,12 @@ public class AbstractMongoQueryUnitTests {
 		verify(executableFind, times(2)).as(Person.class);
 		verify(withQueryMock, times(2)).matching(captor.capture());
 
-		assertThat(captor.getAllValues().get(0).getSkip(), is(0L));
-		assertThat(captor.getAllValues().get(1).getSkip(), is(10L));
+		assertThat(captor.getAllValues().get(0).getSkip()).isZero();
+		assertThat(captor.getAllValues().get(1).getSkip()).isEqualTo(10);
 	}
 
 	@Test // DATAMONGO-1057
-	public void slicedExecutionShouldIncrementLimitByOne() {
+	void slicedExecutionShouldIncrementLimitByOne() {
 
 		MongoQueryFake query = createQueryForMethod("findByLastname", String.class, Pageable.class);
 		Pageable page1 = PageRequest.of(0, 10);
@@ -227,12 +235,12 @@ public class AbstractMongoQueryUnitTests {
 		verify(executableFind, times(2)).as(Person.class);
 		verify(withQueryMock, times(2)).matching(captor.capture());
 
-		assertThat(captor.getAllValues().get(0).getLimit(), is(11));
-		assertThat(captor.getAllValues().get(1).getLimit(), is(11));
+		assertThat(captor.getAllValues().get(0).getLimit()).isEqualTo(11);
+		assertThat(captor.getAllValues().get(1).getLimit()).isEqualTo(11);
 	}
 
 	@Test // DATAMONGO-1057
-	public void slicedExecutionShouldRetainSort() {
+	void slicedExecutionShouldRetainSort() {
 
 		MongoQueryFake query = createQueryForMethod("findByLastname", String.class, Pageable.class);
 		Pageable page1 = PageRequest.of(0, 10, Sort.Direction.DESC, "bar");
@@ -247,12 +255,12 @@ public class AbstractMongoQueryUnitTests {
 		verify(withQueryMock, times(2)).matching(captor.capture());
 
 		Document expectedSortObject = new Document().append("bar", -1);
-		assertThat(captor.getAllValues().get(0).getSortObject(), is(expectedSortObject));
-		assertThat(captor.getAllValues().get(1).getSortObject(), is(expectedSortObject));
+		assertThat(captor.getAllValues().get(0).getSortObject()).isEqualTo(expectedSortObject);
+		assertThat(captor.getAllValues().get(1).getSortObject()).isEqualTo(expectedSortObject);
 	}
 
 	@Test // DATAMONGO-1080
-	public void doesNotTryToPostProcessQueryResultIntoWrapperType() {
+	void doesNotTryToPostProcessQueryResultIntoWrapperType() {
 
 		Person reference = new Person();
 
@@ -260,11 +268,11 @@ public class AbstractMongoQueryUnitTests {
 
 		AbstractMongoQuery query = createQueryForMethod("findByLastname", String.class);
 
-		assertThat(query.execute(new Object[] { "lastname" }), is(reference));
+		assertThat(query.execute(new Object[] { "lastname" })).isEqualTo(reference);
 	}
 
 	@Test // DATAMONGO-1865
-	public void limitingSingleEntityQueryCallsFirst() {
+	void limitingSingleEntityQueryCallsFirst() {
 
 		Person reference = new Person();
 
@@ -272,11 +280,11 @@ public class AbstractMongoQueryUnitTests {
 
 		AbstractMongoQuery query = createQueryForMethod("findFirstByLastname", String.class).setLimitingQuery(true);
 
-		assertThat(query.execute(new Object[] { "lastname" }), is(reference));
+		assertThat(query.execute(new Object[] { "lastname" })).isEqualTo(reference);
 	}
 
 	@Test // DATAMONGO-1872
-	public void doesNotFixCollectionOnPreparation() {
+	void doesNotFixCollectionOnPreparation() {
 
 		AbstractMongoQuery query = createQueryForMethod(DynamicallyMappedRepository.class, "findBy");
 
@@ -287,25 +295,143 @@ public class AbstractMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1979
-	public void usesAnnotatedSortWhenPresent() {
+	void usesAnnotatedSortWhenPresent() {
 
 		createQueryForMethod("findByAge", Integer.class) //
 				.execute(new Object[] { 1000 });
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
-		assertThat(captor.getValue().getSortObject(), is(equalTo(new Document("age", 1))));
+		assertThat(captor.getValue().getSortObject()).isEqualTo(new Document("age", 1));
 	}
 
 	@Test // DATAMONGO-1979
-	public void usesExplicitSortOverridesAnnotatedSortWhenPresent() {
+	void usesExplicitSortOverridesAnnotatedSortWhenPresent() {
 
 		createQueryForMethod("findByAge", Integer.class, Sort.class) //
 				.execute(new Object[] { 1000, Sort.by(Direction.DESC, "age") });
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
-		assertThat(captor.getValue().getSortObject(), is(equalTo(new Document("age", -1))));
+		assertThat(captor.getValue().getSortObject()).isEqualTo(new Document("age", -1));
+	}
+
+	@Test // DATAMONGO-1854
+	void shouldApplyStaticAnnotatedCollation() {
+
+		createQueryForMethod("findWithCollationUsingSpimpleStringValueByFirstName", String.class) //
+				.execute(new Object[] { "dalinar" });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+		assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+				.contains(Collation.of("en_US").toDocument());
+	}
+
+	@Test // DATAMONGO-1854
+	void shouldApplyStaticAnnotatedCollationAsDocument() {
+
+		createQueryForMethod("findWithCollationUsingDocumentByFirstName", String.class) //
+				.execute(new Object[] { "dalinar" });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+		assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+				.contains(Collation.of("en_US").toDocument());
+	}
+
+	@Test // DATAMONGO-1854
+	void shouldApplyDynamicAnnotatedCollationAsString() {
+
+		createQueryForMethod("findWithCollationUsingPlaceholderByFirstName", String.class, Object.class) //
+				.execute(new Object[] { "dalinar", "en_US" });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+		assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+				.contains(Collation.of("en_US").toDocument());
+	}
+
+	@Test // DATAMONGO-1854
+	void shouldApplyDynamicAnnotatedCollationAsDocument() {
+
+		createQueryForMethod("findWithCollationUsingPlaceholderByFirstName", String.class, Object.class) //
+				.execute(new Object[] { "dalinar", new Document("locale", "en_US") });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+		assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+				.contains(Collation.of("en_US").toDocument());
+	}
+
+	@Test // DATAMONGO-1854
+	void shouldApplyDynamicAnnotatedCollationAsLocale() {
+
+		createQueryForMethod("findWithCollationUsingPlaceholderByFirstName", String.class, Object.class) //
+				.execute(new Object[] { "dalinar", Locale.US });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+		assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+				.contains(Collation.of("en_US").toDocument());
+	}
+
+	@Test // DATAMONGO-1854
+	void shouldThrowExceptionOnNonParsableCollation() {
+
+		assertThatIllegalArgumentException().isThrownBy(() -> {
+
+			createQueryForMethod("findWithCollationUsingPlaceholderByFirstName", String.class, Object.class) //
+					.execute(new Object[] { "dalinar", 100 });
+		});
+	}
+
+	@Test // DATAMONGO-1854
+	void shouldApplyDynamicAnnotatedCollationIn() {
+
+		createQueryForMethod("findWithCollationUsingPlaceholderInDocumentByFirstName", String.class, String.class) //
+				.execute(new Object[] { "dalinar", "en_US" });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+		assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+				.contains(Collation.of("en_US").toDocument());
+	}
+
+	@Test // DATAMONGO-1854
+	void shouldApplyCollationParameter() {
+
+		Collation collation = Collation.of("en_US");
+		createQueryForMethod("findWithCollationParameterByFirstName", String.class, Collation.class) //
+				.execute(new Object[] { "dalinar", collation });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+		assertThat(captor.getValue().getCollation()).contains(collation);
+	}
+
+	@Test // DATAMONGO-1854
+	void collationParameterShouldOverrideAnnotation() {
+
+		Collation collation = Collation.of("de_AT");
+		createQueryForMethod("findWithWithCollationParameterAndAnnotationByFirstName", String.class, Collation.class) //
+				.execute(new Object[] { "dalinar", collation });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+		assertThat(captor.getValue().getCollation()).contains(collation);
+	}
+
+	@Test // DATAMONGO-1854
+	void collationParameterShouldNotBeAppliedWhenNullOverrideAnnotation() {
+
+		createQueryForMethod("findWithWithCollationParameterAndAnnotationByFirstName", String.class, Collation.class) //
+				.execute(new Object[] { "dalinar", null });
+
+		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
+		verify(withQueryMock).matching(captor.capture());
+		assertThat(captor.getValue().getCollation().map(Collation::toDocument))
+				.contains(Collation.of("en_US").toDocument());
 	}
 
 	private MongoQueryFake createQueryForMethod(String methodName, Class<?>... paramTypes) {
@@ -332,8 +458,8 @@ public class AbstractMongoQueryUnitTests {
 		private boolean isDeleteQuery;
 		private boolean isLimitingQuery;
 
-		public MongoQueryFake(MongoQueryMethod method, MongoOperations operations) {
-			super(method, operations);
+		MongoQueryFake(MongoQueryMethod method, MongoOperations operations) {
+			super(method, operations, new SpelExpressionParser(), QueryMethodEvaluationContextProvider.DEFAULT);
 		}
 
 		@Override
@@ -361,12 +487,12 @@ public class AbstractMongoQueryUnitTests {
 			return isLimitingQuery;
 		}
 
-		public MongoQueryFake setDeleteQuery(boolean isDeleteQuery) {
+		MongoQueryFake setDeleteQuery(boolean isDeleteQuery) {
 			this.isDeleteQuery = isDeleteQuery;
 			return this;
 		}
 
-		public MongoQueryFake setLimitingQuery(boolean limitingQuery) {
+		MongoQueryFake setLimitingQuery(boolean limitingQuery) {
 
 			isLimitingQuery = limitingQuery;
 			return this;
@@ -400,6 +526,23 @@ public class AbstractMongoQueryUnitTests {
 
 		@org.springframework.data.mongodb.repository.Query(sort = "{ age : 1 }")
 		List<Person> findByAge(Integer age, Sort page);
+
+		@org.springframework.data.mongodb.repository.Query(collation = "en_US")
+		List<Person> findWithCollationUsingSpimpleStringValueByFirstName(String firstname);
+
+		@org.springframework.data.mongodb.repository.Query(collation = "{ 'locale' : 'en_US' }")
+		List<Person> findWithCollationUsingDocumentByFirstName(String firstname);
+
+		@org.springframework.data.mongodb.repository.Query(collation = "?1")
+		List<Person> findWithCollationUsingPlaceholderByFirstName(String firstname, Object collation);
+
+		@org.springframework.data.mongodb.repository.Query(collation = "{ 'locale' : '?1' }")
+		List<Person> findWithCollationUsingPlaceholderInDocumentByFirstName(String firstname, String collation);
+
+		List<Person> findWithCollationParameterByFirstName(String firstname, Collation collation);
+
+		@org.springframework.data.mongodb.repository.Query(collation = "{ 'locale' : 'en_US' }")
+		List<Person> findWithWithCollationParameterAndAnnotationByFirstName(String firstname, Collation collation);
 	}
 
 	// DATAMONGO-1872

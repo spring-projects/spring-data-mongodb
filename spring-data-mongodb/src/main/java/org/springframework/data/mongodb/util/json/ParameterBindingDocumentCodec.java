@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2019 the original author or authors.
+ * Copyright 2008-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import static org.bson.codecs.configuration.CodecRegistries.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -35,22 +36,13 @@ import org.bson.BsonValue;
 import org.bson.BsonWriter;
 import org.bson.Document;
 import org.bson.Transformer;
-import org.bson.codecs.BsonTypeClassMap;
-import org.bson.codecs.BsonTypeCodecMap;
-import org.bson.codecs.BsonValueCodecProvider;
-import org.bson.codecs.Codec;
-import org.bson.codecs.CollectibleCodec;
-import org.bson.codecs.DecoderContext;
-import org.bson.codecs.DocumentCodecProvider;
-import org.bson.codecs.EncoderContext;
-import org.bson.codecs.IdGenerator;
-import org.bson.codecs.ObjectIdGenerator;
-import org.bson.codecs.ValueCodecProvider;
+import org.bson.codecs.*;
 import org.bson.codecs.configuration.CodecRegistry;
-
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
+import org.springframework.util.NumberUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -170,7 +162,7 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 	public Document decode(@Nullable String json, Object[] values) {
 
 		return decode(json, new ParameterBindingContext((index) -> values[index], new SpelExpressionParser(),
-				EvaluationContextProvider.DEFAULT.getEvaluationContext(values)));
+				() -> EvaluationContextProvider.DEFAULT.getEvaluationContext(values)));
 	}
 
 	public Document decode(@Nullable String json, ParameterBindingContext bindingContext) {
@@ -278,6 +270,17 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 			if (bindingReader.currentValue != null) {
 
 				Object value = bindingReader.currentValue;
+
+				if (ObjectUtils.nullSafeEquals(BsonType.DATE_TIME, bindingReader.getCurrentBsonType())
+						&& !(value instanceof Date)) {
+
+					if (value instanceof Number) {
+						value = new Date(NumberUtils.convertNumberToTargetClass((Number) value, Long.class));
+					} else if (value instanceof String) {
+						value = new Date(DateTimeFormatter.parse((String) value));
+					}
+				}
+
 				bindingReader.setState(State.TYPE);
 				bindingReader.currentValue = null;
 				return value;

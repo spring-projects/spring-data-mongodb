@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,21 +19,23 @@ import static org.assertj.core.data.Index.atIndex;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import lombok.Data;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
+import java.time.Duration;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junitpioneer.jupiter.RepeatFailedTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort.Direction;
@@ -41,12 +43,13 @@ import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
+import com.mongodb.client.model.IndexOptions;
 import com.mongodb.reactivestreams.client.ListIndexesPublisher;
 import com.mongodb.reactivestreams.client.MongoClient;
-import com.mongodb.reactivestreams.client.Success;
 
 /**
  * Integration test for index creation via {@link ReactiveMongoTemplate}.
@@ -54,29 +57,34 @@ import com.mongodb.reactivestreams.client.Success;
  * @author Mark Paluch
  * @author Christoph Strobl
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration("classpath:reactive-infrastructure.xml")
+@ExtendWith(MongoClientExtension.class)
 public class ReactiveMongoTemplateIndexTests {
 
-	@Rule public ExpectedException thrown = ExpectedException.none();
+	private static @Client MongoClient client;
 
-	@Autowired SimpleReactiveMongoDatabaseFactory factory;
-	@Autowired ReactiveMongoTemplate template;
-	@Autowired MongoClient client;
+	private SimpleReactiveMongoDatabaseFactory factory;
+	private ReactiveMongoTemplate template;
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	void setUp() {
 
-		StepVerifier.create(template.getCollection("person").drop()).expectNext(Success.SUCCESS).verifyComplete();
-		StepVerifier.create(template.getCollection("indexfail").drop()).expectNext(Success.SUCCESS).verifyComplete();
-		StepVerifier.create(template.getCollection("indexedSample").drop()).expectNext(Success.SUCCESS).verifyComplete();
+		factory = new SimpleReactiveMongoDatabaseFactory(client, "reactive-template-index-tests");
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		mappingContext.setAutoIndexCreation(true);
+		template = new ReactiveMongoTemplate(factory, new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext));
+
+
+		MongoTestUtils.dropCollectionNow(template.getMongoDatabase().getName(), "person", client);
+		MongoTestUtils.dropCollectionNow(template.getMongoDatabase().getName(), "indexfail", client);
+		MongoTestUtils.dropCollectionNow(template.getMongoDatabase().getName(), "indexedSample", client);
 	}
 
-	@After
-	public void cleanUp() {}
+	@AfterEach
+	void cleanUp() {}
 
 	@Test // DATAMONGO-1444
-	public void testEnsureIndexShouldCreateIndex() {
+	@RepeatFailedTest(3)
+	void testEnsureIndexShouldCreateIndex() {
 
 		Person p1 = new Person("Oliver");
 		p1.setAge(25);
@@ -111,7 +119,8 @@ public class ReactiveMongoTemplateIndexTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void getIndexInfoShouldReturnCorrectIndex() {
+	@RepeatFailedTest(3)
+	void getIndexInfoShouldReturnCorrectIndex() {
 
 		Person p1 = new Person("Oliver");
 		p1.setAge(25);
@@ -140,11 +149,9 @@ public class ReactiveMongoTemplateIndexTests {
 				}).verifyComplete();
 	}
 
-	@Test // DATAMONGO-1444
-	public void testReadIndexInfoForIndicesCreatedViaMongoShellCommands() {
-
-		String command = "db." + template.getCollectionName(Person.class)
-				+ ".createIndex({'age':-1}, {'unique':true, 'sparse':true}), 1";
+	@Test // DATAMONGO-1444, DATAMONGO-2264
+	@RepeatFailedTest(3)
+	void testReadIndexInfoForIndicesCreatedViaMongoShellCommands() {
 
 		template.indexOps(Person.class).dropAllIndexes() //
 				.as(StepVerifier::create) //
@@ -154,7 +161,8 @@ public class ReactiveMongoTemplateIndexTests {
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
-		Flux.from(factory.getMongoDatabase().runCommand(new org.bson.Document("eval", command))) //
+		Flux.from(factory.getMongoDatabase().getCollection(template.getCollectionName(Person.class))
+				.createIndex(new Document("age", -1), new IndexOptions().unique(true).sparse(true))) //
 				.as(StepVerifier::create) //
 				.expectNextCount(1) //
 				.verifyComplete();
@@ -177,7 +185,7 @@ public class ReactiveMongoTemplateIndexTests {
 						}
 					}
 
-					assertThat(indexKey).containsEntry("age", -1D);
+					assertThat(indexKey).containsEntry("age", -1);
 					assertThat(unique).isTrue();
 				}).verifyComplete();
 
@@ -194,12 +202,14 @@ public class ReactiveMongoTemplateIndexTests {
 	}
 
 	@Test // DATAMONGO-1928
-	public void shouldCreateIndexOnAccess() {
+	@RepeatFailedTest(3)
+	void shouldCreateIndexOnAccess() {
 
 		StepVerifier.create(template.getCollection("indexedSample").listIndexes(Document.class)).expectNextCount(0)
 				.verifyComplete();
 
 		template.findAll(IndexedSample.class) //
+				.delayElements(Duration.ofMillis(200)) // TODO: check if 4.2.0 server GA still requires this timeout
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
@@ -207,12 +217,12 @@ public class ReactiveMongoTemplateIndexTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAMONGO-1928
-	public void indexCreationShouldFail() throws InterruptedException {
+	@Test // DATAMONGO-1928, DATAMONGO-2264
+	@RepeatFailedTest(3)
+	void indexCreationShouldFail() throws InterruptedException {
 
-		String command = "db.indexfail" + ".createIndex({'field':1}, {'name':'foo', 'unique':true, 'sparse':true}), 1";
-
-		Flux.from(factory.getMongoDatabase().runCommand(new org.bson.Document("eval", command))) //
+		Flux.from(factory.getMongoDatabase().getCollection("indexfail") //
+				.createIndex(new Document("field", 1), new IndexOptions().name("foo").unique(true).sparse(true)))
 				.as(StepVerifier::create) //
 				.expectNextCount(1) //
 				.verifyComplete();

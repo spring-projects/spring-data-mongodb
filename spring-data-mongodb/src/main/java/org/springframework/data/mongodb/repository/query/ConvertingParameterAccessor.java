@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.util.TypeInformation;
@@ -104,6 +105,15 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.ParameterAccessor#findDynamicProjection()
+	 */
+	@Override
+	public Class<?> findDynamicProjection() {
+		return delegate.findDynamicProjection();
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.ParameterAccessor#getBindableValue(int)
 	 */
 	public Object getBindableValue(int index) {
@@ -133,6 +143,15 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	 */
 	public TextCriteria getFullText() {
 		return delegate.getFullText();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getCollation()
+	 */
+	@Override
+	public Collation getCollation() {
+		return delegate.getCollation();
 	}
 
 	/**

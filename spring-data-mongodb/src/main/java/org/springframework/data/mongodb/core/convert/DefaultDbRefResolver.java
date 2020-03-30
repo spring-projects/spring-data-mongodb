@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.ClientSessionException;
 import org.springframework.data.mongodb.LazyLoadingException;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.lang.Nullable;
 import org.springframework.objenesis.ObjenesisStd;
@@ -70,16 +70,16 @@ public class DefaultDbRefResolver implements DbRefResolver {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultDbRefResolver.class);
 
-	private final MongoDbFactory mongoDbFactory;
+	private final MongoDatabaseFactory mongoDbFactory;
 	private final PersistenceExceptionTranslator exceptionTranslator;
 	private final ObjenesisStd objenesis;
 
 	/**
-	 * Creates a new {@link DefaultDbRefResolver} with the given {@link MongoDbFactory}.
+	 * Creates a new {@link DefaultDbRefResolver} with the given {@link MongoDatabaseFactory}.
 	 *
 	 * @param mongoDbFactory must not be {@literal null}.
 	 */
-	public DefaultDbRefResolver(MongoDbFactory mongoDbFactory) {
+	public DefaultDbRefResolver(MongoDatabaseFactory mongoDbFactory) {
 
 		Assert.notNull(mongoDbFactory, "MongoDbFactory translator must not be null!");
 
@@ -116,7 +116,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 
 		if (LOGGER.isTraceEnabled()) {
 			LOGGER.trace("Fetching DBRef '{}' from {}.{}.", dbRef.getId(),
-					StringUtils.hasText(dbRef.getDatabaseName()) ? dbRef.getDatabaseName() : mongoDbFactory.getDb().getName(),
+					StringUtils.hasText(dbRef.getDatabaseName()) ? dbRef.getDatabaseName() : mongoDbFactory.getMongoDatabase().getName(),
 					dbRef.getCollectionName());
 		}
 
@@ -156,7 +156,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		if (LOGGER.isTraceEnabled()) {
 			LOGGER.trace("Bulk fetching DBRefs {} from {}.{}.", ids,
 					StringUtils.hasText(databaseSource.getDatabaseName()) ? databaseSource.getDatabaseName()
-							: mongoDbFactory.getDb().getName(),
+							: mongoDbFactory.getMongoDatabase().getName(),
 					databaseSource.getCollectionName());
 		}
 
@@ -497,7 +497,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	 */
 	protected MongoCollection<Document> getCollection(DBRef dbref) {
 
-		return (StringUtils.hasText(dbref.getDatabaseName()) ? mongoDbFactory.getDb(dbref.getDatabaseName())
-				: mongoDbFactory.getDb()).getCollection(dbref.getCollectionName(), Document.class);
+		return (StringUtils.hasText(dbref.getDatabaseName()) ? mongoDbFactory.getMongoDatabase(dbref.getDatabaseName())
+				: mongoDbFactory.getMongoDatabase()).getCollection(dbref.getCollectionName(), Document.class);
 	}
 }

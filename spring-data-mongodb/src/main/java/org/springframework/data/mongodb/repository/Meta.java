@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,17 +43,10 @@ public @interface Meta {
 	long maxExecutionTimeMs() default -1;
 
 	/**
-	 * Only scan the specified number of documents.
-	 *
-	 * @return
-	 */
-	long maxScanDocuments() default -1;
-
-	/**
 	 * Sets the number of documents to return per batch. <br />
 	 * Use {@literal 0 (zero)} for no limit. A <strong>negative limit</strong> closes the cursor after returning a single
 	 * batch indicating to the server that the client will not ask for a subsequent one.
-	 * 
+	 *
 	 * @return {@literal 0 (zero)} by default.
 	 * @since 2.1
 	 */
@@ -67,18 +60,20 @@ public @interface Meta {
 	String comment() default "";
 
 	/**
-	 * Using snapshot prevents the cursor from returning a document more than once.
-	 *
-	 * @return
-	 */
-	boolean snapshot() default false;
-
-	/**
 	 * Set {@link org.springframework.data.mongodb.core.query.Meta.CursorOption} to be used when executing query.
 	 *
 	 * @return never {@literal null}.
 	 * @since 1.10
 	 */
 	org.springframework.data.mongodb.core.query.Meta.CursorOption[] flags() default {};
+
+	/**
+	 * When set to {@literal true}, aggregation stages can write data to disk.
+	 *
+	 * @return {@literal false} by default.
+	 * @since 3.0
+	 * @see Aggregation
+	 */
+	boolean allowDiskUse() default false;
 
 }

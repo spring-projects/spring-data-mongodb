@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.repository.core.EntityInformation;
 import org.springframework.lang.Nullable;
 
@@ -61,4 +62,23 @@ public interface MongoEntityInformation<T, ID> extends EntityInformation<T, ID> 
 	default Object getVersion(T entity) {
 		return null;
 	}
+
+	/**
+	 * Returns whether the entity defines a specific collation.
+	 *
+	 * @return {@literal true} if the entity defines a collation.
+	 * @since 2.2
+	 */
+	default boolean hasCollation() {
+		return getCollation() != null;
+	}
+
+	/**
+	 * Return the collation for the entity or {@literal null} if {@link #hasCollation() not defined}.
+	 * 
+	 * @return can be {@literal null}.
+	 * @since 2.2
+	 */
+	@Nullable
+	Collation getCollation();
 }

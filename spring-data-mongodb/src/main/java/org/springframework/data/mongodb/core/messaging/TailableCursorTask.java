@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package org.springframework.data.mongodb.core.messaging;
+
+import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -73,6 +75,10 @@ class TailableCursorTask extends CursorReadingTask<Document, Object> {
 
 		if (collation != null) {
 			iterable = iterable.collation(collation);
+		}
+
+		if (!options.maxAwaitTime().isZero()) {
+			iterable = iterable.maxAwaitTime(options.maxAwaitTime().toMillis(), TimeUnit.MILLISECONDS);
 		}
 
 		return iterable.iterator();

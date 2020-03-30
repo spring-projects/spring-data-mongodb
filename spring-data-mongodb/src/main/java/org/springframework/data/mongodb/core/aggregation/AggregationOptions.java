@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,13 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import java.time.Duration;
 import java.util.Optional;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-
-import com.mongodb.DBObject;
 
 /**
  * Holds a set of configurable aggregation options that can be used within an aggregation pipeline. A list of support
@@ -44,11 +43,15 @@ public class AggregationOptions {
 	private static final String EXPLAIN = "explain";
 	private static final String ALLOW_DISK_USE = "allowDiskUse";
 	private static final String COLLATION = "collation";
+	private static final String COMMENT = "comment";
+	private static final String MAX_TIME = "maxTimeMS";
 
 	private final boolean allowDiskUse;
 	private final boolean explain;
 	private final Optional<Document> cursor;
 	private final Optional<Collation> collation;
+	private final Optional<String> comment;
+	private Duration maxTime = Duration.ZERO;
 
 	/**
 	 * Creates a new {@link AggregationOptions}.
@@ -73,11 +76,28 @@ public class AggregationOptions {
 	 */
 	public AggregationOptions(boolean allowDiskUse, boolean explain, @Nullable Document cursor,
 			@Nullable Collation collation) {
+		this(allowDiskUse, explain, cursor, collation, null);
+	}
+
+	/**
+	 * Creates a new {@link AggregationOptions}.
+	 *
+	 * @param allowDiskUse whether to off-load intensive sort-operations to disk.
+	 * @param explain whether to get the execution plan for the aggregation instead of the actual results.
+	 * @param cursor can be {@literal null}, used to pass additional options (such as {@code batchSize}) to the
+	 *          aggregation.
+	 * @param collation collation for string comparison. Can be {@literal null}.
+	 * @param comment execution comment. Can be {@literal null}.
+	 * @since 2.2
+	 */
+	public AggregationOptions(boolean allowDiskUse, boolean explain, @Nullable Document cursor,
+			@Nullable Collation collation, @Nullable String comment) {
 
 		this.allowDiskUse = allowDiskUse;
 		this.explain = explain;
 		this.cursor = Optional.ofNullable(cursor);
 		this.collation = Optional.ofNullable(collation);
+		this.comment = Optional.ofNullable(comment);
 	}
 
 	/**
@@ -93,7 +113,7 @@ public class AggregationOptions {
 	}
 
 	/**
-	 * Creates new {@link AggregationOptions} given {@link DBObject} containing aggregation options.
+	 * Creates new {@link AggregationOptions} given {@link Document} containing aggregation options.
 	 *
 	 * @param document must not be {@literal null}.
 	 * @return the {@link AggregationOptions}.
@@ -108,8 +128,13 @@ public class AggregationOptions {
 		Document cursor = document.get(CURSOR, Document.class);
 		Collation collation = document.containsKey(COLLATION) ? Collation.from(document.get(COLLATION, Document.class))
 				: null;
+		String comment = document.getString(COMMENT);
 
-		return new AggregationOptions(allowDiskUse, explain, cursor, collation);
+		AggregationOptions options = new AggregationOptions(allowDiskUse, explain, cursor, collation, comment);
+		if (document.containsKey(MAX_TIME)) {
+			options.maxTime = Duration.ofMillis(document.getLong(MAX_TIME));
+		}
+		return options;
 	}
 
 	/**
@@ -177,6 +202,24 @@ public class AggregationOptions {
 	}
 
 	/**
+	 * Get the comment for the aggregation.
+	 *
+	 * @return
+	 * @since 2.2
+	 */
+	public Optional<String> getComment() {
+		return comment;
+	}
+
+	/**
+	 * @return the time limit for processing. {@link Duration#ZERO} is used for the default unbounded behavior.
+	 * @since 3.0
+	 */
+	public Duration getMaxTime() {
+		return maxTime;
+	}
+
+	/**
 	 * Returns a new potentially adjusted copy for the given {@code aggregationCommandObject} with the configuration
 	 * applied.
 	 *
@@ -203,6 +246,10 @@ public class AggregationOptions {
 			collation.map(Collation::toDocument).ifPresent(val -> result.append(COLLATION, val));
 		}
 
+		if (hasExecutionTimeLimit() && !result.containsKey(MAX_TIME)) {
+			result.append(MAX_TIME, maxTime.toMillis());
+		}
+
 		return result;
 	}
 
@@ -219,8 +266,21 @@ public class AggregationOptions {
 
 		cursor.ifPresent(val -> document.put(CURSOR, val));
 		collation.ifPresent(val -> document.append(COLLATION, val.toDocument()));
+		comment.ifPresent(val -> document.append(COMMENT, val));
+
+		if (hasExecutionTimeLimit()) {
+			document.append(MAX_TIME, maxTime.toMillis());
+		}
 
 		return document;
+	}
+
+	/**
+	 * @return
+	 * @since 3.0
+	 */
+	public boolean hasExecutionTimeLimit() {
+		return !maxTime.isZero() && !maxTime.isNegative();
 	}
 
 	/* (non-Javadoc)
@@ -247,6 +307,8 @@ public class AggregationOptions {
 		private boolean explain;
 		private @Nullable Document cursor;
 		private @Nullable Collation collation;
+		private @Nullable String comment;
+		private @Nullable Duration maxTime;
 
 		/**
 		 * Defines whether to off-load intensive sort-operations to disk.
@@ -302,10 +364,38 @@ public class AggregationOptions {
 		 *
 		 * @param collation can be {@literal null}.
 		 * @return
+		 * @since 2.0
 		 */
 		public Builder collation(@Nullable Collation collation) {
 
 			this.collation = collation;
+			return this;
+		}
+
+		/**
+		 * Define a comment to describe the execution.
+		 *
+		 * @param comment can be {@literal null}.
+		 * @return
+		 * @since 2.2
+		 */
+		public Builder comment(@Nullable String comment) {
+
+			this.comment = comment;
+			return this;
+		}
+
+		/**
+		 * Set the time limit for processing.
+		 *
+		 * @param maxTime {@link Duration#ZERO} is used for the default unbounded behavior. {@link Duration#isNegative()
+		 *          Negative} values will be ignored.
+		 * @return this.
+		 * @since 3.0
+		 */
+		public Builder maxTime(@Nullable Duration maxTime) {
+
+			this.maxTime = maxTime;
 			return this;
 		}
 
@@ -315,7 +405,13 @@ public class AggregationOptions {
 		 * @return
 		 */
 		public AggregationOptions build() {
-			return new AggregationOptions(allowDiskUse, explain, cursor, collation);
+
+			AggregationOptions options = new AggregationOptions(allowDiskUse, explain, cursor, collation, comment);
+			if (maxTime != null) {
+				options.maxTime = maxTime;
+			}
+
+			return options;
 		}
 	}
 }

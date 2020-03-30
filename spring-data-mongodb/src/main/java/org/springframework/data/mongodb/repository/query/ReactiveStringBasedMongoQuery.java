@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository.query;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
@@ -78,7 +79,7 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 			ReactiveMongoOperations mongoOperations, SpelExpressionParser expressionParser,
 			QueryMethodEvaluationContextProvider evaluationContextProvider) {
 
-		super(method, mongoOperations);
+		super(method, mongoOperations, expressionParser, evaluationContextProvider);
 
 		Assert.notNull(query, "Query must not be null!");
 		Assert.notNull(expressionParser, "SpelExpressionParser must not be null!");
@@ -116,7 +117,7 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	protected Query createQuery(ConvertingParameterAccessor accessor) {
 
 		ParameterBindingContext bindingContext = new ParameterBindingContext((accessor::getBindableValue), expressionParser,
-				evaluationContextProvider.getEvaluationContext(getQueryMethod().getParameters(), accessor.getValues()));
+				() -> evaluationContextProvider.getEvaluationContext(getQueryMethod().getParameters(), accessor.getValues()));
 
 		Document queryObject = CODEC.decode(this.query, bindingContext);
 		Document fieldsObject = CODEC.decode(this.fieldSpec, bindingContext);

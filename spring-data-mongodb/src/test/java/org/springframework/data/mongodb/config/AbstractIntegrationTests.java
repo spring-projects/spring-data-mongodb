@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,30 +15,33 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
+
+import java.util.Collections;
+import java.util.Set;
 
 import org.bson.Document;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import com.mongodb.MongoException;
 import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 
 /**
  * @author Oliver Gierke
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration
 public abstract class AbstractIntegrationTests {
 
@@ -52,7 +55,17 @@ public abstract class AbstractIntegrationTests {
 
 		@Override
 		public MongoClient mongoClient() {
-			return MongoClients.create();
+			return MongoTestUtils.client();
+		}
+
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+			return Collections.emptySet();
+		}
+
+		@Override
+		protected boolean autoIndexCreation() {
+			return true;
 		}
 	}
 
@@ -68,7 +81,7 @@ public abstract class AbstractIntegrationTests {
 					@Override
 					public Void doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
 						collection.deleteMany(new Document());
-						assertThat(collection.find().iterator().hasNext(), is(false));
+						assertThat(collection.find().iterator().hasNext()).isFalse();
 						return null;
 					}
 				});

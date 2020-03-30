@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -80,7 +80,11 @@ public class MappedDocument {
 	}
 
 	public Bson getIdFilter() {
-		return Filters.eq(ID_FIELD, document.get(ID_FIELD));
+		return new Document(ID_FIELD, document.get(ID_FIELD));
+	}
+
+	public Object get(String key) {
+		return document.get(key);
 	}
 
 	public UpdateDefinition updateWithoutId() {

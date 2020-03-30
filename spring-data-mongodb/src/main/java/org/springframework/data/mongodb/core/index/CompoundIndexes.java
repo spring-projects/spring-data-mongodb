@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,15 +15,24 @@
  */
 package org.springframework.data.mongodb.core.index;
 
+import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * @author Jon Brisbin <jbrisbin@vmware.com>
+ * Container annotation that allows to collect multiple {@link CompoundIndex} annotations.
+ * <p>
+ * Can be used natively, declaring several nested {@link CompoundIndex} annotations. Can also be used in conjunction
+ * with Java 8's support for <em>repeatable annotations</em>, where {@link CompoundIndex} can simply be declared several
+ * times on the same {@linkplain ElementType#TYPE type}, implicitly generating this container annotation.
+ *
+ * @author Jon Brisbin
+ * @author Christoph Strobl
  */
 @Target({ ElementType.TYPE })
+@Documented
 @Retention(RetentionPolicy.RUNTIME)
 public @interface CompoundIndexes {
 

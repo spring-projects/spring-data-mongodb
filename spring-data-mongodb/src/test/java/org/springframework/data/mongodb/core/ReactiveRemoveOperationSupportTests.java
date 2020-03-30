@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,32 +22,38 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 import lombok.Data;
 import reactor.test.StepVerifier;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 
-import com.mongodb.MongoClient;
-import com.mongodb.reactivestreams.client.MongoClients;
+import com.mongodb.client.MongoClient;
 
 /**
  * Integration tests for {@link ReactiveRemoveOperationSupport}.
  *
  * @author Mark Paluch
  */
-public class ReactiveRemoveOperationSupportTests {
+@ExtendWith(MongoClientExtension.class)
+class ReactiveRemoveOperationSupportTests {
 
 	private static final String STAR_WARS = "star-wars";
-	MongoTemplate blocking;
-	ReactiveMongoTemplate template;
+	private static @Client MongoClient client;
+	private static @Client com.mongodb.reactivestreams.client.MongoClient reactiveClient;
 
-	Person han;
-	Person luke;
+	private MongoTemplate blocking;
+	private ReactiveMongoTemplate template;
 
-	@Before
-	public void setUp() {
+	private Person han;
+	private Person luke;
 
-		blocking = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), "ExecutableRemoveOperationSupportTests"));
+	@BeforeEach
+	void setUp() {
+
+		blocking = new MongoTemplate(new SimpleMongoClientDatabaseFactory(client, "ExecutableRemoveOperationSupportTests"));
 		blocking.dropCollection(STAR_WARS);
 
 		han = new Person();
@@ -61,36 +67,43 @@ public class ReactiveRemoveOperationSupportTests {
 		blocking.save(han);
 		blocking.save(luke);
 
-		template = new ReactiveMongoTemplate(MongoClients.create(), "ExecutableRemoveOperationSupportTests");
+		template = new ReactiveMongoTemplate(reactiveClient, "ExecutableRemoveOperationSupportTests");
 	}
 
 	@Test // DATAMONGO-1719
-	public void removeAll() {
+	void removeAll() {
 
-		StepVerifier.create(template.remove(Person.class).all()).consumeNextWith(actual -> {
+		template.remove(Person.class).all().as(StepVerifier::create).consumeNextWith(actual -> {
 			assertThat(actual.getDeletedCount()).isEqualTo(2L);
 		}).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1719
-	public void removeAllMatching() {
+	void removeAllMatching() {
 
-		StepVerifier.create(template.remove(Person.class).matching(query(where("firstname").is("han"))).all())
+		template.remove(Person.class).matching(query(where("firstname").is("han"))).all().as(StepVerifier::create)
 				.consumeNextWith(actual -> assertThat(actual.getDeletedCount()).isEqualTo(1L)).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1719
-	public void removeAllMatchingWithAlternateDomainTypeAndCollection() {
+	void removeAllMatchingCriteria() {
 
-		StepVerifier
-				.create(template.remove(Jedi.class).inCollection(STAR_WARS).matching(query(where("name").is("luke"))).all())
+		template.remove(Person.class).matching(where("firstname").is("han")).all().as(StepVerifier::create)
 				.consumeNextWith(actual -> assertThat(actual.getDeletedCount()).isEqualTo(1L)).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1719
-	public void removeAndReturnAllMatching() {
+	void removeAllMatchingWithAlternateDomainTypeAndCollection() {
 
-		StepVerifier.create(template.remove(Person.class).matching(query(where("firstname").is("han"))).findAndRemove())
+		template.remove(Jedi.class).inCollection(STAR_WARS).matching(query(where("name").is("luke"))).all()
+				.as(StepVerifier::create).consumeNextWith(actual -> assertThat(actual.getDeletedCount()).isEqualTo(1L))
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-1719
+	void removeAndReturnAllMatching() {
+
+		template.remove(Person.class).matching(query(where("firstname").is("han"))).findAndRemove().as(StepVerifier::create)
 				.expectNext(han).verifyComplete();
 	}
 

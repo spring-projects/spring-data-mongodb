@@ -1,0 +1,218 @@
+[[upgrading.2-3]]
+= Upgrading from 2.x to 3.x
+
+Spring Data MongoDB 3.x requires the MongoDB Java Driver 4.x. +
+The 4.0 MongoDB Java Driver does no longer support certain features that have already been deprecated in one of the last minor versions.
+Some of the changes affect the initial setup configuration as well as compile/runtime features. We summarized the most typical changes one might encounter.
+
+== Dependency Changes
+
+Instead of the single artifact uber-jar `mongo-java-driver`, imports are now split to include separate artifacts:
+
+* `org.mongodb:mongodb-driver-core` (required)
+* `org.mongodb:mongodb-driver-sync` (optional)
+* `org.mongodb:mongodb-driver-reactivestreams` (optional)
+
+Depending on the application one of the `mongodb-driver-sync`, `mongodb-driver-reactivestreams` artifacts is is required next to the mandatory `mongodb-driver-core`.
+It is possible to combine the sync and reactive drivers in one application if needed.
+
+== Java Configuration
+
+.Java API changes
+|===
+Type | Comment
+
+| `MongoClientFactoryBean`
+| Creates `com.mongodb.client.MongoClient` instead of `com.mongodb.MongoClient` +
+Uses `MongoClientSettings` instead of `MongoClientOptions`.
+
+| `MongoDataIntegrityViolationException`
+| Uses `WriteConcernResult` instead of `WriteResult`.
+
+| `BulkOperationException`
+| Uses `MongoBulkWriteException` and `com.mongodb.bulk.BulkWriteError` instead of `BulkWriteException` and `com.mongodb.BulkWriteError`
+
+| `ReactiveMongoClientFactoryBean`
+| Uses `com.mongodb.MongoClientSettings` instead of `com.mongodb.async.client.MongoClientSettings`
+
+| `ReactiveMongoClientSettingsFactoryBean`
+| Now produces `com.mongodb.MongoClientSettings` instead of `com.mongodb.async.client.MongoClientSettings`
+
+| `AbstractMongoClientConfiguration`, `AbstractReactiveMongoConfiguration`
+| Configuration methods use parameter injection instead of calling local methods to avoid the need for cglib proxies
+|===
+
+.Removed Java API:
+|===
+2.x | Replacement in 3.x | Comment
+
+| `MongoClientOptionsFactoryBean`
+| `MongoClientSettingsFactoryBean`
+| Creating a `com.mongodb.MongoClientSettings`.
+
+| `AbstractMongoConfiguration`
+| `AbstractMongoClientConfiguration` +
+(Available since 2.1)
+| Using `com.mongodb.client.MongoClient`.
+
+| `MongoDbFactory#getLegacyDb()`
+| -
+| -
+
+| `SimpleMongoDbFactory`
+| `SimpleMongoClientDbFactory` +
+(Available since 2.1)
+|
+
+| `MapReduceOptions#getOutputType()`
+| `MapReduceOptions#getMapReduceAction()`
+| Returns `MapReduceAction` instead of `MapReduceCommand.OutputType`.
+
+| `Meta\|Query` maxScan & snapshot
+|
+|
+|===
+
+== XML Namespace
+
+.Changed XML Namespace Elements and Attributes:
+|===
+Element / Attribute | 2.x | 3.x
+
+| `<mongo:mongo-client />`
+| Used to create a `com.mongodb.MongoClient`
+| Now exposes a `com.mongodb.client.MongoClient`
+
+| `<mongo:mongo-client replica-set="..." />`
+| Was a comma delimited list of replica set members (host/port)
+| Now defines the replica set name. +
+Use `<mongo:client-settings cluster-hosts="..." />` instead
+
+| `<mongo:db-factory writeConcern="..." />`
+| NONE, NORMAL, SAFE, FSYNC_SAFE, REPLICAS_SAFE, MAJORITY
+| W1, W2, W3, UNAKNOWLEDGED, AKNOWLEDGED, JOURNALED, MAJORITY
+|===
+
+.Removed XML Namespace Elements and Attributes:
+|===
+Element / Attribute | Replacement in 3.x | Comment
+
+| `<mongo:db-factory mongo-ref="..." />`
+| `<mongo:db-factory mongo-client-ref="..." />`
+| Referencing a `com.mongodb.client.MongoClient`.
+
+| `<mongo:mongo-client credentials="..." />`
+| `<mongo:mongo-client credential="..." />`
+| Single authentication data instead of list.
+
+| `<mongo:client-options />`
+| `<mongo:client-settings />`
+| See `com.mongodb.MongoClientSettings` for details.
+|===
+
+.New XML Namespace Elements and Attributes:
+|===
+Element | Comment
+
+| `<mongo:db-factory mongo-client-ref="..." />`
+| Replacement for `<mongo:db-factory mongo-ref="..." />`
+
+| `<mongo:db-factory connection-string="..." />`
+| Replacement for `uri` and `client-uri`.
+
+| `<mongo:mongo-client connection-string="..." />`
+| Replacement for `uri` and `client-uri`.
+
+| `<mongo:client-settings />`
+| Namespace element for `com.mongodb.MongoClientSettings`.
+
+|===
+
+.Deprecations:
+|===
+2.x | Replacement in 3.x | Comment
+
+| `MongoDbFactorySupport`
+| `MongoDatabaseFactorySupport`
+|
+
+| `SimpleMongoClientDbFactory`
+| `SimpleMongoClientDatabaseFactory`
+|
+
+| `MongoDbFactory`
+| `MongoDatabaseFactory`
+|
+
+|===
+
+== Other Changes
+
+=== Auto Index Creation
+
+Annotation based index creation is now turned **OFF** by default and needs to be enabled eg. when relying on `@GeoSpatialIndexed`.
+Please refer to <<mapping.index-creation>> on how to create indexes programmatically.
+
+.Enable Auto Index Creation
+====
+
+.XML Namespace
+[source,xml]
+----
+<mongo:mapping-converter auto-index-creation="true" />    <1>
+----
+
+.Java Config
+[source,java]
+----
+@Configuration
+public class Config extends AbstractMongoClientConfiguration {
+
+	@Override
+    protected boolean autoIndexCreation() {               <2>
+        return true;
+    }
+
+    // ...
+}
+----
+
+.Programmatic
+[source,java]
+----
+MongoDatabaseFactory dbFactory = new SimpleMongoClientDatabaseFactory(...);
+DefaultDbRefResolver dbRefResolver = new DefaultDbRefResolver(dbFactory);
+
+MongoMappingContext mappingContext = new MongoMappingContext();
+mappingContext.setAutoIndexCreation(true);                <3>
+// ...
+mappingContext.afterPropertiesSet();
+
+MongoTemplate template = new MongoTemplate(dbFactory, new MappingMongoConverter(dbRefResolver, mappingContext));
+----
+<1> Use the XML namespace attribute `auto-index-creation` on `mapping-converter`.
+<2> Override `autoIndexCreation` via `AbstractMongoClientConfiguration` or `AbstractReactiveMongoClientConfiguration`.
+<3> Set the flag on `MongoMappingContext`.
+====
+
+=== UUID Types
+
+The MongoDB UUID representation can now be configured with different formats.
+This has to be done via `MongoClientSettings` as shown in the snippet below.
+
+.UUid Codec Configuration
+====
+[source,java]
+----
+@Configuration
+public class Config extends AbstractMongoClientConfiguration {
+
+    @Override
+    public void configureClientSettings(MongoClientSettings.Builder builder) {
+        builder.uuidRepresentation(UuidRepresentation.STANDARD);
+    }
+
+    // ...
+}
+----
+====

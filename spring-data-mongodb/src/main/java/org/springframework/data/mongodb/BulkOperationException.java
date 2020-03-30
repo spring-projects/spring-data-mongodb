@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2015-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,9 @@ import java.util.List;
 
 import org.springframework.dao.DataAccessException;
 
-import com.mongodb.BulkWriteError;
-import com.mongodb.BulkWriteException;
-import com.mongodb.BulkWriteResult;
+import com.mongodb.MongoBulkWriteException;
+import com.mongodb.bulk.BulkWriteError;
+import com.mongodb.bulk.BulkWriteResult;
 
 /**
  * Is thrown when errors occur during bulk operations.
@@ -38,12 +38,12 @@ public class BulkOperationException extends DataAccessException {
 	private final BulkWriteResult result;
 
 	/**
-	 * Creates a new {@link BulkOperationException} with the given message and source {@link BulkWriteException}.
+	 * Creates a new {@link BulkOperationException} with the given message and source {@link MongoBulkWriteException}.
 	 *
 	 * @param message must not be {@literal null}.
 	 * @param source must not be {@literal null}.
 	 */
-	public BulkOperationException(String message, BulkWriteException source) {
+	public BulkOperationException(String message, MongoBulkWriteException source) {
 
 		super(message, source);
 

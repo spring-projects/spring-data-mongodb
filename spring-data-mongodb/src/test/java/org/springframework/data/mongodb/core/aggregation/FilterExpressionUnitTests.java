@@ -15,20 +15,20 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.hamcrest.core.Is.*;
-import static org.junit.Assert.*;
-import static org.springframework.data.mongodb.core.aggregation.ArrayOperators.Filter.*;
+import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.mongodb.core.aggregation.ArrayOperators.Filter.filter;
 
 import java.util.Arrays;
 import java.util.List;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -38,16 +38,16 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 /**
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.class)
-public class FilterExpressionUnitTests {
+@ExtendWith(MockitoExtension.class)
+class FilterExpressionUnitTests {
 
-	@Mock MongoDbFactory mongoDbFactory;
+	@Mock MongoDatabaseFactory mongoDbFactory;
 
 	private AggregationOperationContext aggregationContext;
 	private MongoMappingContext mappingContext;
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	void setUp() {
 
 		mappingContext = new MongoMappingContext();
 		aggregationContext = new TypeBasedAggregationOperationContext(Sales.class, mappingContext,
@@ -55,72 +55,79 @@ public class FilterExpressionUnitTests {
 	}
 
 	@Test // DATAMONGO-1491
-	public void shouldConstructFilterExpressionCorrectly() {
+	void shouldConstructFilterExpressionCorrectly() {
 
 		TypedAggregation<Sales> agg = Aggregation.newAggregation(Sales.class,
 				Aggregation.project()
 						.and(filter("items").as("item").by(AggregationFunctionExpressions.GTE.of(Fields.field("item.price"), 100)))
 						.as("items"));
 
-		Document dbo = agg.toDocument("sales", aggregationContext);
-
-		List<Object> pipeline = DocumentTestUtils.getAsDBList(dbo, "pipeline");
-		Document $project = DocumentTestUtils.getAsDocument((Document) pipeline.get(0), "$project");
-		Document items = DocumentTestUtils.getAsDocument($project, "items");
-		Document $filter = DocumentTestUtils.getAsDocument(items, "$filter");
-
+		Document $filter = extractFilterOperatorFromDocument(agg.toDocument("sales", aggregationContext));
 		Document expected = Document.parse("{" + //
 				"input: \"$items\"," + //
 				"as: \"item\"," + //
 				"cond: { $gte: [ \"$$item.price\", 100 ] }" + //
 				"}");
 
-		assertThat($filter, is(new Document(expected)));
+		assertThat($filter).isEqualTo(new Document(expected));
 	}
 
 	@Test // DATAMONGO-1491
-	public void shouldConstructFilterExpressionCorrectlyWhenUsingFilterOnProjectionBuilder() {
+	void shouldConstructFilterExpressionCorrectlyWhenUsingFilterOnProjectionBuilder() {
 
 		TypedAggregation<Sales> agg = Aggregation.newAggregation(Sales.class, Aggregation.project().and("items")
 				.filter("item", AggregationFunctionExpressions.GTE.of(Fields.field("item.price"), 100)).as("items"));
 
-		Document dbo = agg.toDocument("sales", aggregationContext);
-
-		List<Object> pipeline = DocumentTestUtils.getAsDBList(dbo, "pipeline");
-		Document $project = DocumentTestUtils.getAsDocument((Document) pipeline.get(0), "$project");
-		Document items = DocumentTestUtils.getAsDocument($project, "items");
-		Document $filter = DocumentTestUtils.getAsDocument(items, "$filter");
-
+		Document $filter = extractFilterOperatorFromDocument(agg.toDocument("sales", aggregationContext));
 		Document expected = Document.parse("{" + //
 				"input: \"$items\"," + //
 				"as: \"item\"," + //
 				"cond: { $gte: [ \"$$item.price\", 100 ] }" + //
 				"}");
 
-		assertThat($filter, is(expected));
+		assertThat($filter).isEqualTo(expected);
 	}
 
 	@Test // DATAMONGO-1491
-	public void shouldConstructFilterExpressionCorrectlyWhenInputMapToArray() {
+	void shouldConstructFilterExpressionCorrectlyWhenInputMapToArray() {
 
 		TypedAggregation<Sales> agg = Aggregation.newAggregation(Sales.class,
 				Aggregation.project().and(filter(Arrays.<Object> asList(1, "a", 2, null, 3.1D, 4, "5")).as("num")
 						.by(AggregationFunctionExpressions.GTE.of(Fields.field("num"), 3))).as("items"));
 
-		Document dbo = agg.toDocument("sales", aggregationContext);
-
-		List<Object> pipeline = DocumentTestUtils.getAsDBList(dbo, "pipeline");
-		Document $project = DocumentTestUtils.getAsDocument((Document) pipeline.get(0), "$project");
-		Document items = DocumentTestUtils.getAsDocument($project, "items");
-		Document $filter = DocumentTestUtils.getAsDocument(items, "$filter");
-
+		Document $filter = extractFilterOperatorFromDocument(agg.toDocument("sales", aggregationContext));
 		Document expected = Document.parse("{" + //
 				"input: [ 1, \"a\", 2, null, 3.1, 4, \"5\" ]," + //
 				"as: \"num\"," + //
 				"cond: { $gte: [ \"$$num\", 3 ] }" + //
 				"}");
 
-		assertThat($filter, is(expected));
+		assertThat($filter).isEqualTo(expected);
+	}
+
+	@Test // DATAMONGO-2320
+	void shouldConstructFilterExpressionCorrectlyWhenConditionContainsFieldReference() {
+
+		Aggregation agg = Aggregation.newAggregation(Aggregation.project().and((ctx) -> new Document()).as("field-1")
+				.and(filter("items").as("item").by(ComparisonOperators.valueOf("item.price").greaterThan("field-1")))
+				.as("items"));
+
+		Document $filter = extractFilterOperatorFromDocument(agg.toDocument("sales", Aggregation.DEFAULT_CONTEXT));
+		Document expected = Document.parse("{" + //
+				"input: \"$items\"," + //
+				"as: \"item\"," + //
+				"cond: { $gt: [ \"$$item.price\", \"$field-1\" ] }" + //
+				"}");
+
+		assertThat($filter).isEqualTo(new Document(expected));
+	}
+
+	private Document extractFilterOperatorFromDocument(Document source) {
+
+		List<Object> pipeline = DocumentTestUtils.getAsDBList(source, "pipeline");
+		Document $project = DocumentTestUtils.getAsDocument((Document) pipeline.get(0), "$project");
+		Document items = DocumentTestUtils.getAsDocument($project, "items");
+		return DocumentTestUtils.getAsDocument(items, "$filter");
 	}
 
 	static class Sales {

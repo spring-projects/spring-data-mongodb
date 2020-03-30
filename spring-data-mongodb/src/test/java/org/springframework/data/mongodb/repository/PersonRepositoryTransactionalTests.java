@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,43 +19,42 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.test.util.MongoTestUtils.*;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.rules.RuleChain;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.data.domain.Persistable;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoTransactionManager;
-import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
+import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.data.mongodb.test.util.AfterTransactionAssertion;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
-import org.springframework.data.mongodb.test.util.ReplicaSet;
-import org.springframework.data.util.Version;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
+import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
+import org.springframework.data.mongodb.test.util.ReplSetClient;
 import org.springframework.lang.Nullable;
 import org.springframework.test.annotation.Rollback;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.transaction.AfterTransaction;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.mongodb.MongoClient;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 
@@ -63,23 +62,22 @@ import com.mongodb.client.model.Filters;
  * @author Christoph Strobl
  * @currentRead Shadow's Edge - Brent Weeks
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration
+@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
+@EnableIfReplicaSetAvailable
+@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
 @Transactional(transactionManager = "txManager")
 public class PersonRepositoryTransactionalTests {
 
-	public static @ClassRule RuleChain TEST_RULES = RuleChain.outerRule(MongoVersionRule.atLeast(Version.parse("3.7.3")))
-			.around(ReplicaSet.required());
-
 	static final String DB_NAME = "repository-tx-tests";
+	static @ReplSetClient MongoClient mongoClient;
 
 	@Configuration
-	@EnableMongoRepositories
-	static class Config extends AbstractMongoConfiguration {
+	@EnableMongoRepositories(includeFilters=@Filter(type = FilterType.ASSIGNABLE_TYPE, classes = PersonRepository.class))
+	static class Config extends AbstractMongoClientConfiguration {
 
 		@Bean
 		public MongoClient mongoClient() {
-			return MongoTestUtils.replSetClient();
+			return mongoClient;
 		}
 
 		@Override
@@ -88,12 +86,15 @@ public class PersonRepositoryTransactionalTests {
 		}
 
 		@Bean
-		MongoTransactionManager txManager(MongoDbFactory dbFactory) {
+		MongoTransactionManager txManager(MongoDatabaseFactory dbFactory) {
 			return new MongoTransactionManager(dbFactory);
 		}
-	}
 
-	public @Rule ExpectedException expectedException = ExpectedException.none();
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+			return Collections.singleton(Person.class);
+		}
+	}
 
 	@Autowired MongoClient client;
 	@Autowired PersonRepository repository;
@@ -105,7 +106,7 @@ public class PersonRepositoryTransactionalTests {
 
 	List<AfterTransactionAssertion<? extends Persistable<?>>> assertionList;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		assertionList = new CopyOnWriteArrayList<>();
 	}

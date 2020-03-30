@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.any;
 
@@ -24,17 +24,18 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.data.mongodb.SessionAwareMethodInterceptor.MethodCache;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.ClassUtils;
 
-import com.mongodb.MongoClient;
+import com.mongodb.MongoClientSettings;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
@@ -44,7 +45,7 @@ import com.mongodb.client.MongoDatabase;
  *
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class SessionAwareMethodInterceptorUnitTests {
 
 	@Mock ClientSession session;
@@ -54,7 +55,7 @@ public class SessionAwareMethodInterceptorUnitTests {
 	MongoCollection collection;
 	MongoDatabase database;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		collection = createProxyInstance(session, targetCollection, MongoCollection.class);
@@ -107,11 +108,11 @@ public class SessionAwareMethodInterceptorUnitTests {
 	public void usesCacheForMethodLookup() {
 
 		MethodCache cache = (MethodCache) ReflectionTestUtils.getField(SessionAwareMethodInterceptor.class, "METHOD_CACHE");
-		Method countMethod = ClassUtils.getMethod(MongoCollection.class, "count");
+		Method countMethod = ClassUtils.getMethod(MongoCollection.class, "countDocuments");
 
 		assertThat(cache.contains(countMethod, MongoCollection.class)).isFalse();
 
-		collection.count();
+		collection.countDocuments();
 
 		assertThat(cache.contains(countMethod, MongoCollection.class)).isTrue();
 	}
@@ -138,7 +139,7 @@ public class SessionAwareMethodInterceptorUnitTests {
 		MongoDatabase otherDb = mock(MongoDatabase.class);
 		when(targetDatabase.withCodecRegistry(any())).thenReturn(otherDb);
 
-		MongoDatabase target = database.withCodecRegistry(MongoClient.getDefaultCodecRegistry());
+		MongoDatabase target = database.withCodecRegistry(MongoClientSettings.getDefaultCodecRegistry());
 		assertThat(target).isInstanceOf(Proxy.class).isNotSameAs(database).isNotSameAs(targetDatabase);
 
 		target.drop();
@@ -152,7 +153,7 @@ public class SessionAwareMethodInterceptorUnitTests {
 		MongoCollection otherCollection = mock(MongoCollection.class);
 		when(targetCollection.withCodecRegistry(any())).thenReturn(otherCollection);
 
-		MongoCollection target = collection.withCodecRegistry(MongoClient.getDefaultCodecRegistry());
+		MongoCollection target = collection.withCodecRegistry(MongoClientSettings.getDefaultCodecRegistry());
 		assertThat(target).isInstanceOf(Proxy.class).isNotSameAs(collection).isNotSameAs(targetCollection);
 
 		target.drop();

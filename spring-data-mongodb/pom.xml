@@ -11,7 +11,7 @@
 	<parent>
 		<groupId>org.springframework.data</groupId>
 		<artifactId>spring-data-mongodb-parent</artifactId>
-		<version>2.2.0.BUILD-SNAPSHOT</version>
+		<version>3.0.0.BUILD-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -65,6 +65,12 @@
 			<artifactId>querydsl-mongodb</artifactId>
 			<version>${querydsl}</version>
 			<optional>true</optional>
+			<exclusions>
+				<exclusion>
+					<groupId>org.mongodb</groupId>
+					<artifactId>mongo-java-driver</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<dependency>
@@ -82,28 +88,19 @@
 		</dependency>
 
 		<!-- reactive -->
+
 		<dependency>
 			<groupId>org.mongodb</groupId>
-			<artifactId>mongodb-driver-reactivestreams</artifactId>
-			<version>${mongo.reactivestreams}</version>
+			<artifactId>mongodb-driver-sync</artifactId>
+			<version>${mongo}</version>
 			<optional>true</optional>
 		</dependency>
 
 		<dependency>
 			<groupId>org.mongodb</groupId>
-			<artifactId>mongodb-driver-async</artifactId>
-			<version>${mongo}</version>
+			<artifactId>mongodb-driver-reactivestreams</artifactId>
+			<version>${mongo.reactivestreams}</version>
 			<optional>true</optional>
-			<exclusions>
-				<exclusion>
-					<groupId>org.mongodb</groupId>
-					<artifactId>mongodb-driver-core</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.mongodb</groupId>
-					<artifactId>bson</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 
 		<dependency>
@@ -254,6 +251,13 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.junit-pioneer</groupId>
+			<artifactId>junit-pioneer</artifactId>
+			<version>0.5.3</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>javax.transaction</groupId>
 			<artifactId>jta</artifactId>
 			<version>1.1</version>
@@ -276,14 +280,12 @@
 		<dependency>
 			<groupId>org.jetbrains.kotlinx</groupId>
 			<artifactId>kotlinx-coroutines-core</artifactId>
-			<version>${kotlin-coroutines}</version>
 			<optional>true</optional>
 		</dependency>
 
 		<dependency>
 			<groupId>org.jetbrains.kotlinx</groupId>
 			<artifactId>kotlinx-coroutines-reactor</artifactId>
-			<version>${kotlin-coroutines}</version>
 			<optional>true</optional>
 		</dependency>
 
@@ -342,12 +344,6 @@
 						<java.util.logging.config.file>src/test/resources/logging.properties</java.util.logging.config.file>
 						<reactor.trace.cancel>true</reactor.trace.cancel>
 					</systemPropertyVariables>
-					<properties>
-						<property>
-							<name>listener</name>
-							<value>org.springframework.data.mongodb.test.util.CleanMongoDBJunitRunListener</value>
-						</property>
-					</properties>
 				</configuration>
 			</plugin>
 

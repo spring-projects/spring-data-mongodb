@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,11 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.domain.Sort.Direction.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
-import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import lombok.Builder;
 
@@ -39,24 +38,20 @@ import org.bson.Document;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.LocalDateTime;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
-import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.TestEntities;
@@ -71,14 +66,16 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Person;
+import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
+import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.MongoVersion;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
+import org.springframework.data.mongodb.test.util.Template;
 import org.springframework.data.util.CloseableIterator;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.MongoException;
 import com.mongodb.client.MongoCollection;
+import com.mongodb.client.model.InsertOneModel;
+import com.mongodb.client.model.WriteModel;
 
 /**
  * Tests for {@link MongoTemplate#aggregate(Aggregation, Class, Class)}.
@@ -93,8 +90,7 @@ import com.mongodb.client.MongoCollection;
  * @author Sergey Shcherbakov
  * @author Minsu Kim
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration("classpath:infrastructure.xml")
+@ExtendWith(MongoTemplateExtension.class)
 public class AggregationTests {
 
 	private static final String INPUT_COLLECTION = "aggregation_test_collection";
@@ -102,44 +98,29 @@ public class AggregationTests {
 
 	private static boolean initialized = false;
 
-	@Autowired MongoTemplate mongoTemplate;
+	@Template //
+	static MongoTestTemplate mongoTemplate;
 
-	@Rule public ExpectedException exception = ExpectedException.none();
-	@Rule public MongoVersionRule mongoVersion = MongoVersionRule.any();
-
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		cleanDb();
 		initSampleDataIfNecessary();
 	}
 
-	@After
+	@AfterEach
 	public void cleanUp() {
 		cleanDb();
 	}
 
 	private void cleanDb() {
 
+		mongoTemplate.flush(Product.class, UserWithLikes.class, DATAMONGO753.class, Data.class, DATAMONGO788.class,
+				User.class, Person.class, Reservation.class, Venue.class, MeterData.class, LineItem.class, InventoryItem.class,
+				Sales.class, Sales2.class, Employee.class, Art.class, Venue.class);
+
 		mongoTemplate.dropCollection(INPUT_COLLECTION);
-		mongoTemplate.dropCollection(Product.class);
-		mongoTemplate.dropCollection(UserWithLikes.class);
-		mongoTemplate.dropCollection(DATAMONGO753.class);
-		mongoTemplate.dropCollection(Data.class);
-		mongoTemplate.dropCollection(DATAMONGO788.class);
-		mongoTemplate.dropCollection(User.class);
-		mongoTemplate.dropCollection(Person.class);
-		mongoTemplate.dropCollection(Reservation.class);
-		mongoTemplate.dropCollection(Venue.class);
-		mongoTemplate.dropCollection(MeterData.class);
-		mongoTemplate.dropCollection(LineItem.class);
-		mongoTemplate.dropCollection(InventoryItem.class);
-		mongoTemplate.dropCollection(Sales.class);
-		mongoTemplate.dropCollection(Sales2.class);
-		mongoTemplate.dropCollection(Employee.class);
-		mongoTemplate.dropCollection(Art.class);
 		mongoTemplate.dropCollection("personQueryTemp");
-		mongoTemplate.dropCollection(Venue.class);
 	}
 
 	/**
@@ -152,20 +133,19 @@ public class AggregationTests {
 
 		if (!initialized) {
 
-			LOGGER.debug("Server uses MongoDB Version: {}", mongoVersion);
-
 			mongoTemplate.dropCollection(ZipInfo.class);
 			mongoTemplate.execute(ZipInfo.class, new CollectionCallback<Void>() {
 
 				@Override
 				public Void doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
 
+					List<WriteModel<Document>> docs = new ArrayList<>();
 					Scanner scanner = null;
 					try {
 						scanner = new Scanner(new BufferedInputStream(new ClassPathResource("zips.json").getInputStream()));
 						while (scanner.hasNextLine()) {
 							String zipInfoRecord = scanner.nextLine();
-							collection.insertOne(Document.parse(zipInfoRecord));
+							docs.add(new InsertOneModel<>(Document.parse(zipInfoRecord)));
 						}
 					} catch (Exception e) {
 						if (scanner != null) {
@@ -174,6 +154,7 @@ public class AggregationTests {
 						throw new RuntimeException("Could not load mongodb sample dataset!", e);
 					}
 
+					collection.bulkWrite(docs);
 					return null;
 				}
 			});
@@ -185,19 +166,22 @@ public class AggregationTests {
 		}
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-586
+	@Test // DATAMONGO-586
 	public void shouldHandleMissingInputCollection() {
-		mongoTemplate.aggregate(newAggregation(), (String) null, TagCount.class);
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> mongoTemplate.aggregate(newAggregation(), (String) null, TagCount.class));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-586
+	@Test // DATAMONGO-586
 	public void shouldHandleMissingAggregationPipeline() {
-		mongoTemplate.aggregate(null, INPUT_COLLECTION, TagCount.class);
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> mongoTemplate.aggregate(null, INPUT_COLLECTION, TagCount.class));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-586
+	@Test // DATAMONGO-586
 	public void shouldHandleMissingEntityClass() {
-		mongoTemplate.aggregate(newAggregation(), INPUT_COLLECTION, null);
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> mongoTemplate.aggregate(newAggregation(), INPUT_COLLECTION, null));
 	}
 
 	@Test // DATAMONGO-586
@@ -305,7 +289,6 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1391
-	@MongoVersion(asOf = "3.2")
 	public void shouldUnwindWithIndex() {
 
 		MongoCollection<Document> coll = mongoTemplate.getCollection(INPUT_COLLECTION);
@@ -332,7 +315,6 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1391
-	@MongoVersion(asOf = "3.2")
 	public void shouldUnwindPreserveEmpty() {
 
 		MongoCollection<Document> coll = mongoTemplate.getCollection(INPUT_COLLECTION);
@@ -779,8 +761,9 @@ public class AggregationTests {
 				group("make").avg(ConditionalOperators //
 						.when(Criteria.where("year").gte(2012)) //
 						.then(1) //
-						.otherwise(9000)).as("score"),
-				sort(ASC, "make"));
+						.otherwise(9000)) //
+						.as("score"),
+				sort(ASC, "score"));
 
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Document.class);
 
@@ -795,7 +778,7 @@ public class AggregationTests {
 		assertThat(((Number) good.get("score")).longValue()).isEqualTo(9000L);
 	}
 
-	@Test // DATAMONGO-1784
+	@Test // DATAMONGO-1784, DATAMONGO-2264
 	public void shouldAllowSumUsingConditionalExpressions() {
 
 		mongoTemplate.dropCollection(CarPerson.class);
@@ -823,7 +806,7 @@ public class AggregationTests {
 						.when(Criteria.where("year").gte(2012)) //
 						.then(1) //
 						.otherwise(9000)).as("score"),
-				sort(ASC, "make"));
+				sort(ASC, "score"));
 
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Document.class);
 
@@ -951,7 +934,6 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-774
-	@MongoVersion(asOf = "2.4")
 	public void stringExpressionsInProjectionExample() {
 
 		Product product = new Product("P1", "A", 1.99, 3, 0.05, 0.19);
@@ -995,23 +977,6 @@ public class AggregationTests {
 				.isEqualTo((product.netPrice * (1 - product.discountRate) + shippingCosts) * (1 + product.taxRate));
 	}
 
-	@Test
-	public void shouldThrowExceptionIfUnknownFieldIsReferencedInArithmenticExpressionsInProjection() {
-
-		exception.expect(MappingException.class);
-		exception.expectMessage("unknown");
-
-		Product product = new Product("P1", "A", 1.99, 3, 0.05, 0.19);
-		mongoTemplate.insert(product);
-
-		TypedAggregation<Product> agg = newAggregation(Product.class, //
-				project("name", "netPrice") //
-						.andExpression("unknown + 1").as("netPricePlus1") //
-		);
-
-		mongoTemplate.aggregate(agg, Document.class);
-	}
-
 	/**
 	 * @see <a href=
 	 *      "https://stackoverflow.com/questions/18653574/spring-data-mongodb-aggregation-framework-invalid-reference-in-group-operati">Spring
@@ -1027,18 +992,19 @@ public class AggregationTests {
 				unwind("pd"), //
 				group("pd.pDch") // the nested field expression
 						.sum("pd.up").as("uplift"), //
-				project("_id", "uplift"));
+				project("_id", "uplift"), //
+				sort(Sort.by("uplift")));
 
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Document.class);
 		List<Document> stats = result.getMappedResults();
 
 		assertThat(stats.size()).isEqualTo(3);
-		assertThat(stats.get(0).get("_id").toString()).isEqualTo("C");
-		assertThat((Integer) stats.get(0).get("uplift")).isEqualTo(2);
-		assertThat(stats.get(1).get("_id").toString()).isEqualTo("B");
-		assertThat((Integer) stats.get(1).get("uplift")).isEqualTo(3);
-		assertThat(stats.get(2).get("_id").toString()).isEqualTo("A");
-		assertThat((Integer) stats.get(2).get("uplift")).isEqualTo(1);
+		assertThat(stats.get(0).get("_id").toString()).isEqualTo("A");
+		assertThat((Integer) stats.get(0).get("uplift")).isEqualTo(1);
+		assertThat(stats.get(1).get("_id").toString()).isEqualTo("C");
+		assertThat((Integer) stats.get(1).get("uplift")).isEqualTo(2);
+		assertThat(stats.get(2).get("_id").toString()).isEqualTo("B");
+		assertThat((Integer) stats.get(2).get("uplift")).isEqualTo(3);
 	}
 
 	/**
@@ -1066,7 +1032,6 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-774
-	@MongoVersion(asOf = "2.4")
 	public void shouldPerformDateProjectionOperatorsCorrectly() throws ParseException {
 
 		Data data = new Data();
@@ -1093,7 +1058,6 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-774
-	@MongoVersion(asOf = "2.4")
 	public void shouldPerformStringProjectionOperatorsCorrectly() throws ParseException {
 
 		Data data = new Data();
@@ -1130,7 +1094,6 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1550
-	@MongoVersion(asOf = "3.4")
 	public void shouldPerformReplaceRootOperatorCorrectly() throws ParseException {
 
 		Data data = new Data();
@@ -1151,7 +1114,7 @@ public class AggregationTests {
 		assertThat((Integer) resultDocument.keySet().size()).isEqualTo(1);
 	}
 
-	@Test // DATAMONGO-788
+	@Test // DATAMONGO-788, DATAMONGO-2264
 	public void referencesToGroupIdsShouldBeRenderedProperly() {
 
 		mongoTemplate.insert(new DATAMONGO788(1, 1));
@@ -1165,7 +1128,7 @@ public class AggregationTests {
 		AggregationOperation project = Aggregation.project("xPerY", "x", "y").andExclude("_id");
 
 		TypedAggregation<DATAMONGO788> aggregation = Aggregation.newAggregation(DATAMONGO788.class, projectFirst, group,
-				project);
+				project, Aggregation.sort(Sort.by("xPerY")));
 		AggregationResults<Document> aggResults = mongoTemplate.aggregate(aggregation, Document.class);
 		List<Document> items = aggResults.getMappedResults();
 
@@ -1278,7 +1241,6 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-960
-	@MongoVersion(asOf = "2.6")
 	public void returnFiveMostCommonLikesAggregationFrameworkExampleWithSortOnDiskOptionEnabled() {
 
 		createUserWithLikesDocuments();
@@ -1302,7 +1264,6 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1637
-	@MongoVersion(asOf = "2.6")
 	public void returnFiveMostCommonLikesAggregationFrameworkExampleWithSortOnDiskOptionEnabledWhileStreaming() {
 
 		createUserWithLikesDocuments();
@@ -1329,7 +1290,6 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-960
-	@MongoVersion(asOf = "2.6")
 	public void returnFiveMostCommonLikesShouldReturnStageExecutionInformationWithExplainOptionEnabled() {
 
 		createUserWithLikesDocuments();
@@ -1347,8 +1307,7 @@ public class AggregationTests {
 		assertThat(rawResult.containsKey("stages")).isEqualTo(true);
 	}
 
-	@Test // DATAMONGO-954
-	@MongoVersion(asOf = "2.6")
+	@Test // DATAMONGO-954, DATAMONGO-2264
 	public void shouldSupportReturningCurrentAggregationRoot() {
 
 		mongoTemplate.save(new Person("p1_first", "p1_last", 25));
@@ -1359,11 +1318,11 @@ public class AggregationTests {
 		List<Document> personsWithAge25 = mongoTemplate.find(Query.query(where("age").is(25)), Document.class,
 				mongoTemplate.getCollectionName(Person.class));
 
-		Aggregation agg = newAggregation(group("age").push(Aggregation.ROOT).as("users"));
+		Aggregation agg = newAggregation(group("age").push(Aggregation.ROOT).as("users"), sort(Sort.by("_id")));
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Person.class, Document.class);
 
 		assertThat(result.getMappedResults()).hasSize(3);
-		Document o = result.getMappedResults().get(2);
+		Document o = result.getMappedResults().get(1);
 
 		assertThat(o.get("_id")).isEqualTo((Object) 25);
 		assertThat((List<?>) o.get("users")).hasSize(2);
@@ -1373,8 +1332,7 @@ public class AggregationTests {
 	/**
 	 * {@link https://stackoverflow.com/questions/24185987/using-root-inside-spring-data-mongodb-for-retrieving-whole-document}
 	 */
-	@Test // DATAMONGO-954
-	@MongoVersion(asOf = "2.6")
+	@Test // DATAMONGO-954, DATAMONGO-2264
 	public void shouldSupportReturningCurrentAggregationRootInReference() {
 
 		mongoTemplate.save(new Reservation("0123", "42", 100));
@@ -1394,7 +1352,6 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1549
-	@MongoVersion(asOf = "3.4")
 	public void shouldApplyCountCorrectly() {
 
 		mongoTemplate.save(new Reservation("0123", "42", 100));
@@ -1552,7 +1509,6 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1326
-	@MongoVersion(asOf = "3.2")
 	public void shouldLookupPeopleCorectly() {
 
 		createUsersWithReferencedPersons();
@@ -1568,11 +1524,10 @@ public class AggregationTests {
 		Document firstItem = mappedResults.get(0);
 
 		assertThat(firstItem).containsEntry("_id", "u1");
-		Assert.assertThat(firstItem, isBsonObject().containing("linkedPerson.[0].firstname", "u1"));
+		assertThat(firstItem).containsEntry("linkedPerson.[0].firstname", "u1");
 	}
 
 	@Test // DATAMONGO-1326
-	@MongoVersion(asOf = "3.2")
 	public void shouldGroupByAndLookupPeopleCorectly() {
 
 		createUsersWithReferencedPersons();
@@ -1589,7 +1544,7 @@ public class AggregationTests {
 		Document firstItem = mappedResults.get(0);
 
 		assertThat(firstItem).containsEntry("foreignKey", "u1");
-		Assert.assertThat(firstItem, isBsonObject().containing("linkedPerson.[0].firstname", "u1"));
+		assertThat(firstItem).containsEntry("linkedPerson.[0].firstname", "u1");
 	}
 
 	@Test // DATAMONGO-1418, DATAMONGO-1824
@@ -1618,7 +1573,6 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1637
-	@MongoVersion(asOf = "2.6")
 	public void shouldCreateOutputCollectionWhileStreaming() {
 
 		createPersonDocuments();
@@ -1641,7 +1595,6 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1637
-	@MongoVersion(asOf = "2.6")
 	public void shouldReturnDocumentsWithOutputCollectionWhileStreaming() {
 
 		createPersonDocuments();
@@ -1672,17 +1625,15 @@ public class AggregationTests {
 		mongoTemplate.save(new Person("Leoniv", "Yakubov", 55, Person.Sex.MALE));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1418
+	@Test // DATAMONGO-1418
 	public void outShouldOutBeTheLastOperation() {
-
-		newAggregation(match(new Criteria()), //
+		assertThatIllegalArgumentException().isThrownBy(() -> newAggregation(match(new Criteria()), //
 				group("field1").count().as("totalCount"), //
 				out("collection1"), //
-				skip(100L));
+				skip(100L)));
 	}
 
 	@Test // DATAMONGO-1325
-	@MongoVersion(asOf = "3.2")
 	public void shouldApplySampleCorrectly() {
 
 		createUserWithLikesDocuments();
@@ -1716,7 +1667,6 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1491
-	@MongoVersion(asOf = "3.2")
 	public void filterShouldBeAppliedCorrectly() {
 
 		Item item43 = Item.builder().itemId("43").quantity(2).price(2L).build();
@@ -1747,7 +1697,6 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1538
-	@MongoVersion(asOf = "3.2")
 	public void letShouldBeAppliedCorrectly() {
 
 		Sales2 sales1 = Sales2.builder().id("1").price(10).tax(0.5F).applyDiscount(true).build();
@@ -1771,8 +1720,7 @@ public class AggregationTests {
 				new Document("_id", "2").append("finalTotal", 10.25D));
 	}
 
-	@Test // DATAMONGO-1551
-	@MongoVersion(asOf = "3.4")
+	@Test // DATAMONGO-1551, DATAMONGO-2264
 	public void graphLookupShouldBeAppliedCorrectly() {
 
 		Employee em1 = Employee.builder().id(1).name("Dev").build();
@@ -1789,20 +1737,22 @@ public class AggregationTests {
 						.connectTo("name") //
 						.depthField("depth") //
 						.maxDepth(5) //
-						.as("reportingHierarchy"));
+						.as("reportingHierarchy"), //
+				project("id", "depth", "name", "reportsTo", "reportingHierarchy"));
 
 		AggregationResults<Document> result = mongoTemplate.aggregate(agg, Document.class);
 
 		Document object = result.getUniqueMappedResult();
 		List<Object> list = (List<Object>) object.get("reportingHierarchy");
 
-		Assert.assertThat(object, isBsonObject().containing("reportingHierarchy", List.class));
-		assertThat((Document) list.get(0)).containsEntry("name", "Dev").containsEntry("depth", 1L);
-		assertThat((Document) list.get(1)).containsEntry("name", "Eliot").containsEntry("depth", 0L);
+		assertThat(object).containsEntry("name", "Andrew").containsEntry("reportsTo", "Eliot");
+		assertThat(list).containsOnly(
+				new Document("_id", 2).append("name", "Eliot").append("reportsTo", "Dev").append("depth", 0L).append("_class",
+						Employee.class.getName()),
+				new Document("_id", 1).append("name", "Dev").append("depth", 1L).append("_class", Employee.class.getName()));
 	}
 
 	@Test // DATAMONGO-1552
-	@MongoVersion(asOf = "3.4")
 	public void bucketShouldCollectDocumentsIntoABucket() {
 
 		Art a1 = Art.builder().id(1).title("The Pillars of Society").artist("Grosz").year(1926).price(199.99).build();
@@ -1825,7 +1775,7 @@ public class AggregationTests {
 
 		// { "_id" : 0 , "count" : 1 , "titles" : [ "Dancer"] , "sum" : 760.4000000000001}
 		Document bound0 = result.getMappedResults().get(0);
-		Assert.assertThat(bound0, isBsonObject().containing("count", 1).containing("titles.[0]", "Dancer"));
+		assertThat(bound0).containsEntry("count", 1).containsEntry("titles.[0]", "Dancer");
 		assertThat((Double) bound0.get("sum")).isCloseTo(760.40, Offset.offset(0.1D));
 
 		// { "_id" : 100 , "count" : 2 , "titles" : [ "The Pillars of Society" , "The Great Wave off Kanagawa"] , "sum" :
@@ -1836,8 +1786,7 @@ public class AggregationTests {
 		assertThat((Double) bound100.get("sum")).isCloseTo(3672.9, Offset.offset(0.1D));
 	}
 
-	@Test // DATAMONGO-1552
-	@MongoVersion(asOf = "3.4")
+	@Test // DATAMONGO-1552, DATAMONGO-2437
 	public void bucketAutoShouldCollectDocumentsIntoABucket() {
 
 		Art a1 = Art.builder().id(1).title("The Pillars of Society").artist("Grosz").year(1926).price(199.99).build();
@@ -1857,20 +1806,20 @@ public class AggregationTests {
 		AggregationResults<Document> result = mongoTemplate.aggregate(aggregation, Document.class);
 		assertThat(result.getMappedResults().size()).isEqualTo(3);
 
-		// { "min" : 680.0 , "max" : 820.0 , "count" : 1 , "titles" : [ "Dancer"] , "sum" : 760.4000000000001}
+		// { "_id" : { "min" : 680.0 , "max" : 820.0 }, "count" : 1 , "titles" : [ "Dancer"] , "sum" : 760.4000000000001}
 		Document bound0 = result.getMappedResults().get(0);
-		Assert.assertThat(bound0, isBsonObject().containing("count", 1).containing("titles.[0]", "Dancer")
-				.containing("min", 680.0).containing("max"));
+		assertThat(bound0).containsEntry("count", 1).containsEntry("titles.[0]", "Dancer").containsEntry("_id.min", 680.0)
+				.containsKey("_id.max");
 
-		// { "min" : 820.0 , "max" : 1800.0 , "count" : 1 , "titles" : [ "The Great Wave off Kanagawa"] , "sum" : 1673.0}
+		// { "_id" : { "min" : 820.0 , "max" : 1800.0 }, "count" : 1 , "titles" : [ "The Great Wave off Kanagawa"] , "sum" :
+		// 1673.0}
 		Document bound1 = result.getMappedResults().get(1);
-		assertThat(bound1).containsEntry("count", 1).containsEntry("min", 820.0);
+		assertThat(bound1).containsEntry("count", 1).containsEntry("_id.min", 820.0);
 		assertThat((List<String>) bound1.get("titles")).contains("The Great Wave off Kanagawa");
 		assertThat((Double) bound1.get("sum")).isCloseTo(1673.0, Offset.offset(0.1D));
 	}
 
 	@Test // DATAMONGO-1552
-	@MongoVersion(asOf = "3.4")
 	public void facetShouldCreateFacets() {
 
 		Art a1 = Art.builder().id(1).title("The Pillars of Society").artist("Grosz").year(1926).price(199.99).build();
@@ -1941,6 +1890,21 @@ public class AggregationTests {
 		AggregationResults<Document> groupResults = mongoTemplate.aggregate(aggregation, "newyork", Document.class);
 
 		assertThat(groupResults.getMappedResults().size()).isEqualTo(4);
+	}
+
+	@Test // DATAMONGO-2437
+	public void shouldReadComplexIdValueCorrectly() {
+
+		WithComplexId source = new WithComplexId();
+		source.id = new ComplexId();
+		source.id.p1 = "v1";
+		source.id.p2 = "v2";
+
+		mongoTemplate.save(source);
+
+		AggregationResults<WithComplexId> result = mongoTemplate.aggregate(newAggregation(project("id")),
+				WithComplexId.class, WithComplexId.class);
+		assertThat(result.getMappedResults()).containsOnly(source);
 	}
 
 	private void createUsersWithReferencedPersons() {
@@ -2243,5 +2207,16 @@ public class AggregationTests {
 		String artist;
 		Integer year;
 		double price;
+	}
+
+	@lombok.Data
+	static class WithComplexId {
+		@Id ComplexId id;
+	}
+
+	@lombok.Data
+	static class ComplexId {
+		String p1;
+		String p2;
 	}
 }

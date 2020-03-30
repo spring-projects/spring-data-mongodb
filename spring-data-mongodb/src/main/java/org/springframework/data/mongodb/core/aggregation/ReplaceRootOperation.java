@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,8 @@ import org.springframework.util.Assert;
  * @author Mark Paluch
  * @author Christoph Strobl
  * @since 1.10
- * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/replaceRoot/">MongoDB Aggregation Framework: $replaceRoot</a>
+ * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/replaceRoot/">MongoDB Aggregation
+ *      Framework: $replaceRoot</a>
  */
 public class ReplaceRootOperation implements FieldsExposingAggregationOperation {
 
@@ -82,7 +83,7 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
-		return new Document("$replaceRoot", new Document("newRoot", replacement.toDocumentExpression(context)));
+		return new Document("$replaceRoot", new Document("newRoot", getReplacement().toDocumentExpression(context)));
 	}
 
 	/* (non-Javadoc)
@@ -91,6 +92,16 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 	@Override
 	public ExposedFields getFields() {
 		return ExposedFields.from();
+	}
+
+	/**
+	 * Obtain the {@link Replacement}.
+	 *
+	 * @return never {@literal null}.
+	 * @since 3.0
+	 */
+	protected Replacement getReplacement() {
+		return replacement;
 	}
 
 	/**

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,12 +23,15 @@ import lombok.Data;
 
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
+import org.springframework.data.mongodb.test.util.MongoTestTemplate;
+import org.springframework.data.mongodb.test.util.Template;
 
-import com.mongodb.MongoClient;
 import com.mongodb.client.result.DeleteResult;
 
 /**
@@ -37,19 +40,21 @@ import com.mongodb.client.result.DeleteResult;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-public class ExecutableRemoveOperationSupportTests {
+@ExtendWith(MongoTemplateExtension.class)
+class ExecutableRemoveOperationSupportTests {
 
 	private static final String STAR_WARS = "star-wars";
-	MongoTemplate template;
 
-	Person han;
-	Person luke;
+	@Template(initialEntitySet = Person.class) //
+	private static MongoTestTemplate template;
 
-	@Before
-	public void setUp() {
+	private Person han;
+	private Person luke;
 
-		template = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), "ExecutableRemoveOperationSupportTests"));
-		template.dropCollection(STAR_WARS);
+	@BeforeEach
+	void setUp() {
+
+		template.flush();
 
 		han = new Person();
 		han.firstname = "han";
@@ -64,7 +69,7 @@ public class ExecutableRemoveOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void removeAll() {
+	void removeAll() {
 
 		DeleteResult result = template.remove(Person.class).all();
 
@@ -72,15 +77,23 @@ public class ExecutableRemoveOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void removeAllMatching() {
+	void removeAllMatching() {
 
 		DeleteResult result = template.remove(Person.class).matching(query(where("firstname").is("han"))).all();
 
 		assertThat(result.getDeletedCount()).isEqualTo(1L);
 	}
 
+	@Test // DATAMONGO-2416
+	void removeAllMatchingCriteria() {
+
+		DeleteResult result = template.remove(Person.class).matching(where("firstname").is("han")).all();
+
+		assertThat(result.getDeletedCount()).isEqualTo(1L);
+	}
+
 	@Test // DATAMONGO-1563
-	public void removeAllMatchingWithAlternateDomainTypeAndCollection() {
+	void removeAllMatchingWithAlternateDomainTypeAndCollection() {
 
 		DeleteResult result = template.remove(Jedi.class).inCollection(STAR_WARS).matching(query(where("name").is("luke")))
 				.all();
@@ -89,7 +102,7 @@ public class ExecutableRemoveOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void removeAndReturnAllMatching() {
+	void removeAndReturnAllMatching() {
 
 		List<Person> result = template.remove(Person.class).matching(query(where("firstname").is("han"))).findAndRemove();
 

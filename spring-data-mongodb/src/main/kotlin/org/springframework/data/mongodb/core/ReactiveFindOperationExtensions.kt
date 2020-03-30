@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,15 @@
  */
 package org.springframework.data.mongodb.core
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitFirstOrNull
 import kotlinx.coroutines.reactive.awaitSingle
+import org.springframework.data.geo.GeoResult
+import org.springframework.data.mongodb.core.query.asString
 import kotlin.reflect.KClass
+import kotlin.reflect.KProperty
+import kotlin.reflect.KProperty1
 
 /**
  * Extension for [ReactiveFindOperation.query] providing a [KClass] based variant.
@@ -37,6 +43,15 @@ fun <T : Any> ReactiveFindOperation.query(entityClass: KClass<T>): ReactiveFindO
  */
 inline fun <reified T : Any> ReactiveFindOperation.query(): ReactiveFindOperation.ReactiveFind<T> =
 		query(T::class.java)
+
+/**
+ * Extension for [ReactiveFindOperation.query] for a type-safe projection of distinct values.
+ *
+ * @author Mark Paluch
+ * @since 3.0
+ */
+inline fun <reified T : Any> ReactiveFindOperation.distinct(field : KProperty1<T, *>): ReactiveFindOperation.TerminatingDistinct<Any> =
+		query(T::class.java).distinct(field.name)
 
 /**
  * Extension for [ReactiveFindOperation.FindWithProjection.as] providing a [KClass] based variant.
@@ -73,8 +88,17 @@ fun <T : Any> ReactiveFindOperation.DistinctWithProjection.asType(resultType: KC
  * @author Christoph Strobl
  * @since 2.1
  */
-inline fun <reified T : Any> ReactiveFindOperation.DistinctWithProjection.asType(): ReactiveFindOperation.DistinctWithProjection =
+inline fun <reified T : Any> ReactiveFindOperation.DistinctWithProjection.asType(): ReactiveFindOperation.TerminatingDistinct<T> =
 		`as`(T::class.java)
+
+/**
+ * Extension for [ReactiveFindOperation.FindDistinct.distinct] leveraging KProperty.
+ *
+ * @author Mark Paluch
+ * @since 3.0
+ */
+fun ReactiveFindOperation.FindDistinct.distinct(key: KProperty<*>): ReactiveFindOperation.TerminatingDistinct<Any> =
+		distinct(asString(key))
 
 /**
  * Non-nullable Coroutines variant of [ReactiveFindOperation.TerminatingFind.one].
@@ -129,3 +153,36 @@ suspend fun <T : Any> ReactiveFindOperation.TerminatingFind<T>.awaitCount(): Lon
  */
 suspend fun <T : Any> ReactiveFindOperation.TerminatingFind<T>.awaitExists(): Boolean =
 		exists().awaitSingle()
+
+/**
+ * Coroutines [Flow] variant of [ReactiveFindOperation.TerminatingFind.all].
+ *
+ * @author Sebastien Deleuze
+ */
+fun <T : Any> ReactiveFindOperation.TerminatingFind<T>.flow(): Flow<T> =
+		all().asFlow()
+
+/**
+ * Coroutines [Flow] variant of [ReactiveFindOperation.TerminatingFind.tail].
+ *
+ * @author Sebastien Deleuze
+ */
+fun <T : Any> ReactiveFindOperation.TerminatingFind<T>.tailAsFlow(): Flow<T> =
+		tail().asFlow()
+
+/**
+ * Coroutines [Flow] variant of [ReactiveFindOperation.TerminatingFindNear.all].
+ *
+ * @author Sebastien Deleuze
+ */
+fun <T : Any> ReactiveFindOperation.TerminatingFindNear<T>.flow(): Flow<GeoResult<T>> =
+		all().asFlow()
+
+/**
+ * Coroutines [Flow] variant of [ReactiveFindOperation.TerminatingDistinct.all].
+ *
+ * @author Sebastien Deleuze
+ * @since 2.2
+ */
+fun <T : Any> ReactiveFindOperation.TerminatingDistinct<T>.flow(): Flow<T> =
+		all().asFlow()

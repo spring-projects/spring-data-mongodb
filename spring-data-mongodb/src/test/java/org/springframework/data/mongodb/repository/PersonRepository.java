@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the original author or authors.
+ * Copyright 2010-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ import org.springframework.data.geo.GeoPage;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.query.Param;
@@ -263,6 +264,9 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	// DATAMONGO-566
 	Long deletePersonByLastname(String lastname);
 
+	// DATAMONGO-1997
+	Optional<Person> deleteOptionalByLastname(String lastname);
+
 	// DATAMONGO-566
 	@Query(value = "{ 'lastname' : ?0 }", delete = true)
 	List<Person> removeByLastnameUsingAnnotatedQuery(String lastname);
@@ -360,6 +364,34 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	@Query(value = "{ 'id' : ?0 }", fields = "{ 'fans': { '$slice': [ ?1, ?2 ] } }")
 	Person findWithSliceInProjection(String id, int skip, int limit);
 
-	@Query(value = "{ 'shippingAddresses' : { '$elemMatch' : { 'city' : { '$eq' : 'lnz' } } } }", fields = "{ 'shippingAddresses.$': ?0 }")
+	@Query(value = "{ 'shippingAddresses' : { '$elemMatch' : { 'city' : { '$eq' : 'lnz' } } } }",
+			fields = "{ 'shippingAddresses.$': ?0 }")
 	Person findWithArrayPositionInProjection(int position);
+
+	@Query(value = "{ 'fans' : { '$elemMatch' : { '$ref' : 'user' } } }", fields = "{ 'fans.$': ?0 }")
+	Person findWithArrayPositionInProjectionWithDbRef(int position);
+
+	@Aggregation("{ '$project': { '_id' : '$lastname' } }")
+	List<String> findAllLastnames();
+
+	@Aggregation("{ '$group': { '_id' : '$lastname', names : { $addToSet : '$?0' } } }")
+	List<PersonAggregate> groupByLastnameAnd(String property);
+
+	@Aggregation("{ '$group': { '_id' : '$lastname', names : { $addToSet : '$?0' } } }")
+	List<PersonAggregate> groupByLastnameAnd(String property, Sort sort);
+
+	@Aggregation("{ '$group': { '_id' : '$lastname', names : { $addToSet : '$?0' } } }")
+	List<PersonAggregate> groupByLastnameAnd(String property, Pageable page);
+
+	@Aggregation(pipeline = "{ '$group' : { '_id' : null, 'total' : { $sum: '$age' } } }")
+	int sumAge();
+
+	@Aggregation(pipeline = "{ '$group' : { '_id' : null, 'total' : { $sum: '$age' } } }")
+	AggregationResults<org.bson.Document> sumAgeAndReturnAggregationResultWrapper();
+
+	@Aggregation(pipeline = "{ '$group' : { '_id' : null, 'total' : { $sum: '$age' } } }")
+	AggregationResults<SumAge> sumAgeAndReturnAggregationResultWrapperWithConcreteType();
+
+	@Query(value = "{_id:?0}")
+	Optional<org.bson.Document> findDocumentById(String id);
 }

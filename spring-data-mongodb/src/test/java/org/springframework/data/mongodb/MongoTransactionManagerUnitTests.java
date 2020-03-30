@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,15 @@
 package org.springframework.data.mongodb;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
@@ -41,39 +41,31 @@ import com.mongodb.session.ServerSession;
 /**
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class MongoTransactionManagerUnitTests {
 
 	@Mock ClientSession session;
 	@Mock ClientSession session2;
 	@Mock ServerSession serverSession;
-	@Mock MongoDbFactory dbFactory;
-	@Mock MongoDbFactory dbFactory2;
+	@Mock MongoDatabaseFactory dbFactory;
+	@Mock MongoDatabaseFactory dbFactory2;
 	@Mock MongoDatabase db;
 	@Mock MongoDatabase db2;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		when(dbFactory.getSession(any())).thenReturn(session, session2);
-
 		when(dbFactory.withSession(session)).thenReturn(dbFactory);
-		when(dbFactory.withSession(session2)).thenReturn(dbFactory2);
-
-		when(dbFactory.getDb()).thenReturn(db);
-		when(dbFactory2.getDb()).thenReturn(db2);
-
+		when(dbFactory.getMongoDatabase()).thenReturn(db);
 		when(session.getServerSession()).thenReturn(serverSession);
-		when(session2.getServerSession()).thenReturn(serverSession);
-
-		when(serverSession.isClosed()).thenReturn(false);
 	}
 
-	@After
+	@AfterEach
 	public void verifyTransactionSynchronizationManager() {
 
-		assertTrue(TransactionSynchronizationManager.getResourceMap().isEmpty());
-		assertFalse(TransactionSynchronizationManager.isSynchronizationActive());
+		assertThat(TransactionSynchronizationManager.getResourceMap().isEmpty()).isTrue();
+		assertThat(TransactionSynchronizationManager.isSynchronizationActive()).isFalse();
 	}
 
 	@Test // DATAMONGO-1920
@@ -237,6 +229,11 @@ public class MongoTransactionManagerUnitTests {
 
 	@Test // DATAMONGO-1920
 	public void suspendTransactionWhilePropagationRequiresNew() {
+
+		when(dbFactory.withSession(session2)).thenReturn(dbFactory2);
+		when(dbFactory2.getMongoDatabase()).thenReturn(db2);
+		when(session2.getServerSession()).thenReturn(serverSession);
+		when(serverSession.isClosed()).thenReturn(false);
 
 		MongoTransactionManager txManager = new MongoTransactionManager(dbFactory);
 		TransactionStatus txStatus = txManager.getTransaction(new DefaultTransactionDefinition());

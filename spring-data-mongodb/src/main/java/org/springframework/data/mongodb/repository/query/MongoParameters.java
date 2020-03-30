@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import org.springframework.core.MethodParameter;
 import org.springframework.data.domain.Range;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.repository.Near;
 import org.springframework.data.mongodb.repository.query.MongoParameters.MongoParameter;
@@ -45,12 +46,13 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	private final int maxDistanceIndex;
 	private final @Nullable Integer fullTextIndex;
 	private final @Nullable Integer nearIndex;
+	private final @Nullable Integer collationIndex;
 
 	/**
 	 * Creates a new {@link MongoParameters} instance from the given {@link Method} and {@link MongoQueryMethod}.
 	 *
 	 * @param method must not be {@literal null}.
-	 * @param queryMethod must not be {@literal null}.
+	 * @param isGeoNearMethod indicate if this is a geo spatial query method
 	 */
 	public MongoParameters(Method method, boolean isGeoNearMethod) {
 
@@ -64,6 +66,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 
 		this.rangeIndex = getTypeIndex(parameterTypeInfo, Range.class, Distance.class);
 		this.maxDistanceIndex = this.rangeIndex == -1 ? getTypeIndex(parameterTypeInfo, Distance.class, null) : -1;
+		this.collationIndex = getTypeIndex(parameterTypeInfo, Collation.class, null);
 
 		int index = findNearIndexInParameters(method);
 		if (index == -1 && isGeoNearMethod) {
@@ -74,7 +77,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	}
 
 	private MongoParameters(List<MongoParameter> parameters, int maxDistanceIndex, @Nullable Integer nearIndex,
-			@Nullable Integer fullTextIndex, int rangeIndex) {
+			@Nullable Integer fullTextIndex, int rangeIndex, @Nullable Integer collationIndex) {
 
 		super(parameters);
 
@@ -82,6 +85,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		this.fullTextIndex = fullTextIndex;
 		this.maxDistanceIndex = maxDistanceIndex;
 		this.rangeIndex = rangeIndex;
+		this.collationIndex = collationIndex;
 	}
 
 	private final int getNearIndex(List<Class<?>> parameterTypes) {
@@ -111,11 +115,11 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 
 			MongoParameter param = createParameter(MethodParameter.forParameter(p));
 			if (param.isManuallyAnnotatedNearParameter()) {
-				if(index == -1) {
+				if (index == -1) {
 					index = param.getIndex();
 				} else {
-					throw new IllegalStateException(String.format("Found multiple @Near annotations ond method %s! Only one allowed!",
-							method.toString()));
+					throw new IllegalStateException(
+							String.format("Found multiple @Near annotations ond method %s! Only one allowed!", method.toString()));
 				}
 
 			}
@@ -131,8 +135,6 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	protected MongoParameter createParameter(MethodParameter parameter) {
 		return new MongoParameter(parameter);
 	}
-
-
 
 	public int getDistanceRangeIndex() {
 		return -1;
@@ -158,7 +160,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 	}
 
 	/**
-	 * Returns ths inde of the parameter to be used as a textquery param
+	 * Returns the index of the parameter to be used as a textquery param
 	 *
 	 * @return
 	 * @since 1.6
@@ -183,13 +185,24 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		return rangeIndex;
 	}
 
+	/**
+	 * Returns the index of the {@link Collation} parameter or -1 if not present.
+	 *
+	 * @return -1 if not set.
+	 * @since 2.2
+	 */
+	public int getCollationParameterIndex() {
+		return collationIndex != null ? collationIndex.intValue() : -1;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.Parameters#createFrom(java.util.List)
 	 */
 	@Override
 	protected MongoParameters createFrom(List<MongoParameter> parameters) {
-		return new MongoParameters(parameters, this.maxDistanceIndex, this.nearIndex, this.fullTextIndex, this.rangeIndex);
+		return new MongoParameters(parameters, this.maxDistanceIndex, this.nearIndex, this.fullTextIndex, this.rangeIndex,
+				this.collationIndex);
 	}
 
 	private int getTypeIndex(List<TypeInformation<?>> parameterTypes, Class<?> type, @Nullable Class<?> componentType) {
@@ -241,7 +254,7 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		@Override
 		public boolean isSpecialParameter() {
 			return super.isSpecialParameter() || Distance.class.isAssignableFrom(getType()) || isNearParameter()
-					|| TextCriteria.class.isAssignableFrom(getType());
+					|| TextCriteria.class.isAssignableFrom(getType()) || Collation.class.isAssignableFrom(getType());
 		}
 
 		private boolean isNearParameter() {

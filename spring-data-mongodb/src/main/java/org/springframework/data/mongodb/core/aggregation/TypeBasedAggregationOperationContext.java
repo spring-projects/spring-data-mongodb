@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,11 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.bson.Document;
 import org.springframework.data.mapping.PersistentPropertyPath;
-import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFieldReference;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
@@ -27,6 +29,7 @@ import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldRefe
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -70,7 +73,16 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 	 */
 	@Override
 	public Document getMappedObject(Document document) {
-		return mapper.getMappedObject(document, mappingContext.getPersistentEntity(type));
+		return getMappedObject(document, type);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(org.bson.Document, java.lang.Class)
+	 */
+	@Override
+	public Document getMappedObject(Document document, @Nullable Class<?> type) {
+		return mapper.getMappedObject(document, type != null ? mappingContext.getPersistentEntity(type) : null);
 	}
 
 	/*
@@ -79,8 +91,6 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 	 */
 	@Override
 	public FieldReference getReference(Field field) {
-
-		PropertyPath.from(field.getTarget(), type);
 		return getReferenceFor(field);
 	}
 
@@ -93,7 +103,40 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 		return getReferenceFor(field(name));
 	}
 
-	private FieldReference getReferenceFor(Field field) {
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getFields(java.lang.Class)
+	 */
+	@Override
+	public Fields getFields(Class<?> type) {
+
+		Assert.notNull(type, "Type must not be null!");
+
+		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(type);
+
+		if (entity == null) {
+			return AggregationOperationContext.super.getFields(type);
+		}
+
+		List<String> fields = new ArrayList<>();
+
+		for (MongoPersistentProperty property : entity) {
+			fields.add(property.getName());
+		}
+
+		return Fields.fields(fields.toArray(new String[0]));
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#continueOnMissingFieldReference()
+	 */
+	@Override
+	public AggregationOperationContext continueOnMissingFieldReference() {
+		return new RelaxedTypeBasedAggregationOperationContext(type, mappingContext, mapper);
+	}
+
+	protected FieldReference getReferenceFor(Field field) {
 
 		PersistentPropertyPath<MongoPersistentProperty> propertyPath = mappingContext
 				.getPersistentPropertyPath(field.getTarget(), type);

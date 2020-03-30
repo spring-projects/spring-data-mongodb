@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ package org.springframework.data.mongodb.core.schema;
 
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type;
 
 /**
@@ -62,5 +62,10 @@ public class JsonSchemaPropertyUnitTests {
 	@Test // DATAMONGO-1877
 	public void shouldRenderTimestampCorrectly() {
 		assertThat(JsonSchemaProperty.timestamp("foo").toDocument()).containsEntry("foo.bsonType", "timestamp");
+	}
+
+	@Test // DATAMONGO-2282
+	public void objectIdShouldBeRenderedCorrectly() {
+		assertThat(JsonSchemaProperty.objectId("_id").toDocument()).containsEntry("_id.bsonType", "objectId");
 	}
 }

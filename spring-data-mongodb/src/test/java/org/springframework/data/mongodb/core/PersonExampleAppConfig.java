@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,15 +17,16 @@ package org.springframework.data.mongodb.core;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 
 @Configuration
 public class PersonExampleAppConfig {
 
 	@Bean
 	public MongoClient mongoClient() {
-		return new MongoClient("localhost");
+		return MongoTestUtils.client();
 	}
 
 	@Bean

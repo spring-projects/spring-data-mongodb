@@ -8,11 +8,11 @@
 			 http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd">
 
 	<mongo:mongo-client id="mongo" host="127.0.0.1" port="27117">
-		<mongo:client-options server-selection-timeout="1000" />
+		<mongo:client-settings cluster-server-selection-timeout="1000" />
 	</mongo:mongo-client>
 
 	<mongo:db-factory id="mongoDbFactory"
-					  mongo-ref="mongo"
+					  mongo-client-ref="mongo"
 					  dbname="database"/>
 
 	<bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,26 +73,37 @@ abstract class CursorReadingTask<T, R> implements Task {
 	@Override
 	public void run() {
 
-		start();
+		try {
 
-		while (isRunning()) {
+			start();
 
-			try {
+			while (isRunning()) {
 
-				T next = execute(this::getNext);
+				try {
 
-				if (next != null) {
-					emitMessage(createMessage(next, targetType, request.getRequestOptions()));
-				} else {
-					Thread.sleep(10);
+					T next = execute(this::getNext);
+
+					if (next != null) {
+						emitMessage(createMessage(next, targetType, request.getRequestOptions()));
+					} else {
+						Thread.sleep(10);
+					}
+				} catch (InterruptedException e) {
+
+					synchronized (lifecycleMonitor) {
+						state = State.CANCELLED;
+					}
+					Thread.currentThread().interrupt();
+					break;
 				}
-			} catch (InterruptedException e) {
-
-				synchronized (lifecycleMonitor) {
-					state = State.CANCELLED;
-				}
-				Thread.currentThread().interrupt();
 			}
+		} catch (RuntimeException e) {
+
+			synchronized (lifecycleMonitor) {
+				state = State.CANCELLED;
+			}
+
+			errorHandler.handleError(e);
 		}
 	}
 
@@ -126,7 +137,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 					if (valid) {
 						this.cursor = cursor;
 						state = State.RUNNING;
-					} else if(cursor != null){
+					} else if (cursor != null) {
 						cursor.close();
 					}
 				}
@@ -219,7 +230,11 @@ abstract class CursorReadingTask<T, R> implements Task {
 
 	@SuppressWarnings("unchecked")
 	private void emitMessage(Message<T, R> message) {
-		request.getMessageListener().onMessage((Message) message);
+		try {
+			request.getMessageListener().onMessage((Message) message);
+		} catch (Exception e) {
+			errorHandler.handleError(e);
+		}
 	}
 
 	@Nullable
@@ -249,8 +264,8 @@ abstract class CursorReadingTask<T, R> implements Task {
 
 	/**
 	 * Execute an operation and take care of translating exceptions using the {@link MongoTemplate templates}
-	 * {@link org.springframework.data.mongodb.core.MongoExceptionTranslator} and passing those on to the
-	 * {@link #errorHandler}.
+	 * {@link org.springframework.data.mongodb.core.MongoExceptionTranslator} rethrowing the potentially translated
+	 * exception.
 	 *
 	 * @param callback must not be {@literal null}.
 	 * @param <T>
@@ -265,10 +280,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 		} catch (RuntimeException e) {
 
 			RuntimeException translated = template.getExceptionTranslator().translateExceptionIfPossible(e);
-			RuntimeException toHandle = translated != null ? translated : e;
-
-			errorHandler.handleError(toHandle);
-			throw toHandle;
+			throw translated != null ? translated : e;
 		}
 	}
 }

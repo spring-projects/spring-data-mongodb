@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,14 +24,17 @@ import lombok.Data;
 import java.util.Optional;
 
 import org.bson.BsonString;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
+import org.springframework.data.mongodb.test.util.MongoTestTemplate;
+import org.springframework.data.mongodb.test.util.Template;
 
-import com.mongodb.MongoClient;
 import com.mongodb.client.result.UpdateResult;
 
 /**
@@ -40,19 +43,21 @@ import com.mongodb.client.result.UpdateResult;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-public class ExecutableUpdateOperationSupportTests {
+@ExtendWith(MongoTemplateExtension.class)
+class ExecutableUpdateOperationSupportTests {
 
 	private static final String STAR_WARS = "star-wars";
-	MongoTemplate template;
 
-	Person han;
-	Person luke;
+	@Template(initialEntitySet = { Human.class, Jedi.class, Person.class }) //
+	private static MongoTestTemplate template;
 
-	@Before
-	public void setUp() {
+	private Person han;
+	private Person luke;
 
-		template = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), "ExecutableUpdateOperationSupportTests"));
-		template.dropCollection(STAR_WARS);
+	@BeforeEach
+	void setUp() {
+
+		template.flush();
 
 		han = new Person();
 		han.firstname = "han";
@@ -66,28 +71,29 @@ public class ExecutableUpdateOperationSupportTests {
 		template.save(luke);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1563
-	public void domainTypeIsRequired() {
-		template.update(null);
-	}
-
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1563
-	public void updateIsRequired() {
-		template.update(Person.class).apply(null);
-	}
-
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1563
-	public void collectionIsRequiredOnSet() {
-		template.update(Person.class).inCollection(null);
-	}
-
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1563
-	public void findAndModifyOptionsAreRequiredOnSet() {
-		template.update(Person.class).apply(new Update()).withOptions(null);
+	@Test // DATAMONGO-1563
+	void domainTypeIsRequired() {
+		assertThatIllegalArgumentException().isThrownBy(() -> template.update(null));
 	}
 
 	@Test // DATAMONGO-1563
-	public void updateFirst() {
+	void updateIsRequired() {
+		assertThatIllegalArgumentException().isThrownBy(() -> template.update(Person.class).apply(null));
+	}
+
+	@Test // DATAMONGO-1563
+	void collectionIsRequiredOnSet() {
+		assertThatIllegalArgumentException().isThrownBy(() -> template.update(Person.class).inCollection(null));
+	}
+
+	@Test // DATAMONGO-1563
+	void findAndModifyOptionsAreRequiredOnSet() {
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> template.update(Person.class).apply(new Update()).withOptions(null));
+	}
+
+	@Test // DATAMONGO-1563
+	void updateFirst() {
 
 		UpdateResult result = template.update(Person.class).apply(new Update().set("firstname", "Han")).first();
 
@@ -96,7 +102,7 @@ public class ExecutableUpdateOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void updateAll() {
+	void updateAll() {
 
 		UpdateResult result = template.update(Person.class).apply(new Update().set("firstname", "Han")).all();
 
@@ -105,7 +111,7 @@ public class ExecutableUpdateOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void updateAllMatching() {
+	void updateAllMatching() {
 
 		UpdateResult result = template.update(Person.class).matching(queryHan()).apply(new Update().set("firstname", "Han"))
 				.all();
@@ -114,8 +120,19 @@ public class ExecutableUpdateOperationSupportTests {
 		assertThat(result.getUpsertedId()).isNull();
 	}
 
+	@Test // DATAMONGO-2416
+	void updateAllMatchingCriteria() {
+
+		UpdateResult result = template.update(Person.class).matching(where("id").is(han.getId()))
+				.apply(new Update().set("firstname", "Han"))
+				.all();
+
+		assertThat(result.getModifiedCount()).isEqualTo(1L);
+		assertThat(result.getUpsertedId()).isNull();
+	}
+
 	@Test // DATAMONGO-1563
-	public void updateWithDifferentDomainClassAndCollection() {
+	void updateWithDifferentDomainClassAndCollection() {
 
 		UpdateResult result = template.update(Jedi.class).inCollection(STAR_WARS)
 				.matching(query(where("_id").is(han.getId()))).apply(new Update().set("name", "Han")).all();
@@ -127,7 +144,7 @@ public class ExecutableUpdateOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void findAndModifyValue() {
+	void findAndModifyValue() {
 
 		Person result = template.update(Person.class).matching(queryHan()).apply(new Update().set("firstname", "Han"))
 				.findAndModifyValue();
@@ -138,7 +155,7 @@ public class ExecutableUpdateOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void findAndModify() {
+	void findAndModify() {
 
 		Optional<Person> result = template.update(Person.class).matching(queryHan())
 				.apply(new Update().set("firstname", "Han")).findAndModify();
@@ -149,7 +166,7 @@ public class ExecutableUpdateOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void findAndModifyWithDifferentDomainTypeAndCollection() {
+	void findAndModifyWithDifferentDomainTypeAndCollection() {
 
 		Optional<Jedi> result = template.update(Jedi.class).inCollection(STAR_WARS)
 				.matching(query(where("_id").is(han.getId()))).apply(new Update().set("name", "Han")).findAndModify();
@@ -160,7 +177,7 @@ public class ExecutableUpdateOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void findAndModifyWithOptions() {
+	void findAndModifyWithOptions() {
 
 		Optional<Person> result = template.update(Person.class).matching(queryHan())
 				.apply(new Update().set("firstname", "Han")).withOptions(FindAndModifyOptions.options().returnNew(true))
@@ -170,7 +187,7 @@ public class ExecutableUpdateOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void upsert() {
+	void upsert() {
 
 		UpdateResult result = template.update(Person.class).matching(query(where("id").is("id-3")))
 				.apply(new Update().set("firstname", "Chewbacca")).upsert();
@@ -180,7 +197,7 @@ public class ExecutableUpdateOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1827
-	public void findAndReplaceValue() {
+	void findAndReplaceValue() {
 
 		Person luke = new Person();
 		luke.firstname = "Luke";
@@ -193,7 +210,7 @@ public class ExecutableUpdateOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1827
-	public void findAndReplace() {
+	void findAndReplace() {
 
 		Person luke = new Person();
 		luke.firstname = "Luke";
@@ -206,7 +223,7 @@ public class ExecutableUpdateOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1827
-	public void findAndReplaceWithCollection() {
+	void findAndReplaceWithCollection() {
 
 		Person luke = new Person();
 		luke.firstname = "Luke";
@@ -220,7 +237,7 @@ public class ExecutableUpdateOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1827
-	public void findAndReplaceWithOptions() {
+	void findAndReplaceWithOptions() {
 
 		Person luke = new Person();
 		luke.firstname = "Luke";
@@ -232,7 +249,7 @@ public class ExecutableUpdateOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1827
-	public void findAndReplaceWithProjection() {
+	void findAndReplaceWithProjection() {
 
 		Person luke = new Person();
 		luke.firstname = "Luke";

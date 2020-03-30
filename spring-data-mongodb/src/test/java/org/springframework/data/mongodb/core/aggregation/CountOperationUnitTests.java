@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,10 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.bson.Document;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link CountOperation}.
@@ -28,16 +27,17 @@ import org.junit.Test;
  */
 public class CountOperationUnitTests {
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1549
+	@Test // DATAMONGO-1549
 	public void rejectsEmptyFieldName() {
-		new CountOperation("");
+		assertThatIllegalArgumentException().isThrownBy(() -> new CountOperation(""));
 	}
 
 	@Test // DATAMONGO-1549
 	public void shouldRenderCorrectly() {
 
 		CountOperation countOperation = new CountOperation("field");
-		assertThat(countOperation.toDocument(Aggregation.DEFAULT_CONTEXT), is(Document.parse("{$count : \"field\" }")));
+		assertThat(countOperation.toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{$count : \"field\" }"));
 	}
 
 	@Test // DATAMONGO-1549
@@ -45,8 +45,8 @@ public class CountOperationUnitTests {
 
 		CountOperation countOperation = new CountOperation("field");
 
-		assertThat(countOperation.getFields().exposesNoFields(), is(false));
-		assertThat(countOperation.getFields().exposesSingleFieldOnly(), is(true));
-		assertThat(countOperation.getFields().getField("field"), notNullValue());
+		assertThat(countOperation.getFields().exposesNoFields()).isFalse();
+		assertThat(countOperation.getFields().exposesSingleFieldOnly()).isTrue();
+		assertThat(countOperation.getFields().getField("field")).isNotNull();
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ import org.springframework.data.geo.Box;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import com.mongodb.client.MongoCollection;
 
@@ -48,7 +48,7 @@ import com.mongodb.client.MongoCollection;
  * @author Mark Paluch
  * @author Christoph Strobl
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:infrastructure.xml")
 public class MapReduceTests {
 
@@ -76,7 +76,7 @@ public class MapReduceTests {
 		template.dropCollection("jmr1_out");
 		template.dropCollection("jmr1");
 		template.dropCollection("jmrWithGeo");
-		template.getMongoDbFactory().getDb("jmr1-out-db").drop();
+		template.getMongoDbFactory().getMongoDatabase("jmr1-out-db").drop();
 	}
 
 	@Test // DATADOC-7
@@ -167,8 +167,9 @@ public class MapReduceTests {
 		mongoTemplate.mapReduce("jmr1", MAP_FUNCTION, REDUCE_FUNCTION,
 				options().outputDatabase("jmr1-out-db").outputCollection("jmr1-out"), ValueObject.class);
 
-		assertThat(template.getMongoDbFactory().getDb("jmr1-out-db").listCollectionNames().into(new ArrayList<>()))
-				.contains("jmr1-out");
+		assertThat(
+				template.getMongoDbFactory().getMongoDatabase("jmr1-out-db").listCollectionNames().into(new ArrayList<>()))
+						.contains("jmr1-out");
 	}
 
 	@Test // DATADOC-7
@@ -326,7 +327,7 @@ public class MapReduceTests {
 		{ "_id" : 3, "document_id" : "Resume", "author" : "Author", "content" : "...", "version" : 6 }
 		{ "_id" : 4, "document_id" : "Schema", "author" : "Someone Else", "content" : "...", "version" : 0.9 }
 		{ "_id" : 5, "document_id" : "Schema", "author" : "Someone Else", "content" : "...", "version" : 1 }
-		
+
 		 */
 		ContentAndVersion cv1 = new ContentAndVersion();
 		cv1.setDocumentId("mongoDB How-To");

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,18 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
 import java.util.List;
 
+import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
+
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -33,6 +37,7 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.User;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.Address;
+import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.Contact;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.Person;
@@ -40,9 +45,6 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
-
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 /**
  * Unit test for {@link ReactiveMongoQueryMethod}.
@@ -64,8 +66,8 @@ public class ReactiveMongoQueryMethodUnitTests {
 		ReactiveMongoQueryMethod queryMethod = queryMethod(SampleRepository.class, "method");
 		MongoEntityMetadata<?> metadata = queryMethod.getEntityInformation();
 
-		assertThat(metadata.getJavaType(), is(typeCompatibleWith(Address.class)));
-		assertThat(metadata.getCollectionName(), is("contact"));
+		assertThat(metadata.getJavaType()).isAssignableFrom(Address.class);
+		assertThat(metadata.getCollectionName()).isEqualTo("contact");
 	}
 
 	@Test // DATAMONGO-1444
@@ -74,8 +76,8 @@ public class ReactiveMongoQueryMethodUnitTests {
 		MongoQueryMethod queryMethod = queryMethod(SampleRepository2.class, "method");
 		MongoEntityMetadata<?> entityInformation = queryMethod.getEntityInformation();
 
-		assertThat(entityInformation.getJavaType(), is(typeCompatibleWith(Person.class)));
-		assertThat(entityInformation.getCollectionName(), is("person"));
+		assertThat(entityInformation.getJavaType()).isAssignableFrom(Person.class);
+		assertThat(entityInformation.getCollectionName()).isEqualTo("person");
 	}
 
 	@Test // DATAMONGO-1444
@@ -83,20 +85,20 @@ public class ReactiveMongoQueryMethodUnitTests {
 
 		MongoQueryMethod queryMethod = queryMethod(PersonRepository.class, "findByLocationNear", Point.class,
 				Distance.class, Pageable.class);
-		assertThat(queryMethod.isGeoNearQuery(), is(false));
-		assertThat(queryMethod.isPageQuery(), is(false));
+		assertThat(queryMethod.isGeoNearQuery()).isFalse();
+		assertThat(queryMethod.isPageQuery()).isFalse();
 
 		queryMethod = queryMethod(PersonRepository.class, "findByFirstname", String.class, Point.class);
-		assertThat(queryMethod.isGeoNearQuery(), is(false));
-		assertThat(queryMethod.isPageQuery(), is(false));
-		assertThat(queryMethod.getEntityInformation().getJavaType(), is(typeCompatibleWith(User.class)));
+		assertThat(queryMethod.isGeoNearQuery()).isFalse();
+		assertThat(queryMethod.isPageQuery()).isFalse();
+		assertThat(queryMethod.getEntityInformation().getJavaType()).isAssignableFrom(User.class);
 
-		assertThat(queryMethod(PersonRepository.class, "findByEmailAddress", String.class, Point.class).isGeoNearQuery(),
-				is(true));
-		assertThat(queryMethod(PersonRepository.class, "findByFirstname", String.class, Point.class).isGeoNearQuery(),
-				is(false));
-		assertThat(queryMethod(PersonRepository.class, "findByLastname", String.class, Point.class).isGeoNearQuery(),
-				is(true));
+		assertThat(queryMethod(PersonRepository.class, "findByEmailAddress", String.class, Point.class).isGeoNearQuery())
+				.isTrue();
+		assertThat(queryMethod(PersonRepository.class, "findByFirstname", String.class, Point.class).isGeoNearQuery())
+				.isFalse();
+		assertThat(queryMethod(PersonRepository.class, "findByLastname", String.class, Point.class).isGeoNearQuery())
+				.isTrue();
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1444
@@ -108,9 +110,10 @@ public class ReactiveMongoQueryMethodUnitTests {
 				new SpelAwareProxyProjectionFactory(), null);
 	}
 
-	@Test(expected = IllegalStateException.class) // DATAMONGO-1444
-	public void rejectsMonoPageableResult() throws Exception {
-		queryMethod(PersonRepository.class, "findMonoByLastname", String.class, Pageable.class);
+	@Test // DATAMONGO-1444
+	public void rejectsMonoPageableResult() {
+		assertThatIllegalStateException()
+				.isThrownBy(() -> queryMethod(PersonRepository.class, "findMonoByLastname", String.class, Pageable.class));
 	}
 
 	@Test // DATAMONGO-1444
@@ -123,8 +126,8 @@ public class ReactiveMongoQueryMethodUnitTests {
 
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "emptyMetaAnnotation");
 
-		assertThat(method.hasQueryMetaAttributes(), is(true));
-		assertThat(method.getQueryMetaAttributes().hasValues(), is(false));
+		assertThat(method.hasQueryMetaAttributes()).isTrue();
+		assertThat(method.getQueryMetaAttributes().hasValues()).isFalse();
 	}
 
 	@Test // DATAMONGO-1444
@@ -132,26 +135,46 @@ public class ReactiveMongoQueryMethodUnitTests {
 
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "metaWithMaxExecutionTime");
 
-		assertThat(method.hasQueryMetaAttributes(), is(true));
-		assertThat(method.getQueryMetaAttributes().getMaxTimeMsec(), is(100L));
+		assertThat(method.hasQueryMetaAttributes()).isTrue();
+		assertThat(method.getQueryMetaAttributes().getMaxTimeMsec()).isEqualTo(100L);
 	}
 
-	@Test(expected = InvalidDataAccessApiUsageException.class) // DATAMONGO-1444
-	public void throwsExceptionOnWrappedPage() throws Exception {
-		queryMethod(PersonRepository.class, "findMonoPageByLastname", String.class, Pageable.class);
+	@Test // DATAMONGO-1444
+	public void throwsExceptionOnWrappedPage() {
+		assertThatExceptionOfType(InvalidDataAccessApiUsageException.class)
+				.isThrownBy(() -> queryMethod(PersonRepository.class, "findMonoPageByLastname", String.class, Pageable.class));
 	}
 
-	@Test(expected = InvalidDataAccessApiUsageException.class) // DATAMONGO-1444
-	public void throwsExceptionOnWrappedSlice() throws Exception {
-		queryMethod(PersonRepository.class, "findMonoSliceByLastname", String.class, Pageable.class);
+	@Test // DATAMONGO-1444
+	public void throwsExceptionOnWrappedSlice() {
+		assertThatExceptionOfType(InvalidDataAccessApiUsageException.class)
+				.isThrownBy(() -> queryMethod(PersonRepository.class, "findMonoSliceByLastname", String.class, Pageable.class));
 	}
 
 	@Test // DATAMONGO-1444
 	public void fallsBackToRepositoryDomainTypeIfMethodDoesNotReturnADomainType() throws Exception {
 
-		MongoQueryMethod method = queryMethod(PersonRepository.class, "deleteByUserName", String.class);
+		ReactiveMongoQueryMethod method = queryMethod(PersonRepository.class, "deleteByUserName", String.class);
 
-		assertThat(method.getEntityInformation().getJavaType(), is(typeCompatibleWith(User.class)));
+		assertThat(method.getEntityInformation().getJavaType()).isAssignableFrom(User.class);
+	}
+
+	@Test // DATAMONGO-2153
+	public void findsAnnotatedAggregation() throws Exception {
+
+		ReactiveMongoQueryMethod method = queryMethod(PersonRepository.class, "findByAggregation");
+
+		Assertions.assertThat(method.hasAnnotatedAggregation()).isTrue();
+		Assertions.assertThat(method.getAnnotatedAggregation()).hasSize(1);
+	}
+
+	@Test // DATAMONGO-2153
+	public void detectsCollationForAggregation() throws Exception {
+
+		ReactiveMongoQueryMethod method = queryMethod(PersonRepository.class, "findByAggregationWithCollation");
+
+		Assertions.assertThat(method.hasAnnotatedCollation()).isTrue();
+		Assertions.assertThat(method.getAnnotatedCollation()).isEqualTo("de_AT");
 	}
 
 	private ReactiveMongoQueryMethod queryMethod(Class<?> repository, String name, Class<?>... parameters)
@@ -188,6 +211,13 @@ public class ReactiveMongoQueryMethodUnitTests {
 		Flux<User> metaWithMaxExecutionTime();
 
 		void deleteByUserName(String userName);
+
+		@Aggregation("{'$group': { _id: '$templateId', maxVersion : { $max : '$version'} } }")
+		Flux<User> findByAggregation();
+
+		@Aggregation(pipeline = "{'$group': { _id: '$templateId', maxVersion : { $max : '$version'} } }",
+				collation = "de_AT")
+		Flux<User> findByAggregationWithCollation();
 	}
 
 	interface SampleRepository extends Repository<Contact, Long> {

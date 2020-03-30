@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,21 +15,21 @@
  */
 package org.springframework.data.mongodb.core.mapreduce;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.data.Offset.offset;
 import static org.springframework.data.mongodb.core.mapreduce.GroupBy.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import org.bson.Document;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
+import org.springframework.data.mongodb.test.util.MongoServerCondition;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.mongodb.client.MongoCollection;
 
@@ -40,19 +40,17 @@ import com.mongodb.client.MongoCollection;
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith({ SpringExtension.class, MongoServerCondition.class })
+@EnableIfMongoServerVersion(isLessThan = "4.1")
 @ContextConfiguration("classpath:infrastructure.xml")
 public class GroupByTests {
 
+	static final String GROUP_TEST_COLLECTION = "group_test_collection";
+
 	@Autowired MongoTemplate mongoTemplate;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
-		cleanDb();
-	}
-
-	@After
-	public void cleanUp() {
 		cleanDb();
 	}
 
@@ -66,7 +64,7 @@ public class GroupByTests {
 
 		Document gc = new GroupBy("a").getGroupByObject();
 
-		assertThat(gc, is(Document.parse("{ \"key\" : { \"a\" : 1} , \"$reduce\" :  null  , \"initial\" :  null }")));
+		assertThat(gc).isEqualTo(Document.parse("{ \"key\" : { \"a\" : 1} , \"$reduce\" :  null  , \"initial\" :  null }"));
 	}
 
 	@Test
@@ -74,8 +72,8 @@ public class GroupByTests {
 
 		Document gc = GroupBy.key("a", "b").getGroupByObject();
 
-		assertThat(gc,
-				is(Document.parse("{ \"key\" : { \"a\" : 1 , \"b\" : 1} , \"$reduce\" :  null  , \"initial\" :  null }")));
+		assertThat(gc).isEqualTo(
+				Document.parse("{ \"key\" : { \"a\" : 1 , \"b\" : 1} , \"$reduce\" :  null  , \"initial\" :  null }"));
 	}
 
 	@Test
@@ -83,15 +81,15 @@ public class GroupByTests {
 
 		Document gc = GroupBy.keyFunction("classpath:keyFunction.js").getGroupByObject();
 
-		assertThat(gc, is(
-				Document.parse("{ \"$keyf\" : \"classpath:keyFunction.js\" , \"$reduce\" :  null  , \"initial\" :  null }")));
+		assertThat(gc).isEqualTo(
+				Document.parse("{ \"$keyf\" : \"classpath:keyFunction.js\" , \"$reduce\" :  null  , \"initial\" :  null }"));
 	}
 
 	@Test
 	public void simpleGroupFunction() {
 
 		createGroupByData();
-		GroupByResults<XObject> results = mongoTemplate.group("group_test_collection", GroupBy.key("x")
+		GroupByResults<XObject> results = mongoTemplate.group(GROUP_TEST_COLLECTION, GroupBy.key("x")
 				.initialDocument(new Document("count", 0)).reduceFunction("function(doc, prev) { prev.count += 1 }"),
 				XObject.class);
 
@@ -104,7 +102,7 @@ public class GroupByTests {
 		createGroupByData();
 		GroupByResults<XObject> results = mongoTemplate
 				.group(
-						"group_test_collection", GroupBy.keyFunction("function(doc) { return { x : doc.x }; }")
+						GROUP_TEST_COLLECTION, GroupBy.keyFunction("function(doc) { return { x : doc.x }; }")
 								.initialDocument("{ count: 0 }").reduceFunction("function(doc, prev) { prev.count += 1 }"),
 						XObject.class);
 
@@ -115,7 +113,7 @@ public class GroupByTests {
 	public void simpleGroupWithFunctionsAsResources() {
 
 		createGroupByData();
-		GroupByResults<XObject> results = mongoTemplate.group("group_test_collection",
+		GroupByResults<XObject> results = mongoTemplate.group(GROUP_TEST_COLLECTION,
 				GroupBy.keyFunction("classpath:keyFunction.js").initialDocument("{ count: 0 }")
 						.reduceFunction("classpath:groupReduce.js"),
 				XObject.class);
@@ -127,7 +125,7 @@ public class GroupByTests {
 	public void simpleGroupWithQueryAndFunctionsAsResources() {
 
 		createGroupByData();
-		GroupByResults<XObject> results = mongoTemplate.group(where("x").gt(0), "group_test_collection",
+		GroupByResults<XObject> results = mongoTemplate.group(where("x").gt(0), GROUP_TEST_COLLECTION,
 				keyFunction("classpath:keyFunction.js").initialDocument("{ count: 0 }")
 						.reduceFunction("classpath:groupReduce.js"),
 				XObject.class);
@@ -140,24 +138,24 @@ public class GroupByTests {
 		int numResults = 0;
 		for (XObject xObject : results) {
 			if (xObject.getX() == 1) {
-				Assert.assertEquals(2, xObject.getCount(), 0.001);
+				assertThat(xObject.getCount()).isCloseTo(2, offset(0.001f));
 			}
 			if (xObject.getX() == 2) {
-				Assert.assertEquals(1, xObject.getCount(), 0.001);
+				assertThat(xObject.getCount()).isCloseTo(1, offset(0.001f));
 			}
 			if (xObject.getX() == 3) {
-				Assert.assertEquals(3, xObject.getCount(), 0.001);
+				assertThat(xObject.getCount()).isCloseTo(3, offset(0.001f));
 			}
 			numResults++;
 		}
-		assertThat(numResults, is(3));
-		assertThat(results.getKeys(), is(3));
-		assertEquals(6, results.getCount(), 0.001);
+		assertThat(numResults).isEqualTo(3);
+		assertThat(results.getKeys()).isEqualTo(3);
+		assertThat(results.getCount()).isCloseTo(6, offset(0.001));
 	}
 
 	private void createGroupByData() {
 
-		MongoCollection<Document> c = mongoTemplate.getDb().getCollection("group_test_collection", Document.class);
+		MongoCollection<Document> c = mongoTemplate.getDb().getCollection(GROUP_TEST_COLLECTION, Document.class);
 
 		c.insertOne(new Document("x", 1));
 		c.insertOne(new Document("x", 1));

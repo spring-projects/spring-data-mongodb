@@ -511,6 +511,27 @@ public class ArithmeticOperators {
 					: AccumulatorOperators.StdDevSamp.stdDevSampOf(expression);
 		}
 
+		/**
+		 * Creates new {@link AggregationExpression} that rounds a number to a whole integer or to a specified decimal
+		 * place.
+		 *
+		 * @return new instance of {@link Round}.
+		 * @since 3.0
+		 */
+		public Round round() {
+			return usesFieldRef() ? Round.roundValueOf(fieldReference) : Round.roundValueOf(expression);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that rounds a number to a specified decimal place.
+		 *
+		 * @return new instance of {@link Round}.
+		 * @since 3.0
+		 */
+		public Round roundToPlace(int place) {
+			return round().place(place);
+		}
+
 		private boolean usesFieldRef() {
 			return fieldReference != null;
 		}
@@ -1420,6 +1441,102 @@ public class ArithmeticOperators {
 
 			Assert.notNull(value, "Value must not be null!");
 			return new Trunc(value);
+		}
+	}
+
+	/**
+	 * {@link Round} rounds a number to a whole integer or to a specified decimal place.
+	 * <ul>
+	 * <li>If {@link Round#place(int)} resolves to a positive integer, {@code $round} rounds to the given decimal
+	 * places.</li>
+	 * <li>If {@link Round#place(int)} resolves to a negative integer, {@code $round} rounds to the left of the
+	 * decimal.</li>
+	 * <li>If {@link Round#place(int)} resolves to a zero, {@code $round} rounds using the first digit to the right of the
+	 * decimal.</li>
+	 * </ul>
+	 *
+	 * @since 3.0
+	 */
+	public static class Round extends AbstractAggregationExpression {
+
+		private Round(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Round the value of the field that resolves to an integer, double, decimal, or long.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link Round}.
+		 */
+		public static Round roundValueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new Round(Collections.singletonList(Fields.field(fieldReference)));
+		}
+
+		/**
+		 * Round the outcome of the given expression hat resolves to an integer, double, decimal, or long.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Round}.
+		 */
+		public static Round roundValueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new Round(Collections.singletonList(expression));
+		}
+
+		/**
+		 * Round the given numeric (integer, double, decimal, or long) value.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return new instance of {@link Round}.
+		 */
+		public static Round round(Number value) {
+
+			Assert.notNull(value, "Value must not be null!");
+			return new Round(Collections.singletonList(value));
+		}
+
+		/**
+		 * The place to round to. Can be between -20 and 100, exclusive.
+		 *
+		 * @param place
+		 * @return new instance of {@link Round}.
+		 */
+		public Round place(int place) {
+			return new Round(append(place));
+		}
+
+		/**
+		 * The place to round to defined by an expression that resolves to an integer between -20 and 100, exclusive.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Round}.
+		 */
+		public Round placeOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new Round(append(expression));
+		}
+
+		/**
+		 * The place to round to defined by via a field reference that resolves to an integer between -20 and 100,
+		 * exclusive.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link Round}.
+		 */
+		public Round placeOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "fieldReference must not be null!");
+			return new Round(append(Fields.field(fieldReference)));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$round";
 		}
 	}
 }

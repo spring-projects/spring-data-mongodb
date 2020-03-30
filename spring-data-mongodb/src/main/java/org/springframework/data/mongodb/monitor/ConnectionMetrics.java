@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import org.springframework.jmx.export.annotation.ManagedMetric;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.jmx.support.MetricType;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 
 /**
  * JMX Metrics for Connections
@@ -30,6 +30,10 @@ import com.mongodb.MongoClient;
 @ManagedResource(description = "Connection metrics")
 public class ConnectionMetrics extends AbstractMonitor {
 
+	/**
+	 * @param mongoClient
+	 * @since 2.2
+	 */
 	public ConnectionMetrics(MongoClient mongoClient) {
 		super(mongoClient);
 	}

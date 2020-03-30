@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,10 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 
 /**
@@ -29,28 +29,28 @@ import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedFi
  */
 public class ExposedFieldsUnitTests {
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void rejectsNullFields() {
-		ExposedFields.from((ExposedField) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> ExposedFields.from((ExposedField) null));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void rejectsNullFieldsForSynthetics() {
-		ExposedFields.synthetic(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> ExposedFields.synthetic(null));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void rejectsNullFieldsForNonSynthetics() {
-		ExposedFields.nonSynthetic(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> ExposedFields.nonSynthetic(null));
 	}
 
 	@Test
 	public void exposesSingleField() {
 
 		ExposedFields fields = ExposedFields.synthetic(Fields.fields("foo"));
-		assertThat(fields.exposesSingleFieldOnly(), is(true));
+		assertThat(fields.exposesSingleFieldOnly()).isTrue();
 
 		fields = fields.and(new ExposedField("bar", true));
-		assertThat(fields.exposesSingleFieldOnly(), is(false));
+		assertThat(fields.exposesSingleFieldOnly()).isFalse();
 	}
 }

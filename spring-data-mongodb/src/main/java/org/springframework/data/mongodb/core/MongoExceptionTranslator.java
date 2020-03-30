@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the original author or authors.
+ * Copyright 2010-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
-import org.springframework.data.mongodb.BulkOperationException;
 import org.springframework.data.mongodb.ClientSessionException;
 import org.springframework.data.mongodb.MongoTransactionException;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
@@ -37,7 +36,6 @@ import org.springframework.data.mongodb.util.MongoDbErrorCodes;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
-import com.mongodb.BulkWriteException;
 import com.mongodb.MongoBulkWriteException;
 import com.mongodb.MongoException;
 import com.mongodb.MongoServerException;
@@ -112,10 +110,6 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 			return new DataIntegrityViolationException(ex.getMessage(), ex);
 		}
 
-		if (ex instanceof BulkWriteException) {
-			return new BulkOperationException(ex.getMessage(), (BulkWriteException) ex);
-		}
-
 		// All other MongoExceptions
 		if (ex instanceof MongoException) {
 
@@ -135,6 +129,7 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 			} else if (MongoDbErrorCodes.isTransactionFailureCode(code)) {
 				return new MongoTransactionException(ex.getMessage(), ex);
 			}
+
 			return new UncategorizedMongoDbException(ex.getMessage(), ex);
 		}
 

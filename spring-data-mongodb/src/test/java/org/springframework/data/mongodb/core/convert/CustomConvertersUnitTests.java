@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,23 +15,25 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.HashSet;
 
 import org.bson.Document;
-import org.hamcrest.CoreMatchers;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.convert.CustomConversions;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 /**
@@ -39,20 +41,20 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
  *
  * @author Oliver Gierke
  */
-@RunWith(MockitoJUnitRunner.class)
-public class CustomConvertersUnitTests {
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+class CustomConvertersUnitTests {
 
-	MappingMongoConverter converter;
+	private MappingMongoConverter converter;
 
 	@Mock BarToDocumentConverter barToDocumentConverter;
 	@Mock DocumentToBarConverter documentToBarConverter;
-	@Mock MongoDbFactory mongoDbFactory;
+	@Mock MongoDatabaseFactory mongoDbFactory;
 
-	MongoMappingContext context;
+	private MongoMappingContext context;
 
-	@Before
-	@SuppressWarnings("unchecked")
-	public void setUp() throws Exception {
+	@BeforeEach
+	void setUp() {
 
 		when(barToDocumentConverter.convert(any(Bar.class))).thenReturn(new Document());
 		when(documentToBarConverter.convert(any(Document.class))).thenReturn(new Bar());
@@ -61,7 +63,7 @@ public class CustomConvertersUnitTests {
 				Arrays.asList(barToDocumentConverter, documentToBarConverter));
 
 		context = new MongoMappingContext();
-		context.setInitialEntitySet(new HashSet<Class<?>>(Arrays.asList(Foo.class, Bar.class)));
+		context.setInitialEntitySet(new HashSet<>(Arrays.asList(Foo.class, Bar.class)));
 		context.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
 		context.initialize();
 
@@ -71,7 +73,7 @@ public class CustomConvertersUnitTests {
 	}
 
 	@Test // DATADOC-101
-	public void nestedToDocumentConverterGetsInvoked() {
+	void nestedToDocumentConverterGetsInvoked() {
 
 		Foo foo = new Foo();
 		foo.bar = new Bar();
@@ -81,7 +83,7 @@ public class CustomConvertersUnitTests {
 	}
 
 	@Test // DATADOC-101
-	public void nestedFromDocumentConverterGetsInvoked() {
+	void nestedFromDocumentConverterGetsInvoked() {
 
 		Document document = new Document();
 		document.put("bar", new Document());
@@ -91,25 +93,25 @@ public class CustomConvertersUnitTests {
 	}
 
 	@Test // DATADOC-101
-	public void toDocumentConverterGetsInvoked() {
+	void toDocumentConverterGetsInvoked() {
 
 		converter.write(new Bar(), new Document());
 		verify(barToDocumentConverter).convert(any(Bar.class));
 	}
 
 	@Test // DATADOC-101
-	public void fromDocumentConverterGetsInvoked() {
+	void fromDocumentConverterGetsInvoked() {
 
 		converter.read(Bar.class, new Document());
 		verify(documentToBarConverter).convert(any(Document.class));
 	}
 
 	@Test // DATADOC-101
-	public void foo() {
+	void foo() {
 		Document document = new Document();
 		document.put("foo", null);
 
-		Assert.assertThat(document.containsKey("foo"), CoreMatchers.is(true));
+		assertThat(document).containsKey("foo");
 	}
 
 	public static class Foo {
@@ -122,11 +124,7 @@ public class CustomConvertersUnitTests {
 		public String foo;
 	}
 
-	private interface BarToDocumentConverter extends Converter<Bar, Document> {
+	private interface BarToDocumentConverter extends Converter<Bar, Document> {}
 
-	}
-
-	private interface DocumentToBarConverter extends Converter<Document, Bar> {
-
-	}
+	private interface DocumentToBarConverter extends Converter<Document, Bar> {}
 }

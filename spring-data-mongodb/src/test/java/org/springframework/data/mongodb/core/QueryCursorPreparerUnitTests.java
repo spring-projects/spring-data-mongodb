@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,18 +22,21 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoTemplate.QueryCursorPreparer;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
-import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.Query;
 
+import com.mongodb.MongoClientSettings;
 import com.mongodb.client.FindIterable;
 
 /**
@@ -43,29 +46,29 @@ import com.mongodb.client.FindIterable;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner.class)
-public class QueryCursorPreparerUnitTests {
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+class QueryCursorPreparerUnitTests {
 
-	@Mock MongoDbFactory factory;
+	@Mock MongoDatabaseFactory factory;
 	@Mock MongoExceptionTranslator exceptionTranslatorMock;
 	@Mock FindIterable<Document> cursor;
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	void setUp() {
 
 		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslatorMock);
+		when(factory.getCodecRegistry()).thenReturn(MongoClientSettings.getDefaultCodecRegistry());
 		when(cursor.batchSize(anyInt())).thenReturn(cursor);
 		when(cursor.comment(anyString())).thenReturn(cursor);
 		when(cursor.maxTime(anyLong(), any())).thenReturn(cursor);
-		when(cursor.maxScan(anyLong())).thenReturn(cursor);
 		when(cursor.hint(any())).thenReturn(cursor);
-		when(cursor.snapshot(anyBoolean())).thenReturn(cursor);
 		when(cursor.noCursorTimeout(anyBoolean())).thenReturn(cursor);
 		when(cursor.collation(any())).thenReturn(cursor);
 	}
 
 	@Test // DATAMONGO-185
-	public void appliesHintsCorrectly() {
+	void appliesHintsCorrectly() {
 
 		Query query = query(where("foo").is("bar")).withHint("{ age: 1 }");
 		prepare(query);
@@ -73,28 +76,47 @@ public class QueryCursorPreparerUnitTests {
 		verify(cursor).hint(new Document("age", 1));
 	}
 
-	@Test // DATAMONGO-957
-	public void doesNotApplyMetaWhenEmpty() {
+	@Test // DATAMONGO-2365
+	void appliesIndexNameAsHintCorrectly() {
 
-		Query query = query(where("foo").is("bar"));
-		query.setMeta(new Meta());
-
+		Query query = query(where("foo").is("bar")).withHint("idx-1");
 		prepare(query);
 
-		verify(cursor, never()).modifiers(any(Document.class));
+		verify(cursor).hintString("idx-1");
 	}
 
-	@Test // DATAMONGO-957
-	public void appliesMaxScanCorrectly() {
+	@Test // DATAMONGO-2319
+	void appliesDocumentHintsCorrectly() {
 
-		Query query = query(where("foo").is("bar")).maxScan(100);
+		Query query = query(where("foo").is("bar")).withHint(Document.parse("{ age: 1 }"));
 		prepare(query);
 
-		verify(cursor).maxScan(100);
+		verify(cursor).hint(new Document("age", 1));
 	}
 
+	// TODO
+	// @Test // DATAMONGO-957
+	// public void doesNotApplyMetaWhenEmpty() {
+	//
+	// Query query = query(where("foo").is("bar"));
+	// query.setMeta(new Meta());
+	//
+	// prepare(query);
+	//
+	// verify(cursor, never()).modifiers(any(Document.class));
+	// }
+
+	// @Test // DATAMONGO-957
+	// public void appliesMaxScanCorrectly() {
+	//
+	// Query query = query(where("foo").is("bar")).maxScan(100);
+	// prepare(query);
+	//
+	// verify(cursor).maxScan(100);
+	// }
+
 	@Test // DATAMONGO-957
-	public void appliesMaxTimeCorrectly() {
+	void appliesMaxTimeCorrectly() {
 
 		Query query = query(where("foo").is("bar")).maxTime(1, TimeUnit.SECONDS);
 		prepare(query);
@@ -103,7 +125,7 @@ public class QueryCursorPreparerUnitTests {
 	}
 
 	@Test // DATAMONGO-957
-	public void appliesCommentCorrectly() {
+	void appliesCommentCorrectly() {
 
 		Query query = query(where("foo").is("bar")).comment("spring data");
 		prepare(query);
@@ -111,17 +133,18 @@ public class QueryCursorPreparerUnitTests {
 		verify(cursor).comment("spring data");
 	}
 
-	@Test // DATAMONGO-957
-	public void appliesSnapshotCorrectly() {
-
-		Query query = query(where("foo").is("bar")).useSnapshot();
-		prepare(query);
-
-		verify(cursor).snapshot(true);
-	}
+	// TODO
+	// @Test // DATAMONGO-957
+	// public void appliesSnapshotCorrectly() {
+	//
+	// Query query = query(where("foo").is("bar")).useSnapshot();
+	// prepare(query);
+	//
+	// verify(cursor).snapshot(true);
+	// }
 
 	@Test // DATAMONGO-1480
-	public void appliesNoCursorTimeoutCorrectly() {
+	void appliesNoCursorTimeoutCorrectly() {
 
 		Query query = query(where("foo").is("bar")).noCursorTimeout();
 
@@ -131,7 +154,7 @@ public class QueryCursorPreparerUnitTests {
 	}
 
 	@Test // DATAMONGO-1518
-	public void appliesCollationCorrectly() {
+	void appliesCollationCorrectly() {
 
 		prepare(new BasicQuery("{}").collation(Collation.of("fr")));
 
@@ -139,7 +162,7 @@ public class QueryCursorPreparerUnitTests {
 	}
 
 	@Test // DATAMONGO-1311
-	public void appliesBatchSizeCorrectly() {
+	void appliesBatchSizeCorrectly() {
 
 		prepare(new BasicQuery("{}").cursorBatchSize(100));
 

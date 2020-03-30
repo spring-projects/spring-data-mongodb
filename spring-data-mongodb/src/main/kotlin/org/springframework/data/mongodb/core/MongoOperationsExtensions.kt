@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,8 +24,6 @@ import org.springframework.data.mongodb.core.BulkOperations.BulkMode
 import org.springframework.data.mongodb.core.aggregation.Aggregation
 import org.springframework.data.mongodb.core.aggregation.AggregationResults
 import org.springframework.data.mongodb.core.index.IndexOperations
-import org.springframework.data.mongodb.core.mapreduce.GroupBy
-import org.springframework.data.mongodb.core.mapreduce.GroupByResults
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions
 import org.springframework.data.mongodb.core.mapreduce.MapReduceResults
 import org.springframework.data.mongodb.core.query.Criteria
@@ -200,7 +198,9 @@ inline fun <reified T : Any> MongoOperations.findAll(collectionName: String? = n
  * @author Sebastien Deleuze
  * @since 2.0
  */
-inline fun <reified T : Any> MongoOperations.group(inputCollectionName: String, groupBy: GroupBy): GroupByResults<T> =
+@Suppress("DEPRECATION")
+@Deprecated("since 2.2, the `group` command has been removed in MongoDB Server 4.2.0.", replaceWith = ReplaceWith("aggregate<T>()"))
+inline fun <reified T : Any> MongoOperations.group(inputCollectionName: String, groupBy: org.springframework.data.mongodb.core.mapreduce.GroupBy): org.springframework.data.mongodb.core.mapreduce.GroupByResults<T> =
 		group(inputCollectionName, groupBy, T::class.java)
 
 /**
@@ -209,7 +209,9 @@ inline fun <reified T : Any> MongoOperations.group(inputCollectionName: String, 
  * @author Sebastien Deleuze
  * @since 2.0
  */
-inline fun <reified T : Any> MongoOperations.group(criteria: Criteria, inputCollectionName: String, groupBy: GroupBy): GroupByResults<T> =
+@Suppress("DEPRECATION")
+@Deprecated("since 2.2, the `group` command has been removed in MongoDB Server 4.2.0.", replaceWith = ReplaceWith("aggregate<T>()"))
+inline fun <reified T : Any> MongoOperations.group(criteria: Criteria, inputCollectionName: String, groupBy: org.springframework.data.mongodb.core.mapreduce.GroupBy): org.springframework.data.mongodb.core.mapreduce.GroupByResults<T> =
 		group(criteria, inputCollectionName, groupBy, T::class.java)
 
 /**
@@ -276,6 +278,8 @@ inline fun <reified T : Any> MongoOperations.mapReduce(query: Query, collectionN
  * @author Sebastien Deleuze
  * @since 2.0
  */
+@Suppress("DEPRECATION")
+@Deprecated("Since 2.2, the `geoNear` command has been removed in MongoDB Server 4.2.0. Use Aggregations with `Aggregation.geoNear(NearQuery, String)` instead.", replaceWith = ReplaceWith("aggregate<T>()"))
 inline fun <reified T : Any> MongoOperations.geoNear(near: NearQuery, collectionName: String? = null): GeoResults<T> =
 		if (collectionName != null) geoNear(near, T::class.java, collectionName)
 		else geoNear(near, T::class.java)
@@ -339,7 +343,7 @@ inline fun <reified T : Any> MongoOperations.findById(id: Any, collectionName: S
  */
 @Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("findDistinct<T, E>(field)"))
 inline fun <reified T : Any> MongoOperations.findDistinct(field: String, entityClass: KClass<*>): List<T> =
-		findDistinct(field, entityClass.java, T::class.java);
+		findDistinct(field, entityClass.java, T::class.java)
 
 /**
  * Extension for [MongoOperations.findDistinct] leveraging reified type parameters.

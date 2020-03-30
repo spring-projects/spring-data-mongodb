@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,13 +18,19 @@ package org.springframework.data.mongodb.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
+import org.springframework.data.mongodb.SpringDataMongoDB;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
+import com.mongodb.MongoClientSettings;
+import com.mongodb.MongoClientSettings.Builder;
 import com.mongodb.reactivestreams.client.MongoClient;
+import com.mongodb.reactivestreams.client.MongoClients;
 
 /**
  * Base class for reactive Spring Data MongoDB configuration using JavaConfig.
@@ -34,25 +40,33 @@ import com.mongodb.reactivestreams.client.MongoClient;
  * @since 2.0
  * @see MongoConfigurationSupport
  */
-@Configuration
+@Configuration(proxyBeanMethods = false)
 public abstract class AbstractReactiveMongoConfiguration extends MongoConfigurationSupport {
 
 	/**
 	 * Return the Reactive Streams {@link MongoClient} instance to connect to. Annotate with {@link Bean} in case you want
-	 * to expose a {@link MongoClient} instance to the {@link org.springframework.context.ApplicationContext}.
+	 * to expose a {@link MongoClient} instance to the {@link org.springframework.context.ApplicationContext}. <br />
+	 * Override {@link #mongoClientSettings()} to configure connection details.
 	 *
 	 * @return never {@literal null}.
+	 * @see #mongoClientSettings()
+	 * @see #configureClientSettings(Builder)
 	 */
-	public abstract MongoClient reactiveMongoClient();
+	public MongoClient reactiveMongoClient() {
+		return createReactiveMongoClient(mongoClientSettings());
+	}
 
 	/**
 	 * Creates {@link ReactiveMongoOperations}.
 	 *
+	 * @see #reactiveMongoDbFactory()
+	 * @see #mappingMongoConverter(ReactiveMongoDatabaseFactory, MongoCustomConversions, MongoMappingContext)
 	 * @return never {@literal null}.
 	 */
 	@Bean
-	public ReactiveMongoOperations reactiveMongoTemplate() throws Exception {
-		return new ReactiveMongoTemplate(reactiveMongoDbFactory(), mappingMongoConverter());
+	public ReactiveMongoTemplate reactiveMongoTemplate(ReactiveMongoDatabaseFactory databaseFactory,
+			MappingMongoConverter mongoConverter) {
+		return new ReactiveMongoTemplate(databaseFactory, mongoConverter);
 	}
 
 	/**
@@ -60,7 +74,7 @@ public abstract class AbstractReactiveMongoConfiguration extends MongoConfigurat
 	 * {@link MongoClient} instance configured in {@link #reactiveMongoClient()}.
 	 *
 	 * @see #reactiveMongoClient()
-	 * @see #reactiveMongoTemplate()
+	 * @see #reactiveMongoTemplate(ReactiveMongoDatabaseFactory, MappingMongoConverter)
 	 * @return never {@literal null}.
 	 */
 	@Bean
@@ -70,20 +84,31 @@ public abstract class AbstractReactiveMongoConfiguration extends MongoConfigurat
 
 	/**
 	 * Creates a {@link MappingMongoConverter} using the configured {@link #reactiveMongoDbFactory()} and
-	 * {@link #mongoMappingContext()}. Will get {@link #customConversions()} applied.
+	 * {@link #mongoMappingContext(MongoCustomConversions)}. Will get {@link #customConversions()} applied.
 	 *
 	 * @see #customConversions()
-	 * @see #mongoMappingContext()
+	 * @see #mongoMappingContext(MongoCustomConversions)
 	 * @see #reactiveMongoDbFactory()
 	 * @return never {@literal null}.
-	 * @throws Exception
 	 */
 	@Bean
-	public MappingMongoConverter mappingMongoConverter() throws Exception {
+	public MappingMongoConverter mappingMongoConverter(ReactiveMongoDatabaseFactory databaseFactory,
+			MongoCustomConversions customConversions, MongoMappingContext mappingContext) {
 
-		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mongoMappingContext());
-		converter.setCustomConversions(customConversions());
+		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext);
+		converter.setCustomConversions(customConversions);
+		converter.setCodecRegistryProvider(databaseFactory);
 
 		return converter;
+	}
+
+	/**
+	 * Create the Reactive Streams {@link MongoClient} instance with given {@link MongoClientSettings}.
+	 *
+	 * @return never {@literal null}.
+	 * @since 3.0
+	 */
+	protected MongoClient createReactiveMongoClient(MongoClientSettings settings) {
+		return MongoClients.create(settings, SpringDataMongoDB.driverInformation());
 	}
 }

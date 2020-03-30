@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,15 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
-import static org.junit.Assume.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,10 +31,13 @@ import org.springframework.dao.UncategorizedDataAccessException;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.script.ExecutableMongoScript;
 import org.springframework.data.mongodb.core.script.NamedMongoScript;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 
 /**
  * Integration tests for {@link DefaultScriptOperations}.
@@ -44,9 +46,12 @@ import com.mongodb.MongoClient;
  * @author Oliver Gierke
  * @since 1.7
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
+@EnableIfMongoServerVersion(isLessThan = "4.1.0")
 @ContextConfiguration
 public class DefaultScriptOperationsTests {
+
+	static @Client MongoClient mongoClient;
 
 	@Configuration
 	static class Config {
@@ -55,14 +60,13 @@ public class DefaultScriptOperationsTests {
 
 		@Bean
 		public MongoClient mongoClient() {
-			return new MongoClient();
+			return mongoClient;
 		}
 
 		@Bean
 		public MongoTemplate template() throws Exception {
 			return new MongoTemplate(mongoClient(), DB_NAME);
 		}
-
 	}
 
 	static final String JAVASCRIPT_COLLECTION_NAME = "system.js";
@@ -74,7 +78,7 @@ public class DefaultScriptOperationsTests {
 	@Autowired MongoTemplate template;
 	DefaultScriptOperations scriptOps;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		template.getCollection(JAVASCRIPT_COLLECTION_NAME).deleteMany(new Document());
@@ -83,18 +87,18 @@ public class DefaultScriptOperationsTests {
 
 	@Test // DATAMONGO-479
 	public void executeShouldDirectlyRunExecutableMongoScript() {
-		assertThat(scriptOps.execute(EXECUTABLE_SCRIPT, 10), is((Object) 10D));
+		assertThat(scriptOps.execute(EXECUTABLE_SCRIPT, 10)).isEqualTo((Object) 10D);
 	}
 
 	@Test // DATAMONGO-479
 	public void saveShouldStoreCallableScriptCorrectly() {
 
 		Query query = query(where("_id").is(SCRIPT_NAME));
-		assumeThat(template.exists(query, JAVASCRIPT_COLLECTION_NAME), is(false));
+		assertThat(template.exists(query, JAVASCRIPT_COLLECTION_NAME)).isFalse();
 
 		scriptOps.register(CALLABLE_SCRIPT);
 
-		assumeThat(template.exists(query, JAVASCRIPT_COLLECTION_NAME), is(true));
+		assertThat(template.exists(query, JAVASCRIPT_COLLECTION_NAME)).isTrue();
 	}
 
 	@Test // DATAMONGO-479
@@ -103,7 +107,7 @@ public class DefaultScriptOperationsTests {
 		NamedMongoScript script = scriptOps.register(EXECUTABLE_SCRIPT);
 
 		Query query = query(where("_id").is(script.getName()));
-		assumeThat(template.exists(query, JAVASCRIPT_COLLECTION_NAME), is(true));
+		assertThat(template.exists(query, JAVASCRIPT_COLLECTION_NAME)).isTrue();
 	}
 
 	@Test // DATAMONGO-479
@@ -112,11 +116,11 @@ public class DefaultScriptOperationsTests {
 		scriptOps.register(CALLABLE_SCRIPT);
 
 		Query query = query(where("_id").is(SCRIPT_NAME));
-		assumeThat(template.exists(query, JAVASCRIPT_COLLECTION_NAME), is(true));
+		assertThat(template.exists(query, JAVASCRIPT_COLLECTION_NAME)).isTrue();
 
 		Object result = scriptOps.call(CALLABLE_SCRIPT.getName(), 10);
 
-		assertThat(result, is((Object) 10D));
+		assertThat(result).isEqualTo(10D);
 	}
 
 	@Test // DATAMONGO-479
@@ -124,12 +128,12 @@ public class DefaultScriptOperationsTests {
 
 		scriptOps.register(CALLABLE_SCRIPT);
 
-		assertThat(scriptOps.exists(SCRIPT_NAME), is(true));
+		assertThat(scriptOps.exists(SCRIPT_NAME)).isTrue();
 	}
 
 	@Test // DATAMONGO-479
 	public void existsShouldReturnFalseIfScriptNotAvailableOnServer() {
-		assertThat(scriptOps.exists(SCRIPT_NAME), is(false));
+		assertThat(scriptOps.exists(SCRIPT_NAME)).isFalse();
 	}
 
 	@Test // DATAMONGO-479
@@ -139,12 +143,12 @@ public class DefaultScriptOperationsTests {
 
 		Object result = scriptOps.call(SCRIPT_NAME, 10);
 
-		assertThat(result, is((Object) 10D));
+		assertThat(result).isEqualTo((Object) 10D);
 	}
 
-	@Test(expected = UncategorizedDataAccessException.class) // DATAMONGO-479
+	@Test // DATAMONGO-479
 	public void callShouldThrowExceptionWhenCallingScriptThatDoesNotExist() {
-		scriptOps.call(SCRIPT_NAME, 10);
+		assertThatExceptionOfType(UncategorizedDataAccessException.class).isThrownBy(() -> scriptOps.call(SCRIPT_NAME, 10));
 	}
 
 	@Test // DATAMONGO-479
@@ -152,16 +156,16 @@ public class DefaultScriptOperationsTests {
 
 		scriptOps.register(CALLABLE_SCRIPT);
 
-		assertThat(scriptOps.getScriptNames(), hasItems("echo"));
+		assertThat(scriptOps.getScriptNames()).contains("echo");
 	}
 
 	@Test // DATAMONGO-479
 	public void scriptNamesShouldReturnEmptySetWhenNoScriptRegistered() {
-		assertThat(scriptOps.getScriptNames(), is(empty()));
+		assertThat(scriptOps.getScriptNames()).isEmpty();
 	}
 
 	@Test // DATAMONGO-1465
 	public void executeShouldNotQuoteStrings() {
-		assertThat(scriptOps.execute(EXECUTABLE_SCRIPT, "spring-data"), is((Object) "spring-data"));
+		assertThat(scriptOps.execute(EXECUTABLE_SCRIPT, "spring-data")).isEqualTo((Object) "spring-data");
 	}
 }

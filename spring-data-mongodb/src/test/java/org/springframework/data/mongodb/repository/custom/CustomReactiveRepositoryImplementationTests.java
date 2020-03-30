@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,32 +15,34 @@
  */
 package org.springframework.data.mongodb.repository.custom;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.ImportResource;
 import org.springframework.data.mongodb.repository.User;
 import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * Integration tests for custom reactive Repository implementations.
  *
  * @author Mark Paluch
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration
 public class CustomReactiveRepositoryImplementationTests {
 
 	@Configuration
-	@EnableReactiveMongoRepositories
+	@EnableReactiveMongoRepositories(includeFilters=@Filter(type = FilterType.ASSIGNABLE_TYPE, classes = CustomReactiveMongoRepository.class))
 	@ImportResource("classpath:reactive-infrastructure.xml")
 	static class Config {}
 
@@ -52,8 +54,8 @@ public class CustomReactiveRepositoryImplementationTests {
 		String username = "bubu";
 		List<User> users = customMongoRepository.findByUsernameCustom(username);
 
-		assertThat(users.size(), is(1));
-		assertThat(users.get(0), is(notNullValue()));
-		assertThat(users.get(0).getUsername(), is(username));
+		assertThat(users.size()).isEqualTo(1);
+		assertThat(users.get(0)).isNotNull();
+		assertThat(users.get(0).getUsername()).isEqualTo(username);
 	}
 }

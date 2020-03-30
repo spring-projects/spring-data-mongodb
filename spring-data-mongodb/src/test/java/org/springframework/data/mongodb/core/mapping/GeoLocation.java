@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@
 package org.springframework.data.mongodb.core.mapping;
 
 import org.bson.types.ObjectId;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
@@ -26,10 +26,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document("geolocation")
 public class GeoLocation {
 
-	@Id
-	private ObjectId id;
-	@GeoSpatialIndexed
-	private double[] location;
+	@Id private ObjectId id;
+	@GeoSpatialIndexed private double[] location;
 
 	public GeoLocation(double[] location) {
 		this.location = location;

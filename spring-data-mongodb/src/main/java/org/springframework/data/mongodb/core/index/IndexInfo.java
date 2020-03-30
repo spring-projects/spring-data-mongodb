@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.index;
 
 import static org.springframework.data.domain.Sort.Direction.*;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -25,11 +26,15 @@ import java.util.List;
 import java.util.Optional;
 
 import org.bson.Document;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.NumberUtils;
 import org.springframework.util.ObjectUtils;
 
 /**
+ * Index information for a MongoDB index.
+ *
  * @author Mark Pollack
  * @author Oliver Gierke
  * @author Christoph Strobl
@@ -47,6 +52,7 @@ public class IndexInfo {
 	private final boolean unique;
 	private final boolean sparse;
 	private final String language;
+	private @Nullable Duration expireAfter;
 	private @Nullable String partialFilterExpression;
 	private @Nullable Document collation;
 
@@ -91,12 +97,17 @@ public class IndexInfo {
 
 			} else {
 
-				Double keyValue = new Double(value.toString());
+				if (ObjectUtils.nullSafeEquals("hashed", value)) {
+					indexFields.add(IndexField.hashed(key));
+				} else {
 
-				if (ONE.equals(keyValue)) {
-					indexFields.add(IndexField.create(key, ASC));
-				} else if (MINUS_ONE.equals(keyValue)) {
-					indexFields.add(IndexField.create(key, DESC));
+					Double keyValue = new Double(value.toString());
+
+					if (ONE.equals(keyValue)) {
+						indexFields.add(IndexField.create(key, ASC));
+					} else if (MINUS_ONE.equals(keyValue)) {
+						indexFields.add(IndexField.create(key, DESC));
+					}
 				}
 			}
 		}
@@ -107,13 +118,35 @@ public class IndexInfo {
 		boolean sparse = sourceDocument.containsKey("sparse") ? (Boolean) sourceDocument.get("sparse") : false;
 		String language = sourceDocument.containsKey("default_language") ? (String) sourceDocument.get("default_language")
 				: "";
-		String partialFilter = sourceDocument.containsKey("partialFilterExpression")
-				? ((Document) sourceDocument.get("partialFilterExpression")).toJson() : null;
+
+		String partialFilter = extractPartialFilterString(sourceDocument);
 
 		IndexInfo info = new IndexInfo(indexFields, name, unique, sparse, language);
 		info.partialFilterExpression = partialFilter;
 		info.collation = sourceDocument.get("collation", Document.class);
+
+		if (sourceDocument.containsKey("expireAfterSeconds")) {
+
+			Number expireAfterSeconds = sourceDocument.get("expireAfterSeconds", Number.class);
+			info.expireAfter = Duration.ofSeconds(NumberUtils.convertNumberToTargetClass(expireAfterSeconds, Long.class));
+		}
+
 		return info;
+	}
+
+	/**
+	 * @param sourceDocument
+	 * @return the {@link String} representation of the partial filter {@link Document}.
+	 * @since 2.1.11
+	 */
+	@Nullable
+	private static String extractPartialFilterString(Document sourceDocument) {
+
+		if (!sourceDocument.containsKey("partialFilterExpression")) {
+			return null;
+		}
+
+		return BsonUtils.toJson(sourceDocument.get("partialFilterExpression", Document.class));
 	}
 
 	/**
@@ -183,11 +216,30 @@ public class IndexInfo {
 		return Optional.ofNullable(collation);
 	}
 
+	/**
+	 * Get the duration after which documents within the index expire.
+	 *
+	 * @return the expiration time if set, {@link Optional#empty()} otherwise.
+	 * @since 2.2
+	 */
+	public Optional<Duration> getExpireAfter() {
+		return Optional.ofNullable(expireAfter);
+	}
+
+	/**
+	 * @return {@literal true} if a hashed index field is present.
+	 * @since 2.2
+	 */
+	public boolean isHashed() {
+		return getIndexFields().stream().anyMatch(IndexField::isHashed);
+	}
+
 	@Override
 	public String toString() {
+
 		return "IndexInfo [indexFields=" + indexFields + ", name=" + name + ", unique=" + unique + ", sparse=" + sparse
 				+ ", language=" + language + ", partialFilterExpression=" + partialFilterExpression + ", collation=" + collation
-				+ "]";
+				+ ", expireAfterSeconds=" + ObjectUtils.nullSafeToString(expireAfter) + "]";
 	}
 
 	@Override
@@ -201,6 +253,7 @@ public class IndexInfo {
 		result += 31 * ObjectUtils.nullSafeHashCode(language);
 		result += 31 * ObjectUtils.nullSafeHashCode(partialFilterExpression);
 		result += 31 * ObjectUtils.nullSafeHashCode(collation);
+		result += 31 * ObjectUtils.nullSafeHashCode(expireAfter);
 		return result;
 	}
 
@@ -242,8 +295,10 @@ public class IndexInfo {
 		if (!ObjectUtils.nullSafeEquals(partialFilterExpression, other.partialFilterExpression)) {
 			return false;
 		}
-
-		if (!ObjectUtils.nullSafeEquals(collation, collation)) {
+		if (!ObjectUtils.nullSafeEquals(collation, other.collation)) {
+			return false;
+		}
+		if (!ObjectUtils.nullSafeEquals(expireAfter, other.expireAfter)) {
 			return false;
 		}
 		return true;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,13 +18,18 @@ package org.springframework.data.mongodb.repository.query;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.bson.Document;
 import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.lang.Nullable;
 
 /**
  * Internal utility class to help avoid duplicate code required in both the reactive and the sync {@link Query} support
  * offered by repositories.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.1
  * @currentRead Assassin's Apprentice - Robin Hobb
  */
@@ -57,5 +62,25 @@ class QueryUtils {
 		});
 
 		return (Query) factory.getProxy();
+	}
+
+	/**
+	 * Apply a collation extracted from the given {@literal collationExpression} to the given {@link Query}. Potentially
+	 * replace parameter placeholders with values from the {@link ConvertingParameterAccessor accessor}.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @param collationExpression must not be {@literal null}.
+	 * @param accessor must not be {@literal null}.
+	 * @return the {@link Query} having proper {@link Collation}.
+	 * @see Query#collation(Collation)
+	 * @since 2.2
+	 */
+	static Query applyCollation(Query query, @Nullable String collationExpression, ConvertingParameterAccessor accessor,
+			MongoParameters parameters, SpelExpressionParser expressionParser,
+			QueryMethodEvaluationContextProvider evaluationContextProvider) {
+
+		Collation collation = CollationUtils.computeCollation(collationExpression, accessor, parameters, expressionParser,
+				evaluationContextProvider);
+		return collation == null ? query : query.collation(collation);
 	}
 }

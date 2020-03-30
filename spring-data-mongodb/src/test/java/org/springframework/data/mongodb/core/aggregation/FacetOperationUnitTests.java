@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,12 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
-import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import org.bson.Document;
 import org.junit.Test;
+
 import org.springframework.data.mongodb.core.query.Criteria;
 
 /**
@@ -61,19 +60,18 @@ public class FacetOperationUnitTests {
 
 		Document agg = facetOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $facet: { } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $facet: { } }"));
 	}
 
 	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1552
 	public void shouldRejectNonExistingFields() {
 
-		FacetOperation facetOperation = new FacetOperation()
-				.and(project("price"), //
-						bucket("price") //
-								.withBoundaries(0, 150, 200, 300, 400) //
-								.withDefaultBucket("Other") //
-								.andOutputCount().as("count") //
-								.andOutput("title").push().as("titles")) //
+		FacetOperation facetOperation = new FacetOperation().and(project("price"), //
+				bucket("price") //
+						.withBoundaries(0, 150, 200, 300, 400) //
+						.withDefaultBucket("Other") //
+						.andOutputCount().as("count") //
+						.andOutput("title").push().as("titles")) //
 				.as("categorizedByPrice");
 
 		Document agg = facetOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -88,18 +86,16 @@ public class FacetOperationUnitTests {
 	@Test // DATAMONGO-1552
 	public void shouldHonorProjectedFields() {
 
-		FacetOperation facetOperation = new FacetOperation()
-				.and(project("price").and("title").as("name"), //
-						bucketAuto("price", 5) //
-								.andOutput("name").push().as("titles")) //
+		FacetOperation facetOperation = new FacetOperation().and(project("price").and("title").as("name"), //
+				bucketAuto("price", 5) //
+						.andOutput("name").push().as("titles")) //
 				.as("categorizedByPrice");
 
 		Document agg = facetOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg).isEqualTo(Document.parse("{ $facet: { categorizedByPrice: ["
-				+ "{ $project: { price: 1, name: \"$title\" } }, "
-						+ "{ $bucketAuto: {  buckets: 5, groupBy: \"$price\", "
-						+ "output: { titles: { $push: \"$name\" } } } } ] } }"));
+				+ "{ $project: { price: 1, name: \"$title\" } }, " + "{ $bucketAuto: {  buckets: 5, groupBy: \"$price\", "
+				+ "output: { titles: { $push: \"$name\" } } } } ] } }"));
 	}
 
 	@Test // DATAMONGO-1553

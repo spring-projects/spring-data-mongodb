@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import org.bson.Document;
+
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -30,8 +31,6 @@ import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-
-import com.mongodb.reactivestreams.client.FindPublisher;
 
 /**
  * Implementation of {@link ReactiveFindOperation}.
@@ -120,12 +119,7 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 		public Mono<T> first() {
 
 			FindPublisherPreparer preparer = getCursorPreparer(query);
-			Flux<T> result = doFind(new FindPublisherPreparer() {
-				@Override
-				public <D> FindPublisher<D> prepare(FindPublisher<D> publisher) {
-					return preparer.prepare(publisher).limit(1);
-				}
-			});
+			Flux<T> result = doFind(publisher -> preparer.prepare(publisher).limit(1));
 
 			return result.next();
 		}
@@ -138,12 +132,7 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 		public Mono<T> one() {
 
 			FindPublisherPreparer preparer = getCursorPreparer(query);
-			Flux<T> result = doFind(new FindPublisherPreparer() {
-				@Override
-				public <D> FindPublisher<D> prepare(FindPublisher<D> publisher) {
-					return preparer.prepare(publisher).limit(2);
-				}
-			});
+			Flux<T> result = doFind(publisher -> preparer.prepare(publisher).limit(2));
 
 			return result.collectList().flatMap(it -> {
 
@@ -238,7 +227,7 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 		}
 
 		private String getCollectionName() {
-			return StringUtils.hasText(collection) ? collection : template.determineCollectionName(domainType);
+			return StringUtils.hasText(collection) ? collection : template.getCollectionName(domainType);
 		}
 
 		private String asString() {

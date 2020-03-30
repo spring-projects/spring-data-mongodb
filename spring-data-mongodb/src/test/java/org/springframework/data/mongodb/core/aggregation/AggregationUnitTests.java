@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,12 +22,11 @@ import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.bson.Document;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -42,44 +41,40 @@ import org.springframework.data.mongodb.core.query.Criteria;
  */
 public class AggregationUnitTests {
 
-	public @Rule ExpectedException exception = ExpectedException.none();
-
-	@Test(expected = IllegalArgumentException.class)
-	public void rejectsNullAggregationOperation() {
-		newAggregation((AggregationOperation[]) null);
+	@Test
+	void rejectsNullAggregationOperation() {
+		assertThatIllegalArgumentException().isThrownBy(() -> newAggregation((AggregationOperation[]) null));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
-	public void rejectsNullTypedAggregationOperation() {
-		newAggregation(String.class, (AggregationOperation[]) null);
+	@Test
+	void rejectsNullTypedAggregationOperation() {
+		assertThatIllegalArgumentException().isThrownBy(() -> newAggregation(String.class, (AggregationOperation[]) null));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
-	public void rejectsNoAggregationOperation() {
-		newAggregation(new AggregationOperation[0]);
+	@Test
+	void rejectsNoAggregationOperation() {
+		assertThatIllegalArgumentException().isThrownBy(() -> newAggregation(new AggregationOperation[0]));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
-	public void rejectsNoTypedAggregationOperation() {
-		newAggregation(String.class, new AggregationOperation[0]);
-	}
-
-	@Test // DATAMONGO-753
-	public void checkForCorrectFieldScopeTransfer() {
-
-		exception.expect(IllegalArgumentException.class);
-		exception.expectMessage("Invalid reference");
-		exception.expectMessage("'b'");
-
-		newAggregation( //
-				project("a", "b"), //
-				group("a").count().as("cnt"), // a was introduced to the context by the project operation
-				project("cnt", "b") // b was removed from the context by the group operation
-		).toDocument("foo", Aggregation.DEFAULT_CONTEXT); // -> triggers IllegalArgumentException
+	@Test
+	void rejectsNoTypedAggregationOperation() {
+		assertThatIllegalArgumentException().isThrownBy(() -> newAggregation(String.class, new AggregationOperation[0]));
 	}
 
 	@Test // DATAMONGO-753
-	public void unwindOperationShouldNotChangeAvailableFields() {
+	void checkForCorrectFieldScopeTransfer() {
+
+		assertThatIllegalArgumentException().isThrownBy(() -> {
+			newAggregation( //
+					project("a", "b"), //
+					group("a").count().as("cnt"), // a was introduced to the context by the project operation
+					project("cnt", "b") // b was removed from the context by the group operation
+			).toDocument("foo", Aggregation.DEFAULT_CONTEXT); // -> triggers IllegalArgumentException
+		});
+	}
+
+	@Test // DATAMONGO-753
+	void unwindOperationShouldNotChangeAvailableFields() {
 
 		newAggregation( //
 				project("a", "b"), //
@@ -89,7 +84,7 @@ public class AggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-1391
-	public void unwindOperationWithIndexShouldPreserveFields() {
+	void unwindOperationWithIndexShouldPreserveFields() {
 
 		newAggregation( //
 				project("a", "b"), //
@@ -99,7 +94,7 @@ public class AggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-1391
-	public void unwindOperationWithIndexShouldAddIndexField() {
+	void unwindOperationWithIndexShouldAddIndexField() {
 
 		newAggregation( //
 				project("a", "b"), //
@@ -109,7 +104,7 @@ public class AggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-1391
-	public void fullUnwindOperationShouldBuildCorrectClause() {
+	void fullUnwindOperationShouldBuildCorrectClause() {
 
 		Document agg = newAggregation( //
 				unwind("a", "x", true)).toDocument("foo", Aggregation.DEFAULT_CONTEXT);
@@ -122,7 +117,7 @@ public class AggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-1391
-	public void unwindOperationWithPreserveNullShouldBuildCorrectClause() {
+	void unwindOperationWithPreserveNullShouldBuildCorrectClause() {
 
 		Document agg = newAggregation( //
 				unwind("a", true)).toDocument("foo", Aggregation.DEFAULT_CONTEXT);
@@ -135,7 +130,7 @@ public class AggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-1550
-	public void replaceRootOperationShouldBuildCorrectClause() {
+	void replaceRootOperationShouldBuildCorrectClause() {
 
 		Document agg = newAggregation( //
 				replaceRoot().withDocument().andValue("value").as("field")) //
@@ -147,7 +142,7 @@ public class AggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-753
-	public void matchOperationShouldNotChangeAvailableFields() {
+	void matchOperationShouldNotChangeAvailableFields() {
 
 		newAggregation( //
 				project("a", "b"), //
@@ -157,7 +152,7 @@ public class AggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-788
-	public void referencesToGroupIdsShouldBeRenderedAsReferences() {
+	void referencesToGroupIdsShouldBeRenderedAsReferences() {
 
 		Document agg = newAggregation( //
 				project("a"), //
@@ -173,7 +168,7 @@ public class AggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-791
-	public void allowAggregationOperationsToBePassedAsIterable() {
+	void allowAggregationOperationsToBePassedAsIterable() {
 
 		List<AggregationOperation> ops = new ArrayList<AggregationOperation>();
 		ops.add(project("a"));
@@ -190,7 +185,7 @@ public class AggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-791
-	public void allowTypedAggregationOperationsToBePassedAsIterable() {
+	void allowTypedAggregationOperationsToBePassedAsIterable() {
 
 		List<AggregationOperation> ops = new ArrayList<>();
 		ops.add(project("a"));
@@ -207,7 +202,7 @@ public class AggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-838
-	public void expressionBasedFieldsShouldBeReferencableInFollowingOperations() {
+	void expressionBasedFieldsShouldBeReferencableInFollowingOperations() {
 
 		Document agg = newAggregation( //
 				project("a").andExpression("b+c").as("foo"), //
@@ -221,7 +216,7 @@ public class AggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-908
-	public void shouldSupportReferingToNestedPropertiesInGroupOperation() {
+	void shouldSupportReferingToNestedPropertiesInGroupOperation() {
 
 		Document agg = newAggregation( //
 				project("cmsParameterId", "rules"), //
@@ -239,7 +234,7 @@ public class AggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-1585
-	public void shouldSupportSortingBySyntheticAndExposedGroupFields() {
+	void shouldSupportSortingBySyntheticAndExposedGroupFields() {
 
 		Document agg = newAggregation( //
 				group("cmsParameterId").addToSet("title").as("titles"), //
@@ -255,7 +250,7 @@ public class AggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-1585
-	public void shouldSupportSortingByProjectedFields() {
+	void shouldSupportSortingByProjectedFields() {
 
 		Document agg = newAggregation( //
 				project("cmsParameterId") //
@@ -274,7 +269,7 @@ public class AggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-924
-	public void referencingProjectionAliasesFromPreviousStepShouldReferToTheSameFieldTarget() {
+	void referencingProjectionAliasesFromPreviousStepShouldReferToTheSameFieldTarget() {
 
 		Document agg = newAggregation( //
 				project().and("foo.bar").as("ba") //
@@ -289,7 +284,7 @@ public class AggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-960
-	public void shouldRenderAggregationWithDefaultOptionsCorrectly() {
+	void shouldRenderAggregationWithDefaultOptionsCorrectly() {
 
 		Document agg = newAggregation( //
 				project().and("a").as("aa") //
@@ -300,7 +295,7 @@ public class AggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-960
-	public void shouldRenderAggregationWithCustomOptionsCorrectly() {
+	void shouldRenderAggregationWithCustomOptionsCorrectly() {
 
 		AggregationOptions aggregationOptions = newAggregationOptions().explain(true).cursor(new Document("foo", 1))
 				.allowDiskUse(true).build();
@@ -320,7 +315,7 @@ public class AggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-954, DATAMONGO-1585
-	public void shouldSupportReferencingSystemVariables() {
+	void shouldSupportReferencingSystemVariables() {
 
 		Document agg = newAggregation( //
 				project("someKey") //
@@ -341,7 +336,7 @@ public class AggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-1254
-	public void shouldExposeAliasedFieldnameForProjectionsIncludingOperationsDownThePipeline() {
+	void shouldExposeAliasedFieldnameForProjectionsIncludingOperationsDownThePipeline() {
 
 		Document agg = Aggregation.newAggregation(//
 				project("date") //
@@ -355,7 +350,7 @@ public class AggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-1254
-	public void shouldUseAliasedFieldnameForProjectionsIncludingOperationsDownThePipelineWhenUsingSpEL() {
+	void shouldUseAliasedFieldnameForProjectionsIncludingOperationsDownThePipelineWhenUsingSpEL() {
 
 		Document agg = Aggregation.newAggregation(//
 				project("date") //
@@ -369,7 +364,7 @@ public class AggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-861
-	public void conditionExpressionBasedFieldsShouldBeReferencableInFollowingOperations() {
+	void conditionExpressionBasedFieldsShouldBeReferencableInFollowingOperations() {
 
 		Document agg = newAggregation( //
 				project("a", "answer"), //
@@ -387,7 +382,7 @@ public class AggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-861
-	public void shouldRenderProjectionConditionalExpressionCorrectly() {
+	void shouldRenderProjectionConditionalExpressionCorrectly() {
 
 		Document agg = Aggregation.newAggregation(//
 				project().and(ConditionalOperators.Cond.newBuilder() //
@@ -406,7 +401,7 @@ public class AggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-861
-	public void shouldRenderProjectionConditionalCorrectly() {
+	void shouldRenderProjectionConditionalCorrectly() {
 
 		Document agg = Aggregation.newAggregation(//
 				project().and("color").applyCondition(ConditionalOperators.Cond.newBuilder() //
@@ -425,7 +420,7 @@ public class AggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-861
-	public void shouldRenderProjectionConditionalWithCriteriaCorrectly() {
+	void shouldRenderProjectionConditionalWithCriteriaCorrectly() {
 
 		Document agg = Aggregation.newAggregation(project()//
 				.and("color")//
@@ -442,14 +437,14 @@ public class AggregationUnitTests {
 		assertThat(getAsDocument(project, "color")).containsEntry("$cond", expectedCondition);
 	}
 
-	@Test // DATAMONGO-861
-	public void referencingProjectionAliasesShouldRenderProjectionConditionalWithFieldReferenceCorrectly() {
+	@Test // DATAMONGO-861, DATAMONGO-2242
+	void referencingProjectionAliasesShouldRenderProjectionConditionalWithFieldReferenceCorrectly() {
 
 		Document agg = Aggregation.newAggregation(//
 				project().and("color").as("chroma"), project().and("luminosity") //
 						.applyCondition(ConditionalOperators //
 								.when("chroma") //
-								.thenValueOf("bright") //
+								.then("bright") //
 								.otherwise("dark"))) //
 				.toDocument("foo", Aggregation.DEFAULT_CONTEXT);
 
@@ -463,7 +458,7 @@ public class AggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-861
-	public void referencingProjectionAliasesShouldRenderProjectionConditionalWithCriteriaReferenceCorrectly() {
+	void referencingProjectionAliasesShouldRenderProjectionConditionalWithCriteriaReferenceCorrectly() {
 
 		Document agg = Aggregation.newAggregation(//
 				project().and("color").as("chroma"), project().and("luminosity") //
@@ -482,7 +477,7 @@ public class AggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-861
-	public void shouldRenderProjectionIfNullWithFieldReferenceCorrectly() {
+	void shouldRenderProjectionIfNullWithFieldReferenceCorrectly() {
 
 		Document agg = Aggregation.newAggregation(//
 				project().and("color"), //
@@ -498,7 +493,7 @@ public class AggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-861
-	public void shouldRenderProjectionIfNullWithFallbackFieldReferenceCorrectly() {
+	void shouldRenderProjectionIfNullWithFallbackFieldReferenceCorrectly() {
 
 		Document agg = Aggregation.newAggregation(//
 				project("fallback").and("color").as("chroma"), project().and("luminosity") //
@@ -512,7 +507,7 @@ public class AggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-1552
-	public void shouldHonorDefaultCountField() {
+	void shouldHonorDefaultCountField() {
 
 		Document agg = Aggregation.newAggregation(//
 				bucket("year"), //
@@ -525,7 +520,7 @@ public class AggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-1533
-	public void groupOperationShouldAllowUsageOfDerivedSpELAggregationExpression() {
+	void groupOperationShouldAllowUsageOfDerivedSpELAggregationExpression() {
 
 		Document agg = newAggregation( //
 				project("a"), //
@@ -543,7 +538,7 @@ public class AggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-1756
-	public void projectOperationShouldRenderNestedFieldNamesCorrectly() {
+	void projectOperationShouldRenderNestedFieldNamesCorrectly() {
 
 		Document agg = newAggregation(project().and("value1.value").plus("value2.value").as("val")).toDocument("collection",
 				Aggregation.DEFAULT_CONTEXT);
@@ -553,7 +548,7 @@ public class AggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-1871
-	public void providedAliasShouldAllowNestingExpressionWithAliasCorrectly() {
+	void providedAliasShouldAllowNestingExpressionWithAliasCorrectly() {
 
 		Document condition = new Document("$and",
 				Arrays.asList(new Document("$gte", Arrays.asList("$$est.dt", "2015-12-29")), //
@@ -566,7 +561,25 @@ public class AggregationUnitTests {
 		Document $project = extractPipelineElement(agg.toDocument("collection-1", Aggregation.DEFAULT_CONTEXT), 0,
 				"$project");
 
-		assertThat($project.containsKey("plts.ests")).isTrue();
+		assertThat($project).containsKey("plts.ests");
+	}
+
+	@Test // DATAMONGO-2377
+	void shouldAllowInternalThisAndValueReferences() {
+
+		Document untyped = newAggregation( //
+				Arrays.asList( //
+						(group("uid", "data.sourceId") //
+								.push("data.attributeRecords").as("attributeRecordArrays")), //
+						(project() //
+								.and(ArrayOperators.arrayOf("attributeRecordArrays") //
+										.reduce(ArrayOperators.arrayOf("$$value").concat("$$this")) //
+										.startingWith(Collections.emptyList())) //
+								.as("attributeRecordArrays")) //
+				)).toDocument("collection-1", DEFAULT_CONTEXT);
+
+		assertThat(extractPipelineElement(untyped, 1, "$project")).isEqualTo(Document.parse(
+				"{\"attributeRecordArrays\": {\"$reduce\": {\"input\": \"$attributeRecordArrays\", \"initialValue\": [], \"in\": {\"$concatArrays\": [\"$$value\", \"$$this\"]}}}}"));
 	}
 
 	private Document extractPipelineElement(Document agg, int index, String operation) {

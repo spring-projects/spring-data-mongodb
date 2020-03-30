@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -33,6 +34,7 @@ import org.springframework.util.Assert;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Shashank Sharma
  * @since 1.0
  */
 public class ArrayOperators {
@@ -58,12 +60,24 @@ public class ArrayOperators {
 	}
 
 	/**
+	 * Take the given {@link Collection values} {@link AggregationExpression}.
+	 *
+	 * @param values must not be {@literal null}.
+	 * @return new instance of {@link ArrayOperatorFactory}.
+	 * @since 2.2
+	 */
+	public static ArrayOperatorFactory arrayOf(Collection<?> values) {
+		return new ArrayOperatorFactory(values);
+	}
+
+	/**
 	 * @author Christoph Strobl
 	 */
 	public static class ArrayOperatorFactory {
 
-		private final String fieldReference;
-		private final AggregationExpression expression;
+		private final @Nullable String fieldReference;
+		private final @Nullable AggregationExpression expression;
+		private final @Nullable Collection values;
 
 		/**
 		 * Creates new {@link ArrayOperatorFactory} for given {@literal fieldReference}.
@@ -75,6 +89,7 @@ public class ArrayOperators {
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			this.fieldReference = fieldReference;
 			this.expression = null;
+			this.values = null;
 		}
 
 		/**
@@ -87,6 +102,21 @@ public class ArrayOperators {
 			Assert.notNull(expression, "Expression must not be null!");
 			this.fieldReference = null;
 			this.expression = expression;
+			this.values = null;
+		}
+
+		/**
+		 * Creates new {@link ArrayOperatorFactory} for given values.
+		 *
+		 * @param values must not be {@literal null}.
+		 * @since 2.2
+		 */
+		public ArrayOperatorFactory(Collection<?> values) {
+
+			Assert.notNull(values, "Values must not be null!");
+			this.fieldReference = null;
+			this.expression = null;
+			this.values = values;
 		}
 
 		/**
@@ -127,7 +157,12 @@ public class ArrayOperators {
 		}
 
 		private ArrayElemAt createArrayElemAt() {
-			return usesFieldRef() ? ArrayElemAt.arrayOf(fieldReference) : ArrayElemAt.arrayOf(expression);
+
+			if (usesFieldRef()) {
+				return ArrayElemAt.arrayOf(fieldReference);
+			}
+
+			return usesExpression() ? ArrayElemAt.arrayOf(expression) : ArrayElemAt.arrayOf(values);
 		}
 
 		/**
@@ -157,7 +192,12 @@ public class ArrayOperators {
 		}
 
 		private ConcatArrays createConcatArrays() {
-			return usesFieldRef() ? ConcatArrays.arrayOf(fieldReference) : ConcatArrays.arrayOf(expression);
+
+			if (usesFieldRef()) {
+				return ConcatArrays.arrayOf(fieldReference);
+			}
+
+			return usesExpression() ? ConcatArrays.arrayOf(expression) : ConcatArrays.arrayOf(values);
 		}
 
 		/**
@@ -167,7 +207,13 @@ public class ArrayOperators {
 		 * @return
 		 */
 		public AsBuilder filter() {
-			return Filter.filter(fieldReference);
+
+			if (usesFieldRef()) {
+				return Filter.filter(fieldReference);
+			}
+
+			Assert.state(values != null, "Values must not be null!");
+			return Filter.filter(new ArrayList<>(values));
 		}
 
 		/**
@@ -176,6 +222,9 @@ public class ArrayOperators {
 		 * @return
 		 */
 		public IsArray isArray() {
+
+			Assert.state(values == null, "Does it make sense to call isArray on an array? Maybe just skip it?");
+
 			return usesFieldRef() ? IsArray.isArray(fieldReference) : IsArray.isArray(expression);
 		}
 
@@ -185,7 +234,12 @@ public class ArrayOperators {
 		 * @return
 		 */
 		public Size length() {
-			return usesFieldRef() ? Size.lengthOfArray(fieldReference) : Size.lengthOfArray(expression);
+
+			if (usesFieldRef()) {
+				return Size.lengthOfArray(fieldReference);
+			}
+
+			return usesExpression() ? Size.lengthOfArray(expression) : Size.lengthOfArray(values);
 		}
 
 		/**
@@ -194,7 +248,12 @@ public class ArrayOperators {
 		 * @return
 		 */
 		public Slice slice() {
-			return usesFieldRef() ? Slice.sliceArrayOf(fieldReference) : Slice.sliceArrayOf(expression);
+
+			if (usesFieldRef()) {
+				return Slice.sliceArrayOf(fieldReference);
+			}
+
+			return usesExpression() ? Slice.sliceArrayOf(expression) : Slice.sliceArrayOf(values);
 		}
 
 		/**
@@ -205,8 +264,13 @@ public class ArrayOperators {
 		 * @return
 		 */
 		public IndexOfArray indexOf(Object value) {
-			return usesFieldRef() ? IndexOfArray.arrayOf(fieldReference).indexOf(value)
-					: IndexOfArray.arrayOf(expression).indexOf(value);
+
+			if (usesFieldRef()) {
+				return IndexOfArray.arrayOf(fieldReference).indexOf(value);
+			}
+
+			return usesExpression() ? IndexOfArray.arrayOf(expression).indexOf(value)
+					: IndexOfArray.arrayOf(values).indexOf(value);
 		}
 
 		/**
@@ -215,7 +279,13 @@ public class ArrayOperators {
 		 * @return
 		 */
 		public ReverseArray reverse() {
-			return usesFieldRef() ? ReverseArray.reverseArrayOf(fieldReference) : ReverseArray.reverseArrayOf(expression);
+
+			if (usesFieldRef()) {
+				return ReverseArray.reverseArrayOf(fieldReference);
+			}
+
+			return usesExpression() ? ReverseArray.reverseArrayOf(expression)
+					: ReverseArray.reverseArrayOf(Collections.singletonList(values));
 		}
 
 		/**
@@ -253,7 +323,12 @@ public class ArrayOperators {
 		 * @return
 		 */
 		public Zip zipWith(Object... arrays) {
-			return (usesFieldRef() ? Zip.arrayOf(fieldReference) : Zip.arrayOf(expression)).zip(arrays);
+
+			if (usesFieldRef()) {
+				return Zip.arrayOf(fieldReference).zip(arrays);
+			}
+
+			return (usesExpression() ? Zip.arrayOf(expression) : Zip.arrayOf(values)).zip(arrays);
 		}
 
 		/**
@@ -264,7 +339,12 @@ public class ArrayOperators {
 		 * @return
 		 */
 		public In containsValue(Object value) {
-			return (usesFieldRef() ? In.arrayOf(fieldReference) : In.arrayOf(expression)).containsValue(value);
+
+			if (usesFieldRef()) {
+				return In.arrayOf(fieldReference).containsValue(value);
+			}
+
+			return (usesExpression() ? In.arrayOf(expression) : In.arrayOf(values)).containsValue(value);
 		}
 
 		/**
@@ -276,8 +356,11 @@ public class ArrayOperators {
 		 */
 		public ArrayToObject toObject() {
 
-			return usesFieldRef() ? ArrayToObject.arrayValueOfToObject(fieldReference)
-					: ArrayToObject.arrayValueOfToObject(expression);
+			if (usesFieldRef()) {
+				return ArrayToObject.arrayValueOfToObject(fieldReference);
+			}
+
+			return usesExpression() ? ArrayToObject.arrayValueOfToObject(expression) : ArrayToObject.arrayToObject(values);
 		}
 
 		/**
@@ -294,8 +377,19 @@ public class ArrayOperators {
 			Reduce startingWith(Object initialValue);
 		}
 
+		/**
+		 * @return {@literal true} if {@link #fieldReference} is not {@literal null}.
+		 */
 		private boolean usesFieldRef() {
 			return fieldReference != null;
+		}
+
+		/**
+		 * @return {@literal true} if {@link #expression} is not {@literal null}.
+		 * @since 2.2
+		 */
+		private boolean usesExpression() {
+			return expression != null;
 		}
 	}
 
@@ -337,6 +431,19 @@ public class ArrayOperators {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new ArrayElemAt(Collections.singletonList(expression));
+		}
+
+		/**
+		 * Creates new {@link ArrayElemAt}.
+		 *
+		 * @param values The array members. Must not be {@literal null}.
+		 * @return new instance of {@link ArrayElemAt}.
+		 * @since 2.2
+		 */
+		public static ArrayElemAt arrayOf(Collection<?> values) {
+
+			Assert.notNull(values, "Values must not be null!");
+			return new ArrayElemAt(Collections.singletonList(values));
 		}
 
 		public ArrayElemAt elementAt(int index) {
@@ -394,6 +501,19 @@ public class ArrayOperators {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new ConcatArrays(Collections.singletonList(expression));
+		}
+
+		/**
+		 * Creates new {@link ConcatArrays}.
+		 *
+		 * @param values The array members. Must not be {@literal null}.
+		 * @return new instance of {@link ConcatArrays}.
+		 * @since 2.2
+		 */
+		public static ConcatArrays arrayOf(Collection<?> values) {
+
+			Assert.notNull(values, "Values must not be null!");
+			return new ConcatArrays(Collections.singletonList(values));
 		}
 
 		public ConcatArrays concat(String arrayFieldReference) {
@@ -496,7 +616,7 @@ public class ArrayOperators {
 			}
 
 			NestedDelegatingExpressionAggregationOperationContext nea = new NestedDelegatingExpressionAggregationOperationContext(
-					context);
+					context, Collections.singleton(as));
 			return ((AggregationExpression) condition).toDocument(nea);
 		}
 
@@ -740,6 +860,19 @@ public class ArrayOperators {
 			Assert.notNull(expression, "Expression must not be null!");
 			return new Size(expression);
 		}
+
+		/**
+		 * Creates new {@link Size}.
+		 *
+		 * @param values must not be {@literal null}.
+		 * @return new instance of {@link Size}.
+		 * @since 2.2
+		 */
+		public static Size lengthOfArray(Collection<?> values) {
+
+			Assert.notNull(values, "Values must not be null!");
+			return new Size(Collections.singletonList(values));
+		}
 	}
 
 	/**
@@ -780,6 +913,19 @@ public class ArrayOperators {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new Slice(Collections.singletonList(expression));
+		}
+
+		/**
+		 * Creates new {@link Slice}.
+		 *
+		 * @param values must not be {@literal null}.
+		 * @return new instance of {@link Slice}.
+		 * @since 2.2
+		 */
+		public static Slice sliceArrayOf(Collection<?> values) {
+
+			Assert.notNull(values, "Values must not be null!");
+			return new Slice(Collections.singletonList(values));
 		}
 
 		public Slice itemCount(int nrElements) {
@@ -850,6 +996,19 @@ public class ArrayOperators {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new IndexOfArrayBuilder(expression);
+		}
+
+		/**
+		 * Start creating new {@link IndexOfArray}.
+		 *
+		 * @param values must not be {@literal null}.
+		 * @return new instance of {@link IndexOfArray}.
+		 * @since 2.2
+		 */
+		public static IndexOfArrayBuilder arrayOf(Collection<?> values) {
+
+			Assert.notNull(values, "Values must not be null!");
+			return new IndexOfArrayBuilder(values);
 		}
 
 		public IndexOfArray within(Range<Long> range) {
@@ -1005,6 +1164,17 @@ public class ArrayOperators {
 		 */
 		public static ReverseArray reverseArrayOf(AggregationExpression expression) {
 			return new ReverseArray(expression);
+		}
+
+		/**
+		 * Creates new {@link ReverseArray}.
+		 *
+		 * @param values must not be {@literal null}.
+		 * @return new instance of {@link ReverseArray}.
+		 * @since 2.2
+		 */
+		public static ReverseArray reverseArrayOf(Collection<?> values) {
+			return new ReverseArray(values);
 		}
 	}
 
@@ -1359,6 +1529,19 @@ public class ArrayOperators {
 		}
 
 		/**
+		 * Start creating new {@link Zip}.
+		 *
+		 * @param values must not be {@literal null}.
+		 * @return new instance of {@link Zip}.
+		 * @since 2.2
+		 */
+		public static ZipBuilder arrayOf(Collection<?> values) {
+
+			Assert.notNull(values, "Expression must not be null!");
+			return new ZipBuilder(values);
+		}
+
+		/**
 		 * Create new {@link Zip} and set the {@code useLongestLength} property to {@literal true}.
 		 *
 		 * @return
@@ -1442,6 +1625,10 @@ public class ArrayOperators {
 	 * {@link AggregationExpression} for {@code $in}.
 	 *
 	 * @author Christoph Strobl
+	 * @author Shashank Sharma
+	 * @see <a href=
+	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/in/">https://docs.mongodb.com/manual/reference/operator/aggregation/in/</a>
+	 * @since 2.2
 	 */
 	public static class In extends AbstractAggregationExpression {
 
@@ -1460,18 +1647,14 @@ public class ArrayOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return
 		 */
-		public static InBuilder arrayOf(final String fieldReference) {
+		public static InBuilder arrayOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 
-			return new InBuilder() {
+			return value -> {
 
-				@Override
-				public In containsValue(Object value) {
-
-					Assert.notNull(value, "Value must not be null!");
-					return new In(Arrays.asList(value, Fields.field(fieldReference)));
-				}
+				Assert.notNull(value, "Value must not be null!");
+				return new In(Arrays.asList(value, Fields.field(fieldReference)));
 			};
 		}
 
@@ -1481,18 +1664,34 @@ public class ArrayOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return
 		 */
-		public static InBuilder arrayOf(final AggregationExpression expression) {
+		public static InBuilder arrayOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 
-			return new InBuilder() {
+			return value -> {
 
-				@Override
-				public In containsValue(Object value) {
+				Assert.notNull(value, "Value must not be null!");
 
-					Assert.notNull(value, "Value must not be null!");
-					return new In(Arrays.asList(value, expression));
-				}
+				return new In(Arrays.asList(value, expression));
+			};
+		}
+
+		/**
+		 * Support for Aggregation In Search an Element in List of Objects to Filter Start creating {@link In}.
+		 *
+		 * @param values must not be {@literal null}.
+		 * @return new instance of {@link InBuilder}.
+		 * @since 2.2
+		 */
+		public static InBuilder arrayOf(Collection<?> values) {
+
+			Assert.notNull(values, "Values must not be null!");
+
+			return value -> {
+
+				Assert.notNull(value, "Value must not be null!");
+
+				return new In(Arrays.asList(value, values));
 			};
 		}
 

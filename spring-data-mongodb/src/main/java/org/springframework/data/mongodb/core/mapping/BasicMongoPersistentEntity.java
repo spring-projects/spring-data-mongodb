@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.mongodb.MongoCollectionUtils;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ParserContext;
 import org.springframework.expression.common.LiteralExpression;
@@ -36,6 +37,7 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -59,6 +61,11 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 	private final @Nullable Expression expression;
 
+	private final @Nullable String collation;
+	private final @Nullable Expression collationExpression;
+
+	private final ShardKey shardKey;
+
 	/**
 	 * Creates a new {@link BasicMongoPersistentEntity} with the given {@link TypeInformation}. Will default the
 	 * collection name to the entities simple type name.
@@ -77,13 +84,38 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 			this.collection = StringUtils.hasText(document.collection()) ? document.collection() : fallback;
 			this.language = StringUtils.hasText(document.language()) ? document.language() : "";
-			this.expression = detectExpression(document);
+			this.expression = detectExpression(document.collection());
+			this.collation = document.collation();
+			this.collationExpression = detectExpression(document.collation());
 		} else {
 
 			this.collection = fallback;
 			this.language = "";
 			this.expression = null;
+			this.collation = null;
+			this.collationExpression = null;
 		}
+
+		this.shardKey = detectShardKey();
+	}
+
+	private ShardKey detectShardKey() {
+
+		if (!isAnnotationPresent(Sharded.class)) {
+			return ShardKey.none();
+		}
+
+		Sharded sharded = getRequiredAnnotation(Sharded.class);
+
+		String[] keyProperties = sharded.shardKey();
+		if (ObjectUtils.isEmpty(keyProperties)) {
+			keyProperties = new String[] { "_id" };
+		}
+
+		ShardKey shardKey = ShardingStrategy.HASH.equals(sharded.shardingStrategy()) ? ShardKey.hash(keyProperties)
+				: ShardKey.range(keyProperties);
+
+		return sharded.immutableKey() ? ShardKey.immutable(shardKey) : shardKey;
 	}
 
 	/*
@@ -127,6 +159,38 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentEntity#getCollation()
+	 */
+	@Override
+	public org.springframework.data.mongodb.core.query.Collation getCollation() {
+
+		Object collationValue = collationExpression != null ? expression.getValue(getEvaluationContext(null), String.class)
+				: this.collation;
+
+		if (collationValue == null) {
+			return null;
+		}
+
+		if (collationValue instanceof org.bson.Document) {
+			return org.springframework.data.mongodb.core.query.Collation.from((org.bson.Document) collationValue);
+		}
+
+		if (collationValue instanceof org.springframework.data.mongodb.core.query.Collation) {
+			return org.springframework.data.mongodb.core.query.Collation.class.cast(collationValue);
+		}
+
+		return StringUtils.hasText(collationValue.toString())
+				? org.springframework.data.mongodb.core.query.Collation.parse(collationValue.toString())
+				: null;
+	}
+
+	@Override
+	public ShardKey getShardKey() {
+		return shardKey;
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mapping.model.BasicPersistentEntity#verify()
 	 */
 	@Override
@@ -136,6 +200,15 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 		verifyFieldUniqueness();
 		verifyFieldTypes();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mapping.model.BasicPersistentEntity#getEvaluationContext(java.lang.Object)
+	 */
+	@Override
+	public EvaluationContext getEvaluationContext(Object rootObject) {
+		return super.getEvaluationContext(rootObject);
 	}
 
 	private void verifyFieldUniqueness() {
@@ -236,24 +309,20 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	}
 
 	/**
-	 * Returns a SpEL {@link Expression} frór the collection String expressed in the given {@link Document} annotation if
-	 * present or {@literal null} otherwise. Will also return {@literal null} it the collection {@link String} evaluates
-	 * to a {@link LiteralExpression} (indicating that no subsequent evaluation is necessary).
+	 * Returns a SpEL {@link Expression} if the given {@link String} is actually an expression that does not evaluate to a
+	 * {@link LiteralExpression} (indicating that no subsequent evaluation is necessary).
 	 *
-	 * @param document can be {@literal null}
+	 * @param potentialExpression can be {@literal null}
 	 * @return
 	 */
 	@Nullable
-	private static Expression detectExpression(Document document) {
+	private static Expression detectExpression(@Nullable String potentialExpression) {
 
-		String collection = document.collection();
-
-		if (!StringUtils.hasText(collection)) {
+		if (!StringUtils.hasText(potentialExpression)) {
 			return null;
 		}
 
-		Expression expression = PARSER.parseExpression(document.collection(), ParserContext.TEMPLATE_EXPRESSION);
-
+		Expression expression = PARSER.parseExpression(potentialExpression, ParserContext.TEMPLATE_EXPRESSION);
 		return expression instanceof LiteralExpression ? null : expression;
 	}
 

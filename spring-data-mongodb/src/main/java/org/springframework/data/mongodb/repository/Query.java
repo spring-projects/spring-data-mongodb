@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -95,4 +95,34 @@ public @interface Query {
 	 * @since 2.1
 	 */
 	String sort() default "";
+
+	/**
+	 * Defines the collation to apply when executing the query.
+	 *
+	 * <pre class="code">
+	 * // Fixed value
+	 * &#64;Query(collation = "en_US")
+	 * List<Entry> findAllByFixedCollation();
+	 *
+	 * // Fixed value as Document
+	 * &#64;Query(collation = "{ 'locale' :  'en_US' }")
+	 * List<Entry> findAllByFixedJsonCollation();
+	 *
+	 * // Dynamic value as String
+	 * &#64;Query(collation = "?0")
+	 * List<Entry> findAllByDynamicCollation(String collation);
+	 *
+	 * // Dynamic value as Document
+	 * &#64;Query(collation = "{ 'locale' :  ?0 }")
+	 * List<Entry> findAllByDynamicJsonCollation(String collation);
+	 *
+	 * // SpEL expression
+	 * &#64;Query(collation = "?#{[0]}")
+	 * List<Entry> findAllByDynamicSpElCollation(String collation);
+	 * </pre>
+	 *
+	 * @return an empty {@link String} by default.
+	 * @since 2.2
+	 */
+	String collation() default "";
 }

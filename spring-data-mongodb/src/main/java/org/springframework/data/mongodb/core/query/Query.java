@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the original author or authors.
+ * Copyright 2010-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
-
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
@@ -96,6 +95,8 @@ public class Query {
 	 */
 	public Query addCriteria(CriteriaDefinition criteriaDefinition) {
 
+		Assert.notNull(criteriaDefinition, "CriteriaDefinition must not be null!");
+
 		CriteriaDefinition existing = this.criteria.get(criteriaDefinition.getKey());
 		String key = criteriaDefinition.getKey();
 
@@ -142,14 +143,31 @@ public class Query {
 	}
 
 	/**
-	 * Configures the query to use the given hint when being executed.
+	 * Configures the query to use the given hint when being executed. The {@code hint} can either be an index name or a
+	 * json {@link Document} representation.
 	 *
-	 * @param name must not be {@literal null} or empty.
+	 * @param hint must not be {@literal null} or empty.
 	 * @return
+	 * @see Document#parse(String)
 	 */
-	public Query withHint(String name) {
-		Assert.hasText(name, "Hint must not be empty or null!");
-		this.hint = name;
+	public Query withHint(String hint) {
+
+		Assert.hasText(hint, "Hint must not be empty or null!");
+		this.hint = hint;
+		return this;
+	}
+
+	/**
+	 * Configures the query to use the given {@link Document hint} when being executed.
+	 *
+	 * @param hint must not be {@literal null}.
+	 * @return
+	 * @since 2.2
+	 */
+	public Query withHint(Document hint) {
+
+		Assert.notNull(hint, "Hint must not be null!");
+		this.hint = hint.toJson();
 		return this;
 	}
 
@@ -265,6 +283,17 @@ public class Query {
 	}
 
 	/**
+	 * Returns {@literal true} if the {@link Query} has a sort parameter.
+	 *
+	 * @return {@literal true} if sorted.
+	 * @see Sort#isSorted()
+	 * @since 2.2
+	 */
+	public boolean isSorted() {
+		return sort.isSorted();
+	}
+
+	/**
 	 * Get the number of documents to skip.
 	 *
 	 * @return
@@ -330,20 +359,6 @@ public class Query {
 	}
 
 	/**
-	 * @param maxScan
-	 * @return this.
-	 * @see Meta#setMaxScan(long)
-	 * @since 1.6
-	 * @deprecated since 2.1 due to deprecation in MongoDB 4.0.
-	 */
-	@Deprecated
-	public Query maxScan(long maxScan) {
-
-		meta.setMaxScan(maxScan);
-		return this;
-	}
-
-	/**
 	 * Add a comment to the query that is propagated to the profile log.
 	 *
 	 * @param comment
@@ -354,19 +369,6 @@ public class Query {
 	public Query comment(String comment) {
 
 		meta.setComment(comment);
-		return this;
-	}
-
-	/**
-	 * @return this.
-	 * @see Meta#setSnapshot(boolean)
-	 * @since 1.6
-	 * @deprecated since 2.1 due to deprecation as of MongoDB 3.6
-	 */
-	@Deprecated
-	public Query useSnapshot() {
-
-		meta.setSnapshot(true);
 		return this;
 	}
 
@@ -510,15 +512,18 @@ public class Query {
 			public Document getQueryObject() {
 				return BsonUtils.merge(sourceQuery, super.getQueryObject());
 			}
+
+			@Override
+			public boolean isSorted() {
+				return source.isSorted() || super.isSorted();
+			}
 		};
 
-		target.criteria.putAll(source.criteria);
-		target.skip = source.skip;
-		target.limit = source.limit;
-		target.sort = Sort.unsorted().and(source.sort);
-		target.hint = source.hint;
-		target.collation = source.collation;
-		target.restrictedTypes.addAll(source.restrictedTypes);
+		target.skip = source.getSkip();
+		target.limit = source.getLimit();
+		target.hint = source.getHint();
+		target.collation = source.getCollation();
+		target.restrictedTypes.addAll(source.getRestrictedTypes());
 
 		if (source.getMeta().hasValues()) {
 			target.setMeta(new Meta(source.getMeta()));

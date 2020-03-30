@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,31 +25,36 @@ import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.springframework.data.util.Version;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 
 /**
  * {@link TestRule} verifying server tests are executed against match a given version. This one can be used as
- * {@link ClassRule} eg. in context depending tests run with {@link SpringJUnit4ClassRunner} when the context would fail
- * to start in case of invalid version, or as simple {@link Rule} on specific tests.
+ * {@link ClassRule} eg. in context depending tests run with {@link SpringRunner} when the context would fail to start
+ * in case of invalid version, or as simple {@link Rule} on specific tests.
  *
  * @author Christoph Strobl
  * @author Mark Paluch
  * @since 1.6
+ * @deprecated Use {@link MongoServerCondition} instead.
  */
+@Deprecated
 public class MongoVersionRule implements TestRule {
 
 	private static final Version ANY = new Version(9999, 9999, 9999);
 	private static final Version DEFAULT_HIGH = ANY;
 	private static final Version DEFAULT_LOW = new Version(0, 0, 0);
 
+	public static MongoVersionRule REQUIRES_4_2 = MongoVersionRule
+			.atLeast(org.springframework.data.util.Version.parse("4.2"));
+
 	private final AtomicReference<Version> currentVersion = new AtomicReference<>(null);
 	private final Version minVersion;
 	private final Version maxVersion;
 
-	private String host = "localhost";
+	private String host = "127.0.0.1";
 	private int port = 27017;
 
 	public MongoVersionRule(Version min, Version max) {
@@ -128,7 +133,6 @@ public class MongoVersionRule implements TestRule {
 					Version maxVersion = MongoVersionRule.this.maxVersion.equals(ANY) ? DEFAULT_HIGH
 							: MongoVersionRule.this.maxVersion;
 
-
 					if (description.getAnnotation(MongoVersion.class) != null) {
 						MongoVersion version = description.getAnnotation(MongoVersion.class);
 						if (version != null) {
@@ -176,11 +180,9 @@ public class MongoVersionRule implements TestRule {
 
 		try {
 
-			MongoClient client;
-			client = new MongoClient(host, port);
+			MongoClient client = MongoTestUtils.client(host, port);
 			MongoDatabase database = client.getDatabase("test");
 			Document result = database.runCommand(new Document("buildInfo", 1));
-			client.close();
 
 			return Version.parse(result.get("version", String.class));
 		} catch (Exception e) {

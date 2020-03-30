@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2015-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.repository.Address;
@@ -40,7 +40,7 @@ import org.springframework.data.mongodb.repository.QUser;
 import org.springframework.data.mongodb.repository.User;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import com.mongodb.MongoException;
 import com.mongodb.client.MongoDatabase;
@@ -54,11 +54,11 @@ import com.mongodb.client.MongoDatabase;
  */
 @ContextConfiguration(
 		locations = "/org/springframework/data/mongodb/repository/PersonRepositoryIntegrationTests-context.xml")
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 public class QuerydslMongoPredicateExecutorIntegrationTests {
 
 	@Autowired MongoOperations operations;
-	@Autowired MongoDbFactory dbFactory;
+	@Autowired MongoDatabaseFactory dbFactory;
 
 	QuerydslMongoPredicateExecutor<Person> repository;
 
@@ -108,9 +108,10 @@ public class QuerydslMongoPredicateExecutorIntegrationTests {
 		assertThat(repository.findOne(person.firstname.eq("batman"))).isNotPresent();
 	}
 
-	@Test(expected = IncorrectResultSizeDataAccessException.class) // DATAMONGO-1690
+	@Test // DATAMONGO-1690
 	public void findOneWithPredicateThrowsExceptionForNonUniqueResults() {
-		repository.findOne(person.firstname.contains("e"));
+		assertThatExceptionOfType(IncorrectResultSizeDataAccessException.class)
+				.isThrownBy(() -> repository.findOne(person.firstname.contains("e")));
 	}
 
 	@Test // DATAMONGO-1848
@@ -205,7 +206,8 @@ public class QuerydslMongoPredicateExecutorIntegrationTests {
 		assertThat(result).containsExactly(person2);
 	}
 
-	@Test(expected = PermissionDeniedDataAccessException.class) // DATAMONGO-1434, DATAMONGO-1848
+	@Test(expected = PermissionDeniedDataAccessException.class)
+	// DATAMONGO-1434, DATAMONGO-1848
 	public void translatesExceptionsCorrectly() {
 
 		MongoOperations ops = new MongoTemplate(dbFactory) {

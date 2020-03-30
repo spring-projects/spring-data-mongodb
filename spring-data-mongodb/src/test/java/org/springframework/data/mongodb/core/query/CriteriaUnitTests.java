@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the original author or authors.
+ * Copyright 2010-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,18 +15,14 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.CoreMatchers.not;
-import static org.junit.Assert.*;
-import static org.junit.Assert.assertThat;
-import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.util.Arrays;
 import java.util.Collections;
 
 import org.bson.Document;
 import org.junit.Test;
+
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.geo.GeoJsonLineString;
@@ -44,13 +40,13 @@ public class CriteriaUnitTests {
 	@Test
 	public void testSimpleCriteria() {
 		Criteria c = new Criteria("name").is("Bubba");
-		assertEquals(Document.parse("{ \"name\" : \"Bubba\"}"), c.getCriteriaObject());
+		assertThat(c.getCriteriaObject()).isEqualTo(Document.parse("{ \"name\" : \"Bubba\"}"));
 	}
 
 	@Test
 	public void testNotEqualCriteria() {
 		Criteria c = new Criteria("name").ne("Bubba");
-		assertEquals(Document.parse("{ \"name\" : { \"$ne\" : \"Bubba\"}}"), c.getCriteriaObject());
+		assertThat(c.getCriteriaObject()).isEqualTo(Document.parse("{ \"name\" : { \"$ne\" : \"Bubba\"}}"));
 	}
 
 	@Test
@@ -59,13 +55,13 @@ public class CriteriaUnitTests {
 		Document reference = new Document("name", null);
 
 		Criteria criteria = new Criteria("name").is(null);
-		assertThat(criteria.getCriteriaObject(), is(reference));
+		assertThat(criteria.getCriteriaObject()).isEqualTo(reference);
 	}
 
 	@Test
 	public void testChainedCriteria() {
 		Criteria c = new Criteria("name").is("Bubba").and("age").lt(21);
-		assertEquals(Document.parse("{ \"name\" : \"Bubba\" , \"age\" : { \"$lt\" : 21}}"), c.getCriteriaObject());
+		assertThat(c.getCriteriaObject()).isEqualTo(Document.parse("{ \"name\" : \"Bubba\" , \"age\" : { \"$lt\" : 21}}"));
 	}
 
 	@Test(expected = InvalidMongoDbApiUsageException.class)
@@ -80,32 +76,29 @@ public class CriteriaUnitTests {
 		Criteria left = new Criteria("name").is("Foo").and("lastname").is("Bar");
 		Criteria right = new Criteria("name").is("Bar").and("lastname").is("Bar");
 
-		assertThat(left, is(not(right)));
-		assertThat(right, is(not(left)));
+		assertThat(left).isNotEqualTo(right);
+		assertThat(right).isNotEqualTo(left);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-507
+	@Test // DATAMONGO-507
 	public void shouldThrowExceptionWhenTryingToNegateAndOperation() {
-
-		new Criteria() //
+		assertThatIllegalArgumentException().isThrownBy(() -> new Criteria() //
 				.not() //
-				.andOperator(Criteria.where("delete").is(true).and("_id").is(42)); //
+				.andOperator(Criteria.where("delete").is(true).and("_id").is(42)));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-507
+	@Test // DATAMONGO-507
 	public void shouldThrowExceptionWhenTryingToNegateOrOperation() {
-
-		new Criteria() //
+		assertThatIllegalArgumentException().isThrownBy(() -> new Criteria() //
 				.not() //
-				.orOperator(Criteria.where("delete").is(true).and("_id").is(42)); //
+				.orOperator(Criteria.where("delete").is(true).and("_id").is(42)));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-507
+	@Test // DATAMONGO-507
 	public void shouldThrowExceptionWhenTryingToNegateNorOperation() {
-
-		new Criteria() //
+		assertThatIllegalArgumentException().isThrownBy(() -> new Criteria() //
 				.not() //
-				.norOperator(Criteria.where("delete").is(true).and("_id").is(42)); //
+				.norOperator(Criteria.where("delete").is(true).and("_id").is(42)));
 	}
 
 	@Test // DATAMONGO-507
@@ -114,8 +107,8 @@ public class CriteriaUnitTests {
 		Criteria c = Criteria.where("age").not().gt(18).and("status").is("student");
 		Document co = c.getCriteriaObject();
 
-		assertThat(co, is(notNullValue()));
-		assertThat(co, is(Document.parse("{ \"age\" : { \"$not\" : { \"$gt\" : 18}} , \"status\" : \"student\"}")));
+		assertThat(co).isNotNull();
+		assertThat(co).isEqualTo(Document.parse("{ \"age\" : { \"$not\" : { \"$gt\" : 18}} , \"status\" : \"student\"}"));
 	}
 
 	@Test // DATAMONGO-1068
@@ -123,7 +116,7 @@ public class CriteriaUnitTests {
 
 		Document document = new Criteria().getCriteriaObject();
 
-		assertThat(document, equalTo(new Document()));
+		assertThat(document).isEqualTo(new Document());
 	}
 
 	@Test // DATAMONGO-1068
@@ -131,7 +124,7 @@ public class CriteriaUnitTests {
 
 		Document document = new Criteria().lt("foo").getCriteriaObject();
 
-		assertThat(document, equalTo(new Document().append("$lt", "foo")));
+		assertThat(document).isEqualTo(new Document().append("$lt", "foo"));
 	}
 
 	@Test // DATAMONGO-1068
@@ -139,7 +132,7 @@ public class CriteriaUnitTests {
 
 		Document document = new Criteria().lt("foo").gt("bar").getCriteriaObject();
 
-		assertThat(document, equalTo(new Document().append("$lt", "foo").append("$gt", "bar")));
+		assertThat(document).isEqualTo(new Document().append("$lt", "foo").append("$gt", "bar"));
 	}
 
 	@Test // DATAMONGO-1068
@@ -147,7 +140,7 @@ public class CriteriaUnitTests {
 
 		Document document = new Criteria().lt("foo").not().getCriteriaObject();
 
-		assertThat(document, equalTo(new Document().append("$not", new Document("$lt", "foo"))));
+		assertThat(document).isEqualTo(new Document().append("$not", new Document("$lt", "foo")));
 	}
 
 	@Test // DATAMONGO-1135
@@ -155,7 +148,7 @@ public class CriteriaUnitTests {
 
 		Document document = new Criteria("foo").near(new GeoJsonPoint(100, 200)).getCriteriaObject();
 
-		assertThat(document, isBsonObject().containing("foo.$near.$geometry", new GeoJsonPoint(100, 200)));
+		assertThat(document).containsEntry("foo.$near.$geometry", new GeoJsonPoint(100, 200));
 	}
 
 	@Test // DATAMONGO-1135
@@ -163,7 +156,7 @@ public class CriteriaUnitTests {
 
 		Document document = new Criteria("foo").near(new Point(100, 200)).getCriteriaObject();
 
-		assertThat(document, isBsonObject().notContaining("foo.$near.$geometry"));
+		assertThat(document).doesNotContainKey("foo.$near.$geometry");
 	}
 
 	@Test // DATAMONGO-1135
@@ -171,7 +164,7 @@ public class CriteriaUnitTests {
 
 		Document document = new Criteria("foo").near(new GeoJsonPoint(100, 200)).maxDistance(50D).getCriteriaObject();
 
-		assertThat(document, isBsonObject().containing("foo.$near.$maxDistance", 50D));
+		assertThat(document).containsEntry("foo.$near.$maxDistance", 50D);
 	}
 
 	@Test // DATAMONGO-1135
@@ -179,7 +172,7 @@ public class CriteriaUnitTests {
 
 		Document document = new Criteria("foo").nearSphere(new GeoJsonPoint(100, 200)).maxDistance(50D).getCriteriaObject();
 
-		assertThat(document, isBsonObject().containing("foo.$nearSphere.$maxDistance", 50D));
+		assertThat(document).containsEntry("foo.$nearSphere.$maxDistance", 50D);
 	}
 
 	@Test // DATAMONGO-1110
@@ -187,7 +180,7 @@ public class CriteriaUnitTests {
 
 		Document document = new Criteria("foo").near(new GeoJsonPoint(100, 200)).minDistance(50D).getCriteriaObject();
 
-		assertThat(document, isBsonObject().containing("foo.$near.$minDistance", 50D));
+		assertThat(document).containsEntry("foo.$near.$minDistance", 50D);
 	}
 
 	@Test // DATAMONGO-1110
@@ -195,7 +188,7 @@ public class CriteriaUnitTests {
 
 		Document document = new Criteria("foo").nearSphere(new GeoJsonPoint(100, 200)).minDistance(50D).getCriteriaObject();
 
-		assertThat(document, isBsonObject().containing("foo.$nearSphere.$minDistance", 50D));
+		assertThat(document).containsEntry("foo.$nearSphere.$minDistance", 50D);
 	}
 
 	@Test // DATAMONGO-1110
@@ -204,13 +197,13 @@ public class CriteriaUnitTests {
 		Document document = new Criteria("foo").nearSphere(new GeoJsonPoint(100, 200)).minDistance(50D).maxDistance(100D)
 				.getCriteriaObject();
 
-		assertThat(document, isBsonObject().containing("foo.$nearSphere.$minDistance", 50D));
-		assertThat(document, isBsonObject().containing("foo.$nearSphere.$maxDistance", 100D));
+		assertThat(document).containsEntry("foo.$nearSphere.$minDistance", 50D);
+		assertThat(document).containsEntry("foo.$nearSphere.$maxDistance", 100D);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1134
+	@Test // DATAMONGO-1134
 	public void intersectsShouldThrowExceptionWhenCalledWihtNullValue() {
-		new Criteria("foo").intersects(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> new Criteria("foo").intersects(null));
 	}
 
 	@Test // DATAMONGO-1134
@@ -219,7 +212,7 @@ public class CriteriaUnitTests {
 		GeoJsonLineString lineString = new GeoJsonLineString(new Point(0, 0), new Point(10, 10));
 		Document document = new Criteria("foo").intersects(lineString).getCriteriaObject();
 
-		assertThat(document, isBsonObject().containing("foo.$geoIntersects.$geometry", lineString));
+		assertThat(document).containsEntry("foo.$geoIntersects.$geometry", lineString);
 	}
 
 	@Test // DATAMONGO-1835
@@ -228,8 +221,8 @@ public class CriteriaUnitTests {
 		MongoJsonSchema schema = MongoJsonSchema.builder().required("name").build();
 		Criteria criteria = Criteria.where("foo").is("bar").andDocumentStructureMatches(schema);
 
-		assertThat(criteria.getCriteriaObject(), is(equalTo(new Document("foo", "bar").append("$jsonSchema",
-				new Document("type", "object").append("required", Collections.singletonList("name"))))));
+		assertThat(criteria.getCriteriaObject()).isEqualTo(new Document("foo", "bar").append("$jsonSchema",
+				new Document("type", "object").append("required", Collections.singletonList("name"))));
 	}
 
 	@Test // DATAMONGO-1835
@@ -238,8 +231,8 @@ public class CriteriaUnitTests {
 		MongoJsonSchema schema = MongoJsonSchema.builder().required("name").build();
 		Criteria criteria = Criteria.matchingDocumentStructure(schema);
 
-		assertThat(criteria.getCriteriaObject(), is(equalTo(new Document("$jsonSchema",
-				new Document("type", "object").append("required", Collections.singletonList("name"))))));
+		assertThat(criteria.getCriteriaObject()).isEqualTo(new Document("$jsonSchema",
+				new Document("type", "object").append("required", Collections.singletonList("name"))));
 	}
 
 	@Test // DATAMONGO-1808
@@ -247,8 +240,8 @@ public class CriteriaUnitTests {
 
 		Criteria numericBitmaskCriteria = new Criteria("field").bits().allClear(0b101);
 
-		assertThat(numericBitmaskCriteria.getCriteriaObject(),
-				is(equalTo(Document.parse("{ \"field\" : { \"$bitsAllClear\" : 5} }"))));
+		assertThat(numericBitmaskCriteria.getCriteriaObject())
+				.isEqualTo(Document.parse("{ \"field\" : { \"$bitsAllClear\" : 5} }"));
 	}
 
 	@Test // DATAMONGO-1808
@@ -256,8 +249,8 @@ public class CriteriaUnitTests {
 
 		Criteria bitPositionsBitmaskCriteria = new Criteria("field").bits().allClear(Arrays.asList(0, 2));
 
-		assertThat(bitPositionsBitmaskCriteria.getCriteriaObject(),
-				is(equalTo(Document.parse("{ \"field\" : { \"$bitsAllClear\" : [ 0, 2 ]} }"))));
+		assertThat(bitPositionsBitmaskCriteria.getCriteriaObject())
+				.isEqualTo(Document.parse("{ \"field\" : { \"$bitsAllClear\" : [ 0, 2 ]} }"));
 	}
 
 	@Test // DATAMONGO-1808
@@ -265,8 +258,8 @@ public class CriteriaUnitTests {
 
 		Criteria numericBitmaskCriteria = new Criteria("field").bits().allSet(0b101);
 
-		assertThat(numericBitmaskCriteria.getCriteriaObject(),
-				is(equalTo(Document.parse("{ \"field\" : { \"$bitsAllSet\" : 5} }"))));
+		assertThat(numericBitmaskCriteria.getCriteriaObject())
+				.isEqualTo(Document.parse("{ \"field\" : { \"$bitsAllSet\" : 5} }"));
 	}
 
 	@Test // DATAMONGO-1808
@@ -274,8 +267,8 @@ public class CriteriaUnitTests {
 
 		Criteria bitPositionsBitmaskCriteria = new Criteria("field").bits().allSet(Arrays.asList(0, 2));
 
-		assertThat(bitPositionsBitmaskCriteria.getCriteriaObject(),
-				is(equalTo(Document.parse("{ \"field\" : { \"$bitsAllSet\" : [ 0, 2 ]} }"))));
+		assertThat(bitPositionsBitmaskCriteria.getCriteriaObject())
+				.isEqualTo(Document.parse("{ \"field\" : { \"$bitsAllSet\" : [ 0, 2 ]} }"));
 	}
 
 	@Test // DATAMONGO-1808
@@ -283,8 +276,8 @@ public class CriteriaUnitTests {
 
 		Criteria numericBitmaskCriteria = new Criteria("field").bits().anyClear(0b101);
 
-		assertThat(numericBitmaskCriteria.getCriteriaObject(),
-				is(equalTo(Document.parse("{ \"field\" : { \"$bitsAnyClear\" : 5} }"))));
+		assertThat(numericBitmaskCriteria.getCriteriaObject())
+				.isEqualTo(Document.parse("{ \"field\" : { \"$bitsAnyClear\" : 5} }"));
 	}
 
 	@Test // DATAMONGO-1808
@@ -292,8 +285,8 @@ public class CriteriaUnitTests {
 
 		Criteria bitPositionsBitmaskCriteria = new Criteria("field").bits().anyClear(Arrays.asList(0, 2));
 
-		assertThat(bitPositionsBitmaskCriteria.getCriteriaObject(),
-				is(equalTo(Document.parse("{ \"field\" : { \"$bitsAnyClear\" : [ 0, 2 ]} }"))));
+		assertThat(bitPositionsBitmaskCriteria.getCriteriaObject())
+				.isEqualTo(Document.parse("{ \"field\" : { \"$bitsAnyClear\" : [ 0, 2 ]} }"));
 	}
 
 	@Test // DATAMONGO-1808
@@ -301,8 +294,8 @@ public class CriteriaUnitTests {
 
 		Criteria numericBitmaskCriteria = new Criteria("field").bits().anySet(0b101);
 
-		assertThat(numericBitmaskCriteria.getCriteriaObject(),
-				is(equalTo(Document.parse("{ \"field\" : { \"$bitsAnySet\" : 5} }"))));
+		assertThat(numericBitmaskCriteria.getCriteriaObject())
+				.isEqualTo(Document.parse("{ \"field\" : { \"$bitsAnySet\" : 5} }"));
 	}
 
 	@Test // DATAMONGO-1808
@@ -310,8 +303,8 @@ public class CriteriaUnitTests {
 
 		Criteria bitPositionsBitmaskCriteria = new Criteria("field").bits().anySet(Arrays.asList(0, 2));
 
-		assertThat(bitPositionsBitmaskCriteria.getCriteriaObject(),
-				is(equalTo(Document.parse("{ \"field\" : { \"$bitsAnySet\" : [ 0, 2 ]} }"))));
+		assertThat(bitPositionsBitmaskCriteria.getCriteriaObject())
+				.isEqualTo(Document.parse("{ \"field\" : { \"$bitsAnySet\" : [ 0, 2 ]} }"));
 	}
 
 	@Test // DATAMONGO-2002

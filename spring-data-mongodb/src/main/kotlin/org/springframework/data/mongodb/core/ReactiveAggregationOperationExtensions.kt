@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.reactive.asFlow
 import kotlin.reflect.KClass
 
 /**
@@ -35,3 +37,12 @@ fun <T : Any> ReactiveAggregationOperation.aggregateAndReturn(entityClass: KClas
  */
 inline fun <reified T : Any> ReactiveAggregationOperation.aggregateAndReturn(): ReactiveAggregationOperation.ReactiveAggregation<T> =
         aggregateAndReturn(T::class.java)
+
+/**
+ * Coroutines [Flow] variant of [ReactiveAggregationOperation.TerminatingAggregationOperation.all].
+ *
+ * @author Sebastien Deleuze
+ * @since 2.2
+ */
+fun <T : Any> ReactiveAggregationOperation.TerminatingAggregationOperation<T>.flow(): Flow<T> =
+		all().asFlow()

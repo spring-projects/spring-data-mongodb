@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,17 +26,19 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.bson.types.ObjectId;
-import org.junit.Before;
-import org.junit.Test;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.convert.LazyLoadingProxy;
 import org.springframework.data.mongodb.core.convert.LazyLoadingTestUtils;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
+import org.springframework.data.mongodb.test.util.MongoTestTemplate;
+import org.springframework.data.mongodb.test.util.Template;
 
-import com.mongodb.MongoClient;
 import com.mongodb.client.model.Filters;
 
 /**
@@ -45,28 +47,24 @@ import com.mongodb.client.model.Filters;
  *
  * @author Christoph Strobl
  */
+@ExtendWith(MongoTemplateExtension.class)
 public class MongoTemplateDbRefTests {
 
-	MongoTemplate template;
-	MongoTemplate otherDbTemplate;
+	@Template(database = "mongo-template-dbref-tests",
+			initialEntitySet = { RefCycleLoadingIntoDifferentTypeRoot.class,
+					RefCycleLoadingIntoDifferentTypeIntermediate.class, RefCycleLoadingIntoDifferentTypeRootView.class,
+					WithDBRefOnRawStringId.class, WithLazyDBRefOnRawStringId.class, WithRefToAnotherDb.class,
+					WithLazyRefToAnotherDb.class, WithListRefToAnotherDb.class, WithLazyListRefToAnotherDb.class }) //
+	static MongoTestTemplate template;
 
-	@Before
+	@Template(database = "mongo-template-dbref-tests-other-db", initialEntitySet = JustSomeType.class) //
+	static MongoTestTemplate otherDbTemplate;
+
+	@BeforeEach
 	public void setUp() {
 
-		template = new MongoTemplate(new MongoClient(), "mongo-template-dbref-tests");
-
-		template.dropCollection(RefCycleLoadingIntoDifferentTypeRoot.class);
-		template.dropCollection(RefCycleLoadingIntoDifferentTypeIntermediate.class);
-		template.dropCollection(RefCycleLoadingIntoDifferentTypeRootView.class);
-		template.dropCollection(WithDBRefOnRawStringId.class);
-		template.dropCollection(WithLazyDBRefOnRawStringId.class);
-		template.dropCollection(WithRefToAnotherDb.class);
-		template.dropCollection(WithLazyRefToAnotherDb.class);
-		template.dropCollection(WithListRefToAnotherDb.class);
-		template.dropCollection(WithLazyListRefToAnotherDb.class);
-
-		otherDbTemplate = new MongoTemplate(new MongoClient(), "mongo-template-dbref-tests-other-db");
-		otherDbTemplate.dropCollection(JustSomeType.class);
+		template.flush();
+		otherDbTemplate.flush();
 	}
 
 	@Test // DATAMONGO-1703

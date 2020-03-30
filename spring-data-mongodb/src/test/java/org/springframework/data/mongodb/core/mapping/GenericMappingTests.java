@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,17 +15,17 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.Collections;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -35,16 +35,16 @@ import org.springframework.data.mongodb.core.convert.MongoConverter;
  *
  * @author Oliver Gierke
  */
-@RunWith(MockitoJUnitRunner.class)
-public class GenericMappingTests {
+@ExtendWith(MockitoExtension.class)
+class GenericMappingTests {
 
-	MongoMappingContext context;
-	MongoConverter converter;
+	private MongoMappingContext context;
+	private MongoConverter converter;
 
 	@Mock DbRefResolver resolver;
 
-	@Before
-	public void setUp() throws Exception {
+	@BeforeEach
+	void setUp() throws Exception {
 
 		context = new MongoMappingContext();
 		context.setInitialEntitySet(Collections.singleton(StringWrapper.class));
@@ -54,7 +54,7 @@ public class GenericMappingTests {
 	}
 
 	@Test
-	public void writesGenericTypeCorrectly() {
+	void writesGenericTypeCorrectly() {
 
 		StringWrapper wrapper = new StringWrapper();
 		wrapper.container = new Container<String>();
@@ -64,26 +64,26 @@ public class GenericMappingTests {
 		converter.write(wrapper, document);
 
 		Object container = document.get("container");
-		assertThat(container, is(notNullValue()));
-		assertTrue(container instanceof Document);
+		assertThat(container).isNotNull();
+		assertThat(container instanceof Document).isTrue();
 
 		Object content = ((Document) container).get("content");
-		assertTrue(content instanceof String);
-		assertThat((String) content, is("Foo!"));
+		assertThat(content instanceof String).isTrue();
+		assertThat((String) content).isEqualTo("Foo!");
 	}
 
 	@Test
-	public void readsGenericTypeCorrectly() {
+	void readsGenericTypeCorrectly() {
 
 		Document content = new Document("content", "Foo!");
 		Document container = new Document("container", content);
 
 		StringWrapper result = converter.read(StringWrapper.class, container);
-		assertThat(result.container, is(notNullValue()));
-		assertThat(result.container.content, is("Foo!"));
+		assertThat(result.container).isNotNull();
+		assertThat(result.container.content).isEqualTo("Foo!");
 	}
 
-	static class StringWrapper extends Wrapper<String> {
+	private static class StringWrapper extends Wrapper<String> {
 
 	}
 

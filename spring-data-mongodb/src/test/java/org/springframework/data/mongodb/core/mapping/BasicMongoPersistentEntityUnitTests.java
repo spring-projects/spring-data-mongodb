@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,13 +23,14 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.mapping.MappingException;
@@ -43,14 +44,14 @@ import org.springframework.data.util.ClassTypeInformation;
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class BasicMongoPersistentEntityUnitTests {
 
 	@Mock ApplicationContext context;
 	@Mock MongoPersistentProperty propertyMock;
 
 	@Test
-	public void subclassInheritsAtDocumentAnnotation() {
+	void subclassInheritsAtDocumentAnnotation() {
 
 		BasicMongoPersistentEntity<Person> entity = new BasicMongoPersistentEntity<Person>(
 				ClassTypeInformation.from(Person.class));
@@ -58,7 +59,7 @@ public class BasicMongoPersistentEntityUnitTests {
 	}
 
 	@Test
-	public void evaluatesSpELExpression() {
+	void evaluatesSpELExpression() {
 
 		MongoPersistentEntity<Company> entity = new BasicMongoPersistentEntity<Company>(
 				ClassTypeInformation.from(Company.class));
@@ -66,7 +67,7 @@ public class BasicMongoPersistentEntityUnitTests {
 	}
 
 	@Test // DATAMONGO-65, DATAMONGO-1108
-	public void collectionAllowsReferencingSpringBean() {
+	void collectionAllowsReferencingSpringBean() {
 
 		CollectionProvider provider = new CollectionProvider();
 		provider.collectionName = "reference";
@@ -84,7 +85,7 @@ public class BasicMongoPersistentEntityUnitTests {
 	}
 
 	@Test // DATAMONGO-937
-	public void shouldDetectLanguageCorrectly() {
+	void shouldDetectLanguageCorrectly() {
 
 		BasicMongoPersistentEntity<DocumentWithLanguage> entity = new BasicMongoPersistentEntity<DocumentWithLanguage>(
 				ClassTypeInformation.from(DocumentWithLanguage.class));
@@ -93,7 +94,7 @@ public class BasicMongoPersistentEntityUnitTests {
 	}
 
 	@Test // DATAMONGO-1053
-	public void verifyShouldThrowExceptionForInvalidTypeOfExplicitLanguageProperty() {
+	void verifyShouldThrowExceptionForInvalidTypeOfExplicitLanguageProperty() {
 
 		doReturn(true).when(propertyMock).isExplicitLanguageProperty();
 		doReturn(Number.class).when(propertyMock).getActualType();
@@ -106,7 +107,7 @@ public class BasicMongoPersistentEntityUnitTests {
 	}
 
 	@Test // DATAMONGO-1053
-	public void verifyShouldPassForStringAsExplicitLanguageProperty() {
+	void verifyShouldPassForStringAsExplicitLanguageProperty() {
 
 		doReturn(true).when(propertyMock).isExplicitLanguageProperty();
 		doReturn(String.class).when(propertyMock).getActualType();
@@ -122,7 +123,7 @@ public class BasicMongoPersistentEntityUnitTests {
 	}
 
 	@Test // DATAMONGO-1053
-	public void verifyShouldIgnoreNonExplicitLanguageProperty() {
+	void verifyShouldIgnoreNonExplicitLanguageProperty() {
 
 		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<AnyDocument>(
 				ClassTypeInformation.from(AnyDocument.class));
@@ -136,7 +137,7 @@ public class BasicMongoPersistentEntityUnitTests {
 	}
 
 	@Test // DATAMONGO-1157
-	public void verifyShouldThrowErrorForLazyDBRefOnFinalClass() {
+	void verifyShouldThrowErrorForLazyDBRefOnFinalClass() {
 
 		org.springframework.data.mongodb.core.mapping.DBRef dbRefMock = mock(
 				org.springframework.data.mongodb.core.mapping.DBRef.class);
@@ -154,7 +155,7 @@ public class BasicMongoPersistentEntityUnitTests {
 	}
 
 	@Test // DATAMONGO-1157
-	public void verifyShouldThrowErrorForLazyDBRefArray() {
+	void verifyShouldThrowErrorForLazyDBRefArray() {
 
 		org.springframework.data.mongodb.core.mapping.DBRef dbRefMock = mock(
 				org.springframework.data.mongodb.core.mapping.DBRef.class);
@@ -172,7 +173,7 @@ public class BasicMongoPersistentEntityUnitTests {
 	}
 
 	@Test // DATAMONGO-1157
-	public void verifyShouldPassForLazyDBRefOnNonArrayNonFinalClass() {
+	void verifyShouldPassForLazyDBRefOnNonArrayNonFinalClass() {
 
 		org.springframework.data.mongodb.core.mapping.DBRef dbRefMock = mock(
 				org.springframework.data.mongodb.core.mapping.DBRef.class);
@@ -191,7 +192,7 @@ public class BasicMongoPersistentEntityUnitTests {
 	}
 
 	@Test // DATAMONGO-1157
-	public void verifyShouldPassForNonLazyDBRefOnFinalClass() {
+	void verifyShouldPassForNonLazyDBRefOnFinalClass() {
 
 		org.springframework.data.mongodb.core.mapping.DBRef dbRefMock = mock(
 				org.springframework.data.mongodb.core.mapping.DBRef.class);
@@ -209,7 +210,7 @@ public class BasicMongoPersistentEntityUnitTests {
 	}
 
 	@Test // DATAMONGO-1291
-	public void metaInformationShouldBeReadCorrectlyFromInheritedDocumentAnnotation() {
+	void metaInformationShouldBeReadCorrectlyFromInheritedDocumentAnnotation() {
 
 		BasicMongoPersistentEntity<DocumentWithCustomAnnotation> entity = new BasicMongoPersistentEntity<DocumentWithCustomAnnotation>(
 				ClassTypeInformation.from(DocumentWithCustomAnnotation.class));
@@ -218,7 +219,7 @@ public class BasicMongoPersistentEntityUnitTests {
 	}
 
 	@Test // DATAMONGO-1373
-	public void metaInformationShouldBeReadCorrectlyFromComposedDocumentAnnotation() {
+	void metaInformationShouldBeReadCorrectlyFromComposedDocumentAnnotation() {
 
 		BasicMongoPersistentEntity<DocumentWithComposedAnnotation> entity = new BasicMongoPersistentEntity<DocumentWithComposedAnnotation>(
 				ClassTypeInformation.from(DocumentWithComposedAnnotation.class));
@@ -227,7 +228,7 @@ public class BasicMongoPersistentEntityUnitTests {
 	}
 
 	@Test // DATAMONGO-1874
-	public void usesEvaluationContextExtensionInDynamicDocumentName() {
+	void usesEvaluationContextExtensionInDynamicDocumentName() {
 
 		BasicMongoPersistentEntity<MappedWithExtension> entity = new BasicMongoPersistentEntity<>(
 				ClassTypeInformation.from(MappedWithExtension.class));
@@ -235,6 +236,56 @@ public class BasicMongoPersistentEntityUnitTests {
 				new ExtensionAwareEvaluationContextProvider(Arrays.asList(new SampleExtension())));
 
 		assertThat(entity.getCollection()).isEqualTo("collectionName");
+	}
+
+	@Test // DATAMONGO-1854
+	void readsSimpleCollation() {
+
+		BasicMongoPersistentEntity<WithSimpleCollation> entity = new BasicMongoPersistentEntity<>(
+				ClassTypeInformation.from(WithSimpleCollation.class));
+
+		assertThat(entity.getCollation()).isEqualTo(org.springframework.data.mongodb.core.query.Collation.of("en_US"));
+	}
+
+	@Test // DATAMONGO-1854
+	void readsDocumentCollation() {
+
+		BasicMongoPersistentEntity<WithDocumentCollation> entity = new BasicMongoPersistentEntity<>(
+				ClassTypeInformation.from(WithDocumentCollation.class));
+
+		assertThat(entity.getCollation()).isEqualTo(org.springframework.data.mongodb.core.query.Collation.of("en_US"));
+	}
+
+	@Test // DATAMONGO-2341
+	void detectsShardedEntityCorrectly() {
+
+		assertThat(entityOf(WithDefaultShardKey.class).isSharded()).isTrue();
+		assertThat(entityOf(Contact.class).isSharded()).isFalse();
+	}
+
+	@Test // DATAMONGO-2341
+	void readsDefaultShardKey() {
+
+		assertThat(entityOf(WithDefaultShardKey.class).getShardKey().getDocument())
+				.isEqualTo(new org.bson.Document("_id", 1));
+	}
+
+	@Test // DATAMONGO-2341
+	void readsSingleShardKey() {
+
+		assertThat(entityOf(WithSingleShardKey.class).getShardKey().getDocument())
+				.isEqualTo(new org.bson.Document("country", 1));
+	}
+
+	@Test // DATAMONGO-2341
+	void readsMultiShardKey() {
+
+		assertThat(entityOf(WithMultiShardKey.class).getShardKey().getDocument())
+				.isEqualTo(new org.bson.Document("country", 1).append("userid", 1));
+	}
+
+	static <T> BasicMongoPersistentEntity<T> entityOf(Class<T> type) {
+		return new BasicMongoPersistentEntity<>(ClassTypeInformation.from(type));
 	}
 
 	@Document("contacts")
@@ -259,13 +310,13 @@ public class BasicMongoPersistentEntityUnitTests {
 	@Document(language = "spanish")
 	static class DocumentWithLanguage {}
 
-	static class AnyDocument {}
+	private static class AnyDocument {}
 
 	@CustomDocumentAnnotation
-	static class DocumentWithCustomAnnotation {}
+	private static class DocumentWithCustomAnnotation {}
 
 	@ComposedDocumentAnnotation
-	static class DocumentWithComposedAnnotation {}
+	private static class DocumentWithComposedAnnotation {}
 
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target({ ElementType.TYPE })
@@ -283,13 +334,33 @@ public class BasicMongoPersistentEntityUnitTests {
 	}
 
 	// DATAMONGO-1874
-
 	@Document("#{myProperty}")
 	class MappedWithExtension {}
 
+	@Document(collation = "#{myCollation}")
+	class WithCollationFromSpEL {}
+
+	@Document(collation = "en_US")
+	class WithSimpleCollation {}
+
+	@Document(collation = "{ 'locale' : 'en_US' }")
+	class WithDocumentCollation {}
+
+	@Sharded
+	private
+	class WithDefaultShardKey {}
+
+	@Sharded("country")
+	private
+	class WithSingleShardKey {}
+
+	@Sharded({ "country", "userid" })
+	private
+	class WithMultiShardKey {}
+
 	static class SampleExtension implements EvaluationContextExtension {
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.spel.spi.EvaluationContextExtension#getExtensionId()
 		 */
@@ -298,13 +369,17 @@ public class BasicMongoPersistentEntityUnitTests {
 			return "sampleExtension";
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.spel.spi.EvaluationContextExtension#getProperties()
 		 */
 		@Override
 		public Map<String, Object> getProperties() {
-			return Collections.singletonMap("myProperty", "collectionName");
+
+			Map<String, Object> properties = new LinkedHashMap<>();
+			properties.put("myProperty", "collectionName");
+			properties.put("myCollation", "en_US");
+			return properties;
 		}
 	}
 }

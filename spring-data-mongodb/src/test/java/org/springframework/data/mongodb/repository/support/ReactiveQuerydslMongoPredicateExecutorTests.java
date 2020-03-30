@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,20 @@
 package org.springframework.data.mongodb.repository.support;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.Set;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
@@ -35,6 +40,7 @@ import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.config.AbstractReactiveMongoConfiguration;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.repository.Address;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.QAddress;
@@ -48,7 +54,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.mongodb.MongoException;
 import com.mongodb.reactivestreams.client.MongoClient;
-import com.mongodb.reactivestreams.client.MongoClients;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 
 /**
@@ -74,23 +79,27 @@ public class ReactiveQuerydslMongoPredicateExecutorTests {
 
 		@Override
 		public MongoClient reactiveMongoClient() {
-			return MongoClients.create();
+			return MongoTestUtils.reactiveClient();
 		}
 
 		@Override
 		protected String getDatabaseName() {
 			return "reactive";
 		}
+
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() {
+			return Collections.singleton(Person.class);
+		}
 	}
 
 	@BeforeClass
 	public static void cleanDb() {
 
-		try (MongoClient client = MongoClients.create()) {
+		MongoClient client = MongoTestUtils.reactiveClient();
 
-			MongoTestUtils.createOrReplaceCollectionNow("reactive", "person", client);
-			MongoTestUtils.createOrReplaceCollectionNow("reactive", "user", client);
-		}
+		MongoTestUtils.createOrReplaceCollectionNow("reactive", "person", client);
+		MongoTestUtils.createOrReplaceCollectionNow("reactive", "user", client);
 	}
 
 	@Before
@@ -100,19 +109,20 @@ public class ReactiveQuerydslMongoPredicateExecutorTests {
 		MongoEntityInformation<Person, String> entityInformation = factory.getEntityInformation(Person.class);
 		repository = new ReactiveQuerydslMongoPredicateExecutor<>(entityInformation, operations);
 
-		operations.dropCollection(Person.class) //
-				.as(StepVerifier::create) //
-				.verifyComplete();
-
 		dave = new Person("Dave", "Matthews", 42);
 		oliver = new Person("Oliver August", "Matthews", 4);
 		carter = new Person("Carter", "Beauford", 49);
 
 		person = new QPerson("person");
 
-		operations.insertAll(Arrays.asList(oliver, dave, carter)).as(StepVerifier::create) //
-				.expectNextCount(3) //
-				.verifyComplete();
+		Flux.merge(operations.insert(oliver), operations.insert(dave), operations.insert(carter)).then() //
+				.as(StepVerifier::create).verifyComplete();
+	}
+
+	@After
+	public void tearDown() {
+		operations.remove(new BasicQuery("{}"), "person").then().as(StepVerifier::create).verifyComplete();
+		operations.remove(new BasicQuery("{}"), "uer").then().as(StepVerifier::create).verifyComplete();
 	}
 
 	@Test // DATAMONGO-2182
@@ -200,10 +210,10 @@ public class ReactiveQuerydslMongoPredicateExecutorTests {
 		User user3 = new User();
 		user3.setUsername("user-3");
 
-		operations.insertAll(Arrays.asList(user1, user2, user3)) //
+		Flux.merge(operations.save(user1), operations.save(user2), operations.save(user3)) //
+				.then() //
 				.as(StepVerifier::create) //
-				.expectNextCount(3) //
-				.verifyComplete();
+				.verifyComplete(); //
 
 		Person person1 = new Person("Max", "The Mighty");
 		person1.setCoworker(user1);
@@ -300,14 +310,14 @@ public class ReactiveQuerydslMongoPredicateExecutorTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAMONGO-2182
+	@Test // DATAMONGO-2182, DATAMONGO-2265
 	public void translatesExceptionsCorrectly() {
 
 		ReactiveMongoOperations ops = new ReactiveMongoTemplate(dbFactory) {
 
 			@Override
-			protected MongoDatabase doGetDatabase() {
-				throw new MongoException(18, "Authentication Failed");
+			protected Mono<MongoDatabase> doGetDatabase() {
+				return Mono.error(new MongoException(18, "Authentication Failed"));
 			}
 		};
 

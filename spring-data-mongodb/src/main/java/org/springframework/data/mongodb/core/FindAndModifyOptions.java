@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the original author or authors.
+ * Copyright 2010-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,31 @@ public class FindAndModifyOptions {
 
 	private @Nullable Collation collation;
 
+	private static final FindAndModifyOptions NONE = new FindAndModifyOptions() {
+
+		private static final String ERROR_MSG = "FindAndModifyOptions.none() cannot be changed. Please use FindAndModifyOptions.options() instead.";
+
+		@Override
+		public FindAndModifyOptions returnNew(boolean returnNew) {
+			throw new UnsupportedOperationException(ERROR_MSG);
+		}
+
+		@Override
+		public FindAndModifyOptions upsert(boolean upsert) {
+			throw new UnsupportedOperationException(ERROR_MSG);
+		}
+
+		@Override
+		public FindAndModifyOptions remove(boolean remove) {
+			throw new UnsupportedOperationException(ERROR_MSG);
+		}
+
+		@Override
+		public FindAndModifyOptions collation(@Nullable Collation collation) {
+			throw new UnsupportedOperationException(ERROR_MSG);
+		}
+	};
+
 	/**
 	 * Static factory method to create a FindAndModifyOptions instance
 	 *
@@ -43,8 +68,18 @@ public class FindAndModifyOptions {
 	}
 
 	/**
+	 * Static factory method returning an unmodifiable {@link FindAndModifyOptions} instance.
+	 *
+	 * @return unmodifiable {@link FindAndModifyOptions} instance.
+	 * @since 2.2
+	 */
+	public static FindAndModifyOptions none() {
+		return NONE;
+	}
+
+	/**
 	 * Create new {@link FindAndModifyOptions} based on option of given {@litearl source}.
-	 * 
+	 *
 	 * @param source can be {@literal null}.
 	 * @return new instance of {@link FindAndModifyOptions}.
 	 * @since 2.0

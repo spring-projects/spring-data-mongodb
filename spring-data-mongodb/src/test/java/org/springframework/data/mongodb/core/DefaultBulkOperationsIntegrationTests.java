@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2015-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,10 +23,9 @@ import java.util.List;
 import java.util.Optional;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.DefaultBulkOperations.BulkOperationContext;
@@ -36,9 +35,10 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
+import org.springframework.data.mongodb.test.util.MongoTestTemplate;
+import org.springframework.data.mongodb.test.util.Template;
 import org.springframework.data.util.Pair;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import com.mongodb.MongoBulkWriteException;
 import com.mongodb.WriteConcern;
@@ -52,39 +52,35 @@ import com.mongodb.client.MongoCollection;
  * @author Christoph Strobl
  * @author Minsu Kim
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration("classpath:infrastructure.xml")
+@ExtendWith(MongoTemplateExtension.class)
 public class DefaultBulkOperationsIntegrationTests {
 
 	static final String COLLECTION_NAME = "bulk_ops";
 
-	@Autowired MongoOperations operations;
+	@Template(initialEntitySet = BaseDoc.class) //
+	static MongoTestTemplate operations;
 
-	MongoCollection<Document> collection;
-
-	@Before
+	@BeforeEach
 	public void setUp() {
-
-		this.collection = this.operations.getCollection(COLLECTION_NAME);
-		this.collection.deleteMany(new Document());
+		operations.flush(COLLECTION_NAME);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-934
+	@Test // DATAMONGO-934
 	public void rejectsNullMongoOperations() {
-		new DefaultBulkOperations(null, COLLECTION_NAME,
-				new BulkOperationContext(BulkMode.ORDERED, Optional.empty(), null, null));
-
+		assertThatIllegalArgumentException().isThrownBy(() -> new DefaultBulkOperations(null, COLLECTION_NAME,
+				new BulkOperationContext(BulkMode.ORDERED, Optional.empty(), null, null, null, null)));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-934
+	@Test // DATAMONGO-934
 	public void rejectsNullCollectionName() {
-		new DefaultBulkOperations(operations, null,
-				new BulkOperationContext(BulkMode.ORDERED, Optional.empty(), null, null));
+		assertThatIllegalArgumentException().isThrownBy(() -> new DefaultBulkOperations(operations, null,
+				new BulkOperationContext(BulkMode.ORDERED, Optional.empty(), null, null, null, null)));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-934
+	@Test // DATAMONGO-934
 	public void rejectsEmptyCollectionName() {
-		new DefaultBulkOperations(operations, "", new BulkOperationContext(BulkMode.ORDERED, Optional.empty(), null, null));
+		assertThatIllegalArgumentException().isThrownBy(() -> new DefaultBulkOperations(operations, "",
+				new BulkOperationContext(BulkMode.ORDERED, Optional.empty(), null, null, null, null)));
 	}
 
 	@Test // DATAMONGO-934
@@ -341,7 +337,7 @@ public class DefaultBulkOperationsIntegrationTests {
 				: Optional.empty();
 
 		BulkOperationContext bulkOperationContext = new BulkOperationContext(mode, entity,
-				new QueryMapper(operations.getConverter()), new UpdateMapper(operations.getConverter()));
+				new QueryMapper(operations.getConverter()), new UpdateMapper(operations.getConverter()), null, null);
 
 		DefaultBulkOperations bulkOps = new DefaultBulkOperations(operations, COLLECTION_NAME, bulkOperationContext);
 		bulkOps.setDefaultWriteConcern(WriteConcern.ACKNOWLEDGED);

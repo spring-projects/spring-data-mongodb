@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@ import static org.springframework.data.mongodb.gridfs.GridFsCriteria.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.nio.ByteBuffer;
+
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.reactivestreams.Publisher;
@@ -37,18 +39,21 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
+import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import com.mongodb.reactivestreams.client.MongoDatabase;
-import com.mongodb.reactivestreams.client.gridfs.AsyncInputStream;
 import com.mongodb.reactivestreams.client.gridfs.GridFSBucket;
 import com.mongodb.reactivestreams.client.gridfs.GridFSBuckets;
-import com.mongodb.reactivestreams.client.gridfs.GridFSDownloadStream;
 import com.mongodb.reactivestreams.client.gridfs.GridFSFindPublisher;
+import com.mongodb.reactivestreams.client.gridfs.GridFSUploadPublisher;
 
 /**
  * {@link ReactiveGridFsOperations} implementation to store content into MongoDB GridFS. Uses by default
  * {@link DefaultDataBufferFactory} to create {@link DataBuffer buffers}.
  *
  * @author Mark Paluch
+ * @author Nick Stolwijk
+ * @author Denis Zavedeev
+ * @author Christoph Strobl
  * @since 2.2
  */
 public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements ReactiveGridFsOperations {
@@ -105,34 +110,12 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.ReactiveGridFsOperations#store(com.mongodb.reactivestreams.client.gridfs.AsyncInputStream, java.lang.String, java.lang.String, java.lang.Object)
-	 */
-	@Override
-	public Mono<ObjectId> store(AsyncInputStream content, @Nullable String filename, @Nullable String contentType,
-			@Nullable Object metadata) {
-		return store(content, filename, contentType, toDocument(metadata));
-	}
-
-	/*
-	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.gridfs.ReactiveGridFsOperations#store(org.reactivestreams.Publisher, java.lang.String, java.lang.String, java.lang.Object)
 	 */
 	@Override
 	public Mono<ObjectId> store(Publisher<DataBuffer> content, @Nullable String filename, @Nullable String contentType,
 			@Nullable Object metadata) {
 		return store(content, filename, contentType, toDocument(metadata));
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.ReactiveGridFsOperations#store(com.mongodb.reactivestreams.client.gridfs.AsyncInputStream, java.lang.String, java.lang.String, org.bson.Document)
-	 */
-	@Override
-	public Mono<ObjectId> store(AsyncInputStream content, @Nullable String filename, @Nullable String contentType,
-			@Nullable Document metadata) {
-
-		Assert.notNull(content, "InputStream must not be null!");
-		return Mono.from(getGridFs().uploadFromStream(filename, content, computeUploadOptionsFor(contentType, metadata)));
 	}
 
 	/*
@@ -145,7 +128,12 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 
 		Assert.notNull(content, "Content must not be null!");
 
-		return BinaryStreamAdapters.toAsyncInputStream(content).flatMap(it -> store(it, filename, contentType, metadata));
+		GridFSUploadOptions uploadOptions = new GridFSUploadOptions();
+		uploadOptions.metadata(metadata);
+
+		GridFSUploadPublisher<ObjectId> publisher = getGridFs().uploadFromPublisher(filename,
+				Flux.from(content).map(DataBuffer::asByteBuffer), uploadOptions);
+		return Mono.from(publisher);
 	}
 
 	/*
@@ -221,10 +209,7 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 		Assert.notNull(file, "GridFSFile must not be null!");
 
 		return Mono.fromSupplier(() -> {
-
-			GridFSDownloadStream stream = getGridFs().openDownloadStream(file.getObjectId());
-
-			return new ReactiveGridFsResource(file, BinaryStreamAdapters.toPublisher(stream, dataBufferFactory));
+			return new ReactiveGridFsResource(file.getFilename(), getGridFs().downloadToPublisher(file.getId()), dataBufferFactory);
 		});
 	}
 
@@ -258,6 +243,14 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 		Document sortObject = getMappedQuery(query.getSortObject());
 
 		GridFSFindPublisher publisherToUse = getGridFs().find(queryObject).sort(sortObject);
+
+		if (query.getLimit() > 0) {
+			publisherToUse = publisherToUse.limit(query.getLimit());
+		}
+
+		if (query.getSkip() > 0) {
+			publisherToUse = publisherToUse.skip(Math.toIntExact(query.getSkip()));
+		}
 
 		Integer cursorBatchSize = query.getMeta().getCursorBatchSize();
 		if (cursorBatchSize != null) {

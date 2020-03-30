@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,11 +23,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.bson.BsonObjectId;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.springframework.core.io.support.ResourcePatternResolver;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.lang.Nullable;
@@ -51,31 +50,32 @@ import com.mongodb.client.gridfs.model.GridFSFile;
  * @author Mark Paluch
  * @author Hartmut Lang
  * @author Niklas Helge Hanft
+ * @author Denis Zavedeev
  */
 public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOperations, ResourcePatternResolver {
 
-	private final MongoDbFactory dbFactory;
+	private final MongoDatabaseFactory dbFactory;
 
 	private final @Nullable String bucket;
 
 	/**
-	 * Creates a new {@link GridFsTemplate} using the given {@link MongoDbFactory} and {@link MongoConverter}.
+	 * Creates a new {@link GridFsTemplate} using the given {@link MongoDatabaseFactory} and {@link MongoConverter}.
 	 *
 	 * @param dbFactory must not be {@literal null}.
 	 * @param converter must not be {@literal null}.
 	 */
-	public GridFsTemplate(MongoDbFactory dbFactory, MongoConverter converter) {
+	public GridFsTemplate(MongoDatabaseFactory dbFactory, MongoConverter converter) {
 		this(dbFactory, converter, null);
 	}
 
 	/**
-	 * Creates a new {@link GridFsTemplate} using the given {@link MongoDbFactory} and {@link MongoConverter}.
+	 * Creates a new {@link GridFsTemplate} using the given {@link MongoDatabaseFactory} and {@link MongoConverter}.
 	 *
 	 * @param dbFactory must not be {@literal null}.
 	 * @param converter must not be {@literal null}.
 	 * @param bucket
 	 */
-	public GridFsTemplate(MongoDbFactory dbFactory, MongoConverter converter, @Nullable String bucket) {
+	public GridFsTemplate(MongoDatabaseFactory dbFactory, MongoConverter converter, @Nullable String bucket) {
 
 		super(converter);
 
@@ -166,7 +166,17 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 		Document queryObject = getMappedQuery(query.getQueryObject());
 		Document sortObject = getMappedQuery(query.getSortObject());
 
-		return getGridFs().find(queryObject).sort(sortObject);
+		GridFSFindIterable iterable = getGridFs().find(queryObject).sort(sortObject);
+
+		if (query.getSkip() > 0) {
+			iterable = iterable.skip(Math.toIntExact(query.getSkip()));
+		}
+
+		if (query.getLimit() > 0) {
+			iterable = iterable.limit(query.getLimit());
+		}
+
+		return iterable;
 	}
 
 	/*
@@ -184,7 +194,7 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 	public void delete(Query query) {
 
 		for (GridFSFile gridFSFile : find(query)) {
-			getGridFs().delete(((BsonObjectId) gridFSFile.getId()).getValue());
+			getGridFs().delete(gridFSFile.getId());
 		}
 	}
 
@@ -215,7 +225,7 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 
 		Assert.notNull(file, "GridFSFile must not be null!");
 
-		return new GridFsResource(file, getGridFs().openDownloadStream(file.getObjectId()));
+		return new GridFsResource(file, getGridFs().openDownloadStream(file.getId()));
 	}
 
 	/*
@@ -247,7 +257,7 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 
 	private GridFSBucket getGridFs() {
 
-		MongoDatabase db = dbFactory.getDb();
+		MongoDatabase db = dbFactory.getMongoDatabase();
 		return bucket == null ? GridFSBuckets.create(db) : GridFSBuckets.create(db, bucket);
 	}
 }

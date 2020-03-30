@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.springframework.data.mongodb;
 
 import reactor.core.publisher.Mono;
@@ -45,7 +44,7 @@ public interface ReactiveMongoDatabaseFactory extends CodecRegistryProvider {
 	MongoDatabase getMongoDatabase() throws DataAccessException;
 
 	/**
-	 * Creates a {@link MongoDatabase} instance to access the database with the given name.
+	 * Obtain a {@link MongoDatabase} instance to access the database with the given name.
 	 *
 	 * @param dbName must not be {@literal null} or empty.
 	 * @return
@@ -88,4 +87,16 @@ public interface ReactiveMongoDatabaseFactory extends CodecRegistryProvider {
 	 * @since 2.1
 	 */
 	ReactiveMongoDatabaseFactory withSession(ClientSession session);
+
+	/**
+	 * Returns if the given {@link ReactiveMongoDatabaseFactory} is bound to a
+	 * {@link com.mongodb.reactivestreams.client.ClientSession} that has an
+	 * {@link com.mongodb.reactivestreams.client.ClientSession#hasActiveTransaction() active transaction}.
+	 *
+	 * @return {@literal true} if there's an active transaction, {@literal false} otherwise.
+	 * @since 2.2
+	 */
+	default boolean isTransactionActive() {
+		return false;
+	}
 }

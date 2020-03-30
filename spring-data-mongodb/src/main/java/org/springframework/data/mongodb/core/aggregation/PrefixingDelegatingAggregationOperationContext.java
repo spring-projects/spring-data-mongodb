@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import java.util.Set;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
+import org.springframework.lang.Nullable;
 
 /**
  * {@link AggregationOperationContext} implementation prefixing non-command keys on root level with the given prefix.
@@ -65,6 +66,15 @@ public class PrefixingDelegatingAggregationOperationContext implements Aggregati
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(org.bson.Document, java.lang.Class)
+	 */
+	@Override
+	public Document getMappedObject(Document document, @Nullable Class<?> type) {
+		return doPrefix(delegate.getMappedObject(document, type));
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getReference(org.springframework.data.mongodb.core.aggregation.Field)
 	 */
 	@Override
@@ -79,6 +89,15 @@ public class PrefixingDelegatingAggregationOperationContext implements Aggregati
 	@Override
 	public FieldReference getReference(String name) {
 		return delegate.getReference(name);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getFields(java.lang.Class)
+	 */
+	@Override
+	public Fields getFields(Class<?> type) {
+		return delegate.getFields(type);
 	}
 
 	@SuppressWarnings("unchecked")

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 package org.springframework.data.mongodb.core
 
 import com.mongodb.client.result.DeleteResult
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.reactive.asFlow
 import kotlinx.coroutines.reactive.awaitSingle
 import kotlin.reflect.KClass
 
@@ -46,3 +48,13 @@ inline fun <reified T : Any> ReactiveRemoveOperation.remove(): ReactiveRemoveOpe
  */
 suspend fun <T : Any> ReactiveRemoveOperation.TerminatingRemove<T>.allAndAwait(): DeleteResult =
 		all().awaitSingle()
+
+
+/**
+ * Coroutines [Flow] variant of [ReactiveRemoveOperation.TerminatingRemove.findAndRemove].
+ *
+ * @author Sebastien Deleuze
+ * @since 2.2
+ */
+fun <T : Any> ReactiveRemoveOperation.TerminatingRemove<T>.findAndRemoveAsFlow(): Flow<T> =
+		findAndRemove().asFlow()

@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2019 the original author or authors.
+ * Copyright 2008-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,13 +37,13 @@ import org.bson.types.Decimal128;
 import org.bson.types.MaxKey;
 import org.bson.types.MinKey;
 import org.bson.types.ObjectId;
-
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.NumberUtils;
+import org.springframework.util.ObjectUtils;
 
 /**
  * Reads a JSON and evaluates placehoders and SpEL expressions. Modified version of <a href=
@@ -95,6 +96,15 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 
 	public ParameterBindingJsonReader(String json, ValueProvider accessor, SpelExpressionParser spelExpressionParser,
 			EvaluationContext evaluationContext) {
+
+		this(json, accessor, spelExpressionParser, () -> evaluationContext);
+	}
+
+	/**
+	 * @since 2.2.3
+	 */
+	public ParameterBindingJsonReader(String json, ValueProvider accessor, SpelExpressionParser spelExpressionParser,
+			Supplier<EvaluationContext> evaluationContext) {
 
 		this.scanner = new JsonScanner(json);
 		setContext(new Context(null, BsonContextType.TOP_LEVEL));
@@ -387,16 +397,42 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		}
 
 		String computedValue = tokenValue;
+
+		boolean matched = false;
 		while (matcher.find()) {
 
+			matched = true;
 			String group = matcher.group();
 			int index = computeParameterIndex(group);
-			computedValue = computedValue.replace(group, getBindableValueForIndex(index).toString());
+			computedValue = computedValue.replace(group, nullSafeToString(getBindableValueForIndex(index)));
 		}
+
+		if (!matched) {
+
+			Matcher regexMatcher = EXPRESSION_BINDING_PATTERN.matcher(tokenValue);
+
+			while (regexMatcher.find()) {
+
+				String binding = regexMatcher.group();
+				String expression = binding.substring(3, binding.length() - 1);
+
+				computedValue = computedValue.replace(binding, nullSafeToString(evaluateExpression(expression)));
+			}
+		}
+
 		bindableValue.setValue(computedValue);
 		bindableValue.setType(BsonType.STRING);
 
 		return bindableValue;
+	}
+
+	private static String nullSafeToString(@Nullable Object value) {
+
+		if (value instanceof Date) {
+			return DateTimeFormatter.format(((Date) value).getTime());
+		}
+
+		return ObjectUtils.nullSafeToString(value);
 	}
 
 	private static int computeParameterIndex(String parameter) {
@@ -1227,13 +1263,25 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		} else {
 			if (valueToken.getType() == JsonTokenType.INT32 || valueToken.getType() == JsonTokenType.INT64) {
 				value = valueToken.getValue(Long.class);
-			} else if (valueToken.getType() == JsonTokenType.STRING) {
-				String dateTimeString = valueToken.getValue(String.class);
-				try {
-					value = DateTimeFormatter.parse(dateTimeString);
-				} catch (IllegalArgumentException e) {
-					throw new JsonParseException("Failed to parse string as a date", e);
+			} else if (valueToken.getType() == JsonTokenType.STRING
+					|| valueToken.getType() == JsonTokenType.UNQUOTED_STRING) {
+
+				// Spring Data Customization START
+
+				Object dt = bindableValueFor(valueToken).getValue();
+				if (dt instanceof Date) {
+					value = ((Date) dt).getTime();
+				} else if (dt instanceof Number) {
+					value = NumberUtils.convertNumberToTargetClass((Number) dt, Long.class);
+				} else {
+					try {
+						value = DateTimeFormatter.parse(dt.toString());
+					} catch (IllegalArgumentException e) {
+						throw new JsonParseException(String.format("Failed to parse string '%s' as a date", dt), e);
+					}
 				}
+
+				// Spring Data Customization END
 			} else {
 				throw new JsonParseException("JSON reader expected an integer or string but found '%s'.",
 						valueToken.getValue());
@@ -1332,7 +1380,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		if (patternToken.getType() == JsonTokenType.STRING || patternToken.getType() == JsonTokenType.UNQUOTED_STRING) {
 			return bindableValueFor(patternToken).getValue().toString();
 		}
-		
+
 		throw new JsonParseException("JSON reader expected a string but found '%s'.", patternToken.getValue());
 
 		// Spring Data Customization END
@@ -1516,28 +1564,9 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		return oid;
 	}
 
-	@Deprecated
-	@Override
-	public void mark() {
-		if (mark != null) {
-			throw new BSONException("A mark already exists; it needs to be reset before creating a new one");
-		}
-		mark = new Mark();
-	}
-
 	@Override
 	public BsonReaderMark getMark() {
 		return new Mark();
-	}
-
-	@Deprecated
-	@Override
-	public void reset() {
-		if (mark == null) {
-			throw new BSONException("trying to reset a mark before creating it");
-		}
-		mark.reset();
-		mark = null;
 	}
 
 	@Override

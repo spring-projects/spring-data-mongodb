@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,17 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
+import java.util.Collections;
+import java.util.Set;
+
 import org.springframework.context.annotation.Bean;
-import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
+import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.mapping.event.LoggingEventListener;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
-import com.mongodb.Mongo;
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 
-public class GeoIndexedAppConfig extends AbstractMongoConfiguration {
+public class GeoIndexedAppConfig extends AbstractMongoClientConfiguration {
 
 	public static String GEO_DB = "database";
 	public static String GEO_COLLECTION = "geolocation";
@@ -35,7 +38,7 @@ public class GeoIndexedAppConfig extends AbstractMongoConfiguration {
 	@Override
 	@Bean
 	public MongoClient mongoClient() {
-		return new MongoClient("127.0.0.1");
+		return MongoTestUtils.client();
 	}
 
 	@Override
@@ -46,5 +49,15 @@ public class GeoIndexedAppConfig extends AbstractMongoConfiguration {
 	@Bean
 	public LoggingEventListener mappingEventsListener() {
 		return new LoggingEventListener();
+	}
+
+	@Override
+	protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+		return Collections.emptySet();
+	}
+
+	@Override
+	protected boolean autoIndexCreation() {
+		return true;
 	}
 }

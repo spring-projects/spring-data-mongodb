@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,21 @@ public class FindAndReplaceOptions {
 	private boolean returnNew;
 	private boolean upsert;
 
+	private static final FindAndReplaceOptions NONE = new FindAndReplaceOptions() {
+
+		private static final String ERROR_MSG = "FindAndReplaceOptions.none() cannot be changed. Please use FindAndReplaceOptions.options() instead.";
+
+		@Override
+		public FindAndReplaceOptions returnNew() {
+			throw new UnsupportedOperationException(ERROR_MSG);
+		}
+
+		@Override
+		public FindAndReplaceOptions upsert() {
+			throw new UnsupportedOperationException(ERROR_MSG);
+		}
+	};
+
 	/**
 	 * Static factory method to create a {@link FindAndReplaceOptions} instance.
 	 * <dl>
@@ -49,6 +64,16 @@ public class FindAndReplaceOptions {
 	 */
 	public static FindAndReplaceOptions options() {
 		return new FindAndReplaceOptions();
+	}
+
+	/**
+	 * Static factory method returning an unmodifiable {@link FindAndReplaceOptions} instance.
+	 *
+	 * @return unmodifiable {@link FindAndReplaceOptions} instance.
+	 * @since 2.2
+	 */
+	public static FindAndReplaceOptions none() {
+		return NONE;
 	}
 
 	/**

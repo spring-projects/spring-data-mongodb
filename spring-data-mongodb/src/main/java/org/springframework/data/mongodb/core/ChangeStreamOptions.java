@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,9 +21,11 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Optional;
 
+import org.bson.BsonDocument;
 import org.bson.BsonTimestamp;
 import org.bson.BsonValue;
 import org.bson.Document;
+
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.lang.Nullable;
@@ -51,6 +53,7 @@ public class ChangeStreamOptions {
 	private @Nullable FullDocument fullDocumentLookup;
 	private @Nullable Collation collation;
 	private @Nullable Object resumeTimestamp;
+	private Resume resume = Resume.UNDEFINED;
 
 	protected ChangeStreamOptions() {}
 
@@ -98,6 +101,22 @@ public class ChangeStreamOptions {
 	}
 
 	/**
+	 * @return {@literal true} if the change stream should be started after the {@link #getResumeToken() token}.
+	 * @since 2.2
+	 */
+	public boolean isStartAfter() {
+		return Resume.START_AFTER.equals(resume);
+	}
+
+	/**
+	 * @return {@literal true} if the change stream should be resumed after the {@link #getResumeToken() token}.
+	 * @since 2.2
+	 */
+	public boolean isResumeAfter() {
+		return Resume.RESUME_AFTER.equals(resume);
+	}
+
+	/**
 	 * @return empty {@link ChangeStreamOptions}.
 	 */
 	public static ChangeStreamOptions empty() {
@@ -138,6 +157,25 @@ public class ChangeStreamOptions {
 	}
 
 	/**
+	 * @author Christoph Strobl
+	 * @since 2.2
+	 */
+	enum Resume {
+
+		UNDEFINED,
+
+		/**
+		 * @see com.mongodb.client.ChangeStreamIterable#startAfter(BsonDocument)
+		 */
+		START_AFTER,
+
+		/**
+		 * @see com.mongodb.client.ChangeStreamIterable#resumeAfter(BsonDocument)
+		 */
+		RESUME_AFTER
+	}
+
+	/**
 	 * Builder for creating {@link ChangeStreamOptions}.
 	 *
 	 * @author Christoph Strobl
@@ -150,6 +188,7 @@ public class ChangeStreamOptions {
 		private @Nullable FullDocument fullDocumentLookup;
 		private @Nullable Collation collation;
 		private @Nullable Object resumeTimestamp;
+		private Resume resume = Resume.UNDEFINED;
 
 		private ChangeStreamOptionsBuilder() {}
 
@@ -217,6 +256,11 @@ public class ChangeStreamOptions {
 			Assert.notNull(resumeToken, "ResumeToken must not be null!");
 
 			this.resumeToken = resumeToken;
+
+			if (this.resume == Resume.UNDEFINED) {
+				this.resume = Resume.RESUME_AFTER;
+			}
+
 			return this;
 		}
 
@@ -274,17 +318,48 @@ public class ChangeStreamOptions {
 		}
 
 		/**
+		 * Set the resume token after which to continue emitting notifications.
+		 *
+		 * @param resumeToken must not be {@literal null}.
+		 * @return this.
+		 * @since 2.2
+		 */
+		public ChangeStreamOptionsBuilder resumeAfter(BsonValue resumeToken) {
+
+			resumeToken(resumeToken);
+			this.resume = Resume.RESUME_AFTER;
+
+			return this;
+		}
+
+		/**
+		 * Set the resume token after which to start emitting notifications.
+		 *
+		 * @param resumeToken must not be {@literal null}.
+		 * @return this.
+		 * @since 2.2
+		 */
+		public ChangeStreamOptionsBuilder startAfter(BsonValue resumeToken) {
+
+			resumeToken(resumeToken);
+			this.resume = Resume.START_AFTER;
+
+			return this;
+		}
+
+		/**
 		 * @return the built {@link ChangeStreamOptions}
 		 */
 		public ChangeStreamOptions build() {
 
 			ChangeStreamOptions options = new ChangeStreamOptions();
 
-			options.filter = filter;
-			options.resumeToken = resumeToken;
-			options.fullDocumentLookup = fullDocumentLookup;
-			options.collation = collation;
-			options.resumeTimestamp = resumeTimestamp;
+			options.filter = this.filter;
+			options.resumeToken = this.resumeToken;
+			options.fullDocumentLookup = this.fullDocumentLookup;
+			options.collation = this.collation;
+			options.resumeTimestamp = this.resumeTimestamp;
+			options.resume = this.resume;
 
 			return options;
 		}

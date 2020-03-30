@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,15 +15,15 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import org.bson.Document;
 import org.bson.types.Code;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.DocumentToNamedMongoScriptConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.NamedMongoScriptToDocumentConverter;
@@ -39,7 +39,8 @@ import org.springframework.data.mongodb.core.script.NamedMongoScript;
  * @since 1.7
  */
 @RunWith(Suite.class)
-@SuiteClasses({ NamedMongoScriptToDocumentConverterUnitTests.class, DocumentToNamedMongoScriptConverterUnitTests.class })
+@SuiteClasses({ NamedMongoScriptToDocumentConverterUnitTests.class,
+		DocumentToNamedMongoScriptConverterUnitTests.class })
 public class NamedMongoScriptConvertsUnitTests {
 
 	static final String FUNCTION_NAME = "echo";
@@ -56,18 +57,12 @@ public class NamedMongoScriptConvertsUnitTests {
 		NamedMongoScriptToDocumentConverter converter = NamedMongoScriptToDocumentConverter.INSTANCE;
 
 		@Test // DATAMONGO-479
-		public void convertShouldReturnEmptyDocWhenScriptIsNull() {
-			assertThat(converter.convert(null), is((Document) new Document()));
-		}
-
-		@Test // DATAMONGO-479
 		public void convertShouldConvertScriptNameCorreclty() {
 
 			Document document = converter.convert(ECHO_SCRIPT);
 
 			Object id = document.get("_id");
-			assertThat(id, is(instanceOf(String.class)));
-			assertThat(id, is((Object) FUNCTION_NAME));
+			assertThat(id).isInstanceOf(String.class).isEqualTo(FUNCTION_NAME);
 		}
 
 		@Test // DATAMONGO-479
@@ -76,8 +71,7 @@ public class NamedMongoScriptConvertsUnitTests {
 			Document document = converter.convert(ECHO_SCRIPT);
 
 			Object code = document.get("value");
-			assertThat(code, is(instanceOf(Code.class)));
-			assertThat(code, is((Object) new Code(JS_FUNCTION)));
+			assertThat(code).isInstanceOf(Code.class).isEqualTo(new Code(JS_FUNCTION));
 		}
 	}
 
@@ -88,9 +82,9 @@ public class NamedMongoScriptConvertsUnitTests {
 
 		DocumentToNamedMongoScriptConverter converter = DocumentToNamedMongoScriptConverter.INSTANCE;
 
-		@Test // DATAMONGO-479
-		public void convertShouldReturnNullIfSourceIsNull() {
-			assertThat(converter.convert(null), is(nullValue()));
+		@Test // DATAMONGO-479, DATAMONGO-2385
+		public void convertShouldReturnNullIfSourceIsEmpty() {
+			assertThat(converter.convert(new Document())).isNull();
 		}
 
 		@Test // DATAMONGO-479
@@ -98,7 +92,7 @@ public class NamedMongoScriptConvertsUnitTests {
 
 			NamedMongoScript script = converter.convert(FUNCTION);
 
-			assertThat(script.getName(), is(FUNCTION_NAME));
+			assertThat(script.getName()).isEqualTo(FUNCTION_NAME);
 		}
 
 		@Test // DATAMONGO-479
@@ -106,8 +100,7 @@ public class NamedMongoScriptConvertsUnitTests {
 
 			NamedMongoScript script = converter.convert(FUNCTION);
 
-			assertThat(script.getCode(), is(notNullValue()));
-			assertThat(script.getCode(), is(JS_FUNCTION));
+			assertThat(script.getCode()).isEqualTo(JS_FUNCTION);
 		}
 	}
 

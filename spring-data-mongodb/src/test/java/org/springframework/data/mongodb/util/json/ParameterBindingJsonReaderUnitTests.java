@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,61 +20,68 @@ import static org.assertj.core.api.Assertions.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 import org.bson.Document;
 import org.bson.codecs.DecoderContext;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.springframework.expression.EvaluationContext;
+import org.springframework.expression.TypedValue;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 /**
+ * Unit tests for {@link ParameterBindingJsonReader}.
+ *
  * @author Christoph Strobl
  */
-public class ParameterBindingJsonReaderUnitTests {
+class ParameterBindingJsonReaderUnitTests {
 
 	@Test
-	public void bindUnquotedStringValue() {
+	void bindUnquotedStringValue() {
 
 		Document target = parse("{ 'lastname' : ?0 }", "kohlin");
 		assertThat(target).isEqualTo(new Document("lastname", "kohlin"));
 	}
 
 	@Test
-	public void bindQuotedStringValue() {
+	void bindQuotedStringValue() {
 
 		Document target = parse("{ 'lastname' : '?0' }", "kohlin");
 		assertThat(target).isEqualTo(new Document("lastname", "kohlin"));
 	}
 
 	@Test
-	public void bindUnquotedIntegerValue() {
+	void bindUnquotedIntegerValue() {
 
 		Document target = parse("{ 'lastname' : ?0 } ", 100);
 		assertThat(target).isEqualTo(new Document("lastname", 100));
 	}
 
 	@Test
-	public void bindMultiplePlacholders() {
+	void bindMultiplePlacholders() {
 
 		Document target = parse("{ 'lastname' : ?0, 'firstname' : '?1' }", "Kohlin", "Dalinar");
 		assertThat(target).isEqualTo(Document.parse("{ 'lastname' : 'Kohlin', 'firstname' : 'Dalinar' }"));
 	}
 
 	@Test
-	public void bindQuotedIntegerValue() {
+	void bindQuotedIntegerValue() {
 
 		Document target = parse("{ 'lastname' : '?0' }", 100);
 		assertThat(target).isEqualTo(new Document("lastname", "100"));
 	}
 
 	@Test
-	public void bindValueToRegex() {
+	void bindValueToRegex() {
 
 		Document target = parse("{ 'lastname' : { '$regex' : '^(?0)'} }", "kohlin");
 		assertThat(target).isEqualTo(Document.parse("{ 'lastname' : { '$regex' : '^(kohlin)'} }"));
 	}
 
 	@Test
-	public void bindValueToMultiRegex() {
+	void bindValueToMultiRegex() {
 
 		Document target = parse(
 				"{'$or' : [{'firstname': {'$regex': '.*?0.*', '$options': 'i'}}, {'lastname' : {'$regex': '.*?0xyz.*', '$options': 'i'}} ]}",
@@ -84,7 +91,7 @@ public class ParameterBindingJsonReaderUnitTests {
 	}
 
 	@Test
-	public void bindMultipleValuesToSingleToken() {
+	void bindMultipleValuesToSingleToken() {
 
 		Document target = parse("{$where: 'return this.date.getUTCMonth() == ?2 && this.date.getUTCDay() == ?3;'}", 0, 1, 2,
 				3, 4);
@@ -93,21 +100,21 @@ public class ParameterBindingJsonReaderUnitTests {
 	}
 
 	@Test
-	public void bindValueToDbRef() {
+	void bindValueToDbRef() {
 
 		Document target = parse("{ 'reference' : { $ref : 'reference', $id : ?0 }}", "kohlin");
 		assertThat(target).isEqualTo(Document.parse("{ 'reference' : { $ref : 'reference', $id : 'kohlin' }}"));
 	}
 
 	@Test
-	public void bindToKey() {
+	void bindToKey() {
 
 		Document target = parse("{ ?0 : ?1 }", "firstname", "kaladin");
 		assertThat(target).isEqualTo(Document.parse("{ 'firstname' : 'kaladin' }"));
 	}
 
 	@Test
-	public void bindListValue() {
+	void bindListValue() {
 
 		//
 		Document target = parse("{ 'lastname' : { $in : ?0 } }", Arrays.asList("Kohlin", "Davar"));
@@ -115,7 +122,7 @@ public class ParameterBindingJsonReaderUnitTests {
 	}
 
 	@Test
-	public void bindListOfBinaryValue() {
+	void bindListOfBinaryValue() {
 
 		//
 		byte[] value = "Kohlin".getBytes(StandardCharsets.UTF_8);
@@ -126,7 +133,7 @@ public class ParameterBindingJsonReaderUnitTests {
 	}
 
 	@Test
-	public void bindExtendedExpression() {
+	void bindExtendedExpression() {
 
 		Document target = parse("{'id':?#{ [0] ? { $exists :true} : [1] }}", true, "firstname", "kaladin");
 		assertThat(target).isEqualTo(Document.parse("{ \"id\" : { \"$exists\" : true}}"));
@@ -135,7 +142,7 @@ public class ParameterBindingJsonReaderUnitTests {
 	// {'id':?#{ [0] ? { $exists :true} : [1] }}
 
 	@Test
-	public void bindDocumentValue() {
+	void bindDocumentValue() {
 
 		//
 		Document target = parse("{ 'lastname' : ?0 }", new Document("$eq", "Kohlin"));
@@ -143,7 +150,7 @@ public class ParameterBindingJsonReaderUnitTests {
 	}
 
 	@Test
-	public void arrayWithoutBinding() {
+	void arrayWithoutBinding() {
 
 		//
 		Document target = parse("{ 'lastname' : { $in : [\"Kohlin\", \"Davar\"] } }");
@@ -151,11 +158,102 @@ public class ParameterBindingJsonReaderUnitTests {
 	}
 
 	@Test
-	public void bindSpEL() {
+	void bindSpEL() {
 
 		// "{ arg0 : ?#{[0]} }"
 		Document target = parse("{ arg0 : ?#{[0]} }", 100.01D);
 		assertThat(target).isEqualTo(new Document("arg0", 100.01D));
+	}
+
+	@Test // DATAMONGO-2315
+	void bindDateAsDate() {
+
+		Date date = new Date();
+		Document target = parse("{ 'end_date' : { $gte : { $date : ?0 } } }", date);
+
+		assertThat(target).isEqualTo(Document.parse("{ 'end_date' : { $gte : { $date : " + date.getTime() + " } } } "));
+	}
+
+	@Test // DATAMONGO-2315
+	void bindQuotedDateAsDate() {
+
+		Date date = new Date();
+		Document target = parse("{ 'end_date' : { $gte : { $date : '?0' } } }", date);
+
+		assertThat(target).isEqualTo(Document.parse("{ 'end_date' : { $gte : { $date : " + date.getTime() + " } } } "));
+	}
+
+	@Test // DATAMONGO-2315
+	void bindStringAsDate() {
+
+		Date date = new Date();
+		Document target = parse("{ 'end_date' : { $gte : { $date : ?0 } } }", "2019-07-04T12:19:23.000Z");
+
+		assertThat(target).isEqualTo(Document.parse("{ 'end_date' : { $gte : { $date : '2019-07-04T12:19:23.000Z' } } } "));
+	}
+
+	@Test // DATAMONGO-2315
+	void bindNumberAsDate() {
+
+		Long time = new Date().getTime();
+		Document target = parse("{ 'end_date' : { $gte : { $date : ?0 } } }", time);
+
+		assertThat(target).isEqualTo(Document.parse("{ 'end_date' : { $gte : { $date : " + time + " } } } "));
+	}
+
+	@Test // DATAMONGO-2418
+	void shouldNotAccessSpElEvaluationContextWhenNoSpElPresentInBindableTarget() {
+
+		Object[] args = new Object[] { "value" };
+		EvaluationContext evaluationContext = new StandardEvaluationContext() {
+
+			@Override
+			public TypedValue getRootObject() {
+				throw new RuntimeException("o_O");
+			}
+		};
+
+		ParameterBindingJsonReader reader = new ParameterBindingJsonReader("{ 'name':'?0' }",
+				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), evaluationContext));
+		Document target = new ParameterBindingDocumentCodec().decode(reader, DecoderContext.builder().build());
+
+		assertThat(target).isEqualTo(new Document("name", "value"));
+	}
+
+	@Test // DATAMONGO-2476
+	void bindUnquotedParameterInArray() {
+
+		Document target = parse("{ 'name' : { $in : [?0] } }", "kohlin");
+		assertThat(target).isEqualTo(new Document("name", new Document("$in", Collections.singletonList("kohlin"))));
+	}
+
+	@Test // DATAMONGO-2476
+	void bindMultipleUnquotedParameterInArray() {
+
+		Document target = parse("{ 'name' : { $in : [?0,?1] } }", "dalinar", "kohlin");
+		assertThat(target).isEqualTo(new Document("name", new Document("$in", Arrays.asList("dalinar", "kohlin"))));
+	}
+
+	@Test // DATAMONGO-2476
+	void bindUnquotedParameterInArrayWithSpaces() {
+
+		Document target = parse("{ 'name' : { $in : [ ?0 ] } }", "kohlin");
+		assertThat(target).isEqualTo(new Document("name", new Document("$in", Collections.singletonList("kohlin"))));
+	}
+
+	@Test // DATAMONGO-2476
+	void bindQuotedParameterInArray() {
+
+		Document target = parse("{ 'name' : { $in : ['?0'] } }", "kohlin");
+		assertThat(target).isEqualTo(new Document("name", new Document("$in", Collections.singletonList("kohlin"))));
+	}
+
+	@Test // DATAMONGO-2476
+	void bindQuotedMulitParameterInArray() {
+
+		Document target = parse("{ 'name' : { $in : ['?0,?1'] } }", "dalinar", "kohlin");
+		assertThat(target)
+				.isEqualTo(new Document("name", new Document("$in", Collections.singletonList("dalinar,kohlin"))));
 	}
 
 	private static Document parse(String json, Object... args) {

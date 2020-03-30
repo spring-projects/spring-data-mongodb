@@ -36,11 +36,17 @@ Subscription subscription = container.register(new ChangeStreamRequest<>(listene
 
 container.stop();                                                                                         <5>
 ----
-<1> Starting the container intializes the resources and starts `Task` instances for already registered `SubscriptionRequest` instances. Requests added after startup are ran immediately.
+<1> Starting the container initializes the resources and starts `Task` instances for already registered `SubscriptionRequest` instances. Requests added after startup are ran immediately.
 <2> Define the listener called when a `Message` is received. The `Message#getBody()` is converted to the requested domain type. Use `Document` to receive raw results without conversion.
 <3> Set the collection to listen to and provide additional options through `ChangeStreamOptions`.
 <4> Register the request. The returned `Subscription` can be used to check the current `Task` state and cancel its execution to free resources.
 <5> Do not forget to stop the container once you are sure you no longer need it. Doing so stops all running `Task` instances within the container.
+====
+
+[NOTE]
+====
+Errors while processing are passed on to an `org.springframework.util.ErrorHandler`. If not stated otherwise a log appending `ErrorHandler` gets applied by default. +
+Please use `register(request, body, errorHandler)` to provide additional functionality.
 ====
 
 === Reactive Change Streams
@@ -51,14 +57,14 @@ Subscribing to Change Streams with the reactive API is a more natural approach t
 ====
 [source,java]
 ----
-ChangeStreamOptions options = ChangeStreamOptions.builder()
-    .filter(newAggregation(User.class, match(where("age").gte(38)))                              <1>
-    .build();
-
-Flux<ChangeStreamEvent<User>> flux = reactiveTemplate.changeStream("user", options, User.class); <2>
+Flux<ChangeStreamEvent<User>> flux = reactiveTemplate.changeStream(User.class) <1>
+    .watchCollection("people")
+    .filter(where("age").gte(38))                                              <2>
+    .listen();                                                                 <3>
 ----
-<1> Use an aggregation pipeline to filter events.
-<2> Obtain a `Flux` of change stream events. The `ChangeStreamEvent#getBody()` is converted to the requested domain type. Use `Document` to receive raw results without conversion.
+<1> The event target type the underlying document should be converted to. Leave this out to receive raw results without conversion.
+<2> Use an aggregation pipeline or just a query `Criteria` to filter events.
+<3> Obtain a `Flux` of change stream events. The `ChangeStreamEvent#getBody()` is converted to the requested domain type from (2).
 ====
 
 === Resuming Change Streams
@@ -72,11 +78,10 @@ The following example shows how to set the resume offset using server time:
 ====
 [source,java]
 ----
-ChangeStreamOptions = ChangeStreamOptions.builder()
-    .resumeAt(Instant.now().minusSeconds(1))        <1>
-    .build()
-
-Flux<ChangeStreamEvent<Person>> resumed = template.changeStream("person", options, User.class)
+Flux<ChangeStreamEvent<User>> resumed = template.changeStream(User.class)
+    .watchCollection("people")
+    .resumeAt(Instant.now().minusSeconds(1)) <1>
+    .listen();
 ----
 <1> You may obtain the server time of an `ChangeStreamEvent` through the `getTimestamp` method or use the `resumeToken`
 exposed through `getResumeToken`.

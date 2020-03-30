@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,34 +23,40 @@ import lombok.Data;
 import reactor.test.StepVerifier;
 
 import org.bson.BsonString;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 
-import com.mongodb.MongoClient;
-import com.mongodb.reactivestreams.client.MongoClients;
+import com.mongodb.client.MongoClient;
 
 /**
  * Integration tests for {@link ReactiveUpdateOperationSupport}.
  *
  * @author Mark Paluch
  */
-public class ReactiveUpdateOperationSupportTests {
+@ExtendWith(MongoClientExtension.class)
+class ReactiveUpdateOperationSupportTests {
 
 	private static final String STAR_WARS = "star-wars";
-	MongoTemplate blocking;
-	ReactiveMongoTemplate template;
+	private static @Client MongoClient client;
+	private static @Client com.mongodb.reactivestreams.client.MongoClient reactiveClient;
 
-	Person han;
-	Person luke;
+	private MongoTemplate blocking;
+	private ReactiveMongoTemplate template;
 
-	@Before
-	public void setUp() {
+	private Person han;
+	private Person luke;
 
-		blocking = new MongoTemplate(new SimpleMongoDbFactory(new MongoClient(), "ExecutableUpdateOperationSupportTests"));
+	@BeforeEach
+	void setUp() {
+
+		blocking = new MongoTemplate(new SimpleMongoClientDatabaseFactory(client, "ExecutableUpdateOperationSupportTests"));
 		blocking.dropCollection(STAR_WARS);
 
 		han = new Person();
@@ -64,33 +70,34 @@ public class ReactiveUpdateOperationSupportTests {
 		blocking.save(han);
 		blocking.save(luke);
 
-		template = new ReactiveMongoTemplate(MongoClients.create(), "ExecutableUpdateOperationSupportTests");
-	}
-
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1719
-	public void domainTypeIsRequired() {
-		template.update(null);
-	}
-
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1719
-	public void updateIsRequired() {
-		template.update(Person.class).apply(null);
-	}
-
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1719
-	public void collectionIsRequiredOnSet() {
-		template.update(Person.class).inCollection(null);
-	}
-
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1719
-	public void findAndModifyOptionsAreRequiredOnSet() {
-		template.update(Person.class).apply(new Update()).withOptions(null);
+		template = new ReactiveMongoTemplate(reactiveClient, "ExecutableUpdateOperationSupportTests");
 	}
 
 	@Test // DATAMONGO-1719
-	public void updateFirst() {
+	void domainTypeIsRequired() {
+		assertThatIllegalArgumentException().isThrownBy(() -> template.update(null));
+	}
 
-		StepVerifier.create(template.update(Person.class).apply(new Update().set("firstname", "Han")).first())
+	@Test // DATAMONGO-1719
+	void updateIsRequired() {
+		assertThatIllegalArgumentException().isThrownBy(() -> template.update(Person.class).apply(null));
+	}
+
+	@Test // DATAMONGO-1719
+	void collectionIsRequiredOnSet() {
+		assertThatIllegalArgumentException().isThrownBy(() -> template.update(Person.class).inCollection(null));
+	}
+
+	@Test // DATAMONGO-1719
+	void findAndModifyOptionsAreRequiredOnSet() {
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> template.update(Person.class).apply(new Update()).withOptions(null));
+	}
+
+	@Test // DATAMONGO-1719
+	void updateFirst() {
+
+		template.update(Person.class).apply(new Update().set("firstname", "Han")).first().as(StepVerifier::create)
 				.consumeNextWith(actual -> {
 
 					assertThat(actual.getModifiedCount()).isEqualTo(1L);
@@ -100,9 +107,9 @@ public class ReactiveUpdateOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void updateAll() {
+	void updateAll() {
 
-		StepVerifier.create(template.update(Person.class).apply(new Update().set("firstname", "Han")).all())
+		template.update(Person.class).apply(new Update().set("firstname", "Han")).all().as(StepVerifier::create)
 				.consumeNextWith(actual -> {
 
 					assertThat(actual.getModifiedCount()).isEqualTo(2L);
@@ -111,11 +118,21 @@ public class ReactiveUpdateOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void updateAllMatching() {
+	void updateAllMatching() {
 
-		StepVerifier
-				.create(template.update(Person.class).matching(queryHan()).apply(new Update().set("firstname", "Han")).all())
-				.consumeNextWith(actual -> {
+		template.update(Person.class).matching(queryHan()).apply(new Update().set("firstname", "Han")).all()
+				.as(StepVerifier::create).consumeNextWith(actual -> {
+
+					assertThat(actual.getModifiedCount()).isEqualTo(1L);
+					assertThat(actual.getUpsertedId()).isNull();
+				}).verifyComplete();
+	}
+
+	@Test // DATAMONGO-2416
+	void updateAllMatchingCriteria() {
+
+		template.update(Person.class).matching(where("id").is(han.getId())).apply(new Update().set("firstname", "Han"))
+				.all().as(StepVerifier::create).consumeNextWith(actual -> {
 
 					assertThat(actual.getModifiedCount()).isEqualTo(1L);
 					assertThat(actual.getUpsertedId()).isNull();
@@ -123,11 +140,10 @@ public class ReactiveUpdateOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void updateWithDifferentDomainClassAndCollection() {
+	void updateWithDifferentDomainClassAndCollection() {
 
-		StepVerifier.create(template.update(Jedi.class).inCollection(STAR_WARS)
-				.matching(query(where("_id").is(han.getId()))).apply(new Update().set("name", "Han")).all())
-				.consumeNextWith(actual -> {
+		template.update(Jedi.class).inCollection(STAR_WARS).matching(query(where("_id").is(han.getId())))
+				.apply(new Update().set("name", "Han")).all().as(StepVerifier::create).consumeNextWith(actual -> {
 
 					assertThat(actual.getModifiedCount()).isEqualTo(1L);
 					assertThat(actual.getUpsertedId()).isNull();
@@ -138,22 +154,20 @@ public class ReactiveUpdateOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void findAndModify() {
+	void findAndModify() {
 
-		StepVerifier.create(
-				template.update(Person.class).matching(queryHan()).apply(new Update().set("firstname", "Han")).findAndModify())
-				.expectNext(han).verifyComplete();
+		template.update(Person.class).matching(queryHan()).apply(new Update().set("firstname", "Han")).findAndModify()
+				.as(StepVerifier::create).expectNext(han).verifyComplete();
 
 		assertThat(blocking.findOne(queryHan(), Person.class)).isNotEqualTo(han).hasFieldOrPropertyWithValue("firstname",
 				"Han");
 	}
 
 	@Test // DATAMONGO-1719
-	public void findAndModifyWithDifferentDomainTypeAndCollection() {
+	void findAndModifyWithDifferentDomainTypeAndCollection() {
 
-		StepVerifier
-				.create(template.update(Jedi.class).inCollection(STAR_WARS).matching(query(where("_id").is(han.getId())))
-						.apply(new Update().set("name", "Han")).findAndModify())
+		template.update(Jedi.class).inCollection(STAR_WARS).matching(query(where("_id").is(han.getId())))
+				.apply(new Update().set("name", "Han")).findAndModify().as(StepVerifier::create)
 				.consumeNextWith(actual -> assertThat(actual.getName()).isEqualTo("han")).verifyComplete();
 
 		assertThat(blocking.findOne(queryHan(), Person.class)).isNotEqualTo(han).hasFieldOrPropertyWithValue("firstname",
@@ -161,20 +175,21 @@ public class ReactiveUpdateOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
-	public void findAndModifyWithOptions() {
+	void findAndModifyWithOptions() {
 
-		StepVerifier.create(template.update(Person.class).matching(queryHan()).apply(new Update().set("firstname", "Han"))
-				.withOptions(FindAndModifyOptions.options().returnNew(true)).findAndModify()).consumeNextWith(actual -> {
+		template.update(Person.class).matching(queryHan()).apply(new Update().set("firstname", "Han"))
+				.withOptions(FindAndModifyOptions.options().returnNew(true)).findAndModify().as(StepVerifier::create)
+				.consumeNextWith(actual -> {
 
 					assertThat(actual).isNotEqualTo(han).hasFieldOrPropertyWithValue("firstname", "Han");
 				}).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1719
-	public void upsert() {
+	void upsert() {
 
-		StepVerifier.create(template.update(Person.class).matching(query(where("id").is("id-3")))
-				.apply(new Update().set("firstname", "Chewbacca")).upsert()).consumeNextWith(actual -> {
+		template.update(Person.class).matching(query(where("id").is("id-3")))
+				.apply(new Update().set("firstname", "Chewbacca")).upsert().as(StepVerifier::create).consumeNextWith(actual -> {
 
 					assertThat(actual.getModifiedCount()).isEqualTo(0L);
 					assertThat(actual.getUpsertedId()).isEqualTo(new BsonString("id-3"));
@@ -182,7 +197,7 @@ public class ReactiveUpdateOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1827
-	public void findAndReplace() {
+	void findAndReplace() {
 
 		Person luke = new Person();
 		luke.firstname = "Luke";
@@ -198,7 +213,7 @@ public class ReactiveUpdateOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1827
-	public void findAndReplaceWithProjection() {
+	void findAndReplaceWithProjection() {
 
 		Person luke = new Person();
 		luke.firstname = "Luke";
@@ -210,7 +225,7 @@ public class ReactiveUpdateOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1827
-	public void findAndReplaceWithCollection() {
+	void findAndReplaceWithCollection() {
 
 		Person luke = new Person();
 		luke.firstname = "Luke";
@@ -226,7 +241,7 @@ public class ReactiveUpdateOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1827
-	public void findAndReplaceWithOptions() {
+	void findAndReplaceWithOptions() {
 
 		Person luke = new Person();
 		luke.firstname = "Luke";

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,8 @@
  */
 package org.springframework.data.mongodb.core.index;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
-import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -27,7 +25,7 @@ import java.lang.annotation.Target;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
@@ -52,6 +50,8 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.ClassTypeInformation;
 
 /**
+ * Tests for {@link MongoPersistentEntityIndexResolver}.
+ *
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Dave Perryman
@@ -59,6 +59,7 @@ import org.springframework.data.util.ClassTypeInformation;
 @RunWith(Suite.class)
 @SuiteClasses({ IndexResolutionTests.class, GeoSpatialIndexResolutionTests.class, CompoundIndexResolutionTests.class,
 		TextIndexedResolutionTests.class, MixedIndexResolutionTests.class })
+@SuppressWarnings("unused")
 public class MongoPersistentEntityIndexResolverUnitTests {
 
 	/**
@@ -75,7 +76,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					IndexOnLevelZero.class);
 
-			assertThat(indexDefinitions, hasSize(1));
+			assertThat(indexDefinitions).hasSize(1);
 			assertIndexPathAndCollection("indexedProperty", "Zero", indexDefinitions.get(0));
 		}
 
@@ -84,7 +85,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(IndexOnLevelOne.class);
 
-			assertThat(indexDefinitions, hasSize(1));
+			assertThat(indexDefinitions).hasSize(1);
 			assertIndexPathAndCollection("zero.indexedProperty", "One", indexDefinitions.get(0));
 		}
 
@@ -95,7 +96,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			IndexResolver indexResolver = IndexResolver.create(mappingContext);
 			Iterable<? extends IndexDefinition> definitions = indexResolver.resolveIndexFor(IndexOnLevelOne.class);
 
-			assertThat(definitions.iterator().hasNext(), is(true));
+			assertThat(definitions).isNotEmpty();
 		}
 
 		@Test // DATAMONGO-899
@@ -103,7 +104,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(IndexOnLevelTwo.class);
 
-			assertThat(indexDefinitions, hasSize(1));
+			assertThat(indexDefinitions).hasSize(1);
 			assertIndexPathAndCollection("one.zero.indexedProperty", "Two", indexDefinitions.get(0));
 		}
 
@@ -113,7 +114,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					IndexOnLevelOneWithExplicitlyNamedField.class);
 
-			assertThat(indexDefinitions, hasSize(1));
+			assertThat(indexDefinitions).hasSize(1);
 			assertIndexPathAndCollection("customZero.customFieldName", "indexOnLevelOneWithExplicitlyNamedField",
 					indexDefinitions.get(0));
 		}
@@ -125,7 +126,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 					IndexOnLevelZero.class);
 
 			IndexDefinition indexDefinition = indexDefinitions.get(0).getIndexDefinition();
-			assertThat(indexDefinition.getIndexOptions(), equalTo(new org.bson.Document().append("name", "indexedProperty")));
+			assertThat(indexDefinition.getIndexOptions()).isEqualTo(new org.bson.Document("name", "indexedProperty"));
 		}
 
 		@Test // DATAMONGO-899
@@ -135,8 +136,8 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 					WithOptionsOnIndexedProperty.class);
 
 			IndexDefinition indexDefinition = indexDefinitions.get(0).getIndexDefinition();
-			assertThat(indexDefinition.getIndexOptions(), equalTo(new org.bson.Document().append("name", "indexedProperty")
-					.append("unique", true).append("sparse", true).append("background", true).append("expireAfterSeconds", 10L)));
+			assertThat(indexDefinition.getIndexOptions()).isEqualTo(new org.bson.Document().append("name", "indexedProperty")
+					.append("unique", true).append("sparse", true).append("background", true).append("expireAfterSeconds", 10L));
 		}
 
 		@Test // DATAMONGO-1297
@@ -144,9 +145,9 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(WithDbRef.class);
 
-			assertThat(indexDefinitions, hasSize(1));
-			assertThat(indexDefinitions.get(0).getCollection(), equalTo("withDbRef"));
-			assertThat(indexDefinitions.get(0).getIndexKeys(), equalTo(new org.bson.Document().append("indexedDbRef", 1)));
+			assertThat(indexDefinitions).hasSize(1);
+			assertThat(indexDefinitions.get(0).getCollection()).isEqualTo("withDbRef");
+			assertThat(indexDefinitions.get(0).getIndexKeys()).isEqualTo(new org.bson.Document("indexedDbRef", 1));
 		}
 
 		@Test // DATAMONGO-1297
@@ -155,10 +156,9 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					WrapperOfWithDbRef.class);
 
-			assertThat(indexDefinitions, hasSize(1));
-			assertThat(indexDefinitions.get(0).getCollection(), equalTo("wrapperOfWithDbRef"));
-			assertThat(indexDefinitions.get(0).getIndexKeys(),
-					equalTo(new org.bson.Document().append("nested.indexedDbRef", 1)));
+			assertThat(indexDefinitions).hasSize(1);
+			assertThat(indexDefinitions.get(0).getCollection()).isEqualTo("wrapperOfWithDbRef");
+			assertThat(indexDefinitions.get(0).getIndexKeys()).isEqualTo(new org.bson.Document("nested.indexedDbRef", 1));
 		}
 
 		@Test // DATAMONGO-1163
@@ -167,9 +167,9 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					IndexOnMetaAnnotatedField.class);
 
-			assertThat(indexDefinitions, hasSize(1));
-			assertThat(indexDefinitions.get(0).getCollection(), equalTo("indexOnMetaAnnotatedField"));
-			assertThat(indexDefinitions.get(0).getIndexOptions(), equalTo(new org.bson.Document().append("name", "_name")));
+			assertThat(indexDefinitions).hasSize(1);
+			assertThat(indexDefinitions.get(0).getCollection()).isEqualTo("indexOnMetaAnnotatedField");
+			assertThat(indexDefinitions.get(0).getIndexOptions()).isEqualTo(new org.bson.Document("name", "_name"));
 		}
 
 		@Test // DATAMONGO-1373
@@ -178,13 +178,15 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					IndexedDocumentWithComposedAnnotations.class);
 
-			assertThat(indexDefinitions, hasSize(2));
+			assertThat(indexDefinitions).hasSize(2);
 
 			IndexDefinitionHolder indexDefinitionHolder = indexDefinitions.get(1);
 
-			assertThat(indexDefinitionHolder.getIndexKeys(), isBsonObject().containing("fieldWithMyIndexName", 1));
-			assertThat(indexDefinitionHolder.getIndexOptions(),
-					isBsonObject().containing("sparse", true).containing("unique", true).containing("name", "my_index_name"));
+			assertThat(indexDefinitionHolder.getIndexKeys()).containsEntry("fieldWithMyIndexName", 1);
+			assertThat(indexDefinitionHolder.getIndexOptions()) //
+					.containsEntry("sparse", true) //
+					.containsEntry("unique", true) //
+					.containsEntry("name", "my_index_name");
 		}
 
 		@Test // DATAMONGO-1373
@@ -193,13 +195,80 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					IndexedDocumentWithComposedAnnotations.class);
 
-			assertThat(indexDefinitions, hasSize(2));
+			assertThat(indexDefinitions).hasSize(2);
 
 			IndexDefinitionHolder indexDefinitionHolder = indexDefinitions.get(0);
 
-			assertThat(indexDefinitionHolder.getIndexKeys(), isBsonObject().containing("fieldWithDifferentIndexName", 1));
-			assertThat(indexDefinitionHolder.getIndexOptions(),
-					isBsonObject().containing("sparse", true).containing("name", "different_name").notContaining("unique"));
+			assertThat(indexDefinitionHolder.getIndexKeys()).containsEntry("fieldWithDifferentIndexName", 1);
+			assertThat(indexDefinitionHolder.getIndexOptions()) //
+					.containsEntry("sparse", true) //
+					.containsEntry("name", "different_name") //
+					.doesNotContainKey("unique");
+		}
+
+		@Test // DATAMONGO-2112
+		public void shouldResolveTimeoutFromString() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					WithExpireAfterAsPlainString.class);
+
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("expireAfterSeconds", 600L);
+		}
+
+		@Test // DATAMONGO-2112
+		public void shouldResolveTimeoutFromIso8601String() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					WithIso8601Style.class);
+
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("expireAfterSeconds", 86400L);
+		}
+
+		@Test // DATAMONGO-2112
+		public void shouldResolveTimeoutFromExpression() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					WithExpireAfterAsExpression.class);
+
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("expireAfterSeconds", 11L);
+		}
+
+		@Test // DATAMONGO-2112
+		public void shouldResolveTimeoutFromExpressionReturningDuration() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					WithExpireAfterAsExpressionResultingInDuration.class);
+
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("expireAfterSeconds", 100L);
+		}
+
+		@Test // DATAMONGO-2112
+		public void shouldErrorOnInvalidTimeoutExpression() {
+
+			MongoMappingContext mappingContext = prepareMappingContext(WithInvalidExpireAfter.class);
+			MongoPersistentEntityIndexResolver indexResolver = new MongoPersistentEntityIndexResolver(mappingContext);
+
+			assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> indexResolver
+					.resolveIndexForEntity(mappingContext.getRequiredPersistentEntity(WithInvalidExpireAfter.class)));
+		}
+
+		@Test // DATAMONGO-2112
+		public void shouldErrorOnDuplicateTimeoutExpression() {
+
+			MongoMappingContext mappingContext = prepareMappingContext(WithDuplicateExpiry.class);
+			MongoPersistentEntityIndexResolver indexResolver = new MongoPersistentEntityIndexResolver(mappingContext);
+
+			assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> indexResolver
+					.resolveIndexForEntity(mappingContext.getRequiredPersistentEntity(WithDuplicateExpiry.class)));
+		}
+
+		@Test // DATAMONGO-2112
+		public void resolveExpressionIndexName() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					WithIndexNameAsExpression.class);
+
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("name", "my1st");
 		}
 
 		@Document("Zero")
@@ -265,13 +334,13 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		@Retention(RetentionPolicy.RUNTIME)
 		@Target({ ElementType.FIELD })
 		@ComposedIndexedAnnotation(indexName = "different_name", beUnique = false)
-		static @interface CustomIndexedAnnotation {
+		@interface CustomIndexedAnnotation {
 		}
 
 		@Retention(RetentionPolicy.RUNTIME)
 		@Target({ ElementType.FIELD, ElementType.ANNOTATION_TYPE })
 		@Indexed
-		static @interface ComposedIndexedAnnotation {
+		@interface ComposedIndexedAnnotation {
 
 			@AliasFor(annotation = Indexed.class, attribute = "unique")
 			boolean beUnique() default true;
@@ -286,10 +355,45 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		@Retention(RetentionPolicy.RUNTIME)
 		@Target(ElementType.FIELD)
 		@org.springframework.data.mongodb.core.mapping.Field
-		static @interface ComposedFieldAnnotation {
+		@interface ComposedFieldAnnotation {
 
 			@AliasFor(annotation = org.springframework.data.mongodb.core.mapping.Field.class, attribute = "value")
 			String name() default "_id";
+		}
+
+		@Document
+		static class WithExpireAfterAsPlainString {
+			@Indexed(expireAfter = "10m") String withTimeout;
+		}
+
+		@Document
+		class WithIso8601Style {
+			@Indexed(expireAfter = "P1D") String withTimeout;
+		}
+
+		@Document
+		static class WithExpireAfterAsExpression {
+			@Indexed(expireAfter = "#{10 + 1 + 's'}") String withTimeout;
+		}
+
+		@Document
+		static class WithExpireAfterAsExpressionResultingInDuration {
+			@Indexed(expireAfter = "#{T(java.time.Duration).ofSeconds(100)}") String withTimeout;
+		}
+
+		@Document
+		class WithInvalidExpireAfter {
+			@Indexed(expireAfter = "123ops") String withTimeout;
+		}
+
+		@Document
+		class WithDuplicateExpiry {
+			@Indexed(expireAfter = "1s", expireAfterSeconds = 2) String withTimeout;
+		}
+
+		@Document
+		static class WithIndexNameAsExpression {
+			@Indexed(name = "#{'my' + 1 + 'st'}") String spelIndexName;
 		}
 	}
 
@@ -297,7 +401,6 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Indexed
 	@interface IndexedFieldAnnotation {
-
 	}
 
 	@Document
@@ -318,7 +421,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					GeoSpatialIndexOnLevelZero.class);
 
-			assertThat(indexDefinitions, hasSize(1));
+			assertThat(indexDefinitions).hasSize(1);
 			assertIndexPathAndCollection("geoIndexedProperty", "Zero", indexDefinitions.get(0));
 		}
 
@@ -328,7 +431,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					GeoSpatialIndexOnLevelOne.class);
 
-			assertThat(indexDefinitions, hasSize(1));
+			assertThat(indexDefinitions).hasSize(1);
 			assertIndexPathAndCollection("zero.geoIndexedProperty", "One", indexDefinitions.get(0));
 		}
 
@@ -338,7 +441,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					GeoSpatialIndexOnLevelTwo.class);
 
-			assertThat(indexDefinitions, hasSize(1));
+			assertThat(indexDefinitions).hasSize(1);
 			assertIndexPathAndCollection("one.zero.geoIndexedProperty", "Two", indexDefinitions.get(0));
 		}
 
@@ -350,8 +453,8 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			IndexDefinition indexDefinition = indexDefinitions.get(0).getIndexDefinition();
 
-			assertThat(indexDefinition.getIndexOptions(), equalTo(
-					new org.bson.Document().append("name", "location").append("min", 1).append("max", 100).append("bits", 2)));
+			assertThat(indexDefinition.getIndexOptions()).isEqualTo(
+					new org.bson.Document().append("name", "location").append("min", 1).append("max", 100).append("bits", 2));
 		}
 
 		@Test // DATAMONGO-1373
@@ -362,10 +465,19 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			IndexDefinition indexDefinition = indexDefinitions.get(0).getIndexDefinition();
 
-			assertThat(indexDefinition.getIndexKeys(),
-					isBsonObject().containing("location", "geoHaystack").containing("What light?", 1));
-			assertThat(indexDefinition.getIndexOptions(),
-					isBsonObject().containing("name", "my_geo_index_name").containing("bucketSize", 2.0));
+			assertThat(indexDefinition.getIndexKeys()).containsEntry("location", "geoHaystack").containsEntry("What light?",
+					1);
+			assertThat(indexDefinition.getIndexOptions()).containsEntry("name", "my_geo_index_name")
+					.containsEntry("bucketSize", 2.0);
+		}
+
+		@Test // DATAMONGO-2112
+		public void resolveExpressionIndexNameForGeoIndex() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					GeoIndexWithNameAsExpression.class);
+
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("name", "my1st");
 		}
 
 		@Document("Zero")
@@ -415,6 +527,11 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			GeoSpatialIndexType indexType() default GeoSpatialIndexType.GEO_HAYSTACK;
 		}
 
+		@Document
+		static class GeoIndexWithNameAsExpression {
+			@GeoSpatialIndexed(name = "#{'my' + 1 + 'st'}") Point spelIndexName;
+		}
+
 	}
 
 	/**
@@ -430,7 +547,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					CompoundIndexOnLevelZero.class);
 
-			assertThat(indexDefinitions, hasSize(1));
+			assertThat(indexDefinitions).hasSize(1);
 			assertIndexPathAndCollection(new String[] { "foo", "bar" }, "CompoundIndexOnLevelZero", indexDefinitions.get(0));
 		}
 
@@ -441,9 +558,9 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 					CompoundIndexOnLevelZero.class);
 
 			IndexDefinition indexDefinition = indexDefinitions.get(0).getIndexDefinition();
-			assertThat(indexDefinition.getIndexOptions(), equalTo(new org.bson.Document().append("name", "compound_index")
-					.append("unique", true).append("sparse", true).append("background", true)));
-			assertThat(indexDefinition.getIndexKeys(), equalTo(new org.bson.Document().append("foo", 1).append("bar", -1)));
+			assertThat(indexDefinition.getIndexOptions()).isEqualTo(new org.bson.Document("name", "compound_index")
+					.append("unique", true).append("sparse", true).append("background", true));
+			assertThat(indexDefinition.getIndexKeys()).isEqualTo(new org.bson.Document().append("foo", 1).append("bar", -1));
 		}
 
 		@Test // DATAMONGO-909
@@ -453,9 +570,9 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 					IndexDefinedOnSuperClass.class);
 
 			IndexDefinition indexDefinition = indexDefinitions.get(0).getIndexDefinition();
-			assertThat(indexDefinition.getIndexOptions(), equalTo(new org.bson.Document().append("name", "compound_index")
-					.append("unique", true).append("sparse", true).append("background", true)));
-			assertThat(indexDefinition.getIndexKeys(), equalTo(new org.bson.Document().append("foo", 1).append("bar", -1)));
+			assertThat(indexDefinition.getIndexOptions()).isEqualTo(new org.bson.Document().append("name", "compound_index")
+					.append("unique", true).append("sparse", true).append("background", true));
+			assertThat(indexDefinition.getIndexKeys()).isEqualTo(new org.bson.Document().append("foo", 1).append("bar", -1));
 		}
 
 		@Test // DATAMONGO-827
@@ -465,9 +582,9 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 					ComountIndexWithAutogeneratedName.class);
 
 			IndexDefinition indexDefinition = indexDefinitions.get(0).getIndexDefinition();
-			assertThat(indexDefinition.getIndexOptions(),
-					equalTo(new org.bson.Document().append("unique", true).append("sparse", true).append("background", true)));
-			assertThat(indexDefinition.getIndexKeys(), equalTo(new org.bson.Document().append("foo", 1).append("bar", -1)));
+			assertThat(indexDefinition.getIndexOptions())
+					.isEqualTo(new org.bson.Document().append("unique", true).append("sparse", true).append("background", true));
+			assertThat(indexDefinition.getIndexKeys()).isEqualTo(new org.bson.Document().append("foo", 1).append("bar", -1));
 		}
 
 		@Test // DATAMONGO-929
@@ -476,7 +593,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					CompoundIndexOnLevelOne.class);
 
-			assertThat(indexDefinitions, hasSize(1));
+			assertThat(indexDefinitions).hasSize(1);
 			assertIndexPathAndCollection(new String[] { "zero.foo", "zero.bar" }, "CompoundIndexOnLevelOne",
 					indexDefinitions.get(0));
 		}
@@ -487,7 +604,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					CompoundIndexOnLevelOneWithEmptyIndexDefinition.class);
 
-			assertThat(indexDefinitions, hasSize(1));
+			assertThat(indexDefinitions).hasSize(1);
 			assertIndexPathAndCollection(new String[] { "zero" }, "CompoundIndexOnLevelZeroWithEmptyIndexDef",
 					indexDefinitions.get(0));
 		}
@@ -498,7 +615,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					SingleCompoundIndex.class);
 
-			assertThat(indexDefinitions, hasSize(1));
+			assertThat(indexDefinitions).hasSize(1);
 			assertIndexPathAndCollection(new String[] { "foo", "bar" }, "CompoundIndexOnLevelZero", indexDefinitions.get(0));
 		}
 
@@ -508,10 +625,43 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					CompoundIndexDocumentWithComposedAnnotation.class);
 
-			assertThat(indexDefinitions, hasSize(1));
-			assertThat(indexDefinitions.get(0).getIndexKeys(), isBsonObject().containing("foo", 1).containing("bar", -1));
-			assertThat(indexDefinitions.get(0).getIndexOptions(), isBsonObject().containing("name", "my_compound_index_name")
-					.containing("unique", true).containing("background", true));
+			assertThat(indexDefinitions).hasSize(1);
+			assertThat(indexDefinitions.get(0).getIndexKeys()).containsEntry("foo", 1).containsEntry("bar", -1);
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("name", "my_compound_index_name")
+					.containsEntry("unique", true).containsEntry("background", true);
+		}
+
+		@Test // DATAMONGO-2112
+		public void resolveExpressionIndexNameForCompoundIndex() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					CompoundIndexWithNameExpression.class);
+
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("name", "cmp2name");
+		}
+
+		@Test // DATAMONGO-2112
+		public void resolveExpressionDefForCompoundIndex() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					CompoundIndexWithDefExpression.class);
+
+			assertThat(indexDefinitions).hasSize(1);
+			assertIndexPathAndCollection(new String[] { "foo", "bar" }, "compoundIndexWithDefExpression",
+					indexDefinitions.get(0));
+		}
+
+		@Test // DATAMONGO-2067
+		public void shouldIdentifyRepeatedAnnotationCorrectly() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					RepeatedCompoundIndex.class);
+
+			assertThat(indexDefinitions).hasSize(2);
+			assertIndexPathAndCollection(new String[] { "firstname", "lastname" }, "repeatedCompoundIndex",
+					indexDefinitions.get(0));
+			assertIndexPathAndCollection(new String[] { "address.city", "address.street" }, "repeatedCompoundIndex",
+					indexDefinitions.get(1));
 		}
 
 		@Test // DATAMONGO-1569
@@ -554,22 +704,16 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 				unique = true)
 		static class SingleCompoundIndex {}
 
-		static class IndexDefinedOnSuperClass extends CompoundIndexOnLevelZero {
-
-		}
+		static class IndexDefinedOnSuperClass extends CompoundIndexOnLevelZero {}
 
 		@Document("ComountIndexWithAutogeneratedName")
 		@CompoundIndexes({ @CompoundIndex(useGeneratedName = true, def = "{'foo': 1, 'bar': -1}", background = true,
 				sparse = true, unique = true) })
-		static class ComountIndexWithAutogeneratedName {
-
-		}
+		static class ComountIndexWithAutogeneratedName {}
 
 		@Document("WithComposedAnnotation")
 		@ComposedCompoundIndex
-		static class CompoundIndexDocumentWithComposedAnnotation {
-
-		}
+		static class CompoundIndexDocumentWithComposedAnnotation {}
 
 		@Retention(RetentionPolicy.RUNTIME)
 		@Target({ ElementType.TYPE })
@@ -597,6 +741,19 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		@CompoundIndex(name = "compound_index_with_partial", def = "{'foo': 1, 'bar': -1}", background = true,
 				unique = true, partial = "{'bar': {$exists: true}}")
 		static class SingleCompoundIndexWithPartialFilter {}
+
+    @Document
+		@CompoundIndex(name = "#{'cmp' + 2 + 'name'}", def = "{'foo': 1, 'bar': -1}")
+		static class CompoundIndexWithNameExpression {}
+
+		@Document
+		@CompoundIndex(def = "#{T(org.bson.Document).parse(\"{ 'foo': 1, 'bar': -1 }\")}")
+		static class CompoundIndexWithDefExpression {}
+
+		@Document
+		@CompoundIndex(name = "cmp-idx-one", def = "{'firstname': 1, 'lastname': -1}")
+		@CompoundIndex(name = "cmp-idx-two", def = "{'address.city': -1, 'address.street': 1}")
+		static class RepeatedCompoundIndex {}
 	}
 
 	public static class TextIndexedResolutionTests {
@@ -606,17 +763,31 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					TextIndexOnSinglePropertyInRoot.class);
-			assertThat(indexDefinitions.size(), equalTo(1));
+
+			assertThat(indexDefinitions).hasSize(1);
 			assertIndexPathAndCollection("bar", "textIndexOnSinglePropertyInRoot", indexDefinitions.get(0));
+			assertThat(indexDefinitions.get(0).getIndexOptions()).doesNotContainKey("collation");
+		}
+
+		@Test // DATAMONGO-2316
+		public void shouldEnforceSimpleCollationOnTextIndex() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					TextIndexWithCollation.class);
+
+			assertThat(indexDefinitions).hasSize(1);
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("collation",
+					new org.bson.Document("locale", "simple"));
 		}
 
 		@Test // DATAMONGO-937
 		public void shouldResolveMultiFieldTextIndexCorrectly() {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
-					TextIndexOnMutiplePropertiesInRoot.class);
-			assertThat(indexDefinitions.size(), equalTo(1));
-			assertIndexPathAndCollection(new String[] { "foo", "bar" }, "textIndexOnMutiplePropertiesInRoot",
+					TextIndexOnMultiplePropertiesInRoot.class);
+
+			assertThat(indexDefinitions).hasSize(1);
+			assertIndexPathAndCollection(new String[] { "foo", "bar" }, "textIndexOnMultiplePropertiesInRoot",
 					indexDefinitions.get(0));
 		}
 
@@ -625,7 +796,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					TextIndexOnNestedRoot.class);
-			assertThat(indexDefinitions.size(), equalTo(1));
+			assertThat(indexDefinitions).hasSize(1);
 			assertIndexPathAndCollection(new String[] { "nested.foo" }, "textIndexOnNestedRoot", indexDefinitions.get(0));
 		}
 
@@ -634,12 +805,12 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					TextIndexOnNestedWithWeightRoot.class);
-			assertThat(indexDefinitions.size(), equalTo(1));
+			assertThat(indexDefinitions).hasSize(1);
 			assertIndexPathAndCollection(new String[] { "nested.foo" }, "textIndexOnNestedWithWeightRoot",
 					indexDefinitions.get(0));
 
 			org.bson.Document weights = DocumentTestUtils.getAsDocument(indexDefinitions.get(0).getIndexOptions(), "weights");
-			assertThat(weights.get("nested.foo"), is((Object) 5F));
+			assertThat(weights.get("nested.foo")).isEqualTo(5F);
 		}
 
 		@Test // DATAMONGO-937
@@ -647,13 +818,13 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					TextIndexOnNestedWithMostSpecificValueRoot.class);
-			assertThat(indexDefinitions.size(), equalTo(1));
+			assertThat(indexDefinitions).hasSize(1);
 			assertIndexPathAndCollection(new String[] { "nested.foo", "nested.bar" },
 					"textIndexOnNestedWithMostSpecificValueRoot", indexDefinitions.get(0));
 
 			org.bson.Document weights = DocumentTestUtils.getAsDocument(indexDefinitions.get(0).getIndexOptions(), "weights");
-			assertThat(weights.get("nested.foo"), is((Object) 5F));
-			assertThat(weights.get("nested.bar"), is((Object) 10F));
+			assertThat(weights.get("nested.foo")).isEqualTo(5F);
+			assertThat(weights.get("nested.bar")).isEqualTo(10F);
 		}
 
 		@Test // DATAMONGO-937
@@ -661,7 +832,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					DocumentWithDefaultLanguage.class);
-			assertThat(indexDefinitions.get(0).getIndexOptions().get("default_language"), is((Object) "spanish"));
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("default_language", "spanish");
 		}
 
 		@Test // DATAMONGO-937, DATAMONGO-1049
@@ -669,7 +840,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					DocumentWithLanguageOverride.class);
-			assertThat(indexDefinitions.get(0).getIndexOptions().get("language_override"), is((Object) "lang"));
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("language_override", "lang");
 		}
 
 		@Test // DATAMONGO-1049
@@ -677,7 +848,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					DocumentWithLanguageOverrideOnNestedElement.class);
-			assertThat(indexDefinitions.get(0).getIndexOptions().get("language_override"), is(nullValue()));
+			assertThat(indexDefinitions.get(0).getIndexOptions().get("language_override")).isNull();
 		}
 
 		@Test // DATAMONGO-1049
@@ -685,7 +856,8 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					DocumentWithNoTextIndexPropertyButReservedFieldLanguage.class);
-			assertThat(indexDefinitions, is(empty()));
+
+			assertThat(indexDefinitions).isEmpty();
 		}
 
 		@Test // DATAMONGO-1049
@@ -693,7 +865,8 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					DocumentWithNoTextIndexPropertyButReservedFieldLanguageAnnotated.class);
-			assertThat(indexDefinitions, is(empty()));
+
+			assertThat(indexDefinitions).isEmpty();
 		}
 
 		@Test // DATAMONGO-1049
@@ -701,7 +874,8 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					DocumentWithOverlappingLanguageProps.class);
-			assertThat(indexDefinitions.get(0).getIndexOptions().get("language_override"), is((Object) "lang"));
+
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("language_override", "lang");
 		}
 
 		@Test // DATAMONGO-1373
@@ -711,7 +885,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 					TextIndexedDocumentWithComposedAnnotation.class);
 
 			org.bson.Document weights = DocumentTestUtils.getAsDocument(indexDefinitions.get(0).getIndexOptions(), "weights");
-			assertThat(weights, isBsonObject().containing("foo", 99f));
+			assertThat(weights).containsEntry("foo", 99f);
 		}
 
 		@Document
@@ -722,8 +896,14 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			@TextIndexed String bar;
 		}
 
+		@Document(collation = "de_AT")
+		static class TextIndexWithCollation {
+
+			@TextIndexed String foo;
+		}
+
 		@Document
-		static class TextIndexOnMutiplePropertiesInRoot {
+		static class TextIndexOnMultiplePropertiesInRoot {
 
 			@TextIndexed String foo;
 
@@ -809,7 +989,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		@Retention(RetentionPolicy.RUNTIME)
 		@Target({ ElementType.FIELD, ElementType.ANNOTATION_TYPE })
 		@TextIndexed
-		static @interface ComposedTextIndexedAnnotation {
+		@interface ComposedTextIndexedAnnotation {
 
 			@AliasFor(annotation = TextIndexed.class, attribute = "weight")
 			float heavyweight() default 99f;
@@ -823,25 +1003,27 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(MixedIndexRoot.class);
 
-			assertThat(indexDefinitions, hasSize(2));
-			assertThat(indexDefinitions.get(0).getIndexDefinition(), instanceOf(Index.class));
-			assertThat(indexDefinitions.get(1).getIndexDefinition(), instanceOf(GeospatialIndex.class));
+			assertThat(indexDefinitions).hasSize(2);
+			assertThat(indexDefinitions.get(0).getIndexDefinition()).isInstanceOf(Index.class);
+			assertThat(indexDefinitions.get(1).getIndexDefinition()).isInstanceOf(GeospatialIndex.class);
 		}
 
 		@Test // DATAMONGO-899
 		public void cyclicPropertyReferenceOverDBRefShouldNotBeTraversed() {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(Inner.class);
-			assertThat(indexDefinitions, hasSize(1));
-			assertThat(indexDefinitions.get(0).getIndexDefinition().getIndexKeys(),
-					equalTo(new org.bson.Document().append("outer", 1)));
+
+			assertThat(indexDefinitions).hasSize(1);
+			assertThat(indexDefinitions.get(0).getIndexDefinition().getIndexKeys())
+					.isEqualTo(new org.bson.Document().append("outer", 1));
 		}
 
 		@Test // DATAMONGO-899
 		public void associationsShouldNotBeTraversed() {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(Outer.class);
-			assertThat(indexDefinitions, empty());
+
+			assertThat(indexDefinitions).isEmpty();
 		}
 
 		@Test // DATAMONGO-926
@@ -849,7 +1031,8 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					CycleStartingInBetween.class);
-			assertThat(indexDefinitions, hasSize(1));
+
+			assertThat(indexDefinitions).hasSize(1);
 		}
 
 		@Test // DATAMONGO-926
@@ -858,7 +1041,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(CycleLevelZero.class);
 			assertIndexPathAndCollection("indexedProperty", "cycleLevelZero", indexDefinitions.get(0));
 			assertIndexPathAndCollection("cyclicReference.indexedProperty", "cycleLevelZero", indexDefinitions.get(1));
-			assertThat(indexDefinitions, hasSize(2));
+			assertThat(indexDefinitions).hasSize(2);
 		}
 
 		@Test // DATAMONGO-926
@@ -866,7 +1049,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(CycleOnLevelOne.class);
 			assertIndexPathAndCollection("reference.indexedProperty", "cycleOnLevelOne", indexDefinitions.get(0));
-			assertThat(indexDefinitions, hasSize(1));
+			assertThat(indexDefinitions).hasSize(1);
 		}
 
 		@Test // DATAMONGO-926
@@ -874,11 +1057,12 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					NoCycleButIdenticallyNamedProperties.class);
+
+			assertThat(indexDefinitions).hasSize(3);
 			assertIndexPathAndCollection("foo", "noCycleButIdenticallyNamedProperties", indexDefinitions.get(0));
 			assertIndexPathAndCollection("reference.foo", "noCycleButIdenticallyNamedProperties", indexDefinitions.get(1));
 			assertIndexPathAndCollection("reference.deep.foo", "noCycleButIdenticallyNamedProperties",
 					indexDefinitions.get(2));
-			assertThat(indexDefinitions, hasSize(3));
 		}
 
 		@Test // DATAMONGO-949
@@ -887,7 +1071,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					SimilarityHolingBean.class);
 			assertIndexPathAndCollection("norm", "similarityHolingBean", indexDefinitions.get(0));
-			assertThat(indexDefinitions, hasSize(1));
+			assertThat(indexDefinitions).hasSize(1);
 		}
 
 		@Test // DATAMONGO-962
@@ -895,7 +1079,8 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					SelfCyclingViaCollectionType.class);
-			assertThat(indexDefinitions, empty());
+
+			assertThat(indexDefinitions).isEmpty();
 		}
 
 		@Test // DATAMONGO-962
@@ -903,14 +1088,15 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					MultipleObjectsOfSameType.class);
-			assertThat(indexDefinitions, empty());
+
+			assertThat(indexDefinitions).isEmpty();
 		}
 
 		@Test // DATAMONGO-962
 		@SuppressWarnings({ "rawtypes", "unchecked" })
 		public void shouldCatchCyclicReferenceExceptionOnRoot() {
 
-			MongoPersistentEntity entity = new BasicMongoPersistentEntity<Object>(ClassTypeInformation.from(Object.class));
+			MongoPersistentEntity entity = new BasicMongoPersistentEntity<>(ClassTypeInformation.from(Object.class));
 
 			MongoPersistentProperty propertyMock = mock(MongoPersistentProperty.class);
 			when(propertyMock.isEntity()).thenReturn(true);
@@ -918,7 +1104,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			when(propertyMock.getActualType()).thenThrow(
 					new MongoPersistentEntityIndexResolver.CyclicPropertyReferenceException("foo", Object.class, "bar"));
 
-			MongoPersistentEntity<SelfCyclingViaCollectionType> selfCyclingEntity = new BasicMongoPersistentEntity<SelfCyclingViaCollectionType>(
+			MongoPersistentEntity<SelfCyclingViaCollectionType> selfCyclingEntity = new BasicMongoPersistentEntity<>(
 					ClassTypeInformation.from(SelfCyclingViaCollectionType.class));
 
 			new MongoPersistentEntityIndexResolver(prepareMappingContext(SelfCyclingViaCollectionType.class))
@@ -931,9 +1117,9 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					NoCycleManyPathsToDeepValueObject.class);
 
+			assertThat(indexDefinitions).hasSize(2);
 			assertIndexPathAndCollection("l3.valueObject.value", "rules", indexDefinitions.get(0));
 			assertIndexPathAndCollection("l2.l3.valueObject.value", "rules", indexDefinitions.get(1));
-			assertThat(indexDefinitions, hasSize(2));
 		}
 
 		@Test // DATAMONGO-1025
@@ -941,8 +1127,9 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					DocumentWithNestedDocumentHavingNamedCompoundIndex.class);
-			assertThat((String) indexDefinitions.get(0).getIndexOptions().get("name"),
-					equalTo("propertyOfTypeHavingNamedCompoundIndex.c_index"));
+
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("name",
+					"propertyOfTypeHavingNamedCompoundIndex.c_index");
 		}
 
 		@Test // DATAMONGO-1025
@@ -950,8 +1137,8 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					DocumentWithNestedTypeHavingNamedCompoundIndex.class);
-			assertThat((String) indexDefinitions.get(0).getIndexOptions().get("name"),
-					equalTo("propertyOfTypeHavingNamedCompoundIndex.c_index"));
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("name",
+					"propertyOfTypeHavingNamedCompoundIndex.c_index");
 		}
 
 		@Test // DATAMONGO-1025
@@ -959,8 +1146,9 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					DocumentWithNestedDocumentHavingNamedIndex.class);
-			assertThat((String) indexDefinitions.get(0).getIndexOptions().get("name"),
-					equalTo("propertyOfTypeHavingNamedIndex.property_index"));
+
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("name",
+					"propertyOfTypeHavingNamedIndex.property_index");
 		}
 
 		@Test // DATAMONGO-1025
@@ -968,8 +1156,9 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					DocumentWithNestedTypeHavingNamedIndex.class);
-			assertThat((String) indexDefinitions.get(0).getIndexOptions().get("name"),
-					equalTo("propertyOfTypeHavingNamedIndex.property_index"));
+
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("name",
+					"propertyOfTypeHavingNamedIndex.property_index");
 		}
 
 		@Test // DATAMONGO-1025
@@ -977,7 +1166,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					DocumentWithNamedIndex.class);
-			assertThat((String) indexDefinitions.get(0).getIndexOptions().get("name"), equalTo("property_index"));
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("name", "property_index");
 		}
 
 		@Test // DATAMONGO-1087
@@ -986,9 +1175,9 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					MultiplePropertiesOfSameTypeWithMatchingStartLetters.class);
 
-			assertThat(indexDefinitions, hasSize(2));
-			assertThat((String) indexDefinitions.get(0).getIndexOptions().get("name"), equalTo("name.component"));
-			assertThat((String) indexDefinitions.get(1).getIndexOptions().get("name"), equalTo("nameLast.component"));
+			assertThat(indexDefinitions).hasSize(2);
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("name", "name.component");
+			assertThat(indexDefinitions.get(1).getIndexOptions()).containsEntry("name", "nameLast.component");
 		}
 
 		@Test // DATAMONGO-1087
@@ -997,9 +1186,9 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					MultiplePropertiesOfSameTypeWithMatchingStartLettersOnNestedProperty.class);
 
-			assertThat(indexDefinitions, hasSize(2));
-			assertThat((String) indexDefinitions.get(0).getIndexOptions().get("name"), equalTo("component.nameLast"));
-			assertThat((String) indexDefinitions.get(1).getIndexOptions().get("name"), equalTo("component.name"));
+			assertThat(indexDefinitions).hasSize(2);
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("name", "component.nameLast");
+			assertThat(indexDefinitions.get(1).getIndexOptions()).containsEntry("name", "component.name");
 		}
 
 		@Test // DATAMONGO-1121
@@ -1008,11 +1197,10 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					OuterDocumentReferingToIndexedPropertyViaDifferentNonCyclingPaths.class);
 
-			assertThat(indexDefinitions, hasSize(2));
-			assertThat((String) indexDefinitions.get(0).getIndexOptions().get("name"), equalTo("path1.foo"));
-			assertThat((String) indexDefinitions.get(1).getIndexOptions().get("name"),
-					equalTo("path2.propertyWithIndexedStructure.foo"));
-
+			assertThat(indexDefinitions).hasSize(2);
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("name", "path1.foo");
+			assertThat(indexDefinitions.get(1).getIndexOptions()).containsEntry("name",
+					"path2.propertyWithIndexedStructure.foo");
 		}
 
 		@Test // DATAMONGO-1263
@@ -1021,9 +1209,63 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
 					EntityWithGenericTypeWrapperAsElement.class);
 
-			assertThat(indexDefinitions, hasSize(1));
-			assertThat((String) indexDefinitions.get(0).getIndexOptions().get("name"),
-					equalTo("listWithGeneircTypeElement.entity.property_index"));
+			assertThat(indexDefinitions).hasSize(1);
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("name",
+					"listWithGeneircTypeElement.entity.property_index");
+		}
+
+		@Test // DATAMONGO-1183
+		public void hashedIndexOnId() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					WithHashedIndexOnId.class);
+
+			assertThat(indexDefinitions).hasSize(1);
+			assertThat(indexDefinitions.get(0)).satisfies(it -> {
+				assertThat(it.getIndexKeys()).hasSize(1).containsEntry("_id", "hashed");
+			});
+		}
+
+		@Test // DATAMONGO-1183
+		public void hashedIndex() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(WithHashedIndex.class);
+
+			assertThat(indexDefinitions).hasSize(1);
+			assertThat(indexDefinitions.get(0)).satisfies(it -> {
+				assertThat(it.getIndexKeys()).hasSize(1).containsEntry("value", "hashed");
+			});
+		}
+
+		@Test // DATAMONGO-1183
+		public void hashedIndexAndIndex() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					WithHashedIndexAndIndex.class);
+
+			assertThat(indexDefinitions).hasSize(2);
+			assertThat(indexDefinitions.get(0)).satisfies(it -> {
+				assertThat(it.getIndexKeys()).containsEntry("value", 1);
+			});
+			assertThat(indexDefinitions.get(1)).satisfies(it -> {
+				assertThat(it.getIndexKeys()).containsEntry("value", "hashed");
+			});
+		}
+
+		@Test // DATAMONGO-1183
+		public void hashedIndexAndIndexViaComposedAnnotation() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					WithComposedHashedIndexAndIndex.class);
+
+			assertThat(indexDefinitions).hasSize(2);
+			assertThat(indexDefinitions.get(0)).satisfies(it -> {
+				assertThat(it.getIndexKeys()).containsEntry("value", 1);
+				assertThat(it.getIndexOptions()).containsEntry("name", "idx-name");
+			});
+			assertThat(indexDefinitions.get(1)).satisfies(it -> {
+				assertThat(it.getIndexKeys()).containsEntry("value", "hashed");
+			});
 		}
 
 		@Document
@@ -1228,6 +1470,41 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		static class EntityWithGenericTypeWrapperAsElement {
 			List<GenericEntityWrapper<DocumentWithNamedIndex>> listWithGeneircTypeElement;
 		}
+
+		@Document
+		static class WithHashedIndexOnId {
+
+			@HashIndexed @Id String id;
+		}
+
+		@Document
+		static class WithHashedIndex {
+
+			@HashIndexed String value;
+		}
+
+		@Document
+		static class WithHashedIndexAndIndex {
+
+			@Indexed //
+			@HashIndexed //
+			String value;
+		}
+
+		@Document
+		static class WithComposedHashedIndexAndIndex {
+
+			@ComposedHashIndexed(name = "idx-name") String value;
+		}
+
+		@HashIndexed
+		@Indexed
+		@Retention(RetentionPolicy.RUNTIME)
+		@interface ComposedHashIndexed {
+
+			@AliasFor(annotation = Indexed.class, attribute = "name")
+			String name() default "";
+		}
 	}
 
 	private static List<IndexDefinitionHolder> prepareMappingContextAndResolveIndexForType(Class<?> type) {
@@ -1255,9 +1532,9 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			IndexDefinitionHolder holder) {
 
 		for (String expectedPath : expectedPaths) {
-			assertThat(holder.getIndexDefinition().getIndexKeys().containsKey(expectedPath), equalTo(true));
+			assertThat(holder.getIndexDefinition().getIndexKeys()).containsKey(expectedPath);
 		}
 
-		assertThat(holder.getCollection(), equalTo(expectedCollection));
+		assertThat(holder.getCollection()).isEqualTo(expectedCollection);
 	}
 }

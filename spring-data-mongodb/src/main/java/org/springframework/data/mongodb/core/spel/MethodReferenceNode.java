@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -84,6 +84,7 @@ public class MethodReferenceNode extends ExpressionNode {
 		map.put("sqrt", singleArgRef().forOperator("$sqrt"));
 		map.put("subtract", arrayArgRef().forOperator("$subtract"));
 		map.put("trunc", singleArgRef().forOperator("$trunc"));
+		map.put("round", arrayArgRef().forOperator("$round"));
 
 		// STRING OPERATORS
 		map.put("concat", arrayArgRef().forOperator("$concat"));

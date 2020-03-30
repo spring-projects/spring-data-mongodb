@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.Tailable;
@@ -169,6 +170,14 @@ public class MongoQueryMethod extends QueryMethod {
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.QueryMethod#getDomainClass()
+	 */
+	protected Class<?> getDomainClass() {
+		return super.getDomainClass();
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.QueryMethod#getParameters()
 	 */
 	@Override
@@ -269,11 +278,6 @@ public class MongoQueryMethod extends QueryMethod {
 			metaAttributes.setMaxTimeMsec(meta.maxExecutionTimeMs());
 		}
 
-		if (meta.maxScanDocuments() > 0) {
-			// TODO: Mongo 4 - removal
-			metaAttributes.setMaxScan(meta.maxScanDocuments());
-		}
-
 		if (meta.cursorBatchSize() != 0) {
 			metaAttributes.setCursorBatchSize(meta.cursorBatchSize());
 		}
@@ -282,17 +286,15 @@ public class MongoQueryMethod extends QueryMethod {
 			metaAttributes.setComment(meta.comment());
 		}
 
-		if (meta.snapshot()) {
-
-			// TODO: Mongo 4 - removal
-			metaAttributes.setSnapshot(meta.snapshot());
-		}
-
 		if (!ObjectUtils.isEmpty(meta.flags())) {
 
 			for (org.springframework.data.mongodb.core.query.Meta.CursorOption option : meta.flags()) {
 				metaAttributes.addFlag(option);
 			}
+		}
+
+		if (meta.allowDiskUse()) {
+			metaAttributes.setAllowDiskUse(meta.allowDiskUse());
 		}
 
 		return metaAttributes;
@@ -305,7 +307,7 @@ public class MongoQueryMethod extends QueryMethod {
 	 * @since 2.1
 	 */
 	public boolean hasAnnotatedSort() {
-		return lookupQueryAnnotation().map(it -> !it.sort().isEmpty()).orElse(false);
+		return lookupQueryAnnotation().map(Query::sort).filter(StringUtils::hasText).isPresent();
 	}
 
 	/**
@@ -320,6 +322,74 @@ public class MongoQueryMethod extends QueryMethod {
 
 		return lookupQueryAnnotation().map(Query::sort).orElseThrow(() -> new IllegalStateException(
 				"Expected to find @Query annotation but did not. Make sure to check hasAnnotatedSort() before."));
+	}
+
+	/**
+	 * Check if the query method is decorated with an non empty {@link Query#collation()} or or
+	 * {@link Aggregation#collation()}.
+	 *
+	 * @return true if method annotated with {@link Query} or {@link Aggregation} having a non-empty collation attribute.
+	 * @since 2.2
+	 */
+	public boolean hasAnnotatedCollation() {
+
+		Optional<String> optionalCollation = lookupQueryAnnotation().map(Query::collation);
+
+		if (!optionalCollation.isPresent()) {
+			optionalCollation = lookupAggregationAnnotation().map(Aggregation::collation);
+		}
+
+		return optionalCollation.filter(StringUtils::hasText).isPresent();
+	}
+
+	/**
+	 * Get the collation value extracted from the {@link Query} or {@link Aggregation} annotation.
+	 *
+	 * @return the {@link Query#collation()} or or {@link Aggregation#collation()} value.
+	 * @throws IllegalStateException if method not annotated with {@link Query} or {@link Aggregation}. Make sure to check
+	 *           {@link #hasAnnotatedQuery()} first.
+	 * @since 2.2
+	 */
+	public String getAnnotatedCollation() {
+
+		return lookupQueryAnnotation().map(Query::collation)
+				.orElseGet(() -> lookupAggregationAnnotation().map(Aggregation::collation) //
+						.orElseThrow(() -> new IllegalStateException(
+								"Expected to find @Query annotation but did not. Make sure to check hasAnnotatedCollation() before.")));
+	}
+
+	/**
+	 * Returns whether the method has an annotated query.
+	 *
+	 * @return true if {@link Aggregation} is present.
+	 * @since 2.2
+	 */
+	public boolean hasAnnotatedAggregation() {
+		return findAnnotatedAggregation().isPresent();
+	}
+
+	/**
+	 * Returns the aggregation pipeline declared in a {@link Aggregation} annotation.
+	 *
+	 * @return the aggregation pipeline.
+	 * @throws IllegalStateException if method not annotated with {@link Aggregation}. Make sure to check
+	 *           {@link #hasAnnotatedAggregation()} first.
+	 * @since 2.2
+	 */
+	public String[] getAnnotatedAggregation() {
+		return findAnnotatedAggregation().orElseThrow(() -> new IllegalStateException(
+				"Expected to find @Aggregation annotation but did not. Make sure to check hasAnnotatedAggregation() before."));
+	}
+
+	private Optional<String[]> findAnnotatedAggregation() {
+
+		return lookupAggregationAnnotation() //
+				.map(Aggregation::pipeline) //
+				.filter(it -> !ObjectUtils.isEmpty(it));
+	}
+
+	Optional<Aggregation> lookupAggregationAnnotation() {
+		return doFindAnnotation(Aggregation.class);
 	}
 
 	@SuppressWarnings("unchecked")

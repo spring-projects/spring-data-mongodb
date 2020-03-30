@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,10 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.bson.Document;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link SampleOperation}.
@@ -31,14 +30,14 @@ public class SampleOperationUnitTests {
 	private static final String SIZE = "size";
 	private static final String OP = "$sample";
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1325
+	@Test // DATAMONGO-1325
 	public void rejectsNegativeSample() {
-		new SampleOperation(-1L);
+		assertThatIllegalArgumentException().isThrownBy(() -> new SampleOperation(-1L));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1325
+	@Test // DATAMONGO-1325
 	public void rejectsZeroSample() {
-		new SampleOperation(0L);
+		assertThatIllegalArgumentException().isThrownBy(() -> new SampleOperation(0L));
 	}
 
 	@Test // DATAMONGO-1325
@@ -50,10 +49,10 @@ public class SampleOperationUnitTests {
 
 		Document sampleOperationDocument = sampleOperation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertNotNull(sampleOperationDocument.get(OP));
-		assertThat(sampleOperationDocument.get(OP), is(instanceOf(Document.class)));
+		assertThat(sampleOperationDocument.get(OP)).isNotNull();
+		assertThat(sampleOperationDocument.get(OP)).isInstanceOf(Document.class);
 
 		Document sampleSizeDocument = sampleOperationDocument.get(OP, Document.class);
-		assertEquals(sampleSize, sampleSizeDocument.get(SIZE));
+		assertThat(sampleSizeDocument.get(SIZE)).isEqualTo(sampleSize);
 	}
 }

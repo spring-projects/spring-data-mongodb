@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,61 +16,63 @@
 package org.springframework.data.mongodb.gridfs;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
-import java.io.ByteArrayInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.reactivestreams.Publisher;
-import org.springframework.core.io.AbstractResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.core.io.buffer.DataBufferFactory;
+import org.springframework.core.io.buffer.DataBufferUtils;
+import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
+import com.mongodb.reactivestreams.client.gridfs.GridFSDownloadPublisher;
 
 /**
- * Reactive {@link GridFSFile} based {@link Resource} implementation.
+ * Reactive {@link GridFSFile} based {@link Resource} implementation. Note that the {@link #getDownloadStream() content}
+ * can be consumed only once.
  *
  * @author Mark Paluch
+ * @author Christoph Strobl
  * @since 2.2
  */
-public class ReactiveGridFsResource extends AbstractResource {
+public class ReactiveGridFsResource {
 
-	static final String CONTENT_TYPE_FIELD = "_contentType";
-	private static final ByteArrayInputStream EMPTY_INPUT_STREAM = new ByteArrayInputStream(new byte[0]);
+	private final AtomicBoolean consumed = new AtomicBoolean(false);
 
-	private final @Nullable GridFSFile file;
 	private final String filename;
-	private final Flux<DataBuffer> content;
+	private final @Nullable GridFSDownloadPublisher downloadPublisher;
+	private final DataBufferFactory dataBufferFactory;
 
 	/**
 	 * Creates a new, absent {@link ReactiveGridFsResource}.
 	 *
 	 * @param filename filename of the absent resource.
-	 * @param content
-	 * @since 2.1
+	 * @param downloadPublisher
 	 */
-	private ReactiveGridFsResource(String filename, Publisher<DataBuffer> content) {
-
-		this.file = null;
-		this.filename = filename;
-		this.content = Flux.from(content);
+	public ReactiveGridFsResource(String filename, @Nullable GridFSDownloadPublisher downloadPublisher) {
+		this(filename, downloadPublisher, new DefaultDataBufferFactory());
 	}
 
 	/**
-	 * Creates a new {@link ReactiveGridFsResource} from the given {@link GridFSFile}.
+	 * Creates a new, absent {@link ReactiveGridFsResource}.
 	 *
-	 * @param file must not be {@literal null}.
-	 * @param content
+	 * @param filename filename of the absent resource.
+	 * @param downloadPublisher
+	 * @param dataBufferFactory
+	 * @since 3.0
 	 */
-	public ReactiveGridFsResource(GridFSFile file, Publisher<DataBuffer> content) {
+	ReactiveGridFsResource(String filename, @Nullable GridFSDownloadPublisher downloadPublisher,
+			DataBufferFactory dataBufferFactory) {
 
-		this.file = file;
-		this.filename = file.getFilename();
-		this.content = Flux.from(content);
+		this.filename = filename;
+		this.downloadPublisher = downloadPublisher;
+		this.dataBufferFactory = dataBufferFactory;
 	}
 
 	/**
@@ -83,98 +85,96 @@ public class ReactiveGridFsResource extends AbstractResource {
 	public static ReactiveGridFsResource absent(String filename) {
 
 		Assert.notNull(filename, "Filename must not be null");
-
-		return new ReactiveGridFsResource(filename, Flux.empty());
+		return new ReactiveGridFsResource(filename, null);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.core.io.InputStreamResource#getInputStream()
-	 */
-	@Override
-	public InputStream getInputStream() throws IllegalStateException {
-		throw new UnsupportedOperationException();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.core.io.AbstractResource#contentLength()
-	 */
-	@Override
-	public long contentLength() throws IOException {
-
-		verifyExists();
-		return file.getLength();
-	}
-
-	/*
-	 * (non-Javadoc)
+	/**
 	 * @see org.springframework.core.io.AbstractResource#getFilename()
 	 */
-	@Override
 	public String getFilename() throws IllegalStateException {
-		return filename;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.core.io.AbstractResource#exists()
-	 */
-	@Override
-	public boolean exists() {
-		return file != null;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.core.io.AbstractResource#lastModified()
-	 */
-	@Override
-	public long lastModified() throws IOException {
-
-		verifyExists();
-		return file.getUploadDate().getTime();
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.core.io.AbstractResource#getDescription()
-	 */
-	@Override
-	public String getDescription() {
-		return String.format("GridFs resource [%s]", this.getFilename());
+		return this.filename;
 	}
 
 	/**
-	 * Returns the {@link Resource}'s id.
-	 *
-	 * @return never {@literal null}.
-	 * @throws IllegalStateException if the file does not {@link #exists()}.
+	 * @return the underlying {@link GridFSFile}. Can be {@literal null} if absent.
+	 * @since 2.2
 	 */
-	public Object getId() {
-
-		Assert.state(exists(), () -> String.format("%s does not exist.", getDescription()));
-
-		return file.getId();
+	public Mono<GridFSFile> getGridFSFile() {
+		return downloadPublisher != null ? Mono.from(downloadPublisher.getGridFSFile()) : Mono.empty();
 	}
 
 	/**
-	 * Retrieve the download stream.
+	 * Obtain the data as {@link InputStream}. <br />
+	 * <strong>NOTE</strong> Buffers data in memory. Use {@link #getDownloadStream()} for large files.
 	 *
-	 * @return
+	 * @throws IllegalStateException if the underlying {@link Publisher} has already been consumed.
+	 * @see org.springframework.core.io.InputStreamResource#getInputStream()
+	 * @see #getDownloadStream()
+	 * @see DataBufferUtils#join(Publisher)
+	 * @since 3.0
+	 */
+	public Mono<InputStream> getInputStream() throws IllegalStateException {
+
+		return getDownloadStream() //
+				.transform(DataBufferUtils::join) //
+				.as(Mono::from) //
+				.map(DataBuffer::asInputStream);
+	}
+
+	/**
+	 * Obtain the download stream emitting chunks of data as they come in. <br />
+	 *
+	 * @return {@link Flux#empty()} if the file does not exist.
+	 * @throws IllegalStateException if the underlying {@link Publisher} has already been consumed.
+	 * @see org.springframework.core.io.InputStreamResource#getInputStream()
+	 * @see #getDownloadStream()
+	 * @see DataBufferUtils#join(Publisher)
+	 * @since 3.0
 	 */
 	public Flux<DataBuffer> getDownloadStream() {
 
-		if (!exists()) {
-			return Flux.error(new FileNotFoundException(String.format("%s does not exist.", getDescription())));
+		if (downloadPublisher == null) {
+			return Flux.empty();
 		}
-		return content;
+
+		return createDownloadStream(downloadPublisher);
 	}
 
-	private void verifyExists() throws FileNotFoundException {
+	/**
+	 * Obtain the download stream emitting chunks of data with given {@code chunkSize} as they come in.
+	 *
+	 * @param chunkSize the preferred number of bytes per emitted {@link DataBuffer}.
+	 * @return {@link Flux#empty()} if the file does not exist.
+	 * @throws IllegalStateException if the underlying {@link Publisher} has already been consumed.
+	 * @see org.springframework.core.io.InputStreamResource#getInputStream()
+	 * @see #getDownloadStream()
+	 * @see DataBufferUtils#join(Publisher)
+	 * @since 3.0
+	 */
+	public Flux<DataBuffer> getDownloadStream(int chunkSize) {
 
-		if (!exists()) {
-			throw new FileNotFoundException(String.format("%s does not exist.", getDescription()));
+		if (downloadPublisher == null) {
+			return Flux.empty();
+		}
+
+		return createDownloadStream(downloadPublisher.bufferSizeBytes(chunkSize));
+	}
+
+	private Flux<DataBuffer> createDownloadStream(GridFSDownloadPublisher publisher) {
+
+		return Flux.from(publisher) //
+				.map(dataBufferFactory::wrap) //
+				.doOnSubscribe(it -> this.verifyStreamStillAvailable());
+	}
+
+	public boolean exists() {
+		return downloadPublisher != null;
+	}
+
+	private void verifyStreamStillAvailable() {
+
+		if (!consumed.compareAndSet(false, true)) {
+			throw new IllegalStateException("Stream already consumed.");
 		}
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -32,25 +33,35 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.AssociationHandler;
 import org.springframework.data.mapping.MappingException;
+import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PropertyHandler;
+import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.CycleGuard.Path;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.TextIndexIncludeOptions.IncludeStrategy;
 import org.springframework.data.mongodb.core.index.TextIndexDefinition.TextIndexDefinitionBuilder;
 import org.springframework.data.mongodb.core.index.TextIndexDefinition.TextIndexedFieldSpec;
+import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.expression.EvaluationContext;
+import org.springframework.expression.Expression;
+import org.springframework.expression.ParserContext;
+import org.springframework.expression.common.LiteralExpression;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -69,15 +80,18 @@ import org.springframework.util.StringUtils;
 public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(MongoPersistentEntityIndexResolver.class);
+	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
 
-	private final MongoMappingContext mappingContext;
+	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+	private EvaluationContextProvider evaluationContextProvider = EvaluationContextProvider.DEFAULT;
 
 	/**
 	 * Create new {@link MongoPersistentEntityIndexResolver}.
 	 *
 	 * @param mappingContext must not be {@literal null}.
 	 */
-	public MongoPersistentEntityIndexResolver(MongoMappingContext mappingContext) {
+	public MongoPersistentEntityIndexResolver(
+			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 
 		Assert.notNull(mappingContext, "Mapping context must not be null in order to resolve index definitions");
 		this.mappingContext = mappingContext;
@@ -92,28 +106,30 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	}
 
 	/**
-	 * Resolve the {@link IndexDefinition}s for given {@literal root} entity by traversing {@link MongoPersistentProperty}
-	 * scanning for index annotations {@link Indexed}, {@link CompoundIndex} and {@link GeospatialIndex}. The given
-	 * {@literal root} has therefore to be annotated with {@link Document}.
+	 * Resolve the {@link IndexDefinition}s for a given {@literal root} entity by traversing
+	 * {@link MongoPersistentProperty} scanning for index annotations {@link Indexed}, {@link CompoundIndex} and
+	 * {@link GeospatialIndex}. The given {@literal root} has therefore to be annotated with {@link Document}.
 	 *
 	 * @param root must not be null.
 	 * @return List of {@link IndexDefinitionHolder}. Will never be {@code null}.
 	 * @throws IllegalArgumentException in case of missing {@link Document} annotation marking root entities.
 	 */
-	public List<IndexDefinitionHolder> resolveIndexForEntity(final MongoPersistentEntity<?> root) {
+	public List<IndexDefinitionHolder> resolveIndexForEntity(MongoPersistentEntity<?> root) {
 
-		Assert.notNull(root, "Index cannot be resolved for given 'null' entity.");
+		Assert.notNull(root, "MongoPersistentEntity must not be null!");
 		Document document = root.findAnnotation(Document.class);
-		Assert.notNull(document, "Given entity is not collection root.");
+		Assert.notNull(document, () -> String
+				.format("Entity %s is not a collection root. Make sure to annotate it with @Document!", root.getName()));
 
-		final List<IndexDefinitionHolder> indexInformation = new ArrayList<>();
-		indexInformation.addAll(potentiallyCreateCompoundIndexDefinitions("", root.getCollection(), root));
-		indexInformation.addAll(potentiallyCreateTextIndexDefinition(root));
+		List<IndexDefinitionHolder> indexInformation = new ArrayList<>();
+		String collection = root.getCollection();
+		indexInformation.addAll(potentiallyCreateCompoundIndexDefinitions("", collection, root));
+		indexInformation.addAll(potentiallyCreateTextIndexDefinition(root, collection));
 
 		root.doWithProperties((PropertyHandler<MongoPersistentProperty>) property -> this
 				.potentiallyAddIndexForProperty(root, property, indexInformation, new CycleGuard()));
 
-		indexInformation.addAll(resolveIndexesForDbrefs("", root.getCollection(), root));
+		indexInformation.addAll(resolveIndexesForDbrefs("", collection, root));
 
 		return indexInformation;
 	}
@@ -127,10 +143,10 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 						persistentProperty.getFieldName(), Path.of(persistentProperty), root.getCollection(), guard));
 			}
 
-			IndexDefinitionHolder indexDefinitionHolder = createIndexDefinitionHolderForProperty(
+			List<IndexDefinitionHolder> indexDefinitions = createIndexDefinitionHolderForProperty(
 					persistentProperty.getFieldName(), root.getCollection(), persistentProperty);
-			if (indexDefinitionHolder != null) {
-				indexes.add(indexDefinitionHolder);
+			if (!indexDefinitions.isEmpty()) {
+				indexes.addAll(indexDefinitions);
 			}
 		} catch (CyclicPropertyReferenceException e) {
 			LOGGER.info(e.getMessage());
@@ -157,14 +173,14 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		indexInformation.addAll(potentiallyCreateCompoundIndexDefinitions(dotPath, collection, entity));
 
 		entity.doWithProperties((PropertyHandler<MongoPersistentProperty>) property -> this
-				.guradAndPotentiallyAddIndexForProperty(property, dotPath, path, collection, indexInformation, guard));
+				.guardAndPotentiallyAddIndexForProperty(property, dotPath, path, collection, indexInformation, guard));
 
 		indexInformation.addAll(resolveIndexesForDbrefs(dotPath, collection, entity));
 
 		return indexInformation;
 	}
 
-	private void guradAndPotentiallyAddIndexForProperty(MongoPersistentProperty persistentProperty, String dotPath,
+	private void guardAndPotentiallyAddIndexForProperty(MongoPersistentProperty persistentProperty, String dotPath,
 			Path path, String collection, List<IndexDefinitionHolder> indexes, CycleGuard guard) {
 
 		String propertyDotPath = (StringUtils.hasText(dotPath) ? dotPath + "." : "") + persistentProperty.getFieldName();
@@ -181,25 +197,30 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			}
 		}
 
-		IndexDefinitionHolder indexDefinitionHolder = createIndexDefinitionHolderForProperty(propertyDotPath, collection,
+		List<IndexDefinitionHolder> indexDefinitions = createIndexDefinitionHolderForProperty(propertyDotPath, collection,
 				persistentProperty);
 
-		if (indexDefinitionHolder != null) {
-			indexes.add(indexDefinitionHolder);
+		if (!indexDefinitions.isEmpty()) {
+			indexes.addAll(indexDefinitions);
 		}
 	}
 
-	@Nullable
-	private IndexDefinitionHolder createIndexDefinitionHolderForProperty(String dotPath, String collection,
+	private List<IndexDefinitionHolder> createIndexDefinitionHolderForProperty(String dotPath, String collection,
 			MongoPersistentProperty persistentProperty) {
 
+		List<IndexDefinitionHolder> indices = new ArrayList<>(2);
+
 		if (persistentProperty.isAnnotationPresent(Indexed.class)) {
-			return createIndexDefinition(dotPath, collection, persistentProperty);
+			indices.add(createIndexDefinition(dotPath, collection, persistentProperty));
 		} else if (persistentProperty.isAnnotationPresent(GeoSpatialIndexed.class)) {
-			return createGeoSpatialIndexDefinition(dotPath, collection, persistentProperty);
+			indices.add(createGeoSpatialIndexDefinition(dotPath, collection, persistentProperty));
 		}
 
-		return null;
+		if (persistentProperty.isAnnotationPresent(HashIndexed.class)) {
+			indices.add(createHashedIndexDefinition(dotPath, collection, persistentProperty));
+		}
+
+		return indices;
 	}
 
 	private List<IndexDefinitionHolder> potentiallyCreateCompoundIndexDefinitions(String dotPath, String collection,
@@ -213,7 +234,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	}
 
 	private Collection<? extends IndexDefinitionHolder> potentiallyCreateTextIndexDefinition(
-			MongoPersistentEntity<?> root) {
+			MongoPersistentEntity<?> root, String collection) {
 
 		String name = root.getType().getSimpleName() + "_TextIndex";
 		if (name.getBytes().length > 127) {
@@ -243,13 +264,17 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			LOGGER.info(e.getMessage());
 		}
 
+		if (root.hasCollation()) {
+			indexDefinitionBuilder.withSimpleCollation();
+		}
+
 		TextIndexDefinition indexDefinition = indexDefinitionBuilder.build();
 
 		if (!indexDefinition.hasFieldSpec()) {
 			return Collections.emptyList();
 		}
 
-		IndexDefinitionHolder holder = new IndexDefinitionHolder("", indexDefinition, root.getCollection());
+		IndexDefinitionHolder holder = new IndexDefinitionHolder("", indexDefinition, collection);
 		return Collections.singletonList(holder);
 
 	}
@@ -310,11 +335,12 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	}
 
 	/**
-	 * Create {@link IndexDefinition} wrapped in {@link IndexDefinitionHolder} for {@link CompoundIndexes} of given type.
+	 * Create {@link IndexDefinition} wrapped in {@link IndexDefinitionHolder} for {@link CompoundIndexes} of a given
+	 * type.
 	 *
 	 * @param dotPath The properties {@literal "dot"} path representation from its document root.
 	 * @param fallbackCollection
-	 * @param type
+	 * @param entity
 	 * @return
 	 */
 	protected List<IndexDefinitionHolder> createCompoundIndexDefinitions(String dotPath, String fallbackCollection,
@@ -338,15 +364,14 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		return indexDefinitions;
 	}
 
-	@SuppressWarnings("deprecation")
 	protected IndexDefinitionHolder createCompoundIndexDefinition(String dotPath, String collection, CompoundIndex index,
 			MongoPersistentEntity<?> entity) {
 
 		CompoundIndexDefinition indexDefinition = new CompoundIndexDefinition(
-				resolveCompoundIndexKeyFromStringDefinition(dotPath, index.def()));
+				resolveCompoundIndexKeyFromStringDefinition(dotPath, index.def(), entity));
 
 		if (!index.useGeneratedName()) {
-			indexDefinition.named(pathAwareIndexName(index.name(), dotPath, null));
+			indexDefinition.named(pathAwareIndexName(index.name(), dotPath, entity, null));
 		}
 
 		if (index.unique()) {
@@ -368,7 +393,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
 	}
 
-	private org.bson.Document resolveCompoundIndexKeyFromStringDefinition(String dotPath, String keyDefinitionString) {
+	private org.bson.Document resolveCompoundIndexKeyFromStringDefinition(String dotPath, String keyDefinitionString,
+			PersistentEntity<?, ?> entity) {
 
 		if (!StringUtils.hasText(dotPath) && !StringUtils.hasText(keyDefinitionString)) {
 			throw new InvalidDataAccessApiUsageException("Cannot create index on root level for empty keys.");
@@ -378,7 +404,11 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			return new org.bson.Document(dotPath, 1);
 		}
 
-		org.bson.Document dbo = org.bson.Document.parse(keyDefinitionString);
+		Object keyDefToUse = evaluate(keyDefinitionString, getEvaluationContextForProperty(entity));
+
+		org.bson.Document dbo = (keyDefToUse instanceof org.bson.Document) ? (org.bson.Document) keyDefToUse
+				: org.bson.Document.parse(ObjectUtils.nullSafeToString(keyDefToUse));
+
 		if (!StringUtils.hasText(dotPath)) {
 			return dbo;
 		}
@@ -392,19 +422,19 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	}
 
 	/**
-	 * Creates {@link IndexDefinition} wrapped in {@link IndexDefinitionHolder} out of {@link Indexed} for given
+	 * Creates {@link IndexDefinition} wrapped in {@link IndexDefinitionHolder} out of {@link Indexed} for a given
 	 * {@link MongoPersistentProperty}.
 	 *
 	 * @param dotPath The properties {@literal "dot"} path representation from its document root.
 	 * @param collection
-	 * @param persitentProperty
+	 * @param persistentProperty
 	 * @return
 	 */
 	@Nullable
 	protected IndexDefinitionHolder createIndexDefinition(String dotPath, String collection,
-			MongoPersistentProperty persitentProperty) {
+			MongoPersistentProperty persistentProperty) {
 
-		Indexed index = persitentProperty.findAnnotation(Indexed.class);
+		Indexed index = persistentProperty.findAnnotation(Indexed.class);
 
 		if (index == null) {
 			return null;
@@ -414,7 +444,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 				IndexDirection.ASCENDING.equals(index.direction()) ? Sort.Direction.ASC : Sort.Direction.DESC);
 
 		if (!index.useGeneratedName()) {
-			indexDefinition.named(pathAwareIndexName(index.name(), dotPath, persitentProperty));
+			indexDefinition
+					.named(pathAwareIndexName(index.name(), dotPath, persistentProperty.getOwner(), persistentProperty));
 		}
 
 		if (index.unique()) {
@@ -433,7 +464,87 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			indexDefinition.expire(index.expireAfterSeconds(), TimeUnit.SECONDS);
 		}
 
+		if (StringUtils.hasText(index.expireAfter())) {
+
+			if (index.expireAfterSeconds() >= 0) {
+				throw new IllegalStateException(String.format(
+						"@Indexed already defines an expiration timeout of %s seconds via Indexed#expireAfterSeconds. Please make to use either expireAfterSeconds or expireAfter.",
+						index.expireAfterSeconds()));
+			}
+
+			Duration timeout = computeIndexTimeout(index.expireAfter(),
+					getEvaluationContextForProperty(persistentProperty.getOwner()));
+			if (!timeout.isZero() && !timeout.isNegative()) {
+				indexDefinition.expire(timeout);
+			}
+		}
+
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
+	}
+
+	/**
+	 * Creates {@link HashedIndex} wrapped in {@link IndexDefinitionHolder} out of {@link HashIndexed} for a given
+	 * {@link MongoPersistentProperty}.
+	 *
+	 * @param dotPath The properties {@literal "dot"} path representation from its document root.
+	 * @param collection
+	 * @param persistentProperty
+	 * @return
+	 * @since 2.2
+	 */
+	@Nullable
+	protected IndexDefinitionHolder createHashedIndexDefinition(String dotPath, String collection,
+			MongoPersistentProperty persistentProperty) {
+
+		HashIndexed index = persistentProperty.findAnnotation(HashIndexed.class);
+
+		if (index == null) {
+			return null;
+		}
+
+		return new IndexDefinitionHolder(dotPath, HashedIndex.hashed(dotPath), collection);
+	}
+
+	/**
+	 * Get the default {@link EvaluationContext}.
+	 *
+	 * @return never {@literal null}.
+	 * @since 2.2
+	 */
+	protected EvaluationContext getEvaluationContext() {
+		return evaluationContextProvider.getEvaluationContext(null);
+	}
+
+	/**
+	 * Get the {@link EvaluationContext} for a given {@link PersistentEntity entity} the default one.
+	 *
+	 * @param persistentEntity can be {@literal null}
+	 * @return
+	 */
+	private EvaluationContext getEvaluationContextForProperty(@Nullable PersistentEntity<?, ?> persistentEntity) {
+
+		if (persistentEntity == null || !(persistentEntity instanceof BasicMongoPersistentEntity)) {
+			return getEvaluationContext();
+		}
+
+		EvaluationContext contextFromEntity = ((BasicMongoPersistentEntity<?>) persistentEntity).getEvaluationContext(null);
+
+		if (contextFromEntity != null && !EvaluationContextProvider.DEFAULT.equals(contextFromEntity)) {
+			return contextFromEntity;
+		}
+
+		return getEvaluationContext();
+	}
+
+	/**
+	 * Set the {@link EvaluationContextProvider} used for obtaining the {@link EvaluationContext} used to compute
+	 * {@link org.springframework.expression.spel.standard.SpelExpression expressions}.
+	 *
+	 * @param evaluationContextProvider must not be {@literal null}.
+	 * @since 2.2
+	 */
+	public void setEvaluationContextProvider(EvaluationContextProvider evaluationContextProvider) {
+		this.evaluationContextProvider = evaluationContextProvider;
 	}
 
 	/**
@@ -460,7 +571,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		indexDefinition.withMin(index.min()).withMax(index.max());
 
 		if (!index.useGeneratedName()) {
-			indexDefinition.named(pathAwareIndexName(index.name(), dotPath, persistentProperty));
+			indexDefinition
+					.named(pathAwareIndexName(index.name(), dotPath, persistentProperty.getOwner(), persistentProperty));
 		}
 
 		indexDefinition.typed(index.type()).withBucketSize(index.bucketSize()).withAdditionalField(index.additionalField());
@@ -468,9 +580,18 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
 	}
 
-	private String pathAwareIndexName(String indexName, String dotPath, @Nullable MongoPersistentProperty property) {
+	private String pathAwareIndexName(String indexName, String dotPath, @Nullable PersistentEntity<?, ?> entity,
+			@Nullable MongoPersistentProperty property) {
 
-		String nameToUse = StringUtils.hasText(indexName) ? indexName : "";
+		String nameToUse = "";
+		if (StringUtils.hasText(indexName)) {
+
+			Object result = evaluate(indexName, getEvaluationContextForProperty(entity));
+
+			if (result != null) {
+				nameToUse = ObjectUtils.nullSafeToString(result);
+			}
+		}
 
 		if (!StringUtils.hasText(dotPath) || (property != null && dotPath.equals(property.getFieldName()))) {
 			return StringUtils.hasText(nameToUse) ? nameToUse : dotPath;
@@ -508,12 +629,54 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 							propertyDotPath));
 		}
 
-		IndexDefinitionHolder indexDefinitionHolder = createIndexDefinitionHolderForProperty(propertyDotPath, collection,
+		List<IndexDefinitionHolder> indexDefinitions = createIndexDefinitionHolderForProperty(propertyDotPath, collection,
 				property);
 
-		if (indexDefinitionHolder != null) {
-			indexes.add(indexDefinitionHolder);
+		if (!indexDefinitions.isEmpty()) {
+			indexes.addAll(indexDefinitions);
 		}
+	}
+
+	/**
+	 * Compute the index timeout value by evaluating a potential
+	 * {@link org.springframework.expression.spel.standard.SpelExpression} and parsing the final value.
+	 *
+	 * @param timeoutValue must not be {@literal null}.
+	 * @param evaluationContext must not be {@literal null}.
+	 * @return never {@literal null}
+	 * @since 2.2
+	 * @throws IllegalArgumentException for invalid duration values.
+	 */
+	private static Duration computeIndexTimeout(String timeoutValue, EvaluationContext evaluationContext) {
+
+		Object evaluatedTimeout = evaluate(timeoutValue, evaluationContext);
+
+		if (evaluatedTimeout == null) {
+			return Duration.ZERO;
+		}
+
+		if (evaluatedTimeout instanceof Duration) {
+			return (Duration) evaluatedTimeout;
+		}
+
+		String val = evaluatedTimeout.toString();
+
+		if (val == null) {
+			return Duration.ZERO;
+		}
+
+		return DurationStyle.detectAndParse(val);
+	}
+
+	@Nullable
+	private static Object evaluate(String value, EvaluationContext evaluationContext) {
+
+		Expression expression = PARSER.parseExpression(value, ParserContext.TEMPLATE_EXPRESSION);
+		if (expression instanceof LiteralExpression) {
+			return value;
+		}
+
+		return expression.getValue(evaluationContext, Object.class);
 	}
 
 	/**

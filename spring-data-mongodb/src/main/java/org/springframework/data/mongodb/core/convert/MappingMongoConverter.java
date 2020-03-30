@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,36 +30,41 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.bson.Document;
+import org.bson.codecs.Codec;
+import org.bson.codecs.DecoderContext;
 import org.bson.conversions.Bson;
+import org.bson.json.JsonReader;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.CollectionFactory;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
-import org.springframework.data.convert.EntityInstantiator;
 import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.PreferredConstructor;
 import org.springframework.data.mapping.PreferredConstructor.Parameter;
+import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mapping.model.DefaultSpELExpressionEvaluator;
+import org.springframework.data.mapping.model.EntityInstantiator;
 import org.springframework.data.mapping.model.ParameterValueProvider;
 import org.springframework.data.mapping.model.PersistentEntityParameterValueProvider;
 import org.springframework.data.mapping.model.PropertyValueProvider;
 import org.springframework.data.mapping.model.SpELContext;
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mapping.model.SpELExpressionParameterValueProvider;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.CodecRegistryProvider;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.mapping.event.AfterConvertCallback;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterLoadEvent;
 import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
@@ -87,8 +92,10 @@ import com.mongodb.DBRef;
  * @author Christoph Strobl
  * @author Jordi Llach
  * @author Mark Paluch
+ * @author Roman Puchkovskiy
+ * @author Heesu Jung
  */
-public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware, ValueResolver {
+public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware {
 
 	private static final String INCOMPATIBLE_TYPES = "Cannot convert %1$s of type %2$s into an instance of %3$s! Implement a custom Converter<%2$s, %3$s> and register it with the CustomConversions. Parent object was: %4$s";
 	private static final String INVALID_TYPE_TO_READ = "Expected to read Document %s into type %s but didn't find a PersistentEntity for the latter!";
@@ -103,8 +110,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	protected @Nullable ApplicationContext applicationContext;
 	protected MongoTypeMapper typeMapper;
 	protected @Nullable String mapKeyDotReplacement = null;
+	protected @Nullable CodecRegistryProvider codecRegistryProvider;
 
 	private SpELContext spELContext;
+	private @Nullable EntityCallbacks entityCallbacks;
 
 	/**
 	 * Creates a new {@link MappingMongoConverter} given the new {@link DbRefResolver} and {@link MappingContext}.
@@ -127,20 +136,22 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		this.idMapper = new QueryMapper(this);
 
 		this.spELContext = new SpELContext(DocumentPropertyAccessor.INSTANCE);
-		this.dbRefProxyHandler = new DefaultDbRefProxyHandler(spELContext, mappingContext, MappingMongoConverter.this);
+		this.dbRefProxyHandler = new DefaultDbRefProxyHandler(spELContext, mappingContext,
+				MappingMongoConverter.this::getValueInternal);
 	}
 
 	/**
-	 * Creates a new {@link MappingMongoConverter} given the new {@link MongoDbFactory} and {@link MappingContext}.
+	 * Creates a new {@link MappingMongoConverter} given the new {@link MongoDatabaseFactory} and {@link MappingContext}.
 	 *
 	 * @deprecated use the constructor taking a {@link DbRefResolver} instead.
 	 * @param mongoDbFactory must not be {@literal null}.
 	 * @param mappingContext must not be {@literal null}.
 	 */
 	@Deprecated
-	public MappingMongoConverter(MongoDbFactory mongoDbFactory,
+	public MappingMongoConverter(MongoDatabaseFactory mongoDbFactory,
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 		this(new DefaultDbRefResolver(mongoDbFactory), mappingContext);
+		setCodecRegistryProvider(mongoDbFactory);
 	}
 
 	/**
@@ -178,6 +189,17 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		this.mapKeyDotReplacement = mapKeyDotReplacement;
 	}
 
+	/**
+	 * Configure a {@link CodecRegistryProvider} that provides native MongoDB {@link org.bson.codecs.Codec codecs} for
+	 * reading values.
+	 *
+	 * @param codecRegistryProvider can be {@literal null}.
+	 * @since 2.2
+	 */
+	public void setCodecRegistryProvider(@Nullable CodecRegistryProvider codecRegistryProvider) {
+		this.codecRegistryProvider = codecRegistryProvider;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.convert.EntityConverter#getMappingContext()
@@ -194,6 +216,26 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		this.applicationContext = applicationContext;
 		this.spELContext = new SpELContext(this.spELContext, applicationContext);
+
+		if (entityCallbacks == null) {
+			setEntityCallbacks(EntityCallbacks.create(applicationContext));
+		}
+	}
+
+	/**
+	 * Set the {@link EntityCallbacks} instance to use when invoking
+	 * {@link org.springframework.data.mapping.callback.EntityCallback callbacks} like the {@link AfterConvertCallback}.
+	 * <p />
+	 * Overrides potentially existing {@link EntityCallbacks}.
+	 *
+	 * @param entityCallbacks must not be {@literal null}.
+	 * @throws IllegalArgumentException if the given instance is {@literal null}.
+	 * @since 3.0
+	 */
+	public void setEntityCallbacks(EntityCallbacks entityCallbacks) {
+
+		Assert.notNull(entityCallbacks, "EntityCallbacks must not be null!");
+		this.entityCallbacks = entityCallbacks;
 	}
 
 	/*
@@ -223,11 +265,20 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return conversionService.convert(bson, rawType);
 		}
 
-		if (DBObject.class.isAssignableFrom(rawType)) {
+		if (Document.class.isAssignableFrom(rawType)) {
 			return (S) bson;
 		}
 
-		if (Document.class.isAssignableFrom(rawType)) {
+		if (DBObject.class.isAssignableFrom(rawType)) {
+
+			if (bson instanceof DBObject) {
+				return (S) bson;
+			}
+
+			if (bson instanceof Document) {
+				return (S) new BasicDBObject((Document) bson);
+			}
+
 			return (S) bson;
 		}
 
@@ -253,6 +304,15 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(typeToUse);
 
 		if (entity == null) {
+
+			if (codecRegistryProvider != null) {
+
+				Optional<? extends Codec<? extends S>> codec = codecRegistryProvider.getCodecFor(rawType);
+				if (codec.isPresent()) {
+					return codec.get().decode(new JsonReader(target.toJson()), DecoderContext.builder().build());
+				}
+			}
+
 			throw new MappingException(String.format(INVALID_TYPE_TO_READ, target, typeToUse.getType()));
 		}
 
@@ -397,7 +457,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			SpELExpressionEvaluator evaluator) {
 
 		return new DefaultDbRefResolverCallback(documentAccessor.getDocument(), currentPath, evaluator,
-				MappingMongoConverter.this);
+				MappingMongoConverter.this::getValueInternal);
 	}
 
 	private void readAssociation(Association<MongoPersistentProperty> association, PersistentPropertyAccessor<?> accessor,
@@ -1009,12 +1069,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		throw new MappingException("No id property found on class " + entity.getType());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.convert.ValueResolver#getValueInternal(org.springframework.data.mongodb.core.mapping.MongoPersistentProperty, com.mongodb.Document, org.springframework.data.mapping.model.SpELExpressionEvaluator, java.lang.Object)
-	 */
-	@Override
-	public Object getValueInternal(MongoPersistentProperty prop, Bson bson, SpELExpressionEvaluator evaluator,
+	@Nullable
+	private Object getValueInternal(MongoPersistentProperty prop, Bson bson, SpELExpressionEvaluator evaluator,
 			ObjectPath path) {
 		return new MongoDbPropertyValueProvider(bson, evaluator, path).getPropertyValue(prop);
 	}
@@ -1457,7 +1513,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				}
 
 				DbRefResolverCallback callback = new DefaultDbRefResolverCallback(accessor.getDocument(), path, evaluator,
-						MappingMongoConverter.this);
+						MappingMongoConverter.this::getValueInternal);
 
 				DBRef dbref = rawRefValue instanceof DBRef ? (DBRef) rawRefValue : null;
 				return (T) dbRefResolver.resolveDbRef(property, dbref, callback, dbRefProxyHandler);
@@ -1539,7 +1595,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	@Nullable
 	private <T> T readAndConvertDBRef(@Nullable DBRef dbref, TypeInformation<?> type, ObjectPath path,
-			final Class<?> rawType) {
+			@Nullable Class<?> rawType) {
 
 		List<T> result = bulkReadAndConvertDBRefs(Collections.singletonList(dbref), type, path, rawType);
 		return CollectionUtils.isEmpty(result) ? null : result.iterator().next();
@@ -1562,7 +1618,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	@SuppressWarnings("unchecked")
 	private <T> List<T> bulkReadAndConvertDBRefs(List<DBRef> dbrefs, TypeInformation<?> type, ObjectPath path,
-			final Class<?> rawType) {
+			@Nullable Class<?> rawType) {
 
 		if (CollectionUtils.isEmpty(dbrefs)) {
 			return Collections.emptyList();
@@ -1573,23 +1629,26 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				: bulkReadRefs(dbrefs);
 		String collectionName = dbrefs.iterator().next().getCollectionName();
 
-		List<T> targeList = new ArrayList<>(dbrefs.size());
+		List<T> targetList = new ArrayList<>(dbrefs.size());
 
 		for (Document document : referencedRawDocuments) {
 
 			if (document != null) {
-				maybeEmitEvent(new AfterLoadEvent<>(document, (Class<T>) rawType, collectionName));
+				maybeEmitEvent(
+						new AfterLoadEvent<>(document, (Class<T>) (rawType != null ? rawType : Object.class), collectionName));
 			}
 
-			final T target = (T) read(type, document, path);
-			targeList.add(target);
+			T target = (T) read(type, document, path);
 
 			if (target != null) {
 				maybeEmitEvent(new AfterConvertEvent<>(document, target, collectionName));
+				target = maybeCallAfterConvert(target, document, collectionName);
 			}
+
+			targetList.add(target);
 		}
 
-		return targeList;
+		return targetList;
 	}
 
 	private void maybeEmitEvent(MongoMappingEvent<?> event) {
@@ -1601,6 +1660,15 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	private boolean canPublishEvent() {
 		return this.applicationContext != null;
+	}
+
+	protected <T> T maybeCallAfterConvert(T object, Document document, String collection) {
+
+		if (null != entityCallbacks) {
+			return entityCallbacks.callback(AfterConvertCallback.class, object, document, collection);
+		}
+
+		return object;
 	}
 
 	/**
@@ -1637,12 +1705,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	/**
-	 * Create a new {@link MappingMongoConverter} using the given {@link MongoDbFactory} when loading {@link DBRef}.
+	 * Create a new {@link MappingMongoConverter} using the given {@link MongoDatabaseFactory} when loading {@link DBRef}.
 	 *
 	 * @return new instance of {@link MappingMongoConverter}. Never {@literal null}.
 	 * @since 2.1.6
 	 */
-	public MappingMongoConverter with(MongoDbFactory dbFactory) {
+	public MappingMongoConverter with(MongoDatabaseFactory dbFactory) {
 
 		MappingMongoConverter target = new MappingMongoConverter(new DefaultDbRefResolver(dbFactory), mappingContext);
 		target.applicationContext = applicationContext;
@@ -1650,6 +1718,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		target.spELContext = spELContext;
 		target.setInstantiators(instantiators);
 		target.typeMapper = typeMapper;
+		target.setCodecRegistryProvider(dbFactory);
 		target.afterPropertiesSet();
 
 		return target;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,19 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -45,17 +45,17 @@ import com.mongodb.BasicDBList;
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ConvertingParameterAccessorUnitTests {
 
-	@Mock MongoDbFactory factory;
+	@Mock MongoDatabaseFactory factory;
 	@Mock MongoParameterAccessor accessor;
 
 	MongoMappingContext context;
 	MappingMongoConverter converter;
 	DbRefResolver resolver;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		this.context = new MongoMappingContext();
@@ -63,14 +63,14 @@ public class ConvertingParameterAccessorUnitTests {
 		this.converter = new MappingMongoConverter(resolver, context);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void rejectsNullDbRefResolver() {
-		new MappingMongoConverter((DbRefResolver) null, context);
+		assertThatIllegalArgumentException().isThrownBy(() -> new MappingMongoConverter((DbRefResolver) null, context));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void rejectsNullContext() {
-		new MappingMongoConverter(resolver, null);
+		assertThatIllegalArgumentException().isThrownBy(() -> new MappingMongoConverter(resolver, null));
 	}
 
 	@Test
@@ -84,7 +84,7 @@ public class ConvertingParameterAccessorUnitTests {
 		BasicDBList reference = new BasicDBList();
 		reference.add("Foo");
 
-		assertThat(result, is((Object) reference));
+		assertThat(result).isEqualTo((Object) reference);
 	}
 
 	@Test // DATAMONGO-505
@@ -95,10 +95,10 @@ public class ConvertingParameterAccessorUnitTests {
 
 		Object result = setupAndConvert(property);
 
-		assertThat(result, is(instanceOf(com.mongodb.DBRef.class)));
+		assertThat(result).isInstanceOf(com.mongodb.DBRef.class);
 		com.mongodb.DBRef dbRef = (com.mongodb.DBRef) result;
-		assertThat(dbRef.getCollectionName(), is("property"));
-		assertThat(dbRef.getId(), is((Object) 5L));
+		assertThat(dbRef.getCollectionName()).isEqualTo("property");
+		assertThat(dbRef.getId()).isEqualTo((Object) 5L);
 	}
 
 	@Test // DATAMONGO-505
@@ -109,16 +109,16 @@ public class ConvertingParameterAccessorUnitTests {
 
 		Object result = setupAndConvert(Arrays.asList(property));
 
-		assertThat(result, is(instanceOf(Collection.class)));
+		assertThat(result).isInstanceOf(Collection.class);
 		Collection<?> collection = (Collection<?>) result;
 
-		assertThat(collection, hasSize(1));
+		assertThat(collection).hasSize(1);
 		Object element = collection.iterator().next();
 
-		assertThat(element, is(instanceOf(com.mongodb.DBRef.class)));
+		assertThat(element).isInstanceOf(com.mongodb.DBRef.class);
 		com.mongodb.DBRef dbRef = (com.mongodb.DBRef) element;
-		assertThat(dbRef.getCollectionName(), is("property"));
-		assertThat(dbRef.getId(), is((Object) 5L));
+		assertThat(dbRef.getCollectionName()).isEqualTo("property");
+		assertThat(dbRef.getId()).isEqualTo((Object) 5L);
 	}
 
 	private Object setupAndConvert(Object... parameters) {

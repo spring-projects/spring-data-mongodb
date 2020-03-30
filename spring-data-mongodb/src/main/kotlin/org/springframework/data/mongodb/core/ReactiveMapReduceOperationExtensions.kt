@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.reactive.asFlow
 import kotlin.reflect.KClass
 
 /**
@@ -54,3 +56,13 @@ fun <T : Any> ReactiveMapReduceOperation.MapReduceWithProjection<*>.asType(resul
  */
 inline fun <reified T : Any> ReactiveMapReduceOperation.MapReduceWithProjection<*>.asType(): ReactiveMapReduceOperation.MapReduceWithQuery<T> =
 		`as`(T::class.java)
+
+
+/**
+ * Coroutines [Flow] variant of [ReactiveMapReduceOperation.TerminatingMapReduce.all].
+ *
+ * @author Sebastien Deleuze
+ * @since 2.2
+ */
+fun <T : Any> ReactiveMapReduceOperation.TerminatingMapReduce<T>.flow(): Flow<T> =
+		all().asFlow()

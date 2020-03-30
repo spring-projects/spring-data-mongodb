@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.util.Set;
 
 import org.bson.Document;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
@@ -40,9 +41,10 @@ public class TextIndexDefinition implements IndexDefinition {
 	private @Nullable String defaultLanguage;
 	private @Nullable String languageOverride;
 	private @Nullable IndexFilter filter;
+	private @Nullable Collation collation;
 
 	TextIndexDefinition() {
-		fieldSpecs = new LinkedHashSet<TextIndexedFieldSpec>();
+		fieldSpecs = new LinkedHashSet<>();
 	}
 
 	/**
@@ -114,6 +116,10 @@ public class TextIndexDefinition implements IndexDefinition {
 		}
 		if (StringUtils.hasText(defaultLanguage)) {
 			options.put("default_language", defaultLanguage);
+		}
+
+		if (collation != null) {
+			options.put("collation", collation.toDocument());
 		}
 
 		Document weightsDocument = new Document();
@@ -345,6 +351,17 @@ public class TextIndexDefinition implements IndexDefinition {
 		public TextIndexDefinitionBuilder partial(@Nullable IndexFilter filter) {
 
 			this.instance.filter = filter;
+			return this;
+		}
+
+		/**
+		 * Configure to use simple {@link Collation}. Required if the collection uses a non-simple collation.
+		 *
+		 * @since 2.2
+		 */
+		public TextIndexDefinitionBuilder withSimpleCollation() {
+
+			this.instance.collation = Collation.simple();
 			return this;
 		}
 

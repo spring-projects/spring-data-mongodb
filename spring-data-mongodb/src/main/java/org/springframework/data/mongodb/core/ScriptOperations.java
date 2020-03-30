@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import org.springframework.data.mongodb.core.script.ExecutableMongoScript;
 import org.springframework.data.mongodb.core.script.NamedMongoScript;
 import org.springframework.lang.Nullable;
 
-import com.mongodb.DB;
 
 /**
  * Script operations on {@link com.mongodb.DB} level. Allows interaction with server side JavaScript functions.
@@ -29,7 +28,9 @@ import com.mongodb.DB;
  * @author Christoph Strobl
  * @author Oliver Gierke
  * @since 1.7
+ * @deprecated since 2.2. The {@code eval} command has been removed without replacement in MongoDB Server 4.2.0.
  */
+@Deprecated
 public interface ScriptOperations {
 
 	/**

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,16 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.util.List;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -37,7 +37,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  *
  * @author Oliver Gierke
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class MongoRepositoryFactoryBeanUnitTests {
 
 	@Mock MongoOperations operations;
@@ -52,8 +52,8 @@ public class MongoRepositoryFactoryBeanUnitTests {
 		factory.setCreateIndexesForQueryMethods(true);
 
 		List<Object> listeners = getListenersFromFactory(factory);
-		assertThat(listeners.isEmpty(), is(false));
-		assertThat(listeners, hasItem(instanceOf(IndexEnsuringQueryCreationListener.class)));
+		assertThat(listeners.isEmpty()).isFalse();
+		assertThat(listeners.stream().filter(IndexEnsuringQueryCreationListener.class::isInstance)).isNotEmpty();
 	}
 
 	@Test
@@ -61,7 +61,7 @@ public class MongoRepositoryFactoryBeanUnitTests {
 	public void doesNotAddIndexEnsuringQueryCreationListenerByDefault() {
 
 		List<Object> listeners = getListenersFromFactory(new MongoRepositoryFactoryBean(ContactRepository.class));
-		assertThat(listeners.size(), is(1));
+		assertThat(listeners.size()).isEqualTo(1);
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })

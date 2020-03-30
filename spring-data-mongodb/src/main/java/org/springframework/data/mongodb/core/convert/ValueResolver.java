@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,14 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.lang.Nullable;
 
 /**
  * Internal API to trigger the resolution of properties.
  *
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 interface ValueResolver {
 
@@ -38,6 +40,6 @@ interface ValueResolver {
 	 * @param parent
 	 * @return
 	 */
-	Object getValueInternal(MongoPersistentProperty prop, Bson bson, SpELExpressionEvaluator evaluator,
-			ObjectPath path);
+	@Nullable
+	Object getValueInternal(MongoPersistentProperty prop, Bson bson, SpELExpressionEvaluator evaluator, ObjectPath path);
 }

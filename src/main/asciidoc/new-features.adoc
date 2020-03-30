@@ -1,19 +1,38 @@
 [[new-features]]
 = New & Noteworthy
 
+[[new-features.3.0]]
+== What's New in Spring Data MongoDB 3.0
+
+* Upgrade to MongoDB Driver 4.0. See <<upgrading.2-3>> for further details.
+* <<mapping.index-creation,Auto-index creation>> is now **disabled** by default.
+* Support for <<mongo-template.aggregation-update,aggregation pipelines in update operations>>.
+* Removal of `_id` flattening for composite Id's when using `MongoTemplate` aggregations.
+* Apply pagination when using GridFS `find(Query)`.
+* <<sharding,Sharding key derivation>> via `@Sharded`.
+* `$merge` and `$addFields` aggregation pipeline stages.
+
 [[new-features.2-2-0]]
 == What's New in Spring Data MongoDB 2.2
-* <<mongo.query.kotlin-support,Type-safe Queries for Kotlin>>
+
+* Compatibility with MongoDB 4.2 deprecating `eval`, `group` and `geoNear` Template API methods.
+* Extended SpEL aggregation support for MongoDB 3.4 and MongoDB 4.0 operators (see <<mongo.aggregation.projection.expressions>>).
 * <<mongodb.reactive.repositories.queries.type-safe,Querydsl support for reactive repositories>> via `ReactiveQuerydslPredicateExecutor`.
 * <<reactive.gridfs,Reactive GridFS support>>.
-* Extended SpEL aggregation support for MongoDB 3.4 and MongoDB 4.0 operators (see <<mongo.aggregation.projection.expressions>>).
+* <<mongodb.repositories.queries.aggregation, Aggregation framework>> support via repository query methods.
+* Declarative reactive transactions using <<mongo.transactions.reactive-tx-manager, @Transactional>>.
 * Template API delete by entity considers the version property in delete queries.
 * Repository deletes now throw `OptimisticLockingFailureException` when a versioned entity cannot be deleted.
 * Support `Range<T>` in repository between queries.
 * Changed behavior of `Reactive/MongoOperations#count` now limiting the range to count matches within by passing on _offset_ & _limit_ to the server.
-* Kotlin extension methods accepting `KClass` are deprecated now in favor of `reified` methods.
 * Support of array filters in `Update` operations.
 * <<mongo.jsonSchema.generated, JSON Schema generation>> from domain types.
+* SpEL support in for expressions in `@Indexed`.
+* Support for <<mapping-usage-indexes.hashed-index>>.
+* Annotation-based Collation support through `@Document` and `@Query`.
+* <<mongo.query.kotlin-support,Type-safe Queries for Kotlin>>.
+* Kotlin extension methods accepting `KClass` are deprecated now in favor of `reified` methods.
+* Kotlin <<kotlin.coroutines>> support.
 
 [[new-features.2-1-0]]
 == What's New in Spring Data MongoDB 2.1
@@ -84,7 +103,7 @@
 * Assert compatibility with MongoDB 3.0 and MongoDB Java Driver 3-beta3 (see: <<mongo.mongo-3>>).
 * Support JSR-310 and ThreeTen back-port date/time types.
 * Allow `Stream` as a query method return type (see: <<mongodb.repositories.queries>>).
-* http://geojson.org/[GeoJSON] support in both domain types and queries (see: <<mongo.geo-json>>).
+* https://geojson.org/[GeoJSON] support in both domain types and queries (see: <<mongo.geo-json>>).
 * `QueryDslPredicateExcecutor` now supports `findAll(OrderSpecifier<?>… orders)`.
 * Support calling JavaScript functions with <<mongo.server-side-scripts>>.
 * Improve support for `CONTAINS` keyword on collection-like properties.

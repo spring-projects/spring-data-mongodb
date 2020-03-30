@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,66 +21,71 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.config.AbstractReactiveMongoConfiguration;
 import org.springframework.data.mongodb.core.query.Collation;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
-import org.springframework.data.util.Version;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.mongodb.reactivestreams.client.MongoClient;
-import com.mongodb.reactivestreams.client.MongoClients;
 
 /**
  * @author Mark Paluch
  * @author Christoph Strobl
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 @ContextConfiguration
 public class ReactiveMongoTemplateCollationTests {
 
-	public static @ClassRule MongoVersionRule REQUIRES_AT_LEAST_3_4_0 = MongoVersionRule.atLeast(Version.parse("3.4.0"));
 	public static final String COLLECTION_NAME = "collation-1";
+	static @Client MongoClient mongoClient;
 
 	@Configuration
 	static class Config extends AbstractReactiveMongoConfiguration {
 
 		@Override
 		public MongoClient reactiveMongoClient() {
-			return MongoClients.create();
+			return mongoClient;
 		}
 
 		@Override
 		protected String getDatabaseName() {
 			return "collation-tests";
 		}
+
+		@Override
+		protected Set<Class<?>> getInitialEntitySet()  {
+			return Collections.emptySet();
+		}
 	}
 
 	@Autowired ReactiveMongoTemplate template;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
-		StepVerifier.create(template.dropCollection(COLLECTION_NAME)).verifyComplete();
+		template.dropCollection(COLLECTION_NAME).as(StepVerifier::create).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1693
 	public void createCollectionWithCollation() {
 
-		StepVerifier.create(template.createCollection(COLLECTION_NAME, CollectionOptions.just(Collation.of("en_US")))) //
+		template.createCollection(COLLECTION_NAME, CollectionOptions.just(Collation.of("en_US"))).as(StepVerifier::create) //
 				.expectNextCount(1) //
 				.verifyComplete();
 
 		Mono<Document> collation = getCollationInfo(COLLECTION_NAME);
-		StepVerifier.create(collation) //
+		collation.as(StepVerifier::create) //
 				.consumeNextWith(document -> assertThat(document.get("locale")).isEqualTo("en_US")) //
 				.verifyComplete();
 
@@ -98,10 +103,9 @@ public class ReactiveMongoTemplateCollationTests {
 
 		return template.execute(db -> {
 
-			return Flux
-					.from(db.runCommand(new Document() //
-							.append("listCollections", 1) //
-							.append("filter", new Document("name", collectionName)))) //
+			return Flux.from(db.runCommand(new Document() //
+					.append("listCollections", 1) //
+					.append("filter", new Document("name", collectionName)))) //
 					.map(it -> it.get("cursor", Document.class))
 					.flatMapIterable(it -> (List<Document>) it.get("firstBatch", List.class));
 		}).next();

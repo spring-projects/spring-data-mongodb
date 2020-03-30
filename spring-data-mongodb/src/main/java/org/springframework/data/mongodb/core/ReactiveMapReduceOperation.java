@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import reactor.core.publisher.Flux;
 
 import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
+import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.Query;
 
 /**
@@ -30,7 +31,7 @@ import org.springframework.data.mongodb.core.query.Query;
  * The collection to operate on is by default derived from the initial {@literal domainType} and can be defined there
  * via {@link org.springframework.data.mongodb.core.mapping.Document}. Using {@code inCollection} allows to override the
  * collection name for the execution.
- * 
+ *
  * <pre>
  *     <code>
  *         mapReduce(Human.class)
@@ -146,6 +147,18 @@ public interface ReactiveMapReduceOperation {
 		 * @throws IllegalArgumentException if query is {@literal null}.
 		 */
 		TerminatingMapReduce<T> matching(Query query);
+
+		/**
+		 * Set the filter {@link CriteriaDefinition criteria} to be used.
+		 *
+		 * @param criteriaDefinition must not be {@literal null}.
+		 * @return new instance of {@link TerminatingMapReduce}.
+		 * @throws IllegalArgumentException if query is {@literal null}.
+		 * @since 3.0
+		 */
+		default TerminatingMapReduce<T> matching(CriteriaDefinition criteriaDefinition) {
+			return matching(Query.query(criteriaDefinition));
+		}
 	}
 
 	/**

@@ -15,6 +15,7 @@
 
 	<bean id="reactiveMongoTemplate" class="org.springframework.data.mongodb.core.ReactiveMongoTemplate">
 		<constructor-arg ref="reactiveMongoDbFactory"/>
+		<property name="writeConcern" value="majority" />
 	</bean>
 
 </beans>

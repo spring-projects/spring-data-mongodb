@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.util.ClassUtils;
 
 import com.mongodb.client.result.DeleteResult;
 
@@ -229,6 +230,10 @@ interface MongoQueryExecution {
 	/**
 	 * {@link MongoQueryExecution} removing documents matching the query.
 	 *
+	 * @author Oliver Gierke
+	 * @author Mark Paluch
+	 * @author Artyom Gabeev
+	 * @author Christoph Strobl
 	 * @since 1.5
 	 */
 	@RequiredArgsConstructor
@@ -251,8 +256,12 @@ interface MongoQueryExecution {
 				return operations.findAllAndRemove(query, type, collectionName);
 			}
 
+			if (method.isQueryForEntity() && !ClassUtils.isPrimitiveOrWrapper(method.getReturnedObjectType())) {
+				return operations.findAndRemove(query, type, collectionName);
+			}
+
 			DeleteResult writeResult = operations.remove(query, type, collectionName);
-			return writeResult != null ? writeResult.getDeletedCount() : 0L;
+			return writeResult.wasAcknowledged() ? writeResult.getDeletedCount() : 0L;
 		}
 	}
 }

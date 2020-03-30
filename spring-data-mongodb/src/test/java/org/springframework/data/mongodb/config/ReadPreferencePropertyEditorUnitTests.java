@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2015-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,10 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.mongodb.ReadPreference;
 
@@ -32,11 +29,9 @@ import com.mongodb.ReadPreference;
  */
 public class ReadPreferencePropertyEditorUnitTests {
 
-	@Rule public ExpectedException expectedException = ExpectedException.none();
-
 	ReadPreferencePropertyEditor editor;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		editor = new ReadPreferencePropertyEditor();
 	}
@@ -44,11 +39,8 @@ public class ReadPreferencePropertyEditorUnitTests {
 	@Test // DATAMONGO-1158
 	public void shouldThrowExceptionOnUndefinedPreferenceString() {
 
-		expectedException.expect(IllegalArgumentException.class);
-		expectedException.expectMessage("ReadPreference");
-		expectedException.expectMessage("foo");
-
-		editor.setAsText("foo");
+		assertThatIllegalArgumentException().isThrownBy(() -> editor.setAsText("foo")).withMessageContaining("foo")
+				.withMessageContaining("ReadPreference");
 	}
 
 	@Test // DATAMONGO-1158
@@ -56,7 +48,7 @@ public class ReadPreferencePropertyEditorUnitTests {
 
 		editor.setAsText("secondary");
 
-		assertThat(editor.getValue(), is((Object) ReadPreference.secondary()));
+		assertThat(editor.getValue()).isEqualTo((Object) ReadPreference.secondary());
 	}
 
 	@Test // DATAMONGO-1158
@@ -64,6 +56,6 @@ public class ReadPreferencePropertyEditorUnitTests {
 
 		editor.setAsText("NEAREST");
 
-		assertThat(editor.getValue(), is((Object) ReadPreference.nearest()));
+		assertThat(editor.getValue()).isEqualTo((Object) ReadPreference.nearest());
 	}
 }

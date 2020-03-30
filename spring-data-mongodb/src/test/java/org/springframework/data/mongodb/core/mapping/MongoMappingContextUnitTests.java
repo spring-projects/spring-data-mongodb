@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,17 +22,16 @@ import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
-import org.springframework.data.mapping.MappingException;
 
 import com.mongodb.DBRef;
 
@@ -44,15 +43,13 @@ import com.mongodb.DBRef;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class MongoMappingContextUnitTests {
 
 	@Mock ApplicationContext applicationContext;
 
-	@Rule public ExpectedException exception = ExpectedException.none();
-
 	@Test
-	public void addsSelfReferencingPersistentEntityCorrectly() throws Exception {
+	void addsSelfReferencingPersistentEntityCorrectly() throws Exception {
 
 		MongoMappingContext context = new MongoMappingContext();
 
@@ -61,21 +58,21 @@ public class MongoMappingContextUnitTests {
 	}
 
 	@Test
-	public void doesNotReturnPersistentEntityForMongoSimpleType() {
+	void doesNotReturnPersistentEntityForMongoSimpleType() {
 
 		MongoMappingContext context = new MongoMappingContext();
 		assertThat(context.getPersistentEntity(DBRef.class)).isNull();
 	}
 
 	@Test // DATAMONGO-638
-	public void doesNotCreatePersistentEntityForAbstractMap() {
+	void doesNotCreatePersistentEntityForAbstractMap() {
 
 		MongoMappingContext context = new MongoMappingContext();
 		assertThat(context.getPersistentEntity(AbstractMap.class)).isNull();
 	}
 
 	@Test // DATAMONGO-607
-	public void populatesPersistentPropertyWithCustomFieldNamingStrategy() {
+	void populatesPersistentPropertyWithCustomFieldNamingStrategy() {
 
 		MongoMappingContext context = new MongoMappingContext();
 		context.setApplicationContext(applicationContext);
@@ -91,21 +88,18 @@ public class MongoMappingContextUnitTests {
 	}
 
 	@Test // DATAMONGO-607
-	public void rejectsClassWithAmbiguousFieldMappings() {
-
-		exception.expect(MappingException.class);
-		exception.expectMessage("firstname");
-		exception.expectMessage("lastname");
-		exception.expectMessage("foo");
-		exception.expectMessage("@Field");
+	void rejectsClassWithAmbiguousFieldMappings() {
 
 		MongoMappingContext context = new MongoMappingContext();
 		context.setApplicationContext(applicationContext);
-		context.getPersistentEntity(InvalidPerson.class);
+
+		assertThatExceptionOfType(MappingException.class).isThrownBy(() -> context.getPersistentEntity(InvalidPerson.class))
+				.withMessageContaining("firstname").withMessageContaining("lastname").withMessageContaining("foo")
+				.withMessageContaining("@Field");
 	}
 
 	@Test // DATAMONGO-694
-	public void doesNotConsiderOverrridenAccessorANewField() {
+	void doesNotConsiderOverrridenAccessorANewField() {
 
 		MongoMappingContext context = new MongoMappingContext();
 		context.setApplicationContext(applicationContext);
@@ -113,7 +107,7 @@ public class MongoMappingContextUnitTests {
 	}
 
 	@Test // DATAMONGO-688
-	public void mappingContextShouldAcceptClassWithImplicitIdProperty() {
+	void mappingContextShouldAcceptClassWithImplicitIdProperty() {
 
 		MongoMappingContext context = new MongoMappingContext();
 		BasicMongoPersistentEntity<?> pe = context.getRequiredPersistentEntity(ClassWithImplicitId.class);
@@ -123,7 +117,7 @@ public class MongoMappingContextUnitTests {
 	}
 
 	@Test // DATAMONGO-688
-	public void mappingContextShouldAcceptClassWithExplicitIdProperty() {
+	void mappingContextShouldAcceptClassWithExplicitIdProperty() {
 
 		MongoMappingContext context = new MongoMappingContext();
 		BasicMongoPersistentEntity<?> pe = context.getRequiredPersistentEntity(ClassWithExplicitId.class);
@@ -133,37 +127,37 @@ public class MongoMappingContextUnitTests {
 	}
 
 	@Test // DATAMONGO-688
-	public void mappingContextShouldAcceptClassWithExplicitAndImplicitIdPropertyByGivingPrecedenceToExplicitIdProperty() {
+	void mappingContextShouldAcceptClassWithExplicitAndImplicitIdPropertyByGivingPrecedenceToExplicitIdProperty() {
 
 		MongoMappingContext context = new MongoMappingContext();
 		BasicMongoPersistentEntity<?> pe = context.getRequiredPersistentEntity(ClassWithExplicitIdAndImplicitId.class);
 		assertThat(pe).isNotNull();
 	}
 
-	@Test(expected = MappingException.class) // DATAMONGO-688
-	public void rejectsClassWithAmbiguousExplicitIdPropertyFieldMappings() {
+	@Test // DATAMONGO-688
+	void rejectsClassWithAmbiguousExplicitIdPropertyFieldMappings() {
 
 		MongoMappingContext context = new MongoMappingContext();
-		context.getPersistentEntity(ClassWithMultipleExplicitIds.class);
+		assertThatThrownBy(() -> context.getPersistentEntity(ClassWithMultipleExplicitIds.class))
+				.isInstanceOf(MappingException.class);
 	}
 
-	@Test(expected = MappingException.class) // DATAMONGO-688
-	public void rejectsClassWithAmbiguousImplicitIdPropertyFieldMappings() {
+	@Test // DATAMONGO-688
+	void rejectsClassWithAmbiguousImplicitIdPropertyFieldMappings() {
 
 		MongoMappingContext context = new MongoMappingContext();
-		context.getPersistentEntity(ClassWithMultipleImplicitIds.class);
+		assertThatThrownBy(() -> context.getPersistentEntity(ClassWithMultipleImplicitIds.class))
+				.isInstanceOf(MappingException.class);
 	}
 
 	@Test // DATAMONGO-976
-	public void shouldRejectClassWithInvalidTextScoreProperty() {
-
-		exception.expect(MappingException.class);
-		exception.expectMessage("score");
-		exception.expectMessage("Float");
-		exception.expectMessage("Double");
+	void shouldRejectClassWithInvalidTextScoreProperty() {
 
 		MongoMappingContext context = new MongoMappingContext();
-		context.getPersistentEntity(ClassWithInvalidTextScoreProperty.class);
+
+		assertThatExceptionOfType(MappingException.class)
+				.isThrownBy(() -> context.getPersistentEntity(ClassWithInvalidTextScoreProperty.class))
+				.withMessageContaining("score").withMessageContaining("Float").withMessageContaining("Double");
 	}
 
 	public class SampleClass {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,12 +24,15 @@ import edu.umd.cs.mtc.MultithreadedTestCase;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+
 import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
@@ -46,7 +49,8 @@ import com.mongodb.client.MongoDatabase;
  *
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class CursorReadingTaskUnitTests {
 
 	@Mock MongoDatabase db;
@@ -59,7 +63,7 @@ public class CursorReadingTaskUnitTests {
 
 	ValueCapturingTaskStub task;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		when(request.getRequestOptions()).thenReturn(options);
@@ -96,15 +100,27 @@ public class CursorReadingTaskUnitTests {
 		verify(listener, times(task.getValues().size())).onMessage(any());
 	}
 
-	@Test // DATAMONGO-2173
+	@Test // DATAMONGO-2173, DATAMONGO-2366
 	public void writesErrorOnStartToErrorHandler() {
 
 		ArgumentCaptor<Throwable> errorCaptor = ArgumentCaptor.forClass(Throwable.class);
 		Task task = new ErrorOnInitCursorTaskStub(template, request, Object.class, errorHandler);
 
-		assertThatExceptionOfType(RuntimeException.class).isThrownBy(task::run);
+		task.run();
 		verify(errorHandler).handleError(errorCaptor.capture());
 		assertThat(errorCaptor.getValue()).hasMessageStartingWith("let's get it started (ha)");
+	}
+
+	@Test // DATAMONGO-2366
+	public void errorOnNextNotifiesErrorHandlerOnlyOnce() {
+
+		ArgumentCaptor<Throwable> errorCaptor = ArgumentCaptor.forClass(Throwable.class);
+		when(cursor.getServerCursor()).thenReturn(new ServerCursor(10, new ServerAddress("mock")));
+		when(cursor.tryNext()).thenThrow(new IllegalStateException());
+
+		task.run();
+		verify(errorHandler).handleError(errorCaptor.capture());
+		assertThat(errorCaptor.getValue()).isInstanceOf(IllegalStateException.class);
 	}
 
 	private static class MultithreadedStopRunningWhileEmittingMessages extends MultithreadedTestCase {

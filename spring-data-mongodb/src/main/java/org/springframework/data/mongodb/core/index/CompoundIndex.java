@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,29 @@ package org.springframework.data.mongodb.core.index;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
  * Mark a class to use compound indexes.
+ * <p />
+ * <p>
+ * <b>NOTE: This annotation is repeatable according to Java 8 conventions using {@link CompoundIndexes#value()} as
+ * container.</b>
+ *
+ * <pre class="code">
+ * &#64;Document
+ * &#64;CompoundIndex(def = "{'firstname': 1, 'lastname': 1}")
+ * &#64;CompoundIndex(def = "{'address.city': 1, 'address.street': 1}")
+ * class Person {
+ * 	String firstname;
+ * 	String lastname;
+ *
+ * 	Address address;
+ * }
+ * </pre>
  *
  * @author Jon Brisbin
  * @author Oliver Gierke
@@ -33,13 +50,30 @@ import java.lang.annotation.Target;
  */
 @Target({ ElementType.TYPE })
 @Documented
+@Repeatable(CompoundIndexes.class)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface CompoundIndex {
 
 	/**
-	 * The actual index definition in JSON format. The keys of the JSON document are the fields to be indexed, the values
-	 * define the index direction (1 for ascending, -1 for descending). <br />
+	 * The actual index definition in JSON format or a {@link org.springframework.expression.spel.standard.SpelExpression
+	 * template expression} resolving to either a JSON String or a {@link org.bson.Document}. The keys of the JSON
+	 * document are the fields to be indexed, the values define the index direction (1 for ascending, -1 for descending).
+	 * <br />
 	 * If left empty on nested document, the whole document will be indexed.
+	 *
+	 * <pre class="code">
+	 * &#64;Document
+	 * &#64;CompoundIndex(def = "{'h1': 1, 'h2': 1}")
+	 * class JsonStringIndexDefinition {
+	 *   String h1, h2;
+	 * }
+	 *
+	 * &#64;Document
+	 * &#64;CompoundIndex(def = "#{T(org.bson.Document).parse("{ 'h1': 1, 'h2': 1 }")}")
+	 * class ExpressionIndexDefinition {
+	 *   String h1, h2;
+	 * }
+	 * </pre>
 	 *
 	 * @return
 	 */
@@ -80,42 +114,39 @@ public @interface CompoundIndex {
 	boolean dropDups() default false;
 
 	/**
-	 * The name of the index to be created. <br />
+	 * Index name of the index to be created either as plain value or as
+	 * {@link org.springframework.expression.spel.standard.SpelExpression template expression}. <br />
 	 * <br />
 	 * The name will only be applied as is when defined on root level. For usage on nested or embedded structures the
 	 * provided name will be prefixed with the path leading to the entity. <br />
 	 * <br />
 	 * The structure below
 	 *
-	 * <pre>
-	 * <code>
+	 * <pre class="code">
 	 * &#64;Document
 	 * class Root {
-	 *   Hybrid hybrid;
-	 *   Nested nested;
+	 * 	Hybrid hybrid;
+	 * 	Nested nested;
 	 * }
 	 *
 	 * &#64;Document
 	 * &#64;CompoundIndex(name = "compound_index", def = "{'h1': 1, 'h2': 1}")
 	 * class Hybrid {
-	 *   String h1, h2;
+	 * 	String h1, h2;
 	 * }
 	 *
 	 * &#64;CompoundIndex(name = "compound_index", def = "{'n1': 1, 'n2': 1}")
 	 * class Nested {
-	 *   String n1, n2;
+	 * 	String n1, n2;
 	 * }
-	 * </code>
 	 * </pre>
 	 *
 	 * resolves in the following index structures
 	 *
-	 * <pre>
-	 * <code>
+	 * <pre class="code">
 	 * db.root.createIndex( { hybrid.h1: 1, hybrid.h2: 1 } , { name: "hybrid.compound_index" } )
 	 * db.root.createIndex( { nested.n1: 1, nested.n2: 1 } , { name: "nested.compound_index" } )
 	 * db.hybrid.createIndex( { h1: 1, h2: 1 } , { name: "compound_index" } )
-	 * </code>
 	 * </pre>
 	 *
 	 * @return

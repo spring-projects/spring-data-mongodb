@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the original author or authors.
+ * Copyright 2010-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
 import org.bson.Document;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
@@ -38,17 +38,17 @@ import org.springframework.data.mongodb.core.SpecialDoc;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-public class QueryTests {
+class QueryTests {
 
 	@Test
-	public void testSimpleQuery() {
+	void testSimpleQuery() {
 
 		Query q = new Query(where("name").is("Thomas").and("age").lt(80));
 		assertThat(q.getQueryObject()).isEqualTo(Document.parse("{ \"name\" : \"Thomas\" , \"age\" : { \"$lt\" : 80}}"));
 	}
 
 	@Test
-	public void testQueryWithNot() {
+	void testQueryWithNot() {
 
 		Query q = new Query(where("name").is("Thomas").and("age").not().mod(10, 0));
 		assertThat(q.getQueryObject())
@@ -56,14 +56,14 @@ public class QueryTests {
 	}
 
 	@Test
-	public void testInvalidQueryWithNotIs() {
+	void testInvalidQueryWithNotIs() {
 
 		assertThatExceptionOfType(InvalidMongoDbApiUsageException.class)
 				.isThrownBy(() -> new Query(where("name").not().is("Thomas")));
 	}
 
 	@Test
-	public void testOrQuery() {
+	void testOrQuery() {
 
 		Query q = new Query(new Criteria().orOperator(where("name").is("Sven").and("age").lt(50), where("age").lt(50),
 				where("name").is("Thomas")));
@@ -72,15 +72,15 @@ public class QueryTests {
 	}
 
 	@Test
-	public void testAndQuery() {
+	void testAndQuery() {
 
 		Query q = new Query(new Criteria().andOperator(where("name").is("Sven"), where("age").lt(50)));
 		Document expected = Document.parse("{ \"$and\" : [ { \"name\" : \"Sven\"} , { \"age\" : { \"$lt\" : 50}}]}");
-		Assert.assertEquals(expected, q.getQueryObject());
+		assertThat(q.getQueryObject()).isEqualTo(expected);
 	}
 
 	@Test
-	public void testNorQuery() {
+	void testNorQuery() {
 
 		Query q = new Query(
 				new Criteria().norOperator(where("name").is("Sven"), where("age").lt(50), where("name").is("Thomas")));
@@ -89,18 +89,18 @@ public class QueryTests {
 	}
 
 	@Test
-	public void testQueryWithLimit() {
+	void testQueryWithLimit() {
 
 		Query q = new Query(where("name").gte("M").lte("T").and("age").not().gt(22));
 		q.limit(50);
 
 		assertThat(q.getQueryObject()).isEqualTo(Document
 				.parse("{ \"name\" : { \"$gte\" : \"M\" , \"$lte\" : \"T\"} , \"age\" : { \"$not\" : { \"$gt\" : 22}}}"));
-		Assert.assertEquals(50, q.getLimit());
+		assertThat(q.getLimit()).isEqualTo(50);
 	}
 
 	@Test
-	public void testQueryWithFieldsAndSlice() {
+	void testQueryWithFieldsAndSlice() {
 
 		Query q = new Query(where("name").gte("M").lte("T").and("age").not().gt(22));
 		q.fields().exclude("address").include("name").slice("orders", 10);
@@ -113,7 +113,7 @@ public class QueryTests {
 	}
 
 	@Test // DATAMONGO-652
-	public void testQueryWithFieldsElemMatchAndPositionalOperator() {
+	void testQueryWithFieldsElemMatchAndPositionalOperator() {
 
 		Query query = query(where("name").gte("M").lte("T").and("age").not().gt(22));
 		query.fields().elemMatch("products", where("name").is("milk")).position("comments", 2);
@@ -125,14 +125,14 @@ public class QueryTests {
 	}
 
 	@Test
-	public void testSimpleQueryWithChainedCriteria() {
+	void testSimpleQueryWithChainedCriteria() {
 
 		Query q = new Query(where("name").is("Thomas").and("age").lt(80));
 		assertThat(q.getQueryObject()).isEqualTo(Document.parse("{ \"name\" : \"Thomas\" , \"age\" : { \"$lt\" : 80}}"));
 	}
 
 	@Test
-	public void testComplexQueryWithMultipleChainedCriteria() {
+	void testComplexQueryWithMultipleChainedCriteria() {
 
 		Query q = new Query(
 				where("name").regex("^T.*").and("age").gt(20).lt(80).and("city").in("Stockholm", "London", "New York"));
@@ -143,22 +143,22 @@ public class QueryTests {
 	}
 
 	@Test
-	public void testAddCriteriaWithComplexQueryWithMultipleChainedCriteria() {
+	void testAddCriteriaWithComplexQueryWithMultipleChainedCriteria() {
 
 		Query q1 = new Query(
 				where("name").regex("^T.*").and("age").gt(20).lt(80).and("city").in("Stockholm", "London", "New York"));
 		Query q2 = new Query(where("name").regex("^T.*").and("age").gt(20).lt(80))
 				.addCriteria(where("city").in("Stockholm", "London", "New York"));
 
-		assertThat(q1.getQueryObject().toString()).isEqualTo(q2.getQueryObject().toString());
+		assertThat(q1.getQueryObject()).hasToString(q2.getQueryObject().toString());
 
 		Query q3 = new Query(where("name").regex("^T.*")).addCriteria(where("age").gt(20).lt(80))
 				.addCriteria(where("city").in("Stockholm", "London", "New York"));
-		assertThat(q1.getQueryObject().toString()).isEqualTo(q3.getQueryObject().toString());
+		assertThat(q1.getQueryObject()).hasToString(q3.getQueryObject().toString());
 	}
 
 	@Test
-	public void testQueryWithElemMatch() {
+	void testQueryWithElemMatch() {
 
 		Query q = new Query(where("openingHours").elemMatch(where("dayOfWeek").is("Monday").and("open").lte("1800")));
 		assertThat(q.getQueryObject()).isEqualTo(Document.parse(
@@ -166,14 +166,14 @@ public class QueryTests {
 	}
 
 	@Test
-	public void testQueryWithIn() {
+	void testQueryWithIn() {
 
 		Query q = new Query(where("state").in("NY", "NJ", "PA"));
 		assertThat(q.getQueryObject()).isEqualTo(Document.parse("{ \"state\" : { \"$in\" : [ \"NY\" , \"NJ\" , \"PA\"]}}"));
 	}
 
 	@Test
-	public void testQueryWithRegex() {
+	void testQueryWithRegex() {
 
 		Query q = new Query(where("name").regex("b.*"));
 		assertThat(q.getQueryObject().toJson())
@@ -181,28 +181,28 @@ public class QueryTests {
 	}
 
 	@Test
-	public void testQueryWithRegexAndOption() {
+	void testQueryWithRegexAndOption() {
 		Query q = new Query(where("name").regex("b.*", "i"));
 		assertThat(q.getQueryObject().toJson())
 				.isEqualTo(Document.parse("{ \"name\" : { \"$regex\" : \"b.*\" , \"$options\" : \"i\"}}").toJson());
 	}
 
 	@Test // DATAMONGO-538
-	public void addsSortCorrectly() {
+	void addsSortCorrectly() {
 
 		Query query = new Query().with(Sort.by(Direction.DESC, "foo"));
 		assertThat(query.getSortObject()).isEqualTo(Document.parse("{ \"foo\" : -1}"));
 	}
 
 	@Test
-	public void rejectsOrderWithIgnoreCase() {
+	void rejectsOrderWithIgnoreCase() {
 
 		assertThatExceptionOfType(IllegalArgumentException.class)
 				.isThrownBy(() -> new Query().with(Sort.by(Order.asc("foo").ignoreCase())));
 	}
 
 	@Test // DATAMONGO-709, DATAMONGO-1735, // DATAMONGO-2198
-	public void shouldReturnClassHierarchyOfRestrictedTypes() {
+	void shouldReturnClassHierarchyOfRestrictedTypes() {
 
 		Query query = new Query(where("name").is("foo")).restrict(SpecialDoc.class);
 
@@ -210,7 +210,7 @@ public class QueryTests {
 	}
 
 	@Test // DATAMONGO-1421
-	public void addCriteriaForSamePropertyMultipleTimesShouldThrowAndSafelySerializeErrorMessage() {
+	void addCriteriaForSamePropertyMultipleTimesShouldThrowAndSafelySerializeErrorMessage() {
 
 		assertThatExceptionOfType(InvalidMongoDbApiUsageException.class).isThrownBy(() -> {
 
@@ -222,7 +222,7 @@ public class QueryTests {
 	}
 
 	@Test // DATAMONGO-1783
-	public void queryOfShouldCreateNewQueryWithEqualBehaviour() {
+	void queryOfShouldCreateNewQueryWithEqualBehaviour() {
 
 		Query source = new Query();
 		source.addCriteria(where("This you must ken!").is(EnumType.VAL_1));
@@ -231,7 +231,7 @@ public class QueryTests {
 	}
 
 	@Test // DATAMONGO-1783
-	public void clonedQueryShouldNotDependOnCriteriaFromSource() {
+	void clonedQueryShouldNotDependOnCriteriaFromSource() {
 
 		Query source = new Query();
 		source.addCriteria(where("From one make ten").is("and two let be."));
@@ -245,7 +245,7 @@ public class QueryTests {
 	}
 
 	@Test // DATAMONGO-1783
-	public void clonedQueryShouldAppendCriteria() {
+	void clonedQueryShouldAppendCriteria() {
 
 		Query source = new Query();
 		source.addCriteria(where("Skip o'er the four!").is("From five and six"));
@@ -259,7 +259,7 @@ public class QueryTests {
 	}
 
 	@Test // DATAMONGO-1783
-	public void clonedQueryShouldNotDependOnCollationFromSource() {
+	void clonedQueryShouldNotDependOnCollationFromSource() {
 
 		Query source = new Query().collation(Collation.simple());
 		Query target = Query.of(source);
@@ -271,7 +271,7 @@ public class QueryTests {
 	}
 
 	@Test // DATAMONGO-1783
-	public void clonedQueryShouldNotDependOnSortFromSource() {
+	void clonedQueryShouldNotDependOnSortFromSource() {
 
 		Query source = new Query().with(Sort.by("And nine is one"));
 		Query target = Query.of(source);
@@ -284,7 +284,7 @@ public class QueryTests {
 	}
 
 	@Test // DATAMONGO-1783
-	public void clonedQueryShouldNotDependOnFieldsFromSource() {
+	void clonedQueryShouldNotDependOnFieldsFromSource() {
 
 		Query source = new Query();
 		source.fields().include("That is the witch's one-time-one!");
@@ -298,7 +298,7 @@ public class QueryTests {
 	}
 
 	@Test // DATAMONGO-1783
-	public void clonedQueryShouldNotDependOnMetaFromSource() {
+	void clonedQueryShouldNotDependOnMetaFromSource() {
 
 		Query source = new Query().maxTimeMsec(100);
 		Query target = Query.of(source);
@@ -312,7 +312,7 @@ public class QueryTests {
 	}
 
 	@Test // DATAMONGO-1783
-	public void clonedQueryShouldNotDependOnRestrictedTypesFromSource() {
+	void clonedQueryShouldNotDependOnRestrictedTypesFromSource() {
 
 		Query source = new Query();
 		source.restrict(EnumType.class);
@@ -325,7 +325,7 @@ public class QueryTests {
 	}
 
 	@Test // DATAMONGO-1783
-	public void clonedQueryShouldApplyRestrictionsFromBasicQuery() {
+	void clonedQueryShouldApplyRestrictionsFromBasicQuery() {
 
 		BasicQuery source = new BasicQuery("{ 'foo' : 'bar'}");
 		Query target = Query.of(source);
@@ -335,6 +335,19 @@ public class QueryTests {
 		target.addCriteria(where("one").is("10"));
 		assertThat(target.getQueryObject()).isEqualTo(new Document("foo", "bar").append("one", "10"))
 				.isNotEqualTo(source.getQueryObject());
+	}
+
+	@Test // DATAMONGO-2478
+	void queryOfShouldWorkOnProxiedObjects() {
+
+		BasicQuery source = new BasicQuery("{ 'foo' : 'bar'}", "{ '_id' : -1, 'foo' : 1 }");
+		source.withHint("the hint");
+		source.limit(10);
+		source.setSortObject(new Document("_id", 1));
+
+		Query target = Query.of((Query) new ProxyFactory(source).getProxy());
+
+		compareQueries(target, source);
 	}
 
 	private void compareQueries(Query actual, Query expected) {

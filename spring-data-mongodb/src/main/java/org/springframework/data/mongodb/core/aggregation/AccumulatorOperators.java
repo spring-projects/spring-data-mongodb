@@ -213,6 +213,20 @@ public class AccumulatorOperators {
 			return new Sum(append(expression));
 		}
 
+		/**
+		 * Creates new {@link Sum} with all previously added arguments appending the given one. <br />
+		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
+		 *
+		 * @param value the value to add.
+		 * @return new instance of {@link Sum}.
+		 * @since 2.2
+		 */
+		public Sum and(Number value) {
+
+			Assert.notNull(value, "Value must not be null!");
+			return new Sum(append(value));
+		}
+
 		/* (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.AbstractAggregationExpression#toDocument(java.lang.Object, org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 		 */

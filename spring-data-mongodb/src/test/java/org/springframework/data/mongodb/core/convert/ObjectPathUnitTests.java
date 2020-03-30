@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,18 @@
 package org.springframework.data.mongodb.core.convert;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.util.ClassTypeInformation;
 
 /**
+ * Unit tests for {@link ObjectPath}.
+ *
  * @author Christoph Strobl
  */
 public class ObjectPathUnitTests {
@@ -33,12 +36,12 @@ public class ObjectPathUnitTests {
 	MongoPersistentEntity<EntityTwo> two;
 	MongoPersistentEntity<EntityThree> three;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
-		one = new BasicMongoPersistentEntity(ClassTypeInformation.from(EntityOne.class));
-		two = new BasicMongoPersistentEntity(ClassTypeInformation.from(EntityTwo.class));
-		three = new BasicMongoPersistentEntity(ClassTypeInformation.from(EntityThree.class));
+		one = new BasicMongoPersistentEntity<>(ClassTypeInformation.from(EntityOne.class));
+		two = new BasicMongoPersistentEntity<>(ClassTypeInformation.from(EntityTwo.class));
+		three = new BasicMongoPersistentEntity<>(ClassTypeInformation.from(EntityThree.class));
 	}
 
 	@Test // DATAMONGO-1703
@@ -81,21 +84,26 @@ public class ObjectPathUnitTests {
 		assertThat(path.getPathItem("id-1", "one", ValueInterface.class)).isNotNull();
 	}
 
+	@Test // DATAMONGO-2267
+	public void collectionLookupShouldBeLazy/* because we may need to resolve SpEL which can be pretty expensive */() {
+
+		MongoPersistentEntity<EntityOne> spied = spy(one);
+		ObjectPath path = ObjectPath.ROOT.push(new EntityThree(), spied, "id-1");
+
+		verify(spied, never()).getCollection();
+
+		path.getPathItem("id-1", "foo", EntityTwo.class);
+
+		verify(spied).getCollection();
+	}
+
 	@Document("one")
-	static class EntityOne {
+	static class EntityOne {}
 
-	}
+	static class EntityTwo extends EntityOne {}
 
-	static class EntityTwo extends EntityOne {
-
-	}
-
-	interface ValueInterface {
-
-	}
+	interface ValueInterface {}
 
 	@Document("three")
-	static class EntityThree implements ValueInterface {
-
-	}
+	static class EntityThree implements ValueInterface {}
 }

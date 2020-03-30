@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,17 @@
  */
 package org.springframework.data.mongodb.core.schema;
 
+import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.*;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.UUID;
 
 import org.bson.Document;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
  * Unit tests for {@link MongoJsonSchema}.
@@ -30,11 +33,11 @@ import org.mockito.junit.MockitoJUnitRunner;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner.class)
-public class MongoJsonSchemaUnitTests {
+@ExtendWith(MockitoExtension.class)
+class MongoJsonSchemaUnitTests {
 
 	@Test // DATAMONGO-1835
-	public void toDocumentRendersSchemaCorrectly() {
+	void toDocumentRendersSchemaCorrectly() {
 
 		MongoJsonSchema schema = MongoJsonSchema.builder() //
 				.required("firstname", "lastname") //
@@ -45,7 +48,7 @@ public class MongoJsonSchemaUnitTests {
 	}
 
 	@Test // DATAMONGO-1835
-	public void rendersDocumentBasedSchemaCorrectly() {
+	void rendersDocumentBasedSchemaCorrectly() {
 
 		Document document = MongoJsonSchema.builder() //
 				.required("firstname", "lastname") //
@@ -58,7 +61,7 @@ public class MongoJsonSchemaUnitTests {
 	}
 
 	@Test // DATAMONGO-1849
-	public void rendersRequiredPropertiesCorrectly() {
+	void rendersRequiredPropertiesCorrectly() {
 
 		MongoJsonSchema schema = MongoJsonSchema.builder() //
 				.required("firstname") //
@@ -71,13 +74,44 @@ public class MongoJsonSchemaUnitTests {
 						new Document("lastname", new Document("type", "string")))));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1835
-	public void throwsExceptionOnNullRoot() {
-		MongoJsonSchema.of((JsonSchemaObject) null);
+	@Test // DATAMONGO-2306
+	void rendersEncryptedPropertyCorrectly() {
+
+		MongoJsonSchema schema = MongoJsonSchema.builder().properties( //
+				encrypted(string("ssn")) //
+						.aead_aes_256_cbc_hmac_sha_512_deterministic() //
+						.keyId("*key0_id") //
+		).build();
+
+		assertThat(schema.toDocument()).isEqualTo(new Document("$jsonSchema",
+				new Document("type", "object").append("properties",
+						new Document("ssn", new Document("encrypt", new Document("keyId", "*key0_id")
+								.append("algorithm", "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic").append("bsonType", "string"))))));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1835
-	public void throwsExceptionOnNullDocument() {
-		MongoJsonSchema.of((Document) null);
+	@Test // DATAMONGO-2306
+	void rendersEncryptedPropertyWithKeyIdCorrectly() {
+
+		UUID uuid = UUID.randomUUID();
+		MongoJsonSchema schema = MongoJsonSchema.builder().properties( //
+				encrypted(string("ssn")) //
+						.aead_aes_256_cbc_hmac_sha_512_deterministic() //
+						.keys(uuid) //
+		).build();
+
+		assertThat(schema.toDocument()).isEqualTo(new Document("$jsonSchema",
+				new Document("type", "object").append("properties",
+						new Document("ssn", new Document("encrypt", new Document("keyId", Collections.singletonList(uuid))
+								.append("algorithm", "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic").append("bsonType", "string"))))));
+	}
+
+	@Test // DATAMONGO-1835
+	void throwsExceptionOnNullRoot() {
+		assertThatIllegalArgumentException().isThrownBy(() -> MongoJsonSchema.of((JsonSchemaObject) null));
+	}
+
+	@Test // DATAMONGO-1835
+	void throwsExceptionOnNullDocument() {
+		assertThatIllegalArgumentException().isThrownBy(() -> MongoJsonSchema.of((Document) null));
 	}
 }

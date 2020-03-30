@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,22 +15,25 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.mongodb.core.AuditablePerson;
@@ -39,11 +42,14 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.stereotype.Repository;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 
 /**
  * Integration tests for auditing via Java config.
@@ -52,9 +58,11 @@ import com.mongodb.MongoClient;
  * @author Oliver Gierke
  * @author Mark Paluch
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 @ContextConfiguration
 public class AuditingViaJavaConfigRepositoriesTests {
+
+	static @Client MongoClient mongoClient;
 
 	@Autowired AuditablePersonRepository auditablePersonRepository;
 	@Autowired AuditorAware<AuditablePerson> auditorAware;
@@ -65,8 +73,9 @@ public class AuditingViaJavaConfigRepositoriesTests {
 
 	@Configuration
 	@EnableMongoAuditing(auditorAwareRef = "auditorProvider")
-	@EnableMongoRepositories(basePackageClasses = AuditablePersonRepository.class, considerNestedRepositories = true)
-	static class Config extends AbstractMongoConfiguration {
+	@EnableMongoRepositories(basePackageClasses = AuditablePersonRepository.class, considerNestedRepositories = true,
+			includeFilters = @Filter(type = FilterType.ASSIGNABLE_TYPE, classes = AuditablePersonRepository.class))
+	static class Config extends AbstractMongoClientConfiguration {
 
 		@Override
 		protected String getDatabaseName() {
@@ -75,7 +84,7 @@ public class AuditingViaJavaConfigRepositoriesTests {
 
 		@Override
 		public MongoClient mongoClient() {
-			return new MongoClient();
+			return mongoClient;
 		}
 
 		@Bean
@@ -83,9 +92,15 @@ public class AuditingViaJavaConfigRepositoriesTests {
 		public AuditorAware<AuditablePerson> auditorProvider() {
 			return mock(AuditorAware.class);
 		}
+
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+			return new HashSet<>(
+					Arrays.asList(AuditablePerson.class, VersionedAuditablePerson.class, SimpleVersionedAuditablePerson.class));
+		}
 	}
 
-	@Before
+	@BeforeEach
 	public void setup() {
 		auditablePersonRepository.deleteAll();
 		this.auditor = auditablePersonRepository.save(new AuditablePerson("auditor"));
@@ -100,9 +115,9 @@ public class AuditingViaJavaConfigRepositoriesTests {
 
 		AuditablePerson createdBy = savedUser.getCreatedBy();
 
-		assertThat(createdBy, is(notNullValue()));
-		assertThat(createdBy.getFirstname(), is(this.auditor.getFirstname()));
-		assertThat(savedUser.getCreatedAt(), is(notNullValue()));
+		assertThat(createdBy).isNotNull();
+		assertThat(createdBy.getFirstname()).isEqualTo(this.auditor.getFirstname());
+		assertThat(savedUser.getCreatedAt()).isNotNull();
 	}
 
 	@Test // DATAMONGO-843
@@ -198,16 +213,21 @@ public class AuditingViaJavaConfigRepositoriesTests {
 
 	@Configuration
 	@EnableMongoAuditing
-	static class SimpleConfig extends AbstractMongoConfiguration {
+	static class SimpleConfig extends AbstractMongoClientConfiguration {
 
 		@Override
 		public MongoClient mongoClient() {
-			return new MongoClient();
+			return MongoTestUtils.client();
 		}
 
 		@Override
 		protected String getDatabaseName() {
 			return "database";
+		}
+
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+			return Collections.emptySet();
 		}
 	}
 

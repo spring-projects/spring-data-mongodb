@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,28 +16,41 @@
 package org.springframework.data.mongodb.core;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.convert.CustomConversions;
-import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 
-public class TestMongoConfiguration extends AbstractMongoConfiguration {
+public class TestMongoConfiguration extends AbstractMongoClientConfiguration {
 
 	@Override
 	public String getDatabaseName() {
 		return "database";
 	}
 
+	@Primary
+	@Bean
+	@Override
+	public MappingMongoConverter mappingMongoConverter(MongoDatabaseFactory databaseFactory,
+			MongoCustomConversions customConversions, MongoMappingContext mappingContext) {
+		return super.mappingMongoConverter(databaseFactory, customConversions, mappingContext);
+	}
+
 	@Override
 	@Bean
 	public MongoClient mongoClient() {
-		return new MongoClient("127.0.0.1", 27017);
+		return MongoTestUtils.client();
 	}
 
 	@Override
@@ -46,11 +59,16 @@ public class TestMongoConfiguration extends AbstractMongoConfiguration {
 	}
 
 	@Override
-	public CustomConversions customConversions() {
+	public MongoCustomConversions customConversions() {
 
 		List<Converter<?, ?>> converters = new ArrayList<>(2);
 		converters.add(new org.springframework.data.mongodb.core.PersonReadConverter());
 		converters.add(new org.springframework.data.mongodb.core.PersonWriteConverter());
 		return new MongoCustomConversions(converters);
+	}
+
+	@Override
+	protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+		return Collections.emptySet();
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2015-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,14 +21,17 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
+import org.assertj.core.data.Percentage;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataAccessException;
@@ -37,7 +40,8 @@ import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
-import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
+import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
+import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
@@ -47,24 +51,27 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.BasicDbListBuilder;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
-import com.mongodb.WriteConcern;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 
 /**
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 @ContextConfiguration
 public class GeoJsonTests {
 
+	static @Client MongoClient mongoClient;
+
 	@Configuration
-	static class TestConfig extends AbstractMongoConfiguration {
+	static class TestConfig extends AbstractMongoClientConfiguration {
 
 		@Override
 		protected String getDatabaseName() {
@@ -73,30 +80,44 @@ public class GeoJsonTests {
 
 		@Override
 		public MongoClient mongoClient() {
-			return new MongoClient();
+			return mongoClient;
+		}
+
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+			return new HashSet<>(Arrays.asList(Venue2DSphere.class, VenueWithDistanceField.class, OpenGeoJson.class,
+					DocumentWithPropertyUsingGeoJsonType.class));
 		}
 	}
 
 	@Autowired MongoTemplate template;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
-		template.setWriteConcern(WriteConcern.JOURNALED);
+		// template.setWriteConcern(WriteConcern.JOURNALED);
+
+		// createIndex();
+		// addVenues();
+	}
+
+	private void createIndexAndAddVenues() {
 
 		createIndex();
 		addVenues();
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
 
 		dropIndex();
 		removeCollections();
 	}
 
-	@Test // DATAMONGO-1135
+	@Test // DATAMONGO-1135, DATAMONGO-2264
 	public void geoNear() {
+
+		createIndexAndAddVenues();
 
 		NearQuery geoNear = NearQuery.near(new GeoJsonPoint(-73, 40), Metrics.KILOMETERS).num(10).maxDistance(150);
 
@@ -104,11 +125,52 @@ public class GeoJsonTests {
 
 		assertThat(result.getContent()).isNotEmpty();
 		assertThat(result.getAverageDistance().getMetric()).isEqualTo(Metrics.KILOMETERS);
+		assertThat(result.getAverageDistance().getValue()).isCloseTo(117.84629457941556, Percentage.withPercentage(0.001));
+	}
+
+	@Test // DATAMONGO-2264
+	public void geoNearShouldNotOverridePropertyWithDefaultNameForCalculatedDistance/* namely "dis" */() {
+
+		createIndexAndAddVenues();
+
+		NearQuery geoNear = NearQuery.near(new GeoJsonPoint(-73, 40), Metrics.KILOMETERS).num(10).maxDistance(150);
+
+		GeoResults<VenueWithDistanceField> result = template.geoNear(geoNear, VenueWithDistanceField.class);
+
+		assertThat(result.getContent()).isNotEmpty();
+		assertThat(result.getAverageDistance().getMetric()).isEqualTo(Metrics.KILOMETERS);
+		assertThat(result.getAverageDistance().getValue()).isCloseTo(117.84629457941556, Percentage.withPercentage(0.001));
+		result.getContent().forEach(it -> {
+
+			assertThat(it.getDistance().getValue()).isNotZero();
+			assertThat(it.getContent().getDis()).isNull();
+		});
+	}
+
+	@Test // DATAMONGO-2264
+	public void geoNearShouldAllowToReadBackCalculatedDistanceIntoTargetTypeProperty/* namely "dis" */() {
+
+		createIndexAndAddVenues();
+
+		NearQuery geoNear = NearQuery.near(new GeoJsonPoint(-73, 40), Metrics.KILOMETERS).num(10).maxDistance(150);
+
+		GeoResults<VenueWithDistanceField> result = template.geoNear(geoNear, Venue2DSphere.class,
+				template.getCollectionName(Venue2DSphere.class), VenueWithDistanceField.class);
+
+		assertThat(result.getContent()).isNotEmpty();
+		assertThat(result.getAverageDistance().getMetric()).isEqualTo(Metrics.KILOMETERS);
+		assertThat(result.getAverageDistance().getValue()).isCloseTo(117.84629457941556, Percentage.withPercentage(0.001));
+		result.getContent().forEach(it -> {
+
+			assertThat(it.getDistance().getValue()).isNotZero();
+			assertThat(it.getContent().getDis()).isEqualTo(it.getDistance().getValue());
+		});
 	}
 
 	@Test // DATAMONGO-1148
 	public void geoNearShouldReturnDistanceCorrectlyUsingGeoJson/*which is using the meters*/() {
 
+		createIndexAndAddVenues();
 		NearQuery geoNear = NearQuery.near(new GeoJsonPoint(-73.99171, 40.738868), Metrics.KILOMETERS).num(10)
 				.maxDistance(0.4);
 
@@ -124,8 +186,8 @@ public class GeoJsonTests {
 	@Test // DATAMONGO-1348
 	public void geoNearShouldReturnDistanceCorrectly/*which is using the meters*/() {
 
-		NearQuery geoNear = NearQuery.near(new Point(-73.99171, 40.738868), Metrics.KILOMETERS).num(10)
-				.maxDistance(0.4);
+		createIndexAndAddVenues();
+		NearQuery geoNear = NearQuery.near(new Point(-73.99171, 40.738868), Metrics.KILOMETERS).num(10).maxDistance(0.4);
 
 		GeoResults<Venue2DSphere> result = template.geoNear(geoNear, Venue2DSphere.class);
 
@@ -139,6 +201,7 @@ public class GeoJsonTests {
 	@Test // DATAMONGO-1135
 	public void geoNearWithMiles() {
 
+		createIndexAndAddVenues();
 		NearQuery geoNear = NearQuery.near(new GeoJsonPoint(-73, 40), Metrics.MILES).num(10).maxDistance(93.2057);
 
 		GeoResults<Venue2DSphere> result = template.geoNear(geoNear, Venue2DSphere.class);
@@ -149,6 +212,8 @@ public class GeoJsonTests {
 
 	@Test // DATAMONGO-1135
 	public void withinPolygon() {
+
+		createIndexAndAddVenues();
 
 		Point first = new Point(-73.99756, 40.73083);
 		Point second = new Point(-73.99756, 40.741404);
@@ -164,6 +229,8 @@ public class GeoJsonTests {
 	@Test // DATAMONGO-1135
 	public void nearPoint() {
 
+		createIndexAndAddVenues();
+
 		GeoJsonPoint point = new GeoJsonPoint(-73.99171, 40.738868);
 
 		Query query = query(where("location").near(point).maxDistance(0.01));
@@ -173,6 +240,8 @@ public class GeoJsonTests {
 
 	@Test // DATAMONGO-1135
 	public void nearSphere() {
+
+		createIndexAndAddVenues();
 
 		GeoJsonPoint point = new GeoJsonPoint(-73.99171, 40.738868);
 
@@ -295,6 +364,8 @@ public class GeoJsonTests {
 	@Test // DATAMONGO-1110
 	public void nearWithMinDistance() {
 
+		createIndexAndAddVenues();
+
 		Point point = new GeoJsonPoint(-73.99171, 40.738868);
 		List<Venue2DSphere> venues = template.find(query(where("location").near(point).minDistance(0.01)),
 				Venue2DSphere.class);
@@ -305,6 +376,8 @@ public class GeoJsonTests {
 	@Test // DATAMONGO-1110
 	public void nearSphereWithMinDistance() {
 
+		createIndexAndAddVenues();
+
 		Point point = new GeoJsonPoint(-73.99171, 40.738868);
 		List<Venue2DSphere> venues = template.find(query(where("location").nearSphere(point).minDistance(0.01)),
 				Venue2DSphere.class);
@@ -314,6 +387,8 @@ public class GeoJsonTests {
 
 	@Test // DATAMONGO-1135
 	public void nearWithMinAndMaxDistance() {
+
+		createIndexAndAddVenues();
 
 		GeoJsonPoint point = new GeoJsonPoint(-73.99171, 40.738868);
 
@@ -404,18 +479,22 @@ public class GeoJsonTests {
 
 	private void addVenues() {
 
-		template.insert(new Venue2DSphere("Penn Station", -73.99408, 40.75057));
-		template.insert(new Venue2DSphere("10gen Office", -73.99171, 40.738868));
-		template.insert(new Venue2DSphere("Flatiron Building", -73.988135, 40.741404));
-		template.insert(new Venue2DSphere("Players Club", -73.997812, 40.739128));
-		template.insert(new Venue2DSphere("City Bakery ", -73.992491, 40.738673));
-		template.insert(new Venue2DSphere("Splash Bar", -73.992491, 40.738673));
-		template.insert(new Venue2DSphere("Momofuku Milk Bar", -73.985839, 40.731698));
-		template.insert(new Venue2DSphere("Shake Shack", -73.98820, 40.74164));
-		template.insert(new Venue2DSphere("Penn Station", -73.99408, 40.75057));
-		template.insert(new Venue2DSphere("Empire State Building", -73.98602, 40.74894));
-		template.insert(new Venue2DSphere("Ulaanbaatar, Mongolia", 106.9154, 47.9245));
-		template.insert(new Venue2DSphere("Maplewood, NJ", -74.2713, 40.73137));
+		List<Venue2DSphere> venues = new ArrayList<>();
+
+		venues.add(new Venue2DSphere("Penn Station", -73.99408, 40.75057));
+		venues.add(new Venue2DSphere("10gen Office", -73.99171, 40.738868));
+		venues.add(new Venue2DSphere("Flatiron Building", -73.988135, 40.741404));
+		venues.add(new Venue2DSphere("Players Club", -73.997812, 40.739128));
+		venues.add(new Venue2DSphere("City Bakery ", -73.992491, 40.738673));
+		venues.add(new Venue2DSphere("Splash Bar", -73.992491, 40.738673));
+		venues.add(new Venue2DSphere("Momofuku Milk Bar", -73.985839, 40.731698));
+		venues.add(new Venue2DSphere("Shake Shack", -73.98820, 40.74164));
+		venues.add(new Venue2DSphere("Penn Station", -73.99408, 40.75057));
+		venues.add(new Venue2DSphere("Empire State Building", -73.98602, 40.74894));
+		venues.add(new Venue2DSphere("Ulaanbaatar, Mongolia", 106.9154, 47.9245));
+		venues.add(new Venue2DSphere("Maplewood, NJ", -74.2713, 40.73137));
+
+		template.bulkOps(BulkMode.UNORDERED, Venue2DSphere.class).insert(venues).execute();
 	}
 
 	protected void createIndex() {
@@ -466,6 +545,23 @@ public class GeoJsonTests {
 		@Override
 		public String toString() {
 			return "Venue2DSphere [id=" + id + ", name=" + name + ", location=" + Arrays.toString(location) + "]";
+		}
+	}
+
+	static class VenueWithDistanceField extends Venue2DSphere {
+
+		private Double dis; // geoNear command default distance field name
+
+		public VenueWithDistanceField(String name, double[] location) {
+			super(name, location);
+		}
+
+		public Double getDis() {
+			return dis;
+		}
+
+		public void setDis(Double dis) {
+			this.dis = dis;
 		}
 	}
 

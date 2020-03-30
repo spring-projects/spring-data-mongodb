@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,10 +23,9 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
@@ -37,8 +36,6 @@ import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
  * @author Christoph Strobl
  */
 public class MongoJsonSchemaMapperUnitTests {
-
-	public @Rule ExpectedException exception = ExpectedException.none();
 
 	MongoJsonSchemaMapper mapper;
 
@@ -108,7 +105,7 @@ public class MongoJsonSchemaMapperUnitTests {
 			"         }" + //
 			"      } }";
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		mapper = new MongoJsonSchemaMapper(new MappingMongoConverter(mock(DbRefResolver.class), new MongoMappingContext()));
 	}
@@ -116,26 +113,20 @@ public class MongoJsonSchemaMapperUnitTests {
 	@Test // DATAMONGO-1835
 	public void noNullSchemaAllowed() {
 
-		exception.expect(IllegalArgumentException.class);
-
-		mapper.mapSchema(null, Object.class);
+		assertThatIllegalArgumentException().isThrownBy(() -> mapper.mapSchema(null, Object.class));
 	}
 
 	@Test // DATAMONGO-1835
 	public void noNullDomainTypeAllowed() {
 
-		exception.expect(IllegalArgumentException.class);
-
-		mapper.mapSchema(new Document("$jsonSchema", new Document()), null);
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> mapper.mapSchema(new Document("$jsonSchema", new Document()), null));
 	}
 
 	@Test // DATAMONGO-1835
 	public void schemaDocumentMustContain$jsonSchemaField() {
-
-		exception.expect(IllegalArgumentException.class);
-		exception.expectMessage("contain $jsonSchema");
-
-		mapper.mapSchema(new Document("foo", new Document()), Object.class);
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> mapper.mapSchema(new Document("foo", new Document()), Object.class));
 	}
 
 	@Test // DATAMONGO-1835

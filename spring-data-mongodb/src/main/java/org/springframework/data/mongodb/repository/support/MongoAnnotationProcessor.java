@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import javax.lang.model.SourceVersion;
 import javax.tools.Diagnostic;
 
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.lang.Nullable;
 
 import com.querydsl.apt.AbstractQuerydslProcessor;
 import com.querydsl.apt.Configuration;
@@ -33,29 +34,29 @@ import com.querydsl.core.annotations.QueryEmbedded;
 import com.querydsl.core.annotations.QueryEntities;
 import com.querydsl.core.annotations.QuerySupertype;
 import com.querydsl.core.annotations.QueryTransient;
-import org.springframework.lang.Nullable;
 
 /**
  * Annotation processor to create Querydsl query types for QueryDsl annotated classes.
  *
  * @author Oliver Gierke
+ * @author Owen Q
  */
-@SupportedAnnotationTypes({ "com.mysema.query.annotations.*", "org.springframework.data.mongodb.core.mapping.*" })
+@SupportedAnnotationTypes({ "com.querydsl.core.annotations.*", "org.springframework.data.mongodb.core.mapping.*" })
 @SupportedSourceVersion(SourceVersion.RELEASE_6)
 public class MongoAnnotationProcessor extends AbstractQuerydslProcessor {
 
 	/*
 	 * (non-Javadoc)
-	 * @see com.mysema.query.apt.AbstractQuerydslProcessor#createConfiguration(javax.annotation.processing.RoundEnvironment)
+	 * @see com.querydsl.apt.AbstractQuerydslProcessor#createConfiguration(javax.annotation.processing.RoundEnvironment)
 	 */
 	@Override
 	protected Configuration createConfiguration(@Nullable RoundEnvironment roundEnv) {
 
 		processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Running " + getClass().getSimpleName());
 
-		DefaultConfiguration configuration = new DefaultConfiguration(roundEnv, processingEnv.getOptions(),
-				Collections.<String> emptySet(), QueryEntities.class, Document.class, QuerySupertype.class,
-				QueryEmbeddable.class, QueryEmbedded.class, QueryTransient.class);
+		DefaultConfiguration configuration = new DefaultConfiguration(processingEnv, roundEnv, Collections.emptySet(),
+				QueryEntities.class, Document.class, QuerySupertype.class, QueryEmbeddable.class, QueryEmbedded.class,
+				QueryTransient.class);
 		configuration.setUnknownAsEmbedded(true);
 
 		return configuration;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,14 +18,17 @@ package org.springframework.data.mongodb.repository.query;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import org.reactivestreams.Publisher;
 
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mapping.model.EntityInstantiators;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -35,8 +38,6 @@ import org.springframework.data.repository.util.ReactiveWrappers;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
-
-import com.mongodb.client.result.DeleteResult;
 
 /**
  * Set of classes to contain query execution strategies. Depending (mostly) on the return type of a
@@ -109,6 +110,7 @@ interface ReactiveMongoQueryExecution {
 	 * {@link ReactiveMongoQueryExecution} removing documents matching the query.
 	 *
 	 * @author Mark Paluch
+	 * @author Artyom Gabeev
 	 */
 	@RequiredArgsConstructor
 	final class DeleteExecution implements ReactiveMongoQueryExecution {
@@ -127,7 +129,12 @@ interface ReactiveMongoQueryExecution {
 				return operations.findAllAndRemove(query, type, collection);
 			}
 
-			return operations.remove(query, type, collection).map(DeleteResult::getDeletedCount);
+			if (method.isQueryForEntity() && !ClassUtils.isPrimitiveOrWrapper(method.getReturnedObjectType())) {
+				return operations.findAndRemove(query, type, collection);
+			}
+
+			return operations.remove(query, type, collection)
+					.map(deleteResult -> deleteResult.wasAcknowledged() ? deleteResult.getDeletedCount() : 0L);
 		}
 	}
 
@@ -168,7 +175,22 @@ interface ReactiveMongoQueryExecution {
 
 			ReturnedType returnedType = processor.getReturnedType();
 
+			if (isVoid(returnedType)) {
+
+				if (source instanceof Mono) {
+					return ((Mono<?>) source).then();
+				}
+
+				if (source instanceof Publisher) {
+					return Flux.from((Publisher<?>) source).then();
+				}
+			}
+
 			if (ClassUtils.isPrimitiveOrWrapper(returnedType.getReturnedType())) {
+				return source;
+			}
+
+			if (!operations.getConverter().getMappingContext().hasPersistentEntityFor(returnedType.getReturnedType())) {
 				return source;
 			}
 
@@ -177,5 +199,9 @@ interface ReactiveMongoQueryExecution {
 
 			return processor.processResult(source, converter);
 		}
+	}
+
+	static boolean isVoid(ReturnedType returnedType) {
+		return returnedType.getReturnedType().equals(Void.class);
 	}
 }

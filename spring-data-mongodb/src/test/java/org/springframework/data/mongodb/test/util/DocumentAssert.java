@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -289,20 +289,14 @@ public class DocumentAssert extends AbstractMapAssert<DocumentAssert, Map<String
 	@SuppressWarnings("unchecked")
 	private static <T> Lookup<T> lookup(Bson source, String path) {
 
-		String[] fragments = path.split("(?<!\\\\)\\.");
+		Document lookupDocument = (Document) source;
+		String pathToUse = path.replace("\\.", ".");
 
-		if (fragments.length == 1) {
-
-			Document document = (Document) source;
-			String pathToUse = path.replace("\\.", ".");
-
-			if (document.containsKey(pathToUse)) {
-				return Lookup.found((T) document.get(pathToUse));
-			}
-
-			return Lookup.notFound();
+		if (lookupDocument.containsKey(pathToUse)) {
+			return Lookup.found((T) lookupDocument.get(pathToUse));
 		}
 
+		String[] fragments = path.split("(?<!\\\\)\\.");
 		Iterator<String> it = Arrays.asList(fragments).iterator();
 
 		Object current = source;
@@ -311,7 +305,7 @@ public class DocumentAssert extends AbstractMapAssert<DocumentAssert, Map<String
 			String key = it.next().replace("\\.", ".");
 
 			if ((!(current instanceof Bson) && !(current instanceof Map)) && !key.startsWith("[")) {
-				return Lookup.found(null);
+				return Lookup.notFound();
 			}
 
 			if (key.startsWith("[")) {

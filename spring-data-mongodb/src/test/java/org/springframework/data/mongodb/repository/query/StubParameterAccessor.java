@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,8 +26,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.repository.query.ParameterAccessor;
+import org.springframework.lang.Nullable;
 
 /**
  * Simple {@link ParameterAccessor} that returns the given parameters unfiltered.
@@ -40,6 +42,7 @@ class StubParameterAccessor implements MongoParameterAccessor {
 
 	private final Object[] values;
 	private Range<Distance> range = Range.unbounded();
+	private @Nullable Collation colllation;
 
 	/**
 	 * Creates a new {@link ConvertingParameterAccessor} backed by a {@link StubParameterAccessor} simply returning the
@@ -63,6 +66,8 @@ class StubParameterAccessor implements MongoParameterAccessor {
 				this.range = (Range<Distance>) value;
 			} else if (value instanceof Distance) {
 				this.range = Range.from(Bound.<Distance> unbounded()).to(Bound.inclusive((Distance) value));
+			} else if (value instanceof Collation) {
+				this.colllation = Collation.class.cast(value);
 			}
 		}
 	}
@@ -133,6 +138,15 @@ class StubParameterAccessor implements MongoParameterAccessor {
 		return null;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getCollation()
+	 */
+	@Override
+	public Collation getCollation() {
+		return this.colllation;
+	}
+
 	/* (non-Javadoc)
 	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getValues()
 	 */
@@ -148,5 +162,14 @@ class StubParameterAccessor implements MongoParameterAccessor {
 	@Override
 	public Optional<Class<?>> getDynamicProjection() {
 		return Optional.empty();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.ParameterAccessor#findDynamicProjection()
+	 */
+	@Override
+	public Class<?> findDynamicProjection() {
+		return null;
 	}
 }

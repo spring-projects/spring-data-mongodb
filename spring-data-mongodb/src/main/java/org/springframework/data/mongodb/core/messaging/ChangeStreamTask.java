@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.bson.BsonDocument;
 import org.bson.BsonTimestamp;
@@ -92,6 +93,7 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 		FullDocument fullDocument = ClassUtils.isAssignable(Document.class, targetType) ? FullDocument.DEFAULT
 				: FullDocument.UPDATE_LOOKUP;
 		BsonTimestamp startAt = null;
+		boolean resumeAfter = true;
 
 		if (options instanceof ChangeStreamRequest.ChangeStreamRequestOptions) {
 
@@ -108,7 +110,9 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 			}
 
 			if (changeStreamOptions.getResumeToken().isPresent()) {
+
 				resumeToken = changeStreamOptions.getResumeToken().get().asDocument();
+				resumeAfter = changeStreamOptions.isResumeAfter();
 			}
 
 			fullDocument = changeStreamOptions.getFullDocumentLookup()
@@ -119,7 +123,8 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 		}
 
 		MongoDatabase db = StringUtils.hasText(options.getDatabaseName())
-				? template.getMongoDbFactory().getDb(options.getDatabaseName()) : template.getDb();
+				? template.getMongoDbFactory().getMongoDatabase(options.getDatabaseName())
+				: template.getDb();
 
 		ChangeStreamIterable<Document> iterable;
 
@@ -131,8 +136,17 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 			iterable = filter.isEmpty() ? db.watch(Document.class) : db.watch(filter, Document.class);
 		}
 
+		if (!options.maxAwaitTime().isZero()) {
+			iterable = iterable.maxAwaitTime(options.maxAwaitTime().toMillis(), TimeUnit.MILLISECONDS);
+		}
+
 		if (!resumeToken.isEmpty()) {
-			iterable = iterable.resumeAfter(resumeToken);
+
+			if (resumeAfter) {
+				iterable = iterable.resumeAfter(resumeToken);
+			} else {
+				iterable = iterable.startAfter(resumeToken);
+			}
 		}
 
 		if (startAt != null) {

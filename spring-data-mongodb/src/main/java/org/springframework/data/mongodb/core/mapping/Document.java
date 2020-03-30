@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,9 +60,17 @@ public @interface Document {
 	/**
 	 * Defines the default language to be used with this document.
 	 *
-	 * @since 1.6
 	 * @return
+	 * @since 1.6
 	 */
 	String language() default "";
+
+	/**
+	 * Defines the collation to apply when executing a query or creating indexes.
+	 *
+	 * @return an empty {@link String} by default.
+	 * @since 2.2
+	 */
+	String collation() default "";
 
 }

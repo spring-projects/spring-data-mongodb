@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,12 +20,13 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 
 /**
@@ -33,39 +34,40 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
  *
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ExecutableAggregationOperationSupportUnitTests {
 
 	@Mock MongoTemplate template;
-	ExecutableAggregationOperationSupport opSupport;
+	private ExecutableAggregationOperationSupport opSupport;
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	void setUp() {
 		opSupport = new ExecutableAggregationOperationSupport(template);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1563
-	public void throwsExceptionOnNullDomainType() {
-		opSupport.aggregateAndReturn(null);
-	}
-
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1563
-	public void throwsExceptionOnNullCollectionWhenUsed() {
-		opSupport.aggregateAndReturn(Person.class).inCollection(null);
-	}
-
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1563
-	public void throwsExceptionOnEmptyCollectionWhenUsed() {
-		opSupport.aggregateAndReturn(Person.class).inCollection("");
-	}
-
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1563
-	public void throwsExceptionOnNullAggregation() {
-		opSupport.aggregateAndReturn(Person.class).by(null);
+	@Test // DATAMONGO-1563
+	void throwsExceptionOnNullDomainType() {
+		assertThatIllegalArgumentException().isThrownBy(() -> opSupport.aggregateAndReturn(null));
 	}
 
 	@Test // DATAMONGO-1563
-	public void aggregateWithUntypedAggregationAndExplicitCollection() {
+	void throwsExceptionOnNullCollectionWhenUsed() {
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> opSupport.aggregateAndReturn(Person.class).inCollection(null));
+	}
+
+	@Test // DATAMONGO-1563
+	void throwsExceptionOnEmptyCollectionWhenUsed() {
+		assertThatIllegalArgumentException().isThrownBy(() -> opSupport.aggregateAndReturn(Person.class).inCollection(""));
+	}
+
+	@Test // DATAMONGO-1563
+	void throwsExceptionOnNullAggregation() {
+		assertThatIllegalArgumentException().isThrownBy(() -> opSupport.aggregateAndReturn(Person.class).by(null));
+	}
+
+	@Test // DATAMONGO-1563
+	void aggregateWithUntypedAggregationAndExplicitCollection() {
 
 		opSupport.aggregateAndReturn(Person.class).inCollection("star-wars").by(newAggregation(project("foo"))).all();
 
@@ -75,7 +77,7 @@ public class ExecutableAggregationOperationSupportUnitTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void aggregateWithUntypedAggregation() {
+	void aggregateWithUntypedAggregation() {
 
 		when(template.getCollectionName(any(Class.class))).thenReturn("person");
 
@@ -90,7 +92,7 @@ public class ExecutableAggregationOperationSupportUnitTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void aggregateWithTypeAggregation() {
+	void aggregateWithTypeAggregation() {
 
 		when(template.getCollectionName(any(Class.class))).thenReturn("person");
 
@@ -105,7 +107,7 @@ public class ExecutableAggregationOperationSupportUnitTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void aggregateStreamWithUntypedAggregationAndExplicitCollection() {
+	void aggregateStreamWithUntypedAggregationAndExplicitCollection() {
 
 		opSupport.aggregateAndReturn(Person.class).inCollection("star-wars").by(newAggregation(project("foo"))).stream();
 
@@ -115,7 +117,7 @@ public class ExecutableAggregationOperationSupportUnitTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void aggregateStreamWithUntypedAggregation() {
+	void aggregateStreamWithUntypedAggregation() {
 
 		when(template.getCollectionName(any(Class.class))).thenReturn("person");
 
@@ -130,7 +132,7 @@ public class ExecutableAggregationOperationSupportUnitTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void aggregateStreamWithTypeAggregation() {
+	void aggregateStreamWithTypeAggregation() {
 
 		when(template.getCollectionName(any(Class.class))).thenReturn("person");
 

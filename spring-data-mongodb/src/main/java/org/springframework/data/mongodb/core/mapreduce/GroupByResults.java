@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,9 @@ import org.springframework.util.Assert;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @param <T> The class in which the results are mapped onto, accessible via an {@link Iterator}.
+ * @deprecated since 2.2. The {@code group} command has been removed in MongoDB Server 4.2.0.
  */
+@Deprecated
 public class GroupByResults<T> implements Iterable<T> {
 
 	private final List<T> mappedResults;

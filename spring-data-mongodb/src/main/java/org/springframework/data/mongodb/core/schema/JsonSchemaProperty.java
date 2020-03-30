@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,18 +18,9 @@ package org.springframework.data.mongodb.core.schema;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
-import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.ArrayJsonSchemaProperty;
-import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.BooleanJsonSchemaProperty;
-import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.DateJsonSchemaProperty;
-import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.NullJsonSchemaProperty;
-import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.NumericJsonSchemaProperty;
-import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.ObjectJsonSchemaProperty;
-import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.RequiredJsonSchemaProperty;
-import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.StringJsonSchemaProperty;
-import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.TimestampJsonSchemaProperty;
-import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.UntypedJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.NumericJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ObjectJsonSchemaObject;
+import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.*;
 import org.springframework.lang.Nullable;
 
 /**
@@ -69,6 +60,17 @@ public interface JsonSchemaProperty extends JsonSchemaObject {
 	}
 
 	/**
+	 * Turns the given target property into an {@link EncryptedJsonSchemaProperty ecrypted} one.
+	 *
+	 * @param property must not be {@literal null}.
+	 * @return new instance of {@link EncryptedJsonSchemaProperty}.
+	 * @since 2.2
+	 */
+	static EncryptedJsonSchemaProperty encrypted(JsonSchemaProperty property) {
+		return EncryptedJsonSchemaProperty.encrypted(property);
+	}
+
+	/**
 	 * Creates a new {@link StringJsonSchemaProperty} with given {@literal identifier} of {@code type : 'string'}.
 	 *
 	 * @param identifier the {@literal property} name or {@literal patternProperty} regex. Must not be {@literal null} nor
@@ -88,6 +90,18 @@ public interface JsonSchemaProperty extends JsonSchemaObject {
 	 */
 	static ObjectJsonSchemaProperty object(String identifier) {
 		return new ObjectJsonSchemaProperty(identifier, JsonSchemaObject.object());
+	}
+
+	/**
+	 * Creates a new {@link JsonSchemaProperty} with given {@literal identifier} of {@code bsonType : 'objectId'}.
+	 *
+	 * @param identifier the {@literal property} name or {@literal patternProperty} regex. Must not be {@literal null} nor
+	 *          {@literal empty}.
+	 * @return new instance of {@link JsonSchemaProperty}.
+	 * @since 2.2
+	 */
+	static JsonSchemaProperty objectId(String identifier) {
+		return JsonSchemaProperty.named(identifier).ofType(Type.objectIdType());
 	}
 
 	/**

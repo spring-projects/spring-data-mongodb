@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,9 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
@@ -87,7 +85,7 @@ public class CleanMongoDB implements TestRule {
 	 * @throws UnknownHostException
 	 */
 	public CleanMongoDB(String host, int port) throws UnknownHostException {
-		this(new MongoClient(host, port));
+		this(MongoTestUtils.client(host, port));
 	}
 
 	/**
@@ -289,7 +287,7 @@ public class CleanMongoDB implements TestRule {
 			return false;
 		}
 
-		client.dropDatabase(dbName);
+		client.getDatabase(dbName).drop();
 		LOGGER.debug("Dropping DB '{}'. ", dbName);
 		return true;
 	}
@@ -360,14 +358,13 @@ public class CleanMongoDB implements TestRule {
 
 			boolean isInternal = false;
 			if (client == null) {
-				client = new MongoClient();
+				client = MongoTestUtils.client();
 				isInternal = true;
 			}
 
 			doClean();
 
 			if (isInternal) {
-				client.close();
 				client = null;
 			}
 		}

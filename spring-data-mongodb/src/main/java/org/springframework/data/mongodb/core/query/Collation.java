@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -116,6 +116,23 @@ public class Collation {
 	 */
 	public static Collation of(CollationLocale locale) {
 		return new Collation(locale);
+	}
+
+	/**
+	 * Parse the given {@code collation} string into a {@link Collation}.
+	 *
+	 * @param collation the collation to parse. Can be a simple string like {@code en_US} or a
+	 *          {@link Document#parse(String) parsable} document like <code>&#123; 'locale' : '?0' &#125;</code> .
+	 * @return never {@literal null}.
+	 * @throws IllegalArgumentException if {@literal collation} is null.
+	 * @since 2.2
+	 */
+	public static Collation parse(String collation) {
+
+		Assert.notNull(collation, "Collation must not be null!");
+
+		return StringUtils.trimLeadingWhitespace(collation).startsWith("{") ? from(Document.parse(collation))
+				: of(collation);
 	}
 
 	/**
@@ -384,6 +401,26 @@ public class Collation {
 	@Override
 	public String toString() {
 		return toDocument().toJson();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+
+		if (this == o) {
+			return true;
+		}
+
+		if (o == null || getClass() != o.getClass()) {
+			return false;
+		}
+
+		Collation that = (Collation) o;
+		return this.toDocument().equals(that.toDocument());
+	}
+
+	@Override
+	public int hashCode() {
+		return toDocument().hashCode();
 	}
 
 	private Collation copy() {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,11 @@
  */
 package org.springframework.data.mongodb.core.index;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
-import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.List;
 
-import org.hamcrest.Matchers;
 import org.hamcrest.core.IsInstanceOf;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -30,6 +27,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -41,13 +39,14 @@ import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexRes
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.test.util.CleanMongoDB;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.util.Version;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
-import com.mongodb.MongoClient;
 import com.mongodb.MongoCommandException;
+import com.mongodb.client.MongoClient;
 
 /**
  * Integration tests for {@link MongoPersistentEntityIndexCreator}.
@@ -56,7 +55,7 @@ import com.mongodb.MongoCommandException;
  * @author Christoph Strobl
  * @author Thomas Darimont
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration
 public class MongoPersistentEntityIndexCreatorIntegrationTests {
 
@@ -76,11 +75,11 @@ public class MongoPersistentEntityIndexCreatorIntegrationTests {
 	public void createsIndexForConfiguredMappingContextOnly() {
 
 		List<IndexInfo> indexInfo = templateOne.indexOps(SampleEntity.class).getIndexInfo();
-		assertThat(indexInfo, hasSize(greaterThan(0)));
-		assertThat(indexInfo, Matchers.<IndexInfo> hasItem(hasProperty("name", is("prop"))));
+		assertThat(indexInfo).isNotEmpty();
+		assertThat(indexInfo).extracting(IndexInfo::getName).contains("prop");
 
 		indexInfo = templateTwo.indexOps(SAMPLE_TYPE_COLLECTION_NAME).getIndexInfo();
-		assertThat(indexInfo, hasSize(0));
+		assertThat(indexInfo).hasSize(0);
 	}
 
 	@Test // DATAMONGO-1202
@@ -88,12 +87,12 @@ public class MongoPersistentEntityIndexCreatorIntegrationTests {
 
 		List<IndexInfo> indexInfo = templateOne.indexOps(RecursiveConcreteType.class).getIndexInfo();
 
-		assertThat(indexInfo, hasSize(greaterThan(0)));
-		assertThat(indexInfo, Matchers.<IndexInfo> hasItem(hasProperty("name", is("firstName"))));
+		assertThat(indexInfo).isNotEmpty();
+		assertThat(indexInfo).extracting(IndexInfo::getName).contains("firstName");
 	}
 
 	@Test // DATAMONGO-1125
-	public void createIndexShouldThrowMeaningfulExceptionWhenIndexCreationFails() throws UnknownHostException {
+	public void createIndexShouldThrowMeaningfulExceptionWhenIndexCreationFails() {
 
 		expectedException.expect(DataIntegrityViolationException.class);
 		expectedException.expectMessage("collection 'datamongo-1125'");
@@ -101,16 +100,18 @@ public class MongoPersistentEntityIndexCreatorIntegrationTests {
 		expectedException.expectMessage("lastname");
 		expectedException.expectCause(IsInstanceOf.<Throwable> instanceOf(MongoCommandException.class));
 
-		MongoTemplate mongoTemplate = new MongoTemplate(new MongoClient(), "issue");
+		try (MongoClient client = MongoTestUtils.client()) {
+			MongoTemplate mongoTemplate = new MongoTemplate(client, "issue");
 
-		MongoPersistentEntityIndexCreator indexCreator = new MongoPersistentEntityIndexCreator(new MongoMappingContext(),
-				mongoTemplate);
+			MongoPersistentEntityIndexCreator indexCreator = new MongoPersistentEntityIndexCreator(new MongoMappingContext(),
+					mongoTemplate);
 
-		indexCreator.createIndex(new IndexDefinitionHolder("dalinar.kohlin",
-				new Index().named("stormlight").on("lastname", Direction.ASC).unique(), "datamongo-1125"));
+			indexCreator.createIndex(new IndexDefinitionHolder("dalinar.kohlin",
+					new Index().named("stormlight").on("lastname", Direction.ASC).unique(), "datamongo-1125"));
 
-		indexCreator.createIndex(new IndexDefinitionHolder("dalinar.kohlin",
-				new Index().named("stormlight").on("lastname", Direction.ASC).sparse(), "datamongo-1125"));
+			indexCreator.createIndex(new IndexDefinitionHolder("dalinar.kohlin",
+					new Index().named("stormlight").on("lastname", Direction.ASC).sparse(), "datamongo-1125"));
+		}
 	}
 
 	@Document(RECURSIVE_TYPE_COLLECTION_NAME)

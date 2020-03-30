@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,44 +23,38 @@ import static org.springframework.data.mongodb.core.schema.JsonSchemaProperty.*;
 import lombok.Data;
 import reactor.test.StepVerifier;
 
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.bson.Document;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
-import org.springframework.data.util.Version;
-
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
-
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
+import org.springframework.data.mongodb.test.util.MongoTestTemplate;
+import org.springframework.data.mongodb.test.util.Template;
 
 /**
  * @author Christoph Strobl
  * @author Mark Paluch
  */
+@ExtendWith(MongoTemplateExtension.class)
 public class JsonSchemaQueryTests {
 
 	public static final String DATABASE_NAME = "json-schema-query-tests";
 
-	public static @ClassRule MongoVersionRule REQUIRES_AT_LEAST_3_6_0 = MongoVersionRule.atLeast(Version.parse("3.6.0"));
+	static @Client com.mongodb.reactivestreams.client.MongoClient reactiveClient;
 
-	static MongoClient client = MongoClients.create();
-	MongoTemplate template;
+	@Template(database = DATABASE_NAME, initialEntitySet = Person.class) //
+	static MongoTestTemplate template;
+
 	Person jellyBelly, roseSpringHeart, kazmardBoombub;
 
-	@BeforeClass
-	public static void beforeClass() {
-		 client = MongoClients.create();
-	}
-
-	@Before
+	@BeforeEach
 	public void setUp() {
 
-		template = new MongoTemplate(client, DATABASE_NAME);
+		template.flush();
 
 		jellyBelly = new Person();
 		jellyBelly.id = "1";
@@ -90,13 +84,6 @@ public class JsonSchemaQueryTests {
 		template.save(roseSpringHeart);
 		template.save(kazmardBoombub);
 	}
-	
-	@AfterClass
-	public static void afterClass() {
-		if (client != null) {
-			client.close();
-		}
-	}
 
 	@Test // DATAMONGO-1835
 	public void findsDocumentsWithRequiredFieldsCorrectly() {
@@ -112,12 +99,9 @@ public class JsonSchemaQueryTests {
 
 		MongoJsonSchema schema = MongoJsonSchema.builder().required("address").build();
 
-		com.mongodb.reactivestreams.client.MongoClient mongoClient = com.mongodb.reactivestreams.client.MongoClients.create();
-
-		StepVerifier.create(new ReactiveMongoTemplate(mongoClient, DATABASE_NAME)
-				.find(query(matchingDocumentStructure(schema)), Person.class)).expectNextCount(2).verifyComplete();
-		
-		mongoClient.close();
+		new ReactiveMongoTemplate(reactiveClient, DATABASE_NAME)
+				.find(query(matchingDocumentStructure(schema)), Person.class).as(StepVerifier::create).expectNextCount(2)
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1835
@@ -197,6 +181,15 @@ public class JsonSchemaQueryTests {
 
 		assertThat(template.find(query(where("value").type(Type.intType(), Type.stringType())), Person.class))
 				.containsExactlyInAnyOrder(jellyBelly, kazmardBoombub);
+	}
+
+	@Test // DATAMONGO-1835
+	public void findsWithSchemaReturningRawDocument() {
+
+		MongoJsonSchema schema = MongoJsonSchema.builder().required("address").build();
+
+		assertThat(template.find(query(matchingDocumentStructure(schema)), Document.class,
+				template.getCollectionName(Person.class))).hasSize(2);
 	}
 
 	@Data

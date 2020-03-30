@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import java.lang.annotation.Target;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Jordi Llach
+ * @author Mark Paluch
  */
 @Target({ ElementType.ANNOTATION_TYPE, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
@@ -65,7 +66,8 @@ public @interface Indexed {
 	boolean dropDups() default false;
 
 	/**
-	 * Index name. <br />
+	 * Index name either as plain value or as {@link org.springframework.expression.spel.standard.SpelExpression template
+	 * expression}. <br />
 	 * <br />
 	 * The name will only be applied as is when defined on root level. For usage on nested or embedded structures the
 	 * provided name will be prefixed with the path leading to the entity. <br />
@@ -83,6 +85,7 @@ public @interface Indexed {
 	 * &#64;Document
 	 * class Hybrid {
 	 *   &#64;Indexed(name="index") String h1;
+	 *   &#64;Indexed(name="#{&#64;myBean.indexName}") String h2;
 	 * }
 	 *
 	 * class Nested {
@@ -98,6 +101,7 @@ public @interface Indexed {
 	 * db.root.createIndex( { hybrid.h1: 1 } , { name: "hybrid.index" } )
 	 * db.root.createIndex( { nested.n1: 1 } , { name: "nested.index" } )
 	 * db.hybrid.createIndex( { h1: 1} , { name: "index" } )
+	 * db.hybrid.createIndex( { h2: 1} , { name: the value myBean.getIndexName() returned } )
 	 * </code>
 	 * </pre>
 	 *
@@ -131,4 +135,34 @@ public @interface Indexed {
 	 *      "https://docs.mongodb.org/manual/tutorial/expire-data/">https://docs.mongodb.org/manual/tutorial/expire-data/</a>
 	 */
 	int expireAfterSeconds() default -1;
+
+	/**
+	 * Alternative for {@link #expireAfterSeconds()} to configure the timeout after which the document should expire.
+	 * Defaults to an empty {@link String} for no expiry. Accepts numeric values followed by their unit of measure:
+	 * <ul>
+	 * <li><b>d</b>: Days</li>
+	 * <li><b>h</b>: Hours</li>
+	 * <li><b>m</b>: Minutes</li>
+	 * <li><b>s</b>: Seconds</li>
+	 * <li>Alternatively: A Spring {@literal template expression}. The expression can result in a
+	 * {@link java.time.Duration} or a valid expiration {@link String} according to the already mentioned
+	 * conventions.</li>
+	 * </ul>
+	 * Supports ISO-8601 style.
+	 *
+	 * <pre class="code">
+	 *
+	 * &#0064;Indexed(expireAfter = "10s") String expireAfterTenSeconds;
+	 *
+	 * &#0064;Indexed(expireAfter = "1d") String expireAfterOneDay;
+	 *
+	 * &#0064;Indexed(expireAfter = "P2D") String expireAfterTwoDays;
+	 *
+	 * &#0064;Indexed(expireAfter = "#{&#0064;mySpringBean.timeout}") String expireAfterTimeoutObtainedFromSpringBean;
+	 * </pre>
+	 *
+	 * @return empty by default.
+	 * @since 2.2
+	 */
+	String expireAfter() default "";
 }
