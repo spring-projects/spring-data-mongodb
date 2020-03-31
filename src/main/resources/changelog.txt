@@ -1,6 +1,23 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.0.0.RC1 (2020-03-31)
+-----------------------------------------
+* DATAMONGO-2501 - Upgrade to Querydsl 4.3.
+* DATAMONGO-2498 - Upgrade to MongoDB 4.0.1 Drivers.
+* DATAMONGO-2497 - Update documentation regarding @Transient properties usage in the persistence constructor.
+* DATAMONGO-2492 - Release 3.0 RC1 (Neumann).
+* DATAMONGO-2488 - KeyMapper.mapPropertyName does not work for nested arrays.
+* DATAMONGO-2479 - More EntityCallback specializations.
+* DATAMONGO-2477 - Disable auto-index creation by default.
+* DATAMONGO-2475 - QueryDSL: $and and $or with more than two arguments in final query document.
+* DATAMONGO-2416 - Add default methods accepting CriteriaDefinition on Fluent API.
+* DATAMONGO-2300 - Can't read and convert DBRef when the type is Map.
+* DATAMONGO-1026 - Joda, JSR-310 and ThreeTenBp converters are timezone-sensitive.
+* DATAMONGO-931 - Add support for $redact operation.
+* DATAMONGO-625 - GridFsOperations.createFile method should allow specification of _id.
+
+
 Changes in version 2.2.6.RELEASE (2020-03-25)
 ---------------------------------------------
 * DATAMONGO-2497 - Update documentation regarding @Transient properties usage in the persistence constructor.
@@ -2948,6 +2965,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
