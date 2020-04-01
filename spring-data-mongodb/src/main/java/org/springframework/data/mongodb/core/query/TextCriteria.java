@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.query;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.bson.Document;
 import org.springframework.lang.Nullable;
@@ -242,5 +243,22 @@ public class TextCriteria implements CriteriaDefinition {
 		}
 
 		return StringUtils.collectionToDelimitedString(result, " ");
+	}
+
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (!(o instanceof TextCriteria)) return false;
+		TextCriteria that = (TextCriteria) o;
+		return Objects.equals(terms, that.terms) &&
+				Objects.equals(language, that.language) &&
+				Objects.equals(caseSensitive, that.caseSensitive) &&
+				Objects.equals(diacriticSensitive, that.diacriticSensitive);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(terms, language, caseSensitive, diacriticSensitive);
 	}
 }
