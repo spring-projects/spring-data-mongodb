@@ -103,6 +103,13 @@ public class TextCriteriaUnitTests {
 				.isEqualTo(new Document("$search", "coffee").append("$diacriticSensitive", true));
 	}
 
+	@Test // DATAMONGO-2504
+	public void twoIdenticalCriteriaShouldBeEqual() {
+		TextCriteria criteriaOne = TextCriteria.forDefaultLanguage().matching("coffee");
+		TextCriteria criteriaTwo = TextCriteria.forDefaultLanguage().matching("coffee");
+		assertThat(criteriaOne).isEqualTo(criteriaTwo);
+	}
+
 	private Document searchObject(String json) {
 		return new Document("$text", Document.parse(json));
 	}
