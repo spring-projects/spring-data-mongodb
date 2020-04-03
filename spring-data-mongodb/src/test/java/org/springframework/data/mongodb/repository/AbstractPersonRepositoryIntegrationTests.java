@@ -36,7 +36,6 @@ import org.bson.Document;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
@@ -1337,5 +1336,24 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		assertThat(repository.findDocumentById(dave.getId()).get()).containsEntry("firstname", dave.getFirstname())
 				.containsEntry("lastname", dave.getLastname());
+	}
+
+	@Test // DATAMONGO-1677
+	public void findWithMoreThan10Arguments() {
+
+		alicia.setSkills(Arrays.asList("musician", "singer", "composer", "actress", "pianist"));
+		alicia.setAddress(new Address("street", "zipCode", "city"));
+		alicia.setUniqueId(UUID.randomUUID());
+		UsernameAndPassword credentials = new UsernameAndPassword();
+		credentials.password = "keys";
+		credentials.username = "alicia";
+		alicia.credentials = credentials;
+
+		alicia = repository.save(this.alicia);
+
+		assertThat(repository.findPersonByManyArguments(this.alicia.getFirstname(), this.alicia.getLastname(), this.alicia.getEmail(),
+				this.alicia.getAge(), Sex.FEMALE, this.alicia.createdAt, alicia.getSkills(), "street", "zipCode", "city",
+				alicia.getUniqueId(), credentials.username, credentials.password)
+		).isNotNull();
 	}
 }
