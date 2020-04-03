@@ -32,9 +32,9 @@ public class Address {
 	}
 
 	/**
-	 * @param string
-	 * @param string2
-	 * @param string3
+	 * @param street
+	 * @param zipcode
+	 * @param city
 	 */
 	public Address(String street, String zipcode, String city) {
 		this.street = street;
