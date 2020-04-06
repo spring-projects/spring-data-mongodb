@@ -395,9 +395,10 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	@Query(value = "{_id:?0}")
 	Optional<org.bson.Document> findDocumentById(String id);
 
-	@Query(
-			value = "{ 'firstname' : ?0, 'lastname' : ?1, 'email' : ?2 , 'age' : ?3, 'sex' : ?4, 'createdAt' : ?5, 'skills' : ?6, 'address.street' : ?7, 'address.zipCode' : ?8, 'address.city' : ?9, 'uniqueId' : ?10, 'credentials.username' : ?11, 'credentials.password' : ?12 }")
+	@Query(value = "{ 'firstname' : ?0, 'lastname' : ?1, 'email' : ?2 , 'age' : ?3, 'sex' : ?4, "
+			+ "'createdAt' : ?5, 'skills' : ?6, 'address.street' : ?7, 'address.zipCode' : ?8, " //
+			+ "'address.city' : ?9, 'uniqueId' : ?10, 'credentials.username' : ?11, 'credentials.password' : ?12 }")
 	Person findPersonByManyArguments(String firstname, String lastname, String email, Integer age, Sex sex,
-									 Date createdAt, List<String> skills, String street, String zipCode, String city, UUID uniqueId, String username,
-									 String password);
+			Date createdAt, List<String> skills, String street, String zipCode, //
+			String city, UUID uniqueId, String username, String password);
 }

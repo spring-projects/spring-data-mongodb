@@ -17,9 +17,8 @@ package org.springframework.data.mongodb.repository.config;
 
 import static org.assertj.core.api.Assertions.*;
 
-import org.junit.Before;
-import org.junit.Test;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionReader;
@@ -40,14 +39,14 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Oliver Gierke
  */
 @ContextConfiguration
-public class MongoNamespaceIntegrationTests extends AbstractPersonRepositoryIntegrationTests {
+class MongoNamespaceIntegrationTests extends AbstractPersonRepositoryIntegrationTests {
 
 	DefaultListableBeanFactory factory;
 	BeanDefinitionReader reader;
 
 	@Autowired ApplicationContext context;
 
-	@Before
+	@BeforeEach
 	@Override
 	public void setUp() throws InterruptedException {
 		super.setUp();
@@ -56,7 +55,7 @@ public class MongoNamespaceIntegrationTests extends AbstractPersonRepositoryInte
 	}
 
 	@Test
-	public void assertDefaultMappingContextIsWired() {
+	void assertDefaultMappingContextIsWired() {
 
 		reader.loadBeanDefinitions(new ClassPathResource("MongoNamespaceIntegrationTests-context.xml", getClass()));
 		BeanDefinition definition = factory.getBeanDefinition("personRepository");
@@ -64,7 +63,7 @@ public class MongoNamespaceIntegrationTests extends AbstractPersonRepositoryInte
 	}
 
 	@Test // DATAMONGO-581
-	public void exposesPersistentEntity() {
+	void exposesPersistentEntity() {
 
 		Repositories repositories = new Repositories(context);
 		PersistentEntity<?, ?> entity = repositories.getPersistentEntity(Person.class);

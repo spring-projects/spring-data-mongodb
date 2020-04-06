@@ -19,8 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
 
-import org.junit.Test;
-
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -31,12 +30,12 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Mark Paluch
  */
 @ContextConfiguration("config/MongoNamespaceIntegrationTests-context.xml")
-public class RedeclaringRepositoryMethodsTests extends AbstractPersonRepositoryIntegrationTests {
+class RedeclaringRepositoryMethodsTests extends AbstractPersonRepositoryIntegrationTests {
 
 	@Autowired RedeclaringRepositoryMethodsRepository repository;
 
 	@Test // DATAMONGO-760
-	public void adjustedWellKnownPagedFindAllMethodShouldReturnOnlyTheUserWithFirstnameOliverAugust() {
+	void adjustedWellKnownPagedFindAllMethodShouldReturnOnlyTheUserWithFirstnameOliverAugust() {
 
 		Page<Person> page = repository.findAll(PageRequest.of(0, 2));
 
@@ -45,7 +44,7 @@ public class RedeclaringRepositoryMethodsTests extends AbstractPersonRepositoryI
 	}
 
 	@Test // DATAMONGO-760
-	public void adjustedWllKnownFindAllMethodShouldReturnAnEmptyList() {
+	void adjustedWllKnownFindAllMethodShouldReturnAnEmptyList() {
 
 		List<Person> result = repository.findAll();
 
