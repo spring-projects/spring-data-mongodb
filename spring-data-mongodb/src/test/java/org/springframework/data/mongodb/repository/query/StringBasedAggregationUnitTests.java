@@ -34,8 +34,12 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
@@ -198,6 +202,16 @@ public class StringBasedAggregationUnitTests {
 		assertThat(collationOf(invocation)).isEqualTo(Collation.of("en_US"));
 	}
 
+	@Test // DATAMONGO-2506
+	public void aggregateRaisesErrorOnInvalidReturnType() {
+
+		StringBasedAggregation sba = createAggregationForMethod("invalidPageReturnType", Pageable.class);
+		assertThatExceptionOfType(InvalidMongoDbApiUsageException.class) //
+				.isThrownBy(() -> sba.execute(new Object[] { PageRequest.of(0, 1) })) //
+				.withMessageContaining("invalidPageReturnType") //
+				.withMessageContaining("Page");
+	}
+
 	private AggregationInvocation executeAggregation(String name, Object... args) {
 
 		Class<?>[] argTypes = Arrays.stream(args).map(Object::getClass).toArray(Class[]::new);
@@ -276,6 +290,9 @@ public class StringBasedAggregationUnitTests {
 
 		@Aggregation(pipeline = RAW_GROUP_BY_LASTNAME_STRING, collation = "de_AT")
 		PersonAggregate aggregateWithCollation(Collation collation);
+
+		@Aggregation(RAW_GROUP_BY_LASTNAME_STRING)
+		Page<Person> invalidPageReturnType(Pageable page);
 	}
 
 	static class PersonAggregate {
