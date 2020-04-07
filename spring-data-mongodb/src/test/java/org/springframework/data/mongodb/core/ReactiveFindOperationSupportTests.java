@@ -59,6 +59,7 @@ import com.mongodb.client.MongoClient;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Juergen Zimmermann
  */
 @ExtendWith(MongoClientExtension.class)
 class ReactiveFindOperationSupportTests {
@@ -168,6 +169,14 @@ class ReactiveFindOperationSupportTests {
 
 		template.query(Person.class).matching(where("firstname").is("luke")).all().as(StepVerifier::create) //
 				.expectNext(luke) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-2507
+	void findAllWithProjectionByCriteria() {
+
+		template.query(Person.class).as(Jedi.class).matching(where("firstname").is("luke")).all()
+				.as(StepVerifier::create).consumeNextWith(it -> assertThat(it).isInstanceOf(Jedi.class)) //
 				.verifyComplete();
 	}
 

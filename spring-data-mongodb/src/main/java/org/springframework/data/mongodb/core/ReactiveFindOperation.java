@@ -46,6 +46,7 @@ import org.springframework.data.mongodb.core.query.Query;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Juergen Zimmermann
  * @since 2.0
  */
 public interface ReactiveFindOperation {
@@ -275,6 +276,18 @@ public interface ReactiveFindOperation {
 		 * @throws IllegalArgumentException if resultType is {@literal null}.
 		 */
 		TerminatingDistinct<T> matching(Query query);
+
+		/**
+		 * Set the filter {@link CriteriaDefinition criteria} to be used.
+		 *
+		 * @param criteriaDefinition must not be {@literal null}.
+		 * @return new instance of {@link TerminatingFind}.
+		 * @throws IllegalArgumentException if query is {@literal null}.
+		 * @since 3.0
+		 */
+		default TerminatingDistinct<T> matching(CriteriaDefinition criteriaDefinition) {
+			return matching(Query.query(criteriaDefinition));
+		}
 	}
 
 	/**
