@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 
 import org.bson.Document;
 
+import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
@@ -70,6 +71,10 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 	@Override
 	protected Object doExecute(MongoQueryMethod method, ResultProcessor resultProcessor,
 			ConvertingParameterAccessor accessor, Class<?> typeToRead) {
+
+		if (method.isPageQuery() || method.isSliceQuery()) {
+			throw new InvalidMongoDbApiUsageException(String.format("Repository aggregation method '%s' does not support '%s' return type. Please use eg. 'List' instead.", method.getName(), method.getReturnType().getType().getSimpleName()));
+		}
 
 		Class<?> sourceType = method.getDomainClass();
 		Class<?> targetType = typeToRead;
