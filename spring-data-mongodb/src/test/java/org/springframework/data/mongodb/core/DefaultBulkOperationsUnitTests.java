@@ -364,7 +364,7 @@ class DefaultBulkOperationsUnitTests {
 
 		UpdateOneModel<Document> updateModel = (UpdateOneModel<Document>) captor.getValue().get(0);
 		assertThat(updateModel.getUpdate())
-				.isEqualTo(new Document("$set", new Document("items.$.documents.0.fileId", "file-id")));
+				.isEqualTo(new Document("$set", new Document("items.$.documents.0.the_file_id", "file-id")));
 	}
 
 	static class OrderTest {
@@ -381,6 +381,7 @@ class DefaultBulkOperationsUnitTests {
 
 	static class OrderTestDocument {
 
+		@Field("the_file_id")
 		private String fileId;
 	}
 

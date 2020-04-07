@@ -419,7 +419,7 @@ public class QueryMapper {
 			return false;
 		}
 
-		Class<? extends Object> type = value.getClass();
+		Class<?> type = value.getClass();
 		MongoPersistentProperty property = documentField.getProperty();
 
 		if (property.getActualType().isAssignableFrom(type)) {
@@ -443,7 +443,7 @@ public class QueryMapper {
 	protected Object convertSimpleOrDocument(Object source, @Nullable MongoPersistentEntity<?> entity) {
 
 		if (source instanceof Example) {
-			return exampleMapper.getMappedExample((Example) source, entity);
+			return exampleMapper.getMappedExample((Example<?>) source, entity);
 		}
 
 		if (source instanceof List) {
@@ -923,6 +923,7 @@ public class QueryMapper {
 	protected static class MetadataBackedField extends Field {
 
 		private static final Pattern POSITIONAL_PARAMETER_PATTERN = Pattern.compile("\\.\\$(\\[.*?\\])?|\\.\\d+");
+		private static final Pattern DOT_POSITIONAL_PATTERN = Pattern.compile("\\.\\d+");
 		private static final String INVALID_ASSOCIATION_REFERENCE = "Invalid path reference %s! Associations can only be pointed to directly or via their id property!";
 
 		private final MongoPersistentEntity<?> entity;
@@ -964,13 +965,9 @@ public class QueryMapper {
 			this.entity = entity;
 			this.mappingContext = context;
 
-			this.path = getPath(removePositionalPlaceholders(name));
+			this.path = getPath(removePlaceholders(POSITIONAL_PARAMETER_PATTERN, name));
 			this.property = path == null ? property : path.getLeafProperty();
 			this.association = findAssociation();
-		}
-
-		private static String removePositionalPlaceholders(String raw) {
-			return POSITIONAL_PARAMETER_PATTERN.matcher(raw).replaceAll("");
 		}
 
 		/*
@@ -1076,7 +1073,7 @@ public class QueryMapper {
 		}
 
 		/**
-		 * Returns the {@link PersistentPropertyPath} for the given <code>pathExpression</code>.
+		 * Returns the {@link PersistentPropertyPath} for the given {@code pathExpression}.
 		 *
 		 * @param pathExpression
 		 * @return
@@ -1084,8 +1081,8 @@ public class QueryMapper {
 		@Nullable
 		private PersistentPropertyPath<MongoPersistentProperty> getPath(String pathExpression) {
 
-			String rawPath = pathExpression.replaceAll("\\.\\d+", "") //
-					.replaceAll(POSITIONAL_OPERATOR.pattern(), "");
+			String rawPath = removePlaceholders(POSITIONAL_OPERATOR,
+					removePlaceholders(DOT_POSITIONAL_PATTERN, pathExpression));
 
 			PropertyPath path = forName(rawPath);
 			if (path == null || isPathToJavaLangClassProperty(path)) {
@@ -1180,6 +1177,10 @@ public class QueryMapper {
 			return mappingContext;
 		}
 
+		private static String removePlaceholders(Pattern pattern, String raw) {
+			return pattern.matcher(raw).replaceAll("");
+		}
+
 		/**
 		 * @author Christoph Strobl
 		 * @since 1.8
@@ -1231,14 +1232,12 @@ public class QueryMapper {
 		static class KeyMapper {
 
 			private final Iterator<String> iterator;
-			private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
 			public KeyMapper(String key,
 					MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 
 				this.iterator = Arrays.asList(key.split("\\.")).iterator();
 				this.iterator.next();
-				this.mappingContext = mappingContext;
 			}
 
 			/**
