@@ -968,7 +968,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-2502
-	void shouldAllowDeeplyNestedPlaceholders() {
+	public void shouldAllowDeeplyNestedPlaceholders() {
 
 		org.bson.Document target = mapper.getMappedObject(
 				query(where("level0.$[some_item].arrayObj.$[other_item].nested").is("value")).getQueryObject(),
@@ -978,7 +978,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-2502
-	void shouldAllowDeeplyNestedPlaceholdersWithCustomName() {
+	public void shouldAllowDeeplyNestedPlaceholdersWithCustomName() {
 
 		org.bson.Document target = mapper.getMappedObject(
 				query(where("level0.$[some_item].arrayCustomName.$[other_item].nested").is("value")).getQueryObject(),

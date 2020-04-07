@@ -334,7 +334,7 @@ public class DefaultBulkOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2502
-	void shouldRetainNestedArrayPathWithPlaceholdersForNoMatchingPaths() {
+	public void shouldRetainNestedArrayPathWithPlaceholdersForNoMatchingPaths() {
 
 		ops.updateOne(new BasicQuery("{}"), new Update().set("items.$.documents.0.fileId", "new-id")).execute();
 
@@ -346,7 +346,7 @@ public class DefaultBulkOperationsUnitTests {
 	}
 
 	@Test // DATAMONGO-2502
-	void shouldRetainNestedArrayPathWithPlaceholdersForMappedEntity() {
+	public void shouldRetainNestedArrayPathWithPlaceholdersForMappedEntity() {
 
 		DefaultBulkOperations ops = new DefaultBulkOperations(template, "collection-1",
 				new BulkOperationContext(BulkMode.ORDERED, Optional.of(mappingContext.getPersistentEntity(OrderTest.class)),
@@ -358,7 +358,7 @@ public class DefaultBulkOperationsUnitTests {
 
 		UpdateOneModel<Document> updateModel = (UpdateOneModel<Document>) captor.getValue().get(0);
 		assertThat(updateModel.getUpdate())
-				.isEqualTo(new Document("$set", new Document("items.$.documents.0.fileId", "file-id")));
+				.isEqualTo(new Document("$set", new Document("items.$.documents.0.the_file_id", "file-id")));
 	}
 
 	static class OrderTest {
@@ -375,6 +375,7 @@ public class DefaultBulkOperationsUnitTests {
 
 	static class OrderTestDocument {
 
+		@Field("the_file_id")
 		private String fileId;
 	}
 
