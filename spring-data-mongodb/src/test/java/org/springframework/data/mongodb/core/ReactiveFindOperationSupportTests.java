@@ -21,6 +21,7 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
@@ -51,6 +52,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
+import org.springframework.util.Assert;
 
 import com.mongodb.client.MongoClient;
 
@@ -631,6 +633,16 @@ class ReactiveFindOperationSupportTests {
 				.verify();
 	}
 
+	@Test // DATAMONGO-2480
+	void shouldAllowInterfaceProjectionsBasedSourceDocument() {
+
+		template.query(ContactWithRequiredArgs.class).as(PersonProjection.class).first() //
+				.as(StepVerifier::create) //
+				.consumeNextWith(it -> {
+					assertThat(it.getFirstname()).isNotNull();
+				}).verifyComplete();
+	}
+
 	interface Contact {}
 
 	@Data
@@ -642,6 +654,25 @@ class ReactiveFindOperationSupportTests {
 		String lastname;
 		Object ability;
 		Person father;
+	}
+
+	@Getter
+	@org.springframework.data.mongodb.core.mapping.Document(collection = STAR_WARS)
+	static class ContactWithRequiredArgs {
+
+		@Id String id;
+		String firstname;
+		String lastname;
+
+		public ContactWithRequiredArgs(String id, String firstname, String lastname) {
+
+			Assert.notNull(firstname, "Firstname must not be null!");
+			Assert.notNull(lastname, "Lastname must not be null!");
+
+			this.id = id;
+			this.firstname = firstname;
+			this.lastname = lastname;
+		}
 	}
 
 	interface PersonProjection {

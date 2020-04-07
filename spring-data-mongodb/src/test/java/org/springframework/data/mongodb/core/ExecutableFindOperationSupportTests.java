@@ -21,6 +21,7 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
@@ -47,6 +48,7 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
+import org.springframework.util.Assert;
 
 /**
  * Integration tests for {@link ExecutableFindOperationSupport}.
@@ -536,6 +538,16 @@ class ExecutableFindOperationSupportTests {
 				.isThrownBy(() -> template.query(Person.class).distinct("firstname").as(Long.class).all());
 	}
 
+	@Test // DATAMONGO-2480
+	void shouldAllowInterfaceProjectionsBasedSourceDocument() {
+
+		initPersons();
+
+		PersonProjection target = template.query(ContactWithRequiredArgs.class).as(PersonProjection.class).firstValue();
+		assertThat(target).isNotNull();
+		assertThat(target.getFirstname()).isNotNull();
+	}
+
 	interface Contact {}
 
 	@Data
@@ -547,6 +559,25 @@ class ExecutableFindOperationSupportTests {
 		String lastname;
 		Object ability;
 		Person father;
+	}
+
+	@Getter
+	@org.springframework.data.mongodb.core.mapping.Document(collection = STAR_WARS)
+	static class ContactWithRequiredArgs {
+
+		@Id String id;
+		String firstname;
+		String lastname;
+
+		public ContactWithRequiredArgs(String id, String firstname, String lastname) {
+
+			Assert.notNull(firstname, "Firstname must not be null!");
+			Assert.notNull(lastname, "Lastname must not be null!");
+
+			this.id = id;
+			this.firstname = firstname;
+			this.lastname = lastname;
+		}
 	}
 
 	interface PersonProjection {

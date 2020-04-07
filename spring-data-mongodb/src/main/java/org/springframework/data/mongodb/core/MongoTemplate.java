@@ -33,7 +33,6 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -54,6 +53,7 @@ import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Metric;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mapping.model.MappingInstantiationException;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoDatabaseUtils;
 import org.springframework.data.mongodb.SessionSynchronization;
@@ -3179,7 +3179,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				maybeEmitEvent(new AfterLoadEvent<>(document, targetType, collectionName));
 			}
 
-			Object source = reader.read(typeToRead, document);
+			Object source = processProjectionSource(typeToRead, document, targetType);
 			Object result = targetType.isInterface() ? projectionFactory.createProjection(targetType, source) : source;
 
 			if (result != null) {
@@ -3188,6 +3188,29 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			}
 
 			return (T) result;
+		}
+
+		/**
+		 * Attempt to create the {@literal typeToRead} instance via domain type mapping. If that fails (eg. due to required
+		 * argument checks in the constructor) and the {@literal targetType} is an interface, rely on the raw result
+		 * {@link Map} and let the {@link org.springframework.data.projection.ProjectionFactory} back the interface with
+		 * that one. Otherwise raise an exception.
+		 * 
+		 * @param typeToRead the actual type used for domain type mapping
+		 * @param document the raw document type
+		 * @param targetType the desired target type.
+		 * @return
+		 */
+		Object processProjectionSource(Class<?> typeToRead, Document document, Class<?> targetType) {
+
+			try {
+				return reader.read(typeToRead, document);
+			} catch (MappingInstantiationException e) {
+				if (targetType.isInterface()) {
+					return BsonUtils.asMap(document);
+				}
+				throw e;
+			}
 		}
 	}
 

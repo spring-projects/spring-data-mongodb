@@ -20,6 +20,7 @@ import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.mapping.model.MappingInstantiationException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -3149,7 +3150,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			maybeEmitEvent(new AfterLoadEvent<>(document, typeToRead, collectionName));
 
-			Object source = reader.read(typeToRead, document);
+			Object source = processProjectionSource(typeToRead, document, targetType);
 			Object result = targetType.isInterface() ? projectionFactory.createProjection(targetType, source) : source;
 
 			T castEntity = (T) result;
@@ -3159,6 +3160,29 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			}
 
 			return Mono.empty();
+		}
+
+		/**
+		 * Attempt to create the {@literal typeToRead} instance via domain type mapping. If that fails (eg. due to required
+		 * argument checks in the constructor) and the {@literal targetType} is an interface, rely on the raw result
+		 * {@link Map} and let the {@link org.springframework.data.projection.ProjectionFactory} back the interface with
+		 * that one. Otherwise raise an exception.
+		 *
+		 * @param typeToRead the actual type used for domain type mapping
+		 * @param document the raw document type
+		 * @param targetType the desired target type.
+		 * @return
+		 */
+		Object processProjectionSource(Class<?> typeToRead, Document document, Class<?> targetType) {
+
+			try {
+				return reader.read(typeToRead, document);
+			} catch (MappingInstantiationException e) {
+				if (targetType.isInterface()) {
+					return BsonUtils.asMap(document);
+				}
+				throw e;
+			}
 		}
 	}
 
