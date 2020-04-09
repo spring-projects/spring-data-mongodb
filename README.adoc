@@ -53,11 +53,6 @@ public class MyService {
 class ApplicationConfig extends AbstractMongoClientConfiguration {
 
   @Override
-  public MongoClient mongoClient() {
-    return MongoClients.create();
-  }
-
-  @Override
   protected String getDatabaseName() {
     return "springdata";
   }
