@@ -46,16 +46,16 @@ pipeline {
 						}
 					}
 				}
-				stage('Publish JDK 13 + MongoDB 4.2') {
+				stage('Publish JDK 14 + MongoDB 4.2') {
 					when {
-						changeset "ci/openjdk13-mongodb-4.2/**"
+						changeset "ci/openjdk14-mongodb-4.2/**"
 					}
 					agent { label 'data' }
 					options { timeout(time: 30, unit: 'MINUTES') }
 
 					steps {
 						script {
-							def image = docker.build("springci/spring-data-openjdk13-with-mongodb-4.2.0", "ci/openjdk13-mongodb-4.2/")
+							def image = docker.build("springci/spring-data-openjdk14-with-mongodb-4.2.0", "ci/openjdk14-mongodb-4.2/")
 							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
 								image.push()
 							}
@@ -139,10 +139,10 @@ pipeline {
 					}
 				}
 
-				stage("test: baseline (jdk13)") {
+				stage("test: baseline (jdk14)") {
 					agent {
 						docker {
-							image 'springci/spring-data-openjdk13-with-mongodb-4.2.0:latest'
+							image 'springci/spring-data-openjdk14-with-mongodb-4.2.0:latest'
 							label 'data'
 							args '-v $HOME:/tmp/jenkins-home'
 						}
