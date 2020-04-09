@@ -269,15 +269,8 @@ You can configure the `MappingMongoConverter` as well as `com.mongodb.client.Mon
 ====
 [source,java]
 ----
-import com.mongodb.client.MongoClients;
-
 @Configuration
-public class GeoSpatialAppConfig extends AbstractMongoClientConfiguration {
-
-  @Bean
-  public MongoClient mongoClient() {
-    return MongoClients.create("monogodb://localhost:27017");
-  }
+public class MongoConfig extends AbstractMongoClientConfiguration {
 
   @Override
   public String getDatabaseName() {
@@ -287,12 +280,12 @@ public class GeoSpatialAppConfig extends AbstractMongoClientConfiguration {
   // the following are optional
 
   @Override
-  public String getMappingBasePackage() {
+  public String getMappingBasePackage() { <1>
     return "com.bigbank.domain";
   }
 
   @Override
-  void configureConverters(MongoConverterConfigurationAdapter adapter) {
+  void configureConverters(MongoConverterConfigurationAdapter adapter) { <2>
 
   	adapter.registerConverter(new org.springframework.data.mongodb.test.PersonReadConverter());
   	adapter.registerConverter(new org.springframework.data.mongodb.test.PersonWriteConverter());
@@ -304,6 +297,8 @@ public class GeoSpatialAppConfig extends AbstractMongoClientConfiguration {
   }
 }
 ----
+<1> The mapping base package defines the root path used to scan for entities used to pre initialize the `MappingContext`. By default the configuration classes package is used.
+<2> Configure additional custom converters for specific domain types that replace the default mapping procedure for those types with your custom implementation.
 ====
 
 `AbstractMongoClientConfiguration` requires you to implement methods that define a `com.mongodb.client.MongoClient` as well as provide a database name. `AbstractMongoClientConfiguration` also has a method named  `getMappingBasePackage(…)` that you can override to tell the converter where to scan for classes annotated with the `@Document` annotation.
@@ -389,6 +384,8 @@ public class Person {
 
 IMPORTANT: The `@Id` annotation tells the mapper which property you want to use for the MongoDB `_id` property, and the `@Indexed` annotation tells the mapping framework to call `createIndex(…)` on that property of your document, making searches faster.
 Automatic index creation is only done for types annotated with `@Document`.
+
+WARNING: Auto index creation is turned **OFF** by default and need to be enabled via the configuration (see <<mapping.index-creation>>).
 
 [[mapping.index-creation]]
 === Index Creation

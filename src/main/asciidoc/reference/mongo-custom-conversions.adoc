@@ -95,12 +95,6 @@ class MyMongoConfiguration extends AbstractMongoClientConfiguration {
 	}
 
 	@Override
-	@Bean
-	public MongoClient mongoClient() {
-		return MongoClients.create();
-	}
-
-	@Override
 	protected void configureConverters(MongoConverterConfigurationAdapter adapter) {
 		adapter.registerConverter(new com.example.PersonReadConverter());
 		adapter.registerConverter(new com.example.PersonWriteConverter());
