@@ -118,7 +118,7 @@ public interface ExecutableFindOperation {
 		/**
 		 * Stream all matching elements.
 		 *
-		 * @return a {@link Stream} that wraps the a Mongo DB {@link com.mongodb.Cursor} that needs to be closed. Never
+		 * @return a {@link Stream} that wraps the a Mongo DB {@link com.mongodb.client.FindIterable} that needs to be closed. Never
 		 *         {@literal null}.
 		 */
 		Stream<T> stream();

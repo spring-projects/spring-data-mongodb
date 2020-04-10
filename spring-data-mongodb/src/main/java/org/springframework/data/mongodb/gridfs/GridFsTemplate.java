@@ -75,7 +75,7 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 	 *
 	 * @param dbFactory must not be {@literal null}.
 	 * @param converter must not be {@literal null}.
-	 * @param bucket
+	 * @param bucket can be {@literal null}.
 	 */
 	public GridFsTemplate(MongoDatabaseFactory dbFactory, MongoConverter converter, @Nullable String bucket) {
 

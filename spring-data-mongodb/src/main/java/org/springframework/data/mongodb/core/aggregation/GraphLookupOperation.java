@@ -146,7 +146,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		 * Set the {@literal collectionName} to apply the {@code $graphLookup} to.
 		 *
 		 * @param collectionName must not be {@literal null} or empty.
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		StartWithBuilder from(String collectionName);
 	}
@@ -161,7 +161,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		 * Set the startWith {@literal fieldReferences} to apply the {@code $graphLookup} to.
 		 *
 		 * @param fieldReferences must not be {@literal null}.
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		ConnectFromBuilder startWith(String... fieldReferences);
 
@@ -169,7 +169,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		 * Set the startWith {@literal expressions} to apply the {@code $graphLookup} to.
 		 *
 		 * @param expressions must not be {@literal null}.
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		ConnectFromBuilder startWith(AggregationExpression... expressions);
 
@@ -178,7 +178,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		 * {@link AggregationExpression} to apply the {@code $graphLookup} to.
 		 *
 		 * @param expressions must not be {@literal null}.
-		 * @return
+		 * @return never {@literal null}.
 		 * @throws IllegalArgumentException
 		 */
 		ConnectFromBuilder startWith(Object... expressions);
@@ -193,7 +193,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		 * Set the connectFrom {@literal fieldName} to apply the {@code $graphLookup} to.
 		 *
 		 * @param fieldName must not be {@literal null} or empty.
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		ConnectToBuilder connectFrom(String fieldName);
 	}
@@ -207,7 +207,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		 * Set the connectTo {@literal fieldName} to apply the {@code $graphLookup} to.
 		 *
 		 * @param fieldName must not be {@literal null} or empty.
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		GraphLookupOperationBuilder connectTo(String fieldName);
 	}
@@ -360,7 +360,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		 * Optionally limit the number of recursions.
 		 *
 		 * @param numberOfRecursions must be greater or equal to zero.
-		 * @return
+		 * @return this.
 		 */
 		public GraphLookupOperationBuilder maxDepth(long numberOfRecursions) {
 
@@ -374,7 +374,7 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		 * Optionally add a depth field {@literal fieldName} to each traversed document in the search path.
 		 *
 		 * @param fieldName must not be {@literal null} or empty.
-		 * @return
+		 * @return this.
 		 */
 		public GraphLookupOperationBuilder depthField(String fieldName) {
 

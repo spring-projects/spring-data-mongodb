@@ -164,7 +164,7 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 	 * {@code $replaceWith} replaces the input document with the specified document. The operation replaces all existing
 	 * fields in the input document, including the <strong>_id</strong> field.
 	 *
-	 * @param replaceWithOperation
+	 * @param replaceWithOperation must not be {@literal null}.
 	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/replaceWith/">$replaceWith Aggregation
 	 *      Reference</a>
@@ -219,8 +219,8 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 	/**
 	 * Short for {@link #unset(UnsetOperation)}.
 	 *
-	 * @param keys
-	 * @return
+	 * @param keys the fields to remove.
+	 * @return this.
 	 */
 	public AggregationUpdate unset(String... keys) {
 

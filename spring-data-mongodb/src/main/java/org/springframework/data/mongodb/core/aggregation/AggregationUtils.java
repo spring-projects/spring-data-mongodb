@@ -32,9 +32,9 @@ interface AggregationUtils {
 	 * Converts the given {@link Range} into an array of values.
 	 *
 	 * @param range must not be {@literal null}.
-	 * @return
+	 * @return never {@literal null}.
 	 */
-	public static List<Long> toRangeValues(Range<Long> range) {
+	static List<Long> toRangeValues(Range<Long> range) {
 
 		Assert.notNull(range, "Range must not be null!");
 

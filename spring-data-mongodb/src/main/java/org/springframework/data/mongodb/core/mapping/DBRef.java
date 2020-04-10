@@ -39,14 +39,14 @@ public @interface DBRef {
 	/**
 	 * The database the referred entity resides in.
 	 *
-	 * @return
+	 * @return empty String by default.
 	 */
 	String db() default "";
 
 	/**
 	 * Controls whether the referenced entity should be loaded lazily. This defaults to {@literal false}.
 	 *
-	 * @return
+	 * @return {@literal false} by default.
 	 */
 	boolean lazy() default false;
 }

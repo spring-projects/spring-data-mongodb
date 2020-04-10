@@ -42,7 +42,7 @@ public @interface Query {
 	 * Takes a MongoDB JSON string to define the actual query to be executed. This one will take precedence over the
 	 * method name then.
 	 *
-	 * @return
+	 * @return empty {@link String}	by default.
 	 */
 	String value() default "";
 
@@ -50,7 +50,7 @@ public @interface Query {
 	 * Defines the fields that should be returned for the given query. Note that only these fields will make it into the
 	 * domain object returned.
 	 *
-	 * @return
+	 * @return empty {@link String}	by default.
 	 */
 	String fields() default "";
 
@@ -58,7 +58,7 @@ public @interface Query {
 	 * Returns whether the query defined should be executed as count projection.
 	 *
 	 * @since 1.3
-	 * @return
+	 * @return {@literal false} by default.
 	 */
 	boolean count() default false;
 
@@ -66,7 +66,7 @@ public @interface Query {
 	 * Returns whether the query defined should be executed as exists projection.
 	 *
 	 * @since 1.10
-	 * @return
+	 * @return {@literal false} by default.
 	 */
 	boolean exists() default false;
 
@@ -74,7 +74,7 @@ public @interface Query {
 	 * Returns whether the query should delete matching documents.
 	 *
 	 * @since 1.5
-	 * @return
+	 * @return {@literal false} by default.
 	 */
 	boolean delete() default false;
 
@@ -91,7 +91,7 @@ public @interface Query {
 	 * </code>
 	 * </pre>
 	 *
-	 * @return
+	 * @return empty {@link String} by default.
 	 * @since 2.1
 	 */
 	String sort() default "";

@@ -70,10 +70,10 @@ class DocumentAccessor {
 	/**
 	 * Puts the given value into the backing {@link Document} based on the coordinates defined through the given
 	 * {@link MongoPersistentProperty}. By default this will be the plain field name. But field names might also consist
-	 * of path traversals so we might need to create intermediate {@link BasicDocument}s.
+	 * of path traversals so we might need to create intermediate {@link Document}s.
 	 *
 	 * @param prop must not be {@literal null}.
-	 * @param value
+	 * @param value can be {@literal null}.
 	 */
 	public void put(MongoPersistentProperty prop, @Nullable Object value) {
 
@@ -106,7 +106,7 @@ class DocumentAccessor {
 	 * a path expression in the field name metadata.
 	 *
 	 * @param property must not be {@literal null}.
-	 * @return
+	 * @return can be {@literal null}.
 	 */
 	@Nullable
 	public Object get(MongoPersistentProperty property) {
@@ -150,7 +150,7 @@ class DocumentAccessor {
 	 * {@link MongoPersistentProperty}.
 	 *
 	 * @param property must not be {@literal null}.
-	 * @return
+	 * @return {@literal true} if no non {@literal null} value present.
 	 */
 	@SuppressWarnings("unchecked")
 	public boolean hasValue(MongoPersistentProperty property) {
@@ -203,7 +203,7 @@ class DocumentAccessor {
 	 * Returns the given source object as map, i.e. {@link Document}s and maps as is or {@literal null} otherwise.
 	 *
 	 * @param source can be {@literal null}.
-	 * @return
+	 * @return can be {@literal null}.
 	 */
 	@Nullable
 	@SuppressWarnings("unchecked")

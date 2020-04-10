@@ -68,8 +68,8 @@ public class IndexInfo {
 	/**
 	 * Creates new {@link IndexInfo} parsing required properties from the given {@literal sourceDocument}.
 	 *
-	 * @param sourceDocument
-	 * @return
+	 * @param sourceDocument never {@literal null}.
+	 * @return new instance of {@link IndexInfo}.
 	 * @since 1.10
 	 */
 	public static IndexInfo indexInfoOf(Document sourceDocument) {
@@ -135,7 +135,7 @@ public class IndexInfo {
 	}
 
 	/**
-	 * @param sourceDocument
+	 * @param sourceDocument never {@literal null}.
 	 * @return the {@link String} representation of the partial filter {@link Document}.
 	 * @since 2.1.11
 	 */

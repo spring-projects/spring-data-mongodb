@@ -53,7 +53,7 @@ interface AggregationExpressionTransformer
 		 * @param currentNode must not be {@literal null}.
 		 * @param parentNode may be {@literal null}.
 		 * @param previousOperationObject may be {@literal null}.
-		 * @param aggregationContext must not be {@literal null}.
+		 * @param context must not be {@literal null}.
 		 */
 		public AggregationExpressionTransformationContext(T currentNode, @Nullable ExpressionNode parentNode,
 				@Nullable Document previousOperationObject, AggregationOperationContext context) {
@@ -67,7 +67,7 @@ interface AggregationExpressionTransformer
 		/**
 		 * Returns the underlying {@link AggregationOperationContext}.
 		 *
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		public AggregationOperationContext getAggregationContext() {
 			return aggregationContext;
@@ -76,7 +76,7 @@ interface AggregationExpressionTransformer
 		/**
 		 * Returns the {@link FieldReference} for the current {@link ExpressionNode}.
 		 *
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		public FieldReference getFieldReference() {
 			return aggregationContext.getReference(getCurrentNode().getName());

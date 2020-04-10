@@ -47,7 +47,8 @@ public @interface EnableMongoRepositories {
 
 	/**
 	 * Alias for the {@link #basePackages()} attribute. Allows for more concise annotation declarations e.g.:
-	 * {@code @EnableMongoRepositories("org.my.pkg")} instead of {@code @EnableMongoRepositories(basePackages="org.my.pkg")}.
+	 * {@code @EnableMongoRepositories("org.my.pkg")} instead of
+	 * {@code @EnableMongoRepositories(basePackages="org.my.pkg")}.
 	 */
 	String[] value() default {};
 
@@ -80,7 +81,7 @@ public @interface EnableMongoRepositories {
 	 * for a repository named {@code PersonRepository} the corresponding implementation class will be looked up scanning
 	 * for {@code PersonRepositoryImpl}.
 	 *
-	 * @return
+	 * @return {@literal Impl} by default.
 	 */
 	String repositoryImplementationPostfix() default "Impl";
 
@@ -88,7 +89,7 @@ public @interface EnableMongoRepositories {
 	 * Configures the location of where to find the Spring Data named queries properties file. Will default to
 	 * {@code META-INFO/mongo-named-queries.properties}.
 	 *
-	 * @return
+	 * @return empty {@link String} by default.
 	 */
 	String namedQueriesLocation() default "";
 
@@ -96,7 +97,7 @@ public @interface EnableMongoRepositories {
 	 * Returns the key of the {@link QueryLookupStrategy} to be used for lookup queries for query methods. Defaults to
 	 * {@link Key#CREATE_IF_NOT_FOUND}.
 	 *
-	 * @return
+	 * @return {@link Key#CREATE_IF_NOT_FOUND} by default.
 	 */
 	Key queryLookupStrategy() default Key.CREATE_IF_NOT_FOUND;
 
@@ -104,14 +105,14 @@ public @interface EnableMongoRepositories {
 	 * Returns the {@link FactoryBean} class to be used for each repository instance. Defaults to
 	 * {@link MongoRepositoryFactoryBean}.
 	 *
-	 * @return
+	 * @return {@link MongoRepositoryFactoryBean} by default.
 	 */
 	Class<?> repositoryFactoryBeanClass() default MongoRepositoryFactoryBean.class;
 
 	/**
 	 * Configure the repository base class to be used to create repository proxies for this particular configuration.
 	 *
-	 * @return
+	 * @return {@link DefaultRepositoryBaseClass} by default.
 	 * @since 1.8
 	 */
 	Class<?> repositoryBaseClass() default DefaultRepositoryBaseClass.class;
@@ -119,20 +120,22 @@ public @interface EnableMongoRepositories {
 	/**
 	 * Configures the name of the {@link MongoTemplate} bean to be used with the repositories detected.
 	 *
-	 * @return
+	 * @return {@literal mongoTemplate} by default.
 	 */
 	String mongoTemplateRef() default "mongoTemplate";
 
 	/**
 	 * Whether to automatically create indexes for query methods defined in the repository interface.
 	 *
-	 * @return
+	 * @return {@literal false} by default.
 	 */
 	boolean createIndexesForQueryMethods() default false;
 
 	/**
 	 * Configures whether nested repository-interfaces (e.g. defined as inner classes) should be discovered by the
 	 * repositories infrastructure.
+	 * 
+	 * @return {@literal false} by default.
 	 */
 	boolean considerNestedRepositories() default false;
 }

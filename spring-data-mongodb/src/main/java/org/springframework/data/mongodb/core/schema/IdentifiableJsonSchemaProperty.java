@@ -365,7 +365,6 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		/**
 		 * @param range must not be {@literal null}.
 		 * @return new instance of {@link ObjectJsonSchemaProperty}.
-		 * @see ObjectJsonSchemaObject#propertiesCount
 		 */
 		public ObjectJsonSchemaProperty propertiesCount(Range<Integer> range) {
 			return new ObjectJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.propertiesCount(range));
@@ -1120,16 +1119,16 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		}
 
 		/**
-		 * @param key
-		 * @return
+		 * @param keyId must not be {@literal null}.
+		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
 		 */
 		public EncryptedJsonSchemaProperty keyId(String keyId) {
 			return new EncryptedJsonSchemaProperty(targetProperty, algorithm, keyId, null);
 		}
 
 		/**
-		 * @param keyId
-		 * @return
+		 * @param keyId must not be {@literal null}.
+		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
 		 */
 		public EncryptedJsonSchemaProperty keys(UUID... keyId) {
 			return new EncryptedJsonSchemaProperty(targetProperty, algorithm, null, Arrays.asList(keyId));

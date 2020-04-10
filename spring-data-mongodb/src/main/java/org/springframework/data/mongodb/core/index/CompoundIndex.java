@@ -74,7 +74,7 @@ public @interface CompoundIndex {
 	 * }
 	 * </pre>
 	 *
-	 * @return
+	 * @return empty String by default.
 	 */
 	String def() default "";
 
@@ -82,13 +82,13 @@ public @interface CompoundIndex {
 	 * It does not actually make sense to use that attribute as the direction has to be defined in the {@link #def()}
 	 * attribute actually.
 	 *
-	 * @return
+	 * @return {@link IndexDirection#ASCENDING} by default.
 	 */
 	@Deprecated
 	IndexDirection direction() default IndexDirection.ASCENDING;
 
 	/**
-	 * @return
+	 * @return {@literal false} by default.
 	 * @see <a href=
 	 *      "https://docs.mongodb.org/manual/core/index-unique/">https://docs.mongodb.org/manual/core/index-unique/</a>
 	 */
@@ -97,14 +97,14 @@ public @interface CompoundIndex {
 	/**
 	 * If set to true index will skip over any document that is missing the indexed field.
 	 *
-	 * @return
+	 * @return {@literal false} by default.
 	 * @see <a href=
 	 *      "https://docs.mongodb.org/manual/core/index-sparse/">https://docs.mongodb.org/manual/core/index-sparse/</a>
 	 */
 	boolean sparse() default false;
 
 	/**
-	 * @return
+	 * @return {@literal false} by default.
 	 * @see <a href=
 	 *      "https://docs.mongodb.org/manual/core/index-creation/#index-creation-duplicate-dropping">https://docs.mongodb.org/manual/core/index-creation/#index-creation-duplicate-dropping</a>
 	 * @deprecated since 2.1. No longer supported by MongoDB as of server version 3.0.
@@ -148,7 +148,7 @@ public @interface CompoundIndex {
 	 * db.hybrid.createIndex( { h1: 1, h2: 1 } , { name: "compound_index" } )
 	 * </pre>
 	 *
-	 * @return
+	 * @return empty String by default.
 	 */
 	String name() default "";
 
@@ -156,7 +156,7 @@ public @interface CompoundIndex {
 	 * If set to {@literal true} then MongoDB will ignore the given index name and instead generate a new name. Defaults
 	 * to {@literal false}.
 	 *
-	 * @return
+	 * @return {@literal false} by default
 	 * @since 1.5
 	 */
 	boolean useGeneratedName() default false;
@@ -164,7 +164,7 @@ public @interface CompoundIndex {
 	/**
 	 * If {@literal true} the index will be created in the background.
 	 *
-	 * @return
+	 * @return {@literal false} by default.
 	 * @see <a href=
 	 *      "https://docs.mongodb.org/manual/core/indexes/#background-construction">https://docs.mongodb.org/manual/core/indexes/#background-construction</a>
 	 */

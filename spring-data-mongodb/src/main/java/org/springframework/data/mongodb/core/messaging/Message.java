@@ -77,7 +77,7 @@ public interface Message<S, T> {
 		/**
 		 * The database name the message originates from.
 		 *
-		 * @return
+		 * @return can be {@literal null}.
 		 */
 		@Nullable
 		public String getDatabaseName() {
@@ -87,7 +87,7 @@ public interface Message<S, T> {
 		/**
 		 * The collection name the message originates from.
 		 *
-		 * @return
+		 * @return can be {@literal null}.
 		 */
 		@Nullable
 		public String getCollectionName() {

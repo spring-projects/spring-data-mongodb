@@ -57,7 +57,7 @@ public class ReplaceWithOperation extends ReplaceRootOperation {
 	 * {@link Field field reference}.
 	 *
 	 * @param value must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link ReplaceWithOperation}.
 	 */
 	public static ReplaceWithOperation replaceWithValueOf(Object value) {
 

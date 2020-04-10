@@ -45,7 +45,7 @@ public interface MongoDatabaseFactory extends CodecRegistryProvider, MongoSessio
 	/**
 	 * Obtain a {@link MongoDatabase} instance to access the database with the given name.
 	 *
-	 * @param dbName
+	 * @param dbName must not be {@literal null}.
 	 * @return never {@literal null}.
 	 * @throws DataAccessException
 	 */

@@ -95,7 +95,7 @@ public abstract class MongoConfigurationSupport {
 	/**
 	 * Register custom {@link Converter}s in a {@link CustomConversions} object if required. These
 	 * {@link CustomConversions} will be registered with the
-	 * {@link org.springframework.data.mongodb.core.convert.MappingMongoConverter} and {@link #mongoMappingContext()}.
+	 * {@link org.springframework.data.mongodb.core.convert.MappingMongoConverter} and {@link MongoMappingContext}.
 	 * Returns an empty {@link MongoCustomConversions} instance by default.
 	 * <p>
 	 * <strong>NOTE:</strong> Use {@link #configureConverters(MongoConverterConfigurationAdapter)} to configure MongoDB

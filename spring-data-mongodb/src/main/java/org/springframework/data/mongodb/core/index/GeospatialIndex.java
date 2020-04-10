@@ -59,7 +59,7 @@ public class GeospatialIndex implements IndexDefinition {
 
 	/**
 	 * @param name must not be {@literal null} or empty.
-	 * @return
+	 * @return this.
 	 */
 	public GeospatialIndex named(String name) {
 
@@ -69,7 +69,7 @@ public class GeospatialIndex implements IndexDefinition {
 
 	/**
 	 * @param min
-	 * @return
+	 * @return this.
 	 */
 	public GeospatialIndex withMin(int min) {
 		this.min = Integer.valueOf(min);
@@ -78,7 +78,7 @@ public class GeospatialIndex implements IndexDefinition {
 
 	/**
 	 * @param max
-	 * @return
+	 * @return this.
 	 */
 	public GeospatialIndex withMax(int max) {
 		this.max = Integer.valueOf(max);
@@ -87,7 +87,7 @@ public class GeospatialIndex implements IndexDefinition {
 
 	/**
 	 * @param bits
-	 * @return
+	 * @return this.
 	 */
 	public GeospatialIndex withBits(int bits) {
 		this.bits = Integer.valueOf(bits);
@@ -96,7 +96,7 @@ public class GeospatialIndex implements IndexDefinition {
 
 	/**
 	 * @param type must not be {@literal null}.
-	 * @return
+	 * @return this.
 	 */
 	public GeospatialIndex typed(GeoSpatialIndexType type) {
 
@@ -108,7 +108,7 @@ public class GeospatialIndex implements IndexDefinition {
 
 	/**
 	 * @param bucketSize
-	 * @return
+	 * @return this.
 	 */
 	public GeospatialIndex withBucketSize(double bucketSize) {
 		this.bucketSize = bucketSize;
@@ -116,8 +116,8 @@ public class GeospatialIndex implements IndexDefinition {
 	}
 
 	/**
-	 * @param fieldName.
-	 * @return
+	 * @param fieldName
+	 * @return this.
 	 */
 	public GeospatialIndex withAdditionalField(String fieldName) {
 		this.additionalField = fieldName;
@@ -128,7 +128,7 @@ public class GeospatialIndex implements IndexDefinition {
 	 * Only index the documents in a collection that meet a specified {@link IndexFilter filter expression}.
 	 *
 	 * @param filter can be {@literal null}.
-	 * @return
+	 * @return this.
 	 * @see <a href=
 	 *      "https://docs.mongodb.com/manual/core/index-partial/">https://docs.mongodb.com/manual/core/index-partial/</a>
 	 * @since 1.10
@@ -146,7 +146,7 @@ public class GeospatialIndex implements IndexDefinition {
 	 * index.
 	 *
 	 * @param collation can be {@literal null}.
-	 * @return
+	 * @return this.
 	 * @since 2.0
 	 */
 	public GeospatialIndex collation(@Nullable Collation collation) {
@@ -155,6 +155,11 @@ public class GeospatialIndex implements IndexDefinition {
 		return this;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.index.IndexDefinition#getIndexKeys()
+	 */
+	@Override
 	public Document getIndexKeys() {
 
 		Document document = new Document();
@@ -184,6 +189,11 @@ public class GeospatialIndex implements IndexDefinition {
 		return document;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.index.IndexDefinition#getIndexOptions()
+	 */
+	@Override
 	public Document getIndexOptions() {
 
 		Document document = new Document();

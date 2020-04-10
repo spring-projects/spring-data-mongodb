@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2020 the original author or authors.
+ * Copyright 2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,28 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.mongodb.core.index;
-
-import org.bson.Document;
 
 /**
- * @author Jon Brisbin <jbrisbin@vmware.com>
- * @author Christoph Strobl
- * @author Mark Paluch
+ * MongoDB driver-specific utility classes for Json conversion.
  */
-public interface IndexDefinition {
-
-	/**
-	 * Get the {@link Document} containing properties covered by the index.
-	 *
-	 * @return never {@literal null}.
-	 */
-	Document getIndexKeys();
-
-	/**
-	 * Get the index properties such as {@literal unique},...
-	 *
-	 * @return never {@literal null}.
-	 */
-	Document getIndexOptions();
-}
+@org.springframework.lang.NonNullApi
+package org.springframework.data.mongodb.util.json;

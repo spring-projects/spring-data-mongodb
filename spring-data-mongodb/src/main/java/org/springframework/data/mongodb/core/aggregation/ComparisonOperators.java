@@ -32,7 +32,7 @@ public class ComparisonOperators {
 	 * Take the field referenced by given {@literal fieldReference}.
 	 *
 	 * @param fieldReference must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link ComparisonOperatorFactory}.
 	 */
 	public static ComparisonOperatorFactory valueOf(String fieldReference) {
 		return new ComparisonOperatorFactory(fieldReference);
@@ -42,7 +42,7 @@ public class ComparisonOperators {
 	 * Take the value resulting from the given {@link AggregationExpression}.
 	 *
 	 * @param expression must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link ComparisonOperatorFactory}.
 	 */
 	public static ComparisonOperatorFactory valueOf(AggregationExpression expression) {
 		return new ComparisonOperatorFactory(expression);
@@ -81,7 +81,7 @@ public class ComparisonOperators {
 		 * Creates new {@link AggregationExpression} that compares two values.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Cmp}.
 		 */
 		public Cmp compareTo(String fieldReference) {
 			return createCmp().compareTo(fieldReference);
@@ -91,7 +91,7 @@ public class ComparisonOperators {
 		 * Creates new {@link AggregationExpression} that compares two values.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Cmp}.
 		 */
 		public Cmp compareTo(AggregationExpression expression) {
 			return createCmp().compareTo(expression);
@@ -101,7 +101,7 @@ public class ComparisonOperators {
 		 * Creates new {@link AggregationExpression} that compares two values.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Cmp}.
 		 */
 		public Cmp compareToValue(Object value) {
 			return createCmp().compareToValue(value);
@@ -116,7 +116,7 @@ public class ComparisonOperators {
 		 * value is equal to the value of the referenced field.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Eq}.
 		 */
 		public Eq equalTo(String fieldReference) {
 			return createEq().equalTo(fieldReference);
@@ -127,7 +127,7 @@ public class ComparisonOperators {
 		 * value is equal to the expression result.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Eq}.
 		 */
 		public Eq equalTo(AggregationExpression expression) {
 			return createEq().equalTo(expression);
@@ -138,7 +138,7 @@ public class ComparisonOperators {
 		 * value is equal to the given value.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Eq}.
 		 */
 		public Eq equalToValue(Object value) {
 			return createEq().equalToValue(value);
@@ -153,7 +153,7 @@ public class ComparisonOperators {
 		 * value is greater than the value of the referenced field.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Gt}.
 		 */
 		public Gt greaterThan(String fieldReference) {
 			return createGt().greaterThan(fieldReference);
@@ -164,7 +164,7 @@ public class ComparisonOperators {
 		 * value is greater than the expression result.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Gt}.
 		 */
 		public Gt greaterThan(AggregationExpression expression) {
 			return createGt().greaterThan(expression);
@@ -175,7 +175,7 @@ public class ComparisonOperators {
 		 * value is greater than the given value.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Gt}.
 		 */
 		public Gt greaterThanValue(Object value) {
 			return createGt().greaterThanValue(value);
@@ -190,7 +190,7 @@ public class ComparisonOperators {
 		 * value is greater than or equivalent to the value of the referenced field.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Gte}.
 		 */
 		public Gte greaterThanEqualTo(String fieldReference) {
 			return createGte().greaterThanEqualTo(fieldReference);
@@ -201,7 +201,7 @@ public class ComparisonOperators {
 		 * value is greater than or equivalent to the expression result.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Gte}.
 		 */
 		public Gte greaterThanEqualTo(AggregationExpression expression) {
 			return createGte().greaterThanEqualTo(expression);
@@ -212,7 +212,7 @@ public class ComparisonOperators {
 		 * value is greater than or equivalent to the given value.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Gte}.
 		 */
 		public Gte greaterThanEqualToValue(Object value) {
 			return createGte().greaterThanEqualToValue(value);
@@ -227,7 +227,7 @@ public class ComparisonOperators {
 		 * value is less than the value of the referenced field.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Lt}.
 		 */
 		public Lt lessThan(String fieldReference) {
 			return createLt().lessThan(fieldReference);
@@ -238,7 +238,7 @@ public class ComparisonOperators {
 		 * value is less than the expression result.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Lt}.
 		 */
 		public Lt lessThan(AggregationExpression expression) {
 			return createLt().lessThan(expression);
@@ -249,7 +249,7 @@ public class ComparisonOperators {
 		 * value is less than to the given value.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Lt}.
 		 */
 		public Lt lessThanValue(Object value) {
 			return createLt().lessThanValue(value);
@@ -264,7 +264,7 @@ public class ComparisonOperators {
 		 * value is less than or equivalent to the value of the referenced field.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Lte}.
 		 */
 		public Lte lessThanEqualTo(String fieldReference) {
 			return createLte().lessThanEqualTo(fieldReference);
@@ -275,7 +275,7 @@ public class ComparisonOperators {
 		 * value is less than or equivalent to the expression result.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Lte}.
 		 */
 		public Lte lessThanEqualTo(AggregationExpression expression) {
 			return createLte().lessThanEqualTo(expression);
@@ -285,8 +285,8 @@ public class ComparisonOperators {
 		 * Creates new {@link AggregationExpression} that compares two values and returns {@literal true} when the first
 		 * value is less than or equivalent to the given value.
 		 *
-		 * @param value
-		 * @return
+		 * @param value must not be {@literal null}.
+		 * @return new instance of {@link Lte}.
 		 */
 		public Lte lessThanEqualToValue(Object value) {
 			return createLte().lessThanEqualToValue(value);
@@ -301,7 +301,7 @@ public class ComparisonOperators {
 		 * are not equivalent.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Ne}.
 		 */
 		public Ne notEqualTo(String fieldReference) {
 			return createNe().notEqualTo(fieldReference);
@@ -312,7 +312,7 @@ public class ComparisonOperators {
 		 * are not equivalent.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Ne}.
 		 */
 		public Ne notEqualTo(AggregationExpression expression) {
 			return createNe().notEqualTo(expression);
@@ -323,7 +323,7 @@ public class ComparisonOperators {
 		 * are not equivalent.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Ne}.
 		 */
 		public Ne notEqualToValue(Object value) {
 			return createNe().notEqualToValue(value);
@@ -358,7 +358,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Cmp}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Cmp}.
 		 */
 		public static Cmp valueOf(String fieldReference) {
 
@@ -370,7 +370,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Cmp}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Cmp}.
 		 */
 		public static Cmp valueOf(AggregationExpression expression) {
 
@@ -382,7 +382,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Cmp} with all previously added arguments appending the given one.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Cmp}.
 		 */
 		public Cmp compareTo(String fieldReference) {
 
@@ -394,7 +394,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Cmp} with all previously added arguments appending the given one.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Cmp}.
 		 */
 		public Cmp compareTo(AggregationExpression expression) {
 
@@ -406,7 +406,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Cmp} with all previously added arguments appending the given one.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Cmp}.
 		 */
 		public Cmp compareToValue(Object value) {
 
@@ -435,7 +435,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Eq}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Eq}.
 		 */
 		public static Eq valueOf(String fieldReference) {
 
@@ -447,7 +447,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Eq}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Eq}.
 		 */
 		public static Eq valueOf(AggregationExpression expression) {
 
@@ -459,7 +459,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Eq} with all previously added arguments appending the given one.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Eq}.
 		 */
 		public Eq equalTo(String fieldReference) {
 
@@ -471,7 +471,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Eq} with all previously added arguments appending the given one.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Eq}.
 		 */
 		public Eq equalTo(AggregationExpression expression) {
 
@@ -483,7 +483,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Eq} with all previously added arguments appending the given one.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Eq}.
 		 */
 		public Eq equalToValue(Object value) {
 
@@ -512,7 +512,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Gt}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Gt}.
 		 */
 		public static Gt valueOf(String fieldReference) {
 
@@ -524,7 +524,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Gt}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Gt}.
 		 */
 		public static Gt valueOf(AggregationExpression expression) {
 
@@ -536,7 +536,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Gt} with all previously added arguments appending the given one.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Gt}.
 		 */
 		public Gt greaterThan(String fieldReference) {
 
@@ -548,7 +548,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Gt} with all previously added arguments appending the given one.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Gt}.
 		 */
 		public Gt greaterThan(AggregationExpression expression) {
 
@@ -560,7 +560,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Gt} with all previously added arguments appending the given one.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Gt}.
 		 */
 		public Gt greaterThanValue(Object value) {
 
@@ -589,7 +589,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Lt}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Lt}.
 		 */
 		public static Lt valueOf(String fieldReference) {
 
@@ -601,7 +601,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Lt}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Lt}.
 		 */
 		public static Lt valueOf(AggregationExpression expression) {
 
@@ -613,7 +613,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Lt} with all previously added arguments appending the given one.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Lt}.
 		 */
 		public Lt lessThan(String fieldReference) {
 
@@ -625,7 +625,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Lt} with all previously added arguments appending the given one.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Lt}.
 		 */
 		public Lt lessThan(AggregationExpression expression) {
 
@@ -637,7 +637,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Lt} with all previously added arguments appending the given one.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Lt}.
 		 */
 		public Lt lessThanValue(Object value) {
 
@@ -666,7 +666,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Gte}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Gte}.
 		 */
 		public static Gte valueOf(String fieldReference) {
 
@@ -678,7 +678,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Gte}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Gte}.
 		 */
 		public static Gte valueOf(AggregationExpression expression) {
 
@@ -690,7 +690,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Gte} with all previously added arguments appending the given one.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Gte}.
 		 */
 		public Gte greaterThanEqualTo(String fieldReference) {
 
@@ -702,7 +702,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Gte} with all previously added arguments appending the given one.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Gte}.
 		 */
 		public Gte greaterThanEqualTo(AggregationExpression expression) {
 
@@ -714,7 +714,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Gte} with all previously added arguments appending the given one.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Gte}.
 		 */
 		public Gte greaterThanEqualToValue(Object value) {
 
@@ -743,7 +743,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Lte}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Lte}.
 		 */
 		public static Lte valueOf(String fieldReference) {
 
@@ -755,7 +755,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Lte}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Lte}.
 		 */
 		public static Lte valueOf(AggregationExpression expression) {
 
@@ -767,7 +767,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Lte} with all previously added arguments appending the given one.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Lte}.
 		 */
 		public Lte lessThanEqualTo(String fieldReference) {
 
@@ -779,7 +779,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Lte} with all previously added arguments appending the given one.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Lte}.
 		 */
 		public Lte lessThanEqualTo(AggregationExpression expression) {
 
@@ -791,7 +791,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Lte} with all previously added arguments appending the given one.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Lte}.
 		 */
 		public Lte lessThanEqualToValue(Object value) {
 
@@ -820,7 +820,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Ne}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Ne}.
 		 */
 		public static Ne valueOf(String fieldReference) {
 
@@ -832,7 +832,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Ne}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Ne}.
 		 */
 		public static Ne valueOf(AggregationExpression expression) {
 
@@ -844,7 +844,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Ne} with all previously added arguments appending the given one.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Ne}.
 		 */
 		public Ne notEqualTo(String fieldReference) {
 
@@ -856,7 +856,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Ne} with all previously added arguments appending the given one.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Ne}.
 		 */
 		public Ne notEqualTo(AggregationExpression expression) {
 
@@ -868,7 +868,7 @@ public class ComparisonOperators {
 		 * Creates new {@link Eq} with all previously added arguments appending the given one.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Ne}.
 		 */
 		public Ne notEqualToValue(Object value) {
 

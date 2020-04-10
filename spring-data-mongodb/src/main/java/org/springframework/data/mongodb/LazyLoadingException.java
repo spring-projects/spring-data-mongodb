@@ -25,8 +25,10 @@ public class LazyLoadingException extends UncategorizedDataAccessException {
 	private static final long serialVersionUID = -7089224903873220037L;
 
 	/**
-	 * @param msg
-	 * @param cause
+	 * Constructor for LazyLoadingException.
+	 *
+	 * @param msg the detail message.
+	 * @param cause the exception thrown by underlying data access API.
 	 */
 	public LazyLoadingException(String msg, Throwable cause) {
 		super(msg, cause);

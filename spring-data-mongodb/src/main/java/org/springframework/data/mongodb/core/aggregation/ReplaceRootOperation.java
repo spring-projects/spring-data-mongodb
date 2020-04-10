@@ -346,7 +346,7 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 		/**
 		 * Creates a {@link ReplacementDocument} given {@link ReplacementContributor}.
 		 *
-		 * @param contributor
+		 * @param contributor must not be {@literal null}.
 		 */
 		protected ReplacementDocument(ReplacementContributor contributor) {
 
@@ -362,7 +362,7 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 		 * Creates a {@link ReplacementDocument} given a {@literal value}.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link ReplacementDocument}.
 		 */
 		public static ReplacementDocument valueOf(Object value) {
 			return new ReplacementDocument(new DocumentContributor(value));
@@ -372,7 +372,7 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 		 * Creates a {@link ReplacementDocument} given a single {@literal field} and {@link AggregationExpression}.
 		 *
 		 * @param aggregationExpression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link ReplacementDocument}.
 		 */
 		public static ReplacementDocument forExpression(String field, AggregationExpression aggregationExpression) {
 			return new ReplacementDocument(new ExpressionFieldContributor(Fields.field(field), aggregationExpression));
@@ -382,7 +382,7 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 		 * Creates a {@link ReplacementDocument} given a single {@literal field} and {@literal value}.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link ReplacementDocument}.
 		 */
 		public static ReplacementDocument forSingleValue(String field, Object value) {
 			return new ReplacementDocument(new ValueFieldContributor(Fields.field(field), value));
@@ -438,7 +438,7 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 		 * {@link AggregationOperationContext}.
 		 *
 		 * @param context will never be {@literal null}.
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		Document toDocument(AggregationOperationContext context);
 	}

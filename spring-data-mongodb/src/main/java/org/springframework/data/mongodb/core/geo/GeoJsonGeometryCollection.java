@@ -38,7 +38,7 @@ public class GeoJsonGeometryCollection implements GeoJson<Iterable<GeoJson<?>>> 
 	/**
 	 * Creates a new {@link GeoJsonGeometryCollection} for the given {@link GeoJson} instances.
 	 *
-	 * @param geometries
+	 * @param geometries must not be {@literal null}.
 	 */
 	public GeoJsonGeometryCollection(List<GeoJson<?>> geometries) {
 

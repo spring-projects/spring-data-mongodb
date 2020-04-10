@@ -41,7 +41,7 @@ public @interface DeleteQuery {
 	 * Takes a MongoDB JSON string to define the actual query to be executed. This one will take precedence over the
 	 * method name then. Alias for {@link Query#value}.
 	 *
-	 * @return
+	 * @return empty {@link String} by default.
 	 */
 	@AliasFor(annotation = Query.class)
 	String value() default "";

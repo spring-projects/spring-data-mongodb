@@ -186,7 +186,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 		/**
 		 * Merge Documents by using the MongoDB {@literal _id} field.
 		 *
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		public static UniqueMergeId id() {
 			return ID;
@@ -375,7 +375,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 		/**
 		 * Factory method creating {@link WhenDocumentsDontMatch} from a {@code value} literal.
 		 *
-		 * @param value
+		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link WhenDocumentsDontMatch}.
 		 */
 		public static WhenDocumentsDontMatch whenNotMatchedOf(String value) {
@@ -403,7 +403,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 		/**
 		 * Stop and fail the aggregation operation. Does not revert already performed changes on previous documents.
 		 *
-		 * @return
+		 * @return new instance of {@link WhenDocumentsDontMatch}.
 		 */
 		public static WhenDocumentsDontMatch failWhenNotMatch() {
 			return whenNotMatchedOf("fail");

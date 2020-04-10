@@ -72,7 +72,7 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 	/**
 	 * Registers {@link EntityInstantiators} to customize entity instantiation.
 	 *
-	 * @param instantiators
+	 * @param instantiators can be {@literal null}. Uses default {@link EntityInstantiators} if so.
 	 */
 	public void setInstantiators(@Nullable EntityInstantiators instantiators) {
 		this.instantiators = instantiators == null ? new EntityInstantiators() : instantiators;

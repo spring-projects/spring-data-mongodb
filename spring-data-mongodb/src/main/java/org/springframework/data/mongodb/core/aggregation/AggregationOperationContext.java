@@ -57,20 +57,20 @@ public interface AggregationOperationContext {
 	Document getMappedObject(Document document, @Nullable Class<?> type);
 
 	/**
-	 * Returns a {@link FieldReference} for the given field or {@literal null} if the context does not expose the given
-	 * field.
+	 * Returns a {@link FieldReference} for the given field.
 	 *
 	 * @param field must not be {@literal null}.
-	 * @return
+	 * @return the {@link FieldReference} for the given {@link Field}.
+	 * @throws IllegalArgumentException if the context does not expose a field with the given name
 	 */
 	FieldReference getReference(Field field);
 
 	/**
-	 * Returns the {@link FieldReference} for the field with the given name or {@literal null} if the context does not
-	 * expose a field with the given name.
+	 * Returns the {@link FieldReference} for the field with the given name.
 	 *
 	 * @param name must not be {@literal null} or empty.
-	 * @return
+	 * @return the {@link FieldReference} for the field with given {@literal name}.
+	 * @throws IllegalArgumentException if the context does not expose a field with the given name
 	 */
 	FieldReference getReference(String name);
 

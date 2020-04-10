@@ -218,8 +218,8 @@ public interface JsonSchemaProperty extends JsonSchemaObject {
 	/**
 	 * Obtain a builder to create a {@link JsonSchemaProperty}.
 	 *
-	 * @param identifier
-	 * @return
+	 * @param identifier must not be {@literal null}.
+	 * @return new instance of {@link JsonSchemaPropertyBuilder}.
 	 */
 	static JsonSchemaPropertyBuilder named(String identifier) {
 		return new JsonSchemaPropertyBuilder(identifier);
@@ -248,7 +248,7 @@ public interface JsonSchemaProperty extends JsonSchemaObject {
 		 * Configure a {@link Type} for the property.
 		 *
 		 * @param type must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link IdentifiableJsonSchemaProperty}.
 		 */
 		public IdentifiableJsonSchemaProperty<TypedJsonSchemaObject> ofType(Type type) {
 			return new IdentifiableJsonSchemaProperty<>(identifier, TypedJsonSchemaObject.of(type));
@@ -269,7 +269,7 @@ public interface JsonSchemaProperty extends JsonSchemaObject {
 		 * Configure a {@link TypedJsonSchemaObject} for the property.
 		 *
 		 * @param schemaObject must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link IdentifiableJsonSchemaProperty}.
 		 */
 		public IdentifiableJsonSchemaProperty<TypedJsonSchemaObject> with(TypedJsonSchemaObject schemaObject) {
 			return new IdentifiableJsonSchemaProperty<>(identifier, schemaObject);

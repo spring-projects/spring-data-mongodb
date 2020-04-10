@@ -119,8 +119,8 @@ public interface MongoConverter
 	/**
 	 * Converts the given raw id value into either {@link ObjectId} or {@link String}.
 	 *
-	 * @param id
-	 * @param targetType
+	 * @param id can be {@literal null}.
+	 * @param targetType must not be {@literal null}.
 	 * @return {@literal null} if source {@literal id} is already {@literal null}.
 	 * @since 2.2
 	 */

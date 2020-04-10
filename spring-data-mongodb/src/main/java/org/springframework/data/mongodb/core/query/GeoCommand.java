@@ -67,7 +67,8 @@ public final class GeoCommand {
 	 * Returns the MongoDB command for the given {@link Shape}.
 	 *
 	 * @param shape must not be {@literal null}.
-	 * @return
+	 * @return never {@literal null}.
+	 * @throws IllegalArgumentException for unknown {@link Shape}.
 	 */
 	private String getCommand(Shape shape) {
 
