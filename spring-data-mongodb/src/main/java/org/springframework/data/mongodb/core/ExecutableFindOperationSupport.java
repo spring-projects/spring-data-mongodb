@@ -257,9 +257,9 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		 * @see org.springframework.data.mongodb.core.CursorPreparer#prepare(com.mongodb.clientFindIterable)
 		 */
 		@Override
-		public FindIterable<Document> prepare(FindIterable<Document> cursor) {
+		public FindIterable<Document> prepare(FindIterable<Document> iterable) {
 
-			FindIterable<Document> target = delegate != null ? delegate.prepare(cursor) : cursor;
+			FindIterable<Document> target = delegate != null ? delegate.prepare(iterable) : iterable;
 			return limit.map(target::limit).orElse(target);
 		}
 

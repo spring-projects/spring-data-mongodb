@@ -35,7 +35,7 @@ public class StringOperators {
 	 * Take the array referenced by given {@literal fieldReference}.
 	 *
 	 * @param fieldReference must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link StringOperatorFactory}.
 	 */
 	public static StringOperatorFactory valueOf(String fieldReference) {
 		return new StringOperatorFactory(fieldReference);
@@ -45,7 +45,7 @@ public class StringOperators {
 	 * Take the array referenced by given {@literal fieldReference}.
 	 *
 	 * @param fieldReference must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link StringOperatorFactory}.
 	 */
 	public static StringOperatorFactory valueOf(AggregationExpression fieldReference) {
 		return new StringOperatorFactory(fieldReference);
@@ -88,7 +88,7 @@ public class StringOperators {
 		 * of the referenced field to it.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Concat}.
 		 */
 		public Concat concatValueOf(String fieldReference) {
 
@@ -101,7 +101,7 @@ public class StringOperators {
 		 * of the given {@link AggregationExpression} to it.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Concat}.
 		 */
 		public Concat concatValueOf(AggregationExpression expression) {
 
@@ -114,7 +114,7 @@ public class StringOperators {
 		 * {@literal value} to it.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Concat}.
 		 */
 		public Concat concat(String value) {
 
@@ -130,8 +130,8 @@ public class StringOperators {
 		 * Creates new {@link AggregationExpression} that takes the associated string representation and returns a substring
 		 * starting at a specified index position.
 		 *
-		 * @param start
-		 * @return
+		 * @param start start index number (including)
+		 * @return new instance of {@link Substr}.
 		 */
 		public Substr substring(int start) {
 			return substring(start, -1);
@@ -141,9 +141,9 @@ public class StringOperators {
 		 * Creates new {@link AggregationExpression} that takes the associated string representation and returns a substring
 		 * starting at a specified index position including the specified number of characters.
 		 *
-		 * @param start
-		 * @param nrOfChars
-		 * @return
+		 * @param start start index number (including)
+		 * @param nrOfChars number of characters.
+		 * @return new instance of {@link Substr}.
 		 */
 		public Substr substring(int start, int nrOfChars) {
 			return createSubstr().substring(start, nrOfChars);
@@ -156,7 +156,7 @@ public class StringOperators {
 		/**
 		 * Creates new {@link AggregationExpression} that takes the associated string representation and lowers it.
 		 *
-		 * @return
+		 * @return new instance of {@link ToLower}.
 		 */
 		public ToLower toLower() {
 			return usesFieldRef() ? ToLower.lowerValueOf(fieldReference) : ToLower.lowerValueOf(expression);
@@ -165,7 +165,7 @@ public class StringOperators {
 		/**
 		 * Creates new {@link AggregationExpression} that takes the associated string representation and uppers it.
 		 *
-		 * @return
+		 * @return new instance of {@link ToUpper}.
 		 */
 		public ToUpper toUpper() {
 			return usesFieldRef() ? ToUpper.upperValueOf(fieldReference) : ToUpper.upperValueOf(expression);
@@ -176,7 +176,7 @@ public class StringOperators {
 		 * case-insensitive comparison to the given {@literal value}.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link StrCaseCmp}.
 		 */
 		public StrCaseCmp strCaseCmp(String value) {
 
@@ -189,7 +189,7 @@ public class StringOperators {
 		 * case-insensitive comparison to the referenced {@literal fieldReference}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link StrCaseCmp}.
 		 */
 		public StrCaseCmp strCaseCmpValueOf(String fieldReference) {
 
@@ -202,7 +202,7 @@ public class StringOperators {
 		 * case-insensitive comparison to the result of the given {@link AggregationExpression}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link StrCaseCmp}.
 		 */
 		public StrCaseCmp strCaseCmpValueOf(AggregationExpression expression) {
 
@@ -220,7 +220,7 @@ public class StringOperators {
 		 * occurrence.
 		 *
 		 * @param substring must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link IndexOfBytes}.
 		 */
 		public IndexOfBytes indexOf(String substring) {
 
@@ -234,7 +234,7 @@ public class StringOperators {
 		 * index (zero-based) of the first occurrence.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link IndexOfBytes}.
 		 */
 		public IndexOfBytes indexOf(Field fieldReference) {
 
@@ -248,7 +248,7 @@ public class StringOperators {
 		 * byte index (zero-based) of the first occurrence.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link IndexOfBytes}.
 		 */
 		public IndexOfBytes indexOf(AggregationExpression expression) {
 
@@ -266,7 +266,7 @@ public class StringOperators {
 		 * first occurrence.
 		 *
 		 * @param substring must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link IndexOfCP}.
 		 */
 		public IndexOfCP indexOfCP(String substring) {
 
@@ -280,7 +280,7 @@ public class StringOperators {
 		 * point index (zero-based) of the first occurrence.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link IndexOfCP}.
 		 */
 		public IndexOfCP indexOfCP(Field fieldReference) {
 
@@ -294,7 +294,7 @@ public class StringOperators {
 		 * code point index (zero-based) of the first occurrence.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link IndexOfCP}.
 		 */
 		public IndexOfCP indexOfCP(AggregationExpression expression) {
 
@@ -311,7 +311,7 @@ public class StringOperators {
 		 * substrings based on the given delimiter.
 		 *
 		 * @param delimiter must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Split}.
 		 */
 		public Split split(String delimiter) {
 			return createSplit().split(delimiter);
@@ -322,7 +322,7 @@ public class StringOperators {
 		 * substrings based on the delimiter resulting from the referenced field..
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Split}.
 		 */
 		public Split split(Field fieldReference) {
 			return createSplit().split(fieldReference);
@@ -333,7 +333,7 @@ public class StringOperators {
 		 * substrings based on a delimiter resulting from the given {@link AggregationExpression}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Split}.
 		 */
 		public Split split(AggregationExpression expression) {
 			return createSplit().split(expression);
@@ -347,7 +347,7 @@ public class StringOperators {
 		 * Creates new {@link AggregationExpression} that returns the number of UTF-8 bytes in the associated string
 		 * representation.
 		 *
-		 * @return
+		 * @return new instance of {@link StrLenBytes}.
 		 */
 		public StrLenBytes length() {
 			return usesFieldRef() ? StrLenBytes.stringLengthOf(fieldReference) : StrLenBytes.stringLengthOf(expression);
@@ -357,7 +357,7 @@ public class StringOperators {
 		 * Creates new {@link AggregationExpression} that returns the number of UTF-8 code points in the associated string
 		 * representation.
 		 *
-		 * @return
+		 * @return new instance of {@link StrLenCP}.
 		 */
 		public StrLenCP lengthCP() {
 			return usesFieldRef() ? StrLenCP.stringLengthOfCP(fieldReference) : StrLenCP.stringLengthOfCP(expression);
@@ -368,7 +368,7 @@ public class StringOperators {
 		 * starting at a specified code point index position.
 		 *
 		 * @param codePointStart
-		 * @return
+		 * @return new instance of {@link SubstrCP}.
 		 */
 		public SubstrCP substringCP(int codePointStart) {
 			return substringCP(codePointStart, -1);
@@ -378,9 +378,9 @@ public class StringOperators {
 		 * Creates new {@link AggregationExpression} that takes the associated string representation and returns a substring
 		 * starting at a specified code point index position including the specified number of code points.
 		 *
-		 * @param codePointStart
+		 * @param codePointStart start point (including).
 		 * @param nrOfCodePoints
-		 * @return
+		 * @return new instance of {@link SubstrCP}.
 		 */
 		public SubstrCP substringCP(int codePointStart, int nrOfCodePoints) {
 			return createSubstrCP().substringCP(codePointStart, nrOfCodePoints);
@@ -541,7 +541,7 @@ public class StringOperators {
 		 * Creates new {@link Concat}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Concat}.
 		 */
 		public static Concat valueOf(String fieldReference) {
 
@@ -553,7 +553,7 @@ public class StringOperators {
 		 * Creates new {@link Concat}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Concat}.
 		 */
 		public static Concat valueOf(AggregationExpression expression) {
 
@@ -565,7 +565,7 @@ public class StringOperators {
 		 * Creates new {@link Concat}.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Concat}.
 		 */
 		public static Concat stringValue(String value) {
 
@@ -573,18 +573,36 @@ public class StringOperators {
 			return new Concat(Collections.singletonList(value));
 		}
 
+		/**
+		 * Concat the value of the given field.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link Concat}.
+		 */
 		public Concat concatValueOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Concat(append(Fields.field(fieldReference)));
 		}
 
+		/**
+		 * Concat the value resulting from the given {@link AggregationExpression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Concat}.
+		 */
 		public Concat concatValueOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new Concat(append(expression));
 		}
 
+		/**
+		 * Concat the given value.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return new instance of {@link Concat}.
+		 */
 		public Concat concat(String value) {
 			return new Concat(append(value));
 		}
@@ -610,7 +628,7 @@ public class StringOperators {
 		 * Creates new {@link Substr}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Substr}.
 		 */
 		public static Substr valueOf(String fieldReference) {
 
@@ -622,7 +640,7 @@ public class StringOperators {
 		 * Creates new {@link Substr}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Substr}.
 		 */
 		public static Substr valueOf(AggregationExpression expression) {
 
@@ -630,10 +648,19 @@ public class StringOperators {
 			return new Substr(Collections.singletonList(expression));
 		}
 
+		/**
+		 * @param start start index (including)
+		 * @return new instance of {@link Substr}.
+		 */
 		public Substr substring(int start) {
 			return substring(start, -1);
 		}
 
+		/**
+		 * @param start start index (including)
+		 * @param nrOfChars
+		 * @return new instance of {@link Substr}.
+		 */
 		public Substr substring(int start, int nrOfChars) {
 			return new Substr(append(Arrays.asList(start, nrOfChars)));
 		}
@@ -777,7 +804,7 @@ public class StringOperators {
 		 * Creates new {@link StrCaseCmp}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link StrCaseCmp}.
 		 */
 		public static StrCaseCmp valueOf(AggregationExpression expression) {
 
@@ -789,7 +816,7 @@ public class StringOperators {
 		 * Creates new {@link StrCaseCmp}.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link StrCaseCmp}.
 		 */
 		public static StrCaseCmp stringValue(String value) {
 
@@ -834,7 +861,7 @@ public class StringOperators {
 		 * Start creating a new {@link IndexOfBytes}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SubstringBuilder}.
 		 */
 		public static SubstringBuilder valueOf(String fieldReference) {
 
@@ -846,7 +873,7 @@ public class StringOperators {
 		 * Start creating a new {@link IndexOfBytes}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SubstringBuilder}.
 		 */
 		public static SubstringBuilder valueOf(AggregationExpression expression) {
 
@@ -858,7 +885,7 @@ public class StringOperators {
 		 * Optionally define the substring search start and end position.
 		 *
 		 * @param range must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link IndexOfBytes}.
 		 */
 		public IndexOfBytes within(Range<Long> range) {
 			return new IndexOfBytes(append(AggregationUtils.toRangeValues(range)));
@@ -876,7 +903,7 @@ public class StringOperators {
 			 * Creates a new {@link IndexOfBytes} given {@literal substring}.
 			 *
 			 * @param substring must not be {@literal null}.
-			 * @return
+			 * @return new instance of {@link IndexOfBytes}.
 			 */
 			public IndexOfBytes indexOf(String substring) {
 				return new IndexOfBytes(Arrays.asList(stringExpression, substring));
@@ -886,7 +913,7 @@ public class StringOperators {
 			 * Creates a new {@link IndexOfBytes} given {@link AggregationExpression} that resolves to the substring.
 			 *
 			 * @param expression must not be {@literal null}.
-			 * @return
+			 * @return new instance of {@link IndexOfBytes}.
 			 */
 			public IndexOfBytes indexOf(AggregationExpression expression) {
 				return new IndexOfBytes(Arrays.asList(stringExpression, expression));
@@ -896,7 +923,7 @@ public class StringOperators {
 			 * Creates a new {@link IndexOfBytes} given {@link Field} that resolves to the substring.
 			 *
 			 * @param fieldReference must not be {@literal null}.
-			 * @return
+			 * @return new instance of {@link IndexOfBytes}.
 			 */
 			public IndexOfBytes indexOf(Field fieldReference) {
 				return new IndexOfBytes(Arrays.asList(stringExpression, fieldReference));
@@ -924,7 +951,7 @@ public class StringOperators {
 		 * Start creating a new {@link IndexOfCP}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link IndexOfCP}.
 		 */
 		public static SubstringBuilder valueOf(String fieldReference) {
 
@@ -936,7 +963,7 @@ public class StringOperators {
 		 * Start creating a new {@link IndexOfCP}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link IndexOfCP}.
 		 */
 		public static SubstringBuilder valueOf(AggregationExpression expression) {
 
@@ -948,7 +975,7 @@ public class StringOperators {
 		 * Optionally define the substring search start and end position.
 		 *
 		 * @param range must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link IndexOfCP}.
 		 */
 		public IndexOfCP within(Range<Long> range) {
 			return new IndexOfCP(append(AggregationUtils.toRangeValues(range)));
@@ -966,7 +993,7 @@ public class StringOperators {
 			 * Creates a new {@link IndexOfCP} given {@literal substring}.
 			 *
 			 * @param substring must not be {@literal null}.
-			 * @return
+			 * @return new instance of {@link IndexOfCP}.
 			 */
 			public IndexOfCP indexOf(String substring) {
 				return new IndexOfCP(Arrays.asList(stringExpression, substring));
@@ -976,7 +1003,7 @@ public class StringOperators {
 			 * Creates a new {@link IndexOfCP} given {@link AggregationExpression} that resolves to the substring.
 			 *
 			 * @param expression must not be {@literal null}.
-			 * @return
+			 * @return new instance of {@link IndexOfCP}.
 			 */
 			public IndexOfCP indexOf(AggregationExpression expression) {
 				return new IndexOfCP(Arrays.asList(stringExpression, expression));
@@ -1014,7 +1041,7 @@ public class StringOperators {
 		 * Start creating a new {@link Split}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Split}.
 		 */
 		public static Split valueOf(String fieldReference) {
 
@@ -1026,7 +1053,7 @@ public class StringOperators {
 		 * Start creating a new {@link Split}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Split}.
 		 */
 		public static Split valueOf(AggregationExpression expression) {
 
@@ -1038,7 +1065,7 @@ public class StringOperators {
 		 * Use given {@link String} as delimiter.
 		 *
 		 * @param delimiter must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Split}.
 		 */
 		public Split split(String delimiter) {
 
@@ -1050,7 +1077,7 @@ public class StringOperators {
 		 * Use value of referenced field as delimiter.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Split}.
 		 */
 		public Split split(Field fieldReference) {
 
@@ -1062,7 +1089,7 @@ public class StringOperators {
 		 * Use value resulting from {@link AggregationExpression} as delimiter.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Split}.
 		 */
 		public Split split(AggregationExpression expression) {
 
@@ -1091,7 +1118,7 @@ public class StringOperators {
 		 * Creates new {@link StrLenBytes}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link StrLenBytes}.
 		 */
 		public static StrLenBytes stringLengthOf(String fieldReference) {
 			return new StrLenBytes(Fields.field(fieldReference));
@@ -1101,7 +1128,7 @@ public class StringOperators {
 		 * Creates new {@link StrLenBytes}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link StrLenBytes}.
 		 */
 		public static StrLenBytes stringLengthOf(AggregationExpression expression) {
 
@@ -1130,7 +1157,7 @@ public class StringOperators {
 		 * Creates new {@link StrLenCP}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link StrLenCP}.
 		 */
 		public static StrLenCP stringLengthOfCP(String fieldReference) {
 			return new StrLenCP(Fields.field(fieldReference));
@@ -1140,7 +1167,7 @@ public class StringOperators {
 		 * Creates new {@link StrLenCP}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link StrLenCP}.
 		 */
 		public static StrLenCP stringLengthOfCP(AggregationExpression expression) {
 
@@ -1169,7 +1196,7 @@ public class StringOperators {
 		 * Creates new {@link SubstrCP}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SubstrCP}.
 		 */
 		public static SubstrCP valueOf(String fieldReference) {
 
@@ -1181,7 +1208,7 @@ public class StringOperators {
 		 * Creates new {@link SubstrCP}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SubstrCP}.
 		 */
 		public static SubstrCP valueOf(AggregationExpression expression) {
 

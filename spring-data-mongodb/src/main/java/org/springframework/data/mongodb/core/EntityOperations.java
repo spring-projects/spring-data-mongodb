@@ -66,7 +66,7 @@ class EntityOperations {
 	 * Creates a new {@link Entity} for the given bean.
 	 *
 	 * @param entity must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link Entity}.
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <T> Entity<T> forEntity(T entity) {
@@ -89,7 +89,7 @@ class EntityOperations {
 	 *
 	 * @param entity must not be {@literal null}.
 	 * @param conversionService must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link AdaptibleEntity}.
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <T> AdaptibleEntity<T> forEntity(T entity, ConversionService conversionService) {
@@ -108,6 +108,10 @@ class EntityOperations {
 		return AdaptibleMappedEntity.of(entity, context, conversionService);
 	}
 
+	/**
+	 * @param entityClass should not be null.
+	 * @return the {@link MongoPersistentEntity#getCollection() collection name}.
+	 */
 	public String determineCollectionName(@Nullable Class<?> entityClass) {
 
 		if (entityClass == null) {
@@ -138,7 +142,7 @@ class EntityOperations {
 	 * {@code _id} if no identifier property can be found.
 	 *
 	 * @param type must not be {@literal null}.
-	 * @return
+	 * @return never {@literal null}.
 	 */
 	public String getIdPropertyName(Class<?> type) {
 

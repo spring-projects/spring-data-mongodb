@@ -30,7 +30,7 @@ public class DataTypeOperators {
 	 * Return the BSON data type of the given {@literal field}.
 	 *
 	 * @param fieldReference must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link Type}.
 	 */
 	public static Type typeOf(String fieldReference) {
 		return Type.typeOf(fieldReference);
@@ -56,7 +56,7 @@ public class DataTypeOperators {
 		 * Creates new {@link Type}.
 		 *
 		 * @param field must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Type}.
 		 */
 		public static Type typeOf(String field) {
 

@@ -499,7 +499,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * Root entry method into write conversion. Adds a type discriminator to the {@link Document}. Shouldn't be called for
 	 * nested conversions.
 	 *
-	 * @see org.springframework.data.mongodb.core.convert.MongoWriter#write(java.lang.Object, com.mongodb.Document)
+	 * @see org.springframework.data.mongodb.core.convert.MongoWriter#write(java.lang.Object, java.lang.Object)
 	 */
 	public void write(Object obj, Bson bson) {
 

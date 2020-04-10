@@ -65,8 +65,8 @@ public class TextQuery extends Query {
 	 * For a full list of supported languages see the mongdodb reference manual for
 	 * <a href="https://docs.mongodb.org/manual/reference/text-search-languages/">Text Search Languages</a>.
 	 *
-	 * @param wordsAndPhrases
-	 * @param locale
+	 * @param wordsAndPhrases must not be {@literal null}.
+	 * @param locale can be {@literal null}.
 	 */
 	public TextQuery(String wordsAndPhrases, @Nullable Locale locale) {
 		this(wordsAndPhrases, locale != null ? locale.getLanguage() : (String) null);
@@ -75,7 +75,7 @@ public class TextQuery extends Query {
 	/**
 	 * Creates new {@link TextQuery} for given {@link TextCriteria}.
 	 *
-	 * @param criteria.
+	 * @param criteria must not be {@literal null}.
 	 */
 	public TextQuery(TextCriteria criteria) {
 		super(criteria);
@@ -84,8 +84,8 @@ public class TextQuery extends Query {
 	/**
 	 * Creates new {@link TextQuery} searching for given {@link TextCriteria}.
 	 *
-	 * @param criteria
-	 * @return
+	 * @param criteria must not be {@literal null}.
+	 * @return new instance of {@link TextQuery}.
 	 */
 	public static TextQuery queryText(TextCriteria criteria) {
 		return new TextQuery(criteria);
@@ -95,7 +95,7 @@ public class TextQuery extends Query {
 	 * Add sorting by text score. Will also add text score to returned fields.
 	 *
 	 * @see TextQuery#includeScore()
-	 * @return
+	 * @return this.
 	 */
 	public TextQuery sortByScore() {
 
@@ -107,7 +107,7 @@ public class TextQuery extends Query {
 	/**
 	 * Add field {@literal score} holding the documents textScore to the returned fields.
 	 *
-	 * @return
+	 * @return this.
 	 */
 	public TextQuery includeScore() {
 
@@ -118,8 +118,8 @@ public class TextQuery extends Query {
 	/**
 	 * Include text search document score in returned fields using the given fieldname.
 	 *
-	 * @param fieldname
-	 * @return
+	 * @param fieldname must not be {@literal null}.
+	 * @return this.
 	 */
 	public TextQuery includeScore(String fieldname) {
 
@@ -131,7 +131,7 @@ public class TextQuery extends Query {
 	/**
 	 * Set the fieldname used for scoring.
 	 *
-	 * @param fieldName
+	 * @param fieldName must not be {@literal null}.
 	 */
 	public void setScoreFieldName(String fieldName) {
 		this.scoreFieldName = fieldName;
@@ -140,7 +140,7 @@ public class TextQuery extends Query {
 	/**
 	 * Get the fieldname used for scoring
 	 *
-	 * @return
+	 * @return never {@literal null}.
 	 */
 	public String getScoreFieldName() {
 		return scoreFieldName;

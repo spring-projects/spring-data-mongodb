@@ -47,7 +47,7 @@ public abstract class AbstractDeleteEvent<T> extends MongoMappingEvent<Document>
 	/**
 	 * Returns the type for which the {@link AbstractDeleteEvent} shall be invoked for.
 	 *
-	 * @return
+	 * @return can be {@literal null}.
 	 */
 	@Nullable
 	public Class<T> getType() {

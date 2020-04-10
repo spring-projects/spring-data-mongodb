@@ -81,7 +81,7 @@ public final class IndexField {
 	 * Creates a geo {@link IndexField} for the given key.
 	 *
 	 * @param key must not be {@literal null} or empty.
-	 * @return
+	 * @return new instance of {@link IndexField}.
 	 */
 	public static IndexField geo(String key) {
 		return new IndexField(key, null, Type.GEO);

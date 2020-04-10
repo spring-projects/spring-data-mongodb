@@ -79,7 +79,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * The collection name used for the specified class by this template.
 	 *
 	 * @param entityClass must not be {@literal null}.
-	 * @return
+	 * @return never {@literal null}.
 	 */
 	String getCollectionName(Class<?> entityClass);
 
@@ -363,7 +363,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	/**
 	 * Returns the {@link ScriptOperations} that can be performed on {@link com.mongodb.client.MongoDatabase} level.
 	 *
-	 * @return
+	 * @return never {@literal null}.
 	 * @since 1.7
 	 * @deprecated since 2.2. The {@code eval} command has been removed without replacement in MongoDB Server 4.2.0.
 	 */
@@ -1557,7 +1557,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	/**
 	 * Returns the underlying {@link MongoConverter}.
 	 *
-	 * @return
+	 * @return never {@literal null}.
 	 */
 	MongoConverter getConverter();
 }

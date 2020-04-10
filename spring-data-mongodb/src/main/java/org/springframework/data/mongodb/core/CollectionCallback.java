@@ -29,7 +29,7 @@ import com.mongodb.client.MongoCollection;
  * @author Grame Rocher
  * @author Oliver Gierke
  * @author John Brisbin
- * @auhtor Christoph Strobl
+ * @author Christoph Strobl
  * @since 1.0
  */
 public interface CollectionCallback<T> {

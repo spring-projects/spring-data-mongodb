@@ -67,10 +67,10 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	/**
 	 * Creates a new {@link BasicMongoPersistentProperty}.
 	 *
-	 * @param property
-	 * @param owner
-	 * @param simpleTypeHolder
-	 * @param fieldNamingStrategy
+	 * @param property the source property.
+	 * @param owner the owing entity.
+	 * @param simpleTypeHolder must not be {@literal null}.
+	 * @param fieldNamingStrategy can be {@literal null}.
 	 */
 	public BasicMongoPersistentProperty(Property property, MongoPersistentEntity<?> owner,
 			SimpleTypeHolder simpleTypeHolder, @Nullable FieldNamingStrategy fieldNamingStrategy) {

@@ -37,7 +37,7 @@ public abstract class AbstractMonitor {
 	private final MongoClient mongoClient;
 
 	/**
-	 * @param mongoClient
+	 * @param mongoClient must not be {@literal null}.
 	 * @since 2.2
 	 */
 	protected AbstractMonitor(MongoClient mongoClient) {

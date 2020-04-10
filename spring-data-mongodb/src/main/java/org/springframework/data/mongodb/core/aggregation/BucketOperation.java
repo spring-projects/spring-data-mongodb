@@ -110,7 +110,7 @@ public class BucketOperation extends BucketOperationSupport<BucketOperation, Buc
 	 * Configures a default bucket {@literal literal} and return a new {@link BucketOperation}.
 	 *
 	 * @param literal must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link BucketOperation}.
 	 */
 	public BucketOperation withDefaultBucket(Object literal) {
 
@@ -123,7 +123,7 @@ public class BucketOperation extends BucketOperationSupport<BucketOperation, Buc
 	 * preserved and the new {@literal boundaries} are appended.
 	 *
 	 * @param boundaries must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link BucketOperation}.
 	 */
 	public BucketOperation withBoundaries(Object... boundaries) {
 
@@ -209,7 +209,7 @@ public class BucketOperation extends BucketOperationSupport<BucketOperation, Buc
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @param operation must not be {@literal null}.
-		 * @param parameters
+		 * @param parameters must not be {@literal null}.
 		 */
 		protected ExpressionBucketOperationBuilder(String expression, BucketOperation operation, Object[] parameters) {
 			super(expression, operation, parameters);

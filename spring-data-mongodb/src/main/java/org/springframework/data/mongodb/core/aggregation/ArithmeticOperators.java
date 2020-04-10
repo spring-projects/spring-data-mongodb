@@ -38,7 +38,7 @@ public class ArithmeticOperators {
 	 * Take the field referenced by given {@literal fieldReference}.
 	 *
 	 * @param fieldReference must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link ArithmeticOperatorFactory}.
 	 */
 	public static ArithmeticOperatorFactory valueOf(String fieldReference) {
 		return new ArithmeticOperatorFactory(fieldReference);
@@ -48,7 +48,7 @@ public class ArithmeticOperators {
 	 * Take the value resulting from the given {@link AggregationExpression}.
 	 *
 	 * @param expression must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link ArithmeticOperatorFactory}.
 	 */
 	public static ArithmeticOperatorFactory valueOf(AggregationExpression expression) {
 		return new ArithmeticOperatorFactory(expression);
@@ -89,7 +89,7 @@ public class ArithmeticOperators {
 		/**
 		 * Creates new {@link AggregationExpression} that returns the absolute value of the associated number.
 		 *
-		 * @return
+		 * @return new instance of {@link Abs}.
 		 */
 		public Abs abs() {
 			return usesFieldRef() ? Abs.absoluteValueOf(fieldReference) : Abs.absoluteValueOf(expression);
@@ -100,7 +100,7 @@ public class ArithmeticOperators {
 		 * number.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Add}.
 		 */
 		public Add add(String fieldReference) {
 
@@ -113,7 +113,7 @@ public class ArithmeticOperators {
 		 * {@link AggregationExpression} to the associated number.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Add}.
 		 */
 		public Add add(AggregationExpression expression) {
 
@@ -125,7 +125,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link AggregationExpression} that adds the given {@literal value} to the associated number.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Add}.
 		 */
 		public Add add(Number value) {
 
@@ -141,7 +141,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link AggregationExpression} that returns the smallest integer greater than or equal to the
 		 * assoicated number.
 		 *
-		 * @return
+		 * @return new instance of {@link Ceil}.
 		 */
 		public Ceil ceil() {
 			return usesFieldRef() ? Ceil.ceilValueOf(fieldReference) : Ceil.ceilValueOf(expression);
@@ -152,7 +152,7 @@ public class ArithmeticOperators {
 		 * {@literal fieldReference}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Divide}.
 		 */
 		public Divide divideBy(String fieldReference) {
 
@@ -165,7 +165,7 @@ public class ArithmeticOperators {
 		 * {@literal expression}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Divide}.
 		 */
 		public Divide divideBy(AggregationExpression expression) {
 
@@ -176,8 +176,8 @@ public class ArithmeticOperators {
 		/**
 		 * Creates new {@link AggregationExpression} that divides the associated number by given {@literal value}.
 		 *
-		 * @param value
-		 * @return
+		 * @param value must not be {@literal null}.
+		 * @return new instance of {@link Divide}.
 		 */
 		public Divide divideBy(Number value) {
 
@@ -192,7 +192,7 @@ public class ArithmeticOperators {
 		/**
 		 * Creates new {@link AggregationExpression} that raises Euler’s number (i.e. e ) on the associated number.
 		 *
-		 * @return
+		 * @return new instance of {@link Exp}.
 		 */
 		public Exp exp() {
 			return usesFieldRef() ? Exp.expValueOf(fieldReference) : Exp.expValueOf(expression);
@@ -202,7 +202,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link AggregationExpression} that returns the largest integer less than or equal to the associated
 		 * number.
 		 *
-		 * @return
+		 * @return new instance of {@link Floor}.
 		 */
 		public Floor floor() {
 			return usesFieldRef() ? Floor.floorValueOf(fieldReference) : Floor.floorValueOf(expression);
@@ -212,7 +212,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link AggregationExpression} that calculates the natural logarithm ln (i.e loge) of the assoicated
 		 * number.
 		 *
-		 * @return
+		 * @return new instance of {@link Ln}.
 		 */
 		public Ln ln() {
 			return usesFieldRef() ? Ln.lnValueOf(fieldReference) : Ln.lnValueOf(expression);
@@ -223,7 +223,7 @@ public class ArithmeticOperators {
 		 * referenced via {@literal fieldReference}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Log}.
 		 */
 		public Log log(String fieldReference) {
 
@@ -236,7 +236,7 @@ public class ArithmeticOperators {
 		 * extracted by given {@link AggregationExpression}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Log}.
 		 */
 		public Log log(AggregationExpression expression) {
 
@@ -249,7 +249,7 @@ public class ArithmeticOperators {
 		 * {@literal base}.
 		 *
 		 * @param base must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Log}.
 		 */
 		public Log log(Number base) {
 
@@ -264,7 +264,7 @@ public class ArithmeticOperators {
 		/**
 		 * Creates new {@link AggregationExpression} that calculates the log base 10 for the associated number.
 		 *
-		 * @return
+		 * @return new instance of {@link Log10}.
 		 */
 		public Log10 log10() {
 			return usesFieldRef() ? Log10.log10ValueOf(fieldReference) : Log10.log10ValueOf(expression);
@@ -275,7 +275,7 @@ public class ArithmeticOperators {
 		 * remainder.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Mod}.
 		 */
 		public Mod mod(String fieldReference) {
 
@@ -288,7 +288,7 @@ public class ArithmeticOperators {
 		 * remainder.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Mod}.
 		 */
 		public Mod mod(AggregationExpression expression) {
 
@@ -301,7 +301,7 @@ public class ArithmeticOperators {
 		 * remainder.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Mod}.
 		 */
 		public Mod mod(Number value) {
 
@@ -317,7 +317,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link AggregationExpression} that multiplies the associated number with another.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Multiply}.
 		 */
 		public Multiply multiplyBy(String fieldReference) {
 
@@ -329,7 +329,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link AggregationExpression} that multiplies the associated number with another.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Multiply}.
 		 */
 		public Multiply multiplyBy(AggregationExpression expression) {
 
@@ -341,7 +341,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link AggregationExpression} that multiplies the associated number with another.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Multiply}.
 		 */
 		public Multiply multiplyBy(Number value) {
 
@@ -357,7 +357,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link AggregationExpression} that raises the associated number to the specified exponent.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Pow}.
 		 */
 		public Pow pow(String fieldReference) {
 
@@ -369,7 +369,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link AggregationExpression} that raises the associated number to the specified exponent.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Pow}.
 		 */
 		public Pow pow(AggregationExpression expression) {
 
@@ -381,7 +381,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link AggregationExpression} that raises the associated number to the specified exponent.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Pow}.
 		 */
 		public Pow pow(Number value) {
 
@@ -396,7 +396,7 @@ public class ArithmeticOperators {
 		/**
 		 * Creates new {@link AggregationExpression} that calculates the square root of the associated number.
 		 *
-		 * @return
+		 * @return new instance of {@link Sqrt}.
 		 */
 		public Sqrt sqrt() {
 			return usesFieldRef() ? Sqrt.sqrtOf(fieldReference) : Sqrt.sqrtOf(expression);
@@ -406,7 +406,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link AggregationExpression} that subtracts value of given from the associated number.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Subtract}.
 		 */
 		public Subtract subtract(String fieldReference) {
 
@@ -418,7 +418,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link AggregationExpression} that subtracts value of given from the associated number.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Subtract}.
 		 */
 		public Subtract subtract(AggregationExpression expression) {
 
@@ -429,8 +429,8 @@ public class ArithmeticOperators {
 		/**
 		 * Creates new {@link AggregationExpression} that subtracts value from the associated number.
 		 *
-		 * @param value
-		 * @return
+		 * @param value must not be {@literal null}.
+		 * @return new instance of {@link Subtract}.
 		 */
 		public Subtract subtract(Number value) {
 
@@ -445,7 +445,7 @@ public class ArithmeticOperators {
 		/**
 		 * Creates new {@link AggregationExpression} that truncates a number to its integer.
 		 *
-		 * @return
+		 * @return new instance of {@link Trunc}.
 		 */
 		public Trunc trunc() {
 			return usesFieldRef() ? Trunc.truncValueOf(fieldReference) : Trunc.truncValueOf(expression);
@@ -454,7 +454,7 @@ public class ArithmeticOperators {
 		/**
 		 * Creates new {@link AggregationExpression} that calculates and returns the sum of numeric values.
 		 *
-		 * @return
+		 * @return new instance of {@link Sum}.
 		 */
 		public Sum sum() {
 			return usesFieldRef() ? AccumulatorOperators.Sum.sumOf(fieldReference)
@@ -464,7 +464,7 @@ public class ArithmeticOperators {
 		/**
 		 * Creates new {@link AggregationExpression} that returns the average value of the numeric values.
 		 *
-		 * @return
+		 * @return new instance of {@link Avg}.
 		 */
 		public Avg avg() {
 			return usesFieldRef() ? AccumulatorOperators.Avg.avgOf(fieldReference)
@@ -474,7 +474,7 @@ public class ArithmeticOperators {
 		/**
 		 * Creates new {@link AggregationExpression} that returns the maximum value.
 		 *
-		 * @return
+		 * @return new instance of {@link Max}.
 		 */
 		public Max max() {
 			return usesFieldRef() ? AccumulatorOperators.Max.maxOf(fieldReference)
@@ -484,7 +484,7 @@ public class ArithmeticOperators {
 		/**
 		 * Creates new {@link AggregationExpression} that returns the minimum value.
 		 *
-		 * @return
+		 * @return new instance of {@link Min}.
 		 */
 		public Min min() {
 			return usesFieldRef() ? AccumulatorOperators.Min.minOf(fieldReference)
@@ -494,7 +494,7 @@ public class ArithmeticOperators {
 		/**
 		 * Creates new {@link AggregationExpression} that calculates the population standard deviation of the input values.
 		 *
-		 * @return
+		 * @return new instance of {@link StdDevPop}.
 		 */
 		public StdDevPop stdDevPop() {
 			return usesFieldRef() ? AccumulatorOperators.StdDevPop.stdDevPopOf(fieldReference)
@@ -504,7 +504,7 @@ public class ArithmeticOperators {
 		/**
 		 * Creates new {@link AggregationExpression} that calculates the sample standard deviation of the input values.
 		 *
-		 * @return
+		 * @return new instance of {@link StdDevSamp}.
 		 */
 		public StdDevSamp stdDevSamp() {
 			return usesFieldRef() ? AccumulatorOperators.StdDevSamp.stdDevSampOf(fieldReference)
@@ -557,7 +557,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Abs}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Abs}.
 		 */
 		public static Abs absoluteValueOf(String fieldReference) {
 
@@ -569,7 +569,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Abs}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Abs}.
 		 */
 		public static Abs absoluteValueOf(AggregationExpression expression) {
 
@@ -581,7 +581,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Abs}.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Abs}.
 		 */
 		public static Abs absoluteValueOf(Number value) {
 
@@ -610,7 +610,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Add}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Add}.
 		 */
 		public static Add valueOf(String fieldReference) {
 
@@ -622,7 +622,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Add}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Add}.
 		 */
 		public static Add valueOf(AggregationExpression expression) {
 
@@ -634,7 +634,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Add}.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Add}.
 		 */
 		public static Add valueOf(Number value) {
 
@@ -642,18 +642,36 @@ public class ArithmeticOperators {
 			return new Add(Collections.singletonList(value));
 		}
 
+		/**
+		 * Add the value stored at the given field.
+		 * 
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link Add}.
+		 */
 		public Add add(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Add(append(Fields.field(fieldReference)));
 		}
 
+		/**
+		 * Add the evaluation result of the given {@link AggregationExpression}.
+		 * 
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Add}.
+		 */
 		public Add add(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new Add(append(expression));
 		}
 
+		/**
+		 * Add the given value.
+		 * 
+		 * @param value must not be {@literal null}.
+		 * @return new instance of {@link Add}.
+		 */
 		public Add add(Number value) {
 			return new Add(append(value));
 		}
@@ -679,7 +697,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Ceil}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Ceil}.
 		 */
 		public static Ceil ceilValueOf(String fieldReference) {
 
@@ -691,7 +709,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Ceil}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Ceil}.
 		 */
 		public static Ceil ceilValueOf(AggregationExpression expression) {
 
@@ -703,7 +721,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Ceil}.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Ceil}.
 		 */
 		public static Ceil ceilValueOf(Number value) {
 
@@ -732,7 +750,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Divide}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Divide}.
 		 */
 		public static Divide valueOf(String fieldReference) {
 
@@ -744,7 +762,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Divide}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Divide}.
 		 */
 		public static Divide valueOf(AggregationExpression expression) {
 
@@ -756,7 +774,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Divide}.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Divide}.
 		 */
 		public static Divide valueOf(Number value) {
 
@@ -764,18 +782,36 @@ public class ArithmeticOperators {
 			return new Divide(Collections.singletonList(value));
 		}
 
+		/**
+		 * Divide by the value stored at the given field.
+		 * 
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link Divide}.
+		 */
 		public Divide divideBy(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Divide(append(Fields.field(fieldReference)));
 		}
 
+		/**
+		 * Divide by the evaluation results of the given {@link AggregationExpression}.
+		 * 
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Divide}.
+		 */
 		public Divide divideBy(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new Divide(append(expression));
 		}
 
+		/**
+		 * Divide by the given value.
+		 * 
+		 * @param value must not be {@literal null}.
+		 * @return new instance of {@link Divide}.
+		 */
 		public Divide divideBy(Number value) {
 			return new Divide(append(value));
 		}
@@ -801,7 +837,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Exp}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Exp}.
 		 */
 		public static Exp expValueOf(String fieldReference) {
 
@@ -813,7 +849,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Exp}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Exp}.
 		 */
 		public static Exp expValueOf(AggregationExpression expression) {
 
@@ -825,7 +861,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Exp}.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Exp}.
 		 */
 		public static Exp expValueOf(Number value) {
 
@@ -854,7 +890,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Floor}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Floor}.
 		 */
 		public static Floor floorValueOf(String fieldReference) {
 
@@ -866,7 +902,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Floor}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Floor}.
 		 */
 		public static Floor floorValueOf(AggregationExpression expression) {
 
@@ -878,7 +914,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Floor}.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Floor}.
 		 */
 		public static Floor floorValueOf(Number value) {
 
@@ -907,7 +943,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Ln}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Ln}.
 		 */
 		public static Ln lnValueOf(String fieldReference) {
 
@@ -919,7 +955,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Ln}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Ln}.
 		 */
 		public static Ln lnValueOf(AggregationExpression expression) {
 
@@ -931,7 +967,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Ln}.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Ln}.
 		 */
 		public static Ln lnValueOf(Number value) {
 
@@ -960,7 +996,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Min}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Log}.
 		 */
 		public static Log valueOf(String fieldReference) {
 
@@ -972,7 +1008,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Log}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Log}.
 		 */
 		public static Log valueOf(AggregationExpression expression) {
 
@@ -992,18 +1028,36 @@ public class ArithmeticOperators {
 			return new Log(Collections.singletonList(value));
 		}
 
+		/**
+		 * Use the value stored at the given field as log base.
+		 * 
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link Log}.
+		 */
 		public Log log(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Log(append(Fields.field(fieldReference)));
 		}
 
+		/**
+		 * Use the evaluated value of the given {@link AggregationExpression} as log base.
+		 * 
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Log}.
+		 */
 		public Log log(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new Log(append(expression));
 		}
 
+		/**
+		 * Use the given value as log base.
+		 * 
+		 * @param base must not be {@literal null}.
+		 * @return new instance of {@link Log}.
+		 */
 		public Log log(Number base) {
 			return new Log(append(base));
 		}
@@ -1029,7 +1083,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Log10}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Log10}.
 		 */
 		public static Log10 log10ValueOf(String fieldReference) {
 
@@ -1041,7 +1095,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Log10}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Log10}.
 		 */
 		public static Log10 log10ValueOf(AggregationExpression expression) {
 
@@ -1053,7 +1107,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Log10}.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Log10}.
 		 */
 		public static Log10 log10ValueOf(Number value) {
 
@@ -1082,7 +1136,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Mod}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Mod}.
 		 */
 		public static Mod valueOf(String fieldReference) {
 
@@ -1094,7 +1148,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Mod}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Mod}.
 		 */
 		public static Mod valueOf(AggregationExpression expression) {
 
@@ -1106,7 +1160,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Mod}.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Mod}.
 		 */
 		public static Mod valueOf(Number value) {
 
@@ -1114,18 +1168,36 @@ public class ArithmeticOperators {
 			return new Mod(Collections.singletonList(value));
 		}
 
+		/**
+		 * Use the value stored at the given field as mod base.
+		 * 
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link Mod}.
+		 */
 		public Mod mod(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Mod(append(Fields.field(fieldReference)));
 		}
 
+		/**
+		 * Use evaluated value of the given {@link AggregationExpression} as mod base.
+		 * 
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Mod}.
+		 */
 		public Mod mod(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new Mod(append(expression));
 		}
 
+		/**
+		 * Use the given value as mod base.
+		 * 
+		 * @param base must not be {@literal null}.
+		 * @return new instance of {@link Mod}.
+		 */
 		public Mod mod(Number base) {
 			return new Mod(append(base));
 		}
@@ -1151,7 +1223,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Multiply}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Multiply}.
 		 */
 		public static Multiply valueOf(String fieldReference) {
 
@@ -1163,7 +1235,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Multiply}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Multiply}.
 		 */
 		public static Multiply valueOf(AggregationExpression expression) {
 
@@ -1175,7 +1247,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Multiply}.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Multiply}.
 		 */
 		public static Multiply valueOf(Number value) {
 
@@ -1183,18 +1255,36 @@ public class ArithmeticOperators {
 			return new Multiply(Collections.singletonList(value));
 		}
 
+		/**
+		 * Multiply by the value stored at the given field.
+		 * 
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link Multiply}.
+		 */
 		public Multiply multiplyBy(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Multiply(append(Fields.field(fieldReference)));
 		}
 
+		/**
+		 * Multiply by the evaluated value of the given {@link AggregationExpression}.
+		 * 
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Multiply}.
+		 */
 		public Multiply multiplyBy(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new Multiply(append(expression));
 		}
 
+		/**
+		 * Multiply by the given value.
+		 * 
+		 * @param value must not be {@literal null}.
+		 * @return new instance of {@link Multiply}.
+		 */
 		public Multiply multiplyBy(Number value) {
 			return new Multiply(append(value));
 		}
@@ -1252,18 +1342,36 @@ public class ArithmeticOperators {
 			return new Pow(Collections.singletonList(value));
 		}
 
+		/**
+		 * Pow by the value stored at the given field.
+		 * 
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link Pow}.
+		 */
 		public Pow pow(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Pow(append(Fields.field(fieldReference)));
 		}
 
+		/**
+		 * Pow by the evaluated value of the given {@link AggregationExpression}.
+		 * 
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Pow}.
+		 */
 		public Pow pow(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new Pow(append(expression));
 		}
 
+		/**
+		 * Pow by the given value.
+		 * 
+		 * @param value must not be {@literal null}.
+		 * @return new instance of {@link Pow}.
+		 */
 		public Pow pow(Number value) {
 			return new Pow(append(value));
 		}
@@ -1289,7 +1397,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Sqrt}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Sqrt}.
 		 */
 		public static Sqrt sqrtOf(String fieldReference) {
 
@@ -1301,7 +1409,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Sqrt}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Sqrt}.
 		 */
 		public static Sqrt sqrtOf(AggregationExpression expression) {
 
@@ -1313,7 +1421,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Sqrt}.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Sqrt}.
 		 */
 		public static Sqrt sqrtOf(Number value) {
 
@@ -1342,7 +1450,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Subtract}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Subtract}.
 		 */
 		public static Subtract valueOf(String fieldReference) {
 
@@ -1354,7 +1462,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Subtract}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Subtract}.
 		 */
 		public static Subtract valueOf(AggregationExpression expression) {
 
@@ -1366,7 +1474,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Subtract}.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Subtract}.
 		 */
 		public static Subtract valueOf(Number value) {
 
@@ -1374,18 +1482,36 @@ public class ArithmeticOperators {
 			return new Subtract(Collections.singletonList(value));
 		}
 
+		/**
+		 * Subtract the value stored at the given field.
+		 * 
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link Pow}.
+		 */
 		public Subtract subtract(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 			return new Subtract(append(Fields.field(fieldReference)));
 		}
 
+		/**
+		 * Subtract the evaluated value of the given {@link AggregationExpression}.
+		 * 
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Pow}.
+		 */
 		public Subtract subtract(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new Subtract(append(expression));
 		}
 
+		/**
+		 * Subtract the given value.
+		 * 
+		 * @param value must not be {@literal null}.
+		 * @return new instance of {@link Pow}.
+		 */
 		public Subtract subtract(Number value) {
 			return new Subtract(append(value));
 		}
@@ -1411,7 +1537,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Trunc}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Trunc}.
 		 */
 		public static Trunc truncValueOf(String fieldReference) {
 
@@ -1423,7 +1549,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Trunc}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Trunc}.
 		 */
 		public static Trunc truncValueOf(AggregationExpression expression) {
 
@@ -1435,7 +1561,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link Trunc}.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Trunc}.
 		 */
 		public static Trunc truncValueOf(Number value) {
 
@@ -1502,7 +1628,7 @@ public class ArithmeticOperators {
 		/**
 		 * The place to round to. Can be between -20 and 100, exclusive.
 		 *
-		 * @param place
+		 * @param place value between -20 and 100, exclusive.
 		 * @return new instance of {@link Round}.
 		 */
 		public Round place(int place) {

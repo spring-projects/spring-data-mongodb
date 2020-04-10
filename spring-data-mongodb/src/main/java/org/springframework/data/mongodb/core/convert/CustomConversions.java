@@ -46,7 +46,7 @@ public class CustomConversions extends MongoCustomConversions {
 	/**
 	 * Creates a new {@link CustomConversions} instance registering the given converters.
 	 *
-	 * @param converters
+	 * @param converters must not be {@literal null}.
 	 */
 	public CustomConversions(List<?> converters) {
 		super(converters);

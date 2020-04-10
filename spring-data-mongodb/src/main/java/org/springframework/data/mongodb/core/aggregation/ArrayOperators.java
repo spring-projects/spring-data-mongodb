@@ -43,7 +43,7 @@ public class ArrayOperators {
 	 * Take the array referenced by given {@literal fieldReference}.
 	 *
 	 * @param fieldReference must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link ArrayOperatorFactory}.
 	 */
 	public static ArrayOperatorFactory arrayOf(String fieldReference) {
 		return new ArrayOperatorFactory(fieldReference);
@@ -53,7 +53,7 @@ public class ArrayOperators {
 	 * Take the array referenced resulting from the given {@link AggregationExpression}.
 	 *
 	 * @param expression must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link ArrayOperatorFactory}.
 	 */
 	public static ArrayOperatorFactory arrayOf(AggregationExpression expression) {
 		return new ArrayOperatorFactory(expression);
@@ -123,8 +123,8 @@ public class ArrayOperators {
 		 * Creates new {@link AggregationExpression} that takes the associated array and returns the element at the
 		 * specified array {@literal position}.
 		 *
-		 * @param position
-		 * @return
+		 * @param position the element index.
+		 * @return new instance of {@link ArrayElemAt}.
 		 */
 		public ArrayElemAt elementAt(int position) {
 			return createArrayElemAt().elementAt(position);
@@ -135,7 +135,7 @@ public class ArrayOperators {
 		 * resulting form the given {@literal expression}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link ArrayElemAt}.
 		 */
 		public ArrayElemAt elementAt(AggregationExpression expression) {
 
@@ -148,7 +148,7 @@ public class ArrayOperators {
 		 * defined by the referenced {@literal field}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link ArrayElemAt}.
 		 */
 		public ArrayElemAt elementAt(String fieldReference) {
 
@@ -170,7 +170,7 @@ public class ArrayOperators {
 		 * {@literal arrayFieldReference} to it.
 		 *
 		 * @param arrayFieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link ConcatArrays}.
 		 */
 		public ConcatArrays concat(String arrayFieldReference) {
 
@@ -183,7 +183,7 @@ public class ArrayOperators {
 		 * the given {@literal expression} to it.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link ConcatArrays}.
 		 */
 		public ConcatArrays concat(AggregationExpression expression) {
 
@@ -204,7 +204,7 @@ public class ArrayOperators {
 		 * Creates new {@link AggregationExpression} that takes the associated array and selects a subset of the array to
 		 * return based on the specified condition.
 		 *
-		 * @return
+		 * @return new instance of {@link AsBuilder} to create a {@link Filter}.
 		 */
 		public AsBuilder filter() {
 
@@ -219,7 +219,7 @@ public class ArrayOperators {
 		/**
 		 * Creates new {@link AggregationExpression} that takes the associated array and an check if its an array.
 		 *
-		 * @return
+		 * @return new instance of {@link IsArray}.
 		 */
 		public IsArray isArray() {
 
@@ -231,7 +231,7 @@ public class ArrayOperators {
 		/**
 		 * Creates new {@link AggregationExpression} that takes the associated array and retrieves its length.
 		 *
-		 * @return
+		 * @return new instance of {@link Size}.
 		 */
 		public Size length() {
 
@@ -245,7 +245,7 @@ public class ArrayOperators {
 		/**
 		 * Creates new {@link AggregationExpression} that takes the associated array and selects a subset from it.
 		 *
-		 * @return
+		 * @return new instance of {@link Slice}.
 		 */
 		public Slice slice() {
 
@@ -261,7 +261,7 @@ public class ArrayOperators {
 		 * value and returns the array index (zero-based) of the first occurrence.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link IndexOfArray}.
 		 */
 		public IndexOfArray indexOf(Object value) {
 
@@ -276,7 +276,7 @@ public class ArrayOperators {
 		/**
 		 * Creates new {@link AggregationExpression} that returns an array with the elements in reverse order.
 		 *
-		 * @return
+		 * @return new instance of {@link ReverseArray}.
 		 */
 		public ReverseArray reverse() {
 
@@ -293,7 +293,7 @@ public class ArrayOperators {
 		 * an array and combines them into a single value.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link ReduceInitialValueBuilder} to create {@link Reduce}.
 		 */
 		public ArrayOperatorFactory.ReduceInitialValueBuilder reduce(AggregationExpression expression) {
 
@@ -305,8 +305,8 @@ public class ArrayOperators {
 		 * Start creating new {@link AggregationExpression} that applies an {@link AggregationExpression} to each element in
 		 * an array and combines them into a single value.
 		 *
-		 * @param expressions
-		 * @return
+		 * @param expressions must not be {@literal null}.
+		 * @return new instance of {@link ReduceInitialValueBuilder} to create {@link Reduce}.
 		 */
 		public ArrayOperatorFactory.ReduceInitialValueBuilder reduce(PropertyExpression... expressions) {
 
@@ -320,7 +320,7 @@ public class ArrayOperators {
 		 * the second input array, etc.
 		 *
 		 * @param arrays must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Zip}.
 		 */
 		public Zip zipWith(Object... arrays) {
 
@@ -336,7 +336,7 @@ public class ArrayOperators {
 		 * associated array.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link In}.
 		 */
 		public In containsValue(Object value) {
 
@@ -413,7 +413,7 @@ public class ArrayOperators {
 		 * Creates new {@link ArrayElemAt}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link ArrayElemAt}.
 		 */
 		public static ArrayElemAt arrayOf(String fieldReference) {
 
@@ -425,7 +425,7 @@ public class ArrayOperators {
 		 * Creates new {@link ArrayElemAt}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link ArrayElemAt}.
 		 */
 		public static ArrayElemAt arrayOf(AggregationExpression expression) {
 
@@ -446,16 +446,34 @@ public class ArrayOperators {
 			return new ArrayElemAt(Collections.singletonList(values));
 		}
 
+		/**
+		 * Use the element with given index number.
+		 *
+		 * @param index the index number
+		 * @return new instance of {@link ArrayElemAt}.
+		 */
 		public ArrayElemAt elementAt(int index) {
 			return new ArrayElemAt(append(index));
 		}
 
+		/**
+		 * Use the element at the index number evaluated from the given {@link AggregationExpression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link ArrayElemAt}.
+		 */
 		public ArrayElemAt elementAt(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 			return new ArrayElemAt(append(expression));
 		}
 
+		/**
+		 * Use the element at the index number traken from the given field.
+		 *
+		 * @param arrayFieldReference the field name.
+		 * @return new instance of {@link ArrayElemAt}.
+		 */
 		public ArrayElemAt elementAt(String arrayFieldReference) {
 
 			Assert.notNull(arrayFieldReference, "ArrayReference must not be null!");
@@ -483,7 +501,7 @@ public class ArrayOperators {
 		 * Creates new {@link ConcatArrays}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link ConcatArrays}.
 		 */
 		public static ConcatArrays arrayOf(String fieldReference) {
 
@@ -495,7 +513,7 @@ public class ArrayOperators {
 		 * Creates new {@link ConcatArrays}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link ConcatArrays}.
 		 */
 		public static ConcatArrays arrayOf(AggregationExpression expression) {
 
@@ -516,12 +534,24 @@ public class ArrayOperators {
 			return new ConcatArrays(Collections.singletonList(values));
 		}
 
+		/**
+		 * Concat with the array stored at the given field.
+		 *
+		 * @param arrayFieldReference must not be {@literal null}.
+		 * @return new instance of {@link ConcatArrays}.
+		 */
 		public ConcatArrays concat(String arrayFieldReference) {
 
 			Assert.notNull(arrayFieldReference, "ArrayFieldReference must not be null!");
 			return new ConcatArrays(append(Fields.field(arrayFieldReference)));
 		}
 
+		/**
+		 * Concat with the array resulting from the given {@link AggregationExpression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link ConcatArrays}.
+		 */
 		public ConcatArrays concat(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
@@ -574,7 +604,7 @@ public class ArrayOperators {
 		 * Set the {@literal values} to apply the {@code $filter} to.
 		 *
 		 * @param values must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link AsBuilder} to create the {@link Filter}.
 		 */
 		public static AsBuilder filter(List<?> values) {
 
@@ -651,7 +681,7 @@ public class ArrayOperators {
 			 * Set the {@literal variableName} for the elements in the input array.
 			 *
 			 * @param variableName must not be {@literal null}.
-			 * @return
+			 * @return never {@literal null}.
 			 */
 			ConditionBuilder as(String variableName);
 		}
@@ -665,7 +695,7 @@ public class ArrayOperators {
 			 * Set the {@link AggregationExpression} that determines whether to include the element in the resulting array.
 			 *
 			 * @param expression must not be {@literal null}.
-			 * @return
+			 * @return never {@literal null}.
 			 */
 			Filter by(AggregationExpression expression);
 
@@ -673,7 +703,7 @@ public class ArrayOperators {
 			 * Set the {@literal expression} that determines whether to include the element in the resulting array.
 			 *
 			 * @param expression must not be {@literal null}.
-			 * @return
+			 * @return never {@literal null}.
 			 */
 			Filter by(String expression);
 
@@ -681,7 +711,7 @@ public class ArrayOperators {
 			 * Set the {@literal expression} that determines whether to include the element in the resulting array.
 			 *
 			 * @param expression must not be {@literal null}.
-			 * @return
+			 * @return never {@literal null}.
 			 */
 			Filter by(Document expression);
 		}
@@ -700,7 +730,7 @@ public class ArrayOperators {
 			/**
 			 * Creates new {@link InputBuilder}.
 			 *
-			 * @return
+			 * @return new instance of {@link FilterExpressionBuilder}.
 			 */
 			public static InputBuilder newBuilder() {
 				return new FilterExpressionBuilder();
@@ -800,7 +830,7 @@ public class ArrayOperators {
 		 * Creates new {@link IsArray}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link IsArray}.
 		 */
 		public static IsArray isArray(String fieldReference) {
 
@@ -812,7 +842,7 @@ public class ArrayOperators {
 		 * Creates new {@link IsArray}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link IsArray}.
 		 */
 		public static IsArray isArray(AggregationExpression expression) {
 
@@ -841,7 +871,7 @@ public class ArrayOperators {
 		 * Creates new {@link Size}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Size}.
 		 */
 		public static Size lengthOfArray(String fieldReference) {
 
@@ -853,7 +883,7 @@ public class ArrayOperators {
 		 * Creates new {@link Size}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Size}.
 		 */
 		public static Size lengthOfArray(AggregationExpression expression) {
 
@@ -895,7 +925,7 @@ public class ArrayOperators {
 		 * Creates new {@link Slice}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Slice}.
 		 */
 		public static Slice sliceArrayOf(String fieldReference) {
 
@@ -907,7 +937,7 @@ public class ArrayOperators {
 		 * Creates new {@link Slice}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Slice}.
 		 */
 		public static Slice sliceArrayOf(AggregationExpression expression) {
 
@@ -928,10 +958,22 @@ public class ArrayOperators {
 			return new Slice(Collections.singletonList(values));
 		}
 
+		/**
+		 * Slice the number of elements.
+		 *
+		 * @param nrElements elements to slice.
+		 * @return new instance of {@link Slice}.
+		 */
 		public Slice itemCount(int nrElements) {
 			return new Slice(append(nrElements));
 		}
 
+		/**
+		 * Slice using offset and count.
+		 *
+		 * @param position the start position
+		 * @return new instance of {@link SliceElementsBuilder} to create {@link Slice}.
+		 */
 		public SliceElementsBuilder offset(final int position) {
 
 			return new SliceElementsBuilder() {
@@ -978,7 +1020,7 @@ public class ArrayOperators {
 		 * Start creating new {@link IndexOfArray}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link IndexOfArray}.
 		 */
 		public static IndexOfArrayBuilder arrayOf(String fieldReference) {
 
@@ -990,7 +1032,7 @@ public class ArrayOperators {
 		 * Start creating new {@link IndexOfArray}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link IndexOfArray}.
 		 */
 		public static IndexOfArrayBuilder arrayOf(AggregationExpression expression) {
 
@@ -1002,7 +1044,7 @@ public class ArrayOperators {
 		 * Start creating new {@link IndexOfArray}.
 		 *
 		 * @param values must not be {@literal null}.
-		 * @return new instance of {@link IndexOfArray}.
+		 * @return new instance of {@link IndexOfArrayBuilder} to create {@link IndexOfArray}.
 		 * @since 2.2
 		 */
 		public static IndexOfArrayBuilder arrayOf(Collection<?> values) {
@@ -1011,6 +1053,12 @@ public class ArrayOperators {
 			return new IndexOfArrayBuilder(values);
 		}
 
+		/**
+		 * Lookup within a given range.
+		 *
+		 * @param range the lookup range.
+		 * @return new instance of {@link IndexOfArray}.
+		 */
 		public IndexOfArray within(Range<Long> range) {
 			return new IndexOfArray(append(AggregationUtils.toRangeValues(range)));
 		}
@@ -1030,7 +1078,7 @@ public class ArrayOperators {
 			 * Set the {@literal value} to check for its index in the array.
 			 *
 			 * @param value must not be {@literal null}.
-			 * @return
+			 * @return new instance of {@link IndexOfArray}.
 			 */
 			public IndexOfArray indexOf(Object value) {
 
@@ -1060,7 +1108,7 @@ public class ArrayOperators {
 		 * Start creating new {@link RangeOperator}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link RangeOperatorBuilder} to create {@link RangeOperator}.
 		 */
 		public static RangeOperatorBuilder rangeStartingAt(String fieldReference) {
 			return new RangeOperatorBuilder(Fields.field(fieldReference));
@@ -1070,7 +1118,7 @@ public class ArrayOperators {
 		 * Start creating new {@link RangeOperator}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link RangeOperatorBuilder} to create {@link RangeOperator}.
 		 */
 		public static RangeOperatorBuilder rangeStartingAt(AggregationExpression expression) {
 			return new RangeOperatorBuilder(expression);
@@ -1080,7 +1128,7 @@ public class ArrayOperators {
 		 * Start creating new {@link RangeOperator}.
 		 *
 		 * @param value
-		 * @return
+		 * @return new instance of {@link RangeOperator}.
 		 */
 		public static RangeOperatorBuilder rangeStartingAt(long value) {
 			return new RangeOperatorBuilder(value);
@@ -1102,7 +1150,7 @@ public class ArrayOperators {
 			 * Creates new {@link RangeOperator}.
 			 *
 			 * @param index
-			 * @return
+			 * @return new instance of {@link RangeOperator}.
 			 */
 			public RangeOperator to(long index) {
 				return new RangeOperator(Arrays.asList(startPoint, index));
@@ -1112,7 +1160,7 @@ public class ArrayOperators {
 			 * Creates new {@link RangeOperator}.
 			 *
 			 * @param expression must not be {@literal null}.
-			 * @return
+			 * @return new instance of {@link RangeOperator}.
 			 */
 			public RangeOperator to(AggregationExpression expression) {
 				return new RangeOperator(Arrays.asList(startPoint, expression));
@@ -1122,7 +1170,7 @@ public class ArrayOperators {
 			 * Creates new {@link RangeOperator}.
 			 *
 			 * @param fieldReference must not be {@literal null}.
-			 * @return
+			 * @return new instance of {@link RangeOperator}.
 			 */
 			public RangeOperator to(String fieldReference) {
 				return new RangeOperator(Arrays.asList(startPoint, Fields.field(fieldReference)));
@@ -1150,7 +1198,7 @@ public class ArrayOperators {
 		 * Creates new {@link ReverseArray} given {@literal fieldReference}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link ReverseArray}.
 		 */
 		public static ReverseArray reverseArrayOf(String fieldReference) {
 			return new ReverseArray(Fields.field(fieldReference));
@@ -1160,7 +1208,7 @@ public class ArrayOperators {
 		 * Creates new {@link ReverseArray} given {@link AggregationExpression}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link ReverseArray}.
 		 */
 		public static ReverseArray reverseArrayOf(AggregationExpression expression) {
 			return new ReverseArray(expression);
@@ -1239,7 +1287,7 @@ public class ArrayOperators {
 		 * Start creating new {@link Reduce}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link InitialValueBuilder} to create {@link Reduce}.
 		 */
 		public static InitialValueBuilder arrayOf(final String fieldReference) {
 
@@ -1267,7 +1315,7 @@ public class ArrayOperators {
 							Assert.notNull(expressions, "PropertyExpressions must not be null");
 
 							return new Reduce(Fields.field(fieldReference), initialValue,
-									Arrays.<AggregationExpression> asList(expressions));
+									Arrays.<AggregationExpression>asList(expressions));
 						}
 					};
 				}
@@ -1278,7 +1326,7 @@ public class ArrayOperators {
 		 * Start creating new {@link Reduce}.
 		 *
 		 * @param arrayValueExpression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link InitialValueBuilder} to create {@link Reduce}.
 		 */
 		public static InitialValueBuilder arrayOf(final AggregationExpression arrayValueExpression) {
 
@@ -1318,7 +1366,7 @@ public class ArrayOperators {
 			 * Define the initial cumulative value set before in is applied to the first element of the input array.
 			 *
 			 * @param initialValue must not be {@literal null}.
-			 * @return
+			 * @return never {@literal null}.
 			 */
 			ReduceBuilder withInitialValue(Object initialValue);
 		}
@@ -1335,7 +1383,7 @@ public class ArrayOperators {
 			 * {@link Variable#VALUE} are available.
 			 *
 			 * @param expression must not be {@literal null}.
-			 * @return
+			 * @return new instance of {@link Reduce}.
 			 */
 			Reduce reduce(AggregationExpression expression);
 
@@ -1346,7 +1394,7 @@ public class ArrayOperators {
 			 * {@link Variable#VALUE} are available.
 			 *
 			 * @param expressions must not be {@literal null}.
-			 * @return
+			 * @return new instance of {@link Reduce}.
 			 */
 			Reduce reduce(PropertyExpression... expressions);
 		}
@@ -1372,7 +1420,7 @@ public class ArrayOperators {
 			 * Define a result property for an {@link AggregationExpression} used in {@link Reduce}.
 			 *
 			 * @param name must not be {@literal null}.
-			 * @return
+			 * @return new instance of {@link AsBuilder} to create {@link Reduce}.
 			 */
 			public static AsBuilder property(final String name) {
 
@@ -1402,7 +1450,7 @@ public class ArrayOperators {
 				 * Set the {@link AggregationExpression} resulting in the properties value.
 				 *
 				 * @param expression must not be {@literal null}.
-				 * @return
+				 * @return never {@literal null}.
 				 */
 				PropertyExpression definedAs(AggregationExpression expression);
 			}
@@ -1459,7 +1507,7 @@ public class ArrayOperators {
 			 * eg. {@code $$value.product}
 			 *
 			 * @param property must not be {@literal null}.
-			 * @return
+			 * @return never {@literal null}.
 			 */
 			public Field referringTo(final String property) {
 
@@ -1508,7 +1556,7 @@ public class ArrayOperators {
 		 * Start creating new {@link Zip}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link ZipBuilder} to create {@link Zip}.
 		 */
 		public static ZipBuilder arrayOf(String fieldReference) {
 
@@ -1520,7 +1568,7 @@ public class ArrayOperators {
 		 * Start creating new {@link Zip}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link ZipBuilder} to create {@link Zip}.
 		 */
 		public static ZipBuilder arrayOf(AggregationExpression expression) {
 
@@ -1544,7 +1592,7 @@ public class ArrayOperators {
 		/**
 		 * Create new {@link Zip} and set the {@code useLongestLength} property to {@literal true}.
 		 *
-		 * @return
+		 * @return new instance of {@link Zip}.
 		 */
 		public Zip useLongestLength() {
 			return new Zip(append("useLongestLength", true));
@@ -1554,7 +1602,7 @@ public class ArrayOperators {
 		 * Optionally provide a default value.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Zip}.
 		 */
 		public Zip defaultTo(String fieldReference) {
 
@@ -1566,7 +1614,7 @@ public class ArrayOperators {
 		 * Optionally provide a default value.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Zip}.
 		 */
 		public Zip defaultTo(AggregationExpression expression) {
 
@@ -1578,7 +1626,7 @@ public class ArrayOperators {
 		 * Optionally provide a default value.
 		 *
 		 * @param array must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Zip}.
 		 */
 		public Zip defaultTo(Object[] array) {
 
@@ -1602,7 +1650,7 @@ public class ArrayOperators {
 			 * array, etc.
 			 *
 			 * @param arrays arrays to zip the referenced one with. must not be {@literal null}.
-			 * @return
+			 * @return new instance of {@link Zip}.
 			 */
 			public Zip zip(Object... arrays) {
 
@@ -1616,7 +1664,7 @@ public class ArrayOperators {
 					}
 				}
 
-				return new Zip(Collections.<String, Object> singletonMap("inputs", sourceArrays));
+				return new Zip(Collections.<String, Object>singletonMap("inputs", sourceArrays));
 			}
 		}
 	}
@@ -1627,7 +1675,7 @@ public class ArrayOperators {
 	 * @author Christoph Strobl
 	 * @author Shashank Sharma
 	 * @see <a href=
-	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/in/">https://docs.mongodb.com/manual/reference/operator/aggregation/in/</a>
+	 * "https://docs.mongodb.com/manual/reference/operator/aggregation/in/">https://docs.mongodb.com/manual/reference/operator/aggregation/in/</a>
 	 * @since 2.2
 	 */
 	public static class In extends AbstractAggregationExpression {
@@ -1645,7 +1693,7 @@ public class ArrayOperators {
 		 * Start creating {@link In}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link InBuilder} to create {@link In}.
 		 */
 		public static InBuilder arrayOf(String fieldReference) {
 
@@ -1662,7 +1710,7 @@ public class ArrayOperators {
 		 * Start creating {@link In}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link InBuilder} to create {@link In}.
 		 */
 		public static InBuilder arrayOf(AggregationExpression expression) {
 
@@ -1704,7 +1752,7 @@ public class ArrayOperators {
 			 * Set the {@literal value} to check for existence in the array.
 			 *
 			 * @param value must not be {@literal value}.
-			 * @return
+			 * @return new instance of {@link In}.
 			 */
 			In containsValue(Object value);
 		}
@@ -1716,7 +1764,7 @@ public class ArrayOperators {
 	 *
 	 * @author Christoph Strobl
 	 * @see <a href=
-	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/arrayToObject/">https://docs.mongodb.com/manual/reference/operator/aggregation/arrayToObject/</a>
+	 * "https://docs.mongodb.com/manual/reference/operator/aggregation/arrayToObject/">https://docs.mongodb.com/manual/reference/operator/aggregation/arrayToObject/</a>
 	 * @since 2.1
 	 */
 	public static class ArrayToObject extends AbstractAggregationExpression {

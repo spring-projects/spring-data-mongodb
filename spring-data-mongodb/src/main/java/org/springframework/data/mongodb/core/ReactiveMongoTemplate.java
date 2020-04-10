@@ -317,8 +317,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	/**
 	 * Configures the {@link WriteConcern} to be used with the template. If none is configured the {@link WriteConcern}
-	 * configured on the {@link MongoDatabaseFactory} will apply. If you configured a {@link Mongo} instance no
-	 * {@link WriteConcern} will be used.
+	 * configured on the {@link MongoDatabaseFactory} will apply.
 	 *
 	 * @param writeConcern can be {@literal null}.
 	 */
@@ -2405,7 +2404,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @param query the query document that specifies the criteria used to find a record.
 	 * @param fields the document that specifies the fields to be returned.
 	 * @param entityClass the parameterized type of the returned list.
-	 * @param preparer allows for customization of the {@link DBCursor} used when iterating over the result set, (apply
+	 * @param preparer allows for customization of the {@link com.mongodb.client.FindIterable} used when iterating over the result set, (apply
 	 *          limits, skips and so on).
 	 * @return the {@link List} of converted objects.
 	 */
@@ -2834,7 +2833,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	/**
 	 * Simple {@link ReactiveCollectionCallback} that takes a query {@link Document} plus an optional fields specification
-	 * {@link Document} and executes that against the {@link DBCollection}.
+	 * {@link Document} and executes that against the {@link MongoCollection}.
 	 *
 	 * @author Oliver Gierke
 	 * @author Thomas Risberg

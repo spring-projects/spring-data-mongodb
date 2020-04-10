@@ -261,7 +261,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	 * ambiguity a @see {@link MappingException} is thrown.
 	 *
 	 * @param property - the new id property candidate
-	 * @return
+	 * @return can be {@literal null}.
 	 */
 	@Override
 	protected MongoPersistentProperty returnPropertyIfBetterIdPropertyCandidateOrNull(MongoPersistentProperty property) {
@@ -313,7 +313,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	 * {@link LiteralExpression} (indicating that no subsequent evaluation is necessary).
 	 *
 	 * @param potentialExpression can be {@literal null}
-	 * @return
+	 * @return can be {@literal null}.
 	 */
 	@Nullable
 	private static Expression detectExpression(@Nullable String potentialExpression) {

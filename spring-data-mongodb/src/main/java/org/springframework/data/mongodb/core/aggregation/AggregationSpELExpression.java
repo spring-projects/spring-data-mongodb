@@ -56,7 +56,7 @@ public class AggregationSpELExpression implements AggregationExpression {
 	 *
 	 * @param expressionString must not be {@literal null}.
 	 * @param parameters can be empty.
-	 * @return
+	 * @return new instance of {@link AggregationSpELExpression}.
 	 */
 	public static AggregationSpELExpression expressionOf(String expressionString, Object... parameters) {
 

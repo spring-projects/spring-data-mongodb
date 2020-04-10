@@ -34,7 +34,7 @@ public class BooleanOperators {
 	 * Take the array referenced by given {@literal fieldReference}.
 	 *
 	 * @param fieldReference must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link BooleanOperatorFactory}.
 	 */
 	public static BooleanOperatorFactory valueOf(String fieldReference) {
 		return new BooleanOperatorFactory(fieldReference);
@@ -44,7 +44,7 @@ public class BooleanOperators {
 	 * Take the value resulting of the given {@link AggregationExpression}.
 	 *
 	 * @param fieldReference must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link BooleanOperatorFactory}.
 	 */
 	public static BooleanOperatorFactory valueOf(AggregationExpression fieldReference) {
 		return new BooleanOperatorFactory(fieldReference);
@@ -55,7 +55,7 @@ public class BooleanOperators {
 	 * opposite boolean value.
 	 *
 	 * @param fieldReference must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link Not}.
 	 */
 	public static Not not(String fieldReference) {
 		return Not.not(fieldReference);
@@ -66,7 +66,7 @@ public class BooleanOperators {
 	 * and returns the opposite boolean value.
 	 *
 	 * @param expression must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link Not}.
 	 */
 	public static Not not(AggregationExpression expression) {
 		return Not.not(expression);
@@ -109,7 +109,7 @@ public class BooleanOperators {
 		 * all of the expressions are {@literal true}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link And}.
 		 */
 		public And and(AggregationExpression expression) {
 
@@ -122,7 +122,7 @@ public class BooleanOperators {
 		 * all of the expressions are {@literal true}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link And}.
 		 */
 		public And and(String fieldReference) {
 
@@ -139,7 +139,7 @@ public class BooleanOperators {
 		 * any of the expressions are {@literal true}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Or}.
 		 */
 		public Or or(AggregationExpression expression) {
 
@@ -152,7 +152,7 @@ public class BooleanOperators {
 		 * any of the expressions are {@literal true}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Or}.
 		 */
 		public Or or(String fieldReference) {
 
@@ -167,7 +167,7 @@ public class BooleanOperators {
 		/**
 		 * Creates new {@link AggregationExpression} that evaluates a boolean and returns the opposite boolean value.
 		 *
-		 * @return
+		 * @return new instance of {@link Not}.
 		 */
 		public Not not() {
 			return usesFieldRef() ? Not.not(fieldReference) : Not.not(expression);
@@ -198,8 +198,8 @@ public class BooleanOperators {
 		 * Creates new {@link And} that evaluates one or more expressions and returns {@literal true} if all of the
 		 * expressions are {@literal true}.
 		 *
-		 * @param expressions
-		 * @return
+		 * @param expressions must not be {@literal null}.
+		 * @return new instance of {@link And}.
 		 */
 		public static And and(Object... expressions) {
 			return new And(Arrays.asList(expressions));
@@ -209,7 +209,7 @@ public class BooleanOperators {
 		 * Creates new {@link And} with all previously added arguments appending the given one.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link And}.
 		 */
 		public And andExpression(AggregationExpression expression) {
 
@@ -221,7 +221,7 @@ public class BooleanOperators {
 		 * Creates new {@link And} with all previously added arguments appending the given one.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link And}.
 		 */
 		public And andField(String fieldReference) {
 
@@ -233,7 +233,7 @@ public class BooleanOperators {
 		 * Creates new {@link And} with all previously added arguments appending the given one.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link And}.
 		 */
 		public And andValue(Object value) {
 
@@ -263,7 +263,7 @@ public class BooleanOperators {
 		 * expressions are {@literal true}.
 		 *
 		 * @param expressions must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Or}.
 		 */
 		public static Or or(Object... expressions) {
 
@@ -275,7 +275,7 @@ public class BooleanOperators {
 		 * Creates new {@link Or} with all previously added arguments appending the given one.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Or}.
 		 */
 		public Or orExpression(AggregationExpression expression) {
 
@@ -287,7 +287,7 @@ public class BooleanOperators {
 		 * Creates new {@link Or} with all previously added arguments appending the given one.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Or}.
 		 */
 		public Or orField(String fieldReference) {
 
@@ -299,7 +299,7 @@ public class BooleanOperators {
 		 * Creates new {@link Or} with all previously added arguments appending the given one.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Or}.
 		 */
 		public Or orValue(Object value) {
 
@@ -329,7 +329,7 @@ public class BooleanOperators {
 		 * value.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Not}.
 		 */
 		public static Not not(String fieldReference) {
 
@@ -342,7 +342,7 @@ public class BooleanOperators {
 		 * returns the opposite boolean value.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Not}.
 		 */
 		public static Not not(AggregationExpression expression) {
 

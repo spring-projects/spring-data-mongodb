@@ -116,7 +116,7 @@ public class FindAndReplaceOptions {
 	/**
 	 * Get the bit indicating to return the replacement document.
 	 *
-	 * @return
+	 * @return {@literal true} if set.
 	 */
 	public boolean isReturnNew() {
 		return returnNew;
@@ -125,7 +125,7 @@ public class FindAndReplaceOptions {
 	/**
 	 * Get the bit indicating if to create a new document if not exists.
 	 *
-	 * @return
+	 * @return {@literal true} if set.
 	 */
 	public boolean isUpsert() {
 		return upsert;

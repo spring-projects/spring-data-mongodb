@@ -31,7 +31,7 @@ import com.mongodb.client.MongoClient;
 public class BtreeIndexCounters extends AbstractMonitor {
 
 	/**
-	 * @param mongoClient
+	 * @param mongoClient must not be {@literal null}.
 	 * @since 2.2
 	 */
 	public BtreeIndexCounters(MongoClient mongoClient) {

@@ -33,7 +33,7 @@ public interface MongoDbFactory extends MongoDatabaseFactory {
 	/**
 	 * Creates a default {@link MongoDatabase} instance.
 	 *
-	 * @return
+	 * @return never {@literal null}.
 	 * @throws DataAccessException
 	 * @deprecated since 3.0. Use {@link #getMongoDatabase()} instead.
 	 */
@@ -46,7 +46,7 @@ public interface MongoDbFactory extends MongoDatabaseFactory {
 	 * Obtain a {@link MongoDatabase} instance to access the database with the given name.
 	 *
 	 * @param dbName must not be {@literal null} or empty.
-	 * @return
+	 * @return never {@literal null}.
 	 * @throws DataAccessException
 	 * @deprecated since 3.0. Use {@link #getMongoDatabase(String)} instead.
 	 */

@@ -1297,9 +1297,9 @@ public class MongoTemplateTests {
 			}
 		}, new CursorPreparer() {
 
-			public FindIterable<org.bson.Document> prepare(FindIterable<org.bson.Document> cursor) {
-				cursor.limit(1);
-				return cursor;
+			public FindIterable<org.bson.Document> prepare(FindIterable<org.bson.Document> iterable) {
+				iterable.limit(1);
+				return iterable;
 			}
 
 		});

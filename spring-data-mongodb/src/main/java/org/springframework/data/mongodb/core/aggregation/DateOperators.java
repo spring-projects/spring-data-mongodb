@@ -37,7 +37,7 @@ public class DateOperators {
 	 * Take the date referenced by given {@literal fieldReference}.
 	 *
 	 * @param fieldReference must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link DateOperatorFactory}.
 	 */
 	public static DateOperatorFactory dateOf(String fieldReference) {
 
@@ -49,7 +49,7 @@ public class DateOperators {
 	 * Take the date resulting from the given {@link AggregationExpression}.
 	 *
 	 * @param expression must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link DateOperatorFactory}.
 	 */
 	public static DateOperatorFactory dateOf(AggregationExpression expression) {
 
@@ -278,7 +278,7 @@ public class DateOperators {
 		 * Creates new {@link AggregationExpression} that returns the day of the year for a date as a number between 1 and
 		 * 366.
 		 *
-		 * @return
+		 * @return new instance of {@link DayOfYear}.
 		 */
 		public DayOfYear dayOfYear() {
 			return applyTimezone(DayOfYear.dayOfYear(dateReference()), timezone);
@@ -288,7 +288,7 @@ public class DateOperators {
 		 * Creates new {@link AggregationExpression} that returns the day of the month for a date as a number between 1 and
 		 * 31.
 		 *
-		 * @return
+		 * @return new instance of {@link DayOfMonth}.
 		 */
 		public DayOfMonth dayOfMonth() {
 			return applyTimezone(DayOfMonth.dayOfMonth(dateReference()), timezone);
@@ -298,7 +298,7 @@ public class DateOperators {
 		 * Creates new {@link AggregationExpression} that returns the day of the week for a date as a number between 1
 		 * (Sunday) and 7 (Saturday).
 		 *
-		 * @return
+		 * @return new instance of {@link DayOfWeek}.
 		 */
 		public DayOfWeek dayOfWeek() {
 			return applyTimezone(DayOfWeek.dayOfWeek(dateReference()), timezone);
@@ -307,7 +307,7 @@ public class DateOperators {
 		/**
 		 * Creates new {@link AggregationExpression} that returns the year portion of a date.
 		 *
-		 * @return
+		 * @return new instance of {@link Year}.
 		 */
 		public Year year() {
 			return applyTimezone(Year.year(dateReference()), timezone);
@@ -316,7 +316,7 @@ public class DateOperators {
 		/**
 		 * Creates new {@link AggregationExpression} that returns the month of a date as a number between 1 and 12.
 		 *
-		 * @return
+		 * @return new instance of {@link Month}.
 		 */
 		public Month month() {
 			return applyTimezone(Month.month(dateReference()), timezone);
@@ -326,7 +326,7 @@ public class DateOperators {
 		 * Creates new {@link AggregationExpression} that returns the week of the year for a date as a number between 0 and
 		 * 53.
 		 *
-		 * @return
+		 * @return new instance of {@link Week}.
 		 */
 		public Week week() {
 			return applyTimezone(Week.week(dateReference()), timezone);
@@ -335,7 +335,7 @@ public class DateOperators {
 		/**
 		 * Creates new {@link AggregationExpression} that returns the hour portion of a date as a number between 0 and 23.
 		 *
-		 * @return
+		 * @return new instance of {@link Hour}.
 		 */
 		public Hour hour() {
 			return applyTimezone(Hour.hour(dateReference()), timezone);
@@ -344,7 +344,7 @@ public class DateOperators {
 		/**
 		 * Creates new {@link AggregationExpression} that returns the minute portion of a date as a number between 0 and 59.
 		 *
-		 * @return
+		 * @return new instance of {@link Minute}.
 		 */
 		public Minute minute() {
 			return applyTimezone(Minute.minute(dateReference()), timezone);
@@ -354,7 +354,7 @@ public class DateOperators {
 		 * Creates new {@link AggregationExpression} that returns the second portion of a date as a number between 0 and 59,
 		 * but can be 60 to account for leap seconds.
 		 *
-		 * @return
+		 * @return new instance of {@link Second}.
 		 */
 		public Second second() {
 			return applyTimezone(Second.second(dateReference()), timezone);
@@ -364,7 +364,7 @@ public class DateOperators {
 		 * Creates new {@link AggregationExpression} that returns the millisecond portion of a date as an integer between 0
 		 * and 999.
 		 *
-		 * @return
+		 * @return new instance of {@link Millisecond}.
 		 */
 		public Millisecond millisecond() {
 			return applyTimezone(Millisecond.millisecond(dateReference()), timezone);
@@ -375,7 +375,7 @@ public class DateOperators {
 		 * {@literal format}.
 		 *
 		 * @param format must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link DateToString}.
 		 */
 		public DateToString toString(String format) {
 			return applyTimezone(DateToString.dateToString(dateReference()).toString(format), timezone);
@@ -396,7 +396,7 @@ public class DateOperators {
 		 * Creates new {@link AggregationExpression} that returns the weekday number in ISO 8601-2018 format, ranging from 1
 		 * (for Monday) to 7 (for Sunday).
 		 *
-		 * @return
+		 * @return new instance of {@link IsoDayOfWeek}.
 		 */
 		public IsoDayOfWeek isoDayOfWeek() {
 			return applyTimezone(IsoDayOfWeek.isoDayWeek(dateReference()), timezone);
@@ -406,7 +406,7 @@ public class DateOperators {
 		 * Creates new {@link AggregationExpression} that returns the week number in ISO 8601-2018 format, ranging from 1 to
 		 * 53.
 		 *
-		 * @return
+		 * @return new instance of {@link IsoWeek}.
 		 */
 		public IsoWeek isoWeek() {
 			return applyTimezone(IsoWeek.isoWeek(dateReference()), timezone);
@@ -415,7 +415,7 @@ public class DateOperators {
 		/**
 		 * Creates new {@link AggregationExpression} that returns the year number in ISO 8601-2018 format.
 		 *
-		 * @return
+		 * @return new instance of {@link IsoWeekYear}.
 		 */
 		public IsoWeekYear isoWeekYear() {
 			return applyTimezone(IsoWeekYear.isoWeekYear(dateReference()), timezone);
@@ -642,7 +642,7 @@ public class DateOperators {
 		 * Creates new {@link DayOfYear}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link DayOfYear}.
 		 */
 		public static DayOfYear dayOfYear(String fieldReference) {
 
@@ -654,7 +654,7 @@ public class DateOperators {
 		 * Creates new {@link DayOfYear}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link DayOfYear}.
 		 */
 		public static DayOfYear dayOfYear(AggregationExpression expression) {
 
@@ -714,7 +714,7 @@ public class DateOperators {
 		 * Creates new {@link DayOfMonth}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link DayOfMonth}.
 		 */
 		public static DayOfMonth dayOfMonth(String fieldReference) {
 
@@ -726,7 +726,7 @@ public class DateOperators {
 		 * Creates new {@link DayOfMonth}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link DayOfMonth}.
 		 */
 		public static DayOfMonth dayOfMonth(AggregationExpression expression) {
 
@@ -786,7 +786,7 @@ public class DateOperators {
 		 * Creates new {@link DayOfWeek}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link DayOfWeek}.
 		 */
 		public static DayOfWeek dayOfWeek(String fieldReference) {
 
@@ -798,7 +798,7 @@ public class DateOperators {
 		 * Creates new {@link DayOfWeek}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link DayOfWeek}.
 		 */
 		public static DayOfWeek dayOfWeek(AggregationExpression expression) {
 
@@ -858,7 +858,7 @@ public class DateOperators {
 		 * Creates new {@link Year}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Year}.
 		 */
 		public static Year yearOf(String fieldReference) {
 
@@ -870,7 +870,7 @@ public class DateOperators {
 		 * Creates new {@link Year}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Year}.
 		 */
 		public static Year yearOf(AggregationExpression expression) {
 
@@ -930,7 +930,7 @@ public class DateOperators {
 		 * Creates new {@link Month}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Month}.
 		 */
 		public static Month monthOf(String fieldReference) {
 
@@ -942,7 +942,7 @@ public class DateOperators {
 		 * Creates new {@link Month}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Month}.
 		 */
 		public static Month monthOf(AggregationExpression expression) {
 
@@ -1002,7 +1002,7 @@ public class DateOperators {
 		 * Creates new {@link Week}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Week}.
 		 */
 		public static Week weekOf(String fieldReference) {
 
@@ -1014,7 +1014,7 @@ public class DateOperators {
 		 * Creates new {@link Week}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Week}.
 		 */
 		public static Week weekOf(AggregationExpression expression) {
 
@@ -1074,7 +1074,7 @@ public class DateOperators {
 		 * Creates new {@link Hour}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Hour}.
 		 */
 		public static Hour hourOf(String fieldReference) {
 
@@ -1086,7 +1086,7 @@ public class DateOperators {
 		 * Creates new {@link Hour}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Hour}.
 		 */
 		public static Hour hourOf(AggregationExpression expression) {
 
@@ -1146,7 +1146,7 @@ public class DateOperators {
 		 * Creates new {@link Minute}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Minute}.
 		 */
 		public static Minute minuteOf(String fieldReference) {
 
@@ -1158,7 +1158,7 @@ public class DateOperators {
 		 * Creates new {@link Minute}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Minute}.
 		 */
 		public static Minute minuteOf(AggregationExpression expression) {
 
@@ -1218,7 +1218,7 @@ public class DateOperators {
 		 * Creates new {@link Second}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Second}.
 		 */
 		public static Second secondOf(String fieldReference) {
 
@@ -1230,7 +1230,7 @@ public class DateOperators {
 		 * Creates new {@link Second}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Second}.
 		 */
 		public static Second secondOf(AggregationExpression expression) {
 
@@ -1290,7 +1290,7 @@ public class DateOperators {
 		 * Creates new {@link Millisecond}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Millisecond}.
 		 */
 		public static Millisecond millisecondOf(String fieldReference) {
 
@@ -1302,7 +1302,7 @@ public class DateOperators {
 		 * Creates new {@link Millisecond}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Millisecond}.
 		 */
 		public static Millisecond millisecondOf(AggregationExpression expression) {
 
@@ -1376,7 +1376,7 @@ public class DateOperators {
 		 * Creates new {@link FormatBuilder} allowing to define the date format to apply.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link FormatBuilder} to crate {@link DateToString}.
 		 */
 		public static FormatBuilder dateOf(final String fieldReference) {
 
@@ -1388,7 +1388,7 @@ public class DateOperators {
 		 * Creates new {@link FormatBuilder} allowing to define the date format to apply.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link FormatBuilder} to crate {@link DateToString}.
 		 */
 		public static FormatBuilder dateOf(final AggregationExpression expression) {
 
@@ -1540,7 +1540,7 @@ public class DateOperators {
 		 * Creates new {@link IsoDayOfWeek}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link IsoDayOfWeek}.
 		 */
 		public static IsoDayOfWeek isoDayOfWeek(String fieldReference) {
 
@@ -1552,7 +1552,7 @@ public class DateOperators {
 		 * Creates new {@link IsoDayOfWeek}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link IsoDayOfWeek}.
 		 */
 		public static IsoDayOfWeek isoDayOfWeek(AggregationExpression expression) {
 
@@ -1612,7 +1612,7 @@ public class DateOperators {
 		 * Creates new {@link IsoWeek}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link IsoWeek}.
 		 */
 		public static IsoWeek isoWeekOf(String fieldReference) {
 
@@ -1624,7 +1624,7 @@ public class DateOperators {
 		 * Creates new {@link IsoWeek}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link IsoWeek}.
 		 */
 		public static IsoWeek isoWeekOf(AggregationExpression expression) {
 
@@ -1684,7 +1684,7 @@ public class DateOperators {
 		 * Creates new {@link IsoWeekYear}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link IsoWeekYear}.
 		 */
 		public static IsoWeekYear isoWeekYearOf(String fieldReference) {
 
@@ -1696,7 +1696,7 @@ public class DateOperators {
 		 * Creates new {@link Millisecond}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link IsoWeekYear}.
 		 */
 		public static IsoWeekYear isoWeekYearOf(AggregationExpression expression) {
 
@@ -2378,6 +2378,7 @@ public class DateOperators {
 	@SuppressWarnings("unchecked")
 	private static <T extends TimezonedDateAggregationExpression> T applyTimezone(T instance, Timezone timezone) {
 		return !ObjectUtils.nullSafeEquals(Timezone.none(), timezone) && !instance.hasTimezone()
-				? (T) instance.withTimezone(timezone) : instance;
+				? (T) instance.withTimezone(timezone)
+				: instance;
 	}
 }

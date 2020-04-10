@@ -268,7 +268,7 @@ abstract class CursorReadingTask<T, R> implements Task {
 	 * exception.
 	 *
 	 * @param callback must not be {@literal null}.
-	 * @param <T>
+	 * @param <V>
 	 * @return can be {@literal null}.
 	 * @throws RuntimeException The potentially translated exception.
 	 */

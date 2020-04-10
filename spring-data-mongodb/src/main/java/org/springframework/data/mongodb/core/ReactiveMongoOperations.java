@@ -1238,7 +1238,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * domain type information. Use {@link #updateFirst(Query, UpdateDefinition, Class, String)} to get full type specific
 	 * support. <br />
 	 * <strong>NOTE:</strong> {@link Query#getSortObject() sorting} is not supported by {@code db.collection.updateOne}.
-	 * Use {@link #findAndModify(Query, Update, Class, String)} instead.
+	 * Use {@link #findAndModify(Query, UpdateDefinition, Class, String)} instead.
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
 	 *          {@literal null}.
@@ -1571,7 +1571,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	/**
 	 * Returns the underlying {@link MongoConverter}.
 	 *
-	 * @return
+	 * @return never {@literal null}.
 	 */
 	MongoConverter getConverter();
 
@@ -1579,7 +1579,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * The collection name used for the specified class by this template.
 	 *
 	 * @param entityClass must not be {@literal null}.
-	 * @return
+	 * @return never {@literal null}.
 	 * @since 2.1
 	 */
 	String getCollectionName(Class<?> entityClass);

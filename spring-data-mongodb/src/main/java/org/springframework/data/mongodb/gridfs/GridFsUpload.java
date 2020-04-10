@@ -188,7 +188,7 @@ public class GridFsUpload<ID> implements GridFsObject<ID, InputStream> {
 		 * Set the file metadata.
 		 *
 		 * @param metadata must not be {@literal null}.
-		 * @return
+		 * @return this.
 		 */
 		public GridFsUploadBuilder<T> metadata(Document metadata) {
 
