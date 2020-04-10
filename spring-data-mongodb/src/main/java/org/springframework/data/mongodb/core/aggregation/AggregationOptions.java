@@ -146,7 +146,7 @@ public class AggregationOptions {
 	 * Enables writing to temporary files. When set to true, aggregation stages can write data to the _tmp subdirectory in
 	 * the dbPath directory.
 	 *
-	 * @return
+	 * @return {@literal true} if enabled.
 	 */
 	public boolean isAllowDiskUse() {
 		return allowDiskUse;
@@ -155,7 +155,7 @@ public class AggregationOptions {
 	/**
 	 * Specifies to return the information on the processing of the pipeline.
 	 *
-	 * @return
+	 * @return {@literal true} if enabled.
 	 */
 	public boolean isExplain() {
 		return explain;
@@ -180,7 +180,7 @@ public class AggregationOptions {
 	/**
 	 * Specify a document that contains options that control the creation of the cursor object.
 	 *
-	 * @return
+	 * @return never {@literal null}.
 	 */
 	public Optional<Document> getCursor() {
 		return cursor;
@@ -189,7 +189,7 @@ public class AggregationOptions {
 	/**
 	 * Get collation settings for string comparison.
 	 *
-	 * @return
+	 * @return never {@literal null}.
 	 * @since 2.0
 	 */
 	public Optional<Collation> getCollation() {
@@ -199,7 +199,7 @@ public class AggregationOptions {
 	/**
 	 * Get the comment for the aggregation.
 	 *
-	 * @return
+	 * @return never {@literal null}.
 	 * @since 2.2
 	 */
 	public Optional<String> getComment() {
@@ -239,7 +239,7 @@ public class AggregationOptions {
 	/**
 	 * Returns a {@link Document} representation of this {@link AggregationOptions}.
 	 *
-	 * @return
+	 * @return never {@literal null}.
 	 */
 	public Document toDocument() {
 
@@ -283,8 +283,8 @@ public class AggregationOptions {
 		/**
 		 * Defines whether to off-load intensive sort-operations to disk.
 		 *
-		 * @param allowDiskUse
-		 * @return
+		 * @param allowDiskUse use {@literal true} to allow disk use during the aggregation.
+		 * @return this.
 		 */
 		public Builder allowDiskUse(boolean allowDiskUse) {
 
@@ -295,8 +295,8 @@ public class AggregationOptions {
 		/**
 		 * Defines whether to get the execution plan for the aggregation instead of the actual results.
 		 *
-		 * @param explain
-		 * @return
+		 * @param explain use {@literal true} to enable explain feature.
+		 * @return this.
 		 */
 		public Builder explain(boolean explain) {
 
@@ -307,8 +307,8 @@ public class AggregationOptions {
 		/**
 		 * Additional options to the aggregation.
 		 *
-		 * @param cursor
-		 * @return
+		 * @param cursor must not be {@literal null}.
+		 * @return this.
 		 */
 		public Builder cursor(Document cursor) {
 
@@ -319,8 +319,8 @@ public class AggregationOptions {
 		/**
 		 * Define the initial cursor batch size.
 		 *
-		 * @param batchSize
-		 * @return
+		 * @param batchSize use a positive int.
+		 * @return this.
 		 * @since 2.0
 		 */
 		public Builder cursorBatchSize(int batchSize) {
@@ -333,7 +333,7 @@ public class AggregationOptions {
 		 * Define collation settings for string comparison.
 		 *
 		 * @param collation can be {@literal null}.
-		 * @return
+		 * @return this.
 		 * @since 2.0
 		 */
 		public Builder collation(@Nullable Collation collation) {
@@ -346,7 +346,7 @@ public class AggregationOptions {
 		 * Define a comment to describe the execution.
 		 *
 		 * @param comment can be {@literal null}.
-		 * @return
+		 * @return this.
 		 * @since 2.2
 		 */
 		public Builder comment(@Nullable String comment) {
@@ -358,7 +358,7 @@ public class AggregationOptions {
 		/**
 		 * Returns a new {@link AggregationOptions} instance with the given configuration.
 		 *
-		 * @return
+		 * @return new instance of {@link AggregationOptions}.
 		 */
 		public AggregationOptions build() {
 			return new AggregationOptions(allowDiskUse, explain, cursor, collation, comment);

@@ -29,7 +29,7 @@ public interface IndexFilter {
 	/**
 	 * Get the raw (unmapped) filter expression.
 	 *
-	 * @return
+	 * @return never {@literal null}.
 	 */
 	Document getFilterObject();
 

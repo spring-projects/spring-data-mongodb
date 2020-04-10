@@ -34,9 +34,9 @@ public class CountOperation implements FieldsExposingAggregationOperation {
 	private final String fieldName;
 
 	/**
-	 * Creates a new {@link CountOperation} given the {@link fieldName} field name.
+	 * Creates a new {@link CountOperation} given the {@literal fieldName} field name.
 	 *
-	 * @param asFieldName must not be {@literal null} or empty.
+	 * @param fieldName must not be {@literal null} or empty.
 	 */
 	public CountOperation(String fieldName) {
 
@@ -71,7 +71,7 @@ public class CountOperation implements FieldsExposingAggregationOperation {
 		 * Returns the finally to be applied {@link CountOperation} with the given alias.
 		 *
 		 * @param fieldName must not be {@literal null} or empty.
-		 * @return
+		 * @return new instance of {@link CountOperation}.
 		 */
 		public CountOperation as(String fieldName) {
 			return new CountOperation(fieldName);

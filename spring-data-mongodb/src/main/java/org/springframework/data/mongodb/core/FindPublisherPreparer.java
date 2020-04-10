@@ -54,7 +54,7 @@ public interface FindPublisherPreparer extends ReadPreferenceAware {
 	 *
 	 * @param collection must not be {@literal null}.
 	 * @param find must not be {@literal null}.
-	 * @return
+	 * @return never {@literal null}.
 	 * @throws IllegalArgumentException if one of the required arguments is {@literal null}.
 	 * @since 2.2
 	 */

@@ -70,7 +70,7 @@ public interface MongoPersistentEntity<T> extends PersistentEntity<T, MongoPersi
 
 	/**
 	 * @return {@literal true} if the entity is annotated with
-	 *         {@link org.springframework.data.mongodb.core.mapping.Collation}.
+	 *         {@link org.springframework.data.mongodb.core.query.Collation}.
 	 * @since 2.2
 	 */
 	default boolean hasCollation() {

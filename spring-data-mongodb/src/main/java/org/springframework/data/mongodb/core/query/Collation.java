@@ -81,7 +81,7 @@ public class Collation {
 	 * {@link java.util.Locale#getVariant()}.
 	 *
 	 * @param locale must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link Collation}.
 	 */
 	public static Collation of(Locale locale) {
 
@@ -102,7 +102,7 @@ public class Collation {
 	 * Create new {@link Collation} with locale set to the given ICU language.
 	 *
 	 * @param language must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link Collation}.
 	 */
 	public static Collation of(String language) {
 		return of(CollationLocale.of(language));
@@ -112,7 +112,7 @@ public class Collation {
 	 * Create new {@link Collation} with locale set to the given {@link CollationLocale}.
 	 *
 	 * @param locale must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link Collation}.
 	 */
 	public static Collation of(CollationLocale locale) {
 		return new Collation(locale);
@@ -139,7 +139,7 @@ public class Collation {
 	 * Create new {@link Collation} from values in {@link Document}.
 	 *
 	 * @param source must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link Collation}.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/collation/#collation-document">MongoDB Reference -
 	 *      Collation Document</a>
 	 */
@@ -181,7 +181,7 @@ public class Collation {
 	/**
 	 * Set the level of comparison to perform.
 	 *
-	 * @param strength
+	 * @param strength comparison level.
 	 * @return new {@link Collation}.
 	 */
 	public Collation strength(int strength) {
@@ -206,7 +206,7 @@ public class Collation {
 	/**
 	 * Set whether to include {@code caseLevel} comparison. <br />
 	 *
-	 * @param caseLevel
+	 * @param caseLevel use {@literal true} to enable {@code caseLevel} comparison.
 	 * @return new {@link Collation}.
 	 */
 	public Collation caseLevel(boolean caseLevel) {
@@ -220,7 +220,7 @@ public class Collation {
 	 * Set the flag that determines sort order of case differences during tertiary level comparisons.
 	 *
 	 * @param caseFirst must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link Collation}.
 	 */
 	public Collation caseFirst(String caseFirst) {
 		return caseFirst(new CaseFirst(caseFirst));
@@ -229,8 +229,8 @@ public class Collation {
 	/**
 	 * Set the flag that determines sort order of case differences during tertiary level comparisons.
 	 *
-	 * @param caseFirst must not be {@literal null}.
-	 * @return
+	 * @param sort must not be {@literal null}.
+	 * @return new instance of {@link Collation}.
 	 */
 	public Collation caseFirst(CaseFirst sort) {
 
@@ -372,7 +372,7 @@ public class Collation {
 	/**
 	 * Get the {@link Document} representation of the {@link Collation}.
 	 *
-	 * @return
+	 * @return the native MongoDB {@link Document} representation of the {@link Collation}.
 	 */
 	public Document toDocument() {
 		return map(toMongoDocumentConverter());
@@ -381,7 +381,7 @@ public class Collation {
 	/**
 	 * Get the {@link com.mongodb.client.model.Collation} representation of the {@link Collation}.
 	 *
-	 * @return
+	 * @return he native MongoDB representation of the {@link Collation}.
 	 */
 	public com.mongodb.client.model.Collation toMongoCollation() {
 		return map(toMongoCollationConverter());
@@ -390,9 +390,9 @@ public class Collation {
 	/**
 	 * Transform {@code this} {@link Collation} by applying a {@link Converter}.
 	 *
-	 * @param mapper
+	 * @param mapper must not be {@literal null}.
 	 * @param <R>
-	 * @return
+	 * @return the converted result.
 	 */
 	public <R> R map(Converter<? super Collation, ? extends R> mapper) {
 		return mapper.convert(this);
@@ -771,7 +771,7 @@ public class Collation {
 		 * Create new {@link CollationLocale} for given language.
 		 *
 		 * @param language must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link CollationLocale}.
 		 */
 		public static CollationLocale of(String language) {
 
@@ -794,7 +794,7 @@ public class Collation {
 		/**
 		 * Get the string representation.
 		 *
-		 * @return
+		 * @return the collation {@link String} in Mongo ICU format.
 		 */
 		public String asString() {
 

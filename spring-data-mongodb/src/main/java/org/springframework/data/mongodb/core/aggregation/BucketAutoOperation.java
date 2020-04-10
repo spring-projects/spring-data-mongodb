@@ -15,11 +15,11 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import org.bson.Document;
+
 import org.springframework.data.mongodb.core.aggregation.BucketAutoOperation.BucketAutoOperationOutputBuilder;
 import org.springframework.data.mongodb.core.aggregation.BucketOperationSupport.OutputBuilder;
 import org.springframework.util.Assert;
-
-import org.bson.Document;
 
 /**
  * Encapsulates the aggregation framework {@code $bucketAuto}-operation. <br />
@@ -113,7 +113,7 @@ public class BucketAutoOperation extends BucketOperationSupport<BucketAutoOperat
 	 * Configures a number of bucket {@literal buckets} and return a new {@link BucketAutoOperation}.
 	 *
 	 * @param buckets must be a positive number.
-	 * @return
+	 * @return new instance of {@link BucketAutoOperation}.
 	 */
 	public BucketAutoOperation withBuckets(int buckets) {
 
@@ -128,7 +128,7 @@ public class BucketAutoOperation extends BucketOperationSupport<BucketAutoOperat
 	 * Use either predefined {@link Granularities} or provide a own one.
 	 *
 	 * @param granularity must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link BucketAutoOperation}.
 	 */
 	public BucketAutoOperation withGranularity(Granularity granularity) {
 
@@ -209,7 +209,7 @@ public class BucketAutoOperation extends BucketOperationSupport<BucketAutoOperat
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @param operation must not be {@literal null}.
-		 * @param parameters
+		 * @param parameters must not be {@literal null}.
 		 */
 		protected ExpressionBucketAutoOperationBuilder(String expression, BucketAutoOperation operation,
 				Object[] parameters) {

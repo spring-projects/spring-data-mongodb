@@ -43,7 +43,7 @@ public class ConditionalOperators {
 	 * Take the field referenced by given {@literal fieldReference}.
 	 *
 	 * @param fieldReference must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link ConditionalOperatorFactory}.
 	 */
 	public static ConditionalOperatorFactory when(String fieldReference) {
 		return new ConditionalOperatorFactory(fieldReference);
@@ -53,7 +53,7 @@ public class ConditionalOperators {
 	 * Take the value resulting from the given {@literal expression}.
 	 *
 	 * @param expression must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link ConditionalOperatorFactory}.
 	 */
 	public static ConditionalOperatorFactory when(AggregationExpression expression) {
 		return new ConditionalOperatorFactory(expression);
@@ -63,7 +63,7 @@ public class ConditionalOperators {
 	 * Take the value resulting from the given {@literal criteriaDefinition}.
 	 *
 	 * @param criteriaDefinition must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link ConditionalOperatorFactory}.
 	 */
 	public static ConditionalOperatorFactory when(CriteriaDefinition criteriaDefinition) {
 		return new ConditionalOperatorFactory(criteriaDefinition);
@@ -75,7 +75,7 @@ public class ConditionalOperators {
 	 * instances of undefined values or missing fields, returns the value of the replacement expression.
 	 *
 	 * @param fieldReference must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link IfNull.ThenBuilder} to create {@link IfNull}.
 	 */
 	public static IfNull.ThenBuilder ifNull(String fieldReference) {
 
@@ -89,7 +89,7 @@ public class ConditionalOperators {
 	 * instances of undefined values or missing fields, returns the value of the replacement expression.
 	 *
 	 * @param expression must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link IfNull.ThenBuilder} to create {@link IfNull}.
 	 */
 	public static IfNull.ThenBuilder ifNull(AggregationExpression expression) {
 
@@ -103,7 +103,7 @@ public class ConditionalOperators {
 	 * out of the control flow.
 	 *
 	 * @param conditions must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link Switch}.
 	 */
 	public static Switch switchCases(CaseOperator... conditions) {
 		return Switch.switchCases(conditions);
@@ -115,7 +115,7 @@ public class ConditionalOperators {
 	 * out of the control flow.
 	 *
 	 * @param conditions must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link Switch}.
 	 */
 	public static Switch switchCases(List<CaseOperator> conditions) {
 		return Switch.switchCases(conditions);
@@ -176,7 +176,7 @@ public class ConditionalOperators {
 		 * return expressions.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link OtherwiseBuilder} to create {@link Cond}.
 		 */
 		public OtherwiseBuilder then(Object value) {
 
@@ -189,7 +189,7 @@ public class ConditionalOperators {
 		 * return expressions.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link OtherwiseBuilder} to create {@link Cond}.
 		 */
 		public OtherwiseBuilder thenValueOf(AggregationExpression expression) {
 
@@ -202,7 +202,7 @@ public class ConditionalOperators {
 		 * return expressions.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link OtherwiseBuilder} to create {@link Cond}.
 		 */
 		public OtherwiseBuilder thenValueOf(String fieldReference) {
 
@@ -233,9 +233,9 @@ public class ConditionalOperators {
 	 * field references}, {@link AggregationExpression expressions}, values of simple MongoDB types or values that can be
 	 * converted to a simple MongoDB type.
 	 *
+	 * @author Mark Paluch
 	 * @see <a href=
 	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/ifNull/">https://docs.mongodb.com/manual/reference/operator/aggregation/ifNull/</a>
-	 * @author Mark Paluch
 	 */
 	public static class IfNull implements AggregationExpression {
 
@@ -251,9 +251,9 @@ public class ConditionalOperators {
 		/**
 		 * Creates new {@link IfNull}.
 		 *
-		 * @param fieldReference the field to check for a {@literal null} value, field reference must not be {@literal null}
-		 *          .
-		 * @return
+		 * @param fieldReference the field to check for a {@literal null} value, field reference must not be
+		 *          {@literal null}.
+		 * @return never {@literal null}.
 		 */
 		public static ThenBuilder ifNull(String fieldReference) {
 
@@ -266,7 +266,7 @@ public class ConditionalOperators {
 		 *
 		 * @param expression the expression to check for a {@literal null} value, field reference must not be
 		 *          {@literal null}.
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		public static ThenBuilder ifNull(AggregationExpression expression) {
 
@@ -338,19 +338,19 @@ public class ConditionalOperators {
 			 * @param value the value to be used if the {@code $ifNull} condition evaluates {@literal true}. Can be a
 			 *          {@link Document}, a value that is supported by MongoDB or a value that can be converted to a MongoDB
 			 *          representation but must not be {@literal null}.
-			 * @return
+			 * @return new instance of {@link IfNull}.
 			 */
 			IfNull then(Object value);
 
 			/**
 			 * @param fieldReference the field holding the replacement value, must not be {@literal null}.
-			 * @return
+			 * @return new instance of {@link IfNull}.
 			 */
 			IfNull thenValueOf(String fieldReference);
 
 			/**
 			 * @param expression the expression yielding to the replacement value, must not be {@literal null}.
-			 * @return
+			 * @return new instance of {@link IfNull}.
 			 */
 			IfNull thenValueOf(AggregationExpression expression);
 		}
@@ -461,6 +461,12 @@ public class ConditionalOperators {
 			return new Switch(Collections.<String, Object> singletonMap("branches", new ArrayList<CaseOperator>(conditions)));
 		}
 
+		/**
+		 * Set the default value.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return new instance of {@link Switch}.
+		 */
 		public Switch defaultTo(Object value) {
 			return new Switch(append("default", value));
 		}
@@ -522,7 +528,7 @@ public class ConditionalOperators {
 				 * Set the then {@literal value}.
 				 *
 				 * @param value must not be {@literal null}.
-				 * @return
+				 * @return new instance of {@link CaseOperator}.
 				 */
 				CaseOperator then(Object value);
 			}
@@ -536,10 +542,10 @@ public class ConditionalOperators {
 	 * {@link AggregationExpression expressions}, values of simple MongoDB types or values that can be converted to a
 	 * simple MongoDB type.
 	 *
-	 * @see <a href=
-	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/cond/">https://docs.mongodb.com/manual/reference/operator/aggregation/cond/</a>
 	 * @author Mark Paluch
 	 * @author Christoph Strobl
+	 * @see <a href=
+	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/cond/">https://docs.mongodb.com/manual/reference/operator/aggregation/cond/</a>
 	 */
 	public static class Cond implements AggregationExpression {
 
@@ -664,7 +670,6 @@ public class ConditionalOperators {
 				}
 
 				clauses.add(new Document(key, args));
-
 			} else if (predicate instanceof Document) {
 
 				Document nested = (Document) predicate;
@@ -680,7 +685,6 @@ public class ConditionalOperators {
 					args.add(nested.get(s));
 					clauses.add(new Document(s, args));
 				}
-
 			} else if (!isKeyword(key)) {
 
 				List<Object> args = new ArrayList<Object>();

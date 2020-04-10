@@ -89,7 +89,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 	/**
 	 * Get a builder that allows creation of {@link LookupOperation}.
 	 *
-	 * @return
+	 * @return never {@literal null}.
 	 */
 	public static FromBuilder newLookup() {
 		return new LookupOperationBuilder();
@@ -99,7 +99,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 
 		/**
 		 * @param name the collection in the same database to perform the join with, must not be {@literal null} or empty.
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		LocalFieldBuilder from(String name);
 	}
@@ -109,7 +109,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		/**
 		 * @param name the field from the documents input to the {@code $lookup} stage, must not be {@literal null} or
 		 *          empty.
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		ForeignFieldBuilder localField(String name);
 	}
@@ -118,7 +118,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 
 		/**
 		 * @param name the field from the documents in the {@code from} collection, must not be {@literal null} or empty.
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		AsBuilder foreignField(String name);
 	}
@@ -127,7 +127,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 
 		/**
 		 * @param name the name of the new array field to add to the input documents, must not be {@literal null} or empty.
-		 * @return
+		 * @return new instance of {@link LookupOperation}.
 		 */
 		LookupOperation as(String name);
 	}

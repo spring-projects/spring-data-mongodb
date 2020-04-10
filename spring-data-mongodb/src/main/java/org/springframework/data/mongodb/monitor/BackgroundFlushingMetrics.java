@@ -42,7 +42,7 @@ public class BackgroundFlushingMetrics extends AbstractMonitor {
 	}
 
 	/**
-	 * @param mongoClient
+	 * @param mongoClient must not be {@literal null}.
 	 * @since 2.2
 	 */
 	public BackgroundFlushingMetrics(com.mongodb.client.MongoClient mongoClient) {

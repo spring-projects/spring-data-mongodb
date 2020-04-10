@@ -77,7 +77,7 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 	 * {@link MongoDbFactory}.
 	 *
 	 * @param mappingContext must not be {@literal null}.
-	 * @param mongoDbFactory must not be {@literal null}.
+	 * @param indexOperationsProvider must not be {@literal null}.
 	 * @param indexResolver must not be {@literal null}.
 	 */
 	public MongoPersistentEntityIndexCreator(MongoMappingContext mappingContext,

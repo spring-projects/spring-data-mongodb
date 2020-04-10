@@ -72,7 +72,7 @@ public @interface GeoSpatialIndexed {
 	 * </code>
 	 * </pre>
 	 *
-	 * @return
+	 * @return empty {@link String} by default.
 	 */
 	String name() default "";
 
@@ -80,7 +80,7 @@ public @interface GeoSpatialIndexed {
 	 * If set to {@literal true} then MongoDB will ignore the given index name and instead generate a new name. Defaults
 	 * to {@literal false}.
 	 *
-	 * @return
+	 * @return {@literal false} by default.
 	 * @since 1.5
 	 */
 	boolean useGeneratedName() default false;
@@ -88,21 +88,21 @@ public @interface GeoSpatialIndexed {
 	/**
 	 * Minimum value for indexed values.
 	 *
-	 * @return
+	 * @return {@literal -180} by default.
 	 */
 	int min() default -180;
 
 	/**
 	 * Maximum value for indexed values.
 	 *
-	 * @return
+	 * @return {@literal +180} by default.
 	 */
 	int max() default 180;
 
 	/**
 	 * Bits of precision for boundary calculations.
 	 *
-	 * @return
+	 * @return {@literal 26} by default.
 	 */
 	int bits() default 26;
 
@@ -110,7 +110,7 @@ public @interface GeoSpatialIndexed {
 	 * The type of the geospatial index. Default is {@link GeoSpatialIndexType#GEO_2D}
 	 *
 	 * @since 1.4
-	 * @return
+	 * @return {@link GeoSpatialIndexType#GEO_2D} by default.
 	 */
 	GeoSpatialIndexType type() default GeoSpatialIndexType.GEO_2D;
 
@@ -118,7 +118,7 @@ public @interface GeoSpatialIndexed {
 	 * The bucket size for {@link GeoSpatialIndexType#GEO_HAYSTACK} indexes, in coordinate units.
 	 *
 	 * @since 1.4
-	 * @return
+	 * @return {@literal 1.0} by default.
 	 */
 	double bucketSize() default 1.0;
 
@@ -126,7 +126,7 @@ public @interface GeoSpatialIndexed {
 	 * The name of the additional field to use for {@link GeoSpatialIndexType#GEO_HAYSTACK} indexes
 	 *
 	 * @since 1.4
-	 * @return
+	 * @return empty {@link String} by default.
 	 */
 	String additionalField() default "";
 }

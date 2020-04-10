@@ -41,7 +41,7 @@ public class GlobalLockMetrics extends AbstractMonitor {
 	}
 
 	/**
-	 * @param mongoClient
+	 * @param mongoClient must not be {@literal null}.
 	 * @since 2.2
 	 */
 	public GlobalLockMetrics(com.mongodb.client.MongoClient mongoClient) {

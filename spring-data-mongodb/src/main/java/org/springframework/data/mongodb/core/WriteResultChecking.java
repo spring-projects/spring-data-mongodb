@@ -16,8 +16,8 @@
 package org.springframework.data.mongodb.core;
 
 /**
- * Enum to represent how strict the check of {@link com.mongodb.WriteResult} shall be. It can either be skipped entirely
- * (use {@link #NONE}) or cause an exception to be thrown {@link #EXCEPTION}.
+ * Enum to represent how strict the check of {@link com.mongodb.WriteConcernResult} shall be. It can either be skipped
+ * entirely (use {@link #NONE}) or cause an exception to be thrown {@link #EXCEPTION}.
  *
  * @author Thomas Risberg
  * @author Oliver Gierke

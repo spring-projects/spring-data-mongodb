@@ -38,7 +38,7 @@ public interface ReactiveMongoDatabaseFactory extends CodecRegistryProvider {
 	/**
 	 * Creates a default {@link MongoDatabase} instance.
 	 *
-	 * @return
+	 * @return never {@literal null}.
 	 * @throws DataAccessException
 	 */
 	MongoDatabase getMongoDatabase() throws DataAccessException;
@@ -47,7 +47,7 @@ public interface ReactiveMongoDatabaseFactory extends CodecRegistryProvider {
 	 * Creates a {@link MongoDatabase} instance to access the database with the given name.
 	 *
 	 * @param dbName must not be {@literal null} or empty.
-	 * @return
+	 * @return never {@literal null}.
 	 * @throws DataAccessException
 	 */
 	MongoDatabase getMongoDatabase(String dbName) throws DataAccessException;

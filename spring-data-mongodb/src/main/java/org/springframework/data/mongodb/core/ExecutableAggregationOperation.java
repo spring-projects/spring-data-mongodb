@@ -88,10 +88,10 @@ public interface ExecutableAggregationOperation {
 
 		/**
 		 * Apply pipeline operations as specified and stream all matching elements. <br />
-		 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.Cursor}
+		 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.client.FindIterable}
 		 *
-		 * @return a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.Cursor} that needs to be closed.
-		 *         Never {@literal null}.
+		 * @return a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.client.FindIterable} that needs
+		 *         to be closed. Never {@literal null}.
 		 */
 		CloseableIterator<T> stream();
 	}

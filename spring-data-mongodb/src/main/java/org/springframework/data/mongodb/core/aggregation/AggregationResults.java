@@ -59,7 +59,7 @@ public class AggregationResults<T> implements Iterable<T> {
 	/**
 	 * Returns the aggregation results.
 	 *
-	 * @return
+	 * @return the list of already mapped results or an empty one if none found.
 	 */
 	public List<T> getMappedResults() {
 		return mappedResults;
@@ -68,7 +68,7 @@ public class AggregationResults<T> implements Iterable<T> {
 	/**
 	 * Returns the unique mapped result. Assumes no result or exactly one.
 	 *
-	 * @return
+	 * @return the single already mapped result object or raise an error if more than one found.
 	 * @throws IllegalArgumentException in case more than one result is available.
 	 */
 	@Nullable
@@ -88,7 +88,7 @@ public class AggregationResults<T> implements Iterable<T> {
 	/**
 	 * Returns the server that has been used to perform the aggregation.
 	 *
-	 * @return
+	 * @return can be {@literal null}.
 	 */
 	@Nullable
 	public String getServerUsed() {
@@ -98,7 +98,7 @@ public class AggregationResults<T> implements Iterable<T> {
 	/**
 	 * Returns the raw result that was returned by the server.
 	 *
-	 * @return
+	 * @return the raw response.
 	 * @since 1.6
 	 */
 	public Document getRawResults() {

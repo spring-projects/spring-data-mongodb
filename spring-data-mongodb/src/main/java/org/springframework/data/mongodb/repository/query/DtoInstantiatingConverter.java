@@ -47,19 +47,19 @@ class DtoInstantiatingConverter implements Converter<Object, Object> {
 	 *
 	 * @param dtoType must not be {@literal null}.
 	 * @param context must not be {@literal null}.
-	 * @param instantiators must not be {@literal null}.
+	 * @param entityInstantiators must not be {@literal null}.
 	 */
 	public DtoInstantiatingConverter(Class<?> dtoType,
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context,
-			EntityInstantiators instantiator) {
+			EntityInstantiators entityInstantiators) {
 
 		Assert.notNull(dtoType, "DTO type must not be null!");
 		Assert.notNull(context, "MappingContext must not be null!");
-		Assert.notNull(instantiator, "EntityInstantiators must not be null!");
+		Assert.notNull(entityInstantiators, "EntityInstantiators must not be null!");
 
 		this.targetType = dtoType;
 		this.context = context;
-		this.instantiator = instantiator.getInstantiatorFor(context.getRequiredPersistentEntity(dtoType));
+		this.instantiator = entityInstantiators.getInstantiatorFor(context.getRequiredPersistentEntity(dtoType));
 	}
 
 	/*

@@ -120,7 +120,7 @@ public class Aggregation {
 	 * supported in MongoDB version 2.6+.
 	 *
 	 * @param options must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link Aggregation}.
 	 * @since 1.6
 	 */
 	public Aggregation withOptions(AggregationOptions options) {
@@ -228,7 +228,7 @@ public class Aggregation {
 	 * Creates a new {@link ProjectionOperation} including the given fields.
 	 *
 	 * @param fields must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link ProjectionOperation}.
 	 */
 	public static ProjectionOperation project(String... fields) {
 		return project(fields(fields));
@@ -238,7 +238,7 @@ public class Aggregation {
 	 * Creates a new {@link ProjectionOperation} including the given {@link Fields}.
 	 *
 	 * @param fields must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link ProjectionOperation}.
 	 */
 	public static ProjectionOperation project(Fields fields) {
 		return new ProjectionOperation(fields);
@@ -261,7 +261,7 @@ public class Aggregation {
 	 * Factory method to create a new {@link UnwindOperation} for the field with the given name.
 	 *
 	 * @param field must not be {@literal null} or empty.
-	 * @return
+	 * @return new instance of {@link UnwindOperation}.
 	 */
 	public static UnwindOperation unwind(String field) {
 		return new UnwindOperation(field(field));
@@ -271,7 +271,7 @@ public class Aggregation {
 	 * Factory method to create a new {@link ReplaceRootOperation} for the field with the given name.
 	 *
 	 * @param fieldName must not be {@literal null} or empty.
-	 * @return
+	 * @return new instance of {@link ReplaceRootOperation}.
 	 * @since 1.10
 	 */
 	public static ReplaceRootOperation replaceRoot(String fieldName) {
@@ -283,7 +283,7 @@ public class Aggregation {
 	 * {@link AggregationExpression}.
 	 *
 	 * @param aggregationExpression must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link ReplaceRootOperation}.
 	 * @since 1.10
 	 */
 	public static ReplaceRootOperation replaceRoot(AggregationExpression aggregationExpression) {
@@ -349,7 +349,7 @@ public class Aggregation {
 	 * Creates a new {@link GroupOperation} for the given fields.
 	 *
 	 * @param fields must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link GroupOperation}.
 	 */
 	public static GroupOperation group(String... fields) {
 		return group(fields(fields));
@@ -370,7 +370,7 @@ public class Aggregation {
 	 * {@link GraphLookupOperation} given {@literal fromCollection}.
 	 *
 	 * @param fromCollection must not be {@literal null} or empty.
-	 * @return
+	 * @return new instance of {@link StartWithBuilder} for creating a {@link GraphLookupOperation}.
 	 * @since 1.10
 	 */
 	public static StartWithBuilder graphLookup(String fromCollection) {
@@ -381,7 +381,7 @@ public class Aggregation {
 	 * Factory method to create a new {@link SortOperation} for the given {@link Sort}.
 	 *
 	 * @param sort must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link SortOperation}.
 	 */
 	public static SortOperation sort(Sort sort) {
 		return new SortOperation(sort);
@@ -392,7 +392,7 @@ public class Aggregation {
 	 *
 	 * @param direction must not be {@literal null}.
 	 * @param fields must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link SortOperation}.
 	 */
 	public static SortOperation sort(Direction direction, String... fields) {
 		return new SortOperation(Sort.by(direction, fields));
@@ -402,7 +402,7 @@ public class Aggregation {
 	 * Creates a new {@link SortByCountOperation} given {@literal groupByField}.
 	 *
 	 * @param field must not be {@literal null} or empty.
-	 * @return
+	 * @return new instance of {@link SortByCountOperation}.
 	 * @since 2.1
 	 */
 	public static SortByCountOperation sortByCount(String field) {
@@ -413,7 +413,7 @@ public class Aggregation {
 	 * Creates a new {@link SortByCountOperation} given {@link AggregationExpression group and sort expression}.
 	 *
 	 * @param groupAndSortExpression must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link SortByCountOperation}.
 	 * @since 2.1
 	 */
 	public static SortByCountOperation sortByCount(AggregationExpression groupAndSortExpression) {
@@ -424,9 +424,10 @@ public class Aggregation {
 	 * Creates a new {@link SkipOperation} skipping the given number of elements.
 	 *
 	 * @param elementsToSkip must not be less than zero.
-	 * @return
+	 * @return new instance of {@link SkipOperation}.
 	 * @deprecated prepare to get this one removed in favor of {@link #skip(long)}.
 	 */
+	@Deprecated
 	public static SkipOperation skip(int elementsToSkip) {
 		return new SkipOperation(elementsToSkip);
 	}
@@ -435,7 +436,7 @@ public class Aggregation {
 	 * Creates a new {@link SkipOperation} skipping the given number of elements.
 	 *
 	 * @param elementsToSkip must not be less than zero.
-	 * @return
+	 * @return new instance of {@link SkipOperation}.
 	 */
 	public static SkipOperation skip(long elementsToSkip) {
 		return new SkipOperation(elementsToSkip);
@@ -445,7 +446,7 @@ public class Aggregation {
 	 * Creates a new {@link LimitOperation} limiting the result to the given number of elements.
 	 *
 	 * @param maxElements must not be less than zero.
-	 * @return
+	 * @return new instance of {@link LimitOperation}.
 	 */
 	public static LimitOperation limit(long maxElements) {
 		return new LimitOperation(maxElements);
@@ -455,7 +456,7 @@ public class Aggregation {
 	 * Creates a new {@link SampleOperation} to select the specified number of documents from its input randomly.
 	 *
 	 * @param sampleSize must not be less than zero.
-	 * @return
+	 * @return new instance of {@link SampleOperation}.
 	 * @since 2.0
 	 */
 	public static SampleOperation sample(long sampleSize) {
@@ -466,7 +467,7 @@ public class Aggregation {
 	 * Creates a new {@link MatchOperation} using the given {@link Criteria}.
 	 *
 	 * @param criteria must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link MatchOperation}.
 	 */
 	public static MatchOperation match(Criteria criteria) {
 		return new MatchOperation(criteria);
@@ -476,7 +477,7 @@ public class Aggregation {
 	 * Creates a new {@link MatchOperation} using the given {@link CriteriaDefinition}.
 	 *
 	 * @param criteria must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link MatchOperation}.
 	 * @since 1.10
 	 */
 	public static MatchOperation match(CriteriaDefinition criteria) {
@@ -491,7 +492,7 @@ public class Aggregation {
 	 *          collection in the current database if one does not already exist. The collection is not visible until the
 	 *          aggregation completes. If the aggregation fails, MongoDB does not create the collection. Must not be
 	 *          {@literal null}.
-	 * @return
+	 * @return new instance of {@link OutOperation}.
 	 */
 	public static OutOperation out(String outCollectionName) {
 		return new OutOperation(outCollectionName);
@@ -501,7 +502,7 @@ public class Aggregation {
 	 * Creates a new {@link BucketOperation} given {@literal groupByField}.
 	 *
 	 * @param groupByField must not be {@literal null} or empty.
-	 * @return
+	 * @return new instance of {@link BucketOperation}.
 	 * @since 1.10
 	 */
 	public static BucketOperation bucket(String groupByField) {
@@ -512,7 +513,7 @@ public class Aggregation {
 	 * Creates a new {@link BucketOperation} given {@link AggregationExpression group-by expression}.
 	 *
 	 * @param groupByExpression must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link BucketOperation}.
 	 * @since 1.10
 	 */
 	public static BucketOperation bucket(AggregationExpression groupByExpression) {
@@ -524,7 +525,7 @@ public class Aggregation {
 	 *
 	 * @param groupByField must not be {@literal null} or empty.
 	 * @param buckets number of buckets, must be a positive integer.
-	 * @return
+	 * @return new instance of {@link BucketAutoOperation}.
 	 * @since 1.10
 	 */
 	public static BucketAutoOperation bucketAuto(String groupByField, int buckets) {
@@ -536,7 +537,7 @@ public class Aggregation {
 	 *
 	 * @param groupByExpression must not be {@literal null}.
 	 * @param buckets number of buckets, must be a positive integer.
-	 * @return
+	 * @return new instance of {@link BucketAutoOperation}.
 	 * @since 1.10
 	 */
 	public static BucketAutoOperation bucketAuto(AggregationExpression groupByExpression, int buckets) {
@@ -546,7 +547,7 @@ public class Aggregation {
 	/**
 	 * Creates a new {@link FacetOperation}.
 	 *
-	 * @return
+	 * @return new instance of {@link FacetOperation}.
 	 * @since 1.10
 	 */
 	public static FacetOperation facet() {
@@ -557,7 +558,7 @@ public class Aggregation {
 	 * Creates a new {@link FacetOperationBuilder} given {@link Aggregation}.
 	 *
 	 * @param aggregationOperations the sub-pipeline, must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link FacetOperation}.
 	 * @since 1.10
 	 */
 	public static FacetOperationBuilder facet(AggregationOperation... aggregationOperations) {
@@ -606,7 +607,7 @@ public class Aggregation {
 	 * Creates a new {@link Fields} instance for the given field names.
 	 *
 	 * @param fields must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link Fields}.
 	 * @see Fields#fields(String...)
 	 */
 	public static Fields fields(String... fields) {
@@ -618,7 +619,7 @@ public class Aggregation {
 	 *
 	 * @param name must not be {@literal null} or empty.
 	 * @param target must not be {@literal null} or empty.
-	 * @return
+	 * @return new instance of {@link Fields}.
 	 */
 	public static Fields bind(String name, String target) {
 		return Fields.from(field(name, target));
@@ -640,7 +641,7 @@ public class Aggregation {
 	/**
 	 * Returns a new {@link AggregationOptions.Builder}.
 	 *
-	 * @return
+	 * @return new instance of {@link AggregationOptions.Builder}.
 	 * @since 1.6
 	 */
 	public static AggregationOptions.Builder newAggregationOptions() {
@@ -702,7 +703,7 @@ public class Aggregation {
 		 * otherwise.
 		 *
 		 * @param fieldRef may be {@literal null}.
-		 * @return
+		 * @return {@literal true} if the given field refers to a {@link SystemVariable}.
 		 */
 		public static boolean isReferingToSystemVariable(@Nullable String fieldRef) {
 

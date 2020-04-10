@@ -132,7 +132,7 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 	/**
 	 * The field value must not match the specified schemas.
 	 *
-	 * @param oneOf must not be {@literal null}.
+	 * @param notMatch must not be {@literal null}.
 	 * @return new instance of {@link TypedJsonSchemaObject}.
 	 */
 	public UntypedJsonSchemaObject notMatch(JsonSchemaObject notMatch) {

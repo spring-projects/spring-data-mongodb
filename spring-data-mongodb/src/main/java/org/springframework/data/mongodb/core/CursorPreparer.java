@@ -43,9 +43,10 @@ public interface CursorPreparer extends ReadPreferenceAware {
 	/**
 	 * Prepare the given cursor (apply limits, skips and so on). Returns the prepared cursor.
 	 *
-	 * @param cursor
+	 * @param iterable must not be {@literal null}.
+	 * @return never {@literal null}.
 	 */
-	FindIterable<Document> prepare(FindIterable<Document> cursor);
+	FindIterable<Document> prepare(FindIterable<Document> iterable);
 
 	/**
 	 * Apply query specific settings to {@link MongoCollection} and initate a find operation returning a
@@ -53,7 +54,7 @@ public interface CursorPreparer extends ReadPreferenceAware {
 	 *
 	 * @param collection must not be {@literal null}.
 	 * @param find must not be {@literal null}.
-	 * @return
+	 * @return never {@literal null}.
 	 * @throws IllegalArgumentException if one of the required arguments is {@literal null}.
 	 * @since 2.2
 	 */

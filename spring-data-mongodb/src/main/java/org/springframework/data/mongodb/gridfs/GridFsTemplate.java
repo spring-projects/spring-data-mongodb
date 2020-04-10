@@ -23,9 +23,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.bson.BsonObjectId;
 import org.bson.Document;
 import org.bson.types.ObjectId;
+
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.data.mongodb.MongoDbFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -73,7 +73,7 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 	 *
 	 * @param dbFactory must not be {@literal null}.
 	 * @param converter must not be {@literal null}.
-	 * @param bucket
+	 * @param bucket can be {@literal null}.
 	 */
 	public GridFsTemplate(MongoDbFactory dbFactory, MongoConverter converter, @Nullable String bucket) {
 

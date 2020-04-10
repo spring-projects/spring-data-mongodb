@@ -20,10 +20,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.bson.Document;
+
 import org.springframework.data.mongodb.core.aggregation.BucketOperation.BucketOperationOutputBuilder;
 import org.springframework.util.Assert;
-
-import org.bson.Document;
 
 /**
  * Encapsulates the aggregation framework {@code $bucket}-operation. <br />
@@ -110,7 +110,7 @@ public class BucketOperation extends BucketOperationSupport<BucketOperation, Buc
 	 * Configures a default bucket {@literal literal} and return a new {@link BucketOperation}.
 	 *
 	 * @param literal must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link BucketOperation}.
 	 */
 	public BucketOperation withDefaultBucket(Object literal) {
 
@@ -123,7 +123,7 @@ public class BucketOperation extends BucketOperationSupport<BucketOperation, Buc
 	 * preserved and the new {@literal boundaries} are appended.
 	 *
 	 * @param boundaries must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link BucketOperation}.
 	 */
 	public BucketOperation withBoundaries(Object... boundaries) {
 
@@ -204,12 +204,12 @@ public class BucketOperation extends BucketOperationSupport<BucketOperation, Buc
 			extends ExpressionBucketOperationBuilderSupport<BucketOperationOutputBuilder, BucketOperation> {
 
 		/**
-		 * Creates a new {@link ExpressionBucketOperationBuilderSupport} for the given value, {@link BucketOperation}
-		 * and parameters.
+		 * Creates a new {@link ExpressionBucketOperationBuilderSupport} for the given value, {@link BucketOperation} and
+		 * parameters.
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @param operation must not be {@literal null}.
-		 * @param parameters
+		 * @param parameters must not be {@literal null}.
 		 */
 		protected ExpressionBucketOperationBuilder(String expression, BucketOperation operation, Object[] parameters) {
 			super(expression, operation, parameters);

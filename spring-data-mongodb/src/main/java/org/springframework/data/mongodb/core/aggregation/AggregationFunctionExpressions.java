@@ -41,7 +41,7 @@ public enum AggregationFunctionExpressions {
 	 * Returns an {@link AggregationExpression} build from the current {@link Enum} name and the given parameters.
 	 *
 	 * @param parameters must not be {@literal null}
-	 * @return
+	 * @return new instance of {@link AggregationExpression}.
 	 */
 	public AggregationExpression of(Object... parameters) {
 

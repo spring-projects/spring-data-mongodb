@@ -94,7 +94,7 @@ public interface MessageListenerContainer extends SmartLifecycle {
 	 * Errors during {@link Message} retrieval lead to {@link Subscription#cancel() cannelation} of the underlying task.
 	 *
 	 * @param request must not be {@literal null}.
-	 * @param type the exact target or a more concrete type of the {@link Message#getBody()}.
+	 * @param bodyType the exact target or a more concrete type of the {@link Message#getBody()}.
 	 * @return never {@literal null}.
 	 */
 	<S, T> Subscription register(SubscriptionRequest<S, ? super T, ? extends RequestOptions> request, Class<T> bodyType);
@@ -127,7 +127,8 @@ public interface MessageListenerContainer extends SmartLifecycle {
 	 * Errors during {@link Message} retrieval are delegated to the given {@link ErrorHandler}.
 	 *
 	 * @param request must not be {@literal null}.
-	 * @param type the exact target or a more concrete type of the {@link Message#getBody()}. Must not be {@literal null}.
+	 * @param bodyType the exact target or a more concrete type of the {@link Message#getBody()}. Must not be
+	 *          {@literal null}.
 	 * @param errorHandler the callback to invoke when retrieving the {@link Message} from the data source fails for some
 	 *          reason.
 	 * @return never {@literal null}.

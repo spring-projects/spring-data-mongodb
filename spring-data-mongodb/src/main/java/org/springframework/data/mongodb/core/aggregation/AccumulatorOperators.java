@@ -34,7 +34,7 @@ public class AccumulatorOperators {
 	 * Take the numeric value referenced by given {@literal fieldReference}.
 	 *
 	 * @param fieldReference must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link AccumulatorOperatorFactory}.
 	 */
 	public static AccumulatorOperatorFactory valueOf(String fieldReference) {
 		return new AccumulatorOperatorFactory(fieldReference);
@@ -44,7 +44,7 @@ public class AccumulatorOperators {
 	 * Take the numeric value referenced resulting from given {@link AggregationExpression}.
 	 *
 	 * @param expression must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link AccumulatorOperatorFactory}.
 	 */
 	public static AccumulatorOperatorFactory valueOf(AggregationExpression expression) {
 		return new AccumulatorOperatorFactory(expression);
@@ -86,7 +86,7 @@ public class AccumulatorOperators {
 		 * Creates new {@link AggregationExpression} that takes the associated numeric value expression and calculates and
 		 * returns the sum.
 		 *
-		 * @return
+		 * @return new instance of {@link Sum}.
 		 */
 		public Sum sum() {
 			return usesFieldRef() ? Sum.sumOf(fieldReference) : Sum.sumOf(expression);
@@ -96,7 +96,7 @@ public class AccumulatorOperators {
 		 * Creates new {@link AggregationExpression} that takes the associated numeric value expression and returns the
 		 * average value.
 		 *
-		 * @return
+		 * @return new instance of {@link Avg}.
 		 */
 		public Avg avg() {
 			return usesFieldRef() ? Avg.avgOf(fieldReference) : Avg.avgOf(expression);
@@ -106,7 +106,7 @@ public class AccumulatorOperators {
 		 * Creates new {@link AggregationExpression} that takes the associated numeric value expression and returns the
 		 * maximum value.
 		 *
-		 * @return
+		 * @return new instance of {@link Max}.
 		 */
 		public Max max() {
 			return usesFieldRef() ? Max.maxOf(fieldReference) : Max.maxOf(expression);
@@ -116,7 +116,7 @@ public class AccumulatorOperators {
 		 * Creates new {@link AggregationExpression} that takes the associated numeric value expression and returns the
 		 * minimum value.
 		 *
-		 * @return
+		 * @return new instance of {@link Min}.
 		 */
 		public Min min() {
 			return usesFieldRef() ? Min.minOf(fieldReference) : Min.minOf(expression);
@@ -126,7 +126,7 @@ public class AccumulatorOperators {
 		 * Creates new {@link AggregationExpression} that takes the associated numeric value expression and calculates the
 		 * population standard deviation of the input values.
 		 *
-		 * @return
+		 * @return new instance of {@link StdDevPop}.
 		 */
 		public StdDevPop stdDevPop() {
 			return usesFieldRef() ? StdDevPop.stdDevPopOf(fieldReference) : StdDevPop.stdDevPopOf(expression);
@@ -136,7 +136,7 @@ public class AccumulatorOperators {
 		 * Creates new {@link AggregationExpression} that takes the associated numeric value expression and calculates the
 		 * sample standard deviation of the input values.
 		 *
-		 * @return
+		 * @return new instance of {@link StdDevSamp}.
 		 */
 		public StdDevSamp stdDevSamp() {
 			return usesFieldRef() ? StdDevSamp.stdDevSampOf(fieldReference) : StdDevSamp.stdDevSampOf(expression);
@@ -167,7 +167,7 @@ public class AccumulatorOperators {
 		 * Creates new {@link Sum}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Sum}.
 		 */
 		public static Sum sumOf(String fieldReference) {
 
@@ -179,7 +179,7 @@ public class AccumulatorOperators {
 		 * Creates new {@link Sum}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Sum}.
 		 */
 		public static Sum sumOf(AggregationExpression expression) {
 
@@ -192,7 +192,7 @@ public class AccumulatorOperators {
 		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Sum}.
 		 */
 		public Sum and(String fieldReference) {
 
@@ -205,7 +205,7 @@ public class AccumulatorOperators {
 		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Sum}.
 		 */
 		public Sum and(AggregationExpression expression) {
 
@@ -264,7 +264,7 @@ public class AccumulatorOperators {
 		 * Creates new {@link Avg}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Avg}.
 		 */
 		public static Avg avgOf(String fieldReference) {
 
@@ -276,7 +276,7 @@ public class AccumulatorOperators {
 		 * Creates new {@link Avg}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Avg}.
 		 */
 		public static Avg avgOf(AggregationExpression expression) {
 
@@ -289,7 +289,7 @@ public class AccumulatorOperators {
 		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Avg}.
 		 */
 		public Avg and(String fieldReference) {
 
@@ -302,7 +302,7 @@ public class AccumulatorOperators {
 		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Avg}.
 		 */
 		public Avg and(AggregationExpression expression) {
 
@@ -347,7 +347,7 @@ public class AccumulatorOperators {
 		 * Creates new {@link Max}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Max}.
 		 */
 		public static Max maxOf(String fieldReference) {
 
@@ -359,7 +359,7 @@ public class AccumulatorOperators {
 		 * Creates new {@link Max}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Max}.
 		 */
 		public static Max maxOf(AggregationExpression expression) {
 
@@ -372,7 +372,7 @@ public class AccumulatorOperators {
 		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Max}.
 		 */
 		public Max and(String fieldReference) {
 
@@ -385,7 +385,7 @@ public class AccumulatorOperators {
 		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Max}.
 		 */
 		public Max and(AggregationExpression expression) {
 
@@ -430,7 +430,7 @@ public class AccumulatorOperators {
 		 * Creates new {@link Min}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Min}.
 		 */
 		public static Min minOf(String fieldReference) {
 
@@ -442,7 +442,7 @@ public class AccumulatorOperators {
 		 * Creates new {@link Min}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Min}.
 		 */
 		public static Min minOf(AggregationExpression expression) {
 
@@ -455,7 +455,7 @@ public class AccumulatorOperators {
 		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Min}.
 		 */
 		public Min and(String fieldReference) {
 
@@ -468,7 +468,7 @@ public class AccumulatorOperators {
 		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link Min}.
 		 */
 		public Min and(AggregationExpression expression) {
 
@@ -513,7 +513,7 @@ public class AccumulatorOperators {
 		 * Creates new {@link StdDevPop}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link StdDevPop}.
 		 */
 		public static StdDevPop stdDevPopOf(String fieldReference) {
 
@@ -525,7 +525,7 @@ public class AccumulatorOperators {
 		 * Creates new {@link StdDevPop} with all previously added arguments appending the given one.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link StdDevPop}.
 		 */
 		public static StdDevPop stdDevPopOf(AggregationExpression expression) {
 
@@ -538,7 +538,7 @@ public class AccumulatorOperators {
 		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link StdDevPop}.
 		 */
 		public StdDevPop and(String fieldReference) {
 
@@ -551,7 +551,7 @@ public class AccumulatorOperators {
 		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link StdDevPop}.
 		 */
 		public StdDevPop and(AggregationExpression expression) {
 
@@ -596,7 +596,7 @@ public class AccumulatorOperators {
 		 * Creates new {@link StdDevSamp}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link StdDevSamp}.
 		 */
 		public static StdDevSamp stdDevSampOf(String fieldReference) {
 
@@ -608,7 +608,7 @@ public class AccumulatorOperators {
 		 * Creates new {@link StdDevSamp}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link StdDevSamp}.
 		 */
 		public static StdDevSamp stdDevSampOf(AggregationExpression expression) {
 
@@ -621,7 +621,7 @@ public class AccumulatorOperators {
 		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
 		 *
 		 * @param fieldReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link StdDevSamp}.
 		 */
 		public StdDevSamp and(String fieldReference) {
 
@@ -634,7 +634,7 @@ public class AccumulatorOperators {
 		 * <strong>NOTE:</strong> Only possible in {@code $project} stage.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link StdDevSamp}.
 		 */
 		public StdDevSamp and(AggregationExpression expression) {
 

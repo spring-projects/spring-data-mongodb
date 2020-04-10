@@ -40,7 +40,7 @@ public class HashedIndex implements IndexDefinition {
 	 * Creates a new {@link HashedIndex} for the given field.
 	 *
 	 * @param field must not be {@literal null} nor empty.
-	 * @return
+	 * @return new instance of {@link HashedIndex}.
 	 */
 	public static HashedIndex hashed(String field) {
 		return new HashedIndex(field);

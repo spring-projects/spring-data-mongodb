@@ -28,7 +28,7 @@ public interface Cancelable {
 	/**
 	 * Abort and free resources.
 	 *
-	 * @throws DataAccessResourceFailureException
+	 * @throws DataAccessResourceFailureException if operation cannot be canceled.
 	 */
 	void cancel() throws DataAccessResourceFailureException;
 }

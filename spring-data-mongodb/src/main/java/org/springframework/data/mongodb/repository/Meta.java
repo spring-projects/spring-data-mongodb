@@ -37,7 +37,7 @@ public @interface Meta {
 	/**
 	 * Set the maximum time limit in milliseconds for processing operations.
 	 *
-	 * @return
+	 * @return {@literal -1} by default.
 	 * @since 1.10
 	 */
 	long maxExecutionTimeMs() default -1;
@@ -64,7 +64,7 @@ public @interface Meta {
 	/**
 	 * Add a comment to the query.
 	 *
-	 * @return
+	 * @return empty {@link String} by default.
 	 */
 	String comment() default "";
 

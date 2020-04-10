@@ -37,7 +37,7 @@ public abstract class AbstractMonitor {
 	private final Object mongoClient;
 
 	/**
-	 * @param mongoClient
+	 * @param mongoClient must not be {@literal null}.
 	 * @deprecated since 2.2 in favor of {@link #AbstractMonitor(com.mongodb.client.MongoClient)}
 	 */
 	@Deprecated

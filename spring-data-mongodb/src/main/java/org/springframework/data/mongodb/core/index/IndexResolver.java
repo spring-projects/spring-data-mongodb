@@ -52,7 +52,7 @@ public interface IndexResolver {
 	 * Find and create {@link IndexDefinition}s for properties of given {@link TypeInformation}. {@link IndexDefinition}s
 	 * are created for properties and types with {@link Indexed}, {@link CompoundIndexes} or {@link GeoSpatialIndexed}.
 	 *
-	 * @param typeInformation
+	 * @param typeInformation must not be {@literal null}.
 	 * @return Empty {@link Iterable} in case no {@link IndexDefinition} could be resolved for type.
 	 */
 	Iterable<? extends IndexDefinition> resolveIndexFor(TypeInformation<?> typeInformation);
@@ -61,7 +61,7 @@ public interface IndexResolver {
 	 * Find and create {@link IndexDefinition}s for properties of given {@link TypeInformation}. {@link IndexDefinition}s
 	 * are created for properties and types with {@link Indexed}, {@link CompoundIndexes} or {@link GeoSpatialIndexed}.
 	 *
-	 * @param entityType
+	 * @param entityType must not be {@literal null}.
 	 * @return Empty {@link Iterable} in case no {@link IndexDefinition} could be resolved for type.
 	 * @see 2.2
 	 */

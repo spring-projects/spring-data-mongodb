@@ -40,6 +40,7 @@ import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -122,9 +123,6 @@ import org.springframework.util.StringUtils;
 
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.CursorType;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
@@ -322,8 +320,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	/**
 	 * Configures the {@link WriteConcern} to be used with the template. If none is configured the {@link WriteConcern}
-	 * configured on the {@link MongoDbFactory} will apply. If you configured a {@link Mongo} instance no
-	 * {@link WriteConcern} will be used.
+	 * configured on the {@link MongoDbFactory} will apply.
 	 *
 	 * @param writeConcern can be {@literal null}.
 	 */
@@ -2400,8 +2397,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @param query the query document that specifies the criteria used to find a record.
 	 * @param fields the document that specifies the fields to be returned.
 	 * @param entityClass the parameterized type of the returned list.
-	 * @param preparer allows for customization of the {@link DBCursor} used when iterating over the result set, (apply
-	 *          limits, skips and so on).
+	 * @param preparer allows for customization of the {@link com.mongodb.client.FindIterable} used when iterating over
+	 *          the result set, (apply limits, skips and so on).
 	 * @return the {@link List} of converted objects.
 	 */
 	protected <T> Flux<T> doFind(String collectionName, Document query, Document fields, Class<T> entityClass,
@@ -2812,7 +2809,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	/**
 	 * Simple {@link ReactiveCollectionCallback} that takes a query {@link Document} plus an optional fields specification
-	 * {@link Document} and executes that against the {@link DBCollection}.
+	 * {@link Document} and executes that against the {@link MongoCollection}.
 	 *
 	 * @author Oliver Gierke
 	 * @author Thomas Risberg

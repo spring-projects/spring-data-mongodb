@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import com.mongodb.ReadPreference;
 import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +25,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.bson.Document;
+
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -37,6 +37,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
+import com.mongodb.ReadPreference;
 import com.mongodb.client.FindIterable;
 
 /**
@@ -257,9 +258,9 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		 * @see org.springframework.data.mongodb.core.CursorPreparer#prepare(com.mongodb.clientFindIterable)
 		 */
 		@Override
-		public FindIterable<Document> prepare(FindIterable<Document> cursor) {
+		public FindIterable<Document> prepare(FindIterable<Document> iterable) {
 
-			FindIterable<Document> target = delegate != null ? delegate.prepare(cursor) : cursor;
+			FindIterable<Document> target = delegate != null ? delegate.prepare(iterable) : iterable;
 			return limit.map(target::limit).orElse(target);
 		}
 

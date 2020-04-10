@@ -31,8 +31,8 @@ public interface AggregationExpression {
 	 * Turns the {@link AggregationExpression} into a {@link Document} within the given
 	 * {@link AggregationOperationContext}.
 	 *
-	 * @param context
-	 * @return
+	 * @param context must not be {@literal null}.
+	 * @return the MongoDB native ({@link Document}) form of the expression.
 	 */
 	Document toDocument(AggregationOperationContext context);
 }

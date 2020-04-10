@@ -40,13 +40,13 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 	/**
 	 * Creates a new {@link CachingMongoPersistentProperty}.
 	 *
-	 * @param property
-	 * @param owner
-	 * @param simpleTypeHolder
-	 * @param fieldNamingStrategy
+	 * @param property must not be {@literal null}.
+	 * @param owner must not be {@literal null}.
+	 * @param simpleTypeHolder must not be {@literal null}.
+	 * @param fieldNamingStrategy can be {@literal null}.
 	 */
 	public CachingMongoPersistentProperty(Property property, MongoPersistentEntity<?> owner,
-			SimpleTypeHolder simpleTypeHolder, FieldNamingStrategy fieldNamingStrategy) {
+			SimpleTypeHolder simpleTypeHolder, @Nullable FieldNamingStrategy fieldNamingStrategy) {
 		super(property, owner, simpleTypeHolder, fieldNamingStrategy);
 	}
 

@@ -89,7 +89,7 @@ public abstract class MongoConfigurationSupport {
 	/**
 	 * Register custom {@link Converter}s in a {@link CustomConversions} object if required. These
 	 * {@link CustomConversions} will be registered with the {@link #mappingMongoConverter()} and
-	 * {@link #mongoMappingContext()}. Returns an empty {@link MongoCustomConversions} instance by default.
+	 * {@link MongoMappingContext}. Returns an empty {@link MongoCustomConversions} instance by default.
 	 *
 	 * @return must not be {@literal null}.
 	 */

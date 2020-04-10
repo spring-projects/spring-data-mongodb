@@ -3262,9 +3262,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.CursorPreparer#prepare(com.mongodb.DBCursor)
 		 */
-		public FindIterable<Document> prepare(FindIterable<Document> cursor) {
+		public FindIterable<Document> prepare(FindIterable<Document> iterable) {
 
-			FindIterable<Document> cursorToUse = cursor;
+			FindIterable<Document> cursorToUse = iterable;
 
 			operations.forType(type).getCollation(query) //
 					.map(Collation::toMongoCollation) //

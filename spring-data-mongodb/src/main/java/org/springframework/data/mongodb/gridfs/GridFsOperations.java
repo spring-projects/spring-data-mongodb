@@ -137,7 +137,7 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	 * case no file matches.
 	 *
 	 * @param query must not be {@literal null}.
-	 * @return
+	 * @return can be {@literal null}.
 	 */
 	@Nullable
 	com.mongodb.client.gridfs.model.GridFSFile findOne(Query query);
@@ -172,7 +172,7 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	 * Returns all {@link GridFsResource}s matching the given file name pattern.
 	 *
 	 * @param filenamePattern must not be {@literal null}.
-	 * @return
+	 * @return an empty array if none found.
 	 * @see ResourcePatternResolver#getResources(String)
 	 */
 	GridFsResource[] getResources(String filenamePattern);

@@ -37,7 +37,7 @@ interface ValueResolver {
 	 * @param prop
 	 * @param bson
 	 * @param evaluator
-	 * @param parent
+	 * @param path
 	 * @return
 	 */
 	@Nullable

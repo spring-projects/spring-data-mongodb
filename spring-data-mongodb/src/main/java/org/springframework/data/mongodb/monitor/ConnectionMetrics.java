@@ -41,7 +41,7 @@ public class ConnectionMetrics extends AbstractMonitor {
 	}
 
 	/**
-	 * @param mongoClient
+	 * @param mongoClient must not be {@literal null}.
 	 * @since 2.2
 	 */
 	public ConnectionMetrics(com.mongodb.client.MongoClient mongoClient) {

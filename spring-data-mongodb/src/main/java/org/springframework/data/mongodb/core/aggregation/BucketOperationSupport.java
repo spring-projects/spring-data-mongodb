@@ -21,13 +21,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.BucketOperationSupport.OutputBuilder;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder;
 import org.springframework.expression.spel.ast.Projection;
 import org.springframework.util.Assert;
-
-import org.bson.Document;
 
 /**
  * Base class for bucket operations that support output expressions the aggregation framework. <br />
@@ -104,7 +103,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 	 *
 	 * @param expression the SpEL expression, must not be {@literal null} or empty.
 	 * @param params must not be {@literal null}
-	 * @return
+	 * @return new instance of {@link ExpressionBucketOperationBuilderSupport} to create {@link BucketOperation}.
 	 */
 	public abstract ExpressionBucketOperationBuilderSupport<B, T> andOutputExpression(String expression,
 			Object... params);
@@ -114,7 +113,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 	 * resulting bucket documents.
 	 *
 	 * @param expression the SpEL expression, must not be {@literal null} or empty.
-	 * @return
+	 * @return never {@literal null}.
 	 */
 	public abstract B andOutput(AggregationExpression expression);
 
@@ -124,14 +123,14 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 	 * {@literal fieldName}.
 	 *
 	 * @param fieldName must not be {@literal null} or empty.
-	 * @return
+	 * @return never {@literal null}.
 	 */
 	public abstract B andOutput(String fieldName);
 
 	/**
 	 * Creates a new {@link BucketOperationSupport} given to add a count field to the resulting bucket documents.
 	 *
-	 * @return
+	 * @return never {@literal null}.
 	 */
 	public B andOutputCount() {
 		return andOutput(new AggregationExpression() {
@@ -231,7 +230,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		 * Generates a builder for a {@code $sum}-expression. <br />
 		 * Count expressions are emulated via {@code $sum: 1}.
 		 *
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		public B count() {
 			return sum(1);
@@ -240,7 +239,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		/**
 		 * Generates a builder for a {@code $sum}-expression for the current value.
 		 *
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		public B sum() {
 			return apply(Accumulators.SUM);
@@ -249,8 +248,8 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		/**
 		 * Generates a builder for a {@code $sum}-expression for the given {@literal value}.
 		 *
-		 * @param value
-		 * @return
+		 * @param value must not be {@literal null}.
+		 * @return never {@literal null}.
 		 */
 		public B sum(Number value) {
 			return apply(new OperationOutput(Accumulators.SUM.getMongoOperator(), Collections.singleton(value)));
@@ -259,7 +258,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		/**
 		 * Generates a builder for an {@code $last}-expression for the current value..
 		 *
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		public B last() {
 			return apply(Accumulators.LAST);
@@ -268,7 +267,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		/**
 		 * Generates a builder for a {@code $first}-expression the current value.
 		 *
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		public B first() {
 			return apply(Accumulators.FIRST);
@@ -277,8 +276,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		/**
 		 * Generates a builder for an {@code $avg}-expression for the current value.
 		 *
-		 * @param reference
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		public B avg() {
 			return apply(Accumulators.AVG);
@@ -287,7 +285,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		/**
 		 * Generates a builder for an {@code $min}-expression for the current value.
 		 *
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		public B min() {
 			return apply(Accumulators.MIN);
@@ -296,7 +294,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		/**
 		 * Generates a builder for an {@code $max}-expression for the current value.
 		 *
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		public B max() {
 			return apply(Accumulators.MAX);
@@ -305,7 +303,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		/**
 		 * Generates a builder for an {@code $push}-expression for the current value.
 		 *
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		public B push() {
 			return apply(Accumulators.PUSH);
@@ -314,7 +312,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		/**
 		 * Generates a builder for an {@code $addToSet}-expression for the current value.
 		 *
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		public B addToSet() {
 			return apply(Accumulators.ADDTOSET);
@@ -325,7 +323,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		 *
 		 * @param operation the operation name, must not be {@literal null} or empty.
 		 * @param values must not be {@literal null}.
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		public B apply(String operation, Object... values) {
 
@@ -342,7 +340,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		 * Apply an {@link OperationOutput} to this output.
 		 *
 		 * @param operationOutput must not be {@literal null}.
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		protected abstract B apply(OperationOutput operationOutput);
 
@@ -354,7 +352,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		 * Returns the finally to be applied {@link BucketOperation} with the given alias.
 		 *
 		 * @param alias will never be {@literal null} or empty.
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		public T as(String alias) {
 
@@ -550,8 +548,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		public Document toDocument(AggregationOperationContext context) {
 
 			List<Object> operationArguments = getOperationArguments(context);
-			return new Document(operation,
-					operationArguments.size() == 1 ? operationArguments.get(0) : operationArguments);
+			return new Document(operation, operationArguments.size() == 1 ? operationArguments.get(0) : operationArguments);
 		}
 
 		protected List<Object> getOperationArguments(AggregationOperationContext context) {
@@ -579,7 +576,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		/**
 		 * Returns the field that holds the {@link ProjectionOperationBuilder.OperationProjection}.
 		 *
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		protected Field getField() {
 			return getExposedField();
@@ -589,7 +586,7 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		 * Creates a new instance of this {@link OperationOutput} with the given alias.
 		 *
 		 * @param alias the alias to set
-		 * @return
+		 * @return new instance of {@link OperationOutput}.
 		 */
 		public OperationOutput withAlias(String alias) {
 
@@ -658,8 +655,8 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		/**
 		 * Creates a new {@link AggregationExpressionOutput}.
 		 *
-		 * @param field
-		 * @param expression
+		 * @param field must not be {@literal null}.
+		 * @param expression must not be {@literal null}.
 		 */
 		protected AggregationExpressionOutput(Field field, AggregationExpression expression) {
 

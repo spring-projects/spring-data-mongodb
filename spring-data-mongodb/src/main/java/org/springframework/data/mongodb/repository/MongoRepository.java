@@ -69,8 +69,8 @@ public interface MongoRepository<T, ID> extends PagingAndSortingRepository<T, ID
 
 	/**
 	 * Inserts the given entities. Assumes the given entities to have not been persisted yet and thus will optimize the
-	 * insert over a call to {@link #save(Iterable)}. Prefer using {@link #save(Iterable)} to avoid the usage of store
-	 * specific API.
+	 * insert over a call to {@link #saveAll(Iterable)}. Prefer using {@link #saveAll(Iterable)} to avoid the usage of
+	 * store specific API.
 	 *
 	 * @param entities must not be {@literal null}.
 	 * @return the saved entities

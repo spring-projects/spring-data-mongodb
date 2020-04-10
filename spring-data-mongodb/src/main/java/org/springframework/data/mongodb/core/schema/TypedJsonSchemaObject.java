@@ -111,7 +111,6 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 	/**
 	 * Auto generate the {@literal description} if not explicitly set.
 	 *
-	 * @param description must not be {@literal null}.
 	 * @return new instance of {@link TypedJsonSchemaObject}.
 	 */
 	@Override
@@ -167,7 +166,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 	/**
 	 * The field value must not match the specified schemas.
 	 *
-	 * @param oneOf must not be {@literal null}.
+	 * @param notMatch must not be {@literal null}.
 	 * @return new instance of {@link TypedJsonSchemaObject}.
 	 */
 	@Override

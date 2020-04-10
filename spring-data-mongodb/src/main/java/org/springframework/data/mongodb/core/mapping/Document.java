@@ -60,7 +60,7 @@ public @interface Document {
 	/**
 	 * Defines the default language to be used with this document.
 	 *
-	 * @return
+	 * @return an empty String by default.
 	 * @since 1.6
 	 */
 	String language() default "";

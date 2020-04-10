@@ -67,7 +67,7 @@ public class Query {
 	 * Static factory method to create a {@link Query} using the provided {@link CriteriaDefinition}.
 	 *
 	 * @param criteriaDefinition must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link Query}.
 	 * @since 1.6
 	 */
 	public static Query query(CriteriaDefinition criteriaDefinition) {
@@ -90,7 +90,7 @@ public class Query {
 	 * Adds the given {@link CriteriaDefinition} to the current {@link Query}.
 	 *
 	 * @param criteriaDefinition must not be {@literal null}.
-	 * @return
+	 * @return this.
 	 * @since 1.6
 	 */
 	public Query addCriteria(CriteriaDefinition criteriaDefinition) {
@@ -122,7 +122,7 @@ public class Query {
 	 * Set number of documents to skip before returning results.
 	 *
 	 * @param skip
-	 * @return
+	 * @return this.
 	 */
 	public Query skip(long skip) {
 		this.skip = skip;
@@ -133,7 +133,7 @@ public class Query {
 	 * Limit the number of returned documents to {@code limit}.
 	 *
 	 * @param limit
-	 * @return
+	 * @return this.
 	 */
 	public Query limit(int limit) {
 		this.limit = limit;
@@ -144,7 +144,7 @@ public class Query {
 	 * Configures the query to use the given hint when being executed. {@code hint} is parsed as {@link Document}.
 	 *
 	 * @param hint must not be {@literal null} or empty.
-	 * @return
+	 * @return this.
 	 * @see Document#parse(String)
 	 * @deprecated since 2.2, use {@link #withHint(Document)}
 	 */
@@ -160,7 +160,7 @@ public class Query {
 	 * Configures the query to use the given {@link Document hint} when being executed.
 	 *
 	 * @param hint must not be {@literal null}.
-	 * @return
+	 * @return this.
 	 * @since 2.2
 	 */
 	public Query withHint(Document hint) {
@@ -174,8 +174,8 @@ public class Query {
 	 * Sets the given pagination information on the {@link Query} instance. Will transparently set {@code skip} and
 	 * {@code limit} as well as applying the {@link Sort} instance defined with the {@link Pageable}.
 	 *
-	 * @param pageable
-	 * @return
+	 * @param pageable must not be {@literal null}.
+	 * @return this.
 	 */
 	public Query with(Pageable pageable) {
 
@@ -192,8 +192,8 @@ public class Query {
 	/**
 	 * Adds a {@link Sort} to the {@link Query} instance.
 	 *
-	 * @param sort
-	 * @return
+	 * @param sort must not be {@literal null}.
+	 * @return this.
 	 */
 	public Query with(Sort sort) {
 
@@ -226,7 +226,7 @@ public class Query {
 	 *
 	 * @param type may not be {@literal null}
 	 * @param additionalTypes may not be {@literal null}
-	 * @return
+	 * @return this.
 	 */
 	public Query restrict(Class<?> type, Class<?>... additionalTypes) {
 
@@ -295,7 +295,7 @@ public class Query {
 	/**
 	 * Get the number of documents to skip.
 	 *
-	 * @return
+	 * @return number of documents to skip
 	 */
 	public long getSkip() {
 		return this.skip;
@@ -304,7 +304,7 @@ public class Query {
 	/**
 	 * Get the maximum number of documents to be return.
 	 *
-	 * @return
+	 * @return number of documents to return.
 	 */
 	public int getLimit() {
 		return this.limit;
@@ -334,7 +334,7 @@ public class Query {
 
 	/**
 	 * @param timeout
-	 * @param timeUnit
+	 * @param timeUnit must not be {@literal null}.
 	 * @return this.
 	 * @see Meta#setMaxTime(long, TimeUnit)
 	 * @since 1.6
@@ -348,7 +348,7 @@ public class Query {
 	}
 
 	/**
-	 * @param timeout
+	 * @param timeout must not be {@literal null}.
 	 * @return this.
 	 * @see Meta#setMaxTime(Duration)
 	 * @since 2.1
@@ -376,7 +376,7 @@ public class Query {
 	/**
 	 * Add a comment to the query that is propagated to the profile log.
 	 *
-	 * @param comment
+	 * @param comment must not be {@literal null}.
 	 * @return this.
 	 * @see Meta#setComment(String)
 	 * @since 1.6
@@ -484,7 +484,7 @@ public class Query {
 	 * Set the {@link Collation} applying language-specific rules for string comparison.
 	 *
 	 * @param collation can be {@literal null}.
-	 * @return
+	 * @return this.
 	 * @since 2.0
 	 */
 	public Query collation(@Nullable Collation collation) {
@@ -496,7 +496,7 @@ public class Query {
 	/**
 	 * Get the {@link Collation} defining language-specific rules for string comparison.
 	 *
-	 * @return
+	 * @return never {@literal null}.
 	 * @since 2.0
 	 */
 	public Optional<Collation> getCollation() {

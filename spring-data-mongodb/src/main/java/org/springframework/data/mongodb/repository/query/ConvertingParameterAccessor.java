@@ -159,7 +159,7 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	 *
 	 * @param value can be {@literal null}.
 	 * @param typeInformation can be {@literal null}.
-	 * @return
+	 * @return can be {@literal null}.
 	 */
 	@Nullable
 	private Object getConvertedValue(Object value, @Nullable TypeInformation<?> typeInformation) {
@@ -251,8 +251,8 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	 * array. Will return an empty {@link Collection} in case {@literal null} is given. Will wrap all other types into a
 	 * single-element collection.
 	 *
-	 * @param source
-	 * @return
+	 * @param source can be {@literal null}, returns an empty {@link List} in that case.
+	 * @return never {@literal null}.
 	 */
 	private static Collection<?> asCollection(@Nullable Object source) {
 

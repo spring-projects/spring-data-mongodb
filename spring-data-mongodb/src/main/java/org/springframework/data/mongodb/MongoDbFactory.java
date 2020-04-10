@@ -37,7 +37,7 @@ public interface MongoDbFactory extends CodecRegistryProvider, MongoSessionProvi
 	/**
 	 * Creates a default {@link MongoDatabase} instance.
 	 *
-	 * @return
+	 * @return never {@literal null}.
 	 * @throws DataAccessException
 	 */
 	MongoDatabase getDb() throws DataAccessException;
@@ -46,7 +46,7 @@ public interface MongoDbFactory extends CodecRegistryProvider, MongoSessionProvi
 	 * Creates a {@link DB} instance to access the database with the given name.
 	 *
 	 * @param dbName must not be {@literal null} or empty.
-	 * @return
+	 * @return never {@literal null}.
 	 * @throws DataAccessException
 	 */
 	MongoDatabase getDb(String dbName) throws DataAccessException;
