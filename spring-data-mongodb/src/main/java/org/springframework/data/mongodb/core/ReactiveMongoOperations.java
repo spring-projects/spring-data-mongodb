@@ -66,6 +66,7 @@ import com.mongodb.reactivestreams.client.MongoCollection;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Mathieu Ouellet
  * @since 2.0
  * @see Flux
  * @see Mono
@@ -298,7 +299,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param collectionName name of the collection.
 	 * @return an existing collection or one created on first server interaction.
 	 */
-	MongoCollection<Document> getCollection(String collectionName);
+	Mono<MongoCollection<Document>> getCollection(String collectionName);
 
 	/**
 	 * Check to see if a collection with a name indicated by the entity class exists.

@@ -116,6 +116,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * @author Mark Paluch
  * @author Christoph Strobl
  * @author Roman Puchkovskiy
+ * @author Mathieu Ouellet
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -146,7 +147,7 @@ public class ReactiveMongoTemplateUnitTests {
 
 		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslator);
 		when(factory.getCodecRegistry()).thenReturn(MongoClientSettings.getDefaultCodecRegistry());
-		when(factory.getMongoDatabase()).thenReturn(db);
+		when(factory.getMongoDatabase()).thenReturn(Mono.just(db));
 		when(db.getCollection(any())).thenReturn(collection);
 		when(db.getCollection(any(), any())).thenReturn(collection);
 		when(db.runCommand(any(), any(Class.class))).thenReturn(runCommandPublisher);

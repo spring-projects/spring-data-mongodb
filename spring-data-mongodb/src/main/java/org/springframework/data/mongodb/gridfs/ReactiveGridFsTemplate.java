@@ -53,6 +53,7 @@ import com.mongodb.reactivestreams.client.gridfs.GridFSUploadPublisher;
  * @author Nick Stolwijk
  * @author Denis Zavedeev
  * @author Christoph Strobl
+ * @author Mathieu Ouellet
  * @since 2.2
  */
 public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements ReactiveGridFsOperations {
@@ -270,7 +271,7 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 
 	protected GridFSBucket getGridFs() {
 
-		MongoDatabase db = dbFactory.getMongoDatabase();
+		MongoDatabase db = dbFactory.getMongoDatabase().block(); // FIXME DATAMONGO-2505
 		return bucket == null ? GridFSBuckets.create(db) : GridFSBuckets.create(db, bucket);
 	}
 }

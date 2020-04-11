@@ -40,10 +40,12 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.mongodb.reactivestreams.client.MongoCollection;
+import com.mongodb.reactivestreams.client.MongoDatabase;
 
 /**
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Mathieu Ouellet
  * @currentRead Beyond the Shadows - Brent Weeks
  */
 @RunWith(SpringRunner.class)
@@ -62,7 +64,8 @@ public class ReactiveMapReduceTests {
 		template.dropCollection(ValueObject.class) //
 				.mergeWith(template.dropCollection("jmr1")) //
 				.mergeWith(template.dropCollection("jmr1_out")) //
-				.mergeWith(Mono.from(factory.getMongoDatabase("reactive-jrm1-out-db").drop()).then()).as(StepVerifier::create) //
+				.mergeWith(factory.getMongoDatabase("reactive-jrm1-out-db").map(MongoDatabase::drop).then()) //
+				.as(StepVerifier::create) //
 				.verifyComplete();
 	}
 
@@ -144,7 +147,7 @@ public class ReactiveMapReduceTests {
 						MapReduceOptions.options().outputDatabase("reactive-jrm1-out-db").outputCollection("jmr1_out"))
 				.as(StepVerifier::create).expectNextCount(4).verifyComplete();
 
-		Flux.from(factory.getMongoDatabase("reactive-jrm1-out-db").listCollectionNames()).buffer(10)
+		factory.getMongoDatabase("reactive-jrm1-out-db").flatMapMany(MongoDatabase::listCollectionNames).buffer(10)
 				.map(list -> list.contains("jmr1_out")).as(StepVerifier::create).expectNext(true).verifyComplete();
 	}
 
@@ -190,11 +193,11 @@ public class ReactiveMapReduceTests {
 
 	private void createMapReduceData() {
 
-		MongoCollection<Document> collection = factory.getMongoDatabase().getCollection("jmr1", Document.class);
-
-		StepVerifier
-				.create(collection.insertMany(Arrays.asList(new Document("x", Arrays.asList("a", "b")),
-						new Document("x", Arrays.asList("b", "c")), new Document("x", Arrays.asList("c", "d")))))
+		factory.getMongoDatabase()
+				.flatMapMany(db -> db.getCollection("jmr1", Document.class)
+						.insertMany(Arrays.asList(new Document("x", Arrays.asList("a", "b")),
+								new Document("x", Arrays.asList("b", "c")), new Document("x", Arrays.asList("c", "d")))))
+				.as(StepVerifier::create) //
 				.expectNextCount(1) //
 				.verifyComplete();
 	}

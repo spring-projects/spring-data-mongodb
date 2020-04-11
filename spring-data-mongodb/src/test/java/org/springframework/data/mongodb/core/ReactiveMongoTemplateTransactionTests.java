@@ -47,6 +47,7 @@ import com.mongodb.reactivestreams.client.MongoClient;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Mathieu Ouellet
  * @currentRead The Core - Peter V. Brett
  */
 @ExtendWith(MongoClientExtension.class)
@@ -186,10 +187,10 @@ public class ReactiveMongoTemplateTransactionTests {
 	public void changesNotVisibleOutsideTransaction() {
 
 		template.inTransaction().execute(action -> {
-			return action.remove(ID_QUERY, Document.class, COLLECTION_NAME).flatMap(val -> {
+			return action.remove(ID_QUERY, Document.class, COLLECTION_NAME).flatMapMany(val -> {
 
 				// once we use the collection directly we're no longer participating in the tx
-				return Mono.from(template.getCollection(COLLECTION_NAME).find(ID_QUERY.getQueryObject()));
+				return template.getCollection(COLLECTION_NAME).flatMapMany(it -> it.find(ID_QUERY.getQueryObject()));
 			});
 		}).as(StepVerifier::create).expectNext(DOCUMENT).verifyComplete();
 

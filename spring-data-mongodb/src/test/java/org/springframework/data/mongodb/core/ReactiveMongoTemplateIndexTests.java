@@ -48,14 +48,15 @@ import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
 import com.mongodb.client.model.IndexOptions;
-import com.mongodb.reactivestreams.client.ListIndexesPublisher;
 import com.mongodb.reactivestreams.client.MongoClient;
+import com.mongodb.reactivestreams.client.MongoCollection;
 
 /**
  * Integration test for index creation via {@link ReactiveMongoTemplate}.
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Mathieu Ouellet
  */
 @ExtendWith(MongoClientExtension.class)
 public class ReactiveMongoTemplateIndexTests {
@@ -73,10 +74,9 @@ public class ReactiveMongoTemplateIndexTests {
 		mappingContext.setAutoIndexCreation(true);
 		template = new ReactiveMongoTemplate(factory, new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext));
 
-
-		MongoTestUtils.dropCollectionNow(template.getMongoDatabase().getName(), "person", client);
-		MongoTestUtils.dropCollectionNow(template.getMongoDatabase().getName(), "indexfail", client);
-		MongoTestUtils.dropCollectionNow(template.getMongoDatabase().getName(), "indexedSample", client);
+		MongoTestUtils.dropCollectionNow("reactive-template-index-tests", "person", client);
+		MongoTestUtils.dropCollectionNow("reactive-template-index-tests", "indexfail", client);
+		MongoTestUtils.dropCollectionNow("reactive-template-index-tests", "indexedSample", client);
 	}
 
 	@AfterEach
@@ -99,7 +99,8 @@ public class ReactiveMongoTemplateIndexTests {
 				.expectNextCount(1) //
 				.verifyComplete();
 
-		Flux.from(template.getCollection(template.getCollectionName(Person.class)).listIndexes()).collectList() //
+		template.getCollection(template.getCollectionName(Person.class)).flatMapMany(MongoCollection::listIndexes)
+				.collectList() //
 				.as(StepVerifier::create) //
 				.consumeNextWith(indexInfo -> {
 
@@ -161,16 +162,15 @@ public class ReactiveMongoTemplateIndexTests {
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
-		Flux.from(factory.getMongoDatabase().getCollection(template.getCollectionName(Person.class))
-				.createIndex(new Document("age", -1), new IndexOptions().unique(true).sparse(true))) //
+		factory.getMongoDatabase() //
+				.flatMapMany(db -> db.getCollection(template.getCollectionName(Person.class))
+						.createIndex(new Document("age", -1), new IndexOptions().unique(true).sparse(true)))
 				.as(StepVerifier::create) //
 				.expectNextCount(1) //
 				.verifyComplete();
 
-		ListIndexesPublisher<Document> listIndexesPublisher = template
-				.getCollection(template.getCollectionName(Person.class)).listIndexes();
-
-		Flux.from(listIndexesPublisher).collectList() //
+		template.getCollection(template.getCollectionName(Person.class)).flatMapMany(MongoCollection::listIndexes)
+				.collectList() //
 				.as(StepVerifier::create) //
 				.consumeNextWith(indexInfos -> {
 
@@ -205,7 +205,9 @@ public class ReactiveMongoTemplateIndexTests {
 	@RepeatFailedTest(3)
 	void shouldCreateIndexOnAccess() {
 
-		StepVerifier.create(template.getCollection("indexedSample").listIndexes(Document.class)).expectNextCount(0)
+		template.getCollection("indexedSample").flatMapMany(it -> it.listIndexes(Document.class)) //
+				.as(StepVerifier::create) //
+				.expectNextCount(0) //
 				.verifyComplete();
 
 		template.findAll(IndexedSample.class) //
@@ -213,7 +215,9 @@ public class ReactiveMongoTemplateIndexTests {
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
-		StepVerifier.create(template.getCollection("indexedSample").listIndexes(Document.class)).expectNextCount(2)
+		template.getCollection("indexedSample").flatMapMany(it -> it.listIndexes(Document.class)) //
+				.as(StepVerifier::create) //
+				.expectNextCount(2) //
 				.verifyComplete();
 	}
 
@@ -221,8 +225,9 @@ public class ReactiveMongoTemplateIndexTests {
 	@RepeatFailedTest(3)
 	void indexCreationShouldFail() throws InterruptedException {
 
-		Flux.from(factory.getMongoDatabase().getCollection("indexfail") //
-				.createIndex(new Document("field", 1), new IndexOptions().name("foo").unique(true).sparse(true)))
+		factory.getMongoDatabase() //
+				.flatMapMany(db -> db.getCollection("indexfail") //
+						.createIndex(new Document("field", 1), new IndexOptions().name("foo").unique(true).sparse(true)))
 				.as(StepVerifier::create) //
 				.expectNextCount(1) //
 				.verifyComplete();

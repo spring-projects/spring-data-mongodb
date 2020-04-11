@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core;
 import lombok.Value;
 import reactor.core.publisher.Mono;
 
+import org.bson.codecs.configuration.CodecRegistry;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.dao.DataAccessException;
@@ -41,6 +42,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Mathieu Ouellet
  * @since 2.0
  */
 public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, ReactiveMongoDatabaseFactory {
@@ -99,7 +101,7 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.ReactiveMongoDbFactory#getMongoDatabase()
 	 */
-	public MongoDatabase getMongoDatabase() throws DataAccessException {
+	public Mono<MongoDatabase> getMongoDatabase() throws DataAccessException {
 		return getMongoDatabase(databaseName);
 	}
 
@@ -107,12 +109,12 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.ReactiveMongoDbFactory#getMongoDatabase(java.lang.String)
 	 */
-	public MongoDatabase getMongoDatabase(String dbName) throws DataAccessException {
+	public Mono<MongoDatabase> getMongoDatabase(String dbName) throws DataAccessException {
 
 		Assert.hasText(dbName, "Database name must not be empty.");
 
-		MongoDatabase db = mongo.getDatabase(dbName);
-		return writeConcern != null ? db.withWriteConcern(writeConcern) : db;
+		return Mono.just(mongo.getDatabase(dbName))
+				.map(db -> writeConcern != null ? db.withWriteConcern(writeConcern) : db);
 	}
 
 	/**
@@ -133,6 +135,15 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 	 */
 	public PersistenceExceptionTranslator getExceptionTranslator() {
 		return this.exceptionTranslator;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.ReactiveMongoDatabaseFactory#getCodecRegistry()
+	 */
+	@Override
+	public CodecRegistry getCodecRegistry() {
+		return this.mongo.getDatabase(databaseName).getCodecRegistry();
 	}
 
 	/*
@@ -171,8 +182,8 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 		 * @see org.springframework.data.mongodb.ReactiveMongoDatabaseFactory#getMongoDatabase()
 		 */
 		@Override
-		public MongoDatabase getMongoDatabase() throws DataAccessException {
-			return decorateDatabase(delegate.getMongoDatabase());
+		public Mono<MongoDatabase> getMongoDatabase() throws DataAccessException {
+			return delegate.getMongoDatabase().map(this::decorateDatabase);
 		}
 
 		/*
@@ -180,8 +191,8 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 		 * @see org.springframework.data.mongodb.ReactiveMongoDatabaseFactory#getMongoDatabase(java.lang.String)
 		 */
 		@Override
-		public MongoDatabase getMongoDatabase(String dbName) throws DataAccessException {
-			return decorateDatabase(delegate.getMongoDatabase(dbName));
+		public Mono<MongoDatabase> getMongoDatabase(String dbName) throws DataAccessException {
+			return delegate.getMongoDatabase(dbName).map(this::decorateDatabase);
 		}
 
 		/*
@@ -191,6 +202,15 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 		@Override
 		public PersistenceExceptionTranslator getExceptionTranslator() {
 			return delegate.getExceptionTranslator();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.ReactiveMongoDatabaseFactory#getCodecRegistry()
+		 */
+		@Override
+		public CodecRegistry getCodecRegistry() {
+			return delegate.getCodecRegistry();
 		}
 
 		/*

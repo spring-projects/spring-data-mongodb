@@ -31,6 +31,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Mathieu Ouellet
  * @since 2.0
  */
 public interface ReactiveMongoDatabaseFactory extends CodecRegistryProvider {
@@ -41,7 +42,7 @@ public interface ReactiveMongoDatabaseFactory extends CodecRegistryProvider {
 	 * @return
 	 * @throws DataAccessException
 	 */
-	MongoDatabase getMongoDatabase() throws DataAccessException;
+	Mono<MongoDatabase> getMongoDatabase() throws DataAccessException;
 
 	/**
 	 * Obtain a {@link MongoDatabase} instance to access the database with the given name.
@@ -50,7 +51,7 @@ public interface ReactiveMongoDatabaseFactory extends CodecRegistryProvider {
 	 * @return
 	 * @throws DataAccessException
 	 */
-	MongoDatabase getMongoDatabase(String dbName) throws DataAccessException;
+	Mono<MongoDatabase> getMongoDatabase(String dbName) throws DataAccessException;
 
 	/**
 	 * Exposes a shared {@link MongoExceptionTranslator}.
@@ -64,10 +65,7 @@ public interface ReactiveMongoDatabaseFactory extends CodecRegistryProvider {
 	 *
 	 * @return never {@literal null}.
 	 */
-	@Override
-	default CodecRegistry getCodecRegistry() {
-		return getMongoDatabase().getCodecRegistry();
-	}
+	CodecRegistry getCodecRegistry();
 
 	/**
 	 * Obtain a {@link Mono} emitting a {@link ClientSession} for given {@link ClientSessionOptions options}.
