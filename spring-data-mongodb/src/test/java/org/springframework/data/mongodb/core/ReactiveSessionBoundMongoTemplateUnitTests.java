@@ -306,7 +306,7 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 		assertThat(template.getCollection(COLLECTION_NAME).block()).isNotInstanceOf(Proxy.class).isInstanceOf(MongoCollection.class);
 	}
 
-	@Test // DATAMONGO-1880, DATAMONGO-2505
+	@Test // DATAMONGO-1880
 	public void getDbShouldJustReturnTheDatabase/*No ClientSession binding*/() {
 		assertThat(template.getMongoDatabase().block()).isNotInstanceOf(Proxy.class).isInstanceOf(MongoDatabase.class);
 	}

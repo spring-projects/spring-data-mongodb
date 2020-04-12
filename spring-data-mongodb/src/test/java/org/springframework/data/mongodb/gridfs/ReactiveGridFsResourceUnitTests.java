@@ -16,31 +16,49 @@
 package org.springframework.data.mongodb.gridfs;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.nio.ByteBuffer;
+import java.util.Date;
 
+import org.bson.BsonObjectId;
+import org.bson.BsonValue;
+import org.bson.Document;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
+import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
+import com.mongodb.reactivestreams.client.gridfs.GridFSBucket;
 import com.mongodb.reactivestreams.client.gridfs.GridFSDownloadPublisher;
 
 /**
  * Unit tests for {@link ReactiveGridFsResource}.
  *
  * @author Christoph Strobl
+ * @author Mathieu Ouellet
  */
+@ExtendWith(MockitoExtension.class)
 class ReactiveGridFsResourceUnitTests {
+
+	@Mock private GridFSBucket bucket;
 
 	@Test // DATAMONGO-2427
 	void streamCanOnlyBeConsumedOnce() {
 
-		ReactiveGridFsResource resource = new ReactiveGridFsResource("file.name", new StubGridFSDownloadPublisher());
+		when(bucket.downloadToPublisher(any(BsonValue.class))).thenReturn(new StubGridFSDownloadPublisher());
+		GridFSFile file = new GridFSFile(new BsonObjectId(), "file.name", 0, 0, new Date(), new Document());
+		ReactiveGridFsResource resource = new ReactiveGridFsResource(file, Mono.just(bucket),
+				new DefaultDataBufferFactory());
 
 		assertThat(resource.exists()).isTrue();
 
@@ -50,9 +68,9 @@ class ReactiveGridFsResourceUnitTests {
 	}
 
 	@Test // DATAMONGO-2427
-	void existReturnsFalseForNullPublisher() {
+	void existReturnsFalseForNullGridFSFile() {
 
-		ReactiveGridFsResource resource = new ReactiveGridFsResource("file.name", null);
+		ReactiveGridFsResource resource = new ReactiveGridFsResource("file.name", Mono.just(bucket));
 
 		assertThat(resource.exists()).isFalse();
 	}
@@ -60,7 +78,7 @@ class ReactiveGridFsResourceUnitTests {
 	@Test // DATAMONGO-2427
 	void nonExistingResourceProducesEmptyDownloadStream() {
 
-		ReactiveGridFsResource resource = new ReactiveGridFsResource("file.name", null);
+		ReactiveGridFsResource resource = new ReactiveGridFsResource("file.name", Mono.just(bucket));
 
 		resource.getInputStream().as(StepVerifier::create).verifyComplete();
 		resource.getInputStream().as(StepVerifier::create).verifyComplete();
