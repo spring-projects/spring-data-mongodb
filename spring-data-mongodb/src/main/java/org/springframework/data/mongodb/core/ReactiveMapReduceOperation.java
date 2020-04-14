@@ -151,13 +151,13 @@ public interface ReactiveMapReduceOperation {
 		/**
 		 * Set the filter {@link CriteriaDefinition criteria} to be used.
 		 *
-		 * @param criteriaDefinition must not be {@literal null}.
+		 * @param criteria must not be {@literal null}.
 		 * @return new instance of {@link TerminatingMapReduce}.
 		 * @throws IllegalArgumentException if query is {@literal null}.
 		 * @since 3.0
 		 */
-		default TerminatingMapReduce<T> matching(CriteriaDefinition criteriaDefinition) {
-			return matching(Query.query(criteriaDefinition));
+		default TerminatingMapReduce<T> matching(CriteriaDefinition criteria) {
+			return matching(Query.query(criteria));
 		}
 	}
 

@@ -39,7 +39,7 @@ import org.springframework.data.mongodb.core.query.Query;
  *         query(Human.class)
  *             .inCollection("star-wars")
  *             .as(Jedi.class)
- *             .matching(query(where("firstname").is("luke")))
+ *             .matching(where("firstname").is("luke"))
  *             .all();
  *     </code>
  * </pre>
@@ -149,13 +149,13 @@ public interface ReactiveFindOperation {
 		/**
 		 * Set the filter {@link CriteriaDefinition criteria} to be used.
 		 *
-		 * @param criteriaDefinition must not be {@literal null}.
+		 * @param criteria must not be {@literal null}.
 		 * @return new instance of {@link TerminatingFind}.
-		 * @throws IllegalArgumentException if query is {@literal null}.
+		 * @throws IllegalArgumentException if criteria is {@literal null}.
 		 * @since 3.0
 		 */
-		default TerminatingFind<T> matching(CriteriaDefinition criteriaDefinition) {
-			return matching(Query.query(criteriaDefinition));
+		default TerminatingFind<T> matching(CriteriaDefinition criteria) {
+			return matching(Query.query(criteria));
 		}
 
 		/**
@@ -273,20 +273,20 @@ public interface ReactiveFindOperation {
 		 *
 		 * @param query must not be {@literal null}.
 		 * @return new instance of {@link TerminatingDistinct}.
-		 * @throws IllegalArgumentException if resultType is {@literal null}.
+		 * @throws IllegalArgumentException if query is {@literal null}.
 		 */
 		TerminatingDistinct<T> matching(Query query);
 
 		/**
 		 * Set the filter {@link CriteriaDefinition criteria} to be used.
 		 *
-		 * @param criteriaDefinition must not be {@literal null}.
-		 * @return new instance of {@link TerminatingFind}.
-		 * @throws IllegalArgumentException if query is {@literal null}.
+		 * @param criteria must not be {@literal null}.
+		 * @return new instance of {@link TerminatingDistinct}.
+		 * @throws IllegalArgumentException if criteria is {@literal null}.
 		 * @since 3.0
 		 */
-		default TerminatingDistinct<T> matching(CriteriaDefinition criteriaDefinition) {
-			return matching(Query.query(criteriaDefinition));
+		default TerminatingDistinct<T> matching(CriteriaDefinition criteria) {
+			return matching(Query.query(criteria));
 		}
 	}
 

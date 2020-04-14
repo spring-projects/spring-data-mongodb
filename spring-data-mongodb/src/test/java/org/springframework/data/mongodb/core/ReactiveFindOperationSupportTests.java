@@ -172,14 +172,6 @@ class ReactiveFindOperationSupportTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAMONGO-2507
-	void findAllWithProjectionByCriteria() {
-
-		template.query(Person.class).as(Jedi.class).matching(where("firstname").is("luke")).all()
-				.as(StepVerifier::create).consumeNextWith(it -> assertThat(it).isInstanceOf(Jedi.class)) //
-				.verifyComplete();
-	}
-
 	@Test // DATAMONGO-1719
 	void findAllByWithCollectionUsingMappingInformation() {
 
@@ -638,6 +630,17 @@ class ReactiveFindOperationSupportTests {
 		template.query(Person.class).distinct("firstname").as(Long.class).all().as(StepVerifier::create)
 				.expectError(InvalidDataAccessApiUsageException.class) //
 				.verify();
+	}
+
+	@Test // DATAMONGO-2507
+	void distinctAppliesFilterQuery() {
+
+		template.query(Person.class).inCollection(STAR_WARS).distinct("firstname") //
+				.matching(where("lastname").is(luke.lastname)) //
+				.as(String.class) //
+				.all() //
+				.as(StepVerifier::create).consumeNextWith(it -> assertThat(it).isEqualTo("luke")) //
+				.verifyComplete();
 	}
 
 	interface Contact {}

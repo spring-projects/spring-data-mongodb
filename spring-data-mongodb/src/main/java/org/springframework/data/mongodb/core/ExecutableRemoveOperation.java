@@ -124,13 +124,13 @@ public interface ExecutableRemoveOperation {
 		/**
 		 * Set the filter {@link CriteriaDefinition criteria} to be used.
 		 *
-		 * @param criteriaDefinition must not be {@literal null}.
+		 * @param criteria must not be {@literal null}.
 		 * @return new instance of {@link TerminatingRemove}.
 		 * @throws IllegalArgumentException if query is {@literal null}.
 		 * @since 3.0
 		 */
-		default TerminatingRemove<T> matching(CriteriaDefinition criteriaDefinition) {
-			return matching(Query.query(criteriaDefinition));
+		default TerminatingRemove<T> matching(CriteriaDefinition criteria) {
+			return matching(Query.query(criteria));
 		}
 	}
 

@@ -536,6 +536,16 @@ class ExecutableFindOperationSupportTests {
 				.isThrownBy(() -> template.query(Person.class).distinct("firstname").as(Long.class).all());
 	}
 
+	@Test // DATAMONGO-2507
+	void distinctAppliesFilterQuery() {
+
+		assertThat(template.query(Person.class).inCollection(STAR_WARS).distinct("firstname") //
+				.matching(where("lastname").is(luke.lastname)) //
+				.as(String.class) //
+				.all() //
+		).containsExactlyInAnyOrder("luke");
+	}
+
 	interface Contact {}
 
 	@Data
