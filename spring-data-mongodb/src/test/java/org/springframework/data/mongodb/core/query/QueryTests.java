@@ -19,6 +19,8 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
+import java.util.function.Consumer;
+
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.springframework.aop.framework.ProxyFactory;
@@ -349,6 +351,44 @@ class QueryTests {
 
 		compareQueries(target, source);
 	}
+
+
+	@Test // DATAMONGO-2499
+	void notCombiningSeveralIndedependentCriterias() {
+
+		Query source = new Query(new Criteria().not(Criteria.where("age").gt(30), Criteria.where("age").lt(20)));
+		Document target = source.getQueryObject();
+
+		assertThat(target).isEqualTo(Document.parse("{\"$and\": [{\"$not\": {\"age\": {\"$gt\": 30}}}, {\"$not\": {\"age\": {\"$lt\": 20}}}]}"));
+	}
+
+	@Test // DATAMONGO-2499
+	void notCombiningSingleCriteria() {
+
+		Query source = new Query(Criteria.where("age").not(age -> age.gt(30).lt(20)));
+		Document target = source.getQueryObject();
+
+		assertThat(target).isEqualTo(Document.parse("{\"$and\": [{\"$not\": {\"age\": {\"$gt\": 30}}}, {\"$not\": {\"age\": {\"$lt\": 20}}}]}"));
+	}
+
+	@Test // DATAMONGO-2499
+	void notCombiningSingleCriteriaWithAnother() {
+
+		Query source = new Query(Criteria.where("age").not(age -> age.gt(30).lt(20)).exists(true));
+		Document target = source.getQueryObject();
+
+		assertThat(target).isEqualTo(Document.parse("{\"$and\": [{\"$not\": {\"age\": {\"$gt\": 30}}}, {\"$not\": {\"age\": {\"$lt\": 20}}}], \"age\": {\"$exists\": true}}"));
+	}
+
+	@Test // DATAMONGO-2499
+	void notCombiningSingleCriteriaWithNestedNot() {
+
+		Query source = new Query(Criteria.where("age").not(age -> age.gt(30).not().lt(20)));
+		Document target = source.getQueryObject();
+
+		assertThat(target).isEqualTo(Document.parse("{\"$and\": [{\"$not\": {\"age\": {\"$gt\": 30}}}, {\"$not\": { \"$not\": {\"age\": {\"$lt\": 20}}}}]}"));
+	}
+
 
 	private void compareQueries(Query actual, Query expected) {
 

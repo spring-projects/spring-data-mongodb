@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -394,7 +395,41 @@ public class Criteria implements CriteriaDefinition {
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/not/">MongoDB Query operator: $not</a>
 	 */
 	public Criteria not() {
-		return not(null);
+		return not((Object)null);
+	}
+
+	public Criteria not(Consumer<Criteria> source) {
+
+		Criteria sink = new Criteria(this.key);
+		source.accept(sink);
+
+		List<Criteria> target = new ArrayList<>();
+		for(Criteria criteria : sink.criteriaChain) {
+			boolean nextIsNot = false;
+			for(Entry<String, Object> entry : criteria.criteria.entrySet()) {
+				if(entry.getKey().equals("$not")) {
+					nextIsNot = true;
+					continue;
+				}
+
+				Criteria extractedSingleCriteria = new Criteria(criteria.key);
+				if(nextIsNot) {
+					extractedSingleCriteria = new Criteria("$not");
+					extractedSingleCriteria.criteria.put(criteria.key, new Document(entry.getKey(), entry.getValue()));
+					nextIsNot = false;
+				} else {
+					extractedSingleCriteria.criteria.put(entry.getKey(), entry.getValue());
+				}
+				target.add(extractedSingleCriteria);
+			}
+		}
+		List bsonList = createCriteriaList(target.toArray(new Criteria[0]), true);
+		return registerCriteriaChainElement(new Criteria("$and").is(bsonList));
+	}
+
+	public Criteria not(Criteria... criteria) {
+		List bsonList = createCriteriaList(criteria, true);
+		return registerCriteriaChainElement(new Criteria("$and").is(bsonList));
 	}
 
 	/**
@@ -660,7 +695,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @param criteria
 	 */
 	public Criteria orOperator(Criteria... criteria) {
-		BasicDBList bsonList = createCriteriaList(criteria);
+		List bsonList = createCriteriaList(criteria, false);
 		return registerCriteriaChainElement(new Criteria("$or").is(bsonList));
 	}
 
@@ -674,7 +709,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @param criteria
 	 */
 	public Criteria norOperator(Criteria... criteria) {
-		BasicDBList bsonList = createCriteriaList(criteria);
+		List bsonList = createCriteriaList(criteria, false);
 		return registerCriteriaChainElement(new Criteria("$nor").is(bsonList));
 	}
 
@@ -688,7 +723,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @param criteria
 	 */
 	public Criteria andOperator(Criteria... criteria) {
-		BasicDBList bsonList = createCriteriaList(criteria);
+		List bsonList = createCriteriaList(criteria, false);
 		return registerCriteriaChainElement(new Criteria("$and").is(bsonList));
 	}
 
@@ -775,16 +810,23 @@ public class Criteria implements CriteriaDefinition {
 			queryCriteria.put(this.key, this.isValue);
 			queryCriteria.putAll(document);
 		} else {
-			queryCriteria.put(this.key, document);
+			if(!document.isEmpty()) {
+				queryCriteria.put(this.key, document);
+			}
 		}
 
 		return queryCriteria;
 	}
 
-	private BasicDBList createCriteriaList(Criteria[] criteria) {
-		BasicDBList bsonList = new BasicDBList();
+	private List createCriteriaList(Criteria[] criteria, boolean not) {
+		List bsonList = new ArrayList();
 		for (Criteria c : criteria) {
-			bsonList.add(c.getCriteriaObject());
+
+			Document co = c.getCriteriaObject();
+			if(not) {
+				co = new Document("$not", co);
+			}
+			bsonList.add(co);
 		}
 		return bsonList;
 	}
