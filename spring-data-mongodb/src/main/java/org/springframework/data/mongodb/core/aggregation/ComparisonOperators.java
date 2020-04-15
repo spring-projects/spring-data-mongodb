@@ -411,7 +411,7 @@ public class ComparisonOperators {
 		public Cmp compareToValue(Object value) {
 
 			Assert.notNull(value, "Value must not be null!");
-			return new Cmp(append(value));
+			return new Cmp(append(value, Expand.KEEP_SOURCE));
 		}
 	}
 
@@ -488,7 +488,7 @@ public class ComparisonOperators {
 		public Eq equalToValue(Object value) {
 
 			Assert.notNull(value, "Value must not be null!");
-			return new Eq(append(value));
+			return new Eq(append(value, Expand.KEEP_SOURCE));
 		}
 	}
 
@@ -873,7 +873,7 @@ public class ComparisonOperators {
 		public Ne notEqualToValue(Object value) {
 
 			Assert.notNull(value, "Value must not be null!");
-			return new Ne(append(value));
+			return new Ne(append(value, Expand.KEEP_SOURCE));
 		}
 	}
 }

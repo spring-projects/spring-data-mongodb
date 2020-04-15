@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -100,14 +101,14 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 		return value;
 	}
 
-	protected List<Object> append(Object value) {
+	protected  List<Object> append(Object value, Expand expandList) {
 
 		if (this.value instanceof List) {
 
 			List<Object> clone = new ArrayList<Object>((List) this.value);
 
-			if (value instanceof List) {
-				clone.addAll((List) value);
+			if (value instanceof Collection && Expand.EXPAND_VALUES.equals(expandList)) {
+				clone.addAll((Collection<?>) value);
 			} else {
 				clone.add(value);
 			}
@@ -115,6 +116,17 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 		}
 
 		return Arrays.asList(this.value, value);
+	}
+
+	/**
+	 * Expand a nested list of values to single entries or keep the list.
+	 */
+	protected enum Expand {
+		EXPAND_VALUES, KEEP_SOURCE
+	}
+
+	protected List<Object> append(Object value) {
+		return append(value, Expand.EXPAND_VALUES);
 	}
 
 	@SuppressWarnings("unchecked")
