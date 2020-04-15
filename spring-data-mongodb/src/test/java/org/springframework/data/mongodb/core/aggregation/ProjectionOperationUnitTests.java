@@ -1499,6 +1499,15 @@ public class ProjectionOperationUnitTests {
 		assertThat(agg).isEqualTo(Document.parse("{ $project: { eq250: { $eq: [\"$qty\", 250]} } }"));
 	}
 
+	@Test // DATAMONGO-2513
+	public void shouldRenderEqAggregationExpressionWithListComparison() {
+
+		Document agg = project().and(ComparisonOperators.valueOf("qty").equalToValue(Arrays.asList(250))).as("eq250")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { eq250: { $eq: [\"$qty\", [250]]} } }"));
+	}
+
 	@Test // DATAMONGO-1536
 	public void shouldRenderGtAggregationExpression() {
 
