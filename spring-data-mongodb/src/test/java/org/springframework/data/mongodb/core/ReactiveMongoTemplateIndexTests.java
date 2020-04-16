@@ -208,8 +208,9 @@ public class ReactiveMongoTemplateIndexTests {
 		StepVerifier.create(template.getCollection("indexedSample").listIndexes(Document.class)).expectNextCount(0)
 				.verifyComplete();
 
-		template.findAll(IndexedSample.class) //
-				.delayElements(Duration.ofMillis(200)) // TODO: check if 4.2.0 server GA still requires this timeout
+		template.findAll(IndexedSample.class).defaultIfEmpty(new IndexedSample()) //
+				.delayElements(Duration.ofMillis(500)) // TODO: check if 4.2.0 server GA still requires this timeout
+				.then()
 				.as(StepVerifier::create) //
 				.verifyComplete();
 

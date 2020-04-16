@@ -47,8 +47,10 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.mongodb.util.BsonUtils;
+import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.client.model.CountOptions;
@@ -70,6 +72,7 @@ class QueryOperations {
 	private final QueryMapper queryMapper;
 	private final UpdateMapper updateMapper;
 	private final EntityOperations entityOperations;
+	private final PropertyOperations propertyOperations;
 	private final CodecRegistryProvider codecRegistryProvider;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private final AggregationUtil aggregationUtil;
@@ -81,14 +84,16 @@ class QueryOperations {
 	 * @param queryMapper must not be {@literal null}.
 	 * @param updateMapper must not be {@literal null}.
 	 * @param entityOperations must not be {@literal null}.
+	 * @param propertyOperations must not be {@literal null}.
 	 * @param codecRegistryProvider must not be {@literal null}.
 	 */
 	QueryOperations(QueryMapper queryMapper, UpdateMapper updateMapper, EntityOperations entityOperations,
-			CodecRegistryProvider codecRegistryProvider) {
+			PropertyOperations propertyOperations, CodecRegistryProvider codecRegistryProvider) {
 
 		this.queryMapper = queryMapper;
 		this.updateMapper = updateMapper;
 		this.entityOperations = entityOperations;
+		this.propertyOperations = propertyOperations;
 		this.codecRegistryProvider = codecRegistryProvider;
 		this.mappingContext = queryMapper.getMappingContext();
 		this.aggregationUtil = new AggregationUtil(queryMapper, mappingContext);
@@ -250,14 +255,31 @@ class QueryOperations {
 			return queryMapper.getMappedObject(getQueryObject(), entity);
 		}
 
-		/**
-		 * Get the already mapped {@link Query#getFieldsObject() fields projection}
-		 *
-		 * @param entity the Entity to map field names to. Can be {@literal null}.
-		 * @return never {@literal null}.
-		 */
-		Document getMappedFields(@Nullable MongoPersistentEntity<?> entity) {
-			return queryMapper.getMappedFields(query.getFieldsObject(), entity);
+		Document getMappedFields(@Nullable MongoPersistentEntity<?> entity, Class<?> targetType,
+				ProjectionFactory projectionFactory) {
+
+			Document fields = query.getFieldsObject();
+			Document mappedFields = fields;
+
+			if (entity == null) {
+				return mappedFields;
+			}
+
+			Document projectedFields = propertyOperations.computeFieldsForProjection(projectionFactory, fields,
+					entity.getType(), targetType);
+
+			if (ObjectUtils.nullSafeEquals(fields, projectedFields)) {
+				mappedFields = queryMapper.getMappedFields(projectedFields, entity);
+			} else {
+				mappedFields = queryMapper.getMappedFields(projectedFields,
+						mappingContext.getRequiredPersistentEntity(targetType));
+			}
+
+			if (entity != null && entity.hasTextScoreProperty() && !query.getQueryObject().containsKey("$text")) {
+				mappedFields.remove(entity.getTextScoreProperty().getFieldName());
+			}
+
+			return mappedFields;
 		}
 
 		/**
@@ -319,6 +341,10 @@ class QueryOperations {
 		}
 
 		@Override
+		Document getMappedFields(@Nullable MongoPersistentEntity<?> entity, Class<?> targetType, ProjectionFactory projectionFactory) {
+			return getMappedFields(entity);
+		}
+
 		Document getMappedFields(@Nullable MongoPersistentEntity<?> entity) {
 			return queryMapper.getMappedFields(new Document(fieldName, 1), entity);
 		}

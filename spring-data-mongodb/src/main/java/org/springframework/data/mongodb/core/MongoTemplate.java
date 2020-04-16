@@ -93,6 +93,7 @@ import org.springframework.data.mongodb.core.mapreduce.GroupBy;
 import org.springframework.data.mongodb.core.mapreduce.GroupByResults;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceResults;
+import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Meta;
@@ -238,7 +239,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		this.projectionFactory = new SpelAwareProxyProjectionFactory();
 		this.operations = new EntityOperations(this.mongoConverter.getMappingContext());
 		this.propertyOperations = new PropertyOperations(this.mongoConverter.getMappingContext());
-		this.queryOperations = new QueryOperations(queryMapper, updateMapper, operations, mongoDbFactory);
+		this.queryOperations = new QueryOperations(queryMapper, updateMapper, operations, propertyOperations, mongoDbFactory);
 
 		// We always have a mapping context in the converter, whether it's a simple one or not
 		mappingContext = this.mongoConverter.getMappingContext();
@@ -424,8 +425,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(entityType);
 
-			Document mappedFields = getMappedFieldsObject(query.getFieldsObject(), persistentEntity, returnType);
-			Document mappedQuery = queryMapper.getMappedObject(query.getQueryObject(), persistentEntity);
+			QueryContext queryContext = queryOperations.createQueryContext(query);
+
+			Document mappedQuery = queryContext.getMappedQuery(persistentEntity);
+			Document mappedFields = queryContext.getMappedFields(persistentEntity, returnType, projectionFactory);
 
 			FindIterable<Document> cursor = new QueryCursorPreparer(query, entityType).initiateFind(collection,
 					col -> col.find(mappedQuery, Document.class).projection(mappedFields));
@@ -1054,7 +1057,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		QueryContext queryContext = queryOperations.createQueryContext(query);
 
 		Document mappedQuery = queryContext.getMappedQuery(entity);
-		Document mappedFields = queryContext.getMappedFields(entity);
+		Document mappedFields = queryContext.getMappedFields(entity, resultType, projectionFactory);
 		Document mappedSort = queryContext.getMappedSort(entity);
 
 		replacement = maybeCallBeforeConvert(replacement, collectionName);
@@ -1819,7 +1822,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		if (query.getMeta().getMaxTimeMsec() != null) {
 			mapReduce = mapReduce.maxTime(query.getMeta().getMaxTimeMsec(), TimeUnit.MILLISECONDS);
 		}
-		mapReduce = mapReduce.sort(getMappedSortObject(query, domainType));
+
+		Document mappedSort = getMappedSortObject(query, domainType);
+		if(mappedSort != null && !mappedSort.isEmpty()) {
+			mapReduce = mapReduce.sort(getMappedSortObject(query, domainType));
+		}
 
 		mapReduce = mapReduce
 				.filter(queryMapper.getMappedObject(query.getQueryObject(), mappingContext.getPersistentEntity(domainType)));
@@ -2435,8 +2442,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
-		Document mappedQuery = queryMapper.getMappedObject(query, entity);
-		Document mappedFields = queryMapper.getMappedObject(fields, entity);
+		QueryContext queryContext = queryOperations.createQueryContext(new BasicQuery(query, fields));
+		Document mappedFields = queryContext.getMappedFields(entity, entityClass, projectionFactory);
+		Document mappedQuery = queryContext.getMappedQuery(entity);
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("findOne using query: {} fields: {} for class: {} in collection: {}", serializeToJsonSafely(query),
@@ -2486,8 +2494,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
-		Document mappedFields = queryMapper.getMappedFields(fields, entity);
-		Document mappedQuery = queryMapper.getMappedObject(query, entity);
+		QueryContext queryContext = queryOperations.createQueryContext(new BasicQuery(query, fields));
+		Document mappedFields = queryContext.getMappedFields(entity, entityClass, projectionFactory);
+		Document mappedQuery = queryContext.getMappedQuery(entity);
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("find using query: {} fields: {} for class: {} in collection: {}",
@@ -2509,8 +2518,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(sourceClass);
 
-		Document mappedFields = getMappedFieldsObject(fields, entity, targetClass);
-		Document mappedQuery = queryMapper.getMappedObject(query, entity);
+		QueryContext queryContext = queryOperations.createQueryContext(new BasicQuery(query, fields));
+		Document mappedFields = queryContext.getMappedFields(entity, targetClass, projectionFactory);
+		Document mappedQuery = queryContext.getMappedQuery(entity);
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("find using query: {} fields: {} for class: {} in collection: {}",
@@ -2837,23 +2847,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		return queryMapper.getMappedSort(query.getSortObject(), mappingContext.getPersistentEntity(type));
-	}
-
-	private Document getMappedFieldsObject(Document fields, @Nullable MongoPersistentEntity<?> entity,
-			Class<?> targetType) {
-
-		if (entity == null) {
-			return fields;
-		}
-
-		Document projectedFields = propertyOperations.computeFieldsForProjection(projectionFactory, fields,
-				entity.getType(), targetType);
-
-		if (ObjectUtils.nullSafeEquals(fields, projectedFields)) {
-			return queryMapper.getMappedFields(projectedFields, entity);
-		}
-
-		return queryMapper.getMappedFields(projectedFields, mappingContext.getRequiredPersistentEntity(targetType));
 	}
 
 	/**
