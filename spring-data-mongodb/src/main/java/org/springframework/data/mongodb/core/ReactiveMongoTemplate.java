@@ -39,7 +39,6 @@ import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -94,6 +93,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.data.mongodb.core.mapping.event.*;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
+import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.Meta.CursorOption;
@@ -258,7 +258,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		this.mappingContext = this.mongoConverter.getMappingContext();
 		this.operations = new EntityOperations(this.mappingContext);
 		this.propertyOperations = new PropertyOperations(this.mappingContext);
-		this.queryOperations = new QueryOperations(queryMapper, updateMapper, operations, mongoDatabaseFactory);
+		this.queryOperations = new QueryOperations(queryMapper, updateMapper, operations, propertyOperations,
+				mongoDatabaseFactory);
 
 		// We create indexes based on mapping events
 		if (this.mappingContext instanceof MongoMappingContext) {
@@ -1161,7 +1162,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		QueryContext queryContext = queryOperations.createQueryContext(query);
 
 		Document mappedQuery = queryContext.getMappedQuery(entity);
-		Document mappedFields = queryContext.getMappedFields(entity);
+		Document mappedFields = queryContext.getMappedFields(entity, resultType, projectionFactory);
 		Document mappedSort = queryContext.getMappedSort(entity);
 
 		return Mono.defer(() -> {
@@ -2152,7 +2153,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			MapReducePublisher<Document> publisher = collection.mapReduce(mapFunction, reduceFunction, Document.class);
 
 			publisher.filter(mappedQuery);
-			publisher.sort(getMappedSortObject(filterQuery, domainType));
+
+			Document mappedSort = getMappedSortObject(filterQuery, domainType);
+			if (mappedSort != null && !mappedSort.isEmpty()) {
+				publisher.sort(mappedSort);
+			}
 
 			if (filterQuery.getMeta().getMaxTimeMsec() != null) {
 				publisher.maxTime(filterQuery.getMeta().getMaxTimeMsec(), TimeUnit.MILLISECONDS);
@@ -2369,8 +2374,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			Class<T> entityClass, FindPublisherPreparer preparer) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
-		Document mappedQuery = queryMapper.getMappedObject(query, entity);
-		Document mappedFields = fields == null ? null : queryMapper.getMappedObject(fields, entity);
+
+		QueryContext queryContext = queryOperations
+				.createQueryContext(new BasicQuery(query, fields != null ? fields : new Document()));
+		Document mappedFields = queryContext.getMappedFields(entity, entityClass, projectionFactory);
+		Document mappedQuery = queryContext.getMappedQuery(entity);
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format("findOne using query: %s fields: %s for class: %s in collection: %s",
@@ -2420,8 +2428,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
-		Document mappedFields = queryMapper.getMappedFields(fields, entity);
-		Document mappedQuery = queryMapper.getMappedObject(query, entity);
+		QueryContext queryContext = queryOperations.createQueryContext(new BasicQuery(query, fields));
+		Document mappedFields = queryContext.getMappedFields(entity, entityClass, projectionFactory);
+		Document mappedQuery = queryContext.getMappedQuery(entity);
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format("find using query: %s fields: %s for class: %s in collection: %s",
@@ -2443,8 +2452,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(sourceClass);
 
-		Document mappedFields = getMappedFieldsObject(fields, entity, targetClass);
-		Document mappedQuery = queryMapper.getMappedObject(query, entity);
+		QueryContext queryContext = queryOperations.createQueryContext(new BasicQuery(query, fields));
+		Document mappedFields = queryContext.getMappedFields(entity, targetClass, projectionFactory);
+		Document mappedQuery = queryContext.getMappedQuery(entity);
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("find using query: {} fields: {} for class: {} in collection: {}",

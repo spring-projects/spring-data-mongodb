@@ -49,8 +49,9 @@ class UpdateOperationsUnitTests {
 	QueryMapper queryMapper = new QueryMapper(mongoConverter);
 	UpdateMapper updateMapper = new UpdateMapper(mongoConverter);
 	EntityOperations entityOperations = new EntityOperations(mappingContext);
+	PropertyOperations propertyOperations = new PropertyOperations(mappingContext);
 
-	ExtendedQueryOperations queryOperations = new ExtendedQueryOperations(queryMapper, updateMapper, entityOperations,
+	ExtendedQueryOperations queryOperations = new ExtendedQueryOperations(queryMapper, updateMapper, entityOperations, propertyOperations,
 			MongoClientSettings::getDefaultCodecRegistry);
 
 	@Test // DATAMONGO-2341
@@ -123,9 +124,9 @@ class UpdateOperationsUnitTests {
 
 	class ExtendedQueryOperations extends QueryOperations {
 
-		ExtendedQueryOperations(QueryMapper queryMapper, UpdateMapper updateMapper, EntityOperations entityOperations,
+		ExtendedQueryOperations(QueryMapper queryMapper, UpdateMapper updateMapper, EntityOperations entityOperations, PropertyOperations propertyOperations,
 				CodecRegistryProvider codecRegistryProvider) {
-			super(queryMapper, updateMapper, entityOperations, codecRegistryProvider);
+			super(queryMapper, updateMapper, entityOperations, propertyOperations, codecRegistryProvider);
 		}
 
 		@NonNull

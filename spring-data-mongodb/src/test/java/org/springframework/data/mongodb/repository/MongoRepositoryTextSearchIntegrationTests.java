@@ -169,13 +169,13 @@ public class MongoRepositoryTextSearchIntegrationTests {
 		assertThat(result.get(0)).isEqualTo(snipes);
 	}
 
-	@Test // DATAMONGO-973
+	@Test // DATAMONGO-973, DATAMONGO-2516
 	public void derivedFinderMethodWithoutFullTextShouldNoCauseTroubleWhenHavingEntityWithTextScoreProperty() {
 
 		initRepoWithDefaultDocuments();
 		List<FullTextDocument> result = repo.findByTitle(DROP_ZONE.getTitle());
 		assertThat(result.get(0)).isEqualTo(DROP_ZONE);
-		assertThat(result.get(0).score).isEqualTo(0.0F);
+		assertThat(result.get(0).score).isNull();
 	}
 
 	private void initRepoWithDefaultDocuments() {
