@@ -1263,9 +1263,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		if (conversions.isSimpleType(obj.getClass())) {
-			// Doesn't need conversion
-			return getPotentiallyConvertedSimpleWrite(obj,
-					typeInformation != null ? typeInformation.getType() : Object.class);
+
+			Class<?> conversionTargetType = Object.class;
+			if(typeInformation != null && conversions.isSimpleType(typeInformation.getType())) {
+				conversionTargetType = typeInformation.getType();
+			}
+			return getPotentiallyConvertedSimpleWrite(obj, conversionTargetType);
 		}
 
 		if (obj instanceof List) {
