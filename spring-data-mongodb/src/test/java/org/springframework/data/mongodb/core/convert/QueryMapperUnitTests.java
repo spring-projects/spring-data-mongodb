@@ -56,6 +56,7 @@ import org.springframework.data.mongodb.core.mapping.TextScore;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.TextQuery;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClientSettings;
@@ -987,6 +988,16 @@ public class QueryMapperUnitTests {
 				.isEqualTo(new org.bson.Document("level0.$[some_item].arrayCustomName.$[other_item].nes-ted", "value"));
 	}
 
+	@Test // DATAMONGO-2517
+	public void shouldParseNestedKeywordWithArgumentMatchingTheSourceEntitiesConstructorCorrectly() {
+
+		TextQuery source = new TextQuery("test");
+
+		org.bson.Document target = mapper.getMappedObject(source.getQueryObject(),
+				context.getPersistentEntity(WithSingleStringArgConstructor.class));
+		assertThat(target).isEqualTo(org.bson.Document.parse("{\"$text\" : { \"$search\" : \"test\" }}"));
+	}
+
 	class WithDeepArrayNesting {
 
 		List<WithNestedArray> level0;
@@ -1157,5 +1168,17 @@ public class QueryMapperUnitTests {
 
 		String id;
 		@Field(targetType = FieldType.OBJECT_ID) String stringAsOid;
+	}
+
+	@Document
+	static class WithSingleStringArgConstructor {
+
+		String value;
+
+		public WithSingleStringArgConstructor() {}
+
+		public WithSingleStringArgConstructor(String value) {
+			this.value = value;
+		}
 	}
 }
