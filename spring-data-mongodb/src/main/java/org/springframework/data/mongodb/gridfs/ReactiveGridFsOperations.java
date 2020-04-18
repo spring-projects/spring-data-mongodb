@@ -25,6 +25,7 @@ import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.ReactiveGridFsUpload.ReactiveGridFsUploadBuilder;
+import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -36,6 +37,7 @@ import com.mongodb.client.gridfs.model.GridFSFile;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Juergen Zimmermann
  * @since 2.2
  */
 public interface ReactiveGridFsOperations {
@@ -183,6 +185,18 @@ public interface ReactiveGridFsOperations {
 	Flux<GridFSFile> find(Query query);
 
 	/**
+	 * Returns a {@link Flux} emitting all files matching the given {@link CriteriaDefinition criteria}. <br />
+	 * <strong>Note:</strong> Currently {@link Sort} criteria defined at the {@link Query} will not be regarded as MongoDB
+	 * does not support ordering for GridFS file access.
+	 *
+	 * @param criteria must not be {@literal null}.
+	 * @return {@link Flux#empty()} if no mach found.
+	 */
+	default Flux<GridFSFile> find(CriteriaDefinition criteria) {
+		return find(Query.query(criteria));
+	}
+
+	/**
 	 * Returns a {@link Mono} emitting a single {@link com.mongodb.client.gridfs.model.GridFSFile} matching the given
 	 * query or {@link Mono#empty()} in case no file matches. <br />
 	 * <strong>NOTE</strong> If more than one file matches the given query the resulting {@link Mono} emits an error. If
@@ -194,6 +208,19 @@ public interface ReactiveGridFsOperations {
 	Mono<GridFSFile> findOne(Query query);
 
 	/**
+	 * Returns a {@link Mono} emitting a single {@link com.mongodb.client.gridfs.model.GridFSFile} matching the given
+	 * {@link CriteriaDefinition criteria} or {@link Mono#empty()} in case no file matches. <br />
+	 * <strong>NOTE</strong> If more than one file matches the given query the resulting {@link Mono} emits an error. If
+	 * you want to obtain the first found file use {@link #findFirst(CriteriaDefinition)}.
+	 *
+	 * @param criteria must not be {@literal null}.
+	 * @return {@link Mono#empty()} if not match found.
+	 */
+	default Mono<GridFSFile> findOne(CriteriaDefinition criteria) {
+		return findOne(Query.query(criteria));
+	}
+
+	/**
 	 * Returns a {@link Mono} emitting the frist {@link com.mongodb.client.gridfs.model.GridFSFile} matching the given
 	 * query or {@link Mono#empty()} in case no file matches.
 	 *
@@ -203,12 +230,33 @@ public interface ReactiveGridFsOperations {
 	Mono<GridFSFile> findFirst(Query query);
 
 	/**
+	 * Returns a {@link Mono} emitting the frist {@link com.mongodb.client.gridfs.model.GridFSFile} matching the given
+	 * {@link CriteriaDefinition criteria} or {@link Mono#empty()} in case no file matches.
+	 *
+	 * @param criteria must not be {@literal null}.
+	 * @return {@link Mono#empty()} if not match found.
+	 */
+	default Mono<GridFSFile> findFirst(CriteriaDefinition criteria) {
+		return findFirst(Query.query(criteria));
+	}
+
+	/**
 	 * Deletes all files matching the given {@link Query}.
 	 *
 	 * @param query must not be {@literal null}.
 	 * @return a {@link Mono} signalling operation completion.
 	 */
 	Mono<Void> delete(Query query);
+
+	/**
+	 * Deletes all files matching the given {@link CriteriaDefinition criteria}.
+	 *
+	 * @param criteria must not be {@literal null}.
+	 * @return a {@link Mono} signalling operation completion.
+	 */
+	default Mono<Void> delete(CriteriaDefinition criteria) {
+		return delete(Query.query(criteria));
+	}
 
 	/**
 	 * Returns a {@link Mono} emitting the {@link ReactiveGridFsResource} with the given file name.
