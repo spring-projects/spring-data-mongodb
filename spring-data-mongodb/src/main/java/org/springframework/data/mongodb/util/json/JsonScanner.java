@@ -231,7 +231,7 @@ class JsonScanner {
 
 					parenthesisCount--;
 					if (parenthesisCount == 0) {
-						buffer.read();
+						c = buffer.read();
 						break;
 					}
 				}
