@@ -989,7 +989,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-2517
-	public void shouldParseNestedKeywordWithArgumentMatchingTheSourceEntitiesConstructorCorrectly() {
+	void shouldParseNestedKeywordWithArgumentMatchingTheSourceEntitiesConstructorCorrectly() {
 
 		TextQuery source = new TextQuery("test");
 
