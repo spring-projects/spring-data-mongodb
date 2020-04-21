@@ -256,6 +256,14 @@ class ParameterBindingJsonReaderUnitTests {
 				.isEqualTo(new Document("name", new Document("$in", Collections.singletonList("dalinar,kohlin"))));
 	}
 
+	@Test // DATAMONGO-2523
+	void bindSpelExpressionInArrayCorrectly/* closing bracket must not have leading whitespace! */() {
+
+		Document target = parse("{ $and : [?#{ [0] == null  ? { '$where' : 'true' } : { 'v1' : { '$in' : {[0]} } } }]}", 1);
+
+		assertThat(target).isEqualTo(Document.parse("{\"$and\": [{\"v1\": {\"$in\": [1]}}]}"));
+	}
+
 	private static Document parse(String json, Object... args) {
 
 		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json, args);
