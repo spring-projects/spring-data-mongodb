@@ -228,7 +228,8 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 
 		Assert.notNull(file, "GridFSFile must not be null!");
 
-		return Mono.fromSupplier(() -> new ReactiveGridFsResource(file, this.doGetBucket(), dataBufferFactory));
+		return this.doGetBucket()
+				.map(it -> new ReactiveGridFsResource(file, it.downloadToPublisher(file.getId()), dataBufferFactory));
 	}
 
 	/*

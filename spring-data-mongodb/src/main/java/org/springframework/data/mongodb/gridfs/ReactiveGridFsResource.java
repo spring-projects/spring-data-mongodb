@@ -19,7 +19,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.InputStream;
-import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.bson.BsonValue;
@@ -34,7 +33,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
-import com.mongodb.reactivestreams.client.gridfs.GridFSBucket;
+import com.mongodb.reactivestreams.client.gridfs.GridFSDownloadPublisher;
 
 /**
  * Reactive {@link GridFSFile} based {@link Resource} implementation. Note that the {@link #getDownloadStream() content}
@@ -42,7 +41,6 @@ import com.mongodb.reactivestreams.client.gridfs.GridFSBucket;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
- * @author Mathieu Ouellet
  * @since 2.2
  */
 public class ReactiveGridFsResource implements GridFsObject<Object, Publisher<DataBuffer>> {
@@ -50,61 +48,56 @@ public class ReactiveGridFsResource implements GridFsObject<Object, Publisher<Da
 	private final AtomicBoolean consumed = new AtomicBoolean(false);
 
 	private final @Nullable Object id;
-	private final @Nullable GridFSFile file;
 	private final Options options;
 	private final String filename;
-	private final Mono<GridFSBucket> bucketPublisher;
+	private final @Nullable GridFSDownloadPublisher downloadPublisher;
 	private final DataBufferFactory dataBufferFactory;
 
 	/**
 	 * Creates a new, absent {@link ReactiveGridFsResource}.
 	 *
 	 * @param filename filename of the absent resource.
-	 * @param bucketPublisher
+	 * @param downloadPublisher
 	 */
-	public ReactiveGridFsResource(String filename, Mono<GridFSBucket> bucketPublisher) {
-		this(null, null, filename, Options.none(), bucketPublisher);
+	public ReactiveGridFsResource(String filename, @Nullable GridFSDownloadPublisher downloadPublisher) {
+		this(null, filename, Options.none(), downloadPublisher);
 	}
 
 	/**
 	 * Creates a new, absent {@link ReactiveGridFsResource}.
 	 *
 	 * @param id
-	 * @param file
 	 * @param filename filename of the absent resource.
 	 * @param options
-	 * @param bucketPublisher
+	 * @param downloadPublisher
 	 * @since 3.0
 	 */
-	public ReactiveGridFsResource(@Nullable Object id, @Nullable GridFSFile file, String filename, Options options,
-			Mono<GridFSBucket> bucketPublisher) {
-		this(id, file, filename, options, bucketPublisher, new DefaultDataBufferFactory());
+	public ReactiveGridFsResource(@Nullable Object id, String filename, Options options,
+			@Nullable GridFSDownloadPublisher downloadPublisher) {
+		this(id, filename, options, downloadPublisher, new DefaultDataBufferFactory());
 	}
 
-	public ReactiveGridFsResource(GridFSFile file, Mono<GridFSBucket> bucketPublisher,
-			DataBufferFactory dataBufferFactory) {
-		this(file.getId(), file, file.getFilename(), Options.from(file), bucketPublisher, dataBufferFactory);
+	ReactiveGridFsResource(GridFSFile file, @Nullable GridFSDownloadPublisher downloadPublisher, DataBufferFactory dataBufferFactory) {
+		this(file.getId(), file.getFilename(), Options.from(file), downloadPublisher, dataBufferFactory);
 	}
 
 	/**
 	 * Creates a new, absent {@link ReactiveGridFsResource}.
 	 *
 	 * @param id
-	 * @param file
 	 * @param filename filename of the absent resource.
 	 * @param options
-	 * @param bucketPublisher
+	 * @param downloadPublisher
 	 * @param dataBufferFactory
 	 * @since 3.0
 	 */
-	ReactiveGridFsResource(@Nullable Object id, @Nullable GridFSFile file, String filename, Options options,
-			Mono<GridFSBucket> bucketPublisher, DataBufferFactory dataBufferFactory) {
+	ReactiveGridFsResource(@Nullable Object id, String filename, Options options,
+			@Nullable GridFSDownloadPublisher downloadPublisher, DataBufferFactory dataBufferFactory) {
 
 		this.id = id;
-		this.file = file;
 		this.filename = filename;
 		this.options = options;
-		this.bucketPublisher = bucketPublisher;
+		this.downloadPublisher = downloadPublisher;
 		this.dataBufferFactory = dataBufferFactory;
 	}
 
@@ -118,7 +111,7 @@ public class ReactiveGridFsResource implements GridFsObject<Object, Publisher<Da
 	public static ReactiveGridFsResource absent(String filename) {
 
 		Assert.notNull(filename, "Filename must not be null");
-		return new ReactiveGridFsResource(filename, Mono.empty());
+		return new ReactiveGridFsResource(filename, null);
 	}
 
 	/*
@@ -142,9 +135,7 @@ public class ReactiveGridFsResource implements GridFsObject<Object, Publisher<Da
 	 * @since 2.2
 	 */
 	public Mono<GridFSFile> getGridFSFile() {
-		Mono<GridFSFile> downloadPublisher = bucketPublisher
-				.flatMapMany(it -> it.downloadToPublisher(file.getId()).getGridFSFile()).single();
-		return file != null ? downloadPublisher : Mono.empty();
+		return downloadPublisher != null ? Mono.from(downloadPublisher.getGridFSFile()) : Mono.empty();
 	}
 
 	/**
@@ -177,10 +168,10 @@ public class ReactiveGridFsResource implements GridFsObject<Object, Publisher<Da
 	 */
 	public Flux<DataBuffer> getDownloadStream() {
 
-		if (file == null) {
+		if (downloadPublisher == null) {
 			return Flux.empty();
 		}
-		Flux<ByteBuffer> downloadPublisher = bucketPublisher.flatMapMany(it -> it.downloadToPublisher(file.getId()));
+
 		return createDownloadStream(downloadPublisher);
 	}
 
@@ -215,15 +206,14 @@ public class ReactiveGridFsResource implements GridFsObject<Object, Publisher<Da
 	 */
 	public Flux<DataBuffer> getDownloadStream(int chunkSize) {
 
-		if (file == null) {
+		if (downloadPublisher == null) {
 			return Flux.empty();
 		}
-		Flux<ByteBuffer> downloadPublisher = bucketPublisher
-				.flatMapMany(it -> it.downloadToPublisher(file.getId()).bufferSizeBytes(chunkSize));
-		return createDownloadStream(downloadPublisher);
+
+		return createDownloadStream(downloadPublisher.bufferSizeBytes(chunkSize));
 	}
 
-	private Flux<DataBuffer> createDownloadStream(Flux<ByteBuffer> publisher) {
+	private Flux<DataBuffer> createDownloadStream(GridFSDownloadPublisher publisher) {
 
 		return Flux.from(publisher) //
 				.map(dataBufferFactory::wrap) //
@@ -231,7 +221,7 @@ public class ReactiveGridFsResource implements GridFsObject<Object, Publisher<Da
 	}
 
 	public boolean exists() {
-		return file != null;
+		return downloadPublisher != null;
 	}
 
 	private void verifyStreamStillAvailable() {
