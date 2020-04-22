@@ -48,7 +48,7 @@ import org.springframework.util.ObjectUtils;
  * @author Mark Paluch
  */
 @ExtendWith(MongoTemplateExtension.class)
-public class MongoRepositoryTextSearchIntegrationTests {
+class MongoRepositoryTextSearchIntegrationTests {
 
 	private static final FullTextDocument PASSENGER_57 = new FullTextDocument("1", "Passenger 57",
 			"Passenger 57 is an action film that stars Wesley Snipes and Bruce Payne.");
@@ -58,24 +58,24 @@ public class MongoRepositoryTextSearchIntegrationTests {
 			"Drop Zone is an action film featuring Wesley Snipes and Gary Busey.");
 
 	@Template(initialEntitySet = FullTextDocument.class) //
-	static MongoTestTemplate template;
+	private static MongoTestTemplate template;
 
-	FullTextRepository repo = new MongoRepositoryFactory(this.template).getRepository(FullTextRepository.class);
+	private FullTextRepository repo = new MongoRepositoryFactory(this.template).getRepository(FullTextRepository.class);
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 
 		template.indexOps(FullTextDocument.class)
 				.ensureIndex(new TextIndexDefinitionBuilder().onField("title").onField("content").build());
 	}
 
 	@AfterEach
-	public void tearDown() {
+	void tearDown() {
 		template.flush();
 	}
 
 	@Test // DATAMONGO-973
-	public void findAllByTextCriteriaShouldReturnMatchingDocuments() {
+	void findAllByTextCriteriaShouldReturnMatchingDocuments() {
 
 		initRepoWithDefaultDocuments();
 
@@ -86,7 +86,7 @@ public class MongoRepositoryTextSearchIntegrationTests {
 	}
 
 	@Test // DATAMONGO-973
-	public void derivedFinderWithTextCriteriaReturnsCorrectResult() {
+	void derivedFinderWithTextCriteriaReturnsCorrectResult() {
 
 		initRepoWithDefaultDocuments();
 		FullTextDocument blade = new FullTextDocument("4", "Blade",
@@ -102,7 +102,7 @@ public class MongoRepositoryTextSearchIntegrationTests {
 	}
 
 	@Test // DATAMONGO-973
-	public void findByWithPaginationWorksCorrectlyWhenUsingTextCriteria() {
+	void findByWithPaginationWorksCorrectlyWhenUsingTextCriteria() {
 
 		initRepoWithDefaultDocuments();
 
@@ -116,7 +116,7 @@ public class MongoRepositoryTextSearchIntegrationTests {
 	}
 
 	@Test // DATAMONGO-973
-	public void findAllByTextCriteriaWithSortWorksCorrectly() {
+	void findAllByTextCriteriaWithSortWorksCorrectly() {
 
 		initRepoWithDefaultDocuments();
 		FullTextDocument snipes = new FullTextDocument("4", "Snipes", "Wesley Trent Snipes is an actor and film producer.");
@@ -130,7 +130,7 @@ public class MongoRepositoryTextSearchIntegrationTests {
 	}
 
 	@Test // DATAMONGO-973
-	public void findByWithSortByScoreViaPageRequestTriggersSortingCorrectly() {
+	void findByWithSortByScoreViaPageRequestTriggersSortingCorrectly() {
 
 		initRepoWithDefaultDocuments();
 		FullTextDocument snipes = new FullTextDocument("4", "Snipes", "Wesley Trent Snipes is an actor and film producer.");
@@ -144,7 +144,7 @@ public class MongoRepositoryTextSearchIntegrationTests {
 	}
 
 	@Test // DATAMONGO-973
-	public void findByWithSortViaPageRequestIgnoresTextScoreWhenSortedByOtherProperty() {
+	void findByWithSortViaPageRequestIgnoresTextScoreWhenSortedByOtherProperty() {
 
 		initRepoWithDefaultDocuments();
 		FullTextDocument snipes = new FullTextDocument("4", "Snipes", "Wesley Trent Snipes is an actor and film producer.");
@@ -158,7 +158,7 @@ public class MongoRepositoryTextSearchIntegrationTests {
 	}
 
 	@Test // DATAMONGO-973
-	public void derivedSortForTextScorePropertyWorksCorrectly() {
+	void derivedSortForTextScorePropertyWorksCorrectly() {
 
 		initRepoWithDefaultDocuments();
 		FullTextDocument snipes = new FullTextDocument("4", "Snipes", "Wesley Trent Snipes is an actor and film producer.");
@@ -170,10 +170,11 @@ public class MongoRepositoryTextSearchIntegrationTests {
 	}
 
 	@Test // DATAMONGO-973, DATAMONGO-2516
-	public void derivedFinderMethodWithoutFullTextShouldNoCauseTroubleWhenHavingEntityWithTextScoreProperty() {
+	void derivedFinderMethodWithoutFullTextShouldNoCauseTroubleWhenHavingEntityWithTextScoreProperty() {
 
 		initRepoWithDefaultDocuments();
 		List<FullTextDocument> result = repo.findByTitle(DROP_ZONE.getTitle());
+		
 		assertThat(result.get(0)).isEqualTo(DROP_ZONE);
 		assertThat(result.get(0).score).isNull();
 	}

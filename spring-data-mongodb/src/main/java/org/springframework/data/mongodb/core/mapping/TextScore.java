@@ -26,9 +26,11 @@ import org.springframework.data.annotation.ReadOnlyProperty;
 /**
  * {@link TextScore} marks the property to be considered as the on server calculated {@literal textScore} when doing
  * full text search. <br />
- * <b>NOTE</b> Property will not be written when saving entity.
+ * <b>NOTE</b> Property will not be written when saving entity and may be {@literal null} if the document is retrieved
+ * by a regular (i.e. {@literal $text}) query.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 1.6
  */
 @ReadOnlyProperty

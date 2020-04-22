@@ -11,6 +11,7 @@
 * Apply pagination when using GridFS `find(Query)`.
 * <<sharding,Sharding key derivation>> via `@Sharded`.
 * `$merge` and `$addFields` aggregation pipeline stages.
+* `@TextScore` is `null` for entities retrieved through non-fulltext queries.
 
 [[new-features.2-2-0]]
 == What's New in Spring Data MongoDB 2.2
