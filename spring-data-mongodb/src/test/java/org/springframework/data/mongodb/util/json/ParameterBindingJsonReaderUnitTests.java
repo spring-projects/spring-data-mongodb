@@ -231,7 +231,7 @@ public class ParameterBindingJsonReaderUnitTests {
 	public void bindMultipleUnquotedParameterInArray() {
 
 		Document target = parse("{ 'name' : { $in : [?0,?1] } }", "dalinar", "kohlin");
-		assertThat(target).isEqualTo(new Document("name", new Document("$in",Arrays.asList("dalinar", "kohlin"))));
+		assertThat(target).isEqualTo(new Document("name", new Document("$in", Arrays.asList("dalinar", "kohlin"))));
 	}
 
 	@Test // DATAMONGO-2476
@@ -252,11 +252,12 @@ public class ParameterBindingJsonReaderUnitTests {
 	public void bindQuotedMulitParameterInArray() {
 
 		Document target = parse("{ 'name' : { $in : ['?0,?1'] } }", "dalinar", "kohlin");
-		assertThat(target).isEqualTo(new Document("name", new Document("$in", Collections.singletonList("dalinar,kohlin"))));
+		assertThat(target)
+				.isEqualTo(new Document("name", new Document("$in", Collections.singletonList("dalinar,kohlin"))));
 	}
 
 	@Test // DATAMONGO-2523
-	void bindSpelExpressionInArrayCorrectly/* closing bracket must not have leading whitespace! */() {
+	public void bindSpelExpressionInArrayCorrectly/* closing bracket must not have leading whitespace! */() {
 
 		Document target = parse("{ $and : [?#{ [0] == null  ? { '$where' : 'true' } : { 'v1' : { '$in' : {[0]} } } }]}", 1);
 
