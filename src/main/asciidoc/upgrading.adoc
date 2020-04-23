@@ -3,7 +3,8 @@
 
 Spring Data MongoDB 3.x requires the MongoDB Java Driver 4.x. +
 The 4.0 MongoDB Java Driver does no longer support certain features that have already been deprecated in one of the last minor versions.
-Some of the changes affect the initial setup configuration as well as compile/runtime features. We summarized the most typical changes one might encounter.
+Some of the changes affect the initial setup configuration as well as compile/runtime features.
+We summarized the most typical changes one might encounter.
 
 == Dependency Changes
 
@@ -216,3 +217,9 @@ public class Config extends AbstractMongoClientConfiguration {
 }
 ----
 ====
+
+=== Deferred MongoDatabase lookup in `ReactiveMongoDatabaseFactory`
+
+`ReactiveMongoDatabaseFactory` now returns `Mono<MongoDatabase>` instead of `MongoDatabase` to allow access to the Reactor Subscriber context to enable context-specific routing functionality.
+
+This change affects `ReactiveMongoTemplate.getMongoDatabase()` and `ReactiveMongoTemplate.getCollection()` so both methods must follow deferred retrieval.

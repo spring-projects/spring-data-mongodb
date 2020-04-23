@@ -113,8 +113,12 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 
 		Assert.hasText(dbName, "Database name must not be empty.");
 
-		return Mono.just(mongo.getDatabase(dbName))
-				.map(db -> writeConcern != null ? db.withWriteConcern(writeConcern) : db);
+		return Mono.fromSupplier(() -> {
+
+			MongoDatabase db = mongo.getDatabase(dbName);
+
+			return writeConcern != null ? db.withWriteConcern(writeConcern) : db;
+		});
 	}
 
 	/**
