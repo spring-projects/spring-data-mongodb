@@ -3155,11 +3155,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		@Nullable
 		public T doWith(@Nullable Document object) {
 
+			T source = null;
+
 			if (null != object) {
 				maybeEmitEvent(new AfterLoadEvent<>(object, type, collectionName));
+				source = reader.read(type, object);
 			}
-
-			T source = reader.read(type, object);
 
 			if (null != source) {
 				maybeEmitEvent(new AfterConvertEvent<>(object, source, collectionName));
@@ -3200,9 +3201,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			Class<?> typeToRead = targetType.isInterface() || targetType.isAssignableFrom(entityType) ? entityType
 					: targetType;
 
-			if (null != object) {
-				maybeEmitEvent(new AfterLoadEvent<>(object, targetType, collectionName));
-			}
+			maybeEmitEvent(new AfterLoadEvent<>(object, targetType, collectionName));
 
 			Object source = reader.read(typeToRead, object);
 			Object result = targetType.isInterface() ? projectionFactory.createProjection(targetType, source) : source;
