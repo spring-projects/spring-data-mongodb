@@ -26,6 +26,7 @@ import org.springframework.data.mongodb.core.DocumentTestUtils;
  * Unit tests for {@link TextCriteria}.
  *
  * @author Christoph Strobl
+ * @author Daniel Debray
  */
 public class TextCriteriaUnitTests {
 
@@ -33,6 +34,7 @@ public class TextCriteriaUnitTests {
 	public void shouldNotHaveLanguageField() {
 
 		TextCriteria criteria = TextCriteria.forDefaultLanguage();
+
 		assertThat(criteria.getCriteriaObject()).isEqualTo(searchObject("{ }"));
 	}
 
@@ -40,6 +42,7 @@ public class TextCriteriaUnitTests {
 	public void shouldNotHaveLanguageForNonDefaultLanguageField() {
 
 		TextCriteria criteria = TextCriteria.forLanguage("spanish");
+
 		assertThat(criteria.getCriteriaObject()).isEqualTo(searchObject("{ \"$language\" : \"spanish\" }"));
 	}
 
@@ -47,6 +50,7 @@ public class TextCriteriaUnitTests {
 	public void shouldCreateSearchFieldForSingleTermCorrectly() {
 
 		TextCriteria criteria = TextCriteria.forDefaultLanguage().matching("cake");
+
 		assertThat(criteria.getCriteriaObject()).isEqualTo(searchObject("{ \"$search\" : \"cake\" }"));
 	}
 
@@ -54,6 +58,7 @@ public class TextCriteriaUnitTests {
 	public void shouldCreateSearchFieldCorrectlyForMultipleTermsCorrectly() {
 
 		TextCriteria criteria = TextCriteria.forDefaultLanguage().matchingAny("bake", "coffee", "cake");
+
 		assertThat(criteria.getCriteriaObject()).isEqualTo(searchObject("{ \"$search\" : \"bake coffee cake\" }"));
 	}
 
@@ -61,6 +66,7 @@ public class TextCriteriaUnitTests {
 	public void shouldCreateSearchFieldForPhraseCorrectly() {
 
 		TextCriteria criteria = TextCriteria.forDefaultLanguage().matchingPhrase("coffee cake");
+
 		assertThat(DocumentTestUtils.getAsDocument(criteria.getCriteriaObject(), "$text"))
 				.isEqualTo(new Document("$search", "\"coffee cake\""));
 	}
@@ -69,6 +75,7 @@ public class TextCriteriaUnitTests {
 	public void shouldCreateNotFieldCorrectly() {
 
 		TextCriteria criteria = TextCriteria.forDefaultLanguage().notMatching("cake");
+
 		assertThat(criteria.getCriteriaObject()).isEqualTo(searchObject("{ \"$search\" : \"-cake\" }"));
 	}
 
@@ -76,6 +83,7 @@ public class TextCriteriaUnitTests {
 	public void shouldCreateSearchFieldCorrectlyForNotMultipleTermsCorrectly() {
 
 		TextCriteria criteria = TextCriteria.forDefaultLanguage().notMatchingAny("bake", "coffee", "cake");
+
 		assertThat(criteria.getCriteriaObject()).isEqualTo(searchObject("{ \"$search\" : \"-bake -coffee -cake\" }"));
 	}
 
@@ -83,6 +91,7 @@ public class TextCriteriaUnitTests {
 	public void shouldCreateSearchFieldForNotPhraseCorrectly() {
 
 		TextCriteria criteria = TextCriteria.forDefaultLanguage().notMatchingPhrase("coffee cake");
+
 		assertThat(DocumentTestUtils.getAsDocument(criteria.getCriteriaObject(), "$text"))
 				.isEqualTo(new Document("$search", "-\"coffee cake\""));
 	}
@@ -91,6 +100,7 @@ public class TextCriteriaUnitTests {
 	public void caseSensitiveOperatorShouldBeSetCorrectly() {
 
 		TextCriteria criteria = TextCriteria.forDefaultLanguage().matching("coffee").caseSensitive(true);
+
 		assertThat(DocumentTestUtils.getAsDocument(criteria.getCriteriaObject(), "$text"))
 				.isEqualTo(new Document("$search", "coffee").append("$caseSensitive", true));
 	}
@@ -99,15 +109,21 @@ public class TextCriteriaUnitTests {
 	public void diacriticSensitiveOperatorShouldBeSetCorrectly() {
 
 		TextCriteria criteria = TextCriteria.forDefaultLanguage().matching("coffee").diacriticSensitive(true);
+
 		assertThat(DocumentTestUtils.getAsDocument(criteria.getCriteriaObject(), "$text"))
 				.isEqualTo(new Document("$search", "coffee").append("$diacriticSensitive", true));
 	}
 
 	@Test // DATAMONGO-2504
 	public void twoIdenticalCriteriaShouldBeEqual() {
+
 		TextCriteria criteriaOne = TextCriteria.forDefaultLanguage().matching("coffee");
 		TextCriteria criteriaTwo = TextCriteria.forDefaultLanguage().matching("coffee");
+
 		assertThat(criteriaOne).isEqualTo(criteriaTwo);
+		assertThat(criteriaOne).hasSameHashCodeAs(criteriaTwo);
+		assertThat(criteriaOne).isNotEqualTo(criteriaTwo.diacriticSensitive(false));
+		assertThat(criteriaOne.hashCode()).isNotEqualTo(criteriaTwo.diacriticSensitive(false).hashCode());
 	}
 
 	private Document searchObject(String json) {

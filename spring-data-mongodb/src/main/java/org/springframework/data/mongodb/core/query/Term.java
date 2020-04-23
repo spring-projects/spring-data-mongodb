@@ -15,8 +15,10 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import java.util.Objects;
+import static org.springframework.util.ObjectUtils.*;
+
 import org.springframework.lang.Nullable;
+import org.springframework.util.ObjectUtils;
 
 /**
  * A {@link Term} defines one or multiple words {@link Type#WORD} or phrases {@link Type#PHRASE} to be used in the
@@ -91,6 +93,47 @@ public class Term {
 		return negated ? negateRaw(formatted) : formatted;
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object o) {
+
+		if (this == o) {
+			return true;
+		}
+
+		if (!(o instanceof Term)) {
+			return false;
+		}
+
+		Term term = (Term) o;
+
+		return ObjectUtils.nullSafeEquals(negated, term.negated) && ObjectUtils.nullSafeEquals(type, term.type)
+				&& ObjectUtils.nullSafeEquals(raw, term.raw);
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+
+		int result = 17;
+
+		result += ObjectUtils.nullSafeHashCode(type);
+		result += ObjectUtils.nullSafeHashCode(raw);
+		result += ObjectUtils.nullSafeHashCode(negated);
+
+		return result;
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
 	@Override
 	public String toString() {
 		return getFormatted();
@@ -102,20 +145,5 @@ public class Term {
 
 	protected String negateRaw(String raw) {
 		return "-" + raw;
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (!(o instanceof Term)) return false;
-		Term term = (Term) o;
-		return negated == term.negated &&
-				type == term.type &&
-				Objects.equals(raw, term.raw);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(type, raw, negated);
 	}
 }
