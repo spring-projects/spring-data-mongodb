@@ -50,6 +50,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * Unit tests for {@link ReactiveMongoPersistentEntityIndexCreator}.
  *
  * @author Mark Paluch
+ * @author Mathieu Ouellet
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -70,7 +71,7 @@ public class ReactiveMongoPersistentEntityIndexCreatorUnitTests {
 	void setUp() {
 
 		when(factory.getExceptionTranslator()).thenReturn(new MongoExceptionTranslator());
-		when(factory.getMongoDatabase()).thenReturn(db);
+		when(factory.getMongoDatabase()).thenReturn(Mono.just(db));
 		when(db.getCollection(any(), any(Class.class))).thenReturn(collection);
 
 		indexOperations = new ReactiveMongoTemplate(factory).indexOps("foo");

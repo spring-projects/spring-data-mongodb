@@ -31,11 +31,14 @@ import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 
 import com.mongodb.reactivestreams.client.MongoClient;
+import com.mongodb.reactivestreams.client.MongoCollection;
+import com.mongodb.reactivestreams.client.MongoDatabase;
 
 /**
  * A {@link ReactiveMongoTemplate} with configuration hooks and extension suitable for tests.
  *
  * @author Christoph Strobl
+ * @author Mathieu Ouellet
  * @since 3.0
  */
 public class ReactiveMongoTestTemplate extends ReactiveMongoTemplate {
@@ -96,7 +99,7 @@ public class ReactiveMongoTestTemplate extends ReactiveMongoTemplate {
 	}
 
 	public Mono<Void> flushDatabase() {
-		return flush(getMongoDatabase().listCollectionNames());
+		return flush(getMongoDatabase().flatMapMany(MongoDatabase::listCollectionNames));
 	}
 
 	public Mono<Void> flush(Class<?>... entities) {
@@ -110,8 +113,8 @@ public class ReactiveMongoTestTemplate extends ReactiveMongoTemplate {
 	public Mono<Void> flush(Publisher<String> collectionNames) {
 
 		return Flux.from(collectionNames)
-				.flatMap(collection -> Mono.from(getCollection(collection).deleteMany(new Document())).then()
-						.onErrorResume(it -> Mono.from(getCollection(collection).drop()).then()))
+				.flatMap(collection -> getCollection(collection).flatMapMany(it -> it.deleteMany(new Document())).then()
+						.onErrorResume(it -> getCollection(collection).flatMapMany(MongoCollection::drop).then()))
 				.then();
 	}
 
@@ -130,18 +133,15 @@ public class ReactiveMongoTestTemplate extends ReactiveMongoTemplate {
 	}
 
 	public Mono<Void> dropDatabase() {
-		return Mono.from(getMongoDatabase().drop()).then();
+		return getMongoDatabase().map(MongoDatabase::drop).then();
 	}
 
-	public void dropIndexes(String... collections) {
-		for (String collection : collections) {
-			getCollection(collection).dropIndexes();
-		}
+	public Mono<Void> dropIndexes(String... collections) {
+		return Flux.fromArray(collections).flatMap(it -> getCollection(it).map(MongoCollection::dropIndexes).then()).then();
 	}
 
-	public void dropIndexes(Class<?>... entities) {
-		for (Class<?> entity : entities) {
-			getCollection(getCollectionName(entity)).dropIndexes();
-		}
+	public Mono<Void> dropIndexes(Class<?>... entities) {
+		return Flux.fromArray(entities)
+				.flatMap(it -> getCollection(getCollectionName(it)).map(MongoCollection::dropIndexes).then()).then();
 	}
 }

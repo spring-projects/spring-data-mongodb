@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import lombok.Data;
+import reactor.core.publisher.Mono;
 
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,6 +46,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
 
 /**
  * @author Christoph Strobl
+ * @author Mathieu Ouellet
  */
 @ExtendWith(MockitoExtension.class)
 public class DefaultReactiveIndexOperationsUnitTests {
@@ -63,7 +65,7 @@ public class DefaultReactiveIndexOperationsUnitTests {
 	@BeforeEach
 	void setUp() {
 
-		when(factory.getMongoDatabase()).thenReturn(db);
+		when(factory.getMongoDatabase()).thenReturn(Mono.just(db));
 		when(factory.getExceptionTranslator()).thenReturn(exceptionTranslator);
 		when(db.getCollection(any(), any(Class.class))).thenReturn(collection);
 		when(collection.createIndex(any(), any(IndexOptions.class))).thenReturn(publisher);

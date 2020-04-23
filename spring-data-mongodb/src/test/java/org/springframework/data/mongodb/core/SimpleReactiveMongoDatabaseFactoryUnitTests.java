@@ -38,6 +38,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * Unit tests for {@link SimpleReactiveMongoDatabaseFactory}.
  *
  * @author Mark Paluch
+ * @author Mathieu Ouellet
  */
 @ExtendWith(MockitoExtension.class)
 class SimpleReactiveMongoDatabaseFactoryUnitTests {
@@ -54,7 +55,7 @@ class SimpleReactiveMongoDatabaseFactoryUnitTests {
 		ReactiveMongoDatabaseFactory factory = new SimpleReactiveMongoDatabaseFactory(mongoClient, "foo");
 		ReactiveMongoDatabaseFactory wrapped = factory.withSession(clientSession).withSession(clientSession);
 
-		InvocationHandler invocationHandler = Proxy.getInvocationHandler(wrapped.getMongoDatabase());
+		InvocationHandler invocationHandler = Proxy.getInvocationHandler(wrapped.getMongoDatabase().block());
 
 		Object singletonTarget = AopProxyUtils
 				.getSingletonTarget(ReflectionTestUtils.getField(invocationHandler, "advised"));

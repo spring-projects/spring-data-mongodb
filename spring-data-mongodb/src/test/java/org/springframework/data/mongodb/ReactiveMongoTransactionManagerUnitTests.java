@@ -40,6 +40,7 @@ import com.mongodb.session.ServerSession;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Mathieu Ouellet
  */
 @ExtendWith(MockitoExtension.class)
 class ReactiveMongoTransactionManagerUnitTests {
@@ -56,7 +57,7 @@ class ReactiveMongoTransactionManagerUnitTests {
 	void setUp() {
 		when(databaseFactory.getSession(any())).thenReturn(Mono.just(session), Mono.just(session2));
 		when(databaseFactory.withSession(session)).thenReturn(databaseFactory);
-		when(databaseFactory.getMongoDatabase()).thenReturn(db);
+		when(databaseFactory.getMongoDatabase()).thenReturn(Mono.just(db));
 		when(session.getServerSession()).thenReturn(serverSession);
 	}
 
@@ -181,7 +182,7 @@ class ReactiveMongoTransactionManagerUnitTests {
 	void suspendTransactionWhilePropagationRequiresNew() {
 
 		when(databaseFactory.withSession(session2)).thenReturn(databaseFactory2);
-		when(databaseFactory2.getMongoDatabase()).thenReturn(db2);
+		when(databaseFactory2.getMongoDatabase()).thenReturn(Mono.just(db2));
 		when(session2.getServerSession()).thenReturn(serverSession);
 
 		ReactiveMongoTransactionManager txManager = new ReactiveMongoTransactionManager(databaseFactory);

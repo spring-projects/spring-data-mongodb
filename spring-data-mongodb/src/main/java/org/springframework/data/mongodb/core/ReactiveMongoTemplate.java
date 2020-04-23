@@ -156,6 +156,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * @author Mark Paluch
  * @author Christoph Strobl
  * @author Roman Puchkovskiy
+ * @author Mathieu Ouellet
  * @since 2.0
  */
 public class ReactiveMongoTemplate implements ReactiveMongoOperations, ApplicationContextAware {
@@ -718,15 +719,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#getCollection(java.lang.String)
 	 */
-	public MongoCollection<Document> getCollection(String collectionName) {
+	public Mono<MongoCollection<Document>> getCollection(String collectionName) {
 
 		Assert.notNull(collectionName, "Collection name must not be null!");
 
-		try {
-			return this.mongoDatabaseFactory.getMongoDatabase().getCollection(collectionName);
-		} catch (RuntimeException e) {
-			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
-		}
+		return createMono(db -> Mono.just(db.getCollection(collectionName)));
 	}
 
 	/*
@@ -777,7 +774,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return createFlux(MongoDatabase::listCollectionNames);
 	}
 
-	public MongoDatabase getMongoDatabase() {
+	public Mono<MongoDatabase> getMongoDatabase() {
 		return mongoDatabaseFactory.getMongoDatabase();
 	}
 
@@ -2074,24 +2071,25 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		FullDocument fullDocument = ClassUtils.isAssignable(Document.class, targetType) ? FullDocument.DEFAULT
 				: FullDocument.UPDATE_LOOKUP;
 
-		MongoDatabase db = StringUtils.hasText(database) ? mongoDatabaseFactory.getMongoDatabase(database)
-				: getMongoDatabase();
+		return ReactiveMongoDatabaseUtils.getDatabase(database, mongoDatabaseFactory) //
+				.map(db -> {
+					ChangeStreamPublisher<Document> publisher;
+					if (StringUtils.hasText(collectionName)) {
+						publisher = filter.isEmpty() ? db.getCollection(collectionName).watch(Document.class)
+								: db.getCollection(collectionName).watch(filter, Document.class);
 
-		ChangeStreamPublisher<Document> publisher;
-		if (StringUtils.hasText(collectionName)) {
-			publisher = filter.isEmpty() ? db.getCollection(collectionName).watch(Document.class)
-					: db.getCollection(collectionName).watch(filter, Document.class);
+					} else {
+						publisher = filter.isEmpty() ? db.watch(Document.class) : db.watch(filter, Document.class);
+					}
 
-		} else {
-			publisher = filter.isEmpty() ? db.watch(Document.class) : db.watch(filter, Document.class);
-		}
-
-		publisher = options.getResumeToken().map(BsonValue::asDocument).map(publisher::resumeAfter).orElse(publisher);
-		publisher = options.getCollation().map(Collation::toMongoCollation).map(publisher::collation).orElse(publisher);
-		publisher = options.getResumeBsonTimestamp().map(publisher::startAtOperationTime).orElse(publisher);
-		publisher = publisher.fullDocument(options.getFullDocumentLookup().orElse(fullDocument));
-
-		return Flux.from(publisher).map(document -> new ChangeStreamEvent<>(document, targetType, getConverter()));
+					publisher = options.getResumeToken().map(BsonValue::asDocument).map(publisher::resumeAfter).orElse(publisher);
+					publisher = options.getCollation().map(Collation::toMongoCollation).map(publisher::collation)
+							.orElse(publisher);
+					publisher = options.getResumeBsonTimestamp().map(publisher::startAtOperationTime).orElse(publisher);
+					return publisher.fullDocument(options.getFullDocumentLookup().orElse(fullDocument));
+				}) //
+				.flatMapMany(publisher -> Flux.from(publisher)
+						.map(document -> new ChangeStreamEvent<>(document, targetType, getConverter())));
 	}
 
 	List<Document> prepareFilter(ChangeStreamOptions options) {
@@ -2337,7 +2335,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				LOGGER.debug("Created collection [{}]", collectionName);
 			}
 
-		}).thenReturn(getCollection(collectionName));
+		}).then(getCollection(collectionName));
 	}
 
 	/**
@@ -3350,7 +3348,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		 * @see org.springframework.data.mongodb.core.ReactiveMongoTemplate#getCollection(java.lang.String)
 		 */
 		@Override
-		public MongoCollection<Document> getCollection(String collectionName) {
+		public Mono<MongoCollection<Document>> getCollection(String collectionName) {
 
 			// native MongoDB objects that offer methods with ClientSession must not be proxied.
 			return delegate.getCollection(collectionName);
@@ -3361,7 +3359,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		 * @see org.springframework.data.mongodb.core.ReactiveMongoTemplate#getMongoDatabase()
 		 */
 		@Override
-		public MongoDatabase getMongoDatabase() {
+		public Mono<MongoDatabase> getMongoDatabase() {
 
 			// native MongoDB objects that offer methods with ClientSession must not be proxied.
 			return delegate.getMongoDatabase();

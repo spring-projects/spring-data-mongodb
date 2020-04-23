@@ -44,6 +44,7 @@ import com.mongodb.reactivestreams.client.MongoCollection;
 /**
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Mathieu Ouellet
  */
 @ExtendWith(MongoTemplateExtension.class)
 public class DefaultReactiveIndexOperationsTests {
@@ -53,13 +54,14 @@ public class DefaultReactiveIndexOperationsTests {
 
 	String collectionName = template.getCollectionName(DefaultIndexOperationsIntegrationTestsSample.class);
 
-	MongoCollection<Document> collection = template.getCollection(collectionName);
 	DefaultReactiveIndexOperations indexOps = new DefaultReactiveIndexOperations(template, collectionName,
 			new QueryMapper(template.getConverter()));
 
 	@BeforeEach
 	public void setUp() {
-		StepVerifier.create(this.collection.dropIndexes()).verifyComplete();
+		template.getCollection(collectionName).flatMapMany(MongoCollection::dropIndexes) //
+				.as(StepVerifier::create) //
+				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1518

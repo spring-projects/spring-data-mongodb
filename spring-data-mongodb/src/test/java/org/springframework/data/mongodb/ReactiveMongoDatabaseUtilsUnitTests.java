@@ -40,6 +40,7 @@ import com.mongodb.session.ServerSession;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Mathieu Ouellet
  */
 @ExtendWith(MockitoExtension.class)
 class ReactiveMongoDatabaseUtilsUnitTests {
@@ -90,7 +91,7 @@ class ReactiveMongoDatabaseUtilsUnitTests {
 	@Test // DATAMONGO-2265
 	void shouldNotStartSessionWhenNoTransactionOngoing() {
 
-		when(databaseFactory.getMongoDatabase()).thenReturn(db);
+		when(databaseFactory.getMongoDatabase()).thenReturn(Mono.just(db));
 
 		ReactiveMongoDatabaseUtils.getDatabase(databaseFactory, SessionSynchronization.ON_ACTUAL_TRANSACTION) //
 				.as(StepVerifier::create) //
