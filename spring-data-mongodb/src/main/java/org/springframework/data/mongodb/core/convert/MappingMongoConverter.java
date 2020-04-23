@@ -252,11 +252,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	@Nullable
 	@SuppressWarnings("unchecked")
-	private <S extends Object> S read(TypeInformation<S> type, @Nullable Bson bson, ObjectPath path) {
+	private <S extends Object> S read(TypeInformation<S> type, Bson bson, ObjectPath path) {
 
-		if (null == bson) {
-			return null;
-		}
+		Assert.notNull(bson, "Bson must not be null!");
 
 		TypeInformation<? extends S> typeToUse = typeMapper.readType(bson, type);
 		Class<? extends S> rawType = typeToUse.getType();
@@ -1640,12 +1638,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		for (Document document : referencedRawDocuments) {
 
+			T target = null;
 			if (document != null) {
+
 				maybeEmitEvent(
 						new AfterLoadEvent<>(document, (Class<T>) (rawType != null ? rawType : Object.class), collectionName));
+				target = (T) read(type, document, path);
 			}
-
-			T target = (T) read(type, document, path);
 
 			if (target != null) {
 				maybeEmitEvent(new AfterConvertEvent<>(document, target, collectionName));

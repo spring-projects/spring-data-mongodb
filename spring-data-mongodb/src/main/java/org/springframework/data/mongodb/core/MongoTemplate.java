@@ -239,7 +239,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		this.projectionFactory = new SpelAwareProxyProjectionFactory();
 		this.operations = new EntityOperations(this.mongoConverter.getMappingContext());
 		this.propertyOperations = new PropertyOperations(this.mongoConverter.getMappingContext());
-		this.queryOperations = new QueryOperations(queryMapper, updateMapper, operations, propertyOperations, mongoDbFactory);
+		this.queryOperations = new QueryOperations(queryMapper, updateMapper, operations, propertyOperations,
+				mongoDbFactory);
 
 		// We always have a mapping context in the converter, whether it's a simple one or not
 		mappingContext = this.mongoConverter.getMappingContext();
@@ -1824,7 +1825,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		Document mappedSort = getMappedSortObject(query, domainType);
-		if(mappedSort != null && !mappedSort.isEmpty()) {
+		if (mappedSort != null && !mappedSort.isEmpty()) {
 			mapReduce = mapReduce.sort(getMappedSortObject(query, domainType));
 		}
 
@@ -3122,11 +3123,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		@Nullable
 		public T doWith(@Nullable Document document) {
 
+			T source = null;
+
 			if (document != null) {
 				maybeEmitEvent(new AfterLoadEvent<>(document, type, collectionName));
+				source = reader.read(type, document);
 			}
-
-			T source = reader.read(type, document);
 
 			if (source != null) {
 				maybeEmitEvent(new AfterConvertEvent<>(document, source, collectionName));
@@ -3168,9 +3170,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			Class<?> typeToRead = targetType.isInterface() || targetType.isAssignableFrom(entityType) ? entityType
 					: targetType;
 
-			if (document != null) {
-				maybeEmitEvent(new AfterLoadEvent<>(document, targetType, collectionName));
-			}
+			maybeEmitEvent(new AfterLoadEvent<>(document, targetType, collectionName));
 
 			Object source = reader.read(typeToRead, document);
 			Object result = targetType.isInterface() ? projectionFactory.createProjection(targetType, source) : source;
