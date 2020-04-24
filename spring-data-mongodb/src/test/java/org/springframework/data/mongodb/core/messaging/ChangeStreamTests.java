@@ -197,8 +197,7 @@ class ChangeStreamTests {
 		assertThat(messageBodies).hasSize(2).doesNotContain(sugarSplashy);
 	}
 
-	@Test // DATAMONGO-1803
-	@RepeatFailedTest(3)
+	@RepeatFailedTest(3) // DATAMONGO-1803
 	void mapsTypedAggregationToFilterMessages() throws InterruptedException {
 
 		CollectingMessageListener<ChangeStreamDocument<Document>, User> messageListener = new CollectingMessageListener<>();

@@ -82,8 +82,7 @@ public class ReactiveMongoTemplateIndexTests {
 	@AfterEach
 	void cleanUp() {}
 
-	@Test // DATAMONGO-1444
-	@RepeatFailedTest(3)
+	@RepeatFailedTest(3) // DATAMONGO-1444
 	void testEnsureIndexShouldCreateIndex() {
 
 		Person p1 = new Person("Oliver");
@@ -119,8 +118,7 @@ public class ReactiveMongoTemplateIndexTests {
 				}).verifyComplete();
 	}
 
-	@Test // DATAMONGO-1444
-	@RepeatFailedTest(3)
+	@RepeatFailedTest(3) // DATAMONGO-1444
 	void getIndexInfoShouldReturnCorrectIndex() {
 
 		Person p1 = new Person("Oliver");
@@ -150,8 +148,7 @@ public class ReactiveMongoTemplateIndexTests {
 				}).verifyComplete();
 	}
 
-	@Test // DATAMONGO-1444, DATAMONGO-2264
-	@RepeatFailedTest(3)
+	@RepeatFailedTest(3) // DATAMONGO-1444, DATAMONGO-2264
 	void testReadIndexInfoForIndicesCreatedViaMongoShellCommands() {
 
 		template.indexOps(Person.class).dropAllIndexes() //
@@ -201,8 +198,7 @@ public class ReactiveMongoTemplateIndexTests {
 				}).verifyComplete();
 	}
 
-	@Test // DATAMONGO-1928
-	@RepeatFailedTest(3)
+	@RepeatFailedTest(3) // DATAMONGO-1928
 	void shouldCreateIndexOnAccess() {
 
 		template.getCollection("indexedSample").flatMapMany(it -> it.listIndexes(Document.class)) //
@@ -222,8 +218,7 @@ public class ReactiveMongoTemplateIndexTests {
 				.verifyComplete();
 	}
 
-	@Test // DATAMONGO-1928, DATAMONGO-2264
-	@RepeatFailedTest(3)
+	@RepeatFailedTest(3) // DATAMONGO-1928, DATAMONGO-2264
 	void indexCreationShouldFail() throws InterruptedException {
 
 		factory.getMongoDatabase() //
