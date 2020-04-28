@@ -1,6 +1,14 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.1.17.RELEASE (2020-04-28)
+----------------------------------------------
+* DATAMONGO-2529 - EntityReader called with null argument.
+* DATAMONGO-2497 - Update documentation regarding @Transient properties usage in the persistence constructor.
+* DATAMONGO-2484 - Release 2.1.17 (Lovelace SR17).
+* DATAMONGO-2300 - Can't read and convert DBRef when the type is Map.
+
+
 Changes in version 3.0.0.RC1 (2020-03-31)
 -----------------------------------------
 * DATAMONGO-2501 - Upgrade to Querydsl 4.3.
@@ -2965,6 +2973,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
