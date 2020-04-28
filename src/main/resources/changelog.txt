@@ -1,6 +1,24 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.0.0.RC2 (2020-04-28)
+-----------------------------------------
+* DATAMONGO-2531 - Fix MongoClientSettings UUID configuration hook in MongoConfigurationSupport.
+* DATAMONGO-2529 - EntityReader called with null argument.
+* DATAMONGO-2523 - ParameterBindingJsonReader skips too many chars.
+* DATAMONGO-2517 - Text search fails on entity with second constructor.
+* DATAMONGO-2516 - Assert compatibility with MongoDB 4.4-rc0.
+* DATAMONGO-2513 - ComparisonOperators.Eq#equalToValue doesn't work well with Lists.
+* DATAMONGO-2510 - Use JDK 14 for Java.NEXT CI testing.
+* DATAMONGO-2508 - Upgrade to MongoDB 4.0.2 Drivers.
+* DATAMONGO-2507 - Add default method accepting CriteriaDefinition on ReactiveFindOperation.DistinctWithQuery.
+* DATAMONGO-2506 - StringBasedAggregation should raise meaningful error when unsupported return type requested.
+* DATAMONGO-2505 - Deferred Database retrieval from ReactiveMongoDatabaseFactory.
+* DATAMONGO-2504 - TextCriteria Hashcode and equals.
+* DATAMONGO-2503 - Release 3.0 RC2 (Neumann).
+* DATAMONGO-2502 - Regression in Update property mapping.
+
+
 Changes in version 2.2.7.RELEASE (2020-04-28)
 ---------------------------------------------
 * DATAMONGO-2529 - EntityReader called with null argument.
@@ -2985,6 +3003,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
