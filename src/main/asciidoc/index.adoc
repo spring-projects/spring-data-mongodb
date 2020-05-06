@@ -33,7 +33,6 @@ include::reference/mapping.adoc[leveloffset=+1]
 include::reference/sharding.adoc[leveloffset=+1]
 include::reference/kotlin.adoc[leveloffset=+1]
 include::reference/jmx.adoc[leveloffset=+1]
-include::reference/mongo-3.adoc[leveloffset=+1]
 
 [[appendix]]
 = Appendix

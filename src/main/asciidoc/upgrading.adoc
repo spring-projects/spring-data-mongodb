@@ -6,6 +6,16 @@ The 4.0 MongoDB Java Driver does no longer support certain features that have al
 Some of the changes affect the initial setup configuration as well as compile/runtime features.
 We summarized the most typical changes one might encounter.
 
+Things to keep in mind when using the 4.0 driver:
+
+* `IndexOperations.resetIndexCache()` is no longer supported.
+* Any `MapReduceOptions.extraOption` is silently ignored.
+* `WriteResult` no longer holds error information but, instead, throws an `Exception`.
+* `MongoOperations.executeInSession(…)` no longer calls `requestStart` and `requestDone`.
+* Index name generation has become a driver-internal operation.
+Spring Data MongoDB still uses the 2.x schema to generate names.
+* Some `Exception` messages differ between the generation 2 and 3 servers as well as between the MMap.v1 and WiredTiger storage engines.
+
 == Dependency Changes
 
 Instead of the single artifact uber-jar `mongo-java-driver`, imports are now split to include separate artifacts:

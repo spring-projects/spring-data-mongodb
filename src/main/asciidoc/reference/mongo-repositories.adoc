@@ -9,7 +9,7 @@ This chapter points out the specialties for repository support for MongoDB. This
 [[mongo-repo-usage]]
 == Usage
 
-To access domain entities stored in a MongoDB, you can use our sophisticated repository support that eases implementation quite significantly. To do so, create an interface for your repository, as the following example shows:
+To access domain entities stored in a MongoDB, you can use our sophisticated repository support that eases implementation quite significantly.To do so, create an interface for your repository, as the following example shows:
 
 .Sample Person entity
 ====
@@ -28,7 +28,7 @@ public class Person {
 ----
 ====
 
-Note that the domain type shown in the preceding example has a property named `id` of type `String`. The default serialization mechanism used in `MongoTemplate` (which backs the repository support) regards properties named `id` as the document ID. Currently, we support `String`, `ObjectId`, and `BigInteger` as ID types.
+Note that the domain type shown in the preceding example has a property named `id` of type `String`.The default serialization mechanism used in `MongoTemplate` (which backs the repository support) regards properties named `id` as the document ID. Currently, we support `String`, `ObjectId`, and `BigInteger` as ID types.
 Please see <<mongo-template.id-handling, ID mapping>> for more information about on how the `id` field is handled in the mapping layer.
 
 Now that we have a domain object, we can define an interface that uses it, as follows:
@@ -49,7 +49,7 @@ public interface PersonRepository extends PagingAndSortingRepository<Person, Str
 Right now this interface serves only to provide type information, but we can add additional methods to it later.
 
 To start using the repository, use the `@EnableMongoRepositories` annotation.
-That annotation carries the same attributes as the namespace element. If no base package is configured, the infrastructure scans the package of the annotated configuration class. The following example shows how to use Java configuration for a repository:
+That annotation carries the same attributes as the namespace element.If no base package is configured, the infrastructure scans the package of the annotated configuration class.The following example shows how to use Java configuration for a repository:
 
 .Java configuration for repositories
 ====
@@ -100,11 +100,11 @@ If you would rather go with XML based configuration add the following content:
 ----
 ====
 
-This namespace element causes the base packages to be scanned for interfaces that extend `MongoRepository` and create Spring beans for each one found. By default, the repositories get a `MongoTemplate` Spring bean wired that is called `mongoTemplate`, so you only need to configure `mongo-template-ref` explicitly if you deviate from this convention.
+This namespace element causes the base packages to be scanned for interfaces that extend `MongoRepository` and create Spring beans for each one found.By default, the repositories get a `MongoTemplate` Spring bean wired that is called `mongoTemplate`, so you only need to configure `mongo-template-ref` explicitly if you deviate from this convention.
 
 
 
-Because our domain repository extends `PagingAndSortingRepository`, it provides you with CRUD operations as well as methods for paginated and sorted access to the entities. Working with the repository instance is just a matter of dependency injecting it into a client. Consequently, accessing the second page of `Person` objects at a page size of 10 would resemble the following code:
+Because our domain repository extends `PagingAndSortingRepository`, it provides you with CRUD operations as well as methods for paginated and sorted access to the entities.Working with the repository instance is just a matter of dependency injecting it into a client.Consequently, accessing the second page of `Person` objects at a page size of 10 would resemble the following code:
 
 .Paging access to Person entities
 ====
@@ -120,13 +120,13 @@ public class PersonRepositoryTests {
     public void readsFirstPageCorrectly() {
 
       Page<Person> persons = repository.findAll(PageRequest.of(0, 10));
-      assertThat(persons.isFirstPage(), is(true));
+      assertThat(persons.isFirstPage()).isTrue();
     }
 }
 ----
 ====
 
-The preceding example creates an application context with Spring's unit test support, which performs annotation-based dependency injection into test cases. Inside the test method, we use the repository to query the datastore. We hand the repository a `PageRequest` instance that requests the first page of `Person` objects at a page size of 10.
+The preceding example creates an application context with Spring's unit test support, which performs annotation-based dependency injection into test cases.Inside the test method, we use the repository to query the datastore.We hand the repository a `PageRequest` instance that requests the first page of `Person` objects at a page size of 10.
 
 [[mongodb.repositories.queries]]
 == Query Methods
