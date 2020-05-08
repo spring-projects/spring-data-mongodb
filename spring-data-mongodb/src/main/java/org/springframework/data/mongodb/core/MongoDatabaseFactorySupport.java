@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import lombok.Value;
-
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
@@ -24,6 +22,7 @@ import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.SessionAwareMethodInterceptor;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.WriteConcern;
@@ -171,11 +170,15 @@ public abstract class MongoDatabaseFactorySupport<C> implements MongoDatabaseFac
 	 * @author Christoph Strobl
 	 * @since 2.1
 	 */
-	@Value
-	static class ClientSessionBoundMongoDbFactory implements MongoDatabaseFactory {
+	static final class ClientSessionBoundMongoDbFactory implements MongoDatabaseFactory {
 
-		ClientSession session;
-		MongoDatabaseFactory delegate;
+		private final ClientSession session;
+		private final MongoDatabaseFactory delegate;
+
+		public ClientSessionBoundMongoDbFactory(ClientSession session, MongoDatabaseFactory delegate) {
+			this.session = session;
+			this.delegate = delegate;
+		}
 
 		/*
 		 * (non-Javadoc)
@@ -255,6 +258,41 @@ public abstract class MongoDatabaseFactorySupport<C> implements MongoDatabaseFac
 					this::proxyDatabase, MongoCollection.class, this::proxyCollection));
 
 			return targetType.cast(factory.getProxy());
+		}
+
+		public ClientSession getSession() {
+			return this.session;
+		}
+
+		public MongoDatabaseFactory getDelegate() {
+			return this.delegate;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (o == null || getClass() != o.getClass())
+				return false;
+
+			ClientSessionBoundMongoDbFactory that = (ClientSessionBoundMongoDbFactory) o;
+
+			if (!ObjectUtils.nullSafeEquals(this.session, that.session)) {
+				return false;
+			}
+			return ObjectUtils.nullSafeEquals(this.delegate, that.delegate);
+		}
+
+		@Override
+		public int hashCode() {
+			int result = ObjectUtils.nullSafeHashCode(this.session);
+			result = 31 * result + ObjectUtils.nullSafeHashCode(this.delegate);
+			return result;
+		}
+
+		public String toString() {
+			return "MongoDatabaseFactorySupport.ClientSessionBoundMongoDbFactory(session=" + this.getSession() + ", delegate="
+					+ this.getDelegate() + ")";
 		}
 	}
 }

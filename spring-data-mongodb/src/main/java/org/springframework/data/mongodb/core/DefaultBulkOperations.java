@@ -15,9 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import lombok.NonNull;
-import lombok.Value;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -47,6 +44,7 @@ import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.util.Pair;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 
 import com.mongodb.WriteConcern;
 import com.mongodb.bulk.BulkWriteResult;
@@ -547,15 +545,93 @@ class DefaultBulkOperations implements BulkOperations {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	@Value
-	static class BulkOperationContext {
+	static final class BulkOperationContext {
 
-		@NonNull BulkMode bulkMode;
-		@NonNull Optional<? extends MongoPersistentEntity<?>> entity;
-		@NonNull QueryMapper queryMapper;
-		@NonNull UpdateMapper updateMapper;
-		ApplicationEventPublisher eventPublisher;
-		EntityCallbacks entityCallbacks;
+		private final BulkMode bulkMode;
+		private final Optional<? extends MongoPersistentEntity<?>> entity;
+		private final QueryMapper queryMapper;
+		private final UpdateMapper updateMapper;
+		private final ApplicationEventPublisher eventPublisher;
+		private final EntityCallbacks entityCallbacks;
+
+		BulkOperationContext(BulkOperations.BulkMode bulkMode, Optional<? extends MongoPersistentEntity<?>> entity,
+				QueryMapper queryMapper, UpdateMapper updateMapper, ApplicationEventPublisher eventPublisher,
+				EntityCallbacks entityCallbacks) {
+
+			this.bulkMode = bulkMode;
+			this.entity = entity;
+			this.queryMapper = queryMapper;
+			this.updateMapper = updateMapper;
+			this.eventPublisher = eventPublisher;
+			this.entityCallbacks = entityCallbacks;
+		}
+
+		public BulkMode getBulkMode() {
+			return this.bulkMode;
+		}
+
+		public Optional<? extends MongoPersistentEntity<?>> getEntity() {
+			return this.entity;
+		}
+
+		public QueryMapper getQueryMapper() {
+			return this.queryMapper;
+		}
+
+		public UpdateMapper getUpdateMapper() {
+			return this.updateMapper;
+		}
+
+		public ApplicationEventPublisher getEventPublisher() {
+			return this.eventPublisher;
+		}
+
+		public EntityCallbacks getEntityCallbacks() {
+			return this.entityCallbacks;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (o == null || getClass() != o.getClass())
+				return false;
+
+			BulkOperationContext that = (BulkOperationContext) o;
+
+			if (bulkMode != that.bulkMode)
+				return false;
+			if (!ObjectUtils.nullSafeEquals(this.entity, that.entity)) {
+				return false;
+			}
+			if (!ObjectUtils.nullSafeEquals(this.queryMapper, that.queryMapper)) {
+				return false;
+			}
+			if (!ObjectUtils.nullSafeEquals(this.updateMapper, that.updateMapper)) {
+				return false;
+			}
+			if (!ObjectUtils.nullSafeEquals(this.eventPublisher, that.eventPublisher)) {
+				return false;
+			}
+			return ObjectUtils.nullSafeEquals(this.entityCallbacks, that.entityCallbacks);
+		}
+
+		@Override
+		public int hashCode() {
+			int result = bulkMode != null ? bulkMode.hashCode() : 0;
+			result = 31 * result + ObjectUtils.nullSafeHashCode(entity);
+			result = 31 * result + ObjectUtils.nullSafeHashCode(queryMapper);
+			result = 31 * result + ObjectUtils.nullSafeHashCode(updateMapper);
+			result = 31 * result + ObjectUtils.nullSafeHashCode(eventPublisher);
+			result = 31 * result + ObjectUtils.nullSafeHashCode(entityCallbacks);
+			return result;
+		}
+
+		public String toString() {
+			return "DefaultBulkOperations.BulkOperationContext(bulkMode=" + this.getBulkMode() + ", entity="
+					+ this.getEntity() + ", queryMapper=" + this.getQueryMapper() + ", updateMapper=" + this.getUpdateMapper()
+					+ ", eventPublisher=" + this.getEventPublisher() + ", entityCallbacks=" + this.getEntityCallbacks() + ")";
+		}
 	}
 
 	/**
@@ -564,10 +640,50 @@ class DefaultBulkOperations implements BulkOperations {
 	 * @since 2.2
 	 * @author Christoph Strobl
 	 */
-	@Value
-	private static class SourceAwareWriteModelHolder {
+	private static final class SourceAwareWriteModelHolder {
 
-		Object source;
-		WriteModel<Document> model;
+		private final Object source;
+		private final WriteModel<Document> model;
+
+		SourceAwareWriteModelHolder(Object source, WriteModel<Document> model) {
+
+			this.source = source;
+			this.model = model;
+		}
+
+		public Object getSource() {
+			return this.source;
+		}
+
+		public WriteModel<Document> getModel() {
+			return this.model;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (o == null || getClass() != o.getClass())
+				return false;
+
+			SourceAwareWriteModelHolder that = (SourceAwareWriteModelHolder) o;
+
+			if (!ObjectUtils.nullSafeEquals(this.source, that.source)) {
+				return false;
+			}
+			return ObjectUtils.nullSafeEquals(this.model, that.model);
+		}
+
+		@Override
+		public int hashCode() {
+			int result = ObjectUtils.nullSafeHashCode(model);
+			result = 31 * result + ObjectUtils.nullSafeHashCode(source);
+			return result;
+		}
+
+		public String toString() {
+			return "DefaultBulkOperations.SourceAwareWriteModelHolder(source=" + this.getSource() + ", model="
+					+ this.getModel() + ")";
+		}
 	}
 }

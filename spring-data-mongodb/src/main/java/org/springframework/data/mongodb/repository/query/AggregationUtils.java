@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import lombok.experimental.UtilityClass;
-
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,10 +47,13 @@ import org.springframework.util.StringUtils;
  * @author Mark Paluch
  * @since 2.2
  */
-@UtilityClass
-class AggregationUtils {
+final class AggregationUtils {
 
 	private static final ParameterBindingDocumentCodec CODEC = new ParameterBindingDocumentCodec();
+
+	private AggregationUtils() {
+		throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
+	}
 
 	/**
 	 * Apply a collation extracted from the given {@literal collationExpression} to the given

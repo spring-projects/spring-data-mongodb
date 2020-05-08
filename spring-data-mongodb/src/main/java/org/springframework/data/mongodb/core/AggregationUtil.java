@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import lombok.AllArgsConstructor;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -49,11 +47,17 @@ import org.springframework.util.ObjectUtils;
  * @author Mark Paluch
  * @since 2.1
  */
-@AllArgsConstructor
 class AggregationUtil {
 
 	QueryMapper queryMapper;
 	MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+
+	AggregationUtil(QueryMapper queryMapper,
+			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+
+		this.queryMapper = queryMapper;
+		this.mappingContext = mappingContext;
+	}
 
 	/**
 	 * Prepare the {@link AggregationOperationContext} for a given aggregation by either returning the context itself it

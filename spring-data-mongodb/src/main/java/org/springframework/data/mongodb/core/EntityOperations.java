@@ -15,10 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import lombok.AccessLevel;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
@@ -55,12 +51,15 @@ import org.springframework.util.MultiValueMap;
  * @see MongoTemplate
  * @see ReactiveMongoTemplate
  */
-@RequiredArgsConstructor
 class EntityOperations {
 
 	private static final String ID_FIELD = "_id";
 
-	private final @NonNull MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context;
+	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context;
+
+	EntityOperations(MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context) {
+		this.context = context;
+	}
 
 	/**
 	 * Creates a new {@link Entity} for the given bean.
@@ -69,7 +68,7 @@ class EntityOperations {
 	 * @return new instance of {@link Entity}.
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public <T> Entity<T> forEntity(T entity) {
+	<T> Entity<T> forEntity(T entity) {
 
 		Assert.notNull(entity, "Bean must not be null!");
 
@@ -92,7 +91,7 @@ class EntityOperations {
 	 * @return new instance of {@link AdaptibleEntity}.
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public <T> AdaptibleEntity<T> forEntity(T entity, ConversionService conversionService) {
+	<T> AdaptibleEntity<T> forEntity(T entity, ConversionService conversionService) {
 
 		Assert.notNull(entity, "Bean must not be null!");
 		Assert.notNull(conversionService, "ConversionService must not be null!");
@@ -346,10 +345,13 @@ class EntityOperations {
 		Number getVersion();
 	}
 
-	@RequiredArgsConstructor
 	private static class UnmappedEntity<T extends Map<String, Object>> implements AdaptibleEntity<T> {
 
 		private final T map;
+
+		protected UnmappedEntity(T map) {
+			this.map = map;
+		}
 
 		/*
 		 * (non-Javadoc)
@@ -460,7 +462,7 @@ class EntityOperations {
 
 	private static class SimpleMappedEntity<T extends Map<String, Object>> extends UnmappedEntity<T> {
 
-		SimpleMappedEntity(T map) {
+		protected SimpleMappedEntity(T map) {
 			super(map);
 		}
 
@@ -483,12 +485,19 @@ class EntityOperations {
 		}
 	}
 
-	@RequiredArgsConstructor(access = AccessLevel.PROTECTED)
 	private static class MappedEntity<T> implements Entity<T> {
 
-		private final @NonNull MongoPersistentEntity<?> entity;
-		private final @NonNull IdentifierAccessor idAccessor;
-		private final @NonNull PersistentPropertyAccessor<T> propertyAccessor;
+		private final MongoPersistentEntity<?> entity;
+		private final IdentifierAccessor idAccessor;
+		private final PersistentPropertyAccessor<T> propertyAccessor;
+
+		protected MappedEntity(MongoPersistentEntity<?> entity, IdentifierAccessor idAccessor,
+				PersistentPropertyAccessor<T> propertyAccessor) {
+
+			this.entity = entity;
+			this.idAccessor = idAccessor;
+			this.propertyAccessor = propertyAccessor;
+		}
 
 		private static <T> MappedEntity<T> of(T bean,
 				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context) {
@@ -759,10 +768,11 @@ class EntityOperations {
 	 * {@link TypedOperations} for generic entities that are not represented with {@link PersistentEntity} (e.g. custom
 	 * conversions).
 	 */
-	@RequiredArgsConstructor
 	enum UntypedOperations implements TypedOperations<Object> {
 
 		INSTANCE;
+
+		UntypedOperations() {}
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		public static <T> TypedOperations<T> instance() {
@@ -798,10 +808,13 @@ class EntityOperations {
 	 *
 	 * @param <T>
 	 */
-	@RequiredArgsConstructor
 	static class TypedEntityOperations<T> implements TypedOperations<T> {
 
-		private final @NonNull MongoPersistentEntity<T> entity;
+		private final MongoPersistentEntity<T> entity;
+
+		protected TypedEntityOperations(MongoPersistentEntity<T> entity) {
+			this.entity = entity;
+		}
 
 		/*
 		 * (non-Javadoc)

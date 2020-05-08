@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import lombok.Getter;
-
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.util.Assert;
 
@@ -28,7 +26,7 @@ import org.springframework.util.Assert;
 class SimpleMongoEntityMetadata<T> implements MongoEntityMetadata<T> {
 
 	private final Class<T> type;
-	private final @Getter MongoPersistentEntity<?> collectionEntity;
+	private final MongoPersistentEntity<?> collectionEntity;
 
 	/**
 	 * Creates a new {@link SimpleMongoEntityMetadata} using the given type and {@link MongoPersistentEntity} to use for
@@ -60,5 +58,9 @@ class SimpleMongoEntityMetadata<T> implements MongoEntityMetadata<T> {
 	 */
 	public String getCollectionName() {
 		return collectionEntity.getCollection();
+	}
+
+	public MongoPersistentEntity<?> getCollectionEntity() {
+		return this.collectionEntity;
 	}
 }

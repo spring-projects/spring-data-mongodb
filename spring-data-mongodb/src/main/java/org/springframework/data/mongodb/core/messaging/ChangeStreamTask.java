@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.core.messaging;
 
-import lombok.AllArgsConstructor;
-
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
@@ -217,11 +215,16 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 	 *
 	 * @since 2.1
 	 */
-	@AllArgsConstructor
 	static class ChangeStreamEventMessage<T> implements Message<ChangeStreamDocument<Document>, T> {
 
 		private final ChangeStreamEvent<T> delegate;
 		private final MessageProperties messageProperties;
+
+		ChangeStreamEventMessage(ChangeStreamEvent<T> delegate, MessageProperties messageProperties) {
+
+			this.delegate = delegate;
+			this.messageProperties = messageProperties;
+		}
 
 		/*
 		 * (non-Javadoc)

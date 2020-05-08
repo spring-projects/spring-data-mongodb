@@ -15,11 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import lombok.AccessLevel;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
-
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -37,10 +32,13 @@ import com.mongodb.bulk.BulkWriteResult;
  * @author Mark Paluch
  * @since 2.0
  */
-@RequiredArgsConstructor
 class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 
-	private final @NonNull MongoTemplate template;
+	private final MongoTemplate template;
+
+	ExecutableInsertOperationSupport(MongoTemplate template) {
+		this.template = template;
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -58,14 +56,20 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	@RequiredArgsConstructor
-	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 	static class ExecutableInsertSupport<T> implements ExecutableInsert<T> {
 
-		@NonNull MongoTemplate template;
-		@NonNull Class<T> domainType;
-		@Nullable String collection;
-		@Nullable BulkMode bulkMode;
+		private final MongoTemplate template;
+		private final Class<T> domainType;
+		@Nullable private final String collection;
+		@Nullable private final BulkMode bulkMode;
+
+		ExecutableInsertSupport(MongoTemplate template, Class<T> domainType, String collection, BulkMode bulkMode) {
+
+			this.template = template;
+			this.domainType = domainType;
+			this.collection = collection;
+			this.bulkMode = bulkMode;
+		}
 
 		/*
 		 * (non-Javadoc)

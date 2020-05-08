@@ -15,14 +15,10 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-
 import java.util.Set;
 
 import org.springframework.data.domain.ExampleMatcher;
+import org.springframework.util.ObjectUtils;
 
 /**
  * {@link ExampleMatcher} implementation for query by example (QBE). Unlike plain {@link ExampleMatcher} this untyped
@@ -33,11 +29,13 @@ import org.springframework.data.domain.ExampleMatcher;
  * @author Mark Paluch
  * @since 2.0
  */
-@EqualsAndHashCode
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class UntypedExampleMatcher implements ExampleMatcher {
 
-	private final @NonNull ExampleMatcher delegate;
+	private final ExampleMatcher delegate;
+
+	private UntypedExampleMatcher(ExampleMatcher delegate) {
+		this.delegate = delegate;
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -224,4 +222,22 @@ public class UntypedExampleMatcher implements ExampleMatcher {
 		return delegate.getMatchMode();
 	}
 
+	@Override
+	public boolean equals(Object o) {
+
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
+
+		UntypedExampleMatcher that = (UntypedExampleMatcher) o;
+
+		return ObjectUtils.nullSafeEquals(delegate, that.delegate);
+	}
+
+	@Override
+	public int hashCode() {
+
+		return ObjectUtils.nullSafeHashCode(delegate);
+	}
 }

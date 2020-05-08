@@ -17,9 +17,6 @@ package org.springframework.data.mongodb.core;
 
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
-import lombok.AccessLevel;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -2410,8 +2407,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @param query the query document that specifies the criteria used to find a record.
 	 * @param fields the document that specifies the fields to be returned.
 	 * @param entityClass the parameterized type of the returned list.
-	 * @param preparer allows for customization of the {@link com.mongodb.client.FindIterable} used when iterating over the result set, (apply
-	 *          limits, skips and so on).
+	 * @param preparer allows for customization of the {@link com.mongodb.client.FindIterable} used when iterating over
+	 *          the result set, (apply limits, skips and so on).
 	 * @return the {@link List} of converted objects.
 	 */
 	protected <T> Flux<T> doFind(String collectionName, Document query, Document fields, Class<T> entityClass,
@@ -2885,7 +2882,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 *
 	 * @author Mark Paluch
 	 */
-	@RequiredArgsConstructor
 	private static class FindCallback implements ReactiveCollectionQueryCallback<Document> {
 
 		private final @Nullable Document query;
@@ -2893,6 +2889,12 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		FindCallback(@Nullable Document query) {
 			this(query, null);
+		}
+
+		FindCallback(Document query, Document fields) {
+
+			this.query = query;
+			this.fields = fields;
 		}
 
 		@Override
@@ -2948,7 +2950,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	/**
 	 * @author Mark Paluch
 	 */
-	@RequiredArgsConstructor
 	private static class FindAndModifyCallback implements ReactiveCollectionCallback<Document> {
 
 		private final Document query;
@@ -2957,6 +2958,17 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		private final Object update;
 		private final List<Document> arrayFilters;
 		private final FindAndModifyOptions options;
+
+		FindAndModifyCallback(Document query, Document fields, Document sort, Object update, List<Document> arrayFilters,
+				FindAndModifyOptions options) {
+
+			this.query = query;
+			this.fields = fields;
+			this.sort = sort;
+			this.update = update;
+			this.arrayFilters = arrayFilters;
+			this.options = options;
+		}
 
 		@Override
 		public Publisher<Document> doInCollection(MongoCollection<Document> collection)
@@ -3013,7 +3025,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @author Christoph Strobl
 	 * @since 2.1
 	 */
-	@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 	private static class FindAndReplaceCallback implements ReactiveCollectionCallback<Document> {
 
 		private final Document query;
@@ -3022,6 +3033,17 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		private final Document update;
 		private final @Nullable com.mongodb.client.model.Collation collation;
 		private final FindAndReplaceOptions options;
+
+		FindAndReplaceCallback(Document query, Document fields, Document sort, Document update,
+				com.mongodb.client.model.Collation collation, FindAndReplaceOptions options) {
+
+			this.query = query;
+			this.fields = fields;
+			this.sort = sort;
+			this.update = update;
+			this.collation = collation;
+			this.options = options;
+		}
 
 		/*
 		 * (non-Javadoc)
@@ -3139,13 +3161,20 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @author Roman Puchkovskiy
 	 * @since 2.0
 	 */
-	@RequiredArgsConstructor
 	private class ProjectingReadCallback<S, T> implements DocumentCallback<T> {
 
-		private final @NonNull EntityReader<Object, Bson> reader;
-		private final @NonNull Class<S> entityType;
-		private final @NonNull Class<T> targetType;
-		private final @NonNull String collectionName;
+		private final EntityReader<Object, Bson> reader;
+		private final Class<S> entityType;
+		private final Class<T> targetType;
+		private final String collectionName;
+
+		ProjectingReadCallback(EntityReader<Object, Bson> reader, Class<S> entityType, Class<T> targetType,
+				String collectionName) {
+			this.reader = reader;
+			this.entityType = entityType;
+			this.targetType = targetType;
+			this.collectionName = collectionName;
+		}
 
 		@SuppressWarnings("unchecked")
 		public Mono<T> doWith(Document document) {
@@ -3365,10 +3394,13 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		}
 	}
 
-	@RequiredArgsConstructor
 	class IndexCreatorEventListener implements ApplicationListener<MappingContextEvent<?, ?>> {
 
 		final Consumer<Throwable> subscriptionExceptionHandler;
+
+		public IndexCreatorEventListener(Consumer<Throwable> subscriptionExceptionHandler) {
+			this.subscriptionExceptionHandler = subscriptionExceptionHandler;
+		}
 
 		@Override
 		public void onApplicationEvent(MappingContextEvent<?, ?> event) {

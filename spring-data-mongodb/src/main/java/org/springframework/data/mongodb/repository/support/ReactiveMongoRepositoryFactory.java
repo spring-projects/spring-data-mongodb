@@ -17,9 +17,6 @@ package org.springframework.data.mongodb.repository.support;
 
 import static org.springframework.data.querydsl.QuerydslUtils.*;
 
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Optional;
@@ -157,12 +154,20 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 	 * @author Mark Paluch
 	 * @author Christoph Strobl
 	 */
-	@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 	private static class MongoQueryLookupStrategy implements QueryLookupStrategy {
 
 		private final ReactiveMongoOperations operations;
 		private final QueryMethodEvaluationContextProvider evaluationContextProvider;
 		private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+
+		MongoQueryLookupStrategy(ReactiveMongoOperations operations,
+				QueryMethodEvaluationContextProvider evaluationContextProvider,
+				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+
+			this.operations = operations;
+			this.evaluationContextProvider = evaluationContextProvider;
+			this.mappingContext = mappingContext;
+		}
 
 		/*
 		 * (non-Javadoc)

@@ -15,13 +15,10 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import org.reactivestreams.Publisher;
-
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
@@ -37,6 +34,7 @@ import org.springframework.data.repository.query.ReturnedType;
 import org.springframework.data.repository.util.ReactiveWrappers;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -57,12 +55,19 @@ interface ReactiveMongoQueryExecution {
 	 *
 	 * @author Mark Paluch
 	 */
-	@RequiredArgsConstructor
 	class GeoNearExecution implements ReactiveMongoQueryExecution {
 
 		private final ReactiveMongoOperations operations;
 		private final MongoParameterAccessor accessor;
 		private final TypeInformation<?> returnType;
+
+		public GeoNearExecution(ReactiveMongoOperations operations, MongoParameterAccessor accessor,
+				TypeInformation<?> returnType) {
+
+			this.operations = operations;
+			this.accessor = accessor;
+			this.returnType = returnType;
+		}
 
 		/*
 		 * (non-Javadoc)
@@ -112,11 +117,15 @@ interface ReactiveMongoQueryExecution {
 	 * @author Mark Paluch
 	 * @author Artyom Gabeev
 	 */
-	@RequiredArgsConstructor
 	final class DeleteExecution implements ReactiveMongoQueryExecution {
 
 		private final ReactiveMongoOperations operations;
 		private final MongoQueryMethod method;
+
+		public DeleteExecution(ReactiveMongoOperations operations, MongoQueryMethod method) {
+			this.operations = operations;
+			this.method = method;
+		}
 
 		/*
 		 * (non-Javadoc)
@@ -142,11 +151,19 @@ interface ReactiveMongoQueryExecution {
 	 * An {@link ReactiveMongoQueryExecution} that wraps the results of the given delegate with the given result
 	 * processing.
 	 */
-	@RequiredArgsConstructor
 	final class ResultProcessingExecution implements ReactiveMongoQueryExecution {
 
-		private final @NonNull ReactiveMongoQueryExecution delegate;
-		private final @NonNull Converter<Object, Object> converter;
+		private final ReactiveMongoQueryExecution delegate;
+		private final Converter<Object, Object> converter;
+
+		public ResultProcessingExecution(ReactiveMongoQueryExecution delegate, Converter<Object, Object> converter) {
+
+			Assert.notNull(delegate, "Delegate must not be null!");
+			Assert.notNull(converter, "Converter must not be null!");
+
+			this.delegate = delegate;
+			this.converter = converter;
+		}
 
 		@Override
 		public Object execute(Query query, Class<?> type, String collection) {
@@ -159,12 +176,23 @@ interface ReactiveMongoQueryExecution {
 	 *
 	 * @author Mark Paluch
 	 */
-	@RequiredArgsConstructor
 	final class ResultProcessingConverter implements Converter<Object, Object> {
 
-		private final @NonNull ResultProcessor processor;
-		private final @NonNull ReactiveMongoOperations operations;
-		private final @NonNull EntityInstantiators instantiators;
+		private final ResultProcessor processor;
+		private final ReactiveMongoOperations operations;
+		private final EntityInstantiators instantiators;
+
+		public ResultProcessingConverter(ResultProcessor processor, ReactiveMongoOperations operations,
+				EntityInstantiators instantiators) {
+
+			Assert.notNull(processor, "Processor must not be null!");
+			Assert.notNull(operations, "Operations must not be null!");
+			Assert.notNull(instantiators, "Instantiators must not be null!");
+
+			this.processor = processor;
+			this.operations = operations;
+			this.instantiators = instantiators;
+		}
 
 		/*
 		 * (non-Javadoc)

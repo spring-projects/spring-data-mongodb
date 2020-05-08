@@ -17,8 +17,6 @@ package org.springframework.data.mongodb.util.json;
 
 import static java.lang.String.*;
 
-import lombok.Data;
-
 import java.text.DateFormat;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
@@ -1631,12 +1629,37 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 
 	// Spring Data Customization START
 
-	@Data
 	static class BindableValue {
 
-		BsonType type;
-		Object value;
-		int index;
+		private BsonType type;
+		private Object value;
+		private int index;
+
+		BindableValue() {}
+
+		BsonType getType() {
+			return type;
+		}
+
+		void setType(BsonType type) {
+			this.type = type;
+		}
+
+		Object getValue() {
+			return value;
+		}
+
+		void setValue(Object value) {
+			this.value = value;
+		}
+
+		int getIndex() {
+			return index;
+		}
+
+		void setIndex(int index) {
+			this.index = index;
+		}
 	}
 
 	// Spring Data Customization END

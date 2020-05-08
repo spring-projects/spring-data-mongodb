@@ -15,15 +15,10 @@
  */
 package org.springframework.data.mongodb.core;
 
-import lombok.AccessLevel;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import org.bson.Document;
-
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -39,12 +34,15 @@ import org.springframework.util.StringUtils;
  * @author Christoph Strobl
  * @since 2.0
  */
-@RequiredArgsConstructor
 class ReactiveFindOperationSupport implements ReactiveFindOperation {
 
 	private static final Query ALL_QUERY = new Query();
 
-	private final @NonNull ReactiveMongoTemplate template;
+	private final ReactiveMongoTemplate template;
+
+	ReactiveFindOperationSupport(ReactiveMongoTemplate template) {
+		this.template = template;
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -64,16 +62,24 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	@RequiredArgsConstructor
-	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 	static class ReactiveFindSupport<T>
 			implements ReactiveFind<T>, FindWithCollection<T>, FindWithProjection<T>, FindWithQuery<T> {
 
-		@NonNull ReactiveMongoTemplate template;
-		@NonNull Class<?> domainType;
-		Class<T> returnType;
-		String collection;
-		Query query;
+		private final ReactiveMongoTemplate template;
+		private final Class<?> domainType;
+		private final Class<T> returnType;
+		private final String collection;
+		private final Query query;
+
+		ReactiveFindSupport(ReactiveMongoTemplate template, Class<?> domainType, Class<T> returnType,
+				String collection, Query query) {
+
+			this.template = template;
+			this.domainType = domainType;
+			this.returnType = returnType;
+			this.collection = collection;
+			this.query = query;
+		}
 
 		/*
 		 * (non-Javadoc)

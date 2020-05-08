@@ -15,10 +15,8 @@
  */
 package org.springframework.data.mongodb.core.schema;
 
-import lombok.AllArgsConstructor;
-import lombok.NonNull;
-
 import org.bson.Document;
+import org.springframework.util.Assert;
 
 /**
  * JSON schema backed by a {@link org.bson.Document} object.
@@ -26,10 +24,15 @@ import org.bson.Document;
  * @author Mark Paluch
  * @since 2.1
  */
-@AllArgsConstructor
 class DocumentJsonSchema implements MongoJsonSchema {
 
-	private final @NonNull Document document;
+	private final Document document;
+
+	DocumentJsonSchema(Document document) {
+		
+		Assert.notNull(document, "Document must not be null!");
+		this.document = document;
+	}
 
 	/*
 	 * (non-Javadoc)

@@ -15,10 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import lombok.AccessLevel;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import reactor.core.publisher.Flux;
 
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -62,15 +58,22 @@ class ReactiveAggregationOperationSupport implements ReactiveAggregationOperatio
 		return new ReactiveAggregationSupport<>(template, domainType, null, null);
 	}
 
-	@RequiredArgsConstructor
-	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 	static class ReactiveAggregationSupport<T>
 			implements AggregationOperationWithAggregation<T>, ReactiveAggregation<T>, TerminatingAggregationOperation<T> {
 
-		@NonNull ReactiveMongoTemplate template;
-		@NonNull Class<T> domainType;
-		Aggregation aggregation;
-		String collection;
+		private final ReactiveMongoTemplate template;
+		private final Class<T> domainType;
+		private final Aggregation aggregation;
+		private final String collection;
+
+		ReactiveAggregationSupport(ReactiveMongoTemplate template, Class<T> domainType, Aggregation aggregation,
+				String collection) {
+
+			this.template = template;
+			this.domainType = domainType;
+			this.aggregation = aggregation;
+			this.collection = collection;
+		}
 
 		/*
 		 * (non-Javadoc)

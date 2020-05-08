@@ -15,9 +15,6 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -30,6 +27,7 @@ import org.springframework.data.geo.GeoPage;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.ExecutableFindOperation;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFind;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -37,6 +35,7 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
 import com.mongodb.client.result.DeleteResult;
@@ -62,11 +61,19 @@ interface MongoQueryExecution {
 	 * @author Christoph Strobl
 	 * @since 1.5
 	 */
-	@RequiredArgsConstructor
 	final class SlicedExecution implements MongoQueryExecution {
 
-		private final @NonNull FindWithQuery<?> find;
-		private final @NonNull Pageable pageable;
+		private final FindWithQuery<?> find;
+		private final Pageable pageable;
+
+		public SlicedExecution(ExecutableFindOperation.FindWithQuery<?> find, Pageable pageable) {
+
+			Assert.notNull(find, "Find must not be null!");
+			Assert.notNull(pageable, "Pageable must not be null!");
+
+			this.find = find;
+			this.pageable = pageable;
+		}
 
 		/*
 		 * (non-Javadoc)
@@ -95,11 +102,19 @@ interface MongoQueryExecution {
 	 * @author Mark Paluch
 	 * @author Christoph Strobl
 	 */
-	@RequiredArgsConstructor
 	final class PagedExecution implements MongoQueryExecution {
 
-		private final @NonNull FindWithQuery<?> operation;
-		private final @NonNull Pageable pageable;
+		private final FindWithQuery<?> operation;
+		private final Pageable pageable;
+
+		public PagedExecution(ExecutableFindOperation.FindWithQuery<?> operation, Pageable pageable) {
+
+			Assert.notNull(operation, "Operation must not be null!");
+			Assert.notNull(pageable, "Pageable must not be null!");
+
+			this.operation = operation;
+			this.pageable = pageable;
+		}
 
 		/*
 		 * (non-Javadoc)
@@ -133,12 +148,23 @@ interface MongoQueryExecution {
 	 *
 	 * @author Oliver Gierke
 	 */
-	@RequiredArgsConstructor
 	class GeoNearExecution implements MongoQueryExecution {
 
-		private final @NonNull FindWithQuery<?> operation;
-		private final @NonNull MongoQueryMethod method;
-		private final @NonNull MongoParameterAccessor accessor;
+		private final FindWithQuery<?> operation;
+		private final MongoQueryMethod method;
+		private final MongoParameterAccessor accessor;
+
+		public GeoNearExecution(ExecutableFindOperation.FindWithQuery<?> operation, MongoQueryMethod method,
+				MongoParameterAccessor accessor) {
+
+			Assert.notNull(operation, "Operation must not be null!");
+			Assert.notNull(method, "Method must not be null!");
+			Assert.notNull(accessor, "Accessor must not be null!");
+
+			this.operation = operation;
+			this.method = method;
+			this.accessor = accessor;
+		}
 
 		/*
 		 * (non-Javadoc)
@@ -236,11 +262,19 @@ interface MongoQueryExecution {
 	 * @author Christoph Strobl
 	 * @since 1.5
 	 */
-	@RequiredArgsConstructor
 	final class DeleteExecution implements MongoQueryExecution {
 
-		private final @NonNull MongoOperations operations;
-		private final @NonNull MongoQueryMethod method;
+		private final MongoOperations operations;
+		private final MongoQueryMethod method;
+
+		public DeleteExecution(MongoOperations operations, MongoQueryMethod method) {
+
+			Assert.notNull(operations, "Operations must not be null!");
+			Assert.notNull(method, "Method must not be null!");
+
+			this.operations = operations;
+			this.method = method;
+		}
 
 		/*
 		 * (non-Javadoc)

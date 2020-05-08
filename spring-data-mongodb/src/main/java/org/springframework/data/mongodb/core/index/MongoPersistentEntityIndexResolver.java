@@ -15,10 +15,6 @@
  */
 package org.springframework.data.mongodb.core.index;
 
-import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
-import lombok.RequiredArgsConstructor;
-
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,7 +29,6 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.Association;
@@ -733,14 +728,17 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		 * @author Christoph Strobl
 		 * @author Mark Paluch
 		 */
-		@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-		@EqualsAndHashCode
 		static class Path {
 
 			private static final Path EMPTY = new Path(Collections.emptyList(), false);
 
 			private final List<PersistentProperty<?>> elements;
 			private final boolean cycle;
+
+			private Path(List<PersistentProperty<?>> elements, boolean cycle) {
+				this.elements = elements;
+				this.cycle = cycle;
+			}
 
 			/**
 			 * @return an empty {@link Path}.
@@ -842,6 +840,28 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 				}
 
 				return builder.toString();
+			}
+
+			@Override
+			public boolean equals(Object o) {
+				if (this == o)
+					return true;
+				if (o == null || getClass() != o.getClass())
+					return false;
+
+				Path that = (Path) o;
+
+				if (this.cycle != that.cycle) {
+					return false;
+				}
+				return ObjectUtils.nullSafeEquals(this.elements, that.elements);
+			}
+
+			@Override
+			public int hashCode() {
+				int result = ObjectUtils.nullSafeHashCode(elements);
+				result = 31 * result + (cycle ? 1 : 0);
+				return result;
 			}
 		}
 	}

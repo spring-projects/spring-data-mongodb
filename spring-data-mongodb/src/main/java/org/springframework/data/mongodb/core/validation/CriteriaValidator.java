@@ -15,15 +15,12 @@
  */
 package org.springframework.data.mongodb.core.validation;
 
-import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
-import lombok.RequiredArgsConstructor;
-
 import org.bson.Document;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 
 /**
  * {@link Validator} implementation based on {@link CriteriaDefinition query expressions}.
@@ -34,11 +31,13 @@ import org.springframework.util.Assert;
  * @see Criteria
  * @see <a href="https://docs.mongodb.com/manual/core/schema-validation/#query-expressions">Schema Validation</a>
  */
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-@EqualsAndHashCode
 class CriteriaValidator implements Validator {
 
 	private final CriteriaDefinition criteria;
+
+	private CriteriaValidator(CriteriaDefinition criteria) {
+		this.criteria = criteria;
+	}
 
 	/**
 	 * Creates a new {@link Validator} object, which is basically setup of query operators, based on a
@@ -71,5 +70,22 @@ class CriteriaValidator implements Validator {
 	@Override
 	public String toString() {
 		return SerializationUtils.serializeToJsonSafely(toDocument());
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
+
+		CriteriaValidator that = (CriteriaValidator) o;
+
+		return ObjectUtils.nullSafeEquals(criteria, that.criteria);
+	}
+
+	@Override
+	public int hashCode() {
+		return ObjectUtils.nullSafeHashCode(criteria);
 	}
 }

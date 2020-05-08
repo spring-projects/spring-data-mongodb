@@ -15,16 +15,10 @@
  */
 package org.springframework.data.mongodb.core;
 
-import lombok.AccessLevel;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
-
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.util.CloseableIterator;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -35,10 +29,13 @@ import org.springframework.util.StringUtils;
  * @author Mark Paluch
  * @since 2.0
  */
-@RequiredArgsConstructor
 class ExecutableAggregationOperationSupport implements ExecutableAggregationOperation {
 
-	private final @NonNull MongoTemplate template;
+	private final MongoTemplate template;
+
+	ExecutableAggregationOperationSupport(MongoTemplate template) {
+		this.template = template;
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -56,15 +53,21 @@ class ExecutableAggregationOperationSupport implements ExecutableAggregationOper
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	@RequiredArgsConstructor
-	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 	static class ExecutableAggregationSupport<T>
 			implements AggregationWithAggregation<T>, ExecutableAggregation<T>, TerminatingAggregation<T> {
 
-		@NonNull MongoTemplate template;
-		@NonNull Class<T> domainType;
-		@Nullable Aggregation aggregation;
-		@Nullable String collection;
+		private final MongoTemplate template;
+		private final Class<T> domainType;
+		private final Aggregation aggregation;
+		private final String collection;
+
+		public ExecutableAggregationSupport(MongoTemplate template, Class<T> domainType, Aggregation aggregation,
+				String collection) {
+			this.template = template;
+			this.domainType = domainType;
+			this.aggregation = aggregation;
+			this.collection = collection;
+		}
 
 		/*
 		 * (non-Javadoc)

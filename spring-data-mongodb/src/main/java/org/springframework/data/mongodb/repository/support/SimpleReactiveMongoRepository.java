@@ -17,8 +17,6 @@ package org.springframework.data.mongodb.repository.support;
 
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -51,11 +49,20 @@ import com.mongodb.client.result.DeleteResult;
  * @author Ruben J Garcia
  * @since 2.0
  */
-@RequiredArgsConstructor
 public class SimpleReactiveMongoRepository<T, ID extends Serializable> implements ReactiveMongoRepository<T, ID> {
 
-	private final @NonNull MongoEntityInformation<T, ID> entityInformation;
-	private final @NonNull ReactiveMongoOperations mongoOperations;
+	private final MongoEntityInformation<T, ID> entityInformation;
+	private final ReactiveMongoOperations mongoOperations;
+
+	public SimpleReactiveMongoRepository(MongoEntityInformation<T, ID> entityInformation,
+			ReactiveMongoOperations mongoOperations) {
+
+		Assert.notNull(entityInformation, "EntityInformation must not be null!");
+		Assert.notNull(mongoOperations, "MongoOperations must not be null!");
+
+		this.entityInformation = entityInformation;
+		this.mongoOperations = mongoOperations;
+	}
 
 	/*
 	 * (non-Javadoc)

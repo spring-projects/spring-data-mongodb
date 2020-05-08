@@ -15,11 +15,9 @@
  */
 package org.springframework.data.mongodb.core.messaging;
 
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 
 /**
  * Trivial {@link Message} implementation.
@@ -27,8 +25,6 @@ import org.springframework.util.Assert;
  * @author Christoph Strobl
  * @since 2.1
  */
-@EqualsAndHashCode
-@ToString
 class SimpleMessage<S, T> implements Message<S, T> {
 
 	private @Nullable final S raw;
@@ -74,5 +70,36 @@ class SimpleMessage<S, T> implements Message<S, T> {
 	@Override
 	public MessageProperties getProperties() {
 		return properties;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
+
+		SimpleMessage<?, ?> that = (SimpleMessage<?, ?>) o;
+
+		if (!ObjectUtils.nullSafeEquals(this.raw, that.raw)) {
+			return false;
+		}
+		if (!ObjectUtils.nullSafeEquals(this.body, that.body)) {
+			return false;
+		}
+		return ObjectUtils.nullSafeEquals(this.properties, that.properties);
+	}
+
+	@Override
+	public int hashCode() {
+		int result = ObjectUtils.nullSafeHashCode(raw);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(body);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(properties);
+		return result;
+	}
+
+	public String toString() {
+		return "SimpleMessage(raw=" + this.getRaw() + ", body=" + this.getBody() + ", properties=" + this.getProperties()
+				+ ")";
 	}
 }

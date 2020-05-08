@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import lombok.experimental.UtilityClass;
-
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -39,11 +37,14 @@ import org.springframework.util.StringUtils;
  * @author Christoph Strobl
  * @since 2.2
  */
-@UtilityClass
-class CollationUtils {
+final class CollationUtils {
 
 	private static final ParameterBindingDocumentCodec CODEC = new ParameterBindingDocumentCodec();
 	private static final Pattern PARAMETER_BINDING_PATTERN = Pattern.compile("\\?(\\d+)");
+
+	private CollationUtils() {
+		throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
+	}
 
 	/**
 	 * Compute the {@link Collation} by inspecting the {@link ConvertingParameterAccessor#getCollation() parameter

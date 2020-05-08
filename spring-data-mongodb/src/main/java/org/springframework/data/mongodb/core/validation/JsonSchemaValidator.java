@@ -15,14 +15,11 @@
  */
 package org.springframework.data.mongodb.core.validation;
 
-import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
-import lombok.RequiredArgsConstructor;
-
 import org.bson.Document;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 
 /**
  * {@link Validator} implementation based on {@link MongoJsonSchema JSON Schema}.
@@ -32,11 +29,13 @@ import org.springframework.util.Assert;
  * @since 2.1
  * @see <a href="https://docs.mongodb.com/manual/core/schema-validation/#json-schema">Schema Validation</a>
  */
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-@EqualsAndHashCode
 class JsonSchemaValidator implements Validator {
 
 	private final MongoJsonSchema schema;
+
+	private JsonSchemaValidator(MongoJsonSchema schema) {
+		this.schema = schema;
+	}
 
 	/**
 	 * Create new {@link JsonSchemaValidator} defining validation rules via {@link MongoJsonSchema}.
@@ -67,5 +66,23 @@ class JsonSchemaValidator implements Validator {
 	@Override
 	public String toString() {
 		return SerializationUtils.serializeToJsonSafely(toDocument());
+	}
+
+	@Override
+	public boolean equals(Object o) {
+
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
+
+		JsonSchemaValidator that = (JsonSchemaValidator) o;
+
+		return ObjectUtils.nullSafeEquals(schema, that.schema);
+	}
+
+	@Override
+	public int hashCode() {
+		return ObjectUtils.nullSafeHashCode(schema);
 	}
 }

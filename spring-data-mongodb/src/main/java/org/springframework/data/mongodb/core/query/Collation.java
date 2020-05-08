@@ -15,11 +15,6 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-
 import java.util.Locale;
 import java.util.Optional;
 
@@ -515,8 +510,6 @@ public class Collation {
 	 *
 	 * @since 2.0
 	 */
-	@AllArgsConstructor(access = AccessLevel.PACKAGE)
-	@Getter
 	static class ICUComparisonLevel implements ComparisonLevel {
 
 		private final int level;
@@ -525,6 +518,24 @@ public class Collation {
 
 		ICUComparisonLevel(int level) {
 			this(level, Optional.empty(), Optional.empty());
+		}
+
+		ICUComparisonLevel(int level, Optional<CaseFirst> caseFirst, Optional<Boolean> caseLevel) {
+			this.level = level;
+			this.caseFirst = caseFirst;
+			this.caseLevel = caseLevel;
+		}
+
+		public int getLevel() {
+			return this.level;
+		}
+
+		public Optional<CaseFirst> getCaseFirst() {
+			return this.caseFirst;
+		}
+
+		public Optional<Boolean> getCaseLevel() {
+			return this.caseLevel;
 		}
 	}
 
@@ -650,7 +661,6 @@ public class Collation {
 	/**
 	 * @since 2.0
 	 */
-	@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 	public static class CaseFirst {
 
 		private static final CaseFirst UPPER = new CaseFirst("upper");
@@ -658,6 +668,10 @@ public class Collation {
 		private static final CaseFirst OFF = new CaseFirst("off");
 
 		private final String state;
+
+		private CaseFirst(String state) {
+			this.state = state;
+		}
 
 		/**
 		 * Sort uppercase before lowercase.
@@ -690,13 +704,17 @@ public class Collation {
 	/**
 	 * @since 2.0
 	 */
-	@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 	public static class Alternate {
 
 		private static final Alternate NON_IGNORABLE = new Alternate("non-ignorable", Optional.empty());
 
 		final String alternate;
 		final Optional<String> maxVariable;
+
+		Alternate(String alternate, Optional<String> maxVariable) {
+			this.alternate = alternate;
+			this.maxVariable = maxVariable;
+		}
 
 		/**
 		 * Consider Whitespace and punctuation as base characters.
@@ -761,11 +779,16 @@ public class Collation {
 	 * @see <a href="http://site.icu-project.org">ICU - International Components for Unicode</a>
 	 * @since 2.0
 	 */
-	@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 	public static class CollationLocale {
 
 		private final String language;
 		private final Optional<String> variant;
+
+		private CollationLocale(String language, Optional<String> variant) {
+
+			this.language = language;
+			this.variant = variant;
+		}
 
 		/**
 		 * Create new {@link CollationLocale} for given language.

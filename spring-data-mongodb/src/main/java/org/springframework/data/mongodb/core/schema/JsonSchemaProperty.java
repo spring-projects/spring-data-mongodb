@@ -15,9 +15,6 @@
  */
 package org.springframework.data.mongodb.core.schema;
 
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.NumericJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ObjectJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.*;
@@ -239,10 +236,13 @@ public interface JsonSchemaProperty extends JsonSchemaObject {
 	/**
 	 * Builder for {@link IdentifiableJsonSchemaProperty}.
 	 */
-	@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 	class JsonSchemaPropertyBuilder {
 
 		private final String identifier;
+
+		JsonSchemaPropertyBuilder(String identifier) {
+			this.identifier = identifier;
+		}
 
 		/**
 		 * Configure a {@link Type} for the property.
