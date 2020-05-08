@@ -139,7 +139,7 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 		setOperation.getFields().forEach(it -> {
 			keysTouched.add(it.getName());
 		});
-		operations.add(setOperation);
+		pipeline.add(setOperation);
 		return this;
 	}
 
@@ -155,7 +155,7 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 
 		Assert.notNull(unsetOperation, "UnsetOperation must not be null!");
 
-		operations.add(unsetOperation);
+		pipeline.add(unsetOperation);
 		keysTouched.addAll(unsetOperation.removedFieldNames());
 		return this;
 	}
@@ -172,7 +172,7 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 	public AggregationUpdate replaceWith(ReplaceWithOperation replaceWithOperation) {
 
 		Assert.notNull(replaceWithOperation, "ReplaceWithOperation must not be null!");
-		operations.add(replaceWithOperation);
+		pipeline.add(replaceWithOperation);
 		return this;
 	}
 

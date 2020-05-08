@@ -51,6 +51,11 @@ public class SkipOperation implements AggregationOperation {
 	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
-		return new Document("$skip", skipCount);
+		return new Document(operator(), skipCount);
+	}
+
+	@Override
+	public String operator() {
+		return "$skip";
 	}
 }

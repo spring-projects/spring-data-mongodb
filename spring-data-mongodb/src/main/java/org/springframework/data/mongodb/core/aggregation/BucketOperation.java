@@ -103,7 +103,12 @@ public class BucketOperation extends BucketOperationSupport<BucketOperation, Buc
 
 		options.putAll(super.toDocument(context));
 
-		return new Document("$bucket", options);
+		return new Document(operator(), options);
+	}
+
+	@Override
+	public String operator() {
+		return "$bucket";
 	}
 
 	/**

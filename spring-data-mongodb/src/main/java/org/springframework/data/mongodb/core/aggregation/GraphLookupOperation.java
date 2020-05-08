@@ -119,7 +119,12 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 			graphLookup.put("restrictSearchWithMatch", context.getMappedObject(restrictSearchWithMatch.getCriteriaObject()));
 		}
 
-		return new Document("$graphLookup", graphLookup);
+		return new Document(operator(), graphLookup);
+	}
+
+	@Override
+	public String operator() {
+		return "$graphLookup";
 	}
 
 	/*

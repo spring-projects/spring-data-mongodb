@@ -96,7 +96,7 @@ public class Aggregation {
 	public static final AggregationOperationContext DEFAULT_CONTEXT = AggregationOperationRenderer.DEFAULT_CONTEXT;
 	public static final AggregationOptions DEFAULT_OPTIONS = newAggregationOptions().build();
 
-	protected final List<AggregationOperation> operations;
+	protected final AggregationPipeline pipeline;
 	private final AggregationOptions options;
 
 	/**
@@ -139,7 +139,7 @@ public class Aggregation {
 	public Aggregation withOptions(AggregationOptions options) {
 
 		Assert.notNull(options, "AggregationOptions must not be null.");
-		return new Aggregation(this.operations, options);
+		return new Aggregation(this.pipeline.getOperations(), options);
 	}
 
 	/**
@@ -202,24 +202,8 @@ public class Aggregation {
 		Assert.notNull(aggregationOperations, "AggregationOperations must not be null!");
 		Assert.notNull(options, "AggregationOptions must not be null!");
 
-		// check $out/$merge is the last operation if it exists
-		for (AggregationOperation aggregationOperation : aggregationOperations) {
-
-			if (aggregationOperation instanceof OutOperation && !isLast(aggregationOperation, aggregationOperations)) {
-				throw new IllegalArgumentException("The $out operator must be the last stage in the pipeline.");
-			}
-
-			if (aggregationOperation instanceof MergeOperation && !isLast(aggregationOperation, aggregationOperations)) {
-				throw new IllegalArgumentException("The $merge operator must be the last stage in the pipeline.");
-			}
-		}
-
-		this.operations = aggregationOperations;
+		this.pipeline = new AggregationPipeline(aggregationOperations);
 		this.options = options;
-	}
-
-	private boolean isLast(AggregationOperation aggregationOperation, List<AggregationOperation> aggregationOperations) {
-		return aggregationOperations.indexOf(aggregationOperation) == aggregationOperations.size() - 1;
 	}
 
 	/**
@@ -718,7 +702,11 @@ public class Aggregation {
 	 * @since 2.1
 	 */
 	public List<Document> toPipeline(AggregationOperationContext rootContext) {
-		return AggregationOperationRenderer.toDocument(operations, rootContext);
+		return pipeline.toDocuments(rootContext);
+	}
+
+	public AggregationPipeline getPipeline() {
+		return pipeline;
 	}
 
 	/**

@@ -74,7 +74,12 @@ public class RedactOperation implements AggregationOperation {
 	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
-		return new Document("$redact", condition.toDocument(context));
+		return new Document(operator(), condition.toDocument(context));
+	}
+
+	@Override
+	public String operator() {
+		return "$redact";
 	}
 
 	/**

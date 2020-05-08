@@ -84,7 +84,12 @@ public class FacetOperation implements FieldsExposingAggregationOperation {
 	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
-		return new Document("$facet", facets.toDocument(context));
+		return new Document(operator(), facets.toDocument(context));
+	}
+
+	@Override
+	public String operator() {
+		return "$facet";
 	}
 
 	/* (non-Javadoc)

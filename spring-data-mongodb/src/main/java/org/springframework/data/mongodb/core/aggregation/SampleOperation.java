@@ -48,6 +48,11 @@ public class SampleOperation implements AggregationOperation {
 	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
-		return new Document("$sample", new Document("size", this.sampleSize));
+		return new Document(operator(), new Document("size", this.sampleSize));
+	}
+
+	@Override
+	public String operator() {
+		return "$sample";
 	}
 }
