@@ -164,4 +164,22 @@ public class ReactiveAggregationTests {
 		reactiveMongoTemplate.aggregate(aggregation, "newyork", Document.class).as(StepVerifier::create).expectNextCount(4)
 				.verifyComplete();
 	}
+
+	@Test // DATAMONGO-2356
+	public void skipOutputDoesNotReadBackAggregationResults() {
+
+		Product product = new Product("P1", "A", 1.99, 3, 0.05, 0.19);
+		reactiveMongoTemplate.insert(product).as(StepVerifier::create).expectNextCount(1).verifyComplete();
+
+		double shippingCosts = 1.2;
+
+		TypedAggregation<Product> agg = newAggregation(Product.class, //
+				project("name", "netPrice") //
+						.andExpression("netPrice * 10", shippingCosts).as("salesPrice") //
+		).withOptions(AggregationOptions.builder().skipOutput().build());
+
+		reactiveMongoTemplate.aggregate(agg, Document.class).as(StepVerifier::create).verifyComplete();
+	}
+
+
 }

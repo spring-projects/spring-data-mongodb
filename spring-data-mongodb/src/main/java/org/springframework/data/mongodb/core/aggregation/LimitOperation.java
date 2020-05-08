@@ -49,6 +49,11 @@ public class LimitOperation implements AggregationOperation {
 	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
-		return new Document("$limit", Long.valueOf(maxElements));
+		return new Document(operator(), Long.valueOf(maxElements));
+	}
+
+	@Override
+	public String operator() {
+		return "$limit";
 	}
 }

@@ -74,6 +74,11 @@ public class SortOperation implements AggregationOperation {
 			object.put(reference.getRaw(), order.isAscending() ? 1 : -1);
 		}
 
-		return new Document("$sort", object);
+		return new Document(operator(), object);
+	}
+
+	@Override
+	public String operator() {
+		return "$sort";
 	}
 }

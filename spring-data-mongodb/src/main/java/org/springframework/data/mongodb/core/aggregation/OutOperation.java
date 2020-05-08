@@ -211,7 +211,12 @@ public class OutOperation implements AggregationOperation {
 			$out.append("uniqueKey", uniqueKey);
 		}
 
-		return new Document("$out", $out);
+		return new Document(operator(), $out);
+	}
+
+	@Override
+	public String operator() {
+		return "$out";
 	}
 
 	private boolean requiresMongoDb42Format() {

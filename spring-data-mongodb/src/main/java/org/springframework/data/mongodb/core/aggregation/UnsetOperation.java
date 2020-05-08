@@ -117,11 +117,16 @@ public class UnsetOperation implements InheritsFieldsAggregationOperation {
 	public Document toDocument(AggregationOperationContext context) {
 
 		if (fields.size() == 1) {
-			return new Document("$unset", computeFieldName(fields.iterator().next(), context));
+			return new Document(operator(), computeFieldName(fields.iterator().next(), context));
 		}
 
-		return new Document("$unset",
+		return new Document(operator(),
 				fields.stream().map(it -> computeFieldName(it, context)).collect(Collectors.toList()));
+	}
+
+	@Override
+	public String operator() {
+		return "$unset";
 	}
 
 	private Object computeFieldName(Object field, AggregationOperationContext context) {

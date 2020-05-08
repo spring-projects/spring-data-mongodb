@@ -261,7 +261,12 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			fieldObject.putAll(projection.toDocument(context));
 		}
 
-		return new Document("$project", fieldObject);
+		return new Document(operator(), fieldObject);
+	}
+
+	@Override
+	public String operator() {
+		return "$project";
 	}
 
 	/**

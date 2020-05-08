@@ -1625,12 +1625,12 @@ public class AggregationTests {
 		mongoTemplate.save(new Person("Leoniv", "Yakubov", 55, Person.Sex.MALE));
 	}
 
-	@Test // DATAMONGO-1418
+	@Test // DATAMONGO-1418, DATAMONGO-2536
 	public void outShouldOutBeTheLastOperation() {
 		assertThatIllegalArgumentException().isThrownBy(() -> newAggregation(match(new Criteria()), //
 				group("field1").count().as("totalCount"), //
 				out("collection1"), //
-				skip(100L)));
+				skip(100L)).toPipeline(DEFAULT_CONTEXT));
 	}
 
 	@Test // DATAMONGO-1325
@@ -1905,6 +1905,27 @@ public class AggregationTests {
 		AggregationResults<WithComplexId> result = mongoTemplate.aggregate(newAggregation(project("id")),
 				WithComplexId.class, WithComplexId.class);
 		assertThat(result.getMappedResults()).containsOnly(source);
+	}
+
+	@Test // DATAMONGO-2536
+	public void skipOutputDoesNotReadBackAggregationResults() {
+
+		createTagDocuments();
+
+		Aggregation agg = newAggregation( //
+				project("tags"), //
+				unwind("tags"), //
+				group("tags") //
+						.count().as("n"), //
+				project("n") //
+						.and("tag").previousOperation(), //
+				sort(DESC, "n") //
+		).withOptions(AggregationOptions.builder().skipOutput().build());
+
+		AggregationResults<TagCount> results = mongoTemplate.aggregate(agg, INPUT_COLLECTION, TagCount.class);
+
+		assertThat(results.getMappedResults()).isEmpty();
+		assertThat(results.getRawResults()).isEmpty();
 	}
 
 	private void createUsersWithReferencedPersons() {
