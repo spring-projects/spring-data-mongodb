@@ -1907,6 +1907,27 @@ public class AggregationTests {
 		assertThat(result.getMappedResults()).containsOnly(source);
 	}
 
+	@Test // DATAMONGO-2536
+	public void skipOutputDoesNotReadBackAggregationResults() {
+
+		createTagDocuments();
+
+		Aggregation agg = newAggregation( //
+				project("tags"), //
+				unwind("tags"), //
+				group("tags") //
+						.count().as("n"), //
+				project("n") //
+						.and("tag").previousOperation(), //
+				sort(DESC, "n") //
+		).withOptions(AggregationOptions.builder().skipOutput().build());
+
+		AggregationResults<TagCount> results = mongoTemplate.aggregate(agg, INPUT_COLLECTION, TagCount.class);
+
+		assertThat(results.getMappedResults()).isEmpty();
+		assertThat(results.getRawResults()).isEmpty();
+	}
+
 	private void createUsersWithReferencedPersons() {
 
 		mongoTemplate.dropCollection(User.class);

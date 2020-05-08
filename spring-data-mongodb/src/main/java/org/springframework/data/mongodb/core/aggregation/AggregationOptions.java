@@ -52,6 +52,7 @@ public class AggregationOptions {
 	private final Optional<Collation> collation;
 	private final Optional<String> comment;
 	private Duration maxTime = Duration.ZERO;
+	private ResultOptions resultOptions = ResultOptions.READ;
 
 	/**
 	 * Creates a new {@link AggregationOptions}.
@@ -220,6 +221,14 @@ public class AggregationOptions {
 	}
 
 	/**
+	 * @return the {@link ResultOptions} to be used when running the {@link Aggregation}. Never {@literal null}.
+	 * @since 3.0
+	 */
+	public ResultOptions resultOptions() {
+		return resultOptions;
+	}
+
+	/**
 	 * Returns a new potentially adjusted copy for the given {@code aggregationCommandObject} with the configuration
 	 * applied.
 	 *
@@ -309,6 +318,7 @@ public class AggregationOptions {
 		private @Nullable Collation collation;
 		private @Nullable String comment;
 		private @Nullable Duration maxTime;
+		private @Nullable ResultOptions resultOptions;
 
 		/**
 		 * Defines whether to off-load intensive sort-operations to disk.
@@ -400,6 +410,20 @@ public class AggregationOptions {
 		}
 
 		/**
+		 * Run the aggregation, but do NOT read the aggregation result from the store. <br />
+		 * If the expected result of the aggregation is rather large, eg. when using an {@literal $out} operation, this
+		 * option allows to execute the aggregation without having the cursor return the operation result.
+		 *
+		 * @return this.
+		 * @since 3.0
+		 */
+		public Builder skipOutput() {
+
+			this.resultOptions = ResultOptions.SKIP;
+			return this;
+		}
+
+		/**
 		 * Returns a new {@link AggregationOptions} instance with the given configuration.
 		 *
 		 * @return new instance of {@link AggregationOptions}.
@@ -410,8 +434,26 @@ public class AggregationOptions {
 			if (maxTime != null) {
 				options.maxTime = maxTime;
 			}
+			if (resultOptions != null) {
+				options.resultOptions = resultOptions;
+			}
 
 			return options;
 		}
+	}
+
+	/**
+	 * @since 3.0
+	 */
+	public enum ResultOptions {
+
+		/**
+		 * Just do it!, and do not read the operation result.
+		 */
+		SKIP,
+		/**
+		 * Read the aggregation result from the cursor.
+		 */
+		READ;
 	}
 }

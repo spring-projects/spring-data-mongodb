@@ -68,6 +68,7 @@ import org.springframework.data.mongodb.core.QueryOperations.UpdateContext;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
+import org.springframework.data.mongodb.core.aggregation.AggregationOptions.ResultOptions;
 import org.springframework.data.mongodb.core.aggregation.PrefixingDelegatingAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
@@ -1026,6 +1027,14 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		if (options.hasExecutionTimeLimit()) {
 			cursor = cursor.maxTime(options.getMaxTime().toMillis(), TimeUnit.MILLISECONDS);
+		}
+
+		if (ResultOptions.SKIP.equals(options.resultOptions())) {
+			if (pipeline.get(pipeline.size() - 1).containsKey("$out")
+					|| pipeline.get(pipeline.size() - 1).containsKey("$merge")) {
+				return Flux.from(cursor.toCollection()).map(it -> (O) it);
+			}
+			return Flux.from(cursor.first()).thenMany(Mono.empty());
 		}
 
 		return Flux.from(cursor).concatMap(readCallback::doWith);
