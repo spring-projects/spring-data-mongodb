@@ -15,11 +15,9 @@
  */
 package org.springframework.data.mongodb.core.messaging;
 
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 
 /**
  * General message abstraction for any type of Event / Message published by MongoDB server to the client. This might be
@@ -65,8 +63,6 @@ public interface Message<S, T> {
 	 * @author Christoph Strobl
 	 * @since 2.1
 	 */
-	@ToString
-	@EqualsAndHashCode
 	class MessageProperties {
 
 		private static final MessageProperties EMPTY = new MessageProperties();
@@ -109,6 +105,34 @@ public interface Message<S, T> {
 		 */
 		public static MessagePropertiesBuilder builder() {
 			return new MessagePropertiesBuilder();
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (o == null || getClass() != o.getClass())
+				return false;
+
+			MessageProperties that = (MessageProperties) o;
+
+			if (!ObjectUtils.nullSafeEquals(this.databaseName, that.databaseName)) {
+				return false;
+			}
+
+			return ObjectUtils.nullSafeEquals(this.collectionName, that.collectionName);
+		}
+
+		@Override
+		public int hashCode() {
+			int result = ObjectUtils.nullSafeHashCode(databaseName);
+			result = 31 * result + ObjectUtils.nullSafeHashCode(collectionName);
+			return result;
+		}
+
+		public String toString() {
+			return "Message.MessageProperties(databaseName=" + this.getDatabaseName() + ", collectionName="
+					+ this.getCollectionName() + ")";
 		}
 
 		/**

@@ -15,9 +15,6 @@
  */
 package org.springframework.data.mongodb.core.schema;
 
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -182,7 +179,6 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 	 * @author Christoph Strobl
 	 * @since 2.1
 	 */
-	@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 	static class Restrictions {
 
 		private final Collection<? extends Object> possibleValues;
@@ -190,6 +186,16 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 		private final Collection<JsonSchemaObject> anyOf;
 		private final Collection<JsonSchemaObject> oneOf;
 		private final @Nullable JsonSchemaObject notMatch;
+
+		Restrictions(Collection<? extends Object> possibleValues, Collection<JsonSchemaObject> allOf,
+				Collection<JsonSchemaObject> anyOf, Collection<JsonSchemaObject> oneOf, JsonSchemaObject notMatch) {
+
+			this.possibleValues = possibleValues;
+			this.allOf = allOf;
+			this.anyOf = anyOf;
+			this.oneOf = oneOf;
+			this.notMatch = notMatch;
+		}
 
 		/**
 		 * @return new empty {@link Restrictions}.

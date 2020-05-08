@@ -15,10 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import lombok.AccessLevel;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -34,10 +30,13 @@ import org.springframework.util.StringUtils;
  * @author Christoph Strobl
  * @since 2.0
  */
-@RequiredArgsConstructor
 class ReactiveInsertOperationSupport implements ReactiveInsertOperation {
 
-	private final @NonNull ReactiveMongoTemplate template;
+	private final ReactiveMongoTemplate template;
+
+	ReactiveInsertOperationSupport(ReactiveMongoTemplate template) {
+		this.template = template;
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -51,13 +50,18 @@ class ReactiveInsertOperationSupport implements ReactiveInsertOperation {
 		return new ReactiveInsertSupport<>(template, domainType, null);
 	}
 
-	@RequiredArgsConstructor
-	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 	static class ReactiveInsertSupport<T> implements ReactiveInsert<T> {
 
-		@NonNull ReactiveMongoTemplate template;
-		@NonNull Class<T> domainType;
-		String collection;
+		private final ReactiveMongoTemplate template;
+		private final Class<T> domainType;
+		private final String collection;
+
+		ReactiveInsertSupport(ReactiveMongoTemplate template, Class<T> domainType, String collection) {
+
+			this.template = template;
+			this.domainType = domainType;
+			this.collection = collection;
+		}
 
 		/*
 		 * (non-Javadoc)

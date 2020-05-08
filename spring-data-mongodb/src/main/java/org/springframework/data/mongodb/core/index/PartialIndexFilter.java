@@ -16,14 +16,8 @@
 package org.springframework.data.mongodb.core.index;
 
 import org.bson.Document;
-
-import lombok.AccessLevel;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
-
-import com.mongodb.DBObject;
+import org.springframework.util.Assert;
 
 /**
  * {@link IndexFilter} implementation for usage with plain {@link Document} as well as {@link CriteriaDefinition} filter
@@ -32,10 +26,16 @@ import com.mongodb.DBObject;
  * @author Christoph Strobl
  * @since 1.10
  */
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class PartialIndexFilter implements IndexFilter {
 
-	private final @NonNull Object filterExpression;
+	private final Object filterExpression;
+
+	private PartialIndexFilter(Object filterExpression) {
+
+		Assert.notNull(filterExpression, "FilterExpression must not be null!");
+
+		this.filterExpression = filterExpression;
+	}
 
 	/**
 	 * Create new {@link PartialIndexFilter} for given {@link Document filter expression}.

@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import lombok.RequiredArgsConstructor;
-
 import java.util.Optional;
 
 import org.springframework.data.mongodb.core.query.Collation;
@@ -312,7 +310,6 @@ public class CollectionOptions {
 	 * @author Andreas Zink
 	 * @since 2.1
 	 */
-	@RequiredArgsConstructor
 	public static class ValidationOptions {
 
 		private static final ValidationOptions NONE = new ValidationOptions(null, null, null);
@@ -320,6 +317,13 @@ public class CollectionOptions {
 		private final @Nullable Validator validator;
 		private final @Nullable ValidationLevel validationLevel;
 		private final @Nullable ValidationAction validationAction;
+
+		public ValidationOptions(Validator validator, ValidationLevel validationLevel, ValidationAction validationAction) {
+
+			this.validator = validator;
+			this.validationLevel = validationLevel;
+			this.validationAction = validationAction;
+		}
 
 		/**
 		 * Create an empty {@link ValidationOptions}.

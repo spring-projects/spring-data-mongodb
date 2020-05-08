@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
@@ -31,12 +29,15 @@ import org.springframework.util.StringUtils;
  * @author Christoph Strobl
  * @since 2.1
  */
-@RequiredArgsConstructor
 class ReactiveMapReduceOperationSupport implements ReactiveMapReduceOperation {
 
 	private static final Query ALL_QUERY = new Query();
 
-	private final @NonNull ReactiveMongoTemplate template;
+	private final ReactiveMongoTemplate template;
+
+	ReactiveMapReduceOperationSupport(ReactiveMongoTemplate template) {
+		this.template = template;
+	}
 
 	/*
 	 * (non-Javascript)

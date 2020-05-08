@@ -15,13 +15,10 @@
  */
 package org.springframework.data.mongodb.core.validation;
 
-import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
-import lombok.RequiredArgsConstructor;
-
 import org.bson.Document;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 
 /**
  * Most trivial {@link Validator} implementation using plain {@link Document} to describe the desired document structure
@@ -32,11 +29,13 @@ import org.springframework.util.Assert;
  * @since 2.1
  * @see <a href="https://docs.mongodb.com/manual/core/schema-validation/">Schema Validation</a>
  */
-@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-@EqualsAndHashCode
 class DocumentValidator implements Validator {
 
 	private final Document validatorObject;
+
+	private DocumentValidator(Document validatorObject) {
+		this.validatorObject = validatorObject;
+	}
 
 	/**
 	 * Create new {@link DocumentValidator} defining validation rules via a plain {@link Document}.
@@ -67,5 +66,23 @@ class DocumentValidator implements Validator {
 	@Override
 	public String toString() {
 		return SerializationUtils.serializeToJsonSafely(validatorObject);
+	}
+
+	@Override
+	public boolean equals(Object o) {
+
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
+
+		DocumentValidator that = (DocumentValidator) o;
+
+		return ObjectUtils.nullSafeEquals(validatorObject, that.validatorObject);
+	}
+
+	@Override
+	public int hashCode() {
+		return ObjectUtils.nullSafeHashCode(validatorObject);
 	}
 }

@@ -15,16 +15,17 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import lombok.experimental.UtilityClass;
-
 /**
  * Utility class containing methods to interact with boolean values.
  *
  * @author Mark Paluch
  * @since 2.0.9
  */
-@UtilityClass
-class BooleanUtil {
+final class BooleanUtil {
+
+	private BooleanUtil() {
+		throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
+	}
 
 	/**
 	 * Count the number of {@literal true} values.

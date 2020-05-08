@@ -15,10 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import lombok.AccessLevel;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -35,12 +31,15 @@ import com.mongodb.client.result.DeleteResult;
  * @author Christoph Strobl
  * @since 2.0
  */
-@RequiredArgsConstructor
 class ReactiveRemoveOperationSupport implements ReactiveRemoveOperation {
 
 	private static final Query ALL_QUERY = new Query();
 
-	private final @NonNull ReactiveMongoTemplate tempate;
+	private final ReactiveMongoTemplate tempate;
+
+	ReactiveRemoveOperationSupport(ReactiveMongoTemplate tempate) {
+		this.tempate = tempate;
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -54,14 +53,20 @@ class ReactiveRemoveOperationSupport implements ReactiveRemoveOperation {
 		return new ReactiveRemoveSupport<>(tempate, domainType, ALL_QUERY, null);
 	}
 
-	@RequiredArgsConstructor
-	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 	static class ReactiveRemoveSupport<T> implements ReactiveRemove<T>, RemoveWithCollection<T> {
 
-		@NonNull ReactiveMongoTemplate template;
-		@NonNull Class<T> domainType;
-		Query query;
-		String collection;
+		private final ReactiveMongoTemplate template;
+		private final Class<T> domainType;
+		private final Query query;
+		private final String collection;
+
+		ReactiveRemoveSupport(ReactiveMongoTemplate template, Class<T> domainType, Query query, String collection) {
+
+			this.template = template;
+			this.domainType = domainType;
+			this.query = query;
+			this.collection = collection;
+		}
 
 		/*
 		 * (non-Javadoc)

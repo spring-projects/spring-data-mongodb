@@ -17,11 +17,6 @@ package org.springframework.data.mongodb.core;
 
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -33,7 +28,6 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -2950,11 +2944,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	@RequiredArgsConstructor
 	private class ExistsCallback implements CollectionCallback<Boolean> {
 
 		private final Document mappedQuery;
 		private final com.mongodb.client.model.Collation collation;
+
+		ExistsCallback(Document mappedQuery, com.mongodb.client.model.Collation collation) {
+
+			this.mappedQuery = mappedQuery;
+			this.collation = collation;
+		}
 
 		@Override
 		public Boolean doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
@@ -2977,7 +2976,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		private final Document sort;
 		private final Optional<Collation> collation;
 
-		public FindAndRemoveCallback(Document query, Document fields, Document sort, @Nullable Collation collation) {
+		FindAndRemoveCallback(Document query, Document fields, Document sort, @Nullable Collation collation) {
 
 			this.query = query;
 			this.fields = fields;
@@ -3003,8 +3002,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		private final List<Document> arrayFilters;
 		private final FindAndModifyOptions options;
 
-		public FindAndModifyCallback(Document query, Document fields, Document sort, Object update,
+		FindAndModifyCallback(Document query, Document fields, Document sort, Object update,
 				List<Document> arrayFilters, FindAndModifyOptions options) {
+
 			this.query = query;
 			this.fields = fields;
 			this.sort = sort;
@@ -3113,12 +3113,18 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @author Christoph Strobl
 	 * @author Roman Puchkovskiy
 	 */
-	@RequiredArgsConstructor
 	private class ReadDocumentCallback<T> implements DocumentCallback<T> {
 
-		private final @NonNull EntityReader<? super T, Bson> reader;
-		private final @NonNull Class<T> type;
+		private final EntityReader<? super T, Bson> reader;
+		private final Class<T> type;
 		private final String collectionName;
+
+		ReadDocumentCallback(EntityReader<? super T, Bson> reader, Class<T> type, String collectionName) {
+
+			this.reader = reader;
+			this.type = type;
+			this.collectionName = collectionName;
+		}
 
 		@Nullable
 		public T doWith(@Nullable Document document) {
@@ -3147,13 +3153,21 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param <T>
 	 * @since 2.0
 	 */
-	@RequiredArgsConstructor
 	private class ProjectingReadCallback<S, T> implements DocumentCallback<T> {
 
-		private final @NonNull EntityReader<Object, Bson> reader;
-		private final @NonNull Class<S> entityType;
-		private final @NonNull Class<T> targetType;
-		private final @NonNull String collectionName;
+		private final EntityReader<Object, Bson> reader;
+		private final Class<S> entityType;
+		private final Class<T> targetType;
+		private final String collectionName;
+
+		ProjectingReadCallback(EntityReader<Object, Bson> reader, Class<S> entityType, Class<T> targetType,
+				String collectionName) {
+
+			this.reader = reader;
+			this.entityType = entityType;
+			this.targetType = targetType;
+			this.collectionName = collectionName;
+		}
 
 		/*
 		 * (non-Javadoc)
@@ -3189,7 +3203,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		private final Query query;
 		private final @Nullable Class<?> type;
 
-		public QueryCursorPreparer(Query query, @Nullable Class<?> type) {
+		QueryCursorPreparer(Query query, @Nullable Class<?> type) {
 
 			this.query = query;
 			this.type = type;
@@ -3331,7 +3345,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @author Thomas Darimont
 	 * @since 1.7
 	 */
-	@AllArgsConstructor(access = AccessLevel.PACKAGE)
 	static class CloseableIterableCursorAdapter<T> implements CloseableIterator<T> {
 
 		private volatile @Nullable MongoCursor<Document> cursor;
@@ -3345,10 +3358,18 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		 * @param exceptionTranslator
 		 * @param objectReadCallback
 		 */
-		public CloseableIterableCursorAdapter(MongoIterable<Document> cursor,
+		CloseableIterableCursorAdapter(MongoIterable<Document> cursor,
 				PersistenceExceptionTranslator exceptionTranslator, DocumentCallback<T> objectReadCallback) {
 
 			this.cursor = cursor.iterator();
+			this.exceptionTranslator = exceptionTranslator;
+			this.objectReadCallback = objectReadCallback;
+		}
+
+		CloseableIterableCursorAdapter(MongoCursor<Document> cursor, PersistenceExceptionTranslator exceptionTranslator,
+				DocumentCallback<T> objectReadCallback) {
+			
+			this.cursor = cursor;
 			this.exceptionTranslator = exceptionTranslator;
 			this.objectReadCallback = objectReadCallback;
 		}

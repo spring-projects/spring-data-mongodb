@@ -15,9 +15,6 @@
  */
 package org.springframework.data.mongodb.core.schema;
 
-import lombok.EqualsAndHashCode;
-import lombok.RequiredArgsConstructor;
-
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Collection;
@@ -44,6 +41,7 @@ import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.String
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.TimestampJsonSchemaObject;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ObjectUtils;
 
 /**
  * Interface that can be implemented by objects that know how to serialize themselves to JSON schema using
@@ -500,11 +498,13 @@ public interface JsonSchemaObject {
 		 * @author Christpoh Strobl
 		 * @since 2.1
 		 */
-		@RequiredArgsConstructor
-		@EqualsAndHashCode
 		class JsonType implements Type {
 
 			private final String name;
+
+			public JsonType(String name) {
+				this.name = name;
+			}
 
 			/*
 			 * (non-Javadoc)
@@ -523,17 +523,36 @@ public interface JsonSchemaObject {
 			public String value() {
 				return name;
 			}
+
+			@Override
+			public boolean equals(Object o) {
+				if (this == o)
+					return true;
+				if (o == null || getClass() != o.getClass())
+					return false;
+
+				JsonType jsonType = (JsonType) o;
+
+				return ObjectUtils.nullSafeEquals(name, jsonType.name);
+			}
+
+			@Override
+			public int hashCode() {
+				return ObjectUtils.nullSafeHashCode(name);
+			}
 		}
 
 		/**
 		 * @author Christpoh Strobl
 		 * @since 2.1
 		 */
-		@RequiredArgsConstructor
-		@EqualsAndHashCode
 		class BsonType implements Type {
 
 			private final String name;
+
+			BsonType(String name) {
+				this.name = name;
+			}
 
 			/*
 			 * (non-Javadoc)
@@ -551,6 +570,24 @@ public interface JsonSchemaObject {
 			@Override
 			public String value() {
 				return name;
+			}
+
+			@Override
+			public boolean equals(Object o) {
+
+				if (this == o)
+					return true;
+				if (o == null || getClass() != o.getClass())
+					return false;
+
+				BsonType bsonType = (BsonType) o;
+
+				return ObjectUtils.nullSafeEquals(name, bsonType.name);
+			}
+
+			@Override
+			public int hashCode() {
+				return ObjectUtils.nullSafeHashCode(name);
 			}
 		}
 	}

@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import lombok.Value;
 import reactor.core.publisher.Mono;
 
 import org.bson.codecs.configuration.CodecRegistry;
@@ -27,6 +26,7 @@ import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.SessionAwareMethodInterceptor;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 
 import com.mongodb.ClientSessionOptions;
 import com.mongodb.ConnectionString;
@@ -175,11 +175,16 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 	 * @author Christoph Strobl
 	 * @since 2.1
 	 */
-	@Value
-	static class ClientSessionBoundMongoDbFactory implements ReactiveMongoDatabaseFactory {
+	static final class ClientSessionBoundMongoDbFactory implements ReactiveMongoDatabaseFactory {
 
-		ClientSession session;
-		ReactiveMongoDatabaseFactory delegate;
+		private final ClientSession session;
+		private final ReactiveMongoDatabaseFactory delegate;
+
+		ClientSessionBoundMongoDbFactory(ClientSession session, ReactiveMongoDatabaseFactory delegate) {
+
+			this.session = session;
+			this.delegate = delegate;
+		}
 
 		/*
 		 * (non-Javadoc)
@@ -267,6 +272,41 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 					this::proxyDatabase, MongoCollection.class, this::proxyCollection));
 
 			return targetType.cast(factory.getProxy());
+		}
+
+		public ClientSession getSession() {
+			return this.session;
+		}
+
+		public ReactiveMongoDatabaseFactory getDelegate() {
+			return this.delegate;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (o == null || getClass() != o.getClass())
+				return false;
+
+			ClientSessionBoundMongoDbFactory that = (ClientSessionBoundMongoDbFactory) o;
+
+			if (!ObjectUtils.nullSafeEquals(this.session, that.session)) {
+				return false;
+			}
+			return ObjectUtils.nullSafeEquals(this.delegate, that.delegate);
+		}
+
+		@Override
+		public int hashCode() {
+			int result = ObjectUtils.nullSafeHashCode(this.session);
+			result = 31 * result + ObjectUtils.nullSafeHashCode(this.delegate);
+			return result;
+		}
+
+		public String toString() {
+			return "SimpleReactiveMongoDatabaseFactory.ClientSessionBoundMongoDbFactory(session=" + this.getSession()
+					+ ", delegate=" + this.getDelegate() + ")";
 		}
 	}
 }

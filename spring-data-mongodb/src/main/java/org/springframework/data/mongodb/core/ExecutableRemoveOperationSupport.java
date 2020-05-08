@@ -15,11 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import lombok.AccessLevel;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
-
 import java.util.List;
 
 import org.springframework.data.mongodb.core.query.Query;
@@ -36,12 +31,15 @@ import com.mongodb.client.result.DeleteResult;
  * @author Mark Paluch
  * @since 2.0
  */
-@RequiredArgsConstructor
 class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 
 	private static final Query ALL_QUERY = new Query();
 
-	private final @NonNull MongoTemplate tempate;
+	private final MongoTemplate tempate;
+
+	public ExecutableRemoveOperationSupport(MongoTemplate tempate) {
+		this.tempate = tempate;
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -59,14 +57,19 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	@RequiredArgsConstructor
-	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 	static class ExecutableRemoveSupport<T> implements ExecutableRemove<T>, RemoveWithCollection<T> {
 
-		@NonNull MongoTemplate template;
-		@NonNull Class<T> domainType;
-		Query query;
-		@Nullable String collection;
+		private final MongoTemplate template;
+		private final Class<T> domainType;
+		private final Query query;
+		@Nullable private final String collection;
+
+		public ExecutableRemoveSupport(MongoTemplate template, Class<T> domainType, Query query, String collection) {
+			this.template = template;
+			this.domainType = domainType;
+			this.query = query;
+			this.collection = collection;
+		}
 
 		/*
 		 * (non-Javadoc)

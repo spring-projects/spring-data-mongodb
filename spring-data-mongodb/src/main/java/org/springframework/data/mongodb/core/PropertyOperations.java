@@ -15,9 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-
 import org.bson.Document;
 import org.springframework.data.mapping.SimplePropertyHandler;
 import org.springframework.data.mapping.context.MappingContext;
@@ -33,10 +30,13 @@ import org.springframework.util.ClassUtils;
  * @author Christoph Strobl
  * @since 2.1
  */
-@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 class PropertyOperations {
 
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+
+	PropertyOperations(MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+		this.mappingContext = mappingContext;
+	}
 
 	/**
 	 * For cases where {@code fields} is {@link Document#isEmpty() empty} include only fields that are required for

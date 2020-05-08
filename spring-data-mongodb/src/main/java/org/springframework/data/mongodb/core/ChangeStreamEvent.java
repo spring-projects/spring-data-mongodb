@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import lombok.EqualsAndHashCode;
-
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
@@ -27,6 +25,7 @@ import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.messaging.Message;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ObjectUtils;
 
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.OperationType;
@@ -39,7 +38,6 @@ import com.mongodb.client.model.changestream.OperationType;
  * @author Mark Paluch
  * @since 2.1
  */
-@EqualsAndHashCode
 public class ChangeStreamEvent<T> {
 
 	@SuppressWarnings("rawtypes") //
@@ -187,8 +185,8 @@ public class ChangeStreamEvent<T> {
 			return CONVERTED_UPDATER.compareAndSet(this, null, result) ? result : CONVERTED_UPDATER.get(this);
 		}
 
-		throw new IllegalArgumentException(String.format("No converter found capable of converting %s to %s",
-				fullDocument.getClass(), targetType));
+		throw new IllegalArgumentException(
+				String.format("No converter found capable of converting %s to %s", fullDocument.getClass(), targetType));
 	}
 
 	/*
@@ -198,5 +196,28 @@ public class ChangeStreamEvent<T> {
 	@Override
 	public String toString() {
 		return "ChangeStreamEvent {" + "raw=" + raw + ", targetType=" + targetType + '}';
+	}
+
+	@Override
+	public boolean equals(Object o) {
+
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
+
+		ChangeStreamEvent<?> that = (ChangeStreamEvent<?>) o;
+
+		if (!ObjectUtils.nullSafeEquals(this.raw, that.raw)) {
+			return false;
+		}
+		return ObjectUtils.nullSafeEquals(this.targetType, that.targetType);
+	}
+
+	@Override
+	public int hashCode() {
+		int result = raw != null ? raw.hashCode() : 0;
+		result = 31 * result + ObjectUtils.nullSafeHashCode(targetType);
+		return result;
 	}
 }

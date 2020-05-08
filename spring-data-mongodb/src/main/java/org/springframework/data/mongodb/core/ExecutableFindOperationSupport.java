@@ -15,12 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import com.mongodb.ReadPreference;
-import lombok.AccessLevel;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -37,6 +31,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
+import com.mongodb.ReadPreference;
 import com.mongodb.client.FindIterable;
 
 /**
@@ -46,12 +41,15 @@ import com.mongodb.client.FindIterable;
  * @author Mark Paluch
  * @since 2.0
  */
-@RequiredArgsConstructor
 class ExecutableFindOperationSupport implements ExecutableFindOperation {
 
 	private static final Query ALL_QUERY = new Query();
 
-	private final @NonNull MongoTemplate template;
+	private final MongoTemplate template;
+
+	ExecutableFindOperationSupport(MongoTemplate template) {
+		this.template = template;
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -70,16 +68,23 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	@RequiredArgsConstructor
-	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 	static class ExecutableFindSupport<T>
 			implements ExecutableFind<T>, FindWithCollection<T>, FindWithProjection<T>, FindWithQuery<T> {
 
-		@NonNull MongoTemplate template;
-		@NonNull Class<?> domainType;
-		Class<T> returnType;
-		@Nullable String collection;
-		Query query;
+		private final MongoTemplate template;
+		private final Class<?> domainType;
+		private final Class<T> returnType;
+		@Nullable private final String collection;
+		private final Query query;
+
+		ExecutableFindSupport(MongoTemplate template, Class<?> domainType, Class<T> returnType,
+				String collection, Query query) {
+			this.template = template;
+			this.domainType = domainType;
+			this.returnType = returnType;
+			this.collection = collection;
+			this.query = query;
+		}
 
 		/*
 		 * (non-Javadoc)
