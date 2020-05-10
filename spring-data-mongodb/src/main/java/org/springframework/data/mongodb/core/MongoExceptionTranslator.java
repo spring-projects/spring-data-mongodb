@@ -29,6 +29,7 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.dao.PermissionDeniedDataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
+import org.springframework.data.mongodb.BulkOperationException;
 import org.springframework.data.mongodb.ClientSessionException;
 import org.springframework.data.mongodb.MongoTransactionException;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
@@ -39,7 +40,6 @@ import org.springframework.util.ClassUtils;
 import com.mongodb.MongoBulkWriteException;
 import com.mongodb.MongoException;
 import com.mongodb.MongoServerException;
-import com.mongodb.bulk.BulkWriteError;
 
 /**
  * Simple {@link PersistenceExceptionTranslator} for Mongo. Convert the given runtime exception to an appropriate
@@ -49,6 +49,7 @@ import com.mongodb.bulk.BulkWriteError;
  * @author Oliver Gierke
  * @author Michal Vich
  * @author Christoph Strobl
+ * @author Jacob Botuck
  */
 public class MongoExceptionTranslator implements PersistenceExceptionTranslator {
 
@@ -63,7 +64,7 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 			Collections.singletonList("MongoInternalException"));
 
 	private static final Set<String> DATA_INTEGRITY_EXCEPTIONS = new HashSet<>(
-			Arrays.asList("WriteConcernException", "MongoWriteException", "MongoBulkWriteException"));
+			Arrays.asList("WriteConcernException", "MongoWriteException"));
 
 	/*
 	 * (non-Javadoc)
@@ -98,18 +99,17 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 				if (((MongoServerException) ex).getCode() == 11000) {
 					return new DuplicateKeyException(ex.getMessage(), ex);
 				}
-				if (ex instanceof MongoBulkWriteException) {
-					for (BulkWriteError x : ((MongoBulkWriteException) ex).getWriteErrors()) {
-						if (x.getCode() == 11000) {
-							return new DuplicateKeyException(ex.getMessage(), ex);
-						}
-					}
-				}
 			}
 
 			return new DataIntegrityViolationException(ex.getMessage(), ex);
 		}
-
+		if (ex instanceof MongoBulkWriteException) {
+			MongoBulkWriteException mongoBulkWriteException = (MongoBulkWriteException) ex;
+			if (mongoBulkWriteException.getWriteConcernError() != null) {
+				return new DataIntegrityViolationException(ex.getMessage(), ex);
+			}
+			return new BulkOperationException(ex.getMessage(), mongoBulkWriteException);
+		}
 		// All other MongoExceptions
 		if (ex instanceof MongoException) {
 
