@@ -18,7 +18,12 @@ package org.springframework.data.mongodb.core;
 import static org.assertj.core.api.Assertions.*;
 
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
 
+import com.mongodb.MongoBulkWriteException;
+import com.mongodb.bulk.BulkWriteError;
+import com.mongodb.bulk.WriteConcernError;
 import org.bson.BsonDocument;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,9 +31,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.core.NestedRuntimeException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.InvalidDataAccessResourceUsageException;
+import org.springframework.data.mongodb.BulkOperationException;
 import org.springframework.data.mongodb.ClientSessionException;
 import org.springframework.data.mongodb.MongoTransactionException;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
@@ -45,6 +52,7 @@ import com.mongodb.ServerAddress;
  * @author Michal Vich
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Jacob Botuck
  */
 public class MongoExceptionTranslatorUnitTests {
 
@@ -150,6 +158,22 @@ public class MongoExceptionTranslatorUnitTests {
 		checkTranslatedMongoException(MongoTransactionException.class, 257);
 		checkTranslatedMongoException(MongoTransactionException.class, 263);
 		checkTranslatedMongoException(MongoTransactionException.class, 267);
+	}
+
+	@Test
+	public void translateMongoBulkOperationExceptionWithWriteConcernError() {
+
+		expectExceptionWithCauseMessage(translator.translateExceptionIfPossible(new MongoBulkWriteException(null,
+				new ArrayList<>(), new WriteConcernError(42, "codename", "writeconcern error happened", new BsonDocument()),
+				new ServerAddress())), DataIntegrityViolationException.class, null);
+	}
+
+	@Test
+	public void translateMongoBulkOperationExceptionWithoutWriteConcernError() {
+
+		expectExceptionWithCauseMessage(translator.translateExceptionIfPossible(new MongoBulkWriteException(null,
+				Arrays.asList(new BulkWriteError(42, "a write error happened", new BsonDocument(), 49)), null,
+				new ServerAddress())), BulkOperationException.class, null);
 	}
 
 	private void checkTranslatedMongoException(Class<? extends Exception> clazz, int code) {
