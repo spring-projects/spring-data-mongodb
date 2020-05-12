@@ -965,7 +965,7 @@ public class QueryMapper {
 			this.entity = entity;
 			this.mappingContext = context;
 
-			this.path = getPath(removePlaceholders(POSITIONAL_PARAMETER_PATTERN, name));
+			this.path = getPath(removePlaceholders(POSITIONAL_PARAMETER_PATTERN, name), property);
 			this.property = path == null ? property : path.getLeafProperty();
 			this.association = findAssociation();
 		}
@@ -1079,10 +1079,16 @@ public class QueryMapper {
 		 * @return
 		 */
 		@Nullable
-		private PersistentPropertyPath<MongoPersistentProperty> getPath(String pathExpression) {
+		private PersistentPropertyPath<MongoPersistentProperty> getPath(String pathExpression,
+				MongoPersistentProperty sourceProperty) {
 
 			String rawPath = removePlaceholders(POSITIONAL_OPERATOR,
 					removePlaceholders(DOT_POSITIONAL_PATTERN, pathExpression));
+
+			if (sourceProperty != null && sourceProperty.getOwner().equals(entity)) {
+				return mappingContext
+						.getPersistentPropertyPath(PropertyPath.from(sourceProperty.getName(), entity.getTypeInformation()));
+			}
 
 			PropertyPath path = forName(rawPath);
 			if (path == null || isPathToJavaLangClassProperty(path)) {
