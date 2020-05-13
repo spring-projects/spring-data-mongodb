@@ -38,6 +38,7 @@ import org.bson.Document;
 import org.bson.Transformer;
 import org.bson.codecs.*;
 import org.bson.codecs.configuration.CodecRegistry;
+import org.bson.json.JsonParseException;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
@@ -190,9 +191,26 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 
 		Document document = new Document();
 		reader.readStartDocument();
-		while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
-			String fieldName = reader.readName();
-			document.put(fieldName, readValue(reader, decoderContext));
+
+		try {
+
+			while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
+				String fieldName = reader.readName();
+				Object value = readValue(reader, decoderContext);
+				document.put(fieldName, value);
+			}
+		} catch (JsonParseException e) {
+			try {
+
+				Object value = readValue(reader, decoderContext);
+				if (value instanceof Map) {
+					if (!((Map) value).isEmpty()) {
+						return new Document((Map) value);
+					}
+				}
+			} catch (Exception ex) {
+				throw e;
+			}
 		}
 
 		reader.readEndDocument();
