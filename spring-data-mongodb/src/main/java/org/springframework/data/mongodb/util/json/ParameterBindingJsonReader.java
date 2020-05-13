@@ -368,23 +368,30 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 
 		if (token.getType().equals(JsonTokenType.UNQUOTED_STRING)) {
 
-			if (matcher.find()) {
-
-				int index = computeParameterIndex(matcher.group());
-				bindableValue.setValue(getBindableValueForIndex(index));
-				bindableValue.setType(bsonTypeForValue(getBindableValueForIndex(index)));
-				return bindableValue;
-			}
-
 			Matcher regexMatcher = EXPRESSION_BINDING_PATTERN.matcher(tokenValue);
 			if (regexMatcher.find()) {
 
 				String binding = regexMatcher.group();
 				String expression = binding.substring(3, binding.length() - 1);
 
+				Matcher inSpelMatcher = PARAMETER_BINDING_PATTERN.matcher(expression);
+				while (inSpelMatcher.find()) {
+
+					int index = computeParameterIndex(inSpelMatcher.group());
+					expression = expression.replace(inSpelMatcher.group(), getBindableValueForIndex(index).toString());
+				}
+
 				Object value = evaluateExpression(expression);
 				bindableValue.setValue(value);
 				bindableValue.setType(bsonTypeForValue(value));
+				return bindableValue;
+			}
+
+			if (matcher.find()) {
+
+				int index = computeParameterIndex(matcher.group());
+				bindableValue.setValue(getBindableValueForIndex(index));
+				bindableValue.setType(bsonTypeForValue(getBindableValueForIndex(index)));
 				return bindableValue;
 			}
 
@@ -396,26 +403,35 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 
 		String computedValue = tokenValue;
 
-		boolean matched = false;
+
+
+		Matcher regexMatcher = EXPRESSION_BINDING_PATTERN.matcher(computedValue);
+
+		while (regexMatcher.find()) {
+
+			String binding = regexMatcher.group();
+			String expression = binding.substring(3, binding.length() - 1);
+
+			Matcher inSpelMatcher = PARAMETER_BINDING_PATTERN.matcher(expression);
+			while (inSpelMatcher.find()) {
+
+				int index = computeParameterIndex(inSpelMatcher.group());
+				expression = expression.replace(inSpelMatcher.group(), getBindableValueForIndex(index).toString());
+			}
+
+			computedValue = computedValue.replace(binding, nullSafeToString(evaluateExpression(expression)));
+
+			bindableValue.setValue(computedValue);
+			bindableValue.setType(BsonType.STRING);
+
+			return bindableValue;
+		}
+
 		while (matcher.find()) {
 
-			matched = true;
 			String group = matcher.group();
 			int index = computeParameterIndex(group);
 			computedValue = computedValue.replace(group, nullSafeToString(getBindableValueForIndex(index)));
-		}
-
-		if (!matched) {
-
-			Matcher regexMatcher = EXPRESSION_BINDING_PATTERN.matcher(tokenValue);
-
-			while (regexMatcher.find()) {
-
-				String binding = regexMatcher.group();
-				String expression = binding.substring(3, binding.length() - 1);
-
-				computedValue = computedValue.replace(binding, nullSafeToString(evaluateExpression(expression)));
-			}
 		}
 
 		bindableValue.setValue(computedValue);

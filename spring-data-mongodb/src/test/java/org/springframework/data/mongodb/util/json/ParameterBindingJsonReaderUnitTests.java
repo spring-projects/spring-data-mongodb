@@ -26,6 +26,7 @@ import java.util.List;
 import org.bson.Document;
 import org.bson.codecs.DecoderContext;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.TypedValue;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -264,10 +265,60 @@ class ParameterBindingJsonReaderUnitTests {
 		assertThat(target).isEqualTo(Document.parse("{\"$and\": [{\"v1\": {\"$in\": [1]}}]}"));
 	}
 
+	@Test // DATAMONGO-2545
+	void shouldABindArgumentsViaIndexInSpelExpressions() {
+
+		Object[] args = new Object[] { "yess", "nooo" };
+		StandardEvaluationContext evaluationContext = (StandardEvaluationContext) EvaluationContextProvider.DEFAULT
+				.getEvaluationContext(args);
+
+		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(
+				"{ 'isBatman' : ?#{ T(" + this.getClass().getName() + ").isBatman() ? [0] : [1] }}",
+				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), evaluationContext));
+		Document target = new ParameterBindingDocumentCodec().decode(reader, DecoderContext.builder().build());
+
+		assertThat(target).isEqualTo(new Document("isBatman", "nooo"));
+	}
+
+	@Test // DATAMONGO-2545
+	void shouldAllowMethodArgumentPlaceholdersInSpelExpressions/*becuase this worked before*/() {
+
+		Object[] args = new Object[] { "yess", "nooo" };
+		StandardEvaluationContext evaluationContext = (StandardEvaluationContext) EvaluationContextProvider.DEFAULT
+				.getEvaluationContext(args);
+
+		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(
+				"{ 'isBatman' : ?#{ T(" + this.getClass().getName() + ").isBatman() ? '?0' : '?1' }}",
+				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), evaluationContext));
+		Document target = new ParameterBindingDocumentCodec().decode(reader, DecoderContext.builder().build());
+
+		assertThat(target).isEqualTo(new Document("isBatman", "nooo"));
+	}
+
+	@Test // DATAMONGO-2545
+	void shouldAllowMethodArgumentPlaceholdersInQuotedSpelExpressions/*becuase this worked before*/() {
+
+		Object[] args = new Object[] { "yess", "nooo" };
+		StandardEvaluationContext evaluationContext = (StandardEvaluationContext) EvaluationContextProvider.DEFAULT
+				.getEvaluationContext(args);
+
+		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(
+				"{ 'isBatman' : \"?#{ T(" + this.getClass().getName() + ").isBatman() ? '?0' : '?1' }\" }",
+				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), evaluationContext));
+		Document target = new ParameterBindingDocumentCodec().decode(reader, DecoderContext.builder().build());
+
+		assertThat(target).isEqualTo(new Document("isBatman", "nooo"));
+	}
+
 	private static Document parse(String json, Object... args) {
 
 		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json, args);
 		return new ParameterBindingDocumentCodec().decode(reader, DecoderContext.builder().build());
+	}
+
+	// DATAMONGO-2545
+	public static boolean isBatman() {
+		return false;
 	}
 
 }
