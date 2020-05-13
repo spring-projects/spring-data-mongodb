@@ -17,6 +17,9 @@ package org.springframework.data.mongodb.util.json;
 
 import static org.assertj.core.api.Assertions.*;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
@@ -310,6 +313,26 @@ class ParameterBindingJsonReaderUnitTests {
 		assertThat(target).isEqualTo(new Document("isBatman", "nooo"));
 	}
 
+	@Test // DATAMONGO-2545
+	void evaluatesSpelExpressionDefiningEntireQuery() {
+
+		Object[] args = new Object[] {};
+		StandardEvaluationContext evaluationContext = (StandardEvaluationContext) EvaluationContextProvider.DEFAULT
+				.getEvaluationContext(args);
+		evaluationContext.setRootObject(new DummySecurityObject(new DummyWithId("wonderwoman")));
+
+		String json = "?#{  T(" + this.getClass().getName()
+				+ ").isBatman() ? {'_class': { '$eq' : 'region' }} : { '$and' : { {'_class': { '$eq' : 'region' } }, {'user.superviser':  principal.id } } } }";
+
+		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json,
+				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), evaluationContext));
+		Document target = new ParameterBindingDocumentCodec().decode(reader, DecoderContext.builder().build());
+
+		assertThat(target)
+				.isEqualTo(new Document("$and", Arrays.asList(new Document("_class", new Document("$eq", "region")),
+						new Document("user.superviser", "wonderwoman"))));
+	}
+
 	private static Document parse(String json, Object... args) {
 
 		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json, args);
@@ -319,6 +342,18 @@ class ParameterBindingJsonReaderUnitTests {
 	// DATAMONGO-2545
 	public static boolean isBatman() {
 		return false;
+	}
+
+	@Data
+	@AllArgsConstructor
+	public static class DummySecurityObject {
+		DummyWithId principal;
+	}
+
+	@Data
+	@AllArgsConstructor
+	public static class DummyWithId {
+		String id;
 	}
 
 }
