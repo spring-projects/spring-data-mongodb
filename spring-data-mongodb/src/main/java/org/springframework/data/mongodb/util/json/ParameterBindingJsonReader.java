@@ -25,6 +25,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Map;
 import java.util.TimeZone;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
@@ -494,6 +495,9 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		}
 		if (ClassUtils.isAssignable(Iterable.class, type)) {
 			return BsonType.ARRAY;
+		}
+		if (ClassUtils.isAssignable(Map.class, type)) {
+			return BsonType.DOCUMENT;
 		}
 
 		return BsonType.UNDEFINED;
