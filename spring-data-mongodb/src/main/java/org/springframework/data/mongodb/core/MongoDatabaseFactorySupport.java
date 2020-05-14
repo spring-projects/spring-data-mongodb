@@ -254,7 +254,7 @@ public abstract class MongoDatabaseFactorySupport<C> implements MongoDatabaseFac
 			factory.addAdvice(new SessionAwareMethodInterceptor<>(session, target, ClientSession.class, MongoDatabase.class,
 					this::proxyDatabase, MongoCollection.class, this::proxyCollection));
 
-			return targetType.cast(factory.getProxy());
+			return targetType.cast(factory.getProxy(target.getClass().getClassLoader()));
 		}
 	}
 }
