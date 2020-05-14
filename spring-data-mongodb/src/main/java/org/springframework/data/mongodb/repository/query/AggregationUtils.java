@@ -47,12 +47,11 @@ import org.springframework.util.StringUtils;
  * @author Mark Paluch
  * @since 2.2
  */
-final class AggregationUtils {
+abstract class AggregationUtils {
 
 	private static final ParameterBindingDocumentCodec CODEC = new ParameterBindingDocumentCodec();
 
 	private AggregationUtils() {
-		throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
 	}
 
 	/**

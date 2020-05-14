@@ -237,7 +237,6 @@ public class UntypedExampleMatcher implements ExampleMatcher {
 
 	@Override
 	public int hashCode() {
-
 		return ObjectUtils.nullSafeHashCode(delegate);
 	}
 }

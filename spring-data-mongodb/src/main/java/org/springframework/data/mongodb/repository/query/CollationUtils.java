@@ -37,13 +37,12 @@ import org.springframework.util.StringUtils;
  * @author Christoph Strobl
  * @since 2.2
  */
-final class CollationUtils {
+abstract class CollationUtils {
 
 	private static final ParameterBindingDocumentCodec CODEC = new ParameterBindingDocumentCodec();
 	private static final Pattern PARAMETER_BINDING_PATTERN = Pattern.compile("\\?(\\d+)");
 
 	private CollationUtils() {
-		throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
 	}
 
 	/**
