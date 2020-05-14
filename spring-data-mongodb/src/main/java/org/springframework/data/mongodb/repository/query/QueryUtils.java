@@ -56,6 +56,6 @@ class QueryUtils {
 			return combinedSort;
 		});
 
-		return (Query) factory.getProxy();
+		return (Query) factory.getProxy(query.getClass().getClassLoader());
 	}
 }

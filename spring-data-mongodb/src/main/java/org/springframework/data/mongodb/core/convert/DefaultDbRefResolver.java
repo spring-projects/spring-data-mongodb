@@ -202,7 +202,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		proxyFactory.addInterface(propertyType);
 		proxyFactory.addAdvice(interceptor);
 
-		return handler.populateId(property, dbref, proxyFactory.getProxy());
+		return handler.populateId(property, dbref, proxyFactory.getProxy(LazyLoadingProxy.class.getClassLoader()));
 	}
 
 	/**
