@@ -87,7 +87,7 @@
 * Out-of-the-box support for `java.util.Currency` in object mapping.
 * Support for the bulk operations introduced in MongoDB 2.6.
 * Upgrade to Querydsl 4.
-* Assert compatibility with MongoDB 3.0 and MongoDB Java Driver 3.2 (see: <<mongo.mongo-3>>).
+* Assert compatibility with MongoDB 3.0 and MongoDB Java Driver 3.2.
 
 [[new-features.1-8-0]]
 == What's New in Spring Data MongoDB 1.8
@@ -101,7 +101,7 @@
 [[new-features.1-7-0]]
 == What's New in Spring Data MongoDB 1.7
 
-* Assert compatibility with MongoDB 3.0 and MongoDB Java Driver 3-beta3 (see: <<mongo.mongo-3>>).
+* Assert compatibility with MongoDB 3.0 and MongoDB Java Driver 3-beta3.
 * Support JSR-310 and ThreeTen back-port date/time types.
 * Allow `Stream` as a query method return type (see: <<mongodb.repositories.queries>>).
 * https://geojson.org/[GeoJSON] support in both domain types and queries (see: <<mongo.geo-json>>).
