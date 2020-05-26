@@ -269,7 +269,7 @@ public class ParameterBindingJsonReaderUnitTests {
 	}
 
 	@Test // DATAMONGO-2545
-	void shouldABindArgumentsViaIndexInSpelExpressions() {
+	public void shouldABindArgumentsViaIndexInSpelExpressions() {
 
 		Object[] args = new Object[] { "yess", "nooo" };
 		StandardEvaluationContext evaluationContext = (StandardEvaluationContext) EvaluationContextProvider.DEFAULT
@@ -284,7 +284,7 @@ public class ParameterBindingJsonReaderUnitTests {
 	}
 
 	@Test // DATAMONGO-2545
-	void shouldAllowMethodArgumentPlaceholdersInSpelExpressions/*becuase this worked before*/() {
+	public void shouldAllowMethodArgumentPlaceholdersInSpelExpressions/*becuase this worked before*/() {
 
 		Object[] args = new Object[] { "yess", "nooo" };
 		StandardEvaluationContext evaluationContext = (StandardEvaluationContext) EvaluationContextProvider.DEFAULT
@@ -299,7 +299,7 @@ public class ParameterBindingJsonReaderUnitTests {
 	}
 
 	@Test // DATAMONGO-2545
-	void shouldAllowMethodArgumentPlaceholdersInQuotedSpelExpressions/*becuase this worked before*/() {
+	public void shouldAllowMethodArgumentPlaceholdersInQuotedSpelExpressions/*because this worked before*/() {
 
 		Object[] args = new Object[] { "yess", "nooo" };
 		StandardEvaluationContext evaluationContext = (StandardEvaluationContext) EvaluationContextProvider.DEFAULT
@@ -314,7 +314,7 @@ public class ParameterBindingJsonReaderUnitTests {
 	}
 
 	@Test // DATAMONGO-2545
-	void evaluatesSpelExpressionDefiningEntireQuery() {
+	public void evaluatesSpelExpressionDefiningEntireQuery() {
 
 		Object[] args = new Object[] {};
 		StandardEvaluationContext evaluationContext = (StandardEvaluationContext) EvaluationContextProvider.DEFAULT
@@ -322,7 +322,7 @@ public class ParameterBindingJsonReaderUnitTests {
 		evaluationContext.setRootObject(new DummySecurityObject(new DummyWithId("wonderwoman")));
 
 		String json = "?#{  T(" + this.getClass().getName()
-				+ ").isBatman() ? {'_class': { '$eq' : 'region' }} : { '$and' : { {'_class': { '$eq' : 'region' } }, {'user.superviser':  principal.id } } } }";
+				+ ").isBatman() ? {'_class': { '$eq' : 'region' }} : { '$and' : { {'_class': { '$eq' : 'region' } }, {'user.supervisor':  principal.id } } } }";
 
 		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json,
 				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), evaluationContext));
@@ -330,7 +330,7 @@ public class ParameterBindingJsonReaderUnitTests {
 
 		assertThat(target)
 				.isEqualTo(new Document("$and", Arrays.asList(new Document("_class", new Document("$eq", "region")),
-						new Document("user.superviser", "wonderwoman"))));
+						new Document("user.supervisor", "wonderwoman"))));
 	}
 
 	private static Document parse(String json, Object... args) {
