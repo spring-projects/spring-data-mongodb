@@ -177,6 +177,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(collection.mapReduce(any(), any(), eq(Document.class))).thenReturn(mapReduceIterable);
 		when(collection.countDocuments(any(Bson.class), any(CountOptions.class))).thenReturn(1L); // TODO: MongoDB 4 - fix
 																																															// me
+		when(collection.estimatedDocumentCount(any())).thenReturn(1L);
 		when(collection.getNamespace()).thenReturn(new MongoNamespace("db.mock-collection"));
 		when(collection.aggregate(any(List.class), any())).thenReturn(aggregateIterable);
 		when(collection.withReadPreference(any())).thenReturn(collection);
@@ -2151,6 +2152,15 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		Person saved = template.findAndReplace(new Query(), entity);
 
 		assertThat(saved.id).isEqualTo("after-save-event");
+	}
+
+	@Test // DATAMONGO-2556
+	void esitmatedCountShouldBeDelegatedCorrectly() {
+
+		template.estimatedCount(Person.class);
+
+		verify(db).getCollection("star-wars", Document.class);
+		verify(collection).estimatedDocumentCount(any());
 	}
 
 	class AutogenerateableId {

@@ -158,6 +158,7 @@ public class ReactiveMongoTemplateUnitTests {
 		when(collection.aggregate(anyList())).thenReturn(aggregatePublisher);
 		when(collection.aggregate(anyList(), any(Class.class))).thenReturn(aggregatePublisher);
 		when(collection.countDocuments(any(), any(CountOptions.class))).thenReturn(Mono.just(0L));
+		when(collection.estimatedDocumentCount(any())).thenReturn(Mono.just(0L));
 		when(collection.updateOne(any(), any(Bson.class), any(UpdateOptions.class))).thenReturn(updateResultPublisher);
 		when(collection.updateMany(any(Bson.class), any(Bson.class), any())).thenReturn(updateResultPublisher);
 		when(collection.updateOne(any(), anyList(), any())).thenReturn(updateResultPublisher);
@@ -1363,6 +1364,15 @@ public class ReactiveMongoTemplateUnitTests {
 		Person saved = template.findAndReplace(new Query(), entity).block(Duration.ofSeconds(1));
 
 		assertThat(saved.id).isEqualTo("after-save-event");
+	}
+
+	@Test // DATAMONGO-2556
+	void esitmatedCountShouldBeDelegatedCorrectly() {
+
+		template.estimatedCount(Person.class).subscribe();
+
+		verify(db).getCollection("star-wars", Document.class);
+		verify(collection).estimatedDocumentCount(any());
 	}
 
 	private void stubFindSubscribe(Document document) {
