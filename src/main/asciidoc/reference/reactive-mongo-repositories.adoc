@@ -16,6 +16,8 @@ Spring Data's Repository abstraction is a dynamic API, mostly defined by you and
 * `ReactiveSortingRepository`
 * `RxJava2CrudRepository`
 * `RxJava2SortingRepository`
+* `RxJava3CrudRepository`
+* `RxJava3SortingRepository`
 
 Spring Data converts reactive wrapper types behind the scenes so that you can stick to your favorite composition library.
 
