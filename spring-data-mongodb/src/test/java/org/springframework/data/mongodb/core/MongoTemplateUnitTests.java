@@ -175,8 +175,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(db.runCommand(any(), any(Class.class))).thenReturn(commandResultDocument);
 		when(collection.find(any(org.bson.Document.class), any(Class.class))).thenReturn(findIterable);
 		when(collection.mapReduce(any(), any(), eq(Document.class))).thenReturn(mapReduceIterable);
-		when(collection.countDocuments(any(Bson.class), any(CountOptions.class))).thenReturn(1L); // TODO: MongoDB 4 - fix
-																																															// me
+		when(collection.countDocuments(any(Bson.class), any(CountOptions.class))).thenReturn(1L);
 		when(collection.estimatedDocumentCount(any())).thenReturn(1L);
 		when(collection.getNamespace()).thenReturn(new MongoNamespace("db.mock-collection"));
 		when(collection.aggregate(any(List.class), any())).thenReturn(aggregateIterable);

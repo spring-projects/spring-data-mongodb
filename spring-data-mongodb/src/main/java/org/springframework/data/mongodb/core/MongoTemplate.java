@@ -3015,8 +3015,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		private final List<Document> arrayFilters;
 		private final FindAndModifyOptions options;
 
-		FindAndModifyCallback(Document query, Document fields, Document sort, Object update,
-				List<Document> arrayFilters, FindAndModifyOptions options) {
+		FindAndModifyCallback(Document query, Document fields, Document sort, Object update, List<Document> arrayFilters,
+				FindAndModifyOptions options) {
 
 			this.query = query;
 			this.fields = fields;
@@ -3371,8 +3371,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		 * @param exceptionTranslator
 		 * @param objectReadCallback
 		 */
-		CloseableIterableCursorAdapter(MongoIterable<Document> cursor,
-				PersistenceExceptionTranslator exceptionTranslator, DocumentCallback<T> objectReadCallback) {
+		CloseableIterableCursorAdapter(MongoIterable<Document> cursor, PersistenceExceptionTranslator exceptionTranslator,
+				DocumentCallback<T> objectReadCallback) {
 
 			this.cursor = cursor.iterator();
 			this.exceptionTranslator = exceptionTranslator;
@@ -3381,7 +3381,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		CloseableIterableCursorAdapter(MongoCursor<Document> cursor, PersistenceExceptionTranslator exceptionTranslator,
 				DocumentCallback<T> objectReadCallback) {
-			
+
 			this.cursor = cursor;
 			this.exceptionTranslator = exceptionTranslator;
 			this.objectReadCallback = objectReadCallback;

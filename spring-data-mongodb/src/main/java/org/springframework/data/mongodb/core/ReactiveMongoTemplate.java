@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.core;
 
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
-import com.mongodb.client.model.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -117,6 +116,7 @@ import com.mongodb.CursorType;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.model.*;
 import com.mongodb.client.model.changestream.FullDocument;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.InsertOneResult;
@@ -1244,7 +1244,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	@Override
 	public Mono<Long> estimatedCount(String collectionName) {
-			return doEstimatedCount(collectionName, new EstimatedDocumentCountOptions());
+		return doEstimatedCount(collectionName, new EstimatedDocumentCountOptions());
 	}
 
 	/**
@@ -1263,8 +1263,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	protected Mono<Long> doEstimatedCount(String collectionName, EstimatedDocumentCountOptions options) {
 
-		return createMono(collectionName,
-				collection -> collection.estimatedDocumentCount(options));
+		return createMono(collectionName, collection -> collection.estimatedDocumentCount(options));
 	}
 
 	/*
