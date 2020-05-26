@@ -299,7 +299,7 @@ class ParameterBindingJsonReaderUnitTests {
 	}
 
 	@Test // DATAMONGO-2545
-	void shouldAllowMethodArgumentPlaceholdersInQuotedSpelExpressions/*becuase this worked before*/() {
+	void shouldAllowMethodArgumentPlaceholdersInQuotedSpelExpressions/*because this worked before*/() {
 
 		Object[] args = new Object[] { "yess", "nooo" };
 		StandardEvaluationContext evaluationContext = (StandardEvaluationContext) EvaluationContextProvider.DEFAULT
@@ -322,7 +322,7 @@ class ParameterBindingJsonReaderUnitTests {
 		evaluationContext.setRootObject(new DummySecurityObject(new DummyWithId("wonderwoman")));
 
 		String json = "?#{  T(" + this.getClass().getName()
-				+ ").isBatman() ? {'_class': { '$eq' : 'region' }} : { '$and' : { {'_class': { '$eq' : 'region' } }, {'user.superviser':  principal.id } } } }";
+				+ ").isBatman() ? {'_class': { '$eq' : 'region' }} : { '$and' : { {'_class': { '$eq' : 'region' } }, {'user.supervisor':  principal.id } } } }";
 
 		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json,
 				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), evaluationContext));
@@ -330,7 +330,7 @@ class ParameterBindingJsonReaderUnitTests {
 
 		assertThat(target)
 				.isEqualTo(new Document("$and", Arrays.asList(new Document("_class", new Document("$eq", "region")),
-						new Document("user.superviser", "wonderwoman"))));
+						new Document("user.supervisor", "wonderwoman"))));
 	}
 
 	private static Document parse(String json, Object... args) {

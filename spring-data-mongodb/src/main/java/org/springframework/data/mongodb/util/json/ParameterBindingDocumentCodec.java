@@ -176,6 +176,7 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 		return this.decode(reader, DecoderContext.builder().build());
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public Document decode(final BsonReader reader, final DecoderContext decoderContext) {
 
@@ -203,12 +204,13 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 			try {
 
 				Object value = readValue(reader, decoderContext);
-				if (value instanceof Map) {
+				if (value instanceof Map<?, ?>) {
 					if (!((Map) value).isEmpty()) {
-						return new Document((Map) value);
+						return new Document((Map<String, Object>) value);
 					}
 				}
 			} catch (Exception ex) {
+				e.addSuppressed(ex);
 				throw e;
 			}
 		}
