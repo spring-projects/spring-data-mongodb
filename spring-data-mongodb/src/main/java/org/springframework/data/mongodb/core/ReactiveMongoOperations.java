@@ -981,6 +981,29 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	Mono<Long> count(Query query, @Nullable Class<?> entityClass, String collectionName);
 
 	/**
+	 * Estimate the number of documents, in the collection {@link #getCollectionName(Class) identified by the given type},
+	 * based on collection statistics.
+	 *
+	 * @param entityClass must not be {@literal null}.
+	 * @return a {@link Mono} emitting the estimated number of documents.
+	 * @since 3.1
+	 */
+	default Mono<Long> estimatedCount(Class<?> entityClass) {
+
+		Assert.notNull(entityClass, "Entity class must not be null!");
+		return estimatedCount(getCollectionName(entityClass));
+	}
+
+	/**
+	 * Estimate the number of documents in the given collection based on collection statistics.
+	 *
+	 * @param collectionName must not be {@literal null}.
+	 * @return a {@link Mono} emitting the estimated number of documents.
+	 * @since 3.1
+	 */
+	Mono<Long> estimatedCount(String collectionName);
+
+	/**
 	 * Insert the object into the collection for the entity type of the object to save.
 	 * <p/>
 	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}.

@@ -1185,6 +1185,29 @@ public interface MongoOperations extends FluentMongoOperations {
 	long count(Query query, String collectionName);
 
 	/**
+	 * Estimate the number of documents, in the collection {@link #getCollectionName(Class) identified by the given type},
+	 * based on collection statistics.
+	 *
+	 * @param entityClass must not be {@literal null}.
+	 * @return the estimated number of documents.
+	 * @since 3.1
+	 */
+	default long estimatedCount(Class<?> entityClass) {
+
+		Assert.notNull(entityClass, "Entity class must not be null!");
+		return estimatedCount(getCollectionName(entityClass));
+	}
+
+	/**
+	 * Estimate the number of documents in the given collection based on collection statistics.
+	 *
+	 * @param collectionName must not be {@literal null}.
+	 * @return the estimated number of documents.
+	 * @since 3.1
+	 */
+	long estimatedCount(String collectionName);
+
+	/**
 	 * Returns the number of documents for the given {@link Query} by querying the given collection using the given entity
 	 * class to map the given {@link Query}. <br />
 	 * <strong>NOTE:</strong> Query {@link Query#getSkip() offset} and {@link Query#getLimit() limit} can have direct

@@ -1136,6 +1136,19 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#estimatedCount(java.lang.String)
+	 */
+	@Override
+	public long estimatedCount(String collectionName) {
+		return doEstimatedCount(collectionName, new EstimatedDocumentCountOptions());
+	}
+
+	protected long doEstimatedCount(String collectionName, EstimatedDocumentCountOptions options) {
+		return execute(collectionName, collection -> collection.estimatedDocumentCount(options));
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.MongoOperations#insert(java.lang.Object)
 	 */
 	@Override
