@@ -244,7 +244,7 @@ public class ConvertingReactiveMongoRepositoryTests {
 		testObserver.assertValue(boyd);
 	}
 
-	@Test // DATAMONGO-1610
+	@Test // DATAMONGO-2558
 	public void simpleRxJava3MethodsShouldWork() {
 
 		TestObserver<Boolean> testObserver = rxJava3PersonRepostitory.existsById(dave.getId()).test();
@@ -255,7 +255,7 @@ public class ConvertingReactiveMongoRepositoryTests {
 		testObserver.assertValue(true);
 	}
 
-	@Test // DATAMONGO-1610
+	@Test // DATAMONGO-2558
 	public void existsWithSingleRxJava3IdMethodsShouldWork() {
 
 		TestObserver<Boolean> testObserver = rxJava3PersonRepostitory.existsById(io.reactivex.Single.just(dave.getId()))
@@ -267,7 +267,7 @@ public class ConvertingReactiveMongoRepositoryTests {
 		testObserver.assertValue(true);
 	}
 
-	@Test // DATAMONGO-1610
+	@Test // DATAMONGO-2558
 	public void flowableRxJava3QueryMethodShouldWork() throws InterruptedException {
 
 		TestSubscriber<ReactivePerson> testSubscriber = rxJava3PersonRepostitory
@@ -279,7 +279,7 @@ public class ConvertingReactiveMongoRepositoryTests {
 		testSubscriber.assertValue(dave);
 	}
 
-	@Test // DATAMONGO-1610
+	@Test // DATAMONGO-2558
 	public void singleProjectedRxJava3QueryMethodShouldWork() throws InterruptedException {
 
 		io.reactivex.rxjava3.observers.TestObserver<ProjectedPerson> testObserver = rxJava3PersonRepostitory
@@ -295,7 +295,7 @@ public class ConvertingReactiveMongoRepositoryTests {
 		});
 	}
 
-	@Test // DATAMONGO-1610
+	@Test // DATAMONGO-2558
 	public void observableProjectedRxJava3QueryMethodShouldWork() throws InterruptedException {
 
 		io.reactivex.rxjava3.observers.TestObserver<ProjectedPerson> testObserver = rxJava3PersonRepostitory
@@ -311,7 +311,7 @@ public class ConvertingReactiveMongoRepositoryTests {
 		});
 	}
 
-	@Test // DATAMONGO-1610
+	@Test // DATAMONGO-2558
 	public void maybeRxJava3QueryMethodShouldWork() throws InterruptedException {
 
 		io.reactivex.rxjava3.observers.TestObserver<ReactivePerson> testObserver = rxJava3PersonRepostitory
