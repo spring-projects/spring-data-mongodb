@@ -1080,7 +1080,7 @@ public class QueryMapper {
 		 */
 		@Nullable
 		private PersistentPropertyPath<MongoPersistentProperty> getPath(String pathExpression,
-				MongoPersistentProperty sourceProperty) {
+				@Nullable MongoPersistentProperty sourceProperty) {
 
 			String rawPath = removePlaceholders(POSITIONAL_OPERATOR,
 					removePlaceholders(DOT_POSITIONAL_PATTERN, pathExpression));
