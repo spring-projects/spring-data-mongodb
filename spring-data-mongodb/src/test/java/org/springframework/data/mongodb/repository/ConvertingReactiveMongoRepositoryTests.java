@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.*;
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
 import io.reactivex.observers.TestObserver;
+import io.reactivex.rxjava3.subscribers.TestSubscriber;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import reactor.core.publisher.Flux;
@@ -38,6 +39,7 @@ import org.reactivestreams.Publisher;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan.Filter;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.ImportResource;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort;
@@ -45,7 +47,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
 import org.springframework.data.repository.reactive.ReactiveSortingRepository;
 import org.springframework.data.repository.reactive.RxJava2SortingRepository;
-import org.springframework.stereotype.Repository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -58,7 +59,12 @@ import org.springframework.test.context.junit4.SpringRunner;
 @ContextConfiguration(classes = ConvertingReactiveMongoRepositoryTests.Config.class)
 public class ConvertingReactiveMongoRepositoryTests {
 
-	@EnableReactiveMongoRepositories(includeFilters = @Filter(value = Repository.class),
+	@EnableReactiveMongoRepositories(
+			includeFilters = { @Filter(value = ReactivePersonRepostitory.class, type = FilterType.ASSIGNABLE_TYPE),
+					@Filter(value = RxJava1PersonRepostitory.class, type = FilterType.ASSIGNABLE_TYPE),
+					@Filter(value = RxJava2PersonRepostitory.class, type = FilterType.ASSIGNABLE_TYPE),
+					@Filter(value = RxJava3PersonRepostitory.class, type = FilterType.ASSIGNABLE_TYPE),
+					@Filter(value = MixedReactivePersonRepostitory.class, type = FilterType.ASSIGNABLE_TYPE) },
 			considerNestedRepositories = true)
 	@ImportResource("classpath:reactive-infrastructure.xml")
 	static class Config {}
@@ -67,6 +73,7 @@ public class ConvertingReactiveMongoRepositoryTests {
 	@Autowired ReactivePersonRepostitory reactivePersonRepostitory;
 	@Autowired RxJava1PersonRepostitory rxJava1PersonRepostitory;
 	@Autowired RxJava2PersonRepostitory rxJava2PersonRepostitory;
+	@Autowired RxJava3PersonRepostitory rxJava3PersonRepostitory;
 
 	ReactivePerson dave, oliver, carter, boyd, stefan, leroi, alicia;
 
@@ -237,6 +244,85 @@ public class ConvertingReactiveMongoRepositoryTests {
 		testObserver.assertValue(boyd);
 	}
 
+	@Test // DATAMONGO-1610
+	public void simpleRxJava3MethodsShouldWork() {
+
+		TestObserver<Boolean> testObserver = rxJava3PersonRepostitory.existsById(dave.getId()).test();
+
+		testObserver.awaitTerminalEvent();
+		testObserver.assertComplete();
+		testObserver.assertNoErrors();
+		testObserver.assertValue(true);
+	}
+
+	@Test // DATAMONGO-1610
+	public void existsWithSingleRxJava3IdMethodsShouldWork() {
+
+		TestObserver<Boolean> testObserver = rxJava3PersonRepostitory.existsById(io.reactivex.Single.just(dave.getId()))
+				.test();
+
+		testObserver.awaitTerminalEvent();
+		testObserver.assertComplete();
+		testObserver.assertNoErrors();
+		testObserver.assertValue(true);
+	}
+
+	@Test // DATAMONGO-1610
+	public void flowableRxJava3QueryMethodShouldWork() throws InterruptedException {
+
+		TestSubscriber<ReactivePerson> testSubscriber = rxJava3PersonRepostitory
+				.findByFirstnameAndLastname(dave.getFirstname(), dave.getLastname()).test();
+
+		testSubscriber.await();
+		testSubscriber.assertComplete();
+		testSubscriber.assertNoErrors();
+		testSubscriber.assertValue(dave);
+	}
+
+	@Test // DATAMONGO-1610
+	public void singleProjectedRxJava3QueryMethodShouldWork() throws InterruptedException {
+
+		io.reactivex.rxjava3.observers.TestObserver<ProjectedPerson> testObserver = rxJava3PersonRepostitory
+				.findProjectedByLastname(io.reactivex.rxjava3.core.Maybe.just(carter.getLastname())).test();
+
+		testObserver.await();
+		testObserver.assertComplete();
+		testObserver.assertNoErrors();
+
+		testObserver.assertValue(actual -> {
+			assertThat(actual.getFirstname()).isEqualTo(carter.getFirstname());
+			return true;
+		});
+	}
+
+	@Test // DATAMONGO-1610
+	public void observableProjectedRxJava3QueryMethodShouldWork() throws InterruptedException {
+
+		io.reactivex.rxjava3.observers.TestObserver<ProjectedPerson> testObserver = rxJava3PersonRepostitory
+				.findProjectedByLastname(io.reactivex.rxjava3.core.Single.just(carter.getLastname())).test();
+
+		testObserver.await();
+		testObserver.assertComplete();
+		testObserver.assertNoErrors();
+
+		testObserver.assertValue(actual -> {
+			assertThat(actual.getFirstname()).isEqualTo(carter.getFirstname());
+			return true;
+		});
+	}
+
+	@Test // DATAMONGO-1610
+	public void maybeRxJava3QueryMethodShouldWork() throws InterruptedException {
+
+		io.reactivex.rxjava3.observers.TestObserver<ReactivePerson> testObserver = rxJava3PersonRepostitory
+				.findByLastname(boyd.getLastname()).test();
+
+		testObserver.await();
+		testObserver.assertComplete();
+		testObserver.assertNoErrors();
+		testObserver.assertValue(boyd);
+	}
+
 	@Test // DATAMONGO-1444
 	public void mixedRepositoryShouldWork() {
 
@@ -280,13 +366,11 @@ public class ConvertingReactiveMongoRepositoryTests {
 		assertThat(people).contains(carter, dave);
 	}
 
-	@Repository
 	interface ReactivePersonRepostitory extends ReactiveSortingRepository<ReactivePerson, String> {
 
 		Publisher<ReactivePerson> findByLastname(String lastname);
 	}
 
-	@Repository
 	interface RxJava1PersonRepostitory extends org.springframework.data.repository.Repository<ReactivePerson, String> {
 
 		Observable<ReactivePerson> findByFirstnameAndLastname(String firstname, String lastname);
@@ -300,7 +384,6 @@ public class ConvertingReactiveMongoRepositoryTests {
 		Single<Boolean> existsById(Single<String> id);
 	}
 
-	@Repository
 	interface RxJava2PersonRepostitory extends RxJava2SortingRepository<ReactivePerson, String> {
 
 		Flowable<ReactivePerson> findByFirstnameAndLastname(String firstname, String lastname);
@@ -312,7 +395,19 @@ public class ConvertingReactiveMongoRepositoryTests {
 		io.reactivex.Observable<ProjectedPerson> findProjectedByLastname(Single<String> lastname);
 	}
 
-	@Repository
+	interface RxJava3PersonRepostitory extends RxJava2SortingRepository<ReactivePerson, String> {
+
+		io.reactivex.rxjava3.core.Flowable<ReactivePerson> findByFirstnameAndLastname(String firstname, String lastname);
+
+		io.reactivex.rxjava3.core.Maybe<ReactivePerson> findByLastname(String lastname);
+
+		io.reactivex.rxjava3.core.Single<ProjectedPerson> findProjectedByLastname(
+				io.reactivex.rxjava3.core.Maybe<String> lastname);
+
+		io.reactivex.rxjava3.core.Observable<ProjectedPerson> findProjectedByLastname(
+				io.reactivex.rxjava3.core.Single<String> lastname);
+	}
+
 	interface MixedReactivePersonRepostitory extends ReactiveMongoRepository<ReactivePerson, String> {
 
 		Single<ReactivePerson> findByLastname(String lastname);

@@ -136,6 +136,13 @@
 			<optional>true</optional>
 		</dependency>
 
+		<dependency>
+			<groupId>io.reactivex.rxjava3</groupId>
+			<artifactId>rxjava</artifactId>
+			<version>${rxjava3}</version>
+			<optional>true</optional>
+		</dependency>
+
 		<!-- CDI -->
 		<!-- Dependency order required to build against CDI 1.0 and test with CDI 2.0 -->
 		<dependency>

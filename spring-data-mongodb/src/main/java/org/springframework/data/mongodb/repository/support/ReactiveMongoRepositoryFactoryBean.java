@@ -35,6 +35,7 @@ import org.springframework.util.Assert;
  * @since 2.0
  * @see org.springframework.data.repository.reactive.ReactiveSortingRepository
  * @see org.springframework.data.repository.reactive.RxJava2SortingRepository
+ * @see org.springframework.data.repository.reactive.RxJava3SortingRepository
  */
 public class ReactiveMongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable>
 		extends RepositoryFactoryBeanSupport<T, S, ID> {
