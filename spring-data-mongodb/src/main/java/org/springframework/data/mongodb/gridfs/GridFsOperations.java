@@ -140,11 +140,11 @@ public interface GridFsOperations extends ResourcePatternResolver {
 		if (StringUtils.hasText(filename)) {
 			uploadBuilder.filename(filename);
 		}
-		if (StringUtils.hasText(contentType)) {
-			uploadBuilder.contentType(contentType);
-		}
 		if (!ObjectUtils.isEmpty(metadata)) {
 			uploadBuilder.metadata(metadata);
+		}
+		if (StringUtils.hasText(contentType)) {
+			uploadBuilder.contentType(contentType);
 		}
 
 		return store(uploadBuilder.build());
