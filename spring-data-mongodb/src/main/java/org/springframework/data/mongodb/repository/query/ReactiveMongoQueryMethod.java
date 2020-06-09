@@ -34,6 +34,7 @@ import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.util.ReactiveWrapperConverters;
 import org.springframework.data.repository.util.ReactiveWrappers;
 import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.Lazy;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.ClassUtils;
 
@@ -50,6 +51,7 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 	private static final ClassTypeInformation<Slice> SLICE_TYPE = ClassTypeInformation.from(Slice.class);
 
 	private final Method method;
+	private final Lazy<Boolean> isCollectionQuery;
 
 	/**
 	 * Creates a new {@link ReactiveMongoQueryMethod} from the given {@link Method}.
@@ -92,6 +94,8 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 		}
 
 		this.method = method;
+		this.isCollectionQuery = Lazy.of(() -> !(isPageQuery() || isSliceQuery())
+				&& ReactiveWrappers.isMultiValueType(metadata.getReturnType(method).getType()));
 	}
 
 	/*
@@ -109,7 +113,7 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 	 */
 	@Override
 	public boolean isCollectionQuery() {
-		return !(isPageQuery() || isSliceQuery()) && ReactiveWrappers.isMultiValueType(method.getReturnType());
+		return isCollectionQuery.get();
 	}
 
 	/*
