@@ -140,7 +140,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	@Override
 	public org.springframework.data.mongodb.core.query.Collation getCollation() {
 
-		Object collationValue = collationExpression != null ? expression.getValue(getEvaluationContext(null), String.class)
+		Object collationValue = collationExpression != null ? collationExpression.getValue(getEvaluationContext(null), String.class)
 				: this.collation;
 
 		if (collationValue == null) {
