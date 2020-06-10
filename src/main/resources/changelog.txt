@@ -1,6 +1,18 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.0.1.RELEASE (2020-06-10)
+---------------------------------------------
+* DATAMONGO-2565 - MongoPersistentEntity.getCollation(...) evaluates document expression instead of collation expression.
+* DATAMONGO-2562 - CoroutineCrudRepository findAllBy throwing IncorrectResultSizeDataAccessException when more than 1 result.
+* DATAMONGO-2560 - Upgrade MongoDB drivers to 4.0.4.
+* DATAMONGO-2553 - Reference documentation contains links to removed sections.
+* DATAMONGO-2547 - java.lang.IllegalArgumentException: com.mongodb.client.MongoDatabase referenced from a method is not visible from class loader.
+* DATAMONGO-2545 - Backwards incompatibilities on @Query.
+* DATAMONGO-2543 - Release 3.0.1 (Neumann SR1).
+* DATAMONGO-2542 - Don't attempt to map query operator keywords to properties.
+
+
 Changes in version 2.2.8.RELEASE (2020-06-10)
 ---------------------------------------------
 * DATAMONGO-2565 - MongoPersistentEntity.getCollation(...) evaluates document expression instead of collation expression.
@@ -3021,6 +3033,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
