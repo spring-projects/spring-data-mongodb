@@ -22,7 +22,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -34,6 +34,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.mapping.MappingException;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.spel.ExtensionAwareEvaluationContextProvider;
 import org.springframework.data.spel.spi.EvaluationContextExtension;
 import org.springframework.data.util.ClassTypeInformation;
@@ -43,6 +44,7 @@ import org.springframework.data.util.ClassTypeInformation;
  *
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @ExtendWith(MockitoExtension.class)
 public class BasicMongoPersistentEntityUnitTests {
@@ -53,7 +55,7 @@ public class BasicMongoPersistentEntityUnitTests {
 	@Test
 	void subclassInheritsAtDocumentAnnotation() {
 
-		BasicMongoPersistentEntity<Person> entity = new BasicMongoPersistentEntity<Person>(
+		BasicMongoPersistentEntity<Person> entity = new BasicMongoPersistentEntity<>(
 				ClassTypeInformation.from(Person.class));
 		assertThat(entity.getCollection()).isEqualTo("contacts");
 	}
@@ -61,7 +63,7 @@ public class BasicMongoPersistentEntityUnitTests {
 	@Test
 	void evaluatesSpELExpression() {
 
-		MongoPersistentEntity<Company> entity = new BasicMongoPersistentEntity<Company>(
+		MongoPersistentEntity<Company> entity = new BasicMongoPersistentEntity<>(
 				ClassTypeInformation.from(Company.class));
 		assertThat(entity.getCollection()).isEqualTo("35");
 	}
@@ -74,7 +76,7 @@ public class BasicMongoPersistentEntityUnitTests {
 
 		when(context.getBean("myBean")).thenReturn(provider);
 
-		BasicMongoPersistentEntity<DynamicallyMapped> entity = new BasicMongoPersistentEntity<DynamicallyMapped>(
+		BasicMongoPersistentEntity<DynamicallyMapped> entity = new BasicMongoPersistentEntity<>(
 				ClassTypeInformation.from(DynamicallyMapped.class));
 		entity.setEvaluationContextProvider(new ExtensionAwareEvaluationContextProvider(context));
 
@@ -87,7 +89,7 @@ public class BasicMongoPersistentEntityUnitTests {
 	@Test // DATAMONGO-937
 	void shouldDetectLanguageCorrectly() {
 
-		BasicMongoPersistentEntity<DocumentWithLanguage> entity = new BasicMongoPersistentEntity<DocumentWithLanguage>(
+		BasicMongoPersistentEntity<DocumentWithLanguage> entity = new BasicMongoPersistentEntity<>(
 				ClassTypeInformation.from(DocumentWithLanguage.class));
 
 		assertThat(entity.getLanguage()).isEqualTo("spanish");
@@ -99,11 +101,11 @@ public class BasicMongoPersistentEntityUnitTests {
 		doReturn(true).when(propertyMock).isExplicitLanguageProperty();
 		doReturn(Number.class).when(propertyMock).getActualType();
 
-		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<AnyDocument>(
+		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<>(
 				ClassTypeInformation.from(AnyDocument.class));
 		entity.addPersistentProperty(propertyMock);
 
-		assertThatExceptionOfType(MappingException.class).isThrownBy(() -> entity.verify());
+		assertThatExceptionOfType(MappingException.class).isThrownBy(entity::verify);
 	}
 
 	@Test // DATAMONGO-1053
@@ -112,7 +114,7 @@ public class BasicMongoPersistentEntityUnitTests {
 		doReturn(true).when(propertyMock).isExplicitLanguageProperty();
 		doReturn(String.class).when(propertyMock).getActualType();
 
-		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<AnyDocument>(
+		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<>(
 				ClassTypeInformation.from(AnyDocument.class));
 		entity.addPersistentProperty(propertyMock);
 
@@ -125,7 +127,7 @@ public class BasicMongoPersistentEntityUnitTests {
 	@Test // DATAMONGO-1053
 	void verifyShouldIgnoreNonExplicitLanguageProperty() {
 
-		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<AnyDocument>(
+		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<>(
 				ClassTypeInformation.from(AnyDocument.class));
 		when(propertyMock.isExplicitLanguageProperty()).thenReturn(false);
 		entity.addPersistentProperty(propertyMock);
@@ -147,11 +149,11 @@ public class BasicMongoPersistentEntityUnitTests {
 		doReturn(dbRefMock).when(propertyMock).getDBRef();
 		doReturn(true).when(dbRefMock).lazy();
 
-		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<AnyDocument>(
+		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<>(
 				ClassTypeInformation.from(AnyDocument.class));
 		entity.addPersistentProperty(propertyMock);
 
-		assertThatExceptionOfType(MappingException.class).isThrownBy(() -> entity.verify());
+		assertThatExceptionOfType(MappingException.class).isThrownBy(entity::verify);
 	}
 
 	@Test // DATAMONGO-1157
@@ -165,11 +167,11 @@ public class BasicMongoPersistentEntityUnitTests {
 		doReturn(dbRefMock).when(propertyMock).getDBRef();
 		doReturn(true).when(dbRefMock).lazy();
 
-		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<AnyDocument>(
+		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<>(
 				ClassTypeInformation.from(AnyDocument.class));
 		entity.addPersistentProperty(propertyMock);
 
-		assertThatExceptionOfType(MappingException.class).isThrownBy(() -> entity.verify());
+		assertThatExceptionOfType(MappingException.class).isThrownBy(entity::verify);
 	}
 
 	@Test // DATAMONGO-1157
@@ -183,7 +185,7 @@ public class BasicMongoPersistentEntityUnitTests {
 		doReturn(dbRefMock).when(propertyMock).getDBRef();
 		doReturn(true).when(dbRefMock).lazy();
 
-		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<AnyDocument>(
+		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<>(
 				ClassTypeInformation.from(AnyDocument.class));
 		entity.addPersistentProperty(propertyMock);
 		entity.verify();
@@ -201,7 +203,7 @@ public class BasicMongoPersistentEntityUnitTests {
 		doReturn(dbRefMock).when(propertyMock).getDBRef();
 		doReturn(false).when(dbRefMock).lazy();
 
-		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<AnyDocument>(
+		BasicMongoPersistentEntity<AnyDocument> entity = new BasicMongoPersistentEntity<>(
 				ClassTypeInformation.from(AnyDocument.class));
 		entity.addPersistentProperty(propertyMock);
 		entity.verify();
@@ -212,7 +214,7 @@ public class BasicMongoPersistentEntityUnitTests {
 	@Test // DATAMONGO-1291
 	void metaInformationShouldBeReadCorrectlyFromInheritedDocumentAnnotation() {
 
-		BasicMongoPersistentEntity<DocumentWithCustomAnnotation> entity = new BasicMongoPersistentEntity<DocumentWithCustomAnnotation>(
+		BasicMongoPersistentEntity<DocumentWithCustomAnnotation> entity = new BasicMongoPersistentEntity<>(
 				ClassTypeInformation.from(DocumentWithCustomAnnotation.class));
 
 		assertThat(entity.getCollection()).isEqualTo("collection-1");
@@ -221,7 +223,7 @@ public class BasicMongoPersistentEntityUnitTests {
 	@Test // DATAMONGO-1373
 	void metaInformationShouldBeReadCorrectlyFromComposedDocumentAnnotation() {
 
-		BasicMongoPersistentEntity<DocumentWithComposedAnnotation> entity = new BasicMongoPersistentEntity<DocumentWithComposedAnnotation>(
+		BasicMongoPersistentEntity<DocumentWithComposedAnnotation> entity = new BasicMongoPersistentEntity<>(
 				ClassTypeInformation.from(DocumentWithComposedAnnotation.class));
 
 		assertThat(entity.getCollection()).isEqualTo("custom-collection");
@@ -233,7 +235,7 @@ public class BasicMongoPersistentEntityUnitTests {
 		BasicMongoPersistentEntity<MappedWithExtension> entity = new BasicMongoPersistentEntity<>(
 				ClassTypeInformation.from(MappedWithExtension.class));
 		entity.setEvaluationContextProvider(
-				new ExtensionAwareEvaluationContextProvider(Arrays.asList(new SampleExtension())));
+				new ExtensionAwareEvaluationContextProvider(Collections.singletonList(new SampleExtension())));
 
 		assertThat(entity.getCollection()).isEqualTo("collectionName");
 	}
@@ -254,6 +256,18 @@ public class BasicMongoPersistentEntityUnitTests {
 				ClassTypeInformation.from(WithDocumentCollation.class));
 
 		assertThat(entity.getCollation()).isEqualTo(org.springframework.data.mongodb.core.query.Collation.of("en_US"));
+	}
+
+	@Test // DATAMONGO-2565
+	void usesCorrectExpressionsForCollectionAndCollation() {
+
+		BasicMongoPersistentEntity<WithCollectionAndCollationFromSpEL> entity = new BasicMongoPersistentEntity<>(
+				ClassTypeInformation.from(WithCollectionAndCollationFromSpEL.class));
+		entity.setEvaluationContextProvider(
+				new ExtensionAwareEvaluationContextProvider(Collections.singletonList(new SampleExtension())));
+
+		assertThat(entity.getCollection()).isEqualTo("collectionName");
+		assertThat(entity.getCollation()).isEqualTo(Collation.of("en_US"));
 	}
 
 	@Test // DATAMONGO-2341
@@ -339,6 +353,9 @@ public class BasicMongoPersistentEntityUnitTests {
 
 	@Document(collation = "#{myCollation}")
 	class WithCollationFromSpEL {}
+
+	@Document(collection = "#{myProperty}", collation = "#{myCollation}")
+	class WithCollectionAndCollationFromSpEL {}
 
 	@Document(collation = "en_US")
 	class WithSimpleCollation {}
