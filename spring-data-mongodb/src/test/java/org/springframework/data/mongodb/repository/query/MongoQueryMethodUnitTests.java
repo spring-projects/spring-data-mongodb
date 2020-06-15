@@ -194,7 +194,7 @@ public class MongoQueryMethodUnitTests {
 				.contains(org.springframework.data.mongodb.core.query.Meta.CursorOption.NO_TIMEOUT);
 	}
 
-	@Test // DATAMONGO-1480
+	@Test // DATAMONGO-1480, DATAMONGO-2572
 	public void createsMongoQueryMethodWithMultipleFlagsCorrectly() throws Exception {
 
 		MongoQueryMethod method = queryMethod(PersonRepository.class, "metaWithMultipleFlags");
@@ -202,7 +202,7 @@ public class MongoQueryMethodUnitTests {
 		assertThat(method.hasQueryMetaAttributes()).isTrue();
 		assertThat(method.getQueryMetaAttributes().getFlags()).contains(
 				org.springframework.data.mongodb.core.query.Meta.CursorOption.NO_TIMEOUT,
-				org.springframework.data.mongodb.core.query.Meta.CursorOption.SLAVE_OK);
+				org.springframework.data.mongodb.core.query.Meta.CursorOption.SECONDARY_READS);
 	}
 
 	@Test // DATAMONGO-1266
@@ -273,7 +273,7 @@ public class MongoQueryMethodUnitTests {
 		List<User> metaWithNoCursorTimeout();
 
 		@Meta(flags = { org.springframework.data.mongodb.core.query.Meta.CursorOption.NO_TIMEOUT,
-				org.springframework.data.mongodb.core.query.Meta.CursorOption.SLAVE_OK })
+				org.springframework.data.mongodb.core.query.Meta.CursorOption.SECONDARY_READS })
 		List<User> metaWithMultipleFlags();
 
 		// DATAMONGO-1266
