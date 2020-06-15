@@ -2458,7 +2458,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	/**
 	 * Prepare the collection before any processing is done using it. This allows a convenient way to apply settings like
-	 * slaveOk() etc. Can be overridden in sub-classes.
+	 * withCodecRegistry() etc. Can be overridden in sub-classes.
 	 *
 	 * @param collection
 	 */

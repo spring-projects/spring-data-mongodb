@@ -1219,7 +1219,7 @@ public class MongoTemplateTests {
 		assertThat(p5.getFirstName(), is("Mark"));
 	}
 
-	@Test
+	@Test // DATAMONGO-2572
 	public void testUsingReadPreference() throws Exception {
 		this.template.execute("readPref", new CollectionCallback<Object>() {
 			public Object doInCollection(MongoCollection<org.bson.Document> collection)
@@ -1230,9 +1230,9 @@ public class MongoTemplateTests {
 				return null;
 			}
 		});
-		MongoTemplate slaveTemplate = new MongoTemplate(factory);
-		slaveTemplate.setReadPreference(ReadPreference.secondary());
-		slaveTemplate.execute("readPref", new CollectionCallback<Object>() {
+		MongoTemplate secondaryTemplate = new MongoTemplate(factory);
+		secondaryTemplate.setReadPreference(ReadPreference.secondary());
+		secondaryTemplate.execute("readPref", new CollectionCallback<Object>() {
 			public Object doInCollection(MongoCollection<org.bson.Document> collection)
 					throws MongoException, DataAccessException {
 				assertThat(collection.getReadPreference(), is(ReadPreference.secondary()));

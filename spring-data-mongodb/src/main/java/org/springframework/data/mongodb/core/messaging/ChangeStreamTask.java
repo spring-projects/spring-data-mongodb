@@ -63,7 +63,7 @@ import com.mongodb.client.model.changestream.FullDocument;
  */
 class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>, Object> {
 
-	private final Set<String> blacklist = new HashSet<>(
+	private final Set<String> denylist = new HashSet<>(
 			Arrays.asList("operationType", "fullDocument", "documentKey", "updateDescription", "ns"));
 
 	private final QueryMapper queryMapper;
@@ -165,7 +165,7 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 							template.getConverter().getMappingContext(), queryMapper)
 					: Aggregation.DEFAULT_CONTEXT;
 
-			return agg.toPipeline(new PrefixingDelegatingAggregationOperationContext(context, "fullDocument", blacklist));
+			return agg.toPipeline(new PrefixingDelegatingAggregationOperationContext(context, "fullDocument", denylist));
 		}
 
 		if (filter instanceof List) {
