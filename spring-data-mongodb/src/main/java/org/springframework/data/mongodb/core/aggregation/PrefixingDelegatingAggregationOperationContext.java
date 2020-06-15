@@ -31,7 +31,7 @@ import org.springframework.lang.Nullable;
  * {@link AggregationOperationContext} implementation prefixing non-command keys on root level with the given prefix.
  * Useful when mapping fields to domain specific types while having to prefix keys for query purpose.
  * <p />
- * Fields to be excluded from prefixing my be added to a {@literal blacklist}.
+ * Fields to be excluded from prefixing my be added to a {@literal denylist}.
  *
  * @author Christoph Strobl
  * @author Mark Paluch
@@ -41,18 +41,18 @@ public class PrefixingDelegatingAggregationOperationContext implements Aggregati
 
 	private final AggregationOperationContext delegate;
 	private final String prefix;
-	private final Set<String> blacklist;
+	private final Set<String> denylist;
 
 	public PrefixingDelegatingAggregationOperationContext(AggregationOperationContext delegate, String prefix) {
 		this(delegate, prefix, Collections.emptySet());
 	}
 
 	public PrefixingDelegatingAggregationOperationContext(AggregationOperationContext delegate, String prefix,
-			Collection<String> blacklist) {
+			Collection<String> denylist) {
 
 		this.delegate = delegate;
 		this.prefix = prefix;
-		this.blacklist = new HashSet<>(blacklist);
+		this.denylist = new HashSet<>(denylist);
 	}
 
 	/*
@@ -121,7 +121,7 @@ public class PrefixingDelegatingAggregationOperationContext implements Aggregati
 	}
 
 	private String prefixKey(String key) {
-		return (key.startsWith("$") || isBlacklisted(key)) ? key : (prefix + "." + key);
+		return (key.startsWith("$") || isDenied(key)) ? key : (prefix + "." + key);
 	}
 
 	private Object prefixCollection(Collection<Object> sourceCollection) {
@@ -139,9 +139,9 @@ public class PrefixingDelegatingAggregationOperationContext implements Aggregati
 		return prefixed;
 	}
 
-	private boolean isBlacklisted(String key) {
+	private boolean isDenied(String key) {
 
-		if (blacklist.contains(key)) {
+		if (denylist.contains(key)) {
 			return true;
 		}
 
@@ -149,8 +149,8 @@ public class PrefixingDelegatingAggregationOperationContext implements Aggregati
 			return false;
 		}
 
-		for (String blacklisted : blacklist) {
-			if (key.startsWith(blacklisted + ".")) {
+		for (String denied : denylist) {
+			if (key.startsWith(denied + ".")) {
 				return true;
 			}
 		}

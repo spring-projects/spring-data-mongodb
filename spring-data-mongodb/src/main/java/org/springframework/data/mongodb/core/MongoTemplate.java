@@ -1178,7 +1178,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	/**
 	 * Prepare the collection before any processing is done using it. This allows a convenient way to apply settings like
-	 * slaveOk() etc. Can be overridden in sub-classes.
+	 * withCodecRegistry() etc. Can be overridden in sub-classes.
 	 *
 	 * @param collection
 	 */
@@ -3260,6 +3260,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 							case PARTIAL:
 								cursorToUse = cursorToUse.partial(true);
 								break;
+							case SECONDARY_READS:
 							case SLAVE_OK:
 								break;
 							default:
@@ -3277,7 +3278,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		@Override
 		public ReadPreference getReadPreference() {
-			return query.getMeta().getFlags().contains(CursorOption.SLAVE_OK) ? ReadPreference.primaryPreferred() : null;
+			return (query.getMeta().getFlags().contains(CursorOption.SECONDARY_READS)
+					|| query.getMeta().getFlags().contains(CursorOption.SLAVE_OK)) ? ReadPreference.primaryPreferred() : null;
 		}
 	}
 
