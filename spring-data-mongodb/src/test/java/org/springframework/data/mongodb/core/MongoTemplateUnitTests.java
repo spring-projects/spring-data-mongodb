@@ -1656,32 +1656,32 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		Assertions.assertThat(ReflectionTestUtils.getField(template, "entityCallbacks")).isSameAs(callbacks);
 	}
 
-	@Test // DATAMONGO-2344
-	public void slaveOkQueryOptionShouldApplyPrimaryPreferredReadPreferenceForFind() {
+	@Test // DATAMONGO-2344, DATAMONGO-2572
+	public void allowSecondaryReadsQueryOptionShouldApplyPrimaryPreferredReadPreferenceForFind() {
 
-		template.find(new Query().slaveOk(), AutogenerateableId.class);
-
-		verify(collection).withReadPreference(eq(ReadPreference.primaryPreferred()));
-	}
-
-	@Test // DATAMONGO-2344
-	public void slaveOkQueryOptionShouldApplyPrimaryPreferredReadPreferenceForFindOne() {
-
-		template.findOne(new Query().slaveOk(), AutogenerateableId.class);
+		template.find(new Query().allowSecondaryReads(), AutogenerateableId.class);
 
 		verify(collection).withReadPreference(eq(ReadPreference.primaryPreferred()));
 	}
 
-	@Test // DATAMONGO-2344
-	public void slaveOkQueryOptionShouldApplyPrimaryPreferredReadPreferenceForFindDistinct() {
+	@Test // DATAMONGO-2344, DATAMONGO-2572
+	public void allowSecondaryReadsQueryOptionShouldApplyPrimaryPreferredReadPreferenceForFindOne() {
 
-		template.findDistinct(new Query().slaveOk(), "name", AutogenerateableId.class, String.class);
+		template.findOne(new Query().allowSecondaryReads(), AutogenerateableId.class);
 
 		verify(collection).withReadPreference(eq(ReadPreference.primaryPreferred()));
 	}
 
-	@Test // DATAMONGO-2344
-	public void slaveOkQueryOptionShouldApplyPrimaryPreferredReadPreferenceForStream() {
+	@Test // DATAMONGO-2344, DATAMONGO-2572
+	public void allowSecondaryReadsQueryOptionShouldApplyPrimaryPreferredReadPreferenceForFindDistinct() {
+
+		template.findDistinct(new Query().allowSecondaryReads(), "name", AutogenerateableId.class, String.class);
+
+		verify(collection).withReadPreference(eq(ReadPreference.primaryPreferred()));
+	}
+
+	@Test // DATAMONGO-2344, DATAMONGO-2572
+	public void allowSecondaryReadsQueryOptionShouldApplyPrimaryPreferredReadPreferenceForStream() {
 
 		template.stream(new Query().slaveOk(), AutogenerateableId.class);
 		verify(collection).withReadPreference(eq(ReadPreference.primaryPreferred()));

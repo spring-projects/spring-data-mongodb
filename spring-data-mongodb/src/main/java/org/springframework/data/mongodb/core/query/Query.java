@@ -439,15 +439,30 @@ public class Query {
 	}
 
 	/**
-	 * Allows querying of a replica slave.
+	 * Allows querying of a replica.
 	 *
 	 * @return this.
 	 * @see org.springframework.data.mongodb.core.query.Meta.CursorOption#SLAVE_OK
 	 * @since 1.10
+	 * @deprecated since 3.0.2, use {@link #allowSecondaryReads()}.
 	 */
+	@Deprecated
 	public Query slaveOk() {
 
 		meta.addFlag(Meta.CursorOption.SLAVE_OK);
+		return this;
+	}
+
+	/**
+	 * Allows querying of a replica.
+	 *
+	 * @return this.
+	 * @see org.springframework.data.mongodb.core.query.Meta.CursorOption#SECONDARY_READS
+	 * @since 3.0.2
+	 */
+	public Query allowSecondaryReads() {
+
+		meta.addFlag(Meta.CursorOption.SECONDARY_READS);
 		return this;
 	}
 

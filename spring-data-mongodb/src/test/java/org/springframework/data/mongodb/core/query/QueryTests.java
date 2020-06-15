@@ -297,14 +297,14 @@ public class QueryTests {
 				.isNotEqualTo(source.getFieldsObject());
 	}
 
-	@Test // DATAMONGO-1783
+	@Test // DATAMONGO-1783, DATAMONGO-2572
 	public void clonedQueryShouldNotDependOnMetaFromSource() {
 
 		Query source = new Query().maxTimeMsec(100);
 		Query target = Query.of(source);
 
 		compareQueries(target, source);
-		source.slaveOk();
+		source.allowSecondaryReads();
 
 		Meta meta = new Meta();
 		meta.setMaxTimeMsec(100);
