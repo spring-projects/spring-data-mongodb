@@ -284,8 +284,20 @@ public class Meta {
 		 */
 		EXHAUST,
 
-		/** Allows querying of a replica slave. */
+		/**
+		 * Allows querying of a replica.
+		 *
+		 * @deprecated since 3.0.2, use {@link #SECONDARY_READS} instead.
+		 */
+		@Deprecated
 		SLAVE_OK,
+
+		/**
+		 * Allows querying of a replica.
+		 *
+		 * @since 3.0.2
+		 */
+		SECONDARY_READS,
 
 		/**
 		 * Sets the cursor to return partial data from a query against a sharded cluster in which some shards do not respond

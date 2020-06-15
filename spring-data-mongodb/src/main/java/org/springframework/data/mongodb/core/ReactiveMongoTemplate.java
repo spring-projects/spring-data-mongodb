@@ -2679,7 +2679,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	/**
 	 * Prepare the collection before any processing is done using it. This allows a convenient way to apply settings like
-	 * slaveOk() etc. Can be overridden in sub-classes.
+	 * withCodecRegistry() etc. Can be overridden in sub-classes.
 	 *
 	 * @param collection
 	 */
@@ -3324,7 +3324,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		@Override
 		public ReadPreference getReadPreference() {
-			return query.getMeta().getFlags().contains(CursorOption.SLAVE_OK) ? ReadPreference.primaryPreferred() : null;
+			return (query.getMeta().getFlags().contains(CursorOption.SECONDARY_READS)
+					|| query.getMeta().getFlags().contains(CursorOption.SLAVE_OK)) ? ReadPreference.primaryPreferred() : null;
 		}
 	}
 

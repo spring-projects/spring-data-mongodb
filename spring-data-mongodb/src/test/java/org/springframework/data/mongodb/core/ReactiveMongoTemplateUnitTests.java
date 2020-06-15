@@ -896,26 +896,26 @@ public class ReactiveMongoTemplateUnitTests {
 		Assertions.assertThat(ReflectionTestUtils.getField(template, "entityCallbacks")).isSameAs(callbacks);
 	}
 
-	@Test // DATAMONGO-2344
-	void slaveOkQueryOptionShouldApplyPrimaryPreferredReadPreferenceForFind() {
+	@Test // DATAMONGO-2344, DATAMONGO-2572
+	void allowSecondaryReadsQueryOptionShouldApplyPrimaryPreferredReadPreferenceForFind() {
 
-		template.find(new Query().slaveOk(), AutogenerateableId.class).subscribe();
-
-		verify(collection).withReadPreference(eq(ReadPreference.primaryPreferred()));
-	}
-
-	@Test // DATAMONGO-2344
-	void slaveOkQueryOptionShouldApplyPrimaryPreferredReadPreferenceForFindOne() {
-
-		template.findOne(new Query().slaveOk(), AutogenerateableId.class).subscribe();
+		template.find(new Query().allowSecondaryReads(), AutogenerateableId.class).subscribe();
 
 		verify(collection).withReadPreference(eq(ReadPreference.primaryPreferred()));
 	}
 
-	@Test // DATAMONGO-2344
-	void slaveOkQueryOptionShouldApplyPrimaryPreferredReadPreferenceForFindDistinct() {
+	@Test // DATAMONGO-2344, DATAMONGO-2572
+	void allowSecondaryReadsQueryOptionShouldApplyPrimaryPreferredReadPreferenceForFindOne() {
 
-		template.findDistinct(new Query().slaveOk(), "name", AutogenerateableId.class, String.class).subscribe();
+		template.findOne(new Query().allowSecondaryReads(), AutogenerateableId.class).subscribe();
+
+		verify(collection).withReadPreference(eq(ReadPreference.primaryPreferred()));
+	}
+
+	@Test // DATAMONGO-2344, DATAMONGO-2572
+	void allowSecondaryReadsQueryOptionShouldApplyPrimaryPreferredReadPreferenceForFindDistinct() {
+
+		template.findDistinct(new Query().allowSecondaryReads(), "name", AutogenerateableId.class, String.class).subscribe();
 
 		verify(collection).withReadPreference(eq(ReadPreference.primaryPreferred()));
 	}
