@@ -2205,7 +2205,7 @@ On the repository level the `@Meta` annotation provides means to add query optio
 ====
 [source,java]
 ----
-@Meta(comment = "find luke", batchSize = 100, flags = { SLAVE_OK })
+@Meta(comment = "find luke", batchSize = 100, flags = { SECONDARY_READS })
 List<Person> findByFirstname(String firstname);
 ----
 ====
