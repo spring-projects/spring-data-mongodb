@@ -316,8 +316,8 @@ The Mongo driver options
 				<xsd:simpleType>
 					<xsd:union memberTypes="writeConcernEnumeration xsd:string"/>
 				</xsd:simpleType>
-			</xsd:attribute>		
-		<!-- MLP 
+			</xsd:attribute>
+		<!-- MLP
 		<xsd:attributeGroup ref="writeConcern" />
 		-->
 		<xsd:attribute name="id" type="xsd:ID" use="optional">
@@ -346,14 +346,14 @@ The host to connect to a MongoDB server.  Default is localhost
 The comma delimited list of host:port entries to use for replica set/pairs.
 							]]></xsd:documentation>
 			</xsd:annotation>
-		</xsd:attribute>				
+		</xsd:attribute>
 	</xsd:complexType>
 
 	<xsd:complexType name="optionsType">
 		<xsd:attribute name="connections-per-host" type="xsd:string">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
-The number of connections allowed per host.  Will block if run out.	 Default is 10.  System property MONGO.POOLSIZE can override	
+The number of connections allowed per host.  Will block if run out.	 Default is 10.  System property MONGO.POOLSIZE can override
 				]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
@@ -361,22 +361,22 @@ The number of connections allowed per host.  Will block if run out.	 Default is 
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
 The multiplier for connectionsPerHost for # of threads that can block.  Default is 5.
-If connectionsPerHost is 10, and threadsAllowedToBlockForConnectionMultiplier is 5, 
-then 50 threads can block more than that and an exception will be thrown.			
+If connectionsPerHost is 10, and threadsAllowedToBlockForConnectionMultiplier is 5,
+then 50 threads can block more than that and an exception will be thrown.
 				]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
 		<xsd:attribute name="max-wait-time" type="xsd:string">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
-The max wait time of a blocking thread for a connection. Default is 12000 ms (2 minutes)	
+The max wait time of a blocking thread for a connection. Default is 12000 ms (2 minutes)
 				]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
 		<xsd:attribute name="connect-timeout" type="xsd:string">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
-The connect timeout in milliseconds. 0 is default and infinite.	
+The connect timeout in milliseconds. 0 is default and infinite.
 				]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
@@ -393,18 +393,18 @@ The socket timeout.  0 is default and infinite.
 The keep alive flag, controls whether or not to have socket keep alive timeout.  Defaults to false.
 				]]></xsd:documentation>
 			</xsd:annotation>
-		</xsd:attribute>		
+		</xsd:attribute>
 		<xsd:attribute name="auto-connect-retry" type="xsd:string">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
-This controls whether or not on a connect, the system retries automatically.  Default is false. 
+This controls whether or not on a connect, the system retries automatically.  Default is false.
 				]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
 		<xsd:attribute name="max-auto-connect-retry-time" type="xsd:long">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
-The maximum amount of time in millisecons to spend retrying to open connection to the same server. Default is 0, which means to use the default 15s if autoConnectRetry is on. 
+The maximum amount of time in millisecons to spend retrying to open connection to the same server. Default is 0, which means to use the default 15s if autoConnectRetry is on.
 				]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>
@@ -428,14 +428,14 @@ This controls timeout for write operations in milliseconds.  The 'wtimeout' opti
 This controls whether or not to fsync.  The 'fsync' option to the getlasterror command. Defaults to false.
 				]]></xsd:documentation>
 			</xsd:annotation>
-		</xsd:attribute>						
+		</xsd:attribute>
 		<xsd:attribute name="slave-ok" type="xsd:string">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
 This controls if the driver is allowed to read from secondaries or replicas.  Defaults to false.
 				]]></xsd:documentation>
 			</xsd:annotation>
-		</xsd:attribute>				
+		</xsd:attribute>
 	</xsd:complexType>
 
 	<xsd:group name="beanElementGroup">
