@@ -129,7 +129,7 @@ public interface GridFsOperations extends ResourcePatternResolver {
 	 *
 	 * @param content must not be {@literal null}.
 	 * @param filename must not be {@literal null} or empty.
-	 * @param contentType can be {@literal null}.
+	 * @param contentType can be {@literal null}. If not empty, may override content type within {@literal metadata}.
 	 * @param metadata can be {@literal null}.
 	 * @return the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just created.
 	 */
