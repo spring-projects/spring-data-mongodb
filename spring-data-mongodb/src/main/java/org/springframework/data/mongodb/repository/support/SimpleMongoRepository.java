@@ -47,6 +47,7 @@ import org.springframework.util.Assert;
  * @author Christoph Strobl
  * @author Thomas Darimont
  * @author Mark Paluch
+ * @author Mehran Behnam
  */
 public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
@@ -214,7 +215,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Assert.notNull(pageable, "Pageable must not be null!");
 
-		Long count = count();
+		long count = count();
 		List<T> list = findAll(new Query().with(pageable));
 
 		return new PageImpl<T>(list, pageable, count);
