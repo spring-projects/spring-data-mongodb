@@ -135,7 +135,7 @@ public interface ReactiveGridFsOperations {
 	 *
 	 * @param content must not be {@literal null}.
 	 * @param filename must not be {@literal null} or empty.
-	 * @param contentType can be {@literal null}.
+	 * @param contentType can be {@literal null}. If not empty, may override content type within {@literal metadata}.
 	 * @param metadata can be {@literal null}.
 	 * @return a {@link Mono} emitting the {@link ObjectId} of the {@link com.mongodb.client.gridfs.model.GridFSFile} just
 	 *         created.
@@ -148,11 +148,11 @@ public interface ReactiveGridFsOperations {
 		if (StringUtils.hasText(filename)) {
 			uploadBuilder.filename(filename);
 		}
-		if (StringUtils.hasText(contentType)) {
-			uploadBuilder.contentType(contentType);
-		}
 		if (!ObjectUtils.isEmpty(metadata)) {
 			uploadBuilder.metadata(metadata);
+		}
+		if (StringUtils.hasText(contentType)) {
+			uploadBuilder.contentType(contentType);
 		}
 
 		return store(uploadBuilder.build());
