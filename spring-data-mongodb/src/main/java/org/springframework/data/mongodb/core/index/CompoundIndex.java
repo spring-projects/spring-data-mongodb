@@ -96,7 +96,8 @@ public @interface CompoundIndex {
 	boolean unique() default false;
 
 	/**
-	 * If set to true index will skip over any document that is missing the indexed field.
+	 * If set to true index will skip over any document that is missing the indexed field. <br />
+	 * Must not be used with {@link #partialFilter()}.
 	 *
 	 * @return {@literal false} by default.
 	 * @see <a href=
@@ -171,13 +172,14 @@ public @interface CompoundIndex {
 	 */
 	boolean background() default false;
 
-
 	/**
-	 * Only index the documents in a collection that meet a specified {@link IndexFilter filter expression}.
+	 * Only index the documents in a collection that meet a specified {@link IndexFilter filter expression}. <br />
+	 * Must not be used with {@link #sparse() sparse = true}.
 	 *
-	 * @return
+	 * @return empty by default.
 	 * @see <a href=
 	 *      "https://docs.mongodb.com/manual/core/index-partial/">https://docs.mongodb.com/manual/core/index-partial/</a>
+	 * @since 3.1
 	 */
-	String partial() default "";
+	String partialFilter() default "";
 }
