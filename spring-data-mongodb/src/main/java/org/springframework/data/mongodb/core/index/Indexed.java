@@ -53,7 +53,8 @@ public @interface Indexed {
 	IndexDirection direction() default IndexDirection.ASCENDING;
 
 	/**
-	 * If set to true index will skip over any document that is missing the indexed field.
+	 * If set to true index will skip over any document that is missing the indexed field. <br />
+	 * Must not be used with {@link #partialFilter()}.
 	 *
 	 * @return {@literal false} by default.
 	 * @see <a href=
@@ -170,4 +171,15 @@ public @interface Indexed {
 	 * @since 2.2
 	 */
 	String expireAfter() default "";
+
+	/**
+	 * Only index the documents in a collection that meet a specified {@link IndexFilter filter expression}. <br />
+	 * Must not be used with {@link #sparse() sparse = true}.
+	 * 
+	 * @return empty by default.
+	 * @see <a href=
+	 *      "https://docs.mongodb.com/manual/core/index-partial/">https://docs.mongodb.com/manual/core/index-partial/</a>
+	 * @since 3.1
+	 */
+	String partialFilter() default "";
 }

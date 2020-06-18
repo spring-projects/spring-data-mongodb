@@ -271,6 +271,16 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("name", "my1st");
 		}
 
+		@Test // DATAMONGO-1569
+		public void resolvesPartialFilter() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					WithPartialFilter.class);
+
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("partialFilterExpression",
+					org.bson.Document.parse("{'value': {'$exists': true}}"));
+		}
+
 		@Document("Zero")
 		static class IndexOnLevelZero {
 			@Indexed String indexedProperty;
@@ -394,6 +404,11 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		@Document
 		static class WithIndexNameAsExpression {
 			@Indexed(name = "#{'my' + 1 + 'st'}") String spelIndexName;
+		}
+
+		@Document
+		class WithPartialFilter {
+			@Indexed(partialFilter = "{'value': {'$exists': true}}") String withPartialFilter;
 		}
 	}
 

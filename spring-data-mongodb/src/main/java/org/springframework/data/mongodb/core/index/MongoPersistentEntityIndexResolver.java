@@ -46,6 +46,7 @@ import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.EvaluationContext;
@@ -474,8 +475,24 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			}
 		}
 
+		if (StringUtils.hasText(index.partialFilter())) {
+			indexDefinition.partial(evaluatePartialFilter(index.partialFilter(), persistentProperty.getOwner()));
+		}
+
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
 	}
+
+	private PartialIndexFilter evaluatePartialFilter(String filterExpression, PersistentEntity<?,?> entity) {
+
+		Object result = evaluate(filterExpression, getEvaluationContextForProperty(entity));
+
+		if (result instanceof org.bson.Document) {
+			return PartialIndexFilter.of((org.bson.Document) result);
+		}
+
+		return PartialIndexFilter.of(BsonUtils.parse(filterExpression, null));
+	}
+
 
 	/**
 	 * Creates {@link HashedIndex} wrapped in {@link IndexDefinitionHolder} out of {@link HashIndexed} for a given
