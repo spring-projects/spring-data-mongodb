@@ -382,8 +382,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			indexDefinition.background();
 		}
 
-		if (StringUtils.hasText(index.partial())) {
-			indexDefinition.partial(PartialIndexFilter.of(org.bson.Document.parse(index.partial())));
+		if (StringUtils.hasText(index.partialFilter())) {
+			indexDefinition.partial(evaluatePartialFilter(index.partialFilter(), entity));
 		}
 
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
