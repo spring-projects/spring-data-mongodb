@@ -98,7 +98,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		Assert.notNull(entities, "The given Iterable of entities not be null!");
 
 		Streamable<S> source = Streamable.of(entities);
-		boolean allNew = source.stream().allMatch(it -> entityInformation.isNew(it));
+		boolean allNew = source.stream().allMatch(entityInformation::isNew);
 
 		if (allNew) {
 
@@ -211,6 +211,8 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	 */
 	@Override
 	public Iterable<T> findAllById(Iterable<ID> ids) {
+
+		Assert.notNull(ids, "The given Ids of entities not be null!");
 
 		return findAll(new Query(new Criteria(entityInformation.getIdAttribute())
 				.in(Streamable.of(ids).stream().collect(StreamUtils.toUnmodifiableList()))));
