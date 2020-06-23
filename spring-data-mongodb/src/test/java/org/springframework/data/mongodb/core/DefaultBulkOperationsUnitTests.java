@@ -24,6 +24,7 @@ import static org.mockito.Mockito.eq;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,9 +41,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.callback.EntityCallbacks;
+import org.springframework.data.mongodb.BulkOperationException;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.DefaultBulkOperations.BulkOperationContext;
@@ -64,9 +67,13 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Update;
 
+import com.mongodb.MongoBulkWriteException;
 import com.mongodb.MongoWriteException;
+import com.mongodb.ServerAddress;
 import com.mongodb.WriteConcern;
 import com.mongodb.WriteError;
+import com.mongodb.bulk.BulkWriteError;
+import com.mongodb.bulk.WriteConcernError;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.BulkWriteOptions;
@@ -85,6 +92,7 @@ import com.mongodb.client.model.WriteModel;
  * @author Minsu Kim
  * @author Jens Schauder
  * @author Roman Puchkovskiy
+ * @author Jacob Botuck
  */
 @ExtendWith(MockitoExtension.class)
 class DefaultBulkOperationsUnitTests {
@@ -365,6 +373,29 @@ class DefaultBulkOperationsUnitTests {
 		UpdateOneModel<Document> updateModel = (UpdateOneModel<Document>) captor.getValue().get(0);
 		assertThat(updateModel.getUpdate())
 				.isEqualTo(new Document("$set", new Document("items.$.documents.0.the_file_id", "file-id")));
+	}
+
+	@Test // DATAMONGO-2285
+	public void translateMongoBulkOperationExceptionWithWriteConcernError() {
+
+		when(collection.bulkWrite(anyList(), any(BulkWriteOptions.class))).thenThrow(new MongoBulkWriteException(null,
+				Collections.emptyList(),
+				new WriteConcernError(42, "codename", "writeconcern error happened", new BsonDocument()), new ServerAddress()));
+
+		assertThatExceptionOfType(DataIntegrityViolationException.class)
+				.isThrownBy(() -> ops.insert(new SomeDomainType()).execute());
+
+	}
+
+	@Test // DATAMONGO-2285
+	public void translateMongoBulkOperationExceptionWithoutWriteConcernError() {
+
+		when(collection.bulkWrite(anyList(), any(BulkWriteOptions.class))).thenThrow(new MongoBulkWriteException(null,
+				Collections.singletonList(new BulkWriteError(42, "a write error happened", new BsonDocument(), 49)), null,
+				new ServerAddress()));
+
+		assertThatExceptionOfType(BulkOperationException.class)
+				.isThrownBy(() -> ops.insert(new SomeDomainType()).execute());
 	}
 
 	static class OrderTest {

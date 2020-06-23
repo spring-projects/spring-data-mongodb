@@ -24,8 +24,9 @@ import java.util.stream.Collectors;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.dao.support.PersistenceExceptionTranslator;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.mapping.callback.EntityCallbacks;
+import org.springframework.data.mongodb.BulkOperationException;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
@@ -46,6 +47,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
+import com.mongodb.MongoBulkWriteException;
 import com.mongodb.WriteConcern;
 import com.mongodb.bulk.BulkWriteResult;
 import com.mongodb.client.MongoCollection;
@@ -62,6 +64,7 @@ import com.mongodb.client.model.*;
  * @author Jens Schauder
  * @author Michail Nikolaev
  * @author Roman Puchkovskiy
+ * @author Jacob Botuck
  * @since 1.9
  */
 class DefaultBulkOperations implements BulkOperations {
@@ -71,7 +74,6 @@ class DefaultBulkOperations implements BulkOperations {
 	private final BulkOperationContext bulkOperationContext;
 	private final List<SourceAwareWriteModelHolder> models = new ArrayList<>();
 
-	private PersistenceExceptionTranslator exceptionTranslator;
 	private @Nullable WriteConcern defaultWriteConcern;
 
 	private BulkWriteOptions bulkOptions;
@@ -95,17 +97,7 @@ class DefaultBulkOperations implements BulkOperations {
 		this.mongoOperations = mongoOperations;
 		this.collectionName = collectionName;
 		this.bulkOperationContext = bulkOperationContext;
-		this.exceptionTranslator = new MongoExceptionTranslator();
 		this.bulkOptions = getBulkWriteOptions(bulkOperationContext.getBulkMode());
-	}
-
-	/**
-	 * Configures the {@link PersistenceExceptionTranslator} to be used. Defaults to {@link MongoExceptionTranslator}.
-	 *
-	 * @param exceptionTranslator can be {@literal null}.
-	 */
-	public void setExceptionTranslator(@Nullable PersistenceExceptionTranslator exceptionTranslator) {
-		this.exceptionTranslator = exceptionTranslator == null ? new MongoExceptionTranslator() : exceptionTranslator;
 	}
 
 	/**
@@ -314,11 +306,26 @@ class DefaultBulkOperations implements BulkOperations {
 			collection = collection.withWriteConcern(defaultWriteConcern);
 		}
 
-		return collection.bulkWrite( //
-				models.stream() //
-						.map(this::extractAndMapWriteModel) //
-						.collect(Collectors.toList()), //
-				bulkOptions);
+		try {
+
+			return collection.bulkWrite( //
+					models.stream() //
+							.map(this::extractAndMapWriteModel) //
+							.collect(Collectors.toList()), //
+					bulkOptions);
+		} catch (RuntimeException ex) {
+
+			if (ex instanceof MongoBulkWriteException) {
+
+				MongoBulkWriteException mongoBulkWriteException = (MongoBulkWriteException) ex;
+				if (mongoBulkWriteException.getWriteConcernError() != null) {
+					throw new DataIntegrityViolationException(ex.getMessage(), ex);
+				}
+				throw new BulkOperationException(ex.getMessage(), mongoBulkWriteException);
+			}
+
+			throw ex;
+		}
 	}
 
 	private WriteModel<Document> extractAndMapWriteModel(SourceAwareWriteModelHolder it) {
