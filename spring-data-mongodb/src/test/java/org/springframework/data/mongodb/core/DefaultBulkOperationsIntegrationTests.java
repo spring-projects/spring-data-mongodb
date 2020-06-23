@@ -27,6 +27,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.data.mongodb.BulkOperationException;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.DefaultBulkOperations.BulkOperationContext;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
@@ -91,13 +92,13 @@ public class DefaultBulkOperationsIntegrationTests {
 		assertThat(createBulkOps(BulkMode.ORDERED).insert(documents).execute().getInsertedCount()).isEqualTo(2);
 	}
 
-	@Test // DATAMONGO-934
+	@Test // DATAMONGO-934, DATAMONGO-2285
 	public void insertOrderedFails() {
 
 		List<BaseDoc> documents = Arrays.asList(newDoc("1"), newDoc("1"), newDoc("2"));
 
 		assertThatThrownBy(() -> createBulkOps(BulkMode.ORDERED).insert(documents).execute()) //
-				.isInstanceOf(DuplicateKeyException.class) //
+				.isInstanceOf(BulkOperationException.class) //
 				.hasCauseInstanceOf(MongoBulkWriteException.class) //
 				.extracting(Throwable::getCause) //
 				.satisfies(it -> {
@@ -117,13 +118,13 @@ public class DefaultBulkOperationsIntegrationTests {
 		assertThat(createBulkOps(BulkMode.UNORDERED).insert(documents).execute().getInsertedCount()).isEqualTo(2);
 	}
 
-	@Test // DATAMONGO-934
+	@Test // DATAMONGO-934, DATAMONGO-2285
 	public void insertUnOrderedContinuesOnError() {
 
 		List<BaseDoc> documents = Arrays.asList(newDoc("1"), newDoc("1"), newDoc("2"));
 
 		assertThatThrownBy(() -> createBulkOps(BulkMode.UNORDERED).insert(documents).execute()) //
-				.isInstanceOf(DuplicateKeyException.class) //
+				.isInstanceOf(BulkOperationException.class) //
 				.hasCauseInstanceOf(MongoBulkWriteException.class) //
 				.extracting(Throwable::getCause) //
 				.satisfies(it -> {

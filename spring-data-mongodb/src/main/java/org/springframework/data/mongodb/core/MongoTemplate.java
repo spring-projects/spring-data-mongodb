@@ -757,7 +757,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				new BulkOperationContext(mode, Optional.ofNullable(getPersistentEntity(entityType)), queryMapper, updateMapper,
 						eventPublisher, entityCallbacks));
 
-		operations.setExceptionTranslator(exceptionTranslator);
 		operations.setDefaultWriteConcern(writeConcern);
 
 		return operations;
