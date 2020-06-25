@@ -233,7 +233,7 @@ It provides the following features:
 
 See the http://www.querydsl.com/static/querydsl/latest/reference/html/[Querydsl documentation] for how to bootstrap your environment for APT-based code generation using Maven or Ant.
 
-The Querydsl repository support lets you write and execute queries such as the following:
+The Querydsl repository support lets you write and run queries, such as the following:
 
 [source,java]
 ----

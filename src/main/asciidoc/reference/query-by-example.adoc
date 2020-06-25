@@ -1,4 +1,4 @@
-[[query-by-example.execution]]
+[[query-by-example.running]]
 == Running an Example
 
 The following example shows how to query by example when using a repository (of `Person` objects, in this case):
