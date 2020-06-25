@@ -1,6 +1,28 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.1.0-M1 (2020-06-25)
+----------------------------------------
+* DATAMONGO-2576 - Upgrade to Hibernate Validator 5.4.3.
+* DATAMONGO-2574 - GridFSOperations should not override content type.
+* DATAMONGO-2572 - Remove usage of Oppressive Language.
+* DATAMONGO-2570 - Avoiding unintentional unboxing.
+* DATAMONGO-2565 - MongoPersistentEntity.getCollation(...) evaluates document expression instead of collation expression.
+* DATAMONGO-2564 - Use standard Spring code of conduct.
+* DATAMONGO-2562 - CoroutineCrudRepository findAllBy throwing IncorrectResultSizeDataAccessException when more than 1 result.
+* DATAMONGO-2560 - Upgrade MongoDB drivers to 4.0.4.
+* DATAMONGO-2558 - Add integration test for RxJava 3 repositories.
+* DATAMONGO-2556 - Support countAll() in MongoOperations.
+* DATAMONGO-2553 - Reference documentation contains links to removed sections.
+* DATAMONGO-2547 - java.lang.IllegalArgumentException: com.mongodb.client.MongoDatabase referenced from a method is not visible from class loader.
+* DATAMONGO-2545 - Backwards incompatibilities on @Query.
+* DATAMONGO-2544 - Release 3.1 M1 (2020.0.0).
+* DATAMONGO-2542 - Don't attempt to map query operator keywords to properties.
+* DATAMONGO-2538 - Delombok source files.
+* DATAMONGO-2285 - BulkOperations.execute throws DuplicateKeyException.
+* DATAMONGO-1569 - Allow partial filter expression usage along with the *...Indexed annotations.
+
+
 Changes in version 3.0.1.RELEASE (2020-06-10)
 ---------------------------------------------
 * DATAMONGO-2565 - MongoPersistentEntity.getCollation(...) evaluates document expression instead of collation expression.
@@ -3033,6 +3055,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
