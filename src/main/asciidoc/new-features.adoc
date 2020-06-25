@@ -44,7 +44,7 @@
 [[new-features.2-1-0]]
 == What's New in Spring Data MongoDB 2.1
 
-* Cursor-based aggregation execution.
+* Cursor-based aggregation.
 * <<mongo-template.query.distinct,Distinct queries>> for imperative and reactive Template APIs.
 * Support for Map/Reduce through the reactive Template API.
 * <<mongo.mongo-3.validation,`validator` support for collections>>.

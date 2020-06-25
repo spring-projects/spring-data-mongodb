@@ -19,7 +19,7 @@ concept that is already prevalent in the Spring ecosystem.
 Listening to a capped collection using a Sync Driver creates a long running, blocking task that needs to be delegated to
 a separate component. In this case, we need to first create a `MessageListenerContainer`, which will be the main entry point
 for running the specific `SubscriptionRequest`. Spring Data MongoDB already ships with a default implementation that
-operates on `MongoTemplate` and is capable of creating and executing `Task` instances for a `TailableCursorRequest`.
+operates on `MongoTemplate` and is capable of creating and running `Task` instances for a `TailableCursorRequest`.
 
 The following example shows how to use tailable cursors with `MessageListener` instances:
 
@@ -49,7 +49,7 @@ container.stop();                                                               
 <3> Set the collection to listen to.
 <4> Provide an optional filter for documents to receive.
 <5> Set the message listener to publish incoming ``Message``s to.
-<6> Register the request. The returned `Subscription` can be used to check the current `Task` state and cancel its execution to free resources.
+<6> Register the request. The returned `Subscription` can be used to check the current `Task` state and cancel it to free resources.
 <5> Do not forget to stop the container once you are sure you no longer need it. Doing so stops all running `Task` instances within the container.
 ====
 

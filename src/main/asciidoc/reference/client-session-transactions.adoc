@@ -221,7 +221,7 @@ NOTE: `@Transactional(readOnly = true)` advises `MongoTransactionManager` to als
 == Reactive Transactions
 
 Same as with the reactive `ClientSession` support, the `ReactiveMongoTemplate` offers dedicated methods for operating
-within a transaction without having to worry about the commit/abort actions depending on the operations outcome.
+within a transaction without having to worry about the committing or stopping actions depending on the operations outcome.
 
 NOTE: Unless you specify a `ReactiveMongoTransactionManager` within your application context, transaction support is *DISABLED*. You can use `setSessionSynchronization(ALWAYS)` to participate in ongoing non-native MongoDB transactions.
 
@@ -249,7 +249,7 @@ Mono<DeleteResult> result = Mono
 <1> First we obviously need to initiate the session.
 <2> Once we have the `ClientSession` at hand, start the transaction.
 <3> Operate within the transaction by passing on the `ClientSession` to the operation.
-<4> If the operations completes exceptionally, we need to abort the transaction and preserve the error.
+<4> If the operations completes exceptionally, we need to stop the transaction and preserve the error.
 <5> Or of course, commit the changes in case of success. Still preserving the operations result.
 <6> Lastly, we need to make sure to close the session.
 ====
@@ -339,7 +339,7 @@ Inside transactions, MongoDB server has a slightly different behavior.
 *Connection Settings*
 
 The MongoDB drivers offer a dedicated replica set name configuration option turing the driver into auto detection
-mode. This option helps identifying replica set master nodes and command routing during a transaction.
+mode. This option helps identifying replica set manager nodes and command routing during a transaction.
 
 NOTE: Make sure to add `replicaSet` to the MongoDB URI. Please refer to https://docs.mongodb.com/manual/reference/connection-string/#connections-connection-options[connection string options] for further details.
 
@@ -351,7 +351,7 @@ structures in place.
 
 *Transient Errors*
 
-MongoDB can add special labels to errors raised during transactional execution. Those may indicate transient failures
+MongoDB can add special labels to errors raised during transactional operations. Those may indicate transient failures
 that might vanish by merely retrying the operation.
 We highly recommend https://github.com/spring-projects/spring-retry[Spring Retry] for those purposes. Nevertheless
 one may override `MongoTransactionManager#doCommit(MongoTransactionObject)` to implement a https://docs.mongodb.com/manual/core/transactions/#retry-commit-operation[Retry Commit Operation]
