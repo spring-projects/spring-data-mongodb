@@ -548,6 +548,7 @@ public class Person<T extends Address> {
   }
 
 // other getters/setters omitted
+}
 ----
 
 [TIP]
@@ -784,7 +785,7 @@ class Nested {
 [[mapping-usage-references]]
 === Using DBRefs
 
-The mapping framework does not have to store child objects embedded within the document. You can also store them separately and use a DBRef to refer to that document. When the object is loaded from MongoDB, those references are eagerly resolved so that you get back a mapped object that looks the same as if it had been stored embedded within your master document.
+The mapping framework does not have to store child objects embedded within the document. You can also store them separately and use a DBRef to refer to that document. When the object is loaded from MongoDB, those references are eagerly resolved so that you get back a mapped object that looks the same as if it had been stored embedded within your controlling document.
 
 The following example uses a DBRef to refer to a specific document that exists independently of the object in which it is referenced (both classes are shown in-line for brevity's sake):
 

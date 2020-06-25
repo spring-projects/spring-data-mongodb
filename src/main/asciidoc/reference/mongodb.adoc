@@ -417,7 +417,7 @@ The default converter implementation used by `MongoTemplate` is `MappingMongoCon
 
 Another central feature of `MongoTemplate` is translation of exceptions thrown by the MongoDB Java driver into Spring's portable Data Access Exception hierarchy. See "`<<mongo.exception>>`" for more information.
 
-`MongoTemplate` offers many convenience methods to help you easily perform common tasks. However, if you need to directly access the MongoDB driver API, you can use one of several `Execute` callback methods. The execute callbacks gives you a reference to either a `com.mongodb.client.MongoCollection` or a `com.mongodb.client.MongoDatabase` object. See the <<mongo.executioncallback,"`Execution Callbacks`">> section for more information.
+`MongoTemplate` offers many convenience methods to help you easily perform common tasks. However, if you need to directly access the MongoDB driver API, you can use one of several `Execute` callback methods. The `execute` callbacks gives you a reference to either a `com.mongodb.client.MongoCollection` or a `com.mongodb.client.MongoDatabase` object. See the <<mongo.executioncallback,"`Execution Callbacks`">> section for more information.
 
 The next section contains an example of how to work with the `MongoTemplate` in the context of the Spring container.
 
@@ -875,7 +875,7 @@ In addition to the `Query` discussed earlier, we provide the update definition b
 Most methods return the `Update` object to provide a fluent style for the API.
 
 [[mongodb-template-update.methods]]
-==== Methods for Executing Updates for Documents
+==== Methods for Running Updates for Documents
 
 * *updateFirst*: Updates the first document that matches the query document criteria with the updated document.
 * *updateMulti*: Updates all objects that match the query document criteria with the updated document.
@@ -1054,7 +1054,7 @@ db.students.update(                                                         <3>
 ----
 <1> The 1st `$set` stage calculates a new field _average_ based on the average of the _tests_ field.
 <2> The 2nd `$set` stage calculates a new field _grade_ based on the _average_ field calculated by the first aggregation stage.
-<3> The pipeline is executed on the _students_ collection and uses `Student` for the aggregation field mapping.
+<3> The pipeline is run on the _students_ collection and uses `Student` for the aggregation field mapping.
 <4> Apply the update to all matching documents in the collection.
 ====
 
@@ -1080,7 +1080,7 @@ Optional<User> result = template.update(Person.class)      <1>
 <2> The actual match query mapped against the given domain type. Provide `sort`, `fields` and `collation` settings via the query.
 <3> Additional optional hook to provide options other than the defaults, like `upsert`.
 <4> An optional projection type used for mapping the operation result. If none given the initial domain type is used.
-<5> Trigger the actual execution. Use `findAndReplaceValue` to obtain the nullable result instead of an `Optional`.
+<5> Trigger the actual processing. Use `findAndReplaceValue` to obtain the nullable result instead of an `Optional`.
 ====
 
 IMPORTANT: Please note that the replacement must not hold an `id` itself as the `id` of the existing `Document` will be
@@ -1107,7 +1107,7 @@ template.findAllAndRemove(new Query().limit(3), "GOT");                     <5>
 ----
 <1> Remove a single entity specified by its `_id` from the associated collection.
 <2> Remove all documents that match the criteria of the query from the `GOT` collection.
-<3> Remove the first three documents in the `GOT` collection. Unlike <2>, the documents to remove are identified by their `_id`, executing the given query, applying `sort`, `limit`, and `skip` options first, and then removing all at once in a separate step.
+<3> Remove the first three documents in the `GOT` collection. Unlike <2>, the documents to remove are identified by their `_id`, running the given query, applying `sort`, `limit`, and `skip` options first, and then removing all at once in a separate step.
 <4> Remove all documents matching the criteria of the query from the `GOT` collection. Unlike <3>, documents do not get deleted in a batch but one by one.
 <5> Remove the first three documents in the `GOT` collection. Unlike <3>, documents do not get deleted in a batch but one by one.
 ====
@@ -1521,7 +1521,7 @@ repo.findByLocationWithin(                              <4>
   new Polygon(
     new Point(-73.992514, 40.758934),
     new Point(-73.961138, 40.760348),
-    new Point(-73.991658, 40.730006));
+    new Point(-73.991658, 40.730006)));
 ----
 <1> Repository method definition using the commons type allows calling it with both the GeoJSON and the legacy format.
 <2> Use GeoJSON type to make use of `$geometry` operator.
@@ -1724,7 +1724,7 @@ db.foo.createIndex(
 )
 ----
 
-A query searching for `coffee cake` can be defined and executed as follows:
+A query searching for `coffee cake` can be defined and run as follows:
 
 .Full Text Query
 ====
@@ -1808,7 +1808,7 @@ collation is applied to index creation and queries unless you specify a differen
 whole operation and cannot be specified on a per-field basis.
 
 Like other metadata, collations can be be derived from the domain type via the `collation` attribute of the `@Document`
-annotation and will be applied directly when executing queries, creating collections or indexes.
+annotation and will be applied directly when running queries, creating collections or indexes.
 
 NOTE: Annotated collations will not be used when a collection is auto created by MongoDB on first interaction. This would
 require additional store interaction delaying the entire process. Please use `MongoOperations.createCollection` for those cases.
@@ -2125,7 +2125,7 @@ target type is a closed interface or DTO projection.
 
 You can switch between retrieving a single entity and retrieving multiple entities as a `List` or a `Stream` through the terminating methods: `first()`, `one()`, `all()`, or `stream()`.
 
-When writing a geo-spatial query with `near(NearQuery)`, the number of terminating methods is altered to include only the methods that are valid for executing a `geoNear` command in MongoDB (fetching entities as a `GeoResult` within `GeoResults`), as the following example shows:
+When writing a geo-spatial query with `near(NearQuery)`, the number of terminating methods is altered to include only the methods that are valid for running a `geoNear` command in MongoDB (fetching entities as a `GeoResult` within `GeoResults`), as the following example shows:
 
 ====
 [source,java]
@@ -2224,7 +2224,7 @@ As of Spring Data MongoDB 3.x any `count` operation uses regardless the existenc
 
 [NOTE]
 ====
-MongoDBs native `countDocuments` method, and the executed `$match` aggregation, does not support `$near` and `$nearSphere` but require `$geoWithin` along with `$center` or `$centerSphere` which does not support `$minDistance` (see https://jira.mongodb.org/browse/SERVER-37043).
+MongoDBs native `countDocuments` method and the `$match` aggregation, do not support `$near` and `$nearSphere` but require `$geoWithin` along with `$center` or `$centerSphere` which does not support `$minDistance` (see https://jira.mongodb.org/browse/SERVER-37043).
 
 Therefore a given `Query` will be rewritten for `count` operations using `Reactive`-/`MongoTemplate` to bypass the issue like shown below.
 
@@ -2247,7 +2247,7 @@ Therefore a given `Query` will be rewritten for `count` operations using `Reacti
 
 You can query MongoDB by using Map-Reduce, which is useful for batch processing, for data aggregation, and for when the query language does not fulfill your needs.
 
-Spring provides integration with MongoDB's Map-Reduce by providing methods on `MongoOperations` to simplify the creation and execution of Map-Reduce operations.It can convert the results of a Map-Reduce operation to a POJO and integrates with Spring's https://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/core.html#resources[Resource abstraction].This lets you place your JavaScript files on the file system, classpath, HTTP server, or any other Spring Resource implementation and then reference the JavaScript resources through an easy URI style syntax -- for example, `classpath:reduce.js;`.Externalizing JavaScript code in files is often preferable to embedding them as Java strings in your code.Note that you can still pass JavaScript code as Java strings if you prefer.
+Spring provides integration with MongoDB's Map-Reduce by providing methods on `MongoOperations` to simplify the creation and running of Map-Reduce operations.It can convert the results of a Map-Reduce operation to a POJO and integrates with Spring's https://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/core.html#resources[Resource abstraction].This lets you place your JavaScript files on the file system, classpath, HTTP server, or any other Spring Resource implementation and then reference the JavaScript resources through an easy URI style syntax -- for example, `classpath:reduce.js;`.Externalizing JavaScript code in files is often preferable to embedding them as Java strings in your code.Note that you can still pass JavaScript code as Java strings if you prefer.
 
 [[mongo.mapreduce.example]]
 === Example Usage
@@ -2379,7 +2379,7 @@ by `ScriptOperations`. +
 There is no replacement for the removed functionality.
 ====
 
-MongoDB allows executing JavaScript functions on the server by either directly sending the script or calling a stored one. `ScriptOperations` can be accessed through `MongoTemplate` and provides basic abstraction for `JavaScript` usage. The following example shows how to us the `ScriptOperations` class:
+MongoDB allows running JavaScript functions on the server by either directly sending the script or calling a stored one. `ScriptOperations` can be accessed through `MongoTemplate` and provides basic abstraction for `JavaScript` usage. The following example shows how to us the `ScriptOperations` class:
 
 ====
 [source,java]
@@ -2392,9 +2392,9 @@ scriptOps.execute(echoScript, "directly execute script");     <1>
 scriptOps.register(new NamedMongoScript("echo", echoScript)); <2>
 scriptOps.call("echo", "execute script via name");            <3>
 ----
-<1> Execute the script directly without storing the function on server side.
+<1> Run the script directly without storing the function on server side.
 <2> Store the script using 'echo' as its name. The given name identifies the script and allows calling it later.
-<3> Execute the script with name 'echo' using the provided parameters.
+<3> Run the script with name 'echo' using the provided parameters.
 ====
 
 [[mongo.group]]
@@ -2402,7 +2402,7 @@ scriptOps.call("echo", "execute script via name");            <3>
 
 As an alternative to using Map-Reduce to perform data aggregation, you can use the https://www.mongodb.org/display/DOCS/Aggregation#Aggregation-Group[`group` operation] which feels similar to using SQL's group by query style, so it may feel more approachable vs. using Map-Reduce. Using the group operations does have some limitations, for example it is not supported in a shared environment and it returns the full result set in a single BSON object, so the result should be small, less than 10,000 keys.
 
-Spring provides integration with MongoDB's group operation by providing methods on MongoOperations to simplify the creation and execution of group operations. It can convert the results of the group operation to a POJO and also integrates with Spring's https://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/core.html#resources[Resource abstraction] abstraction. This will let you place your JavaScript files on the file system, classpath, http server or any other Spring Resource implementation and then reference the JavaScript resources via an easy URI style syntax, e.g. 'classpath:reduce.js;. Externalizing JavaScript code in files if often preferable to embedding them as Java strings in your code. Note that you can still pass JavaScript code as Java strings if you prefer.
+Spring provides integration with MongoDB's group operation by providing methods on MongoOperations to simplify the creation and running of group operations. It can convert the results of the group operation to a POJO and also integrates with Spring's https://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/core.html#resources[Resource abstraction] abstraction. This will let you place your JavaScript files on the file system, classpath, http server or any other Spring Resource implementation and then reference the JavaScript resources via an easy URI style syntax, e.g. 'classpath:reduce.js;. Externalizing JavaScript code in files if often preferable to embedding them as Java strings in your code. Note that you can still pass JavaScript code as Java strings if you prefer.
 
 [[mongo.group.example]]
 === Example Usage
@@ -2419,7 +2419,7 @@ In order to understand how group operations work the following example is used, 
 { "_id" : ObjectId("4ec1d25d41421e2015da64f6"), "x" : 3 }
 ----
 
-We would like to group by the only field in each row, the `x` field and aggregate the number of times each specific value of `x` occurs. To do this we need to create an initial document that contains our count variable and also a reduce function which will increment it each time it is encountered. The Java code to execute the group operation is shown below
+We would like to group by the only field in each row, the `x` field and aggregate the number of times each specific value of `x` occurs. To do this we need to create an initial document that contains our count variable and also a reduce function which will increment it each time it is encountered. The Java code to run the group operation is shown below
 
 [source,java]
 ----
@@ -2508,13 +2508,13 @@ The Aggregation Framework support in Spring Data MongoDB is based on the followi
 +
 An `Aggregation` represents a MongoDB `aggregate` operation and holds the description of the aggregation pipeline instructions. Aggregations are created by invoking the appropriate `newAggregation(…)` static factory method of the `Aggregation` class, which takes a list of `AggregateOperation` and an optional input class.
 +
-The actual aggregate operation is executed by the `aggregate` method of the `MongoTemplate`, which takes the desired output class as a parameter.
+The actual aggregate operation is run by the `aggregate` method of the `MongoTemplate`, which takes the desired output class as a parameter.
 +
 * `TypedAggregation`
 +
 A `TypedAggregation`, just like an `Aggregation`, holds the instructions of the aggregation pipeline and a reference to the input type, that is used for mapping domain properties to actual document fields.
 +
-On execution field references get checked against the given input type considering potential `@Field` annotations and raising errors when referencing non existing properties.
+At runtime, field references get checked against the given input type, considering potential `@Field` annotations and raising errors when referencing nonexistent properties.
 +
 * `AggregationOperation`
 +
@@ -2755,7 +2755,7 @@ A sort by count operation is equivalent to the following BSON (Binary JSON):
 [[mongo.aggregation.projection.expressions]]
 ==== Spring Expression Support in Projection Expressions
 
-We support the use of SpEL expressions in projection expressions through the `andExpression` method of the `ProjectionOperation` and `BucketOperation` classes. This feature lets you define the desired expression as a SpEL expression. On query execution, the SpEL expression is translated into a corresponding MongoDB projection expression part. This arrangement makes it much easier to express complex calculations.
+We support the use of SpEL expressions in projection expressions through the `andExpression` method of the `ProjectionOperation` and `BucketOperation` classes. This feature lets you define the desired expression as a SpEL expression. On running a query, the SpEL expression is translated into a corresponding MongoDB projection expression part. This arrangement makes it much easier to express complex calculations.
 
 ===== Complex Calculations with SpEL expressions
 
@@ -3226,16 +3226,16 @@ mongoTemplate.dropCollection("MyNewCollection");
 NOTE: Collection creation allows customization with `CollectionOptions` and supports <<mongo.collation,collations>>.
 
 [[mongo-template.commands]]
-== Executing Commands
+== Running Commands
 
 You can get at the MongoDB driver's `MongoDatabase.runCommand( )` method by using the `executeCommand(…)` methods on `MongoTemplate`. These methods also perform exception translation into Spring's `DataAccessException` hierarchy.
 
 [[mongo-template.commands.execution]]
-=== Methods for executing commands
+=== Methods for running commands
 
 * `Document` *executeCommand* `(Document command)`: Run a MongoDB command.
 * `Document` *executeCommand* `(Document command, ReadPreference readPreference)`: Run a MongoDB command with the given nullable MongoDB `ReadPreference`.
-* `Document` *executeCommand* `(String jsonCommand)`: Execute a MongoDB command expressed as a JSON string.
+* `Document` *executeCommand* `(String jsonCommand)`: Run a MongoDB command expressed as a JSON string.
 
 [[mongodb.mapping-usage.events]]
 == Lifecycle Events
@@ -3299,19 +3299,19 @@ Some of the mappings performed by the `MongoExceptionTranslator` are `com.mongod
 [[mongo.executioncallback]]
 == Execution Callbacks
 
-One common design feature of all Spring template classes is that all functionality is routed into one of the template's execute callback methods. Doing so helps to ensure that exceptions and any resource management that may be required are performed consistently. While JDBC and JMS need this feature much more than MongoDB does, it still offers a single spot for exception translation and logging to occur. Consequently, using these execute callbacks is the preferred way to access the MongoDB driver's `MongoDatabase` and `MongoCollection` objects to perform uncommon operations that were not exposed as methods on `MongoTemplate`.
+One common design feature of all Spring template classes is that all functionality is routed into one of the template's `execute` callback methods. Doing so helps to ensure that exceptions and any resource management that may be required are performed consistently. While JDBC and JMS need this feature much more than MongoDB does, it still offers a single spot for exception translation and logging to occur. Consequently, using these `execute` callbacks is the preferred way to access the MongoDB driver's `MongoDatabase` and `MongoCollection` objects to perform uncommon operations that were not exposed as methods on `MongoTemplate`.
 
-The following list describes the execute callback methods.
+The following list describes the `execute` callback methods.
 
-* `<T> T` *execute* `(Class<?> entityClass, CollectionCallback<T> action)`: Executes the given `CollectionCallback` for the entity collection of the specified class.
+* `<T> T` *execute* `(Class<?> entityClass, CollectionCallback<T> action)`: Runs the given `CollectionCallback` for the entity collection of the specified class.
 
-* `<T> T` *execute* `(String collectionName, CollectionCallback<T> action)`: Executes the given `CollectionCallback` on the collection of the given name.
+* `<T> T` *execute* `(String collectionName, CollectionCallback<T> action)`: Runs the given `CollectionCallback` on the collection of the given name.
 
-* `<T> T` *execute* `(DbCallback<T> action)`: Executes a DbCallback translating any exceptions as necessary. Spring Data MongoDB provides support for the Aggregation Framework introduced to MongoDB in version 2.2.
+* `<T> T` *execute* `(DbCallback<T> action)`: Runs a DbCallback, translating any exceptions as necessary. Spring Data MongoDB provides support for the Aggregation Framework introduced to MongoDB in version 2.2.
 
-* `<T> T` *execute* `(String collectionName, DbCallback<T> action)`: Executes a `DbCallback` on the collection of the given name translating any exceptions as necessary.
+* `<T> T` *execute* `(String collectionName, DbCallback<T> action)`: Runs a `DbCallback` on the collection of the given name translating any exceptions as necessary.
 
-* `<T> T` *executeInSession* `(DbCallback<T> action)`: Executes the given `DbCallback` within the same connection to the database so as to ensure consistency in a write-heavy environment where you may read the data that you wrote.
+* `<T> T` *executeInSession* `(DbCallback<T> action)`: Runs the given `DbCallback` within the same connection to the database so as to ensure consistency in a write-heavy environment where you may read the data that you wrote.
 
 The following example uses the `CollectionCallback` to return information about an index:
 
