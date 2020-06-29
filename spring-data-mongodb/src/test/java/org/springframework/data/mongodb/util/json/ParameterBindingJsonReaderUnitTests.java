@@ -333,6 +333,22 @@ class ParameterBindingJsonReaderUnitTests {
 						new Document("user.supervisor", "wonderwoman"))));
 	}
 
+	@Test // DATAMONGO-2571
+	public void shouldParseRegexCorrectly() {
+
+		Document target = parse("{ $and: [{'fieldA': {$in: [/ABC.*/, /CDE.*F/]}}, {'fieldB': {$ne: null}}]}");
+		assertThat(target)
+				.isEqualTo(Document.parse("{ $and: [{'fieldA': {$in: [/ABC.*/, /CDE.*F/]}}, {'fieldB': {$ne: null}}]}"));
+	}
+
+	@Test // DATAMONGO-2571
+	public void shouldParseRegexWithPlaceholderCorrectly() {
+
+		Document target = parse("{ $and: [{'fieldA': {$in: [/?0.*/, /CDE.*F/]}}, {'fieldB': {$ne: null}}]}", "ABC");
+		assertThat(target)
+				.isEqualTo(Document.parse("{ $and: [{'fieldA': {$in: [/ABC.*/, /CDE.*F/]}}, {'fieldB': {$ne: null}}]}"));
+	}
+
 	private static Document parse(String json, Object... args) {
 
 		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json, args);
