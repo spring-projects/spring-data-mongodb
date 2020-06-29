@@ -227,7 +227,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 			case REGULAR_EXPRESSION:
 
 				setCurrentBsonType(BsonType.REGULAR_EXPRESSION);
-				currentValue = bindableValueFor(token).getValue().toString();
+				currentValue = bindableValueFor(token).getValue();
 				break;
 			case STRING:
 
@@ -363,8 +363,11 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 			return null;
 		}
 
+		boolean isRegularExpression = token.getType().equals(JsonTokenType.REGULAR_EXPRESSION);
+
 		BindableValue bindableValue = new BindableValue();
-		String tokenValue = String.class.cast(token.getValue());
+		String tokenValue = isRegularExpression ? token.getValue(BsonRegularExpression.class).getPattern()
+				: String.class.cast(token.getValue());
 		Matcher matcher = PARAMETER_BINDING_PATTERN.matcher(tokenValue);
 
 		if (token.getType().equals(JsonTokenType.UNQUOTED_STRING)) {
@@ -404,8 +407,6 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 
 		String computedValue = tokenValue;
 
-
-
 		Matcher regexMatcher = EXPRESSION_BINDING_PATTERN.matcher(computedValue);
 
 		while (regexMatcher.find()) {
@@ -435,9 +436,15 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 			computedValue = computedValue.replace(group, nullSafeToString(getBindableValueForIndex(index)));
 		}
 
-		bindableValue.setValue(computedValue);
-		bindableValue.setType(BsonType.STRING);
+		if (isRegularExpression) {
 
+			bindableValue.setValue(new BsonRegularExpression(computedValue));
+			bindableValue.setType(BsonType.REGULAR_EXPRESSION);
+		} else {
+
+			bindableValue.setValue(computedValue);
+			bindableValue.setType(BsonType.STRING);
+		}
 		return bindableValue;
 	}
 
