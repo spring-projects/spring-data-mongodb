@@ -37,6 +37,7 @@ import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationCo
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -54,7 +55,7 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	private final ReactiveMongoOperations operations;
 	private final EntityInstantiators instantiators;
 	private final FindWithProjection<?> findOperationWithProjection;
-	private final SpelExpressionParser expressionParser;
+	private final ExpressionParser expressionParser;
 	private final ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider;
 
 	/**
@@ -67,7 +68,7 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	 * @param evaluationContextProvider must not be {@literal null}.
 	 */
 	public AbstractReactiveMongoQuery(ReactiveMongoQueryMethod method, ReactiveMongoOperations operations,
-			SpelExpressionParser expressionParser, ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider) {
+			ExpressionParser expressionParser, ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider) {
 
 		Assert.notNull(method, "MongoQueryMethod must not be null!");
 		Assert.notNull(operations, "ReactiveMongoOperations must not be null!");

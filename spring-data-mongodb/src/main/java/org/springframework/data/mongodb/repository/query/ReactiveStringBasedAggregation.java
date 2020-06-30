@@ -39,6 +39,7 @@ import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
 import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.spel.ExpressionDependencies;
+import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.ClassUtils;
 
@@ -54,7 +55,7 @@ public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 
 	private static final ParameterBindingDocumentCodec CODEC = new ParameterBindingDocumentCodec();
 
-	private final SpelExpressionParser expressionParser;
+	private final ExpressionParser expressionParser;
 	private final ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider;
 	private final ReactiveMongoOperations reactiveMongoOperations;
 	private final MongoConverter mongoConverter;
@@ -66,7 +67,7 @@ public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 	 * @param evaluationContextProvider must not be {@literal null}.
 	 */
 	public ReactiveStringBasedAggregation(ReactiveMongoQueryMethod method,
-			ReactiveMongoOperations reactiveMongoOperations, SpelExpressionParser expressionParser,
+			ReactiveMongoOperations reactiveMongoOperations, ExpressionParser expressionParser,
 			ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider) {
 
 		super(method, reactiveMongoOperations, expressionParser, evaluationContextProvider);
@@ -118,11 +119,7 @@ public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 				});
 			}
 
-			if (method.isCollectionQuery()) {
-				return flux;
-			} else {
-				return flux.next();
-			}
+			return method.isCollectionQuery() ? flux : flux.next();
 		});
 	}
 
@@ -145,7 +142,7 @@ public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 					it -> evaluationContextProvider.getEvaluationContextLater(method.getParameters(), accessor.getValues(), it))
 					.map(evaluationContext -> evaluationContext
 							.map(it -> (SpELExpressionEvaluator) new DefaultSpELExpressionEvaluator(expressionParser, it)))
-					.orElseGet(() -> Mono.just(NoOpExpressionEvaluator.INSTANCE));
+					.orElseGet(() -> Mono.just(DefaultSpELExpressionEvaluator.unsupported()));
 
 			Mono<AggregationOperation> stage = evaluator.map(it -> {
 

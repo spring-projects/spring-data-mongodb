@@ -23,6 +23,7 @@ import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.data.util.Lazy;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
+import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 
@@ -55,7 +56,7 @@ public class ParameterBindingContext {
 	 * @param evaluationContext a {@link Supplier} for {@link Lazy} context retrieval.
 	 * @since 2.2.3
 	 */
-	public ParameterBindingContext(ValueProvider valueProvider, SpelExpressionParser expressionParser,
+	public ParameterBindingContext(ValueProvider valueProvider, ExpressionParser expressionParser,
 			Supplier<EvaluationContext> evaluationContext) {
 
 		this(valueProvider, new SpELExpressionEvaluator() {
@@ -87,7 +88,7 @@ public class ParameterBindingContext {
 	 * @since 3.1
 	 */
 	public static ParameterBindingContext forExpressions(ValueProvider valueProvider,
-			SpelExpressionParser expressionParser, Function<ExpressionDependencies, EvaluationContext> contextFunction) {
+			ExpressionParser expressionParser, Function<ExpressionDependencies, EvaluationContext> contextFunction) {
 
 		return new ParameterBindingContext(valueProvider, new SpELExpressionEvaluator() {
 			@Override

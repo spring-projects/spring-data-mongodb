@@ -32,7 +32,7 @@ import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.ResultProcessor;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.ExpressionParser;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -43,7 +43,7 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 
 	private final MongoOperations mongoOperations;
 	private final MongoConverter mongoConverter;
-	private final SpelExpressionParser expressionParser;
+	private final ExpressionParser expressionParser;
 	private final QueryMethodEvaluationContextProvider evaluationContextProvider;
 
 	/**
@@ -55,7 +55,7 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 	 * @param evaluationContextProvider
 	 */
 	public StringBasedAggregation(MongoQueryMethod method, MongoOperations mongoOperations,
-			SpelExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			ExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
 		super(method, mongoOperations, expressionParser, evaluationContextProvider);
 
 		this.mongoOperations = mongoOperations;

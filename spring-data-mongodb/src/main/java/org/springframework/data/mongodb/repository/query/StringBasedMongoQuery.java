@@ -54,7 +54,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	private final String fieldSpec;
 
 	private final ParameterBindingDocumentCodec codec;
-	private final SpelExpressionParser expressionParser;
+	private final ExpressionParser expressionParser;
 	private final QueryMethodEvaluationContextProvider evaluationContextProvider;
 
 	private final boolean isCountQuery;
@@ -71,7 +71,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	 * @param evaluationContextProvider must not be {@literal null}.
 	 */
 	public StringBasedMongoQuery(MongoQueryMethod method, MongoOperations mongoOperations,
-			SpelExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			ExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
 		this(method.getAnnotatedQuery(), method, mongoOperations, expressionParser, evaluationContextProvider);
 	}
 
@@ -85,7 +85,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	 * @param expressionParser must not be {@literal null}.
 	 */
 	public StringBasedMongoQuery(String query, MongoQueryMethod method, MongoOperations mongoOperations,
-			SpelExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			ExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
 
 		super(method, mongoOperations, expressionParser, evaluationContextProvider);
 
@@ -151,7 +151,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 						accessor.getValues(), it))
 				.map(evaluationContext -> (SpELExpressionEvaluator) new DefaultSpELExpressionEvaluator(expressionParser,
 						evaluationContext))
-				.orElse(NoOpExpressionEvaluator.INSTANCE);
+				.orElse(DefaultSpELExpressionEvaluator.unsupported());
 
 		return new ParameterBindingContext(accessor::getBindableValue, evaluator);
 	}
