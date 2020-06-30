@@ -42,6 +42,7 @@ import org.springframework.data.repository.core.support.RepositoryFragment;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
@@ -127,7 +128,8 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 	@Override
 	protected Optional<QueryLookupStrategy> getQueryLookupStrategy(@Nullable Key key,
 			QueryMethodEvaluationContextProvider evaluationContextProvider) {
-		return Optional.of(new MongoQueryLookupStrategy(operations, evaluationContextProvider, mappingContext));
+		return Optional.of(new MongoQueryLookupStrategy(operations,
+				(ReactiveQueryMethodEvaluationContextProvider) evaluationContextProvider, mappingContext));
 	}
 
 	/*
@@ -157,11 +159,11 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 	private static class MongoQueryLookupStrategy implements QueryLookupStrategy {
 
 		private final ReactiveMongoOperations operations;
-		private final QueryMethodEvaluationContextProvider evaluationContextProvider;
+		private final ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider;
 		private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 
 		MongoQueryLookupStrategy(ReactiveMongoOperations operations,
-				QueryMethodEvaluationContextProvider evaluationContextProvider,
+				ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider,
 				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 
 			this.operations = operations;

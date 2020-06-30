@@ -20,6 +20,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import lombok.Value;
+import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -55,6 +56,7 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
@@ -172,7 +174,7 @@ public class ReactiveStringBasedAggregationUnitTests {
 		ArgumentCaptor<TypedAggregation> aggregationCaptor = ArgumentCaptor.forClass(TypedAggregation.class);
 		ArgumentCaptor<Class> targetTypeCaptor = ArgumentCaptor.forClass(Class.class);
 
-		Object result = aggregation.execute(args);
+		Object result = Flux.from((Publisher) aggregation.execute(args)).blockLast();
 
 		verify(operations).aggregate(aggregationCaptor.capture(), targetTypeCaptor.capture());
 
@@ -186,7 +188,7 @@ public class ReactiveStringBasedAggregationUnitTests {
 		ReactiveMongoQueryMethod queryMethod = new ReactiveMongoQueryMethod(method,
 				new DefaultRepositoryMetadata(SampleRepository.class), factory, converter.getMappingContext());
 		return new ReactiveStringBasedAggregation(queryMethod, operations, PARSER,
-				QueryMethodEvaluationContextProvider.DEFAULT);
+				ReactiveQueryMethodEvaluationContextProvider.DEFAULT);
 	}
 
 	private List<Document> pipelineOf(AggregationInvocation invocation) {

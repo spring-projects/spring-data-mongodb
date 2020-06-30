@@ -15,16 +15,22 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import java.util.Optional;
+
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.util.json.ParameterBindingContext;
 import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.spel.ExpressionDependencies;
+import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
 
@@ -122,11 +128,8 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	@Override
 	protected Query createQuery(ConvertingParameterAccessor accessor) {
 
-		ParameterBindingContext bindingContext = new ParameterBindingContext((accessor::getBindableValue), expressionParser,
-				() -> evaluationContextProvider.getEvaluationContext(getQueryMethod().getParameters(), accessor.getValues()));
-
-		Document queryObject = codec.decode(this.query, bindingContext);
-		Document fieldsObject = codec.decode(this.fieldSpec, bindingContext);
+		Document queryObject = codec.decode(this.query, getBindingContext(accessor, expressionParser, this.query));
+		Document fieldsObject = codec.decode(this.fieldSpec, getBindingContext(accessor, expressionParser, this.fieldSpec));
 
 		Query query = new BasicQuery(queryObject, fieldsObject).with(accessor.getSort());
 
@@ -135,6 +138,22 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		}
 
 		return query;
+	}
+
+	private ParameterBindingContext getBindingContext(ConvertingParameterAccessor accessor,
+			ExpressionParser expressionParser, String json) {
+
+		Optional<ExpressionDependencies> dependencies = codec.getExpressionDependencies(json, accessor::getBindableValue,
+				expressionParser);
+
+		SpELExpressionEvaluator evaluator = dependencies
+				.map(it -> evaluationContextProvider.getEvaluationContext(getQueryMethod().getParameters(),
+						accessor.getValues(), it))
+				.map(evaluationContext -> (SpELExpressionEvaluator) new DefaultSpELExpressionEvaluator(expressionParser,
+						evaluationContext))
+				.orElse(NoOpExpressionEvaluator.INSTANCE);
+
+		return new ParameterBindingContext(accessor::getBindableValue, evaluator);
 	}
 
 	/*

@@ -25,11 +25,13 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import org.bson.Document;
 import org.bson.codecs.DecoderContext;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.spel.EvaluationContextProvider;
+import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.TypedValue;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -39,6 +41,7 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
  * Unit tests for {@link ParameterBindingJsonReader}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 class ParameterBindingJsonReaderUnitTests {
 
@@ -258,6 +261,29 @@ class ParameterBindingJsonReaderUnitTests {
 		Document target = parse("{ 'name' : { $in : ['?0,?1'] } }", "dalinar", "kohlin");
 		assertThat(target)
 				.isEqualTo(new Document("name", new Document("$in", Collections.singletonList("dalinar,kohlin"))));
+	}
+
+	@Test // DATAMONGO-1894
+	void discoversNoDependenciesInExpression() {
+
+		String json = "{ $and : [?#{ [0] == null  ? { '$where' : 'true' } : { 'v1' : { '$in' : {[0]} } } }]}";
+
+		Optional<ExpressionDependencies> expressionDependencies = new ParameterBindingDocumentCodec()
+				.getExpressionDependencies(json, it -> new Object(), new SpelExpressionParser());
+
+		assertThat(expressionDependencies).contains(ExpressionDependencies.empty());
+	}
+
+	@Test // DATAMONGO-1894
+	void discoversCorrectlyDependenciesInExpression() {
+
+		String json = "{ hello: ?#{hasRole('foo')} }";
+
+		Optional<ExpressionDependencies> expressionDependencies = new ParameterBindingDocumentCodec()
+				.getExpressionDependencies(json, it -> new Object(), new SpelExpressionParser());
+
+		assertThat(expressionDependencies).isNotEmpty();
+		assertThat(expressionDependencies.get()).hasSize(1);
 	}
 
 	@Test // DATAMONGO-2523

@@ -72,8 +72,9 @@ abstract class CollationUtils {
 
 		if (StringUtils.trimLeadingWhitespace(collationExpression).startsWith("{")) {
 
-			ParameterBindingContext bindingContext = new ParameterBindingContext((accessor::getBindableValue),
-					expressionParser, () -> evaluationContextProvider.getEvaluationContext(parameters, accessor.getValues()));
+			ParameterBindingContext bindingContext = ParameterBindingContext.forExpressions(accessor::getBindableValue,
+					expressionParser, dependencies -> evaluationContextProvider.getEvaluationContext(parameters,
+							accessor.getValues(), dependencies));
 
 			return Collation.from(CODEC.decode(collationExpression, bindingContext));
 		}

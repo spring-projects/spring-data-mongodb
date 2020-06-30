@@ -15,8 +15,11 @@
  */
 package org.springframework.data.mongodb.util.json;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.springframework.data.mapping.model.SpELExpressionEvaluator;
+import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.data.util.Lazy;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
@@ -28,25 +31,21 @@ import org.springframework.lang.Nullable;
  * To be used along with {@link ParameterBindingDocumentCodec#decode(String, ParameterBindingContext)}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.2
  */
 public class ParameterBindingContext {
 
 	private final ValueProvider valueProvider;
-	private final SpelExpressionParser expressionParser;
-	private final Lazy<EvaluationContext> evaluationContext;
+	private final SpELExpressionEvaluator expressionEvaluator;
 
 	/**
 	 * @param valueProvider
 	 * @param expressionParser
 	 * @param evaluationContext
-	 * @deprecated since 2.2.3 - Please use
-	 *             {@link #ParameterBindingContext(ValueProvider, SpelExpressionParser, Supplier)} instead.
 	 */
-	@Deprecated
 	public ParameterBindingContext(ValueProvider valueProvider, SpelExpressionParser expressionParser,
 			EvaluationContext evaluationContext) {
-
 		this(valueProvider, expressionParser, () -> evaluationContext);
 	}
 
@@ -59,9 +58,48 @@ public class ParameterBindingContext {
 	public ParameterBindingContext(ValueProvider valueProvider, SpelExpressionParser expressionParser,
 			Supplier<EvaluationContext> evaluationContext) {
 
+		this(valueProvider, new SpELExpressionEvaluator() {
+			@Override
+			public <T> T evaluate(String expressionString) {
+				return (T) expressionParser.parseExpression(expressionString).getValue(evaluationContext.get(), Object.class);
+			}
+		});
+	}
+
+	/**
+	 * @param valueProvider
+	 * @param expressionEvaluator
+	 * @since 3.1
+	 */
+	public ParameterBindingContext(ValueProvider valueProvider, SpELExpressionEvaluator expressionEvaluator) {
 		this.valueProvider = valueProvider;
-		this.expressionParser = expressionParser;
-		this.evaluationContext = evaluationContext instanceof Lazy ? (Lazy) evaluationContext : Lazy.of(evaluationContext);
+		this.expressionEvaluator = expressionEvaluator;
+	}
+
+	/**
+	 * Create a new {@link ParameterBindingContext} that is capable of expression parsing and can provide a
+	 * {@link EvaluationContext} based on {@link ExpressionDependencies}.
+	 *
+	 * @param valueProvider
+	 * @param expressionParser
+	 * @param contextFunction
+	 * @return
+	 * @since 3.1
+	 */
+	public static ParameterBindingContext forExpressions(ValueProvider valueProvider,
+			SpelExpressionParser expressionParser, Function<ExpressionDependencies, EvaluationContext> contextFunction) {
+
+		return new ParameterBindingContext(valueProvider, new SpELExpressionEvaluator() {
+			@Override
+			public <T> T evaluate(String expressionString) {
+
+				Expression expression = expressionParser.parseExpression(expressionString);
+				ExpressionDependencies dependencies = ExpressionDependencies.discover(expression);
+				EvaluationContext evaluationContext = contextFunction.apply(dependencies);
+
+				return (T) expression.getValue(evaluationContext, Object.class);
+			}
+		});
 	}
 
 	@Nullable
@@ -71,17 +109,7 @@ public class ParameterBindingContext {
 
 	@Nullable
 	public Object evaluateExpression(String expressionString) {
-
-		Expression expression = expressionParser.parseExpression(expressionString);
-		return expression.getValue(getEvaluationContext(), Object.class);
-	}
-
-	public EvaluationContext getEvaluationContext() {
-		return this.evaluationContext.get();
-	}
-
-	public SpelExpressionParser getExpressionParser() {
-		return expressionParser;
+		return expressionEvaluator.evaluate(expressionString);
 	}
 
 	public ValueProvider getValueProvider() {

@@ -15,11 +15,11 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import org.bson.Document;
 import org.reactivestreams.Publisher;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mapping.model.EntityInstantiators;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -33,7 +33,7 @@ import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecu
 import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.ResultProcessingConverter;
 import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.ResultProcessingExecution;
 import org.springframework.data.repository.query.ParameterAccessor;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.util.TypeInformation;
@@ -55,7 +55,7 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	private final EntityInstantiators instantiators;
 	private final FindWithProjection<?> findOperationWithProjection;
 	private final SpelExpressionParser expressionParser;
-	private final QueryMethodEvaluationContextProvider evaluationContextProvider;
+	private final ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider;
 
 	/**
 	 * Creates a new {@link AbstractReactiveMongoQuery} from the given {@link MongoQueryMethod} and
@@ -67,12 +67,12 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	 * @param evaluationContextProvider must not be {@literal null}.
 	 */
 	public AbstractReactiveMongoQuery(ReactiveMongoQueryMethod method, ReactiveMongoOperations operations,
-			SpelExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			SpelExpressionParser expressionParser, ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider) {
 
 		Assert.notNull(method, "MongoQueryMethod must not be null!");
 		Assert.notNull(operations, "ReactiveMongoOperations must not be null!");
 		Assert.notNull(expressionParser, "SpelExpressionParser must not be null!");
-		Assert.notNull(evaluationContextProvider, "QueryMethodEvaluationContextProvider must not be null!");
+		Assert.notNull(evaluationContextProvider, "ReactiveEvaluationContextExtension must not be null!");
 
 		this.method = method;
 		this.operations = operations;
@@ -98,25 +98,21 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.RepositoryQuery#execute(java.lang.Object[])
 	 */
-	public Object execute(Object[] parameters) {
+	public Publisher<Object> execute(Object[] parameters) {
 
 		return method.hasReactiveWrapperParameter() ? executeDeferred(parameters)
 				: execute(new MongoParametersParameterAccessor(method, parameters));
 	}
 
 	@SuppressWarnings("unchecked")
-	private Object executeDeferred(Object[] parameters) {
+	private Publisher<Object> executeDeferred(Object[] parameters) {
 
 		ReactiveMongoParameterAccessor parameterAccessor = new ReactiveMongoParameterAccessor(method, parameters);
 
-		if (getQueryMethod().isCollectionQuery()) {
-			return Flux.defer(() -> (Publisher<Object>) execute(parameterAccessor));
-		}
-
-		return Mono.defer(() -> (Mono<Object>) execute(parameterAccessor));
+		return execute(parameterAccessor);
 	}
 
-	private Object execute(MongoParameterAccessor parameterAccessor) {
+	private Publisher<Object> execute(MongoParameterAccessor parameterAccessor) {
 
 		ConvertingParameterAccessor accessor = new ConvertingParameterAccessor(operations.getConverter(),
 				parameterAccessor);
@@ -141,24 +137,27 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	 * @param accessor for providing invocation arguments. Never {@literal null}.
 	 * @param typeToRead the desired component target type. Can be {@literal null}.
 	 */
-	protected Object doExecute(ReactiveMongoQueryMethod method, ResultProcessor processor,
+	protected Publisher<Object> doExecute(ReactiveMongoQueryMethod method, ResultProcessor processor,
 			ConvertingParameterAccessor accessor, @Nullable Class<?> typeToRead) {
 
-		Query query = createQuery(accessor);
 
-		applyQueryMetaAttributesWhenPresent(query);
-		query = applyAnnotatedDefaultSortIfPresent(query);
-		query = applyAnnotatedCollationIfPresent(query, accessor);
+		return createQuery(accessor).flatMapMany(it -> {
 
-		FindWithQuery<?> find = typeToRead == null //
-				? findOperationWithProjection //
-				: findOperationWithProjection.as(typeToRead);
+			Query query = it;
+			applyQueryMetaAttributesWhenPresent(query);
+			query = applyAnnotatedDefaultSortIfPresent(query);
+			query = applyAnnotatedCollationIfPresent(query, accessor);
 
-		String collection = method.getEntityInformation().getCollectionName();
+			FindWithQuery<?> find = typeToRead == null //
+					? findOperationWithProjection //
+					: findOperationWithProjection.as(typeToRead);
 
-		ReactiveMongoQueryExecution execution = getExecution(accessor,
-				new ResultProcessingConverter(processor, operations, instantiators), find);
-		return execution.execute(query, processor.getReturnedType().getDomainType(), collection);
+			String collection = method.getEntityInformation().getCollectionName();
+
+			ReactiveMongoQueryExecution execution = getExecution(accessor,
+					new ResultProcessingConverter(processor, operations, instantiators), find);
+			return execution.execute(query, processor.getReturnedType().getDomainType(), collection);
+		});
 	}
 
 	/**
@@ -254,8 +253,8 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	 * @param accessor must not be {@literal null}.
 	 * @return
 	 */
-	protected Query createCountQuery(ConvertingParameterAccessor accessor) {
-		return applyQueryMetaAttributesWhenPresent(createQuery(accessor));
+	protected Mono<Query> createCountQuery(ConvertingParameterAccessor accessor) {
+		return createQuery(accessor).map(this::applyQueryMetaAttributesWhenPresent);
 	}
 
 	/**
@@ -264,7 +263,7 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	 * @param accessor must not be {@literal null}.
 	 * @return
 	 */
-	protected abstract Query createQuery(ConvertingParameterAccessor accessor);
+	protected abstract Mono<Query> createQuery(ConvertingParameterAccessor accessor);
 
 	/**
 	 * Returns whether the query should get a count projection applied.
