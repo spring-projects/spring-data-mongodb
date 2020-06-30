@@ -44,6 +44,7 @@ import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
+import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -162,7 +163,8 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 
 		private final MongoOperations operations;
 		private final QueryMethodEvaluationContextProvider evaluationContextProvider;
-		MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+		private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+		private final ExpressionParser expressionParser = new CachingExpressionParser(EXPRESSION_PARSER);
 
 		public MongoQueryLookupStrategy(MongoOperations operations,
 				QueryMethodEvaluationContextProvider evaluationContextProvider,
@@ -186,14 +188,14 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 
 			if (namedQueries.hasQuery(namedQueryName)) {
 				String namedQuery = namedQueries.getQuery(namedQueryName);
-				return new StringBasedMongoQuery(namedQuery, queryMethod, operations, EXPRESSION_PARSER,
+				return new StringBasedMongoQuery(namedQuery, queryMethod, operations, expressionParser,
 						evaluationContextProvider);
 			} else if (queryMethod.hasAnnotatedAggregation()) {
-				return new StringBasedAggregation(queryMethod, operations, EXPRESSION_PARSER, evaluationContextProvider);
+				return new StringBasedAggregation(queryMethod, operations, expressionParser, evaluationContextProvider);
 			} else if (queryMethod.hasAnnotatedQuery()) {
-				return new StringBasedMongoQuery(queryMethod, operations, EXPRESSION_PARSER, evaluationContextProvider);
+				return new StringBasedMongoQuery(queryMethod, operations, expressionParser, evaluationContextProvider);
 			} else {
-				return new PartTreeMongoQuery(queryMethod, operations, EXPRESSION_PARSER, evaluationContextProvider);
+				return new PartTreeMongoQuery(queryMethod, operations, expressionParser, evaluationContextProvider);
 			}
 		}
 	}

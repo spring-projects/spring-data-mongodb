@@ -35,6 +35,15 @@ class DefaultSpELExpressionEvaluator implements SpELExpressionEvaluator {
 		this.context = context;
 	}
 
+	/**
+	 * Return a {@link SpELExpressionEvaluator} that does not support expression evaluation.
+	 *
+	 * @return a {@link SpELExpressionEvaluator} that does not support expression evaluation.
+	 */
+	public static SpELExpressionEvaluator unsupported() {
+		return NoOpExpressionEvaluator.INSTANCE;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mapping.model.SpELExpressionEvaluator#evaluate(java.lang.String)
@@ -43,5 +52,21 @@ class DefaultSpELExpressionEvaluator implements SpELExpressionEvaluator {
 	@SuppressWarnings("unchecked")
 	public <T> T evaluate(String expression) {
 		return (T) parser.parseExpression(expression).getValue(context, Object.class);
+	}
+
+	/**
+	 * {@link SpELExpressionEvaluator} that does not support SpEL evaluation.
+	 *
+	 * @author Mark Paluch
+	 * @since 3.1
+	 */
+	enum NoOpExpressionEvaluator implements SpELExpressionEvaluator {
+
+		INSTANCE;
+
+		@Override
+		public <T> T evaluate(String expression) {
+			throw new UnsupportedOperationException("Expression evaluation not supported");
+		}
 	}
 }

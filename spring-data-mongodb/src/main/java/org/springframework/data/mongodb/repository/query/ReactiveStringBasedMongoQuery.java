@@ -53,7 +53,7 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	private final String query;
 	private final String fieldSpec;
 
-	private final SpelExpressionParser expressionParser;
+	private final ExpressionParser expressionParser;
 	private final ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider;
 
 	private final boolean isCountQuery;
@@ -70,7 +70,7 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	 * @param evaluationContextProvider must not be {@literal null}.
 	 */
 	public ReactiveStringBasedMongoQuery(ReactiveMongoQueryMethod method, ReactiveMongoOperations mongoOperations,
-			SpelExpressionParser expressionParser, ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider) {
+			ExpressionParser expressionParser, ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider) {
 		this(method.getAnnotatedQuery(), method, mongoOperations, expressionParser, evaluationContextProvider);
 	}
 
@@ -85,7 +85,7 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	 * @param expressionParser must not be {@literal null}.
 	 */
 	public ReactiveStringBasedMongoQuery(String query, ReactiveMongoQueryMethod method,
-			ReactiveMongoOperations mongoOperations, SpelExpressionParser expressionParser,
+			ReactiveMongoOperations mongoOperations, ExpressionParser expressionParser,
 			ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider) {
 
 		super(method, mongoOperations, expressionParser, evaluationContextProvider);
@@ -153,7 +153,7 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 						accessor.getValues(), it))
 				.map(evaluationContext -> evaluationContext
 						.map(it -> (SpELExpressionEvaluator) new DefaultSpELExpressionEvaluator(expressionParser, it)))
-				.orElseGet(() -> Mono.just(NoOpExpressionEvaluator.INSTANCE));
+				.orElseGet(() -> Mono.just(DefaultSpELExpressionEvaluator.unsupported()));
 
 		return evaluator.map(it -> new ParameterBindingContext(accessor::getBindableValue, it));
 	}

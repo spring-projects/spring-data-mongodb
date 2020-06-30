@@ -21,6 +21,7 @@ import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 
@@ -76,7 +77,7 @@ class QueryUtils {
 	 * @since 2.2
 	 */
 	static Query applyCollation(Query query, @Nullable String collationExpression, ConvertingParameterAccessor accessor,
-			MongoParameters parameters, SpelExpressionParser expressionParser,
+			MongoParameters parameters, ExpressionParser expressionParser,
 			QueryMethodEvaluationContextProvider evaluationContextProvider) {
 
 		Collation collation = CollationUtils.computeCollation(collationExpression, accessor, parameters, expressionParser,

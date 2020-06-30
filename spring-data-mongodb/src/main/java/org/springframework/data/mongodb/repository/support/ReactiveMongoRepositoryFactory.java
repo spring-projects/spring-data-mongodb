@@ -44,6 +44,7 @@ import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
+import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -161,6 +162,7 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 		private final ReactiveMongoOperations operations;
 		private final ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider;
 		private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+		private final ExpressionParser expressionParser = new CachingExpressionParser(EXPRESSION_PARSER);
 
 		MongoQueryLookupStrategy(ReactiveMongoOperations operations,
 				ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider,
@@ -184,15 +186,15 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 
 			if (namedQueries.hasQuery(namedQueryName)) {
 				String namedQuery = namedQueries.getQuery(namedQueryName);
-				return new ReactiveStringBasedMongoQuery(namedQuery, queryMethod, operations, EXPRESSION_PARSER,
+				return new ReactiveStringBasedMongoQuery(namedQuery, queryMethod, operations, expressionParser,
 						evaluationContextProvider);
 			} else if (queryMethod.hasAnnotatedAggregation()) {
-				return new ReactiveStringBasedAggregation(queryMethod, operations, EXPRESSION_PARSER,
+				return new ReactiveStringBasedAggregation(queryMethod, operations, expressionParser,
 						evaluationContextProvider);
 			} else if (queryMethod.hasAnnotatedQuery()) {
-				return new ReactiveStringBasedMongoQuery(queryMethod, operations, EXPRESSION_PARSER, evaluationContextProvider);
+				return new ReactiveStringBasedMongoQuery(queryMethod, operations, expressionParser, evaluationContextProvider);
 			} else {
-				return new ReactivePartTreeMongoQuery(queryMethod, operations, EXPRESSION_PARSER, evaluationContextProvider);
+				return new ReactivePartTreeMongoQuery(queryMethod, operations, expressionParser, evaluationContextProvider);
 			}
 		}
 	}

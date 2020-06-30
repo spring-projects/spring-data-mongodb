@@ -24,6 +24,7 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.util.json.ParameterBindingContext;
 import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.NumberUtils;
@@ -59,7 +60,7 @@ abstract class CollationUtils {
 	 */
 	@Nullable
 	static Collation computeCollation(@Nullable String collationExpression, ConvertingParameterAccessor accessor,
-			MongoParameters parameters, SpelExpressionParser expressionParser,
+			MongoParameters parameters, ExpressionParser expressionParser,
 			QueryMethodEvaluationContextProvider evaluationContextProvider) {
 
 		if (accessor.getCollation() != null) {

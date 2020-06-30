@@ -30,6 +30,7 @@ import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
+import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -47,7 +48,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	private final MongoQueryMethod method;
 	private final MongoOperations operations;
 	private final ExecutableFind<?> executableFind;
-	private final SpelExpressionParser expressionParser;
+	private final ExpressionParser expressionParser;
 	private final QueryMethodEvaluationContextProvider evaluationContextProvider;
 
 	/**
@@ -58,7 +59,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * @param expressionParser must not be {@literal null}.
 	 * @param evaluationContextProvider must not be {@literal null}.
 	 */
-	public AbstractMongoQuery(MongoQueryMethod method, MongoOperations operations, SpelExpressionParser expressionParser,
+	public AbstractMongoQuery(MongoQueryMethod method, MongoOperations operations, ExpressionParser expressionParser,
 			QueryMethodEvaluationContextProvider evaluationContextProvider) {
 
 		Assert.notNull(operations, "MongoOperations must not be null!");

@@ -34,6 +34,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.util.json.ParameterBindingContext;
 import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
@@ -64,12 +65,12 @@ abstract class AggregationUtils {
 	 * @param accessor must not be {@literal null}.
 	 * @return the {@link Query} having proper {@link Collation}.
 	 * @see AggregationOptions#getCollation()
-	 * @see CollationUtils#computeCollation(String, ConvertingParameterAccessor, MongoParameters, SpelExpressionParser,
+	 * @see CollationUtils#computeCollation(String, ConvertingParameterAccessor, MongoParameters, ExpressionParser,
 	 *      QueryMethodEvaluationContextProvider)
 	 */
 	static AggregationOptions.Builder applyCollation(AggregationOptions.Builder builder,
 			@Nullable String collationExpression, ConvertingParameterAccessor accessor, MongoParameters parameters,
-			SpelExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			ExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
 
 		Collation collation = CollationUtils.computeCollation(collationExpression, accessor, parameters, expressionParser,
 				evaluationContextProvider);
@@ -119,7 +120,7 @@ abstract class AggregationUtils {
 	 * @return
 	 */
 	static List<AggregationOperation> computePipeline(MongoQueryMethod method, ConvertingParameterAccessor accessor,
-			SpelExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			ExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
 
 		ParameterBindingContext bindingContext = new ParameterBindingContext((accessor::getBindableValue), expressionParser,
 				() -> evaluationContextProvider.getEvaluationContext(method.getParameters(), accessor.getValues()));
