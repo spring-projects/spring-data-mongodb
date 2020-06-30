@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.bson.AbstractBsonReader.State;
@@ -39,7 +40,11 @@ import org.bson.Transformer;
 import org.bson.codecs.*;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.json.JsonParseException;
+
+import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.spel.EvaluationContextProvider;
+import org.springframework.data.spel.ExpressionDependencies;
+import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.NumberUtils;
@@ -163,7 +168,7 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 	public Document decode(@Nullable String json, Object[] values) {
 
 		return decode(json, new ParameterBindingContext((index) -> values[index], new SpelExpressionParser(),
-				() -> EvaluationContextProvider.DEFAULT.getEvaluationContext(values)));
+				EvaluationContextProvider.DEFAULT.getEvaluationContext(values)));
 	}
 
 	public Document decode(@Nullable String json, ParameterBindingContext bindingContext) {
@@ -174,6 +179,51 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 
 		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json, bindingContext);
 		return this.decode(reader, DecoderContext.builder().build());
+	}
+
+	/**
+	 * Determine {@link ExpressionDependencies} from Expressions that are nested in the {@code json} content. Returns
+	 * {@link Optional#empty()} if {@code json} is empty or of it does not contain any SpEL expressions.
+	 *
+	 * @param json
+	 * @param expressionParser
+	 * @return a {@link Optional} containing merged {@link ExpressionDependencies} object if expressions were found,
+	 *         otherwise {@link Optional#empty()}.
+	 * @since 3.1
+	 */
+	public Optional<ExpressionDependencies> getExpressionDependencies(@Nullable String json, ValueProvider valueProvider,
+			ExpressionParser expressionParser) {
+
+		if (StringUtils.isEmpty(json)) {
+			return Optional.empty();
+		}
+
+		List<ExpressionDependencies> dependencies = new ArrayList<>();
+
+		ParameterBindingContext context = new ParameterBindingContext(valueProvider, new SpELExpressionEvaluator() {
+			@Override
+			public <T> T evaluate(String expression) {
+
+				dependencies.add(ExpressionDependencies.discover(expressionParser.parseExpression(expression)));
+
+				return (T) new Object();
+			}
+		});
+
+		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json, context);
+		this.decode(reader, DecoderContext.builder().build());
+
+		if (dependencies.isEmpty()) {
+			return Optional.empty();
+		}
+
+		ExpressionDependencies result = ExpressionDependencies.empty();
+
+		for (ExpressionDependencies dependency : dependencies) {
+			result = result.mergeWith(dependency);
+		}
+
+		return Optional.of(result);
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -349,4 +399,5 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 		reader.readEndArray();
 		return list;
 	}
+
 }

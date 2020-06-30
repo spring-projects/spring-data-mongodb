@@ -48,7 +48,10 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ReactiveExtensionAwareQueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
+import org.springframework.data.spel.spi.EvaluationContextExtension;
+import org.springframework.data.spel.spi.ReactiveEvaluationContextExtension;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Base64Utils;
 
@@ -83,7 +86,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 		ReactiveStringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastname", String.class);
 		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "Matthews");
 
-		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor).block();
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : 'Matthews'}");
 
 		assertThat(query.getQueryObject()).isEqualTo(reference.getQueryObject());
@@ -101,7 +104,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 		converter.write(address, dbObject);
 		dbObject.remove(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY);
 
-		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor).block();
 		Document queryObject = new Document("address", dbObject);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery(queryObject);
 
@@ -136,7 +139,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 		ReactiveStringBasedMongoQuery mongoQuery = createQueryForMethod("findByParameterizedCriteriaAndFields",
 				Document.class, Map.class);
 
-		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor).block();
 
 		assertThat(query.getQueryObject())
 				.isEqualTo(new BasicQuery("{ \"firstname\": \"first\", \"lastname\": \"last\"}").getQueryObject());
@@ -150,7 +153,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 		ReactiveStringBasedMongoQuery mongoQuery = createQueryForMethod("findByQueryWithParametersInExpression", int.class,
 				int.class, int.class, int.class);
 
-		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor).block();
 
 		assertThat(query.getQueryObject())
 				.isEqualTo(new BasicQuery("{$where: 'return this.date.getUTCMonth() == 3 && this.date.getUTCDay() == 4;'}")
@@ -164,7 +167,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 				String.class, String.class);
 		ConvertingParameterAccessor parameterAccessor = StubParameterAccessor.getAccessor(converter, "key", "value");
 
-		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(parameterAccessor);
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(parameterAccessor).block();
 
 		assertThat(query.getQueryObject()).isEqualTo(new Document().append("key", "value"));
 	}
@@ -175,7 +178,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, "Matthews");
 		ReactiveStringBasedMongoQuery mongoQuery = createQueryForMethod("findByQueryWithExpression", String.class);
 
-		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor).block();
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : 'Matthews'}");
 
 		assertThat(query.getQueryObject()).isEqualTo(reference.getQueryObject());
@@ -188,7 +191,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 		ReactiveStringBasedMongoQuery mongoQuery = createQueryForMethod("findByQueryWithExpressionAndNestedObject",
 				boolean.class, String.class);
 
-		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor).block();
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{ \"id\" : { \"$exists\" : true}}");
 
 		assertThat(query.getQueryObject()).isEqualTo(reference.getQueryObject());
@@ -201,7 +204,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 		ReactiveStringBasedMongoQuery mongoQuery = createQueryForMethod("findByQueryWithExpressionAndMultipleNestedObjects",
 				boolean.class, String.class, String.class);
 
-		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor).block();
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery(
 				"{ \"id\" : { \"$exists\" : true} , \"foo\" : 42 , \"bar\" : { \"$exists\" : false}}");
 
@@ -215,21 +218,43 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter, binaryData);
 		ReactiveStringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameAsBinary", byte[].class);
 
-		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor);
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor).block();
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery(
 				"{'lastname' : { '$binary' : '" + Base64Utils.encodeToString(binaryData) + "', '$type' : '" + 0 + "'}}");
 
 		assertThat(query.getQueryObject().toJson()).isEqualTo(reference.getQueryObject().toJson());
 	}
 
+	@Test // DATAMONGO-1894
+	void shouldConsiderReactiveSpelExtension() throws Exception {
+
+		ReactiveExtensionAwareQueryMethodEvaluationContextProvider contextProvider = new ReactiveExtensionAwareQueryMethodEvaluationContextProvider(
+				Collections.singletonList(ReactiveSpelExtension.INSTANCE));
+
+		ConvertingParameterAccessor accesor = StubParameterAccessor.getAccessor(converter);
+		ReactiveStringBasedMongoQuery mongoQuery = createQueryForMethod(contextProvider, "withReactiveSpelExtensions");
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accesor).block();
+		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{lastname: true}", "{project: true}");
+
+		assertThat(query.getQueryObject().toJson()).isEqualTo(reference.getQueryObject().toJson());
+	}
+
 	private ReactiveStringBasedMongoQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
+		return createQueryForMethod(ReactiveQueryMethodEvaluationContextProvider.DEFAULT, name, parameters);
+	}
+
+	private ReactiveStringBasedMongoQuery createQueryForMethod(
+			ReactiveQueryMethodEvaluationContextProvider contextProvider, String name, Class<?>... parameters)
+			throws Exception {
 
 		Method method = SampleRepository.class.getMethod(name, parameters);
 		ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
 		ReactiveMongoQueryMethod queryMethod = new ReactiveMongoQueryMethod(method,
 				new DefaultRepositoryMetadata(SampleRepository.class), factory, converter.getMappingContext());
+
 		return new ReactiveStringBasedMongoQuery(queryMethod, operations, PARSER,
-				QueryMethodEvaluationContextProvider.DEFAULT);
+				contextProvider);
 	}
 
 	private interface SampleRepository extends Repository<Person, Long> {
@@ -269,5 +294,42 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 
 		@Query(value = "{ 'lastname' : ?0 }", exists = true)
 		Mono<Boolean> existsByLastname(String lastname);
+
+		@Query(value = "{ 'lastname' : ?#{hasRole()} }", fields = "{project: ?#{hasRole()}}")
+		Mono<Document> withReactiveSpelExtensions();
+	}
+
+	public enum ReactiveSpelExtension implements ReactiveEvaluationContextExtension {
+
+		INSTANCE;
+
+		@Override
+		public Mono<? extends EvaluationContextExtension> getExtension() {
+			return Mono.just(SpelExtension.INSTANCE);
+		}
+
+		@Override
+		public String getExtensionId() {
+			return "sample";
+		}
+	}
+
+	public enum SpelExtension implements EvaluationContextExtension {
+
+		INSTANCE;
+
+		@Override
+		public Object getRootObject() {
+			return this;
+		}
+
+		@Override
+		public String getExtensionId() {
+			return "sample";
+		}
+
+		public boolean hasRole() {
+			return true;
+		}
 	}
 }

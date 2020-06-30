@@ -48,7 +48,7 @@ import org.springframework.util.ClassUtils;
  */
 interface ReactiveMongoQueryExecution {
 
-	Object execute(Query query, Class<?> type, String collection);
+	Publisher<? extends Object> execute(Query query, Class<?> type, String collection);
 
 	/**
 	 * {@link MongoQueryExecution} to execute geo-near queries.
@@ -74,7 +74,7 @@ interface ReactiveMongoQueryExecution {
 		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
 		 */
 		@Override
-		public Object execute(Query query, Class<?> type, String collection) {
+		public Publisher<? extends Object> execute(Query query, Class<?> type, String collection) {
 
 			Flux<GeoResult<Object>> results = doExecuteQuery(query, type, collection);
 			return isStreamOfGeoResult() ? results : results.map(GeoResult::getContent);
@@ -132,7 +132,7 @@ interface ReactiveMongoQueryExecution {
 		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
 		 */
 		@Override
-		public Object execute(Query query, Class<?> type, String collection) {
+		public Publisher<? extends Object> execute(Query query, Class<?> type, String collection) {
 
 			if (method.isCollectionQuery()) {
 				return operations.findAllAndRemove(query, type, collection);
@@ -166,8 +166,8 @@ interface ReactiveMongoQueryExecution {
 		}
 
 		@Override
-		public Object execute(Query query, Class<?> type, String collection) {
-			return converter.convert(delegate.execute(query, type, collection));
+		public Publisher<? extends Object> execute(Query query, Class<?> type, String collection) {
+			return (Publisher) converter.convert(delegate.execute(query, type, collection));
 		}
 	}
 

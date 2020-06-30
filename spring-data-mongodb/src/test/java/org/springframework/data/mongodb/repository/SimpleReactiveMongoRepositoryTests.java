@@ -45,6 +45,7 @@ import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.repository.support.ReactiveMongoRepositoryFactory;
 import org.springframework.data.mongodb.repository.support.SimpleReactiveMongoRepository;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.ClassUtils;
@@ -86,7 +87,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		factory.setRepositoryBaseClass(SimpleReactiveMongoRepository.class);
 		factory.setBeanClassLoader(classLoader);
 		factory.setBeanFactory(beanFactory);
-		factory.setEvaluationContextProvider(QueryMethodEvaluationContextProvider.DEFAULT);
+		factory.setEvaluationContextProvider(ReactiveQueryMethodEvaluationContextProvider.DEFAULT);
 
 		repository = factory.getRepository(ReactivePersonRepostitory.class);
 

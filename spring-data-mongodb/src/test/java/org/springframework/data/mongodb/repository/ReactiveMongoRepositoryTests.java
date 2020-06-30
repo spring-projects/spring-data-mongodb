@@ -67,6 +67,7 @@ import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.mongodb.reactivestreams.client.MongoClient;
@@ -112,7 +113,7 @@ public class ReactiveMongoRepositoryTests {
 			factory.setRepositoryBaseClass(SimpleReactiveMongoRepository.class);
 			factory.setBeanClassLoader(beanFactory.getClass().getClassLoader());
 			factory.setBeanFactory(beanFactory);
-			factory.setEvaluationContextProvider(QueryMethodEvaluationContextProvider.DEFAULT);
+			factory.setEvaluationContextProvider(ReactiveQueryMethodEvaluationContextProvider.DEFAULT);
 
 			return factory;
 		}

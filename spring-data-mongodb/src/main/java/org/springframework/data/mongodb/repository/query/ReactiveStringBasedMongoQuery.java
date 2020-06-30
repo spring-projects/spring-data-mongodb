@@ -15,17 +15,25 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import reactor.core.publisher.Mono;
+
+import java.util.Optional;
+
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.util.json.ParameterBindingContext;
 import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ReactiveExtensionAwareQueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
+import org.springframework.data.spel.ExpressionDependencies;
+import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
 
@@ -46,7 +54,7 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	private final String fieldSpec;
 
 	private final SpelExpressionParser expressionParser;
-	private final QueryMethodEvaluationContextProvider evaluationContextProvider;
+	private final ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider;
 
 	private final boolean isCountQuery;
 	private final boolean isExistsQuery;
@@ -62,13 +70,14 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	 * @param evaluationContextProvider must not be {@literal null}.
 	 */
 	public ReactiveStringBasedMongoQuery(ReactiveMongoQueryMethod method, ReactiveMongoOperations mongoOperations,
-			SpelExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			SpelExpressionParser expressionParser, ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider) {
 		this(method.getAnnotatedQuery(), method, mongoOperations, expressionParser, evaluationContextProvider);
 	}
 
 	/**
 	 * Creates a new {@link ReactiveStringBasedMongoQuery} for the given {@link String}, {@link MongoQueryMethod},
-	 * {@link MongoOperations}, {@link SpelExpressionParser} and {@link QueryMethodEvaluationContextProvider}.
+	 * {@link MongoOperations}, {@link SpelExpressionParser} and
+	 * {@link ReactiveExtensionAwareQueryMethodEvaluationContextProvider}.
 	 *
 	 * @param query must not be {@literal null}.
 	 * @param method must not be {@literal null}.
@@ -77,7 +86,7 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	 */
 	public ReactiveStringBasedMongoQuery(String query, ReactiveMongoQueryMethod method,
 			ReactiveMongoOperations mongoOperations, SpelExpressionParser expressionParser,
-			QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider) {
 
 		super(method, mongoOperations, expressionParser, evaluationContextProvider);
 
@@ -114,21 +123,39 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#createQuery(org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor)
 	 */
 	@Override
-	protected Query createQuery(ConvertingParameterAccessor accessor) {
+	protected Mono<Query> createQuery(ConvertingParameterAccessor accessor) {
 
-		ParameterBindingContext bindingContext = new ParameterBindingContext((accessor::getBindableValue), expressionParser,
-				() -> evaluationContextProvider.getEvaluationContext(getQueryMethod().getParameters(), accessor.getValues()));
+		Mono<Document> queryObject = getBindingContext(accessor, expressionParser, this.query)
+				.map(it -> CODEC.decode(this.query, it));
+		Mono<Document> fieldsObject = getBindingContext(accessor, expressionParser, this.fieldSpec)
+				.map(it -> CODEC.decode(this.fieldSpec, it));
 
-		Document queryObject = CODEC.decode(this.query, bindingContext);
-		Document fieldsObject = CODEC.decode(this.fieldSpec, bindingContext);
+		return queryObject.zipWith(fieldsObject).map(tuple -> {
 
-		Query query = new BasicQuery(queryObject, fieldsObject).with(accessor.getSort());
+			Query query = new BasicQuery(tuple.getT1(), tuple.getT2()).with(accessor.getSort());
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug(String.format("Created query %s for %s fields.", query.getQueryObject(), query.getFieldsObject()));
-		}
+			if (LOG.isDebugEnabled()) {
+				LOG.debug(String.format("Created query %s for %s fields.", query.getQueryObject(), query.getFieldsObject()));
+			}
 
-		return query;
+			return query;
+		});
+	}
+
+	private Mono<ParameterBindingContext> getBindingContext(ConvertingParameterAccessor accessor,
+			ExpressionParser expressionParser, String json) {
+
+		Optional<ExpressionDependencies> dependencies = CODEC.getExpressionDependencies(json, accessor::getBindableValue,
+				expressionParser);
+
+		Mono<SpELExpressionEvaluator> evaluator = dependencies
+				.map(it -> evaluationContextProvider.getEvaluationContextLater(getQueryMethod().getParameters(),
+						accessor.getValues(), it))
+				.map(evaluationContext -> evaluationContext
+						.map(it -> (SpELExpressionEvaluator) new DefaultSpELExpressionEvaluator(expressionParser, it)))
+				.orElseGet(() -> Mono.just(NoOpExpressionEvaluator.INSTANCE));
+
+		return evaluator.map(it -> new ParameterBindingContext(accessor::getBindableValue, it));
 	}
 
 	/*
