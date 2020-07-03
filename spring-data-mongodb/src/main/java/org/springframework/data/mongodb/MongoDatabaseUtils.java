@@ -79,7 +79,7 @@ public class MongoDatabaseUtils {
 	 * @param factory the {@link MongoDbFactory} to get the {@link MongoDatabase} from.
 	 * @return the {@link MongoDatabase} that is potentially associated with a transactional {@link ClientSession}.
 	 */
-	public static MongoDatabase getDatabase(String dbName, MongoDbFactory factory) {
+	public static MongoDatabase getDatabase(@Nullable String dbName, MongoDbFactory factory) {
 		return doGetMongoDatabase(dbName, factory, SessionSynchronization.ON_ACTUAL_TRANSACTION);
 	}
 
@@ -88,13 +88,13 @@ public class MongoDatabaseUtils {
 	 * <p />
 	 * Registers a {@link MongoSessionSynchronization MongoDB specific transaction synchronization} within the current
 	 * {@link Thread} if {@link TransactionSynchronizationManager#isSynchronizationActive() synchronization is active}.
-	 * 
+	 *
 	 * @param dbName the name of the {@link MongoDatabase} to get.
 	 * @param factory the {@link MongoDbFactory} to get the {@link MongoDatabase} from.
 	 * @param sessionSynchronization the synchronization to use. Must not be {@literal null}.
 	 * @return the {@link MongoDatabase} that is potentially associated with a transactional {@link ClientSession}.
 	 */
-	public static MongoDatabase getDatabase(String dbName, MongoDbFactory factory,
+	public static MongoDatabase getDatabase(@Nullable String dbName, MongoDbFactory factory,
 			SessionSynchronization sessionSynchronization) {
 		return doGetMongoDatabase(dbName, factory, sessionSynchronization);
 	}
