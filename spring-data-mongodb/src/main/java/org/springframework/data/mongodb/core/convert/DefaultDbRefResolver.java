@@ -45,6 +45,7 @@ import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.ClientSessionException;
 import org.springframework.data.mongodb.LazyLoadingException;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.data.mongodb.MongoDatabaseUtils;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.lang.Nullable;
 import org.springframework.objenesis.ObjenesisStd;
@@ -497,7 +498,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	 */
 	protected MongoCollection<Document> getCollection(DBRef dbref) {
 
-		return (StringUtils.hasText(dbref.getDatabaseName()) ? mongoDbFactory.getMongoDatabase(dbref.getDatabaseName())
-				: mongoDbFactory.getMongoDatabase()).getCollection(dbref.getCollectionName(), Document.class);
+		return MongoDatabaseUtils.getDatabase(dbref.getDatabaseName(), mongoDbFactory)
+				.getCollection(dbref.getCollectionName(), Document.class);
 	}
 }
