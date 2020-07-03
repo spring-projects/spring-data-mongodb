@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
@@ -51,6 +52,7 @@ public class ClientSessionTests {
 
 	private static final String DB_NAME = "client-session-tests";
 	private static final String COLLECTION_NAME = "test";
+	private static final String REF_COLLECTION_NAME = "test-with-ref";
 
 	static @ReplSetClient MongoClient mongoClient;
 
@@ -148,6 +150,31 @@ public class ClientSessionTests {
 		assertThat(template.exists(query(where("id").is(saved.getId())), SomeDoc.class)).isFalse();
 	}
 
+	@Test // DATAMONGO-2490
+	public void shouldBeAbleToReadDbRefDuringTransaction() {
+
+		SomeDoc ref = new SomeDoc("ref-1", "da value");
+		WithDbRef source = new WithDbRef("source-1", "da source", ref);
+
+		ClientSession session = mongoClient.startSession(ClientSessionOptions.builder().causallyConsistent(true).build());
+
+		assertThat(session.getOperationTime()).isNull();
+
+		session.startTransaction();
+
+		WithDbRef saved = template.withSession(() -> session).execute(action -> {
+
+			template.save(ref);
+			template.save(source);
+
+			return template.findOne(query(where("id").is(source.id)), WithDbRef.class);
+		});
+
+		assertThat(saved.getSomeDocRef()).isEqualTo(ref);
+
+		session.abortTransaction();
+	}
+
 	@Data
 	@AllArgsConstructor
 	@org.springframework.data.mongodb.core.mapping.Document(COLLECTION_NAME)
@@ -155,6 +182,16 @@ public class ClientSessionTests {
 
 		@Id String id;
 		String value;
+	}
+
+	@Data
+	@AllArgsConstructor
+	@org.springframework.data.mongodb.core.mapping.Document(REF_COLLECTION_NAME)
+	static class WithDbRef {
+
+		@Id String id;
+		String value;
+		@DBRef SomeDoc someDocRef;
 	}
 
 }
