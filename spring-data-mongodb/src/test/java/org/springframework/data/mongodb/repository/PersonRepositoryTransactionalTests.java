@@ -21,6 +21,7 @@ import static org.springframework.data.mongodb.test.util.MongoTestUtils.*;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -178,6 +179,25 @@ public class PersonRepositoryTransactionalTests {
 		repository.save(hu);
 
 		assertAfterTransaction(hu).isNotPresent();
+	}
+
+	@Test // DATAMONGO-2490
+	public void shouldBeAbleToReadDbRefDuringTransaction() {
+
+		User rat = new User();
+		rat.setUsername("rat");
+
+		template.save(rat);
+
+		Person elene = new Person("Elene", "Cromwyll", 18);
+		elene.setCoworker(rat);
+
+		repository.save(elene);
+
+		Optional<Person> loaded = repository.findById(elene.getId());
+		assertThat(loaded).isPresent();
+		assertThat(loaded.get().getCoworker()).isNotNull();
+		assertThat(loaded.get().getCoworker().getUsername()).isEqualTo(rat.getUsername());
 	}
 
 	private AfterTransactionAssertion assertAfterTransaction(Person person) {
