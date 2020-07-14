@@ -106,7 +106,12 @@ public class BucketAutoOperation extends BucketOperationSupport<BucketAutoOperat
 
 		options.putAll(super.toDocument(context));
 
-		return new Document("$bucketAuto", options);
+		return new Document(operator(), options);
+	}
+
+	@Override
+	public String operator() {
+		return "$bucketAuto";
 	}
 
 	/**

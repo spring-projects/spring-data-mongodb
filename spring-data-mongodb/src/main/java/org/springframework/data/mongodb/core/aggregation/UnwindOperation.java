@@ -94,7 +94,7 @@ public class UnwindOperation
 		String path = context.getReference(field).toString();
 
 		if (!preserveNullAndEmptyArrays && arrayIndex == null) {
-			return new Document("$unwind", path);
+			return new Document(operator(), path);
 		}
 
 		Document unwindArgs = new Document();
@@ -104,7 +104,12 @@ public class UnwindOperation
 		}
 		unwindArgs.put("preserveNullAndEmptyArrays", preserveNullAndEmptyArrays);
 
-		return new Document("$unwind", unwindArgs);
+		return new Document(operator(), unwindArgs);
+	}
+
+	@Override
+	public String operator() {
+		return "$unwind";
 	}
 
 	/*

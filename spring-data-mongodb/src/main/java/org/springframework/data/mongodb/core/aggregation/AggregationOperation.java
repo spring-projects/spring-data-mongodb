@@ -54,4 +54,8 @@ public interface AggregationOperation {
 	default List<Document> toPipelineStages(AggregationOperationContext context) {
 		return Collections.singletonList(toDocument(context));
 	}
+
+	default String operator() {
+		return toDocument(Aggregation.DEFAULT_CONTEXT).keySet().iterator().next();
+	}
 }

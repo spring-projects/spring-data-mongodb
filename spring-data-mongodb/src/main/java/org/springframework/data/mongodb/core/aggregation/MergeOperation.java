@@ -100,7 +100,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 	public Document toDocument(AggregationOperationContext context) {
 
 		if (isJustCollection()) {
-			return new Document("$merge", into.collection);
+			return new Document(operator(), into.collection);
 		}
 
 		Document $merge = new Document();
@@ -122,7 +122,12 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 			$merge.putAll(whenNotMatched.toDocument(context));
 		}
 
-		return new Document("$merge", $merge);
+		return new Document(operator(), $merge);
+	}
+
+	@Override
+	public String operator() {
+		return "$merge";
 	}
 
 	/*

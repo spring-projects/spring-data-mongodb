@@ -49,7 +49,12 @@ public class CountOperation implements FieldsExposingAggregationOperation {
 	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
-		return new Document("$count", fieldName);
+		return new Document(operator(), fieldName);
+	}
+
+	@Override
+	public String operator() {
+		return "$count";
 	}
 
 	/* (non-Javadoc)

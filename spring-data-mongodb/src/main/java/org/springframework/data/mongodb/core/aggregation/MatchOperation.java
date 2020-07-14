@@ -53,6 +53,11 @@ public class MatchOperation implements AggregationOperation {
 	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
-		return new Document("$match", context.getMappedObject(criteriaDefinition.getCriteriaObject()));
+		return new Document(operator(), context.getMappedObject(criteriaDefinition.getCriteriaObject()));
+	}
+
+	@Override
+	public String operator() {
+		return "$match";
 	}
 }

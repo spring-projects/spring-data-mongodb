@@ -74,7 +74,12 @@ public class SortByCountOperation implements AggregationOperation {
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
 
-		return new Document("$sortByCount", groupByExpression == null ? context.getReference(groupByField).toString()
+		return new Document(operator(), groupByExpression == null ? context.getReference(groupByField).toString()
 				: groupByExpression.toDocument(context));
+	}
+
+	@Override
+	public String operator() {
+		return "$sortByCount";
 	}
 }

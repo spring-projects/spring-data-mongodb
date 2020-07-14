@@ -83,7 +83,12 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		lookupObject.append("foreignField", foreignField.getTarget());
 		lookupObject.append("as", as.getTarget());
 
-		return new Document("$lookup", lookupObject);
+		return new Document(operator(), lookupObject);
+	}
+
+	@Override
+	public String operator() {
+		return "$lookup";
 	}
 
 	/**

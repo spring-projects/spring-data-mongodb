@@ -26,6 +26,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.bson.BsonValue;
@@ -1005,11 +1006,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		}
 
 		ReadDocumentCallback<O> readCallback = new ReadDocumentCallback<>(mongoConverter, outputType, collectionName);
-		return execute(collectionName, collection -> aggregateAndMap(collection, pipeline, options, readCallback,
+		return execute(collectionName, collection -> aggregateAndMap(collection, pipeline, () -> aggregation.getPipeline().isOutOrMerge(), options, readCallback,
 				aggregation instanceof TypedAggregation ? ((TypedAggregation) aggregation).getInputType() : null));
 	}
 
-	private <O> Flux<O> aggregateAndMap(MongoCollection<Document> collection, List<Document> pipeline,
+	private <O> Flux<O> aggregateAndMap(MongoCollection<Document> collection, List<Document> pipeline, Supplier<Boolean> isOutOrMerge,
 			AggregationOptions options, ReadDocumentCallback<O> readCallback, @Nullable Class<?> inputType) {
 
 		AggregatePublisher<Document> cursor = collection.aggregate(pipeline, Document.class)
@@ -1030,8 +1031,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		}
 
 		if (ResultOptions.SKIP.equals(options.resultOptions())) {
-			if (pipeline.get(pipeline.size() - 1).containsKey("$out")
-					|| pipeline.get(pipeline.size() - 1).containsKey("$merge")) {
+			if (isOutOrMerge.get()) {
 				return Flux.from(cursor.toCollection()).map(it -> (O) it);
 			}
 			return Flux.from(cursor.first()).thenMany(Mono.empty());

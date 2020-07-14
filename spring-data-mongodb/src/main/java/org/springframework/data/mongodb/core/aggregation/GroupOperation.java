@@ -429,7 +429,12 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 			operationObject.putAll(operation.toDocument(context));
 		}
 
-		return new Document("$group", operationObject);
+		return new Document(operator(), operationObject);
+	}
+
+	@Override
+	public String operator() {
+		return "$group";
 	}
 
 	interface Keyword {

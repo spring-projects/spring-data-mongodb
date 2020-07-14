@@ -109,7 +109,12 @@ public class GeoNearOperation implements AggregationOperation {
 			command.put("key", indexKey);
 		}
 
-		return new Document("$geoNear", command);
+		return new Document(operator(), command);
+	}
+
+	@Override
+	public String operator() {
+		return "$geoNear";
 	}
 
 	/*

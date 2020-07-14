@@ -1625,12 +1625,12 @@ public class AggregationTests {
 		mongoTemplate.save(new Person("Leoniv", "Yakubov", 55, Person.Sex.MALE));
 	}
 
-	@Test // DATAMONGO-1418
+	@Test // DATAMONGO-1418, DATAMONGO-2536
 	public void outShouldOutBeTheLastOperation() {
 		assertThatIllegalArgumentException().isThrownBy(() -> newAggregation(match(new Criteria()), //
 				group("field1").count().as("totalCount"), //
 				out("collection1"), //
-				skip(100L)));
+				skip(100L)).toPipeline(DEFAULT_CONTEXT));
 	}
 
 	@Test // DATAMONGO-1325

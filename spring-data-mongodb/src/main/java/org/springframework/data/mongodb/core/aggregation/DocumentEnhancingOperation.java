@@ -71,6 +71,11 @@ abstract class DocumentEnhancingOperation implements InheritsFieldsAggregationOp
 	 */
 	protected abstract String mongoOperator();
 
+	@Override
+	public String operator() {
+		return mongoOperator();
+	}
+
 	/**
 	 * @return the raw value map
 	 */
