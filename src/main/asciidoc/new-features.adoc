@@ -1,6 +1,11 @@
 [[new-features]]
 = New & Noteworthy
 
+[[new-features.3.1]]
+== What's New in Spring Data MongoDB 3.1
+
+* <<mongo.auditing,Reactive auditing>> enabled through `@EnableReactiveMongoAuditing`. `@EnableMongoAuditing` no longer registers `ReactiveAuditingEntityCallback`.
+
 [[new-features.3.0]]
 == What's New in Spring Data MongoDB 3.0
 

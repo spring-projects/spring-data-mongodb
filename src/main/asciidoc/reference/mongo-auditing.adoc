@@ -30,3 +30,22 @@ To activate auditing functionality via XML, add the Spring Data Mongo `auditing`
 ----
 ====
 
+If you wish to use auditing with the reactive programming model, then enable auditing through `@EnableReactiveMongoAuditing`
+
+.Activating auditing using JavaConfig
+====
+[source,java]
+----
+@Configuration
+@EnableReactiveMongoAuditing
+class Config {
+
+  @Bean
+  public ReactiveAuditorAware<AuditableUser> myAuditorProvider() {
+      return new AuditorAwareImpl();
+  }
+}
+----
+====
+If you expose a bean of type `ReactiveAuditorAware` to the `ApplicationContext`, the auditing infrastructure picks it up automatically and uses it to determine the current user to be set on domain types. If you have multiple implementations registered in the `ApplicationContext`, you can select the one to be used by explicitly setting the `auditorAwareRef` attribute of `@EnableReactiveMongoAuditing`.
+

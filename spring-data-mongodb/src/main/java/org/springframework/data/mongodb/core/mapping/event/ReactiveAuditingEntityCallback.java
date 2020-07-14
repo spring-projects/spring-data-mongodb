@@ -15,13 +15,12 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
-import reactor.core.publisher.Mono;
-
 import org.reactivestreams.Publisher;
+
 import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.core.Ordered;
 import org.springframework.data.auditing.AuditingHandler;
-import org.springframework.data.auditing.IsNewAwareAuditingHandler;
+import org.springframework.data.auditing.ReactiveIsNewAwareAuditingHandler;
 import org.springframework.data.mapping.callback.EntityCallback;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.util.Assert;
@@ -34,7 +33,7 @@ import org.springframework.util.Assert;
  */
 public class ReactiveAuditingEntityCallback implements ReactiveBeforeConvertCallback<Object>, Ordered {
 
-	private final ObjectFactory<IsNewAwareAuditingHandler> auditingHandlerFactory;
+	private final ObjectFactory<ReactiveIsNewAwareAuditingHandler> auditingHandlerFactory;
 
 	/**
 	 * Creates a new {@link ReactiveAuditingEntityCallback} using the given {@link MappingContext} and
@@ -42,19 +41,19 @@ public class ReactiveAuditingEntityCallback implements ReactiveBeforeConvertCall
 	 *
 	 * @param auditingHandlerFactory must not be {@literal null}.
 	 */
-	public ReactiveAuditingEntityCallback(ObjectFactory<IsNewAwareAuditingHandler> auditingHandlerFactory) {
+	public ReactiveAuditingEntityCallback(ObjectFactory<ReactiveIsNewAwareAuditingHandler> auditingHandlerFactory) {
 
 		Assert.notNull(auditingHandlerFactory, "IsNewAwareAuditingHandler must not be null!");
 		this.auditingHandlerFactory = auditingHandlerFactory;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.mapping.event.ReactiveBeforeConvertCallback#onBeforeConvert(java.lang.Object, java.lang.String)
 	 */
 	@Override
 	public Publisher<Object> onBeforeConvert(Object entity, String collection) {
-		return Mono.just(auditingHandlerFactory.getObject().markAudited(entity));
+		return auditingHandlerFactory.getObject().markAudited(entity);
 	}
 
 	/*

@@ -16,7 +16,6 @@
 package org.springframework.data.mongodb.config;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -30,13 +29,14 @@ import java.util.function.Function;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.data.annotation.Version;
-import org.springframework.data.domain.AuditorAware;
+import org.springframework.data.domain.ReactiveAuditorAware;
 import org.springframework.data.mongodb.core.AuditablePerson;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -57,17 +57,16 @@ import com.mongodb.reactivestreams.client.MongoClient;
  */
 @ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 @ContextConfiguration
-public class ReactiveAuditingTests {
+class ReactiveAuditingTests {
 
 	static @Client MongoClient mongoClient;
 
 	@Autowired ReactiveAuditablePersonRepository auditablePersonRepository;
-	@Autowired AuditorAware<AuditablePerson> auditorAware;
 	@Autowired MongoMappingContext context;
 	@Autowired ReactiveMongoOperations operations;
 
 	@Configuration
-	@EnableMongoAuditing(auditorAwareRef = "auditorProvider")
+	@EnableReactiveMongoAuditing
 	@EnableReactiveMongoRepositories(basePackageClasses = ReactiveAuditingTests.class, considerNestedRepositories = true,
 			includeFilters = @Filter(type = FilterType.ASSIGNABLE_TYPE, classes = ReactiveAuditablePersonRepository.class))
 	static class Config extends AbstractReactiveMongoConfiguration {
@@ -89,14 +88,17 @@ public class ReactiveAuditingTests {
 		}
 
 		@Bean
-		@SuppressWarnings("unchecked")
-		public AuditorAware<AuditablePerson> auditorProvider() {
-			return mock(AuditorAware.class);
+		public ReactiveAuditorAware<AuditablePerson> auditorProvider() {
+
+			AuditablePerson person = new AuditablePerson("some-person");
+			person.setId("foo");
+
+			return () -> Mono.just(person);
 		}
 	}
 
-	@Test // DATAMONGO-2139, DATAMONGO-2150
-	public void auditingWorksForVersionedEntityWithWrapperVersion() {
+	@Test // DATAMONGO-2139, DATAMONGO-2150, DATAMONGO-2586
+	void auditingWorksForVersionedEntityWithWrapperVersion() {
 
 		verifyAuditingViaVersionProperty(new VersionedAuditablePerson(), //
 				it -> it.version, //
@@ -106,7 +108,7 @@ public class ReactiveAuditingTests {
 	}
 
 	@Test // DATAMONGO-2179
-	public void auditingWorksForVersionedEntityBatchWithWrapperVersion() {
+	void auditingWorksForVersionedEntityBatchWithWrapperVersion() {
 
 		verifyAuditingViaVersionProperty(new VersionedAuditablePerson(), //
 				it -> it.version, //
@@ -115,8 +117,8 @@ public class ReactiveAuditingTests {
 				null, 0L, 1L);
 	}
 
-	@Test // DATAMONGO-2139, DATAMONGO-2150
-	public void auditingWorksForVersionedEntityWithSimpleVersion() {
+	@Test // DATAMONGO-2139, DATAMONGO-2150, DATAMONGO-2586
+	void auditingWorksForVersionedEntityWithSimpleVersion() {
 
 		verifyAuditingViaVersionProperty(new SimpleVersionedAuditablePerson(), //
 				it -> it.version, //
@@ -125,8 +127,8 @@ public class ReactiveAuditingTests {
 				0L, 1L, 2L);
 	}
 
-	@Test // DATAMONGO-2139, DATAMONGO-2150
-	public void auditingWorksForVersionedEntityWithWrapperVersionOnTemplate() {
+	@Test // DATAMONGO-2139, DATAMONGO-2150, DATAMONGO-2586
+	void auditingWorksForVersionedEntityWithWrapperVersionOnTemplate() {
 
 		verifyAuditingViaVersionProperty(new VersionedAuditablePerson(), //
 				it -> it.version, //
@@ -135,8 +137,8 @@ public class ReactiveAuditingTests {
 				null, 0L, 1L);
 	}
 
-	@Test // DATAMONGO-2139, DATAMONGO-2150
-	public void auditingWorksForVersionedEntityWithSimpleVersionOnTemplate() {
+	@Test // DATAMONGO-2139, DATAMONGO-2150, DATAMONGO-2586
+	void auditingWorksForVersionedEntityWithSimpleVersionOnTemplate() {
 		verifyAuditingViaVersionProperty(new SimpleVersionedAuditablePerson(), //
 				it -> it.version, //
 				AuditablePerson::getCreatedAt, //
