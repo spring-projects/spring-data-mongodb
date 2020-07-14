@@ -333,7 +333,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		if (mappingContext instanceof ApplicationEventPublisherAware) {
 			((ApplicationEventPublisherAware) mappingContext).setApplicationEventPublisher(eventPublisher);
 		}
-
+		                                                                                                                                                                                                             ReactiveMongoAuditingRegistrar
 		resourceLoader = applicationContext;
 
 		projectionFactory.setBeanFactory(applicationContext);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,23 +24,23 @@ import java.lang.annotation.Target;
 
 import org.springframework.context.annotation.Import;
 import org.springframework.data.auditing.DateTimeProvider;
-import org.springframework.data.domain.AuditorAware;
+import org.springframework.data.domain.ReactiveAuditorAware;
 
 /**
- * Annotation to enable auditing in MongoDB via annotation configuration.
+ * Annotation to enable auditing in MongoDB using reactive infrastructure via annotation configuration.
  *
- * @author Thomas Darimont
- * @author Oliver Gierke
+ * @author Mark Paluch
+ * @since 3.1
  */
 @Inherited
 @Documented
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@Import(MongoAuditingRegistrar.class)
-public @interface EnableMongoAuditing {
+@Import(ReactiveMongoAuditingRegistrar.class)
+public @interface EnableReactiveMongoAuditing {
 
 	/**
-	 * Configures the {@link AuditorAware} bean to be used to lookup the current principal.
+	 * Configures the {@link ReactiveAuditorAware} bean to be used to lookup the current principal.
 	 *
 	 * @return empty {@link String} by default.
 	 */

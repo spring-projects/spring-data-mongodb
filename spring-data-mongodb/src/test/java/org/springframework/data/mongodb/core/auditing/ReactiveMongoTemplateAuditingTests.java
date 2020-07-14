@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.auditing;
 
 import static org.assertj.core.api.Assertions.*;
 
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import reactor.util.function.Tuples;
 
@@ -29,14 +30,17 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.Version;
+import org.springframework.data.domain.ReactiveAuditorAware;
 import org.springframework.data.mongodb.config.AbstractReactiveMongoConfiguration;
-import org.springframework.data.mongodb.config.EnableMongoAuditing;
+import org.springframework.data.mongodb.config.EnableReactiveMongoAuditing;
 import org.springframework.data.mongodb.core.KAuditableVersionedEntity;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -50,17 +54,20 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import com.mongodb.reactivestreams.client.MongoClient;
 
 /**
+ * Integration tests for {@link EnableReactiveMongoAuditing} through {@link ReactiveMongoTemplate}.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @ExtendWith({ MongoClientExtension.class, SpringExtension.class })
-public class ReactiveMongoTemplateAuditingTests {
+class ReactiveMongoTemplateAuditingTests {
 
 	static final String DB_NAME = "mongo-template-audit-tests";
 
 	static @Client MongoClient mongoClient;
 
 	@Configuration
-	@EnableMongoAuditing
+	@EnableReactiveMongoAuditing
 	static class Conf extends AbstractReactiveMongoConfiguration {
 
 		@Bean
@@ -84,7 +91,7 @@ public class ReactiveMongoTemplateAuditingTests {
 	@Autowired MongoClient client;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 
 		MongoTestUtils.flushCollection(DB_NAME, template.getCollectionName(ImmutableAuditableEntityWithVersion.class),
 				client);
@@ -92,7 +99,7 @@ public class ReactiveMongoTemplateAuditingTests {
 	}
 
 	@Test // DATAMONGO-2346
-	public void auditingSetsLastModifiedDateCorrectlyForImmutableVersionedEntityOnSave() {
+	void auditingSetsLastModifiedDateCorrectlyForImmutableVersionedEntityOnSave() {
 
 		ImmutableAuditableEntityWithVersion entity = new ImmutableAuditableEntityWithVersion(null, "value", null, null);
 
@@ -114,7 +121,7 @@ public class ReactiveMongoTemplateAuditingTests {
 	}
 
 	@Test // DATAMONGO-2346
-	public void auditingSetsLastModifiedDateCorrectlyForImmutableVersionedKotlinEntityOnSave() {
+	void auditingSetsLastModifiedDateCorrectlyForImmutableVersionedKotlinEntityOnSave() {
 
 		KAuditableVersionedEntity entity = new KAuditableVersionedEntity(null, "value", null, null);
 
