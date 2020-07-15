@@ -63,7 +63,7 @@ public class ClientSessionTests {
 	MongoClient client;
 
 	@Before
-	void setUp() {
+	public void setUp() {
 
 		client = MongoTestUtils.replSetClient();
 
@@ -74,7 +74,7 @@ public class ClientSessionTests {
 	}
 
 	@Test // DATAMONGO-1880
-	void shouldApplyClientSession() {
+	public void shouldApplyClientSession() {
 
 		ClientSession session = client.startSession(ClientSessionOptions.builder().causallyConsistent(true).build());
 
@@ -91,7 +91,7 @@ public class ClientSessionTests {
 	}
 
 	@Test // DATAMONGO-2241
-	void shouldReuseConfiguredInfrastructure() {
+	public void shouldReuseConfiguredInfrastructure() {
 
 		ClientSession session = client.startSession(ClientSessionOptions.builder().causallyConsistent(true).build());
 
