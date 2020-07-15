@@ -115,14 +115,16 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	@Override
 	public Document fetch(DBRef dbRef) {
 
+		MongoCollection<Document> mongoCollection = getCollection(dbRef);
+
 		if (LOGGER.isTraceEnabled()) {
 			LOGGER.trace("Fetching DBRef '{}' from {}.{}.", dbRef.getId(),
-					StringUtils.hasText(dbRef.getDatabaseName()) ? dbRef.getDatabaseName() : mongoDbFactory.getMongoDatabase().getName(),
+					StringUtils.hasText(dbRef.getDatabaseName()) ? dbRef.getDatabaseName()
+							: mongoCollection.getNamespace().getDatabaseName(),
 					dbRef.getCollectionName());
 		}
 
-		StringUtils.hasText(dbRef.getDatabaseName());
-		return getCollection(dbRef).find(Filters.eq("_id", dbRef.getId())).first();
+		return mongoCollection.find(Filters.eq("_id", dbRef.getId())).first();
 	}
 
 	/*
@@ -153,15 +155,16 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		}
 
 		DBRef databaseSource = refs.iterator().next();
+		MongoCollection<Document> mongoCollection = getCollection(databaseSource);
 
 		if (LOGGER.isTraceEnabled()) {
 			LOGGER.trace("Bulk fetching DBRefs {} from {}.{}.", ids,
 					StringUtils.hasText(databaseSource.getDatabaseName()) ? databaseSource.getDatabaseName()
-							: mongoDbFactory.getMongoDatabase().getName(),
+							: mongoCollection.getNamespace().getDatabaseName(),
 					databaseSource.getCollectionName());
 		}
 
-		List<Document> result = getCollection(databaseSource) //
+		List<Document> result = mongoCollection //
 				.find(new Document("_id", new Document("$in", ids))) //
 				.into(new ArrayList<>());
 
