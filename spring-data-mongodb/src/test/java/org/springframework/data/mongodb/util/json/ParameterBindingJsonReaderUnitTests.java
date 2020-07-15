@@ -334,7 +334,7 @@ class ParameterBindingJsonReaderUnitTests {
 	}
 
 	@Test // DATAMONGO-2571
-	public void shouldParseRegexCorrectly() {
+	void shouldParseRegexCorrectly() {
 
 		Document target = parse("{ $and: [{'fieldA': {$in: [/ABC.*/, /CDE.*F/]}}, {'fieldB': {$ne: null}}]}");
 		assertThat(target)
@@ -342,7 +342,7 @@ class ParameterBindingJsonReaderUnitTests {
 	}
 
 	@Test // DATAMONGO-2571
-	public void shouldParseRegexWithPlaceholderCorrectly() {
+	void shouldParseRegexWithPlaceholderCorrectly() {
 
 		Document target = parse("{ $and: [{'fieldA': {$in: [/?0.*/, /CDE.*F/]}}, {'fieldB': {$ne: null}}]}", "ABC");
 		assertThat(target)
