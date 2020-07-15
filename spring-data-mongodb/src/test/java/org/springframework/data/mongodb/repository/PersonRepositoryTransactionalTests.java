@@ -111,6 +111,7 @@ public class PersonRepositoryTransactionalTests {
 	public void beforeTransaction() {
 
 		createOrReplaceCollection(DB_NAME, template.getCollectionName(Person.class), client);
+		createOrReplaceCollection(DB_NAME, template.getCollectionName(User.class), client);
 
 		durzo = new Person("Durzo", "Blint", 700);
 		kylar = new Person("Kylar", "Stern", 21);

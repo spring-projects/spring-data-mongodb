@@ -45,6 +45,8 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.ClientSession;
 
 /**
+ * Integration tests for {@link ClientSession} through {@link MongoTemplate#withSession(ClientSession)}.
+ *
  * @author Christoph Strobl
  * @author Mark Paluch
  */
@@ -61,7 +63,7 @@ public class ClientSessionTests {
 	MongoClient client;
 
 	@Before
-	public void setUp() {
+	void setUp() {
 
 		client = MongoTestUtils.replSetClient();
 
@@ -72,7 +74,7 @@ public class ClientSessionTests {
 	}
 
 	@Test // DATAMONGO-1880
-	public void shouldApplyClientSession() {
+	void shouldApplyClientSession() {
 
 		ClientSession session = client.startSession(ClientSessionOptions.builder().causallyConsistent(true).build());
 
@@ -89,7 +91,7 @@ public class ClientSessionTests {
 	}
 
 	@Test // DATAMONGO-2241
-	public void shouldReuseConfiguredInfrastructure() {
+	void shouldReuseConfiguredInfrastructure() {
 
 		ClientSession session = client.startSession(ClientSessionOptions.builder().causallyConsistent(true).build());
 
@@ -162,7 +164,7 @@ public class ClientSessionTests {
 		SomeDoc ref = new SomeDoc("ref-1", "da value");
 		WithDbRef source = new WithDbRef("source-1", "da source", ref);
 
-		ClientSession session = mongoClient.startSession(ClientSessionOptions.builder().causallyConsistent(true).build());
+		ClientSession session = client.startSession(ClientSessionOptions.builder().causallyConsistent(true).build());
 
 		assertThat(session.getOperationTime()).isNull();
 
