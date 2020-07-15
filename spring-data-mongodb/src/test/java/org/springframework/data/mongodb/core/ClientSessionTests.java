@@ -42,24 +42,26 @@ import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 
 /**
+ * Integration tests for {@link ClientSession} through {@link MongoTemplate#withSession(ClientSession)}.
+ *
  * @author Christoph Strobl
  * @author Mark Paluch
  */
 @ExtendWith({ MongoClientExtension.class })
 @EnableIfReplicaSetAvailable
 @EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
-public class ClientSessionTests {
+class ClientSessionTests {
 
 	private static final String DB_NAME = "client-session-tests";
 	private static final String COLLECTION_NAME = "test";
 	private static final String REF_COLLECTION_NAME = "test-with-ref";
 
-	static @ReplSetClient MongoClient mongoClient;
+	private static @ReplSetClient MongoClient mongoClient;
 
-	MongoTemplate template;
+	private MongoTemplate template;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 
 		MongoTestUtils.createOrReplaceCollection(DB_NAME, COLLECTION_NAME, mongoClient);
 
@@ -68,7 +70,7 @@ public class ClientSessionTests {
 	}
 
 	@Test // DATAMONGO-1880
-	public void shouldApplyClientSession() {
+	void shouldApplyClientSession() {
 
 		ClientSession session = mongoClient.startSession(ClientSessionOptions.builder().causallyConsistent(true).build());
 
@@ -85,7 +87,7 @@ public class ClientSessionTests {
 	}
 
 	@Test // DATAMONGO-2241
-	public void shouldReuseConfiguredInfrastructure() {
+	void shouldReuseConfiguredInfrastructure() {
 
 		ClientSession session = mongoClient.startSession(ClientSessionOptions.builder().causallyConsistent(true).build());
 
@@ -101,7 +103,7 @@ public class ClientSessionTests {
 	}
 
 	@Test // DATAMONGO-1920
-	public void withCommittedTransaction() {
+	void withCommittedTransaction() {
 
 		ClientSession session = mongoClient.startSession(ClientSessionOptions.builder().causallyConsistent(true).build());
 
@@ -126,7 +128,7 @@ public class ClientSessionTests {
 	}
 
 	@Test // DATAMONGO-1920
-	public void withAbortedTransaction() {
+	void withAbortedTransaction() {
 
 		ClientSession session = mongoClient.startSession(ClientSessionOptions.builder().causallyConsistent(true).build());
 
@@ -151,7 +153,7 @@ public class ClientSessionTests {
 	}
 
 	@Test // DATAMONGO-2490
-	public void shouldBeAbleToReadDbRefDuringTransaction() {
+	void shouldBeAbleToReadDbRefDuringTransaction() {
 
 		SomeDoc ref = new SomeDoc("ref-1", "da value");
 		WithDbRef source = new WithDbRef("source-1", "da source", ref);
