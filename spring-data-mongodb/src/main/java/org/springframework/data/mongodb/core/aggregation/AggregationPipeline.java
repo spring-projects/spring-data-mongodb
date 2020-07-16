@@ -26,7 +26,7 @@ import org.springframework.util.Assert;
  * The {@link AggregationPipeline} holds the collection of {@link AggregationOperation aggregation stages}.
  *
  * @author Christoph Strobl
- * @since 3.1
+ * @since 3.0.2
  */
 public class AggregationPipeline {
 
@@ -86,7 +86,7 @@ public class AggregationPipeline {
 			return false;
 		}
 
-		String operator = pipeline.get(pipeline.size() - 1).operator();
+		String operator = pipeline.get(pipeline.size() - 1).getOperator();
 		return operator.equals("$out") || operator.equals("$merge");
 	}
 

@@ -100,7 +100,7 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 	public Document toDocument(AggregationOperationContext context) {
 
 		if (isJustCollection()) {
-			return new Document(operator(), into.collection);
+			return new Document(getOperator(), into.collection);
 		}
 
 		Document $merge = new Document();
@@ -122,11 +122,15 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 			$merge.putAll(whenNotMatched.toDocument(context));
 		}
 
-		return new Document(operator(), $merge);
+		return new Document(getOperator(), $merge);
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
+	 */
 	@Override
-	public String operator() {
+	public String getOperator() {
 		return "$merge";
 	}
 

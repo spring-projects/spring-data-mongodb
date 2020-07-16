@@ -33,7 +33,8 @@ import org.springframework.util.Assert;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @since 1.3
- * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/sort/">MongoDB Aggregation Framework: $sort</a>
+ * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/sort/">MongoDB Aggregation Framework:
+ *      $sort</a>
  */
 public class SortOperation implements AggregationOperation {
 
@@ -74,11 +75,15 @@ public class SortOperation implements AggregationOperation {
 			object.put(reference.getRaw(), order.isAscending() ? 1 : -1);
 		}
 
-		return new Document(operator(), object);
+		return new Document(getOperator(), object);
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
+	 */
 	@Override
-	public String operator() {
+	public String getOperator() {
 		return "$sort";
 	}
 }

@@ -221,11 +221,12 @@ public class AggregationOptions {
 	}
 
 	/**
-	 * @return the {@link ResultOptions} to be used when running the {@link Aggregation}. Never {@literal null}.
-	 * @since 3.0
+	 * @return {@literal true} to skip results when running an aggregation. Useful in combination with {@code $merge} or
+	 *         {@code $out}.
+	 * @since 3.0.2
 	 */
-	public ResultOptions resultOptions() {
-		return resultOptions;
+	public boolean isSkipResults() {
+		return ResultOptions.SKIP.equals(resultOptions);
 	}
 
 	/**
@@ -415,7 +416,7 @@ public class AggregationOptions {
 		 * option allows to execute the aggregation without having the cursor return the operation result.
 		 *
 		 * @return this.
-		 * @since 3.0
+		 * @since 3.0.2
 		 */
 		public Builder skipOutput() {
 
@@ -445,7 +446,7 @@ public class AggregationOptions {
 	/**
 	 * @since 3.0
 	 */
-	public enum ResultOptions {
+	private enum ResultOptions {
 
 		/**
 		 * Just do it!, and do not read the operation result.

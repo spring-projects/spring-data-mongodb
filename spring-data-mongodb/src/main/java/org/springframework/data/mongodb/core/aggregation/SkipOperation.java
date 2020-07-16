@@ -28,7 +28,8 @@ import org.springframework.util.Assert;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @since 1.3
- * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/skip/">MongoDB Aggregation Framework: $skip</a>
+ * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/skip/">MongoDB Aggregation Framework:
+ *      $skip</a>
  */
 public class SkipOperation implements AggregationOperation {
 
@@ -51,11 +52,15 @@ public class SkipOperation implements AggregationOperation {
 	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
-		return new Document(operator(), skipCount);
+		return new Document(getOperator(), skipCount);
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
+	 */
 	@Override
-	public String operator() {
+	public String getOperator() {
 		return "$skip";
 	}
 }

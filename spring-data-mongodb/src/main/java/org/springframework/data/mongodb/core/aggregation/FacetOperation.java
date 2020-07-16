@@ -20,11 +20,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.BucketOperationSupport.Output;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.util.Assert;
-
-import org.bson.Document;
 
 /**
  * Encapsulates the aggregation framework {@code $facet}-operation. <br />
@@ -84,11 +83,15 @@ public class FacetOperation implements FieldsExposingAggregationOperation {
 	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
-		return new Document(operator(), facets.toDocument(context));
+		return new Document(getOperator(), facets.toDocument(context));
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
+	 */
 	@Override
-	public String operator() {
+	public String getOperator() {
 		return "$facet";
 	}
 

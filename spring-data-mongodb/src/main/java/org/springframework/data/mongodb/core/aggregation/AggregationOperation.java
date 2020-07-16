@@ -55,7 +55,14 @@ public interface AggregationOperation {
 		return Collections.singletonList(toDocument(context));
 	}
 
-	default String operator() {
+	/**
+	 * Return the MongoDB operator that is used for this {@link AggregationOperation}. Aggregation operations should
+	 * implement this method to avoid document rendering.
+	 *
+	 * @return the operator used for this {@link AggregationOperation}.
+	 * @since 3.0.2
+	 */
+	default String getOperator() {
 		return toDocument(Aggregation.DEFAULT_CONTEXT).keySet().iterator().next();
 	}
 }

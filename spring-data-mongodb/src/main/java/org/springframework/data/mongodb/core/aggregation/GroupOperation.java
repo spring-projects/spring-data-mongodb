@@ -429,11 +429,15 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 			operationObject.putAll(operation.toDocument(context));
 		}
 
-		return new Document(operator(), operationObject);
+		return new Document(getOperator(), operationObject);
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
+	 */
 	@Override
-	public String operator() {
+	public String getOperator() {
 		return "$group";
 	}
 

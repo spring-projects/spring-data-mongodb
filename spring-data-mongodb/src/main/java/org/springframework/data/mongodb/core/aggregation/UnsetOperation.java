@@ -40,7 +40,7 @@ public class UnsetOperation implements InheritsFieldsAggregationOperation {
 
 	/**
 	 * Create new instance of {@link UnsetOperation}.
-	 * 
+	 *
 	 * @param fields must not be {@literal null}.
 	 */
 	public UnsetOperation(Collection<Object> fields) {
@@ -117,15 +117,19 @@ public class UnsetOperation implements InheritsFieldsAggregationOperation {
 	public Document toDocument(AggregationOperationContext context) {
 
 		if (fields.size() == 1) {
-			return new Document(operator(), computeFieldName(fields.iterator().next(), context));
+			return new Document(getOperator(), computeFieldName(fields.iterator().next(), context));
 		}
 
-		return new Document(operator(),
+		return new Document(getOperator(),
 				fields.stream().map(it -> computeFieldName(it, context)).collect(Collectors.toList()));
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
+	 */
 	@Override
-	public String operator() {
+	public String getOperator() {
 		return "$unset";
 	}
 

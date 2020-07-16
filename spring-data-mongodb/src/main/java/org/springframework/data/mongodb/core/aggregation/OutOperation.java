@@ -16,7 +16,6 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import org.bson.Document;
-
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -211,11 +210,15 @@ public class OutOperation implements AggregationOperation {
 			$out.append("uniqueKey", uniqueKey);
 		}
 
-		return new Document(operator(), $out);
+		return new Document(getOperator(), $out);
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
+	 */
 	@Override
-	public String operator() {
+	public String getOperator() {
 		return "$out";
 	}
 

@@ -86,8 +86,12 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 		return new Document("$replaceRoot", new Document("newRoot", getReplacement().toDocumentExpression(context)));
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
+	 */
 	@Override
-	public String operator() {
+	public String getOperator() {
 		return "$replaceRoot";
 	}
 

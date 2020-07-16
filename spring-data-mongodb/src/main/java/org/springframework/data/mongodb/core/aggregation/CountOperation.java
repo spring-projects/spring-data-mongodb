@@ -49,11 +49,11 @@ public class CountOperation implements FieldsExposingAggregationOperation {
 	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
-		return new Document(operator(), fieldName);
+		return new Document(getOperator(), fieldName);
 	}
 
 	@Override
-	public String operator() {
+	public String getOperator() {
 		return "$count";
 	}
 

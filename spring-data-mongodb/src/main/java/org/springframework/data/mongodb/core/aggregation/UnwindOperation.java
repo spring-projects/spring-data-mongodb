@@ -31,7 +31,8 @@ import org.springframework.util.Assert;
  * @author Mark Paluch
  * @author Christoph Strobl
  * @since 1.3
- * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/unwind/">MongoDB Aggregation Framework: $unwind</a>
+ * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/unwind/">MongoDB Aggregation Framework:
+ *      $unwind</a>
  */
 public class UnwindOperation
 		implements AggregationOperation, FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation {
@@ -94,7 +95,7 @@ public class UnwindOperation
 		String path = context.getReference(field).toString();
 
 		if (!preserveNullAndEmptyArrays && arrayIndex == null) {
-			return new Document(operator(), path);
+			return new Document(getOperator(), path);
 		}
 
 		Document unwindArgs = new Document();
@@ -104,11 +105,15 @@ public class UnwindOperation
 		}
 		unwindArgs.put("preserveNullAndEmptyArrays", preserveNullAndEmptyArrays);
 
-		return new Document(operator(), unwindArgs);
+		return new Document(getOperator(), unwindArgs);
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
+	 */
 	@Override
-	public String operator() {
+	public String getOperator() {
 		return "$unwind";
 	}
 
