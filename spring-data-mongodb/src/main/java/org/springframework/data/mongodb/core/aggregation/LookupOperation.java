@@ -83,11 +83,15 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		lookupObject.append("foreignField", foreignField.getTarget());
 		lookupObject.append("as", as.getTarget());
 
-		return new Document(operator(), lookupObject);
+		return new Document(getOperator(), lookupObject);
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
+	 */
 	@Override
-	public String operator() {
+	public String getOperator() {
 		return "$lookup";
 	}
 
@@ -173,8 +177,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 
 			Assert.hasText(name, "'As' must not be null or empty!");
 			as = new ExposedField(Fields.field(name), true);
-			return new LookupOperation(from, localField, foreignField,
-					as);
+			return new LookupOperation(from, localField, foreignField, as);
 		}
 
 		@Override

@@ -99,17 +99,17 @@ public class AggregationTests {
 	private static boolean initialized = false;
 
 	@Template //
-	static MongoTestTemplate mongoTemplate;
+	private static MongoTestTemplate mongoTemplate;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 
 		cleanDb();
 		initSampleDataIfNecessary();
 	}
 
 	@AfterEach
-	public void cleanUp() {
+	void cleanUp() {
 		cleanDb();
 	}
 
@@ -167,25 +167,25 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-586
-	public void shouldHandleMissingInputCollection() {
+	void shouldHandleMissingInputCollection() {
 		assertThatIllegalArgumentException()
 				.isThrownBy(() -> mongoTemplate.aggregate(newAggregation(), (String) null, TagCount.class));
 	}
 
 	@Test // DATAMONGO-586
-	public void shouldHandleMissingAggregationPipeline() {
+	void shouldHandleMissingAggregationPipeline() {
 		assertThatIllegalArgumentException()
 				.isThrownBy(() -> mongoTemplate.aggregate(null, INPUT_COLLECTION, TagCount.class));
 	}
 
 	@Test // DATAMONGO-586
-	public void shouldHandleMissingEntityClass() {
+	void shouldHandleMissingEntityClass() {
 		assertThatIllegalArgumentException()
 				.isThrownBy(() -> mongoTemplate.aggregate(newAggregation(), INPUT_COLLECTION, null));
 	}
 
 	@Test // DATAMONGO-586
-	public void shouldAggregate() {
+	void shouldAggregate() {
 
 		createTagDocuments();
 
@@ -214,7 +214,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1637
-	public void shouldAggregateAndStream() {
+	void shouldAggregateAndStream() {
 
 		createTagDocuments();
 
@@ -243,7 +243,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-586
-	public void shouldAggregateEmptyCollection() {
+	void shouldAggregateEmptyCollection() {
 
 		Aggregation aggregation = newAggregation(//
 				project("tags"), //
@@ -266,7 +266,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1637
-	public void shouldAggregateEmptyCollectionAndStream() {
+	void shouldAggregateEmptyCollectionAndStream() {
 
 		Aggregation aggregation = newAggregation(//
 				project("tags"), //
@@ -289,7 +289,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1391
-	public void shouldUnwindWithIndex() {
+	void shouldUnwindWithIndex() {
 
 		MongoCollection<Document> coll = mongoTemplate.getCollection(INPUT_COLLECTION);
 
@@ -315,7 +315,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1391
-	public void shouldUnwindPreserveEmpty() {
+	void shouldUnwindPreserveEmpty() {
 
 		MongoCollection<Document> coll = mongoTemplate.getCollection(INPUT_COLLECTION);
 
@@ -341,7 +341,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-586
-	public void shouldDetectResultMismatch() {
+	void shouldDetectResultMismatch() {
 
 		createTagDocuments();
 
@@ -366,7 +366,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1637
-	public void shouldDetectResultMismatchWhileStreaming() {
+	void shouldDetectResultMismatchWhileStreaming() {
 
 		createTagDocuments();
 
@@ -391,7 +391,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-586
-	public void complexAggregationFrameworkUsageLargestAndSmallestCitiesByState() {
+	void complexAggregationFrameworkUsageLargestAndSmallestCitiesByState() {
 		/*
 		 //complex mongodb aggregation framework example from https://docs.mongodb.org/manual/tutorial/aggregation-examples/#largest-and-smallest-cities-by-state
 		db.zipInfo.aggregate(
@@ -499,11 +499,11 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-586
-	public void findStatesWithPopulationOver10MillionAggregationExample() {
+	void findStatesWithPopulationOver10MillionAggregationExample() {
 		/*
 		 //complex mongodb aggregation framework example from
 		 https://docs.mongodb.org/manual/tutorial/aggregation-examples/#largest-and-smallest-cities-by-state
-		
+
 		 db.zipcodes.aggregate(
 			 	{
 				   $group: {
@@ -549,7 +549,7 @@ public class AggregationTests {
 	 *      Framework: $cond</a>
 	 */
 	@Test // DATAMONGO-861
-	public void aggregationUsingConditionalProjectionToCalculateDiscount() {
+	void aggregationUsingConditionalProjectionToCalculateDiscount() {
 
 		/*
 		db.inventory.aggregate(
@@ -602,7 +602,7 @@ public class AggregationTests {
 	 *      Framework: $ifNull</a>
 	 */
 	@Test // DATAMONGO-861
-	public void aggregationUsingIfNullToProjectSaneDefaults() {
+	void aggregationUsingIfNullToProjectSaneDefaults() {
 
 		/*
 		db.inventory.aggregate(
@@ -642,7 +642,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-861
-	public void aggregationUsingConditionalProjection() {
+	void aggregationUsingConditionalProjection() {
 
 		TypedAggregation<ZipInfo> aggregation = newAggregation(ZipInfo.class, //
 				project() //
@@ -664,7 +664,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-861
-	public void aggregationUsingNestedConditionalProjection() {
+	void aggregationUsingNestedConditionalProjection() {
 
 		TypedAggregation<ZipInfo> aggregation = newAggregation(ZipInfo.class, //
 				project() //
@@ -687,7 +687,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-861
-	public void aggregationUsingIfNullProjection() {
+	void aggregationUsingIfNullProjection() {
 
 		mongoTemplate.insert(new LineItem("id", "caption", 0));
 		mongoTemplate.insert(new LineItem("idonly", null, 0));
@@ -711,7 +711,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-861
-	public void aggregationUsingIfNullReplaceWithFieldReferenceProjection() {
+	void aggregationUsingIfNullReplaceWithFieldReferenceProjection() {
 
 		mongoTemplate.insert(new LineItem("id", "caption", 0));
 		mongoTemplate.insert(new LineItem("idonly", null, 0));
@@ -735,7 +735,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-861
-	public void shouldAllowGroupingUsingConditionalExpressions() {
+	void shouldAllowGroupingUsingConditionalExpressions() {
 
 		mongoTemplate.dropCollection(CarPerson.class);
 
@@ -779,7 +779,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1784, DATAMONGO-2264
-	public void shouldAllowSumUsingConditionalExpressions() {
+	void shouldAllowSumUsingConditionalExpressions() {
 
 		mongoTemplate.dropCollection(CarPerson.class);
 
@@ -827,7 +827,7 @@ public class AggregationTests {
 	 *      the Five Most Common “Likes”</a>
 	 */
 	@Test // DATAMONGO-586
-	public void returnFiveMostCommonLikesAggregationFrameworkExample() {
+	void returnFiveMostCommonLikesAggregationFrameworkExample() {
 
 		createUserWithLikesDocuments();
 
@@ -848,7 +848,7 @@ public class AggregationTests {
 		assertLikeStats(result.getMappedResults().get(4), "e", 3);
 	}
 
-	protected TypedAggregation<UserWithLikes> createUsersWithCommonLikesAggregation() {
+	TypedAggregation<UserWithLikes> createUsersWithCommonLikesAggregation() {
 		return newAggregation(UserWithLikes.class, //
 				unwind("likes"), //
 				group("likes").count().as("number"), //
@@ -859,7 +859,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-586
-	public void arithmenticOperatorsInProjectionExample() {
+	void arithmenticOperatorsInProjectionExample() {
 
 		Product product = new Product("P1", "A", 1.99, 3, 0.05, 0.19);
 		mongoTemplate.insert(product);
@@ -902,7 +902,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-774
-	public void expressionsInProjectionExample() {
+	void expressionsInProjectionExample() {
 
 		Product product = new Product("P1", "A", 1.99, 3, 0.05, 0.19);
 		mongoTemplate.insert(product);
@@ -934,7 +934,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-774
-	public void stringExpressionsInProjectionExample() {
+	void stringExpressionsInProjectionExample() {
 
 		Product product = new Product("P1", "A", 1.99, 3, 0.05, 0.19);
 		mongoTemplate.insert(product);
@@ -954,7 +954,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-774
-	public void expressionsInProjectionExampleShowcase() {
+	void expressionsInProjectionExampleShowcase() {
 
 		Product product = new Product("P1", "A", 1.99, 3, 0.05, 0.19);
 		mongoTemplate.insert(product);
@@ -983,7 +983,7 @@ public class AggregationTests {
 	 *      Data MongoDB - Aggregation Framework - invalid reference in group Operation</a>
 	 */
 	@Test // DATAMONGO-753
-	public void allowsNestedFieldReferencesAsGroupIdsInGroupExpressions() {
+	void allowsNestedFieldReferencesAsGroupIdsInGroupExpressions() {
 
 		mongoTemplate.insert(new DATAMONGO753().withPDs(new PD("A", 1), new PD("B", 1), new PD("C", 1)));
 		mongoTemplate.insert(new DATAMONGO753().withPDs(new PD("B", 1), new PD("B", 1), new PD("C", 1)));
@@ -1013,7 +1013,7 @@ public class AggregationTests {
 	 *      Data MongoDB - Aggregation Framework - invalid reference in group Operation</a>
 	 */
 	@Test // DATAMONGO-753
-	public void aliasesNestedFieldInProjectionImmediately() {
+	void aliasesNestedFieldInProjectionImmediately() {
 
 		mongoTemplate.insert(new DATAMONGO753().withPDs(new PD("A", 1), new PD("B", 1), new PD("C", 1)));
 		mongoTemplate.insert(new DATAMONGO753().withPDs(new PD("B", 1), new PD("B", 1), new PD("C", 1)));
@@ -1032,7 +1032,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-774
-	public void shouldPerformDateProjectionOperatorsCorrectly() throws ParseException {
+	void shouldPerformDateProjectionOperatorsCorrectly() throws ParseException {
 
 		Data data = new Data();
 		data.stringValue = "ABC";
@@ -1058,7 +1058,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-774
-	public void shouldPerformStringProjectionOperatorsCorrectly() throws ParseException {
+	void shouldPerformStringProjectionOperatorsCorrectly() throws ParseException {
 
 		Data data = new Data();
 		data.dateValue = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss.SSSZ").parse("29.08.1983 12:34:56.789+0000");
@@ -1094,7 +1094,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1550
-	public void shouldPerformReplaceRootOperatorCorrectly() throws ParseException {
+	void shouldPerformReplaceRootOperatorCorrectly() throws ParseException {
 
 		Data data = new Data();
 		DataItem dataItem = new DataItem();
@@ -1115,7 +1115,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-788, DATAMONGO-2264
-	public void referencesToGroupIdsShouldBeRenderedProperly() {
+	void referencesToGroupIdsShouldBeRenderedProperly() {
 
 		mongoTemplate.insert(new DATAMONGO788(1, 1));
 		mongoTemplate.insert(new DATAMONGO788(1, 1));
@@ -1142,7 +1142,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-806
-	public void shouldAllowGroupByIdFields() {
+	void shouldAllowGroupByIdFields() {
 
 		mongoTemplate.dropCollection(User.class);
 
@@ -1173,7 +1173,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-840
-	public void shouldAggregateOrderDataToAnInvoice() {
+	void shouldAggregateOrderDataToAnInvoice() {
 
 		mongoTemplate.dropCollection(Order.class);
 
@@ -1210,7 +1210,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-924
-	public void shouldAllowGroupingByAliasedFieldDefinedInFormerAggregationStage() {
+	void shouldAllowGroupingByAliasedFieldDefinedInFormerAggregationStage() {
 
 		mongoTemplate.dropCollection(CarPerson.class);
 
@@ -1241,7 +1241,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-960
-	public void returnFiveMostCommonLikesAggregationFrameworkExampleWithSortOnDiskOptionEnabled() {
+	void returnFiveMostCommonLikesAggregationFrameworkExampleWithSortOnDiskOptionEnabled() {
 
 		createUserWithLikesDocuments();
 
@@ -1264,7 +1264,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1637
-	public void returnFiveMostCommonLikesAggregationFrameworkExampleWithSortOnDiskOptionEnabledWhileStreaming() {
+	void returnFiveMostCommonLikesAggregationFrameworkExampleWithSortOnDiskOptionEnabledWhileStreaming() {
 
 		createUserWithLikesDocuments();
 
@@ -1290,7 +1290,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-960
-	public void returnFiveMostCommonLikesShouldReturnStageExecutionInformationWithExplainOptionEnabled() {
+	void returnFiveMostCommonLikesShouldReturnStageExecutionInformationWithExplainOptionEnabled() {
 
 		createUserWithLikesDocuments();
 
@@ -1308,7 +1308,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-954, DATAMONGO-2264
-	public void shouldSupportReturningCurrentAggregationRoot() {
+	void shouldSupportReturningCurrentAggregationRoot() {
 
 		mongoTemplate.save(new Person("p1_first", "p1_last", 25));
 		mongoTemplate.save(new Person("p2_first", "p2_last", 32));
@@ -1333,7 +1333,7 @@ public class AggregationTests {
 	 * {@link https://stackoverflow.com/questions/24185987/using-root-inside-spring-data-mongodb-for-retrieving-whole-document}
 	 */
 	@Test // DATAMONGO-954, DATAMONGO-2264
-	public void shouldSupportReturningCurrentAggregationRootInReference() {
+	void shouldSupportReturningCurrentAggregationRootInReference() {
 
 		mongoTemplate.save(new Reservation("0123", "42", 100));
 		mongoTemplate.save(new Reservation("0360", "43", 200));
@@ -1352,7 +1352,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1549
-	public void shouldApplyCountCorrectly() {
+	void shouldApplyCountCorrectly() {
 
 		mongoTemplate.save(new Reservation("0123", "42", 100));
 		mongoTemplate.save(new Reservation("0360", "43", 200));
@@ -1371,7 +1371,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-975
-	public void shouldRetrieveDateTimeFragementsCorrectly() throws Exception {
+	void shouldRetrieveDateTimeFragementsCorrectly() throws Exception {
 
 		mongoTemplate.dropCollection(ObjectWithDate.class);
 
@@ -1424,7 +1424,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1127
-	public void shouldSupportGeoNearQueriesForAggregationWithDistanceField() {
+	void shouldSupportGeoNearQueriesForAggregationWithDistanceField() {
 
 		mongoTemplate.insertAll(Arrays.asList(TestEntities.geolocation().pennStation(),
 				TestEntities.geolocation().tenGenOffice(), TestEntities.geolocation().flatironBuilding()));
@@ -1444,7 +1444,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1348
-	public void shouldSupportGeoJsonInGeoNearQueriesForAggregationWithDistanceField() {
+	void shouldSupportGeoJsonInGeoNearQueriesForAggregationWithDistanceField() {
 
 		mongoTemplate.insert(new Venue("Penn Station", -73.99408, 40.75057));
 		mongoTemplate.insert(new Venue("10gen Office", -73.99171, 40.738868));
@@ -1466,7 +1466,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1348
-	public void shouldSupportGeoJsonInGeoNearQueriesForAggregationWithDistanceFieldInMiles() {
+	void shouldSupportGeoJsonInGeoNearQueriesForAggregationWithDistanceFieldInMiles() {
 
 		mongoTemplate.insert(new Venue("Penn Station", -73.99408, 40.75057));
 		mongoTemplate.insert(new Venue("10gen Office", -73.99171, 40.738868));
@@ -1489,7 +1489,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1133
-	public void shouldHonorFieldAliasesForFieldReferences() {
+	void shouldHonorFieldAliasesForFieldReferences() {
 
 		mongoTemplate.insert(new MeterData("m1", "counter1", 42));
 		mongoTemplate.insert(new MeterData("m1", "counter1", 13));
@@ -1509,7 +1509,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1326
-	public void shouldLookupPeopleCorectly() {
+	void shouldLookupPeopleCorectly() {
 
 		createUsersWithReferencedPersons();
 
@@ -1528,7 +1528,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1326
-	public void shouldGroupByAndLookupPeopleCorectly() {
+	void shouldGroupByAndLookupPeopleCorectly() {
 
 		createUsersWithReferencedPersons();
 
@@ -1549,7 +1549,7 @@ public class AggregationTests {
 
 	@Test // DATAMONGO-1418, DATAMONGO-1824
 	@MongoVersion(asOf = "2.6")
-	public void shouldCreateOutputCollection() {
+	void shouldCreateOutputCollection() {
 
 		createPersonDocuments();
 
@@ -1573,7 +1573,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1637
-	public void shouldCreateOutputCollectionWhileStreaming() {
+	void shouldCreateOutputCollectionWhileStreaming() {
 
 		createPersonDocuments();
 
@@ -1595,7 +1595,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1637
-	public void shouldReturnDocumentsWithOutputCollectionWhileStreaming() {
+	void shouldReturnDocumentsWithOutputCollectionWhileStreaming() {
 
 		createPersonDocuments();
 
@@ -1626,7 +1626,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1418, DATAMONGO-2536
-	public void outShouldOutBeTheLastOperation() {
+	void outShouldOutBeTheLastOperation() {
 		assertThatIllegalArgumentException().isThrownBy(() -> newAggregation(match(new Criteria()), //
 				group("field1").count().as("totalCount"), //
 				out("collection1"), //
@@ -1634,7 +1634,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1325
-	public void shouldApplySampleCorrectly() {
+	void shouldApplySampleCorrectly() {
 
 		createUserWithLikesDocuments();
 
@@ -1651,7 +1651,7 @@ public class AggregationTests {
 
 	@Test // DATAMONGO-1457
 	@MongoVersion(asOf = "3.2")
-	public void sliceShouldBeAppliedCorrectly() {
+	void sliceShouldBeAppliedCorrectly() {
 
 		createUserWithLikesDocuments();
 
@@ -1667,7 +1667,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1491
-	public void filterShouldBeAppliedCorrectly() {
+	void filterShouldBeAppliedCorrectly() {
 
 		Item item43 = Item.builder().itemId("43").quantity(2).price(2L).build();
 		Item item2 = Item.builder().itemId("2").quantity(1).price(240L).build();
@@ -1697,7 +1697,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1538
-	public void letShouldBeAppliedCorrectly() {
+	void letShouldBeAppliedCorrectly() {
 
 		Sales2 sales1 = Sales2.builder().id("1").price(10).tax(0.5F).applyDiscount(true).build();
 		Sales2 sales2 = Sales2.builder().id("2").price(10).tax(0.25F).applyDiscount(false).build();
@@ -1721,7 +1721,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1551, DATAMONGO-2264
-	public void graphLookupShouldBeAppliedCorrectly() {
+	void graphLookupShouldBeAppliedCorrectly() {
 
 		Employee em1 = Employee.builder().id(1).name("Dev").build();
 		Employee em2 = Employee.builder().id(2).name("Eliot").reportsTo("Dev").build();
@@ -1753,7 +1753,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1552
-	public void bucketShouldCollectDocumentsIntoABucket() {
+	void bucketShouldCollectDocumentsIntoABucket() {
 
 		Art a1 = Art.builder().id(1).title("The Pillars of Society").artist("Grosz").year(1926).price(199.99).build();
 		Art a2 = Art.builder().id(2).title("Melancholy III").artist("Munch").year(1902).price(280.00).build();
@@ -1787,7 +1787,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1552, DATAMONGO-2437
-	public void bucketAutoShouldCollectDocumentsIntoABucket() {
+	void bucketAutoShouldCollectDocumentsIntoABucket() {
 
 		Art a1 = Art.builder().id(1).title("The Pillars of Society").artist("Grosz").year(1926).price(199.99).build();
 		Art a2 = Art.builder().id(2).title("Melancholy III").artist("Munch").year(1902).price(280.00).build();
@@ -1820,7 +1820,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1552
-	public void facetShouldCreateFacets() {
+	void facetShouldCreateFacets() {
 
 		Art a1 = Art.builder().id(1).title("The Pillars of Society").artist("Grosz").year(1926).price(199.99).build();
 		Art a2 = Art.builder().id(2).title("Melancholy III").artist("Munch").year(1902).price(280.00).build();
@@ -1863,7 +1863,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1986
-	public void runMatchOperationCriteriaThroughQueryMapperForTypedAggregation() {
+	void runMatchOperationCriteriaThroughQueryMapperForTypedAggregation() {
 
 		mongoTemplate.insertAll(TestEntities.geolocation().newYork());
 
@@ -1878,7 +1878,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-1986
-	public void runMatchOperationCriteriaThroughQueryMapperForUntypedAggregation() {
+	void runMatchOperationCriteriaThroughQueryMapperForUntypedAggregation() {
 
 		mongoTemplate.insertAll(TestEntities.geolocation().newYork());
 
@@ -1893,7 +1893,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-2437
-	public void shouldReadComplexIdValueCorrectly() {
+	void shouldReadComplexIdValueCorrectly() {
 
 		WithComplexId source = new WithComplexId();
 		source.id = new ComplexId();
@@ -1908,7 +1908,7 @@ public class AggregationTests {
 	}
 
 	@Test // DATAMONGO-2536
-	public void skipOutputDoesNotReadBackAggregationResults() {
+	void skipOutputDoesNotReadBackAggregationResults() {
 
 		createTagDocuments();
 
@@ -2021,7 +2021,7 @@ public class AggregationTests {
 		String pDch;
 		@org.springframework.data.mongodb.core.mapping.Field("alias") int up;
 
-		public PD(String pDch, int up) {
+		PD(String pDch, int up) {
 			this.pDch = pDch;
 			this.up = up;
 		}
@@ -2036,7 +2036,7 @@ public class AggregationTests {
 
 		public DATAMONGO788() {}
 
-		public DATAMONGO788(int x, int y) {
+		DATAMONGO788(int x, int y) {
 			this.x = x;
 			this.xField = x;
 			this.y = y;
@@ -2052,7 +2052,7 @@ public class AggregationTests {
 
 		public User() {}
 
-		public User(String id, PushMessage... msgs) {
+		User(String id, PushMessage... msgs) {
 			this.id = id;
 			this.msgs = Arrays.asList(msgs);
 		}
@@ -2067,7 +2067,7 @@ public class AggregationTests {
 
 		public PushMessage() {}
 
-		public PushMessage(String id, String content, Date createDate) {
+		PushMessage(String id, String content, Date createDate) {
 			this.id = id;
 			this.content = content;
 			this.createDate = createDate;
@@ -2082,7 +2082,7 @@ public class AggregationTests {
 		private String lastName;
 		private Descriptors descriptors;
 
-		public CarPerson(String firstname, String lastname, Entry... entries) {
+		CarPerson(String firstname, String lastname, Entry... entries) {
 			this.firstName = firstname;
 			this.lastName = lastname;
 
@@ -2102,7 +2102,7 @@ public class AggregationTests {
 
 		private List<Entry> entries = new ArrayList<AggregationTests.CarDescriptor.Entry>();
 
-		public CarDescriptor(Entry... entries) {
+		CarDescriptor(Entry... entries) {
 
 			for (Entry entry : entries) {
 				this.entries.add(entry);
@@ -2118,7 +2118,7 @@ public class AggregationTests {
 
 			public Entry() {}
 
-			public Entry(String make, String model, int year) {
+			Entry(String make, String model, int year) {
 				this.make = make;
 				this.model = model;
 				this.year = year;
@@ -2134,7 +2134,7 @@ public class AggregationTests {
 
 		public Reservation() {}
 
-		public Reservation(String hotelCode, String confirmationNumber, int timestamp) {
+		Reservation(String hotelCode, String confirmationNumber, int timestamp) {
 			this.hotelCode = hotelCode;
 			this.confirmationNumber = confirmationNumber;
 			this.timestamp = timestamp;
@@ -2145,7 +2145,7 @@ public class AggregationTests {
 
 		Date dateValue;
 
-		public ObjectWithDate(Date dateValue) {
+		ObjectWithDate(Date dateValue) {
 			this.dateValue = dateValue;
 		}
 	}
@@ -2161,14 +2161,14 @@ public class AggregationTests {
 
 		public InventoryItem() {}
 
-		public InventoryItem(int id, String item, int qty) {
+		InventoryItem(int id, String item, int qty) {
 
 			this.id = id;
 			this.item = item;
 			this.qty = qty;
 		}
 
-		public InventoryItem(int id, String item, String description, int qty) {
+		InventoryItem(int id, String item, String description, int qty) {
 
 			this.id = id;
 			this.item = item;

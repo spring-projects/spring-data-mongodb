@@ -68,7 +68,6 @@ import org.springframework.data.mongodb.core.QueryOperations.UpdateContext;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
-import org.springframework.data.mongodb.core.aggregation.AggregationOptions.ResultOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
@@ -2126,7 +2125,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			List<Document> rawResult = new ArrayList<>();
 
-			Class<?> domainType = aggregation instanceof TypedAggregation ? ((TypedAggregation) aggregation).getInputType()
+			Class<?> domainType = aggregation instanceof TypedAggregation ? ((TypedAggregation<?>) aggregation).getInputType()
 					: null;
 
 			Optional<Collation> collation = Optionals.firstNonEmpty(options::getCollation,
@@ -2147,10 +2146,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				aggregateIterable = aggregateIterable.maxTime(options.getMaxTime().toMillis(), TimeUnit.MILLISECONDS);
 			}
 
-			if(ResultOptions.SKIP.equals(options.resultOptions())) {
+			if (options.isSkipResults()) {
 
 				// toCollection only allowed for $out and $merge if those are the last stages
-				if(aggregation.getPipeline().isOutOrMerge()) {
+				if (aggregation.getPipeline().isOutOrMerge()) {
 					aggregateIterable.toCollection();
 				} else {
 					aggregateIterable.first();

@@ -261,11 +261,15 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			fieldObject.putAll(projection.toDocument(context));
 		}
 
-		return new Document(operator(), fieldObject);
+		return new Document(getOperator(), fieldObject);
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
+	 */
 	@Override
-	public String operator() {
+	public String getOperator() {
 		return "$project";
 	}
 
@@ -1553,7 +1557,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 				final Field aliasedField = Fields.field(alias, this.field.getName());
 				return new OperationProjection(aliasedField, operation, values.toArray()) {
 
-					/* 
+					/*
 					 * (non-Javadoc)
 					 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder.OperationProjection#getField()
 					 */
@@ -1754,7 +1758,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			this.expression = expression;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 		 */
@@ -1882,7 +1886,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			this.projections = projections;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 		 */

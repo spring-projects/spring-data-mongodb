@@ -645,9 +645,9 @@ public class Aggregation {
 	/**
 	 * Creates a new {@link RedactOperation} that can restrict the content of a document based on information stored
 	 * within the document itself.
-	 * 
+	 *
 	 * <pre class="code">
-	 * 
+	 *
 	 * Aggregation.redact(ConditionalOperators.when(Criteria.where("level").is(5)) //
 	 * 		.then(RedactOperation.PRUNE) //
 	 * 		.otherwise(RedactOperation.DESCEND));
@@ -705,6 +705,10 @@ public class Aggregation {
 		return pipeline.toDocuments(rootContext);
 	}
 
+	/**
+	 * @return the {@link AggregationPipeline}.
+	 * @since 3.0.2
+	 */
 	public AggregationPipeline getPipeline() {
 		return pipeline;
 	}

@@ -20,21 +20,19 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.BucketOperation.BucketOperationOutputBuilder;
 import org.springframework.util.Assert;
 
-import org.bson.Document;
-
 /**
  * Encapsulates the aggregation framework {@code $bucket}-operation. <br />
- *
  * Bucket stage is typically used with {@link Aggregation} and {@code $facet}. Categorizes incoming documents into
  * groups, called buckets, based on a specified expression and bucket boundaries. <br />
- *
  * We recommend to use the static factory method {@link Aggregation#bucket(String)} instead of creating instances of
  * this class directly.
  *
- * @see <a href="https://docs.mongodb.org/manual/reference/aggregation/bucket/">https://docs.mongodb.org/manual/reference/aggregation/bucket/</a>
+ * @see <a href=
+ *      "https://docs.mongodb.org/manual/reference/aggregation/bucket/">https://docs.mongodb.org/manual/reference/aggregation/bucket/</a>
  * @see BucketOperationSupport
  * @author Mark Paluch
  * @since 1.10
@@ -103,11 +101,15 @@ public class BucketOperation extends BucketOperationSupport<BucketOperation, Buc
 
 		options.putAll(super.toDocument(context));
 
-		return new Document(operator(), options);
+		return new Document(getOperator(), options);
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
+	 */
 	@Override
-	public String operator() {
+	public String getOperator() {
 		return "$bucket";
 	}
 
@@ -209,8 +211,8 @@ public class BucketOperation extends BucketOperationSupport<BucketOperation, Buc
 			extends ExpressionBucketOperationBuilderSupport<BucketOperationOutputBuilder, BucketOperation> {
 
 		/**
-		 * Creates a new {@link ExpressionBucketOperationBuilderSupport} for the given value, {@link BucketOperation}
-		 * and parameters.
+		 * Creates a new {@link ExpressionBucketOperationBuilderSupport} for the given value, {@link BucketOperation} and
+		 * parameters.
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @param operation must not be {@literal null}.

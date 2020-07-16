@@ -48,11 +48,15 @@ public class SampleOperation implements AggregationOperation {
 	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
-		return new Document(operator(), new Document("size", this.sampleSize));
+		return new Document(getOperator(), new Document("size", this.sampleSize));
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
+	 */
 	@Override
-	public String operator() {
+	public String getOperator() {
 		return "$sample";
 	}
 }

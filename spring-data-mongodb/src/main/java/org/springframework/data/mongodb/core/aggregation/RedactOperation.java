@@ -74,11 +74,15 @@ public class RedactOperation implements AggregationOperation {
 	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
-		return new Document(operator(), condition.toDocument(context));
+		return new Document(getOperator(), condition.toDocument(context));
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
+	 */
 	@Override
-	public String operator() {
+	public String getOperator() {
 		return "$redact";
 	}
 

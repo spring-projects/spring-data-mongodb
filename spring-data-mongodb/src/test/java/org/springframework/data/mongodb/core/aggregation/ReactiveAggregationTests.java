@@ -181,5 +181,4 @@ public class ReactiveAggregationTests {
 		reactiveMongoTemplate.aggregate(agg, Document.class).as(StepVerifier::create).verifyComplete();
 	}
 
-
 }

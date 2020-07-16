@@ -99,6 +99,10 @@ public class AddFieldsOperation extends DocumentEnhancingOperation {
 		return new AddFieldsOperationBuilder(getValueMap());
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.DocumentEnhancingOperation#mongoOperator()
+	 */
 	@Override
 	protected String mongoOperator() {
 		return "$addFields";

@@ -29,7 +29,6 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.bson.BsonValue;
@@ -40,6 +39,7 @@ import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -72,7 +72,6 @@ import org.springframework.data.mongodb.core.QueryOperations.UpdateContext;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
-import org.springframework.data.mongodb.core.aggregation.AggregationOptions.ResultOptions;
 import org.springframework.data.mongodb.core.aggregation.PrefixingDelegatingAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
@@ -1018,11 +1017,14 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		}
 
 		ReadDocumentCallback<O> readCallback = new ReadDocumentCallback<>(mongoConverter, outputType, collectionName);
-		return execute(collectionName, collection -> aggregateAndMap(collection, pipeline, () -> aggregation.getPipeline().isOutOrMerge(), options, readCallback,
-				aggregation instanceof TypedAggregation ? ((TypedAggregation) aggregation).getInputType() : null));
+		return execute(collectionName,
+				collection -> aggregateAndMap(collection, pipeline, aggregation.getPipeline().isOutOrMerge(), options,
+						readCallback,
+						aggregation instanceof TypedAggregation ? ((TypedAggregation<?>) aggregation).getInputType() : null));
 	}
 
-	private <O> Flux<O> aggregateAndMap(MongoCollection<Document> collection, List<Document> pipeline, Supplier<Boolean> isOutOrMerge,
+	private <O> Flux<O> aggregateAndMap(MongoCollection<Document> collection, List<Document> pipeline,
+			boolean isOutOrMerge,
 			AggregationOptions options, ReadDocumentCallback<O> readCallback, @Nullable Class<?> inputType) {
 
 		AggregatePublisher<Document> cursor = collection.aggregate(pipeline, Document.class)
@@ -1042,11 +1044,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			cursor = cursor.maxTime(options.getMaxTime().toMillis(), TimeUnit.MILLISECONDS);
 		}
 
-		if (ResultOptions.SKIP.equals(options.resultOptions())) {
-			if (isOutOrMerge.get()) {
-				return Flux.from(cursor.toCollection()).map(it -> (O) it);
-			}
-			return Flux.from(cursor.first()).thenMany(Mono.empty());
+		if (options.isSkipResults()) {
+			return (isOutOrMerge ? Flux.from(cursor.toCollection()) : Flux.from(cursor.first())).thenMany(Mono.empty());
 		}
 
 		return Flux.from(cursor).concatMap(readCallback::doWith);

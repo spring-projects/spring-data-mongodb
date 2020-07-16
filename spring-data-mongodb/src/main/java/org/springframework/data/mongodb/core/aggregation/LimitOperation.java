@@ -49,11 +49,15 @@ public class LimitOperation implements AggregationOperation {
 	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
-		return new Document(operator(), Long.valueOf(maxElements));
+		return new Document(getOperator(), Long.valueOf(maxElements));
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
+	 */
 	@Override
-	public String operator() {
+	public String getOperator() {
 		return "$limit";
 	}
 }

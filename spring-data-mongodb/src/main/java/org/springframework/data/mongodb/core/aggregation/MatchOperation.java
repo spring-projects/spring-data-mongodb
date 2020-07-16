@@ -30,7 +30,8 @@ import org.springframework.util.Assert;
  * @author Thomas Darimont
  * @author Oliver Gierke
  * @since 1.3
- * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/match/">MongoDB Aggregation Framework: $match</a>
+ * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/match/">MongoDB Aggregation Framework:
+ *      $match</a>
  */
 public class MatchOperation implements AggregationOperation {
 
@@ -53,11 +54,15 @@ public class MatchOperation implements AggregationOperation {
 	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
-		return new Document(operator(), context.getMappedObject(criteriaDefinition.getCriteriaObject()));
+		return new Document(getOperator(), context.getMappedObject(criteriaDefinition.getCriteriaObject()));
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
+	 */
 	@Override
-	public String operator() {
+	public String getOperator() {
 		return "$match";
 	}
 }

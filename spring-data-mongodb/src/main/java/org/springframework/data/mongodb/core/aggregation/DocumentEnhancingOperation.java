@@ -71,8 +71,12 @@ abstract class DocumentEnhancingOperation implements InheritsFieldsAggregationOp
 	 */
 	protected abstract String mongoOperator();
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
+	 */
 	@Override
-	public String operator() {
+	public String getOperator() {
 		return mongoOperator();
 	}
 

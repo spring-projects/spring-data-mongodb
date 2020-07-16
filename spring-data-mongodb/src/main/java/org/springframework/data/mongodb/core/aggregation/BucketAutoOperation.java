@@ -15,11 +15,10 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.BucketAutoOperation.BucketAutoOperationOutputBuilder;
 import org.springframework.data.mongodb.core.aggregation.BucketOperationSupport.OutputBuilder;
 import org.springframework.util.Assert;
-
-import org.bson.Document;
 
 /**
  * Encapsulates the aggregation framework {@code $bucketAuto}-operation. <br />
@@ -106,11 +105,15 @@ public class BucketAutoOperation extends BucketOperationSupport<BucketAutoOperat
 
 		options.putAll(super.toDocument(context));
 
-		return new Document(operator(), options);
+		return new Document(getOperator(), options);
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
+	 */
 	@Override
-	public String operator() {
+	public String getOperator() {
 		return "$bucketAuto";
 	}
 
