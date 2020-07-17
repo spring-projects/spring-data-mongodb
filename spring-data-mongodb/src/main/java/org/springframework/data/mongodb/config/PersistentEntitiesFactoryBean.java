@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,8 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
  *
  * @author Oliver Gierke
  * @author Mark Paluch
+ * @author Christoph Strobl
+ * @since 3.1
  */
 class PersistentEntitiesFactoryBean implements FactoryBean<PersistentEntities> {
 
@@ -44,7 +46,7 @@ class PersistentEntitiesFactoryBean implements FactoryBean<PersistentEntities> {
 	 * @see org.springframework.beans.factory.FactoryBean#getObject()
 	 */
 	@Override
-	public PersistentEntities getObject() throws Exception {
+	public PersistentEntities getObject() {
 		return PersistentEntities.of(converter.getMappingContext());
 	}
 
@@ -55,14 +57,5 @@ class PersistentEntitiesFactoryBean implements FactoryBean<PersistentEntities> {
 	@Override
 	public Class<?> getObjectType() {
 		return PersistentEntities.class;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.beans.factory.FactoryBean#isSingleton()
-	 */
-	@Override
-	public boolean isSingleton() {
-		return true;
 	}
 }

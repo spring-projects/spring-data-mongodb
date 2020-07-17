@@ -21,6 +21,7 @@ import static org.mockito.Mockito.*;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -34,12 +35,16 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.core.ResolvableType;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.AuditorAware;
+import org.springframework.data.mapping.callback.EntityCallback;
 import org.springframework.data.mongodb.core.AuditablePerson;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.event.AuditingEntityCallback;
+import org.springframework.data.mongodb.core.mapping.event.ReactiveAuditingEntityCallback;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.data.mongodb.test.util.Client;
@@ -48,6 +53,7 @@ import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.stereotype.Repository;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.client.MongoClient;
 
@@ -60,7 +66,7 @@ import com.mongodb.client.MongoClient;
  */
 @ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 @ContextConfiguration
-public class AuditingViaJavaConfigRepositoriesTests {
+class AuditingViaJavaConfigRepositoriesTests {
 
 	static @Client MongoClient mongoClient;
 
@@ -79,6 +85,7 @@ public class AuditingViaJavaConfigRepositoriesTests {
 
 		@Override
 		protected String getDatabaseName() {
+
 			return "database";
 		}
 
@@ -101,13 +108,13 @@ public class AuditingViaJavaConfigRepositoriesTests {
 	}
 
 	@BeforeEach
-	public void setup() {
+	void setup() {
 		auditablePersonRepository.deleteAll();
 		this.auditor = auditablePersonRepository.save(new AuditablePerson("auditor"));
 	}
 
 	@Test // DATAMONGO-792, DATAMONGO-883
-	public void basicAuditing() {
+	void basicAuditing() {
 
 		doReturn(Optional.of(this.auditor)).when(this.auditorAware).getCurrentAuditor();
 
@@ -122,18 +129,18 @@ public class AuditingViaJavaConfigRepositoriesTests {
 
 	@Test // DATAMONGO-843
 	@SuppressWarnings("resource")
-	public void auditingUsesFallbackMappingContextIfNoneConfiguredWithRepositories() {
+	void auditingUsesFallbackMappingContextIfNoneConfiguredWithRepositories() {
 		new AnnotationConfigApplicationContext(SimpleConfigWithRepositories.class);
 	}
 
 	@Test // DATAMONGO-843
 	@SuppressWarnings("resource")
-	public void auditingUsesFallbackMappingContextIfNoneConfigured() {
+	void auditingUsesFallbackMappingContextIfNoneConfigured() {
 		new AnnotationConfigApplicationContext(SimpleConfig.class);
 	}
 
 	@Test // DATAMONGO-2139
-	public void auditingWorksForVersionedEntityWithWrapperVersion() {
+	void auditingWorksForVersionedEntityWithWrapperVersion() {
 
 		verifyAuditingViaVersionProperty(new VersionedAuditablePerson(), //
 				it -> it.version, //
@@ -143,7 +150,7 @@ public class AuditingViaJavaConfigRepositoriesTests {
 	}
 
 	@Test // DATAMONGO-2179
-	public void auditingWorksForVersionedEntityBatchWithWrapperVersion() {
+	void auditingWorksForVersionedEntityBatchWithWrapperVersion() {
 
 		verifyAuditingViaVersionProperty(new VersionedAuditablePerson(), //
 				it -> it.version, //
@@ -153,7 +160,7 @@ public class AuditingViaJavaConfigRepositoriesTests {
 	}
 
 	@Test // DATAMONGO-2139
-	public void auditingWorksForVersionedEntityWithSimpleVersion() {
+	void auditingWorksForVersionedEntityWithSimpleVersion() {
 
 		verifyAuditingViaVersionProperty(new SimpleVersionedAuditablePerson(), //
 				it -> it.version, //
@@ -163,7 +170,7 @@ public class AuditingViaJavaConfigRepositoriesTests {
 	}
 
 	@Test // DATAMONGO-2139
-	public void auditingWorksForVersionedEntityWithWrapperVersionOnTemplate() {
+	void auditingWorksForVersionedEntityWithWrapperVersionOnTemplate() {
 
 		verifyAuditingViaVersionProperty(new VersionedAuditablePerson(), //
 				it -> it.version, //
@@ -173,13 +180,26 @@ public class AuditingViaJavaConfigRepositoriesTests {
 	}
 
 	@Test // DATAMONGO-2139
-	public void auditingWorksForVersionedEntityWithSimpleVersionOnTemplate() {
+	void auditingWorksForVersionedEntityWithSimpleVersionOnTemplate() {
 
 		verifyAuditingViaVersionProperty(new SimpleVersionedAuditablePerson(), //
 				it -> it.version, //
 				AuditablePerson::getCreatedAt, //
 				operations::save, //
 				0L, 1L, 2L);
+	}
+
+	@Test // DATAMONGO-2586
+	void auditingShouldOnlyRegisterImperativeAuditingCallback() {
+
+		Object callbacks = ReflectionTestUtils.getField(operations, "entityCallbacks");
+		Object callbackDiscoverer = ReflectionTestUtils.getField(callbacks, "callbackDiscoverer");
+		List<EntityCallback<?>> actualCallbacks = ReflectionTestUtils.invokeMethod(callbackDiscoverer, "getEntityCallbacks",
+				AuditablePerson.class, ResolvableType.forClass(EntityCallback.class));
+
+		assertThat(actualCallbacks) //
+				.hasAtLeastOneElementOfType(AuditingEntityCallback.class) //
+				.doesNotHaveAnyElementsOfTypes(ReactiveAuditingEntityCallback.class);
 	}
 
 	private <T extends AuditablePerson> void verifyAuditingViaVersionProperty(T instance,

@@ -17,12 +17,18 @@ package org.springframework.data.mongodb.config;
 
 import static org.assertj.core.api.Assertions.*;
 
+import org.springframework.core.ResolvableType;
+import org.springframework.data.mapping.callback.EntityCallback;
+import org.springframework.data.mongodb.core.mapping.event.AuditingEntityCallback;
+import org.springframework.data.mongodb.core.mapping.event.ReactiveAuditingEntityCallback;
+import org.springframework.test.util.ReflectionTestUtils;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -144,6 +150,19 @@ class ReactiveAuditingTests {
 				AuditablePerson::getCreatedAt, //
 				operations::save, //
 				0L, 1L, 2L);
+	}
+
+	@Test // DATAMONGO-2586
+	void auditingShouldOnlyRegisterReactiveAuditingCallback() {
+
+		Object callbacks = ReflectionTestUtils.getField(operations, "entityCallbacks");
+		Object callbackDiscoverer = ReflectionTestUtils.getField(callbacks, "callbackDiscoverer");
+		List<EntityCallback<?>> actualCallbacks = ReflectionTestUtils.invokeMethod(callbackDiscoverer, "getEntityCallbacks",
+				AuditablePerson.class, ResolvableType.forClass(EntityCallback.class));
+
+		assertThat(actualCallbacks) //
+				.hasAtLeastOneElementOfType(ReactiveAuditingEntityCallback.class) //
+				.doesNotHaveAnyElementsOfTypes(AuditingEntityCallback.class);
 	}
 
 	private <T extends AuditablePerson> void verifyAuditingViaVersionProperty(T instance,
