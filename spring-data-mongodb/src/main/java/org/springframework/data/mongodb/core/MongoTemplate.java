@@ -155,6 +155,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Cimon Lucas
  * @author Michael J. Simons
  * @author Roman Puchkovskiy
+ * @author Yadhukrishna S Pai
  */
 public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider {
 
@@ -2149,6 +2150,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			options.getComment().ifPresent(aggregateIterable::comment);
 
+			options.getHint().ifPresent(aggregateIterable::hint);
+
 			if (options.hasExecutionTimeLimit()) {
 				aggregateIterable = aggregateIterable.maxTime(options.getMaxTime().toMillis(), TimeUnit.MILLISECONDS);
 			}
@@ -2206,6 +2209,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			}
 
 			options.getComment().ifPresent(cursor::comment);
+
+			options.getHint().ifPresent(cursor::hint);
 
 			Class<?> domainType = aggregation instanceof TypedAggregation ? ((TypedAggregation) aggregation).getInputType()
 					: null;

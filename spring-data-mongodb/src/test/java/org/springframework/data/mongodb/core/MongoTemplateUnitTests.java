@@ -139,6 +139,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Mark Paluch
  * @author Michael J. Simons
  * @author Roman Puchkovskiy
+ * @author Yadhukrishna S Pai
  */
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
@@ -466,6 +467,17 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.aggregate(newAggregation(Aggregation.unwind("foo")).withOptions(options), "collection-1", Wrapper.class);
 
 		verify(aggregateIterable).comment("expensive");
+	}
+
+	@Test // DATAMONGO-1836
+	void aggregateShouldHonorOptionsHint() {
+
+		Document hint = new Document("dummyField", 1);
+		AggregationOptions options = AggregationOptions.builder().hint(hint).build();
+
+		template.aggregate(newAggregation(Aggregation.unwind("foo")).withOptions(options), "collection-1", Wrapper.class);
+
+		verify(aggregateIterable).hint(hint);
 	}
 
 	@Test // DATAMONGO-1166, DATAMONGO-2264
