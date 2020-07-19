@@ -28,10 +28,12 @@ import org.junit.jupiter.api.Test;
  * @author Thomas Darimont
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Yadhukrishna S Pai
  * @since 1.6
  */
 public class AggregationOptionsTests {
 
+	private final Document dummyHint = new Document("dummyField", 1);
 	AggregationOptions aggregationOptions;
 
 	@BeforeEach
@@ -40,18 +42,20 @@ public class AggregationOptionsTests {
 				.cursorBatchSize(1) //
 				.allowDiskUse(true) //
 				.comment("hola!") //
+				.hint(dummyHint) //
 				.build();
 	}
 
-	@Test // DATAMONGO-960
+	@Test // DATAMONGO-960, DATAMONGO-1836
 	public void aggregationOptionsBuilderShouldSetOptionsAccordingly() {
 
 		assertThat(aggregationOptions.isAllowDiskUse()).isTrue();
 		assertThat(aggregationOptions.isExplain()).isTrue();
 		assertThat(aggregationOptions.getCursor().get()).isEqualTo(new Document("batchSize", 1));
+		assertThat(aggregationOptions.getHint().get()).isEqualTo(dummyHint);
 	}
 
-	@Test // DATAMONGO-1637, DATAMONGO-2153
+	@Test // DATAMONGO-1637, DATAMONGO-2153, DATAMONGO-1836
 	public void shouldInitializeFromDocument() {
 
 		Document document = new Document();
@@ -59,6 +63,7 @@ public class AggregationOptionsTests {
 		document.put("explain", true);
 		document.put("allowDiskUse", true);
 		document.put("comment", "hola!");
+		document.put("hint", dummyHint);
 
 		aggregationOptions = AggregationOptions.fromDocument(document);
 
@@ -67,12 +72,19 @@ public class AggregationOptionsTests {
 		assertThat(aggregationOptions.getCursor().get()).isEqualTo(new Document("batchSize", 1));
 		assertThat(aggregationOptions.getCursorBatchSize()).isEqualTo(1);
 		assertThat(aggregationOptions.getComment().get()).isEqualTo("hola!");
+		assertThat(aggregationOptions.getHint().get()).isEqualTo(dummyHint);
 	}
 
-	@Test // DATAMONGO-960, DATAMONGO-2153
+	@Test // DATAMONGO-960, DATAMONGO-2153, DATAMONGO-1836
 	public void aggregationOptionsToString() {
 
 		assertThat(aggregationOptions.toDocument()).isEqualTo(Document.parse(
-				"{ \"allowDiskUse\" : true , \"explain\" : true , \"cursor\" : { \"batchSize\" : 1}, \"comment\": \"hola!\"}"));
+				"{ " +
+						"\"allowDiskUse\" : true , " +
+						"\"explain\" : true , " +
+						"\"cursor\" : { \"batchSize\" : 1}, " +
+						"\"comment\": \"hola!\", " +
+						"\"hint\" : { \"dummyField\" : 1}" +
+						"}"));
 	}
 }

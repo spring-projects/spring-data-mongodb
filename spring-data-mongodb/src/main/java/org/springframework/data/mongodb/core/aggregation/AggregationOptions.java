@@ -32,6 +32,7 @@ import org.springframework.util.Assert;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Yadhukrishna S Pai
  * @see Aggregation#withOptions(AggregationOptions)
  * @see TypedAggregation#withOptions(AggregationOptions)
  * @since 1.6
@@ -45,12 +46,14 @@ public class AggregationOptions {
 	private static final String COLLATION = "collation";
 	private static final String COMMENT = "comment";
 	private static final String MAX_TIME = "maxTimeMS";
+	private static final String HINT = "hint";
 
 	private final boolean allowDiskUse;
 	private final boolean explain;
 	private final Optional<Document> cursor;
 	private final Optional<Collation> collation;
 	private final Optional<String> comment;
+	private final Optional<Document> hint;
 	private Duration maxTime = Duration.ZERO;
 	private ResultOptions resultOptions = ResultOptions.READ;
 
@@ -77,7 +80,7 @@ public class AggregationOptions {
 	 */
 	public AggregationOptions(boolean allowDiskUse, boolean explain, @Nullable Document cursor,
 			@Nullable Collation collation) {
-		this(allowDiskUse, explain, cursor, collation, null);
+		this(allowDiskUse, explain, cursor, collation, null, null);
 	}
 
 	/**
@@ -89,16 +92,18 @@ public class AggregationOptions {
 	 * aggregation.
 	 * @param collation collation for string comparison. Can be {@literal null}.
 	 * @param comment execution comment. Can be {@literal null}.
+	 * @param hint can be {@literal null}, used to provide an index that would be forcibly used by query optimizer.
 	 * @since 2.2
 	 */
 	public AggregationOptions(boolean allowDiskUse, boolean explain, @Nullable Document cursor,
-			@Nullable Collation collation, @Nullable String comment) {
+			@Nullable Collation collation, @Nullable String comment, @Nullable Document hint) {
 
 		this.allowDiskUse = allowDiskUse;
 		this.explain = explain;
 		this.cursor = Optional.ofNullable(cursor);
 		this.collation = Optional.ofNullable(collation);
 		this.comment = Optional.ofNullable(comment);
+		this.hint = Optional.ofNullable(hint);
 	}
 
 	/**
@@ -130,8 +135,9 @@ public class AggregationOptions {
 		Collation collation = document.containsKey(COLLATION) ? Collation.from(document.get(COLLATION, Document.class))
 				: null;
 		String comment = document.getString(COMMENT);
+		Document hint = document.get(HINT, Document.class);
 
-		AggregationOptions options = new AggregationOptions(allowDiskUse, explain, cursor, collation, comment);
+		AggregationOptions options = new AggregationOptions(allowDiskUse, explain, cursor, collation, comment, hint);
 		if (document.containsKey(MAX_TIME)) {
 			options.maxTime = Duration.ofMillis(document.getLong(MAX_TIME));
 		}
@@ -213,6 +219,16 @@ public class AggregationOptions {
 	}
 
 	/**
+	 * Get the hint used to to fulfill the aggregation.
+	 *
+	 * @return never {@literal null}.
+	 */
+	public Optional<Document> getHint() {
+		return hint;
+	}
+
+
+	/**
 	 * @return the time limit for processing. {@link Duration#ZERO} is used for the default unbounded behavior.
 	 * @since 3.0
 	 */
@@ -248,6 +264,10 @@ public class AggregationOptions {
 			result.put(EXPLAIN, explain);
 		}
 
+		if (result.containsKey(HINT)) {
+			hint.ifPresent(val -> result.append(HINT, val));
+		}
+
 		if (!result.containsKey(CURSOR)) {
 			cursor.ifPresent(val -> result.put(CURSOR, val));
 		}
@@ -277,6 +297,7 @@ public class AggregationOptions {
 		cursor.ifPresent(val -> document.put(CURSOR, val));
 		collation.ifPresent(val -> document.append(COLLATION, val.toDocument()));
 		comment.ifPresent(val -> document.append(COMMENT, val));
+		hint.ifPresent(val -> document.append(HINT, val));
 
 		if (hasExecutionTimeLimit()) {
 			document.append(MAX_TIME, maxTime.toMillis());
@@ -318,6 +339,7 @@ public class AggregationOptions {
 		private @Nullable Document cursor;
 		private @Nullable Collation collation;
 		private @Nullable String comment;
+		private @Nullable Document hint;
 		private @Nullable Duration maxTime;
 		private @Nullable ResultOptions resultOptions;
 
@@ -397,6 +419,19 @@ public class AggregationOptions {
 		}
 
 		/**
+		 * Define a hint is used forcibly by query optimizer to to fulfill the aggregation.
+		 *
+		 * @param hint can be {@literal null}.
+		 * @return this.
+		 * @since 2.2
+		 */
+		public Builder hint(@Nullable Document hint) {
+
+			this.hint = hint;
+			return this;
+		}
+
+		/**
 		 * Set the time limit for processing.
 		 *
 		 * @param maxTime {@link Duration#ZERO} is used for the default unbounded behavior. {@link Duration#isNegative()
@@ -431,7 +466,13 @@ public class AggregationOptions {
 		 */
 		public AggregationOptions build() {
 
-			AggregationOptions options = new AggregationOptions(allowDiskUse, explain, cursor, collation, comment);
+			AggregationOptions options = new AggregationOptions(
+					allowDiskUse,
+					explain,
+					cursor,
+					collation,
+					comment,
+					hint);
 			if (maxTime != null) {
 				options.maxTime = maxTime;
 			}
