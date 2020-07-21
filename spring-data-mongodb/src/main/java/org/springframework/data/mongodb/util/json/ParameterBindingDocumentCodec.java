@@ -40,7 +40,6 @@ import org.bson.Transformer;
 import org.bson.codecs.*;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.json.JsonParseException;
-
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.spel.ExpressionDependencies;
@@ -187,43 +186,23 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 	 *
 	 * @param json
 	 * @param expressionParser
-	 * @return a {@link Optional} containing merged {@link ExpressionDependencies} object if expressions were found,
-	 *         otherwise {@link Optional#empty()}.
+	 * @return merged {@link ExpressionDependencies} object if expressions were found, otherwise
+	 *         {@link ExpressionDependencies#none()}.
 	 * @since 3.1
 	 */
-	public Optional<ExpressionDependencies> getExpressionDependencies(@Nullable String json, ValueProvider valueProvider,
+	public ExpressionDependencies captureExpressionDependencies(@Nullable String json, ValueProvider valueProvider,
 			ExpressionParser expressionParser) {
 
 		if (StringUtils.isEmpty(json)) {
-			return Optional.empty();
+			return ExpressionDependencies.none();
 		}
 
-		List<ExpressionDependencies> dependencies = new ArrayList<>();
+		DependencyCapturingExpressionEvaluator expressionEvaluator = new DependencyCapturingExpressionEvaluator(
+				expressionParser);
+		this.decode(new ParameterBindingJsonReader(json, new ParameterBindingContext(valueProvider, expressionEvaluator)),
+				DecoderContext.builder().build());
 
-		ParameterBindingContext context = new ParameterBindingContext(valueProvider, new SpELExpressionEvaluator() {
-			@Override
-			public <T> T evaluate(String expression) {
-
-				dependencies.add(ExpressionDependencies.discover(expressionParser.parseExpression(expression)));
-
-				return (T) new Object();
-			}
-		});
-
-		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json, context);
-		this.decode(reader, DecoderContext.builder().build());
-
-		if (dependencies.isEmpty()) {
-			return Optional.empty();
-		}
-
-		ExpressionDependencies result = ExpressionDependencies.empty();
-
-		for (ExpressionDependencies dependency : dependencies) {
-			result = result.mergeWith(dependency);
-		}
-
-		return Optional.of(result);
+		return expressionEvaluator.getCapturedDependencies();
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -400,4 +379,32 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 		return list;
 	}
 
+	/**
+	 * @author Christoph Strobl
+	 * @since 3.1
+	 */
+	static class DependencyCapturingExpressionEvaluator implements SpELExpressionEvaluator {
+
+		private static final Object PLACEHOLDER = new Object();
+
+		private final ExpressionParser expressionParser;
+		private final List<ExpressionDependencies> dependencies = new ArrayList<>();
+
+		DependencyCapturingExpressionEvaluator(ExpressionParser expressionParser) {
+			this.expressionParser = expressionParser;
+		}
+
+		@Nullable
+		@Override
+		public <T> T evaluate(String expression) {
+
+			dependencies.add(ExpressionDependencies.discover(expressionParser.parseExpression(expression)));
+			return (T) PLACEHOLDER;
+		}
+
+		ExpressionDependencies getCapturedDependencies() {
+			return ExpressionDependencies.merged(dependencies);
+		}
+
+	}
 }

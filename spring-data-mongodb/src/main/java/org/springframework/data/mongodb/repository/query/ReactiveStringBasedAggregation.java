@@ -20,12 +20,9 @@ import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.bson.Document;
 import org.reactivestreams.Publisher;
-
-import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
@@ -40,7 +37,6 @@ import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationCo
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.expression.ExpressionParser;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -135,16 +131,10 @@ public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 
 		for (String source : method.getAnnotatedAggregation()) {
 
-			Optional<ExpressionDependencies> dependencies = CODEC.getExpressionDependencies(source,
+			ExpressionDependencies dependencies = CODEC.captureExpressionDependencies(source,
 					accessor::getBindableValue, expressionParser);
 
-			Mono<SpELExpressionEvaluator> evaluator = dependencies.map(
-					it -> evaluationContextProvider.getEvaluationContextLater(method.getParameters(), accessor.getValues(), it))
-					.map(evaluationContext -> evaluationContext
-							.map(it -> (SpELExpressionEvaluator) new DefaultSpELExpressionEvaluator(expressionParser, it)))
-					.orElseGet(() -> Mono.just(DefaultSpELExpressionEvaluator.unsupported()));
-
-			Mono<AggregationOperation> stage = evaluator.map(it -> {
+			Mono<AggregationOperation> stage = getSpelEvaluatorFor(dependencies, accessor).map(it -> {
 
 				ParameterBindingContext bindingContext = new ParameterBindingContext(accessor::getBindableValue, it);
 

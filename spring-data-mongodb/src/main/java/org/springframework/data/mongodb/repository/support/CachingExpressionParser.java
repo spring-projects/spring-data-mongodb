@@ -35,7 +35,7 @@ class CachingExpressionParser implements ExpressionParser {
 	private final ExpressionParser delegate;
 	private final Map<String, Expression> cache = new ConcurrentHashMap<>();
 
-	public CachingExpressionParser(ExpressionParser delegate) {
+	CachingExpressionParser(ExpressionParser delegate) {
 		this.delegate = delegate;
 	}
 

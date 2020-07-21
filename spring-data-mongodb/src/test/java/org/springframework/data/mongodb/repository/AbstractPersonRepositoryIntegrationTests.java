@@ -1356,4 +1356,11 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 				this.alicia.getEmail(), this.alicia.getAge(), Sex.FEMALE, this.alicia.createdAt, alicia.getSkills(), "street",
 				"zipCode", "city", alicia.getUniqueId(), credentials.username, credentials.password)).isNotNull();
 	}
+
+	@Test // DATAMONGO-1894
+	void spelExpressionArgumentsGetReevaluatedOnEveryInvocation() {
+
+		assertThat(repository.findWithSpelByFirstnameForSpELExpressionWithParameterIndexOnly("Dave")).containsExactly(dave);
+		assertThat(repository.findWithSpelByFirstnameForSpELExpressionWithParameterIndexOnly("Carter")).containsExactly(carter);
+	}
 }

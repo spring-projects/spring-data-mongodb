@@ -25,7 +25,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 import org.bson.Document;
 import org.bson.codecs.DecoderContext;
@@ -268,10 +267,10 @@ class ParameterBindingJsonReaderUnitTests {
 
 		String json = "{ $and : [?#{ [0] == null  ? { '$where' : 'true' } : { 'v1' : { '$in' : {[0]} } } }]}";
 
-		Optional<ExpressionDependencies> expressionDependencies = new ParameterBindingDocumentCodec()
-				.getExpressionDependencies(json, it -> new Object(), new SpelExpressionParser());
+		ExpressionDependencies expressionDependencies = new ParameterBindingDocumentCodec()
+				.captureExpressionDependencies(json, it -> new Object(), new SpelExpressionParser());
 
-		assertThat(expressionDependencies).contains(ExpressionDependencies.empty());
+		assertThat(expressionDependencies).isEqualTo(ExpressionDependencies.none());
 	}
 
 	@Test // DATAMONGO-1894
@@ -279,8 +278,8 @@ class ParameterBindingJsonReaderUnitTests {
 
 		String json = "{ hello: ?#{hasRole('foo')} }";
 
-		Optional<ExpressionDependencies> expressionDependencies = new ParameterBindingDocumentCodec()
-				.getExpressionDependencies(json, it -> new Object(), new SpelExpressionParser());
+		ExpressionDependencies expressionDependencies = new ParameterBindingDocumentCodec()
+				.captureExpressionDependencies(json, it -> new Object(), new SpelExpressionParser());
 
 		assertThat(expressionDependencies).isNotEmpty();
 		assertThat(expressionDependencies.get()).hasSize(1);

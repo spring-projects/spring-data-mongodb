@@ -19,9 +19,9 @@ import reactor.core.publisher.Mono;
 
 import org.bson.Document;
 import org.reactivestreams.Publisher;
-
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mapping.model.EntityInstantiators;
+import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.ReactiveFindOperation.FindWithProjection;
 import org.springframework.data.mongodb.core.ReactiveFindOperation.FindWithQuery;
@@ -36,9 +36,9 @@ import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
+import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.ExpressionParser;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -140,7 +140,6 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	 */
 	protected Publisher<Object> doExecute(ReactiveMongoQueryMethod method, ResultProcessor processor,
 			ConvertingParameterAccessor accessor, @Nullable Class<?> typeToRead) {
-
 
 		return createQuery(accessor).flatMapMany(it -> {
 
@@ -296,4 +295,22 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	 * @since 2.0.4
 	 */
 	protected abstract boolean isLimiting();
+
+	/**
+	 * Obtain a {@link Mono publisher} emitting the {@link SpELExpressionEvaluator} suitable to evaluate expressions
+	 * backed by the given dependencies.
+	 * 
+	 * @param dependencies must not be {@literal null}.
+	 * @param accessor must not be {@literal null}.
+	 * @return a {@link Mono} emitting the {@link SpELExpressionEvaluator} when ready.
+	 */
+	protected Mono<SpELExpressionEvaluator> getSpelEvaluatorFor(ExpressionDependencies dependencies,
+			ConvertingParameterAccessor accessor) {
+
+		return evaluationContextProvider
+				.getEvaluationContextLater(getQueryMethod().getParameters(), accessor.getValues(), dependencies)
+				.map(evaluationContext -> (SpELExpressionEvaluator) new DefaultSpELExpressionEvaluator(expressionParser,
+						evaluationContext))
+				.defaultIfEmpty(DefaultSpELExpressionEvaluator.unsupported());
+	}
 }
