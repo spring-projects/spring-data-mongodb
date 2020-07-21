@@ -17,13 +17,9 @@ package org.springframework.data.mongodb.repository.query;
 
 import reactor.core.publisher.Mono;
 
-import java.util.Optional;
-
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
@@ -145,17 +141,11 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	private Mono<ParameterBindingContext> getBindingContext(ConvertingParameterAccessor accessor,
 			ExpressionParser expressionParser, String json) {
 
-		Optional<ExpressionDependencies> dependencies = CODEC.getExpressionDependencies(json, accessor::getBindableValue,
+		ExpressionDependencies dependencies = CODEC.captureExpressionDependencies(json, accessor::getBindableValue,
 				expressionParser);
 
-		Mono<SpELExpressionEvaluator> evaluator = dependencies
-				.map(it -> evaluationContextProvider.getEvaluationContextLater(getQueryMethod().getParameters(),
-						accessor.getValues(), it))
-				.map(evaluationContext -> evaluationContext
-						.map(it -> (SpELExpressionEvaluator) new DefaultSpELExpressionEvaluator(expressionParser, it)))
-				.orElseGet(() -> Mono.just(DefaultSpELExpressionEvaluator.unsupported()));
-
-		return evaluator.map(it -> new ParameterBindingContext(accessor::getBindableValue, it));
+		return getSpelEvaluatorFor(dependencies, accessor)
+				.map(it -> new ParameterBindingContext(accessor::getBindableValue, it));
 	}
 
 	/*

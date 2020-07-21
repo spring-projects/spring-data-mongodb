@@ -15,13 +15,10 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import java.util.Optional;
-
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
@@ -143,15 +140,11 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	private ParameterBindingContext getBindingContext(ConvertingParameterAccessor accessor,
 			ExpressionParser expressionParser, String json) {
 
-		Optional<ExpressionDependencies> dependencies = codec.getExpressionDependencies(json, accessor::getBindableValue,
+		ExpressionDependencies dependencies = codec.captureExpressionDependencies(json, accessor::getBindableValue,
 				expressionParser);
 
-		SpELExpressionEvaluator evaluator = dependencies
-				.map(it -> evaluationContextProvider.getEvaluationContext(getQueryMethod().getParameters(),
-						accessor.getValues(), it))
-				.map(evaluationContext -> (SpELExpressionEvaluator) new DefaultSpELExpressionEvaluator(expressionParser,
-						evaluationContext))
-				.orElse(DefaultSpELExpressionEvaluator.unsupported());
+		SpELExpressionEvaluator evaluator = new DefaultSpELExpressionEvaluator(expressionParser, evaluationContextProvider
+				.getEvaluationContext(getQueryMethod().getParameters(), accessor.getValues(), dependencies));
 
 		return new ParameterBindingContext(accessor::getBindableValue, evaluator);
 	}

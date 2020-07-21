@@ -19,7 +19,6 @@ import reactor.core.publisher.Mono;
 
 import org.bson.Document;
 import org.bson.json.JsonParseException;
-
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
@@ -34,7 +33,6 @@ import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ReturnedType;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.expression.ExpressionParser;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.StringUtils;
 
 /**
@@ -85,9 +83,26 @@ public class ReactivePartTreeMongoQuery extends AbstractReactiveMongoQuery {
 	 */
 	@Override
 	protected Mono<Query> createQuery(ConvertingParameterAccessor accessor) {
+		return Mono.fromSupplier(() -> createQueryInternal(accessor, false));
+	}
 
-		MongoQueryCreator creator = new MongoQueryCreator(tree, accessor, context, isGeoNearQuery);
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#createCountQuery(org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor)
+	 */
+	@Override
+	protected Mono<Query> createCountQuery(ConvertingParameterAccessor accessor) {
+		return Mono.fromSupplier(() -> createQueryInternal(accessor, true));
+	}
+
+	private Query createQueryInternal(ConvertingParameterAccessor accessor, boolean isCountQuery) {
+
+		MongoQueryCreator creator = new MongoQueryCreator(tree, accessor, context, isCountQuery ? false : isGeoNearQuery);
 		Query query = creator.createQuery();
+
+		if (isCountQuery) {
+			return query;
+		}
 
 		if (tree.isLimiting()) {
 			query.limit(tree.getMaxResults());
@@ -108,7 +123,7 @@ public class ReactivePartTreeMongoQuery extends AbstractReactiveMongoQuery {
 				returnedType.getInputProperties().forEach(query.fields()::include);
 			}
 
-			return Mono.just(query);
+			return query;
 		}
 
 		try {
@@ -116,21 +131,11 @@ public class ReactivePartTreeMongoQuery extends AbstractReactiveMongoQuery {
 			BasicQuery result = new BasicQuery(query.getQueryObject(), Document.parse(fieldSpec));
 			result.setSortObject(query.getSortObject());
 
-			return Mono.just(result);
-
+			return result;
 		} catch (JsonParseException o_O) {
 			throw new IllegalStateException(String.format("Invalid query or field specification in %s!", getQueryMethod()),
 					o_O);
 		}
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#createCountQuery(org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor)
-	 */
-	@Override
-	protected Mono<Query> createCountQuery(ConvertingParameterAccessor accessor) {
-		return Mono.fromSupplier(() -> new MongoQueryCreator(tree, accessor, context, false).createQuery());
 	}
 
 	/*

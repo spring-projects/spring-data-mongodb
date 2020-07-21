@@ -39,6 +39,7 @@ class DefaultSpELExpressionEvaluator implements SpELExpressionEvaluator {
 	 * Return a {@link SpELExpressionEvaluator} that does not support expression evaluation.
 	 *
 	 * @return a {@link SpELExpressionEvaluator} that does not support expression evaluation.
+	 * @since 3.1
 	 */
 	public static SpELExpressionEvaluator unsupported() {
 		return NoOpExpressionEvaluator.INSTANCE;
