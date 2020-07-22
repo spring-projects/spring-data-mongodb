@@ -1,6 +1,13 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.1.19.RELEASE (2020-07-22)
+----------------------------------------------
+* DATAMONGO-2572 - Remove usage of Oppressive Language.
+* DATAMONGO-2570 - Avoiding unintentional unboxing.
+* DATAMONGO-2566 - Release 2.1.19 (Lovelace SR19).
+
+
 Changes in version 3.1.0-M1 (2020-06-25)
 ----------------------------------------
 * DATAMONGO-2576 - Upgrade to Hibernate Validator 5.4.3.
@@ -3055,6 +3062,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
