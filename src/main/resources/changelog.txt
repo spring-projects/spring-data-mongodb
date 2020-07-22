@@ -1,6 +1,17 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.0.2.RELEASE (2020-07-22)
+---------------------------------------------
+* DATAMONGO-2589 - Upgrade to MongoDB Driver 4.0.5.
+* DATAMONGO-2572 - Remove usage of Oppressive Language.
+* DATAMONGO-2571 - regex expression included "/" character can't be parsed in the stage of aggregation annotation.
+* DATAMONGO-2570 - Avoiding unintentional unboxing.
+* DATAMONGO-2568 - Release 3.0.2 (Neumann SR2).
+* DATAMONGO-2536 - Add option to discard results on $out and $merge.
+* DATAMONGO-2490 - @DBRef fetched without ClientSession when using Spring Transactions.
+
+
 Changes in version 2.2.9.RELEASE (2020-07-22)
 ---------------------------------------------
 * DATAMONGO-2572 - Remove usage of Oppressive Language.
@@ -3080,6 +3091,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
