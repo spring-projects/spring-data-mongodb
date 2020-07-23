@@ -16,7 +16,6 @@
 package org.springframework.data.mongodb.repository.query;
 
 import org.bson.Document;
-import org.bson.codecs.configuration.CodecRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
@@ -30,9 +29,6 @@ import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
-
-import com.mongodb.MongoClientSettings;
-import com.mongodb.client.MongoDatabase;
 
 /**
  * Query to use a plain JSON String to create the {@link Query} to actually execute.
@@ -50,7 +46,6 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	private final String query;
 	private final String fieldSpec;
 
-	private final ParameterBindingDocumentCodec codec;
 	private final ExpressionParser expressionParser;
 	private final QueryMethodEvaluationContextProvider evaluationContextProvider;
 
@@ -112,10 +107,6 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 			this.isExistsQuery = false;
 			this.isDeleteQuery = false;
 		}
-
-		CodecRegistry codecRegistry = mongoOperations.execute(MongoDatabase::getCodecRegistry);
-		this.codec = new ParameterBindingDocumentCodec(
-				codecRegistry != null ? codecRegistry : MongoClientSettings.getDefaultCodecRegistry());
 	}
 
 	/*
@@ -125,8 +116,10 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	@Override
 	protected Query createQuery(ConvertingParameterAccessor accessor) {
 
-		Document queryObject = codec.decode(this.query, getBindingContext(accessor, expressionParser, this.query));
-		Document fieldsObject = codec.decode(this.fieldSpec, getBindingContext(accessor, expressionParser, this.fieldSpec));
+		ParameterBindingDocumentCodec codec = getParameterBindingCodec();
+
+		Document queryObject = codec.decode(this.query, getBindingContext(this.query, accessor, codec));
+		Document fieldsObject = codec.decode(this.fieldSpec, getBindingContext(this.fieldSpec, accessor, codec));
 
 		Query query = new BasicQuery(queryObject, fieldsObject).with(accessor.getSort());
 
@@ -137,15 +130,13 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		return query;
 	}
 
-	private ParameterBindingContext getBindingContext(ConvertingParameterAccessor accessor,
-			ExpressionParser expressionParser, String json) {
+	private ParameterBindingContext getBindingContext(String json, ConvertingParameterAccessor accessor,
+			ParameterBindingDocumentCodec codec) {
 
 		ExpressionDependencies dependencies = codec.captureExpressionDependencies(json, accessor::getBindableValue,
 				expressionParser);
 
-		SpELExpressionEvaluator evaluator = new DefaultSpELExpressionEvaluator(expressionParser, evaluationContextProvider
-				.getEvaluationContext(getQueryMethod().getParameters(), accessor.getValues(), dependencies));
-
+		SpELExpressionEvaluator evaluator = getSpELExpressionEvaluatorFor(dependencies, accessor);
 		return new ParameterBindingContext(accessor::getBindableValue, evaluator);
 	}
 
@@ -188,5 +179,9 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	private static boolean hasAmbiguousProjectionFlags(boolean isCountQuery, boolean isExistsQuery,
 			boolean isDeleteQuery) {
 		return BooleanUtil.countBooleanTrueValues(isCountQuery, isExistsQuery, isDeleteQuery) > 1;
+	}
+
+	private ParameterBindingDocumentCodec getParameterBindingCodec() {
+		return new ParameterBindingDocumentCodec(getCodecRegistry());
 	}
 }

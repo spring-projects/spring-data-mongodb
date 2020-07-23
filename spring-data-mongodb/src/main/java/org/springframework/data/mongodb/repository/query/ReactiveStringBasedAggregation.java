@@ -49,8 +49,6 @@ import org.springframework.util.ClassUtils;
  */
 public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 
-	private static final ParameterBindingDocumentCodec CODEC = new ParameterBindingDocumentCodec();
-
 	private final ExpressionParser expressionParser;
 	private final ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider;
 	private final ReactiveMongoOperations reactiveMongoOperations;
@@ -125,25 +123,29 @@ public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 
 	private Mono<List<AggregationOperation>> computePipeline(ConvertingParameterAccessor accessor) {
 
-		MongoQueryMethod method = getQueryMethod();
+		return getCodecRegistry().map(ParameterBindingDocumentCodec::new).flatMap(codec -> {
 
-		List<Mono<AggregationOperation>> stages = new ArrayList<>(method.getAnnotatedAggregation().length);
+			String[] sourcePipeline = getQueryMethod().getAnnotatedAggregation();
 
-		for (String source : method.getAnnotatedAggregation()) {
+			List<Mono<AggregationOperation>> stages = new ArrayList<>(sourcePipeline.length);
+			for (String source : sourcePipeline) {
+				stages.add(computePipelineStage(source, accessor, codec));
+			}
+			return Flux.concat(stages).collectList();
+		});
+	}
 
-			ExpressionDependencies dependencies = CODEC.captureExpressionDependencies(source,
-					accessor::getBindableValue, expressionParser);
+	private Mono<AggregationOperation> computePipelineStage(String source, ConvertingParameterAccessor accessor,
+			ParameterBindingDocumentCodec codec) {
 
-			Mono<AggregationOperation> stage = getSpelEvaluatorFor(dependencies, accessor).map(it -> {
+		ExpressionDependencies dependencies = codec.captureExpressionDependencies(source, accessor::getBindableValue,
+				expressionParser);
 
-				ParameterBindingContext bindingContext = new ParameterBindingContext(accessor::getBindableValue, it);
+		return getSpelEvaluatorFor(dependencies, accessor).map(it -> {
 
-				return ctx -> ctx.getMappedObject(CODEC.decode(source, bindingContext), method.getDomainClass());
-			});
-			stages.add(stage);
-		}
-
-		return Flux.concat(stages).collectList();
+			ParameterBindingContext bindingContext = new ParameterBindingContext(accessor::getBindableValue, it);
+			return ctx -> ctx.getMappedObject(codec.decode(source, bindingContext), getQueryMethod().getDomainClass());
+		});
 	}
 
 	private AggregationOptions computeOptions(MongoQueryMethod method, ConvertingParameterAccessor accessor) {

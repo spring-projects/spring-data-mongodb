@@ -19,6 +19,8 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -62,6 +64,7 @@ import org.springframework.util.Base64Utils;
  * @author Christoph Strobl
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class ReactiveStringBasedMongoQueryUnitTests {
 
 	SpelExpressionParser PARSER = new SpelExpressionParser();
@@ -76,6 +79,7 @@ public class ReactiveStringBasedMongoQueryUnitTests {
 	public void setUp() {
 
 		when(operations.query(any())).thenReturn(reactiveFind);
+		when(operations.execute(any())).thenReturn(Flux.empty());
 
 		this.converter = new MappingMongoConverter(factory, new MongoMappingContext());
 	}

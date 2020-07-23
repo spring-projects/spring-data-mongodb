@@ -44,7 +44,6 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 
 	private static final String COUNT_EXISTS_AND_DELETE = "Manually defined query for %s cannot be a count and exists or delete query at the same time!";
 	private static final Logger LOG = LoggerFactory.getLogger(ReactiveStringBasedMongoQuery.class);
-	private static final ParameterBindingDocumentCodec CODEC = new ParameterBindingDocumentCodec();
 
 	private final String query;
 	private final String fieldSpec;
@@ -121,27 +120,30 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	@Override
 	protected Mono<Query> createQuery(ConvertingParameterAccessor accessor) {
 
-		Mono<Document> queryObject = getBindingContext(accessor, expressionParser, this.query)
-				.map(it -> CODEC.decode(this.query, it));
-		Mono<Document> fieldsObject = getBindingContext(accessor, expressionParser, this.fieldSpec)
-				.map(it -> CODEC.decode(this.fieldSpec, it));
+		return getCodecRegistry().map(ParameterBindingDocumentCodec::new).flatMap(codec -> {
 
-		return queryObject.zipWith(fieldsObject).map(tuple -> {
+			Mono<Document> queryObject = getBindingContext(query, accessor, codec)
+					.map(context -> codec.decode(query, context));
+			Mono<Document> fieldsObject = getBindingContext(fieldSpec, accessor, codec)
+					.map(context -> codec.decode(fieldSpec, context));
 
-			Query query = new BasicQuery(tuple.getT1(), tuple.getT2()).with(accessor.getSort());
+			return queryObject.zipWith(fieldsObject).map(tuple -> {
 
-			if (LOG.isDebugEnabled()) {
-				LOG.debug(String.format("Created query %s for %s fields.", query.getQueryObject(), query.getFieldsObject()));
-			}
+				Query query = new BasicQuery(tuple.getT1(), tuple.getT2()).with(accessor.getSort());
 
-			return query;
+				if (LOG.isDebugEnabled()) {
+					LOG.debug(String.format("Created query %s for %s fields.", query.getQueryObject(), query.getFieldsObject()));
+				}
+
+				return query;
+			});
 		});
 	}
 
-	private Mono<ParameterBindingContext> getBindingContext(ConvertingParameterAccessor accessor,
-			ExpressionParser expressionParser, String json) {
+	private Mono<ParameterBindingContext> getBindingContext(String json, ConvertingParameterAccessor accessor,
+			ParameterBindingDocumentCodec codec) {
 
-		ExpressionDependencies dependencies = CODEC.captureExpressionDependencies(json, accessor::getBindableValue,
+		ExpressionDependencies dependencies = codec.captureExpressionDependencies(json, accessor::getBindableValue,
 				expressionParser);
 
 		return getSpelEvaluatorFor(dependencies, accessor)

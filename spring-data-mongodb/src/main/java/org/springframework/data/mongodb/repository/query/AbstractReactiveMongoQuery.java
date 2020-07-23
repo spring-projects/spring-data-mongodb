@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository.query;
 import reactor.core.publisher.Mono;
 
 import org.bson.Document;
+import org.bson.codecs.configuration.CodecRegistry;
 import org.reactivestreams.Publisher;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mapping.model.EntityInstantiators;
@@ -41,6 +42,9 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+
+import com.mongodb.MongoClientSettings;
+import com.mongodb.reactivestreams.client.MongoDatabase;
 
 /**
  * Base class for reactive {@link RepositoryQuery} implementations for MongoDB.
@@ -258,6 +262,35 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	}
 
 	/**
+	 * Obtain a {@link Mono publisher} emitting the {@link SpELExpressionEvaluator} suitable to evaluate expressions
+	 * backed by the given dependencies.
+	 *
+	 * @param dependencies must not be {@literal null}.
+	 * @param accessor must not be {@literal null}.
+	 * @return a {@link Mono} emitting the {@link SpELExpressionEvaluator} when ready.
+	 * @since 2.4
+	 */
+	protected Mono<SpELExpressionEvaluator> getSpelEvaluatorFor(ExpressionDependencies dependencies,
+			ConvertingParameterAccessor accessor) {
+
+		return evaluationContextProvider
+				.getEvaluationContextLater(getQueryMethod().getParameters(), accessor.getValues(), dependencies)
+				.map(evaluationContext -> (SpELExpressionEvaluator) new DefaultSpELExpressionEvaluator(expressionParser,
+						evaluationContext))
+				.defaultIfEmpty(DefaultSpELExpressionEvaluator.unsupported());
+	}
+
+	/**
+	 * @return a {@link Mono} emitting the {@link CodecRegistry} when ready.
+	 * @since 2.4
+	 */
+	protected Mono<CodecRegistry> getCodecRegistry() {
+
+		return Mono.from(operations.execute(AbstractReactiveMongoQuery::obtainCodecRegistry))
+				.defaultIfEmpty(MongoClientSettings.getDefaultCodecRegistry());
+	}
+
+	/**
 	 * Creates a {@link Query} instance using the given {@link ParameterAccessor}
 	 *
 	 * @param accessor must not be {@literal null}.
@@ -296,21 +329,7 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	 */
 	protected abstract boolean isLimiting();
 
-	/**
-	 * Obtain a {@link Mono publisher} emitting the {@link SpELExpressionEvaluator} suitable to evaluate expressions
-	 * backed by the given dependencies.
-	 * 
-	 * @param dependencies must not be {@literal null}.
-	 * @param accessor must not be {@literal null}.
-	 * @return a {@link Mono} emitting the {@link SpELExpressionEvaluator} when ready.
-	 */
-	protected Mono<SpELExpressionEvaluator> getSpelEvaluatorFor(ExpressionDependencies dependencies,
-			ConvertingParameterAccessor accessor) {
-
-		return evaluationContextProvider
-				.getEvaluationContextLater(getQueryMethod().getParameters(), accessor.getValues(), dependencies)
-				.map(evaluationContext -> (SpELExpressionEvaluator) new DefaultSpELExpressionEvaluator(expressionParser,
-						evaluationContext))
-				.defaultIfEmpty(DefaultSpELExpressionEvaluator.unsupported());
+	private static Mono<CodecRegistry> obtainCodecRegistry(MongoDatabase db) {
+		return Mono.justOrEmpty(db.getCodecRegistry());
 	}
 }

@@ -91,6 +91,7 @@ public class ReactiveStringBasedAggregationUnitTests {
 		converter = new MappingMongoConverter(dbRefResolver, new MongoMappingContext());
 		when(operations.getConverter()).thenReturn(converter);
 		when(operations.aggregate(any(TypedAggregation.class), any())).thenReturn(Flux.empty());
+		when(operations.execute(any())).thenReturn(Flux.empty());
 	}
 
 	@Test // DATAMONGO-2153
@@ -166,6 +167,13 @@ public class ReactiveStringBasedAggregationUnitTests {
 		assertThat(collationOf(invocation)).isEqualTo(Collation.of("en_US"));
 	}
 
+	@Test // DATAMONGO-2557
+	void aggregationRetrievesCodecFromDriverJustOnceForMultipleAggregationOperationsInPipeline() {
+
+		executeAggregation("multiOperationPipeline", "firstname");
+		verify(operations).execute(any());
+	}
+
 	private AggregationInvocation executeAggregation(String name, Object... args) {
 
 		Class<?>[] argTypes = Arrays.stream(args).map(Object::getClass).toArray(size -> new Class<?>[size]);
@@ -227,6 +235,9 @@ public class ReactiveStringBasedAggregationUnitTests {
 
 		@Aggregation(GROUP_BY_LASTNAME_STRING_WITH_SPEL_PARAMETER_PLACEHOLDER)
 		Mono<PersonAggregate> spelParameterReplacementAggregation(String arg0);
+
+		@Aggregation(pipeline = {RAW_GROUP_BY_LASTNAME_STRING, GROUP_BY_LASTNAME_STRING_WITH_SPEL_PARAMETER_PLACEHOLDER})
+		Mono<PersonAggregate> multiOperationPipeline(String arg0);
 
 		@Aggregation(pipeline = RAW_GROUP_BY_LASTNAME_STRING, collation = "de_AT")
 		Mono<PersonAggregate> aggregateWithCollation();

@@ -15,11 +15,12 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
-
+import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -30,8 +31,11 @@ import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.util.json.ParameterBindingContext;
+import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.ResultProcessor;
+import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.util.ClassUtils;
 
@@ -73,7 +77,9 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 			ConvertingParameterAccessor accessor, Class<?> typeToRead) {
 
 		if (method.isPageQuery() || method.isSliceQuery()) {
-			throw new InvalidMongoDbApiUsageException(String.format("Repository aggregation method '%s' does not support '%s' return type. Please use eg. 'List' instead.", method.getName(), method.getReturnType().getType().getSimpleName()));
+			throw new InvalidMongoDbApiUsageException(String.format(
+					"Repository aggregation method '%s' does not support '%s' return type. Please use eg. 'List' instead.",
+					method.getName(), method.getReturnType().getType().getSimpleName()));
 		}
 
 		Class<?> sourceType = method.getDomainClass();
@@ -125,7 +131,26 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 	}
 
 	List<AggregationOperation> computePipeline(MongoQueryMethod method, ConvertingParameterAccessor accessor) {
-		return AggregationUtils.computePipeline(method, accessor, expressionParser, evaluationContextProvider);
+
+		ParameterBindingDocumentCodec codec = new ParameterBindingDocumentCodec(getCodecRegistry());
+		String[] sourcePipeline = method.getAnnotatedAggregation();
+
+		List<AggregationOperation> stages = new ArrayList<>(sourcePipeline.length);
+		for (String source : sourcePipeline) {
+			stages.add(computePipelineStage(source, accessor, codec));
+		}
+		return stages;
+	}
+
+	private AggregationOperation computePipelineStage(String source, ConvertingParameterAccessor accessor,
+			ParameterBindingDocumentCodec codec) {
+
+		ExpressionDependencies dependencies = codec.captureExpressionDependencies(source, accessor::getBindableValue,
+				expressionParser);
+
+		SpELExpressionEvaluator evaluator = getSpELExpressionEvaluatorFor(dependencies, accessor);
+		ParameterBindingContext bindingContext = new ParameterBindingContext(accessor::getBindableValue, evaluator);
+		return ctx -> ctx.getMappedObject(codec.decode(source, bindingContext), getQueryMethod().getDomainClass());
 	}
 
 	private AggregationOptions computeOptions(MongoQueryMethod method, ConvertingParameterAccessor accessor) {
