@@ -16,6 +16,8 @@
 package org.springframework.data.mongodb.repository.query;
 
 import org.bson.Document;
+import org.bson.codecs.configuration.CodecRegistry;
+import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFind;
@@ -30,10 +32,13 @@ import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
+import org.springframework.data.spel.ExpressionDependencies;
+import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.ExpressionParser;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+
+import com.mongodb.client.MongoDatabase;
 
 /**
  * Base class for {@link RepositoryQuery} implementations for Mongo.
@@ -210,6 +215,29 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	}
 
 	/**
+	 * Obtain a the {@link EvaluationContext} suitable to evaluate expressions backed by the given dependencies.
+	 *
+	 * @param dependencies must not be {@literal null}.
+	 * @param accessor must not be {@literal null}.
+	 * @return the {@link SpELExpressionEvaluator}.
+	 * @since 2.4
+	 */
+	protected SpELExpressionEvaluator getSpELExpressionEvaluatorFor(ExpressionDependencies dependencies,
+			ConvertingParameterAccessor accessor) {
+
+		return new DefaultSpELExpressionEvaluator(expressionParser, evaluationContextProvider
+				.getEvaluationContext(getQueryMethod().getParameters(), accessor.getValues(), dependencies));
+	}
+
+	/**
+	 * @return the {@link CodecRegistry} used.
+	 * @since 2.4
+	 */
+	protected CodecRegistry getCodecRegistry() {
+		return operations.execute(AbstractMongoQuery::obtainCodecRegistry);
+	}
+
+	/**
 	 * Creates a {@link Query} instance using the given {@link ParameterAccessor}
 	 *
 	 * @param accessor must not be {@literal null}.
@@ -247,4 +275,8 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * @since 2.0.4
 	 */
 	protected abstract boolean isLimiting();
+
+	private static CodecRegistry obtainCodecRegistry(MongoDatabase db) {
+		return db.getCodecRegistry();
+	}
 }

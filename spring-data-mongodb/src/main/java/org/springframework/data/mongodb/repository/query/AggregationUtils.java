@@ -16,7 +16,6 @@
 package org.springframework.data.mongodb.repository.query;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -25,17 +24,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
-import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Meta;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.util.json.ParameterBindingContext;
-import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.expression.ExpressionParser;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
@@ -50,10 +45,7 @@ import org.springframework.util.StringUtils;
  */
 abstract class AggregationUtils {
 
-	private static final ParameterBindingDocumentCodec CODEC = new ParameterBindingDocumentCodec();
-
-	private AggregationUtils() {
-	}
+	private AggregationUtils() {}
 
 	/**
 	 * Apply a collation extracted from the given {@literal collationExpression} to the given
@@ -104,32 +96,6 @@ abstract class AggregationUtils {
 		}
 
 		return builder;
-	}
-
-	/**
-	 * Compute the {@link AggregationOperation aggregation} pipeline for the given {@link MongoQueryMethod}. The raw
-	 * {@link org.springframework.data.mongodb.repository.Aggregation#pipeline()} is parsed with a
-	 * {@link ParameterBindingDocumentCodec} to obtain the MongoDB native {@link Document} representation returned by
-	 * {@link AggregationOperation#toDocument(AggregationOperationContext)} that is mapped against the domain type
-	 * properties.
-	 *
-	 * @param method
-	 * @param accessor
-	 * @param expressionParser
-	 * @param evaluationContextProvider
-	 * @return
-	 */
-	static List<AggregationOperation> computePipeline(MongoQueryMethod method, ConvertingParameterAccessor accessor,
-			ExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
-
-		ParameterBindingContext bindingContext = new ParameterBindingContext((accessor::getBindableValue), expressionParser,
-				() -> evaluationContextProvider.getEvaluationContext(method.getParameters(), accessor.getValues()));
-
-		List<AggregationOperation> target = new ArrayList<>(method.getAnnotatedAggregation().length);
-		for (String source : method.getAnnotatedAggregation()) {
-			target.add(ctx -> ctx.getMappedObject(CODEC.decode(source, bindingContext), method.getDomainClass()));
-		}
-		return target;
 	}
 
 	/**

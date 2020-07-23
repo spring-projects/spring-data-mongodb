@@ -66,6 +66,8 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
+import com.mongodb.MongoClientSettings;
+
 /**
  * Unit tests for {@link StringBasedAggregation}.
  *
@@ -97,6 +99,7 @@ public class StringBasedAggregationUnitTests {
 		converter = new MappingMongoConverter(dbRefResolver, new MongoMappingContext());
 		when(operations.getConverter()).thenReturn(converter);
 		when(operations.aggregate(any(TypedAggregation.class), any())).thenReturn(aggregationResults);
+		when(operations.execute(any())).thenReturn(MongoClientSettings.getDefaultCodecRegistry());
 	}
 
 	@Test // DATAMONGO-2153
@@ -218,6 +221,13 @@ public class StringBasedAggregationUnitTests {
 				.withMessageContaining("Page");
 	}
 
+	@Test // DATAMONGO-2557
+	void aggregationRetrievesCodecFromDriverJustOnceForMultipleAggregationOperationsInPipeline() {
+
+		executeAggregation("multiOperationPipeline", "firstname");
+		verify(operations).execute(any());
+	}
+
 	private AggregationInvocation executeAggregation(String name, Object... args) {
 
 		Class<?>[] argTypes = Arrays.stream(args).map(Object::getClass).toArray(Class[]::new);
@@ -290,6 +300,9 @@ public class StringBasedAggregationUnitTests {
 
 		@Aggregation(GROUP_BY_LASTNAME_STRING_WITH_SPEL_PARAMETER_PLACEHOLDER)
 		PersonAggregate spelParameterReplacementAggregation(String arg0);
+
+		@Aggregation(pipeline = { RAW_GROUP_BY_LASTNAME_STRING, GROUP_BY_LASTNAME_STRING_WITH_SPEL_PARAMETER_PLACEHOLDER })
+		PersonAggregate multiOperationPipeline(String arg0);
 
 		@Aggregation(pipeline = RAW_GROUP_BY_LASTNAME_STRING, collation = "de_AT")
 		PersonAggregate aggregateWithCollation();
