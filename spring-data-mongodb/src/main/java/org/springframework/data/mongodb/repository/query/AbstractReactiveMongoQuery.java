@@ -20,6 +20,7 @@ import reactor.core.publisher.Mono;
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.reactivestreams.Publisher;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mapping.model.EntityInstantiators;
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
@@ -44,7 +45,6 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.mongodb.MongoClientSettings;
-import com.mongodb.reactivestreams.client.MongoDatabase;
 
 /**
  * Base class for reactive {@link RepositoryQuery} implementations for MongoDB.
@@ -286,7 +286,7 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	 */
 	protected Mono<CodecRegistry> getCodecRegistry() {
 
-		return Mono.from(operations.execute(AbstractReactiveMongoQuery::obtainCodecRegistry))
+		return Mono.from(operations.execute(db -> Mono.just(db.getCodecRegistry())))
 				.defaultIfEmpty(MongoClientSettings.getDefaultCodecRegistry());
 	}
 
@@ -328,8 +328,4 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 	 * @since 2.0.4
 	 */
 	protected abstract boolean isLimiting();
-
-	private static Mono<CodecRegistry> obtainCodecRegistry(MongoDatabase db) {
-		return Mono.justOrEmpty(db.getCodecRegistry());
-	}
 }

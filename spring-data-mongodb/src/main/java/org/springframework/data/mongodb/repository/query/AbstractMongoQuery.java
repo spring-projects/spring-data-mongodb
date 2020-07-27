@@ -234,7 +234,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * @since 2.4
 	 */
 	protected CodecRegistry getCodecRegistry() {
-		return operations.execute(AbstractMongoQuery::obtainCodecRegistry);
+		return operations.execute(MongoDatabase::getCodecRegistry);
 	}
 
 	/**
@@ -275,8 +275,4 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * @since 2.0.4
 	 */
 	protected abstract boolean isLimiting();
-
-	private static CodecRegistry obtainCodecRegistry(MongoDatabase db) {
-		return db.getCodecRegistry();
-	}
 }
