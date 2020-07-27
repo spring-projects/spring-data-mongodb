@@ -117,6 +117,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * @author Christoph Strobl
  * @author Roman Puchkovskiy
  * @author Mathieu Ouellet
+ * @author Yadhukrishna S Pai
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -626,6 +627,17 @@ public class ReactiveMongoTemplateUnitTests {
 				Document.class).subscribe();
 
 		verify(aggregatePublisher).comment("expensive");
+	}
+
+	@Test // DATAMONGO-1836
+	void aggregateShouldHonorOptionsHint() {
+		Document hint = new Document("dummyHint", 1);
+		AggregationOptions options = AggregationOptions.builder().hint(hint).build();
+
+		template.aggregate(newAggregation(Sith.class, project("id")).withOptions(options), AutogenerateableId.class,
+				Document.class).subscribe();
+
+		verify(aggregatePublisher).hint(hint);
 	}
 
 	@Test // DATAMONGO-2390

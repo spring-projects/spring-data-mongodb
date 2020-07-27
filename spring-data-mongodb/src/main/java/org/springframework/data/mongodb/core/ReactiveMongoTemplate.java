@@ -146,6 +146,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * @author Christoph Strobl
  * @author Roman Puchkovskiy
  * @author Mathieu Ouellet
+ * @author Yadhukrishna S Pai
  * @since 2.0
  */
 public class ReactiveMongoTemplate implements ReactiveMongoOperations, ApplicationContextAware {
@@ -1023,6 +1024,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		}
 
 		options.getComment().ifPresent(cursor::comment);
+
+		options.getHint().ifPresent(cursor::hint);
 
 		Optionals.firstNonEmpty(options::getCollation, () -> operations.forType(inputType).getCollation()) //
 				.map(Collation::toMongoCollation) //
