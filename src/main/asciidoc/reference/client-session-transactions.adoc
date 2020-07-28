@@ -339,7 +339,7 @@ Inside transactions, MongoDB server has a slightly different behavior.
 *Connection Settings*
 
 The MongoDB drivers offer a dedicated replica set name configuration option turing the driver into auto detection
-mode. This option helps identifying replica set manager nodes and command routing during a transaction.
+mode. This option helps identifying the primary replica set nodes and command routing during a transaction.
 
 NOTE: Make sure to add `replicaSet` to the MongoDB URI. Please refer to https://docs.mongodb.com/manual/reference/connection-string/#connections-connection-options[connection string options] for further details.
 
