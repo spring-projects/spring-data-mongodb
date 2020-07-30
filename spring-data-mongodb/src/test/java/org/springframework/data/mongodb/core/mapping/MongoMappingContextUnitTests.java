@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.mapping;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.time.temporal.ChronoUnit;
 import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.Locale;
@@ -158,6 +159,18 @@ public class MongoMappingContextUnitTests {
 				.withMessageContaining("score").withMessageContaining("Float").withMessageContaining("Double");
 	}
 
+	@Test // DATAMONGO-2599
+	public void shouldNotCreateEntityForEnum() {
+
+		MongoMappingContext context = new MongoMappingContext();
+
+		BasicMongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(ClassWithChronoUnit.class);
+
+		assertThat(entity.getPersistentProperty("unit").isEntity()).isFalse();
+		assertThat(context.hasPersistentEntityFor(ChronoUnit.class)).isFalse();
+		assertThat(context.getPersistentEntity(ChronoUnit.class)).isNull();
+	}
+
 	public class SampleClass {
 
 		Map<String, SampleClass> children;
@@ -223,5 +236,10 @@ public class MongoMappingContextUnitTests {
 	class ClassWithInvalidTextScoreProperty {
 
 		@TextScore Locale score;
+	}
+
+	class ClassWithChronoUnit {
+
+		ChronoUnit unit;
 	}
 }
