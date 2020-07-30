@@ -48,6 +48,7 @@ import com.mongodb.client.model.geojson.Polygon;
  *
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 public abstract class MongoSimpleTypes {
 
@@ -108,6 +109,10 @@ public abstract class MongoSimpleTypes {
 
 		@Override
 		public boolean isSimpleType(Class<?> type) {
+
+			if (type.isEnum()) {
+				return true;
+			}
 
 			if (type.getName().startsWith("java.time")) {
 				return false;
