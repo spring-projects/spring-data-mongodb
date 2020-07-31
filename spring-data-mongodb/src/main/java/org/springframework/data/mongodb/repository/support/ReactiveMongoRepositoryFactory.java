@@ -75,6 +75,7 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 
 		this.operations = mongoOperations;
 		this.mappingContext = mongoOperations.getConverter().getMappingContext();
+		setEvaluationContextProvider(ReactiveQueryMethodEvaluationContextProvider.DEFAULT);
 	}
 
 	/*
