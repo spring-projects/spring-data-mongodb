@@ -32,6 +32,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ReturnedType;
 import org.springframework.data.repository.util.ReactiveWrappers;
+import org.springframework.data.util.ReflectionUtils;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -203,7 +204,7 @@ interface ReactiveMongoQueryExecution {
 
 			ReturnedType returnedType = processor.getReturnedType();
 
-			if (isVoid(returnedType)) {
+			if (ReflectionUtils.isVoid(returnedType.getReturnedType())) {
 
 				if (source instanceof Mono) {
 					return ((Mono<?>) source).then();
@@ -227,9 +228,5 @@ interface ReactiveMongoQueryExecution {
 
 			return processor.processResult(source, converter);
 		}
-	}
-
-	static boolean isVoid(ReturnedType returnedType) {
-		return returnedType.getReturnedType().equals(Void.class);
 	}
 }
