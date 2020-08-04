@@ -572,7 +572,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				ReactiveMongoTemplate.this);
 
 		return Flux.from(action.doInSession(operations)) //
-				.subscriberContext(ctx -> ReactiveMongoContext.setSession(ctx, Mono.just(session)));
+				.contextWrite(ctx -> ReactiveMongoContext.setSession(ctx, Mono.just(session)));
 	}
 
 	/*

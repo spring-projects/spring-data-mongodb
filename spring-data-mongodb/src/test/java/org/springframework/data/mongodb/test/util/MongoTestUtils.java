@@ -35,6 +35,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.reactivestreams.client.MongoClients;
+import reactor.util.retry.Retry;
 
 /**
  * Utility to create (and reuse) imperative and reactive {@code MongoClient} instances.
@@ -160,7 +161,7 @@ public class MongoTestUtils {
 				.withWriteConcern(WriteConcern.MAJORITY).withReadPreference(ReadPreference.primary());
 
 		Mono.from(database.getCollection(collectionName).drop()) //
-				.delayElement(getTimeout()).retryBackoff(3, Duration.ofMillis(250)) //
+				.delayElement(getTimeout()).retryWhen(Retry.backoff(3, Duration.ofMillis(250))) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 	}

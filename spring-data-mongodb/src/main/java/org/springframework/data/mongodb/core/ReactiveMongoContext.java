@@ -15,10 +15,14 @@
  */
 package org.springframework.data.mongodb.core;
 
-import org.reactivestreams.Publisher;
-import org.springframework.util.Assert;
 import reactor.core.publisher.Mono;
 import reactor.util.context.Context;
+
+import java.util.function.Function;
+
+import org.reactivestreams.Publisher;
+
+import org.springframework.util.Assert;
 
 import com.mongodb.reactivestreams.client.ClientSession;
 
@@ -29,7 +33,7 @@ import com.mongodb.reactivestreams.client.ClientSession;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @since 2.1
- * @see Mono#subscriberContext()
+ * @see Mono#deferContextual(Function)
  * @see Context
  */
 public class ReactiveMongoContext {
@@ -46,8 +50,14 @@ public class ReactiveMongoContext {
 	 */
 	public static Mono<ClientSession> getSession() {
 
-		return Mono.subscriberContext().filter(ctx -> ctx.hasKey(SESSION_KEY))
-				.flatMap(ctx -> ctx.<Mono<ClientSession>> get(SESSION_KEY));
+		return Mono.deferContextual(ctx -> {
+
+			if (ctx.hasKey(SESSION_KEY)) {
+				return ctx.<Mono<ClientSession>> get(SESSION_KEY);
+			}
+
+			return Mono.empty();
+		});
 	}
 
 	/**
