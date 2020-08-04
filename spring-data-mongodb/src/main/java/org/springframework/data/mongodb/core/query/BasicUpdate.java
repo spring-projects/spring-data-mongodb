@@ -67,6 +67,7 @@ public class BasicUpdate extends Update {
 	}
 
 	@Override
+	@Deprecated
 	public Update pushAll(String key, Object[] values) {
 		Document keyValue = new Document();
 		keyValue.put(key, values);
