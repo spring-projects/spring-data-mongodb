@@ -20,6 +20,7 @@ import org.junit.Test
 
 /**
  * @author Tjeu Kayim
+ * @author Yoann de Martino
  */
 class KPropertyPathTests {
 
@@ -56,6 +57,26 @@ class KPropertyPathTests {
 		class AnotherEntity(val entity: Entity)
 
 		val property = asString(AnotherEntity::entity / Entity::book / Book::author / Author::name)
+
+		assertThat(property).isEqualTo("entity.book.author.name")
+	}
+
+	@Test
+	fun `Convert nested KProperty to field name using toString()`() {
+
+		val property = (Book::author / Author::name).toString()
+
+		assertThat(property).isEqualTo("author.name")
+	}
+
+
+	@Test
+	fun `Convert triple nested KProperty to field name using toString()`() {
+
+		class Entity(val book: Book)
+		class AnotherEntity(val entity: Entity)
+
+		val property = (AnotherEntity::entity / Entity::book / Book::author / Author::name).toString()
 
 		assertThat(property).isEqualTo("entity.book.author.name")
 	}
