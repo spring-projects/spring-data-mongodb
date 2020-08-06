@@ -1024,7 +1024,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		}
 
 		options.getComment().ifPresent(cursor::comment);
-
 		options.getHint().ifPresent(cursor::hint);
 
 		Optionals.firstNonEmpty(options::getCollation, () -> operations.forType(inputType).getCollation()) //

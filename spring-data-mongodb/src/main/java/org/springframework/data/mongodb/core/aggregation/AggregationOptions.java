@@ -74,7 +74,7 @@ public class AggregationOptions {
 	 * @param allowDiskUse whether to off-load intensive sort-operations to disk.
 	 * @param explain whether to get the execution plan for the aggregation instead of the actual results.
 	 * @param cursor can be {@literal null}, used to pass additional options (such as {@code batchSize}) to the
-	 * aggregation.
+	 *          aggregation.
 	 * @param collation collation for string comparison. Can be {@literal null}.
 	 * @since 2.0
 	 */
@@ -89,13 +89,29 @@ public class AggregationOptions {
 	 * @param allowDiskUse whether to off-load intensive sort-operations to disk.
 	 * @param explain whether to get the execution plan for the aggregation instead of the actual results.
 	 * @param cursor can be {@literal null}, used to pass additional options (such as {@code batchSize}) to the
-	 * aggregation.
+	 *          aggregation.
 	 * @param collation collation for string comparison. Can be {@literal null}.
 	 * @param comment execution comment. Can be {@literal null}.
-	 * @param hint can be {@literal null}, used to provide an index that would be forcibly used by query optimizer.
 	 * @since 2.2
 	 */
 	public AggregationOptions(boolean allowDiskUse, boolean explain, @Nullable Document cursor,
+			@Nullable Collation collation, @Nullable String comment) {
+		this(allowDiskUse, explain, cursor, collation, comment, null);
+	}
+
+	/**
+	 * Creates a new {@link AggregationOptions}.
+	 *
+	 * @param allowDiskUse whether to off-load intensive sort-operations to disk.
+	 * @param explain whether to get the execution plan for the aggregation instead of the actual results.
+	 * @param cursor can be {@literal null}, used to pass additional options (such as {@code batchSize}) to the
+	 *          aggregation.
+	 * @param collation collation for string comparison. Can be {@literal null}.
+	 * @param comment execution comment. Can be {@literal null}.
+	 * @param hint can be {@literal null}, used to provide an index that would be forcibly used by query optimizer.
+	 * @since 3.1
+	 */
+	private AggregationOptions(boolean allowDiskUse, boolean explain, @Nullable Document cursor,
 			@Nullable Collation collation, @Nullable String comment, @Nullable Document hint) {
 
 		this.allowDiskUse = allowDiskUse;
@@ -222,11 +238,11 @@ public class AggregationOptions {
 	 * Get the hint used to to fulfill the aggregation.
 	 *
 	 * @return never {@literal null}.
+	 * @since 3.1
 	 */
 	public Optional<Document> getHint() {
 		return hint;
 	}
-
 
 	/**
 	 * @return the time limit for processing. {@link Duration#ZERO} is used for the default unbounded behavior.
@@ -419,11 +435,11 @@ public class AggregationOptions {
 		}
 
 		/**
-		 * Define a hint is used forcibly by query optimizer to to fulfill the aggregation.
+		 * Define a hint that is used by query optimizer to to fulfill the aggregation.
 		 *
 		 * @param hint can be {@literal null}.
 		 * @return this.
-		 * @since 2.2
+		 * @since 3.1
 		 */
 		public Builder hint(@Nullable Document hint) {
 
@@ -435,7 +451,7 @@ public class AggregationOptions {
 		 * Set the time limit for processing.
 		 *
 		 * @param maxTime {@link Duration#ZERO} is used for the default unbounded behavior. {@link Duration#isNegative()
-		 * Negative} values will be ignored.
+		 *          Negative} values will be ignored.
 		 * @return this.
 		 * @since 3.0
 		 */
@@ -466,13 +482,7 @@ public class AggregationOptions {
 		 */
 		public AggregationOptions build() {
 
-			AggregationOptions options = new AggregationOptions(
-					allowDiskUse,
-					explain,
-					cursor,
-					collation,
-					comment,
-					hint);
+			AggregationOptions options = new AggregationOptions(allowDiskUse, explain, cursor, collation, comment, hint);
 			if (maxTime != null) {
 				options.maxTime = maxTime;
 			}

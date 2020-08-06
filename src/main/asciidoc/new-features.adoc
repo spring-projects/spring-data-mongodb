@@ -6,6 +6,7 @@
 
 * <<mongo.auditing,Reactive auditing>> enabled through `@EnableReactiveMongoAuditing`. `@EnableMongoAuditing` no longer registers `ReactiveAuditingEntityCallback`.
 * Reactive SpEL support in `@Query` and `@Aggregation` query methods.
+* Aggregation hints via `AggregationOptions.builder().hint(bson).build()`.
 
 [[new-features.3.0]]
 == What's New in Spring Data MongoDB 3.0

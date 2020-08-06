@@ -631,6 +631,7 @@ public class ReactiveMongoTemplateUnitTests {
 
 	@Test // DATAMONGO-1836
 	void aggregateShouldHonorOptionsHint() {
+
 		Document hint = new Document("dummyHint", 1);
 		AggregationOptions options = AggregationOptions.builder().hint(hint).build();
 

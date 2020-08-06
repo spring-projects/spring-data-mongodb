@@ -2149,7 +2149,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			}
 
 			options.getComment().ifPresent(aggregateIterable::comment);
-
 			options.getHint().ifPresent(aggregateIterable::hint);
 
 			if (options.hasExecutionTimeLimit()) {
@@ -2209,7 +2208,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			}
 
 			options.getComment().ifPresent(cursor::comment);
-
 			options.getHint().ifPresent(cursor::hint);
 
 			Class<?> domainType = aggregation instanceof TypedAggregation ? ((TypedAggregation) aggregation).getInputType()
