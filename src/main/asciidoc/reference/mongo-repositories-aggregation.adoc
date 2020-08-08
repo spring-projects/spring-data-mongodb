@@ -17,10 +17,10 @@ public interface PersonRepository extends CrudReppsitory<Person, String> {
   @Aggregation("{ $group: { _id : $lastname, names : { $addToSet : $firstname } } }")
   List<PersonAggregate> groupByLastnameAndFirstnames(Sort sort);                   <2>
 
-  @Aggregation("{ $group: { _id : $lastname, names : { $addToSet : $?0 } } }")
+  @Aggregation("{ $group: { _id : $lastname, names : { $addToSet : ?0 } } }")
   List<PersonAggregate> groupByLastnameAnd(String property);                       <3>
 
-  @Aggregation("{ $group: { _id : $lastname, names : { $addToSet : $?0 } } }")
+  @Aggregation("{ $group: { _id : $lastname, names : { $addToSet : ?0 } } }")
   List<PersonAggregate> groupByLastnameAnd(String property, Pageable page);        <4>
 
   @Aggregation("{ $group : { _id : null, total : { $sum : $age } } }")
