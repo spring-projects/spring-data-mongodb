@@ -1,6 +1,14 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.0.3.RELEASE (2020-08-12)
+---------------------------------------------
+* DATAMONGO-2601 - Consider Unit a void type in Coroutine repositories.
+* DATAMONGO-2599 - Ambiguous field mapping detected for enum java.time.temporal.ChronoUnit.
+* DATAMONGO-2598 - Wording changes.
+* DATAMONGO-2594 - Release 3.0.3 (Neumann SR3).
+
+
 Changes in version 3.1.0-M2 (2020-08-12)
 ----------------------------------------
 * DATAMONGO-2603 - Adopt to Reactor 3.4 changes.
@@ -3108,6 +3116,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
