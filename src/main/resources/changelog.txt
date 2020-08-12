@@ -1,6 +1,23 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.1.0-M2 (2020-08-12)
+----------------------------------------
+* DATAMONGO-2603 - Adopt to Reactor 3.4 changes.
+* DATAMONGO-2602 - Upgrade MongoDB drivers to 4.1.0.
+* DATAMONGO-2601 - Consider Unit a void type in Coroutine repositories.
+* DATAMONGO-2599 - Ambiguous field mapping detected for enum java.time.temporal.ChronoUnit.
+* DATAMONGO-2598 - Wording changes.
+* DATAMONGO-2591 - Upgrade MongoDB drivers to 4.1.0-rc0.
+* DATAMONGO-2586 - Add support for reactive auditing.
+* DATAMONGO-2579 - Release 3.1 M2 (2020.0.0).
+* DATAMONGO-2571 - regex expression included "/" character can't be parsed in the stage of aggregation annotation.
+* DATAMONGO-2536 - Add option to discard results on $out and $merge.
+* DATAMONGO-2490 - @DBRef fetched without ClientSession when using Spring Transactions.
+* DATAMONGO-1894 - Use reactive subscriber context for SpEL evaluation in query execution.
+* DATAMONGO-1836 - Add support for hint option to aggregation.
+
+
 Changes in version 3.0.2.RELEASE (2020-07-22)
 ---------------------------------------------
 * DATAMONGO-2589 - Upgrade to MongoDB Driver 4.0.5.
@@ -3082,6 +3099,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
