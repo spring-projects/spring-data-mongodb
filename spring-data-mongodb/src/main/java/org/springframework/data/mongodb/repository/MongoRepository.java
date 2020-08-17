@@ -19,6 +19,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.QueryByExampleExecutor;
@@ -31,6 +32,7 @@ import org.springframework.data.repository.query.QueryByExampleExecutor;
  * @author Thomas Darimont
  * @author Mark Paluch
  * @author Khaled Baklouti
+ * @author Oleh Kurpiak
  */
 @NoRepositoryBean
 public interface MongoRepository<T, ID> extends PagingAndSortingRepository<T, ID>, QueryByExampleExecutor<T> {
@@ -91,4 +93,11 @@ public interface MongoRepository<T, ID> extends PagingAndSortingRepository<T, ID
 	 */
 	@Override
 	<S extends T> List<S> findAll(Example<S> example, Sort sort);
+
+	/**
+	 * Select all entities by given query
+	 * @param query - query to be applied to search criteria
+	 * @return list of entities that match given query
+	 */
+	List<T> findAll(Query query);
 }

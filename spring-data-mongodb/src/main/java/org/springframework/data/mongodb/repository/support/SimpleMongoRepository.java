@@ -18,7 +18,6 @@ package org.springframework.data.mongodb.repository.support;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -51,6 +50,7 @@ import com.mongodb.client.result.DeleteResult;
  * @author Thomas Darimont
  * @author Mark Paluch
  * @author Mehran Behnam
+ * @author Oleh Kurpiak
  */
 public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
@@ -366,20 +366,23 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		return mongoOperations.exists(query, example.getProbeType(), entityInformation.getCollectionName());
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.MongoRepository#findAll(org.springframework.data.mongodb.core.query.Query)
+	 */
+	@Override
+	public List<T> findAll(Query query) {
+
+		Assert.notNull(query, "Query can't be null");
+
+		return mongoOperations.find(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
+	}
+
 	private Query getIdQuery(Object id) {
 		return new Query(getIdCriteria(id));
 	}
 
 	private Criteria getIdCriteria(Object id) {
 		return where(entityInformation.getIdAttribute()).is(id);
-	}
-
-	private List<T> findAll(@Nullable Query query) {
-
-		if (query == null) {
-			return Collections.emptyList();
-		}
-
-		return mongoOperations.find(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}
 }

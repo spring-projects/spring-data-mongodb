@@ -39,6 +39,8 @@ import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.query.Collation;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Address;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.Person.Sex;
@@ -58,6 +60,7 @@ import org.springframework.transaction.support.TransactionTemplate;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Oleh Kurpiak
  */
 @ExtendWith({ MongoTemplateExtension.class, MongoServerCondition.class })
 public class SimpleMongoRepositoryTests {
@@ -387,6 +390,15 @@ public class SimpleMongoRepositoryTests {
 		repository.saveAll(Arrays.asList(first, second));
 
 		assertThat(repository.findAll()).containsExactlyInAnyOrder(first, second);
+	}
+
+	@Test
+	public void findAllByQuery() {
+
+		Query query = Query.query(Criteria.where("sex").is(Sex.MALE))
+			.addCriteria(Criteria.where("age").gte(40));
+
+		assertThat(repository.findAll(query)).containsExactly(dave, carter, boyd, leroi);
 	}
 
 	@Test // DATAMONGO-2130
