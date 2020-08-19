@@ -22,6 +22,7 @@ import static org.springframework.data.mongodb.core.schema.JsonSchemaObject.of;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import org.bson.Document;
 import org.junit.Test;
@@ -33,6 +34,7 @@ import org.springframework.data.domain.Range.*;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Michał Kurcius
  */
 public class JsonSchemaObjectUnitTests {
 
@@ -207,6 +209,13 @@ public class JsonSchemaObjectUnitTests {
 
 		assertThat(array().items(Arrays.asList(string(), bool())).toDocument()).isEqualTo(new Document("type", "array")
 				.append("items", Arrays.asList(new Document("type", "string"), new Document("type", "boolean"))));
+	}
+
+	@Test // DATAMONGO-2613
+	public void arrayObjectShouldRenderItemsCorrectlyAsObjectIfContainsOnlyOneElement() {
+
+		assertThat(array().items(Collections.singletonList(string())).toDocument()).isEqualTo(new Document("type", "array")
+				.append("items", new Document("type", "string")));
 	}
 
 	@Test // DATAMONGO-1835
