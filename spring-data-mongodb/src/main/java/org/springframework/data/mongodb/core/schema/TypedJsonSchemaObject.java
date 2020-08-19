@@ -41,6 +41,7 @@ import org.springframework.util.StringUtils;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Michał Kurcius
  * @since 2.1
  */
 public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
@@ -1203,7 +1204,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 			Document doc = new Document(super.toDocument());
 
 			if (!CollectionUtils.isEmpty(items)) {
-				doc.append("items", items.size() == 1 ? items.iterator().next()
+				doc.append("items", items.size() == 1 ? items.iterator().next().toDocument()
 						: items.stream().map(JsonSchemaObject::toDocument).collect(Collectors.toList()));
 			}
 
