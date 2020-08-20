@@ -32,7 +32,6 @@ import java.util.Set;
 
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.*;
 
@@ -43,14 +42,14 @@ import org.springframework.data.domain.Range.*;
  * @author Mark Paluch
  * @author Michał Kurcius
  */
-public class JsonSchemaObjectUnitTests {
+class JsonSchemaObjectUnitTests {
 
 	// -----------------
 	// type from class
 	// -----------------
 
 	@Test // DATAMONGO-1849
-	public void primitiveType() {
+	void primitiveType() {
 
 		assertThat(JsonSchemaObject.of(boolean.class).getTypes()).containsExactly(Type.booleanType());
 		assertThat(JsonSchemaObject.of(int.class).getTypes()).containsExactly(Type.intType());
@@ -61,7 +60,7 @@ public class JsonSchemaObjectUnitTests {
 	}
 
 	@Test // DATAMONGO-1849
-	public void objectType() {
+	void objectType() {
 
 		assertThat(JsonSchemaObject.of(Object.class).getTypes()).containsExactly(Type.objectType());
 		assertThat(JsonSchemaObject.of(Map.class).getTypes()).containsExactly(Type.objectType());
@@ -69,12 +68,12 @@ public class JsonSchemaObjectUnitTests {
 	}
 
 	@Test // DATAMONGO-1849
-	public void binaryData() {
+	void binaryData() {
 		assertThat(JsonSchemaObject.of(byte[].class).getTypes()).containsExactly(Type.binaryType());
 	}
 
 	@Test // DATAMONGO-1849
-	public void collectionType() {
+	void collectionType() {
 
 		assertThat(JsonSchemaObject.of(Object[].class).getTypes()).containsExactly(Type.arrayType());
 		assertThat(JsonSchemaObject.of(Collection.class).getTypes()).containsExactly(Type.arrayType());
@@ -83,7 +82,7 @@ public class JsonSchemaObjectUnitTests {
 	}
 
 	@Test // DATAMONGO-1849
-	public void dateType() {
+	void dateType() {
 		assertThat(JsonSchemaObject.of(Date.class).getTypes()).containsExactly(Type.dateType());
 	}
 
@@ -92,14 +91,14 @@ public class JsonSchemaObjectUnitTests {
 	// -----------------
 
 	@Test // DATAMONGO-1835
-	public void objectObjectShouldRenderTypeCorrectly() {
+	void objectObjectShouldRenderTypeCorrectly() {
 
 		assertThat(object().generatedDescription().toDocument())
 				.isEqualTo(new Document("type", "object").append("description", "Must be an object."));
 	}
 
 	@Test // DATAMONGO-1835
-	public void objectObjectShouldRenderNrPropertiesCorrectly() {
+	void objectObjectShouldRenderNrPropertiesCorrectly() {
 
 		assertThat(object().propertiesCount(from(inclusive(10)).to(inclusive(20))).generatedDescription().toDocument())
 				.isEqualTo(new Document("type", "object").append("description", "Must be an object with [10-20] properties.")
@@ -107,7 +106,7 @@ public class JsonSchemaObjectUnitTests {
 	}
 
 	@Test // DATAMONGO-1835
-	public void objectObjectShouldRenderRequiredPropertiesCorrectly() {
+	void objectObjectShouldRenderRequiredPropertiesCorrectly() {
 
 		assertThat(object().required("spring", "data", "mongodb").generatedDescription().toDocument())
 				.isEqualTo(new Document("type", "object")
@@ -116,7 +115,7 @@ public class JsonSchemaObjectUnitTests {
 	}
 
 	@Test // DATAMONGO-1835
-	public void objectObjectShouldRenderAdditionalPropertiesCorrectlyWhenBoolean() {
+	void objectObjectShouldRenderAdditionalPropertiesCorrectlyWhenBoolean() {
 
 		assertThat(object().additionalProperties(true).generatedDescription().toDocument()).isEqualTo(
 				new Document("type", "object").append("description", "Must be an object allowing additional properties.")
@@ -128,7 +127,7 @@ public class JsonSchemaObjectUnitTests {
 	}
 
 	@Test // DATAMONGO-1835
-	public void objectObjectShouldRenderPropertiesCorrectly() {
+	void objectObjectShouldRenderPropertiesCorrectly() {
 
 		Document expected = new Document("type", "object")
 				.append("description", "Must be an object defining restrictions for name, active.").append("properties",
@@ -143,7 +142,7 @@ public class JsonSchemaObjectUnitTests {
 	}
 
 	@Test // DATAMONGO-1835
-	public void objectObjectShouldRenderNestedObjectPropertiesCorrectly() {
+	void objectObjectShouldRenderNestedObjectPropertiesCorrectly() {
 
 		Document expected = new Document("type", "object")
 				.append("description", "Must be an object defining restrictions for address.")
@@ -159,7 +158,7 @@ public class JsonSchemaObjectUnitTests {
 	}
 
 	@Test // DATAMONGO-1835
-	public void objectObjectShouldRenderPatternPropertiesCorrectly() {
+	void objectObjectShouldRenderPatternPropertiesCorrectly() {
 
 		Document expected = new Document("type", "object")
 				.append("description", "Must be an object defining restrictions for patterns na.*.")
@@ -171,7 +170,7 @@ public class JsonSchemaObjectUnitTests {
 	}
 
 	@Test // DATAMONGO-1849
-	public void objectShouldIncludeRequiredNestedCorrectly() {
+	void objectShouldIncludeRequiredNestedCorrectly() {
 
 		assertThat(object() //
 				.properties( //
@@ -186,21 +185,21 @@ public class JsonSchemaObjectUnitTests {
 	// -----------------
 
 	@Test // DATAMONGO-1835
-	public void stringObjectShouldRenderTypeCorrectly() {
+	void stringObjectShouldRenderTypeCorrectly() {
 
 		assertThat(string().generatedDescription().toDocument())
 				.isEqualTo(new Document("type", "string").append("description", "Must be a string."));
 	}
 
 	@Test // DATAMONGO-1835
-	public void stringObjectShouldRenderDescriptionCorrectly() {
+	void stringObjectShouldRenderDescriptionCorrectly() {
 
 		assertThat(string().description("error msg").toDocument())
 				.isEqualTo(new Document("type", "string").append("description", "error msg"));
 	}
 
 	@Test // DATAMONGO-1835
-	public void stringObjectShouldRenderRangeCorrectly() {
+	void stringObjectShouldRenderRangeCorrectly() {
 
 		assertThat(string().length(from(inclusive(10)).to(inclusive(20))).generatedDescription().toDocument())
 				.isEqualTo(new Document("type", "string").append("description", "Must be a string with length [10-20].")
@@ -208,7 +207,7 @@ public class JsonSchemaObjectUnitTests {
 	}
 
 	@Test // DATAMONGO-1835
-	public void stringObjectShouldRenderPatternCorrectly() {
+	void stringObjectShouldRenderPatternCorrectly() {
 
 		assertThat(string().matching("^spring$").generatedDescription().toDocument())
 				.isEqualTo(new Document("type", "string").append("description", "Must be a string matching ^spring$.")
@@ -220,7 +219,7 @@ public class JsonSchemaObjectUnitTests {
 	// -----------------
 
 	@Test // DATAMONGO-1835
-	public void numberObjectShouldRenderMultipleOfCorrectly() {
+	void numberObjectShouldRenderMultipleOfCorrectly() {
 
 		assertThat(number().multipleOf(3.141592F).generatedDescription().toDocument())
 				.isEqualTo(new Document("type", "number").append("description", "Must be a numeric value multiple of 3.141592.")
@@ -228,7 +227,7 @@ public class JsonSchemaObjectUnitTests {
 	}
 
 	@Test // DATAMONGO-1835
-	public void numberObjectShouldRenderMaximumCorrectly() {
+	void numberObjectShouldRenderMaximumCorrectly() {
 
 		assertThat(
 				number().within(Range.of(Bound.unbounded(), Bound.inclusive(3.141592F))).generatedDescription().toDocument())
@@ -244,7 +243,7 @@ public class JsonSchemaObjectUnitTests {
 	}
 
 	@Test // DATAMONGO-1835
-	public void numberObjectShouldRenderMinimumCorrectly() {
+	void numberObjectShouldRenderMinimumCorrectly() {
 
 		assertThat(
 				number().within(Range.of(Bound.inclusive(3.141592F), Bound.unbounded())).generatedDescription().toDocument())
@@ -264,42 +263,42 @@ public class JsonSchemaObjectUnitTests {
 	// -----------------
 
 	@Test // DATAMONGO-1835
-	public void arrayObjectShouldRenderItemsCorrectly() {
+	void arrayObjectShouldRenderItemsCorrectly() {
 
 		assertThat(array().items(Arrays.asList(string(), bool())).toDocument()).isEqualTo(new Document("type", "array")
 				.append("items", Arrays.asList(new Document("type", "string"), new Document("type", "boolean"))));
 	}
 
 	@Test // DATAMONGO-2613
-	public void arrayObjectShouldRenderItemsCorrectlyAsObjectIfContainsOnlyOneElement() {
+	void arrayObjectShouldRenderItemsCorrectlyAsObjectIfContainsOnlyOneElement() {
 
-		assertThat(array().items(Collections.singletonList(string())).toDocument()).isEqualTo(new Document("type", "array")
-				.append("items", new Document("type", "string")));
+		assertThat(array().items(Collections.singletonList(string())).toDocument())
+				.isEqualTo(new Document("type", "array").append("items", new Document("type", "string")));
 	}
 
 	@Test // DATAMONGO-1835
-	public void arrayObjectShouldRenderMaxItemsCorrectly() {
+	void arrayObjectShouldRenderMaxItemsCorrectly() {
 
 		assertThat(array().maxItems(5).generatedDescription().toDocument()).isEqualTo(new Document("type", "array")
 				.append("description", "Must be an array having size unbounded-5].").append("maxItems", 5));
 	}
 
 	@Test // DATAMONGO-1835
-	public void arrayObjectShouldRenderMinItemsCorrectly() {
+	void arrayObjectShouldRenderMinItemsCorrectly() {
 
 		assertThat(array().minItems(5).generatedDescription().toDocument()).isEqualTo(new Document("type", "array")
 				.append("description", "Must be an array having size [5-unbounded.").append("minItems", 5));
 	}
 
 	@Test // DATAMONGO-1835
-	public void arrayObjectShouldRenderUniqueItemsCorrectly() {
+	void arrayObjectShouldRenderUniqueItemsCorrectly() {
 
 		assertThat(array().uniqueItems(true).generatedDescription().toDocument()).isEqualTo(new Document("type", "array")
 				.append("description", "Must be an array of unique values.").append("uniqueItems", true));
 	}
 
 	@Test // DATAMONGO-1835
-	public void arrayObjectShouldRenderAdditionalItemsItemsCorrectly() {
+	void arrayObjectShouldRenderAdditionalItemsItemsCorrectly() {
 
 		assertThat(array().additionalItems(true).generatedDescription().toDocument())
 				.isEqualTo(new Document("type", "array").append("description", "Must be an array with additional items.")
@@ -314,7 +313,7 @@ public class JsonSchemaObjectUnitTests {
 	// -----------------
 
 	@Test // DATAMONGO-1835
-	public void booleanShouldRenderCorrectly() {
+	void booleanShouldRenderCorrectly() {
 
 		assertThat(bool().generatedDescription().toDocument())
 				.isEqualTo(new Document("type", "boolean").append("description", "Must be a boolean."));
@@ -325,7 +324,7 @@ public class JsonSchemaObjectUnitTests {
 	// -----------------
 
 	@Test // DATAMONGO-1835
-	public void nullShouldRenderCorrectly() {
+	void nullShouldRenderCorrectly() {
 
 		assertThat(nil().generatedDescription().toDocument())
 				.isEqualTo(new Document("type", "null").append("description", "Must be null."));
@@ -336,7 +335,7 @@ public class JsonSchemaObjectUnitTests {
 	// -----------------
 
 	@Test // DATAMONGO-1877
-	public void dateShouldRenderCorrectly() {
+	void dateShouldRenderCorrectly() {
 
 		assertThat(date().generatedDescription().toDocument())
 				.isEqualTo(new Document("bsonType", "date").append("description", "Must be a date."));
@@ -347,7 +346,7 @@ public class JsonSchemaObjectUnitTests {
 	// -----------------
 
 	@Test // DATAMONGO-1877
-	public void timestampShouldRenderCorrectly() {
+	void timestampShouldRenderCorrectly() {
 
 		assertThat(timestamp().generatedDescription().toDocument())
 				.isEqualTo(new Document("bsonType", "timestamp").append("description", "Must be a timestamp."));
@@ -358,35 +357,35 @@ public class JsonSchemaObjectUnitTests {
 	// -----------------
 
 	@Test // DATAMONGO-1835
-	public void typedObjectShouldRenderEnumCorrectly() {
+	void typedObjectShouldRenderEnumCorrectly() {
 
 		assertThat(of(String.class).possibleValues(Arrays.asList("one", "two")).toDocument())
 				.isEqualTo(new Document("type", "string").append("enum", Arrays.asList("one", "two")));
 	}
 
 	@Test // DATAMONGO-1835
-	public void typedObjectShouldRenderAllOfCorrectly() {
+	void typedObjectShouldRenderAllOfCorrectly() {
 
 		assertThat(of(Object.class).allOf(Arrays.asList(string())).toDocument())
 				.isEqualTo(new Document("type", "object").append("allOf", Arrays.asList(new Document("type", "string"))));
 	}
 
 	@Test // DATAMONGO-1835
-	public void typedObjectShouldRenderAnyOfCorrectly() {
+	void typedObjectShouldRenderAnyOfCorrectly() {
 
 		assertThat(of(String.class).anyOf(Arrays.asList(string())).toDocument())
 				.isEqualTo(new Document("type", "string").append("anyOf", Arrays.asList(new Document("type", "string"))));
 	}
 
 	@Test // DATAMONGO-1835
-	public void typedObjectShouldRenderOneOfCorrectly() {
+	void typedObjectShouldRenderOneOfCorrectly() {
 
 		assertThat(of(String.class).oneOf(Arrays.asList(string())).toDocument())
 				.isEqualTo(new Document("type", "string").append("oneOf", Arrays.asList(new Document("type", "string"))));
 	}
 
 	@Test // DATAMONGO-1835
-	public void typedObjectShouldRenderNotCorrectly() {
+	void typedObjectShouldRenderNotCorrectly() {
 
 		assertThat(untyped().notMatch(string()).toDocument())
 				.isEqualTo(new Document("not", new Document("type", "string")));
