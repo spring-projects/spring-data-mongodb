@@ -131,6 +131,10 @@ public interface MongoConverter
 			return null;
 		}
 
+		if(ClassUtils.isAssignableValue(targetType, id)) {
+			return id;
+		}
+
 		if (ClassUtils.isAssignable(ObjectId.class, targetType)) {
 
 			if (id instanceof String) {
