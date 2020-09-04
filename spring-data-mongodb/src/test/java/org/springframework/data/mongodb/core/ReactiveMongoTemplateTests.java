@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
+import static java.util.Collections.*;
+import static java.util.stream.Collectors.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
@@ -24,6 +26,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Wither;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.data.convert.MappingContextTypeInformationMapper;
+import org.springframework.data.domain.Example;
+import org.springframework.data.mongodb.core.convert.DefaultMongoTypeMapper;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -40,7 +49,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.bson.BsonDocument;
@@ -93,6 +101,7 @@ import com.mongodb.reactivestreams.client.MongoClient;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Roman Puchkovskiy
  */
 @ExtendWith({ MongoClientExtension.class, MongoServerCondition.class })
 public class ReactiveMongoTemplateTests {
@@ -1393,7 +1402,7 @@ public class ReactiveMongoTemplateTests {
 		Thread.sleep(500); // just give it some time to link receive all events
 
 		try {
-			assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList())).hasSize(3)
+			assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(toList())).hasSize(3)
 					.allMatch(val -> val instanceof Document);
 		} finally {
 			disposable.dispose();
@@ -1425,7 +1434,7 @@ public class ReactiveMongoTemplateTests {
 		Thread.sleep(500); // just give it some time to link receive all events
 
 		try {
-			assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
+			assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(toList()))
 					.containsExactly(person1, person2, person3);
 		} finally {
 			disposable.dispose();
@@ -1458,7 +1467,7 @@ public class ReactiveMongoTemplateTests {
 		Thread.sleep(500); // just give it some time to link receive all events
 
 		try {
-			assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
+			assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(toList()))
 					.containsExactly(person1, person3);
 		} finally {
 			disposable.dispose();
@@ -1501,7 +1510,7 @@ public class ReactiveMongoTemplateTests {
 		Thread.sleep(500); // just give it some time to link receive all events
 
 		try {
-			assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
+			assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(toList()))
 					.containsExactly(replacement);
 		} finally {
 			disposable.dispose();
@@ -1543,7 +1552,7 @@ public class ReactiveMongoTemplateTests {
 		Thread.sleep(500); // just give it some time to link receive all events
 
 		try {
-			assertThat(resumeDocuments.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
+			assertThat(resumeDocuments.stream().map(ChangeStreamEvent::getBody).collect(toList()))
 					.containsExactly(person2, person3);
 		} finally {
 			disposable.dispose();
@@ -1556,7 +1565,7 @@ public class ReactiveMongoTemplateTests {
 
 		List<Sample> samples = IntStream.range(0, 100) //
 				.mapToObj(i -> new Sample("id-" + i, i % 2 == 0 ? "stark" : "lannister")) //
-				.collect(Collectors.toList());
+				.collect(toList());
 
 		template.insertAll(samples) //
 				.as(StepVerifier::create) //
@@ -1573,7 +1582,7 @@ public class ReactiveMongoTemplateTests {
 
 		List<Sample> samples = IntStream.range(0, 100) //
 				.mapToObj(i -> new Sample("id-" + i, i % 2 == 0 ? "stark" : "lannister")) //
-				.collect(Collectors.toList());
+				.collect(toList());
 
 		template.insertAll(samples).as(StepVerifier::create).expectNextCount(100).verifyComplete();
 
@@ -1653,7 +1662,7 @@ public class ReactiveMongoTemplateTests {
 		Thread.sleep(500); // just give it some time to link receive all events
 
 		try {
-			assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
+			assertThat(documents.stream().map(ChangeStreamEvent::getBody).collect(toList()))
 					.containsExactly(person1, person2, person3);
 		} finally {
 			disposable.dispose();
@@ -1704,7 +1713,7 @@ public class ReactiveMongoTemplateTests {
 		Thread.sleep(500); // just give it some time to link receive all events
 
 		try {
-			assertThat(resumeDocuments.stream().map(ChangeStreamEvent::getBody).collect(Collectors.toList()))
+			assertThat(resumeDocuments.stream().map(ChangeStreamEvent::getBody).collect(toList()))
 					.containsExactly(person2, person3);
 		} finally {
 			disposable.dispose();
@@ -1775,6 +1784,41 @@ public class ReactiveMongoTemplateTests {
 		});
 
 		return saved;
+	}
+
+	@Test // DATAMONGO-2620
+	void alikeQueryShouldFindProperlyWhenNoClassAttributeIsSaved() {
+		ReactiveMongoTemplate templateSavingNoTypeInfoInDb = createTemplateSavingNoTypeInfo();
+
+		Person john = new Person();
+		john.setFirstName("John");
+
+		Person savedPerson = templateSavingNoTypeInfoInDb.save(john).block();
+
+		Criteria alikeCriteria = new Criteria().alike(Example.of(savedPerson));
+		List<Person> foundPeople = templateSavingNoTypeInfoInDb.find(new Query(alikeCriteria), Person.class)
+				.toStream().collect(toList());
+
+		assertThat(foundPeople).hasSize(1);
+		assertThat(foundPeople.get(0).getId()).isEqualTo(savedPerson.getId());
+	}
+
+	@NotNull
+	private ReactiveMongoTemplate createTemplateSavingNoTypeInfo() {
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		mappingContext.setInitialEntitySet(singleton(Person.class));
+		mappingContext.setAutoIndexCreation(false);
+		mappingContext.afterPropertiesSet();
+
+		MappingContextTypeInformationMapper typeInformationMapper = new MappingContextTypeInformationMapper(
+				mappingContext);
+		DefaultMongoTypeMapper typeMapper = new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY,
+				singletonList(typeInformationMapper));
+
+		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext);
+		converter.setTypeMapper(typeMapper);
+
+		return new ReactiveMongoTemplate(new SimpleReactiveMongoDatabaseFactory(client, DB_NAME), converter);
 	}
 
 	@AllArgsConstructor

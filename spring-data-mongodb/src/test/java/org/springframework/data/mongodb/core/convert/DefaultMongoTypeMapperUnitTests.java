@@ -15,7 +15,9 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import static java.util.Collections.*;
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -25,8 +27,11 @@ import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import org.mockito.Mockito;
 import org.springframework.data.convert.ConfigurableTypeInformationMapper;
 import org.springframework.data.convert.SimpleTypeInformationMapper;
+import org.springframework.data.convert.TypeInformationMapper;
+import org.springframework.data.mapping.Alias;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.util.TypeInformation;
 
@@ -34,6 +39,7 @@ import org.springframework.data.util.TypeInformation;
  * Unit tests for {@link DefaultMongoTypeMapper}.
  *
  * @author Oliver Gierke
+ * @author Roman Puchkovskiy
  */
 public class DefaultMongoTypeMapperUnitTests {
 
@@ -182,6 +188,19 @@ public class DefaultMongoTypeMapperUnitTests {
 		typeMapper = new DefaultMongoTypeMapper(null);
 		assertThat(typeMapper.isTypeKey("_custom")).isFalse();
 		assertThat(typeMapper.isTypeKey(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY)).isFalse();
+	}
+
+	@Test // DATAMONGO-2620
+	void givenTypeAliasesAreNotAvailable_whenWritingTypeRestrictions_thenDoesNotAddInConditionWithEmptySet() {
+		TypeInformationMapper informationMapperMaintainingNoAliasInfo = mock(TypeInformationMapper.class);
+		when(informationMapperMaintainingNoAliasInfo.createAliasFor(any())).thenReturn(Alias.NONE);
+		typeMapper = new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY,
+				singletonList(informationMapperMaintainingNoAliasInfo));
+
+		Document document = new Document();
+		typeMapper.writeTypeRestrictions(document, singleton(Integer.class));
+
+		assertThat(document).isEmpty();
 	}
 
 	private void readsTypeFromField(Document document, Class<?> type) {

@@ -47,6 +47,7 @@ import com.mongodb.DBObject;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Roman Puchkovskiy
  */
 public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements MongoTypeMapper {
 
@@ -154,7 +155,9 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 			}
 		}
 
-		accessor.writeTypeTo(result, new Document("$in", restrictedMappedTypes));
+		if (!restrictedMappedTypes.isEmpty()) {
+			accessor.writeTypeTo(result, new Document("$in", restrictedMappedTypes));
+		}
 	}
 
 	/*

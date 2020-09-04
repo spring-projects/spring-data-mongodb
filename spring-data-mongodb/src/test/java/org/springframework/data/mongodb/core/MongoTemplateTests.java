@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import static java.util.Collections.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
@@ -39,6 +40,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.bson.types.ObjectId;
+import org.jetbrains.annotations.NotNull;
 import org.joda.time.DateTime;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -57,19 +59,27 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.auditing.IsNewAwareAuditingHandler;
+import org.springframework.data.convert.MappingContextTypeInformationMapper;
+import org.springframework.data.domain.Example;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.data.mongodb.core.convert.DbRefResolver;
+import org.springframework.data.mongodb.core.convert.DefaultMongoTypeMapper;
 import org.springframework.data.mongodb.core.convert.LazyLoadingProxy;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
@@ -117,6 +127,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Mark Paluch
  * @author Laszlo Csontos
  * @author duozhilin
+ * @author Roman Puchkovskiy
  */
 @ExtendWith(MongoClientExtension.class)
 public class MongoTemplateTests {
@@ -2185,7 +2196,7 @@ public class MongoTemplateTests {
 		entry.put("key2", new ModelA("value2"));
 
 		Query query = query(where("id").is(doc.id));
-		Update update = Update.update("models", Collections.singletonList(entry));
+		Update update = Update.update("models", singletonList(entry));
 
 		assertThat(template.findOne(query, DocumentWithNestedCollection.class)).isNotNull();
 
@@ -3474,7 +3485,7 @@ public class MongoTemplateTests {
 
 		Document document = new Document();
 
-		template.insertAll(Collections.singletonList(document));
+		template.insertAll(singletonList(document));
 
 		assertThat(document.id).isNotNull();
 	}
@@ -3486,7 +3497,7 @@ public class MongoTemplateTests {
 		AtomicReference<ImmutableVersioned> saved = createAfterSaveReference();
 		ImmutableVersioned source = new ImmutableVersioned();
 
-		template.insertAll(Collections.singletonList(source));
+		template.insertAll(singletonList(source));
 
 		assertThat(saved.get()).isNotNull();
 		assertThat(saved.get()).isNotSameAs(source);
@@ -3511,7 +3522,7 @@ public class MongoTemplateTests {
 	@Test // DATAMONGO-1509
 	public void findsByGenericNestedListElements() {
 
-		List<Model> modelList = Collections.singletonList(new ModelA("value"));
+		List<Model> modelList = singletonList(new ModelA("value"));
 		DocumentWithCollection dwc = new DocumentWithCollection(modelList);
 
 		template.insert(dwc);
@@ -3681,6 +3692,40 @@ public class MongoTemplateTests {
 		template.save(f);
 
 		assertThat(template.find(new BasicQuery("{}").with(Sort.by("id")), WithIdAndFieldAnnotation.class)).isNotEmpty();
+	}
+
+	@Test // DATAMONGO-2620
+	void alikeQueryShouldFindProperlyWhenNoClassAttributeIsSaved() {
+		MongoTemplate templateSavingNoTypeInfoInDb = createTemplateSavingNoTypeInfo();
+
+		Person john = new Person();
+		john.setFirstName("John");
+
+		Person savedPerson = templateSavingNoTypeInfoInDb.save(john);
+
+		Criteria alikeCriteria = new Criteria().alike(Example.of(savedPerson));
+		List<Person> foundPeople = templateSavingNoTypeInfoInDb.find(new Query(alikeCriteria), Person.class);
+		
+		assertThat(foundPeople).hasSize(1);
+		assertThat(foundPeople.get(0).getId()).isEqualTo(savedPerson.getId());
+	}
+
+	@NotNull
+	private MongoTemplate createTemplateSavingNoTypeInfo() {
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		mappingContext.setInitialEntitySet(singleton(Person.class));
+		mappingContext.setAutoIndexCreation(false);
+		mappingContext.afterPropertiesSet();
+
+		MappingContextTypeInformationMapper typeInformationMapper = new MappingContextTypeInformationMapper(
+				mappingContext);
+		DefaultMongoTypeMapper typeMapper = new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY,
+				singletonList(typeInformationMapper));
+
+		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext);
+		converter.setTypeMapper(typeMapper);
+
+		return new MongoTemplate(new SimpleMongoClientDatabaseFactory(client, DB_NAME), converter);
 	}
 
 	private AtomicReference<ImmutableVersioned> createAfterSaveReference() {
