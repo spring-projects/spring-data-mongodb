@@ -1867,7 +1867,7 @@ public class MappingMongoConverterUnitTests {
 			}
 		};
 
-		converter.setCustomConversions(new MongoCustomConversions(Arrays.asList(enumConverter)));
+		converter.setCustomConversions(new MongoCustomConversions(Collections.singletonList(enumConverter)));
 		converter.afterPropertiesSet();
 
 		DocWithInterfacedEnum result = converter.read(DocWithInterfacedEnum.class, document);
@@ -1878,14 +1878,13 @@ public class MappingMongoConverterUnitTests {
 	@Test // DATAMONGO-1904
 	void readsNestedArraysCorrectly() {
 
-		List<List<List<Float>>> floats = Arrays.asList(Arrays.asList(Arrays.asList(1.0f, 2.0f)));
+		List<List<List<Float>>> floats = Collections.singletonList(Collections.singletonList(Arrays.asList(1.0f, 2.0f)));
 
 		org.bson.Document document = new org.bson.Document("nestedFloats", floats);
 
 		WithNestedLists result = converter.read(WithNestedLists.class, document);
 
-		assertThat(result.nestedFloats).hasSize(1);
-		assertThat(result.nestedFloats).isEqualTo(new float[][][] { { { 1.0f, 2.0f } } });
+		assertThat(result.nestedFloats).hasDimensions(1, 1).isEqualTo(new float[][][] { { { 1.0f, 2.0f } } });
 	}
 
 	@Test // DATAMONGO-1992
