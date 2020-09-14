@@ -175,7 +175,7 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 	 *
 	 * @author Mark Paluch
 	 */
-	static class ReplaceRootDocumentOperation extends ReplaceRootOperation {
+	public static class ReplaceRootDocumentOperation extends ReplaceRootOperation {
 
 		private final static ReplacementDocument EMPTY = new ReplacementDocument();
 		private final ReplacementDocument current;
