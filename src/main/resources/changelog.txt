@@ -1,6 +1,14 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.1.0-RC1 (2020-09-16)
+-----------------------------------------
+* DATAMONGO-2621 - Adapt to changed array assertions in AssertJ.
+* DATAMONGO-2618 - ReplaceRootDocumentOperation not visible.
+* DATAMONGO-2613 - ArrayJsonSchemaObject incorrectly mapped to Document.
+* DATAMONGO-2608 - Release 3.1 RC1 (2020.0.0).
+
+
 Changes in version 3.0.4.RELEASE (2020-09-16)
 ---------------------------------------------
 * DATAMONGO-2618 - ReplaceRootDocumentOperation not visible.
@@ -3138,6 +3146,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
