@@ -1,6 +1,13 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.1.20.RELEASE (2020-09-16)
+----------------------------------------------
+* DATAMONGO-2618 - ReplaceRootDocumentOperation not visible.
+* DATAMONGO-2613 - ArrayJsonSchemaObject incorrectly mapped to Document.
+* DATAMONGO-2592 - Release 2.1.20 (Lovelace SR20).
+
+
 Changes in version 3.0.3.RELEASE (2020-08-12)
 ---------------------------------------------
 * DATAMONGO-2601 - Consider Unit a void type in Coroutine repositories.
@@ -3116,6 +3123,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
