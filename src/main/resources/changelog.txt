@@ -1,6 +1,14 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.2.10.RELEASE (2020-09-16)
+----------------------------------------------
+* DATAMONGO-2618 - ReplaceRootDocumentOperation not visible.
+* DATAMONGO-2613 - ArrayJsonSchemaObject incorrectly mapped to Document.
+* DATAMONGO-2599 - Ambiguous field mapping detected for enum java.time.temporal.ChronoUnit.
+* DATAMONGO-2593 - Release 2.2.10 (Moore SR10).
+
+
 Changes in version 2.1.20.RELEASE (2020-09-16)
 ----------------------------------------------
 * DATAMONGO-2618 - ReplaceRootDocumentOperation not visible.
@@ -3114,6 +3122,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
