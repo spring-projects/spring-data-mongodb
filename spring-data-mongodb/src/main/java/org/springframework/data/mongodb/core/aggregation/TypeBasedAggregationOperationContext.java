@@ -133,6 +133,19 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 	 */
 	@Override
 	public AggregationOperationContext continueOnMissingFieldReference() {
+		return continueOnMissingFieldReference(type);
+	}
+
+	/**
+	 * This toggle allows the {@link AggregationOperationContext context} to use any given field name without checking for
+	 * its existence. Typically the {@link AggregationOperationContext} fails when referencing unknown fields, those that
+	 * are not present in one of the previous stages or the input source, throughout the pipeline.
+	 *
+	 * @param type The domain type to map fields to.
+	 * @return a more relaxed {@link AggregationOperationContext}.
+	 * @since 3.1
+	 */
+	public AggregationOperationContext continueOnMissingFieldReference(Class<?> type) {
 		return new RelaxedTypeBasedAggregationOperationContext(type, mappingContext, mapper);
 	}
 
