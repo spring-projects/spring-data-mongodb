@@ -28,6 +28,7 @@ import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.CountOperation;
+import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
@@ -75,12 +76,17 @@ class AggregationUtil {
 			return context;
 		}
 
-		if (aggregation instanceof TypedAggregation) {
-			return new TypeBasedAggregationOperationContext(((TypedAggregation) aggregation).getInputType(), mappingContext,
-					queryMapper);
+		if (!(aggregation instanceof TypedAggregation)) {
+			return Aggregation.DEFAULT_CONTEXT;
 		}
 
-		return Aggregation.DEFAULT_CONTEXT;
+		Class<?> inputType = ((TypedAggregation) aggregation).getInputType();
+
+		if (aggregation.getPipeline().requiresRelaxedChecking()) {
+			return new RelaxedTypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper);
+		}
+
+		return new TypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper);
 	}
 
 	/**

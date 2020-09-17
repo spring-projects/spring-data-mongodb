@@ -149,4 +149,12 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 		}
 		return null;
 	}
+
+	/**
+	 * @return obtain the root context used to resolve references.
+	 * @since 3.1
+	 */
+	AggregationOperationContext getRootContext() {
+		return rootContext;
+	}
 }

@@ -1977,9 +1977,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
 
-		AggregationOperationContext context = new TypeBasedAggregationOperationContext(aggregation.getInputType(),
-				mappingContext, queryMapper);
-		return aggregate(aggregation, inputCollectionName, outputType, context);
+		return aggregate(aggregation, inputCollectionName, outputType, null);
 	}
 
 	/* (non-Javadoc)

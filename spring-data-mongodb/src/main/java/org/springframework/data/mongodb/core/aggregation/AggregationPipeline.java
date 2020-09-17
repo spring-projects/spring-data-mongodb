@@ -45,6 +45,8 @@ public class AggregationPipeline {
 	 * @param aggregationOperations must not be {@literal null}.
 	 */
 	public AggregationPipeline(List<AggregationOperation> aggregationOperations) {
+
+		Assert.notNull(aggregationOperations, "AggregationOperations must not be null!");
 		pipeline = new ArrayList<>(aggregationOperations);
 	}
 
@@ -107,5 +109,38 @@ public class AggregationPipeline {
 
 	private boolean isLast(AggregationOperation aggregationOperation) {
 		return pipeline.indexOf(aggregationOperation) == pipeline.size() - 1;
+	}
+
+	/**
+	 * @return {@literal true} if field names might get computed by one of the pipeline stages, that the
+	 *         {@link AggregationOperationContext} might not be aware of. A strongly typed context might fail to resolve
+	 *         field references, so if {@literal true} usage of a {@link RelaxedTypeBasedAggregationOperationContext}
+	 *         might be the better choice.
+	 * @since 3.1
+	 */
+	public boolean requiresRelaxedChecking() {
+		return pipelineContainsValueOfType(UnionWithOperation.class);
+	}
+
+	/**
+	 * @return {@literal true} if the pipeline does not contain any stages.
+	 * @since 3.1
+	 */
+	public boolean isEmpty() {
+		return pipeline.isEmpty();
+	}
+
+	private boolean pipelineContainsValueOfType(Class<?> type) {
+
+		if (isEmpty()) {
+			return false;
+		}
+
+		for (Object element : pipeline) {
+			if (type.isInstance(element)) {
+				return true;
+			}
+		}
+		return false;
 	}
 }
