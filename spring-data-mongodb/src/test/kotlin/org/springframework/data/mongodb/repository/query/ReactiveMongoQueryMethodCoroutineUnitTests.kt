@@ -39,6 +39,8 @@ class ReactiveMongoQueryMethodCoroutineUnitTests {
 		suspend fun findSuspendAllByName(): Flow<Person>
 
 		fun findAllByName(): Flow<Person>
+
+		suspend fun findSuspendByName(): List<Person>
 	}
 
 	@Test // DATAMONGO-2562
@@ -54,6 +56,15 @@ class ReactiveMongoQueryMethodCoroutineUnitTests {
 	internal fun `should consider suspended methods returning Flow as collection queries`() {
 
 		val method = PersonRepository::class.java.getMethod("findSuspendAllByName", Continuation::class.java)
+		val queryMethod = ReactiveMongoQueryMethod(method, DefaultRepositoryMetadata(PersonRepository::class.java), projectionFactory, MongoMappingContext())
+
+		assertThat(queryMethod.isCollectionQuery).isTrue()
+	}
+
+	@Test // DATAMONGO-2630
+	internal fun `should consider suspended methods returning List as collection queries`() {
+
+		val method = PersonRepository::class.java.getMethod("findSuspendByName", Continuation::class.java)
 		val queryMethod = ReactiveMongoQueryMethod(method, DefaultRepositoryMetadata(PersonRepository::class.java), projectionFactory, MongoMappingContext())
 
 		assertThat(queryMethod.isCollectionQuery).isTrue()

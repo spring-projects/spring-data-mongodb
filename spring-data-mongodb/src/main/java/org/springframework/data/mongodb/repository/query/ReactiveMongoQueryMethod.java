@@ -94,8 +94,8 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 		}
 
 		this.method = method;
-		this.isCollectionQuery = Lazy.of(() -> !(isPageQuery() || isSliceQuery())
-				&& ReactiveWrappers.isMultiValueType(metadata.getReturnType(method).getType()));
+		this.isCollectionQuery = Lazy.of(() -> (!(isPageQuery() || isSliceQuery())
+				&& ReactiveWrappers.isMultiValueType(metadata.getReturnType(method).getType()) || super.isCollectionQuery()));
 	}
 
 	/*
