@@ -140,6 +140,39 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 
 	}
 
+	/**
+	 * Append the given key at the position in the underlying {@link LinkedHashMap}.
+	 *
+	 * @param index
+	 * @param key
+	 * @param value
+	 * @return
+	 * @since 3.1
+	 */
+	protected java.util.Map<String, Object> appendAt(int index, String key, Object value) {
+
+		Assert.isInstanceOf(Map.class, this.value, "Value must be a type of Map!");
+
+		java.util.LinkedHashMap<String, Object> clone = new java.util.LinkedHashMap<>();
+
+		int i = 0;
+		for (Map.Entry<String, Object> entry : ((java.util.Map<String, Object>) this.value).entrySet()) {
+
+			if (i == index) {
+				clone.put(key, value);
+			}
+			if (!entry.getKey().equals(key)) {
+				clone.put(entry.getKey(), entry.getValue());
+			}
+			i++;
+		}
+		if (i <= index) {
+			clone.put(key, value);
+		}
+		return clone;
+
+	}
+
 	protected List<Object> values() {
 
 		if (value instanceof List) {
