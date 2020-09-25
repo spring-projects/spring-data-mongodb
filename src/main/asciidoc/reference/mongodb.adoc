@@ -2559,6 +2559,7 @@ The MongoDB Aggregation Framework provides the following types of aggregation op
 * Lookup Aggregation Operators
 * Convert Aggregation Operators
 * Object Aggregation Operators
+* Script Aggregation Operators
 
 At the time of this writing, we provide support for the following Aggregation Operations in Spring Data MongoDB:
 
@@ -2606,6 +2607,9 @@ At the time of this writing, we provide support for the following Aggregation Op
 
 | Object Aggregation Operators
 | `objectToArray`, `mergeObjects`
+
+| Script Aggregation Operators
+| `function`, `accumulator`
 |===
 
 * The operation is mapped or added by Spring Data MongoDB.
