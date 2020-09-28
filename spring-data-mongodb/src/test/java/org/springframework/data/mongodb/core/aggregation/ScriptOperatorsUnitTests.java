@@ -46,6 +46,72 @@ class ScriptOperatorsUnitTests {
 				$function(new Document(EMPTY_ARGS_FUNCTION_DOCUMENT).append("args", Collections.singletonList("$name"))));
 	}
 
+	private static final String INIT_FUNCTION = "function() { return { count: 0, sum: 0 } }";
+	private static final String ACC_FUNCTION = "function(state, numCopies) { return { count: state.count + 1, sum: state.sum + numCopies } }";
+	private static final String MERGE_FUNCTION = "function(state1, state2) { return { count: state1.count + state2.count, sum: state1.sum + state2.sum } }";
+	private static final String FINALIZE_FUNCTION = "function(state) { return (state.sum / state.count) }";
+
+	private static final Document $ACCUMULATOR = Document.parse("{" + //
+			"      $accumulator:" + //
+			"      {" + //
+			"        init: '" + INIT_FUNCTION + "'," + //
+			"        accumulate: '" + ACC_FUNCTION + "'," + //
+			"        accumulateArgs: [\"$copies\"]," + //
+			"        merge: '" + MERGE_FUNCTION + "'," + //
+			"        finalize: '" + FINALIZE_FUNCTION + "'," + //
+			"        lang: \"js\"" + //
+			"      }" + //
+			"    }" + //
+			"  }");
+
+	@Test // DATAMONGO-2623
+	void accumulatorWithStringInput() {
+
+		Accumulator accumulator = accumulator() //
+				.init(INIT_FUNCTION) //
+				.accumulate(ACC_FUNCTION).accumulateArgs("$copies") //
+				.merge(MERGE_FUNCTION) //
+				.finalize(FINALIZE_FUNCTION);
+
+		assertThat(accumulator.toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo($ACCUMULATOR);
+	}
+
+	@Test // DATAMONGO-2623
+	void accumulatorWithFunctionInput() {
+
+		Accumulator accumulator = accumulator() //
+				.init(function(INIT_FUNCTION)) //
+				.accumulate(function(ACC_FUNCTION).args("$copies")) //
+				.merge(MERGE_FUNCTION) //
+				.finalize(FINALIZE_FUNCTION);
+
+		assertThat(accumulator.toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo($ACCUMULATOR);
+	}
+
+	@Test // DATAMONGO-2623
+	void accumulatorRemovesOptionalAccumulatorArgsFieldsWhenEmpty() {
+
+		Accumulator source = accumulator().accumulateArgs("$copies");
+		Accumulator target = source.accumulate(function(ACC_FUNCTION).args(Collections.emptyList())); //
+
+		assertThat(source.toDocument(Aggregation.DEFAULT_CONTEXT).get("$accumulator", Document.class)) //
+				.containsKey("accumulateArgs");
+		assertThat(target.toDocument(Aggregation.DEFAULT_CONTEXT).get("$accumulator", Document.class)) //
+				.doesNotContainKey("accumulateArgs");
+	}
+
+	@Test // DATAMONGO-2623
+	void accumulatorRemovesOptionalInitArgsFieldsWhenEmpty() {
+
+		Accumulator source = accumulator().initArgs(10);
+		Accumulator target = source.init(function(INIT_FUNCTION).args(Collections.emptyList())); //
+
+		assertThat(source.toDocument(Aggregation.DEFAULT_CONTEXT).get("$accumulator", Document.class)) //
+				.containsKey("initArgs");
+		assertThat(target.toDocument(Aggregation.DEFAULT_CONTEXT).get("$accumulator", Document.class)) //
+				.doesNotContainKey("initArgs");
+	}
+
 	static Document $function(Document source) {
 		return new Document("$function", source);
 	}

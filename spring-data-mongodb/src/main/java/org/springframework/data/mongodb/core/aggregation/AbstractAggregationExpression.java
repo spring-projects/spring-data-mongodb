@@ -140,6 +140,15 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 
 	}
 
+	protected java.util.Map<String, Object> remove(String key) {
+
+		Assert.isInstanceOf(Map.class, this.value, "Value must be a type of Map!");
+
+		java.util.Map<String, Object> clone = new LinkedHashMap<>((java.util.Map) this.value);
+		clone.remove(key);
+		return clone;
+	}
+
 	/**
 	 * Append the given key at the position in the underlying {@link LinkedHashMap}.
 	 *
