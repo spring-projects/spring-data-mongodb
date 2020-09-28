@@ -349,6 +349,15 @@ class ParameterBindingJsonReaderUnitTests {
 				.isEqualTo(Document.parse("{ $and: [{'fieldA': {$in: [/ABC.*/, /CDE.*F/]}}, {'fieldB': {$ne: null}}]}"));
 	}
 
+	@Test // DATAMONGO-2633
+	void shouldParseNestedArrays() {
+
+		Document target = parse("{ 'stores.location' : { $geoWithin: { $centerSphere: [ [ ?0, 48.799029 ] , ?1 ] } } }",
+				1.948516D, 0.004D);
+		assertThat(target).isEqualTo(Document
+				.parse("{ 'stores.location' : { $geoWithin: { $centerSphere: [ [ 1.948516, 48.799029 ] , 0.004 ] } } }"));
+	}
+
 	private static Document parse(String json, Object... args) {
 
 		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json, args);
