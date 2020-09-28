@@ -365,15 +365,7 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 		reader.readStartArray();
 		List<Object> list = new ArrayList<>();
 		while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
-
-			// Spring Data Customization START
-			Object listValue = readValue(reader, decoderContext);
-			if (listValue instanceof Collection) {
-				list.addAll((Collection) listValue);
-				break;
-			}
-			list.add(listValue);
-			// Spring Data Customization END
+			list.add(readValue(reader, decoderContext));
 		}
 		reader.readEndArray();
 		return list;
