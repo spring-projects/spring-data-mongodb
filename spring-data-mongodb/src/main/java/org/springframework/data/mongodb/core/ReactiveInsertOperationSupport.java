@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import lombok.AccessLevel;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -34,10 +30,13 @@ import org.springframework.util.StringUtils;
  * @author Christoph Strobl
  * @since 2.0
  */
-@RequiredArgsConstructor
 class ReactiveInsertOperationSupport implements ReactiveInsertOperation {
 
-	private final @NonNull ReactiveMongoTemplate template;
+	private final ReactiveMongoTemplate template;
+
+	ReactiveInsertOperationSupport(ReactiveMongoTemplate template) {
+		this.template = template;
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -51,13 +50,18 @@ class ReactiveInsertOperationSupport implements ReactiveInsertOperation {
 		return new ReactiveInsertSupport<>(template, domainType, null);
 	}
 
-	@RequiredArgsConstructor
-	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 	static class ReactiveInsertSupport<T> implements ReactiveInsert<T> {
 
-		@NonNull ReactiveMongoTemplate template;
-		@NonNull Class<T> domainType;
-		String collection;
+		private final ReactiveMongoTemplate template;
+		private final Class<T> domainType;
+		private final String collection;
+
+		ReactiveInsertSupport(ReactiveMongoTemplate template, Class<T> domainType, String collection) {
+
+			this.template = template;
+			this.domainType = domainType;
+			this.collection = collection;
+		}
 
 		/*
 		 * (non-Javadoc)
@@ -96,7 +100,7 @@ class ReactiveInsertOperationSupport implements ReactiveInsertOperation {
 		}
 
 		private String getCollectionName() {
-			return StringUtils.hasText(collection) ? collection : template.determineCollectionName(domainType);
+			return StringUtils.hasText(collection) ? collection : template.getCollectionName(domainType);
 		}
 	}
 }

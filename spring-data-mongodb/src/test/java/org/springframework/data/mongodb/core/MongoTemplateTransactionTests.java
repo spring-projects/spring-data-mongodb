@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,37 +23,37 @@ import static org.springframework.data.mongodb.test.util.MongoTestUtils.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Persistable;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoTransactionManager;
-import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
+import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.test.util.AfterTransactionAssertion;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
-import org.springframework.data.mongodb.test.util.ReplicaSet;
-import org.springframework.data.util.Version;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
+import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
+import org.springframework.data.mongodb.test.util.ReplSetClient;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.transaction.AfterTransaction;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.mongodb.MongoClient;
 import com.mongodb.ReadPreference;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 
@@ -61,23 +61,24 @@ import com.mongodb.client.model.Filters;
  * @author Christoph Strobl
  * @currentRead Shadow's Edge - Brent Weeks
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
+@EnableIfReplicaSetAvailable
+@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
 @ContextConfiguration
 @Transactional(transactionManager = "txManager")
 public class MongoTemplateTransactionTests {
 
-	public static @ClassRule RuleChain TEST_RULES = RuleChain.outerRule(MongoVersionRule.atLeast(Version.parse("3.7.3")))
-			.around(ReplicaSet.required());
-
 	static final String DB_NAME = "template-tx-tests";
 	static final String COLLECTION_NAME = "assassins";
 
+	static @ReplSetClient MongoClient mongoClient;
+
 	@Configuration
-	static class Config extends AbstractMongoConfiguration {
+	static class Config extends AbstractMongoClientConfiguration {
 
 		@Bean
 		public MongoClient mongoClient() {
-			return MongoTestUtils.replSetClient();
+			return mongoClient;
 		}
 
 		@Override
@@ -85,9 +86,19 @@ public class MongoTemplateTransactionTests {
 			return DB_NAME;
 		}
 
+		@Override
+		protected boolean autoIndexCreation() {
+			return false;
+		}
+
 		@Bean
-		MongoTransactionManager txManager(MongoDbFactory dbFactory) {
+		MongoTransactionManager txManager(MongoDatabaseFactory dbFactory) {
 			return new MongoTransactionManager(dbFactory);
+		}
+
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+			return Collections.emptySet();
 		}
 	}
 
@@ -96,7 +107,7 @@ public class MongoTemplateTransactionTests {
 
 	List<AfterTransactionAssertion<? extends Persistable<?>>> assertionList;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		template.setReadPreference(ReadPreference.primary());
@@ -109,7 +120,7 @@ public class MongoTemplateTransactionTests {
 	}
 
 	@AfterTransaction
-	public void verifyDbState()  {
+	public void verifyDbState() {
 
 		MongoCollection<Document> collection = client.getDatabase(DB_NAME).withReadPreference(ReadPreference.primary())
 				.getCollection(COLLECTION_NAME);

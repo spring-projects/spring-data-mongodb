@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,20 +22,26 @@ import static org.mockito.Mockito.*;
 import lombok.Value;
 
 import java.lang.reflect.Method;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
-
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
@@ -60,13 +66,16 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 
+import com.mongodb.MongoClientSettings;
+
 /**
  * Unit tests for {@link StringBasedAggregation}.
  *
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class StringBasedAggregationUnitTests {
 
 	SpelExpressionParser PARSER = new SpelExpressionParser();
@@ -84,12 +93,13 @@ public class StringBasedAggregationUnitTests {
 	private static final Document SORT = Document.parse(RAW_SORT_STRING);
 	private static final Document GROUP_BY_LASTNAME = Document.parse(RAW_GROUP_BY_LASTNAME_STRING);
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		converter = new MappingMongoConverter(dbRefResolver, new MongoMappingContext());
 		when(operations.getConverter()).thenReturn(converter);
 		when(operations.aggregate(any(TypedAggregation.class), any())).thenReturn(aggregationResults);
+		when(operations.execute(any())).thenReturn(MongoClientSettings.getDefaultCodecRegistry());
 	}
 
 	@Test // DATAMONGO-2153
@@ -102,18 +112,19 @@ public class StringBasedAggregationUnitTests {
 		assertThat(pipelineOf(invocation)).containsExactly(GROUP_BY_LASTNAME, SORT);
 	}
 
-	@Test // DATAMONGO-2153
+	@Test // DATAMONGO-2153, DATAMONGO-2449
 	public void plainStringAggregationConsidersMeta() {
 
 		AggregationInvocation invocation = executeAggregation("plainStringAggregation");
-
 		AggregationOptions options = invocation.aggregation.getOptions();
 
 		assertThat(options.getComment()).contains("expensive-aggregation");
 		assertThat(options.getCursorBatchSize()).isEqualTo(42);
+		assertThat(options.isAllowDiskUse()).isTrue();
+		assertThat(options.getMaxTime()).isEqualTo(Duration.ofMillis(100));
 	}
 
-	@Test // DATAMONGO-2153
+	@Test // DATAMONGO-2153, DATAMONGO-2449
 	public void returnSingleObject() {
 
 		PersonAggregate expected = new PersonAggregate();
@@ -126,6 +137,8 @@ public class StringBasedAggregationUnitTests {
 
 		assertThat(options.getComment()).isEmpty();
 		assertThat(options.getCursorBatchSize()).isNull();
+		assertThat(options.isAllowDiskUse()).isFalse();
+		assertThat(options.getMaxTime()).isEqualTo(Duration.ZERO);
 	}
 
 	@Test // DATAMONGO-2153
@@ -198,6 +211,23 @@ public class StringBasedAggregationUnitTests {
 		assertThat(collationOf(invocation)).isEqualTo(Collation.of("en_US"));
 	}
 
+	@Test // DATAMONGO-2506
+	public void aggregateRaisesErrorOnInvalidReturnType() {
+
+		StringBasedAggregation sba = createAggregationForMethod("invalidPageReturnType", Pageable.class);
+		assertThatExceptionOfType(InvalidMongoDbApiUsageException.class) //
+				.isThrownBy(() -> sba.execute(new Object[] { PageRequest.of(0, 1) })) //
+				.withMessageContaining("invalidPageReturnType") //
+				.withMessageContaining("Page");
+	}
+
+	@Test // DATAMONGO-2557
+	void aggregationRetrievesCodecFromDriverJustOnceForMultipleAggregationOperationsInPipeline() {
+
+		executeAggregation("multiOperationPipeline", "firstname");
+		verify(operations).execute(any());
+	}
+
 	private AggregationInvocation executeAggregation(String name, Object... args) {
 
 		Class<?>[] argTypes = Arrays.stream(args).map(Object::getClass).toArray(Class[]::new);
@@ -246,7 +276,7 @@ public class StringBasedAggregationUnitTests {
 
 	private interface SampleRepository extends Repository<Person, Long> {
 
-		@Meta(cursorBatchSize = 42, comment = "expensive-aggregation")
+		@Meta(cursorBatchSize = 42, comment = "expensive-aggregation", allowDiskUse = true, maxExecutionTimeMs = 100)
 		@Aggregation({ RAW_GROUP_BY_LASTNAME_STRING, RAW_SORT_STRING })
 		PersonAggregate plainStringAggregation();
 
@@ -271,11 +301,17 @@ public class StringBasedAggregationUnitTests {
 		@Aggregation(GROUP_BY_LASTNAME_STRING_WITH_SPEL_PARAMETER_PLACEHOLDER)
 		PersonAggregate spelParameterReplacementAggregation(String arg0);
 
+		@Aggregation(pipeline = { RAW_GROUP_BY_LASTNAME_STRING, GROUP_BY_LASTNAME_STRING_WITH_SPEL_PARAMETER_PLACEHOLDER })
+		PersonAggregate multiOperationPipeline(String arg0);
+
 		@Aggregation(pipeline = RAW_GROUP_BY_LASTNAME_STRING, collation = "de_AT")
 		PersonAggregate aggregateWithCollation();
 
 		@Aggregation(pipeline = RAW_GROUP_BY_LASTNAME_STRING, collation = "de_AT")
 		PersonAggregate aggregateWithCollation(Collation collation);
+
+		@Aggregation(RAW_GROUP_BY_LASTNAME_STRING)
+		Page<Person> invalidPageReturnType(Pageable page);
 	}
 
 	static class PersonAggregate {

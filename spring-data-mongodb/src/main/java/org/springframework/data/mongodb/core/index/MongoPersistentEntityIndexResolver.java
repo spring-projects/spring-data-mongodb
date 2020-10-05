@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 package org.springframework.data.mongodb.core.index;
-
-import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
-import lombok.RequiredArgsConstructor;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -41,15 +37,16 @@ import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PropertyHandler;
+import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.CycleGuard.Path;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.TextIndexIncludeOptions.IncludeStrategy;
 import org.springframework.data.mongodb.core.index.TextIndexDefinition.TextIndexDefinitionBuilder;
 import org.springframework.data.mongodb.core.index.TextIndexDefinition.TextIndexedFieldSpec;
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.EvaluationContext;
@@ -73,6 +70,7 @@ import org.springframework.util.StringUtils;
  * @author Thomas Darimont
  * @author Martin Macko
  * @author Mark Paluch
+ * @author Dave Perryman
  * @since 1.5
  */
 public class MongoPersistentEntityIndexResolver implements IndexResolver {
@@ -80,7 +78,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	private static final Logger LOGGER = LoggerFactory.getLogger(MongoPersistentEntityIndexResolver.class);
 	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
 
-	private final MongoMappingContext mappingContext;
+	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private EvaluationContextProvider evaluationContextProvider = EvaluationContextProvider.DEFAULT;
 
 	/**
@@ -88,7 +86,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 *
 	 * @param mappingContext must not be {@literal null}.
 	 */
-	public MongoPersistentEntityIndexResolver(MongoMappingContext mappingContext) {
+	public MongoPersistentEntityIndexResolver(
+			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 
 		Assert.notNull(mappingContext, "Mapping context must not be null in order to resolve index definitions");
 		this.mappingContext = mappingContext;
@@ -261,6 +260,10 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			LOGGER.info(e.getMessage());
 		}
 
+		if (root.hasCollation()) {
+			indexDefinitionBuilder.withSimpleCollation();
+		}
+
 		TextIndexDefinition indexDefinition = indexDefinitionBuilder.build();
 
 		if (!indexDefinition.hasFieldSpec()) {
@@ -379,6 +382,10 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			indexDefinition.background();
 		}
 
+		if (StringUtils.hasText(index.partialFilter())) {
+			indexDefinition.partial(evaluatePartialFilter(index.partialFilter(), entity));
+		}
+
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
 	}
 
@@ -468,8 +475,24 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			}
 		}
 
+		if (StringUtils.hasText(index.partialFilter())) {
+			indexDefinition.partial(evaluatePartialFilter(index.partialFilter(), persistentProperty.getOwner()));
+		}
+
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
 	}
+
+	private PartialIndexFilter evaluatePartialFilter(String filterExpression, PersistentEntity<?,?> entity) {
+
+		Object result = evaluate(filterExpression, getEvaluationContextForProperty(entity));
+
+		if (result instanceof org.bson.Document) {
+			return PartialIndexFilter.of((org.bson.Document) result);
+		}
+
+		return PartialIndexFilter.of(BsonUtils.parse(filterExpression, null));
+	}
+
 
 	/**
 	 * Creates {@link HashedIndex} wrapped in {@link IndexDefinitionHolder} out of {@link HashIndexed} for a given
@@ -727,14 +750,17 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		 * @author Christoph Strobl
 		 * @author Mark Paluch
 		 */
-		@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-		@EqualsAndHashCode
 		static class Path {
 
 			private static final Path EMPTY = new Path(Collections.emptyList(), false);
 
 			private final List<PersistentProperty<?>> elements;
 			private final boolean cycle;
+
+			private Path(List<PersistentProperty<?>> elements, boolean cycle) {
+				this.elements = elements;
+				this.cycle = cycle;
+			}
 
 			/**
 			 * @return an empty {@link Path}.
@@ -836,6 +862,28 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 				}
 
 				return builder.toString();
+			}
+
+			@Override
+			public boolean equals(Object o) {
+				if (this == o)
+					return true;
+				if (o == null || getClass() != o.getClass())
+					return false;
+
+				Path that = (Path) o;
+
+				if (this.cycle != that.cycle) {
+					return false;
+				}
+				return ObjectUtils.nullSafeEquals(this.elements, that.elements);
+			}
+
+			@Override
+			public int hashCode() {
+				int result = ObjectUtils.nullSafeHashCode(elements);
+				result = 31 * result + (cycle ? 1 : 0);
+				return result;
 			}
 		}
 	}

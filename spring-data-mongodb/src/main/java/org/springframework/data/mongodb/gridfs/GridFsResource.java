@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import java.util.Optional;
 
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
-import org.springframework.data.util.Optionals;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -38,7 +38,7 @@ import com.mongodb.client.gridfs.model.GridFSFile;
  * @author Hartmut Lang
  * @author Mark Paluch
  */
-public class GridFsResource extends InputStreamResource {
+public class GridFsResource extends InputStreamResource implements GridFsObject<Object, InputStream> {
 
 	static final String CONTENT_TYPE_FIELD = "_contentType";
 	private static final ByteArrayInputStream EMPTY_INPUT_STREAM = new ByteArrayInputStream(new byte[0]);
@@ -48,7 +48,7 @@ public class GridFsResource extends InputStreamResource {
 
 	/**
 	 * Creates a new, absent {@link GridFsResource}.
-	 * 
+	 *
 	 * @param filename filename of the absent resource.
 	 * @since 2.1
 	 */
@@ -116,7 +116,7 @@ public class GridFsResource extends InputStreamResource {
 	public long contentLength() throws IOException {
 
 		verifyExists();
-		return file.getLength();
+		return getGridFSFile().getLength();
 	}
 
 	/*
@@ -125,7 +125,7 @@ public class GridFsResource extends InputStreamResource {
 	 */
 	@Override
 	public String getFilename() throws IllegalStateException {
-		return filename;
+		return this.filename;
 	}
 
 	/*
@@ -134,7 +134,7 @@ public class GridFsResource extends InputStreamResource {
 	 */
 	@Override
 	public boolean exists() {
-		return file != null;
+		return this.file != null;
 	}
 
 	/*
@@ -145,7 +145,7 @@ public class GridFsResource extends InputStreamResource {
 	public long lastModified() throws IOException {
 
 		verifyExists();
-		return file.getUploadDate().getTime();
+		return getGridFSFile().getUploadDate().getTime();
 	}
 
 	/*
@@ -167,7 +167,27 @@ public class GridFsResource extends InputStreamResource {
 
 		Assert.state(exists(), () -> String.format("%s does not exist.", getDescription()));
 
-		return file.getId();
+		return getGridFSFile().getId();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.gridfs.GridFsObject#getFileId()
+	 */
+	@Override
+	public Object getFileId() {
+
+		Assert.state(exists(), () -> String.format("%s does not exist.", getDescription()));
+		return BsonUtils.toJavaType(getGridFSFile().getId());
+	}
+
+	/**
+	 * @return the underlying {@link GridFSFile}. Can be {@literal null} if absent.
+	 * @since 2.2
+	 */
+	@Nullable
+	public GridFSFile getGridFSFile() {
+		return this.file;
 	}
 
 	/**
@@ -175,7 +195,7 @@ public class GridFsResource extends InputStreamResource {
 	 *
 	 * @return never {@literal null}.
 	 * @throws com.mongodb.MongoGridFSException in case no content type declared on {@link GridFSFile#getMetadata()} nor
-	 *           provided via {@link GridFSFile#getContentType()}.
+	 *           provided via {@link GridFSFile}.
 	 * @throws IllegalStateException if the file does not {@link #exists()}.
 	 */
 	@SuppressWarnings("deprecation")
@@ -183,11 +203,31 @@ public class GridFsResource extends InputStreamResource {
 
 		Assert.state(exists(), () -> String.format("%s does not exist.", getDescription()));
 
-		return Optionals
-				.firstNonEmpty(
-						() -> Optional.ofNullable(file.getMetadata()).map(it -> it.get(CONTENT_TYPE_FIELD, String.class)),
-						() -> Optional.ofNullable(file.getContentType()))
+		return Optional.ofNullable(getGridFSFile().getMetadata()).map(it -> it.get(CONTENT_TYPE_FIELD, String.class))
 				.orElseThrow(() -> new MongoGridFSException("No contentType data for this GridFS file"));
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.gridfs.GridFsObject#getContent()
+	 */
+	@Override
+	public InputStream getContent() {
+
+		try {
+			return getInputStream();
+		} catch (IOException e) {
+			throw new IllegalStateException("Failed to obtain input stream for " + filename, e);
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.gridfs.GridFsObject#getOptions()
+	 */
+	@Override
+	public Options getOptions() {
+		return Options.from(getGridFSFile());
 	}
 
 	private void verifyExists() throws FileNotFoundException {

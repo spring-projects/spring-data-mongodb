@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -105,6 +105,15 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.ParameterAccessor#findDynamicProjection()
+	 */
+	@Override
+	public Class<?> findDynamicProjection() {
+		return delegate.findDynamicProjection();
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.ParameterAccessor#getBindableValue(int)
 	 */
 	public Object getBindableValue(int index) {
@@ -150,7 +159,7 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	 *
 	 * @param value can be {@literal null}.
 	 * @param typeInformation can be {@literal null}.
-	 * @return
+	 * @return can be {@literal null}.
 	 */
 	@Nullable
 	private Object getConvertedValue(Object value, @Nullable TypeInformation<?> typeInformation) {
@@ -242,8 +251,8 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	 * array. Will return an empty {@link Collection} in case {@literal null} is given. Will wrap all other types into a
 	 * single-element collection.
 	 *
-	 * @param source
-	 * @return
+	 * @param source can be {@literal null}, returns an empty {@link List} in that case.
+	 * @return never {@literal null}.
 	 */
 	private static Collection<?> asCollection(@Nullable Object source) {
 

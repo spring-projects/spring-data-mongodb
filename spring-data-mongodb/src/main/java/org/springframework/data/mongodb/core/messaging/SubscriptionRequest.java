@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,9 @@
  */
 package org.springframework.data.mongodb.core.messaging;
 
-import org.springframework.data.mongodb.MongoDbFactory;
+import java.time.Duration;
+
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -57,7 +59,7 @@ public interface SubscriptionRequest<S, T, O extends RequestOptions> {
 		 * Get the database name of the db.
 		 *
 		 * @return the name of the database to subscribe to. Can be {@literal null} in which case the default
-		 *         {@link MongoDbFactory#getDb() database} is used.
+		 *         {@link MongoDatabaseFactory#getMongoDatabase() database} is used.
 		 */
 		@Nullable
 		default String getDatabaseName() {
@@ -71,6 +73,16 @@ public interface SubscriptionRequest<S, T, O extends RequestOptions> {
 		 */
 		@Nullable
 		String getCollectionName();
+
+		/**
+		 * Get the maximum wait time (the time till the next Document is emitted) to apply when reading from the collection.
+		 *
+		 * @return never {@literal null}. {@link Duration#ZERO} by default.
+		 * @since 3.0
+		 */
+		default Duration maxAwaitTime() {
+			return Duration.ZERO;
+		}
 
 		/**
 		 * Create empty options.

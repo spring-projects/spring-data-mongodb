@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import lombok.Value;
+import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -28,12 +29,12 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
@@ -55,6 +56,7 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
@@ -66,7 +68,7 @@ import org.springframework.util.ClassUtils;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ReactiveStringBasedAggregationUnitTests {
 
 	SpelExpressionParser PARSER = new SpelExpressionParser();
@@ -83,12 +85,13 @@ public class ReactiveStringBasedAggregationUnitTests {
 	private static final Document SORT = Document.parse(RAW_SORT_STRING);
 	private static final Document GROUP_BY_LASTNAME = Document.parse(RAW_GROUP_BY_LASTNAME_STRING);
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		converter = new MappingMongoConverter(dbRefResolver, new MongoMappingContext());
 		when(operations.getConverter()).thenReturn(converter);
 		when(operations.aggregate(any(TypedAggregation.class), any())).thenReturn(Flux.empty());
+		when(operations.execute(any())).thenReturn(Flux.empty());
 	}
 
 	@Test // DATAMONGO-2153
@@ -164,6 +167,13 @@ public class ReactiveStringBasedAggregationUnitTests {
 		assertThat(collationOf(invocation)).isEqualTo(Collation.of("en_US"));
 	}
 
+	@Test // DATAMONGO-2557
+	void aggregationRetrievesCodecFromDriverJustOnceForMultipleAggregationOperationsInPipeline() {
+
+		executeAggregation("multiOperationPipeline", "firstname");
+		verify(operations).execute(any());
+	}
+
 	private AggregationInvocation executeAggregation(String name, Object... args) {
 
 		Class<?>[] argTypes = Arrays.stream(args).map(Object::getClass).toArray(size -> new Class<?>[size]);
@@ -172,7 +182,7 @@ public class ReactiveStringBasedAggregationUnitTests {
 		ArgumentCaptor<TypedAggregation> aggregationCaptor = ArgumentCaptor.forClass(TypedAggregation.class);
 		ArgumentCaptor<Class> targetTypeCaptor = ArgumentCaptor.forClass(Class.class);
 
-		Object result = aggregation.execute(args);
+		Object result = Flux.from((Publisher) aggregation.execute(args)).blockLast();
 
 		verify(operations).aggregate(aggregationCaptor.capture(), targetTypeCaptor.capture());
 
@@ -186,7 +196,7 @@ public class ReactiveStringBasedAggregationUnitTests {
 		ReactiveMongoQueryMethod queryMethod = new ReactiveMongoQueryMethod(method,
 				new DefaultRepositoryMetadata(SampleRepository.class), factory, converter.getMappingContext());
 		return new ReactiveStringBasedAggregation(queryMethod, operations, PARSER,
-				QueryMethodEvaluationContextProvider.DEFAULT);
+				ReactiveQueryMethodEvaluationContextProvider.DEFAULT);
 	}
 
 	private List<Document> pipelineOf(AggregationInvocation invocation) {
@@ -225,6 +235,9 @@ public class ReactiveStringBasedAggregationUnitTests {
 
 		@Aggregation(GROUP_BY_LASTNAME_STRING_WITH_SPEL_PARAMETER_PLACEHOLDER)
 		Mono<PersonAggregate> spelParameterReplacementAggregation(String arg0);
+
+		@Aggregation(pipeline = {RAW_GROUP_BY_LASTNAME_STRING, GROUP_BY_LASTNAME_STRING_WITH_SPEL_PARAMETER_PLACEHOLDER})
+		Mono<PersonAggregate> multiOperationPipeline(String arg0);
 
 		@Aggregation(pipeline = RAW_GROUP_BY_LASTNAME_STRING, collation = "de_AT")
 		Mono<PersonAggregate> aggregateWithCollation();

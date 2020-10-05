@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,25 +15,25 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessResourceFailureException;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 /**
- * Integration tests for {@link MongoDbFactory}.
+ * Integration tests for {@link MongoDatabaseFactory}.
  *
  * @author Thomas Risberg
  * @author Oliver Gierke
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration
 public class MongoDbFactoryNoDatabaseRunningTests {
 
@@ -41,11 +41,12 @@ public class MongoDbFactoryNoDatabaseRunningTests {
 
 	@Test // DATAMONGO-139
 	public void startsUpWithoutADatabaseRunning() {
-		assertThat(mongoTemplate.getClass().getName(), is("org.springframework.data.mongodb.core.MongoTemplate"));
+		assertThat(mongoTemplate.getClass().getName()).isEqualTo("org.springframework.data.mongodb.core.MongoTemplate");
 	}
 
-	@Test(expected = DataAccessResourceFailureException.class)
+	@Test
 	public void failsDataAccessWithoutADatabaseRunning() {
-		mongoTemplate.getCollectionNames();
+		assertThatExceptionOfType(DataAccessResourceFailureException.class)
+				.isThrownBy(() -> mongoTemplate.getCollectionNames());
 	}
 }

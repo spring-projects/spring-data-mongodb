@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,14 +39,14 @@ public @interface DBRef {
 	/**
 	 * The database the referred entity resides in.
 	 *
-	 * @return
+	 * @return empty String by default.
 	 */
 	String db() default "";
 
 	/**
 	 * Controls whether the referenced entity should be loaded lazily. This defaults to {@literal false}.
 	 *
-	 * @return
+	 * @return {@literal false} by default.
 	 */
 	boolean lazy() default false;
 }

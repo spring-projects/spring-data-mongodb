@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,7 @@
 package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
@@ -37,14 +36,10 @@ import java.util.stream.IntStream;
 
 import org.aopalliance.aop.Advice;
 import org.bson.Document;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.rules.TestRule;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.aop.Advisor;
 import org.springframework.aop.framework.Advised;
@@ -53,7 +48,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.ClientSessionException;
 import org.springframework.data.mongodb.LazyLoadingException;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.SessionAwareMethodInterceptor;
 import org.springframework.data.mongodb.core.MongoTemplate.SessionBoundMongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -66,15 +61,15 @@ import org.springframework.data.mongodb.core.index.GeospatialIndex;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
-import org.springframework.data.mongodb.test.util.ReplicaSet;
-import org.springframework.data.util.Version;
+import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
+import org.springframework.data.mongodb.test.util.MongoVersion;
+import org.springframework.data.mongodb.test.util.ReplSetClient;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.ClientSessionOptions;
-import com.mongodb.MongoClient;
 import com.mongodb.client.ClientSession;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
@@ -83,31 +78,27 @@ import com.mongodb.client.MongoDatabase;
  *
  * @author Christoph Strobl
  */
+@ExtendWith(MongoClientExtension.class)
+@EnableIfReplicaSetAvailable
 public class SessionBoundMongoTemplateTests {
 
-	public static @ClassRule MongoVersionRule REQUIRES_AT_LEAST_3_6_0 = MongoVersionRule.atLeast(Version.parse("3.6.0"));
-	public static @ClassRule TestRule replSet = ReplicaSet.required();
+	static @ReplSetClient MongoClient client;
 
-	public @Rule ExpectedException exception = ExpectedException.none();
-
-	MongoClient client;
 	MongoTemplate template;
 	SessionBoundMongoTemplate sessionBoundTemplate;
 	ClientSession session;
 	volatile List<MongoCollection<Document>> spiedCollections = new ArrayList<>();
 	volatile List<MongoDatabase> spiedDatabases = new ArrayList<>();
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
-		client = MongoTestUtils.replSetClient();
-
-		MongoDbFactory factory = new SimpleMongoDbFactory(client, "session-bound-mongo-template-tests") {
+		MongoDatabaseFactory factory = new SimpleMongoClientDatabaseFactory(client, "session-bound-mongo-template-tests") {
 
 			@Override
-			public MongoDatabase getDb() throws DataAccessException {
+			public MongoDatabase getMongoDatabase() throws DataAccessException {
 
-				MongoDatabase spiedDatabse = Mockito.spy(super.getDb());
+				MongoDatabase spiedDatabse = Mockito.spy(super.getMongoDatabase());
 				spiedDatabases.add(spiedDatabse);
 				return spiedDatabse;
 			}
@@ -150,11 +141,10 @@ public class SessionBoundMongoTemplateTests {
 		};
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
 
 		session.close();
-		client.close();
 	}
 
 	@Test // DATAMONGO-1880
@@ -211,8 +201,6 @@ public class SessionBoundMongoTemplateTests {
 	@Test // DATAMONGO-1880
 	public void shouldErrorOnLoadDbRefWhenSessionIsClosed() {
 
-		exception.expect(ClientSessionException.class);
-
 		Person person = new Person("Kylar Stern");
 
 		template.save(person);
@@ -225,7 +213,8 @@ public class SessionBoundMongoTemplateTests {
 
 		session.close();
 
-		sessionBoundTemplate.findById(wdr.id, WithDbRef.class);
+		assertThatExceptionOfType(ClientSessionException.class)
+				.isThrownBy(() -> sessionBoundTemplate.findById(wdr.id, WithDbRef.class));
 	}
 
 	@Test // DATAMONGO-1880
@@ -249,9 +238,6 @@ public class SessionBoundMongoTemplateTests {
 	@Test // DATAMONGO-1880
 	public void shouldErrorOnLoadLazyDbRefWhenSessionIsClosed() {
 
-		exception.expect(LazyLoadingException.class);
-		exception.expectMessage("Invalid session state");
-
 		Person person = new Person("Kylar Stern");
 
 		template.save(person);
@@ -262,19 +248,15 @@ public class SessionBoundMongoTemplateTests {
 
 		template.save(wdr);
 
-		WithLazyDbRef result = null;
-		try {
-			result = sessionBoundTemplate.findById(wdr.id, WithLazyDbRef.class);
-		} catch (Exception e) {
-			fail("Someting went wrong, seems the session was already closed when reading.", e);
-		}
+		WithLazyDbRef result = sessionBoundTemplate.findById(wdr.id, WithLazyDbRef.class);
 
 		session.close(); // now close the session
 
-		assertThat(result.getPersonRef()).isEqualTo(person); // resolve the lazy loading proxy
+		assertThatExceptionOfType(LazyLoadingException.class).isThrownBy(() -> result.getPersonRef().toString());
 	}
 
 	@Test // DATAMONGO-2001
+	@MongoVersion(asOf = "4.0")
 	public void countShouldWorkInTransactions() {
 
 		if (!template.collectionExists(Person.class)) {
@@ -299,7 +281,7 @@ public class SessionBoundMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-2012
-	@Ignore("error 2 (BadValue): $match does not support $geoNear, $near, and $nearSphere")
+	@MongoVersion(asOf = "4.0")
 	public void countWithGeoInTransaction() {
 
 		if (!template.collectionExists(Person.class)) {
@@ -324,6 +306,7 @@ public class SessionBoundMongoTemplateTests {
 	}
 
 	@Test // DATAMONGO-2001
+	@MongoVersion(asOf = "4.0")
 	public void countShouldReturnIsolatedCount() throws InterruptedException {
 
 		if (!template.collectionExists(Person.class)) {
@@ -409,7 +392,7 @@ public class SessionBoundMongoTemplateTests {
 		return spiedDatabases.get(index);
 	}
 
-	private MongoConverter getDefaultMongoConverter(MongoDbFactory factory) {
+	private MongoConverter getDefaultMongoConverter(MongoDatabaseFactory factory) {
 
 		DbRefResolver dbRefResolver = new DefaultDbRefResolver(factory);
 		MongoCustomConversions conversions = new MongoCustomConversions(Collections.emptyList());
@@ -420,6 +403,7 @@ public class SessionBoundMongoTemplateTests {
 
 		MappingMongoConverter converter = new MappingMongoConverter(dbRefResolver, mappingContext);
 		converter.setCustomConversions(conversions);
+		converter.setCodecRegistryProvider(factory);
 		converter.afterPropertiesSet();
 
 		return converter;

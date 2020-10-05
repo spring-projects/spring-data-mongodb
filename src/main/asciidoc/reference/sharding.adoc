@@ -1,0 +1,76 @@
+[[sharding]]
+= Sharding
+
+MongoDB supports large data sets via sharding, a method for distributing data across multiple database servers.
+Please refer to the https://docs.mongodb.com/manual/sharding/[MongoDB Documentation] to learn how to set up a sharded cluster, its requirements and limitations.
+
+Spring Data MongoDB uses the `@Sharded` annotation to identify entities stored in sharded collections as shown below.
+
+====
+[source,java]
+----
+@Document("users")
+@Sharded(shardKey = { "country", "userId" }) <1>
+public class User {
+
+	@Id
+	Long id;
+
+	@Field("userid")
+	String userId;
+
+	String country;
+}
+----
+<1> The properties of the shard key get mapped to the actual field names.
+====
+
+[[sharding.sharded-collections]]
+== Sharded Collections
+
+Spring Data MongoDB does not auto set up sharding for collections nor indexes required for it.
+The snippet below shows how to do so using the MongoDB client API.
+
+====
+[source,java]
+----
+MongoDatabase adminDB = template.getMongoDbFactory()
+    .getMongoDatabase("admin");                                     <1>
+
+adminDB.runCommand(new Document("enableSharding", "db"));           <2>
+
+Document shardCmd = new Document("shardCollection", "db.users")     <3>
+	.append("key", new Document("country", 1).append("userid", 1)); <4>
+
+adminDB.runCommand(shardCmd);
+----
+<1> Sharding commands need to be run against the _admin_ database.
+<2> Enable sharding for a specific database if necessary.
+<3> Shard a collection within the database having sharding enabled.
+<4> Specify the shard key.
+This example uses range based sharding.
+====
+
+[[sharding.shard-key]]
+== Shard Key Handling
+
+The shard key consists of a single or multiple properties that must exist in every document in the target collection.
+It is used to distribute documents across shards.
+
+Adding the `@Sharded` annotation to an entity enables Spring Data MongoDB to apply best effort optimisations required for sharded scenarios.
+This means essentially adding required shard key information, if not already present, to `replaceOne` filter queries when upserting entities.
+This may require an additional server round trip to determine the actual value of the current shard key.
+
+TIP: By setting `@Sharded(immutableKey = true)` Spring Data does not attempt to check if an entity shard key was changed.
+
+Please see the https://docs.mongodb.com/manual/reference/method/db.collection.replaceOne/#upsert[MongoDB Documentation] for further details.
+The following list contains which operations are eligible for shard key auto-inclusion:
+
+* `(Reactive)CrudRepository.save(…)`
+* `(Reactive)CrudRepository.saveAll(…)`
+* `(Reactive)MongoTemplate.save(…)`
+
+
+
+
+

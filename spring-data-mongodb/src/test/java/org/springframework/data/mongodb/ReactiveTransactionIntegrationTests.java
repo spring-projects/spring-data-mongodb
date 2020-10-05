@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,15 +23,17 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.Duration;
+import java.util.Collections;
+import java.util.Set;
 
 import org.bson.types.ObjectId;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.rules.RuleChain;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
+import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,17 +42,16 @@ import org.springframework.data.mongodb.config.AbstractReactiveMongoConfiguratio
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
+import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
-import org.springframework.data.mongodb.test.util.ReplicaSet;
-import org.springframework.data.util.Version;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import com.mongodb.reactivestreams.client.MongoClient;
-import com.mongodb.reactivestreams.client.MongoClients;
 
 /**
  * Integration tests for reactive transaction management.
@@ -58,34 +59,37 @@ import com.mongodb.reactivestreams.client.MongoClients;
  * @author Mark Paluch
  * @author Christoph Strobl
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(MongoClientExtension.class)
+@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
+@EnableIfReplicaSetAvailable
+@DisabledIfSystemProperty(named = "user.name", matches = "jenkins")
 public class ReactiveTransactionIntegrationTests {
 
-	public static @ClassRule RuleChain TEST_RULES = RuleChain.outerRule(MongoVersionRule.atLeast(Version.parse("4.0.0")))
-			.around(ReplicaSet.required());
-
 	private static final String DATABASE = "rxtx-test";
-	PersonService personService;
-	ReactiveMongoOperations operations;
+
+	static @Client MongoClient mongoClient;
 	static GenericApplicationContext context;
 
-	@BeforeClass
+	PersonService personService;
+	ReactiveMongoOperations operations;
+
+	@BeforeAll
 	public static void init() {
 		context = new AnnotationConfigApplicationContext(TestMongoConfig.class, PersonService.class);
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void after() {
 		context.close();
 	}
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		personService = context.getBean(PersonService.class);
 		operations = context.getBean(ReactiveMongoOperations.class);
 
-		try (MongoClient client = MongoClients.create()) {
+		try (MongoClient client = MongoTestUtils.reactiveClient()) {
 
 			Flux.merge( //
 					MongoTestUtils.createOrReplaceCollection(DATABASE, operations.getCollectionName(Person.class), client),
@@ -224,7 +228,7 @@ public class ReactiveTransactionIntegrationTests {
 
 		@Override
 		public MongoClient reactiveMongoClient() {
-			return MongoClients.create("mongodb://localhost");
+			return mongoClient;
 		}
 
 		@Override
@@ -235,6 +239,11 @@ public class ReactiveTransactionIntegrationTests {
 		@Bean
 		public ReactiveMongoTransactionManager transactionManager(ReactiveMongoDatabaseFactory factory) {
 			return new ReactiveMongoTransactionManager(factory);
+		}
+
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() {
+			return Collections.singleton(Person.class);
 		}
 	}
 
@@ -303,25 +312,27 @@ public class ReactiveTransactionIntegrationTests {
 		}
 
 		@Transactional
-		public Mono<Person> declarativeSavePerson(Person person) {
+		public Flux<Person> declarativeSavePerson(Person person) {
 
 			TransactionalOperator transactionalOperator = TransactionalOperator.create(manager,
 					new DefaultTransactionDefinition());
 
-			return operations.save(person) //
-					.flatMap(Mono::just) //
-					.as(transactionalOperator::transactional);
+			return transactionalOperator.execute(reactiveTransaction -> {
+				return operations.save(person);
+			});
 		}
 
 		@Transactional
-		public Mono<Person> declarativeSavePersonErrors(Person person) {
+		public Flux<Person> declarativeSavePersonErrors(Person person) {
 
 			TransactionalOperator transactionalOperator = TransactionalOperator.create(manager,
 					new DefaultTransactionDefinition());
 
-			return operations.save(person) //
-					.<Person> flatMap(it -> Mono.error(new RuntimeException("poof!"))) //
-					.as(transactionalOperator::transactional);
+			return transactionalOperator.execute(reactiveTransaction -> {
+
+				return operations.save(person) //
+						.<Person> flatMap(it -> Mono.error(new RuntimeException("poof!")));
+			});
 		}
 	}
 

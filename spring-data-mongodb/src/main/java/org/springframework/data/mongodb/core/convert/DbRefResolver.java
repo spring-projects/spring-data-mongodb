@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ public interface DbRefResolver {
 	 * @param property will never be {@literal null}.
 	 * @param dbref the {@link DBRef} to resolve.
 	 * @param callback will never be {@literal null}.
-	 * @return
+	 * @return can be {@literal null}.
 	 */
 	@Nullable
 	Object resolveDbRef(MongoPersistentProperty property, @Nullable DBRef dbref, DbRefResolverCallback callback,
@@ -58,7 +58,7 @@ public interface DbRefResolver {
 	 * @param annotation will never be {@literal null}.
 	 * @param entity will never be {@literal null}.
 	 * @param id will never be {@literal null}.
-	 * @return
+	 * @return new instance of {@link DBRef}.
 	 */
 	default DBRef createDbRef(@Nullable org.springframework.data.mongodb.core.mapping.DBRef annotation,
 			MongoPersistentEntity<?> entity, Object id) {
@@ -74,7 +74,7 @@ public interface DbRefResolver {
 	 * Actually loads the {@link DBRef} from the datasource.
 	 *
 	 * @param dbRef must not be {@literal null}.
-	 * @return
+	 * @return can be {@literal null}.
 	 * @since 1.7
 	 */
 	@Nullable

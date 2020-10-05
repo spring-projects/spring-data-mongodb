@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,13 +83,22 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		lookupObject.append("foreignField", foreignField.getTarget());
 		lookupObject.append("as", as.getTarget());
 
-		return new Document("$lookup", lookupObject);
+		return new Document(getOperator(), lookupObject);
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
+	 */
+	@Override
+	public String getOperator() {
+		return "$lookup";
 	}
 
 	/**
 	 * Get a builder that allows creation of {@link LookupOperation}.
 	 *
-	 * @return
+	 * @return never {@literal null}.
 	 */
 	public static FromBuilder newLookup() {
 		return new LookupOperationBuilder();
@@ -99,7 +108,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 
 		/**
 		 * @param name the collection in the same database to perform the join with, must not be {@literal null} or empty.
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		LocalFieldBuilder from(String name);
 	}
@@ -109,7 +118,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 		/**
 		 * @param name the field from the documents input to the {@code $lookup} stage, must not be {@literal null} or
 		 *          empty.
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		ForeignFieldBuilder localField(String name);
 	}
@@ -118,7 +127,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 
 		/**
 		 * @param name the field from the documents in the {@code from} collection, must not be {@literal null} or empty.
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		AsBuilder foreignField(String name);
 	}
@@ -127,7 +136,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 
 		/**
 		 * @param name the name of the new array field to add to the input documents, must not be {@literal null} or empty.
-		 * @return
+		 * @return new instance of {@link LookupOperation}.
 		 */
 		LookupOperation as(String name);
 	}
@@ -168,8 +177,7 @@ public class LookupOperation implements FieldsExposingAggregationOperation, Inhe
 
 			Assert.hasText(name, "'As' must not be null or empty!");
 			as = new ExposedField(Fields.field(name), true);
-			return new LookupOperation(from, localField, foreignField,
-					as);
+			return new LookupOperation(from, localField, foreignField, as);
 		}
 
 		@Override

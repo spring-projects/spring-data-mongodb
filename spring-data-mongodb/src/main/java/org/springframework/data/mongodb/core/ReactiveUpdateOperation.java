@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,11 @@ package org.springframework.data.mongodb.core;
 
 import reactor.core.publisher.Mono;
 
+import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
+import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 
 import com.mongodb.client.result.UpdateResult;
 
@@ -118,13 +121,16 @@ public interface ReactiveUpdateOperation {
 	interface UpdateWithUpdate<T> {
 
 		/**
-		 * Set the {@link org.springframework.data.mongodb.core.query.Update} to be applied.
+		 * Set the {@link UpdateDefinition} to be applied.
 		 *
 		 * @param update must not be {@literal null}.
 		 * @return new instance of {@link TerminatingUpdate}. Never {@literal null}.
 		 * @throws IllegalArgumentException if update is {@literal null}.
+		 * @since 3.0
+		 * @see Update
+		 * @see AggregationUpdate
 		 */
-		TerminatingUpdate<T> apply(org.springframework.data.mongodb.core.query.Update update);
+		TerminatingUpdate<T> apply(UpdateDefinition update);
 
 		/**
 		 * Specify {@code replacement} object.
@@ -166,6 +172,18 @@ public interface ReactiveUpdateOperation {
 		 * @throws IllegalArgumentException if query is {@literal null}.
 		 */
 		UpdateWithUpdate<T> matching(Query query);
+
+		/**
+		 * Set the filter {@link CriteriaDefinition criteria} to be used.
+		 *
+		 * @param criteria must not be {@literal null}.
+		 * @return new instance of {@link UpdateWithUpdate}.
+		 * @throws IllegalArgumentException if query is {@literal null}.
+		 * @since 3.0
+		 */
+		default UpdateWithUpdate<T> matching(CriteriaDefinition criteria) {
+			return matching(Query.query(criteria));
+		}
 	}
 
 	/**

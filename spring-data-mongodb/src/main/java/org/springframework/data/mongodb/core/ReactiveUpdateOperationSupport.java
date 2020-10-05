@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,10 @@
  */
 package org.springframework.data.mongodb.core;
 
-import lombok.AccessLevel;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import reactor.core.publisher.Mono;
 
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -35,12 +32,15 @@ import com.mongodb.client.result.UpdateResult;
  * @author Christoph Strobl
  * @since 2.0
  */
-@RequiredArgsConstructor
 class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 
 	private static final Query ALL_QUERY = new Query();
 
-	private final @NonNull ReactiveMongoTemplate template;
+	private final ReactiveMongoTemplate template;
+
+	ReactiveUpdateOperationSupport(ReactiveMongoTemplate template) {
+		this.template = template;
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -54,28 +54,41 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 		return new ReactiveUpdateSupport<>(template, domainType, ALL_QUERY, null, null, null, null, null, domainType);
 	}
 
-	@RequiredArgsConstructor
-	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 	static class ReactiveUpdateSupport<T>
 			implements ReactiveUpdate<T>, UpdateWithCollection<T>, UpdateWithQuery<T>, TerminatingUpdate<T>,
 			FindAndReplaceWithOptions<T>, FindAndReplaceWithProjection<T>, TerminatingFindAndReplace<T> {
 
-		@NonNull ReactiveMongoTemplate template;
-		@NonNull Class<?> domainType;
-		Query query;
-		org.springframework.data.mongodb.core.query.Update update;
-		@Nullable String collection;
-		@Nullable FindAndModifyOptions findAndModifyOptions;
-		@Nullable FindAndReplaceOptions findAndReplaceOptions;
-		@Nullable Object replacement;
-		@NonNull Class<T> targetType;
+		private final ReactiveMongoTemplate template;
+		private final Class<?> domainType;
+		private final Query query;
+		private final org.springframework.data.mongodb.core.query.UpdateDefinition update;
+		@Nullable private final String collection;
+		@Nullable private final FindAndModifyOptions findAndModifyOptions;
+		@Nullable private final FindAndReplaceOptions findAndReplaceOptions;
+		@Nullable private final Object replacement;
+		private final Class<T> targetType;
+
+		ReactiveUpdateSupport(ReactiveMongoTemplate template, Class<?> domainType, Query query, UpdateDefinition update,
+				String collection, FindAndModifyOptions findAndModifyOptions, FindAndReplaceOptions findAndReplaceOptions,
+				Object replacement, Class<T> targetType) {
+
+			this.template = template;
+			this.domainType = domainType;
+			this.query = query;
+			this.update = update;
+			this.collection = collection;
+			this.findAndModifyOptions = findAndModifyOptions;
+			this.findAndReplaceOptions = findAndReplaceOptions;
+			this.replacement = replacement;
+			this.targetType = targetType;
+		}
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.UpdateWithUpdate#apply(org.springframework.data.mongodb.core.query.Update)
+		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.UpdateWithUpdate#apply(org.springframework.data.mongodb.core.query.UpdateDefinition)
 		 */
 		@Override
-		public TerminatingUpdate<T> apply(org.springframework.data.mongodb.core.query.Update update) {
+		public TerminatingUpdate<T> apply(org.springframework.data.mongodb.core.query.UpdateDefinition update) {
 
 			Assert.notNull(update, "Update must not be null!");
 
@@ -123,10 +136,12 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 
 			String collectionName = getCollectionName();
 
-			return template.findAndModify(query, update, findAndModifyOptions != null ? findAndModifyOptions : FindAndModifyOptions.none(), targetType, collectionName);
+			return template.findAndModify(query, update,
+					findAndModifyOptions != null ? findAndModifyOptions : FindAndModifyOptions.none(), targetType,
+					collectionName);
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.TerminatingFindAndReplace#findAndReplace()
 		 */
@@ -172,7 +187,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 					findAndReplaceOptions, replacement, targetType);
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.UpdateWithUpdate#replaceWith(java.lang.Object)
 		 */
@@ -185,7 +200,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 					findAndReplaceOptions, replacement, targetType);
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.FindAndReplaceWithOptions#withOptions(org.springframework.data.mongodb.core.FindAndReplaceOptions)
 		 */
@@ -216,7 +231,7 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 		}
 
 		private String getCollectionName() {
-			return StringUtils.hasText(collection) ? collection : template.determineCollectionName(domainType);
+			return StringUtils.hasText(collection) ? collection : template.getCollectionName(domainType);
 		}
 	}
 }

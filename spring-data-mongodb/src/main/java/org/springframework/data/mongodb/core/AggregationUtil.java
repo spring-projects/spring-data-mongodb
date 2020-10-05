@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 package org.springframework.data.mongodb.core;
-
-import lombok.AllArgsConstructor;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -49,11 +47,17 @@ import org.springframework.util.ObjectUtils;
  * @author Mark Paluch
  * @since 2.1
  */
-@AllArgsConstructor
 class AggregationUtil {
 
 	QueryMapper queryMapper;
 	MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+
+	AggregationUtil(QueryMapper queryMapper,
+			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+
+		this.queryMapper = queryMapper;
+		this.mappingContext = mappingContext;
+	}
 
 	/**
 	 * Prepare the {@link AggregationOperationContext} for a given aggregation by either returning the context itself it

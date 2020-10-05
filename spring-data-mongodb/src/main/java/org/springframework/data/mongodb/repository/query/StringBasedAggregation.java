@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,13 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
-
+import org.springframework.data.mapping.model.SpELExpressionEvaluator;
+import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
@@ -29,9 +31,12 @@ import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.util.json.ParameterBindingContext;
+import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.ResultProcessor;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.data.spel.ExpressionDependencies;
+import org.springframework.expression.ExpressionParser;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -42,7 +47,7 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 
 	private final MongoOperations mongoOperations;
 	private final MongoConverter mongoConverter;
-	private final SpelExpressionParser expressionParser;
+	private final ExpressionParser expressionParser;
 	private final QueryMethodEvaluationContextProvider evaluationContextProvider;
 
 	/**
@@ -54,7 +59,7 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 	 * @param evaluationContextProvider
 	 */
 	public StringBasedAggregation(MongoQueryMethod method, MongoOperations mongoOperations,
-			SpelExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			ExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
 		super(method, mongoOperations, expressionParser, evaluationContextProvider);
 
 		this.mongoOperations = mongoOperations;
@@ -70,6 +75,12 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 	@Override
 	protected Object doExecute(MongoQueryMethod method, ResultProcessor resultProcessor,
 			ConvertingParameterAccessor accessor, Class<?> typeToRead) {
+
+		if (method.isPageQuery() || method.isSliceQuery()) {
+			throw new InvalidMongoDbApiUsageException(String.format(
+					"Repository aggregation method '%s' does not support '%s' return type. Please use eg. 'List' instead.",
+					method.getName(), method.getReturnType().getType().getSimpleName()));
+		}
 
 		Class<?> sourceType = method.getDomainClass();
 		Class<?> targetType = typeToRead;
@@ -120,7 +131,26 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 	}
 
 	List<AggregationOperation> computePipeline(MongoQueryMethod method, ConvertingParameterAccessor accessor) {
-		return AggregationUtils.computePipeline(method, accessor, expressionParser, evaluationContextProvider);
+
+		ParameterBindingDocumentCodec codec = new ParameterBindingDocumentCodec(getCodecRegistry());
+		String[] sourcePipeline = method.getAnnotatedAggregation();
+
+		List<AggregationOperation> stages = new ArrayList<>(sourcePipeline.length);
+		for (String source : sourcePipeline) {
+			stages.add(computePipelineStage(source, accessor, codec));
+		}
+		return stages;
+	}
+
+	private AggregationOperation computePipelineStage(String source, ConvertingParameterAccessor accessor,
+			ParameterBindingDocumentCodec codec) {
+
+		ExpressionDependencies dependencies = codec.captureExpressionDependencies(source, accessor::getBindableValue,
+				expressionParser);
+
+		SpELExpressionEvaluator evaluator = getSpELExpressionEvaluatorFor(dependencies, accessor);
+		ParameterBindingContext bindingContext = new ParameterBindingContext(accessor::getBindableValue, evaluator);
+		return ctx -> ctx.getMappedObject(codec.decode(source, bindingContext), getQueryMethod().getDomainClass());
 	}
 
 	private AggregationOptions computeOptions(MongoQueryMethod method, ConvertingParameterAccessor accessor) {

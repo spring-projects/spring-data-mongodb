@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2019 the original author or authors.
+ * Copyright 2008-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,15 +17,15 @@ package org.springframework.data.mongodb.util.json;
 
 import static java.lang.String.*;
 
-import lombok.Data;
-
 import java.text.DateFormat;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Map;
 import java.util.TimeZone;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -36,6 +36,7 @@ import org.bson.types.Decimal128;
 import org.bson.types.MaxKey;
 import org.bson.types.MinKey;
 import org.bson.types.ObjectId;
+
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -95,6 +96,15 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 
 	public ParameterBindingJsonReader(String json, ValueProvider accessor, SpelExpressionParser spelExpressionParser,
 			EvaluationContext evaluationContext) {
+
+		this(json, accessor, spelExpressionParser, () -> evaluationContext);
+	}
+
+	/**
+	 * @since 2.2.3
+	 */
+	public ParameterBindingJsonReader(String json, ValueProvider accessor, SpelExpressionParser spelExpressionParser,
+			Supplier<EvaluationContext> evaluationContext) {
 
 		this.scanner = new JsonScanner(json);
 		setContext(new Context(null, BsonContextType.TOP_LEVEL));
@@ -218,7 +228,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 			case REGULAR_EXPRESSION:
 
 				setCurrentBsonType(BsonType.REGULAR_EXPRESSION);
-				currentValue = bindableValueFor(token).getValue().toString();
+				currentValue = bindableValueFor(token).getValue();
 				break;
 			case STRING:
 
@@ -354,19 +364,14 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 			return null;
 		}
 
+		boolean isRegularExpression = token.getType().equals(JsonTokenType.REGULAR_EXPRESSION);
+
 		BindableValue bindableValue = new BindableValue();
-		String tokenValue = String.class.cast(token.getValue());
+		String tokenValue = isRegularExpression ? token.getValue(BsonRegularExpression.class).getPattern()
+				: String.class.cast(token.getValue());
 		Matcher matcher = PARAMETER_BINDING_PATTERN.matcher(tokenValue);
 
 		if (token.getType().equals(JsonTokenType.UNQUOTED_STRING)) {
-
-			if (matcher.find()) {
-
-				int index = computeParameterIndex(matcher.group());
-				bindableValue.setValue(getBindableValueForIndex(index));
-				bindableValue.setType(bsonTypeForValue(getBindableValueForIndex(index)));
-				return bindableValue;
-			}
 
 			Matcher regexMatcher = EXPRESSION_BINDING_PATTERN.matcher(tokenValue);
 			if (regexMatcher.find()) {
@@ -374,9 +379,24 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 				String binding = regexMatcher.group();
 				String expression = binding.substring(3, binding.length() - 1);
 
+				Matcher inSpelMatcher = PARAMETER_BINDING_PATTERN.matcher(expression);
+				while (inSpelMatcher.find()) {
+
+					int index = computeParameterIndex(inSpelMatcher.group());
+					expression = expression.replace(inSpelMatcher.group(), getBindableValueForIndex(index).toString());
+				}
+
 				Object value = evaluateExpression(expression);
 				bindableValue.setValue(value);
 				bindableValue.setType(bsonTypeForValue(value));
+				return bindableValue;
+			}
+
+			if (matcher.find()) {
+
+				int index = computeParameterIndex(matcher.group());
+				bindableValue.setValue(getBindableValueForIndex(index));
+				bindableValue.setType(bsonTypeForValue(getBindableValueForIndex(index)));
 				return bindableValue;
 			}
 
@@ -388,32 +408,54 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 
 		String computedValue = tokenValue;
 
-		boolean matched = false;
+		Matcher regexMatcher = EXPRESSION_BINDING_PATTERN.matcher(computedValue);
+
+		while (regexMatcher.find()) {
+
+			String binding = regexMatcher.group();
+			String expression = binding.substring(3, binding.length() - 1);
+
+			Matcher inSpelMatcher = PARAMETER_BINDING_PATTERN.matcher(expression);
+			while (inSpelMatcher.find()) {
+
+				int index = computeParameterIndex(inSpelMatcher.group());
+				expression = expression.replace(inSpelMatcher.group(), getBindableValueForIndex(index).toString());
+			}
+
+			computedValue = computedValue.replace(binding, nullSafeToString(evaluateExpression(expression)));
+
+			bindableValue.setValue(computedValue);
+			bindableValue.setType(BsonType.STRING);
+
+			return bindableValue;
+		}
+
 		while (matcher.find()) {
 
-			matched = true;
 			String group = matcher.group();
 			int index = computeParameterIndex(group);
-			computedValue = computedValue.replace(group, ObjectUtils.nullSafeToString(getBindableValueForIndex(index)));
+			computedValue = computedValue.replace(group, nullSafeToString(getBindableValueForIndex(index)));
 		}
 
-		if (!matched) {
+		if (isRegularExpression) {
 
-			Matcher regexMatcher = EXPRESSION_BINDING_PATTERN.matcher(tokenValue);
+			bindableValue.setValue(new BsonRegularExpression(computedValue));
+			bindableValue.setType(BsonType.REGULAR_EXPRESSION);
+		} else {
 
-			while (regexMatcher.find()) {
-
-				String binding = regexMatcher.group();
-				String expression = binding.substring(3, binding.length() - 1);
-
-				computedValue = computedValue.replace(binding, ObjectUtils.nullSafeToString(evaluateExpression(expression)));
-			}
+			bindableValue.setValue(computedValue);
+			bindableValue.setType(BsonType.STRING);
 		}
-
-		bindableValue.setValue(computedValue);
-		bindableValue.setType(BsonType.STRING);
-
 		return bindableValue;
+	}
+
+	private static String nullSafeToString(@Nullable Object value) {
+
+		if (value instanceof Date) {
+			return DateTimeFormatter.format(((Date) value).getTime());
+		}
+
+		return ObjectUtils.nullSafeToString(value);
 	}
 
 	private static int computeParameterIndex(String parameter) {
@@ -459,6 +501,9 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		}
 		if (ClassUtils.isAssignable(Iterable.class, type)) {
 			return BsonType.ARRAY;
+		}
+		if (ClassUtils.isAssignable(Map.class, type)) {
+			return BsonType.DOCUMENT;
 		}
 
 		return BsonType.UNDEFINED;
@@ -1244,13 +1289,25 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		} else {
 			if (valueToken.getType() == JsonTokenType.INT32 || valueToken.getType() == JsonTokenType.INT64) {
 				value = valueToken.getValue(Long.class);
-			} else if (valueToken.getType() == JsonTokenType.STRING) {
-				String dateTimeString = valueToken.getValue(String.class);
-				try {
-					value = DateTimeFormatter.parse(dateTimeString);
-				} catch (IllegalArgumentException e) {
-					throw new JsonParseException("Failed to parse string as a date", e);
+			} else if (valueToken.getType() == JsonTokenType.STRING
+					|| valueToken.getType() == JsonTokenType.UNQUOTED_STRING) {
+
+				// Spring Data Customization START
+
+				Object dt = bindableValueFor(valueToken).getValue();
+				if (dt instanceof Date) {
+					value = ((Date) dt).getTime();
+				} else if (dt instanceof Number) {
+					value = NumberUtils.convertNumberToTargetClass((Number) dt, Long.class);
+				} else {
+					try {
+						value = DateTimeFormatter.parse(dt.toString());
+					} catch (IllegalArgumentException e) {
+						throw new JsonParseException(String.format("Failed to parse string '%s' as a date", dt), e);
+					}
 				}
+
+				// Spring Data Customization END
 			} else {
 				throw new JsonParseException("JSON reader expected an integer or string but found '%s'.",
 						valueToken.getValue());
@@ -1533,28 +1590,9 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		return oid;
 	}
 
-	@Deprecated
-	@Override
-	public void mark() {
-		if (mark != null) {
-			throw new BSONException("A mark already exists; it needs to be reset before creating a new one");
-		}
-		mark = new Mark();
-	}
-
 	@Override
 	public BsonReaderMark getMark() {
 		return new Mark();
-	}
-
-	@Deprecated
-	@Override
-	public void reset() {
-		if (mark == null) {
-			throw new BSONException("trying to reset a mark before creating it");
-		}
-		mark.reset();
-		mark = null;
 	}
 
 	@Override
@@ -1619,12 +1657,37 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 
 	// Spring Data Customization START
 
-	@Data
 	static class BindableValue {
 
-		BsonType type;
-		Object value;
-		int index;
+		private BsonType type;
+		private Object value;
+		private int index;
+
+		BindableValue() {}
+
+		BsonType getType() {
+			return type;
+		}
+
+		void setType(BsonType type) {
+			this.type = type;
+		}
+
+		Object getValue() {
+			return value;
+		}
+
+		void setValue(Object value) {
+			this.value = value;
+		}
+
+		int getIndex() {
+			return index;
+		}
+
+		void setIndex(int index) {
+			this.index = index;
+		}
 	}
 
 	// Spring Data Customization END

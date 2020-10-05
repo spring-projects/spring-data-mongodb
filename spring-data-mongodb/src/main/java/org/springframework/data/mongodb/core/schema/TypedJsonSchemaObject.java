@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,6 +41,7 @@ import org.springframework.util.StringUtils;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Michał Kurcius
  * @since 2.1
  */
 public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
@@ -111,7 +112,6 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 	/**
 	 * Auto generate the {@literal description} if not explicitly set.
 	 *
-	 * @param description must not be {@literal null}.
 	 * @return new instance of {@link TypedJsonSchemaObject}.
 	 */
 	@Override
@@ -167,7 +167,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 	/**
 	 * The field value must not match the specified schemas.
 	 *
-	 * @param oneOf must not be {@literal null}.
+	 * @param notMatch must not be {@literal null}.
 	 * @return new instance of {@link TypedJsonSchemaObject}.
 	 */
 	@Override
@@ -1204,7 +1204,7 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 			Document doc = new Document(super.toDocument());
 
 			if (!CollectionUtils.isEmpty(items)) {
-				doc.append("items", items.size() == 1 ? items.iterator().next()
+				doc.append("items", items.size() == 1 ? items.iterator().next().toDocument()
 						: items.stream().map(JsonSchemaObject::toDocument).collect(Collectors.toList()));
 			}
 

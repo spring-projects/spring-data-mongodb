@@ -3,13 +3,13 @@
 	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:util="http://www.springframework.org/schema/util"
 	   xsi:schemaLocation="http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/util https://www.springframework.org/schema/util/spring-util.xsd">
 
-	<bean id="mongoClient" class="org.springframework.data.mongodb.core.ReactiveMongoClientFactoryBean">
+	<bean id="reactiveMongoClient" class="org.springframework.data.mongodb.core.ReactiveMongoClientFactoryBean">
 		<property name="host" value="127.0.0.1"/>
 		<property name="port" value="27017"/>
 	</bean>
 
 	<bean id="reactiveMongoDbFactory" class="org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory">
-		<constructor-arg name="mongoClient" ref="mongoClient"/>
+		<constructor-arg name="mongoClient" ref="reactiveMongoClient" type="com.mongodb.reactivestreams.client.MongoClient"/>
 		<constructor-arg name="databaseName" value="reactive_gridfs"/>
 	</bean>
 
@@ -27,4 +27,13 @@
 		<constructor-arg ref="converter"/>
 	</bean>
 
+	<bean id="mongoClient" class="org.springframework.data.mongodb.core.MongoClientFactoryBean">
+		<property name="host" value="127.0.0.1"/>
+		<property name="port" value="27017"/>
+	</bean>
+
+	<bean id="mongoDbFactory" class="org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory">
+		<constructor-arg name="mongoClient" ref="mongoClient"/>
+		<constructor-arg name="databaseName" value="reactive_gridfs"/>
+	</bean>
 </beans>

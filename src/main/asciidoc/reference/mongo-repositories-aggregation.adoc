@@ -11,7 +11,6 @@ The definition may contain simple placeholders like `?0` as well as https://docs
 ----
 public interface PersonRepository extends CrudReppsitory<Person, String> {
 
-
   @Aggregation("{ $group: { _id : $lastname, names : { $addToSet : $firstname } } }")
   List<PersonAggregate> groupByLastnameAndFirstnames();                            <1>
 
@@ -73,6 +72,36 @@ To gain more control, you might consider `AggregationResult` as method return ty
 <7> Obtain the raw `AggregationResults` mapped to the generic target wrapper type `SumValue` or `org.bson.Document`.
 <8> Like in <6>, a single value can be directly obtained from multiple result ``Document``s.
 ====
+
+In some scenarios, aggregations might require additional options, such as a maximum run time, additional log comments, or the permission to temporarily write data to disk.
+Use the `@Meta` annotation to set those options via `maxExecutionTimeMs`, `comment` or `allowDiskUse`.
+
+[source,java]
+----
+public interface PersonRepository extends CrudReppsitory<Person, String> {
+
+  @Meta(allowDiskUse = true)
+  @Aggregation("{ $group: { _id : $lastname, names : { $addToSet : $firstname } } }")
+  List<PersonAggregate> groupByLastnameAndFirstnames();
+}
+----
+
+Or use `@Meta` to create your own annotation as shown in the sample below.
+
+[source,java]
+----
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ ElementType.METHOD })
+@Meta(allowDiskUse = true)
+@interface AllowDiskUse { }
+
+public interface PersonRepository extends CrudReppsitory<Person, String> {
+
+  @AllowDiskUse
+  @Aggregation("{ $group: { _id : $lastname, names : { $addToSet : $firstname } } }")
+  List<PersonAggregate> groupByLastnameAndFirstnames();
+}
+----
 
 TIP: You can use `@Aggregation` also with <<mongo.reactive.repositories, Reactive Repositories>>.
 

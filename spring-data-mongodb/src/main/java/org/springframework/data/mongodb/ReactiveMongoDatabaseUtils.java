@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,6 +41,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Mathieu Ouellet
  * @since 2.2
  */
 public class ReactiveMongoDatabaseUtils {
@@ -142,14 +143,13 @@ public class ReactiveMongoDatabaseUtils {
 				.flatMap(synchronizationManager -> {
 
 					return doGetSession(synchronizationManager, factory, sessionSynchronization) //
-							.map(it -> getMongoDatabaseOrDefault(dbName, factory.withSession(it)));
-				})
-				.onErrorResume(NoTransactionException.class,
-						e -> Mono.fromSupplier(() -> getMongoDatabaseOrDefault(dbName, factory)))
-				.defaultIfEmpty(getMongoDatabaseOrDefault(dbName, factory));
+							.flatMap(it -> getMongoDatabaseOrDefault(dbName, factory.withSession(it)));
+				}) //
+				.onErrorResume(NoTransactionException.class, e -> getMongoDatabaseOrDefault(dbName, factory))
+				.switchIfEmpty(getMongoDatabaseOrDefault(dbName, factory));
 	}
 
-	private static MongoDatabase getMongoDatabaseOrDefault(@Nullable String dbName,
+	private static Mono<MongoDatabase> getMongoDatabaseOrDefault(@Nullable String dbName,
 			ReactiveMongoDatabaseFactory factory) {
 		return StringUtils.hasText(dbName) ? factory.getMongoDatabase(dbName) : factory.getMongoDatabase();
 	}

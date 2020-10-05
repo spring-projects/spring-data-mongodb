@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,17 +37,18 @@ import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import com.mongodb.reactivestreams.client.MongoCollection;
-import com.mongodb.reactivestreams.client.Success;
+import com.mongodb.reactivestreams.client.MongoDatabase;
 
 /**
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Mathieu Ouellet
  * @currentRead Beyond the Shadows - Brent Weeks
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:reactive-infrastructure.xml")
 public class ReactiveMapReduceTests {
 
@@ -60,11 +61,11 @@ public class ReactiveMapReduceTests {
 	@Before
 	public void setUp() {
 
-		StepVerifier
-				.create(template.dropCollection(ValueObject.class) //
-						.mergeWith(template.dropCollection("jmr1")) //
-						.mergeWith(template.dropCollection("jmr1_out")) //
-						.mergeWith(Mono.from(factory.getMongoDatabase("reactive-jrm1-out-db").drop()).then())) //
+		template.dropCollection(ValueObject.class) //
+				.mergeWith(template.dropCollection("jmr1")) //
+				.mergeWith(template.dropCollection("jmr1_out")) //
+				.mergeWith(factory.getMongoDatabase("reactive-jrm1-out-db").map(MongoDatabase::drop).then()) //
+				.as(StepVerifier::create) //
 				.verifyComplete();
 	}
 
@@ -73,9 +74,10 @@ public class ReactiveMapReduceTests {
 
 		createMapReduceData();
 
-		StepVerifier
-				.create(template.mapReduce(new Query(), Person.class, "jmr1", ValueObject.class, mapFunction, reduceFunction,
-						MapReduceOptions.options()).buffer(4)) //
+		template
+				.mapReduce(new Query(), Person.class, "jmr1", ValueObject.class, mapFunction, reduceFunction,
+						MapReduceOptions.options())
+				.buffer(4).as(StepVerifier::create) //
 				.consumeNextWith(result -> {
 					assertThat(result).containsExactlyInAnyOrder(new ValueObject("a", 1), new ValueObject("b", 2),
 							new ValueObject("c", 2), new ValueObject("d", 1));
@@ -88,13 +90,12 @@ public class ReactiveMapReduceTests {
 
 		createMapReduceData();
 
-		StepVerifier
-				.create(template.mapReduce(new Query(), Person.class, "jmr1", ValueObject.class, mapFunction, reduceFunction, //
-						MapReduceOptions.options().outputCollection("mapreduceout"))) //
+		template.mapReduce(new Query(), Person.class, "jmr1", ValueObject.class, mapFunction, reduceFunction, //
+				MapReduceOptions.options().outputCollection("mapreduceout")).as(StepVerifier::create) //
 				.expectNextCount(4) //
 				.verifyComplete();
 
-		StepVerifier.create(template.find(new Query(), ValueObject.class, "mapreduceout").buffer(4)) //
+		template.find(new Query(), ValueObject.class, "mapreduceout").buffer(4).as(StepVerifier::create) //
 				.consumeNextWith(result -> {
 					assertThat(result).containsExactlyInAnyOrder(new ValueObject("a", 1), new ValueObject("b", 2),
 							new ValueObject("c", 2), new ValueObject("d", 1));
@@ -107,9 +108,10 @@ public class ReactiveMapReduceTests {
 
 		createMapReduceData();
 
-		StepVerifier
-				.create(template.mapReduce(query(where("x").ne(new String[] { "a", "b" })), ValueObject.class, "jmr1",
-						ValueObject.class, mapFunction, reduceFunction, MapReduceOptions.options()).buffer(4)) //
+		template
+				.mapReduce(query(where("x").ne(new String[] { "a", "b" })), ValueObject.class, "jmr1", ValueObject.class,
+						mapFunction, reduceFunction, MapReduceOptions.options())
+				.buffer(4).as(StepVerifier::create) //
 				.consumeNextWith(result -> {
 					assertThat(result).containsExactlyInAnyOrder(new ValueObject("b", 1), new ValueObject("c", 2),
 							new ValueObject("d", 1));
@@ -122,12 +124,12 @@ public class ReactiveMapReduceTests {
 
 		createMapReduceData();
 
-		StepVerifier
-				.create(template.mapReduce(new Query(), ValueObject.class, "jmr1", ValueObject.class, mapFunction,
-						reduceFunction, MapReduceOptions.options().outputCollection("jmr1_out")))
-				.expectNextCount(4).verifyComplete();
+		template
+				.mapReduce(new Query(), ValueObject.class, "jmr1", ValueObject.class, mapFunction, reduceFunction,
+						MapReduceOptions.options().outputCollection("jmr1_out"))
+				.as(StepVerifier::create).expectNextCount(4).verifyComplete();
 
-		StepVerifier.create(template.find(new Query(), ValueObject.class, "jmr1_out").buffer(4)) //
+		template.find(new Query(), ValueObject.class, "jmr1_out").buffer(4).as(StepVerifier::create) //
 				.consumeNextWith(result -> {
 					assertThat(result).containsExactlyInAnyOrder(new ValueObject("a", 1), new ValueObject("b", 2),
 							new ValueObject("c", 2), new ValueObject("d", 1));
@@ -140,12 +142,12 @@ public class ReactiveMapReduceTests {
 
 		createMapReduceData();
 
-		StepVerifier
-				.create(template.mapReduce(new Query(), ValueObject.class, "jmr1", ValueObject.class, mapFunction,
-						reduceFunction, MapReduceOptions.options().outputDatabase("reactive-jrm1-out-db").outputCollection("jmr1_out")))
-				.expectNextCount(4).verifyComplete();
+		template
+				.mapReduce(new Query(), ValueObject.class, "jmr1", ValueObject.class, mapFunction, reduceFunction,
+						MapReduceOptions.options().outputDatabase("reactive-jrm1-out-db").outputCollection("jmr1_out"))
+				.as(StepVerifier::create).expectNextCount(4).verifyComplete();
 
-		Flux.from(factory.getMongoDatabase("reactive-jrm1-out-db").listCollectionNames()).buffer(10)
+		factory.getMongoDatabase("reactive-jrm1-out-db").flatMapMany(MongoDatabase::listCollectionNames).buffer(10)
 				.map(list -> list.contains("jmr1_out")).as(StepVerifier::create).expectNext(true).verifyComplete();
 	}
 
@@ -154,9 +156,10 @@ public class ReactiveMapReduceTests {
 
 		createMapReduceData();
 
-		StepVerifier
-				.create(template.mapReduce(query(where("values").ne(new String[] { "a", "b" })), MappedFieldsValueObject.class,
-						"jmr1", ValueObject.class, mapFunction, reduceFunction, MapReduceOptions.options()).buffer(4)) //
+		template
+				.mapReduce(query(where("values").ne(new String[] { "a", "b" })), MappedFieldsValueObject.class, "jmr1",
+						ValueObject.class, mapFunction, reduceFunction, MapReduceOptions.options())
+				.buffer(4).as(StepVerifier::create) //
 				.consumeNextWith(result -> {
 					assertThat(result).containsExactlyInAnyOrder(new ValueObject("b", 1), new ValueObject("c", 2),
 							new ValueObject("d", 1));
@@ -169,9 +172,10 @@ public class ReactiveMapReduceTests {
 
 		createMapReduceData();
 
-		StepVerifier
-				.create(template.mapReduce(query(where("values").ne(new String[] { "a", "b" })), MappedFieldsValueObject.class,
-						ValueObject.class, mapFunction, reduceFunction, MapReduceOptions.options()).buffer(4)) //
+		template
+				.mapReduce(query(where("values").ne(new String[] { "a", "b" })), MappedFieldsValueObject.class,
+						ValueObject.class, mapFunction, reduceFunction, MapReduceOptions.options())
+				.buffer(4).as(StepVerifier::create) //
 				.consumeNextWith(result -> {
 					assertThat(result).containsExactlyInAnyOrder(new ValueObject("b", 1), new ValueObject("c", 2),
 							new ValueObject("d", 1));
@@ -182,19 +186,20 @@ public class ReactiveMapReduceTests {
 	@Test // DATAMONGO-1890
 	public void throwsExceptionWhenTryingToLoadFunctionsFromDisk() {
 
-		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> template.mapReduce(new Query(), Person.class,
-				"foo", ValueObject.class, "classpath:map.js", "classpath:reduce.js", MapReduceOptions.options()))
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> template.mapReduce(new Query(),
+				Person.class, "foo", ValueObject.class, "classpath:map.js", "classpath:reduce.js", MapReduceOptions.options()))
 				.withMessageContaining("classpath:map.js");
 	}
 
 	private void createMapReduceData() {
 
-		MongoCollection<Document> collection = factory.getMongoDatabase().getCollection("jmr1", Document.class);
-
-		StepVerifier
-				.create(collection.insertMany(Arrays.asList(new Document("x", Arrays.asList("a", "b")),
-						new Document("x", Arrays.asList("b", "c")), new Document("x", Arrays.asList("c", "d")))))
-				.expectNext(Success.SUCCESS).verifyComplete();
+		factory.getMongoDatabase()
+				.flatMapMany(db -> db.getCollection("jmr1", Document.class)
+						.insertMany(Arrays.asList(new Document("x", Arrays.asList("a", "b")),
+								new Document("x", Arrays.asList("b", "c")), new Document("x", Arrays.asList("c", "d")))))
+				.as(StepVerifier::create) //
+				.expectNextCount(1) //
+				.verifyComplete();
 	}
 
 	@org.springframework.data.mongodb.core.mapping.Document("jmr1")

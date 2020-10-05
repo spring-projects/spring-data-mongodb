@@ -15,9 +15,12 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import java.util.Collection;
+
 import org.bson.Document;
-import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
+
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExpressionFieldReference;
+import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
 import org.springframework.util.Assert;
 
 /**
@@ -26,21 +29,25 @@ import org.springframework.util.Assert;
  * variable.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 1.10
  */
 class NestedDelegatingExpressionAggregationOperationContext implements AggregationOperationContext {
 
 	private final AggregationOperationContext delegate;
+	private final Collection<Field> inners;
 
 	/**
 	 * Creates new {@link NestedDelegatingExpressionAggregationOperationContext}.
 	 *
 	 * @param referenceContext must not be {@literal null}.
 	 */
-	public NestedDelegatingExpressionAggregationOperationContext(AggregationOperationContext referenceContext) {
+	NestedDelegatingExpressionAggregationOperationContext(AggregationOperationContext referenceContext,
+			Collection<Field> inners) {
 
 		Assert.notNull(referenceContext, "Reference context must not be null!");
 		this.delegate = referenceContext;
+		this.inners = inners;
 	}
 
 	/*
@@ -67,7 +74,25 @@ class NestedDelegatingExpressionAggregationOperationContext implements Aggregati
 	 */
 	@Override
 	public FieldReference getReference(Field field) {
-		return new ExpressionFieldReference(delegate.getReference(field));
+
+		FieldReference reference = delegate.getReference(field);
+		return isInnerVariableReference(field) ? new ExpressionFieldReference(delegate.getReference(field)) : reference;
+	}
+
+	private boolean isInnerVariableReference(Field field) {
+
+		if (inners.isEmpty()) {
+			return false;
+		}
+
+		for (Field inner : inners) {
+			if (inner.getName().equals(field.getName())
+					|| (field.getTarget().contains(".") && field.getTarget().startsWith(inner.getName()))) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/*
@@ -77,5 +102,14 @@ class NestedDelegatingExpressionAggregationOperationContext implements Aggregati
 	@Override
 	public FieldReference getReference(String name) {
 		return new ExpressionFieldReference(delegate.getReference(name));
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getFields(java.lang.Class)
+	 */
+	@Override
+	public Fields getFields(Class<?> type) {
+		return delegate.getFields(type);
 	}
 }

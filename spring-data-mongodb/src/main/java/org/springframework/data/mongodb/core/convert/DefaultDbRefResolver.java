@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,8 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.ClientSessionException;
 import org.springframework.data.mongodb.LazyLoadingException;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.data.mongodb.MongoDatabaseUtils;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.lang.Nullable;
 import org.springframework.objenesis.ObjenesisStd;
@@ -70,16 +71,16 @@ public class DefaultDbRefResolver implements DbRefResolver {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultDbRefResolver.class);
 
-	private final MongoDbFactory mongoDbFactory;
+	private final MongoDatabaseFactory mongoDbFactory;
 	private final PersistenceExceptionTranslator exceptionTranslator;
 	private final ObjenesisStd objenesis;
 
 	/**
-	 * Creates a new {@link DefaultDbRefResolver} with the given {@link MongoDbFactory}.
+	 * Creates a new {@link DefaultDbRefResolver} with the given {@link MongoDatabaseFactory}.
 	 *
 	 * @param mongoDbFactory must not be {@literal null}.
 	 */
-	public DefaultDbRefResolver(MongoDbFactory mongoDbFactory) {
+	public DefaultDbRefResolver(MongoDatabaseFactory mongoDbFactory) {
 
 		Assert.notNull(mongoDbFactory, "MongoDbFactory translator must not be null!");
 
@@ -114,14 +115,16 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	@Override
 	public Document fetch(DBRef dbRef) {
 
+		MongoCollection<Document> mongoCollection = getCollection(dbRef);
+
 		if (LOGGER.isTraceEnabled()) {
 			LOGGER.trace("Fetching DBRef '{}' from {}.{}.", dbRef.getId(),
-					StringUtils.hasText(dbRef.getDatabaseName()) ? dbRef.getDatabaseName() : mongoDbFactory.getDb().getName(),
+					StringUtils.hasText(dbRef.getDatabaseName()) ? dbRef.getDatabaseName()
+							: mongoCollection.getNamespace().getDatabaseName(),
 					dbRef.getCollectionName());
 		}
 
-		StringUtils.hasText(dbRef.getDatabaseName());
-		return getCollection(dbRef).find(Filters.eq("_id", dbRef.getId())).first();
+		return mongoCollection.find(Filters.eq("_id", dbRef.getId())).first();
 	}
 
 	/*
@@ -152,15 +155,16 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		}
 
 		DBRef databaseSource = refs.iterator().next();
+		MongoCollection<Document> mongoCollection = getCollection(databaseSource);
 
 		if (LOGGER.isTraceEnabled()) {
 			LOGGER.trace("Bulk fetching DBRefs {} from {}.{}.", ids,
 					StringUtils.hasText(databaseSource.getDatabaseName()) ? databaseSource.getDatabaseName()
-							: mongoDbFactory.getDb().getName(),
+							: mongoCollection.getNamespace().getDatabaseName(),
 					databaseSource.getCollectionName());
 		}
 
-		List<Document> result = getCollection(databaseSource) //
+		List<Document> result = mongoCollection //
 				.find(new Document("_id", new Document("$in", ids))) //
 				.into(new ArrayList<>());
 
@@ -202,7 +206,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 		proxyFactory.addInterface(propertyType);
 		proxyFactory.addAdvice(interceptor);
 
-		return handler.populateId(property, dbref, proxyFactory.getProxy());
+		return handler.populateId(property, dbref, proxyFactory.getProxy(LazyLoadingProxy.class.getClassLoader()));
 	}
 
 	/**
@@ -497,7 +501,7 @@ public class DefaultDbRefResolver implements DbRefResolver {
 	 */
 	protected MongoCollection<Document> getCollection(DBRef dbref) {
 
-		return (StringUtils.hasText(dbref.getDatabaseName()) ? mongoDbFactory.getDb(dbref.getDatabaseName())
-				: mongoDbFactory.getDb()).getCollection(dbref.getCollectionName(), Document.class);
+		return MongoDatabaseUtils.getDatabase(dbref.getDatabaseName(), mongoDbFactory)
+				.getCollection(dbref.getCollectionName(), Document.class);
 	}
 }

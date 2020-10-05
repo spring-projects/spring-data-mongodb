@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,8 @@ import org.springframework.util.Assert;
  * @author Mark Paluch
  * @author Christoph Strobl
  * @since 1.3
- * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/unwind/">MongoDB Aggregation Framework: $unwind</a>
+ * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/unwind/">MongoDB Aggregation Framework:
+ *      $unwind</a>
  */
 public class UnwindOperation
 		implements AggregationOperation, FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation {
@@ -94,7 +95,7 @@ public class UnwindOperation
 		String path = context.getReference(field).toString();
 
 		if (!preserveNullAndEmptyArrays && arrayIndex == null) {
-			return new Document("$unwind", path);
+			return new Document(getOperator(), path);
 		}
 
 		Document unwindArgs = new Document();
@@ -104,7 +105,16 @@ public class UnwindOperation
 		}
 		unwindArgs.put("preserveNullAndEmptyArrays", preserveNullAndEmptyArrays);
 
-		return new Document("$unwind", unwindArgs);
+		return new Document(getOperator(), unwindArgs);
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
+	 */
+	@Override
+	public String getOperator() {
+		return "$unwind";
 	}
 
 	/*

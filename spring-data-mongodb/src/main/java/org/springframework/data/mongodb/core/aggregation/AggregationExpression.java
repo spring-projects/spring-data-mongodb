@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2015-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,8 +31,8 @@ public interface AggregationExpression {
 	 * Turns the {@link AggregationExpression} into a {@link Document} within the given
 	 * {@link AggregationOperationContext}.
 	 *
-	 * @param context
-	 * @return
+	 * @param context must not be {@literal null}.
+	 * @return the MongoDB native ({@link Document}) form of the expression.
 	 */
 	Document toDocument(AggregationOperationContext context);
 }

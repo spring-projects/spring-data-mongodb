@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,25 +37,16 @@ public @interface Meta {
 	/**
 	 * Set the maximum time limit in milliseconds for processing operations.
 	 *
-	 * @return
+	 * @return {@literal -1} by default.
 	 * @since 1.10
 	 */
 	long maxExecutionTimeMs() default -1;
 
 	/**
-	 * Only scan the specified number of documents.
-	 *
-	 * @return
-	 * @deprecated since 2.2. {@code $maxScan} has been removed without replacement in MongoDB 4.2.
-	 */
-	@Deprecated
-	long maxScanDocuments() default -1;
-
-	/**
 	 * Sets the number of documents to return per batch. <br />
 	 * Use {@literal 0 (zero)} for no limit. A <strong>negative limit</strong> closes the cursor after returning a single
 	 * batch indicating to the server that the client will not ask for a subsequent one.
-	 * 
+	 *
 	 * @return {@literal 0 (zero)} by default.
 	 * @since 2.1
 	 */
@@ -64,16 +55,9 @@ public @interface Meta {
 	/**
 	 * Add a comment to the query.
 	 *
-	 * @return
+	 * @return empty {@link String} by default.
 	 */
 	String comment() default "";
-
-	/**
-	 * Using snapshot prevents the cursor from returning a document more than once.
-	 *
-	 * @return
-	 */
-	boolean snapshot() default false;
 
 	/**
 	 * Set {@link org.springframework.data.mongodb.core.query.Meta.CursorOption} to be used when executing query.
@@ -82,5 +66,14 @@ public @interface Meta {
 	 * @since 1.10
 	 */
 	org.springframework.data.mongodb.core.query.Meta.CursorOption[] flags() default {};
+
+	/**
+	 * When set to {@literal true}, aggregation stages can write data to disk.
+	 *
+	 * @return {@literal false} by default.
+	 * @since 3.0
+	 * @see Aggregation
+	 */
+	boolean allowDiskUse() default false;
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,5 +53,16 @@ public interface AggregationOperation {
 	 */
 	default List<Document> toPipelineStages(AggregationOperationContext context) {
 		return Collections.singletonList(toDocument(context));
+	}
+
+	/**
+	 * Return the MongoDB operator that is used for this {@link AggregationOperation}. Aggregation operations should
+	 * implement this method to avoid document rendering.
+	 *
+	 * @return the operator used for this {@link AggregationOperation}.
+	 * @since 3.0.2
+	 */
+	default String getOperator() {
+		return toDocument(Aggregation.DEFAULT_CONTEXT).keySet().iterator().next();
 	}
 }

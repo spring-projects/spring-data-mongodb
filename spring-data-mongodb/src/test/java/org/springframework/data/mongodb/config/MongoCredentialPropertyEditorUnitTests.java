@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2015-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,8 +83,6 @@ public class MongoCredentialPropertyEditorUnitTests {
 
 	static final MongoCredential USER_2_CREDENTIALS = MongoCredential.createCredential(USER_2_NAME, USER_2_DB,
 			USER_2_PWD.toCharArray());
-	static final MongoCredential USER_2_CREDENTIALS_CR_AUTH = MongoCredential.createMongoCRCredential(USER_2_NAME,
-			USER_2_DB, USER_2_PWD.toCharArray());
 
 	static final MongoCredential USER_3_CREDENTIALS_X509_AUTH = MongoCredential.createMongoX509Credential(USER_3_NAME);
 
@@ -137,14 +135,15 @@ public class MongoCredentialPropertyEditorUnitTests {
 		assertThat(getValue()).isNull();
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1158
+	@Test // DATAMONGO-1158
 	public void shouldThrowExceptionForMalformatedCredentialsString() {
-		editor.setAsText("tyrion");
+		assertThatIllegalArgumentException().isThrownBy(() -> editor.setAsText("tyrion"));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1158
+	@Test // DATAMONGO-1158
 	public void shouldThrowExceptionForMalformatedAuthMechanism() {
-		editor.setAsText(USER_2_AUTH_STRING + "?uri.authMechanism=Targaryen");
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> editor.setAsText(USER_2_AUTH_STRING + "?uri.authMechanism=Targaryen"));
 	}
 
 	@Test // DATAMONGO-1158
@@ -173,16 +172,6 @@ public class MongoCredentialPropertyEditorUnitTests {
 				.setAsText(StringUtils.collectionToCommaDelimitedString(Arrays.asList(USER_1_AUTH_STRING, USER_2_AUTH_STRING)));
 
 		assertThat(getValue()).contains(USER_1_CREDENTIALS, USER_2_CREDENTIALS);
-	}
-
-	@Test // DATAMONGO-1158
-	@SuppressWarnings("unchecked")
-	public void shouldReturnCredentialsValueCorrectlyWhenGivenMultipleUserNamePasswordStringWithDatabaseAndAuthOptions() {
-
-		editor.setAsText(StringUtils.collectionToCommaDelimitedString(Arrays
-				.asList(USER_1_AUTH_STRING_WITH_PLAIN_AUTH_MECHANISM, USER_2_AUTH_STRING_WITH_MONGODB_CR_AUTH_MECHANISM)));
-
-		assertThat(getValue()).contains(USER_1_CREDENTIALS_PLAIN_AUTH, USER_2_CREDENTIALS_CR_AUTH);
 	}
 
 	@Test // DATAMONGO-1158
@@ -283,10 +272,10 @@ public class MongoCredentialPropertyEditorUnitTests {
 		assertThat(getValue()).contains(SCRAM_SHA_256_CREDENTIALS);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-2016
+	@Test // DATAMONGO-2016
 	@SuppressWarnings("unchecked")
 	public void failsGracefullyOnEmptyQueryArgument() {
-		editor.setAsText(USER_5_AUTH_STRING_WITH_QUERY_ARGS);
+		assertThatIllegalArgumentException().isThrownBy(() -> editor.setAsText(USER_5_AUTH_STRING_WITH_QUERY_ARGS));
 	}
 
 	@SuppressWarnings("unchecked")

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,13 @@
  */
 package org.springframework.data.mongodb.core.messaging;
 
-import lombok.AllArgsConstructor;
-
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import org.bson.BsonDocument;
 import org.bson.BsonTimestamp;
@@ -63,7 +62,7 @@ import com.mongodb.client.model.changestream.FullDocument;
  */
 class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>, Object> {
 
-	private final Set<String> blacklist = new HashSet<>(
+	private final Set<String> denylist = new HashSet<>(
 			Arrays.asList("operationType", "fullDocument", "documentKey", "updateDescription", "ns"));
 
 	private final QueryMapper queryMapper;
@@ -122,7 +121,7 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 		}
 
 		MongoDatabase db = StringUtils.hasText(options.getDatabaseName())
-				? template.getMongoDbFactory().getDb(options.getDatabaseName())
+				? template.getMongoDbFactory().getMongoDatabase(options.getDatabaseName())
 				: template.getDb();
 
 		ChangeStreamIterable<Document> iterable;
@@ -133,6 +132,10 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 
 		} else {
 			iterable = filter.isEmpty() ? db.watch(Document.class) : db.watch(filter, Document.class);
+		}
+
+		if (!options.maxAwaitTime().isZero()) {
+			iterable = iterable.maxAwaitTime(options.maxAwaitTime().toMillis(), TimeUnit.MILLISECONDS);
 		}
 
 		if (!resumeToken.isEmpty()) {
@@ -173,7 +176,7 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 							template.getConverter().getMappingContext(), queryMapper)
 					: Aggregation.DEFAULT_CONTEXT;
 
-			return agg.toPipeline(new PrefixingDelegatingAggregationOperationContext(context, "fullDocument", blacklist));
+			return agg.toPipeline(new PrefixingDelegatingAggregationOperationContext(context, "fullDocument", denylist));
 		}
 
 		if (filter instanceof List) {
@@ -212,11 +215,16 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 	 *
 	 * @since 2.1
 	 */
-	@AllArgsConstructor
 	static class ChangeStreamEventMessage<T> implements Message<ChangeStreamDocument<Document>, T> {
 
 		private final ChangeStreamEvent<T> delegate;
 		private final MessageProperties messageProperties;
+
+		ChangeStreamEventMessage(ChangeStreamEvent<T> delegate, MessageProperties messageProperties) {
+
+			this.delegate = delegate;
+			this.messageProperties = messageProperties;
+		}
 
 		/*
 		 * (non-Javadoc)

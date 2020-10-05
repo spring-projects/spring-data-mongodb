@@ -1,5 +1,6 @@
+
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import org.springframework.context.annotation.Configuration;
-import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 
-import com.mongodb.Mongo;
-import com.mongodb.MongoClient;
+import java.util.Collections;
+import java.util.Set;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
+
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
 
 /**
  * Sample configuration class in default package.
@@ -25,11 +30,11 @@ import com.mongodb.MongoClient;
  * @author Oliver Gierke
  */
 @Configuration
-public class ConfigClassInDefaultPackage extends AbstractMongoConfiguration {
+public class ConfigClassInDefaultPackage extends AbstractMongoClientConfiguration {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.config.AbstractMongoConfiguration#getDatabaseName()
+	 * @see org.springframework.data.mongodb.config.AbstractMongoClientConfiguration#getDatabaseName()
 	 */
 	@Override
 	protected String getDatabaseName() {
@@ -38,10 +43,15 @@ public class ConfigClassInDefaultPackage extends AbstractMongoConfiguration {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.config.AbstractMongoConfiguration#mongo()
+	 * @see org.springframework.data.mongodb.config.AbstractMongoClientConfiguration#mongoClient()
 	 */
 	@Override
 	public MongoClient mongoClient() {
-		return new MongoClient();
+		return MongoClients.create();
+	}
+
+	@Override
+	protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+		return Collections.emptySet();
 	}
 }

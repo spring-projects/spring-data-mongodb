@@ -15,7 +15,7 @@
  */
 
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,18 +32,19 @@
 package org.springframework.data.mongodb.repository.support;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
@@ -54,27 +55,24 @@ import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 /**
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.class)
-public class SimpleReactiveMongoRepositoryUnitTests {
+@ExtendWith(MockitoExtension.class)
+class SimpleReactiveMongoRepositoryUnitTests {
 
-	SimpleReactiveMongoRepository<Object, String> repository;
+	private SimpleReactiveMongoRepository<Object, String> repository;
 	@Mock Mono mono;
 	@Mock Flux flux;
 	@Mock ReactiveMongoOperations mongoOperations;
 	@Mock MongoEntityInformation<Object, String> entityInformation;
 
-	@Before
-	public void setUp() {
-
-		when(mongoOperations.count(any(), any(), any())).thenReturn(mono);
-		when(mongoOperations.exists(any(), any(), any())).thenReturn(mono);
-		when(mongoOperations.find(any(), any(), any())).thenReturn(flux);
-
+	@BeforeEach
+	void setUp() {
 		repository = new SimpleReactiveMongoRepository<>(entityInformation, mongoOperations);
 	}
 
 	@Test // DATAMONGO-1854
-	public void shouldAddDefaultCollationToCountForExampleIfPresent() {
+	void shouldAddDefaultCollationToCountForExampleIfPresent() {
+
+		when(mongoOperations.count(any(), any(), any())).thenReturn(mono);
 
 		Collation collation = Collation.of("en_US");
 
@@ -88,7 +86,9 @@ public class SimpleReactiveMongoRepositoryUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void shouldAddDefaultCollationToExistsForExampleIfPresent() {
+	void shouldAddDefaultCollationToExistsForExampleIfPresent() {
+
+		when(mongoOperations.exists(any(), any(), any())).thenReturn(mono);
 
 		Collation collation = Collation.of("en_US");
 
@@ -102,7 +102,9 @@ public class SimpleReactiveMongoRepositoryUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void shouldAddDefaultCollationToFindForExampleIfPresent() {
+	void shouldAddDefaultCollationToFindForExampleIfPresent() {
+
+		when(mongoOperations.find(any(), any(), any())).thenReturn(flux);
 
 		Collation collation = Collation.of("en_US");
 
@@ -116,7 +118,9 @@ public class SimpleReactiveMongoRepositoryUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void shouldAddDefaultCollationToFindWithSortForExampleIfPresent() {
+	void shouldAddDefaultCollationToFindWithSortForExampleIfPresent() {
+
+		when(mongoOperations.find(any(), any(), any())).thenReturn(flux);
 
 		Collation collation = Collation.of("en_US");
 
@@ -130,7 +134,9 @@ public class SimpleReactiveMongoRepositoryUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void shouldAddDefaultCollationToFindOneForExampleIfPresent() {
+	void shouldAddDefaultCollationToFindOneForExampleIfPresent() {
+
+		when(mongoOperations.find(any(), any(), any())).thenReturn(flux);
 
 		Collation collation = Collation.of("en_US");
 
@@ -143,7 +149,7 @@ public class SimpleReactiveMongoRepositoryUnitTests {
 		assertThat(query.getValue().getCollation()).contains(collation);
 	}
 
-	static class TestDummy {
+	private static class TestDummy {
 
 	}
 

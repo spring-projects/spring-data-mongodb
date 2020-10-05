@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,11 @@ package org.springframework.data.mongodb.repository.support;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.bson.BsonJavaScript;
@@ -49,6 +52,7 @@ import com.querydsl.mongodb.MongodbOps;
  * @author Mark Paluch
  * @author Christoph Strobl
  * @author Mikhail Kaduchka
+ * @author Enrique Leon Molina
  * @since 2.1
  */
 abstract class MongodbDocumentSerializer implements Visitor<Object, Void> {
@@ -181,22 +185,30 @@ abstract class MongodbDocumentSerializer implements Visitor<Object, Void> {
 			return asDocument(asDBKey(expr, 0), "");
 		} else if (op == Ops.AND) {
 
-			Map<Object, Object> lhs = (Map<Object, Object>) handle(expr.getArg(0));
-			Map<Object, Object> rhs = (Map<Object, Object>) handle(expr.getArg(1));
+			Queue<Map<Object, Object>> pendingDocuments = collectConnectorArgs("$and", expr);
+			List<Map<Object, Object>> unmergeableDocuments = new ArrayList<>();
+			List<Map<Object, Object>> generatedDocuments = new ArrayList<>();
 
-			LinkedHashSet<Object> lhs2 = new LinkedHashSet<>(lhs.keySet());
-			lhs2.retainAll(rhs.keySet());
+			while (!pendingDocuments.isEmpty()) {
 
-			if (lhs2.isEmpty()) {
-				lhs.putAll(rhs);
-				return lhs;
-			} else {
-				List<Object> list = new ArrayList<>(2);
-				list.add(handle(expr.getArg(0)));
-				list.add(handle(expr.getArg(1)));
-				return asDocument("$and", list);
+				Map<Object, Object> lhs = pendingDocuments.poll();
+
+				for (Map<Object, Object> rhs : pendingDocuments) {
+					Set<Object> lhs2 = new LinkedHashSet<>(lhs.keySet());
+					lhs2.retainAll(rhs.keySet());
+					if (lhs2.isEmpty()) {
+						lhs.putAll(rhs);
+					} else {
+						unmergeableDocuments.add(rhs);
+					}
+				}
+
+				generatedDocuments.add(lhs);
+				pendingDocuments = new LinkedList<>(unmergeableDocuments);
+				unmergeableDocuments = new LinkedList<>();
 			}
 
+			return generatedDocuments.size() == 1 ? generatedDocuments.get(0) : asDocument("$and", generatedDocuments);
 		} else if (op == Ops.NOT) {
 			// Handle the not's child
 			Operation<?> subOperation = (Operation<?>) expr.getArg(0);
@@ -211,12 +223,7 @@ abstract class MongodbDocumentSerializer implements Visitor<Object, Void> {
 			}
 
 		} else if (op == Ops.OR) {
-
-			List<Object> list = new ArrayList<>(2);
-			list.add(handle(expr.getArg(0)));
-			list.add(handle(expr.getArg(1)));
-			return asDocument("$or", list);
-
+			return asDocument("$or", collectConnectorArgs("$or", expr));
 		} else if (op == Ops.NE) {
 
 			Path<?> path = (Path<?>) expr.getArg(0);
@@ -433,5 +440,20 @@ abstract class MongodbDocumentSerializer implements Visitor<Object, Void> {
 	@Override
 	public Object visit(ParamExpression<?> expr, Void context) {
 		throw new UnsupportedOperationException();
+	}
+
+	private LinkedList<Map<Object, Object>> collectConnectorArgs(String operator, Operation<?> operation) {
+
+		LinkedList<Map<Object, Object>> pendingDocuments = new LinkedList<>();
+		for (Expression<?> exp : operation.getArgs()) {
+			Map<Object, Object> document = (Map<Object, Object>) handle(exp);
+			if (document.keySet().size() == 1 && document.containsKey(operator)) {
+				pendingDocuments.addAll((Collection<Map<Object, Object>>) document.get(operator));
+			} else {
+				pendingDocuments.add(document);
+			}
+		}
+		return pendingDocuments;
+
 	}
 }

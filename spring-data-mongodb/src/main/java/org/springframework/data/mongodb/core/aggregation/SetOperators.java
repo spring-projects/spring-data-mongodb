@@ -34,7 +34,7 @@ public class SetOperators {
 	 * Take the array referenced by given {@literal fieldReference}.
 	 *
 	 * @param fieldReference must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link SetOperatorFactory}.
 	 */
 	public static SetOperatorFactory arrayAsSet(String fieldReference) {
 		return new SetOperatorFactory(fieldReference);
@@ -44,7 +44,7 @@ public class SetOperators {
 	 * Take the array resulting from the given {@link AggregationExpression}.
 	 *
 	 * @param expression must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link SetOperatorFactory}.
 	 */
 	public static SetOperatorFactory arrayAsSet(AggregationExpression expression) {
 		return new SetOperatorFactory(expression);
@@ -87,7 +87,7 @@ public class SetOperators {
 		 * returns {@literal true} if they have the same distinct elements and {@literal false} otherwise.
 		 *
 		 * @param arrayReferences must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetEquals}.
 		 */
 		public SetEquals isEqualTo(String... arrayReferences) {
 			return createSetEquals().isEqualTo(arrayReferences);
@@ -98,7 +98,7 @@ public class SetOperators {
 		 * returns {@literal true} if they have the same distinct elements and {@literal false} otherwise.
 		 *
 		 * @param expressions must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetEquals}.
 		 */
 		public SetEquals isEqualTo(AggregationExpression... expressions) {
 			return createSetEquals().isEqualTo(expressions);
@@ -113,7 +113,7 @@ public class SetOperators {
 		 * arrays and returns an array that contains the elements that appear in every of those.
 		 *
 		 * @param arrayReferences must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetIntersection}.
 		 */
 		public SetIntersection intersects(String... arrayReferences) {
 			return createSetIntersection().intersects(arrayReferences);
@@ -124,7 +124,7 @@ public class SetOperators {
 		 * arrays and returns an array that contains the elements that appear in every of those.
 		 *
 		 * @param expressions must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetIntersection}.
 		 */
 		public SetIntersection intersects(AggregationExpression... expressions) {
 			return createSetIntersection().intersects(expressions);
@@ -139,7 +139,7 @@ public class SetOperators {
 		 * arrays and returns an array that contains the elements that appear in any of those.
 		 *
 		 * @param arrayReferences must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetUnion}.
 		 */
 		public SetUnion union(String... arrayReferences) {
 			return createSetUnion().union(arrayReferences);
@@ -150,7 +150,7 @@ public class SetOperators {
 		 * arrays and returns an array that contains the elements that appear in any of those.
 		 *
 		 * @param expressions must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetUnion}.
 		 */
 		public SetUnion union(AggregationExpression... expressions) {
 			return createSetUnion().union(expressions);
@@ -165,7 +165,7 @@ public class SetOperators {
 		 * containing the elements that do not exist in the given {@literal arrayReference}.
 		 *
 		 * @param arrayReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetDifference}.
 		 */
 		public SetDifference differenceTo(String arrayReference) {
 			return createSetDifference().differenceTo(arrayReference);
@@ -176,7 +176,7 @@ public class SetOperators {
 		 * containing the elements that do not exist in the given {@link AggregationExpression}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetDifference}.
 		 */
 		public SetDifference differenceTo(AggregationExpression expression) {
 			return createSetDifference().differenceTo(expression);
@@ -191,7 +191,7 @@ public class SetOperators {
 		 * {@literal true} if it is a subset of the given {@literal arrayReference}.
 		 *
 		 * @param arrayReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetIsSubset}.
 		 */
 		public SetIsSubset isSubsetOf(String arrayReference) {
 			return createSetIsSubset().isSubsetOf(arrayReference);
@@ -202,7 +202,7 @@ public class SetOperators {
 		 * {@literal true} if it is a subset of the given {@link AggregationExpression}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetIsSubset}.
 		 */
 		public SetIsSubset isSubsetOf(AggregationExpression expression) {
 			return createSetIsSubset().isSubsetOf(expression);
@@ -216,7 +216,7 @@ public class SetOperators {
 		 * Creates new {@link AggregationExpression} that takes array of the previously mentioned field and returns
 		 * {@literal true} if any of the elements are {@literal true} and {@literal false} otherwise.
 		 *
-		 * @return
+		 * @return new instance of {@link AnyElementTrue}.
 		 */
 		public AnyElementTrue anyElementTrue() {
 			return usesFieldRef() ? AnyElementTrue.arrayAsSet(fieldReference) : AnyElementTrue.arrayAsSet(expression);
@@ -226,7 +226,7 @@ public class SetOperators {
 		 * Creates new {@link AggregationExpression} that tkes array of the previously mentioned field and returns
 		 * {@literal true} if no elements is {@literal false}.
 		 *
-		 * @return
+		 * @return new instance of {@link AllElementsTrue}.
 		 */
 		public AllElementsTrue allElementsTrue() {
 			return usesFieldRef() ? AllElementsTrue.arrayAsSet(fieldReference) : AllElementsTrue.arrayAsSet(expression);
@@ -257,7 +257,7 @@ public class SetOperators {
 		 * Create new {@link SetEquals}.
 		 *
 		 * @param arrayReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetEquals}.
 		 */
 		public static SetEquals arrayAsSet(String arrayReference) {
 
@@ -269,7 +269,7 @@ public class SetOperators {
 		 * Create new {@link SetEquals}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetEquals}.
 		 */
 		public static SetEquals arrayAsSet(AggregationExpression expression) {
 
@@ -281,7 +281,7 @@ public class SetOperators {
 		 * Creates new {@link java.util.Set} with all previously added arguments appending the given one.
 		 *
 		 * @param arrayReferences must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetEquals}.
 		 */
 		public SetEquals isEqualTo(String... arrayReferences) {
 
@@ -293,7 +293,7 @@ public class SetOperators {
 		 * Creates new {@link Sum} with all previously added arguments appending the given one.
 		 *
 		 * @param expressions must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetEquals}.
 		 */
 		public SetEquals isEqualTo(AggregationExpression... expressions) {
 
@@ -305,7 +305,7 @@ public class SetOperators {
 		 * Creates new {@link Sum} with all previously added arguments appending the given one.
 		 *
 		 * @param array must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetEquals}.
 		 */
 		public SetEquals isEqualTo(Object[] array) {
 
@@ -334,7 +334,7 @@ public class SetOperators {
 		 * Creates new {@link SetIntersection}
 		 *
 		 * @param arrayReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetIntersection}.
 		 */
 		public static SetIntersection arrayAsSet(String arrayReference) {
 
@@ -346,7 +346,7 @@ public class SetOperators {
 		 * Creates new {@link SetIntersection}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetIntersection}.
 		 */
 		public static SetIntersection arrayAsSet(AggregationExpression expression) {
 
@@ -358,7 +358,7 @@ public class SetOperators {
 		 * Creates new {@link SetIntersection} with all previously added arguments appending the given one.
 		 *
 		 * @param arrayReferences must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetIntersection}.
 		 */
 		public SetIntersection intersects(String... arrayReferences) {
 
@@ -370,7 +370,7 @@ public class SetOperators {
 		 * Creates new {@link SetIntersection} with all previously added arguments appending the given one.
 		 *
 		 * @param expressions must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetIntersection}.
 		 */
 		public SetIntersection intersects(AggregationExpression... expressions) {
 
@@ -399,7 +399,7 @@ public class SetOperators {
 		 * Creates new {@link SetUnion}.
 		 *
 		 * @param arrayReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetUnion}.
 		 */
 		public static SetUnion arrayAsSet(String arrayReference) {
 
@@ -411,7 +411,7 @@ public class SetOperators {
 		 * Creates new {@link SetUnion}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetUnion}.
 		 */
 		public static SetUnion arrayAsSet(AggregationExpression expression) {
 
@@ -423,7 +423,7 @@ public class SetOperators {
 		 * Creates new {@link SetUnion} with all previously added arguments appending the given one.
 		 *
 		 * @param arrayReferences must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetUnion}.
 		 */
 		public SetUnion union(String... arrayReferences) {
 
@@ -435,7 +435,7 @@ public class SetOperators {
 		 * Creates new {@link SetUnion} with all previously added arguments appending the given one.
 		 *
 		 * @param expressions must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetUnion}.
 		 */
 		public SetUnion union(AggregationExpression... expressions) {
 
@@ -464,7 +464,7 @@ public class SetOperators {
 		 * Creates new {@link SetDifference}.
 		 *
 		 * @param arrayReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetDifference}.
 		 */
 		public static SetDifference arrayAsSet(String arrayReference) {
 
@@ -476,7 +476,7 @@ public class SetOperators {
 		 * Creates new {@link SetDifference}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetDifference}.
 		 */
 		public static SetDifference arrayAsSet(AggregationExpression expression) {
 
@@ -488,7 +488,7 @@ public class SetOperators {
 		 * Creates new {@link SetDifference} with all previously added arguments appending the given one.
 		 *
 		 * @param arrayReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetDifference}.
 		 */
 		public SetDifference differenceTo(String arrayReference) {
 
@@ -500,7 +500,7 @@ public class SetOperators {
 		 * Creates new {@link SetDifference} with all previously added arguments appending the given one.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetDifference}.
 		 */
 		public SetDifference differenceTo(AggregationExpression expression) {
 
@@ -529,7 +529,7 @@ public class SetOperators {
 		 * Creates new {@link SetIsSubset}.
 		 *
 		 * @param arrayReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetIsSubset}.
 		 */
 		public static SetIsSubset arrayAsSet(String arrayReference) {
 
@@ -541,7 +541,7 @@ public class SetOperators {
 		 * Creates new {@link SetIsSubset}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetIsSubset}.
 		 */
 		public static SetIsSubset arrayAsSet(AggregationExpression expression) {
 
@@ -553,7 +553,7 @@ public class SetOperators {
 		 * Creates new {@link SetIsSubset} with all previously added arguments appending the given one.
 		 *
 		 * @param arrayReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetIsSubset}.
 		 */
 		public SetIsSubset isSubsetOf(String arrayReference) {
 
@@ -565,7 +565,7 @@ public class SetOperators {
 		 * Creates new {@link SetIsSubset} with all previously added arguments appending the given one.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link SetIsSubset}.
 		 */
 		public SetIsSubset isSubsetOf(AggregationExpression expression) {
 
@@ -594,7 +594,7 @@ public class SetOperators {
 		 * Creates new {@link AnyElementTrue}.
 		 *
 		 * @param arrayReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link AnyElementTrue}.
 		 */
 		public static AnyElementTrue arrayAsSet(String arrayReference) {
 
@@ -606,7 +606,7 @@ public class SetOperators {
 		 * Creates new {@link AnyElementTrue}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link AnyElementTrue}.
 		 */
 		public static AnyElementTrue arrayAsSet(AggregationExpression expression) {
 
@@ -639,7 +639,7 @@ public class SetOperators {
 		 * Creates new {@link AllElementsTrue}.
 		 *
 		 * @param arrayReference must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link AllElementsTrue}.
 		 */
 		public static AllElementsTrue arrayAsSet(String arrayReference) {
 
@@ -651,7 +651,7 @@ public class SetOperators {
 		 * Creates new {@link AllElementsTrue}.
 		 *
 		 * @param expression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link AllElementsTrue}.
 		 */
 		public static AllElementsTrue arrayAsSet(AggregationExpression expression) {
 

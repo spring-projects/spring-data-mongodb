@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,12 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-import org.springframework.util.NumberUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -95,21 +93,27 @@ public class GeoNearOperation implements AggregationOperation {
 
 		Document command = context.getMappedObject(nearQuery.toDocument());
 
-		if(command.containsKey("query")) {
+		if (command.containsKey("query")) {
 			command.replace("query", context.getMappedObject(command.get("query", Document.class)));
 		}
 
-		if(command.containsKey("collation")) {
-			command.remove("collation");
-		}
-
+		command.remove("collation");
 		command.put("distanceField", distanceField);
 
 		if (StringUtils.hasText(indexKey)) {
 			command.put("key", indexKey);
 		}
 
-		return new Document("$geoNear", command);
+		return new Document(getOperator(), command);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
+	 */
+	@Override
+	public String getOperator() {
+		return "$geoNear";
 	}
 
 	/*
@@ -125,11 +129,11 @@ public class GeoNearOperation implements AggregationOperation {
 		List<Document> stages = new ArrayList<>();
 		stages.add(command);
 
-		if(nearQuery.getSkip() != null && nearQuery.getSkip() > 0){
+		if (nearQuery.getSkip() != null && nearQuery.getSkip() > 0) {
 			stages.add(new Document("$skip", nearQuery.getSkip()));
 		}
 
-		if(limit != null) {
+		if (limit != null) {
 			stages.add(new Document("$limit", limit.longValue()));
 		}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,11 +20,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.BucketOperationSupport.Output;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.util.Assert;
-
-import org.bson.Document;
 
 /**
  * Encapsulates the aggregation framework {@code $facet}-operation. <br />
@@ -84,7 +83,16 @@ public class FacetOperation implements FieldsExposingAggregationOperation {
 	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
-		return new Document("$facet", facets.toDocument(context));
+		return new Document(getOperator(), facets.toDocument(context));
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
+	 */
+	@Override
+	public String getOperator() {
+		return "$facet";
 	}
 
 	/* (non-Javadoc)

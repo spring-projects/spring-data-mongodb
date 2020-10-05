@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package org.springframework.data.mongodb.core.validation;
 import static org.assertj.core.api.Assertions.*;
 
 import org.bson.Document;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 /**
@@ -40,8 +40,8 @@ public class CriteriaValidatorUnitTests {
 				.isEqualTo(new Document("$type", 16).append("$gte", 0).append("$lte", 122));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1322
+	@Test // DATAMONGO-1322
 	public void testFailOnNull() {
-		CriteriaValidator.of(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> CriteriaValidator.of(null));
 	}
 }

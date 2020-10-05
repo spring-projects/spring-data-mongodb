@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ public class CustomConversions extends MongoCustomConversions {
 	/**
 	 * Creates a new {@link CustomConversions} instance registering the given converters.
 	 *
-	 * @param converters
+	 * @param converters must not be {@literal null}.
 	 */
 	public CustomConversions(List<?> converters) {
 		super(converters);

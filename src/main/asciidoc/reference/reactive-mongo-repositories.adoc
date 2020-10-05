@@ -16,6 +16,8 @@ Spring Data's Repository abstraction is a dynamic API, mostly defined by you and
 * `ReactiveSortingRepository`
 * `RxJava2CrudRepository`
 * `RxJava2SortingRepository`
+* `RxJava3CrudRepository`
+* `RxJava3SortingRepository`
 
 Spring Data converts reactive wrapper types behind the scenes so that you can stick to your favorite composition library.
 
@@ -41,7 +43,10 @@ public class Person {
 ----
 ====
 
-Note that the entity defined in the preceding example has a property named `id` of type `ObjectId`. The default serialization mechanism used in `MongoTemplate` (which backs the repository support) regards properties named `id` as the document ID. Currently, we support `String`, `ObjectId`, and `BigInteger` as id-types. The following example shows how to create an interface that defines queries against the `Person` object from the preceding example:
+Note that the entity defined in the preceding example has a property named `id` of type `String`. The default serialization mechanism used in `MongoTemplate` (which backs the repository support) regards properties named `id` as the document ID. Currently, we support `String`, `ObjectId`, and `BigInteger` as id-types.
+Please see <<mongo-template.id-handling, ID mapping>> for more information about on how the `id` field is handled in the mapping layer.
+
+The following example shows how to create an interface that defines queries against the `Person` object from the preceding example:
 
 .Basic repository interface to persist Person entities
 ====
@@ -93,7 +98,7 @@ class ApplicationConfig extends AbstractReactiveMongoConfiguration {
 
   @Override
   protected String getMappingBasePackage() {
-    return "com.oreilly.springdata.mongodb"
+    return "com.oreilly.springdata.mongodb";
   }
 }
 ----
@@ -114,6 +119,20 @@ public class PersonRepositoryTests {
       Flux<Person> persons = repository.findAll(Sort.by(new Order(ASC, "lastname")));
     }
 }
+----
+====
+
+WARNING: The `Page` return type (as in `Mono<Page>`) is not supported by reactive repositories.
+
+It is possible to use `Pageable` in derived finder methods, to pass on `sort`, `limit` and `offset` parameters to the query to reduce load and network traffic.
+The returned `Flux` will only emit data within the declared range.
+
+.Limit and Offset with reactive repositories
+====
+[source,java]
+----
+Pageable page = PageRequest.of(1, 10, Sort.by("lastname"));
+Flux<Person> persons = repository.findByFirstnameOrderByLastname("luke", page);
 ----
 ====
 
@@ -143,7 +162,7 @@ The following example shows how to define a `near` query that finds all persons 
 ====
 [source,java]
 ----
-public interface PersonRepository extends ReactiveMongoRepository<Person, String>
+public interface PersonRepository extends ReactiveMongoRepository<Person, String> {
 
   // { 'location' : { '$near' : [point.x, point.y], '$maxDistance' : distance}}
   Flux<Person> findByLocationNear(Point location, Distance distance);
@@ -178,7 +197,7 @@ Spring Data MongoDB supports geo-near queries, as the following example shows:
 
 [source,java]
 ----
-public interface PersonRepository extends ReactiveMongoRepository<Person, String>
+public interface PersonRepository extends ReactiveMongoRepository<Person, String>  {
 
   // {'geoNear' : 'location', 'near' : [x, y] }
   Flux<GeoResult<Person>> findByLocationNear(Point location);
@@ -216,7 +235,7 @@ It provides the following features:
 
 See the http://www.querydsl.com/static/querydsl/latest/reference/html/[Querydsl documentation] for how to bootstrap your environment for APT-based code generation using Maven or Ant.
 
-The Querydsl repository support lets you write and execute queries such as the following:
+The Querydsl repository support lets you write and run queries, such as the following:
 
 [source,java]
 ----

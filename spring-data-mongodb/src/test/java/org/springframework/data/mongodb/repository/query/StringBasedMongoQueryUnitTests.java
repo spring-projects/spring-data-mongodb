@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.repository.query;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.Method;
@@ -28,14 +28,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import org.bson.BSON;
+import org.bson.BsonBinarySubType;
 import org.bson.Document;
+import org.bson.UuidRepresentation;
+import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.types.ObjectId;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import org.springframework.data.mongodb.core.DbCallback;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -56,6 +62,9 @@ import org.springframework.data.repository.query.QueryMethodEvaluationContextPro
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Base64Utils;
 
+import com.mongodb.MongoClientSettings;
+import com.mongodb.reactivestreams.client.MongoClients;
+
 /**
  * Unit tests for {@link StringBasedMongoQuery}.
  *
@@ -64,7 +73,8 @@ import org.springframework.util.Base64Utils;
  * @author Thomas Darimont
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class StringBasedMongoQueryUnitTests {
 
 	SpelExpressionParser PARSER = new SpelExpressionParser();
@@ -75,12 +85,13 @@ public class StringBasedMongoQueryUnitTests {
 
 	MongoConverter converter;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		this.converter = new MappingMongoConverter(factory, new MongoMappingContext());
 
 		doReturn(findOperation).when(operations).query(any());
+		doReturn(MongoClientSettings.getDefaultCodecRegistry()).when(operations).execute(any());
 	}
 
 	@Test
@@ -162,9 +173,9 @@ public class StringBasedMongoQueryUnitTests {
 		assertThat(mongoQuery.isDeleteQuery()).isTrue();
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-566
+	@Test // DATAMONGO-566
 	public void preventsDeleteAndCountFlagAtTheSameTime() {
-		createQueryForMethod("invalidMethod", String.class);
+		assertThatIllegalArgumentException().isThrownBy(() -> createQueryForMethod("invalidMethod", String.class));
 	}
 
 	@Test // DATAMONGO-420
@@ -318,7 +329,7 @@ public class StringBasedMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : { '$binary' : '"
-				+ Base64Utils.encodeToString(binaryData) + "', '$type' : '" + BSON.B_GENERAL + "'}}");
+				+ Base64Utils.encodeToString(binaryData) + "', '$type' : '" + BsonBinarySubType.BINARY.getValue() + "'}}");
 
 		assertThat(query.getQueryObject().toJson()).isEqualTo(reference.getQueryObject().toJson());
 	}
@@ -333,7 +344,7 @@ public class StringBasedMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery("{'lastname' : { $in: [{'$binary' : '"
-				+ Base64Utils.encodeToString(binaryData) + "', '$type' : '" + BSON.B_GENERAL + "'}] }}");
+				+ Base64Utils.encodeToString(binaryData) + "', '$type' : '" + BsonBinarySubType.BINARY.getValue() + "'}] }}");
 
 		assertThat(query.getQueryObject().toJson()).isEqualTo(reference.getQueryObject().toJson());
 	}
@@ -349,7 +360,18 @@ public class StringBasedMongoQueryUnitTests {
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery(
 				"{'lastname' : { $binary:\"5PHq4zvkTYa5WbZAgvtjNg==\", $type: \"03\"}}");
 
-		assertThat(query.getQueryObject().toJson()).isEqualTo(reference.getQueryObject().toJson());
+		// CodecRegistry registry =
+		// MongoClientSettings.builder().uuidRepresentation(UuidRepresentation.JAVA_LEGACY).build().getCodecRegistry();
+
+		// TODO: use OverridableUuidRepresentationCodecRegistry instead to save resources
+		CodecRegistry registry = MongoClients
+				.create(MongoClientSettings.builder().uuidRepresentation(UuidRepresentation.JAVA_LEGACY).build())
+				.getDatabase("database").getCodecRegistry();
+
+		// OverridableUuidRepresentationCodecRegistry
+
+		assertThat(query.getQueryObject().toJson(registry.get(Document.class)))
+				.isEqualTo(reference.getQueryObject().toJson());
 	}
 
 	@Test // DATAMONGO-2029
@@ -366,7 +388,36 @@ public class StringBasedMongoQueryUnitTests {
 		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery(
 				"{'lastname' : { $in: [{ $binary : \"5PHq4zvkTYa5WbZAgvtjNg==\", $type : \"03\" }, { $binary : \"5PH+yjvkTYa5WbZAgvtjNg==\", $type : \"03\" }]}}");
 
-		assertThat(query.getQueryObject().toJson()).isEqualTo(reference.getQueryObject().toJson());
+		// TODO: use OverridableUuidRepresentationCodecRegistry instead to save resources
+		CodecRegistry registry = MongoClients
+				.create(MongoClientSettings.builder().uuidRepresentation(UuidRepresentation.JAVA_LEGACY).build())
+				.getDatabase("database").getCodecRegistry();
+		assertThat(query.getQueryObject().toJson(registry.get(Document.class)))
+				.isEqualTo(reference.getQueryObject().toJson());
+	}
+
+	@Test // DATAMONGO-2427
+	public void shouldSupportNonQuotedUUIDCollectionReplacementWhenUsingNonLegacyUUIDCodec() {
+
+		// TODO: use OverridableUuidRepresentationCodecRegistry instead to save resources
+		CodecRegistry registry = MongoClients
+				.create(MongoClientSettings.builder().uuidRepresentation(UuidRepresentation.STANDARD).build())
+				.getDatabase("database").getCodecRegistry();
+		when(operations.execute(any(DbCallback.class))).thenReturn(registry);
+
+		UUID uuid1 = UUID.fromString("864de43b-e3ea-f1e4-3663-fb8240b659b9");
+		UUID uuid2 = UUID.fromString("864de43b-cafe-f1e4-3663-fb8240b659b9");
+
+		ConvertingParameterAccessor accessor = StubParameterAccessor.getAccessor(converter,
+				(Object) Arrays.asList(uuid1, uuid2));
+		StringBasedMongoQuery mongoQuery = createQueryForMethod("findByLastnameAsUUIDIn", List.class);
+
+		org.springframework.data.mongodb.core.query.Query query = mongoQuery.createQuery(accessor);
+		org.springframework.data.mongodb.core.query.Query reference = new BasicQuery(
+				"{'lastname' : { $in: [{ $binary : \"hk3kO+Pq8eQ2Y/uCQLZZuQ==\", $type : \"04\" }, { $binary : \"hk3kO8r+8eQ2Y/uCQLZZuQ==\", $type : \"04\" }]}}");
+
+		assertThat(query.getQueryObject().toJson(registry.get(Document.class)))
+				.isEqualTo(reference.getQueryObject().toJson());
 	}
 
 	@Test // DATAMONGO-1911
@@ -755,7 +806,8 @@ public class StringBasedMongoQueryUnitTests {
 		@Query("{ 'arg0' : '?0', 'arg1' : '?1s' }")
 		List<Person> findByWhenQuotedAndSomeStuffAppended(String arg0, String arg1);
 
-		@Query("{ 'lastname' : { '$regex' : '^(?0|John ?1|?1)'} }") // use spel or some regex string this is bad
+		@Query("{ 'lastname' : { '$regex' : '^(?0|John ?1|?1)'} }")
+		// use spel or some regex string this is bad
 		Person findByLastnameRegex(String lastname, String alternative);
 
 		@Query("{ arg0 : ?#{[0]} }")

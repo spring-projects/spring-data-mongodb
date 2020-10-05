@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,6 @@
  * limitations under the License.
  */
 package org.springframework.data.mongodb.core.query;
-
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 import java.util.Locale;
 import java.util.Optional;
@@ -81,7 +76,7 @@ public class Collation {
 	 * {@link java.util.Locale#getVariant()}.
 	 *
 	 * @param locale must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link Collation}.
 	 */
 	public static Collation of(Locale locale) {
 
@@ -102,7 +97,7 @@ public class Collation {
 	 * Create new {@link Collation} with locale set to the given ICU language.
 	 *
 	 * @param language must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link Collation}.
 	 */
 	public static Collation of(String language) {
 		return of(CollationLocale.of(language));
@@ -112,7 +107,7 @@ public class Collation {
 	 * Create new {@link Collation} with locale set to the given {@link CollationLocale}.
 	 *
 	 * @param locale must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link Collation}.
 	 */
 	public static Collation of(CollationLocale locale) {
 		return new Collation(locale);
@@ -139,7 +134,7 @@ public class Collation {
 	 * Create new {@link Collation} from values in {@link Document}.
 	 *
 	 * @param source must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link Collation}.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/collation/#collation-document">MongoDB Reference -
 	 *      Collation Document</a>
 	 */
@@ -181,7 +176,7 @@ public class Collation {
 	/**
 	 * Set the level of comparison to perform.
 	 *
-	 * @param strength
+	 * @param strength comparison level.
 	 * @return new {@link Collation}.
 	 */
 	public Collation strength(int strength) {
@@ -206,7 +201,7 @@ public class Collation {
 	/**
 	 * Set whether to include {@code caseLevel} comparison. <br />
 	 *
-	 * @param caseLevel
+	 * @param caseLevel use {@literal true} to enable {@code caseLevel} comparison.
 	 * @return new {@link Collation}.
 	 */
 	public Collation caseLevel(boolean caseLevel) {
@@ -220,7 +215,7 @@ public class Collation {
 	 * Set the flag that determines sort order of case differences during tertiary level comparisons.
 	 *
 	 * @param caseFirst must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link Collation}.
 	 */
 	public Collation caseFirst(String caseFirst) {
 		return caseFirst(new CaseFirst(caseFirst));
@@ -229,8 +224,8 @@ public class Collation {
 	/**
 	 * Set the flag that determines sort order of case differences during tertiary level comparisons.
 	 *
-	 * @param caseFirst must not be {@literal null}.
-	 * @return
+	 * @param sort must not be {@literal null}.
+	 * @return new instance of {@link Collation}.
 	 */
 	public Collation caseFirst(CaseFirst sort) {
 
@@ -372,7 +367,7 @@ public class Collation {
 	/**
 	 * Get the {@link Document} representation of the {@link Collation}.
 	 *
-	 * @return
+	 * @return the native MongoDB {@link Document} representation of the {@link Collation}.
 	 */
 	public Document toDocument() {
 		return map(toMongoDocumentConverter());
@@ -381,7 +376,7 @@ public class Collation {
 	/**
 	 * Get the {@link com.mongodb.client.model.Collation} representation of the {@link Collation}.
 	 *
-	 * @return
+	 * @return he native MongoDB representation of the {@link Collation}.
 	 */
 	public com.mongodb.client.model.Collation toMongoCollation() {
 		return map(toMongoCollationConverter());
@@ -390,9 +385,9 @@ public class Collation {
 	/**
 	 * Transform {@code this} {@link Collation} by applying a {@link Converter}.
 	 *
-	 * @param mapper
+	 * @param mapper must not be {@literal null}.
 	 * @param <R>
-	 * @return
+	 * @return the converted result.
 	 */
 	public <R> R map(Converter<? super Collation, ? extends R> mapper) {
 		return mapper.convert(this);
@@ -515,8 +510,6 @@ public class Collation {
 	 *
 	 * @since 2.0
 	 */
-	@AllArgsConstructor(access = AccessLevel.PACKAGE)
-	@Getter
 	static class ICUComparisonLevel implements ComparisonLevel {
 
 		private final int level;
@@ -525,6 +518,24 @@ public class Collation {
 
 		ICUComparisonLevel(int level) {
 			this(level, Optional.empty(), Optional.empty());
+		}
+
+		ICUComparisonLevel(int level, Optional<CaseFirst> caseFirst, Optional<Boolean> caseLevel) {
+			this.level = level;
+			this.caseFirst = caseFirst;
+			this.caseLevel = caseLevel;
+		}
+
+		public int getLevel() {
+			return this.level;
+		}
+
+		public Optional<CaseFirst> getCaseFirst() {
+			return this.caseFirst;
+		}
+
+		public Optional<Boolean> getCaseLevel() {
+			return this.caseLevel;
 		}
 	}
 
@@ -650,7 +661,6 @@ public class Collation {
 	/**
 	 * @since 2.0
 	 */
-	@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 	public static class CaseFirst {
 
 		private static final CaseFirst UPPER = new CaseFirst("upper");
@@ -658,6 +668,10 @@ public class Collation {
 		private static final CaseFirst OFF = new CaseFirst("off");
 
 		private final String state;
+
+		private CaseFirst(String state) {
+			this.state = state;
+		}
 
 		/**
 		 * Sort uppercase before lowercase.
@@ -690,13 +704,17 @@ public class Collation {
 	/**
 	 * @since 2.0
 	 */
-	@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 	public static class Alternate {
 
 		private static final Alternate NON_IGNORABLE = new Alternate("non-ignorable", Optional.empty());
 
 		final String alternate;
 		final Optional<String> maxVariable;
+
+		Alternate(String alternate, Optional<String> maxVariable) {
+			this.alternate = alternate;
+			this.maxVariable = maxVariable;
+		}
 
 		/**
 		 * Consider Whitespace and punctuation as base characters.
@@ -761,17 +779,22 @@ public class Collation {
 	 * @see <a href="http://site.icu-project.org">ICU - International Components for Unicode</a>
 	 * @since 2.0
 	 */
-	@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 	public static class CollationLocale {
 
 		private final String language;
 		private final Optional<String> variant;
 
+		private CollationLocale(String language, Optional<String> variant) {
+
+			this.language = language;
+			this.variant = variant;
+		}
+
 		/**
 		 * Create new {@link CollationLocale} for given language.
 		 *
 		 * @param language must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link CollationLocale}.
 		 */
 		public static CollationLocale of(String language) {
 
@@ -794,7 +817,7 @@ public class Collation {
 		/**
 		 * Get the string representation.
 		 *
-		 * @return
+		 * @return the collation {@link String} in Mongo ICU format.
 		 */
 		public String asString() {
 

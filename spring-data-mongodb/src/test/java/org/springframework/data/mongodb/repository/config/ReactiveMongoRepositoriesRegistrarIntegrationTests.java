@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository.config;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -25,17 +26,16 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.repository.ReactivePersonRepository;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import com.mongodb.reactivestreams.client.MongoClients;
+import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * Integration tests for {@link ReactiveMongoRepositoriesRegistrar}.
  *
  * @author Mark Paluch
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration
 public class ReactiveMongoRepositoriesRegistrarIntegrationTests {
 
@@ -45,7 +45,8 @@ public class ReactiveMongoRepositoriesRegistrarIntegrationTests {
 
 		@Bean
 		public ReactiveMongoTemplate reactiveMongoTemplate() throws Exception {
-			return new ReactiveMongoTemplate(new SimpleReactiveMongoDatabaseFactory(MongoClients.create(), "database"));
+			return new ReactiveMongoTemplate(
+					new SimpleReactiveMongoDatabaseFactory(MongoTestUtils.reactiveClient(), "database"));
 		}
 	}
 

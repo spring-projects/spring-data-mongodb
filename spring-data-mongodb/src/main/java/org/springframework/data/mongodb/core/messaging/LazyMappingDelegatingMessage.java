@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.core.messaging;
 
-import lombok.ToString;
-
 import org.bson.Document;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.util.ClassUtils;
@@ -26,7 +24,6 @@ import org.springframework.util.ClassUtils;
  * @author Mark Paluch
  * @since 2.1
  */
-@ToString(of = { "delegate", "targetType" })
 class LazyMappingDelegatingMessage<S, T> implements Message<S, T> {
 
 	private final Message<S, ?> delegate;
@@ -81,5 +78,9 @@ class LazyMappingDelegatingMessage<S, T> implements Message<S, T> {
 	@Override
 	public MessageProperties getProperties() {
 		return delegate.getProperties();
+	}
+
+	public String toString() {
+		return "LazyMappingDelegatingMessage(delegate=" + this.delegate + ", targetType=" + this.targetType + ")";
 	}
 }

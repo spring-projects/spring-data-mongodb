@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,34 +20,37 @@ import static org.assertj.core.api.Assumptions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.repository.VersionedPerson;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
-import org.springframework.data.mongodb.test.util.MongoVersion;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.mongodb.test.util.ReplicaSet;
-import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
 
 /**
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration
 public class SimpleMongoRepositoryVersionedEntityTests {
 
@@ -56,24 +59,28 @@ public class SimpleMongoRepositoryVersionedEntityTests {
 
 		@Override
 		public MongoClient mongoClient() {
-			return MongoClients.create();
+			return MongoTestUtils.client();
 		}
 
 		@Override
 		protected String getDatabaseName() {
 			return "database";
 		}
+
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+			return new HashSet<>(Arrays.asList(VersionedPerson.class));
+		}
 	}
 
-	@Autowired //
-	private MongoTemplate template;
+	@Autowired private MongoTemplate template;
 
 	private MongoEntityInformation<VersionedPerson, String> personEntityInformation;
 	private SimpleMongoRepository<VersionedPerson, String> repository;
 
 	private VersionedPerson sarah;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		MongoPersistentEntity entity = template.getConverter().getMappingContext()
@@ -95,7 +102,7 @@ public class SimpleMongoRepositoryVersionedEntityTests {
 	}
 
 	@Test // DATAMONGO-2195
-	@MongoVersion(asOf = "4.0")
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
 	public void deleteWithMatchingVersionInTx() {
 
 		assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
@@ -124,7 +131,7 @@ public class SimpleMongoRepositoryVersionedEntityTests {
 	}
 
 	@Test // DATAMONGO-2195
-	@MongoVersion(asOf = "4.0")
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
 	public void deleteWithVersionMismatchInTx() {
 
 		assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();
@@ -151,7 +158,7 @@ public class SimpleMongoRepositoryVersionedEntityTests {
 	}
 
 	@Test // DATAMONGO-2195
-	@MongoVersion(asOf = "4.0")
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
 	public void deleteNonExistingInTx() {
 
 		assumeThat(ReplicaSet.required().runsAsReplicaSet()).isTrue();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -91,7 +91,7 @@ abstract class GeoConverters {
 	/**
 	 * Returns the geo converters to be registered.
 	 *
-	 * @return
+	 * @return never {@literal null}.
 	 */
 	@SuppressWarnings("unchecked")
 	public static Collection<? extends Object> getConvertersToRegister() {
@@ -817,8 +817,8 @@ abstract class GeoConverters {
 	/**
 	 * Converts a coordinate pairs nested in in {@link BasicDBList} into {@link GeoJsonPoint}s.
 	 *
-	 * @param listOfCoordinatePairs
-	 * @return
+	 * @param listOfCoordinatePairs must not be {@literal null}.
+	 * @return never {@literal null}.
 	 * @since 1.7
 	 */
 	@SuppressWarnings("unchecked")
@@ -841,8 +841,8 @@ abstract class GeoConverters {
 	/**
 	 * Converts a coordinate pairs nested in in {@link BasicDBList} into {@link GeoJsonPolygon}.
 	 *
-	 * @param dbList
-	 * @return
+	 * @param dbList must not be {@literal null}.
+	 * @return never {@literal null}.
 	 * @since 1.7
 	 */
 	static GeoJsonPolygon toGeoJsonPolygon(List dbList) {

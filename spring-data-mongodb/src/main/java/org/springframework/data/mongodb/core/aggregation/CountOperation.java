@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,9 +34,9 @@ public class CountOperation implements FieldsExposingAggregationOperation {
 	private final String fieldName;
 
 	/**
-	 * Creates a new {@link CountOperation} given the {@link fieldName} field name.
+	 * Creates a new {@link CountOperation} given the {@literal fieldName} field name.
 	 *
-	 * @param asFieldName must not be {@literal null} or empty.
+	 * @param fieldName must not be {@literal null} or empty.
 	 */
 	public CountOperation(String fieldName) {
 
@@ -49,7 +49,12 @@ public class CountOperation implements FieldsExposingAggregationOperation {
 	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
-		return new Document("$count", fieldName);
+		return new Document(getOperator(), fieldName);
+	}
+
+	@Override
+	public String getOperator() {
+		return "$count";
 	}
 
 	/* (non-Javadoc)
@@ -71,7 +76,7 @@ public class CountOperation implements FieldsExposingAggregationOperation {
 		 * Returns the finally to be applied {@link CountOperation} with the given alias.
 		 *
 		 * @param fieldName must not be {@literal null} or empty.
-		 * @return
+		 * @return new instance of {@link CountOperation}.
 		 */
 		public CountOperation as(String fieldName) {
 			return new CountOperation(fieldName);

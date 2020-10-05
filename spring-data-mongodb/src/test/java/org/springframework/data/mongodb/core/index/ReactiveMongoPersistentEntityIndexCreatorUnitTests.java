@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,12 +24,15 @@ import reactor.test.StepVerifier;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoExceptionTranslator;
@@ -47,26 +50,28 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * Unit tests for {@link ReactiveMongoPersistentEntityIndexCreator}.
  *
  * @author Mark Paluch
+ * @author Mathieu Ouellet
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class ReactiveMongoPersistentEntityIndexCreatorUnitTests {
 
-	ReactiveIndexOperations indexOperations;
+	private ReactiveIndexOperations indexOperations;
 
 	@Mock ReactiveMongoDatabaseFactory factory;
 	@Mock MongoDatabase db;
 	@Mock MongoCollection<org.bson.Document> collection;
 
-	ArgumentCaptor<org.bson.Document> keysCaptor;
-	ArgumentCaptor<IndexOptions> optionsCaptor;
-	ArgumentCaptor<String> collectionCaptor;
+	private ArgumentCaptor<org.bson.Document> keysCaptor;
+	private ArgumentCaptor<IndexOptions> optionsCaptor;
+	private ArgumentCaptor<String> collectionCaptor;
 
-	@Before
+	@BeforeEach
 	@SuppressWarnings("unchecked")
-	public void setUp() {
+	void setUp() {
 
 		when(factory.getExceptionTranslator()).thenReturn(new MongoExceptionTranslator());
-		when(factory.getMongoDatabase()).thenReturn(db);
+		when(factory.getMongoDatabase()).thenReturn(Mono.just(db));
 		when(db.getCollection(any(), any(Class.class))).thenReturn(collection);
 
 		indexOperations = new ReactiveMongoTemplate(factory).indexOps("foo");
@@ -79,7 +84,7 @@ public class ReactiveMongoPersistentEntityIndexCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-1928
-	public void buildsIndexDefinitionUsingFieldName() {
+	void buildsIndexDefinitionUsingFieldName() {
 
 		MongoMappingContext mappingContext = prepareMappingContext(Person.class);
 
@@ -96,7 +101,7 @@ public class ReactiveMongoPersistentEntityIndexCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-1928
-	public void createIndexShouldUsePersistenceExceptionTranslatorForNonDataIntegrityConcerns() {
+	void createIndexShouldUsePersistenceExceptionTranslatorForNonDataIntegrityConcerns() {
 
 		when(collection.createIndex(any(org.bson.Document.class), any(IndexOptions.class)))
 				.thenReturn(Mono.error(new MongoException(6, "HostUnreachable")));
@@ -109,7 +114,7 @@ public class ReactiveMongoPersistentEntityIndexCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-1928
-	public void createIndexShouldNotConvertUnknownExceptionTypes() {
+	void createIndexShouldNotConvertUnknownExceptionTypes() {
 
 		when(collection.createIndex(any(org.bson.Document.class), any(IndexOptions.class)))
 				.thenReturn(Mono.error(new ClassCastException("o_O")));

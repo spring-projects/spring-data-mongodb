@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 	/**
 	 * Returns an empty {@link ExposedFields} instance.
 	 *
-	 * @return
+	 * @return never {@literal null}.
 	 * @since 2.0
 	 */
 	public static ExposedFields empty() {
@@ -57,7 +57,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 	 * Creates a new {@link ExposedFields} instance from the given {@link ExposedField}s.
 	 *
 	 * @param fields must not be {@literal null}.
-	 * @return
+	 * @return never {@literal null}.
 	 */
 	public static ExposedFields from(ExposedField... fields) {
 		return from(Arrays.asList(fields));
@@ -67,7 +67,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 	 * Creates a new {@link ExposedFields} instance from the given {@link ExposedField}s.
 	 *
 	 * @param fields must not be {@literal null}.
-	 * @return
+	 * @return never {@literal null}.
 	 */
 	private static ExposedFields from(List<ExposedField> fields) {
 
@@ -84,7 +84,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 	 * Creates synthetic {@link ExposedFields} from the given {@link Fields}.
 	 *
 	 * @param fields must not be {@literal null}.
-	 * @return
+	 * @return never {@literal null}.
 	 */
 	public static ExposedFields synthetic(Fields fields) {
 		return createFields(fields, true);
@@ -94,7 +94,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 	 * Creates non-synthetic {@link ExposedFields} from the given {@link Fields}.
 	 *
 	 * @param fields must not be {@literal null}.
-	 * @return
+	 * @return never {@literal null}.
 	 */
 	public static ExposedFields nonSynthetic(Fields fields) {
 		return createFields(fields, false);
@@ -105,7 +105,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 	 *
 	 * @param fields must not be {@literal null}.
 	 * @param synthetic
-	 * @return
+	 * @return never {@literal null}.
 	 */
 	private static ExposedFields createFields(Fields fields, boolean synthetic) {
 
@@ -135,7 +135,7 @@ public final class ExposedFields implements Iterable<ExposedField> {
 	 * Creates a new {@link ExposedFields} adding the given {@link ExposedField}.
 	 *
 	 * @param field must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link ExposedFields}.
 	 */
 	public ExposedFields and(ExposedField field) {
 
@@ -151,8 +151,8 @@ public final class ExposedFields implements Iterable<ExposedField> {
 	/**
 	 * Returns the field with the given name or {@literal null} if no field with the given name is available.
 	 *
-	 * @param name
-	 * @return
+	 * @param name must not be {@literal null}.
+	 * @return can be {@literal null}.
 	 */
 	@Nullable
 	public ExposedField getField(String name) {

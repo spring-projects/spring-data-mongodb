@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,11 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.hamcrest.Matchers.*;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
-import org.junit.Test;
-
 import org.bson.Document;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link BucketOperation}.
@@ -31,9 +28,9 @@ import org.bson.Document;
  */
 public class BucketOperationUnitTests {
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1552
+	@Test // DATAMONGO-1552
 	public void rejectsNullFields() {
-		new BucketOperation((Field) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> new BucketOperation((Field) null));
 	}
 
 	@Test // DATAMONGO-1552
@@ -44,13 +41,13 @@ public class BucketOperationUnitTests {
 				.andOutput("title").push().as("titles");
 
 		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		assertThat(extractOutput(dbObject), is(Document.parse(
-				"{ \"grossSalesPrice\" : { \"$multiply\" : [ { \"$add\" : [ \"$netPrice\" , \"$surCharge\"]} , \"$taxrate\" , 2]} , \"titles\" : { $push: \"$title\" } }}")));
+		assertThat(extractOutput(dbObject)).isEqualTo(Document.parse(
+				"{ \"grossSalesPrice\" : { \"$multiply\" : [ { \"$add\" : [ \"$netPrice\" , \"$surCharge\"]} , \"$taxrate\" , 2]} , \"titles\" : { $push: \"$title\" } }}"));
 	}
 
-	@Test(expected = IllegalStateException.class) // DATAMONGO-1552
+	@Test // DATAMONGO-1552
 	public void shouldRenderEmptyAggregationExpression() {
-		bucket("groupby").andOutput("field").as("alias");
+		assertThatIllegalStateException().isThrownBy(() -> bucket("groupby").andOutput("field").as("alias"));
 	}
 
 	@Test // DATAMONGO-1552
@@ -60,7 +57,7 @@ public class BucketOperationUnitTests {
 				.andOutputCount().as("titles");
 
 		Document agg = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		assertThat(extractOutput(agg), is(Document.parse("{ titles : { $sum: 1 } }")));
+		assertThat(extractOutput(agg)).isEqualTo(Document.parse("{ titles : { $sum: 1 } }"));
 	}
 
 	@Test // DATAMONGO-1552
@@ -70,8 +67,8 @@ public class BucketOperationUnitTests {
 				.andOutput(ArithmeticOperators.valueOf("quizzes").sum()).as("quizTotal") //
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse(
-				"{ $bucket: { groupBy: \"$field\", boundaries: [],  output : { quizTotal: { $sum: \"$quizzes\"} } } }")));
+		assertThat(agg).isEqualTo(Document
+				.parse("{ $bucket: { groupBy: \"$field\", boundaries: [],  output : { quizTotal: { $sum: \"$quizzes\"} } } }"));
 	}
 
 	@Test // DATAMONGO-1552
@@ -79,8 +76,8 @@ public class BucketOperationUnitTests {
 
 		Document agg = bucket("field").withDefaultBucket("default bucket").toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $bucket: { groupBy: \"$field\", boundaries: [],  default: \"default bucket\" } }")));
+		assertThat(agg).isEqualTo(
+				Document.parse("{ $bucket: { groupBy: \"$field\", boundaries: [],  default: \"default bucket\" } }"));
 	}
 
 	@Test // DATAMONGO-1552
@@ -91,8 +88,8 @@ public class BucketOperationUnitTests {
 				.withBoundaries(0) //
 				.withBoundaries(10, 20).toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg,
-				is(Document.parse("{ $bucket: { boundaries: [0, 10, 20],  default: \"default bucket\", groupBy: \"$field\" } }")));
+		assertThat(agg).isEqualTo(
+				Document.parse("{ $bucket: { boundaries: [0, 10, 20],  default: \"default bucket\", groupBy: \"$field\" } }"));
 	}
 
 	@Test // DATAMONGO-1552
@@ -102,7 +99,7 @@ public class BucketOperationUnitTests {
 				.andOutput("score").sum().as("cummulated_score");
 
 		Document agg = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		assertThat(extractOutput(agg), is(Document.parse("{ cummulated_score : { $sum: \"$score\" } }")));
+		assertThat(extractOutput(agg)).isEqualTo(Document.parse("{ cummulated_score : { $sum: \"$score\" } }"));
 	}
 
 	@Test // DATAMONGO-1552
@@ -112,7 +109,7 @@ public class BucketOperationUnitTests {
 				.andOutput("score").sum(4).as("cummulated_score");
 
 		Document agg = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		assertThat(extractOutput(agg), is(Document.parse("{ cummulated_score : { $sum: 4 } }")));
+		assertThat(extractOutput(agg)).isEqualTo(Document.parse("{ cummulated_score : { $sum: 4 } }"));
 	}
 
 	@Test // DATAMONGO-1552
@@ -122,7 +119,7 @@ public class BucketOperationUnitTests {
 				.andOutput("score").avg().as("average");
 
 		Document agg = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		assertThat(extractOutput(agg), is(Document.parse("{ average : { $avg: \"$score\" } }")));
+		assertThat(extractOutput(agg)).isEqualTo(Document.parse("{ average : { $avg: \"$score\" } }"));
 	}
 
 	@Test // DATAMONGO-1552
@@ -132,7 +129,7 @@ public class BucketOperationUnitTests {
 				.andOutput("title").first().as("first_title");
 
 		Document agg = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		assertThat(extractOutput(agg), is(Document.parse("{ first_title : { $first: \"$title\" } }")));
+		assertThat(extractOutput(agg)).isEqualTo(Document.parse("{ first_title : { $first: \"$title\" } }"));
 	}
 
 	@Test // DATAMONGO-1552
@@ -142,7 +139,7 @@ public class BucketOperationUnitTests {
 				.andOutput("title").last().as("last_title");
 
 		Document agg = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		assertThat(extractOutput(agg), is(Document.parse("{ last_title : { $last: \"$title\" } }")));
+		assertThat(extractOutput(agg)).isEqualTo(Document.parse("{ last_title : { $last: \"$title\" } }"));
 	}
 
 	@Test // DATAMONGO-1552
@@ -152,7 +149,7 @@ public class BucketOperationUnitTests {
 				.andOutput("score").min().as("min_score");
 
 		Document agg = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		assertThat(extractOutput(agg), is(Document.parse("{ min_score : { $min: \"$score\" } }")));
+		assertThat(extractOutput(agg)).isEqualTo(Document.parse("{ min_score : { $min: \"$score\" } }"));
 	}
 
 	@Test // DATAMONGO-1552
@@ -162,7 +159,7 @@ public class BucketOperationUnitTests {
 				.andOutput("title").push().as("titles");
 
 		Document agg = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		assertThat(extractOutput(agg), is(Document.parse("{ titles : { $push: \"$title\" } }")));
+		assertThat(extractOutput(agg)).isEqualTo(Document.parse("{ titles : { $push: \"$title\" } }"));
 	}
 
 	@Test // DATAMONGO-1552
@@ -172,7 +169,7 @@ public class BucketOperationUnitTests {
 				.andOutput("title").addToSet().as("titles");
 
 		Document agg = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		assertThat(extractOutput(agg), is(Document.parse("{ titles : { $addToSet: \"$title\" } }")));
+		assertThat(extractOutput(agg)).isEqualTo(Document.parse("{ titles : { $addToSet: \"$title\" } }"));
 	}
 
 	@Test // DATAMONGO-1552
@@ -182,7 +179,8 @@ public class BucketOperationUnitTests {
 				.andOutputExpression("netPrice + tax").sum().as("total");
 
 		Document agg = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		assertThat(extractOutput(agg), is(Document.parse("{ total : { $sum: { $add : [\"$netPrice\", \"$tax\"]} } }")));
+		assertThat(extractOutput(agg))
+				.isEqualTo(Document.parse("{ total : { $sum: { $add : [\"$netPrice\", \"$tax\"]} } }"));
 	}
 
 	@Test // DATAMONGO-1552
@@ -192,8 +190,8 @@ public class BucketOperationUnitTests {
 				.andOutputExpression("netPrice + tax").apply("$multiply", 5).as("total");
 
 		Document agg = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		assertThat(extractOutput(agg),
-				is(Document.parse("{ total : { $multiply: [ {$add : [\"$netPrice\", \"$tax\"]}, 5] } }")));
+		assertThat(extractOutput(agg))
+				.isEqualTo(Document.parse("{ total : { $multiply: [ {$add : [\"$netPrice\", \"$tax\"]}, 5] } }"));
 	}
 
 	@Test // DATAMONGO-1552
@@ -201,8 +199,8 @@ public class BucketOperationUnitTests {
 
 		BucketOperation operation = bucket("field");
 
-		assertThat(operation.getFields().exposesSingleFieldOnly(), is(true));
-		assertThat(operation.getFields().getField("count"), is(notNullValue()));
+		assertThat(operation.getFields().exposesSingleFieldOnly()).isTrue();
+		assertThat(operation.getFields().getField("count")).isNotNull();
 	}
 
 	private static Document extractOutput(Document fromBucketClause) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.bson.UuidRepresentation;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
@@ -31,10 +32,14 @@ import org.springframework.data.mapping.model.CamelCaseAbbreviatingFieldNamingSt
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions.MongoConverterConfigurationAdapter;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
+
+import com.mongodb.MongoClientSettings;
+import com.mongodb.MongoClientSettings.Builder;
 
 /**
  * Base class for Spring Data MongoDB to be extended for JavaConfiguration usage.
@@ -75,11 +80,12 @@ public abstract class MongoConfigurationSupport {
 	 * @throws ClassNotFoundException
 	 */
 	@Bean
-	public MongoMappingContext mongoMappingContext() throws ClassNotFoundException {
+	public MongoMappingContext mongoMappingContext(MongoCustomConversions customConversions)
+			throws ClassNotFoundException {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		mappingContext.setInitialEntitySet(getInitialEntitySet());
-		mappingContext.setSimpleTypeHolder(customConversions().getSimpleTypeHolder());
+		mappingContext.setSimpleTypeHolder(customConversions.getSimpleTypeHolder());
 		mappingContext.setFieldNamingStrategy(fieldNamingStrategy());
 		mappingContext.setAutoIndexCreation(autoIndexCreation());
 
@@ -88,14 +94,30 @@ public abstract class MongoConfigurationSupport {
 
 	/**
 	 * Register custom {@link Converter}s in a {@link CustomConversions} object if required. These
-	 * {@link CustomConversions} will be registered with the {@link #mappingMongoConverter()} and
-	 * {@link #mongoMappingContext()}. Returns an empty {@link MongoCustomConversions} instance by default.
+	 * {@link CustomConversions} will be registered with the
+	 * {@link org.springframework.data.mongodb.core.convert.MappingMongoConverter} and {@link MongoMappingContext}.
+	 * Returns an empty {@link MongoCustomConversions} instance by default.
+	 * <p>
+	 * <strong>NOTE:</strong> Use {@link #configureConverters(MongoConverterConfigurationAdapter)} to configure MongoDB
+	 * native simple types and register custom {@link Converter converters}.
 	 *
 	 * @return must not be {@literal null}.
 	 */
 	@Bean
-	public CustomConversions customConversions() {
-		return new MongoCustomConversions(Collections.emptyList());
+	public MongoCustomConversions customConversions() {
+		return MongoCustomConversions.create(this::configureConverters);
+	}
+
+	/**
+	 * Configuration hook for {@link MongoCustomConversions} creation.
+	 *
+	 * @param converterConfigurationAdapter never {@literal null}.
+	 * @since 2.3
+	 * @see MongoConverterConfigurationAdapter#useNativeDriverJavaTimeCodecs()
+	 * @see MongoConverterConfigurationAdapter#useSpringDataJavaTimeCodecs()
+	 */
+	protected void configureConverters(MongoConverterConfigurationAdapter converterConfigurationAdapter) {
+
 	}
 
 	/**
@@ -177,11 +199,36 @@ public abstract class MongoConfigurationSupport {
 	 * Configure whether to automatically create indices for domain types by deriving the
 	 * {@link org.springframework.data.mongodb.core.index.IndexDefinition} from the entity or not.
 	 *
-	 * @return {@literal true} by default. <br />
-	 *         <strong>INFO</strong>: As of 3.x the default will be set to {@literal false}.
+	 * @return {@literal false} by default. <br />
+	 *         <strong>INFO</strong>: As of 3.x the default is set to {@literal false}; In 2.x it was {@literal true}.
 	 * @since 2.2
 	 */
 	protected boolean autoIndexCreation() {
-		return true;
+		return false;
+	}
+
+	/**
+	 * Return the {@link MongoClientSettings} used to create the actual {@literal MongoClient}. <br />
+	 * Override either this method, or use {@link #configureClientSettings(Builder)} to alter the setup.
+	 *
+	 * @return never {@literal null}.
+	 * @since 3.0
+	 */
+	protected MongoClientSettings mongoClientSettings() {
+
+		MongoClientSettings.Builder builder = MongoClientSettings.builder();
+		builder.uuidRepresentation(UuidRepresentation.JAVA_LEGACY);
+		configureClientSettings(builder);
+		return builder.build();
+	}
+
+	/**
+	 * Configure {@link MongoClientSettings} via its {@link Builder} API.
+	 *
+	 * @param builder never {@literal null}.
+	 * @since 3.0
+	 */
+	protected void configureClientSettings(MongoClientSettings.Builder builder) {
+		// customization hook
 	}
 }

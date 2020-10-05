@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,8 +42,7 @@ public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersis
 	private static final FieldNamingStrategy DEFAULT_NAMING_STRATEGY = PropertyNameFieldNamingStrategy.INSTANCE;
 
 	private FieldNamingStrategy fieldNamingStrategy = DEFAULT_NAMING_STRATEGY;
-	private @Nullable ApplicationContext context;
-	private boolean autoIndexCreation = true;
+	private boolean autoIndexCreation = false;
 
 	/**
 	 * Creates a new {@link MongoMappingContext}.
@@ -99,8 +98,6 @@ public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersis
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 
 		super.setApplicationContext(applicationContext);
-
-		this.context = applicationContext;
 	}
 
 	/**
@@ -108,7 +105,8 @@ public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersis
 	 * <strong>NOTE:</strong>Index creation should happen at a well-defined time that is ideally controlled by the
 	 * application itself.
 	 *
-	 * @return {@literal true} when auto-index creation is enabled; {@literal false} otherwise.
+	 * @return {@literal true} when auto-index creation is enabled; {@literal false} otherwise. <br />
+	 *         <strong>INFO</strong>: As of 3.x the default will is set to {@literal false} was {@literal true} in 2.x.
 	 * @since 2.2
 	 * @see org.springframework.data.mongodb.core.index.Indexed
 	 */
@@ -121,7 +119,7 @@ public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersis
 	 * <strong>NOTE:</strong>Index creation should happen at a well-defined time that is ideally controlled by the
 	 * application itself.
 	 *
-	 * @param autoCreateIndexes set to {@literal false} to disable auto-index creation.
+	 * @param autoCreateIndexes set to {@literal true} to enable auto-index creation.
 	 * @since 2.2
 	 * @see org.springframework.data.mongodb.core.index.Indexed
 	 */

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the original author or authors.
+ * Copyright 2010-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import org.bson.Document;
+import org.springframework.lang.Nullable;
 
 /**
  * @author Thomas Risberg
@@ -42,7 +43,7 @@ public class BasicUpdate extends Update {
 	}
 
 	@Override
-	public Update set(String key, Object value) {
+	public Update set(String key, @Nullable Object value) {
 		updateObject.put("$set", Collections.singletonMap(key, value));
 		return this;
 	}
@@ -60,12 +61,13 @@ public class BasicUpdate extends Update {
 	}
 
 	@Override
-	public Update push(String key, Object value) {
+	public Update push(String key, @Nullable Object value) {
 		updateObject.put("$push", Collections.singletonMap(key, value));
 		return this;
 	}
 
 	@Override
+	@Deprecated
 	public Update pushAll(String key, Object[] values) {
 		Document keyValue = new Document();
 		keyValue.put(key, values);
@@ -74,7 +76,7 @@ public class BasicUpdate extends Update {
 	}
 
 	@Override
-	public Update addToSet(String key, Object value) {
+	public Update addToSet(String key, @Nullable Object value) {
 		updateObject.put("$addToSet", Collections.singletonMap(key, value));
 		return this;
 	}
@@ -86,7 +88,7 @@ public class BasicUpdate extends Update {
 	}
 
 	@Override
-	public Update pull(String key, Object value) {
+	public Update pull(String key, @Nullable Object value) {
 		updateObject.put("$pull", Collections.singletonMap(key, value));
 		return this;
 	}

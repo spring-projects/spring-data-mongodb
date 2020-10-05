@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 
 import org.springframework.data.mongodb.core.mapreduce.MapReduceOptions;
@@ -31,12 +29,15 @@ import org.springframework.util.StringUtils;
  * @author Christoph Strobl
  * @since 2.1
  */
-@RequiredArgsConstructor
 class ReactiveMapReduceOperationSupport implements ReactiveMapReduceOperation {
 
 	private static final Query ALL_QUERY = new Query();
 
-	private final @NonNull ReactiveMongoTemplate template;
+	private final ReactiveMongoTemplate template;
+
+	ReactiveMapReduceOperationSupport(ReactiveMongoTemplate template) {
+		this.template = template;
+	}
 
 	/*
 	 * (non-Javascript)
@@ -171,7 +172,7 @@ class ReactiveMapReduceOperationSupport implements ReactiveMapReduceOperation {
 		}
 
 		private String getCollectionName() {
-			return StringUtils.hasText(collection) ? collection : template.determineCollectionName(domainType);
+			return StringUtils.hasText(collection) ? collection : template.getCollectionName(domainType);
 		}
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 package org.springframework.data.mongodb.core.schema;
-
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -132,7 +129,7 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 	/**
 	 * The field value must not match the specified schemas.
 	 *
-	 * @param oneOf must not be {@literal null}.
+	 * @param notMatch must not be {@literal null}.
 	 * @return new instance of {@link TypedJsonSchemaObject}.
 	 */
 	public UntypedJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
@@ -182,7 +179,6 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 	 * @author Christoph Strobl
 	 * @since 2.1
 	 */
-	@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 	static class Restrictions {
 
 		private final Collection<? extends Object> possibleValues;
@@ -190,6 +186,16 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 		private final Collection<JsonSchemaObject> anyOf;
 		private final Collection<JsonSchemaObject> oneOf;
 		private final @Nullable JsonSchemaObject notMatch;
+
+		Restrictions(Collection<? extends Object> possibleValues, Collection<JsonSchemaObject> allOf,
+				Collection<JsonSchemaObject> anyOf, Collection<JsonSchemaObject> oneOf, JsonSchemaObject notMatch) {
+
+			this.possibleValues = possibleValues;
+			this.allOf = allOf;
+			this.anyOf = anyOf;
+			this.oneOf = oneOf;
+			this.notMatch = notMatch;
+		}
 
 		/**
 		 * @return new empty {@link Restrictions}.

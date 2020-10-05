@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import lombok.experimental.UtilityClass;
-
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,6 +24,7 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.util.json.ParameterBindingContext;
 import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.NumberUtils;
@@ -39,11 +38,13 @@ import org.springframework.util.StringUtils;
  * @author Christoph Strobl
  * @since 2.2
  */
-@UtilityClass
-class CollationUtils {
+abstract class CollationUtils {
 
 	private static final ParameterBindingDocumentCodec CODEC = new ParameterBindingDocumentCodec();
 	private static final Pattern PARAMETER_BINDING_PATTERN = Pattern.compile("\\?(\\d+)");
+
+	private CollationUtils() {
+	}
 
 	/**
 	 * Compute the {@link Collation} by inspecting the {@link ConvertingParameterAccessor#getCollation() parameter
@@ -59,7 +60,7 @@ class CollationUtils {
 	 */
 	@Nullable
 	static Collation computeCollation(@Nullable String collationExpression, ConvertingParameterAccessor accessor,
-			MongoParameters parameters, SpelExpressionParser expressionParser,
+			MongoParameters parameters, ExpressionParser expressionParser,
 			QueryMethodEvaluationContextProvider evaluationContextProvider) {
 
 		if (accessor.getCollation() != null) {
@@ -72,8 +73,9 @@ class CollationUtils {
 
 		if (StringUtils.trimLeadingWhitespace(collationExpression).startsWith("{")) {
 
-			ParameterBindingContext bindingContext = new ParameterBindingContext((accessor::getBindableValue),
-					expressionParser, evaluationContextProvider.getEvaluationContext(parameters, accessor.getValues()));
+			ParameterBindingContext bindingContext = ParameterBindingContext.forExpressions(accessor::getBindableValue,
+					expressionParser, dependencies -> evaluationContextProvider.getEvaluationContext(parameters,
+							accessor.getValues(), dependencies));
 
 			return Collation.from(CODEC.decode(collationExpression, bindingContext));
 		}

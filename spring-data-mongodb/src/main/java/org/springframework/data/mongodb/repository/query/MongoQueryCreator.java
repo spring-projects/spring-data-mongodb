@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the original author or authors.
+ * Copyright 2010-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,11 +36,13 @@ import org.springframework.data.geo.Shape;
 import org.springframework.data.mapping.PersistentPropertyPath;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mongodb.core.geo.GeoJson;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
+import org.springframework.data.mongodb.core.query.MetricConversion;
 import org.springframework.data.mongodb.core.query.MongoRegexCreator;
 import org.springframework.data.mongodb.core.query.MongoRegexCreator.MatchMode;
 import org.springframework.data.mongodb.core.query.Query;
@@ -235,8 +237,14 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 						criteria.near(pointToUse);
 					}
 
-					criteria.maxDistance(it.getNormalizedValue());
-					minDistance.ifPresent(min -> criteria.minDistance(min.getNormalizedValue()));
+					if (pointToUse instanceof GeoJson) { // using GeoJson distance is in meters.
+
+						criteria.maxDistance(MetricConversion.getDistanceInMeters(it));
+						minDistance.map(MetricConversion::getDistanceInMeters).ifPresent(criteria::minDistance);
+					} else {
+						criteria.maxDistance(it.getNormalizedValue());
+						minDistance.map(Distance::getNormalizedValue).ifPresent(criteria::minDistance);
+					}
 
 					return criteria;
 

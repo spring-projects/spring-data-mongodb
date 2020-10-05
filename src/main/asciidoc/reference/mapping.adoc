@@ -1,3 +1,4 @@
+
 [[mapping-chapter]]
 = Mapping
 
@@ -177,14 +178,24 @@ calling `get()` before the actual conversion
 | converter
 | `{"currencyCode" : "EUR"}`
 
+| `Instant` +
+(Java 8)
+| native
+| `{"date" : ISODate("2019-11-12T23:00:00.809Z")}`
+
+| `Instant` +
+(Joda, JSR310-BackPort)
+| converter
+| `{"date" : ISODate("2019-11-12T23:00:00.809Z")}`
+
 | `LocalDate` +
 (Joda, Java 8, JSR310-BackPort)
-| converter
+| converter / native (Java8)footnote:[Uses UTC zone offset. Configure via <<mapping-configuration,MongoConverterConfigurationAdapter>>]
 | `{"date" : ISODate("2019-11-12T00:00:00.000Z")}`
 
-| `LocalDateTime`, `LocalTime`, `Instant` +
+| `LocalDateTime`, `LocalTime` +
 (Joda, Java 8, JSR310-BackPort)
-| converter
+| converter / native (Java8)footnote:[Uses UTC zone offset. Configure via <<mapping-configuration,MongoConverterConfigurationAdapter>>]
 | `{"date" : ISODate("2019-11-12T23:00:00.809Z")}`
 
 | `DateTime` (Joda)
@@ -252,40 +263,32 @@ calling `get()` before the actual conversion
 
 Unless explicitly configured, an instance of `MappingMongoConverter` is created by default when you create a `MongoTemplate`. You can create your own instance of the `MappingMongoConverter`. Doing so lets you dictate where in the classpath your domain classes can be found, so that Spring Data MongoDB can extract metadata and construct indexes. Also, by creating your own instance, you can register Spring converters to map specific classes to and from the database.
 
-You can configure the `MappingMongoConverter` as well as `com.mongodb.MongoClient` and MongoTemplate by using either Java-based or XML-based metadata. The following example uses Spring's Java-based configuration:
+You can configure the `MappingMongoConverter` as well as `com.mongodb.client.MongoClient` and MongoTemplate by using either Java-based or XML-based metadata. The following example uses Spring's Java-based configuration:
 
 .@Configuration class to configure MongoDB mapping support
 ====
 [source,java]
 ----
 @Configuration
-public class GeoSpatialAppConfig extends AbstractMongoConfiguration {
-
-  @Bean
-  public MongoClient mongoClient() {
-    return new MongoClient("localhost");
-  }
+public class MongoConfig extends AbstractMongoClientConfiguration {
 
   @Override
   public String getDatabaseName() {
     return "database";
   }
 
+  // the following are optional
+
   @Override
-  public String getMappingBasePackage() {
+  public String getMappingBasePackage() { <1>
     return "com.bigbank.domain";
   }
 
-  // the following are optional
-
-
-  @Bean
   @Override
-  public CustomConversions customConversions() throws Exception {
-    List<Converter<?, ?>> converterList = new ArrayList<Converter<?, ?>>();
-    converterList.add(new org.springframework.data.mongodb.test.PersonReadConverter());
-    converterList.add(new org.springframework.data.mongodb.test.PersonWriteConverter());
-    return new CustomConversions(converterList);
+  void configureConverters(MongoConverterConfigurationAdapter adapter) { <2>
+
+  	adapter.registerConverter(new org.springframework.data.mongodb.test.PersonReadConverter());
+  	adapter.registerConverter(new org.springframework.data.mongodb.test.PersonWriteConverter());
   }
 
   @Bean
@@ -294,15 +297,19 @@ public class GeoSpatialAppConfig extends AbstractMongoConfiguration {
   }
 }
 ----
+<1> The mapping base package defines the root path used to scan for entities used to pre initialize the `MappingContext`. By default the configuration classes package is used.
+<2> Configure additional custom converters for specific domain types that replace the default mapping procedure for those types with your custom implementation.
 ====
 
-`AbstractMongoConfiguration` requires you to implement methods that define a `com.mongodb.MongoClient` as well as provide a database name. `AbstractMongoConfiguration` also has a method named  `getMappingBasePackage(…)` that you can override to tell the converter where to scan for classes annotated with the `@Document` annotation.
+`AbstractMongoClientConfiguration` requires you to implement methods that define a `com.mongodb.client.MongoClient` as well as provide a database name. `AbstractMongoClientConfiguration` also has a method named  `getMappingBasePackage(…)` that you can override to tell the converter where to scan for classes annotated with the `@Document` annotation.
 
-You can add additional converters to the converter by overriding the `customConversions` method. Also shown in the preceding example is a `LoggingEventListener`, which logs `MongoMappingEvent` instances that are posted onto Spring's `ApplicationContextEvent` infrastructure.
+You can add additional converters to the converter by overriding the `customConversionsConfiguration` method.
+MongoDB's native JSR-310 support can be enabled through `MongoConverterConfigurationAdapter.useNativeDriverJavaTimeCodecs()`.
+Also shown in the preceding example is a `LoggingEventListener`, which logs `MongoMappingEvent` instances that are posted onto Spring's `ApplicationContextEvent` infrastructure.
 
-NOTE: `AbstractMongoConfiguration` creates a `MongoTemplate` instance and registers it with the container under the name `mongoTemplate`.
+NOTE: `AbstractMongoClientConfiguration` creates a `MongoTemplate` instance and registers it with the container under the name `mongoTemplate`.
 
-Spring's MongoDB namespace lets you  enable mapping functionality in XML, as the following example shows:
+Spring's MongoDB namespace lets you enable mapping functionality in XML, as the following example shows:
 
 .XML schema to configure MongoDB mapping support
 ====
@@ -311,10 +318,9 @@ Spring's MongoDB namespace lets you  enable mapping functionality in XML, as the
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xmlns:context="http://www.springframework.org/schema/context"
   xmlns:mongo="http://www.springframework.org/schema/data/mongo"
-  xsi:schemaLocation="http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context-3.0.xsd
-    http://www.springframework.org/schema/data/mongo https://www.springframework.org/schema/data/mongo/spring-mongo-1.0.xsd
+  xsi:schemaLocation="
+    http://www.springframework.org/schema/data/mongo https://www.springframework.org/schema/data/mongo/spring-mongo.xsd
     http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
 
   <!-- Default bean name is 'mongo' -->
@@ -379,9 +385,75 @@ public class Person {
 IMPORTANT: The `@Id` annotation tells the mapper which property you want to use for the MongoDB `_id` property, and the `@Indexed` annotation tells the mapping framework to call `createIndex(…)` on that property of your document, making searches faster.
 Automatic index creation is only done for types annotated with `@Document`.
 
+WARNING: Auto index creation is **disabled** by default and needs to be enabled through the configuration (see <<mapping.index-creation>>).
+
+[[mapping.index-creation]]
+=== Index Creation
+
+Spring Data MongoDB can automatically create indexes for entity types annotated with `@Document`.
+Index creation must be explicitly enabled since version 3.0 to prevent undesired effects with collection lifecyle and performance impact.
+Indexes are automatically created for the initial entity set on application startup and when accessing an entity type for the first time while the application runs.
+
+We generally recommend explicit index creation for application-based control of indexes as Spring Data cannot automatically create indexes for collections that were recreated while the application was running.
+
+`IndexResolver` provides an abstraction for programmatic index definition creation if you want to make use of `@Indexed` annotations such as `@GeoSpatialIndexed`, `@TextIndexed`, `@CompoundIndex`.
+You can use index definitions with `IndexOperations` to create indexes.
+A good point in time for index creation is on application startup, specifically after the application context was refreshed, triggered by observing `ContextRefreshedEvent`.
+This event guarantees that the context is fully initialized.
+Note that at this time other components, especially bean factories might have access to the MongoDB database.
+
+.Programmatic Index Creation for a single Domain Type
+====
+[source,java]
+----
+class MyListener {
+
+  @EventListener(ContextRefreshedEvent.class)
+  public void initIndicesAfterStartup() {
+
+    MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext = mongoTemplate
+                .getConverter().getMappingContext();
+
+    IndexResolver resolver = new MongoPersistentEntityIndexResolver(mappingContext);
+
+    IndexOperations indexOps = mongoTemplate.indexOps(DomainType.class);
+    resolver.resolveIndexFor(DomainType.class).forEach(indexOps::ensureIndex);
+  }
+}
+----
+====
+
+.Programmatic Index Creation for all Initial Entities
+====
+[source,java]
+----
+class MyListener{
+
+  @EventListener(ContextRefreshedEvent.class)
+  public void initIndicesAfterStartup() {
+
+    MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext = mongoTemplate
+        .getConverter().getMappingContext();
+
+    // consider only entities that are annotated with @Document
+    mappingContext.getPersistentEntities()
+                            .stream()
+                            .filter(it -> it.isAnnotationPresent(Document.class))
+                            .forEach(it -> {
+
+    IndexOperations indexOps = mongoTemplate.indexOps(it.getType());
+    resolver.resolveIndexFor(it.getType()).forEach(indexOps::ensureIndex);
+    });
+  }
+}
+----
+====
+
+Alternatively, if you want to ensure index and collection presence before any component is able to access your database from your application, declare a `@Bean` method for `MongoTemplate` and include the code  from above before returning the `MongoTemplate` object.
+
 [NOTE]
 ====
-To turn automatic index creation _OFF_ please override `autoIndexCreation()` in your configuration.
+To turn automatic index creation _ON_ please override `autoIndexCreation()` in your configuration.
 [source,java]
 ----
 @Configuration
@@ -389,17 +461,15 @@ public class Config extends AbstractMongoClientConfiguration {
 
   @Override
   public boolean autoIndexCreation() {
-    return false;
+    return true;
   }
 
-  // ...
+// ...
 }
 ----
 ====
 
-IMPORTANT: Automatic index creation will be turned _OFF_ by default with the release of 3.x.
-We recommend index creation to happen either out of band or as part of the application startup using
-`IndexOperations`.
+IMPORTANT: Automatic index creation is turned _OFF_ by default as of version 3.0.
 
 [[mapping-usage-annotations]]
 === Mapping Annotation Overview
@@ -408,7 +478,7 @@ The MappingMongoConverter can use metadata to drive the mapping of objects to do
 
 * `@Id`: Applied at the field level to mark the field used for identity purpose.
 * `@MongoId`: Applied at the field level to mark the field used for identity purpose. Accepts an optional `FieldType` to customize id conversion.
-* `@Document`: Applied at the class level to indicate this class is a candidate for mapping to the database. You can specify the name of the collection where the database will be stored.
+* `@Document`: Applied at the class level to indicate this class is a candidate for mapping to the database. You can specify the name of the collection where the data will be stored.
 * `@DBRef`: Applied at the field to indicate it is to be stored using a com.mongodb.DBRef.
 * `@Indexed`: Applied at the field level to describe how to index the field.
 * `@CompoundIndex` (repeatable): Applied at the type level to declare Compound Indexes.
@@ -416,11 +486,11 @@ The MappingMongoConverter can use metadata to drive the mapping of objects to do
 * `@TextIndexed`: Applied at the field level to mark the field to be included in the text index.
 * `@HashIndexed`: Applied at the field level for usage within a hashed index to partition data across a sharded cluster.
 * `@Language`: Applied at the field level to set the language override property for text index.
-* `@Transient`: By default all private fields are mapped to the document, this annotation excludes the field where it is applied from being stored in the database
+* `@Transient`: By default, all fields are mapped to the document. This annotation excludes the field where it is applied from being stored in the database. Transient properties cannot be used within a persistence constructor as the converter cannot materialize a value for the constructor argument.
 * `@PersistenceConstructor`: Marks a given constructor - even a package protected one - to use when instantiating the object from the database. Constructor arguments are mapped by name to the key values in the retrieved Document.
 * `@Value`: This annotation is part of the Spring Framework . Within the mapping framework it can be applied to constructor arguments. This lets you use a Spring Expression Language statement to transform a key's value retrieved in the database before it is used to construct a domain object. In order to reference a property of a given document one has to use expressions like: `@Value("#root.myProperty")` where `root` refers to the root of the given document.
 * `@Field`: Applied at the field level it allows to describe the name and type of the field as it will be represented in the MongoDB BSON document thus allowing the name and type to be different than the fieldname of the class as well as the property type.
-* `@Version`: Applied at field level is used for optimistic locking and checked for modification on save operations. The initial value is `zero` which is bumped automatically on every update.
+* `@Version`: Applied at field level is used for optimistic locking and checked for modification on save operations. The initial value is `zero` (`one` for primitive types) which is bumped automatically on every update.
 
 The mapping metadata infrastructure is defined in a separate spring-data-commons project that is technology agnostic. Specific subclasses are using in the MongoDB support to support annotation based metadata. Other strategies are also possible to put in place if there is demand.
 
@@ -478,6 +548,7 @@ public class Person<T extends Address> {
   }
 
 // other getters/setters omitted
+}
 ----
 
 [TIP]
@@ -714,7 +785,9 @@ class Nested {
 [[mapping-usage-references]]
 === Using DBRefs
 
-The mapping framework does not have to store child objects embedded within the document. You can also store them separately and use a DBRef to refer to that document. When the object is loaded from MongoDB, those references are eagerly resolved so that you get back a mapped object that looks the same as if it had been stored embedded within your master document.
+The mapping framework does not have to store child objects embedded within the document.
+You can also store them separately and use a DBRef to refer to that document.
+When the object is loaded from MongoDB, those references are eagerly resolved so that you get back a mapped object that looks the same as if it had been stored embedded within your top-level document.
 
 The following example uses a DBRef to refer to a specific document that exists independently of the object in which it is referenced (both classes are shown in-line for brevity's sake):
 
@@ -760,45 +833,4 @@ Events are fired throughout the lifecycle of the mapping process. This is descri
 
 Declaring these beans in your Spring ApplicationContext causes them to be invoked whenever the event is dispatched.
 
-[[mapping-explicit-converters]]
-=== Overriding Mapping with Explicit Converters
-
-When storing and querying your objects, it is convenient to have a `MongoConverter` instance handle the mapping of all Java types to `Document` instances. However, sometimes you may want the `MongoConverter` instances do most of the work but let you selectively handle the conversion for a particular type -- perhaps to optimize performance.
-
-To selectively handle the conversion yourself, register one or more one or more `org.springframework.core.convert.converter.Converter` instances with the `MongoConverter`.
-
-NOTE: Spring 3.0 introduced a core.convert package that provides a general type conversion system. This is described in detail in the Spring reference documentation section entitled https://docs.spring.io/spring/docs/{springVersion}/spring-framework-reference/core.html#validation["`Spring Type Conversion`"].
-
-You can use the `customConversions` method in `AbstractMongoConfiguration` to configure converters. The examples <<mapping-configuration, at the beginning of this chapter>> show how to perform the configuration using Java and XML.
-
-The following example of a Spring Converter implementation converts from a `Document` to a `Person` POJO:
-
-[source,java]
-----
-@ReadingConverter
- public class PersonReadConverter implements Converter<Document, Person> {
-
-  public Person convert(Document source) {
-    Person p = new Person((ObjectId) source.get("_id"), (String) source.get("name"));
-    p.setAge((Integer) source.get("age"));
-    return p;
-  }
-}
-----
-
-The following example converts from a `Person` to a `Document`:
-
-[source,java]
-----
-@WritingConverter
-public class PersonWriteConverter implements Converter<Person, Document> {
-
-  public Document convert(Person source) {
-    Document document = new Document();
-    document.put("_id", source.getId());
-    document.put("name", source.getFirstName());
-    document.put("age", source.getAge());
-    return document;
-  }
-}
-----
+include::mongo-custom-conversions.adoc[]

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ import example.first.First
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
@@ -37,6 +36,7 @@ class ReactiveMapReduceOperationExtensionsTests {
 	val operationWithProjection = mockk<ReactiveMapReduceOperation.MapReduceWithProjection<First>>(relaxed = true)
 
 	@Test // DATAMONGO-1929
+	@Suppress("DEPRECATION")
 	fun `ReactiveMapReduceOperation#mapReduce(KClass) extension should call its Java counterpart`() {
 
 		operation.mapReduce(First::class)
@@ -51,6 +51,7 @@ class ReactiveMapReduceOperationExtensionsTests {
 	}
 
 	@Test // DATAMONGO-1929, DATAMONGO-2086
+	@Suppress("DEPRECATION")
 	fun `ReactiveMapReduceOperation#MapReduceWithProjection#asType(KClass) extension should call its Java counterpart`() {
 
 		operationWithProjection.asType(User::class)
@@ -65,7 +66,6 @@ class ReactiveMapReduceOperationExtensionsTests {
 	}
 
 	@Test // DATAMONGO-2255
-	@FlowPreview
 	fun terminatingMapReduceAllAsFlow() {
 
 		val spec = mockk<ReactiveMapReduceOperation.TerminatingMapReduce<String>>()

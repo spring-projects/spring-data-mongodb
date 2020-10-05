@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,10 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import reactor.core.publisher.Mono;
+
 import org.bson.Document;
 import org.bson.json.JsonParseException;
-
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
@@ -26,12 +27,12 @@ import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.repository.query.QueryMethod;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ReturnedType;
 import org.springframework.data.repository.query.parser.PartTree;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.ExpressionParser;
 import org.springframework.util.StringUtils;
 
 /**
@@ -57,7 +58,7 @@ public class ReactivePartTreeMongoQuery extends AbstractReactiveMongoQuery {
 	 * @param evaluationContextProvider must not be {@literal null}.
 	 */
 	public ReactivePartTreeMongoQuery(ReactiveMongoQueryMethod method, ReactiveMongoOperations mongoOperations,
-			SpelExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			ExpressionParser expressionParser, ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider) {
 
 		super(method, mongoOperations, expressionParser, evaluationContextProvider);
 
@@ -81,10 +82,27 @@ public class ReactivePartTreeMongoQuery extends AbstractReactiveMongoQuery {
 	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#createQuery(org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor, boolean)
 	 */
 	@Override
-	protected Query createQuery(ConvertingParameterAccessor accessor) {
+	protected Mono<Query> createQuery(ConvertingParameterAccessor accessor) {
+		return Mono.fromSupplier(() -> createQueryInternal(accessor, false));
+	}
 
-		MongoQueryCreator creator = new MongoQueryCreator(tree, accessor, context, isGeoNearQuery);
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#createCountQuery(org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor)
+	 */
+	@Override
+	protected Mono<Query> createCountQuery(ConvertingParameterAccessor accessor) {
+		return Mono.fromSupplier(() -> createQueryInternal(accessor, true));
+	}
+
+	private Query createQueryInternal(ConvertingParameterAccessor accessor, boolean isCountQuery) {
+
+		MongoQueryCreator creator = new MongoQueryCreator(tree, accessor, context, isCountQuery ? false : isGeoNearQuery);
 		Query query = creator.createQuery();
+
+		if (isCountQuery) {
+			return query;
+		}
 
 		if (tree.isLimiting()) {
 			query.limit(tree.getMaxResults());
@@ -114,20 +132,10 @@ public class ReactivePartTreeMongoQuery extends AbstractReactiveMongoQuery {
 			result.setSortObject(query.getSortObject());
 
 			return result;
-
 		} catch (JsonParseException o_O) {
 			throw new IllegalStateException(String.format("Invalid query or field specification in %s!", getQueryMethod()),
 					o_O);
 		}
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#createCountQuery(org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor)
-	 */
-	@Override
-	protected Query createCountQuery(ConvertingParameterAccessor accessor) {
-		return new MongoQueryCreator(tree, accessor, context, false).createQuery();
 	}
 
 	/*

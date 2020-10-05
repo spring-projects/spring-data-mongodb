@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import org.bson.Document;
-
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -211,7 +210,16 @@ public class OutOperation implements AggregationOperation {
 			$out.append("uniqueKey", uniqueKey);
 		}
 
-		return new Document("$out", $out);
+		return new Document(getOperator(), $out);
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
+	 */
+	@Override
+	public String getOperator() {
+		return "$out";
 	}
 
 	private boolean requiresMongoDb42Format() {

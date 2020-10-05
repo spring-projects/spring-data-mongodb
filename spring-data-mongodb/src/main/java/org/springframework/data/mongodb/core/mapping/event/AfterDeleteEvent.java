@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ public class AfterDeleteEvent<T> extends AbstractDeleteEvent<T> {
 	/**
 	 * Creates a new {@link AfterDeleteEvent} for the given {@link Document}, type and collectionName.
 	 *
-	 * @param dbo must not be {@literal null}.
+	 * @param document must not be {@literal null}.
 	 * @param type may be {@literal null}.
 	 * @param collectionName must not be {@literal null}.
 	 * @since 1.8

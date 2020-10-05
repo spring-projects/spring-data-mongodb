@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2019 the original author or authors.
+ * Copyright 2008-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,10 @@ import static org.bson.codecs.configuration.CodecRegistries.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.bson.AbstractBsonReader.State;
@@ -35,22 +37,17 @@ import org.bson.BsonValue;
 import org.bson.BsonWriter;
 import org.bson.Document;
 import org.bson.Transformer;
-import org.bson.codecs.BsonTypeClassMap;
-import org.bson.codecs.BsonTypeCodecMap;
-import org.bson.codecs.BsonValueCodecProvider;
-import org.bson.codecs.Codec;
-import org.bson.codecs.CollectibleCodec;
-import org.bson.codecs.DecoderContext;
-import org.bson.codecs.DocumentCodecProvider;
-import org.bson.codecs.EncoderContext;
-import org.bson.codecs.IdGenerator;
-import org.bson.codecs.ObjectIdGenerator;
-import org.bson.codecs.ValueCodecProvider;
+import org.bson.codecs.*;
 import org.bson.codecs.configuration.CodecRegistry;
-
+import org.bson.json.JsonParseException;
+import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.spel.EvaluationContextProvider;
+import org.springframework.data.spel.ExpressionDependencies;
+import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
+import org.springframework.util.NumberUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -183,6 +180,32 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 		return this.decode(reader, DecoderContext.builder().build());
 	}
 
+	/**
+	 * Determine {@link ExpressionDependencies} from Expressions that are nested in the {@code json} content. Returns
+	 * {@link Optional#empty()} if {@code json} is empty or of it does not contain any SpEL expressions.
+	 *
+	 * @param json
+	 * @param expressionParser
+	 * @return merged {@link ExpressionDependencies} object if expressions were found, otherwise
+	 *         {@link ExpressionDependencies#none()}.
+	 * @since 3.1
+	 */
+	public ExpressionDependencies captureExpressionDependencies(@Nullable String json, ValueProvider valueProvider,
+			ExpressionParser expressionParser) {
+
+		if (StringUtils.isEmpty(json)) {
+			return ExpressionDependencies.none();
+		}
+
+		DependencyCapturingExpressionEvaluator expressionEvaluator = new DependencyCapturingExpressionEvaluator(
+				expressionParser);
+		this.decode(new ParameterBindingJsonReader(json, new ParameterBindingContext(valueProvider, expressionEvaluator)),
+				DecoderContext.builder().build());
+
+		return expressionEvaluator.getCapturedDependencies();
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public Document decode(final BsonReader reader, final DecoderContext decoderContext) {
 
@@ -198,9 +221,27 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 
 		Document document = new Document();
 		reader.readStartDocument();
-		while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
-			String fieldName = reader.readName();
-			document.put(fieldName, readValue(reader, decoderContext));
+
+		try {
+
+			while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
+				String fieldName = reader.readName();
+				Object value = readValue(reader, decoderContext);
+				document.put(fieldName, value);
+			}
+		} catch (JsonParseException e) {
+			try {
+
+				Object value = readValue(reader, decoderContext);
+				if (value instanceof Map<?, ?>) {
+					if (!((Map) value).isEmpty()) {
+						return new Document((Map<String, Object>) value);
+					}
+				}
+			} catch (Exception ex) {
+				e.addSuppressed(ex);
+				throw e;
+			}
 		}
 
 		reader.readEndDocument();
@@ -278,6 +319,17 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 			if (bindingReader.currentValue != null) {
 
 				Object value = bindingReader.currentValue;
+
+				if (ObjectUtils.nullSafeEquals(BsonType.DATE_TIME, bindingReader.getCurrentBsonType())
+						&& !(value instanceof Date)) {
+
+					if (value instanceof Number) {
+						value = new Date(NumberUtils.convertNumberToTargetClass((Number) value, Long.class));
+					} else if (value instanceof String) {
+						value = new Date(DateTimeFormatter.parse((String) value));
+					}
+				}
+
 				bindingReader.setState(State.TYPE);
 				bindingReader.currentValue = null;
 				return value;
@@ -313,17 +365,38 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 		reader.readStartArray();
 		List<Object> list = new ArrayList<>();
 		while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
-
-			// Spring Data Customization START
-			Object listValue = readValue(reader, decoderContext);
-			if (listValue instanceof Collection) {
-				list.addAll((Collection) listValue);
-				break;
-			}
-			list.add(listValue);
-			// Spring Data Customization END
+			list.add(readValue(reader, decoderContext));
 		}
 		reader.readEndArray();
 		return list;
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 * @since 3.1
+	 */
+	static class DependencyCapturingExpressionEvaluator implements SpELExpressionEvaluator {
+
+		private static final Object PLACEHOLDER = new Object();
+
+		private final ExpressionParser expressionParser;
+		private final List<ExpressionDependencies> dependencies = new ArrayList<>();
+
+		DependencyCapturingExpressionEvaluator(ExpressionParser expressionParser) {
+			this.expressionParser = expressionParser;
+		}
+
+		@Nullable
+		@Override
+		public <T> T evaluate(String expression) {
+
+			dependencies.add(ExpressionDependencies.discover(expressionParser.parseExpression(expression)));
+			return (T) PLACEHOLDER;
+		}
+
+		ExpressionDependencies getCapturedDependencies() {
+			return ExpressionDependencies.merged(dependencies);
+		}
+
 	}
 }

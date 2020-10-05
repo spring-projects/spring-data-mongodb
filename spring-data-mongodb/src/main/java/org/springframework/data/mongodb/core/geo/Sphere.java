@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ public class Sphere implements Shape {
 	/**
 	 * Creates a Sphere around the given center {@link Point} with the given radius.
 	 *
-	 * @param center
+	 * @param center must not be {@literal null}.
 	 * @param radius
 	 */
 	public Sphere(Point center, double radius) {
@@ -68,7 +68,7 @@ public class Sphere implements Shape {
 	/**
 	 * Creates a Sphere from the given {@link Circle}.
 	 *
-	 * @param circle
+	 * @param circle must not be {@literal null}.
 	 */
 	public Sphere(Circle circle) {
 		this(circle.getCenter(), circle.getRadius());
@@ -86,7 +86,7 @@ public class Sphere implements Shape {
 	/**
 	 * Returns the radius of the {@link Circle}.
 	 *
-	 * @return
+	 * @return never {@literal null}.
 	 */
 	public Distance getRadius() {
 		return radius;
@@ -136,7 +136,7 @@ public class Sphere implements Shape {
 	 * Returns the {@link Shape} as a list of usually {@link Double} or {@link List}s of {@link Double}s. Wildcard bound
 	 * to allow implementations to return a more concrete element type.
 	 *
-	 * @return
+	 * @return never {@literal null}.
 	 */
 	public List<? extends Object> asList() {
 		return Arrays.asList(Arrays.asList(center.getX(), center.getY()), this.radius.getValue());
@@ -145,7 +145,7 @@ public class Sphere implements Shape {
 	/**
 	 * Returns the command to be used to create the {@literal $within} criterion.
 	 *
-	 * @return
+	 * @return never {@literal null}.
 	 */
 	public String getCommand() {
 		return COMMAND;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,17 @@
 package org.springframework.data.mongodb.repository.support;
 
 import java.io.Serializable;
+import java.util.Optional;
 
+import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.index.IndexOperationsAdapter;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
+import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ReactiveExtensionAwareQueryMethodEvaluationContextProvider;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -35,6 +39,7 @@ import org.springframework.util.Assert;
  * @since 2.0
  * @see org.springframework.data.repository.reactive.ReactiveSortingRepository
  * @see org.springframework.data.repository.reactive.RxJava2SortingRepository
+ * @see org.springframework.data.repository.reactive.RxJava3SortingRepository
  */
 public class ReactiveMongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable>
 		extends RepositoryFactoryBeanSupport<T, S, ID> {
@@ -83,13 +88,10 @@ public class ReactiveMongoRepositoryFactoryBean<T extends Repository<S, ID>, S, 
 
 	/*
 	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.springframework.data.repository.support.RepositoryFactoryBeanSupport
-	 * #createRepositoryFactory()
+	 * @see org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport#createRepositoryFactory()
 	 */
 	@Override
-	protected final RepositoryFactorySupport createRepositoryFactory() {
+	protected RepositoryFactorySupport createRepositoryFactory() {
 
 		RepositoryFactorySupport factory = getFactoryInstance(operations);
 
@@ -99,6 +101,16 @@ public class ReactiveMongoRepositoryFactoryBean<T extends Repository<S, ID>, S, 
 		}
 
 		return factory;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport#createDefaultQueryMethodEvaluationContextProvider(ListableBeanFactory)
+	 */
+	@Override
+	protected Optional<QueryMethodEvaluationContextProvider> createDefaultQueryMethodEvaluationContextProvider(
+			ListableBeanFactory beanFactory) {
+		return Optional.of(new ReactiveExtensionAwareQueryMethodEvaluationContextProvider(beanFactory));
 	}
 
 	/**
@@ -113,10 +125,7 @@ public class ReactiveMongoRepositoryFactoryBean<T extends Repository<S, ID>, S, 
 
 	/*
 	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.springframework.data.repository.support.RepositoryFactoryBeanSupport
-	 * #afterPropertiesSet()
+	 * @see org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport#afterPropertiesSet()
 	 */
 	@Override
 	public void afterPropertiesSet() {

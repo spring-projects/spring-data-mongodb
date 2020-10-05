@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.util.Assert;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 
 /**
@@ -36,10 +36,14 @@ public class MongoAdmin implements MongoAdminOperations {
 
 	private final MongoClient mongoClient;
 
-	public MongoAdmin(MongoClient mongoClient) {
+	/**
+	 * @param client the underlying {@link com.mongodb.client.MongoClient} used for data access.
+	 * @since 2.2
+	 */
+	public MongoAdmin(MongoClient client) {
 
-		Assert.notNull(mongoClient, "MongoClient must not be null!");
-		this.mongoClient = mongoClient;
+		Assert.notNull(client, "Client must not be null!");
+		this.mongoClient = client;
 	}
 
 	/* (non-Javadoc)

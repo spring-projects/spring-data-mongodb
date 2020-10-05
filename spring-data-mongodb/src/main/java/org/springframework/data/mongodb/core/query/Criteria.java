@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the original author or authors.
+ * Copyright 2010-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 import org.bson.BsonRegularExpression;
 import org.bson.Document;
 import org.bson.types.Binary;
-
 import org.springframework.data.domain.Example;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
@@ -105,8 +104,8 @@ public class Criteria implements CriteriaDefinition {
 	/**
 	 * Static factory method to create a Criteria using the provided key
 	 *
-	 * @param key
-	 * @return
+	 * @param key the property or field name.
+	 * @return new instance of {@link Criteria}.
 	 */
 	public static Criteria where(String key) {
 		return new Criteria(key);
@@ -116,7 +115,7 @@ public class Criteria implements CriteriaDefinition {
 	 * Static factory method to create a {@link Criteria} matching an example object.
 	 *
 	 * @param example must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link Criteria}.
 	 * @see Criteria#alike(Example)
 	 * @since 1.8
 	 */
@@ -128,7 +127,7 @@ public class Criteria implements CriteriaDefinition {
 	 * Static factory method to create a {@link Criteria} matching an example object.
 	 *
 	 * @param example must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link Criteria}.
 	 * @see Criteria#alike(Example)
 	 * @since 1.8
 	 */
@@ -153,7 +152,7 @@ public class Criteria implements CriteriaDefinition {
 	/**
 	 * Static factory method to create a Criteria using the provided key
 	 *
-	 * @return
+	 * @return new instance of {@link Criteria}.
 	 */
 	public Criteria and(String key) {
 		return new Criteria(this.criteriaChain, key);
@@ -162,10 +161,10 @@ public class Criteria implements CriteriaDefinition {
 	/**
 	 * Creates a criterion using equality
 	 *
-	 * @param o
-	 * @return
+	 * @param value can be {@literal null}.
+	 * @return this.
 	 */
-	public Criteria is(@Nullable Object o) {
+	public Criteria is(@Nullable Object value) {
 
 		if (!isValue.equals(NOT_SET)) {
 			throw new InvalidMongoDbApiUsageException(
@@ -176,7 +175,7 @@ public class Criteria implements CriteriaDefinition {
 			throw new InvalidMongoDbApiUsageException("Invalid query: 'not' can't be used with 'is' - use 'ne' instead.");
 		}
 
-		this.isValue = o;
+		this.isValue = value;
 		return this;
 	}
 
@@ -187,120 +186,120 @@ public class Criteria implements CriteriaDefinition {
 	/**
 	 * Creates a criterion using the {@literal $ne} operator.
 	 *
-	 * @param o
-	 * @return
+	 * @param value can be {@literal null}.
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/ne/">MongoDB Query operator: $ne</a>
 	 */
-	public Criteria ne(@Nullable Object o) {
-		criteria.put("$ne", o);
+	public Criteria ne(@Nullable Object value) {
+		criteria.put("$ne", value);
 		return this;
 	}
 
 	/**
 	 * Creates a criterion using the {@literal $lt} operator.
 	 *
-	 * @param o
-	 * @return
+	 * @param value must not be {@literal null}.
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/lt/">MongoDB Query operator: $lt</a>
 	 */
-	public Criteria lt(Object o) {
-		criteria.put("$lt", o);
+	public Criteria lt(Object value) {
+		criteria.put("$lt", value);
 		return this;
 	}
 
 	/**
 	 * Creates a criterion using the {@literal $lte} operator.
 	 *
-	 * @param o
-	 * @return
+	 * @param value must not be {@literal null}.
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/lte/">MongoDB Query operator: $lte</a>
 	 */
-	public Criteria lte(Object o) {
-		criteria.put("$lte", o);
+	public Criteria lte(Object value) {
+		criteria.put("$lte", value);
 		return this;
 	}
 
 	/**
 	 * Creates a criterion using the {@literal $gt} operator.
 	 *
-	 * @param o
-	 * @return
+	 * @param value must not be {@literal null}.
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/gt/">MongoDB Query operator: $gt</a>
 	 */
-	public Criteria gt(Object o) {
-		criteria.put("$gt", o);
+	public Criteria gt(Object value) {
+		criteria.put("$gt", value);
 		return this;
 	}
 
 	/**
 	 * Creates a criterion using the {@literal $gte} operator.
 	 *
-	 * @param o
-	 * @return
+	 * @param value can be {@literal null}.
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/gte/">MongoDB Query operator: $gte</a>
 	 */
-	public Criteria gte(Object o) {
-		criteria.put("$gte", o);
+	public Criteria gte(Object value) {
+		criteria.put("$gte", value);
 		return this;
 	}
 
 	/**
 	 * Creates a criterion using the {@literal $in} operator.
 	 *
-	 * @param o the values to match against
-	 * @return
+	 * @param values the values to match against
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/in/">MongoDB Query operator: $in</a>
 	 */
-	public Criteria in(Object... o) {
-		if (o.length > 1 && o[1] instanceof Collection) {
+	public Criteria in(Object... values) {
+		if (values.length > 1 && values[1] instanceof Collection) {
 			throw new InvalidMongoDbApiUsageException(
-					"You can only pass in one argument of type " + o[1].getClass().getName());
+					"You can only pass in one argument of type " + values[1].getClass().getName());
 		}
-		criteria.put("$in", Arrays.asList(o));
+		criteria.put("$in", Arrays.asList(values));
 		return this;
 	}
 
 	/**
 	 * Creates a criterion using the {@literal $in} operator.
 	 *
-	 * @param c the collection containing the values to match against
-	 * @return
+	 * @param values the collection containing the values to match against
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/in/">MongoDB Query operator: $in</a>
 	 */
-	public Criteria in(Collection<?> c) {
-		criteria.put("$in", c);
+	public Criteria in(Collection<?> values) {
+		criteria.put("$in", values);
 		return this;
 	}
 
 	/**
 	 * Creates a criterion using the {@literal $nin} operator.
 	 *
-	 * @param o
-	 * @return
+	 * @param values
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/nin/">MongoDB Query operator: $nin</a>
 	 */
-	public Criteria nin(Object... o) {
-		return nin(Arrays.asList(o));
+	public Criteria nin(Object... values) {
+		return nin(Arrays.asList(values));
 	}
 
 	/**
 	 * Creates a criterion using the {@literal $nin} operator.
 	 *
-	 * @param o
-	 * @return
+	 * @param values must not be {@literal null}.
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/nin/">MongoDB Query operator: $nin</a>
 	 */
-	public Criteria nin(Collection<?> o) {
-		criteria.put("$nin", o);
+	public Criteria nin(Collection<?> values) {
+		criteria.put("$nin", values);
 		return this;
 	}
 
 	/**
 	 * Creates a criterion using the {@literal $mod} operator.
 	 *
-	 * @param value
-	 * @param remainder
-	 * @return
+	 * @param value must not be {@literal null}.
+	 * @param remainder must not be {@literal null}.
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/mod/">MongoDB Query operator: $mod</a>
 	 */
 	public Criteria mod(Number value, Number remainder) {
@@ -314,59 +313,59 @@ public class Criteria implements CriteriaDefinition {
 	/**
 	 * Creates a criterion using the {@literal $all} operator.
 	 *
-	 * @param o
-	 * @return
+	 * @param values must not be {@literal null}.
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/all/">MongoDB Query operator: $all</a>
 	 */
-	public Criteria all(Object... o) {
-		return all(Arrays.asList(o));
+	public Criteria all(Object... values) {
+		return all(Arrays.asList(values));
 	}
 
 	/**
 	 * Creates a criterion using the {@literal $all} operator.
 	 *
-	 * @param o
-	 * @return
+	 * @param values must not be {@literal null}.
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/all/">MongoDB Query operator: $all</a>
 	 */
-	public Criteria all(Collection<?> o) {
-		criteria.put("$all", o);
+	public Criteria all(Collection<?> values) {
+		criteria.put("$all", values);
 		return this;
 	}
 
 	/**
 	 * Creates a criterion using the {@literal $size} operator.
 	 *
-	 * @param s
-	 * @return
+	 * @param size
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/size/">MongoDB Query operator: $size</a>
 	 */
-	public Criteria size(int s) {
-		criteria.put("$size", s);
+	public Criteria size(int size) {
+		criteria.put("$size", size);
 		return this;
 	}
 
 	/**
 	 * Creates a criterion using the {@literal $exists} operator.
 	 *
-	 * @param b
-	 * @return
+	 * @param value
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/exists/">MongoDB Query operator: $exists</a>
 	 */
-	public Criteria exists(boolean b) {
-		criteria.put("$exists", b);
+	public Criteria exists(boolean value) {
+		criteria.put("$exists", value);
 		return this;
 	}
 
 	/**
 	 * Creates a criterion using the {@literal $type} operator.
 	 *
-	 * @param t
-	 * @return
+	 * @param typeNumber
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/type/">MongoDB Query operator: $type</a>
 	 */
-	public Criteria type(int t) {
-		criteria.put("$type", t);
+	public Criteria type(int typeNumber) {
+		criteria.put("$type", typeNumber);
 		return this;
 	}
 
@@ -374,7 +373,7 @@ public class Criteria implements CriteriaDefinition {
 	 * Creates a criterion using the {@literal $type} operator.
 	 *
 	 * @param types must not be {@literal null}.
-	 * @return this
+	 * @return this.
 	 * @since 2.1
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/type/">MongoDB Query operator: $type</a>
 	 */
@@ -390,7 +389,7 @@ public class Criteria implements CriteriaDefinition {
 	/**
 	 * Creates a criterion using the {@literal $not} meta operator which affects the clause directly following
 	 *
-	 * @return
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/not/">MongoDB Query operator: $not</a>
 	 */
 	public Criteria not() {
@@ -400,8 +399,8 @@ public class Criteria implements CriteriaDefinition {
 	/**
 	 * Creates a criterion using the {@literal $not} operator.
 	 *
-	 * @param value
-	 * @return
+	 * @param value can be {@literal null}.
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/not/">MongoDB Query operator: $not</a>
 	 */
 	private Criteria not(@Nullable Object value) {
@@ -412,31 +411,31 @@ public class Criteria implements CriteriaDefinition {
 	/**
 	 * Creates a criterion using a {@literal $regex} operator.
 	 *
-	 * @param re
-	 * @return
+	 * @param regex must not be {@literal null}.
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/regex/">MongoDB Query operator: $regex</a>
 	 */
-	public Criteria regex(String re) {
-		return regex(re, null);
+	public Criteria regex(String regex) {
+		return regex(regex, null);
 	}
 
 	/**
 	 * Creates a criterion using a {@literal $regex} and {@literal $options} operator.
 	 *
-	 * @param re
-	 * @param options
-	 * @return
+	 * @param regex must not be {@literal null}.
+	 * @param options can be {@literal null}.
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/regex/">MongoDB Query operator: $regex</a>
 	 */
-	public Criteria regex(String re, @Nullable String options) {
-		return regex(toPattern(re, options));
+	public Criteria regex(String regex, @Nullable String options) {
+		return regex(toPattern(regex, options));
 	}
 
 	/**
 	 * Syntactical sugar for {@link #is(Object)} making obvious that we create a regex predicate.
 	 *
-	 * @param pattern
-	 * @return
+	 * @param pattern must not be {@literal null}.
+	 * @return this.
 	 */
 	public Criteria regex(Pattern pattern) {
 
@@ -450,6 +449,12 @@ public class Criteria implements CriteriaDefinition {
 		return this;
 	}
 
+	/**
+	 * Use a MongoDB native {@link BsonRegularExpression}.
+	 *
+	 * @param regex must not be {@literal null}.
+	 * @return this.
+	 */
 	public Criteria regex(BsonRegularExpression regex) {
 
 		if (lastOperatorWasNot()) {
@@ -472,7 +477,7 @@ public class Criteria implements CriteriaDefinition {
 	 * Mongo 2.4 and higher.
 	 *
 	 * @param circle must not be {@literal null}
-	 * @return
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/geoWithin/">MongoDB Query operator:
 	 *      $geoWithin</a>
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/centerSphere/">MongoDB Query operator:
@@ -489,8 +494,8 @@ public class Criteria implements CriteriaDefinition {
 	/**
 	 * Creates a geospatial criterion using a {@literal $geoWithin} operation.
 	 *
-	 * @param shape
-	 * @return
+	 * @param shape must not be {@literal null}.
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/geoWithin/">MongoDB Query operator:
 	 *      $geoWithin</a>
 	 */
@@ -506,7 +511,7 @@ public class Criteria implements CriteriaDefinition {
 	 * Creates a geospatial criterion using a {@literal $near} operation.
 	 *
 	 * @param point must not be {@literal null}
-	 * @return
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/near/">MongoDB Query operator: $near</a>
 	 */
 	public Criteria near(Point point) {
@@ -522,7 +527,7 @@ public class Criteria implements CriteriaDefinition {
 	 * higher.
 	 *
 	 * @param point must not be {@literal null}
-	 * @return
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/nearSphere/">MongoDB Query operator:
 	 *      $nearSphere</a>
 	 */
@@ -539,7 +544,7 @@ public class Criteria implements CriteriaDefinition {
 	 * structure and the documents one. Requires MongoDB 2.4 or better.
 	 *
 	 * @param geoJson must not be {@literal null}.
-	 * @return
+	 * @return this.
 	 * @since 1.8
 	 */
 	@SuppressWarnings("rawtypes")
@@ -554,7 +559,7 @@ public class Criteria implements CriteriaDefinition {
 	 * Creates a geo-spatial criterion using a {@literal $maxDistance} operation, for use with $near
 	 *
 	 * @param maxDistance
-	 * @return
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/maxDistance/">MongoDB Query operator:
 	 *      $maxDistance</a>
 	 */
@@ -574,7 +579,7 @@ public class Criteria implements CriteriaDefinition {
 	 * {@literal $nearSphere}.
 	 *
 	 * @param minDistance
-	 * @return
+	 * @return this.
 	 * @since 1.7
 	 */
 	public Criteria minDistance(double minDistance) {
@@ -591,27 +596,26 @@ public class Criteria implements CriteriaDefinition {
 	/**
 	 * Creates a criterion using the {@literal $elemMatch} operator
 	 *
-	 * @param c
-	 * @return
+	 * @param criteria must not be {@literal null}.
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/elemMatch/">MongoDB Query operator:
 	 *      $elemMatch</a>
 	 */
-	public Criteria elemMatch(Criteria c) {
-		criteria.put("$elemMatch", c.getCriteriaObject());
+	public Criteria elemMatch(Criteria criteria) {
+		this.criteria.put("$elemMatch", criteria.getCriteriaObject());
 		return this;
 	}
 
 	/**
 	 * Creates a criterion using the given object as a pattern.
 	 *
-	 * @param sample
-	 * @return
+	 * @param sample must not be {@literal null}.
+	 * @return this.
 	 * @since 1.8
 	 */
 	public Criteria alike(Example<?> sample) {
 
 		criteria.put("$example", sample);
-		this.criteriaChain.add(this);
 		return this;
 	}
 
@@ -658,7 +662,8 @@ public class Criteria implements CriteriaDefinition {
 	 * <p>
 	 *
 	 * @throws IllegalArgumentException if {@link #orOperator(Criteria...)} follows a not() call directly.
-	 * @param criteria
+	 * @param criteria must not be {@literal null}.
+	 * @return this.
 	 */
 	public Criteria orOperator(Criteria... criteria) {
 		BasicDBList bsonList = createCriteriaList(criteria);
@@ -672,7 +677,8 @@ public class Criteria implements CriteriaDefinition {
 	 * <p>
 	 *
 	 * @throws IllegalArgumentException if {@link #norOperator(Criteria...)} follows a not() call directly.
-	 * @param criteria
+	 * @param criteria must not be {@literal null}.
+	 * @return this.
 	 */
 	public Criteria norOperator(Criteria... criteria) {
 		BasicDBList bsonList = createCriteriaList(criteria);
@@ -686,7 +692,8 @@ public class Criteria implements CriteriaDefinition {
 	 * <p>
 	 *
 	 * @throws IllegalArgumentException if {@link #andOperator(Criteria...)} follows a not() call directly.
-	 * @param criteria
+	 * @param criteria must not be {@literal null}.
+	 * @return this.
 	 */
 	public Criteria andOperator(Criteria... criteria) {
 		BasicDBList bsonList = createCriteriaList(criteria);

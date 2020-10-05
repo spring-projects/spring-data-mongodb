@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,18 +28,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.bson.conversions.Bson;
 import org.bson.types.Code;
 import org.bson.types.ObjectId;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.geo.Point;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
@@ -55,10 +56,11 @@ import org.springframework.data.mongodb.core.mapping.TextScore;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.TextQuery;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import com.mongodb.QueryBuilder;
+import com.mongodb.MongoClientSettings;
+import com.mongodb.client.model.Filters;
 
 /**
  * Unit tests for {@link QueryMapper}.
@@ -69,17 +71,17 @@ import com.mongodb.QueryBuilder;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class QueryMapperUnitTests {
 
-	QueryMapper mapper;
-	MongoMappingContext context;
-	MappingMongoConverter converter;
+	private QueryMapper mapper;
+	private MongoMappingContext context;
+	private MappingMongoConverter converter;
 
-	@Mock MongoDbFactory factory;
+	@Mock MongoDatabaseFactory factory;
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	void beforeEach() {
 
 		this.context = new MongoMappingContext();
 
@@ -90,18 +92,18 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test
-	public void translatesIdPropertyIntoIdKey() {
+	void translatesIdPropertyIntoIdKey() {
 
 		org.bson.Document query = new org.bson.Document("foo", "value");
 		MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(Sample.class);
 
 		org.bson.Document result = mapper.getMappedObject(query, entity);
-		assertThat(result.get("_id")).isNotNull();
-		assertThat(result.get("foo")).isNull();
+		assertThat(result).containsKey("_id");
+		assertThat(result).doesNotContainKey("foo");
 	}
 
 	@Test
-	public void convertsStringIntoObjectId() {
+	void convertsStringIntoObjectId() {
 
 		org.bson.Document query = new org.bson.Document("_id", new ObjectId().toString());
 		org.bson.Document result = mapper.getMappedObject(query, context.getPersistentEntity(IdWrapper.class));
@@ -109,24 +111,24 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test
-	public void handlesBigIntegerIdsCorrectly() {
+	void handlesBigIntegerIdsCorrectly() {
 
 		org.bson.Document document = new org.bson.Document("id", new BigInteger("1"));
 		org.bson.Document result = mapper.getMappedObject(document, context.getPersistentEntity(IdWrapper.class));
-		assertThat(result.get("_id")).isEqualTo("1");
+		assertThat(result).containsEntry("_id", "1");
 	}
 
 	@Test
-	public void handlesObjectIdCapableBigIntegerIdsCorrectly() {
+	void handlesObjectIdCapableBigIntegerIdsCorrectly() {
 
 		ObjectId id = new ObjectId();
 		org.bson.Document document = new org.bson.Document("id", new BigInteger(id.toString(), 16));
 		org.bson.Document result = mapper.getMappedObject(document, context.getPersistentEntity(IdWrapper.class));
-		assertThat(result.get("_id")).isEqualTo(id);
+		assertThat(result).containsEntry("_id", id);
 	}
 
 	@Test // DATAMONGO-278
-	public void translates$NeCorrectly() {
+	void translates$NeCorrectly() {
 
 		Criteria criteria = where("foo").ne(new ObjectId().toString());
 
@@ -139,7 +141,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-326
-	public void handlesEnumsCorrectly() {
+	void handlesEnumsCorrectly() {
 		Query query = query(where("foo").is(Enum.INSTANCE));
 		org.bson.Document result = mapper.getMappedObject(query.getQueryObject(), Optional.empty());
 
@@ -148,7 +150,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test
-	public void handlesEnumsInNotEqualCorrectly() {
+	void handlesEnumsInNotEqualCorrectly() {
 		Query query = query(where("foo").ne(Enum.INSTANCE));
 		org.bson.Document result = mapper.getMappedObject(query.getQueryObject(), Optional.empty());
 
@@ -156,12 +158,11 @@ public class QueryMapperUnitTests {
 		assertThat(object).isInstanceOf(org.bson.Document.class);
 
 		Object ne = ((org.bson.Document) object).get("$ne");
-		assertThat(ne).isInstanceOf(String.class);
-		assertThat(ne.toString()).isEqualTo(Enum.INSTANCE.name());
+		assertThat(ne).isInstanceOf(String.class).hasToString(Enum.INSTANCE.name());
 	}
 
 	@Test
-	public void handlesEnumsIn$InCorrectly() {
+	void handlesEnumsIn$InCorrectly() {
 
 		Query query = query(where("foo").in(Enum.INSTANCE));
 		org.bson.Document result = mapper.getMappedObject(query.getQueryObject(), Optional.empty());
@@ -174,30 +175,30 @@ public class QueryMapperUnitTests {
 
 		List list = (List) in;
 		assertThat(list).hasSize(1);
-		assertThat(list.get(0)).isInstanceOf(String.class);
-		assertThat(list.get(0).toString()).isEqualTo(Enum.INSTANCE.name());
+		assertThat(list.get(0)).isInstanceOf(String.class).hasToString(Enum.INSTANCE.name());
 	}
 
 	@Test // DATAMONGO-373
-	public void handlesNativelyBuiltQueryCorrectly() {
+	void handlesNativelyBuiltQueryCorrectly() {
 
-		DBObject query = new QueryBuilder().or(new BasicDBObject("foo", "bar")).get();
-		mapper.getMappedObject(new org.bson.Document(query.toMap()), Optional.empty());
+		Bson query = new BasicDBObject(Filters.or(new BasicDBObject("foo", "bar")).toBsonDocument(org.bson.Document.class,
+				MongoClientSettings.getDefaultCodecRegistry()));
+		mapper.getMappedObject(query, Optional.empty());
 	}
 
 	@Test // DATAMONGO-369
-	public void handlesAllPropertiesIfDocument() {
+	void handlesAllPropertiesIfDocument() {
 
 		org.bson.Document query = new org.bson.Document();
 		query.put("foo", new org.bson.Document("$in", Arrays.asList(1, 2)));
 		query.put("bar", new Person());
 
 		org.bson.Document result = mapper.getMappedObject(query, Optional.empty());
-		assertThat(result.get("bar")).isNotNull();
+		assertThat(result).containsKey("bar");
 	}
 
 	@Test // DATAMONGO-429
-	public void transformsArraysCorrectly() {
+	void transformsArraysCorrectly() {
 
 		Query query = new BasicQuery("{ 'tags' : { '$all' : [ 'green', 'orange']}}");
 
@@ -206,7 +207,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test
-	public void doesHandleNestedFieldsWithDefaultIdNames() {
+	void doesHandleNestedFieldsWithDefaultIdNames() {
 
 		org.bson.Document document = new org.bson.Document("id", new ObjectId().toString());
 		document.put("nested", new org.bson.Document("id", new ObjectId().toString()));
@@ -219,7 +220,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-493
-	public void doesNotTranslateNonIdPropertiesFor$NeCriteria() {
+	void doesNotTranslateNonIdPropertiesFor$NeCriteria() {
 
 		ObjectId accidentallyAnObjectId = new ObjectId();
 
@@ -231,12 +232,12 @@ public class QueryMapperUnitTests {
 		assertThat(document.get("publishers")).isInstanceOf(org.bson.Document.class);
 
 		org.bson.Document publishers = (org.bson.Document) document.get("publishers");
-		assertThat(publishers.containsKey("$ne")).isTrue();
+		assertThat(publishers).containsKey("$ne");
 		assertThat(publishers.get("$ne")).isInstanceOf(String.class);
 	}
 
 	@Test // DATAMONGO-494
-	public void usesEntityMetadataInOr() {
+	void usesEntityMetadataInOr() {
 
 		Query query = query(new Criteria().orOperator(where("foo").is("bar")));
 		org.bson.Document result = mapper.getMappedObject(query.getQueryObject(),
@@ -248,44 +249,43 @@ public class QueryMapperUnitTests {
 		assertThat(ors).hasSize(1);
 		org.bson.Document criterias = getAsDocument(ors, 0);
 		assertThat(criterias.keySet()).hasSize(1).doesNotContain("foo");
-		assertThat(criterias.get("_id")).isNotNull();
+		assertThat(criterias).containsKey("_id");
 	}
 
 	@Test
-	public void translatesPropertyReferenceCorrectly() {
+	void translatesPropertyReferenceCorrectly() {
 
 		Query query = query(where("field").is(new CustomizedField()));
 		org.bson.Document result = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(CustomizedField.class));
 
-		assertThat(result.containsKey("foo")).isTrue();
-		assertThat(result.keySet()).hasSize(1);
+		assertThat(result).containsKey("foo").hasSize(1);
 	}
 
 	@Test
-	public void translatesNestedPropertyReferenceCorrectly() {
+	void translatesNestedPropertyReferenceCorrectly() {
 
 		Query query = query(where("field.field").is(new CustomizedField()));
 		org.bson.Document result = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(CustomizedField.class));
 
-		assertThat(result.containsKey("foo.foo")).isTrue();
+		assertThat(result).containsKey("foo.foo");
 		assertThat(result.keySet()).hasSize(1);
 	}
 
 	@Test
-	public void returnsOriginalKeyIfNoPropertyReference() {
+	void returnsOriginalKeyIfNoPropertyReference() {
 
 		Query query = query(where("bar").is(new CustomizedField()));
 		org.bson.Document result = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(CustomizedField.class));
 
-		assertThat(result.containsKey("bar")).isTrue();
+		assertThat(result).containsKey("bar");
 		assertThat(result.keySet()).hasSize(1);
 	}
 
 	@Test
-	public void convertsAssociationCorrectly() {
+	void convertsAssociationCorrectly() {
 
 		Reference reference = new Reference();
 		reference.id = 5L;
@@ -300,7 +300,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test
-	public void convertsNestedAssociationCorrectly() {
+	void convertsNestedAssociationCorrectly() {
 
 		Reference reference = new Reference();
 		reference.id = 5L;
@@ -315,7 +315,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test
-	public void convertsInKeywordCorrectly() {
+	void convertsInKeywordCorrectly() {
 
 		Reference first = new Reference();
 		first.id = 5L;
@@ -336,7 +336,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-570
-	public void correctlyConvertsNullReference() {
+	void correctlyConvertsNullReference() {
 
 		Query query = query(where("reference").is(null));
 		org.bson.Document object = mapper.getMappedObject(query.getQueryObject(),
@@ -346,20 +346,20 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-629
-	public void doesNotMapIdIfNoEntityMetadataAvailable() {
+	void doesNotMapIdIfNoEntityMetadataAvailable() {
 
 		String id = new ObjectId().toString();
 		Query query = query(where("id").is(id));
 
 		org.bson.Document object = mapper.getMappedObject(query.getQueryObject(), Optional.empty());
 
-		assertThat(object.containsKey("id")).isTrue();
-		assertThat(object.get("id")).isEqualTo(id);
-		assertThat(object.containsKey("_id")).isFalse();
+		assertThat(object).containsKey("id");
+		assertThat(object).containsEntry("id", id);
+		assertThat(object).doesNotContainKey("_id");
 	}
 
 	@Test // DATAMONGO-677
-	public void handleMapWithDBRefCorrectly() {
+	void handleMapWithDBRefCorrectly() {
 
 		org.bson.Document mapDocument = new org.bson.Document();
 		mapDocument.put("test", new com.mongodb.DBRef("test", "test"));
@@ -368,24 +368,24 @@ public class QueryMapperUnitTests {
 
 		org.bson.Document mapped = mapper.getMappedObject(document, context.getPersistentEntity(WithMapDBRef.class));
 
-		assertThat(mapped.containsKey("mapWithDBRef")).isTrue();
+		assertThat(mapped).containsKey("mapWithDBRef");
 		assertThat(mapped.get("mapWithDBRef")).isInstanceOf(org.bson.Document.class);
-		assertThat(((org.bson.Document) mapped.get("mapWithDBRef")).containsKey("test")).isTrue();
+		assertThat(((org.bson.Document) mapped.get("mapWithDBRef"))).containsKey("test");
 		assertThat(((org.bson.Document) mapped.get("mapWithDBRef")).get("test")).isInstanceOf(com.mongodb.DBRef.class);
 	}
 
 	@Test
-	public void convertsUnderscoreIdValueWithoutMetadata() {
+	void convertsUnderscoreIdValueWithoutMetadata() {
 
 		org.bson.Document document = new org.bson.Document().append("_id", new ObjectId().toString());
 
 		org.bson.Document mapped = mapper.getMappedObject(document, Optional.empty());
-		assertThat(mapped.containsKey("_id")).isTrue();
+		assertThat(mapped).containsKey("_id");
 		assertThat(mapped.get("_id")).isInstanceOf(ObjectId.class);
 	}
 
 	@Test // DATAMONGO-705
-	public void convertsDBRefWithExistsQuery() {
+	void convertsDBRefWithExistsQuery() {
 
 		Query query = query(where("reference").exists(false));
 
@@ -393,12 +393,12 @@ public class QueryMapperUnitTests {
 		org.bson.Document mappedObject = mapper.getMappedObject(query.getQueryObject(), entity);
 
 		org.bson.Document reference = getAsDocument(mappedObject, "reference");
-		assertThat(reference.containsKey("$exists")).isTrue();
-		assertThat(reference.get("$exists")).isEqualTo(false);
+		assertThat(reference).containsKey("$exists");
+		assertThat(reference).containsEntry("$exists", false);
 	}
 
 	@Test // DATAMONGO-706
-	public void convertsNestedDBRefsCorrectly() {
+	void convertsNestedDBRefsCorrectly() {
 
 		Reference reference = new Reference();
 		reference.id = 5L;
@@ -408,7 +408,7 @@ public class QueryMapperUnitTests {
 		BasicMongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(WithDBRef.class);
 		org.bson.Document mappedObject = mapper.getMappedObject(query.getQueryObject(), entity);
 
-		assertThat(mappedObject.get("someString")).isEqualTo("foo");
+		assertThat(mappedObject).containsEntry("someString", "foo");
 
 		List<Object> andClause = getAsDBList(mappedObject, "$and");
 		assertThat(andClause).hasSize(1);
@@ -419,29 +419,29 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-752
-	public void mapsSimpleValuesStartingWith$Correctly() {
+	void mapsSimpleValuesStartingWith$Correctly() {
 
 		Query query = query(where("myvalue").is("$334"));
 
 		org.bson.Document result = mapper.getMappedObject(query.getQueryObject(), Optional.empty());
 
 		assertThat(result.keySet()).hasSize(1);
-		assertThat(result.get("myvalue")).isEqualTo("$334");
+		assertThat(result).containsEntry("myvalue", "$334");
 	}
 
 	@Test // DATAMONGO-752
-	public void mapsKeywordAsSimpleValuesCorrectly() {
+	void mapsKeywordAsSimpleValuesCorrectly() {
 
 		Query query = query(where("myvalue").is("$center"));
 
 		org.bson.Document result = mapper.getMappedObject(query.getQueryObject(), Optional.empty());
 
 		assertThat(result.keySet()).hasSize(1);
-		assertThat(result.get("myvalue")).isEqualTo("$center");
+		assertThat(result).containsEntry("myvalue", "$center");
 	}
 
 	@Test // DATAMONGO-805
-	public void shouldExcludeDBRefAssociation() {
+	void shouldExcludeDBRefAssociation() {
 
 		Query query = query(where("someString").is("foo"));
 		query.fields().exclude("reference");
@@ -450,12 +450,12 @@ public class QueryMapperUnitTests {
 		org.bson.Document queryResult = mapper.getMappedObject(query.getQueryObject(), entity);
 		org.bson.Document fieldsResult = mapper.getMappedObject(query.getFieldsObject(), entity);
 
-		assertThat(queryResult.get("someString")).isEqualTo("foo");
-		assertThat(fieldsResult.get("reference")).isEqualTo(0);
+		assertThat(queryResult).containsEntry("someString", "foo");
+		assertThat(fieldsResult).containsEntry("reference", 0);
 	}
 
 	@Test // DATAMONGO-686
-	public void queryMapperShouldNotChangeStateInGivenQueryObjectWhenIdConstrainedByInList() {
+	void queryMapperShouldNotChangeStateInGivenQueryObjectWhenIdConstrainedByInList() {
 
 		BasicMongoPersistentEntity<?> persistentEntity = context.getRequiredPersistentEntity(Sample.class);
 		String idPropertyName = persistentEntity.getIdProperty().getName();
@@ -469,7 +469,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-821
-	public void queryMapperShouldNotTryToMapDBRefListPropertyIfNestedInsideDocumentWithinDocument() {
+	void queryMapperShouldNotTryToMapDBRefListPropertyIfNestedInsideDocumentWithinDocument() {
 
 		org.bson.Document queryObject = query(
 				where("referenceList").is(new org.bson.Document("$nested", new org.bson.Document("$keys", 0L))))
@@ -484,7 +484,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-821
-	public void queryMapperShouldNotTryToMapDBRefPropertyIfNestedInsideDocumentWithinDocument() {
+	void queryMapperShouldNotTryToMapDBRefPropertyIfNestedInsideDocumentWithinDocument() {
 
 		org.bson.Document queryObject = query(
 				where("reference").is(new org.bson.Document("$nested", new org.bson.Document("$keys", 0L)))).getQueryObject();
@@ -497,7 +497,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-821
-	public void queryMapperShouldMapDBRefPropertyIfNestedInDocument() {
+	void queryMapperShouldMapDBRefPropertyIfNestedInDocument() {
 
 		Reference sample = new Reference();
 		sample.id = 321L;
@@ -513,7 +513,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-773
-	public void queryMapperShouldBeAbleToProcessQueriesThatIncludeDbRefFields() {
+	void queryMapperShouldBeAbleToProcessQueriesThatIncludeDbRefFields() {
 
 		BasicMongoPersistentEntity<?> persistentEntity = context.getRequiredPersistentEntity(WithDBRef.class);
 
@@ -525,7 +525,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-893
-	public void classInformationShouldNotBePresentInDocumentUsedInFinderMethods() {
+	void classInformationShouldNotBePresentInDocumentUsedInFinderMethods() {
 
 		EmbeddedClass embedded = new EmbeddedClass();
 		embedded.id = "1";
@@ -539,7 +539,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1406
-	public void shouldMapQueryForNestedCustomizedPropertiesUsingConfiguredFieldNames() {
+	void shouldMapQueryForNestedCustomizedPropertiesUsingConfiguredFieldNames() {
 
 		EmbeddedClass embeddedClass = new EmbeddedClass();
 		embeddedClass.customizedField = "hello";
@@ -558,7 +558,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-647
-	public void customizedFieldNameShouldBeMappedCorrectlyWhenApplyingSort() {
+	void customizedFieldNameShouldBeMappedCorrectlyWhenApplyingSort() {
 
 		Query query = query(where("field").is("bar")).with(Sort.by(Direction.DESC, "field"));
 		org.bson.Document document = mapper.getMappedObject(query.getSortObject(),
@@ -567,7 +567,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-973
-	public void getMappedFieldsAppendsTextScoreFieldProperlyCorrectlyWhenNotPresent() {
+	void getMappedFieldsAppendsTextScoreFieldProperlyCorrectlyWhenNotPresent() {
 
 		Query query = new Query();
 
@@ -579,7 +579,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-973
-	public void getMappedFieldsReplacesTextScoreFieldProperlyCorrectlyWhenPresent() {
+	void getMappedFieldsReplacesTextScoreFieldProperlyCorrectlyWhenPresent() {
 
 		Query query = new Query();
 		query.fields().include("textScore");
@@ -592,7 +592,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-973
-	public void getMappedSortAppendsTextScoreProperlyWhenSortedByScore() {
+	void getMappedSortAppendsTextScoreProperlyWhenSortedByScore() {
 
 		Query query = new Query().with(Sort.by("textScore"));
 
@@ -604,7 +604,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-973
-	public void getMappedSortIgnoresTextScoreWhenNotSortedByScore() {
+	void getMappedSortIgnoresTextScoreWhenNotSortedByScore() {
 
 		Query query = new Query().with(Sort.by("id"));
 
@@ -615,20 +615,20 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1070, DATAMONGO-1798
-	public void mapsIdReferenceToDBRefCorrectly() {
+	void mapsIdReferenceToDBRefCorrectly() {
 
 		ObjectId id = new ObjectId();
 
 		org.bson.Document query = new org.bson.Document("reference.id", new com.mongodb.DBRef("reference", id));
 		org.bson.Document result = mapper.getMappedObject(query, context.getPersistentEntity(WithDBRef.class));
 
-		assertThat(result.containsKey("reference")).isTrue();
+		assertThat(result).containsKey("reference");
 		com.mongodb.DBRef reference = getTypedValue(result, "reference", com.mongodb.DBRef.class);
 		assertThat(reference.getId()).isInstanceOf(ObjectId.class);
 	}
 
 	@Test // DATAMONGO-1050
-	public void shouldUseExplicitlySetFieldnameForIdPropertyCandidates() {
+	void shouldUseExplicitlySetFieldnameForIdPropertyCandidates() {
 
 		Query query = query(where("nested.id").is("bar"));
 
@@ -639,7 +639,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1050
-	public void shouldUseExplicitlySetFieldnameForIdPropertyCandidatesUsedInSortClause() {
+	void shouldUseExplicitlySetFieldnameForIdPropertyCandidatesUsedInSortClause() {
 
 		Query query = new Query().with(Sort.by("nested.id"));
 
@@ -650,7 +650,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1135
-	public void nearShouldUseGeoJsonRepresentationOnUnmappedProperty() {
+	void nearShouldUseGeoJsonRepresentationOnUnmappedProperty() {
 
 		Query query = query(where("foo").near(new GeoJsonPoint(100, 50)));
 
@@ -663,7 +663,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1135
-	public void nearShouldUseGeoJsonRepresentationWhenMappingToGoJsonType() {
+	void nearShouldUseGeoJsonRepresentationWhenMappingToGoJsonType() {
 
 		Query query = query(where("geoJsonPoint").near(new GeoJsonPoint(100, 50)));
 
@@ -674,7 +674,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1135
-	public void nearSphereShouldUseGeoJsonRepresentationWhenMappingToGoJsonType() {
+	void nearSphereShouldUseGeoJsonRepresentationWhenMappingToGoJsonType() {
 
 		Query query = query(where("geoJsonPoint").nearSphere(new GeoJsonPoint(100, 50)));
 
@@ -685,7 +685,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1135
-	public void shouldMapNameCorrectlyForGeoJsonType() {
+	void shouldMapNameCorrectlyForGeoJsonType() {
 
 		Query query = query(where("namedGeoJsonPoint").nearSphere(new GeoJsonPoint(100, 50)));
 
@@ -696,7 +696,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1135
-	public void withinShouldUseGeoJsonPolygonWhenMappingPolygonOn2DSphereIndex() {
+	void withinShouldUseGeoJsonPolygonWhenMappingPolygonOn2DSphereIndex() {
 
 		Query query = query(where("geoJsonPoint")
 				.within(new GeoJsonPolygon(new Point(0, 0), new Point(100, 100), new Point(100, 0), new Point(0, 0))));
@@ -708,7 +708,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1134
-	public void intersectsShouldUseGeoJsonRepresentationCorrectly() {
+	void intersectsShouldUseGeoJsonRepresentationCorrectly() {
 
 		Query query = query(where("geoJsonPoint")
 				.intersects(new GeoJsonPolygon(new Point(0, 0), new Point(100, 100), new Point(100, 0), new Point(0, 0))));
@@ -721,29 +721,29 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1269
-	public void mappingShouldRetainNumericMapKey() {
+	void mappingShouldRetainNumericMapKey() {
 
 		Query query = query(where("map.1.stringProperty").is("ba'alzamon"));
 
 		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(EntityWithComplexValueTypeMap.class));
 
-		assertThat(document.containsKey("map.1.stringProperty")).isTrue();
+		assertThat(document).containsKey("map.1.stringProperty");
 	}
 
 	@Test // DATAMONGO-1269
-	public void mappingShouldRetainNumericPositionInList() {
+	void mappingShouldRetainNumericPositionInList() {
 
 		Query query = query(where("list.1.stringProperty").is("ba'alzamon"));
 
 		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(EntityWithComplexValueTypeList.class));
 
-		assertThat(document.containsKey("list.1.stringProperty")).isTrue();
+		assertThat(document).containsKey("list.1.stringProperty");
 	}
 
 	@Test // DATAMONGO-1245
-	public void exampleShouldBeMappedCorrectly() {
+	void exampleShouldBeMappedCorrectly() {
 
 		Foo probe = new Foo();
 		probe.embedded = new EmbeddedClass();
@@ -757,7 +757,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void exampleShouldBeMappedCorrectlyWhenContainingLegacyPoint() {
+	void exampleShouldBeMappedCorrectlyWhenContainingLegacyPoint() {
 
 		ClassWithGeoTypes probe = new ClassWithGeoTypes();
 		probe.legacyPoint = new Point(10D, 20D);
@@ -767,12 +767,12 @@ public class QueryMapperUnitTests {
 		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(WithDBRef.class));
 
-		assertThat(document.get("legacyPoint.x")).isEqualTo(10D);
-		assertThat(document.get("legacyPoint.y")).isEqualTo(20D);
+		assertThat(document).containsEntry("legacyPoint.x", 10D);
+		assertThat(document).containsEntry("legacyPoint.y", 20D);
 	}
 
 	@Test // DATAMONGO-1988
-	public void mapsStringObjectIdRepresentationToObjectIdWhenReferencingIdProperty() {
+	void mapsStringObjectIdRepresentationToObjectIdWhenReferencingIdProperty() {
 
 		Query query = query(where("sample.foo").is(new ObjectId().toHexString()));
 		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
@@ -782,7 +782,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1988
-	public void matchesExactFieldNameToIdProperty() {
+	void matchesExactFieldNameToIdProperty() {
 
 		Query query = query(where("sample.iid").is(new ObjectId().toHexString()));
 		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
@@ -792,7 +792,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1988
-	public void leavesNonObjectIdStringIdRepresentationUntouchedWhenReferencingIdProperty() {
+	void leavesNonObjectIdStringIdRepresentationUntouchedWhenReferencingIdProperty() {
 
 		Query query = query(where("sample.foo").is("id-1"));
 		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
@@ -802,7 +802,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-2168
-	public void getMappedObjectShouldNotMapTypeHint() {
+	void getMappedObjectShouldNotMapTypeHint() {
 
 		converter.setTypeMapper(new DefaultMongoTypeMapper("className"));
 
@@ -813,7 +813,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-2168
-	public void getMappedObjectShouldIgnorePathsLeadingToJavaLangClassProperties/* like Class#getName() */() {
+	void getMappedObjectShouldIgnorePathsLeadingToJavaLangClassProperties/* like Class#getName() */() {
 
 		org.bson.Document update = new org.bson.Document("className", "foo");
 		org.bson.Document mappedObject = mapper.getMappedObject(update, context.getPersistentEntity(UserEntity.class));
@@ -822,7 +822,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-2193
-	public void shouldNotConvertHexStringToObjectIdForRenamedNestedIdField() {
+	void shouldNotConvertHexStringToObjectIdForRenamedNestedIdField() {
 
 		String idHex = new ObjectId().toHexString();
 		Query query = new Query(where("nested.id").is(idHex));
@@ -834,7 +834,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-2221
-	public void shouldNotConvertHexStringToObjectIdForRenamedDeeplyNestedIdField() {
+	void shouldNotConvertHexStringToObjectIdForRenamedDeeplyNestedIdField() {
 
 		String idHex = new ObjectId().toHexString();
 		Query query = new Query(where("nested.deeplyNested.id").is(idHex));
@@ -846,7 +846,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-2221
-	public void shouldNotConvertHexStringToObjectIdForUnresolvablePath() {
+	void shouldNotConvertHexStringToObjectIdForUnresolvablePath() {
 
 		String idHex = new ObjectId().toHexString();
 		Query query = new Query(where("nested.unresolvablePath.id").is(idHex));
@@ -858,7 +858,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1849
-	public void shouldConvertPropertyWithExplicitTargetType() {
+	void shouldConvertPropertyWithExplicitTargetType() {
 
 		String script = "if (a > b) a else b";
 		Query query = new Query(where("script").is(script));
@@ -870,7 +870,7 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1849
-	public void shouldConvertCollectionPropertyWithExplicitTargetType() {
+	void shouldConvertCollectionPropertyWithExplicitTargetType() {
 
 		String script = "if (a > b) a else b";
 		Query query = new Query(where("scripts").is(script));
@@ -881,18 +881,164 @@ public class QueryMapperUnitTests {
 		assertThat(document).isEqualTo(new org.bson.Document("scripts", new Code(script)));
 	}
 
+	@Test // DATAMONGO-2339
+	void findByIdUsesMappedIdFieldNameWithUnderscoreCorrectly() {
+
+		org.bson.Document target = mapper.getMappedObject(new org.bson.Document("with_underscore", "id-1"),
+				context.getPersistentEntity(WithIdPropertyContainingUnderscore.class));
+
+		assertThat(target).isEqualTo(new org.bson.Document("_id", "id-1"));
+	}
+
+	@Test // DATAMONGO-2394
+	void leavesDistanceUntouchedWhenUsingGeoJson() {
+
+		Query query = query(where("geoJsonPoint").near(new GeoJsonPoint(27.987901, 86.9165379)).maxDistance(1000));
+
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(ClassWithGeoTypes.class));
+		assertThat(document).containsEntry("geoJsonPoint.$near.$geometry.type", "Point");
+		assertThat(document).containsEntry("geoJsonPoint.$near.$maxDistance", 1000.0D);
+	}
+
+	@Test // DATAMONGO-2440
+	void convertsInWithNonIdFieldAndObjectIdTypeHintCorrectly() {
+
+		String id = new ObjectId().toHexString();
+		NonIdFieldWithObjectIdTargetType source = new NonIdFieldWithObjectIdTargetType();
+
+		source.stringAsOid = id;
+
+		org.bson.Document target = mapper.getMappedObject(query(where("stringAsOid").in(id)).getQueryObject(),
+				context.getPersistentEntity(NonIdFieldWithObjectIdTargetType.class));
+		assertThat(target).isEqualTo(org.bson.Document.parse("{\"stringAsOid\": {\"$in\": [{\"$oid\": \"" + id + "\"}]}}"));
+	}
+
+	@Test // DATAMONGO-2440
+	void convertsInWithIdFieldAndObjectIdTypeHintCorrectly() {
+
+		String id = new ObjectId().toHexString();
+		NonIdFieldWithObjectIdTargetType source = new NonIdFieldWithObjectIdTargetType();
+
+		source.id = id;
+
+		org.bson.Document target = mapper.getMappedObject(query(where("id").in(id)).getQueryObject(),
+				context.getPersistentEntity(NonIdFieldWithObjectIdTargetType.class));
+		assertThat(target).isEqualTo(org.bson.Document.parse("{\"_id\": {\"$in\": [{\"$oid\": \"" + id + "\"}]}}"));
+	}
+
+	@Test // DATAMONGO-2488
+	void mapsNestedArrayPathCorrectlyForNonMatchingPath() {
+
+		org.bson.Document target = mapper.getMappedObject(
+				query(where("array.$[some_item].nested.$[other_item]").is("value")).getQueryObject(),
+				context.getPersistentEntity(Foo.class));
+
+		assertThat(target).isEqualTo(new org.bson.Document("array.$[some_item].nested.$[other_item]", "value"));
+	}
+
+	@Test // DATAMONGO-2488
+	void mapsNestedArrayPathCorrectlyForObjectTargetArray() {
+
+		org.bson.Document target = mapper.getMappedObject(
+				query(where("arrayObj.$[some_item].nested.$[other_item]").is("value")).getQueryObject(),
+				context.getPersistentEntity(WithNestedArray.class));
+
+		assertThat(target).isEqualTo(new org.bson.Document("arrayObj.$[some_item].nested.$[other_item]", "value"));
+	}
+
+	@Test // DATAMONGO-2488
+	void mapsNestedArrayPathCorrectlyForStringTargetArray() {
+
+		org.bson.Document target = mapper.getMappedObject(
+				query(where("arrayString.$[some_item].nested.$[other_item]").is("value")).getQueryObject(),
+				context.getPersistentEntity(WithNestedArray.class));
+
+		assertThat(target).isEqualTo(new org.bson.Document("arrayString.$[some_item].nested.$[other_item]", "value"));
+	}
+
+	@Test // DATAMONGO-2488
+	void mapsCustomFieldNamesForNestedArrayPathCorrectly() {
+
+		org.bson.Document target = mapper.getMappedObject(
+				query(where("arrayCustomName.$[some_item].nested.$[other_item]").is("value")).getQueryObject(),
+				context.getPersistentEntity(WithNestedArray.class));
+
+		assertThat(target).isEqualTo(new org.bson.Document("arrayCustomName.$[some_item].nes-ted.$[other_item]", "value"));
+	}
+
+	@Test // DATAMONGO-2502
+	void shouldAllowDeeplyNestedPlaceholders() {
+
+		org.bson.Document target = mapper.getMappedObject(
+				query(where("level0.$[some_item].arrayObj.$[other_item].nested").is("value")).getQueryObject(),
+				context.getPersistentEntity(WithDeepArrayNesting.class));
+
+		assertThat(target).isEqualTo(new org.bson.Document("level0.$[some_item].arrayObj.$[other_item].nested", "value"));
+	}
+
+	@Test // DATAMONGO-2502
+	void shouldAllowDeeplyNestedPlaceholdersWithCustomName() {
+
+		org.bson.Document target = mapper.getMappedObject(
+				query(where("level0.$[some_item].arrayCustomName.$[other_item].nested").is("value")).getQueryObject(),
+				context.getPersistentEntity(WithDeepArrayNesting.class));
+
+		assertThat(target)
+				.isEqualTo(new org.bson.Document("level0.$[some_item].arrayCustomName.$[other_item].nes-ted", "value"));
+	}
+
+	@Test // DATAMONGO-2517
+	void shouldParseNestedKeywordWithArgumentMatchingTheSourceEntitiesConstructorCorrectly() {
+
+		TextQuery source = new TextQuery("test");
+
+		org.bson.Document target = mapper.getMappedObject(source.getQueryObject(),
+				context.getPersistentEntity(WithSingleStringArgConstructor.class));
+		assertThat(target).isEqualTo(org.bson.Document.parse("{\"$text\" : { \"$search\" : \"test\" }}"));
+	}
+
+	class WithDeepArrayNesting {
+
+		List<WithNestedArray> level0;
+	}
+
+	class WithNestedArray {
+
+		List<NestedArrayOfObj> arrayObj;
+		List<NestedArrayOfString> arrayString;
+		List<NestedArrayOfObjCustomFieldName> arrayCustomName;
+	}
+
+	class NestedArrayOfObj {
+		List<ArrayObj> nested;
+	}
+
+	class NestedArrayOfObjCustomFieldName {
+
+		@Field("nes-ted") List<ArrayObj> nested;
+	}
+
+	class NestedArrayOfString {
+		List<String> nested;
+	}
+
+	class ArrayObj {
+		String foo;
+	}
+
 	@Document
-	public class Foo {
+	class Foo {
 		@Id private ObjectId id;
 		EmbeddedClass embedded;
 
 		@Field("my_items") List<EmbeddedClass> listOfItems;
 	}
 
-	public class EmbeddedClass {
-		public String id;
+	class EmbeddedClass {
+		String id;
 
-		@Field("fancy_custom_name") public String customizedField;
+		@Field("fancy_custom_name") String customizedField;
 	}
 
 	class IdWrapper {
@@ -1012,5 +1158,27 @@ public class QueryMapperUnitTests {
 
 		@Field(targetType = FieldType.SCRIPT) //
 		List<String> scripts;
+	}
+
+	static class WithIdPropertyContainingUnderscore {
+		@Id String with_underscore;
+	}
+
+	static class NonIdFieldWithObjectIdTargetType {
+
+		String id;
+		@Field(targetType = FieldType.OBJECT_ID) String stringAsOid;
+	}
+
+	@Document
+	static class WithSingleStringArgConstructor {
+
+		String value;
+
+		public WithSingleStringArgConstructor() {}
+
+		public WithSingleStringArgConstructor(String value) {
+			this.value = value;
+		}
 	}
 }

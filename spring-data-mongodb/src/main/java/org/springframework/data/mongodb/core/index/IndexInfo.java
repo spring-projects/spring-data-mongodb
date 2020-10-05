@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.bson.Document;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.NumberUtils;
@@ -67,8 +68,8 @@ public class IndexInfo {
 	/**
 	 * Creates new {@link IndexInfo} parsing required properties from the given {@literal sourceDocument}.
 	 *
-	 * @param sourceDocument
-	 * @return
+	 * @param sourceDocument never {@literal null}.
+	 * @return new instance of {@link IndexInfo}.
 	 * @since 1.10
 	 */
 	public static IndexInfo indexInfoOf(Document sourceDocument) {
@@ -117,9 +118,8 @@ public class IndexInfo {
 		boolean sparse = sourceDocument.containsKey("sparse") ? (Boolean) sourceDocument.get("sparse") : false;
 		String language = sourceDocument.containsKey("default_language") ? (String) sourceDocument.get("default_language")
 				: "";
-		String partialFilter = sourceDocument.containsKey("partialFilterExpression")
-				? ((Document) sourceDocument.get("partialFilterExpression")).toJson()
-				: null;
+
+		String partialFilter = extractPartialFilterString(sourceDocument);
 
 		IndexInfo info = new IndexInfo(indexFields, name, unique, sparse, language);
 		info.partialFilterExpression = partialFilter;
@@ -132,6 +132,21 @@ public class IndexInfo {
 		}
 
 		return info;
+	}
+
+	/**
+	 * @param sourceDocument never {@literal null}.
+	 * @return the {@link String} representation of the partial filter {@link Document}.
+	 * @since 2.1.11
+	 */
+	@Nullable
+	private static String extractPartialFilterString(Document sourceDocument) {
+
+		if (!sourceDocument.containsKey("partialFilterExpression")) {
+			return null;
+		}
+
+		return BsonUtils.toJson(sourceDocument.get("partialFilterExpression", Document.class));
 	}
 
 	/**

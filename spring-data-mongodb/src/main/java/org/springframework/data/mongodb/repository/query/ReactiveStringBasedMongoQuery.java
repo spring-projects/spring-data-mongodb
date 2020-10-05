@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,17 +15,21 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import reactor.core.publisher.Mono;
+
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.util.json.ParameterBindingContext;
 import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ReactiveExtensionAwareQueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
+import org.springframework.data.spel.ExpressionDependencies;
+import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
 
@@ -40,13 +44,12 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 
 	private static final String COUNT_EXISTS_AND_DELETE = "Manually defined query for %s cannot be a count and exists or delete query at the same time!";
 	private static final Logger LOG = LoggerFactory.getLogger(ReactiveStringBasedMongoQuery.class);
-	private static final ParameterBindingDocumentCodec CODEC = new ParameterBindingDocumentCodec();
 
 	private final String query;
 	private final String fieldSpec;
 
-	private final SpelExpressionParser expressionParser;
-	private final QueryMethodEvaluationContextProvider evaluationContextProvider;
+	private final ExpressionParser expressionParser;
+	private final ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider;
 
 	private final boolean isCountQuery;
 	private final boolean isExistsQuery;
@@ -62,13 +65,14 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	 * @param evaluationContextProvider must not be {@literal null}.
 	 */
 	public ReactiveStringBasedMongoQuery(ReactiveMongoQueryMethod method, ReactiveMongoOperations mongoOperations,
-			SpelExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			ExpressionParser expressionParser, ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider) {
 		this(method.getAnnotatedQuery(), method, mongoOperations, expressionParser, evaluationContextProvider);
 	}
 
 	/**
 	 * Creates a new {@link ReactiveStringBasedMongoQuery} for the given {@link String}, {@link MongoQueryMethod},
-	 * {@link MongoOperations}, {@link SpelExpressionParser} and {@link QueryMethodEvaluationContextProvider}.
+	 * {@link MongoOperations}, {@link SpelExpressionParser} and
+	 * {@link ReactiveExtensionAwareQueryMethodEvaluationContextProvider}.
 	 *
 	 * @param query must not be {@literal null}.
 	 * @param method must not be {@literal null}.
@@ -76,8 +80,8 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	 * @param expressionParser must not be {@literal null}.
 	 */
 	public ReactiveStringBasedMongoQuery(String query, ReactiveMongoQueryMethod method,
-			ReactiveMongoOperations mongoOperations, SpelExpressionParser expressionParser,
-			QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			ReactiveMongoOperations mongoOperations, ExpressionParser expressionParser,
+			ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider) {
 
 		super(method, mongoOperations, expressionParser, evaluationContextProvider);
 
@@ -114,21 +118,36 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#createQuery(org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor)
 	 */
 	@Override
-	protected Query createQuery(ConvertingParameterAccessor accessor) {
+	protected Mono<Query> createQuery(ConvertingParameterAccessor accessor) {
 
-		ParameterBindingContext bindingContext = new ParameterBindingContext((accessor::getBindableValue), expressionParser,
-				evaluationContextProvider.getEvaluationContext(getQueryMethod().getParameters(), accessor.getValues()));
+		return getCodecRegistry().map(ParameterBindingDocumentCodec::new).flatMap(codec -> {
 
-		Document queryObject = CODEC.decode(this.query, bindingContext);
-		Document fieldsObject = CODEC.decode(this.fieldSpec, bindingContext);
+			Mono<Document> queryObject = getBindingContext(query, accessor, codec)
+					.map(context -> codec.decode(query, context));
+			Mono<Document> fieldsObject = getBindingContext(fieldSpec, accessor, codec)
+					.map(context -> codec.decode(fieldSpec, context));
 
-		Query query = new BasicQuery(queryObject, fieldsObject).with(accessor.getSort());
+			return queryObject.zipWith(fieldsObject).map(tuple -> {
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug(String.format("Created query %s for %s fields.", query.getQueryObject(), query.getFieldsObject()));
-		}
+				Query query = new BasicQuery(tuple.getT1(), tuple.getT2()).with(accessor.getSort());
 
-		return query;
+				if (LOG.isDebugEnabled()) {
+					LOG.debug(String.format("Created query %s for %s fields.", query.getQueryObject(), query.getFieldsObject()));
+				}
+
+				return query;
+			});
+		});
+	}
+
+	private Mono<ParameterBindingContext> getBindingContext(String json, ConvertingParameterAccessor accessor,
+			ParameterBindingDocumentCodec codec) {
+
+		ExpressionDependencies dependencies = codec.captureExpressionDependencies(json, accessor::getBindableValue,
+				expressionParser);
+
+		return getSpelEvaluatorFor(dependencies, accessor)
+				.map(it -> new ParameterBindingContext(accessor::getBindableValue, it));
 	}
 
 	/*

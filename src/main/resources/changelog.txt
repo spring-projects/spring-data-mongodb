@@ -1,6 +1,506 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.1.0-RC1 (2020-09-16)
+-----------------------------------------
+* DATAMONGO-2621 - Adapt to changed array assertions in AssertJ.
+* DATAMONGO-2618 - ReplaceRootDocumentOperation not visible.
+* DATAMONGO-2613 - ArrayJsonSchemaObject incorrectly mapped to Document.
+* DATAMONGO-2608 - Release 3.1 RC1 (2020.0.0).
+
+
+Changes in version 3.0.4.RELEASE (2020-09-16)
+---------------------------------------------
+* DATAMONGO-2618 - ReplaceRootDocumentOperation not visible.
+* DATAMONGO-2613 - ArrayJsonSchemaObject incorrectly mapped to Document.
+* DATAMONGO-2609 - Release 3.0.4 (Neumann SR4).
+
+
+Changes in version 2.2.10.RELEASE (2020-09-16)
+----------------------------------------------
+* DATAMONGO-2618 - ReplaceRootDocumentOperation not visible.
+* DATAMONGO-2613 - ArrayJsonSchemaObject incorrectly mapped to Document.
+* DATAMONGO-2599 - Ambiguous field mapping detected for enum java.time.temporal.ChronoUnit.
+* DATAMONGO-2593 - Release 2.2.10 (Moore SR10).
+
+
+Changes in version 2.1.20.RELEASE (2020-09-16)
+----------------------------------------------
+* DATAMONGO-2618 - ReplaceRootDocumentOperation not visible.
+* DATAMONGO-2613 - ArrayJsonSchemaObject incorrectly mapped to Document.
+* DATAMONGO-2592 - Release 2.1.20 (Lovelace SR20).
+
+
+Changes in version 3.0.3.RELEASE (2020-08-12)
+---------------------------------------------
+* DATAMONGO-2601 - Consider Unit a void type in Coroutine repositories.
+* DATAMONGO-2599 - Ambiguous field mapping detected for enum java.time.temporal.ChronoUnit.
+* DATAMONGO-2598 - Wording changes.
+* DATAMONGO-2594 - Release 3.0.3 (Neumann SR3).
+
+
+Changes in version 3.1.0-M2 (2020-08-12)
+----------------------------------------
+* DATAMONGO-2603 - Adopt to Reactor 3.4 changes.
+* DATAMONGO-2602 - Upgrade MongoDB drivers to 4.1.0.
+* DATAMONGO-2601 - Consider Unit a void type in Coroutine repositories.
+* DATAMONGO-2599 - Ambiguous field mapping detected for enum java.time.temporal.ChronoUnit.
+* DATAMONGO-2598 - Wording changes.
+* DATAMONGO-2591 - Upgrade MongoDB drivers to 4.1.0-rc0.
+* DATAMONGO-2586 - Add support for reactive auditing.
+* DATAMONGO-2579 - Release 3.1 M2 (2020.0.0).
+* DATAMONGO-2571 - regex expression included "/" character can't be parsed in the stage of aggregation annotation.
+* DATAMONGO-2536 - Add option to discard results on $out and $merge.
+* DATAMONGO-2490 - @DBRef fetched without ClientSession when using Spring Transactions.
+* DATAMONGO-1894 - Use reactive subscriber context for SpEL evaluation in query execution.
+* DATAMONGO-1836 - Add support for hint option to aggregation.
+
+
+Changes in version 3.0.2.RELEASE (2020-07-22)
+---------------------------------------------
+* DATAMONGO-2589 - Upgrade to MongoDB Driver 4.0.5.
+* DATAMONGO-2572 - Remove usage of Oppressive Language.
+* DATAMONGO-2571 - regex expression included "/" character can't be parsed in the stage of aggregation annotation.
+* DATAMONGO-2570 - Avoiding unintentional unboxing.
+* DATAMONGO-2568 - Release 3.0.2 (Neumann SR2).
+* DATAMONGO-2536 - Add option to discard results on $out and $merge.
+* DATAMONGO-2490 - @DBRef fetched without ClientSession when using Spring Transactions.
+
+
+Changes in version 2.2.9.RELEASE (2020-07-22)
+---------------------------------------------
+* DATAMONGO-2572 - Remove usage of Oppressive Language.
+* DATAMONGO-2571 - regex expression included "/" character can't be parsed in the stage of aggregation annotation.
+* DATAMONGO-2570 - Avoiding unintentional unboxing.
+* DATAMONGO-2567 - Release 2.2.9 (Moore SR9).
+* DATAMONGO-2490 - @DBRef fetched without ClientSession when using Spring Transactions.
+
+
+Changes in version 2.1.19.RELEASE (2020-07-22)
+----------------------------------------------
+* DATAMONGO-2572 - Remove usage of Oppressive Language.
+* DATAMONGO-2570 - Avoiding unintentional unboxing.
+* DATAMONGO-2566 - Release 2.1.19 (Lovelace SR19).
+
+
+Changes in version 3.1.0-M1 (2020-06-25)
+----------------------------------------
+* DATAMONGO-2576 - Upgrade to Hibernate Validator 5.4.3.
+* DATAMONGO-2574 - GridFSOperations should not override content type.
+* DATAMONGO-2572 - Remove usage of Oppressive Language.
+* DATAMONGO-2570 - Avoiding unintentional unboxing.
+* DATAMONGO-2565 - MongoPersistentEntity.getCollation(...) evaluates document expression instead of collation expression.
+* DATAMONGO-2564 - Use standard Spring code of conduct.
+* DATAMONGO-2562 - CoroutineCrudRepository findAllBy throwing IncorrectResultSizeDataAccessException when more than 1 result.
+* DATAMONGO-2560 - Upgrade MongoDB drivers to 4.0.4.
+* DATAMONGO-2558 - Add integration test for RxJava 3 repositories.
+* DATAMONGO-2556 - Support countAll() in MongoOperations.
+* DATAMONGO-2553 - Reference documentation contains links to removed sections.
+* DATAMONGO-2547 - java.lang.IllegalArgumentException: com.mongodb.client.MongoDatabase referenced from a method is not visible from class loader.
+* DATAMONGO-2545 - Backwards incompatibilities on @Query.
+* DATAMONGO-2544 - Release 3.1 M1 (2020.0.0).
+* DATAMONGO-2542 - Don't attempt to map query operator keywords to properties.
+* DATAMONGO-2538 - Delombok source files.
+* DATAMONGO-2285 - BulkOperations.execute throws DuplicateKeyException.
+* DATAMONGO-1569 - Allow partial filter expression usage along with the *...Indexed annotations.
+
+
+Changes in version 3.0.1.RELEASE (2020-06-10)
+---------------------------------------------
+* DATAMONGO-2565 - MongoPersistentEntity.getCollation(...) evaluates document expression instead of collation expression.
+* DATAMONGO-2562 - CoroutineCrudRepository findAllBy throwing IncorrectResultSizeDataAccessException when more than 1 result.
+* DATAMONGO-2560 - Upgrade MongoDB drivers to 4.0.4.
+* DATAMONGO-2553 - Reference documentation contains links to removed sections.
+* DATAMONGO-2547 - java.lang.IllegalArgumentException: com.mongodb.client.MongoDatabase referenced from a method is not visible from class loader.
+* DATAMONGO-2545 - Backwards incompatibilities on @Query.
+* DATAMONGO-2543 - Release 3.0.1 (Neumann SR1).
+* DATAMONGO-2542 - Don't attempt to map query operator keywords to properties.
+
+
+Changes in version 2.2.8.RELEASE (2020-06-10)
+---------------------------------------------
+* DATAMONGO-2565 - MongoPersistentEntity.getCollation(...) evaluates document expression instead of collation expression.
+* DATAMONGO-2547 - java.lang.IllegalArgumentException: com.mongodb.client.MongoDatabase referenced from a method is not visible from class loader.
+* DATAMONGO-2545 - Backwards incompatibilities on @Query.
+* DATAMONGO-2542 - Don't attempt to map query operator keywords to properties.
+* DATAMONGO-2535 - Remove Travis CI.
+* DATAMONGO-2533 - Release 2.2.8 (Moore SR8).
+* DATAMONGO-2509 - Polish documentation for 3.0 release.
+
+
+Changes in version 2.1.18.RELEASE (2020-06-10)
+----------------------------------------------
+* DATAMONGO-2547 - java.lang.IllegalArgumentException: com.mongodb.client.MongoDatabase referenced from a method is not visible from class loader.
+* DATAMONGO-2535 - Remove Travis CI.
+* DATAMONGO-2532 - Release 2.1.18 (Lovelace SR18).
+
+
+Changes in version 3.0.0.RELEASE (2020-05-12)
+---------------------------------------------
+* DATAMONGO-2541 - Upgrade to MongoDB 4.0.3 Drivers.
+* DATAMONGO-2535 - Remove Travis CI.
+* DATAMONGO-2534 - Release 3.0 GA (Neumann).
+* DATAMONGO-2509 - Polish documentation for 3.0 release.
+* DATAMONGO-365 - Example 5.5. of reference documentation uses deprecated function.
+
+
+Changes in version 3.0.0.RC2 (2020-04-28)
+-----------------------------------------
+* DATAMONGO-2531 - Fix MongoClientSettings UUID configuration hook in MongoConfigurationSupport.
+* DATAMONGO-2529 - EntityReader called with null argument.
+* DATAMONGO-2523 - ParameterBindingJsonReader skips too many chars.
+* DATAMONGO-2517 - Text search fails on entity with second constructor.
+* DATAMONGO-2516 - Assert compatibility with MongoDB 4.4-rc0.
+* DATAMONGO-2513 - ComparisonOperators.Eq#equalToValue doesn't work well with Lists.
+* DATAMONGO-2510 - Use JDK 14 for Java.NEXT CI testing.
+* DATAMONGO-2508 - Upgrade to MongoDB 4.0.2 Drivers.
+* DATAMONGO-2507 - Add default method accepting CriteriaDefinition on ReactiveFindOperation.DistinctWithQuery.
+* DATAMONGO-2506 - StringBasedAggregation should raise meaningful error when unsupported return type requested.
+* DATAMONGO-2505 - Deferred Database retrieval from ReactiveMongoDatabaseFactory.
+* DATAMONGO-2504 - TextCriteria Hashcode and equals.
+* DATAMONGO-2503 - Release 3.0 RC2 (Neumann).
+* DATAMONGO-2502 - Regression in Update property mapping.
+
+
+Changes in version 2.2.7.RELEASE (2020-04-28)
+---------------------------------------------
+* DATAMONGO-2529 - EntityReader called with null argument.
+* DATAMONGO-2523 - ParameterBindingJsonReader skips too many chars.
+* DATAMONGO-2517 - Text search fails on entity with second constructor.
+* DATAMONGO-2513 - ComparisonOperators.Eq#equalToValue doesn't work well with Lists.
+* DATAMONGO-2506 - StringBasedAggregation should raise meaningful error when unsupported return type requested.
+* DATAMONGO-2504 - TextCriteria Hashcode and equals.
+* DATAMONGO-2502 - Regression in Update property mapping.
+* DATAMONGO-2500 - Release 2.2.7 (Moore SR7).
+
+
+Changes in version 2.1.17.RELEASE (2020-04-28)
+----------------------------------------------
+* DATAMONGO-2529 - EntityReader called with null argument.
+* DATAMONGO-2497 - Update documentation regarding @Transient properties usage in the persistence constructor.
+* DATAMONGO-2484 - Release 2.1.17 (Lovelace SR17).
+* DATAMONGO-2300 - Can't read and convert DBRef when the type is Map.
+
+
+Changes in version 3.0.0.RC1 (2020-03-31)
+-----------------------------------------
+* DATAMONGO-2501 - Upgrade to Querydsl 4.3.
+* DATAMONGO-2498 - Upgrade to MongoDB 4.0.1 Drivers.
+* DATAMONGO-2497 - Update documentation regarding @Transient properties usage in the persistence constructor.
+* DATAMONGO-2492 - Release 3.0 RC1 (Neumann).
+* DATAMONGO-2488 - KeyMapper.mapPropertyName does not work for nested arrays.
+* DATAMONGO-2479 - More EntityCallback specializations.
+* DATAMONGO-2477 - Disable auto-index creation by default.
+* DATAMONGO-2475 - QueryDSL: $and and $or with more than two arguments in final query document.
+* DATAMONGO-2416 - Add default methods accepting CriteriaDefinition on Fluent API.
+* DATAMONGO-2300 - Can't read and convert DBRef when the type is Map.
+* DATAMONGO-1026 - Joda, JSR-310 and ThreeTenBp converters are timezone-sensitive.
+* DATAMONGO-931 - Add support for $redact operation.
+* DATAMONGO-625 - GridFsOperations.createFile method should allow specification of _id.
+
+
+Changes in version 2.2.6.RELEASE (2020-03-25)
+---------------------------------------------
+* DATAMONGO-2497 - Update documentation regarding @Transient properties usage in the persistence constructor.
+* DATAMONGO-2488 - KeyMapper.mapPropertyName does not work for nested arrays.
+* DATAMONGO-2485 - Release 2.2.6 (Moore SR6).
+* DATAMONGO-2445 - Deprecate ReactiveGridFs methods using AsyncInputStream.
+* DATAMONGO-2300 - Can't read and convert DBRef when the type is Map.
+
+
+Changes in version 3.0.0.M4 (2020-03-11)
+----------------------------------------
+* DATAMONGO-2491 - Adapt to Mockito 3.3 changes.
+* DATAMONGO-2489 - Upgrade to MongoDB Driver 4.0.
+* DATAMONGO-2481 - Speed up build.
+* DATAMONGO-2478 - NPE when using Query annotation and with sort and pageable.
+* DATAMONGO-2476 - JsonParseException: JSON reader was expecting a value but found '}'.
+* DATAMONGO-2474 - Upgrade to MongoDB Driver 4.0.0-rc0.
+* DATAMONGO-2473 - Release 3.0 M4 (Neumann).
+* DATAMONGO-2363 - Add support for $merge aggregation stage.
+* DATAMONGO-2355 - Revise Abstract…MongoConfiguration to expose more bean detail and avoid proxying.
+* DATAMONGO-2341 - Support shard key derivation.
+
+
+Changes in version 2.2.5.RELEASE (2020-02-26)
+---------------------------------------------
+* DATAMONGO-2478 - NPE when using Query annotation and with sort and pageable.
+* DATAMONGO-2476 - JsonParseException: JSON reader was expecting a value but found '}'.
+* DATAMONGO-2464 - Fix code examples in reference documentation.
+* DATAMONGO-2460 - @Field annotation behaviour changed.
+* DATAMONGO-2459 - Update Documentation of Reactive Repositories to mention usage of PageRequest.
+* DATAMONGO-2457 - Reference documentation: Text does not match with code example.
+* DATAMONGO-2453 - Release 2.2.5 (Moore SR5).
+* DATAMONGO-2406 - Allow Mono<Void> as return type for derived deleteBy queries.
+* DATAMONGO-2079 - MappingMongoConverter cannot be proxied because it implements the package-private ValueResolver interface.
+
+
+Changes in version 2.1.16.RELEASE (2020-02-26)
+----------------------------------------------
+* DATAMONGO-2464 - Fix code examples in reference documentation.
+* DATAMONGO-2459 - Update Documentation of Reactive Repositories to mention usage of PageRequest.
+* DATAMONGO-2457 - Reference documentation: Text does not match with code example.
+* DATAMONGO-2452 - Release 2.1.16 (Lovelace SR16).
+* DATAMONGO-2079 - MappingMongoConverter cannot be proxied because it implements the package-private ValueResolver interface.
+
+
+Changes in version 3.0.0.M3 (2020-02-12)
+----------------------------------------
+* DATAMONGO-2470 - Adapt tests to AssertJ 3.15.0.
+* DATAMONGO-2464 - Fix code examples in reference documentation.
+* DATAMONGO-2462 - Move off deprecated EntityInstantiators.
+* DATAMONGO-2461 - Fix Jenkins build.
+* DATAMONGO-2460 - @Field annotation behaviour changed.
+* DATAMONGO-2459 - Update Documentation of Reactive Repositories to mention usage of PageRequest.
+* DATAMONGO-2457 - Reference documentation: Text does not match with code example.
+* DATAMONGO-2456 - Release 3.0 M3 (Neumann).
+* DATAMONGO-2449 - Add aggregation options parameters to @Aggregation annotation.
+* DATAMONGO-2427 - Switch to 4.0-beta1 MongoDB driver.
+* DATAMONGO-2417 - Typesafe Extension Function for ReactiveFindOperation.FindDistinct.
+* DATAMONGO-2406 - Allow Mono<Void> as return type for derived deleteBy queries.
+* DATAMONGO-2400 - Read/write converters not working.
+* DATAMONGO-2365 - Parameter hint in Query#hint is not index name.
+* DATAMONGO-2249 - Query hint leads to error when executed via reactive template.
+* DATAMONGO-2079 - MappingMongoConverter cannot be proxied because it implements the package-private ValueResolver interface.
+* DATAMONGO-1997 - Add support to return the single deleted item for a deleteBy query method.
+
+
+Changes in version 3.0.0.M2 (2020-01-17)
+----------------------------------------
+* DATAMONGO-2454 - Release 3.0 M2 (Neumann).
+
+
+Changes in version 3.0.0.M1 (2020-01-16)
+----------------------------------------
+* DATAMONGO-2451 - Value of sort direction converted to String for id fields (query, index creation).
+* DATAMONGO-2450 - Bulk Operations do not support filterArray in update operations.
+* DATAMONGO-2448 - Bump Version to 3.0.
+* DATAMONGO-2447 - Upgrade MongoDB Drivers to 3.12.0 and 1.13.0.
+* DATAMONGO-2444 - Update copyright years to 2020.
+* DATAMONGO-2442 - Cond.thenValueOf(String fieldReference) does not concat fieldRef with "$" prefix.
+* DATAMONGO-2440 - Unable to use MongoTemplate to perform query with 'in' condition by field annotated with @Field(targetType = FieldType.OBJECT_ID).
+* DATAMONGO-2437 - Grouping after aggregation returns NULL _id when mapping to a class with compound key.
+* DATAMONGO-2430 - Upgrade to mongo-java-driver 3.11.2.
+* DATAMONGO-2423 - @NonNullApi restricts update with null.
+* DATAMONGO-2418 - Application Context Doesn't start with @Query.
+* DATAMONGO-2414 - ReactiveGridFsResource.getDownloadStream(…) hang if completion happens on event loop.
+* DATAMONGO-2410 - Using BasicDBObject as an entity caused java.lang.ClassCastException in runtime.
+* DATAMONGO-2409 - Extension Function ReactiveFindOperation.DistinctWithProjection.asType() has wrong return type.
+* DATAMONGO-2403 - ReactiveStringBasedAggregation / AggregationUtils fails on NPE because source or value is null.
+* DATAMONGO-2399 - Upgrade to mongo-java-driver 3.11.1.
+* DATAMONGO-2394 - nearSphere query wrongly generated with radian parameter instead of meters.
+* DATAMONGO-2393 - Reading large file from ReactiveGridFsTemplate causes a stackoverflow and the code to hang.
+* DATAMONGO-2392 - Reading GridFS files written with old api and custom id fails on ReactiveGridFsTemplate.
+* DATAMONGO-2390 - Add maxTimeMS to AggregationOptions.
+* DATAMONGO-2388 - IndexOperations.getIndexInfo() fails for index that has partialFilterExpression containing DBRef.
+* DATAMONGO-2385 - Unnecessary null checks in MongoConverters.
+* DATAMONGO-2383 - Release 3.0 M1 (Neumann).
+* DATAMONGO-2370 - Add support for  $round aggregation expression.
+* DATAMONGO-2331 - Add support for Aggregations in Update.
+* DATAMONGO-2059 - Replace usage of deprecated collection.count() with collection.countDocuments().
+* DATAMONGO-765 - Add support for paging and sorting on GridFSTemplate.
+
+
+Changes in version 2.2.4.RELEASE (2020-01-15)
+---------------------------------------------
+* DATAMONGO-2451 - Value of sort direction converted to String for id fields (query, index creation).
+* DATAMONGO-2450 - Bulk Operations do not support filterArray in update operations.
+* DATAMONGO-2444 - Update copyright years to 2020.
+* DATAMONGO-2442 - Cond.thenValueOf(String fieldReference) does not concat fieldRef with "$" prefix.
+* DATAMONGO-2440 - Unable to use MongoTemplate to perform query with 'in' condition by field annotated with @Field(targetType = FieldType.OBJECT_ID).
+* DATAMONGO-2432 - Release 2.2.4 (Moore SR4).
+* DATAMONGO-2423 - @NonNullApi restricts update with null.
+
+
+Changes in version 2.1.15.RELEASE (2020-01-15)
+----------------------------------------------
+* DATAMONGO-2444 - Update copyright years to 2020.
+* DATAMONGO-2442 - Cond.thenValueOf(String fieldReference) does not concat fieldRef with "$" prefix.
+* DATAMONGO-2431 - Release 2.1.15 (Lovelace SR15).
+* DATAMONGO-2423 - @NonNullApi restricts update with null.
+
+
+Changes in version 2.2.3.RELEASE (2019-12-04)
+---------------------------------------------
+* DATAMONGO-2430 - Upgrade to mongo-java-driver 3.11.2.
+* DATAMONGO-2422 - Release 2.2.3 (Moore SR3).
+* DATAMONGO-2418 - Application Context Doesn't start with @Query.
+* DATAMONGO-2410 - Using BasicDBObject as an entity caused java.lang.ClassCastException in runtime.
+
+
+Changes in version 2.1.14.RELEASE (2019-12-04)
+----------------------------------------------
+* DATAMONGO-2421 - Release 2.1.14 (Lovelace SR14).
+* DATAMONGO-2410 - Using BasicDBObject as an entity caused java.lang.ClassCastException in runtime.
+
+
+Changes in version 2.2.2.RELEASE (2019-11-18)
+---------------------------------------------
+* DATAMONGO-2414 - ReactiveGridFsResource.getDownloadStream(…) hang if completion happens on event loop.
+* DATAMONGO-2409 - Extension Function ReactiveFindOperation.DistinctWithProjection.asType() has wrong return type.
+* DATAMONGO-2403 - ReactiveStringBasedAggregation / AggregationUtils fails on NPE because source or value is null.
+* DATAMONGO-2402 - Release 2.2.2 (Moore SR2).
+
+
+Changes in version 2.1.13.RELEASE (2019-11-18)
+----------------------------------------------
+* DATAMONGO-2409 - Extension Function ReactiveFindOperation.DistinctWithProjection.asType() has wrong return type.
+* DATAMONGO-2401 - Release 2.1.13 (Lovelace SR13).
+
+
+Changes in version 2.2.1.RELEASE (2019-11-04)
+---------------------------------------------
+* DATAMONGO-2399 - Upgrade to mongo-java-driver 3.11.1.
+* DATAMONGO-2394 - nearSphere query wrongly generated with radian parameter instead of meters.
+* DATAMONGO-2393 - Reading large file from ReactiveGridFsTemplate causes a stackoverflow and the code to hang.
+* DATAMONGO-2392 - Reading GridFS files written with old api and custom id fails on ReactiveGridFsTemplate.
+* DATAMONGO-2388 - IndexOperations.getIndexInfo() fails for index that has partialFilterExpression containing DBRef.
+* DATAMONGO-2382 - Release 2.2.1 (Moore SR1).
+
+
+Changes in version 2.1.12.RELEASE (2019-11-04)
+----------------------------------------------
+* DATAMONGO-2388 - IndexOperations.getIndexInfo() fails for index that has partialFilterExpression containing DBRef.
+* DATAMONGO-2381 - Release 2.1.12 (Lovelace SR12).
+
+
+Changes in version 2.2.0.RELEASE (2019-09-30)
+---------------------------------------------
+* DATAMONGO-2380 - Remove @ExperimentalCoroutinesApi annotations.
+* DATAMONGO-2379 - Add documentation for Kotlin support.
+* DATAMONGO-2378 - Favor com.mongodb.client.MongoClient (over already deprecated com.mongodb.MongoClient) where possible.
+* DATAMONGO-2377 - Wrong processing of $$value and $$this.
+* DATAMONGO-2374 - Couldn't find PersistentEntity for type class org.bson.Document using query methods.
+* DATAMONGO-2366 - CursorReadingTask calls errorHandler.handleError twice for exception raised while reading from the cursor.
+* DATAMONGO-2361 - Trivial fix in Mapping Annotation Overview chapter of RefDoc.
+* DATAMONGO-2360 - MongoTemplate#count does not use hinted index.
+* DATAMONGO-2334 - Release 2.2 GA (Moore).
+* DATAMONGO-1731 - Improve JavaDoc of MongoOperations update / findAndModify methods.
+
+
+Changes in version 2.1.11.RELEASE (2019-09-30)
+----------------------------------------------
+* DATAMONGO-2377 - Wrong processing of $$value and $$this.
+* DATAMONGO-2374 - Couldn't find PersistentEntity for type class org.bson.Document using query methods.
+* DATAMONGO-2366 - CursorReadingTask calls errorHandler.handleError twice for exception raised while reading from the cursor.
+* DATAMONGO-2361 - Trivial fix in Mapping Annotation Overview chapter of RefDoc.
+* DATAMONGO-2360 - MongoTemplate#count does not use hinted index.
+* DATAMONGO-2354 - protected function expose package-private propertty.
+* DATAMONGO-2352 - Documentation Typo Fix.
+* DATAMONGO-2351 - UnsupportedOperationException is thrown during delete with UNACKNOWLEDGED write concern.
+* DATAMONGO-2349 - ZonedDateTime to/from Date not recognized without @Reading/@WritingConverter.
+* DATAMONGO-2348 - Initial value of @Version annotated fields not described correctly in reference documentation.
+* DATAMONGO-2339 - Id property containing underscore not mapped correctly.
+* DATAMONGO-2338 - Unable to specialise MongoRepositoryFactoryBean due to final method.
+* DATAMONGO-2337 - Add HTTPS entries into spring.schemas.
+* DATAMONGO-2333 - Release 2.1.11 (Lovelace SR11).
+* DATAMONGO-2310 - Improve TypedAggregation vs. untyped aggregation documentation.
+* DATAMONGO-1731 - Improve JavaDoc of MongoOperations update / findAndModify methods.
+
+
+Changes in version 2.2.0.RC3 (2019-09-06)
+-----------------------------------------
+* DATAMONGO-2358 - Upgrade to Kotlin Coroutines 1.3.0.
+* DATAMONGO-2357 - com.mongodb.client.model.geojson types should be considered as store specific simple ones.
+* DATAMONGO-2356 - Switch to newly introduced usingWhen methods.
+* DATAMONGO-2354 - protected function expose package-private propertty.
+* DATAMONGO-2352 - Documentation Typo Fix.
+* DATAMONGO-2351 - UnsupportedOperationException is thrown during delete with UNACKNOWLEDGED write concern.
+* DATAMONGO-2349 - ZonedDateTime to/from Date not recognized without @Reading/@WritingConverter.
+* DATAMONGO-2348 - Initial value of @Version annotated fields not described correctly in reference documentation.
+* DATAMONGO-2346 - Field annotated with @LastModifiedDate is not persisted in Kotlin data classes.
+* DATAMONGO-2344 - Add SLAVE_OK as a cursor option throws an exception.
+* DATAMONGO-2342 - Upgrade to MongoDB Java Driver 3.11.
+* DATAMONGO-2339 - Id property containing underscore not mapped correctly.
+* DATAMONGO-2338 - Unable to specialise MongoRepositoryFactoryBean due to final method.
+* DATAMONGO-2337 - Add HTTPS entries into spring.schemas.
+* DATAMONGO-2335 - Release 2.2 RC3 (Moore).
+* DATAMONGO-2310 - Improve TypedAggregation vs. untyped aggregation documentation.
+
+
+Changes in version 2.2.0.RC2 (2019-08-05)
+-----------------------------------------
+* DATAMONGO-2330 - Regression: DefaultBulkOperations ignores defaultWriteConcern.
+* DATAMONGO-2328 - Add missing type converters for native target type conversion.
+* DATAMONGO-2327 - QuerydslAbstractMongodbQuery lacks a toJson method.
+* DATAMONGO-2326 - Upgrade to MongoDB Reactive Streams Driver 1.12.0-rc0.
+* DATAMONGO-2325 - Upgrade to MongoDB Driver 3.11.0-rc0.
+* DATAMONGO-2324 - Adapt to changed API in Commons.
+* DATAMONGO-2323 - .stream() cannot be used with Document.class type.
+* DATAMONGO-2322 - Exceptions from MessageListeners are not caught by change stream container's error handler.
+* DATAMONGO-2321 - Migrate tests to AssertJ.
+* DATAMONGO-2320 - Invalid variable reference in ArrayOperators.Filter.
+* DATAMONGO-2319 - Deprecate Query.withHint(String) and introduce replacement method accepting Document.
+* DATAMONGO-2318 - Revise readme for a consistent structure.
+* DATAMONGO-2316 - TextIndex cannot be created when @Document contains collation specified.
+* DATAMONGO-2315 - ParameterBindingJsonReader cannot bind Date values.
+* DATAMONGO-2314 - Query by Example does not work on nested properties.
+* DATAMONGO-2312 - Add support for projecting new array fields to aggregation.
+* DATAMONGO-2306 - Add support for field level encryption.
+* DATAMONGO-2305 - Upgrade to MongoDB Java Driver 3.11.0-beta4.
+* DATAMONGO-2304 - Fix EntityCallback API documentation inclusion and offset.
+* DATAMONGO-2303 - Release 2.2 RC2 (Moore).
+* DATAMONGO-2296 - MongoTemplate should consistently use getCollectionName(Class).
+* DATAMONGO-2287 - Add Support of In Aggregation with field value search in Array with In.
+* DATAMONGO-2280 - Introduce Jenkins CI.
+* DATAMONGO-2240 - Expose GridFSFile through [Reactive]GridFsResource.
+* DATAMONGO-2200 - Derive fields for aggregation $project stage from a given type.
+* DATAMONGO-2168 - Using className as type hint field name with versioned entities fails with InvalidPersistentPropertyPath in UpdateMapper.
+* DATAMONGO-2089 - Add fluent API for ChangeStreams.
+
+
+Changes in version 2.1.10.RELEASE (2019-08-05)
+----------------------------------------------
+* DATAMONGO-2330 - Regression: DefaultBulkOperations ignores defaultWriteConcern.
+* DATAMONGO-2323 - .stream() cannot be used with Document.class type.
+* DATAMONGO-2322 - Exceptions from MessageListeners are not caught by change stream container's error handler.
+* DATAMONGO-2320 - Invalid variable reference in ArrayOperators.Filter.
+* DATAMONGO-2314 - Query by Example does not work on nested properties.
+* DATAMONGO-2309 - Fix NoHTTP errors.
+* DATAMONGO-2302 - Release 2.1.10 (Lovelace SR10).
+* DATAMONGO-2296 - MongoTemplate should consistently use getCollectionName(Class).
+* DATAMONGO-2280 - Introduce Jenkins CI.
+* DATAMONGO-2168 - Using className as type hint field name with versioned entities fails with InvalidPersistentPropertyPath in UpdateMapper.
+
+
+Changes in version 1.10.23.RELEASE (2019-08-05)
+-----------------------------------------------
+* DATAMONGO-2280 - Introduce Jenkins CI.
+* DATAMONGO-2272 - Release 1.10.23 (Ingalls SR23).
+
+
+Changes in version 2.2.0.RC1 (2019-06-14)
+-----------------------------------------
+* DATAMONGO-2295 - Adapt to renamed TransactionSynchronizationManager.forCurrentTransaction().
+* DATAMONGO-2293 - EntityOperations.populateIdIfNecessary nulls entire entity when just the id is null.
+* DATAMONGO-2292 - Create security policy readme.
+* DATAMONGO-2290 - BulkOperation does not trigger lifecycle callbacks for entities.
+* DATAMONGO-2288 - Fix wrong indentation on documentation code sample.
+* DATAMONGO-2282 - Add shortcut to create JsonSchemaProperty for ObjectId.
+* DATAMONGO-2278 - Update Querydsl package names in MongoAnnotationProcessor.
+* DATAMONGO-2275 - NPE when in QueryMapper for MongoJsonSchema when domain type is Document.
+* DATAMONGO-2267 - Property population resolves collection name via SpEL multiple times.
+* DATAMONGO-2261 - Use Entity Callback API for before-save operations.
+* DATAMONGO-2259 - Add MongoDB 4.2 expanded format to 'out' aggregation operation.
+* DATAMONGO-2256 - Release 2.2 RC1 (Moore).
+* DATAMONGO-2252 - getCollection(collectionName) does not create collection when expected (api description mismatch).
+* DATAMONGO-2153 - Add support for aggregations via annotated repository methods.
+* DATAMONGO-2081 - Expose expireAfterSeconds in IndexInfo.
+* DATAMONGO-2067 - Make @CompoundIndex and all similar annotations repeatable.
+* DATAMONGO-1183 - Add support for Hashed Index.
+
+
+Changes in version 2.1.9.RELEASE (2019-06-14)
+---------------------------------------------
+* DATAMONGO-2293 - EntityOperations.populateIdIfNecessary nulls entire entity when just the id is null.
+* DATAMONGO-2288 - Fix wrong indentation on documentation code sample.
+* DATAMONGO-2278 - Update Querydsl package names in MongoAnnotationProcessor.
+* DATAMONGO-2275 - NPE when in QueryMapper for MongoJsonSchema when domain type is Document.
+* DATAMONGO-2271 - Release 2.1.9 (Lovelace SR9).
+* DATAMONGO-2267 - Property population resolves collection name via SpEL multiple times.
+* DATAMONGO-2252 - getCollection(collectionName) does not create collection when expected (api description mismatch).
+
+
 Changes in version 1.10.22.RELEASE (2019-05-13)
 -----------------------------------------------
 * DATAMONGO-2270 - Release 1.10.22 (Ingalls SR22).
@@ -2646,4 +3146,32 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,8 @@ import org.springframework.util.Assert;
  * @author Mark Paluch
  * @author Christoph Strobl
  * @since 1.10
- * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/replaceRoot/">MongoDB Aggregation Framework: $replaceRoot</a>
+ * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/replaceRoot/">MongoDB Aggregation
+ *      Framework: $replaceRoot</a>
  */
 public class ReplaceRootOperation implements FieldsExposingAggregationOperation {
 
@@ -82,7 +83,16 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
-		return new Document("$replaceRoot", new Document("newRoot", replacement.toDocumentExpression(context)));
+		return new Document("$replaceRoot", new Document("newRoot", getReplacement().toDocumentExpression(context)));
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
+	 */
+	@Override
+	public String getOperator() {
+		return "$replaceRoot";
 	}
 
 	/* (non-Javadoc)
@@ -91,6 +101,16 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 	@Override
 	public ExposedFields getFields() {
 		return ExposedFields.from();
+	}
+
+	/**
+	 * Obtain the {@link Replacement}.
+	 *
+	 * @return never {@literal null}.
+	 * @since 3.0
+	 */
+	protected Replacement getReplacement() {
+		return replacement;
 	}
 
 	/**
@@ -155,7 +175,7 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 	 *
 	 * @author Mark Paluch
 	 */
-	static class ReplaceRootDocumentOperation extends ReplaceRootOperation {
+	public static class ReplaceRootDocumentOperation extends ReplaceRootOperation {
 
 		private final static ReplacementDocument EMPTY = new ReplacementDocument();
 		private final ReplacementDocument current;
@@ -335,7 +355,7 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 		/**
 		 * Creates a {@link ReplacementDocument} given {@link ReplacementContributor}.
 		 *
-		 * @param contributor
+		 * @param contributor must not be {@literal null}.
 		 */
 		protected ReplacementDocument(ReplacementContributor contributor) {
 
@@ -351,7 +371,7 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 		 * Creates a {@link ReplacementDocument} given a {@literal value}.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link ReplacementDocument}.
 		 */
 		public static ReplacementDocument valueOf(Object value) {
 			return new ReplacementDocument(new DocumentContributor(value));
@@ -361,7 +381,7 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 		 * Creates a {@link ReplacementDocument} given a single {@literal field} and {@link AggregationExpression}.
 		 *
 		 * @param aggregationExpression must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link ReplacementDocument}.
 		 */
 		public static ReplacementDocument forExpression(String field, AggregationExpression aggregationExpression) {
 			return new ReplacementDocument(new ExpressionFieldContributor(Fields.field(field), aggregationExpression));
@@ -371,7 +391,7 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 		 * Creates a {@link ReplacementDocument} given a single {@literal field} and {@literal value}.
 		 *
 		 * @param value must not be {@literal null}.
-		 * @return
+		 * @return new instance of {@link ReplacementDocument}.
 		 */
 		public static ReplacementDocument forSingleValue(String field, Object value) {
 			return new ReplacementDocument(new ValueFieldContributor(Fields.field(field), value));
@@ -427,7 +447,7 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 		 * {@link AggregationOperationContext}.
 		 *
 		 * @param context will never be {@literal null}.
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		Document toDocument(AggregationOperationContext context);
 	}

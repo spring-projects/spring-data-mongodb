@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,17 +16,16 @@
 package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.*;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.aop.framework.AopProxyUtils;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -39,32 +38,33 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * Unit tests for {@link SimpleReactiveMongoDatabaseFactory}.
  *
  * @author Mark Paluch
+ * @author Mathieu Ouellet
  */
-@RunWith(MockitoJUnitRunner.class)
-public class SimpleReactiveMongoDatabaseFactoryUnitTests {
+@ExtendWith(MockitoExtension.class)
+class SimpleReactiveMongoDatabaseFactoryUnitTests {
 
 	@Mock MongoClient mongoClient;
 	@Mock ClientSession clientSession;
 	@Mock MongoDatabase database;
 
 	@Test // DATAMONGO-1880
-	public void cascadedWithSessionUsesRootFactory() {
+	void cascadedWithSessionUsesRootFactory() {
 
 		when(mongoClient.getDatabase("foo")).thenReturn(database);
 
 		ReactiveMongoDatabaseFactory factory = new SimpleReactiveMongoDatabaseFactory(mongoClient, "foo");
 		ReactiveMongoDatabaseFactory wrapped = factory.withSession(clientSession).withSession(clientSession);
 
-		InvocationHandler invocationHandler = Proxy.getInvocationHandler(wrapped.getMongoDatabase());
+		InvocationHandler invocationHandler = Proxy.getInvocationHandler(wrapped.getMongoDatabase().block());
 
 		Object singletonTarget = AopProxyUtils
 				.getSingletonTarget(ReflectionTestUtils.getField(invocationHandler, "advised"));
 
-		assertThat(singletonTarget, is(sameInstance(database)));
+		assertThat(singletonTarget).isSameAs(database);
 	}
 
 	@Test // DATAMONGO-1903
-	public void rejectsIllegalDatabaseNames() {
+	void rejectsIllegalDatabaseNames() {
 
 		rejectsDatabaseName("foo.bar");
 		rejectsDatabaseName("foo$bar");

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 
 	private @Nullable Boolean isIdProperty;
 	private @Nullable Boolean isAssociation;
-	private @Nullable boolean dbRefResolved;
+	private boolean dbRefResolved;
 	private @Nullable DBRef dbref;
 	private @Nullable String fieldName;
 	private @Nullable Class<?> fieldType;
@@ -40,13 +40,13 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 	/**
 	 * Creates a new {@link CachingMongoPersistentProperty}.
 	 *
-	 * @param property
-	 * @param owner
-	 * @param simpleTypeHolder
-	 * @param fieldNamingStrategy
+	 * @param property must not be {@literal null}.
+	 * @param owner must not be {@literal null}.
+	 * @param simpleTypeHolder must not be {@literal null}.
+	 * @param fieldNamingStrategy can be {@literal null}.
 	 */
 	public CachingMongoPersistentProperty(Property property, MongoPersistentEntity<?> owner,
-			SimpleTypeHolder simpleTypeHolder, FieldNamingStrategy fieldNamingStrategy) {
+			SimpleTypeHolder simpleTypeHolder, @Nullable FieldNamingStrategy fieldNamingStrategy) {
 		super(property, owner, simpleTypeHolder, fieldNamingStrategy);
 	}
 

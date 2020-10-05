@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.util.stream.Stream;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.geo.GeoResults;
+import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.lang.Nullable;
@@ -43,7 +44,7 @@ import com.mongodb.client.MongoCollection;
  *         query(Human.class)
  *             .inCollection("star-wars")
  *             .as(Jedi.class)
- *             .matching(query(where("firstname").is("luke")))
+ *             .matching(where("firstname").is("luke"))
  *             .all();
  *     </code>
  * </pre>
@@ -117,7 +118,7 @@ public interface ExecutableFindOperation {
 		/**
 		 * Stream all matching elements.
 		 *
-		 * @return a {@link Stream} that wraps the a Mongo DB {@link com.mongodb.Cursor} that needs to be closed. Never
+		 * @return a {@link Stream} that wraps the a Mongo DB {@link com.mongodb.client.FindIterable} that needs to be closed. Never
 		 *         {@literal null}.
 		 */
 		Stream<T> stream();
@@ -169,6 +170,18 @@ public interface ExecutableFindOperation {
 		 * @throws IllegalArgumentException if query is {@literal null}.
 		 */
 		TerminatingFind<T> matching(Query query);
+
+		/**
+		 * Set the filter {@link CriteriaDefinition criteria} to be used.
+		 *
+		 * @param criteria must not be {@literal null}.
+		 * @return new instance of {@link TerminatingFind}.
+		 * @throws IllegalArgumentException if criteria is {@literal null}.
+		 * @since 3.0
+		 */
+		default TerminatingFind<T> matching(CriteriaDefinition criteria) {
+			return matching(Query.query(criteria));
+		}
 
 		/**
 		 * Set the filter query for the geoNear execution.
@@ -291,9 +304,21 @@ public interface ExecutableFindOperation {
 		 *
 		 * @param query must not be {@literal null}.
 		 * @return new instance of {@link TerminatingDistinct}.
-		 * @throws IllegalArgumentException if resultType is {@literal null}.
+		 * @throws IllegalArgumentException if query is {@literal null}.
 		 */
 		TerminatingDistinct<T> matching(Query query);
+
+		/**
+		 * Set the filter {@link CriteriaDefinition criteria} to be used.
+		 *
+		 * @param criteria must not be {@literal null}.
+		 * @return new instance of {@link TerminatingDistinct}.
+		 * @throws IllegalArgumentException if criteria is {@literal null}.
+		 * @since 3.0
+		 */
+		default TerminatingDistinct<T> matching(CriteriaDefinition criteria) {
+			return matching(Query.query(criteria));
+		}
 	}
 
 	/**

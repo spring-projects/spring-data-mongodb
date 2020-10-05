@@ -1,40 +1,35 @@
 package org.springframework.data.mongodb.core.mapping;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity.MongoPersistentPropertyComparator;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.mockito.Mockito.*;
+import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity.MongoPersistentPropertyComparator;
 
 /**
  * Unit tests for {@link MongoPersistentPropertyComparator}.
- * 
+ *
  * @author Oliver Gierke
  */
-@RunWith(MockitoJUnitRunner.class)
-public class MongoPersistentPropertyComparatorUnitTests {
+@ExtendWith(MockitoExtension.class)
+class MongoPersistentPropertyComparatorUnitTests {
 
-	@Mock
-	MongoPersistentProperty firstName;
+	@Mock MongoPersistentProperty firstName;
 
-	@Mock
-	MongoPersistentProperty lastName;
+	@Mock MongoPersistentProperty lastName;
 
-	@Mock
-	MongoPersistentProperty ssn;
+	@Mock MongoPersistentProperty ssn;
 
 	@Test
-	public void ordersPropertiesCorrectly() {
+	void ordersPropertiesCorrectly() {
 
 		when(ssn.getFieldOrder()).thenReturn(10);
 		when(firstName.getFieldOrder()).thenReturn(20);
@@ -43,8 +38,8 @@ public class MongoPersistentPropertyComparatorUnitTests {
 		List<MongoPersistentProperty> properties = Arrays.asList(firstName, lastName, ssn);
 		Collections.sort(properties, MongoPersistentPropertyComparator.INSTANCE);
 
-		assertThat(properties.get(0), is(ssn));
-		assertThat(properties.get(1), is(firstName));
-		assertThat(properties.get(2), is(lastName));
+		assertThat(properties.get(0)).isEqualTo(ssn);
+		assertThat(properties.get(1)).isEqualTo(firstName);
+		assertThat(properties.get(2)).isEqualTo(lastName);
 	}
 }

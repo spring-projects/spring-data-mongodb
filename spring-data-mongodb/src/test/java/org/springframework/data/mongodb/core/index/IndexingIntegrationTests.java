@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,20 +25,21 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
-import org.junit.After;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.MongoCollectionUtils;
-import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -46,11 +47,13 @@ import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 
 /**
  * Integration tests for index handling.
@@ -60,20 +63,22 @@ import com.mongodb.MongoClient;
  * @author Jordi Llach
  * @author Mark Paluch
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 @ContextConfiguration
 public class IndexingIntegrationTests {
 
+	static @Client MongoClient mongoClient;
+
 	@Autowired MongoOperations operations;
-	@Autowired MongoDbFactory mongoDbFactory;
+	@Autowired MongoDatabaseFactory mongoDbFactory;
 	@Autowired ConfigurableApplicationContext context;
 
 	@Configuration
-	static class Config extends AbstractMongoConfiguration {
+	static class Config extends AbstractMongoClientConfiguration {
 
 		@Override
 		public MongoClient mongoClient() {
-			return new MongoClient();
+			return mongoClient;
 		}
 
 		@Override
@@ -85,9 +90,19 @@ public class IndexingIntegrationTests {
 		TimeoutResolver myTimeoutResolver() {
 			return new TimeoutResolver("11s");
 		}
+
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+			return Collections.emptySet();
+		}
+
+		@Override
+		protected boolean autoIndexCreation() {
+			return true;
+		}
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
 		operations.dropCollection(IndexedPerson.class);
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,13 +25,15 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.springframework.test.annotation.IfProfileValue;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 
 /**
  * {@link TestRule} evaluating if MongoDB Server is running with {@code --replSet} flag.
  *
  * @author Christoph Strobl
+ * @deprecated Use {@link MongoServerCondition} with {@link EnableIfReplicaSetAvailable} instead.
  */
+@Deprecated
 public class ReplicaSet implements TestRule {
 
 	boolean required = false;
@@ -94,12 +96,11 @@ public class ReplicaSet implements TestRule {
 
 		if (runsAsReplicaSet.get() == null) {
 
-			try (MongoClient client = new MongoClient()) {
+			MongoClient client = MongoTestUtils.client();
 
-				boolean tmp = client.getDatabase("admin").runCommand(new Document("getCmdLineOpts", "1"))
-						.get("argv", List.class).contains("--replSet");
-				runsAsReplicaSet.compareAndSet(null, tmp);
-			}
+			boolean tmp = client.getDatabase("admin").runCommand(new Document("getCmdLineOpts", "1")).get("argv", List.class)
+					.contains("--replSet");
+			runsAsReplicaSet.compareAndSet(null, tmp);
 		}
 		return runsAsReplicaSet.get();
 	}

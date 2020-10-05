@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,8 +23,6 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.DBRef;
-import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
  * @author Jon Brisbin <jbrisbin@vmware.com>
@@ -33,18 +31,13 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @CompoundIndexes({ @CompoundIndex(name = "age_idx", def = "{'lastName': 1, 'age': -1}") })
 public class Person<T extends Address> {
 
-	@Id
-	private String id;
-	@Indexed(unique = true)
-	private Integer ssn;
+	@Id private String id;
+	@Indexed(unique = true) private Integer ssn;
 	private String firstName;
-	@Indexed
-	private String lastName;
+	@Indexed private String lastName;
 	private Integer age;
-	@Transient
-	private Integer accountTotal;
-	@DBRef
-	private List<Account> accounts;
+	@Transient private Integer accountTotal;
+	@DBRef private List<Account> accounts;
 	private T address;
 
 	public Person(Integer ssn) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,4 +43,12 @@ public interface Field {
 	 * @return
 	 */
 	boolean isAliased();
+
+	/**
+	 * @return true if the field name references a local value such as {@code $$this}.
+	 * @since 2.2
+	 */
+	default boolean isInternal() {
+		return false;
+	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,8 @@
  */
 package org.springframework.data.mongodb.core;
 
-import lombok.AccessLevel;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
-
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -35,12 +30,15 @@ import com.mongodb.client.result.UpdateResult;
  * @author Mark Paluch
  * @since 2.0
  */
-@RequiredArgsConstructor
 class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 
 	private static final Query ALL_QUERY = new Query();
 
-	private final @NonNull MongoTemplate template;
+	private final MongoTemplate template;
+
+	ExecutableUpdateOperationSupport(MongoTemplate template) {
+		this.template = template;
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -58,28 +56,41 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	@RequiredArgsConstructor
-	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 	static class ExecutableUpdateSupport<T>
 			implements ExecutableUpdate<T>, UpdateWithCollection<T>, UpdateWithQuery<T>, TerminatingUpdate<T>,
 			FindAndReplaceWithOptions<T>, TerminatingFindAndReplace<T>, FindAndReplaceWithProjection<T> {
 
-		@NonNull MongoTemplate template;
-		@NonNull Class domainType;
-		Query query;
-		@Nullable Update update;
-		@Nullable String collection;
-		@Nullable FindAndModifyOptions findAndModifyOptions;
-		@Nullable FindAndReplaceOptions findAndReplaceOptions;
-		@Nullable Object replacement;
-		@NonNull Class<T> targetType;
+		private final MongoTemplate template;
+		private final Class domainType;
+		private final Query query;
+		@Nullable private final UpdateDefinition update;
+		@Nullable private final String collection;
+		@Nullable private final FindAndModifyOptions findAndModifyOptions;
+		@Nullable private final FindAndReplaceOptions findAndReplaceOptions;
+		@Nullable private final Object replacement;
+		private final Class<T> targetType;
+
+		ExecutableUpdateSupport(MongoTemplate template, Class domainType, Query query, UpdateDefinition update,
+				String collection, FindAndModifyOptions findAndModifyOptions, FindAndReplaceOptions findAndReplaceOptions,
+				Object replacement, Class<T> targetType) {
+
+			this.template = template;
+			this.domainType = domainType;
+			this.query = query;
+			this.update = update;
+			this.collection = collection;
+			this.findAndModifyOptions = findAndModifyOptions;
+			this.findAndReplaceOptions = findAndReplaceOptions;
+			this.replacement = replacement;
+			this.targetType = targetType;
+		}
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableUpdateOperation.UpdateWithUpdate#apply(Update)
+		 * @see org.springframework.data.mongodb.core.ExecutableUpdateOperation.UpdateWithUpdate#apply(org.springframework.data.mongodb.core.query.UpdateDefinition)
 		 */
 		@Override
-		public TerminatingUpdate<T> apply(Update update) {
+		public TerminatingUpdate<T> apply(UpdateDefinition update) {
 
 			Assert.notNull(update, "Update must not be null!");
 

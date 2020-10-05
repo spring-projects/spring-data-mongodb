@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 package org.springframework.data.mongodb.core.messaging;
-
-import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
-import lombok.RequiredArgsConstructor;
 
 import java.time.Duration;
 import java.util.LinkedHashMap;
@@ -34,6 +30,7 @@ import org.springframework.data.mongodb.core.messaging.SubscriptionRequest.Reque
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ErrorHandler;
+import org.springframework.util.ObjectUtils;
 
 /**
  * Simple {@link Executor} based {@link MessageListenerContainer} implementation for running {@link Task tasks} like
@@ -259,7 +256,6 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 	 * @author Christoph Strobl
 	 * @since 2.1
 	 */
-	@EqualsAndHashCode
 	static class TaskSubscription implements Subscription {
 
 		private final Task task;
@@ -286,18 +282,38 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 		public void cancel() throws DataAccessResourceFailureException {
 			task.cancel();
 		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (o == null || getClass() != o.getClass())
+				return false;
+
+			TaskSubscription that = (TaskSubscription) o;
+
+			return ObjectUtils.nullSafeEquals(this.task, that.task);
+		}
+
+		@Override
+		public int hashCode() {
+			return ObjectUtils.nullSafeHashCode(task);
+		}
 	}
 
 	/**
 	 * @author Christoph Strobl
 	 * @since 2.1
 	 */
-	@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 	private static class DecoratingLoggingErrorHandler implements ErrorHandler {
 
 		private final Log logger = LogFactory.getLog(DecoratingLoggingErrorHandler.class);
 
 		private final ErrorHandler delegate;
+
+		DecoratingLoggingErrorHandler(ErrorHandler delegate) {
+			this.delegate = delegate;
+		}
 
 		@Override
 		public void handleError(Throwable t) {

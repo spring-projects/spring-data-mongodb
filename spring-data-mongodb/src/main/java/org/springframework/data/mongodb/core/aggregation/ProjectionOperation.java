@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond;
@@ -71,6 +72,16 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 	 */
 	public ProjectionOperation(Fields fields) {
 		this(NONE, ProjectionOperationBuilder.FieldProjection.from(fields));
+	}
+
+	/**
+	 * Creates a new {@link ProjectionOperation} including all top level fields of the given {@link Class type}.
+	 *
+	 * @param type must not be {@literal null}.
+	 * @since 2.2
+	 */
+	public ProjectionOperation(Class<?> type) {
+		this(NONE, Collections.singletonList(new TypeProjection(type)));
 	}
 
 	/**
@@ -166,6 +177,48 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		return new ProjectionOperation(this.projections, FieldProjection.from(fields, true));
 	}
 
+	/**
+	 * Includes the current {@link ProjectionOperation} as an array with given name. <br />
+	 * If you want to specify array values directly use {@link #andArrayOf(Object...)}.
+	 *
+	 * @param name the target property name.
+	 * @return new instance of {@link ProjectionOperation}.
+	 * @since 2.2
+	 */
+	public ProjectionOperation asArray(String name) {
+
+		return new ProjectionOperation(Collections.emptyList(),
+				Collections.singletonList(new ArrayProjection(Fields.field(name), (List) this.projections)));
+	}
+
+	/**
+	 * Includes the given values ({@link Field field references}, {@link AggregationExpression expression}, plain values)
+	 * as an array. <br />
+	 * The target property name needs to be set via {@link ArrayProjectionOperationBuilder#as(String)}.
+	 *
+	 * @param values must not be {@literal null}.
+	 * @return new instance of {@link ArrayProjectionOperationBuilder}.
+	 * @throws IllegalArgumentException if the required argument it {@literal null}.
+	 * @since 2.2
+	 */
+	public ArrayProjectionOperationBuilder andArrayOf(Object... values) {
+
+		ArrayProjectionOperationBuilder builder = new ArrayProjectionOperationBuilder(this);
+
+		for (Object value : values) {
+
+			if (value instanceof Field) {
+				builder.and((Field) value);
+			} else if (value instanceof AggregationExpression) {
+				builder.and((AggregationExpression) value);
+			} else {
+				builder.and(value);
+			}
+		}
+
+		return builder;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation#getFields()
@@ -208,7 +261,16 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			fieldObject.putAll(projection.toDocument(context));
 		}
 
-		return new Document("$project", fieldObject);
+		return new Document(getOperator(), fieldObject);
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
+	 */
+	@Override
+	public String getOperator() {
+		return "$project";
 	}
 
 	/**
@@ -1495,7 +1557,8 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 				final Field aliasedField = Fields.field(alias, this.field.getName());
 				return new OperationProjection(aliasedField, operation, values.toArray()) {
 
-					/* (non-Javadoc)
+					/*
+					 * (non-Javadoc)
 					 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder.OperationProjection#getField()
 					 */
 					@Override
@@ -1695,9 +1758,164 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			this.expression = expression;
 		}
 
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+		 */
 		@Override
 		public Document toDocument(AggregationOperationContext context) {
 			return new Document(field.getName(), expression.toDocument(context));
+		}
+	}
+
+	/**
+	 * A {@link Projection} including all top level fields of the given target type mapped to include potentially
+	 * deviating field names.
+	 *
+	 * @since 2.2
+	 * @author Christoph Strobl
+	 */
+	static class TypeProjection extends Projection {
+
+		private final Class<?> type;
+
+		TypeProjection(Class<?> type) {
+
+			super(Fields.field(type.getSimpleName()));
+			this.type = type;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+		 */
+		@Override
+		public Document toDocument(AggregationOperationContext context) {
+
+			Document projections = new Document();
+
+			Fields fields = context.getFields(type);
+			fields.forEach(it -> projections.append(it.getName(), 1));
+			return context.getMappedObject(projections, type);
+		}
+	}
+
+	/**
+	 * Builder for {@code array} projections.
+	 *
+	 * @author Christoph Strobl
+	 * @since 2.2
+	 */
+	public static class ArrayProjectionOperationBuilder {
+
+		private ProjectionOperation target;
+		private final List<Object> projections;
+
+		public ArrayProjectionOperationBuilder(ProjectionOperation target) {
+
+			this.target = target;
+			this.projections = new ArrayList<>();
+		}
+
+		/**
+		 * Creates a new {@link ArrayProjectionOperationBuilder} with the current {@link Projection}s and the given one.
+		 *
+		 * @param expression
+		 * @return
+		 */
+		public ArrayProjectionOperationBuilder and(AggregationExpression expression) {
+
+			Assert.notNull(expression, "AggregationExpression must not be null!");
+
+			this.projections.add(expression);
+			return this;
+		}
+
+		/**
+		 * Creates a new {@link ArrayProjectionOperationBuilder} with the current {@link Projection}s and the given one.
+		 *
+		 * @param field
+		 * @return
+		 */
+		public ArrayProjectionOperationBuilder and(Field field) {
+
+			Assert.notNull(field, "Field must not be null!");
+
+			this.projections.add(field);
+			return this;
+		}
+
+		/**
+		 * Creates a new {@link ArrayProjectionOperationBuilder} with the current {@link Projection}s and the given one.
+		 *
+		 * @param value
+		 * @return
+		 */
+		public ArrayProjectionOperationBuilder and(Object value) {
+
+			this.projections.add(value);
+			return this;
+		}
+
+		/**
+		 * Create the {@link ProjectionOperation} for the array property with given {@literal name}.
+		 *
+		 * @param name The target property name. Must not be {@literal null}.
+		 * @return new instance of {@link ArrayProjectionOperationBuilder}.
+		 */
+		public ProjectionOperation as(String name) {
+
+			return new ProjectionOperation(target.projections,
+					Collections.singletonList(new ArrayProjection(Fields.field(name), this.projections)));
+		}
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 * @since 2.2
+	 */
+	static class ArrayProjection extends Projection {
+
+		private final Field targetField;
+		private final List<Object> projections;
+
+		public ArrayProjection(Field targetField, List<Object> projections) {
+
+			super(targetField);
+			this.targetField = targetField;
+			this.projections = projections;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
+		 */
+		@Override
+		public Document toDocument(AggregationOperationContext context) {
+
+			return new Document(targetField.getName(),
+					projections.stream().map(it -> toArrayEntry(it, context)).collect(Collectors.toList()));
+		}
+
+		private Object toArrayEntry(Object projection, AggregationOperationContext ctx) {
+
+			if (projection instanceof Field) {
+				return ctx.getReference((Field) projection).toString();
+			}
+
+			if (projection instanceof AggregationExpression) {
+				return ((AggregationExpression) projection).toDocument(ctx);
+			}
+
+			if (projection instanceof FieldProjection) {
+				return ctx.getReference(((FieldProjection) projection).getExposedField().getTarget()).toString();
+			}
+
+			if (projection instanceof Projection) {
+				((Projection) projection).toDocument(ctx);
+			}
+
+			return projection;
 		}
 	}
 }

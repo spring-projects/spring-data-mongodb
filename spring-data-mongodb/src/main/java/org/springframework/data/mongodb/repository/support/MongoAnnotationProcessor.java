@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,9 +54,9 @@ public class MongoAnnotationProcessor extends AbstractQuerydslProcessor {
 
 		processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Running " + getClass().getSimpleName());
 
-		DefaultConfiguration configuration = new DefaultConfiguration(roundEnv, processingEnv.getOptions(),
-				Collections.emptySet(), QueryEntities.class, Document.class, QuerySupertype.class,
-				QueryEmbeddable.class, QueryEmbedded.class, QueryTransient.class);
+		DefaultConfiguration configuration = new DefaultConfiguration(processingEnv, roundEnv, Collections.emptySet(),
+				QueryEntities.class, Document.class, QuerySupertype.class, QueryEmbeddable.class, QueryEmbedded.class,
+				QueryTransient.class);
 		configuration.setUnknownAsEmbedded(true);
 
 		return configuration;

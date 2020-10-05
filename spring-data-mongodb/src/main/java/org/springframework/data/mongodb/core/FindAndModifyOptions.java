@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the original author or authors.
+ * Copyright 2010-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -78,7 +78,7 @@ public class FindAndModifyOptions {
 	}
 
 	/**
-	 * Create new {@link FindAndModifyOptions} based on option of given {@litearl source}.
+	 * Create new {@link FindAndModifyOptions} based on option of given {@literal source}.
 	 *
 	 * @param source can be {@literal null}.
 	 * @return new instance of {@link FindAndModifyOptions}.
@@ -117,8 +117,8 @@ public class FindAndModifyOptions {
 	/**
 	 * Define the {@link Collation} specifying language-specific rules for string comparison.
 	 *
-	 * @param collation
-	 * @return
+	 * @param collation can be {@literal null}.
+	 * @return this.
 	 * @since 2.0
 	 */
 	public FindAndModifyOptions collation(@Nullable Collation collation) {
@@ -142,7 +142,7 @@ public class FindAndModifyOptions {
 	/**
 	 * Get the {@link Collation} specifying language-specific rules for string comparison.
 	 *
-	 * @return
+	 * @return never {@literal null}.
 	 * @since 2.0
 	 */
 	public Optional<Collation> getCollation() {

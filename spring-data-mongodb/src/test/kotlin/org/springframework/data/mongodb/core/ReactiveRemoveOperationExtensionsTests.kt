@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import example.first.First
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import org.assertj.core.api.Assertions.assertThat
@@ -37,6 +36,7 @@ class ReactiveRemoveOperationExtensionsTests {
 	val operation = mockk<ReactiveRemoveOperation>(relaxed = true)
 
 	@Test // DATAMONGO-1719
+	@Suppress("DEPRECATION")
 	fun `remove(KClass) extension should call its Java counterpart`() {
 
 		operation.remove(First::class)
@@ -67,7 +67,6 @@ class ReactiveRemoveOperationExtensionsTests {
 	}
 
 	@Test // DATAMONGO-2255
-	@FlowPreview
 	fun terminatingRemoveFindAndRemoveAsFlow() {
 
 		val spec = mockk<ReactiveRemoveOperation.TerminatingRemove<String>>()

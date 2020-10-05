@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,17 @@
 package org.springframework.data.mongodb.core.convert;
 
 import java.math.BigInteger;
+import java.util.Date;
 
+import org.bson.types.Code;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.data.convert.ConverterBuilder;
 import org.springframework.data.convert.CustomConversions;
-import org.springframework.data.convert.EntityInstantiators;
+import org.springframework.data.mapping.model.EntityInstantiators;
 import org.springframework.data.mongodb.core.convert.MongoConverters.BigIntegerToObjectIdConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.ObjectIdToBigIntegerConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.ObjectIdToStringConverter;
@@ -69,7 +72,7 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 	/**
 	 * Registers {@link EntityInstantiators} to customize entity instantiation.
 	 *
-	 * @param instantiators
+	 * @param instantiators can be {@literal null}. Uses default {@link EntityInstantiators} if so.
 	 */
 	public void setInstantiators(@Nullable EntityInstantiators instantiators) {
 		this.instantiators = instantiators == null ? new EntityInstantiators() : instantiators;
@@ -93,6 +96,23 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 			conversionService.addConverter(BigIntegerToObjectIdConverter.INSTANCE);
 		}
 
+		if (!conversionService.canConvert(Date.class, Long.class)) {
+			conversionService
+					.addConverter(ConverterBuilder.writing(Date.class, Long.class, Date::getTime).getWritingConverter());
+		}
+
+		if (!conversionService.canConvert(Long.class, Date.class)) {
+			conversionService.addConverter(ConverterBuilder.reading(Long.class, Date.class, Date::new).getReadingConverter());
+		}
+
+		if (!conversionService.canConvert(ObjectId.class, Date.class)) {
+
+			conversionService.addConverter(ConverterBuilder
+					.reading(ObjectId.class, Date.class, objectId -> new Date(objectId.getTimestamp())).getReadingConverter());
+		}
+
+		conversionService
+				.addConverter(ConverterBuilder.reading(Code.class, String.class, Code::getCode).getReadingConverter());
 		conversions.registerConvertersIn(conversionService);
 	}
 

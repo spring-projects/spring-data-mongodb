@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,11 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.bson.Document;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.data.mongodb.core.mapping.Account;
@@ -40,7 +40,7 @@ public class AbstractMongoEventListenerUnitTests {
 		MongoMappingEvent<Person> event = new BeforeConvertEvent<Person>(new Person("Dave", "Matthews"), "collection-1");
 		SamplePersonEventListener listener = new SamplePersonEventListener();
 		listener.onApplicationEvent(event);
-		assertThat(listener.invokedOnBeforeConvert, is(true));
+		assertThat(listener.invokedOnBeforeConvert).isTrue();
 	}
 
 	@Test
@@ -53,11 +53,11 @@ public class AbstractMongoEventListenerUnitTests {
 		context.addApplicationListener(listener);
 
 		context.publishEvent(new BeforeConvertEvent<Person>(new Person("Dave", "Matthews"), "collection-1"));
-		assertThat(listener.invokedOnBeforeConvert, is(true));
+		assertThat(listener.invokedOnBeforeConvert).isTrue();
 
 		listener.invokedOnBeforeConvert = false;
 		context.publishEvent(new BeforeConvertEvent<String>("Test", "collection-1"));
-		assertThat(listener.invokedOnBeforeConvert, is(false));
+		assertThat(listener.invokedOnBeforeConvert).isFalse();
 
 		context.close();
 	}
@@ -67,7 +67,7 @@ public class AbstractMongoEventListenerUnitTests {
 
 		SamplePersonEventListener listener = new SamplePersonEventListener();
 		listener.onApplicationEvent(new AfterLoadEvent<Person>(new Document(), Person.class, "collection-1"));
-		assertThat(listener.invokedOnAfterLoad, is(true));
+		assertThat(listener.invokedOnAfterLoad).isTrue();
 	}
 
 	@Test // DATAMONGO-289
@@ -78,8 +78,8 @@ public class AbstractMongoEventListenerUnitTests {
 		personListener.onApplicationEvent(new AfterLoadEvent<Person>(new Document(), Person.class, "collection-1"));
 		accountListener.onApplicationEvent(new AfterLoadEvent<Person>(new Document(), Person.class, "collection-1"));
 
-		assertThat(personListener.invokedOnAfterLoad, is(true));
-		assertThat(accountListener.invokedOnAfterLoad, is(false));
+		assertThat(personListener.invokedOnAfterLoad).isTrue();
+		assertThat(accountListener.invokedOnAfterLoad).isFalse();
 	}
 
 	@Test // DATAMONGO-289
@@ -90,8 +90,8 @@ public class AbstractMongoEventListenerUnitTests {
 		personListener.onApplicationEvent(new AfterLoadEvent<Person>(new Document(), Person.class, "collection-1"));
 		contactListener.onApplicationEvent(new AfterLoadEvent<Person>(new Document(), Person.class, "collection-1"));
 
-		assertThat(personListener.invokedOnAfterLoad, is(true));
-		assertThat(contactListener.invokedOnAfterLoad, is(true));
+		assertThat(personListener.invokedOnAfterLoad).isTrue();
+		assertThat(contactListener.invokedOnAfterLoad).isTrue();
 	}
 
 	@Test // DATAMONGO-289
@@ -102,8 +102,8 @@ public class AbstractMongoEventListenerUnitTests {
 		personListener.onApplicationEvent(new AfterLoadEvent<Contact>(new Document(), Contact.class, "collection-1"));
 		contactListener.onApplicationEvent(new AfterLoadEvent<Contact>(new Document(), Contact.class, "collection-1"));
 
-		assertThat(personListener.invokedOnAfterLoad, is(false));
-		assertThat(contactListener.invokedOnAfterLoad, is(true));
+		assertThat(personListener.invokedOnAfterLoad).isFalse();
+		assertThat(contactListener.invokedOnAfterLoad).isTrue();
 	}
 
 	@Test // DATAMONGO-333
@@ -121,7 +121,7 @@ public class AbstractMongoEventListenerUnitTests {
 		SampleContactEventListener listener = new SampleContactEventListener();
 		listener.onApplicationEvent(event);
 
-		assertThat(listener.invokedOnBeforeDelete, is(true));
+		assertThat(listener.invokedOnBeforeDelete).isTrue();
 	}
 
 	@Test // DATAMONGO-545
@@ -131,7 +131,7 @@ public class AbstractMongoEventListenerUnitTests {
 		SamplePersonEventListener listener = new SamplePersonEventListener();
 		listener.onApplicationEvent(event);
 
-		assertThat(listener.invokedOnBeforeDelete, is(true));
+		assertThat(listener.invokedOnBeforeDelete).isTrue();
 	}
 
 	@Test // DATAMONGO-545
@@ -141,7 +141,7 @@ public class AbstractMongoEventListenerUnitTests {
 		SamplePersonEventListener listener = new SamplePersonEventListener();
 		listener.onApplicationEvent(event);
 
-		assertThat(listener.invokedOnBeforeDelete, is(false));
+		assertThat(listener.invokedOnBeforeDelete).isFalse();
 	}
 
 	@Test // DATAMONGO-545
@@ -151,7 +151,7 @@ public class AbstractMongoEventListenerUnitTests {
 		SamplePersonEventListener listener = new SamplePersonEventListener();
 		listener.onApplicationEvent(event);
 
-		assertThat(listener.invokedOnBeforeDelete, is(false));
+		assertThat(listener.invokedOnBeforeDelete).isFalse();
 	}
 
 	class SamplePersonEventListener extends AbstractMongoEventListener<Person> {

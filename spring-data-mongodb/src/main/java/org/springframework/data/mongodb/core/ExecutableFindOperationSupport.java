@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,6 @@
  * limitations under the License.
  */
 package org.springframework.data.mongodb.core;
-
-import lombok.AccessLevel;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 
 import java.util.List;
 import java.util.Optional;
@@ -36,6 +31,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
+import com.mongodb.ReadPreference;
 import com.mongodb.client.FindIterable;
 
 /**
@@ -45,12 +41,15 @@ import com.mongodb.client.FindIterable;
  * @author Mark Paluch
  * @since 2.0
  */
-@RequiredArgsConstructor
 class ExecutableFindOperationSupport implements ExecutableFindOperation {
 
 	private static final Query ALL_QUERY = new Query();
 
-	private final @NonNull MongoTemplate template;
+	private final MongoTemplate template;
+
+	ExecutableFindOperationSupport(MongoTemplate template) {
+		this.template = template;
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -69,16 +68,23 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 	 * @author Christoph Strobl
 	 * @since 2.0
 	 */
-	@RequiredArgsConstructor
-	@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 	static class ExecutableFindSupport<T>
 			implements ExecutableFind<T>, FindWithCollection<T>, FindWithProjection<T>, FindWithQuery<T> {
 
-		@NonNull MongoTemplate template;
-		@NonNull Class<?> domainType;
-		Class<T> returnType;
-		@Nullable String collection;
-		Query query;
+		private final MongoTemplate template;
+		private final Class<?> domainType;
+		private final Class<T> returnType;
+		@Nullable private final String collection;
+		private final Query query;
+
+		ExecutableFindSupport(MongoTemplate template, Class<?> domainType, Class<T> returnType,
+				String collection, Query query) {
+			this.template = template;
+			this.domainType = domainType;
+			this.returnType = returnType;
+			this.collection = collection;
+			this.query = query;
+		}
 
 		/*
 		 * (non-Javadoc)
@@ -256,9 +262,9 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		 * @see org.springframework.data.mongodb.core.CursorPreparer#prepare(com.mongodb.clientFindIterable)
 		 */
 		@Override
-		public FindIterable<Document> prepare(FindIterable<Document> cursor) {
+		public FindIterable<Document> prepare(FindIterable<Document> iterable) {
 
-			FindIterable<Document> target = delegate != null ? delegate.prepare(cursor) : cursor;
+			FindIterable<Document> target = delegate != null ? delegate.prepare(iterable) : iterable;
 			return limit.map(target::limit).orElse(target);
 		}
 
@@ -266,6 +272,11 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 
 			this.limit = Optional.of(limit);
 			return this;
+		}
+
+		@Override
+		public ReadPreference getReadPreference() {
+			return delegate.getReadPreference();
 		}
 	}
 

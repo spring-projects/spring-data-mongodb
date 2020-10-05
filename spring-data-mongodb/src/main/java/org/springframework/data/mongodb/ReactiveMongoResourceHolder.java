@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ class ReactiveMongoResourceHolder extends ResourceHolderSupport {
 	 * Create a new {@link ReactiveMongoResourceHolder} for a given {@link ClientSession session}.
 	 *
 	 * @param session the associated {@link ClientSession}. Can be {@literal null}.
-	 * @param databaseFactory the associated {@link MongoDbFactory}. must not be {@literal null}.
+	 * @param databaseFactory the associated {@link MongoDatabaseFactory}. must not be {@literal null}.
 	 */
 	ReactiveMongoResourceHolder(@Nullable ClientSession session, ReactiveMongoDatabaseFactory databaseFactory) {
 
@@ -99,7 +99,7 @@ class ReactiveMongoResourceHolder extends ResourceHolderSupport {
 	 * If the {@link ReactiveMongoResourceHolder} is {@link #hasSession() not already associated} with a
 	 * {@link ClientSession} the given value is {@link #setSession(ClientSession) set} and returned, otherwise the current
 	 * bound session is returned.
-	 * 
+	 *
 	 * @param session
 	 * @return
 	 */

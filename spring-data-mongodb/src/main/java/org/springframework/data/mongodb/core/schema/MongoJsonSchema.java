@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,7 +74,7 @@ public interface MongoJsonSchema {
 	 * Create a new {@link MongoJsonSchema} for a given root object.
 	 *
 	 * @param root must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link MongoJsonSchema}.
 	 */
 	static MongoJsonSchema of(JsonSchemaObject root) {
 		return new DefaultMongoJsonSchema(root);
@@ -84,7 +84,7 @@ public interface MongoJsonSchema {
 	 * Create a new {@link MongoJsonSchema} for a given root {@link Document} containing the schema definition.
 	 *
 	 * @param document must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link MongoJsonSchema}.
 	 */
 	static MongoJsonSchema of(Document document) {
 		return new DocumentJsonSchema(document);
@@ -135,7 +135,7 @@ public interface MongoJsonSchema {
 		}
 
 		/**
-		 * @param properties
+		 * @param properties must not be {@literal null}.
 		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see ObjectJsonSchemaObject#required(String...)
 		 */
@@ -157,7 +157,7 @@ public interface MongoJsonSchema {
 		}
 
 		/**
-		 * @param schema
+		 * @param schema must not be {@literal null}.
 		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see ObjectJsonSchemaObject#additionalProperties(ObjectJsonSchemaObject)
 		 */
@@ -168,7 +168,7 @@ public interface MongoJsonSchema {
 		}
 
 		/**
-		 * @param properties
+		 * @param properties must not be {@literal null}.
 		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see ObjectJsonSchemaObject#properties(JsonSchemaProperty...)
 		 */
@@ -179,7 +179,7 @@ public interface MongoJsonSchema {
 		}
 
 		/**
-		 * @param properties
+		 * @param properties must not be {@literal null}.
 		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see ObjectJsonSchemaObject#patternProperties(JsonSchemaProperty...)
 		 */
@@ -190,7 +190,7 @@ public interface MongoJsonSchema {
 		}
 
 		/**
-		 * @param property
+		 * @param property must not be {@literal null}.
 		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see ObjectJsonSchemaObject#property(JsonSchemaProperty)
 		 */
@@ -201,7 +201,7 @@ public interface MongoJsonSchema {
 		}
 
 		/**
-		 * @param possibleValues
+		 * @param possibleValues must not be {@literal null}.
 		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see ObjectJsonSchemaObject#possibleValues(Collection)
 		 */
@@ -212,7 +212,7 @@ public interface MongoJsonSchema {
 		}
 
 		/**
-		 * @param allOf
+		 * @param allOf must not be {@literal null}.
 		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see UntypedJsonSchemaObject#allOf(Collection)
 		 */
@@ -223,7 +223,7 @@ public interface MongoJsonSchema {
 		}
 
 		/**
-		 * @param anyOf
+		 * @param anyOf must not be {@literal null}.
 		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see UntypedJsonSchemaObject#anyOf(Collection)
 		 */
@@ -234,7 +234,7 @@ public interface MongoJsonSchema {
 		}
 
 		/**
-		 * @param oneOf
+		 * @param oneOf must not be {@literal null}.
 		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see UntypedJsonSchemaObject#oneOf(Collection)
 		 */
@@ -245,7 +245,7 @@ public interface MongoJsonSchema {
 		}
 
 		/**
-		 * @param notMatch
+		 * @param notMatch must not be {@literal null}.
 		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see UntypedJsonSchemaObject#notMatch(JsonSchemaObject)
 		 */
@@ -256,7 +256,7 @@ public interface MongoJsonSchema {
 		}
 
 		/**
-		 * @param description
+		 * @param description must not be {@literal null}.
 		 * @return {@code this} {@link MongoJsonSchemaBuilder}.
 		 * @see UntypedJsonSchemaObject#description(String)
 		 */

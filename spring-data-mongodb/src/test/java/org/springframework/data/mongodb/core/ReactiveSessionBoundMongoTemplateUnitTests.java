@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
@@ -29,12 +29,14 @@ import java.lang.reflect.Proxy;
 import org.bson.Document;
 import org.bson.codecs.BsonValueCodec;
 import org.bson.codecs.configuration.CodecRegistry;
+import org.bson.conversions.Bson;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.reactivestreams.Publisher;
+
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
@@ -67,6 +69,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Mathieu Ouellet
  */
 @SuppressWarnings("unchecked")
 @RunWith(MockitoJUnitRunner.Silent.class)
@@ -109,13 +112,15 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 		when(collection.deleteMany(any(ClientSession.class), any(), any())).thenReturn(resultPublisher);
 		when(collection.insertOne(any(ClientSession.class), any(Document.class))).thenReturn(resultPublisher);
 		when(collection.aggregate(any(ClientSession.class), anyList(), any(Class.class))).thenReturn(aggregatePublisher);
-		when(collection.count(any(ClientSession.class), any(), any(CountOptions.class))).thenReturn(resultPublisher);
-		when(collection.drop(any(ClientSession.class))).thenReturn(resultPublisher);
-		when(collection.findOneAndUpdate(any(ClientSession.class), any(), any(), any())).thenReturn(resultPublisher);
-		when(collection.distinct(any(ClientSession.class), any(), any(), any())).thenReturn(distinctPublisher);
-		when(collection.updateOne(any(ClientSession.class), any(), any(), any(UpdateOptions.class)))
+		when(collection.countDocuments(any(ClientSession.class), any(), any(CountOptions.class)))
 				.thenReturn(resultPublisher);
-		when(collection.updateMany(any(ClientSession.class), any(), any(), any(UpdateOptions.class)))
+		when(collection.drop(any(ClientSession.class))).thenReturn(resultPublisher);
+		when(collection.findOneAndUpdate(any(ClientSession.class), any(), any(Bson.class), any()))
+				.thenReturn(resultPublisher);
+		when(collection.distinct(any(ClientSession.class), any(), any(Bson.class), any())).thenReturn(distinctPublisher);
+		when(collection.updateOne(any(ClientSession.class), any(), any(Bson.class), any(UpdateOptions.class)))
+				.thenReturn(resultPublisher);
+		when(collection.updateMany(any(ClientSession.class), any(), any(Bson.class), any(UpdateOptions.class)))
 				.thenReturn(resultPublisher);
 		when(collection.dropIndex(any(ClientSession.class), anyString())).thenReturn(resultPublisher);
 		when(collection.mapReduce(any(ClientSession.class), any(), any(), any())).thenReturn(mapReducePublisher);
@@ -124,7 +129,6 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 		when(findPublisher.collation(any())).thenReturn(findPublisher);
 		when(findPublisher.first()).thenReturn(resultPublisher);
 		when(aggregatePublisher.allowDiskUse(anyBoolean())).thenReturn(aggregatePublisher);
-		when(aggregatePublisher.useCursor(anyBoolean())).thenReturn(aggregatePublisher);
 
 		factory = new SimpleReactiveMongoDatabaseFactory(client, "foo");
 
@@ -221,7 +225,7 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 
 		template.count(new Query(), Person.class).subscribe();
 
-		verify(collection).count(eq(clientSession), any(), any(CountOptions.class));
+		verify(collection).countDocuments(eq(clientSession), any(), any(CountOptions.class));
 	}
 
 	@Test // DATAMONGO-1880
@@ -245,7 +249,7 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 
 		template.findAndModify(new Query(), new Update().set("foo", "bar"), Person.class).subscribe();
 
-		verify(collection).findOneAndUpdate(eq(clientSession), any(), any(), any(FindOneAndUpdateOptions.class));
+		verify(collection).findOneAndUpdate(eq(clientSession), any(), any(Bson.class), any(FindOneAndUpdateOptions.class));
 	}
 
 	@Test // DATAMONGO-1880
@@ -278,7 +282,7 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 
 		template.updateFirst(new Query(), Update.update("foo", "bar"), Person.class).subscribe();
 
-		verify(collection).updateOne(eq(clientSession), any(), any(), any(UpdateOptions.class));
+		verify(collection).updateOne(eq(clientSession), any(), any(Bson.class), any(UpdateOptions.class));
 	}
 
 	@Test // DATAMONGO-1880
@@ -286,7 +290,7 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 
 		template.updateMulti(new Query(), Update.update("foo", "bar"), Person.class).subscribe();
 
-		verify(collection).updateMany(eq(clientSession), any(), any(), any(UpdateOptions.class));
+		verify(collection).updateMany(eq(clientSession), any(), any(Bson.class), any(UpdateOptions.class));
 	}
 
 	@Test // DATAMONGO-1880
@@ -294,17 +298,18 @@ public class ReactiveSessionBoundMongoTemplateUnitTests {
 
 		template.upsert(new Query(), Update.update("foo", "bar"), Person.class).subscribe();
 
-		verify(collection).updateOne(eq(clientSession), any(), any(), any(UpdateOptions.class));
+		verify(collection).updateOne(eq(clientSession), any(), any(Bson.class), any(UpdateOptions.class));
 	}
 
 	@Test // DATAMONGO-1880
 	public void getCollectionShouldShouldJustReturnTheCollection/*No ClientSession binding*/() {
-		assertThat(template.getCollection(COLLECTION_NAME)).isNotInstanceOf(Proxy.class);
+		assertThat(template.getCollection(COLLECTION_NAME).block()).isNotInstanceOf(Proxy.class)
+				.isInstanceOf(MongoCollection.class);
 	}
 
 	@Test // DATAMONGO-1880
 	public void getDbShouldJustReturnTheDatabase/*No ClientSession binding*/() {
-		assertThat(template.getMongoDatabase()).isNotInstanceOf(Proxy.class);
+		assertThat(template.getMongoDatabase().block()).isNotInstanceOf(Proxy.class).isInstanceOf(MongoDatabase.class);
 	}
 
 	@Test // DATAMONGO-1880

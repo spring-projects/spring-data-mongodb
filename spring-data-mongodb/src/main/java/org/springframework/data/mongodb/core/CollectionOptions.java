@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the original author or authors.
+ * Copyright 2010-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 package org.springframework.data.mongodb.core;
-
-import lombok.RequiredArgsConstructor;
 
 import java.util.Optional;
 
@@ -95,7 +93,7 @@ public class CollectionOptions {
 
 	/**
 	 * Create new {@link CollectionOptions} with already given settings and capped set to {@literal true}. <br />
-	 * <strong>NOTE</strong> Using capped collections requires defining {@link #size(int)}.
+	 * <strong>NOTE</strong> Using capped collections requires defining {@link #size(long)}.
 	 *
 	 * @return new {@link CollectionOptions}.
 	 * @since 2.0
@@ -312,7 +310,6 @@ public class CollectionOptions {
 	 * @author Andreas Zink
 	 * @since 2.1
 	 */
-	@RequiredArgsConstructor
 	public static class ValidationOptions {
 
 		private static final ValidationOptions NONE = new ValidationOptions(null, null, null);
@@ -320,6 +317,13 @@ public class CollectionOptions {
 		private final @Nullable Validator validator;
 		private final @Nullable ValidationLevel validationLevel;
 		private final @Nullable ValidationAction validationAction;
+
+		public ValidationOptions(Validator validator, ValidationLevel validationLevel, ValidationAction validationAction) {
+
+			this.validator = validator;
+			this.validationLevel = validationLevel;
+			this.validationAction = validationAction;
+		}
 
 		/**
 		 * Create an empty {@link ValidationOptions}.

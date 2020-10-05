@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -88,9 +88,9 @@ public interface ExecutableAggregationOperation {
 
 		/**
 		 * Apply pipeline operations as specified and stream all matching elements. <br />
-		 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.Cursor}
+		 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.client.FindIterable}
 		 *
-		 * @return a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.Cursor} that needs to be closed.
+		 * @return a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.client.FindIterable} that needs to be closed.
 		 *         Never {@literal null}.
 		 */
 		CloseableIterator<T> stream();

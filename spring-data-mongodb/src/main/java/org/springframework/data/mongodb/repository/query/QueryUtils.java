@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 
@@ -61,7 +62,7 @@ class QueryUtils {
 			return combinedSort;
 		});
 
-		return (Query) factory.getProxy();
+		return (Query) factory.getProxy(query.getClass().getClassLoader());
 	}
 
 	/**
@@ -76,7 +77,7 @@ class QueryUtils {
 	 * @since 2.2
 	 */
 	static Query applyCollation(Query query, @Nullable String collationExpression, ConvertingParameterAccessor accessor,
-			MongoParameters parameters, SpelExpressionParser expressionParser,
+			MongoParameters parameters, ExpressionParser expressionParser,
 			QueryMethodEvaluationContextProvider evaluationContextProvider) {
 
 		Collation collation = CollationUtils.computeCollation(collationExpression, accessor, parameters, expressionParser,

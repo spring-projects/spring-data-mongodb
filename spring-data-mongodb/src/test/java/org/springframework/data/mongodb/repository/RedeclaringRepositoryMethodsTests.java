@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,11 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -31,24 +30,24 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Mark Paluch
  */
 @ContextConfiguration("config/MongoNamespaceIntegrationTests-context.xml")
-public class RedeclaringRepositoryMethodsTests extends AbstractPersonRepositoryIntegrationTests {
+class RedeclaringRepositoryMethodsTests extends AbstractPersonRepositoryIntegrationTests {
 
 	@Autowired RedeclaringRepositoryMethodsRepository repository;
 
 	@Test // DATAMONGO-760
-	public void adjustedWellKnownPagedFindAllMethodShouldReturnOnlyTheUserWithFirstnameOliverAugust() {
+	void adjustedWellKnownPagedFindAllMethodShouldReturnOnlyTheUserWithFirstnameOliverAugust() {
 
 		Page<Person> page = repository.findAll(PageRequest.of(0, 2));
 
-		assertThat(page.getNumberOfElements(), is(1));
-		assertThat(page.getContent().get(0).getFirstname(), is(oliver.getFirstname()));
+		assertThat(page.getNumberOfElements()).isEqualTo(1);
+		assertThat(page.getContent().get(0).getFirstname()).isEqualTo(oliver.getFirstname());
 	}
 
 	@Test // DATAMONGO-760
-	public void adjustedWllKnownFindAllMethodShouldReturnAnEmptyList() {
+	void adjustedWllKnownFindAllMethodShouldReturnAnEmptyList() {
 
 		List<Person> result = repository.findAll();
 
-		assertThat(result.isEmpty(), is(true));
+		assertThat(result.isEmpty()).isTrue();
 	}
 }

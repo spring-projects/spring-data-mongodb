@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
@@ -24,9 +24,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 /**
@@ -39,7 +40,7 @@ public class DataMongo273Tests {
 
 	MappingMongoConverter converter;
 
-	@Before
+	@BeforeEach
 	public void setupMongoConverter() {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
@@ -67,13 +68,13 @@ public class DataMongo273Tests {
 		@SuppressWarnings("unchecked")
 		Map<String, Object> mapOfThings2 = converter.read(Map.class, result);
 
-		assertTrue(mapOfThings2.get("plane") instanceof Plane);
-		assertTrue(mapOfThings2.get("train") instanceof Train);
-		assertTrue(mapOfThings2.get("automobile") instanceof Automobile);
+		assertThat(mapOfThings2.get("plane") instanceof Plane).isTrue();
+		assertThat(mapOfThings2.get("train") instanceof Train).isTrue();
+		assertThat(mapOfThings2.get("automobile") instanceof Automobile).isTrue();
 	}
 
 	@Test // DATAMONGO-294
-	@Ignore("TODO: Mongo3 - this is no longer supported as DBList is no Bson type :/")
+	@Disabled("TODO: Mongo3 - this is no longer supported as DBList is no Bson type :/")
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void convertListOfThings() {
 		Plane plane = new Plane("Boeing", 4);
@@ -90,9 +91,9 @@ public class DataMongo273Tests {
 
 		List listOfThings2 = converter.read(List.class, result);
 
-		assertTrue(listOfThings2.get(0) instanceof Plane);
-		assertTrue(listOfThings2.get(1) instanceof Train);
-		assertTrue(listOfThings2.get(2) instanceof Automobile);
+		assertThat(listOfThings2.get(0) instanceof Plane).isTrue();
+		assertThat(listOfThings2.get(1) instanceof Train).isTrue();
+		assertThat(listOfThings2.get(2) instanceof Automobile).isTrue();
 	}
 
 	@Test // DATAMONGO-294
@@ -120,9 +121,9 @@ public class DataMongo273Tests {
 
 		List listOfThings2 = (List) shipment2.getBoxes().get("one");
 
-		assertTrue(listOfThings2.get(0) instanceof Plane);
-		assertTrue(listOfThings2.get(1) instanceof Train);
-		assertTrue(listOfThings2.get(2) instanceof Automobile);
+		assertThat(listOfThings2.get(0) instanceof Plane).isTrue();
+		assertThat(listOfThings2.get(1) instanceof Train).isTrue();
+		assertThat(listOfThings2.get(2) instanceof Automobile).isTrue();
 	}
 
 	static class Plane {

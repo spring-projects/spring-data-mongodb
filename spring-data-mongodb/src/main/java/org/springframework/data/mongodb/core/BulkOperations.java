@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2015-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -94,7 +94,6 @@ public interface BulkOperations {
 	 * Add a list of updates to the bulk operation. For each update request, all matching documents are updated.
 	 *
 	 * @param updates Update operations to perform.
-	 * @return The bulk operation.
 	 * @return the current {@link BulkOperations} instance with the update added, will never be {@literal null}.
 	 */
 	BulkOperations updateMulti(List<Pair<Query, Update>> updates);
@@ -105,7 +104,6 @@ public interface BulkOperations {
 	 *
 	 * @param query Update criteria.
 	 * @param update Update operation to perform.
-	 * @return The bulk operation.
 	 * @return the current {@link BulkOperations} instance with the update added, will never be {@literal null}.
 	 */
 	BulkOperations upsert(Query query, Update update);
@@ -115,7 +113,6 @@ public interface BulkOperations {
 	 * else an insert.
 	 *
 	 * @param updates Updates/insert operations to perform.
-	 * @return The bulk operation.
 	 * @return the current {@link BulkOperations} instance with the update added, will never be {@literal null}.
 	 */
 	BulkOperations upsert(List<Pair<Query, Update>> updates);

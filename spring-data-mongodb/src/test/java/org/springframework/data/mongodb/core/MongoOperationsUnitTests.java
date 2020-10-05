@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,18 +15,18 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.Arrays;
 import java.util.List;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mapping.MappingException;
@@ -49,7 +49,7 @@ import com.mongodb.DBRef;
  * @author Thomas Darimont
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public abstract class MongoOperationsUnitTests {
 
 	@Mock CollectionCallback<Object> collectionCallback;
@@ -59,7 +59,7 @@ public abstract class MongoOperationsUnitTests {
 	Person person;
 	List<Person> persons;
 
-	@Before
+	@BeforeEach
 	public final void operationsSetUp() {
 
 		person = new Person("Oliver");
@@ -95,23 +95,23 @@ public abstract class MongoOperationsUnitTests {
 		};
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void rejectsNullForCollectionCallback() {
-
-		getOperations().execute("test", (CollectionCallback) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> getOperations().execute("test", (CollectionCallback) null));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void rejectsNullForCollectionCallback2() {
-		getOperations().execute("collection", (CollectionCallback) null);
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> getOperations().execute("collection", (CollectionCallback) null));
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void rejectsNullForDbCallback() {
-		getOperations().execute((DbCallback) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> getOperations().execute((DbCallback) null));
 	}
 
 	@Test
@@ -350,12 +350,7 @@ public abstract class MongoOperationsUnitTests {
 
 		public void assertException(Class<? extends Exception> exception) {
 
-			try {
-				doWith(getOperationsForExceptionHandling());
-				fail("Expected " + exception + " but completed without any!");
-			} catch (Exception e) {
-				assertTrue("Expected " + exception + " but got " + e, exception.isInstance(e));
-			}
+			assertThatThrownBy(() -> doWith(getOperationsForExceptionHandling())).isInstanceOf(exception);
 		}
 
 		public abstract void doWith(MongoOperations operations);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -81,6 +81,6 @@ public class TypedAggregation<I> extends Aggregation {
 	public TypedAggregation<I> withOptions(AggregationOptions options) {
 
 		Assert.notNull(options, "AggregationOptions must not be null.");
-		return new TypedAggregation<I>(inputType, operations, options);
+		return new TypedAggregation<I>(inputType, pipeline.getOperations(), options);
 	}
 }

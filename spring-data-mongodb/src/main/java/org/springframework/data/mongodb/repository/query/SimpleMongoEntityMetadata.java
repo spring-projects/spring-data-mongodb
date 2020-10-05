@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import lombok.Getter;
-
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.util.Assert;
 
@@ -28,7 +26,7 @@ import org.springframework.util.Assert;
 class SimpleMongoEntityMetadata<T> implements MongoEntityMetadata<T> {
 
 	private final Class<T> type;
-	private final @Getter MongoPersistentEntity<?> collectionEntity;
+	private final MongoPersistentEntity<?> collectionEntity;
 
 	/**
 	 * Creates a new {@link SimpleMongoEntityMetadata} using the given type and {@link MongoPersistentEntity} to use for
@@ -60,5 +58,9 @@ class SimpleMongoEntityMetadata<T> implements MongoEntityMetadata<T> {
 	 */
 	public String getCollectionName() {
 		return collectionEntity.getCollection();
+	}
+
+	public MongoPersistentEntity<?> getCollectionEntity() {
+		return this.collectionEntity;
 	}
 }

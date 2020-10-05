@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,14 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.net.UnknownHostException;
 
 import org.bson.BsonDocument;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import org.springframework.core.NestedRuntimeException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
@@ -50,7 +50,7 @@ public class MongoExceptionTranslatorUnitTests {
 
 	MongoExceptionTranslator translator;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		translator = new MongoExceptionTranslator();
 	}
@@ -127,7 +127,7 @@ public class MongoExceptionTranslatorUnitTests {
 	public void translateUnsupportedException() {
 
 		RuntimeException exception = new RuntimeException();
-		assertThat(translator.translateExceptionIfPossible(exception), is(nullValue()));
+		assertThat(translator.translateExceptionIfPossible(exception)).isNull();
 	}
 
 	@Test // DATAMONGO-2045
@@ -156,11 +156,11 @@ public class MongoExceptionTranslatorUnitTests {
 
 		DataAccessException translated = translator.translateExceptionIfPossible(new MongoException(code, ""));
 
-		assertThat("Expected exception of type " + clazz.getName() + "!", translated, is(not(nullValue())));
+		assertThat(translated).as("Expected exception of type " + clazz.getName() + "!").isNotNull();
 
 		Throwable cause = translated.getRootCause();
-		assertThat(cause, is(instanceOf(MongoException.class)));
-		assertThat(((MongoException) cause).getCode(), is(code));
+		assertThat(cause).isInstanceOf(MongoException.class);
+		assertThat(((MongoException) cause).getCode()).isEqualTo(code);
 	}
 
 	private static void expectExceptionWithCauseMessage(NestedRuntimeException e,
@@ -171,11 +171,11 @@ public class MongoExceptionTranslatorUnitTests {
 	private static void expectExceptionWithCauseMessage(NestedRuntimeException e,
 			Class<? extends NestedRuntimeException> type, String message) {
 
-		assertThat(e, is(instanceOf(type)));
+		assertThat(e).isInstanceOf(type);
 
 		if (message != null) {
-			assertThat(e.getRootCause(), is(notNullValue()));
-			assertThat(e.getRootCause().getMessage(), containsString(message));
+			assertThat(e.getRootCause()).isNotNull();
+			assertThat(e.getRootCause().getMessage()).contains(message);
 		}
 	}
 }

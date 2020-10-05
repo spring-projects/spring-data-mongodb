@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,33 +15,33 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.bson.Document;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link GeoCommandStatistics}.
  *
  * @author Oliver Gierke
+ * @author Mark Paluch
  * @soundtrack Fruitcake - Jeff Coffin (The Inside of the Outside)
  */
 public class GeoCommandStatisticsUnitTests {
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1361
+	@Test // DATAMONGO-1361
 	public void rejectsNullCommandResult() {
-		GeoCommandStatistics.from(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> GeoCommandStatistics.from(null));
 	}
 
 	@Test // DATAMONGO-1361
 	public void fallsBackToNanIfNoAverageDistanceIsAvailable() {
 
 		GeoCommandStatistics statistics = GeoCommandStatistics.from(new Document("stats", null));
-		assertThat(statistics.getAverageDistance(), is(Double.NaN));
+		assertThat(statistics.getAverageDistance()).isNaN();
 
 		statistics = GeoCommandStatistics.from(new Document("stats", new Document()));
-		assertThat(statistics.getAverageDistance(), is(Double.NaN));
+		assertThat(statistics.getAverageDistance()).isNaN();
 	}
 
 	@Test // DATAMONGO-1361
@@ -50,6 +50,6 @@ public class GeoCommandStatisticsUnitTests {
 		GeoCommandStatistics statistics = GeoCommandStatistics
 				.from(new Document("stats", new Document("avgDistance", 1.5)));
 
-		assertThat(statistics.getAverageDistance(), is(1.5));
+		assertThat(statistics.getAverageDistance()).isEqualTo(1.5);
 	}
 }

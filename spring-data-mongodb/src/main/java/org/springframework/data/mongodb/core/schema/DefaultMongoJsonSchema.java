@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,8 @@
  */
 package org.springframework.data.mongodb.core.schema;
 
-import lombok.AllArgsConstructor;
-import lombok.NonNull;
-
 import org.bson.Document;
+import org.springframework.util.Assert;
 
 /**
  * Value object representing a MongoDB-specific JSON schema which is the default {@link MongoJsonSchema} implementation.
@@ -27,10 +25,15 @@ import org.bson.Document;
  * @author Mark Paluch
  * @since 2.1
  */
-@AllArgsConstructor
 class DefaultMongoJsonSchema implements MongoJsonSchema {
 
-	private final @NonNull JsonSchemaObject root;
+	private final JsonSchemaObject root;
+
+	DefaultMongoJsonSchema(JsonSchemaObject root) {
+		
+		Assert.notNull(root, "Root must not be null!");
+		this.root = root;
+	}
 
 	/*
 	 * (non-Javadoc)

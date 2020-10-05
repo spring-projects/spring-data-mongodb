@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,11 +70,27 @@ public interface MongoPersistentEntity<T> extends PersistentEntity<T, MongoPersi
 
 	/**
 	 * @return {@literal true} if the entity is annotated with
-	 *         {@link org.springframework.data.mongodb.core.mapping.Collation}.
+	 *         {@link org.springframework.data.mongodb.core.query.Collation}.
 	 * @since 2.2
 	 */
 	default boolean hasCollation() {
 		return getCollation() != null;
+	}
+
+	/**
+	 * Get the entities shard key if defined.
+	 *
+	 * @return {@link ShardKey#none()} if not not set.
+	 * @since 3.0
+	 */
+	ShardKey getShardKey();
+
+	/**
+	 * @return {@literal true} if the {@link #getShardKey() shard key} is sharded.
+	 * @since 3.0
+	 */
+	default boolean isSharded() {
+		return getShardKey().isSharded();
 	}
 
 }

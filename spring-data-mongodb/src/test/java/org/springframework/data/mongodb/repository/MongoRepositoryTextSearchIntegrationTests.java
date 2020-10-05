@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,42 +15,30 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static org.hamcrest.collection.IsCollectionWithSize.*;
-import static org.hamcrest.core.Is.*;
-import static org.hamcrest.core.IsCollectionContaining.*;
-import static org.hamcrest.core.IsEqual.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
-import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.index.TextIndexDefinition.TextIndexDefinitionBuilder;
 import org.springframework.data.mongodb.core.index.TextIndexed;
 import org.springframework.data.mongodb.core.mapping.TextScore;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactory;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
-import org.springframework.data.util.Version;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.util.ClassUtils;
+import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
+import org.springframework.data.mongodb.test.util.MongoTestTemplate;
+import org.springframework.data.mongodb.test.util.Template;
 import org.springframework.util.ObjectUtils;
-
-import com.mongodb.MongoClient;
 
 /**
  * Integration tests for text searches on repository.
@@ -59,11 +47,8 @@ import com.mongodb.MongoClient;
  * @author Oliver Gierke
  * @author Mark Paluch
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration
-public class MongoRepositoryTextSearchIntegrationTests {
-
-	public static @ClassRule MongoVersionRule versionRule = MongoVersionRule.atLeast(new Version(2, 6, 0));
+@ExtendWith(MongoTemplateExtension.class)
+class MongoRepositoryTextSearchIntegrationTests {
 
 	private static final FullTextDocument PASSENGER_57 = new FullTextDocument("1", "Passenger 57",
 			"Passenger 57 is an action film that stars Wesley Snipes and Bruce Payne.");
@@ -72,35 +57,36 @@ public class MongoRepositoryTextSearchIntegrationTests {
 	private static final FullTextDocument DROP_ZONE = new FullTextDocument("3", "Drop Zone",
 			"Drop Zone is an action film featuring Wesley Snipes and Gary Busey.");
 
-	@Autowired MongoTemplate template;
-	FullTextRepository repo;
+	@Template(initialEntitySet = FullTextDocument.class) //
+	private static MongoTestTemplate template;
 
-	@Before
-	public void setUp() {
+	private FullTextRepository repo = new MongoRepositoryFactory(this.template).getRepository(FullTextRepository.class);
+
+	@BeforeEach
+	void setUp() {
 
 		template.indexOps(FullTextDocument.class)
 				.ensureIndex(new TextIndexDefinitionBuilder().onField("title").onField("content").build());
-		this.repo = new MongoRepositoryFactory(this.template).getRepository(FullTextRepository.class);
 	}
 
-	@After
-	public void tearDown() {
-		template.dropCollection(FullTextDocument.class);
+	@AfterEach
+	void tearDown() {
+		template.flush();
 	}
 
 	@Test // DATAMONGO-973
-	public void findAllByTextCriteriaShouldReturnMatchingDocuments() {
+	void findAllByTextCriteriaShouldReturnMatchingDocuments() {
 
 		initRepoWithDefaultDocuments();
 
 		List<FullTextDocument> result = repo.findAllBy(TextCriteria.forDefaultLanguage().matchingAny("stallone", "payne"));
 
-		assertThat(result, hasSize(2));
-		assertThat(result, hasItems(PASSENGER_57, DEMOLITION_MAN));
+		assertThat(result).hasSize(2);
+		assertThat(result).contains(PASSENGER_57, DEMOLITION_MAN);
 	}
 
 	@Test // DATAMONGO-973
-	public void derivedFinderWithTextCriteriaReturnsCorrectResult() {
+	void derivedFinderWithTextCriteriaReturnsCorrectResult() {
 
 		initRepoWithDefaultDocuments();
 		FullTextDocument blade = new FullTextDocument("4", "Blade",
@@ -111,26 +97,26 @@ public class MongoRepositoryTextSearchIntegrationTests {
 		List<FullTextDocument> result = repo.findByNonTextIndexProperty("foo",
 				TextCriteria.forDefaultLanguage().matching("snipes"));
 
-		assertThat(result, hasSize(1));
-		assertThat(result, hasItems(blade));
+		assertThat(result).hasSize(1);
+		assertThat(result).contains(blade);
 	}
 
 	@Test // DATAMONGO-973
-	public void findByWithPaginationWorksCorrectlyWhenUsingTextCriteria() {
+	void findByWithPaginationWorksCorrectlyWhenUsingTextCriteria() {
 
 		initRepoWithDefaultDocuments();
 
 		Page<FullTextDocument> page = repo.findAllBy(TextCriteria.forDefaultLanguage().matching("film"),
 				PageRequest.of(1, 1, Direction.ASC, "id"));
 
-		assertThat(page.hasNext(), is(true));
-		assertThat(page.hasPrevious(), is(true));
-		assertThat(page.getTotalElements(), is(3L));
-		assertThat(page.getContent().get(0), equalTo(DEMOLITION_MAN));
+		assertThat(page.hasNext()).isTrue();
+		assertThat(page.hasPrevious()).isTrue();
+		assertThat(page.getTotalElements()).isEqualTo(3L);
+		assertThat(page.getContent().get(0)).isEqualTo(DEMOLITION_MAN);
 	}
 
 	@Test // DATAMONGO-973
-	public void findAllByTextCriteriaWithSortWorksCorrectly() {
+	void findAllByTextCriteriaWithSortWorksCorrectly() {
 
 		initRepoWithDefaultDocuments();
 		FullTextDocument snipes = new FullTextDocument("4", "Snipes", "Wesley Trent Snipes is an actor and film producer.");
@@ -139,12 +125,12 @@ public class MongoRepositoryTextSearchIntegrationTests {
 		List<FullTextDocument> result = repo.findAllBy(TextCriteria.forDefaultLanguage().matching("snipes"),
 				Sort.by("score"));
 
-		assertThat(result.size(), is(4));
-		assertThat(result.get(0), equalTo(snipes));
+		assertThat(result.size()).isEqualTo(4);
+		assertThat(result.get(0)).isEqualTo(snipes);
 	}
 
 	@Test // DATAMONGO-973
-	public void findByWithSortByScoreViaPageRequestTriggersSortingCorrectly() {
+	void findByWithSortByScoreViaPageRequestTriggersSortingCorrectly() {
 
 		initRepoWithDefaultDocuments();
 		FullTextDocument snipes = new FullTextDocument("4", "Snipes", "Wesley Trent Snipes is an actor and film producer.");
@@ -153,12 +139,12 @@ public class MongoRepositoryTextSearchIntegrationTests {
 		Page<FullTextDocument> page = repo.findAllBy(TextCriteria.forDefaultLanguage().matching("snipes"),
 				PageRequest.of(0, 10, Direction.ASC, "score"));
 
-		assertThat(page.getTotalElements(), is(4L));
-		assertThat(page.getContent().get(0), equalTo(snipes));
+		assertThat(page.getTotalElements()).isEqualTo(4L);
+		assertThat(page.getContent().get(0)).isEqualTo(snipes);
 	}
 
 	@Test // DATAMONGO-973
-	public void findByWithSortViaPageRequestIgnoresTextScoreWhenSortedByOtherProperty() {
+	void findByWithSortViaPageRequestIgnoresTextScoreWhenSortedByOtherProperty() {
 
 		initRepoWithDefaultDocuments();
 		FullTextDocument snipes = new FullTextDocument("4", "Snipes", "Wesley Trent Snipes is an actor and film producer.");
@@ -167,12 +153,12 @@ public class MongoRepositoryTextSearchIntegrationTests {
 		Page<FullTextDocument> page = repo.findAllBy(TextCriteria.forDefaultLanguage().matching("snipes"),
 				PageRequest.of(0, 10, Direction.ASC, "id"));
 
-		assertThat(page.getTotalElements(), is(4L));
-		assertThat(page.getContent().get(0), equalTo(PASSENGER_57));
+		assertThat(page.getTotalElements()).isEqualTo(4L);
+		assertThat(page.getContent().get(0)).isEqualTo(PASSENGER_57);
 	}
 
 	@Test // DATAMONGO-973
-	public void derivedSortForTextScorePropertyWorksCorrectly() {
+	void derivedSortForTextScorePropertyWorksCorrectly() {
 
 		initRepoWithDefaultDocuments();
 		FullTextDocument snipes = new FullTextDocument("4", "Snipes", "Wesley Trent Snipes is an actor and film producer.");
@@ -180,35 +166,21 @@ public class MongoRepositoryTextSearchIntegrationTests {
 
 		List<FullTextDocument> result = repo
 				.findByNonTextIndexPropertyIsNullOrderByScoreDesc(TextCriteria.forDefaultLanguage().matching("snipes"));
-		assertThat(result.get(0), equalTo(snipes));
+		assertThat(result.get(0)).isEqualTo(snipes);
 	}
 
-	@Test // DATAMONGO-973
-	public void derivedFinderMethodWithoutFullTextShouldNoCauseTroubleWhenHavingEntityWithTextScoreProperty() {
+	@Test // DATAMONGO-973, DATAMONGO-2516
+	void derivedFinderMethodWithoutFullTextShouldNoCauseTroubleWhenHavingEntityWithTextScoreProperty() {
 
 		initRepoWithDefaultDocuments();
 		List<FullTextDocument> result = repo.findByTitle(DROP_ZONE.getTitle());
-		assertThat(result.get(0), equalTo(DROP_ZONE));
-		assertThat(result.get(0).score, equalTo(0.0F));
+		
+		assertThat(result.get(0)).isEqualTo(DROP_ZONE);
+		assertThat(result.get(0).score).isNull();
 	}
 
 	private void initRepoWithDefaultDocuments() {
 		repo.saveAll(Arrays.asList(PASSENGER_57, DEMOLITION_MAN, DROP_ZONE));
-	}
-
-	@org.springframework.context.annotation.Configuration
-	public static class Configuration extends AbstractMongoConfiguration {
-
-		@Override
-		protected String getDatabaseName() {
-			return ClassUtils.getShortNameAsProperty(MongoRepositoryTextSearchIntegrationTests.class);
-		}
-
-		@Override
-		public MongoClient mongoClient() {
-			return new MongoClient();
-		}
-
 	}
 
 	static class FullTextDocument {

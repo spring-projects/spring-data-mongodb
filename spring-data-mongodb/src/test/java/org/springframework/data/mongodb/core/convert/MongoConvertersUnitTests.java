@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.assertj.core.data.TemporalUnitLessThanOffset;
 import org.bson.BsonTimestamp;
 import org.bson.Document;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
 import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.geo.Box;

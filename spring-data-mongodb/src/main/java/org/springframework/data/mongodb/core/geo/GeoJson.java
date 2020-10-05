@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2015-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.core.geo;
 
 /**
- * Interface definition for structures defined in GeoJSON ({@link https://geojson.org/}) format.
+ * Interface definition for structures defined in <a href="https://geojson.org/>GeoJSON</a> format.
  *
  * @author Christoph Strobl
  * @since 1.7

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,9 +21,13 @@ import static org.springframework.data.mongodb.gridfs.GridFsCriteria.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.nio.ByteBuffer;
+
+import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.reactivestreams.Publisher;
+
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
@@ -32,23 +36,27 @@ import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.client.gridfs.model.GridFSFile;
-import com.mongodb.reactivestreams.client.MongoDatabase;
-import com.mongodb.reactivestreams.client.gridfs.AsyncInputStream;
+import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import com.mongodb.reactivestreams.client.gridfs.GridFSBucket;
 import com.mongodb.reactivestreams.client.gridfs.GridFSBuckets;
-import com.mongodb.reactivestreams.client.gridfs.GridFSDownloadStream;
 import com.mongodb.reactivestreams.client.gridfs.GridFSFindPublisher;
+import com.mongodb.reactivestreams.client.gridfs.GridFSUploadPublisher;
 
 /**
  * {@link ReactiveGridFsOperations} implementation to store content into MongoDB GridFS. Uses by default
  * {@link DefaultDataBufferFactory} to create {@link DataBuffer buffers}.
  *
  * @author Mark Paluch
+ * @author Nick Stolwijk
+ * @author Denis Zavedeev
+ * @author Christoph Strobl
+ * @author Mathieu Ouellet
  * @since 2.2
  */
 public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements ReactiveGridFsOperations {
@@ -105,16 +113,6 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.ReactiveGridFsOperations#store(com.mongodb.reactivestreams.client.gridfs.AsyncInputStream, java.lang.String, java.lang.String, java.lang.Object)
-	 */
-	@Override
-	public Mono<ObjectId> store(AsyncInputStream content, @Nullable String filename, @Nullable String contentType,
-			@Nullable Object metadata) {
-		return store(content, filename, contentType, toDocument(metadata));
-	}
-
-	/*
-	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.gridfs.ReactiveGridFsOperations#store(org.reactivestreams.Publisher, java.lang.String, java.lang.String, java.lang.Object)
 	 */
 	@Override
@@ -125,27 +123,27 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.ReactiveGridFsOperations#store(com.mongodb.reactivestreams.client.gridfs.AsyncInputStream, java.lang.String, java.lang.String, org.bson.Document)
+	 * @see org.springframework.data.mongodb.gridfs.ReactiveGridFsOperations#save(org.springframework.data.mongodb.gridfs.GridFsObject)
 	 */
-	@Override
-	public Mono<ObjectId> store(AsyncInputStream content, @Nullable String filename, @Nullable String contentType,
-			@Nullable Document metadata) {
+	public <T> Mono<T> store(GridFsObject<T, Publisher<DataBuffer>> upload) {
 
-		Assert.notNull(content, "InputStream must not be null!");
-		return Mono.from(getGridFs().uploadFromStream(filename, content, computeUploadOptionsFor(contentType, metadata)));
-	}
+		GridFSUploadOptions uploadOptions = computeUploadOptionsFor(upload.getOptions().getContentType(),
+				upload.getOptions().getMetadata());
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.ReactiveGridFsOperations#store(org.reactivestreams.Publisher, java.lang.String, java.lang.String, org.bson.Document)
-	 */
-	@Override
-	public Mono<ObjectId> store(Publisher<DataBuffer> content, @Nullable String filename, @Nullable String contentType,
-			@Nullable Document metadata) {
+		if (upload.getOptions().getChunkSize() > 0) {
+			uploadOptions.chunkSizeBytes(upload.getOptions().getChunkSize());
+		}
 
-		Assert.notNull(content, "Content must not be null!");
+		String filename = upload.getFilename();
+		Flux<ByteBuffer> source = Flux.from(upload.getContent()).map(DataBuffer::asByteBuffer);
+		T fileId = upload.getFileId();
 
-		return BinaryStreamAdapters.toAsyncInputStream(content).flatMap(it -> store(it, filename, contentType, metadata));
+		if (fileId == null) {
+			return (Mono<T>) createMono(new AutoIdCreatingUploadCallback(filename, source, uploadOptions));
+		}
+
+		UploadCallback callback = new UploadCallback(BsonUtils.simpleToBsonValue(fileId), filename, source, uploadOptions);
+		return createMono(callback).thenReturn(fileId);
 	}
 
 	/*
@@ -154,7 +152,11 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 	 */
 	@Override
 	public Flux<GridFSFile> find(Query query) {
-		return Flux.from(prepareQuery(query));
+
+		Document queryObject = getMappedQuery(query.getQueryObject());
+		Document sortObject = getMappedQuery(query.getSortObject());
+
+		return createFlux(new FindCallback(query, queryObject, sortObject));
 	}
 
 	/*
@@ -164,19 +166,22 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 	@Override
 	public Mono<GridFSFile> findOne(Query query) {
 
-		return Flux.from(prepareQuery(query).limit(2)) //
+		Document queryObject = getMappedQuery(query.getQueryObject());
+		Document sortObject = getMappedQuery(query.getSortObject());
+
+		return createFlux(new FindLimitCallback(query, queryObject, sortObject, 2)) //
 				.collectList() //
-				.flatMap(it -> {
-					if (it.isEmpty()) {
-						return Mono.empty();
+				.handle((files, sink) -> {
+
+					if (files.size() == 1) {
+						sink.next(files.get(0));
+						return;
 					}
 
-					if (it.size() > 1) {
-						return Mono.error(new IncorrectResultSizeDataAccessException(
+					if (files.size() > 1) {
+						sink.error(new IncorrectResultSizeDataAccessException(
 								"Query " + SerializationUtils.serializeToJsonSafely(query) + " returned non unique result.", 1));
 					}
-
-					return Mono.just(it.get(0));
 				});
 	}
 
@@ -186,7 +191,11 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 	 */
 	@Override
 	public Mono<GridFSFile> findFirst(Query query) {
-		return Flux.from(prepareQuery(query).limit(1)).next();
+
+		Document queryObject = getMappedQuery(query.getQueryObject());
+		Document sortObject = getMappedQuery(query.getSortObject());
+
+		return createFlux(new FindLimitCallback(query, queryObject, sortObject, 1)).next();
 	}
 
 	/*
@@ -195,7 +204,7 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 	 */
 	@Override
 	public Mono<Void> delete(Query query) {
-		return find(query).flatMap(it -> getGridFs().delete(it.getId())).then();
+		return find(query).flatMap(it -> createMono(new DeleteCallback(it.getId()))).then();
 	}
 
 	/*
@@ -220,12 +229,8 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 
 		Assert.notNull(file, "GridFSFile must not be null!");
 
-		return Mono.fromSupplier(() -> {
-
-			GridFSDownloadStream stream = getGridFs().openDownloadStream(file.getObjectId());
-
-			return new ReactiveGridFsResource(file, BinaryStreamAdapters.toPublisher(stream, dataBufferFactory));
-		});
+		return doGetBucket()
+				.map(it -> new ReactiveGridFsResource(file, it.downloadToPublisher(file.getId()), dataBufferFactory));
 	}
 
 	/*
@@ -250,26 +255,152 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 		return getResource(locationPattern).flux();
 	}
 
-	protected GridFSFindPublisher prepareQuery(Query query) {
+	/**
+	 * Create a reusable Mono for a {@link ReactiveBucketCallback}. It's up to the developer to choose to obtain a new
+	 * {@link Flux} or to reuse the {@link Flux}.
+	 *
+	 * @param callback must not be {@literal null}
+	 * @return a {@link Mono} wrapping the {@link ReactiveBucketCallback}.
+	 */
+	public <T> Mono<T> createMono(ReactiveBucketCallback<T> callback) {
 
-		Assert.notNull(query, "Query must not be null!");
+		Assert.notNull(callback, "ReactiveBucketCallback must not be null!");
 
-		Document queryObject = getMappedQuery(query.getQueryObject());
-		Document sortObject = getMappedQuery(query.getSortObject());
+		return doGetBucket().flatMap(bucket -> Mono.from(callback.doInBucket(bucket)));
+	}
 
-		GridFSFindPublisher publisherToUse = getGridFs().find(queryObject).sort(sortObject);
+	/**
+	 * Create a reusable Flux for a {@link ReactiveBucketCallback}. It's up to the developer to choose to obtain a new
+	 * {@link Flux} or to reuse the {@link Flux}.
+	 *
+	 * @param callback must not be {@literal null}
+	 * @return a {@link Flux} wrapping the {@link ReactiveBucketCallback}.
+	 */
+	public <T> Flux<T> createFlux(ReactiveBucketCallback<T> callback) {
 
-		Integer cursorBatchSize = query.getMeta().getCursorBatchSize();
-		if (cursorBatchSize != null) {
-			publisherToUse = publisherToUse.batchSize(cursorBatchSize);
+		Assert.notNull(callback, "ReactiveBucketCallback must not be null!");
+
+		return doGetBucket().flatMapMany(callback::doInBucket);
+	}
+
+	protected Mono<GridFSBucket> doGetBucket() {
+		return dbFactory.getMongoDatabase()
+				.map(db -> bucket == null ? GridFSBuckets.create(db) : GridFSBuckets.create(db, bucket));
+	}
+
+	/**
+	 * @param <T>
+	 * @author Mathieu Ouellet
+	 * @since 3.0
+	 */
+	interface ReactiveBucketCallback<T> {
+		Publisher<T> doInBucket(GridFSBucket bucket);
+	}
+
+	private static class FindCallback implements ReactiveBucketCallback<GridFSFile> {
+
+		private final Query query;
+		private final Document queryObject;
+		private final Document sortObject;
+
+		public FindCallback(Query query, Document queryObject, Document sortObject) {
+
+			this.query = query;
+			this.queryObject = queryObject;
+			this.sortObject = sortObject;
 		}
 
-		return publisherToUse;
+		public GridFSFindPublisher doInBucket(GridFSBucket bucket) {
+
+			GridFSFindPublisher findPublisher = bucket.find(queryObject).sort(sortObject);
+
+			if (query.getLimit() > 0) {
+				findPublisher = findPublisher.limit(query.getLimit());
+			}
+
+			if (query.getSkip() > 0) {
+				findPublisher = findPublisher.skip(Math.toIntExact(query.getSkip()));
+			}
+
+			Integer cursorBatchSize = query.getMeta().getCursorBatchSize();
+			if (cursorBatchSize != null) {
+				findPublisher = findPublisher.batchSize(cursorBatchSize);
+			}
+
+			return findPublisher;
+		}
 	}
 
-	protected GridFSBucket getGridFs() {
+	private static class FindLimitCallback extends FindCallback {
 
-		MongoDatabase db = dbFactory.getMongoDatabase();
-		return bucket == null ? GridFSBuckets.create(db) : GridFSBuckets.create(db, bucket);
+		private final int limit;
+
+		public FindLimitCallback(Query query, Document queryObject, Document sortObject, int limit) {
+
+			super(query, queryObject, sortObject);
+			this.limit = limit;
+		}
+
+		@Override
+		public GridFSFindPublisher doInBucket(GridFSBucket bucket) {
+			return super.doInBucket(bucket).limit(limit);
+		}
 	}
+
+	private static class UploadCallback implements ReactiveBucketCallback<Void> {
+
+		private final BsonValue fileId;
+		private final String filename;
+		private final Publisher<ByteBuffer> source;
+		private final GridFSUploadOptions uploadOptions;
+
+		public UploadCallback(BsonValue fileId, String filename, Publisher<ByteBuffer> source,
+				GridFSUploadOptions uploadOptions) {
+
+			this.fileId = fileId;
+			this.filename = filename;
+			this.source = source;
+			this.uploadOptions = uploadOptions;
+		}
+
+		@Override
+		public GridFSUploadPublisher<Void> doInBucket(GridFSBucket bucket) {
+			return bucket.uploadFromPublisher(fileId, filename, source, uploadOptions);
+		}
+	}
+
+	private static class AutoIdCreatingUploadCallback implements ReactiveBucketCallback<ObjectId> {
+
+		private final String filename;
+		private final Publisher<ByteBuffer> source;
+		private final GridFSUploadOptions uploadOptions;
+
+		public AutoIdCreatingUploadCallback(String filename, Publisher<ByteBuffer> source,
+				GridFSUploadOptions uploadOptions) {
+
+			this.filename = filename;
+			this.source = source;
+			this.uploadOptions = uploadOptions;
+		}
+
+		@Override
+		public GridFSUploadPublisher<ObjectId> doInBucket(GridFSBucket bucket) {
+			return bucket.uploadFromPublisher(filename, source, uploadOptions);
+		}
+	}
+
+	private static class DeleteCallback implements ReactiveBucketCallback<Void> {
+
+		private final BsonValue id;
+
+		public DeleteCallback(BsonValue id) {
+			this.id = id;
+		}
+
+		@Override
+		public Publisher<Void> doInBucket(GridFSBucket bucket) {
+			return bucket.delete(id);
+		}
+	}
+
 }

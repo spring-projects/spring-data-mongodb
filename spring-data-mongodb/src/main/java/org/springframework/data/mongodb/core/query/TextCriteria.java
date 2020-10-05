@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.util.List;
 import org.bson.Document;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -34,7 +35,7 @@ import org.springframework.util.StringUtils;
 public class TextCriteria implements CriteriaDefinition {
 
 	private final List<Term> terms;
-	private @Nullable String language;
+	private final @Nullable String language;
 	private @Nullable Boolean caseSensitive;
 	private @Nullable Boolean diacriticSensitive;
 
@@ -51,7 +52,7 @@ public class TextCriteria implements CriteriaDefinition {
 	private TextCriteria(@Nullable String language) {
 
 		this.language = language;
-		this.terms = new ArrayList<Term>();
+		this.terms = new ArrayList<>();
 	}
 
 	/**
@@ -231,9 +232,47 @@ public class TextCriteria implements CriteriaDefinition {
 		return new Document("$text", document);
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object o) {
+
+		if (this == o) {
+			return true;
+		}
+		if (!(o instanceof TextCriteria)) {
+			return false;
+		}
+
+		TextCriteria that = (TextCriteria) o;
+
+		return ObjectUtils.nullSafeEquals(terms, that.terms) && ObjectUtils.nullSafeEquals(language, that.language)
+				&& ObjectUtils.nullSafeEquals(caseSensitive, that.caseSensitive)
+				&& ObjectUtils.nullSafeEquals(diacriticSensitive, that.diacriticSensitive);
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+
+		int result = 17;
+
+		result += ObjectUtils.nullSafeHashCode(terms);
+		result += ObjectUtils.nullSafeHashCode(language);
+		result += ObjectUtils.nullSafeHashCode(caseSensitive);
+		result += ObjectUtils.nullSafeHashCode(diacriticSensitive);
+
+		return result;
+	}
+
 	private String join(Iterable<Term> terms) {
 
-		List<String> result = new ArrayList<String>();
+		List<String> result = new ArrayList<>();
 
 		for (Term term : terms) {
 			if (term != null) {

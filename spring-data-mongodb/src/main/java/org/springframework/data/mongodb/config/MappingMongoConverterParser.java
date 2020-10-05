@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -95,6 +95,9 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 		BeanDefinitionRegistry registry = parserContext.getRegistry();
 		String id = element.getAttribute(AbstractBeanDefinitionParser.ID_ATTRIBUTE);
 		id = StringUtils.hasText(id) ? id : DEFAULT_CONVERTER_BEAN_NAME;
+
+		String autoIndexCreation = element.getAttribute("auto-index-creation");
+		boolean autoIndexCreationEnabled = StringUtils.hasText(autoIndexCreation) && Boolean.valueOf(autoIndexCreation);
 
 		parserContext.pushContainingComponent(new CompositeComponentDefinition("Mapping Mongo Converter", element));
 
@@ -199,6 +202,11 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 
 	public static String potentiallyCreateMappingContext(Element element, ParserContext parserContext,
 			@Nullable BeanDefinition conversionsDefinition, @Nullable String converterId) {
+		return potentiallyCreateMappingContext(element, parserContext, conversionsDefinition, converterId, false);
+	}
+
+	public static String potentiallyCreateMappingContext(Element element, ParserContext parserContext,
+			@Nullable BeanDefinition conversionsDefinition, @Nullable String converterId, boolean autoIndexCreation) {
 
 		String ctxRef = element.getAttribute("mapping-context-ref");
 
@@ -225,6 +233,8 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 
 			mappingContextBuilder.addPropertyValue("simpleTypeHolder", simpleTypesDefinition);
 		}
+
+		mappingContextBuilder.addPropertyValue("autoIndexCreation", autoIndexCreation);
 
 		parseFieldNamingStrategy(element, parserContext.getReaderContext(), mappingContextBuilder);
 

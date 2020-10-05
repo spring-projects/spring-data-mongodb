@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2015-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.hamcrest.core.Is.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -28,6 +27,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
+
 import org.springframework.data.mongodb.core.convert.MongoConverters.NumberToNumberConverterFactory;
 
 /**
@@ -54,6 +54,7 @@ public class NumberToNumberConverterFactoryUnitTests {
 
 	@Test // DATAMONGO-1288
 	public void convertsToTargetTypeCorrectly() {
-		assertThat(NumberToNumberConverterFactory.INSTANCE.getConverter(expected.getClass()).convert(source), is(expected));
+		assertThat(NumberToNumberConverterFactory.INSTANCE.getConverter(expected.getClass()).convert(source))
+				.isEqualTo(expected);
 	}
 }

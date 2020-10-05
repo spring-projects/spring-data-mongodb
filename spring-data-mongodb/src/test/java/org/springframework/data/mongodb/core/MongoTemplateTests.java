@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.*;
 import static org.junit.Assume.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.core.query.Update.*;
@@ -31,29 +32,20 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.Value;
-import lombok.experimental.Wither;
-
 import org.bson.types.ObjectId;
-import org.hamcrest.collection.IsMapContaining;
 import org.joda.time.DateTime;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -65,41 +57,33 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.auditing.IsNewAwareAuditingHandler;
-import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mapping.MappingException;
-import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
-import org.springframework.data.mongodb.MongoDbFactory;
-import org.springframework.data.mongodb.core.convert.DbRefResolver;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.LazyLoadingProxy;
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
-import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexField;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoId;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
-import org.springframework.data.mongodb.core.mapping.event.AuditingEventListener;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
+import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.MongoVersion;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -113,6 +97,7 @@ import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.ListIndexesIterable;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.model.Filters;
@@ -134,111 +119,72 @@ import com.mongodb.client.result.UpdateResult;
  * @author Laszlo Csontos
  * @author duozhilin
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration("classpath:infrastructure.xml")
+@ExtendWith(MongoClientExtension.class)
 public class MongoTemplateTests {
 
-	@Autowired MongoTemplate template;
-	@Autowired MongoDbFactory factory;
+	public static final String DB_NAME = "mongo-template-tests";
 
-	ConfigurableApplicationContext context;
-	MongoTemplate mappingTemplate;
+	static @Client MongoClient client;
 
-	@Rule public ExpectedException thrown = ExpectedException.none();
-	@Rule public MongoVersionRule mongoVersion = MongoVersionRule.any();
+	ConfigurableApplicationContext context = new GenericApplicationContext();
 
-	@Autowired
-	public void setApplicationContext(ConfigurableApplicationContext context) {
+	MongoTestTemplate template = new MongoTestTemplate(cfg -> {
 
-		this.context = context;
+		cfg.configureDatabaseFactory(it -> {
 
-		context.addApplicationListener(new PersonWithIdPropertyOfTypeUUIDListener());
+			it.client(client);
+			it.defaultDb(DB_NAME);
+		});
 
-		PersistentEntities entities = PersistentEntities.of(template.getConverter().getMappingContext());
+		cfg.configureMappingContext(it -> {
+			it.autocreateIndex(false);
+			it.intitalEntitySet(AuditablePerson.class);
 
-		context.addApplicationListener(new AuditingEventListener(() -> new IsNewAwareAuditingHandler(entities)));
-	}
+		});
 
-	@Autowired
-	public void setMongoClient(MongoClient mongo) throws Exception {
+		cfg.configureApplicationContext(it -> {
+			it.applicationContext(context);
+			it.addEventListener(new PersonWithIdPropertyOfTypeUUIDListener());
+		});
 
-		CustomConversions conversions = new MongoCustomConversions(
-				Arrays.asList(DateToDateTimeConverter.INSTANCE, DateTimeToDateConverter.INSTANCE));
+		cfg.configureAuditing(it -> {
+			it.auditingHandler(IsNewAwareAuditingHandler::new);
+		});
+	});
 
-		MongoMappingContext mappingContext = new MongoMappingContext();
-		mappingContext.setInitialEntitySet(new HashSet<Class<?>>(
-				Arrays.asList(PersonWith_idPropertyOfTypeObjectId.class, PersonWith_idPropertyOfTypeString.class,
-						PersonWithIdPropertyOfTypeObjectId.class, PersonWithIdPropertyOfTypeString.class,
-						PersonWithIdPropertyOfTypeInteger.class, PersonWithIdPropertyOfTypeBigInteger.class,
-						PersonWithIdPropertyOfPrimitiveInt.class, PersonWithIdPropertyOfTypeLong.class,
-						PersonWithIdPropertyOfPrimitiveLong.class, PersonWithIdPropertyOfTypeUUID.class)));
-		mappingContext.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
-		mappingContext.initialize();
+	MongoTestTemplate mappingTemplate = new MongoTestTemplate(cfg -> {
 
-		DbRefResolver dbRefResolver = new DefaultDbRefResolver(factory);
-		MappingMongoConverter mappingConverter = new MappingMongoConverter(dbRefResolver, mappingContext);
-		mappingConverter.setCustomConversions(conversions);
-		mappingConverter.afterPropertiesSet();
+		cfg.configureDatabaseFactory(it -> {
 
-		this.mappingTemplate = new MongoTemplate(factory, mappingConverter);
-	}
+			it.client(client);
+			it.defaultDb(DB_NAME);
+		});
 
-	@Before
-	public void setUp() {
+		cfg.configureConversion(it -> {
+			it.customConverters(DateToDateTimeConverter.INSTANCE, DateTimeToDateConverter.INSTANCE);
+		});
 
-		cleanDb();
+		cfg.configureMappingContext(it -> {
+			it.autocreateIndex(false);
+		});
 
-		this.mappingTemplate.setApplicationContext(context);
-	}
+		cfg.configureApplicationContext(it -> {
+			it.applicationContext(new GenericApplicationContext());
+			it.addEventListener(new PersonWithIdPropertyOfTypeUUIDListener());
+		});
+	});
 
-	@After
+	MongoDatabaseFactory factory = template.getMongoDbFactory();
+
+	@AfterEach
 	public void cleanUp() {
-		cleanDb();
-	}
 
-	protected void cleanDb() {
+		template.flush();
+		template.flush("collection", "personX", "findandreplace");
+
+		mappingTemplate.flush();
+
 		template.dropCollection(Person.class);
-		template.dropCollection(PersonWithAList.class);
-		template.dropCollection(PersonWith_idPropertyOfTypeObjectId.class);
-		template.dropCollection(PersonWith_idPropertyOfTypeString.class);
-		template.dropCollection(PersonWithIdPropertyOfTypeObjectId.class);
-		template.dropCollection(PersonWithIdPropertyOfTypeString.class);
-		template.dropCollection(PersonWithIdPropertyOfTypeInteger.class);
-		template.dropCollection(PersonWithIdPropertyOfTypeBigInteger.class);
-		template.dropCollection(PersonWithIdPropertyOfPrimitiveInt.class);
-		template.dropCollection(PersonWithIdPropertyOfTypeLong.class);
-		template.dropCollection(PersonWithIdPropertyOfPrimitiveLong.class);
-		template.dropCollection(PersonWithIdPropertyOfTypeUUID.class);
-		template.dropCollection(PersonWithVersionPropertyOfTypeInteger.class);
-		template.dropCollection(TestClass.class);
-		template.dropCollection(Sample.class);
-		template.dropCollection(MyPerson.class);
-		template.dropCollection(TypeWithFieldAnnotation.class);
-		template.dropCollection(TypeWithDate.class);
-		template.dropCollection("collection");
-		template.dropCollection("personX");
-		template.dropCollection("findandreplace");
-		template.dropCollection(Document.class);
-		template.dropCollection(ObjectWith3AliasedFields.class);
-		template.dropCollection(ObjectWith3AliasedFieldsAndNestedAddress.class);
-		template.dropCollection(BaseDoc.class);
-		template.dropCollection(ObjectWithEnumValue.class);
-		template.dropCollection(DocumentWithCollection.class);
-		template.dropCollection(DocumentWithCollectionOfSimpleType.class);
-		template.dropCollection(DocumentWithMultipleCollections.class);
-		template.dropCollection(DocumentWithNestedCollection.class);
-		template.dropCollection(DocumentWithEmbeddedDocumentWithCollection.class);
-		template.dropCollection(DocumentWithNestedList.class);
-		template.dropCollection(DocumentWithDBRefCollection.class);
-		template.dropCollection(SomeContent.class);
-		template.dropCollection(SomeTemplate.class);
-		template.dropCollection(Address.class);
-		template.dropCollection(DocumentWithCollectionOfSamples.class);
-		template.dropCollection(WithGeoJson.class);
-		template.dropCollection(DocumentWithNestedTypeHavingStringIdProperty.class);
-		template.dropCollection(ImmutableAudited.class);
-		template.dropCollection(RawStringId.class);
-		template.dropCollection(Outer.class);
 	}
 
 	@Test
@@ -249,8 +195,8 @@ public class MongoTemplateTests {
 		template.insert(person);
 
 		List<Person> result = template.find(new Query(Criteria.where("_id").is(person.getId())), Person.class);
-		assertThat(result.size(), is(1));
-		assertThat(result, hasItem(person));
+		assertThat(result.size()).isEqualTo(1);
+		assertThat(result).contains(person);
 	}
 
 	@Test
@@ -283,7 +229,7 @@ public class MongoTemplateTests {
 			template.insert(person);
 			fail("Expected DataIntegrityViolationException!");
 		} catch (DataIntegrityViolationException e) {
-			assertThat(e.getMessage(), containsString("E11000 duplicate key error"));
+			assertThat(e.getMessage()).contains("E11000 duplicate key error");
 		}
 	}
 
@@ -299,14 +245,12 @@ public class MongoTemplateTests {
 
 		template.insert(person);
 
-		thrown.expect(DataIntegrityViolationException.class);
-		thrown.expectMessage("array");
-		thrown.expectMessage("age");
-		// thrown.expectMessage("failed");
-
 		Query query = new Query(Criteria.where("firstName").is("Amol"));
 		Update upd = new Update().push("age", 29);
-		template.updateFirst(query, upd, Person.class);
+
+		assertThatExceptionOfType(DataIntegrityViolationException.class)
+				.isThrownBy(() -> template.updateFirst(query, upd, Person.class)).withMessageContaining("array")
+				.withMessageContaining("age");
 	}
 
 	@Test // DATAMONGO-480
@@ -328,15 +272,12 @@ public class MongoTemplateTests {
 			template.save(person);
 			fail("Expected DataIntegrityViolationException!");
 		} catch (DataIntegrityViolationException e) {
-			assertThat(e.getMessage(), containsString("E11000 duplicate key error"));
+			assertThat(e.getMessage()).contains("E11000 duplicate key error");
 		}
 	}
 
 	@Test // DATAMONGO-480
 	public void rejectsDuplicateIdInInsertAll() {
-
-		thrown.expect(DataIntegrityViolationException.class);
-		thrown.expectMessage("E11000 duplicate key error");
 
 		MongoTemplate template = new MongoTemplate(factory);
 		template.setWriteResultChecking(WriteResultChecking.EXCEPTION);
@@ -345,11 +286,12 @@ public class MongoTemplateTests {
 		Person person = new Person(id, "Amol");
 		person.setAge(28);
 
-		List<Person> records = new ArrayList<Person>();
+		List<Person> records = new ArrayList<>();
 		records.add(person);
 		records.add(person);
 
-		template.insertAll(records);
+		assertThatExceptionOfType(DataIntegrityViolationException.class).isThrownBy(() -> template.insertAll(records))
+				.withMessageContaining("E11000 duplicate key error");
 	}
 
 	@Test // DATAMONGO-1687
@@ -359,7 +301,7 @@ public class MongoTemplateTests {
 
 		org.bson.Document collectionOptions = getCollectionInfo(template.getCollectionName(Person.class)).get("options",
 				org.bson.Document.class);
-		assertThat(collectionOptions.get("capped"), is(true));
+		assertThat(collectionOptions.get("capped")).isEqualTo(true);
 	}
 
 	private org.bson.Document getCollectionInfo(String collectionName) {
@@ -385,10 +327,10 @@ public class MongoTemplateTests {
 		template.indexOps(Person.class).ensureIndex(new Index().on("age", Direction.DESC).unique());
 
 		MongoCollection<org.bson.Document> coll = template.getCollection(template.getCollectionName(Person.class));
-		List<org.bson.Document> indexInfo = new ArrayList<org.bson.Document>();
+		List<org.bson.Document> indexInfo = new ArrayList<>();
 		coll.listIndexes().into(indexInfo);
 
-		assertThat(indexInfo.size(), is(2));
+		assertThat(indexInfo.size()).isEqualTo(2);
 		Object indexKey = null;
 		boolean unique = false;
 		for (org.bson.Document ix : indexInfo) {
@@ -396,33 +338,33 @@ public class MongoTemplateTests {
 			if ("age_-1".equals(ix.get("name"))) {
 				indexKey = ix.get("key");
 				unique = (Boolean) ix.get("unique");
-				assertThat(ix.get("dropDups"), is(nullValue()));
+				assertThat(ix.get("dropDups")).isNull();
 			}
 		}
-		assertThat(((org.bson.Document) indexKey), IsMapContaining.<String, Object> hasEntry("age", -1));
-		assertThat(unique, is(true));
+		assertThat(((org.bson.Document) indexKey)).containsEntry("age", -1);
+		assertThat(unique).isTrue();
 
 		List<IndexInfo> indexInfoList = template.indexOps(Person.class).getIndexInfo();
 
-		assertThat(indexInfoList.size(), is(2));
+		assertThat(indexInfoList.size()).isEqualTo(2);
 		IndexInfo ii = indexInfoList.get(1);
-		assertThat(ii.isUnique(), is(true));
-		assertThat(ii.isSparse(), is(false));
+		assertThat(ii.isUnique()).isTrue();
+		assertThat(ii.isSparse()).isFalse();
 
 		List<IndexField> indexFields = ii.getIndexFields();
 		IndexField field = indexFields.get(0);
 
-		assertThat(field, is(IndexField.create("age", Direction.DESC)));
+		assertThat(field).isEqualTo(IndexField.create("age", Direction.DESC));
 	}
 
 	@Test // DATAMONGO-746, DATAMONGO-2264
 	public void testReadIndexInfoForIndicesCreatedViaMongoShellCommands() throws Exception {
 
-		template.indexOps(Person.class).dropAllIndexes();
+		template.dropCollection(Person.class);
 
-		assertThat(template.indexOps(Person.class).getIndexInfo().isEmpty(), is(true));
+		assertThat(template.indexOps(Person.class).getIndexInfo().isEmpty()).isTrue();
 
-		factory.getDb().getCollection(template.getCollectionName(Person.class))
+		factory.getMongoDatabase().getCollection(template.getCollectionName(Person.class))
 				.createIndex(new org.bson.Document("age", -1), new IndexOptions().name("age_-1").unique(true).sparse(true));
 
 		ListIndexesIterable<org.bson.Document> indexInfo = template.getCollection(template.getCollectionName(Person.class))
@@ -442,17 +384,17 @@ public class MongoTemplateTests {
 			}
 		}
 
-		assertThat(indexKey, IsMapContaining.<String, Object> hasEntry("age", -1));
-		assertThat(unique, is(true));
+		assertThat(indexKey).containsEntry("age", -1);
+		assertThat(unique).isTrue();
 
 		IndexInfo info = template.indexOps(Person.class).getIndexInfo().get(1);
-		assertThat(info.isUnique(), is(true));
-		assertThat(info.isSparse(), is(true));
+		assertThat(info.isUnique()).isTrue();
+		assertThat(info.isSparse()).isTrue();
 
 		List<IndexField> indexFields = info.getIndexFields();
 		IndexField field = indexFields.get(0);
 
-		assertThat(field, is(IndexField.create("age", Direction.DESC)));
+		assertThat(field).isEqualTo(IndexField.create("age", Direction.DESC));
 	}
 
 	@Test
@@ -470,11 +412,11 @@ public class MongoTemplateTests {
 		mongoTemplate.insert(p1);
 		// also try save
 		mongoTemplate.save(p1);
-		assertThat(p1.getId(), notNullValue());
+		assertThat(p1.getId()).isNotNull();
 		PersonWithIdPropertyOfTypeString p1q = mongoTemplate.findOne(new Query(where("id").is(p1.getId())),
 				PersonWithIdPropertyOfTypeString.class);
-		assertThat(p1q, notNullValue());
-		assertThat(p1q.getId(), is(p1.getId()));
+		assertThat(p1q).isNotNull();
+		assertThat(p1q.getId()).isEqualTo(p1.getId());
 		checkCollectionContents(PersonWithIdPropertyOfTypeString.class, 1);
 
 		// String id - provided
@@ -486,11 +428,11 @@ public class MongoTemplateTests {
 		mongoTemplate.insert(p2);
 		// also try save
 		mongoTemplate.save(p2);
-		assertThat(p2.getId(), notNullValue());
+		assertThat(p2.getId()).isNotNull();
 		PersonWithIdPropertyOfTypeString p2q = mongoTemplate.findOne(new Query(where("id").is(p2.getId())),
 				PersonWithIdPropertyOfTypeString.class);
-		assertThat(p2q, notNullValue());
-		assertThat(p2q.getId(), is(p2.getId()));
+		assertThat(p2q).isNotNull();
+		assertThat(p2q.getId()).isEqualTo(p2.getId());
 		checkCollectionContents(PersonWithIdPropertyOfTypeString.class, 2);
 
 		// String _id - generated
@@ -501,11 +443,11 @@ public class MongoTemplateTests {
 		mongoTemplate.insert(p3);
 		// also try save
 		mongoTemplate.save(p3);
-		assertThat(p3.get_id(), notNullValue());
+		assertThat(p3.get_id()).isNotNull();
 		PersonWith_idPropertyOfTypeString p3q = mongoTemplate.findOne(new Query(where("_id").is(p3.get_id())),
 				PersonWith_idPropertyOfTypeString.class);
-		assertThat(p3q, notNullValue());
-		assertThat(p3q.get_id(), is(p3.get_id()));
+		assertThat(p3q).isNotNull();
+		assertThat(p3q.get_id()).isEqualTo(p3.get_id());
 		checkCollectionContents(PersonWith_idPropertyOfTypeString.class, 1);
 
 		// String _id - provided
@@ -517,11 +459,11 @@ public class MongoTemplateTests {
 		mongoTemplate.insert(p4);
 		// also try save
 		mongoTemplate.save(p4);
-		assertThat(p4.get_id(), notNullValue());
+		assertThat(p4.get_id()).isNotNull();
 		PersonWith_idPropertyOfTypeString p4q = mongoTemplate.findOne(new Query(where("_id").is(p4.get_id())),
 				PersonWith_idPropertyOfTypeString.class);
-		assertThat(p4q, notNullValue());
-		assertThat(p4q.get_id(), is(p4.get_id()));
+		assertThat(p4q).isNotNull();
+		assertThat(p4q.get_id()).isEqualTo(p4.get_id());
 		checkCollectionContents(PersonWith_idPropertyOfTypeString.class, 2);
 
 		// ObjectId id - generated
@@ -532,11 +474,11 @@ public class MongoTemplateTests {
 		mongoTemplate.insert(p5);
 		// also try save
 		mongoTemplate.save(p5);
-		assertThat(p5.getId(), notNullValue());
+		assertThat(p5.getId()).isNotNull();
 		PersonWithIdPropertyOfTypeObjectId p5q = mongoTemplate.findOne(new Query(where("id").is(p5.getId())),
 				PersonWithIdPropertyOfTypeObjectId.class);
-		assertThat(p5q, notNullValue());
-		assertThat(p5q.getId(), is(p5.getId()));
+		assertThat(p5q).isNotNull();
+		assertThat(p5q.getId()).isEqualTo(p5.getId());
 		checkCollectionContents(PersonWithIdPropertyOfTypeObjectId.class, 1);
 
 		// ObjectId id - provided
@@ -548,11 +490,11 @@ public class MongoTemplateTests {
 		mongoTemplate.insert(p6);
 		// also try save
 		mongoTemplate.save(p6);
-		assertThat(p6.getId(), notNullValue());
+		assertThat(p6.getId()).isNotNull();
 		PersonWithIdPropertyOfTypeObjectId p6q = mongoTemplate.findOne(new Query(where("id").is(p6.getId())),
 				PersonWithIdPropertyOfTypeObjectId.class);
-		assertThat(p6q, notNullValue());
-		assertThat(p6q.getId(), is(p6.getId()));
+		assertThat(p6q).isNotNull();
+		assertThat(p6q.getId()).isEqualTo(p6.getId());
 		checkCollectionContents(PersonWithIdPropertyOfTypeObjectId.class, 2);
 
 		// ObjectId _id - generated
@@ -563,11 +505,11 @@ public class MongoTemplateTests {
 		mongoTemplate.insert(p7);
 		// also try save
 		mongoTemplate.save(p7);
-		assertThat(p7.get_id(), notNullValue());
+		assertThat(p7.get_id()).isNotNull();
 		PersonWith_idPropertyOfTypeObjectId p7q = mongoTemplate.findOne(new Query(where("_id").is(p7.get_id())),
 				PersonWith_idPropertyOfTypeObjectId.class);
-		assertThat(p7q, notNullValue());
-		assertThat(p7q.get_id(), is(p7.get_id()));
+		assertThat(p7q).isNotNull();
+		assertThat(p7q.get_id()).isEqualTo(p7.get_id());
 		checkCollectionContents(PersonWith_idPropertyOfTypeObjectId.class, 1);
 
 		// ObjectId _id - provided
@@ -579,11 +521,11 @@ public class MongoTemplateTests {
 		mongoTemplate.insert(p8);
 		// also try save
 		mongoTemplate.save(p8);
-		assertThat(p8.get_id(), notNullValue());
+		assertThat(p8.get_id()).isNotNull();
 		PersonWith_idPropertyOfTypeObjectId p8q = mongoTemplate.findOne(new Query(where("_id").is(p8.get_id())),
 				PersonWith_idPropertyOfTypeObjectId.class);
-		assertThat(p8q, notNullValue());
-		assertThat(p8q.get_id(), is(p8.get_id()));
+		assertThat(p8q).isNotNull();
+		assertThat(p8q.get_id()).isEqualTo(p8.get_id());
 		checkCollectionContents(PersonWith_idPropertyOfTypeObjectId.class, 2);
 
 		// Integer id - provided
@@ -595,11 +537,11 @@ public class MongoTemplateTests {
 		mongoTemplate.insert(p9);
 		// also try save
 		mongoTemplate.save(p9);
-		assertThat(p9.getId(), notNullValue());
+		assertThat(p9.getId()).isNotNull();
 		PersonWithIdPropertyOfTypeInteger p9q = mongoTemplate.findOne(new Query(where("id").in(p9.getId())),
 				PersonWithIdPropertyOfTypeInteger.class);
-		assertThat(p9q, notNullValue());
-		assertThat(p9q.getId(), is(p9.getId()));
+		assertThat(p9q).isNotNull();
+		assertThat(p9q.getId()).isEqualTo(p9.getId());
 		checkCollectionContents(PersonWithIdPropertyOfTypeInteger.class, 1);
 
 		// DATAMONGO-602
@@ -612,11 +554,11 @@ public class MongoTemplateTests {
 		mongoTemplate.insert(p9bi);
 		// also try save
 		mongoTemplate.save(p9bi);
-		assertThat(p9bi.getId(), notNullValue());
+		assertThat(p9bi.getId()).isNotNull();
 		PersonWithIdPropertyOfTypeBigInteger p9qbi = mongoTemplate.findOne(new Query(where("id").in(p9bi.getId())),
 				PersonWithIdPropertyOfTypeBigInteger.class);
-		assertThat(p9qbi, notNullValue());
-		assertThat(p9qbi.getId(), is(p9bi.getId()));
+		assertThat(p9qbi).isNotNull();
+		assertThat(p9qbi.getId()).isEqualTo(p9bi.getId());
 		checkCollectionContents(PersonWithIdPropertyOfTypeBigInteger.class, 1);
 
 		// int id - provided
@@ -628,11 +570,11 @@ public class MongoTemplateTests {
 		mongoTemplate.insert(p10);
 		// also try save
 		mongoTemplate.save(p10);
-		assertThat(p10.getId(), notNullValue());
+		assertThat(p10.getId()).isNotNull();
 		PersonWithIdPropertyOfPrimitiveInt p10q = mongoTemplate.findOne(new Query(where("id").in(p10.getId())),
 				PersonWithIdPropertyOfPrimitiveInt.class);
-		assertThat(p10q, notNullValue());
-		assertThat(p10q.getId(), is(p10.getId()));
+		assertThat(p10q).isNotNull();
+		assertThat(p10q.getId()).isEqualTo(p10.getId());
 		checkCollectionContents(PersonWithIdPropertyOfPrimitiveInt.class, 1);
 
 		// Long id - provided
@@ -644,11 +586,11 @@ public class MongoTemplateTests {
 		mongoTemplate.insert(p11);
 		// also try save
 		mongoTemplate.save(p11);
-		assertThat(p11.getId(), notNullValue());
+		assertThat(p11.getId()).isNotNull();
 		PersonWithIdPropertyOfTypeLong p11q = mongoTemplate.findOne(new Query(where("id").in(p11.getId())),
 				PersonWithIdPropertyOfTypeLong.class);
-		assertThat(p11q, notNullValue());
-		assertThat(p11q.getId(), is(p11.getId()));
+		assertThat(p11q).isNotNull();
+		assertThat(p11q.getId()).isEqualTo(p11.getId());
 		checkCollectionContents(PersonWithIdPropertyOfTypeLong.class, 1);
 
 		// long id - provided
@@ -660,11 +602,11 @@ public class MongoTemplateTests {
 		mongoTemplate.insert(p12);
 		// also try save
 		mongoTemplate.save(p12);
-		assertThat(p12.getId(), notNullValue());
+		assertThat(p12.getId()).isNotNull();
 		PersonWithIdPropertyOfPrimitiveLong p12q = mongoTemplate.findOne(new Query(where("id").in(p12.getId())),
 				PersonWithIdPropertyOfPrimitiveLong.class);
-		assertThat(p12q, notNullValue());
-		assertThat(p12q.getId(), is(p12.getId()));
+		assertThat(p12q).isNotNull();
+		assertThat(p12q.getId()).isEqualTo(p12.getId());
 		checkCollectionContents(PersonWithIdPropertyOfPrimitiveLong.class, 1);
 
 		// DATAMONGO-1617
@@ -676,16 +618,16 @@ public class MongoTemplateTests {
 		mongoTemplate.insert(p13);
 		// also try save
 		mongoTemplate.save(p13);
-		assertThat(p13.getId(), notNullValue());
+		assertThat(p13.getId()).isNotNull();
 		PersonWithIdPropertyOfTypeUUID p13q = mongoTemplate.findOne(new Query(where("id").in(p13.getId())),
 				PersonWithIdPropertyOfTypeUUID.class);
-		assertThat(p13q, notNullValue());
-		assertThat(p13q.getId(), is(p13.getId()));
+		assertThat(p13q).isNotNull();
+		assertThat(p13q.getId()).isEqualTo(p13.getId());
 		checkCollectionContents(PersonWithIdPropertyOfTypeUUID.class, 1);
 	}
 
 	private void checkCollectionContents(Class<?> entityClass, int count) {
-		assertThat(template.findAll(entityClass).size(), is(count));
+		assertThat(template.findAll(entityClass).size()).isEqualTo(count);
 	}
 
 	@Test // DATAMONGO-234
@@ -698,28 +640,28 @@ public class MongoTemplateTests {
 		Query query = new Query(Criteria.where("firstName").is("Harry"));
 		Update update = new Update().inc("age", 1);
 		Person p = template.findAndModify(query, update, Person.class); // return old
-		assertThat(p.getFirstName(), is("Harry"));
-		assertThat(p.getAge(), is(23));
+		assertThat(p.getFirstName()).isEqualTo("Harry");
+		assertThat(p.getAge()).isEqualTo(23);
 		p = template.findOne(query, Person.class);
-		assertThat(p.getAge(), is(24));
+		assertThat(p.getAge()).isEqualTo(24);
 
 		p = template.findAndModify(query, update, Person.class, "person");
-		assertThat(p.getAge(), is(24));
+		assertThat(p.getAge()).isEqualTo(24);
 		p = template.findOne(query, Person.class);
-		assertThat(p.getAge(), is(25));
+		assertThat(p.getAge()).isEqualTo(25);
 
 		p = template.findAndModify(query, update, new FindAndModifyOptions().returnNew(true), Person.class);
-		assertThat(p.getAge(), is(26));
+		assertThat(p.getAge()).isEqualTo(26);
 
 		p = template.findAndModify(query, update, new FindAndModifyOptions(), Person.class, "person");
-		assertThat(p.getAge(), is(26));
+		assertThat(p.getAge()).isEqualTo(26);
 		p = template.findOne(query, Person.class);
-		assertThat(p.getAge(), is(27));
+		assertThat(p.getAge()).isEqualTo(27);
 
 		Query query2 = new Query(Criteria.where("firstName").is("Mary"));
 		p = template.findAndModify(query2, update, new FindAndModifyOptions().returnNew(true).upsert(true), Person.class);
-		assertThat(p.getFirstName(), is("Mary"));
-		assertThat(p.getAge(), is(1));
+		assertThat(p.getFirstName()).isEqualTo("Mary");
+		assertThat(p.getAge()).isEqualTo(1);
 
 	}
 
@@ -731,8 +673,8 @@ public class MongoTemplateTests {
 		Update update = new Update().set("age", 23);
 		Person p = template.findAndModify(query, update, new FindAndModifyOptions().upsert(true).returnNew(true),
 				Person.class);
-		assertThat(p.getFirstName(), is("Harry"));
-		assertThat(p.getAge(), is(23));
+		assertThat(p.getFirstName()).isEqualTo("Harry");
+		assertThat(p.getAge()).isEqualTo(23);
 	}
 
 	@Test
@@ -748,9 +690,9 @@ public class MongoTemplateTests {
 		Message found2 = template.findAndRemove(q, Message.class);
 
 		Message notFound = template.findAndRemove(q, Message.class);
-		assertThat(found1, notNullValue());
-		assertThat(found2, notNullValue());
-		assertThat(notFound, nullValue());
+		assertThat(found1).isNotNull();
+		assertThat(found2).isNotNull();
+		assertThat(notFound).isNull();
 	}
 
 	@Test // DATAMONGO-1761
@@ -789,8 +731,7 @@ public class MongoTemplateTests {
 
 		template.insert(new Person("garvin"));
 
-		assertThat(template.findDistinct("firstName", Person.class, Object.class))
-				.allSatisfy(val -> instanceOf(String.class));
+		assertThat(template.findDistinct("firstName", Person.class, Object.class)).allSatisfy(String.class::isInstance);
 	}
 
 	@Test // DATAMONGO-1761
@@ -850,9 +791,9 @@ public class MongoTemplateTests {
 		List<PersonWithIdPropertyOfTypeObjectId> results2 = template.find(q2, PersonWithIdPropertyOfTypeObjectId.class);
 		Query q3 = new Query(Criteria.where("id").in(p3.getId()));
 		List<PersonWithIdPropertyOfTypeObjectId> results3 = template.find(q3, PersonWithIdPropertyOfTypeObjectId.class);
-		assertThat(results1.size(), is(3));
-		assertThat(results2.size(), is(2));
-		assertThat(results3.size(), is(1));
+		assertThat(results1.size()).isEqualTo(3);
+		assertThat(results2.size()).isEqualTo(2);
+		assertThat(results3.size()).isEqualTo(1);
 	}
 
 	@Test
@@ -883,9 +824,9 @@ public class MongoTemplateTests {
 		List<PersonWithIdPropertyOfTypeString> results2 = template.find(q2, PersonWithIdPropertyOfTypeString.class);
 		Query q3 = new Query(Criteria.where("id").in(p3.getId(), p4.getId()));
 		List<PersonWithIdPropertyOfTypeString> results3 = template.find(q3, PersonWithIdPropertyOfTypeString.class);
-		assertThat(results1.size(), is(3));
-		assertThat(results2.size(), is(2));
-		assertThat(results3.size(), is(2));
+		assertThat(results1.size()).isEqualTo(3);
+		assertThat(results2.size()).isEqualTo(2);
+		assertThat(results3.size()).isEqualTo(2);
 	}
 
 	@Test
@@ -920,9 +861,9 @@ public class MongoTemplateTests {
 		List<PersonWithIdPropertyOfTypeLong> results2 = template.find(q2, PersonWithIdPropertyOfTypeLong.class);
 		Query q3 = new Query(Criteria.where("id").in(1001L, 1004L));
 		List<PersonWithIdPropertyOfTypeLong> results3 = template.find(q3, PersonWithIdPropertyOfTypeLong.class);
-		assertThat(results1.size(), is(3));
-		assertThat(results2.size(), is(2));
-		assertThat(results3.size(), is(2));
+		assertThat(results1.size()).isEqualTo(3);
+		assertThat(results2.size()).isEqualTo(2);
+		assertThat(results3.size()).isEqualTo(2);
 	}
 
 	@Test // DATAMONGO-602
@@ -958,9 +899,9 @@ public class MongoTemplateTests {
 		Query q3 = new Query(Criteria.where("id").in(new BigInteger("2666666666666666665069473312490162649510603601"),
 				new BigInteger("2666666666666666665069473312490162649510603604")));
 		List<PersonWithIdPropertyOfTypeBigInteger> results3 = template.find(q3, PersonWithIdPropertyOfTypeBigInteger.class);
-		assertThat(results1.size(), is(3));
-		assertThat(results2.size(), is(2));
-		assertThat(results3.size(), is(2));
+		assertThat(results1.size()).isEqualTo(3);
+		assertThat(results2.size()).isEqualTo(2);
+		assertThat(results3.size()).isEqualTo(2);
 	}
 
 	@Test
@@ -995,9 +936,9 @@ public class MongoTemplateTests {
 		List<PersonWithIdPropertyOfPrimitiveInt> results2 = template.find(q2, PersonWithIdPropertyOfPrimitiveInt.class);
 		Query q3 = new Query(Criteria.where("id").in(1001, 1003));
 		List<PersonWithIdPropertyOfPrimitiveInt> results3 = template.find(q3, PersonWithIdPropertyOfPrimitiveInt.class);
-		assertThat(results1.size(), is(3));
-		assertThat(results2.size(), is(2));
-		assertThat(results3.size(), is(2));
+		assertThat(results1.size()).isEqualTo(3);
+		assertThat(results2.size()).isEqualTo(2);
+		assertThat(results3.size()).isEqualTo(2);
 	}
 
 	@Test
@@ -1022,7 +963,7 @@ public class MongoTemplateTests {
 		p4.setAge(41);
 		template.insert(p4);
 
-		List<Integer> l1 = new ArrayList<Integer>();
+		List<Integer> l1 = new ArrayList<>();
 		l1.add(11);
 		l1.add(21);
 		l1.add(41);
@@ -1030,10 +971,10 @@ public class MongoTemplateTests {
 		List<PersonWithIdPropertyOfTypeObjectId> results1 = template.find(q1, PersonWithIdPropertyOfTypeObjectId.class);
 		Query q2 = new Query(Criteria.where("age").in(l1.toArray()));
 		List<PersonWithIdPropertyOfTypeObjectId> results2 = template.find(q2, PersonWithIdPropertyOfTypeObjectId.class);
-		assertThat(results1.size(), is(3));
-		assertThat(results2.size(), is(3));
+		assertThat(results1.size()).isEqualTo(3);
+		assertThat(results2.size()).isEqualTo(3);
 		try {
-			List<Integer> l2 = new ArrayList<Integer>();
+			List<Integer> l2 = new ArrayList<>();
 			l2.add(31);
 			Query q3 = new Query(Criteria.where("age").in(l1, l2));
 			template.find(q3, PersonWithIdPropertyOfTypeObjectId.class);
@@ -1067,8 +1008,8 @@ public class MongoTemplateTests {
 		List<PersonWithIdPropertyOfTypeObjectId> results1 = template.find(q1, PersonWithIdPropertyOfTypeObjectId.class);
 		Query q2 = new Query(Criteria.where("firstName").regex("S.*", "i"));
 		List<PersonWithIdPropertyOfTypeObjectId> results2 = template.find(q2, PersonWithIdPropertyOfTypeObjectId.class);
-		assertThat(results1.size(), is(1));
-		assertThat(results2.size(), is(2));
+		assertThat(results1.size()).isEqualTo(1);
+		assertThat(results2.size()).isEqualTo(2);
 	}
 
 	@Test
@@ -1095,9 +1036,9 @@ public class MongoTemplateTests {
 
 		Query orQuery = new Query(new Criteria().orOperator(where("age").in(11, 21), where("age").is(31)));
 		List<PersonWithIdPropertyOfTypeObjectId> results = template.find(orQuery, PersonWithIdPropertyOfTypeObjectId.class);
-		assertThat(results.size(), is(3));
+		assertThat(results.size()).isEqualTo(3);
 		for (PersonWithIdPropertyOfTypeObjectId p : results) {
-			assertThat(p.getAge(), isOneOf(11, 21, 31));
+			assertThat(p.getAge()).isIn(11, 21, 31);
 		}
 	}
 
@@ -1120,18 +1061,18 @@ public class MongoTemplateTests {
 		UpdateResult wr = template.updateMulti(new Query(), u, PersonWithIdPropertyOfTypeObjectId.class);
 
 		if (wr.wasAcknowledged()) {
-			assertThat(wr.getModifiedCount(), is(2L));
+			assertThat(wr.getModifiedCount()).isEqualTo(2L);
 		}
 
 		Query q1 = new Query(Criteria.where("age").in(11, 21));
 		List<PersonWithIdPropertyOfTypeObjectId> r1 = template.find(q1, PersonWithIdPropertyOfTypeObjectId.class);
-		assertThat(r1.size(), is(0));
+		assertThat(r1.size()).isEqualTo(0);
 		Query q2 = new Query(Criteria.where("age").is(10));
 		List<PersonWithIdPropertyOfTypeObjectId> r2 = template.find(q2, PersonWithIdPropertyOfTypeObjectId.class);
-		assertThat(r2.size(), is(2));
+		assertThat(r2.size()).isEqualTo(2);
 		for (PersonWithIdPropertyOfTypeObjectId p : r2) {
-			assertThat(p.getAge(), is(10));
-			assertThat(p.getFirstName(), is("Bob"));
+			assertThat(p.getAge()).isEqualTo(10);
+			assertThat(p.getFirstName()).isEqualTo("Bob");
 		}
 	}
 
@@ -1145,11 +1086,11 @@ public class MongoTemplateTests {
 
 		Query q1 = new Query(Criteria.where("id").is(p1.getId()));
 		PersonWithIdPropertyOfTypeObjectId found1 = template.findOne(q1, PersonWithIdPropertyOfTypeObjectId.class);
-		assertThat(found1, notNullValue());
+		assertThat(found1).isNotNull();
 		Query _q = new Query(Criteria.where("_id").is(p1.getId()));
 		template.remove(_q, PersonWithIdPropertyOfTypeObjectId.class);
 		PersonWithIdPropertyOfTypeObjectId notFound1 = template.findOne(q1, PersonWithIdPropertyOfTypeObjectId.class);
-		assertThat(notFound1, nullValue());
+		assertThat(notFound1).isNull();
 
 		PersonWithIdPropertyOfTypeObjectId p2 = new PersonWithIdPropertyOfTypeObjectId();
 		p2.setFirstName("Bubba_to_be_removed");
@@ -1158,10 +1099,10 @@ public class MongoTemplateTests {
 
 		Query q2 = new Query(Criteria.where("id").is(p2.getId()));
 		PersonWithIdPropertyOfTypeObjectId found2 = template.findOne(q2, PersonWithIdPropertyOfTypeObjectId.class);
-		assertThat(found2, notNullValue());
+		assertThat(found2).isNotNull();
 		template.remove(q2, PersonWithIdPropertyOfTypeObjectId.class);
 		PersonWithIdPropertyOfTypeObjectId notFound2 = template.findOne(q2, PersonWithIdPropertyOfTypeObjectId.class);
-		assertThat(notFound2, nullValue());
+		assertThat(notFound2).isNull();
 	}
 
 	@Test
@@ -1173,16 +1114,16 @@ public class MongoTemplateTests {
 
 		Query q1 = new Query(Criteria.where("id").is(p.getId()));
 		PersonWithAList p2 = template.findOne(q1, PersonWithAList.class);
-		assertThat(p2, notNullValue());
-		assertThat(p2.getWishList().size(), is(0));
+		assertThat(p2).isNotNull();
+		assertThat(p2.getWishList().size()).isEqualTo(0);
 
 		p2.addToWishList("please work!");
 
 		template.save(p2);
 
 		PersonWithAList p3 = template.findOne(q1, PersonWithAList.class);
-		assertThat(p3, notNullValue());
-		assertThat(p3.getWishList().size(), is(1));
+		assertThat(p3).isNotNull();
+		assertThat(p3.getWishList().size()).isEqualTo(1);
 
 		Friend f = new Friend();
 		p.setFirstName("Erik");
@@ -1192,9 +1133,9 @@ public class MongoTemplateTests {
 		template.save(p3);
 
 		PersonWithAList p4 = template.findOne(q1, PersonWithAList.class);
-		assertThat(p4, notNullValue());
-		assertThat(p4.getWishList().size(), is(1));
-		assertThat(p4.getFriends().size(), is(1));
+		assertThat(p4).isNotNull();
+		assertThat(p4.getWishList().size()).isEqualTo(1);
+		assertThat(p4.getFriends().size()).isEqualTo(1);
 
 	}
 
@@ -1219,10 +1160,10 @@ public class MongoTemplateTests {
 		Query q2 = new Query(Criteria.where("age").gt(10));
 		q2.with(Sort.by(Direction.DESC, "age"));
 		PersonWithAList p5 = template.findOne(q2, PersonWithAList.class);
-		assertThat(p5.getFirstName(), is("Mark"));
+		assertThat(p5.getFirstName()).isEqualTo("Mark");
 	}
 
-	@Test
+	@Test // DATAMONGO-2572
 	public void testUsingReadPreference() throws Exception {
 		this.template.execute("readPref", new CollectionCallback<Object>() {
 			public Object doInCollection(MongoCollection<org.bson.Document> collection)
@@ -1233,21 +1174,21 @@ public class MongoTemplateTests {
 				return null;
 			}
 		});
-		MongoTemplate slaveTemplate = new MongoTemplate(factory);
-		slaveTemplate.setReadPreference(ReadPreference.secondary());
-		slaveTemplate.execute("readPref", new CollectionCallback<Object>() {
+		MongoTemplate secondaryTemplate = new MongoTemplate(factory);
+		secondaryTemplate.setReadPreference(ReadPreference.secondary());
+		secondaryTemplate.execute("readPref", new CollectionCallback<Object>() {
 			public Object doInCollection(MongoCollection<org.bson.Document> collection)
 					throws MongoException, DataAccessException {
-				assertThat(collection.getReadPreference(), is(ReadPreference.secondary()));
+				assertThat(collection.getReadPreference()).isEqualTo(ReadPreference.secondary());
 				// assertThat(collection.getDB().getOptions(), is(0));
 				return null;
 			}
 		});
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATADOC-166, DATAMONGO-1762
+	@Test // DATADOC-166, DATAMONGO-1762
 	public void removingNullIsANoOp() {
-		template.remove((Object) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> template.remove((Object) null));
 	}
 
 	@Test // DATADOC-240, DATADOC-212
@@ -1263,9 +1204,9 @@ public class MongoTemplateTests {
 
 		PersonWithIdPropertyOfTypeObjectId result = template.findById(person.getId(),
 				PersonWithIdPropertyOfTypeObjectId.class);
-		assertThat(result, is(notNullValue()));
-		assertThat(result.getId(), is(person.getId()));
-		assertThat(result.getFirstName(), is("Carter"));
+		assertThat(result).isNotNull();
+		assertThat(result.getId()).isEqualTo(person.getId());
+		assertThat(result.getFirstName()).isEqualTo("Carter");
 	}
 
 	@Test
@@ -1287,12 +1228,13 @@ public class MongoTemplateTests {
 		template.updateFirst(q, u, PersonWithIdPropertyOfTypeObjectId.class);
 
 		MongoAction lastMongoAction = resolver.getMongoAction();
-		assertThat(lastMongoAction.getCollectionName(), is("personWithIdPropertyOfTypeObjectId"));
-		assertThat(lastMongoAction.getDefaultWriteConcern(), equalTo(WriteConcern.UNACKNOWLEDGED));
-		assertThat(lastMongoAction.getDocument(), notNullValue());
-		assertThat(lastMongoAction.getEntityType().toString(), is(PersonWithIdPropertyOfTypeObjectId.class.toString()));
-		assertThat(lastMongoAction.getMongoActionOperation(), is(MongoActionOperation.UPDATE));
-		assertThat(lastMongoAction.getQuery(), equalTo(q.getQueryObject()));
+		assertThat(lastMongoAction.getCollectionName()).isEqualTo("personWithIdPropertyOfTypeObjectId");
+		assertThat(lastMongoAction.getDefaultWriteConcern()).isEqualTo(WriteConcern.UNACKNOWLEDGED);
+		assertThat(lastMongoAction.getDocument()).isNotNull();
+		assertThat(lastMongoAction.getEntityType().toString())
+				.isEqualTo(PersonWithIdPropertyOfTypeObjectId.class.toString());
+		assertThat(lastMongoAction.getMongoActionOperation()).isEqualTo(MongoActionOperation.UPDATE);
+		assertThat(lastMongoAction.getQuery()).isEqualTo(q.getQueryObject());
 	}
 
 	private class FsyncSafeWriteConcernResolver implements WriteConcernResolver {
@@ -1324,10 +1266,11 @@ public class MongoTemplateTests {
 
 	@Test // DATADOC-202
 	public void executeDocument() {
+
 		template.insert(new Person("Tom"));
 		template.insert(new Person("Dick"));
 		template.insert(new Person("Harry"));
-		final List<String> names = new ArrayList<String>();
+		final List<String> names = new ArrayList<>();
 		template.executeQuery(new Query(), template.getCollectionName(Person.class), new DocumentCallbackHandler() {
 			public void processDocument(org.bson.Document document) {
 				String name = (String) document.get("firstName");
@@ -1336,7 +1279,7 @@ public class MongoTemplateTests {
 				}
 			}
 		});
-		assertEquals(3, names.size());
+		assertThat(names.size()).isEqualTo(3);
 		// template.remove(new Query(), Person.class);
 	}
 
@@ -1345,7 +1288,7 @@ public class MongoTemplateTests {
 		template.insert(new Person("Tom"));
 		template.insert(new Person("Dick"));
 		template.insert(new Person("Harry"));
-		final List<String> names = new ArrayList<String>();
+		final List<String> names = new ArrayList<>();
 		template.executeQuery(new Query(), template.getCollectionName(Person.class), new DocumentCallbackHandler() {
 			public void processDocument(org.bson.Document document) {
 				String name = (String) document.get("firstName");
@@ -1355,20 +1298,20 @@ public class MongoTemplateTests {
 			}
 		}, new CursorPreparer() {
 
-			public FindIterable<org.bson.Document> prepare(FindIterable<org.bson.Document> cursor) {
-				cursor.limit(1);
-				return cursor;
+			public FindIterable<org.bson.Document> prepare(FindIterable<org.bson.Document> iterable) {
+				iterable.limit(1);
+				return iterable;
 			}
 
 		});
-		assertEquals(1, names.size());
+		assertThat(names.size()).isEqualTo(1);
 		template.remove(new Query(), Person.class);
 	}
 
 	@Test // DATADOC-183
 	public void countsDocumentsCorrectly() {
 
-		assertThat(template.count(new Query(), Person.class), is(0L));
+		assertThat(template.count(new Query(), Person.class)).isEqualTo(0L);
 
 		Person dave = new Person("Dave");
 		Person carter = new Person("Carter");
@@ -1376,23 +1319,23 @@ public class MongoTemplateTests {
 		template.save(dave);
 		template.save(carter);
 
-		assertThat(template.count(new Query(), Person.class), is(2L));
-		assertThat(template.count(query(where("firstName").is("Carter")), Person.class), is(1L));
+		assertThat(template.count(new Query(), Person.class)).isEqualTo(2L);
+		assertThat(template.count(query(where("firstName").is("Carter")), Person.class)).isEqualTo(1L);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATADOC-183
+	@Test // DATADOC-183
 	public void countRejectsNullEntityClass() {
-		template.count(null, (Class<?>) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> template.count(null, (Class<?>) null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATADOC-183
+	@Test // DATADOC-183
 	public void countRejectsEmptyCollectionName() {
-		template.count(null, "");
+		assertThatIllegalArgumentException().isThrownBy(() -> template.count(null, ""));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATADOC-183
+	@Test // DATADOC-183
 	public void countRejectsNullCollectionName() {
-		template.count(null, (String) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> template.count(null, (String) null));
 	}
 
 	@Test
@@ -1404,8 +1347,8 @@ public class MongoTemplateTests {
 
 		List<TestClass> testClassList = mappingTemplate.find(new Query(Criteria.where("myDate").is(dateTime.toDate())),
 				TestClass.class);
-		assertThat(testClassList.size(), is(1));
-		assertThat(testClassList.get(0).myDate, is(testClass.myDate));
+		assertThat(testClassList.size()).isEqualTo(1);
+		assertThat(testClassList.get(0).myDate).isEqualTo(testClass.myDate);
 	}
 
 	@Test // DATADOC-230
@@ -1416,10 +1359,10 @@ public class MongoTemplateTests {
 		Person person = new Person("Dave");
 
 		template.save(person, "mycollection");
-		assertThat(template.findAll(TestClass.class, "mycollection").size(), is(1));
+		assertThat(template.findAll(TestClass.class, "mycollection").size()).isEqualTo(1);
 
 		template.remove(person, "mycollection");
-		assertThat(template.findAll(Person.class, "mycollection").isEmpty(), is(true));
+		assertThat(template.findAll(Person.class, "mycollection").isEmpty()).isTrue();
 	}
 
 	@Test // DATADOC-349
@@ -1432,10 +1375,10 @@ public class MongoTemplateTests {
 
 		template.save(sample);
 
-		assertThat(template.findOne(query(where("id").is(id)), Sample.class).id, is(id));
+		assertThat(template.findOne(query(where("id").is(id)), Sample.class).id).isEqualTo(id);
 
 		template.remove(sample);
-		assertThat(template.findOne(query(where("id").is(id)), Sample.class), is(nullValue()));
+		assertThat(template.findOne(query(where("id").is(id)), Sample.class)).isNull();
 	}
 
 	@Test // DATAMONGO-423
@@ -1453,8 +1396,8 @@ public class MongoTemplateTests {
 		Query query = query(where("field").not().regex("Matthews"));
 
 		List<Sample> result = template.find(query, Sample.class);
-		assertThat(result.size(), is(1));
-		assertThat(result.get(0).field, is("Beauford"));
+		assertThat(result.size()).isEqualTo(1);
+		assertThat(result.get(0).field).isEqualTo("Beauford");
 	}
 
 	@Test // DATAMONGO-447
@@ -1487,17 +1430,17 @@ public class MongoTemplateTests {
 		Query query = new BasicQuery("{'name' : 'Oleg'}");
 		List<MyPerson> result = template.find(query, MyPerson.class);
 
-		assertThat(result, hasSize(1));
-		assertThat(result.get(0), hasProperty("name", is("Oleg")));
+		assertThat(result).hasSize(1);
+		assertThat(result.get(0).getName()).isEqualTo("Oleg");
 
 		query = new BasicQuery("{'address.state' : 'PA' }");
 		result = template.find(query, MyPerson.class);
 
-		assertThat(result, hasSize(1));
-		assertThat(result.get(0), hasProperty("name", is("Oleg")));
+		assertThat(result).hasSize(1);
+		assertThat(result.get(0).getName()).isEqualTo("Oleg");
 	}
 
-	@Test(expected = OptimisticLockingFailureException.class) // DATAMONGO-279
+	@Test // DATAMONGO-279
 	public void optimisticLockingHandling() {
 
 		// Init version
@@ -1509,8 +1452,8 @@ public class MongoTemplateTests {
 		List<PersonWithVersionPropertyOfTypeInteger> result = template
 				.findAll(PersonWithVersionPropertyOfTypeInteger.class);
 
-		assertThat(result, hasSize(1));
-		assertThat(result.get(0).version, is(0));
+		assertThat(result).hasSize(1);
+		assertThat(result.get(0).version).isEqualTo(0);
 
 		// Version change
 		person = result.get(0);
@@ -1518,18 +1461,20 @@ public class MongoTemplateTests {
 
 		template.save(person);
 
-		assertThat(person.version, is(1));
+		assertThat(person.version).isEqualTo(1);
 
 		result = mappingTemplate.findAll(PersonWithVersionPropertyOfTypeInteger.class);
 
-		assertThat(result, hasSize(1));
-		assertThat(result.get(0).version, is(1));
+		assertThat(result).hasSize(1);
+		assertThat(result.get(0).version).isEqualTo(1);
 
 		// Optimistic lock exception
 		person.version = 0;
 		person.firstName = "Patryk3";
 
-		template.save(person);
+		final PersonWithVersionPropertyOfTypeInteger toBeSaved = person;
+
+		assertThatExceptionOfType(OptimisticLockingFailureException.class).isThrownBy(() -> template.save(toBeSaved));
 	}
 
 	@Test // DATAMONGO-562
@@ -1559,7 +1504,7 @@ public class MongoTemplateTests {
 		person.setAge(33);
 
 		template.insert(person);
-		assertThat(person.getId(), is(notNullValue()));
+		assertThat(person.getId()).isNotNull();
 	}
 
 	@Test // DATAMONGO-539
@@ -1571,29 +1516,29 @@ public class MongoTemplateTests {
 		PersonWithConvertedId person = new PersonWithConvertedId();
 		person.name = "Dave";
 		template.save(person, collectionName);
-		assertThat(template.findAll(PersonWithConvertedId.class, collectionName).isEmpty(), is(false));
+		assertThat(template.findAll(PersonWithConvertedId.class, collectionName).isEmpty()).isFalse();
 
 		template.remove(person, collectionName);
-		assertThat(template.findAll(PersonWithConvertedId.class, collectionName).isEmpty(), is(true));
+		assertThat(template.findAll(PersonWithConvertedId.class, collectionName).isEmpty()).isTrue();
 	}
 
 	// DATAMONGO-549
 	public void savesMapCorrectly() {
 
-		Map<String, String> map = new HashMap<String, String>();
+		Map<String, String> map = new HashMap<>();
 		map.put("key", "value");
 
 		template.save(map, "maps");
 	}
 
-	@Test(expected = MappingException.class) // DATAMONGO-549, DATAMONGO-1730
+	@Test // DATAMONGO-549, DATAMONGO-1730
 	public void savesMongoPrimitiveObjectCorrectly() {
-		template.save(new Object(), "collection");
+		assertThatExceptionOfType(MappingException.class).isThrownBy(() -> template.save(new Object(), "collection"));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-549
+	@Test // DATAMONGO-549
 	public void rejectsNullObjectToBeSaved() {
-		template.save(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> template.save(null));
 	}
 
 	@Test // DATAMONGO-550
@@ -1602,16 +1547,17 @@ public class MongoTemplateTests {
 		org.bson.Document document = new org.bson.Document("foo", "bar");
 		template.save(document, "collection");
 
-		assertThat(document.containsKey("_id"), is(true));
+		assertThat(document.containsKey("_id")).isTrue();
 	}
 
-	@Test(expected = MappingException.class) // DATAMONGO-550, DATAMONGO-1730
+	@Test // DATAMONGO-550, DATAMONGO-1730
 	public void rejectsPlainObjectWithOutExplicitCollection() {
 
 		org.bson.Document document = new org.bson.Document("foo", "bar");
 		template.save(document, "collection");
 
-		template.findById(document.get("_id"), org.bson.Document.class);
+		assertThatExceptionOfType(MappingException.class)
+				.isThrownBy(() -> template.findById(document.get("_id"), org.bson.Document.class));
 	}
 
 	@Test // DATAMONGO-550
@@ -1621,8 +1567,8 @@ public class MongoTemplateTests {
 		template.save(document, "collection");
 
 		org.bson.Document result = template.findById(document.get("_id"), org.bson.Document.class, "collection");
-		assertThat(result.get("foo"), is(document.get("foo")));
-		assertThat(result.get("_id"), is(document.get("_id")));
+		assertThat(result.get("foo")).isEqualTo(document.get("foo"));
+		assertThat(result.get("_id")).isEqualTo(document.get("_id"));
 	}
 
 	@Test // DATAMONGO-551
@@ -1630,9 +1576,9 @@ public class MongoTemplateTests {
 		template.save("{ 'foo' : 'bar' }", "collection");
 	}
 
-	@Test(expected = MappingException.class) // DATAMONGO-551
+	@Test // DATAMONGO-551
 	public void rejectsNonJsonStringForSave() {
-		template.save("Foobar!", "collection");
+		assertThatExceptionOfType(MappingException.class).isThrownBy(() -> template.save("Foobar!", "collection"));
 	}
 
 	@Test // DATAMONGO-588
@@ -1643,7 +1589,7 @@ public class MongoTemplateTests {
 
 		template.insert(person);
 
-		assertThat(person.version, is(0));
+		assertThat(person.version).isEqualTo(0);
 	}
 
 	@Test // DATAMONGO-2195
@@ -1653,7 +1599,7 @@ public class MongoTemplateTests {
 		person.firstName = "Dave";
 
 		template.insert(person);
-		assertThat(person.version, is(0));
+		assertThat(person.version).isEqualTo(0);
 		template.update(PersonWithVersionPropertyOfTypeInteger.class).matching(query(where("id").is(person.id)))
 				.apply(new Update().set("firstName", "Walter")).first();
 
@@ -1672,7 +1618,7 @@ public class MongoTemplateTests {
 
 		template.insertAll(Arrays.asList(person));
 
-		assertThat(person.version, is(0));
+		assertThat(person.version).isEqualTo(0);
 	}
 
 	@Test // DATAMONGO-1992
@@ -1682,17 +1628,18 @@ public class MongoTemplateTests {
 
 		ImmutableVersioned saved = template.insert(versioned);
 
-		assertThat(saved, is(not(sameInstance(versioned))));
-		assertThat(versioned.id, is(nullValue()));
-		assertThat(versioned.version, is(nullValue()));
+		assertThat(saved).isNotSameAs(versioned);
+		assertThat(versioned.id).isNull();
+		assertThat(versioned.version).isNull();
 
-		assertThat(saved.id, is(notNullValue()));
-		assertThat(saved.version, is(0L));
+		assertThat(saved.id).isNotNull();
+		assertThat(saved.version).isEqualTo(0L);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-568, DATAMONGO-1762
+	@Test // DATAMONGO-568, DATAMONGO-1762
 	public void queryCantBeNull() {
-		template.find(null, PersonWithIdPropertyOfTypeObjectId.class);
+		assertThatIllegalArgumentException()
+				.isThrownBy(() -> template.find(null, PersonWithIdPropertyOfTypeObjectId.class));
 	}
 
 	@Test // DATAMONGO-620
@@ -1702,10 +1649,10 @@ public class MongoTemplateTests {
 		person.firstName = "Dave";
 
 		template.save(person, "personX");
-		assertThat(person.version, is(0));
+		assertThat(person.version).isEqualTo(0);
 
 		template.save(person, "personX");
-		assertThat(person.version, is(1));
+		assertThat(person.version).isEqualTo(1);
 	}
 
 	@Test // DATAMONGO-621
@@ -1715,10 +1662,10 @@ public class MongoTemplateTests {
 		person.firstName = "Dave";
 
 		template.save(person);
-		assertThat(person.version, is(0L));
+		assertThat(person.version).isEqualTo(0L);
 	}
 
-	@Test(expected = DuplicateKeyException.class) // DATAMONGO-622
+	@Test // DATAMONGO-622
 	public void preventsDuplicateInsert() {
 
 		template.setWriteConcern(WriteConcern.ACKNOWLEDGED);
@@ -1727,10 +1674,10 @@ public class MongoTemplateTests {
 		person.firstName = "Dave";
 
 		template.save(person);
-		assertThat(person.version, is(0));
+		assertThat(person.version).isEqualTo(0);
 
 		person.version = null;
-		template.save(person);
+		assertThatExceptionOfType(DuplicateKeyException.class).isThrownBy(() -> template.save(person));
 	}
 
 	@Test // DATAMONGO-629
@@ -1742,8 +1689,8 @@ public class MongoTemplateTests {
 		Query query = query(where("_id").is(person.getId()));
 		String collectionName = template.getCollectionName(Person.class);
 
-		assertThat(template.find(query, HashMap.class, collectionName), hasSize(1));
-		assertThat(template.count(query, collectionName), is(1L));
+		assertThat(template.find(query, HashMap.class, collectionName)).hasSize(1);
+		assertThat(template.count(query, collectionName)).isEqualTo(1L);
 	}
 
 	@Test // DATAMONGO-571
@@ -1754,13 +1701,13 @@ public class MongoTemplateTests {
 		person.lastname = "Matthews";
 
 		template.save(person);
-		assertThat(person.id, is(notNullValue()));
+		assertThat(person.id).isNotNull();
 
 		person.lastname = null;
 		template.save(person);
 
 		person = template.findOne(query(where("id").is(person.id)), VersionedPerson.class);
-		assertThat(person.lastname, is(nullValue()));
+		assertThat(person.lastname).isNull();
 	}
 
 	@Test // DATAMONGO-571
@@ -1773,7 +1720,7 @@ public class MongoTemplateTests {
 		template.save(person);
 
 		person = template.findOne(query(where("id").is(person.getId())), Person.class);
-		assertThat(person.getFirstName(), is(nullValue()));
+		assertThat(person.getFirstName()).isNull();
 	}
 
 	@Test // DATAMONGO-679
@@ -1784,8 +1731,8 @@ public class MongoTemplateTests {
 		template.save(document, "collection");
 
 		List<org.bson.Document> result = template.findAll(org.bson.Document.class, "collection");
-		assertThat(result.size(), is(1));
-		assertThat(result.get(0).containsKey("first"), is(true));
+		assertThat(result.size()).isEqualTo(1);
+		assertThat(result.get(0).containsKey("first")).isTrue();
 	}
 
 	@Test
@@ -1796,9 +1743,9 @@ public class MongoTemplateTests {
 
 		Query query = query(where("id").is(sample.id));
 
-		assertThat(template.exists(query, Sample.class), is(true));
-		assertThat(template.exists(query(where("_id").is(sample.id)), template.getCollectionName(Sample.class)), is(true));
-		assertThat(template.exists(query, Sample.class, template.getCollectionName(Sample.class)), is(true));
+		assertThat(template.exists(query, Sample.class)).isTrue();
+		assertThat(template.exists(query(where("_id").is(sample.id)), template.getCollectionName(Sample.class))).isTrue();
+		assertThat(template.exists(query, Sample.class, template.getCollectionName(Sample.class))).isTrue();
 	}
 
 	@Test // DATAMONGO-675
@@ -1814,7 +1761,7 @@ public class MongoTemplateTests {
 
 		FindAndModifyOptions options = new FindAndModifyOptions().returnNew(true);
 		TypeWithFieldAnnotation result = template.findAndModify(query, update, options, TypeWithFieldAnnotation.class);
-		assertThat(result.emailAddress, is("new"));
+		assertThat(result.emailAddress).isEqualTo("new");
 	}
 
 	@Test // DATAMONGO-671
@@ -1827,8 +1774,8 @@ public class MongoTemplateTests {
 		Query query = query(where("date").lt(new Date()));
 		List<TypeWithDate> result = template.find(query, TypeWithDate.class);
 
-		assertThat(result, hasSize(1));
-		assertThat(result.get(0).date, is(notNullValue()));
+		assertThat(result).hasSize(1);
+		assertThat(result.get(0).date).isNotNull();
 	}
 
 	@Test // DATAMONGO-540
@@ -1843,9 +1790,9 @@ public class MongoTemplateTests {
 		template.upsert(query, update, Sample.class);
 		Sample result = template.findOne(query, Sample.class);
 
-		assertThat(result, is(notNullValue()));
-		assertThat(result.field, is(fieldValue));
-		assertThat(result.id, is(idValue));
+		assertThat(result).isNotNull();
+		assertThat(result.field).isEqualTo(fieldValue);
+		assertThat(result.id).isEqualTo(idValue);
 	}
 
 	@Test // DATAMONGO-392
@@ -1863,10 +1810,10 @@ public class MongoTemplateTests {
 
 		Document result = template.findOne(query, Document.class);
 
-		assertThat(result, is(notNullValue()));
-		assertThat(result.id, is(doc.id));
-		assertThat(result.model, is(notNullValue()));
-		assertThat(result.model.value(), is(newModelValue));
+		assertThat(result).isNotNull();
+		assertThat(result.id).isEqualTo(doc.id);
+		assertThat(result.model).isNotNull();
+		assertThat(result.model.value()).isEqualTo(newModelValue);
 	}
 
 	@Test // DATAMONGO-702
@@ -1887,10 +1834,10 @@ public class MongoTemplateTests {
 
 		ObjectWith3AliasedFields result = template.findOne(query, ObjectWith3AliasedFields.class);
 
-		assertThat(result.id, is(obj.id));
-		assertThat(result.property1, is(nullValue()));
-		assertThat(result.property2, is(obj.property2));
-		assertThat(result.property3, is(obj.property3));
+		assertThat(result.id).isEqualTo(obj.id);
+		assertThat(result.property1).isNull();
+		assertThat(result.property2).isEqualTo(obj.property2);
+		assertThat(result.property3).isEqualTo(obj.property3);
 	}
 
 	@Test // DATAMONGO-702
@@ -1911,10 +1858,10 @@ public class MongoTemplateTests {
 
 		ObjectWith3AliasedFields result = template.findOne(query, ObjectWith3AliasedFields.class);
 
-		assertThat(result.id, is(obj.id));
-		assertThat(result.property1, is(obj.property1));
-		assertThat(result.property2, is(nullValue()));
-		assertThat(result.property3, is(nullValue()));
+		assertThat(result.id).isEqualTo(obj.id);
+		assertThat(result.property1).isEqualTo(obj.property1);
+		assertThat(result.property2).isNull();
+		assertThat(result.property3).isNull();
 	}
 
 	@Test // DATAMONGO-702
@@ -1941,22 +1888,22 @@ public class MongoTemplateTests {
 
 		List<ObjectWith3AliasedFields> results = template.find(query, ObjectWith3AliasedFields.class);
 
-		assertThat(results, is(notNullValue()));
-		assertThat(results.size(), is(2));
+		assertThat(results).isNotNull();
+		assertThat(results.size()).isEqualTo(2);
 
 		ObjectWith3AliasedFields result0 = results.get(0);
-		assertThat(result0, is(notNullValue()));
-		assertThat(result0.id, is(obj0.id));
-		assertThat(result0.property1, is(obj0.property1));
-		assertThat(result0.property2, is(nullValue()));
-		assertThat(result0.property3, is(nullValue()));
+		assertThat(result0).isNotNull();
+		assertThat(result0.id).isEqualTo(obj0.id);
+		assertThat(result0.property1).isEqualTo(obj0.property1);
+		assertThat(result0.property2).isNull();
+		assertThat(result0.property3).isNull();
 
 		ObjectWith3AliasedFields result1 = results.get(1);
-		assertThat(result1, is(notNullValue()));
-		assertThat(result1.id, is(obj1.id));
-		assertThat(result1.property1, is(obj1.property1));
-		assertThat(result1.property2, is(nullValue()));
-		assertThat(result1.property3, is(nullValue()));
+		assertThat(result1).isNotNull();
+		assertThat(result1.id).isEqualTo(obj1.id);
+		assertThat(result1.property1).isEqualTo(obj1.property1);
+		assertThat(result1.property2).isNull();
+		assertThat(result1.property3).isNull();
 	}
 
 	@Test // DATAMONGO-702
@@ -1983,13 +1930,13 @@ public class MongoTemplateTests {
 		ObjectWith3AliasedFieldsAndNestedAddress result = template.findOne(query,
 				ObjectWith3AliasedFieldsAndNestedAddress.class);
 
-		assertThat(result.id, is(obj.id));
-		assertThat(result.property1, is(nullValue()));
-		assertThat(result.property2, is(obj.property2));
-		assertThat(result.property3, is(nullValue()));
-		assertThat(result.address, is(notNullValue()));
-		assertThat(result.address.city, is(nullValue()));
-		assertThat(result.address.state, is(stateValue));
+		assertThat(result.id).isEqualTo(obj.id);
+		assertThat(result.property1).isNull();
+		assertThat(result.property2).isEqualTo(obj.property2);
+		assertThat(result.property3).isNull();
+		assertThat(result.address).isNotNull();
+		assertThat(result.address.city).isNull();
+		assertThat(result.address.state).isEqualTo(stateValue);
 	}
 
 	@Test // DATAMONGO-709
@@ -2013,9 +1960,9 @@ public class MongoTemplateTests {
 		Query query = Query.query(where("value").is("foo")).restrict(SpecialDoc.class);
 		List<BaseDoc> result = template.find(query, BaseDoc.class);
 
-		assertThat(result, is(notNullValue()));
-		assertThat(result.size(), is(1));
-		assertThat(result.get(0), is(instanceOf(SpecialDoc.class)));
+		assertThat(result).isNotNull();
+		assertThat(result.size()).isEqualTo(1);
+		assertThat(result.get(0)).isInstanceOf(SpecialDoc.class);
 	}
 
 	@Test // DATAMONGO-709
@@ -2039,10 +1986,10 @@ public class MongoTemplateTests {
 		Query query = Query.query(where("value").is("foo")).restrict(BaseDoc.class, VerySpecialDoc.class);
 		List<BaseDoc> result = template.find(query, BaseDoc.class);
 
-		assertThat(result, is(notNullValue()));
-		assertThat(result.size(), is(2));
-		assertThat(result.get(0).getClass(), is((Object) BaseDoc.class));
-		assertThat(result.get(1).getClass(), is((Object) VerySpecialDoc.class));
+		assertThat(result).isNotNull();
+		assertThat(result.size()).isEqualTo(2);
+		assertThat(result.get(0).getClass()).isEqualTo((Object) BaseDoc.class);
+		assertThat(result.get(1).getClass()).isEqualTo((Object) VerySpecialDoc.class);
 	}
 
 	@Test // DATAMONGO-709
@@ -2066,11 +2013,11 @@ public class MongoTemplateTests {
 		Query query = Query.query(where("value").is("foo"));
 		List<BaseDoc> result = template.find(query, BaseDoc.class);
 
-		assertThat(result, is(notNullValue()));
-		assertThat(result.size(), is(3));
-		assertThat(result.get(0).getClass(), is((Object) BaseDoc.class));
-		assertThat(result.get(1).getClass(), is((Object) SpecialDoc.class));
-		assertThat(result.get(2).getClass(), is((Object) VerySpecialDoc.class));
+		assertThat(result).isNotNull();
+		assertThat(result.size()).isEqualTo(3);
+		assertThat(result.get(0).getClass()).isEqualTo((Object) BaseDoc.class);
+		assertThat(result.get(1).getClass()).isEqualTo((Object) SpecialDoc.class);
+		assertThat(result.get(2).getClass()).isEqualTo((Object) VerySpecialDoc.class);
 	}
 
 	@Test // DATAMONGO-771
@@ -2083,9 +2030,9 @@ public class MongoTemplateTests {
 		template.insert(json, "sample");
 		List<Sample> result = template.findAll(Sample.class);
 
-		assertThat(result.size(), is(1));
-		assertThat(result.get(0).id, is(id));
-		assertThat(result.get(0).field, is(value));
+		assertThat(result.size()).isEqualTo(1);
+		assertThat(result.get(0).id).isEqualTo(id);
+		assertThat(result.get(0).field).isEqualTo(value);
 	}
 
 	@Test // DATAMONGO-2028
@@ -2095,9 +2042,9 @@ public class MongoTemplateTests {
 		template.insert(dbObject, "sample");
 		List<org.bson.Document> result = template.findAll(org.bson.Document.class, "sample");
 
-		assertThat(result.size(), is(1));
-		assertThat(result.get(0).getString("_id"), is("foo"));
-		assertThat(result.get(0).getString("duration"), is("PT1M40S"));
+		assertThat(result.size()).isEqualTo(1);
+		assertThat(result.get(0).getString("_id")).isEqualTo("foo");
+		assertThat(result.get(0).getString("duration")).isEqualTo("PT1M40S");
 	}
 
 	@Test // DATAMONGO-816
@@ -2115,11 +2062,11 @@ public class MongoTemplateTests {
 					@Override
 					public void processDocument(org.bson.Document document) throws MongoException, DataAccessException {
 
-						assertThat(document, is(notNullValue()));
+						assertThat(document).isNotNull();
 
 						ObjectWithEnumValue result = template.getConverter().read(ObjectWithEnumValue.class, document);
 
-						assertThat(result.value, is(EnumValue.VALUE2));
+						assertThat(result.value).isEqualTo(EnumValue.VALUE2);
 					}
 				});
 	}
@@ -2131,17 +2078,17 @@ public class MongoTemplateTests {
 		person.firstname = "Dave";
 		person.lastname = "Matthews";
 		template.save(person);
-		assertThat(person.id, is(notNullValue()));
+		assertThat(person.id).isNotNull();
 
 		Query qry = query(where("id").is(person.id));
 		VersionedPerson personAfterFirstSave = template.findOne(qry, VersionedPerson.class);
-		assertThat(personAfterFirstSave.version, is(0L));
+		assertThat(personAfterFirstSave.version).isEqualTo(0L);
 
 		template.updateFirst(qry, Update.update("lastname", "Bubu"), VersionedPerson.class);
 
 		VersionedPerson personAfterUpdateFirst = template.findOne(qry, VersionedPerson.class);
-		assertThat(personAfterUpdateFirst.version, is(1L));
-		assertThat(personAfterUpdateFirst.lastname, is("Bubu"));
+		assertThat(personAfterUpdateFirst.version).isEqualTo(1L);
+		assertThat(personAfterUpdateFirst.lastname).isEqualTo("Bubu");
 	}
 
 	@Test // DATAMONGO-811
@@ -2161,9 +2108,9 @@ public class MongoTemplateTests {
 
 		for (VersionedPerson p : template.find(q, VersionedPerson.class)) {
 			if ("Metthews".equals(p.lastname)) {
-				assertThat(p.version, equalTo(Long.valueOf(1)));
+				assertThat(p.version).isEqualTo(Long.valueOf(1));
 			} else {
-				assertThat(p.version, equalTo(Long.valueOf(0)));
+				assertThat(p.version).isEqualTo(Long.valueOf(0));
 			}
 		}
 	}
@@ -2184,7 +2131,7 @@ public class MongoTemplateTests {
 		template.updateMulti(q, Update.update("lastname", "Metthews"), VersionedPerson.class);
 
 		for (VersionedPerson p : template.find(q, VersionedPerson.class)) {
-			assertThat(p.version, equalTo(Long.valueOf(1)));
+			assertThat(p.version).isEqualTo(Long.valueOf(1));
 		}
 	}
 
@@ -2200,12 +2147,12 @@ public class MongoTemplateTests {
 		Query query = new Query();
 		query.addCriteria(where("_id").in("42", "43"));
 
-		assertThat(template.count(query, Sample.class), is(1L));
+		assertThat(template.count(query, Sample.class)).isEqualTo(1L);
 
 		query.with(PageRequest.of(0, 10));
 		query.with(Sort.by("field"));
 
-		assertThat(template.find(query, Sample.class), is(not(empty())));
+		assertThat(template.find(query, Sample.class)).isNotEmpty();
 	}
 
 	@Test // DATAMONGO-807
@@ -2221,8 +2168,8 @@ public class MongoTemplateTests {
 		template.findAndModify(query, update, Document.class);
 
 		Document retrieved = template.findOne(query, Document.class);
-		assertThat(retrieved.model, instanceOf(ModelA.class));
-		assertThat(retrieved.model.value(), equalTo("value2"));
+		assertThat(retrieved.model).isInstanceOf(ModelA.class);
+		assertThat(retrieved.model.value()).isEqualTo("value2");
 	}
 
 	@Test // DATAMONGO-1210
@@ -2230,7 +2177,7 @@ public class MongoTemplateTests {
 
 		DocumentWithNestedCollection doc = new DocumentWithNestedCollection();
 
-		Map<String, Model> entry = new HashMap<String, Model>();
+		Map<String, Model> entry = new HashMap<>();
 		entry.put("key1", new ModelA("value1"));
 		doc.models.add(entry);
 
@@ -2241,22 +2188,22 @@ public class MongoTemplateTests {
 		Query query = query(where("id").is(doc.id));
 		Update update = Update.update("models", Collections.singletonList(entry));
 
-		assertThat(template.findOne(query, DocumentWithNestedCollection.class), notNullValue());
+		assertThat(template.findOne(query, DocumentWithNestedCollection.class)).isNotNull();
 
 		template.findAndModify(query, update, DocumentWithNestedCollection.class);
 
 		DocumentWithNestedCollection retrieved = template.findOne(query, DocumentWithNestedCollection.class);
 
-		assertThat(retrieved, is(notNullValue()));
-		assertThat(retrieved.id, is(doc.id));
+		assertThat(retrieved).isNotNull();
+		assertThat(retrieved.id).isEqualTo(doc.id);
 
-		assertThat(retrieved.models.get(0).entrySet(), hasSize(2));
+		assertThat(retrieved.models.get(0).entrySet()).hasSize(2);
 
-		assertThat(retrieved.models.get(0).get("key1"), instanceOf(ModelA.class));
-		assertThat(retrieved.models.get(0).get("key1").value(), equalTo("value1"));
+		assertThat(retrieved.models.get(0).get("key1")).isInstanceOf(ModelA.class);
+		assertThat(retrieved.models.get(0).get("key1").value()).isEqualTo("value1");
 
-		assertThat(retrieved.models.get(0).get("key2"), instanceOf(ModelA.class));
-		assertThat(retrieved.models.get(0).get("key2").value(), equalTo("value2"));
+		assertThat(retrieved.models.get(0).get("key2")).isInstanceOf(ModelA.class);
+		assertThat(retrieved.models.get(0).get("key2").value()).isEqualTo("value2");
 	}
 
 	@Test // DATAMONGO-1210
@@ -2264,7 +2211,7 @@ public class MongoTemplateTests {
 
 		DocumentWithNestedCollection doc = new DocumentWithNestedCollection();
 
-		Map<String, Model> entry = new HashMap<String, Model>();
+		Map<String, Model> entry = new HashMap<>();
 		entry.put("key1", new ModelA("value1"));
 		doc.models.add(entry);
 
@@ -2275,22 +2222,22 @@ public class MongoTemplateTests {
 		Query query = query(where("id").is(doc.id));
 		Update update = Update.update("models.0", entry);
 
-		assertThat(template.findOne(query, DocumentWithNestedCollection.class), notNullValue());
+		assertThat(template.findOne(query, DocumentWithNestedCollection.class)).isNotNull();
 
 		template.findAndModify(query, update, DocumentWithNestedCollection.class);
 
 		DocumentWithNestedCollection retrieved = template.findOne(query, DocumentWithNestedCollection.class);
 
-		assertThat(retrieved, is(notNullValue()));
-		assertThat(retrieved.id, is(doc.id));
+		assertThat(retrieved).isNotNull();
+		assertThat(retrieved.id).isEqualTo(doc.id);
 
-		assertThat(retrieved.models.get(0).entrySet(), hasSize(2));
+		assertThat(retrieved.models.get(0).entrySet()).hasSize(2);
 
-		assertThat(retrieved.models.get(0).get("key1"), instanceOf(ModelA.class));
-		assertThat(retrieved.models.get(0).get("key1").value(), equalTo("value1"));
+		assertThat(retrieved.models.get(0).get("key1")).isInstanceOf(ModelA.class);
+		assertThat(retrieved.models.get(0).get("key1").value()).isEqualTo("value1");
 
-		assertThat(retrieved.models.get(0).get("key2"), instanceOf(ModelA.class));
-		assertThat(retrieved.models.get(0).get("key2").value(), equalTo("value2"));
+		assertThat(retrieved.models.get(0).get("key2")).isInstanceOf(ModelA.class);
+		assertThat(retrieved.models.get(0).get("key2").value()).isEqualTo("value2");
 	}
 
 	@Test // DATAMONGO-1210
@@ -2298,7 +2245,7 @@ public class MongoTemplateTests {
 
 		DocumentWithNestedCollection doc = new DocumentWithNestedCollection();
 
-		Map<String, Model> entry = new HashMap<String, Model>();
+		Map<String, Model> entry = new HashMap<>();
 		entry.put("key1", new ModelA("value1"));
 		doc.models.add(entry);
 
@@ -2307,30 +2254,30 @@ public class MongoTemplateTests {
 		Query query = query(where("id").is(doc.id));
 		Update update = Update.update("models.1", Collections.singletonMap("key2", new ModelA("value2")));
 
-		assertThat(template.findOne(query, DocumentWithNestedCollection.class), notNullValue());
+		assertThat(template.findOne(query, DocumentWithNestedCollection.class)).isNotNull();
 
 		template.findAndModify(query, update, DocumentWithNestedCollection.class);
 
 		DocumentWithNestedCollection retrieved = template.findOne(query, DocumentWithNestedCollection.class);
 
-		assertThat(retrieved, is(notNullValue()));
-		assertThat(retrieved.id, is(doc.id));
+		assertThat(retrieved).isNotNull();
+		assertThat(retrieved.id).isEqualTo(doc.id);
 
-		assertThat(retrieved.models.get(0).entrySet(), hasSize(1));
-		assertThat(retrieved.models.get(1).entrySet(), hasSize(1));
+		assertThat(retrieved.models.get(0).entrySet()).hasSize(1);
+		assertThat(retrieved.models.get(1).entrySet()).hasSize(1);
 
-		assertThat(retrieved.models.get(0).get("key1"), instanceOf(ModelA.class));
-		assertThat(retrieved.models.get(0).get("key1").value(), equalTo("value1"));
+		assertThat(retrieved.models.get(0).get("key1")).isInstanceOf(ModelA.class);
+		assertThat(retrieved.models.get(0).get("key1").value()).isEqualTo("value1");
 
-		assertThat(retrieved.models.get(1).get("key2"), instanceOf(ModelA.class));
-		assertThat(retrieved.models.get(1).get("key2").value(), equalTo("value2"));
+		assertThat(retrieved.models.get(1).get("key2")).isInstanceOf(ModelA.class);
+		assertThat(retrieved.models.get(1).get("key2").value()).isEqualTo("value2");
 	}
 
 	@Test // DATAMONGO-1210
 	public void findAndModifyShouldRetainTypeInformationWithinUpdatedTypeOnEmbeddedDocumentWithCollectionWhenUpdatingPositionedElement()
 			throws Exception {
 
-		List<Model> models = new ArrayList<Model>();
+		List<Model> models = new ArrayList<>();
 		models.add(new ModelA("value1"));
 
 		DocumentWithEmbeddedDocumentWithCollection doc = new DocumentWithEmbeddedDocumentWithCollection(
@@ -2341,23 +2288,23 @@ public class MongoTemplateTests {
 		Query query = query(where("id").is(doc.id));
 		Update update = Update.update("embeddedDocument.models.0", new ModelA("value2"));
 
-		assertThat(template.findOne(query, DocumentWithEmbeddedDocumentWithCollection.class), notNullValue());
+		assertThat(template.findOne(query, DocumentWithEmbeddedDocumentWithCollection.class)).isNotNull();
 
 		template.findAndModify(query, update, DocumentWithEmbeddedDocumentWithCollection.class);
 
 		DocumentWithEmbeddedDocumentWithCollection retrieved = template.findOne(query,
 				DocumentWithEmbeddedDocumentWithCollection.class);
 
-		assertThat(retrieved, notNullValue());
-		assertThat(retrieved.embeddedDocument.models, hasSize(1));
-		assertThat(retrieved.embeddedDocument.models.get(0).value(), is("value2"));
+		assertThat(retrieved).isNotNull();
+		assertThat(retrieved.embeddedDocument.models).hasSize(1);
+		assertThat(retrieved.embeddedDocument.models.get(0).value()).isEqualTo("value2");
 	}
 
 	@Test // DATAMONGO-1210
 	public void findAndModifyShouldAddTypeInformationWithinUpdatedTypeOnEmbeddedDocumentWithCollectionWhenUpdatingSecondElement()
 			throws Exception {
 
-		List<Model> models = new ArrayList<Model>();
+		List<Model> models = new ArrayList<>();
 		models.add(new ModelA("value1"));
 
 		DocumentWithEmbeddedDocumentWithCollection doc = new DocumentWithEmbeddedDocumentWithCollection(
@@ -2368,17 +2315,17 @@ public class MongoTemplateTests {
 		Query query = query(where("id").is(doc.id));
 		Update update = Update.update("embeddedDocument.models.1", new ModelA("value2"));
 
-		assertThat(template.findOne(query, DocumentWithEmbeddedDocumentWithCollection.class), notNullValue());
+		assertThat(template.findOne(query, DocumentWithEmbeddedDocumentWithCollection.class)).isNotNull();
 
 		template.findAndModify(query, update, DocumentWithEmbeddedDocumentWithCollection.class);
 
 		DocumentWithEmbeddedDocumentWithCollection retrieved = template.findOne(query,
 				DocumentWithEmbeddedDocumentWithCollection.class);
 
-		assertThat(retrieved, notNullValue());
-		assertThat(retrieved.embeddedDocument.models, hasSize(2));
-		assertThat(retrieved.embeddedDocument.models.get(0).value(), is("value1"));
-		assertThat(retrieved.embeddedDocument.models.get(1).value(), is("value2"));
+		assertThat(retrieved).isNotNull();
+		assertThat(retrieved.embeddedDocument.models).hasSize(2);
+		assertThat(retrieved.embeddedDocument.models.get(0).value()).isEqualTo("value1");
+		assertThat(retrieved.embeddedDocument.models.get(1).value()).isEqualTo("value2");
 	}
 
 	@Test // DATAMONGO-1210
@@ -2396,16 +2343,16 @@ public class MongoTemplateTests {
 		Update update = Update.update("embeddedDocument",
 				new DocumentWithCollection(Arrays.<Model> asList(new ModelA("value2"))));
 
-		assertThat(template.findOne(query, DocumentWithEmbeddedDocumentWithCollection.class), notNullValue());
+		assertThat(template.findOne(query, DocumentWithEmbeddedDocumentWithCollection.class)).isNotNull();
 
 		template.findAndModify(query, update, DocumentWithEmbeddedDocumentWithCollection.class);
 
 		DocumentWithEmbeddedDocumentWithCollection retrieved = template.findOne(query,
 				DocumentWithEmbeddedDocumentWithCollection.class);
 
-		assertThat(retrieved, notNullValue());
-		assertThat(retrieved.embeddedDocument.models, hasSize(1));
-		assertThat(retrieved.embeddedDocument.models.get(0).value(), is("value2"));
+		assertThat(retrieved).isNotNull();
+		assertThat(retrieved.embeddedDocument.models).hasSize(1);
+		assertThat(retrieved.embeddedDocument.models.get(0).value()).isEqualTo("value2");
 	}
 
 	@Test // DATAMONGO-1210
@@ -2413,7 +2360,7 @@ public class MongoTemplateTests {
 
 		DocumentWithNestedList doc = new DocumentWithNestedList();
 
-		List<Model> entry = new ArrayList<Model>();
+		List<Model> entry = new ArrayList<>();
 		entry.add(new ModelA("value1"));
 		doc.models.add(entry);
 
@@ -2421,7 +2368,7 @@ public class MongoTemplateTests {
 
 		Query query = query(where("id").is(doc.id));
 
-		assertThat(template.findOne(query, DocumentWithNestedList.class), notNullValue());
+		assertThat(template.findOne(query, DocumentWithNestedList.class)).isNotNull();
 
 		Update update = Update.update("models.0.1", new ModelA("value2"));
 
@@ -2429,16 +2376,16 @@ public class MongoTemplateTests {
 
 		DocumentWithNestedList retrieved = template.findOne(query, DocumentWithNestedList.class);
 
-		assertThat(retrieved, is(notNullValue()));
-		assertThat(retrieved.id, is(doc.id));
+		assertThat(retrieved).isNotNull();
+		assertThat(retrieved.id).isEqualTo(doc.id);
 
-		assertThat(retrieved.models.get(0), hasSize(2));
+		assertThat(retrieved.models.get(0)).hasSize(2);
 
-		assertThat(retrieved.models.get(0).get(0), instanceOf(ModelA.class));
-		assertThat(retrieved.models.get(0).get(0).value(), equalTo("value1"));
+		assertThat(retrieved.models.get(0).get(0)).isInstanceOf(ModelA.class);
+		assertThat(retrieved.models.get(0).get(0).value()).isEqualTo("value1");
 
-		assertThat(retrieved.models.get(0).get(1), instanceOf(ModelA.class));
-		assertThat(retrieved.models.get(0).get(1).value(), equalTo("value2"));
+		assertThat(retrieved.models.get(0).get(1)).isInstanceOf(ModelA.class);
+		assertThat(retrieved.models.get(0).get(1).value()).isEqualTo("value2");
 	}
 
 	@Test // DATAMONGO-1827
@@ -2459,30 +2406,27 @@ public class MongoTemplateTests {
 	@MongoVersion(asOf = "3.6")
 	public void findAndReplaceShouldErrorOnIdPresent() {
 
-		thrown.expect(InvalidDataAccessApiUsageException.class);
-
 		template.save(new MyPerson("Walter"));
 
 		MyPerson replacement = new MyPerson("Heisenberg");
 		replacement.id = "invalid-id";
 
-		template.findAndReplace(query(where("name").is("Walter")), replacement);
+		assertThatExceptionOfType(InvalidDataAccessApiUsageException.class)
+				.isThrownBy(() -> template.findAndReplace(query(where("name").is("Walter")), replacement));
 	}
 
 	@Test // DATAMONGO-1827
 	public void findAndReplaceShouldErrorOnSkip() {
 
-		thrown.expect(IllegalArgumentException.class);
-
-		template.findAndReplace(query(where("name").is("Walter")).skip(10), new MyPerson("Heisenberg"));
+		assertThatIllegalArgumentException().isThrownBy(
+				() -> template.findAndReplace(query(where("name").is("Walter")).skip(10), new MyPerson("Heisenberg")));
 	}
 
 	@Test // DATAMONGO-1827
 	public void findAndReplaceShouldErrorOnLimit() {
 
-		thrown.expect(IllegalArgumentException.class);
-
-		template.findAndReplace(query(where("name").is("Walter")).limit(10), new MyPerson("Heisenberg"));
+		assertThatIllegalArgumentException().isThrownBy(
+				() -> template.findAndReplace(query(where("name").is("Walter")).limit(10), new MyPerson("Heisenberg")));
 	}
 
 	@Test // DATAMONGO-1827
@@ -2590,11 +2534,11 @@ public class MongoTemplateTests {
 		Query findQuery = new Query(Criteria.where("id").is(doc.id));
 		DocumentWithCollection result = template.findOne(findQuery, DocumentWithCollection.class);
 
-		assertThat(result, is(notNullValue()));
-		assertThat(result.id, is(doc.id));
-		assertThat(result.models, is(notNullValue()));
-		assertThat(result.models, hasSize(1));
-		assertThat(result.models.get(0).value(), is(newModelValue));
+		assertThat(result).isNotNull();
+		assertThat(result.id).isEqualTo(doc.id);
+		assertThat(result.models).isNotNull();
+		assertThat(result.models).hasSize(1);
+		assertThat(result.models.get(0).value()).isEqualTo(newModelValue);
 	}
 
 	@Test // DATAMONGO-812
@@ -2604,12 +2548,12 @@ public class MongoTemplateTests {
 		DocumentWithCollection document = new DocumentWithCollection(Collections.<Model> emptyList());
 		template.save(document);
 		Query query = query(where("id").is(document.id));
-		assumeThat(template.findOne(query, DocumentWithCollection.class).models, hasSize(1));
+		assertThat(template.findOne(query, DocumentWithCollection.class).models).isEmpty();
 
 		Update update = new Update().push("models").each(new ModelA("model-b"), new ModelA("model-c"));
 		template.updateMulti(query, update, DocumentWithCollection.class);
 
-		assertThat(template.findOne(query, DocumentWithCollection.class).models, hasSize(3));
+		assertThat(template.findOne(query, DocumentWithCollection.class).models).hasSize(2);
 	}
 
 	@Test // DATAMONGO-812
@@ -2621,12 +2565,12 @@ public class MongoTemplateTests {
 		template.save(document);
 
 		Query query = query(where("id").is(document.id));
-		assumeThat(template.findOne(query, DocumentWithCollectionOfSimpleType.class).values, hasSize(1));
+		assertThat(template.findOne(query, DocumentWithCollectionOfSimpleType.class).values).hasSize(1);
 
 		Update update = new Update().push("values").each("data", "mongodb");
 		template.updateMulti(query, update, DocumentWithCollectionOfSimpleType.class);
 
-		assertThat(template.findOne(query, DocumentWithCollectionOfSimpleType.class).values, hasSize(3));
+		assertThat(template.findOne(query, DocumentWithCollectionOfSimpleType.class).values).hasSize(3);
 	}
 
 	@Test // DATAMONOGO-828
@@ -2635,7 +2579,7 @@ public class MongoTemplateTests {
 		Query q = query(where("id").is(Long.MIN_VALUE));
 
 		template.updateFirst(q, Update.update("lastname", "supercalifragilisticexpialidocious"), VersionedPerson.class);
-		assertThat(template.findOne(q, VersionedPerson.class), nullValue());
+		assertThat(template.findOne(q, VersionedPerson.class)).isNull();
 	}
 
 	@Test // DATAMONGO-354, DATAMONGO-1824
@@ -2657,8 +2601,8 @@ public class MongoTemplateTests {
 		template.updateFirst(findQuery, update, DocumentWithMultipleCollections.class);
 
 		DocumentWithMultipleCollections result = template.findOne(findQuery, DocumentWithMultipleCollections.class);
-		assertThat(result.string1, hasItems("spring", "data", "mongodb"));
-		assertThat(result.string2, hasItems("one", "two", "three"));
+		assertThat(result.string1).contains("spring", "data", "mongodb");
+		assertThat(result.string2).contains("one", "two", "three");
 
 	}
 
@@ -2685,10 +2629,10 @@ public class MongoTemplateTests {
 
 		DocumentWithDBRefCollection result = template.findOne(qry, DocumentWithDBRefCollection.class);
 
-		assertThat(result, is(notNullValue()));
-		assertThat(result.dbRefAnnotatedList, hasSize(1));
-		assertThat(result.dbRefAnnotatedList.get(0), is(notNullValue()));
-		assertThat(result.dbRefAnnotatedList.get(0).id, is((Object) "1"));
+		assertThat(result).isNotNull();
+		assertThat(result.dbRefAnnotatedList).hasSize(1);
+		assertThat(result.dbRefAnnotatedList.get(0)).isNotNull();
+		assertThat(result.dbRefAnnotatedList.get(0).id).isEqualTo((Object) "1");
 	}
 
 	@Test // DATAMONGO-404
@@ -2714,10 +2658,10 @@ public class MongoTemplateTests {
 
 		DocumentWithDBRefCollection result = template.findOne(qry, DocumentWithDBRefCollection.class);
 
-		assertThat(result, is(notNullValue()));
-		assertThat(result.dbRefAnnotatedList, hasSize(1));
-		assertThat(result.dbRefAnnotatedList.get(0), is(notNullValue()));
-		assertThat(result.dbRefAnnotatedList.get(0).id, is((Object) "1"));
+		assertThat(result).isNotNull();
+		assertThat(result.dbRefAnnotatedList).hasSize(1);
+		assertThat(result.dbRefAnnotatedList.get(0)).isNotNull();
+		assertThat(result.dbRefAnnotatedList.get(0).id).isEqualTo((Object) "1");
 	}
 
 	@Test // DATAMONGO-852
@@ -2727,17 +2671,17 @@ public class MongoTemplateTests {
 		person.firstname = "Dave";
 		person.lastname = "Matthews";
 		template.save(person);
-		assertThat(person.id, is(notNullValue()));
+		assertThat(person.id).isNotNull();
 
 		Query qry = query(where("id").is(person.id));
 		VersionedPerson personAfterFirstSave = template.findOne(qry, VersionedPerson.class);
-		assertThat(personAfterFirstSave.version, is(0L));
+		assertThat(personAfterFirstSave.version).isEqualTo(0L);
 
 		template.updateFirst(qry, Update.update("lastname", "Bubu").set("version", 100L), VersionedPerson.class);
 
 		VersionedPerson personAfterUpdateFirst = template.findOne(qry, VersionedPerson.class);
-		assertThat(personAfterUpdateFirst.version, is(100L));
-		assertThat(personAfterUpdateFirst.lastname, is("Bubu"));
+		assertThat(personAfterUpdateFirst.version).isEqualTo(100L);
+		assertThat(personAfterUpdateFirst.lastname).isEqualTo("Bubu");
 	}
 
 	@Test // DATAMONGO-468
@@ -2760,10 +2704,10 @@ public class MongoTemplateTests {
 
 		DocumentWithDBRefCollection updatedDoc = template.findOne(qry, DocumentWithDBRefCollection.class);
 
-		assertThat(updatedDoc, is(notNullValue()));
-		assertThat(updatedDoc.dbRefProperty, is(notNullValue()));
-		assertThat(updatedDoc.dbRefProperty.id, is(sample2.id));
-		assertThat(updatedDoc.dbRefProperty.field, is(sample2.field));
+		assertThat(updatedDoc).isNotNull();
+		assertThat(updatedDoc.dbRefProperty).isNotNull();
+		assertThat(updatedDoc.dbRefProperty.id).isEqualTo(sample2.id);
+		assertThat(updatedDoc.dbRefProperty.field).isEqualTo(sample2.field);
 	}
 
 	@Test // DATAMONGO-862
@@ -2779,7 +2723,7 @@ public class MongoTemplateTests {
 		template.findAndModify(query, update, DocumentWithCollection.class);
 
 		DocumentWithCollection result = template.findOne(query(where("id").is(document.id)), DocumentWithCollection.class);
-		assertThat(result.models.get(0).value(), is("mongodb"));
+		assertThat(result.models.get(0).value()).isEqualTo("mongodb");
 	}
 
 	@Test // DATAMONGO-773
@@ -2799,11 +2743,11 @@ public class MongoTemplateTests {
 
 		List<DocumentWithDBRefCollection> result = template.find(qry, DocumentWithDBRefCollection.class);
 
-		assertThat(result, is(notNullValue()));
-		assertThat(result, hasSize(1));
-		assertThat(result.get(0), is(notNullValue()));
-		assertThat(result.get(0).dbRefProperty, is(notNullValue()));
-		assertThat(result.get(0).dbRefProperty.field, is(sample.field));
+		assertThat(result).isNotNull();
+		assertThat(result).hasSize(1);
+		assertThat(result.get(0)).isNotNull();
+		assertThat(result.get(0).dbRefProperty).isNotNull();
+		assertThat(result.get(0).dbRefProperty.field).isEqualTo(sample.field);
 	}
 
 	@Test // DATAMONGO-566
@@ -2817,11 +2761,13 @@ public class MongoTemplateTests {
 		Query qry = query(where("field").in("spring", "mongodb"));
 		List<Sample> result = template.findAllAndRemove(qry, Sample.class);
 
-		assertThat(result, hasSize(2));
+		assertThat(result).hasSize(2);
 
 		assertThat(template.getDb().getCollection("sample").countDocuments(
-				new org.bson.Document("field", new org.bson.Document("$in", Arrays.asList("spring", "mongodb")))), is(0L));
-		assertThat(template.getDb().getCollection("sample").countDocuments(new org.bson.Document("field", "data")), is(1L));
+				new org.bson.Document("field", new org.bson.Document("$in", Arrays.asList("spring", "mongodb")))))
+						.isEqualTo(0L);
+		assertThat(template.getDb().getCollection("sample").countDocuments(new org.bson.Document("field", "data")))
+				.isEqualTo(1L);
 	}
 
 	@Test // DATAMONGO-1001
@@ -2848,7 +2794,7 @@ public class MongoTemplateTests {
 		loadedContent.setText("data");
 		template.save(loadedContent);
 
-		assertThat(template.findById(content.id, SomeContent.class).getText(), is("data"));
+		assertThat(template.findById(content.id, SomeContent.class).getText()).isEqualTo("data");
 
 	}
 
@@ -2881,8 +2827,8 @@ public class MongoTemplateTests {
 
 		SomeMessage savedMessage = template.findById(message.id, SomeMessage.class);
 
-		assertThat(savedMessage.dbrefContent.text, is(content.text));
-		assertThat(savedMessage.normalContent.text, is(content.text));
+		assertThat(savedMessage.dbrefContent.text).isEqualTo(content.text);
+		assertThat(savedMessage.normalContent.text).isEqualTo(content.text);
 	}
 
 	@Test // DATAMONGO-884
@@ -2906,9 +2852,9 @@ public class MongoTemplateTests {
 
 		template.remove(content);
 
-		assertThat(savedTmpl.getContent().toString(), is("someContent:C1$LazyLoadingProxy"));
-		assertThat(savedTmpl.getContent(), is(instanceOf(LazyLoadingProxy.class)));
-		assertThat(savedTmpl.getContent().getText(), is(nullValue()));
+		assertThat(savedTmpl.getContent().toString()).isEqualTo("someContent:C1$LazyLoadingProxy");
+		assertThat(savedTmpl.getContent()).isInstanceOf(LazyLoadingProxy.class);
+		assertThat(savedTmpl.getContent().getText()).isNull();
 	}
 
 	@Test // DATAMONGO-471
@@ -2919,12 +2865,12 @@ public class MongoTemplateTests {
 		template.save(document);
 
 		Query query = query(where("id").is(document.id));
-		assumeThat(template.findOne(query, DocumentWithCollectionOfSimpleType.class).values, hasSize(1));
+		assertThat(template.findOne(query, DocumentWithCollectionOfSimpleType.class).values).hasSize(1);
 
 		Update update = new Update().addToSet("values").each("data", "mongodb");
 		template.updateMulti(query, update, DocumentWithCollectionOfSimpleType.class);
 
-		assertThat(template.findOne(query, DocumentWithCollectionOfSimpleType.class).values, hasSize(3));
+		assertThat(template.findOne(query, DocumentWithCollectionOfSimpleType.class).values).hasSize(3);
 	}
 
 	@Test // DATAMONGO-1210
@@ -2937,7 +2883,7 @@ public class MongoTemplateTests {
 
 		Query query = query(where("id").is(doc.id));
 
-		assertThat(template.findOne(query, DocumentWithCollectionOfSamples.class), notNullValue());
+		assertThat(template.findOne(query, DocumentWithCollectionOfSamples.class)).isNotNull();
 
 		Update update = new Update().addToSet("samples").each(new Sample(null, "sample2"), new Sample(null, "sample1"));
 
@@ -2945,10 +2891,10 @@ public class MongoTemplateTests {
 
 		DocumentWithCollectionOfSamples retrieved = template.findOne(query, DocumentWithCollectionOfSamples.class);
 
-		assertThat(retrieved, notNullValue());
-		assertThat(retrieved.samples, hasSize(2));
-		assertThat(retrieved.samples.get(0).field, is("sample1"));
-		assertThat(retrieved.samples.get(1).field, is("sample2"));
+		assertThat(retrieved).isNotNull();
+		assertThat(retrieved.samples).hasSize(2);
+		assertThat(retrieved.samples.get(0).field).isEqualTo("sample1");
+		assertThat(retrieved.samples.get(1).field).isEqualTo("sample2");
 	}
 
 	@Test // DATAMONGO-888
@@ -2966,7 +2912,7 @@ public class MongoTemplateTests {
 		template.save(two);
 
 		Query query = query(where("_id").in("1", "2")).with(Sort.by(Direction.DESC, "someIdKey"));
-		assertThat(template.find(query, DoucmentWithNamedIdField.class), contains(two, one));
+		assertThat(template.find(query, DoucmentWithNamedIdField.class)).containsExactly(two, one);
 	}
 
 	@Test // DATAMONGO-888
@@ -2984,7 +2930,7 @@ public class MongoTemplateTests {
 		template.save(two);
 
 		Query query = query(where("_id").in("1", "2")).with(Sort.by(Direction.DESC, "value"));
-		assertThat(template.find(query, DoucmentWithNamedIdField.class), contains(two, one));
+		assertThat(template.find(query, DoucmentWithNamedIdField.class)).containsExactly(two, one);
 	}
 
 	@Test // DATAMONGO-913
@@ -3005,11 +2951,11 @@ public class MongoTemplateTests {
 
 		SomeTemplate result = template.findOne(query(where("content").is(tmpl.getContent())), SomeTemplate.class);
 
-		assertThat(result, is(notNullValue()));
-		assertThat(result.getContent(), is(notNullValue()));
-		assertThat(result.getContent().getId(), is(notNullValue()));
-		assertThat(result.getContent().getName(), is(notNullValue()));
-		assertThat(result.getContent().getText(), is(content.getText()));
+		assertThat(result).isNotNull();
+		assertThat(result.getContent()).isNotNull();
+		assertThat(result.getContent().getId()).isNotNull();
+		assertThat(result.getContent().getName()).isNotNull();
+		assertThat(result.getContent().getText()).isEqualTo(content.getText());
 	}
 
 	@Test // DATAMONGO-913
@@ -3033,8 +2979,8 @@ public class MongoTemplateTests {
 		// Use lazy-loading-proxy in query
 		result = template.findOne(query(where("content").is(result.getContent())), SomeTemplate.class);
 
-		assertNotNull(result.getContent().getName());
-		assertThat(result.getContent().getName(), is(content.getName()));
+		assertThat(result.getContent().getName()).isNotNull();
+		assertThat(result.getContent().getName()).isEqualTo(content.getName());
 	}
 
 	@Test // DATAMONGO-970
@@ -3043,11 +2989,11 @@ public class MongoTemplateTests {
 		org.bson.Document object = new org.bson.Document("key", "value");
 		template.insert(object, "collection");
 
-		assertThat(object.get("_id"), is(notNullValue()));
-		assertThat(template.findAll(Document.class, "collection"), hasSize(1));
+		assertThat(object.get("_id")).isNotNull();
+		assertThat(template.findAll(Document.class, "collection")).hasSize(1);
 
 		template.remove(object, "collection");
-		assertThat(template.findAll(Document.class, "collection"), hasSize(0));
+		assertThat(template.findAll(Document.class, "collection")).hasSize(0);
 	}
 
 	@Test // DATAMONGO-1207
@@ -3060,8 +3006,8 @@ public class MongoTemplateTests {
 
 		List<Address> result = template.findAll(Address.class);
 
-		assertThat(result, hasSize(2));
-		assertThat(result, hasItems(newYork, washington));
+		assertThat(result).hasSize(2);
+		assertThat(result).contains(newYork, washington);
 	}
 
 	@Test // DATAMONGO-1176
@@ -3074,9 +3020,9 @@ public class MongoTemplateTests {
 
 		List<Person> result = template.findAll(Person.class);
 
-		assertThat(result, hasSize(2));
-		assertThat(walter.getId(), is(notNullValue()));
-		assertThat(jesse.getId(), is(notNullValue()));
+		assertThat(result).hasSize(2);
+		assertThat(walter.getId()).isNotNull();
+		assertThat(jesse.getId()).isNotNull();
 	}
 
 	@Test // DATAMONGO-1208
@@ -3091,8 +3037,8 @@ public class MongoTemplateTests {
 		q.with(Sort.by(Direction.ASC, "age"));
 		CloseableIterator<Person> stream = template.stream(q, Person.class);
 
-		assertThat(stream.next().getAge(), is(youngestPerson.getAge()));
-		assertThat(stream.next().getAge(), is(oldestPerson.getAge()));
+		assertThat(stream.next().getAge()).isEqualTo(youngestPerson.getAge());
+		assertThat(stream.next().getAge()).isEqualTo(oldestPerson.getAge());
 	}
 
 	@Test // DATAMONGO-1208
@@ -3107,8 +3053,8 @@ public class MongoTemplateTests {
 		q.with(PageRequest.of(0, 1, Sort.by(Direction.ASC, "age")));
 		CloseableIterator<Person> stream = template.stream(q, Person.class);
 
-		assertThat(stream.next().getAge(), is(youngestPerson.getAge()));
-		assertThat(stream.hasNext(), is(false));
+		assertThat(stream.next().getAge()).isEqualTo(youngestPerson.getAge());
+		assertThat(stream.hasNext()).isFalse();
 	}
 
 	@Test // DATAMONGO-1204
@@ -3129,8 +3075,8 @@ public class MongoTemplateTests {
 		SomeMessage messageLoaded = template.findOne(query(where("id").is(message.id)), SomeMessage.class);
 		SomeContent contentLoaded = template.findOne(query(where("id").is(content.id)), SomeContent.class);
 
-		assertThat(messageLoaded.dbrefContent.id, is(contentLoaded.id));
-		assertThat(contentLoaded.dbrefMessage.id, is(messageLoaded.id));
+		assertThat(messageLoaded.dbrefContent.id).isEqualTo(contentLoaded.id);
+		assertThat(contentLoaded.dbrefMessage.id).isEqualTo(messageLoaded.id);
 	}
 
 	@Test // DATAMONGO-1287, DATAMONGO-2004
@@ -3147,8 +3093,8 @@ public class MongoTemplateTests {
 
 		DocumentWithLazyDBrefUsedInPresistenceConstructor loaded = template.findOne(query(where("id").is(source.id)),
 				DocumentWithLazyDBrefUsedInPresistenceConstructor.class);
-		assertThat(loaded.refToDocUsedInCtor, instanceOf(LazyLoadingProxy.class));
-		assertThat(loaded.refToDocNotUsedInCtor, nullValue());
+		assertThat(loaded.refToDocUsedInCtor).isInstanceOf(LazyLoadingProxy.class);
+		assertThat(loaded.refToDocNotUsedInCtor).isNull();
 	}
 
 	@Test // DATAMONGO-1287
@@ -3166,8 +3112,8 @@ public class MongoTemplateTests {
 
 		DocumentWithLazyDBrefUsedInPresistenceConstructor loaded = template.findOne(query(where("id").is(source.id)),
 				DocumentWithLazyDBrefUsedInPresistenceConstructor.class);
-		assertThat(loaded.refToDocNotUsedInCtor, instanceOf(LazyLoadingProxy.class));
-		assertThat(loaded.refToDocUsedInCtor, nullValue());
+		assertThat(loaded.refToDocNotUsedInCtor).isInstanceOf(LazyLoadingProxy.class);
+		assertThat(loaded.refToDocUsedInCtor).isNull();
 	}
 
 	@Test // DATAMONGO-1287, DATAMONGO-2004
@@ -3189,8 +3135,8 @@ public class MongoTemplateTests {
 
 		DocumentWithLazyDBrefUsedInPresistenceConstructor loaded = template.findOne(query(where("id").is(source.id)),
 				DocumentWithLazyDBrefUsedInPresistenceConstructor.class);
-		assertThat(loaded.refToDocUsedInCtor, instanceOf(LazyLoadingProxy.class));
-		assertThat(loaded.refToDocNotUsedInCtor, instanceOf(LazyLoadingProxy.class));
+		assertThat(loaded.refToDocUsedInCtor).isInstanceOf(LazyLoadingProxy.class);
+		assertThat(loaded.refToDocNotUsedInCtor).isInstanceOf(LazyLoadingProxy.class);
 	}
 
 	@Test // DATAMONGO-1401
@@ -3206,7 +3152,7 @@ public class MongoTemplateTests {
 		wgj.description = "datamongo-1401-update";
 		template.save(wgj);
 
-		assertThat(template.findOne(query(where("id").is(wgj.id)), WithGeoJson.class).point, is(equalTo(wgj.point)));
+		assertThat(template.findOne(query(where("id").is(wgj.id)), WithGeoJson.class).point).isEqualTo(wgj.point);
 	}
 
 	@Test // DATAMONGO-1404
@@ -3221,7 +3167,7 @@ public class MongoTemplateTests {
 		template.updateFirst(query(where("id").is(twd.id)), new Update().min("date", cal.getTime()), TypeWithDate.class);
 
 		TypeWithDate loaded = template.find(query(where("id").is(twd.id)), TypeWithDate.class).get(0);
-		assertThat(loaded.date, equalTo(cal.getTime()));
+		assertThat(loaded.date).isEqualTo(cal.getTime());
 	}
 
 	@Test // DATAMONGO-1404
@@ -3254,13 +3200,13 @@ public class MongoTemplateTests {
 		template.updateFirst(query(where("id").is(twn.id)), update, TypeWithNumbers.class);
 
 		TypeWithNumbers loaded = template.find(query(where("id").is(twn.id)), TypeWithNumbers.class).get(0);
-		assertThat(loaded.byteVal, equalTo(byteVal));
-		assertThat(loaded.doubleVal, equalTo(190D));
-		assertThat(loaded.floatVal, equalTo(290F));
-		assertThat(loaded.intVal, equalTo(390));
-		assertThat(loaded.longVal, equalTo(490L));
-		assertThat(loaded.bigIntegerVal, equalTo(new BigInteger("590")));
-		assertThat(loaded.bigDeciamVal, equalTo(new BigDecimal("690")));
+		assertThat(loaded.byteVal).isEqualTo(byteVal);
+		assertThat(loaded.doubleVal).isEqualTo(190D);
+		assertThat(loaded.floatVal).isEqualTo(290F);
+		assertThat(loaded.intVal).isEqualTo(390);
+		assertThat(loaded.longVal).isEqualTo(490L);
+		assertThat(loaded.bigIntegerVal).isEqualTo(new BigInteger("590"));
+		assertThat(loaded.bigDeciamVal).isEqualTo(new BigDecimal("690"));
 	}
 
 	@Test // DATAMONGO-1404
@@ -3277,7 +3223,7 @@ public class MongoTemplateTests {
 		template.updateFirst(query(where("id").is(twd.id)), new Update().max("date", cal.getTime()), TypeWithDate.class);
 
 		TypeWithDate loaded = template.find(query(where("id").is(twd.id)), TypeWithDate.class).get(0);
-		assertThat(loaded.date, equalTo(cal.getTime()));
+		assertThat(loaded.date).isEqualTo(cal.getTime());
 	}
 
 	@Test // DATAMONGO-1404
@@ -3310,13 +3256,13 @@ public class MongoTemplateTests {
 		template.updateFirst(query(where("id").is(twn.id)), update, TypeWithNumbers.class);
 
 		TypeWithNumbers loaded = template.find(query(where("id").is(twn.id)), TypeWithNumbers.class).get(0);
-		assertThat(loaded.byteVal, equalTo(byteVal));
-		assertThat(loaded.doubleVal, equalTo(290D));
-		assertThat(loaded.floatVal, equalTo(390F));
-		assertThat(loaded.intVal, equalTo(490));
-		assertThat(loaded.longVal, equalTo(590L));
-		assertThat(loaded.bigIntegerVal, equalTo(new BigInteger("690")));
-		assertThat(loaded.bigDeciamVal, equalTo(new BigDecimal("790")));
+		assertThat(loaded.byteVal).isEqualTo(byteVal);
+		assertThat(loaded.doubleVal).isEqualTo(290D);
+		assertThat(loaded.floatVal).isEqualTo(390F);
+		assertThat(loaded.intVal).isEqualTo(490);
+		assertThat(loaded.longVal).isEqualTo(590L);
+		assertThat(loaded.bigIntegerVal).isEqualTo(new BigInteger("690"));
+		assertThat(loaded.bigDeciamVal).isEqualTo(new BigDecimal("790"));
 	}
 
 	@Test // DATAMONGO-1404
@@ -3339,8 +3285,8 @@ public class MongoTemplateTests {
 		template.updateFirst(query(where("id").is(twn.id)), update, TypeWithNumbers.class);
 
 		TypeWithNumbers loaded = template.find(query(where("id").is(twn.id)), TypeWithNumbers.class).get(0);
-		assertThat(loaded.bigIntegerVal, equalTo(new BigInteger("70")));
-		assertThat(loaded.bigDeciamVal, equalTo(new BigDecimal("80")));
+		assertThat(loaded.bigIntegerVal).isEqualTo(new BigInteger("70"));
+		assertThat(loaded.bigDeciamVal).isEqualTo(new BigDecimal("80"));
 	}
 
 	@Test // DATAMONGO-1404
@@ -3363,11 +3309,11 @@ public class MongoTemplateTests {
 		template.updateFirst(query(where("id").is(twn.id)), update, TypeWithNumbers.class);
 
 		TypeWithNumbers loaded = template.find(query(where("id").is(twn.id)), TypeWithNumbers.class).get(0);
-		assertThat(loaded.bigIntegerVal, equalTo(new BigInteger("700")));
-		assertThat(loaded.bigDeciamVal, equalTo(new BigDecimal("800")));
+		assertThat(loaded.bigIntegerVal).isEqualTo(new BigInteger("700"));
+		assertThat(loaded.bigDeciamVal).isEqualTo(new BigDecimal("800"));
 	}
 
-	@Test // DATAMONGO-1431
+	@Test // DATAMONGO-1431, DATAMONGO-2323
 	public void streamExecutionUsesExplicitCollectionName() {
 
 		template.remove(new Query(), "some_special_collection");
@@ -3378,14 +3324,14 @@ public class MongoTemplateTests {
 		template.insert(document, "some_special_collection");
 
 		CloseableIterator<Document> stream = template.stream(new Query(), Document.class);
+		assertThat(stream.hasNext()).isFalse();
 
-		assertThat(stream.hasNext(), is(false));
+		CloseableIterator<org.bson.Document> stream2 = template.stream(new Query(where("_id").is(document.id)),
+				org.bson.Document.class, "some_special_collection");
 
-		stream = template.stream(new Query(), Document.class, "some_special_collection");
-
-		assertThat(stream.hasNext(), is(true));
-		assertThat(stream.next().id, is(document.id));
-		assertThat(stream.hasNext(), is(false));
+		assertThat(stream2.hasNext()).isTrue();
+		assertThat(stream2.next().get("_id")).isEqualTo(new ObjectId(document.id));
+		assertThat(stream2.hasNext()).isFalse();
 	}
 
 	@Test // DATAMONGO-1194
@@ -3402,7 +3348,7 @@ public class MongoTemplateTests {
 
 		template.save(source);
 
-		assertThat(template.findOne(query(where("id").is(source.id)), DocumentWithDBRefCollection.class), is(source));
+		assertThat(template.findOne(query(where("id").is(source.id)), DocumentWithDBRefCollection.class)).isEqualTo(source);
 	}
 
 	@Test // DATAMONGO-1194
@@ -3422,8 +3368,8 @@ public class MongoTemplateTests {
 		DocumentWithDBRefCollection target = template.findOne(query(where("id").is(source.id)),
 				DocumentWithDBRefCollection.class);
 
-		assertThat(target.lazyDbRefAnnotatedList, instanceOf(LazyLoadingProxy.class));
-		assertThat(target.getLazyDbRefAnnotatedList(), contains(two, one));
+		assertThat(target.lazyDbRefAnnotatedList).isInstanceOf(LazyLoadingProxy.class);
+		assertThat(target.getLazyDbRefAnnotatedList()).containsExactly(two, one);
 	}
 
 	@Test // DATAMONGO-1194
@@ -3436,7 +3382,7 @@ public class MongoTemplateTests {
 		template.save(two);
 
 		DocumentWithDBRefCollection source = new DocumentWithDBRefCollection();
-		source.lazyDbRefAnnotatedMap = new LinkedHashMap<String, Sample>();
+		source.lazyDbRefAnnotatedMap = new LinkedHashMap<>();
 		source.lazyDbRefAnnotatedMap.put("tyrion", two);
 		source.lazyDbRefAnnotatedMap.put("jon", one);
 		template.save(source);
@@ -3444,8 +3390,8 @@ public class MongoTemplateTests {
 		DocumentWithDBRefCollection target = template.findOne(query(where("id").is(source.id)),
 				DocumentWithDBRefCollection.class);
 
-		assertThat(target.lazyDbRefAnnotatedMap, instanceOf(LazyLoadingProxy.class));
-		assertThat(target.lazyDbRefAnnotatedMap.values(), contains(two, one));
+		assertThat(target.lazyDbRefAnnotatedMap).isInstanceOf(LazyLoadingProxy.class);
+		assertThat(target.lazyDbRefAnnotatedMap.values()).containsExactly(two, one);
 	}
 
 	@Test // DATAMONGO-2004
@@ -3463,8 +3409,8 @@ public class MongoTemplateTests {
 		DocumentWithLazyDBRefsAndConstructorCreation target = template.findOne(query(where("id").is(source.id)),
 				DocumentWithLazyDBRefsAndConstructorCreation.class);
 
-		assertThat(target.lazyDbRefProperty, instanceOf(LazyLoadingProxy.class));
-		assertThat(target.lazyDbRefProperty, is(one));
+		assertThat(target.lazyDbRefProperty).isInstanceOf(LazyLoadingProxy.class);
+		assertThat(target.lazyDbRefProperty).isEqualTo(one);
 	}
 
 	@Test // DATAMONGO-2004
@@ -3488,8 +3434,8 @@ public class MongoTemplateTests {
 		DocumentWithLazyDBRefsAndConstructorCreation target = template.findOne(query(where("id").is(source.id)),
 				DocumentWithLazyDBRefsAndConstructorCreation.class);
 
-		assertThat(target.lazyDbRefAnnotatedMap, instanceOf(LazyLoadingProxy.class));
-		assertThat(target.lazyDbRefAnnotatedMap.values(), contains(two, one));
+		assertThat(target.lazyDbRefAnnotatedMap).isInstanceOf(LazyLoadingProxy.class);
+		assertThat(target.lazyDbRefAnnotatedMap.values()).containsExactly(two, one);
 	}
 
 	@Test // DATAMONGO-2004
@@ -3511,8 +3457,8 @@ public class MongoTemplateTests {
 		DocumentWithLazyDBRefsAndConstructorCreation target = template.findOne(query(where("id").is(source.id)),
 				DocumentWithLazyDBRefsAndConstructorCreation.class);
 
-		assertThat(target.lazyDbRefAnnotatedList, instanceOf(LazyLoadingProxy.class));
-		assertThat(target.getLazyDbRefAnnotatedList(), contains(two, one));
+		assertThat(target.lazyDbRefAnnotatedList).isInstanceOf(LazyLoadingProxy.class);
+		assertThat(target.getLazyDbRefAnnotatedList()).containsExactly(two, one);
 	}
 
 	@Test // DATAMONGO-1513
@@ -3531,7 +3477,7 @@ public class MongoTemplateTests {
 
 		template.insertAll(Collections.singletonList(document));
 
-		assertThat(document.id, is(notNullValue()));
+		assertThat(document.id).isNotNull();
 	}
 
 	@Test // DATAMONGO-2189
@@ -3543,9 +3489,9 @@ public class MongoTemplateTests {
 
 		template.insertAll(Collections.singletonList(source));
 
-		assertThat(saved.get(), is(notNullValue()));
-		assertThat(saved.get(), is(not(sameInstance(source))));
-		assertThat(saved.get().id, is(notNullValue()));
+		assertThat(saved.get()).isNotNull();
+		assertThat(saved.get()).isNotSameAs(source);
+		assertThat(saved.get().id).isNotNull();
 
 	}
 
@@ -3558,9 +3504,9 @@ public class MongoTemplateTests {
 
 		template.insert(source);
 
-		assertThat(saved.get(), is(notNullValue()));
-		assertThat(saved.get(), is(not(sameInstance(source))));
-		assertThat(saved.get().id, is(notNullValue()));
+		assertThat(saved.get()).isNotNull();
+		assertThat(saved.get()).isNotSameAs(source);
+		assertThat(saved.get().id).isNotNull();
 	}
 
 	@Test // DATAMONGO-1509
@@ -3572,7 +3518,7 @@ public class MongoTemplateTests {
 		template.insert(dwc);
 
 		Query query = query(where("models").is(modelList));
-		assertThat(template.findOne(query, DocumentWithCollection.class), is(equalTo(dwc)));
+		assertThat(template.findOne(query, DocumentWithCollection.class)).isEqualTo(dwc);
 	}
 
 	@Test // DATAMONGO-1517
@@ -3589,7 +3535,7 @@ public class MongoTemplateTests {
 		template.save(source);
 
 		WithObjectTypeProperty loaded = template.findOne(query(where("id").is(source.id)), WithObjectTypeProperty.class);
-		assertThat(loaded.getValue(), instanceOf(decimal128Type));
+		assertThat(loaded.getValue()).isInstanceOf(decimal128Type);
 	}
 
 	@Test // DATAMONGO-1718
@@ -3606,9 +3552,9 @@ public class MongoTemplateTests {
 		List<Sample> result = template.findAllAndRemove(query(where("field").regex(".*stark$")),
 				template.getCollectionName(Sample.class));
 
-		assertThat(result, hasSize(2));
-		assertThat(result, containsInAnyOrder(bran, rickon));
-		assertThat(template.count(new BasicQuery("{}"), template.getCollectionName(Sample.class)), is(equalTo(1L)));
+		assertThat(result).hasSize(2);
+		assertThat(result).contains(bran, rickon);
+		assertThat(template.count(new BasicQuery("{}"), template.getCollectionName(Sample.class))).isEqualTo(1L);
 	}
 
 	@Test // DATAMONGO-1779
@@ -3682,7 +3628,8 @@ public class MongoTemplateTests {
 
 		ImmutableAudited read = template.findOne(query(where("id").is(result.getId())), ImmutableAudited.class);
 
-		assertThat(read.modified).isEqualTo(result.modified).describedAs("Expected auditing information to be read!");
+		assertThat(read.modified).isEqualTo(result.modified.truncatedTo(ChronoUnit.MILLIS))
+				.describedAs("Expected auditing information to be read!");
 	}
 
 	@Test // DATAMONGO-1798
@@ -3742,6 +3689,20 @@ public class MongoTemplateTests {
 		assertThat(first).isEqualTo(second);
 		assertThat(first.address).isNull();
 		assertThat(second.address).isNull();
+	}
+
+	@Test // DATAMONGO-2451
+	public void sortOnIdFieldWithExplicitTypeShouldWork() {
+
+		template.dropCollection(WithIdAndFieldAnnotation.class);
+
+		WithIdAndFieldAnnotation f = new WithIdAndFieldAnnotation();
+		f.id = new ObjectId().toHexString();
+		f.value = "value";
+
+		template.save(f);
+
+		assertThat(template.find(new BasicQuery("{}").with(Sort.by("id")), WithIdAndFieldAnnotation.class)).isNotEmpty();
 	}
 
 	private AtomicReference<ImmutableVersioned> createAfterSaveReference() {
@@ -3890,12 +3851,12 @@ public class MongoTemplateTests {
 
 	static class DocumentWithNestedCollection {
 		@Id String id;
-		List<Map<String, Model>> models = new ArrayList<Map<String, Model>>();
+		List<Map<String, Model>> models = new ArrayList<>();
 	}
 
 	static class DocumentWithNestedList {
 		@Id String id;
-		List<List<Model>> models = new ArrayList<List<Model>>();
+		List<List<Model>> models = new ArrayList<>();
 	}
 
 	static class DocumentWithEmbeddedDocumentWithCollection {
@@ -4277,5 +4238,15 @@ public class MongoTemplateTests {
 
 		@Field("id") String id;
 		String value;
+	}
+
+	@Data
+	static class WithIdAndFieldAnnotation {
+
+		@Id //
+		@Field(name = "_id") //
+		String id;
+		String value;
+
 	}
 }

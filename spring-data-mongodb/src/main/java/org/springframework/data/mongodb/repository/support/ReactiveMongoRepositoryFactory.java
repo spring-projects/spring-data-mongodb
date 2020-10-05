@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,6 @@
 package org.springframework.data.mongodb.repository.support;
 
 import static org.springframework.data.querydsl.QuerydslUtils.*;
-
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
@@ -45,7 +42,9 @@ import org.springframework.data.repository.core.support.RepositoryFragment;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
+import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -76,6 +75,7 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 
 		this.operations = mongoOperations;
 		this.mappingContext = mongoOperations.getConverter().getMappingContext();
+		setEvaluationContextProvider(ReactiveQueryMethodEvaluationContextProvider.DEFAULT);
 	}
 
 	/*
@@ -130,7 +130,8 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 	@Override
 	protected Optional<QueryLookupStrategy> getQueryLookupStrategy(@Nullable Key key,
 			QueryMethodEvaluationContextProvider evaluationContextProvider) {
-		return Optional.of(new MongoQueryLookupStrategy(operations, evaluationContextProvider, mappingContext));
+		return Optional.of(new MongoQueryLookupStrategy(operations,
+				(ReactiveQueryMethodEvaluationContextProvider) evaluationContextProvider, mappingContext));
 	}
 
 	/*
@@ -157,12 +158,21 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 	 * @author Mark Paluch
 	 * @author Christoph Strobl
 	 */
-	@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 	private static class MongoQueryLookupStrategy implements QueryLookupStrategy {
 
 		private final ReactiveMongoOperations operations;
-		private final QueryMethodEvaluationContextProvider evaluationContextProvider;
+		private final ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider;
 		private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+		private final ExpressionParser expressionParser = new CachingExpressionParser(EXPRESSION_PARSER);
+
+		MongoQueryLookupStrategy(ReactiveMongoOperations operations,
+				ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider,
+				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+
+			this.operations = operations;
+			this.evaluationContextProvider = evaluationContextProvider;
+			this.mappingContext = mappingContext;
+		}
 
 		/*
 		 * (non-Javadoc)
@@ -177,15 +187,15 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 
 			if (namedQueries.hasQuery(namedQueryName)) {
 				String namedQuery = namedQueries.getQuery(namedQueryName);
-				return new ReactiveStringBasedMongoQuery(namedQuery, queryMethod, operations, EXPRESSION_PARSER,
+				return new ReactiveStringBasedMongoQuery(namedQuery, queryMethod, operations, expressionParser,
 						evaluationContextProvider);
 			} else if (queryMethod.hasAnnotatedAggregation()) {
-				return new ReactiveStringBasedAggregation(queryMethod, operations, EXPRESSION_PARSER,
+				return new ReactiveStringBasedAggregation(queryMethod, operations, expressionParser,
 						evaluationContextProvider);
 			} else if (queryMethod.hasAnnotatedQuery()) {
-				return new ReactiveStringBasedMongoQuery(queryMethod, operations, EXPRESSION_PARSER, evaluationContextProvider);
+				return new ReactiveStringBasedMongoQuery(queryMethod, operations, expressionParser, evaluationContextProvider);
 			} else {
-				return new ReactivePartTreeMongoQuery(queryMethod, operations, EXPRESSION_PARSER, evaluationContextProvider);
+				return new ReactivePartTreeMongoQuery(queryMethod, operations, expressionParser, evaluationContextProvider);
 			}
 		}
 	}

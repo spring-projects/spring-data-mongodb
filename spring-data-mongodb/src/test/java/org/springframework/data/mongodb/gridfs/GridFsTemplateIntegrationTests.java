@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,21 @@
 package org.springframework.data.mongodb.gridfs;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.mongodb.core.query.Criteria.where;
+import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.gridfs.GridFsCriteria.*;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Stream;
 
 import org.bson.BsonObjectId;
+import org.bson.BsonString;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.Before;
@@ -36,11 +39,13 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.StreamUtils;
 
 import com.mongodb.MongoGridFSException;
@@ -56,14 +61,16 @@ import com.mongodb.client.gridfs.model.GridFSFile;
  * @author Martin Baumgartner
  * @author Hartmut Lang
  * @author Mark Paluch
+ * @author Denis Zavedeev
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:gridfs/gridfs.xml")
 public class GridFsTemplateIntegrationTests {
 
 	Resource resource = new ClassPathResource("gridfs/gridfs.xml");
 
 	@Autowired GridFsOperations operations;
+	@Autowired SimpleMongoClientDatabaseFactory mongoClient;
 
 	@Before
 	public void setUp() {
@@ -75,12 +82,30 @@ public class GridFsTemplateIntegrationTests {
 
 		ObjectId reference = operations.store(resource.getInputStream(), "foo.xml");
 
-		List<com.mongodb.client.gridfs.model.GridFSFile> files = new ArrayList<com.mongodb.client.gridfs.model.GridFSFile>();
+		List<com.mongodb.client.gridfs.model.GridFSFile> files = new ArrayList<>();
 		GridFSFindIterable result = operations.find(query(where("_id").is(reference)));
 		result.into(files);
-		assertThat(files.size()).isEqualTo(1);
+		assertThat(files).hasSize(1);
 		assertThat(((BsonObjectId) files.get(0).getId()).getValue()).isEqualTo(reference);
 	}
+
+	// @Test // DATAMONGO-2392
+	// public void storesAndFindsByUUID() throws IOException {
+	//
+	// UUID uuid = UUID.randomUUID();
+	//
+	// GridFSFile fs = new GridFSFile(new BsonObjectId(new ObjectId(uuid.to))
+	// GridFSInputFile in = fs.createFile(resource.getInputStream(), "gridfs.xml");
+	//
+	// in.put("_id", uuid);
+	// in.put("contentType", "application/octet-stream");
+	// in.save();
+	//
+	// GridFSFile file = operations.findOne(query(where("_id").is(uuid)));
+	// GridFsResource resource = operations.getResource(file);
+	//
+	// assertThat(resource.exists()).isTrue();
+	// }
 
 	@Test // DATAMONGO-6
 	public void writesMetadataCorrectly() throws IOException {
@@ -88,11 +113,11 @@ public class GridFsTemplateIntegrationTests {
 		Document metadata = new Document("key", "value");
 		ObjectId reference = operations.store(resource.getInputStream(), "foo.xml", metadata);
 
-		List<com.mongodb.client.gridfs.model.GridFSFile> files = new ArrayList<com.mongodb.client.gridfs.model.GridFSFile>();
+		List<com.mongodb.client.gridfs.model.GridFSFile> files = new ArrayList<>();
 		GridFSFindIterable result = operations.find(query(whereMetaData("key").is("value")));
 		result.into(files);
 
-		assertThat(files.size()).isEqualTo(1);
+		assertThat(files).hasSize(1);
 		assertThat(((BsonObjectId) files.get(0).getId()).getValue()).isEqualTo(reference);
 	}
 
@@ -104,11 +129,11 @@ public class GridFsTemplateIntegrationTests {
 
 		ObjectId reference = operations.store(resource.getInputStream(), "foo.xml", metadata);
 
-		List<com.mongodb.client.gridfs.model.GridFSFile> files = new ArrayList<com.mongodb.client.gridfs.model.GridFSFile>();
+		List<com.mongodb.client.gridfs.model.GridFSFile> files = new ArrayList<>();
 		GridFSFindIterable result = operations.find(query(whereFilename().is("foo.xml")));
 		result.into(files);
 
-		assertThat(files.size()).isEqualTo(1);
+		assertThat(files).hasSize(1);
 		assertThat(((BsonObjectId) files.get(0).getId()).getValue()).isEqualTo(reference);
 	}
 
@@ -119,7 +144,7 @@ public class GridFsTemplateIntegrationTests {
 
 		GridFsResource[] resources = operations.getResources("*.xml");
 
-		assertThat(resources.length).isEqualTo(1);
+		assertThat(resources).hasSize(1);
 		assertThat(((BsonObjectId) resources[0].getId()).getValue()).isEqualTo(reference);
 		assertThat(resources[0].contentLength()).isEqualTo(resource.contentLength());
 	}
@@ -130,7 +155,7 @@ public class GridFsTemplateIntegrationTests {
 		ObjectId reference = operations.store(resource.getInputStream(), "foo.xml");
 
 		GridFsResource[] resources = operations.getResources("foo.xml");
-		assertThat(resources.length).isEqualTo(1);
+		assertThat(resources).hasSize(1);
 		assertThat(((BsonObjectId) resources[0].getId()).getValue()).isEqualTo(reference);
 		assertThat(resources[0].contentLength()).isEqualTo(resource.contentLength());
 	}
@@ -140,11 +165,11 @@ public class GridFsTemplateIntegrationTests {
 
 		ObjectId reference = operations.store(resource.getInputStream(), "foo2.xml", "application/xml");
 
-		List<com.mongodb.client.gridfs.model.GridFSFile> files = new ArrayList<com.mongodb.client.gridfs.model.GridFSFile>();
+		List<com.mongodb.client.gridfs.model.GridFSFile> files = new ArrayList<>();
 		GridFSFindIterable result = operations.find(query(whereContentType().is("application/xml")));
 		result.into(files);
 
-		assertThat(files.size()).isEqualTo(1);
+		assertThat(files).hasSize(1);
 		assertThat(((BsonObjectId) files.get(0).getId()).getValue()).isEqualTo(reference);
 	}
 
@@ -157,7 +182,7 @@ public class GridFsTemplateIntegrationTests {
 
 		Query query = new Query().with(Sort.by(Direction.ASC, "filename"));
 
-		List<com.mongodb.client.gridfs.model.GridFSFile> files = new ArrayList<com.mongodb.client.gridfs.model.GridFSFile>();
+		List<com.mongodb.client.gridfs.model.GridFSFile> files = new ArrayList<>();
 		GridFSFindIterable result = operations.find(query);
 		result.into(files);
 
@@ -177,9 +202,9 @@ public class GridFsTemplateIntegrationTests {
 		assertThat(files).hasSize(1).extracting(it -> ((BsonObjectId) it.getId()).getValue()).containsExactly(reference);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1762
+	@Test // DATAMONGO-1762
 	public void queryingWithNullQueryThrowsException() {
-		operations.find(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> operations.find(null));
 	}
 
 	@Test // DATAMONGO-813, DATAMONGO-1914
@@ -193,7 +218,7 @@ public class GridFsTemplateIntegrationTests {
 		Document metadata = new Document("key", "value");
 		ObjectId reference = operations.store(resource.getInputStream(), "foobar", metadata);
 
-		List<com.mongodb.client.gridfs.model.GridFSFile> files = new ArrayList<com.mongodb.client.gridfs.model.GridFSFile>();
+		List<com.mongodb.client.gridfs.model.GridFSFile> files = new ArrayList<>();
 		GridFSFindIterable result = operations.find(query(whereMetaData("key").is("value")));
 		result.into(files);
 
@@ -207,7 +232,7 @@ public class GridFsTemplateIntegrationTests {
 		metadata.version = "1.0";
 		ObjectId reference = operations.store(resource.getInputStream(), "foobar", metadata);
 
-		List<com.mongodb.client.gridfs.model.GridFSFile> files = new ArrayList<com.mongodb.client.gridfs.model.GridFSFile>();
+		List<com.mongodb.client.gridfs.model.GridFSFile> files = new ArrayList<>();
 		GridFSFindIterable result = operations.find(query(whereMetaData("version").is("1.0")));
 		result.into(files);
 
@@ -228,7 +253,7 @@ public class GridFsTemplateIntegrationTests {
 		operations.store(resource.getInputStream(), "no-content-type", (String) null);
 		GridFsResource result = operations.getResource("no-content-type");
 
-		assertThatThrownBy(() -> result.getContentType()).isInstanceOf(MongoGridFSException.class);
+		assertThatThrownBy(result::getContentType).isInstanceOf(MongoGridFSException.class);
 	}
 
 	@Test // DATAMONGO-1813
@@ -263,6 +288,46 @@ public class GridFsTemplateIntegrationTests {
 
 			assertThat(content).isEqualTo(StreamUtils.copyToByteArray(entry.getValue().getInputStream()));
 		}
+	}
+
+	@Test // DATAMONGO-625
+	public void storeSavesGridFsUploadWithGivenIdCorrectly() throws IOException {
+
+		String id = "id-1";
+
+		GridFsUpload<String> upload = GridFsUpload.fromStream(resource.getInputStream()) //
+				.id(id) //
+				.filename("gridFsUpload.xml") //
+				.contentType("xml") //
+				.build();
+
+		assertThat(operations.store(upload)).isEqualTo(id);
+
+		GridFsResource fsFile = operations.getResource(operations.findOne(query(where("_id").is(id))));
+		byte[] content = StreamUtils.copyToByteArray(fsFile.getInputStream());
+
+		assertThat(content).isEqualTo(StreamUtils.copyToByteArray(resource.getInputStream()));
+		assertThat(fsFile.getFilename()).isEqualTo("gridFsUpload.xml");
+		assertThat(fsFile.getId()).isEqualTo(new BsonString(id));
+		assertThat(fsFile.getFileId()).isEqualTo(id);
+		assertThat(fsFile.getContentType()).isEqualTo("xml");
+	}
+
+	@Test // DATAMONGO-765
+	public void considersSkipLimitWhenQueryingFiles() {
+
+		Stream.of("a", "aa", "aaa", //
+				"b", "bb", "bb", //
+				"c", "cc", "ccc", //
+				"d", "dd", "ddd") //
+				.forEach(filename -> operations.store(new ByteArrayInputStream(new byte[0]), filename));
+
+		PageRequest pageRequest = PageRequest.of(2, 3, Direction.ASC, "filename");
+		List<String> filenames = operations.find(new Query().with(pageRequest)) //
+				.map(GridFSFile::getFilename) //
+				.into(new ArrayList<>());
+
+		assertThat(filenames).containsExactly("c", "cc", "ccc");
 	}
 
 	class Metadata {

@@ -9,7 +9,7 @@ This chapter points out the specialties for repository support for MongoDB. This
 [[mongo-repo-usage]]
 == Usage
 
-To access domain entities stored in a MongoDB, you can use our sophisticated repository support that eases implementation quite significantly. To do so, create an interface for your repository, as the following example shows:
+To access domain entities stored in a MongoDB, you can use our sophisticated repository support that eases implementation quite significantly.To do so, create an interface for your repository, as the following example shows:
 
 .Sample Person entity
 ====
@@ -28,7 +28,10 @@ public class Person {
 ----
 ====
 
-Note that the domain type shown in the preceding example has a property named `id` of type `ObjectId`. The default serialization mechanism used in `MongoTemplate` (which backs the repository support) regards properties named `id` as the document ID. Currently, we support `String`, `ObjectId`, and `BigInteger` as ID types. Now that we have a domain object, we can define an interface that uses it, as follows:
+Note that the domain type shown in the preceding example has a property named `id` of type `String`.The default serialization mechanism used in `MongoTemplate` (which backs the repository support) regards properties named `id` as the document ID. Currently, we support `String`, `ObjectId`, and `BigInteger` as ID types.
+Please see <<mongo-template.id-handling, ID mapping>> for more information about on how the `id` field is handled in the mapping layer.
+
+Now that we have a domain object, we can define an interface that uses it, as follows:
 
 .Basic repository interface to persist Person entities
 ====
@@ -41,9 +44,37 @@ public interface PersonRepository extends PagingAndSortingRepository<Person, Str
 ----
 ====
 
-Right now this interface serves only to provide type information, but we can add additional methods to it later. To do so, in your Spring configuration, add the following content:
 
-.General MongoDB repository Spring configuration
+
+Right now this interface serves only to provide type information, but we can add additional methods to it later.
+
+To start using the repository, use the `@EnableMongoRepositories` annotation.
+That annotation carries the same attributes as the namespace element.If no base package is configured, the infrastructure scans the package of the annotated configuration class.The following example shows how to use Java configuration for a repository:
+
+.Java configuration for repositories
+====
+[source,java]
+----
+@Configuration
+@EnableMongoRepositories
+class ApplicationConfig extends AbstractMongoClientConfiguration {
+
+  @Override
+  protected String getDatabaseName() {
+    return "e-store";
+  }
+
+  @Override
+  protected String getMappingBasePackage() {
+    return "com.oreilly.springdata.mongodb";
+  }
+}
+----
+====
+
+If you would rather go with XML based configuration add the following content:
+
+.General MongoDB repository Spring XML configuration
 ====
 [source,xml]
 ----
@@ -69,43 +100,17 @@ Right now this interface serves only to provide type information, but we can add
 ----
 ====
 
-This namespace element causes the base packages to be scanned for interfaces that extend `MongoRepository` and create Spring beans for each one found. By default, the repositories get a `MongoTemplate` Spring bean wired that is called `mongoTemplate`, so you only need to configure `mongo-template-ref` explicitly if you deviate from this convention.
+This namespace element causes the base packages to be scanned for interfaces that extend `MongoRepository` and create Spring beans for each one found.By default, the repositories get a `MongoTemplate` Spring bean wired that is called `mongoTemplate`, so you only need to configure `mongo-template-ref` explicitly if you deviate from this convention.
 
-If you would rather go with Java-based configuration, use the `@EnableMongoRepositories` annotation. That annotation carries the same attributes as the namespace element. If no base package is configured, the infrastructure scans the package of the annotated configuration class. The following example shows how to use Java configuration for a repository:
 
-.Java configuration for repositories
-====
-[source,java]
-----
-@Configuration
-@EnableMongoRepositories
-class ApplicationConfig extends AbstractMongoConfiguration {
 
-  @Override
-  protected String getDatabaseName() {
-    return "e-store";
-  }
-
-  @Override
-  public MongoClient mongoClient() {
-    return new MongoClient();
-  }
-
-  @Override
-  protected String getMappingBasePackage() {
-    return "com.oreilly.springdata.mongodb"
-  }
-}
-----
-====
-
-Because our domain repository extends `PagingAndSortingRepository`, it provides you with CRUD operations as well as methods for paginated and sorted access to the entities. Working with the repository instance is just a matter of dependency injecting it into a client. Consequently, accessing the second page of `Person` objects at a page size of 10 would resemble the following code:
+Because our domain repository extends `PagingAndSortingRepository`, it provides you with CRUD operations as well as methods for paginated and sorted access to the entities.Working with the repository instance is just a matter of dependency injecting it into a client.Consequently, accessing the second page of `Person` objects at a page size of 10 would resemble the following code:
 
 .Paging access to Person entities
 ====
 [source,java]
 ----
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration
 public class PersonRepositoryTests {
 
@@ -115,18 +120,18 @@ public class PersonRepositoryTests {
     public void readsFirstPageCorrectly() {
 
       Page<Person> persons = repository.findAll(PageRequest.of(0, 10));
-      assertThat(persons.isFirstPage(), is(true));
+      assertThat(persons.isFirstPage()).isTrue();
     }
 }
 ----
 ====
 
-The preceding example creates an application context with Spring's unit test support, which performs annotation-based dependency injection into test cases. Inside the test method, we use the repository to query the datastore. We hand the repository a `PageRequest` instance that requests the first page of `Person` objects at a page size of 10.
+The preceding example creates an application context with Spring's unit test support, which performs annotation-based dependency injection into test cases.Inside the test method, we use the repository to query the datastore.We hand the repository a `PageRequest` instance that requests the first page of `Person` objects at a page size of 10.
 
 [[mongodb.repositories.queries]]
 == Query Methods
 
-Most of the data access operations you usually trigger on a repository result in a query being executed against the MongoDB databases. Defining such a query is a matter of declaring a method on the repository interface, as the following example shows:
+Most of the data access operations you usually trigger on a repository result in a query being executed against the MongoDB databases.Defining such a query is a matter of declaring a method on the repository interface, as the following example shows:
 
 .PersonRepository with query methods
 ====
@@ -291,14 +296,21 @@ The keywords in the preceding table can be used in conjunction with `delete…By
 ----
 public interface PersonRepository extends MongoRepository<Person, String> {
 
-  List <Person> deleteByLastname(String lastname);
+  List <Person> deleteByLastname(String lastname);      <1>
 
-  Long deletePersonByLastname(String lastname);
+  Long deletePersonByLastname(String lastname);         <2>
+
+  @Nullable
+  Person deleteSingleByLastname(String lastname);       <3>
+
+  Optional<Person> deleteByBirthdate(Date birthdate);   <4>
 }
 ----
+<1> Using a return type of `List` retrieves and returns all matching documents before actually deleting them.
+<2> A numeric return type directly removes the matching documents, returning the total number of documents removed.
+<3> A single domain type result retrieves and removes the first matching document.
+<4> Same as in 3 but wrapped in an `Optional` type.
 ====
-
-Using a return type of `List` retrieves and returns all matching documents before actually deleting them. A numeric return type directly removes the matching documents, returning the total number of documents removed.
 
 [[mongodb.repositories.queries.geo-spatial]]
 === Geo-spatial Repository Queries
@@ -311,7 +323,7 @@ The following example shows how to define a `near` query that finds all persons 
 ====
 [source,java]
 ----
-public interface PersonRepository extends MongoRepository<Person, String>
+public interface PersonRepository extends MongoRepository<Person, String> {
 
   // { 'location' : { '$near' : [point.x, point.y], '$maxDistance' : distance}}
   List<Person> findByLocationNear(Point location, Distance distance);
@@ -344,7 +356,7 @@ Spring Data MongoDb supports geo-near queries, as the following example shows:
 
 [source,java]
 ----
-public interface PersonRepository extends MongoRepository<Person, String>
+public interface PersonRepository extends MongoRepository<Person, String> {
 
   // {'geoNear' : 'location', 'near' : [x, y] }
   GeoResults<Person> findByLocationNear(Point location);
@@ -371,7 +383,7 @@ By adding the `org.springframework.data.mongodb.repository.Query` annotation to 
 
 [source,java]
 ----
-public interface PersonRepository extends MongoRepository<Person, String>
+public interface PersonRepository extends MongoRepository<Person, String> {
 
   @Query("{ 'firstname' : ?0 }")
   List<Person> findByThePersonsFirstname(String firstname);
@@ -387,7 +399,7 @@ You can also use the filter property to restrict the set of properties that is m
 
 [source,java]
 ----
-public interface PersonRepository extends MongoRepository<Person, String>
+public interface PersonRepository extends MongoRepository<Person, String> {
 
   @Query(value="{ 'firstname' : ?0 }", fields="{ 'firstname' : 1, 'lastname' : 1}")
   List<Person> findByThePersonsFirstname(String firstname);
@@ -433,36 +445,36 @@ results in `{ age : -1 }`. Using `Sort.by(ASC, "age")` overrides the defaults an
 Query strings and field definitions can be used together with SpEL expressions to create dynamic queries at runtime.
 SpEL expressions can provide predicate values and can be used to extend predicates with subdocuments.
 
-Expressions expose method arguments through an array that contains all the arguments. The following query uses `[0]`
+Expressions expose method arguments through an array that contains all the arguments.The following query uses `[0]`
 to declare the predicate value for `lastname` (which is equivalent to the `?0` parameter binding):
 
 [source,java]
 ----
-public interface PersonRepository extends MongoRepository<Person, String>
+public interface PersonRepository extends MongoRepository<Person, String> {
 
   @Query("{'lastname': ?#{[0]} }")
   List<Person> findByQueryWithExpression(String param0);
 }
 ----
 
-Expressions can be used to invoke functions, evaluate conditionals, and construct values. SpEL expressions
+Expressions can be used to invoke functions, evaluate conditionals, and construct values.SpEL expressions
 used in conjunction with JSON reveal a side-effect, because Map-like declarations inside of SpEL read like JSON, as the following example shows:
 
 [source,java]
 ----
-public interface PersonRepository extends MongoRepository<Person, String>
+public interface PersonRepository extends MongoRepository<Person, String> {
 
   @Query("{'id': ?#{ [0] ? {$exists :true} : [1] }}")
   List<Person> findByQueryWithExpressionAndNestedObject(boolean param0, String param1);
 }
 ----
 
-SpEL in query strings can be a powerful way to enhance queries. However, they can also accept a broad range of unwanted arguments.
+SpEL in query strings can be a powerful way to enhance queries.However, they can also accept a broad range of unwanted arguments.
 You should make sure to sanitize strings before passing them to the query to avoid unwanted changes to your query.
 
 Expression support is extensible through the Query SPI: `org.springframework.data.repository.query.spi.EvaluationContextExtension`.
-The Query SPI can contribute properties and functions and can customize the root object. Extensions are retrieved from the application context
-at the time of SpEL evaluation when the query is built. The following example shows how to use `EvaluationContextExtension`:
+The Query SPI can contribute properties and functions and can customize the root object.Extensions are retrieved from the application context
+at the time of SpEL evaluation when the query is built.The following example shows how to use `EvaluationContextExtension`:
 
 [source,java]
 ----
@@ -480,13 +492,15 @@ public class SampleEvaluationContextExtension extends EvaluationContextExtension
 }
 ----
 
-NOTE: Bootstrapping `MongoRepositoryFactory` yourself is not application context-aware and requires further configuration
-to pick up Query SPI extensions.
+NOTE: Bootstrapping `MongoRepositoryFactory` yourself is not application context-aware and requires further configuration to pick up Query SPI extensions.
+
+NOTE: Reactive query methods can make use of `org.springframework.data.spel.spi.ReactiveEvaluationContextExtension`.
 
 [[mongodb.repositories.queries.type-safe]]
 === Type-safe Query Methods
 
-MongoDB repository support integrates with the http://www.querydsl.com/[Querydsl] project, which provides a way to perform type-safe queries. To quote from the project description, "Instead of writing queries as inline strings or externalizing them into XML files they are constructed via a fluent API." It provides the following features:
+MongoDB repository support integrates with the http://www.querydsl.com/[Querydsl] project, which provides a way to perform type-safe queries.
+To quote from the project description, "Instead of writing queries as inline strings or externalizing them into XML files they are constructed via a fluent API." It provides the following features:
 
 * Code completion in the IDE (all properties, methods, and operations can be expanded in your favorite Java IDE).
 * Almost no syntactically invalid queries allowed (type-safe on all levels).
@@ -507,7 +521,7 @@ Page<Person> page = repository.findAll(person.lastname.contains("a"),
                                        PageRequest.of(0, 2, Direction.ASC, "lastname"));
 ----
 
-`QPerson` is a class that is generated by the Java annotation post-processing tool. It is a `Predicate` that lets you write type-safe queries. Notice that there are no strings in the query other than the `C0123` value.
+`QPerson` is a class that is generated by the Java annotation post-processing tool.It is a `Predicate` that lets you write type-safe queries.Notice that there are no strings in the query other than the `C0123` value.
 
 You can use the generated `Predicate` class by using the `QuerydslPredicateExecutor` interface, which the following listing shows:
 
@@ -594,7 +608,7 @@ class MongoTemplateProducer {
     @ApplicationScoped
     public MongoOperations createMongoTemplate() {
 
-        MongoDbFactory factory = new SimpleMongoDbFactory(new MongoClient(), "database");
+        MongoDatabaseFactory factory = new SimpleMongoClientDatabaseFactory(MongoClients.create(), "database");
         return new MongoTemplate(factory);
     }
 }

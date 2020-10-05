@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -278,11 +278,6 @@ public class MongoQueryMethod extends QueryMethod {
 			metaAttributes.setMaxTimeMsec(meta.maxExecutionTimeMs());
 		}
 
-		if (meta.maxScanDocuments() > 0) {
-			// TODO: Mongo 4 - removal
-			metaAttributes.setMaxScan(meta.maxScanDocuments());
-		}
-
 		if (meta.cursorBatchSize() != 0) {
 			metaAttributes.setCursorBatchSize(meta.cursorBatchSize());
 		}
@@ -291,17 +286,15 @@ public class MongoQueryMethod extends QueryMethod {
 			metaAttributes.setComment(meta.comment());
 		}
 
-		if (meta.snapshot()) {
-
-			// TODO: Mongo 4 - removal
-			metaAttributes.setSnapshot(meta.snapshot());
-		}
-
 		if (!ObjectUtils.isEmpty(meta.flags())) {
 
 			for (org.springframework.data.mongodb.core.query.Meta.CursorOption option : meta.flags()) {
 				metaAttributes.addFlag(option);
 			}
+		}
+
+		if (meta.allowDiskUse()) {
+			metaAttributes.setAllowDiskUse(meta.allowDiskUse());
 		}
 
 		return metaAttributes;

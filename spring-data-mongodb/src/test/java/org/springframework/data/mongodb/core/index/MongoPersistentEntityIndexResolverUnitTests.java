@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,6 +54,7 @@ import org.springframework.data.util.ClassTypeInformation;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Dave Perryman
  */
 @RunWith(Suite.class)
 @SuiteClasses({ IndexResolutionTests.class, GeoSpatialIndexResolutionTests.class, CompoundIndexResolutionTests.class,
@@ -270,23 +271,33 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("name", "my1st");
 		}
 
+		@Test // DATAMONGO-1569
+		public void resolvesPartialFilter() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					WithPartialFilter.class);
+
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("partialFilterExpression",
+					org.bson.Document.parse("{'value': {'$exists': true}}"));
+		}
+
 		@Document("Zero")
-		static class IndexOnLevelZero {
+		class IndexOnLevelZero {
 			@Indexed String indexedProperty;
 		}
 
 		@Document("One")
-		static class IndexOnLevelOne {
+		class IndexOnLevelOne {
 			IndexOnLevelZero zero;
 		}
 
 		@Document("Two")
-		static class IndexOnLevelTwo {
+		class IndexOnLevelTwo {
 			IndexOnLevelOne one;
 		}
 
 		@Document("WithOptionsOnIndexedProperty")
-		static class WithOptionsOnIndexedProperty {
+		class WithOptionsOnIndexedProperty {
 
 			@Indexed(background = true, direction = IndexDirection.DESCENDING, dropDups = true, expireAfterSeconds = 10,
 					sparse = true, unique = true) //
@@ -294,23 +305,23 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 
 		@Document
-		static class IndexOnLevelOneWithExplicitlyNamedField {
+		class IndexOnLevelOneWithExplicitlyNamedField {
 
 			@Field("customZero") IndexOnLevelZeroWithExplicityNamedField zero;
 		}
 
-		static class IndexOnLevelZeroWithExplicityNamedField {
+		class IndexOnLevelZeroWithExplicityNamedField {
 
 			@Indexed @Field("customFieldName") String namedProperty;
 		}
 
 		@Document
-		static class WrapperOfWithDbRef {
+		class WrapperOfWithDbRef {
 			WithDbRef nested;
 		}
 
 		@Document
-		static class WithDbRef {
+		class WithDbRef {
 
 			@Indexed //
 			@DBRef //
@@ -318,12 +329,12 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 
 		@Document("no-index")
-		static class NoIndex {
+		class NoIndex {
 			@Id String id;
 		}
 
 		@Document
-		static class IndexedDocumentWithComposedAnnotations {
+		class IndexedDocumentWithComposedAnnotations {
 
 			@Id String id;
 			@CustomIndexedAnnotation String fieldWithDifferentIndexName;
@@ -361,7 +372,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 
 		@Document
-		static class WithExpireAfterAsPlainString {
+		class WithExpireAfterAsPlainString {
 			@Indexed(expireAfter = "10m") String withTimeout;
 		}
 
@@ -371,12 +382,12 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 
 		@Document
-		static class WithExpireAfterAsExpression {
+		class WithExpireAfterAsExpression {
 			@Indexed(expireAfter = "#{10 + 1 + 's'}") String withTimeout;
 		}
 
 		@Document
-		static class WithExpireAfterAsExpressionResultingInDuration {
+		class WithExpireAfterAsExpressionResultingInDuration {
 			@Indexed(expireAfter = "#{T(java.time.Duration).ofSeconds(100)}") String withTimeout;
 		}
 
@@ -391,8 +402,13 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 
 		@Document
-		static class WithIndexNameAsExpression {
+		class WithIndexNameAsExpression {
 			@Indexed(name = "#{'my' + 1 + 'st'}") String spelIndexName;
+		}
+
+		@Document
+		class WithPartialFilter {
+			@Indexed(partialFilter = "{'value': {'$exists': true}}") String withPartialFilter;
 		}
 	}
 
@@ -403,7 +419,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 	}
 
 	@Document
-	static class IndexOnMetaAnnotatedField {
+	class IndexOnMetaAnnotatedField {
 		@Field("_name") @IndexedFieldAnnotation String lastname;
 	}
 
@@ -480,29 +496,29 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 
 		@Document("Zero")
-		static class GeoSpatialIndexOnLevelZero {
+		class GeoSpatialIndexOnLevelZero {
 			@GeoSpatialIndexed Point geoIndexedProperty;
 		}
 
 		@Document("One")
-		static class GeoSpatialIndexOnLevelOne {
+		class GeoSpatialIndexOnLevelOne {
 			GeoSpatialIndexOnLevelZero zero;
 		}
 
 		@Document("Two")
-		static class GeoSpatialIndexOnLevelTwo {
+		class GeoSpatialIndexOnLevelTwo {
 			GeoSpatialIndexOnLevelOne one;
 		}
 
 		@Document("WithOptionsOnGeoSpatialIndexProperty")
-		static class WithOptionsOnGeoSpatialIndexProperty {
+		class WithOptionsOnGeoSpatialIndexProperty {
 
 			@GeoSpatialIndexed(bits = 2, max = 100, min = 1, type = GeoSpatialIndexType.GEO_2D) //
 			Point location;
 		}
 
 		@Document("WithComposedAnnotation")
-		static class GeoSpatialIndexedDocumentWithComposedAnnotation {
+		class GeoSpatialIndexedDocumentWithComposedAnnotation {
 
 			@ComposedGeoSpatialIndexed //
 			Point location;
@@ -527,7 +543,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 
 		@Document
-		static class GeoIndexWithNameAsExpression {
+		class GeoIndexWithNameAsExpression {
 			@GeoSpatialIndexed(name = "#{'my' + 1 + 'st'}") Point spelIndexName;
 		}
 
@@ -659,17 +675,32 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			assertThat(indexDefinitions).hasSize(2);
 			assertIndexPathAndCollection(new String[] { "firstname", "lastname" }, "repeatedCompoundIndex",
 					indexDefinitions.get(0));
-			assertIndexPathAndCollection(new String[] { "address.city", "address.street" }, "repeatedCompoundIndex", indexDefinitions.get(1));
+			assertIndexPathAndCollection(new String[] { "address.city", "address.street" }, "repeatedCompoundIndex",
+					indexDefinitions.get(1));
+		}
+
+		@Test // DATAMONGO-1569
+		public void singleIndexWithPartialFilter() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					SingleCompoundIndexWithPartialFilter.class);
+
+			assertThat(indexDefinitions).hasSize(1);
+			assertThat(indexDefinitions.get(0).getIndexKeys()).containsEntry("foo", 1).containsEntry("bar", -1);
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("name", "compound_index_with_partial")
+					.containsEntry("unique", true).containsEntry("background", true);
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("partialFilterExpression",
+					org.bson.Document.parse("{'value': {'$exists': true}}"));
 		}
 
 		@Document("CompoundIndexOnLevelOne")
-		static class CompoundIndexOnLevelOne {
+		class CompoundIndexOnLevelOne {
 
 			CompoundIndexOnLevelZero zero;
 		}
 
 		@Document("CompoundIndexOnLevelZeroWithEmptyIndexDef")
-		static class CompoundIndexOnLevelOneWithEmptyIndexDefinition {
+		class CompoundIndexOnLevelOneWithEmptyIndexDefinition {
 
 			CompoundIndexOnLevelZeroWithEmptyIndexDef zero;
 		}
@@ -677,26 +708,26 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		@Document("CompoundIndexOnLevelZero")
 		@CompoundIndexes({ @CompoundIndex(name = "compound_index", def = "{'foo': 1, 'bar': -1}", background = true,
 				sparse = true, unique = true) })
-		static class CompoundIndexOnLevelZero {}
+		class CompoundIndexOnLevelZero {}
 
 		@CompoundIndexes({ @CompoundIndex(name = "compound_index", background = true, sparse = true, unique = true) })
-		static class CompoundIndexOnLevelZeroWithEmptyIndexDef {}
+		class CompoundIndexOnLevelZeroWithEmptyIndexDef {}
 
 		@Document("CompoundIndexOnLevelZero")
 		@CompoundIndex(name = "compound_index", def = "{'foo': 1, 'bar': -1}", background = true, sparse = true,
 				unique = true)
-		static class SingleCompoundIndex {}
+		class SingleCompoundIndex {}
 
-		static class IndexDefinedOnSuperClass extends CompoundIndexOnLevelZero {}
+		class IndexDefinedOnSuperClass extends CompoundIndexOnLevelZero {}
 
 		@Document("ComountIndexWithAutogeneratedName")
 		@CompoundIndexes({ @CompoundIndex(useGeneratedName = true, def = "{'foo': 1, 'bar': -1}", background = true,
 				sparse = true, unique = true) })
-		static class ComountIndexWithAutogeneratedName {}
+		class ComountIndexWithAutogeneratedName {}
 
 		@Document("WithComposedAnnotation")
 		@ComposedCompoundIndex
-		static class CompoundIndexDocumentWithComposedAnnotation {}
+		class CompoundIndexDocumentWithComposedAnnotation {}
 
 		@Retention(RetentionPolicy.RUNTIME)
 		@Target({ ElementType.TYPE })
@@ -722,16 +753,21 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 		@Document
 		@CompoundIndex(name = "#{'cmp' + 2 + 'name'}", def = "{'foo': 1, 'bar': -1}")
-		static class CompoundIndexWithNameExpression {}
+		class CompoundIndexWithNameExpression {}
 
 		@Document
 		@CompoundIndex(def = "#{T(org.bson.Document).parse(\"{ 'foo': 1, 'bar': -1 }\")}")
-		static class CompoundIndexWithDefExpression {}
+		class CompoundIndexWithDefExpression {}
 
 		@Document
 		@CompoundIndex(name = "cmp-idx-one", def = "{'firstname': 1, 'lastname': -1}")
 		@CompoundIndex(name = "cmp-idx-two", def = "{'address.city': -1, 'address.street': 1}")
-		static class RepeatedCompoundIndex {}
+		class RepeatedCompoundIndex {}
+
+		@Document("SingleCompoundIndexWithPartialFilter")
+		@CompoundIndex(name = "compound_index_with_partial", def = "{'foo': 1, 'bar': -1}", background = true,
+				unique = true, partialFilter = "{'value': {'$exists': true}}")
+		class SingleCompoundIndexWithPartialFilter {}
 	}
 
 	public static class TextIndexedResolutionTests {
@@ -744,16 +780,28 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			assertThat(indexDefinitions).hasSize(1);
 			assertIndexPathAndCollection("bar", "textIndexOnSinglePropertyInRoot", indexDefinitions.get(0));
+			assertThat(indexDefinitions.get(0).getIndexOptions()).doesNotContainKey("collation");
+		}
+
+		@Test // DATAMONGO-2316
+		public void shouldEnforceSimpleCollationOnTextIndex() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					TextIndexWithCollation.class);
+
+			assertThat(indexDefinitions).hasSize(1);
+			assertThat(indexDefinitions.get(0).getIndexOptions()).containsEntry("collation",
+					new org.bson.Document("locale", "simple"));
 		}
 
 		@Test // DATAMONGO-937
 		public void shouldResolveMultiFieldTextIndexCorrectly() {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
-					TextIndexOnMutiplePropertiesInRoot.class);
+					TextIndexOnMultiplePropertiesInRoot.class);
 
 			assertThat(indexDefinitions).hasSize(1);
-			assertIndexPathAndCollection(new String[] { "foo", "bar" }, "textIndexOnMutiplePropertiesInRoot",
+			assertIndexPathAndCollection(new String[] { "foo", "bar" }, "textIndexOnMultiplePropertiesInRoot",
 					indexDefinitions.get(0));
 		}
 
@@ -855,15 +903,21 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 
 		@Document
-		static class TextIndexOnSinglePropertyInRoot {
+		class TextIndexOnSinglePropertyInRoot {
 
 			String foo;
 
 			@TextIndexed String bar;
 		}
 
+		@Document(collation = "de_AT")
+		class TextIndexWithCollation {
+
+			@TextIndexed String foo;
+		}
+
 		@Document
-		static class TextIndexOnMutiplePropertiesInRoot {
+		class TextIndexOnMultiplePropertiesInRoot {
 
 			@TextIndexed String foo;
 
@@ -871,48 +925,48 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 
 		@Document
-		static class TextIndexOnNestedRoot {
+		class TextIndexOnNestedRoot {
 
 			String bar;
 
 			@TextIndexed TextIndexOnNested nested;
 		}
 
-		static class TextIndexOnNested {
+		class TextIndexOnNested {
 
 			String foo;
 		}
 
 		@Document
-		static class TextIndexOnNestedWithWeightRoot {
+		class TextIndexOnNestedWithWeightRoot {
 
 			@TextIndexed(weight = 5) TextIndexOnNested nested;
 		}
 
 		@Document
-		static class TextIndexOnNestedWithMostSpecificValueRoot {
+		class TextIndexOnNestedWithMostSpecificValueRoot {
 			@TextIndexed(weight = 5) TextIndexOnNestedWithMostSpecificValue nested;
 		}
 
-		static class TextIndexOnNestedWithMostSpecificValue {
+		class TextIndexOnNestedWithMostSpecificValue {
 
 			String foo;
 			@TextIndexed(weight = 10) String bar;
 		}
 
 		@Document(language = "spanish")
-		static class DocumentWithDefaultLanguage {
+		class DocumentWithDefaultLanguage {
 			@TextIndexed String foo;
 		}
 
 		@Document
-		static class DocumentWithLanguageOverrideOnNestedElement {
+		class DocumentWithLanguageOverrideOnNestedElement {
 
 			DocumentWithLanguageOverride nested;
 		}
 
 		@Document
-		static class DocumentWithLanguageOverride {
+		class DocumentWithLanguageOverride {
 
 			@TextIndexed String foo;
 
@@ -920,19 +974,19 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 
 		@Document
-		static class DocumentWithNoTextIndexPropertyButReservedFieldLanguage {
+		class DocumentWithNoTextIndexPropertyButReservedFieldLanguage {
 
 			String language;
 		}
 
 		@Document
-		static class DocumentWithNoTextIndexPropertyButReservedFieldLanguageAnnotated {
+		class DocumentWithNoTextIndexPropertyButReservedFieldLanguageAnnotated {
 
 			@Field("language") String lang;
 		}
 
 		@Document
-		static class DocumentWithOverlappingLanguageProps {
+		class DocumentWithOverlappingLanguageProps {
 
 			@TextIndexed String foo;
 			String language;
@@ -940,7 +994,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 
 		@Document
-		static class TextIndexedDocumentWithComposedAnnotation {
+		class TextIndexedDocumentWithComposedAnnotation {
 
 			@ComposedTextIndexedAnnotation String foo;
 			String lang;
@@ -1229,104 +1283,104 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 
 		@Document
-		static class MixedIndexRoot {
+		class MixedIndexRoot {
 
 			@Indexed String first;
 			NestedGeoIndex nestedGeo;
 		}
 
-		static class NestedGeoIndex {
+		class NestedGeoIndex {
 
 			@GeoSpatialIndexed Point location;
 		}
 
 		@Document
-		static class Outer {
+		class Outer {
 
 			@DBRef Inner inner;
 		}
 
 		@Document
-		static class Inner {
+		class Inner {
 
 			@Indexed Outer outer;
 		}
 
 		@Document
-		static class CycleLevelZero {
+		class CycleLevelZero {
 
 			@Indexed String indexedProperty;
 			CycleLevelZero cyclicReference;
 		}
 
 		@Document
-		static class CycleOnLevelOne {
+		class CycleOnLevelOne {
 
 			CycleOnLevelOneReferenced reference;
 		}
 
-		static class CycleOnLevelOneReferenced {
+		class CycleOnLevelOneReferenced {
 
 			@Indexed String indexedProperty;
 			CycleOnLevelOne cyclicReference;
 		}
 
 		@Document
-		public static class CycleStartingInBetween {
+		static class CycleStartingInBetween {
 
 			CycleOnLevelOne referenceToCycleStart;
 		}
 
 		@Document
-		static class NoCycleButIdenticallyNamedProperties {
+		class NoCycleButIdenticallyNamedProperties {
 
 			@Indexed String foo;
 			NoCycleButIdenticallyNamedPropertiesNested reference;
 		}
 
-		static class NoCycleButIdenticallyNamedPropertiesNested {
+		class NoCycleButIdenticallyNamedPropertiesNested {
 
 			@Indexed String foo;
 			NoCycleButIndenticallNamedPropertiesDeeplyNested deep;
 		}
 
-		static class NoCycleButIndenticallNamedPropertiesDeeplyNested {
+		class NoCycleButIndenticallNamedPropertiesDeeplyNested {
 
 			@Indexed String foo;
 		}
 
 		@Document("rules")
-		static class NoCycleManyPathsToDeepValueObject {
+		class NoCycleManyPathsToDeepValueObject {
 
 			private NoCycleLevel3 l3;
 			private NoCycleLevel2 l2;
 		}
 
-		static class NoCycleLevel2 {
+		class NoCycleLevel2 {
 			private NoCycleLevel3 l3;
 		}
 
-		static class NoCycleLevel3 {
+		class NoCycleLevel3 {
 			private ValueObject valueObject;
 		}
 
-		static class ValueObject {
+		class ValueObject {
 			@Indexed private String value;
 		}
 
 		@Document
-		static class SimilarityHolingBean {
+		class SimilarityHolingBean {
 
 			@Indexed @Field("norm") String normalProperty;
 			@Field("similarityL") private List<SimilaritySibling> listOfSimilarilyNamedEntities = null;
 		}
 
-		static class SimilaritySibling {
+		class SimilaritySibling {
 			@Field("similarity") private String similarThoughNotEqualNamedProperty;
 		}
 
 		@Document
-		static class MultipleObjectsOfSameType {
+		class MultipleObjectsOfSameType {
 
 			SelfCyclingViaCollectionType cycleOne;
 
@@ -1334,7 +1388,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 
 		@Document
-		static class SelfCyclingViaCollectionType {
+		class SelfCyclingViaCollectionType {
 
 			List<SelfCyclingViaCollectionType> cyclic;
 
@@ -1342,55 +1396,55 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 		@Document
 		@CompoundIndex(name = "c_index", def = "{ foo:1, bar:1 }")
-		static class DocumentWithNamedCompoundIndex {
+		class DocumentWithNamedCompoundIndex {
 
 			String property;
 		}
 
 		@Document
-		static class DocumentWithNamedIndex {
+		class DocumentWithNamedIndex {
 
 			@Indexed(name = "property_index") String property;
 		}
 
-		static class TypeWithNamedIndex {
+		class TypeWithNamedIndex {
 
 			@Indexed(name = "property_index") String property;
 		}
 
 		@Document
-		static class DocumentWithNestedDocumentHavingNamedCompoundIndex {
+		class DocumentWithNestedDocumentHavingNamedCompoundIndex {
 
 			DocumentWithNamedCompoundIndex propertyOfTypeHavingNamedCompoundIndex;
 		}
 
 		@CompoundIndex(name = "c_index", def = "{ foo:1, bar:1 }")
-		static class TypeWithNamedCompoundIndex {
+		class TypeWithNamedCompoundIndex {
 			String property;
 		}
 
 		@Document
-		static class DocumentWithNestedTypeHavingNamedCompoundIndex {
+		class DocumentWithNestedTypeHavingNamedCompoundIndex {
 
 			TypeWithNamedCompoundIndex propertyOfTypeHavingNamedCompoundIndex;
 		}
 
 		@Document
-		static class DocumentWithNestedDocumentHavingNamedIndex {
+		class DocumentWithNestedDocumentHavingNamedIndex {
 
 			DocumentWithNamedIndex propertyOfTypeHavingNamedIndex;
 		}
 
 		@Document
-		static class DocumentWithNestedTypeHavingNamedIndex {
+		class DocumentWithNestedTypeHavingNamedIndex {
 
 			TypeWithNamedIndex propertyOfTypeHavingNamedIndex;
 		}
 
 		@Document
-		public class MultiplePropertiesOfSameTypeWithMatchingStartLetters {
+		class MultiplePropertiesOfSameTypeWithMatchingStartLetters {
 
-			public class NameComponent {
+			class NameComponent {
 
 				@Indexed String component;
 			}
@@ -1400,9 +1454,9 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 
 		@Document
-		public class MultiplePropertiesOfSameTypeWithMatchingStartLettersOnNestedProperty {
+		class MultiplePropertiesOfSameTypeWithMatchingStartLettersOnNestedProperty {
 
-			public class NameComponent {
+			class NameComponent {
 
 				@Indexed String nameLast;
 				@Indexed String name;
@@ -1412,39 +1466,39 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 
 		@Document
-		public static class OuterDocumentReferingToIndexedPropertyViaDifferentNonCyclingPaths {
+		static class OuterDocumentReferingToIndexedPropertyViaDifferentNonCyclingPaths {
 
 			NoCycleButIndenticallNamedPropertiesDeeplyNested path1;
 			AlternatePathToNoCycleButIndenticallNamedPropertiesDeeplyNestedDocument path2;
 		}
 
-		public static class AlternatePathToNoCycleButIndenticallNamedPropertiesDeeplyNestedDocument {
+		static class AlternatePathToNoCycleButIndenticallNamedPropertiesDeeplyNestedDocument {
 			NoCycleButIndenticallNamedPropertiesDeeplyNested propertyWithIndexedStructure;
 		}
 
-		static class GenericEntityWrapper<T> {
+		class GenericEntityWrapper<T> {
 			T entity;
 		}
 
 		@Document
-		static class EntityWithGenericTypeWrapperAsElement {
+		class EntityWithGenericTypeWrapperAsElement {
 			List<GenericEntityWrapper<DocumentWithNamedIndex>> listWithGeneircTypeElement;
 		}
 
 		@Document
-		static class WithHashedIndexOnId {
+		class WithHashedIndexOnId {
 
 			@HashIndexed @Id String id;
 		}
 
 		@Document
-		static class WithHashedIndex {
+		class WithHashedIndex {
 
 			@HashIndexed String value;
 		}
 
 		@Document
-		static class WithHashedIndexAndIndex {
+		class WithHashedIndexAndIndex {
 
 			@Indexed //
 			@HashIndexed //
@@ -1452,7 +1506,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 
 		@Document
-		static class WithComposedHashedIndexAndIndex {
+		class WithComposedHashedIndexAndIndex {
 
 			@ComposedHashIndexed(name = "idx-name") String value;
 		}

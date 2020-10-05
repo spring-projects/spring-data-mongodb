@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,25 +39,31 @@ public @interface Indexed {
 	/**
 	 * If set to true reject all documents that contain a duplicate value for the indexed field.
 	 *
-	 * @return
+	 * @return {@literal false} by default.
 	 * @see <a href=
 	 *      "https://docs.mongodb.org/manual/core/index-unique/">https://docs.mongodb.org/manual/core/index-unique/</a>
 	 */
 	boolean unique() default false;
 
+	/**
+	 * The index sort direction.
+	 * 
+	 * @return {@link IndexDirection#ASCENDING} by default.
+	 */
 	IndexDirection direction() default IndexDirection.ASCENDING;
 
 	/**
-	 * If set to true index will skip over any document that is missing the indexed field.
+	 * If set to true index will skip over any document that is missing the indexed field. <br />
+	 * Must not be used with {@link #partialFilter()}.
 	 *
-	 * @return
+	 * @return {@literal false} by default.
 	 * @see <a href=
 	 *      "https://docs.mongodb.org/manual/core/index-sparse/">https://docs.mongodb.org/manual/core/index-sparse/</a>
 	 */
 	boolean sparse() default false;
 
 	/**
-	 * @return
+	 * @return {@literal false} by default.
 	 * @see <a href=
 	 *      "https://docs.mongodb.org/manual/core/index-creation/#index-creation-duplicate-dropping">https://docs.mongodb.org/manual/core/index-creation/#index-creation-duplicate-dropping</a>
 	 * @deprecated since 2.1. No longer supported by MongoDB as of server version 3.0.
@@ -105,7 +111,7 @@ public @interface Indexed {
 	 * </code>
 	 * </pre>
 	 *
-	 * @return
+	 * @return empty String by default.
 	 */
 	String name() default "";
 
@@ -113,7 +119,7 @@ public @interface Indexed {
 	 * If set to {@literal true} then MongoDB will ignore the given index name and instead generate a new name. Defaults
 	 * to {@literal false}.
 	 *
-	 * @return
+	 * @return {@literal false} by default.
 	 * @since 1.5
 	 */
 	boolean useGeneratedName() default false;
@@ -121,7 +127,7 @@ public @interface Indexed {
 	/**
 	 * If {@literal true} the index will be created in the background.
 	 *
-	 * @return
+	 * @return {@literal false} by default.
 	 * @see <a href=
 	 *      "https://docs.mongodb.org/manual/core/indexes/#background-construction">https://docs.mongodb.org/manual/core/indexes/#background-construction</a>
 	 */
@@ -130,7 +136,7 @@ public @interface Indexed {
 	/**
 	 * Configures the number of seconds after which the collection should expire. Defaults to -1 for no expiry.
 	 *
-	 * @return
+	 * @return {@literal -1} by default.
 	 * @see <a href=
 	 *      "https://docs.mongodb.org/manual/tutorial/expire-data/">https://docs.mongodb.org/manual/tutorial/expire-data/</a>
 	 */
@@ -165,4 +171,15 @@ public @interface Indexed {
 	 * @since 2.2
 	 */
 	String expireAfter() default "";
+
+	/**
+	 * Only index the documents in a collection that meet a specified {@link IndexFilter filter expression}. <br />
+	 * Must not be used with {@link #sparse() sparse = true}.
+	 * 
+	 * @return empty by default.
+	 * @see <a href=
+	 *      "https://docs.mongodb.com/manual/core/index-partial/">https://docs.mongodb.com/manual/core/index-partial/</a>
+	 * @since 3.1
+	 */
+	String partialFilter() default "";
 }

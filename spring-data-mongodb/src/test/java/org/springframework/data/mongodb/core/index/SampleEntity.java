@@ -6,9 +6,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document
 public class SampleEntity {
 
-	@Id
-	String id;
+	@Id String id;
 
-	@Indexed
-	String prop;
+	@Indexed String prop;
 }

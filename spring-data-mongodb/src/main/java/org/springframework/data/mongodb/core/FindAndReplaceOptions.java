@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -116,7 +116,7 @@ public class FindAndReplaceOptions {
 	/**
 	 * Get the bit indicating to return the replacement document.
 	 *
-	 * @return
+	 * @return {@literal true} if set.
 	 */
 	public boolean isReturnNew() {
 		return returnNew;
@@ -125,7 +125,7 @@ public class FindAndReplaceOptions {
 	/**
 	 * Get the bit indicating if to create a new document if not exists.
 	 *
-	 * @return
+	 * @return {@literal true} if set.
 	 */
 	public boolean isUpsert() {
 		return upsert;

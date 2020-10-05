@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,15 +15,15 @@
  */
 package org.springframework.data.mongodb.repository.cdi;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import javax.enterprise.inject.se.SeContainer;
 import javax.enterprise.inject.se.SeContainerInitializer;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
 import org.springframework.data.mongodb.repository.Person;
 
 /**
@@ -36,7 +36,7 @@ public class CdiExtensionIntegrationTests {
 
 	static SeContainer container;
 
-	@BeforeClass
+	@BeforeAll
 	public static void setUp() {
 
 		container = SeContainerInitializer.newInstance() //
@@ -45,7 +45,7 @@ public class CdiExtensionIntegrationTests {
 				.initialize();
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void tearDown() {
 		container.close();
 	}
@@ -56,21 +56,21 @@ public class CdiExtensionIntegrationTests {
 		RepositoryClient client = container.select(RepositoryClient.class).get();
 		CdiPersonRepository repository = client.getRepository();
 
-		assertThat(repository, is(notNullValue()));
+		assertThat(repository).isNotNull();
 
 		repository.deleteAll();
 
 		Person person = new Person("Dave", "Matthews");
 		Person result = repository.save(person);
 
-		assertThat(result, is(notNullValue()));
-		assertThat(repository.findById(person.getId()).get().getId(), is(result.getId()));
+		assertThat(result).isNotNull();
+		assertThat(repository.findById(person.getId()).get().getId()).isEqualTo(result.getId());
 	}
 
 	@Test // DATAMONGO-1017, DATAMONGO-1785
 	public void returnOneFromCustomImpl() {
 
 		RepositoryClient repositoryConsumer = container.select(RepositoryClient.class).get();
-		assertThat(repositoryConsumer.getSamplePersonRepository().returnOne(), is(1));
+		assertThat(repositoryConsumer.getSamplePersonRepository().returnOne()).isEqualTo(1);
 	}
 }

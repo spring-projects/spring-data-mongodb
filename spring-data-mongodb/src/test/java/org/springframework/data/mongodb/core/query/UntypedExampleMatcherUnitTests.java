@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,10 @@
 package org.springframework.data.mongodb.core.query;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.hamcrest.Matchers.*;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.ExampleMatcher.NullHandler;
 import org.springframework.data.domain.ExampleMatcher.StringMatcher;
@@ -31,8 +31,8 @@ public class UntypedExampleMatcherUnitTests {
 
 	ExampleMatcher matcher;
 
-	@Before
-	public void setUp() throws Exception {
+	@BeforeEach
+	public void setUp() {
 		matcher = UntypedExampleMatcher.matching();
 	}
 
@@ -56,9 +56,10 @@ public class UntypedExampleMatcherUnitTests {
 		assertThat(matcher.getNullHandler()).isEqualTo(NullHandler.IGNORE);
 	}
 
-	@Test(expected = UnsupportedOperationException.class) // DATAMONGO-1768
-	public void ignoredPathsIsNotModifiable() throws Exception {
-		matcher.getIgnoredPaths().add("¯\\_(ツ)_/¯");
+	@Test // DATAMONGO-1768
+	public void ignoredPathsIsNotModifiable() {
+		assertThatExceptionOfType(UnsupportedOperationException.class)
+				.isThrownBy(() -> matcher.getIgnoredPaths().add("¯\\_(ツ)_/¯"));
 	}
 
 	@Test // DATAMONGO-1768
@@ -125,7 +126,7 @@ public class UntypedExampleMatcherUnitTests {
 		matcher = UntypedExampleMatcher.matching().withIgnorePaths("foo", "bar", "foo");
 		ExampleMatcher configuredExampleSpec = matcher.withIgnoreCase();
 
-		assertThat(matcher).isNotEqualTo(sameInstance(configuredExampleSpec));
+		assertThat(matcher).isNotSameAs(configuredExampleSpec);
 		assertThat(matcher.getIgnoredPaths()).hasSize(2);
 		assertThat(matcher.isIgnoreCaseEnabled()).isFalse();
 

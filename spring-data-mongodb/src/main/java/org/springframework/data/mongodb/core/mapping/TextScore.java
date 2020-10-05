@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,9 +26,11 @@ import org.springframework.data.annotation.ReadOnlyProperty;
 /**
  * {@link TextScore} marks the property to be considered as the on server calculated {@literal textScore} when doing
  * full text search. <br />
- * <b>NOTE</b> Property will not be written when saving entity.
+ * <b>NOTE</b> Property will not be written when saving entity and may be {@literal null} if the document is retrieved
+ * by a regular (i.e. {@literal $text}) query.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 1.6
  */
 @ReadOnlyProperty

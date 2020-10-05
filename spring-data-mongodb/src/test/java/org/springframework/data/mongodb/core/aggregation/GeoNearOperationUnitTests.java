@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.*;
 import java.util.Arrays;
 
 import org.bson.Document;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
@@ -108,8 +108,9 @@ public class GeoNearOperationUnitTests {
 
 		NearQuery query = NearQuery.near(10.0, 20.0);
 
-		assertThat(new GeoNearOperation(query, "distance").useIndex("index-1").toPipelineStages(Aggregation.DEFAULT_CONTEXT))
-				.containsExactly($geoNear().near(10.0, 20.0).key("index-1").doc());
+		assertThat(
+				new GeoNearOperation(query, "distance").useIndex("index-1").toPipelineStages(Aggregation.DEFAULT_CONTEXT))
+						.containsExactly($geoNear().near(10.0, 20.0).key("index-1").doc());
 	}
 
 	@Test // DATAMONGO-2264

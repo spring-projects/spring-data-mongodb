@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2019 the original author or authors.
+ * Copyright 2008-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -219,7 +219,7 @@ class JsonScanner {
 		boolean isExpression = false;
 		int parenthesisCount = 0;
 
-		while (c == '$' || c == '_' || Character.isLetterOrDigit(c) || c == '#' || c == '{' || c == '[' || c == ']'
+		while (c == '$' || c == '_' || Character.isLetterOrDigit(c) || c == '#' || c == '{' || c == '['
 				|| (isExpression && isExpressionAllowedChar(c))) {
 
 			if (charCount == 0 && c == '#') {
@@ -231,7 +231,7 @@ class JsonScanner {
 
 					parenthesisCount--;
 					if (parenthesisCount == 0) {
-						buffer.read();
+						c = buffer.read();
 						break;
 					}
 				}

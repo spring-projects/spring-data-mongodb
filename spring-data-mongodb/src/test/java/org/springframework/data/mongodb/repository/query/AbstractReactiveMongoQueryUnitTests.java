@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,18 +18,24 @@ package org.springframework.data.mongodb.repository.query;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Locale;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+
 import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.ReactiveFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.ReactiveFindOperation.ReactiveFind;
@@ -45,15 +51,19 @@ import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ReactiveExtensionAwareQueryMethodEvaluationContextProvider;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 /**
+ * Unit tests for {@link AbstractReactiveMongoQuery}.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @currentRead Way of Kings - Brandon Sanderson
  */
-@RunWith(MockitoJUnitRunner.class)
-public class AbstractReactiveMongoQueryUnitTests {
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+class AbstractReactiveMongoQueryUnitTests {
 
 	@Mock ReactiveMongoOperations mongoOperationsMock;
 	@Mock BasicMongoPersistentEntity<?> persitentEntityMock;
@@ -62,8 +72,8 @@ public class AbstractReactiveMongoQueryUnitTests {
 	@Mock ReactiveFind<?> executableFind;
 	@Mock FindWithQuery<?> withQueryMock;
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	void setUp() {
 
 		doReturn("persons").when(persitentEntityMock).getCollection();
 		doReturn(persitentEntityMock).when(mappingContextMock).getPersistentEntity(Mockito.any(Class.class));
@@ -77,14 +87,17 @@ public class AbstractReactiveMongoQueryUnitTests {
 
 		doReturn(executableFind).when(mongoOperationsMock).query(any());
 		doReturn(withQueryMock).when(executableFind).as(any());
-		doReturn(withQueryMock).when(withQueryMock).matching(any());
+		doReturn(withQueryMock).when(withQueryMock).matching(any(Query.class));
+		doReturn(Flux.empty()).when(withQueryMock).all();
+		doReturn(Mono.empty()).when(withQueryMock).first();
+		doReturn(Mono.empty()).when(withQueryMock).one();
 	}
 
 	@Test // DATAMONGO-1854
-	public void shouldApplyStaticAnnotatedCollation() {
+	void shouldApplyStaticAnnotatedCollation() {
 
 		createQueryForMethod("findWithCollationUsingSpimpleStringValueByFirstName", String.class) //
-				.execute(new Object[] { "dalinar" });
+				.executeBlocking(new Object[] { "dalinar" });
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
@@ -93,10 +106,10 @@ public class AbstractReactiveMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void shouldApplyStaticAnnotatedCollationAsDocument() {
+	void shouldApplyStaticAnnotatedCollationAsDocument() {
 
 		createQueryForMethod("findWithCollationUsingDocumentByFirstName", String.class) //
-				.execute(new Object[] { "dalinar" });
+				.executeBlocking(new Object[] { "dalinar" });
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
@@ -105,10 +118,10 @@ public class AbstractReactiveMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void shouldApplyDynamicAnnotatedCollationAsString() {
+	void shouldApplyDynamicAnnotatedCollationAsString() {
 
 		createQueryForMethod("findWithCollationUsingPlaceholderByFirstName", String.class, Object.class) //
-				.execute(new Object[] { "dalinar", "en_US" });
+				.executeBlocking(new Object[] { "dalinar", "en_US" });
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
@@ -117,10 +130,10 @@ public class AbstractReactiveMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void shouldApplyDynamicAnnotatedCollationAsDocument() {
+	void shouldApplyDynamicAnnotatedCollationAsDocument() {
 
 		createQueryForMethod("findWithCollationUsingPlaceholderByFirstName", String.class, Object.class) //
-				.execute(new Object[] { "dalinar", new Document("locale", "en_US") });
+				.executeBlocking(new Object[] { "dalinar", new Document("locale", "en_US") });
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
@@ -129,22 +142,10 @@ public class AbstractReactiveMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void shouldApplyDynamicAnnotatedCollationAsLocale() {
+	void shouldApplyDynamicAnnotatedCollationAsLocale() {
 
 		createQueryForMethod("findWithCollationUsingPlaceholderByFirstName", String.class, Object.class) //
-				.execute(new Object[] { "dalinar", Locale.US });
-
-		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
-		verify(withQueryMock).matching(captor.capture());
-		assertThat(captor.getValue().getCollation().map(Collation::toDocument))
-				.contains(Collation.of("en_US").toDocument());
-	}
-
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1854
-	public void shouldThrowExceptionOnNonParsableCollation() {
-
-		createQueryForMethod("findWithCollationUsingPlaceholderByFirstName", String.class, Object.class) //
-				.execute(new Object[] { "dalinar", 100 });
+				.executeBlocking(new Object[] { "dalinar", Locale.US });
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
@@ -153,10 +154,19 @@ public class AbstractReactiveMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void shouldApplyDynamicAnnotatedCollationIn() {
+	void shouldThrowExceptionOnNonParsableCollation() {
+
+		assertThatIllegalArgumentException().isThrownBy(() -> {
+			createQueryForMethod("findWithCollationUsingPlaceholderByFirstName", String.class, Object.class) //
+					.executeBlocking(new Object[] { "dalinar", 100 });
+		});
+	}
+
+	@Test // DATAMONGO-1854
+	void shouldApplyDynamicAnnotatedCollationIn() {
 
 		createQueryForMethod("findWithCollationUsingPlaceholderInDocumentByFirstName", String.class, String.class) //
-				.execute(new Object[] { "dalinar", "en_US" });
+				.executeBlocking(new Object[] { "dalinar", "en_US" });
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
@@ -165,11 +175,11 @@ public class AbstractReactiveMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void shouldApplyDynamicAnnotatedCollationWithMultiplePlaceholders() {
+	void shouldApplyDynamicAnnotatedCollationWithMultiplePlaceholders() {
 
 		createQueryForMethod("findWithCollationUsingPlaceholdersInDocumentByFirstName", String.class, String.class,
 				int.class) //
-						.execute(new Object[] { "dalinar", "en_US", 2 });
+						.executeBlocking(new Object[] { "dalinar", "en_US", 2 });
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
@@ -178,11 +188,11 @@ public class AbstractReactiveMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void shouldApplyCollationParameter() {
+	void shouldApplyCollationParameter() {
 
 		Collation collation = Collation.of("en_US");
 		createQueryForMethod("findWithCollationParameterByFirstName", String.class, Collation.class) //
-				.execute(new Object[] { "dalinar", collation });
+				.executeBlocking(new Object[] { "dalinar", collation });
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
@@ -190,11 +200,11 @@ public class AbstractReactiveMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void collationParameterShouldOverrideAnnotation() {
+	void collationParameterShouldOverrideAnnotation() {
 
 		Collation collation = Collation.of("de_AT");
 		createQueryForMethod("findWithWithCollationParameterAndAnnotationByFirstName", String.class, Collation.class) //
-				.execute(new Object[] { "dalinar", collation });
+				.executeBlocking(new Object[] { "dalinar", collation });
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
@@ -202,10 +212,10 @@ public class AbstractReactiveMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1854
-	public void collationParameterShouldNotBeAppliedWhenNullOverrideAnnotation() {
+	void collationParameterShouldNotBeAppliedWhenNullOverrideAnnotation() {
 
 		createQueryForMethod("findWithWithCollationParameterAndAnnotationByFirstName", String.class, Collation.class) //
-				.execute(new Object[] { "dalinar", null });
+				.executeBlocking(new Object[] { "dalinar", null });
 
 		ArgumentCaptor<Query> captor = ArgumentCaptor.forClass(Query.class);
 		verify(withQueryMock).matching(captor.capture());
@@ -237,13 +247,18 @@ public class AbstractReactiveMongoQueryUnitTests {
 		private boolean isDeleteQuery;
 		private boolean isLimitingQuery;
 
-		public ReactiveMongoQueryFake(ReactiveMongoQueryMethod method, ReactiveMongoOperations operations) {
-			super(method, operations, new SpelExpressionParser(), QueryMethodEvaluationContextProvider.DEFAULT);
+		ReactiveMongoQueryFake(ReactiveMongoQueryMethod method, ReactiveMongoOperations operations) {
+			super(method, operations, new SpelExpressionParser(),
+					ReactiveExtensionAwareQueryMethodEvaluationContextProvider.DEFAULT);
 		}
 
 		@Override
-		protected Query createQuery(ConvertingParameterAccessor accessor) {
-			return new BasicQuery("{'foo':'bar'}");
+		protected Mono<Query> createQuery(ConvertingParameterAccessor accessor) {
+			return Mono.just(new BasicQuery("{'foo':'bar'}"));
+		}
+
+		Object executeBlocking(Object[] parameters) {
+			return Flux.from(super.execute(parameters)).collectList().block();
 		}
 
 		@Override

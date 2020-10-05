@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import java.util.function.UnaryOperator;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
-
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.DefaultTypeMapper;
 import org.springframework.data.convert.SimpleTypeInformationMapper;
@@ -42,9 +41,7 @@ import com.mongodb.DBObject;
 
 /**
  * Default implementation of {@link MongoTypeMapper} allowing configuration of the key to lookup and store type
- * information in {@link Document}. The key defaults to {@link #DEFAULT_TYPE_KEY}. Actual type-to-{@link String}
- * conversion and back is done in {@link #getTypeString(TypeInformation)} or {@link #getTypeInformation(String)}
- * respectively.
+ * information in {@link Document}. The key defaults to {@link #DEFAULT_TYPE_KEY}.
  *
  * @author Oliver Gierke
  * @author Thomas Darimont
@@ -111,7 +108,7 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 	 * {@link TypeInformationMapper} to map type hints.
 	 *
 	 * @param typeKey name of the field to read and write type hints. Can be {@literal null} to disable type hints.
-	 * @param mappers
+	 * @param mappers must not be {@literal null}.
 	 */
 	public DefaultMongoTypeMapper(@Nullable String typeKey, List<? extends TypeInformationMapper> mappers) {
 		this(typeKey, new DocumentTypeAliasAccessor(typeKey), null, mappers);

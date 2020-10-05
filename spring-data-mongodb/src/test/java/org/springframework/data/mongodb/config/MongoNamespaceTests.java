@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the original author or authors.
+ * Copyright 2010-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.test.util.ReflectionTestUtils.*;
 
 import javax.net.ssl.SSLSocketFactory;
@@ -24,17 +24,18 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.MongoClientFactoryBean;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit4.SpringRunner;
 
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientOptions;
+import com.mongodb.MongoClientSettings;
+import com.mongodb.ServerAddress;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.MongoClient;
 
 /**
  * Integration tests for the MongoDB namespace.
@@ -45,7 +46,7 @@ import com.mongodb.WriteConcern;
  * @author Thomas Darimont
  * @author Christoph Strobl
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(SpringRunner.class)
 @ContextConfiguration
 public class MongoNamespaceTests {
 
@@ -54,181 +55,164 @@ public class MongoNamespaceTests {
 	@Test
 	public void testMongoSingleton() throws Exception {
 
-		assertTrue(ctx.containsBean("noAttrMongo"));
+		assertThat(ctx.containsBean("noAttrMongo")).isTrue();
 		MongoClientFactoryBean mfb = (MongoClientFactoryBean) ctx.getBean("&noAttrMongo");
 
-		assertNull(getField(mfb, "host"));
-		assertNull(getField(mfb, "port"));
+		assertThat(getField(mfb, "host")).isNull();
+		assertThat(getField(mfb, "port")).isNull();
 	}
 
 	@Test
 	public void testMongoSingletonWithAttributes() throws Exception {
 
-		assertTrue(ctx.containsBean("defaultMongo"));
+		assertThat(ctx.containsBean("defaultMongo")).isTrue();
 		MongoClientFactoryBean mfb = (MongoClientFactoryBean) ctx.getBean("&defaultMongo");
 
 		String host = (String) getField(mfb, "host");
 		Integer port = (Integer) getField(mfb, "port");
 
-		assertEquals("localhost", host);
-		assertEquals(new Integer(27017), port);
+		assertThat(host).isEqualTo("localhost");
+		assertThat(port).isEqualTo(new Integer(27017));
 
-		MongoClientOptions options = (MongoClientOptions) getField(mfb, "mongoClientOptions");
-		assertFalse("By default socketFactory should not be a SSLSocketFactory",
-				options.getSocketFactory() instanceof SSLSocketFactory);
+		MongoClientSettings options = (MongoClientSettings) getField(mfb, "mongoClientSettings");
+		assertThat(options).isNull();
 	}
 
 	@Test // DATAMONGO-764
 	public void testMongoSingletonWithSslEnabled() throws Exception {
 
-		assertTrue(ctx.containsBean("mongoSsl"));
+		assertThat(ctx.containsBean("mongoSsl")).isTrue();
 		MongoClientFactoryBean mfb = (MongoClientFactoryBean) ctx.getBean("&mongoSsl");
 
-		MongoClientOptions options = (MongoClientOptions) getField(mfb, "mongoClientOptions");
-		assertTrue("socketFactory should be a SSLSocketFactory", options.getSocketFactory() instanceof SSLSocketFactory);
+		MongoClientSettings options = (MongoClientSettings) getField(mfb, "mongoClientSettings");
+		assertThat(options.getSslSettings().getContext().getSocketFactory() instanceof SSLSocketFactory)
+				.as("socketFactory should be a SSLSocketFactory").isTrue();
 	}
 
 	@Test // DATAMONGO-1490
 	public void testMongoClientSingletonWithSslEnabled() {
 
-		assertTrue(ctx.containsBean("mongoClientSsl"));
+		assertThat(ctx.containsBean("mongoClientSsl")).isTrue();
 		MongoClientFactoryBean mfb = (MongoClientFactoryBean) ctx.getBean("&mongoClientSsl");
 
-		MongoClientOptions options = (MongoClientOptions) getField(mfb, "mongoClientOptions");
-		assertTrue("socketFactory should be a SSLSocketFactory", options.getSocketFactory() instanceof SSLSocketFactory);
+		MongoClientSettings options = (MongoClientSettings) getField(mfb, "mongoClientSettings");
+		assertThat(options.getSslSettings().getContext().getSocketFactory() instanceof SSLSocketFactory)
+				.as("socketFactory should be a SSLSocketFactory").isTrue();
 	}
 
 	@Test // DATAMONGO-764
 	public void testMongoSingletonWithSslEnabledAndCustomSslSocketFactory() throws Exception {
 
-		assertTrue(ctx.containsBean("mongoSslWithCustomSslFactory"));
+		assertThat(ctx.containsBean("mongoSslWithCustomSslFactory")).isTrue();
 		MongoClientFactoryBean mfb = (MongoClientFactoryBean) ctx.getBean("&mongoSslWithCustomSslFactory");
 
-		SSLSocketFactory customSslSocketFactory = ctx.getBean("customSslSocketFactory", SSLSocketFactory.class);
-		MongoClientOptions options = (MongoClientOptions) getField(mfb, "mongoClientOptions");
+		MongoClientSettings options = (MongoClientSettings) getField(mfb, "mongoClientSettings");
 
-		assertTrue("socketFactory should be a SSLSocketFactory", options.getSocketFactory() instanceof SSLSocketFactory);
-		assertSame(customSslSocketFactory, options.getSocketFactory());
+		assertThat(options.getSslSettings().getContext().getSocketFactory() instanceof SSLSocketFactory)
+				.as("socketFactory should be a SSLSocketFactory").isTrue();
+		assertThat(options.getSslSettings().getContext().getProvider().getName()).isEqualTo("SunJSSE");
 	}
 
 	@Test
 	public void testSecondMongoDbFactory() {
 
-		assertTrue(ctx.containsBean("secondMongoDbFactory"));
-		MongoDbFactory dbf = (MongoDbFactory) ctx.getBean("secondMongoDbFactory");
+		assertThat(ctx.containsBean("secondMongoDbFactory")).isTrue();
+		MongoDatabaseFactory dbf = (MongoDatabaseFactory) ctx.getBean("secondMongoDbFactory");
 
 		MongoClient mongo = (MongoClient) getField(dbf, "mongoClient");
-		assertEquals("127.0.0.1", mongo.getAddress().getHost());
-		assertEquals(27017, mongo.getAddress().getPort());
-		assertEquals("database", getField(dbf, "databaseName"));
+		assertThat(mongo.getClusterDescription().getClusterSettings().getHosts()).containsExactly(new ServerAddress());
+		assertThat(getField(dbf, "databaseName")).isEqualTo("database");
 	}
 
 	@Test // DATAMONGO-789
 	public void testThirdMongoDbFactory() {
 
-		assertTrue(ctx.containsBean("thirdMongoDbFactory"));
+		assertThat(ctx.containsBean("thirdMongoDbFactory")).isTrue();
 
-		MongoDbFactory dbf = (MongoDbFactory) ctx.getBean("thirdMongoDbFactory");
+		MongoDatabaseFactory dbf = (MongoDatabaseFactory) ctx.getBean("thirdMongoDbFactory");
 		MongoClient mongo = (MongoClient) getField(dbf, "mongoClient");
 
-		assertEquals("127.0.0.1", mongo.getAddress().getHost());
-		assertEquals(27017, mongo.getAddress().getPort());
-		assertEquals("database", getField(dbf, "databaseName"));
+		assertThat(mongo.getClusterDescription().getClusterSettings().getHosts()).containsExactly(new ServerAddress());
+		assertThat(getField(dbf, "databaseName")).isEqualTo("database");
 	}
 
 	@Test // DATAMONGO-140
 	public void testMongoTemplateFactory() {
 
-		assertTrue(ctx.containsBean("mongoTemplate"));
+		assertThat(ctx.containsBean("mongoTemplate")).isTrue();
 		MongoOperations operations = (MongoOperations) ctx.getBean("mongoTemplate");
 
-		MongoDbFactory dbf = (MongoDbFactory) getField(operations, "mongoDbFactory");
-		assertEquals("database", getField(dbf, "databaseName"));
+		MongoDatabaseFactory dbf = (MongoDatabaseFactory) getField(operations, "mongoDbFactory");
+		assertThat(getField(dbf, "databaseName")).isEqualTo("database");
 
 		MongoConverter converter = (MongoConverter) getField(operations, "mongoConverter");
-		assertNotNull(converter);
+		assertThat(converter).isNotNull();
 	}
 
 	@Test // DATAMONGO-140
 	public void testSecondMongoTemplateFactory() {
 
-		assertTrue(ctx.containsBean("anotherMongoTemplate"));
+		assertThat(ctx.containsBean("anotherMongoTemplate")).isTrue();
 		MongoOperations operations = (MongoOperations) ctx.getBean("anotherMongoTemplate");
 
-		MongoDbFactory dbf = (MongoDbFactory) getField(operations, "mongoDbFactory");
-		assertEquals("database", getField(dbf, "databaseName"));
+		MongoDatabaseFactory dbf = (MongoDatabaseFactory) getField(operations, "mongoDbFactory");
+		assertThat(getField(dbf, "databaseName")).isEqualTo("database");
 
 		WriteConcern writeConcern = (WriteConcern) getField(operations, "writeConcern");
-		assertEquals(WriteConcern.SAFE, writeConcern);
+		assertThat(writeConcern).isEqualTo(WriteConcern.ACKNOWLEDGED);
 	}
 
 	@Test // DATAMONGO-628
 	public void testGridFsTemplateFactory() {
 
-		assertTrue(ctx.containsBean("gridFsTemplate"));
+		assertThat(ctx.containsBean("gridFsTemplate")).isTrue();
 		GridFsOperations operations = (GridFsOperations) ctx.getBean("gridFsTemplate");
 
-		MongoDbFactory dbf = (MongoDbFactory) getField(operations, "dbFactory");
-		assertEquals("database", getField(dbf, "databaseName"));
+		MongoDatabaseFactory dbf = (MongoDatabaseFactory) getField(operations, "dbFactory");
+		assertThat(getField(dbf, "databaseName")).isEqualTo("database");
 
 		MongoConverter converter = (MongoConverter) getField(operations, "converter");
-		assertNotNull(converter);
+		assertThat(converter).isNotNull();
 	}
 
 	@Test // DATAMONGO-628
 	public void testSecondGridFsTemplateFactory() {
 
-		assertTrue(ctx.containsBean("secondGridFsTemplate"));
+		assertThat(ctx.containsBean("secondGridFsTemplate")).isTrue();
 		GridFsOperations operations = (GridFsOperations) ctx.getBean("secondGridFsTemplate");
 
-		MongoDbFactory dbf = (MongoDbFactory) getField(operations, "dbFactory");
-		assertEquals("database", getField(dbf, "databaseName"));
-		assertEquals(null, getField(operations, "bucket"));
+		MongoDatabaseFactory dbf = (MongoDatabaseFactory) getField(operations, "dbFactory");
+		assertThat(getField(dbf, "databaseName")).isEqualTo("database");
+		assertThat(getField(operations, "bucket")).isEqualTo(null);
 
 		MongoConverter converter = (MongoConverter) getField(operations, "converter");
-		assertNotNull(converter);
+		assertThat(converter).isNotNull();
 	}
 
 	@Test // DATAMONGO-823
 	public void testThirdGridFsTemplateFactory() {
 
-		assertTrue(ctx.containsBean("thirdGridFsTemplate"));
+		assertThat(ctx.containsBean("thirdGridFsTemplate")).isTrue();
 		GridFsOperations operations = (GridFsOperations) ctx.getBean("thirdGridFsTemplate");
 
-		MongoDbFactory dbf = (MongoDbFactory) getField(operations, "dbFactory");
-		assertEquals("database", getField(dbf, "databaseName"));
-		assertEquals("bucketString", getField(operations, "bucket"));
+		MongoDatabaseFactory dbf = (MongoDatabaseFactory) getField(operations, "dbFactory");
+		assertThat(getField(dbf, "databaseName")).isEqualTo("database");
+		assertThat(getField(operations, "bucket")).isEqualTo("bucketString");
 
 		MongoConverter converter = (MongoConverter) getField(operations, "converter");
-		assertNotNull(converter);
+		assertThat(converter).isNotNull();
 	}
 
 	@Test
-	@SuppressWarnings("deprecation")
-	public void testMongoSingletonWithPropertyPlaceHolders() throws Exception {
+	public void testMongoSingletonWithPropertyPlaceHolders() {
 
-		assertTrue(ctx.containsBean("mongoClient"));
+		assertThat(ctx.containsBean("mongoClient")).isTrue();
 		MongoClientFactoryBean mfb = (MongoClientFactoryBean) ctx.getBean("&mongoClient");
 
 		String host = (String) getField(mfb, "host");
 		Integer port = (Integer) getField(mfb, "port");
 
-		assertEquals("127.0.0.1", host);
-		assertEquals(new Integer(27017), port);
-
-		MongoClient mongo = mfb.getObject();
-		MongoClientOptions mongoOpts = mongo.getMongoClientOptions();
-
-		assertEquals(8, mongoOpts.getConnectionsPerHost());
-		assertEquals(1000, mongoOpts.getConnectTimeout());
-		assertEquals(1500, mongoOpts.getMaxWaitTime());
-
-		assertEquals(1500, mongoOpts.getSocketTimeout());
-		assertEquals(4, mongoOpts.getThreadsAllowedToBlockForConnectionMultiplier());
-
-		// TODO: check the damned defaults
-		// assertEquals("w", mongoOpts.getWriteConcern().getW());
-		// assertEquals(0, mongoOpts.getWriteConcern().getWtimeout());
-		// assertEquals(true, mongoOpts.getWriteConcern().fsync());
+		assertThat(host).isEqualTo("127.0.0.1");
+		assertThat(port).isEqualTo(new Integer(27017));
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import lombok.EqualsAndHashCode;
-
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Optional;
@@ -25,7 +23,6 @@ import org.bson.BsonDocument;
 import org.bson.BsonTimestamp;
 import org.bson.BsonValue;
 import org.bson.Document;
-
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.lang.Nullable;
@@ -45,7 +42,6 @@ import com.mongodb.client.model.changestream.FullDocument;
  * @author Mark Paluch
  * @since 2.1
  */
-@EqualsAndHashCode
 public class ChangeStreamOptions {
 
 	private @Nullable Object filter;
@@ -154,6 +150,44 @@ public class ChangeStreamOptions {
 		throw new IllegalArgumentException(
 				"o_O that should actually not happen. The timestamp should be an Instant or a BsonTimestamp but was "
 						+ ObjectUtils.nullSafeClassName(timestamp));
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
+
+		ChangeStreamOptions that = (ChangeStreamOptions) o;
+
+		if (!ObjectUtils.nullSafeEquals(this.filter, that.filter)) {
+			return false;
+		}
+		if (!ObjectUtils.nullSafeEquals(this.resumeToken, that.resumeToken)) {
+			return false;
+		}
+		if (!ObjectUtils.nullSafeEquals(this.fullDocumentLookup, that.fullDocumentLookup)) {
+			return false;
+		}
+		if (!ObjectUtils.nullSafeEquals(this.collation, that.collation)) {
+			return false;
+		}
+		if (!ObjectUtils.nullSafeEquals(this.resumeTimestamp, that.resumeTimestamp)) {
+			return false;
+		}
+		return resume == that.resume;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = ObjectUtils.nullSafeHashCode(filter);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(resumeToken);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(fullDocumentLookup);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(collation);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(resumeTimestamp);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(resume);
+		return result;
 	}
 
 	/**

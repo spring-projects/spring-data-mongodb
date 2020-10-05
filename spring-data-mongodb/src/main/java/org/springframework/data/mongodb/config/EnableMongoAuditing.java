@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,29 +42,29 @@ public @interface EnableMongoAuditing {
 	/**
 	 * Configures the {@link AuditorAware} bean to be used to lookup the current principal.
 	 *
-	 * @return
+	 * @return empty {@link String} by default.
 	 */
 	String auditorAwareRef() default "";
 
 	/**
 	 * Configures whether the creation and modification dates are set. Defaults to {@literal true}.
 	 *
-	 * @return
+	 * @return {@literal true} by default.
 	 */
 	boolean setDates() default true;
 
 	/**
 	 * Configures whether the entity shall be marked as modified on creation. Defaults to {@literal true}.
 	 *
-	 * @return
+	 * @return {@literal true} by default.
 	 */
 	boolean modifyOnCreate() default true;
 
 	/**
-	 * Configures a {@link DateTimeProvider} bean name that allows customizing the {@link org.joda.time.DateTime} to be
-	 * used for setting creation and modification dates.
+	 * Configures a {@link DateTimeProvider} bean name that allows customizing the timestamp to be used for setting
+	 * creation and modification dates.
 	 *
-	 * @return
+	 * @return empty {@link String} by default.
 	 */
 	String dateTimeProviderRef() default "";
 }

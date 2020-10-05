@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,14 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import org.springframework.data.mongodb.core.query.BasicQuery;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.Set;
 
 import org.junit.After;
 import org.junit.Before;
@@ -39,6 +40,7 @@ import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.config.AbstractReactiveMongoConfiguration;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.repository.Address;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.QAddress;
@@ -52,7 +54,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import com.mongodb.MongoException;
 import com.mongodb.reactivestreams.client.MongoClient;
-import com.mongodb.reactivestreams.client.MongoClients;
 import com.mongodb.reactivestreams.client.MongoDatabase;
 
 /**
@@ -78,23 +79,27 @@ public class ReactiveQuerydslMongoPredicateExecutorTests {
 
 		@Override
 		public MongoClient reactiveMongoClient() {
-			return MongoClients.create();
+			return MongoTestUtils.reactiveClient();
 		}
 
 		@Override
 		protected String getDatabaseName() {
 			return "reactive";
 		}
+
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() {
+			return Collections.singleton(Person.class);
+		}
 	}
 
 	@BeforeClass
 	public static void cleanDb() {
 
-		try (MongoClient client = MongoClients.create()) {
+		MongoClient client = MongoTestUtils.reactiveClient();
 
-			MongoTestUtils.createOrReplaceCollectionNow("reactive", "person", client);
-			MongoTestUtils.createOrReplaceCollectionNow("reactive", "user", client);
-		}
+		MongoTestUtils.createOrReplaceCollectionNow("reactive", "person", client);
+		MongoTestUtils.createOrReplaceCollectionNow("reactive", "user", client);
 	}
 
 	@Before

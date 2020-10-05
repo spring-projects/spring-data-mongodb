@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,8 +19,8 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 import org.bson.Document;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link AggregationOptions}.
@@ -28,51 +28,58 @@ import org.junit.Test;
  * @author Thomas Darimont
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Yadhukrishna S Pai
  * @since 1.6
  */
-public class AggregationOptionsTests {
+class AggregationOptionsTests {
 
+	private final Document dummyHint = new Document("dummyField", 1);
 	AggregationOptions aggregationOptions;
 
-	@Before
-	public void setup() {
+	@BeforeEach
+	void setup() {
 		aggregationOptions = newAggregationOptions().explain(true) //
 				.cursorBatchSize(1) //
 				.allowDiskUse(true) //
 				.comment("hola!") //
+				.hint(dummyHint) //
 				.build();
 	}
 
-	@Test // DATAMONGO-960
-	public void aggregationOptionsBuilderShouldSetOptionsAccordingly() {
+	@Test // DATAMONGO-960, DATAMONGO-1836
+	void aggregationOptionsBuilderShouldSetOptionsAccordingly() {
 
 		assertThat(aggregationOptions.isAllowDiskUse()).isTrue();
 		assertThat(aggregationOptions.isExplain()).isTrue();
-		assertThat(aggregationOptions.getCursor().get()).isEqualTo(new Document("batchSize", 1));
+		assertThat(aggregationOptions.getCursor()).contains(new Document("batchSize", 1));
+		assertThat(aggregationOptions.getHint()).contains(dummyHint);
 	}
 
-	@Test // DATAMONGO-1637, DATAMONGO-2153
-	public void shouldInitializeFromDocument() {
+	@Test // DATAMONGO-1637, DATAMONGO-2153, DATAMONGO-1836
+	void shouldInitializeFromDocument() {
 
 		Document document = new Document();
 		document.put("cursor", new Document("batchSize", 1));
 		document.put("explain", true);
 		document.put("allowDiskUse", true);
 		document.put("comment", "hola!");
+		document.put("hint", dummyHint);
 
 		aggregationOptions = AggregationOptions.fromDocument(document);
 
 		assertThat(aggregationOptions.isAllowDiskUse()).isTrue();
 		assertThat(aggregationOptions.isExplain()).isTrue();
-		assertThat(aggregationOptions.getCursor().get()).isEqualTo(new Document("batchSize", 1));
+		assertThat(aggregationOptions.getCursor()).contains(new Document("batchSize", 1));
 		assertThat(aggregationOptions.getCursorBatchSize()).isEqualTo(1);
-		assertThat(aggregationOptions.getComment().get()).isEqualTo("hola!");
+		assertThat(aggregationOptions.getComment()).contains("hola!");
+		assertThat(aggregationOptions.getHint()).contains(dummyHint);
 	}
 
-	@Test // DATAMONGO-960, DATAMONGO-2153
-	public void aggregationOptionsToString() {
+	@Test // DATAMONGO-960, DATAMONGO-2153, DATAMONGO-1836
+	void aggregationOptionsToString() {
 
-		assertThat(aggregationOptions.toDocument()).isEqualTo(Document.parse(
-				"{ \"allowDiskUse\" : true , \"explain\" : true , \"cursor\" : { \"batchSize\" : 1}, \"comment\": \"hola!\"}"));
+		assertThat(aggregationOptions.toDocument()).isEqualTo(Document
+				.parse("{ " + "\"allowDiskUse\" : true , " + "\"explain\" : true , " + "\"cursor\" : { \"batchSize\" : 1}, "
+						+ "\"comment\": \"hola!\", " + "\"hint\" : { \"dummyField\" : 1}" + "}"));
 	}
 }

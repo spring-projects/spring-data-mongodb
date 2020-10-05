@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,10 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.BucketAutoOperation.BucketAutoOperationOutputBuilder;
 import org.springframework.data.mongodb.core.aggregation.BucketOperationSupport.OutputBuilder;
 import org.springframework.util.Assert;
-
-import org.bson.Document;
 
 /**
  * Encapsulates the aggregation framework {@code $bucketAuto}-operation. <br />
@@ -106,14 +105,23 @@ public class BucketAutoOperation extends BucketOperationSupport<BucketAutoOperat
 
 		options.putAll(super.toDocument(context));
 
-		return new Document("$bucketAuto", options);
+		return new Document(getOperator(), options);
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
+	 */
+	@Override
+	public String getOperator() {
+		return "$bucketAuto";
 	}
 
 	/**
 	 * Configures a number of bucket {@literal buckets} and return a new {@link BucketAutoOperation}.
 	 *
 	 * @param buckets must be a positive number.
-	 * @return
+	 * @return new instance of {@link BucketAutoOperation}.
 	 */
 	public BucketAutoOperation withBuckets(int buckets) {
 
@@ -128,7 +136,7 @@ public class BucketAutoOperation extends BucketOperationSupport<BucketAutoOperat
 	 * Use either predefined {@link Granularities} or provide a own one.
 	 *
 	 * @param granularity must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link BucketAutoOperation}.
 	 */
 	public BucketAutoOperation withGranularity(Granularity granularity) {
 
@@ -209,7 +217,7 @@ public class BucketAutoOperation extends BucketOperationSupport<BucketAutoOperat
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @param operation must not be {@literal null}.
-		 * @param parameters
+		 * @param parameters must not be {@literal null}.
 		 */
 		protected ExpressionBucketAutoOperationBuilder(String expression, BucketAutoOperation operation,
 				Object[] parameters) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ public class GridFsCriteria extends Criteria {
 	/**
 	 * Creates a new {@link GridFsCriteria} for the given key.
 	 *
-	 * @param key
+	 * @param key must not be {@literal null}.
 	 */
 	public GridFsCriteria(String key) {
 		super(key);
@@ -38,7 +38,7 @@ public class GridFsCriteria extends Criteria {
 	/**
 	 * Creates a {@link GridFsCriteria} for restrictions on the file's metadata.
 	 *
-	 * @return
+	 * @return new instance of {@link GridFsCriteria}.
 	 */
 	public static GridFsCriteria whereMetaData() {
 		return new GridFsCriteria("metadata");
@@ -47,8 +47,8 @@ public class GridFsCriteria extends Criteria {
 	/**
 	 * Creates a {@link GridFsCriteria} for restrictions on a single file's metadata item.
 	 *
-	 * @param metadataKey
-	 * @return
+	 * @param metadataKey can be {@literal null}.
+	 * @return new instance of {@link GridFsCriteria}.
 	 */
 	public static GridFsCriteria whereMetaData(@Nullable String metadataKey) {
 
@@ -59,7 +59,7 @@ public class GridFsCriteria extends Criteria {
 	/**
 	 * Creates a {@link GridFsCriteria} for restrictions on the file's name.
 	 *
-	 * @return
+	 * @return new instance of {@link GridFsCriteria}.
 	 */
 	public static GridFsCriteria whereFilename() {
 		return new GridFsCriteria("filename");
@@ -68,7 +68,7 @@ public class GridFsCriteria extends Criteria {
 	/**
 	 * Creates a {@link GridFsCriteria} for restrictions on the file's content type.
 	 *
-	 * @return
+	 * @return new instance of {@link GridFsCriteria}.
 	 */
 	public static GridFsCriteria whereContentType() {
 		return new GridFsCriteria("metadata.".concat(GridFsResource.CONTENT_TYPE_FIELD));

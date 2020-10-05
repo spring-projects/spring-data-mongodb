@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the original author or authors.
+ * Copyright 2010-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,6 +50,7 @@ import com.mongodb.client.result.DeleteResult;
  * @author Christoph Strobl
  * @author Thomas Darimont
  * @author Mark Paluch
+ * @author Mehran Behnam
  */
 public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
@@ -97,7 +98,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		Assert.notNull(entities, "The given Iterable of entities not be null!");
 
 		Streamable<S> source = Streamable.of(entities);
-		boolean allNew = source.stream().allMatch(it -> entityInformation.isNew(it));
+		boolean allNew = source.stream().allMatch(entityInformation::isNew);
 
 		if (allNew) {
 
@@ -211,6 +212,8 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	@Override
 	public Iterable<T> findAllById(Iterable<ID> ids) {
 
+		Assert.notNull(ids, "The given Ids of entities not be null!");
+
 		return findAll(new Query(new Criteria(entityInformation.getIdAttribute())
 				.in(Streamable.of(ids).stream().collect(StreamUtils.toUnmodifiableList()))));
 	}
@@ -224,7 +227,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Assert.notNull(pageable, "Pageable must not be null!");
 
-		Long count = count();
+		long count = count();
 		List<T> list = findAll(new Query().with(pageable));
 
 		return new PageImpl<>(list, pageable, count);

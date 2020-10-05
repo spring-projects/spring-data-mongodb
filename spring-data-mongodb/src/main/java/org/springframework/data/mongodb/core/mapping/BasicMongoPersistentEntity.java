@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -62,6 +63,8 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 	private final @Nullable String collation;
 	private final @Nullable Expression collationExpression;
+
+	private final ShardKey shardKey;
 
 	/**
 	 * Creates a new {@link BasicMongoPersistentEntity} with the given {@link TypeInformation}. Will default the
@@ -92,6 +95,27 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 			this.collation = null;
 			this.collationExpression = null;
 		}
+
+		this.shardKey = detectShardKey();
+	}
+
+	private ShardKey detectShardKey() {
+
+		if (!isAnnotationPresent(Sharded.class)) {
+			return ShardKey.none();
+		}
+
+		Sharded sharded = getRequiredAnnotation(Sharded.class);
+
+		String[] keyProperties = sharded.shardKey();
+		if (ObjectUtils.isEmpty(keyProperties)) {
+			keyProperties = new String[] { "_id" };
+		}
+
+		ShardKey shardKey = ShardingStrategy.HASH.equals(sharded.shardingStrategy()) ? ShardKey.hash(keyProperties)
+				: ShardKey.range(keyProperties);
+
+		return sharded.immutableKey() ? ShardKey.immutable(shardKey) : shardKey;
 	}
 
 	/*
@@ -140,7 +164,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	@Override
 	public org.springframework.data.mongodb.core.query.Collation getCollation() {
 
-		Object collationValue = collationExpression != null ? expression.getValue(getEvaluationContext(null), String.class)
+		Object collationValue = collationExpression != null ? collationExpression.getValue(getEvaluationContext(null), String.class)
 				: this.collation;
 
 		if (collationValue == null) {
@@ -158,6 +182,11 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		return StringUtils.hasText(collationValue.toString())
 				? org.springframework.data.mongodb.core.query.Collation.parse(collationValue.toString())
 				: null;
+	}
+
+	@Override
+	public ShardKey getShardKey() {
+		return shardKey;
 	}
 
 	/*
@@ -232,7 +261,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	 * ambiguity a @see {@link MappingException} is thrown.
 	 *
 	 * @param property - the new id property candidate
-	 * @return
+	 * @return can be {@literal null}.
 	 */
 	@Override
 	protected MongoPersistentProperty returnPropertyIfBetterIdPropertyCandidateOrNull(MongoPersistentProperty property) {
@@ -284,7 +313,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	 * {@link LiteralExpression} (indicating that no subsequent evaluation is necessary).
 	 *
 	 * @param potentialExpression can be {@literal null}
-	 * @return
+	 * @return can be {@literal null}.
 	 */
 	@Nullable
 	private static Expression detectExpression(@Nullable String potentialExpression) {

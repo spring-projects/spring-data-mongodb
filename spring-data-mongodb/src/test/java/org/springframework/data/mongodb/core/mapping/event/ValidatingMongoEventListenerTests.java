@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,20 +15,17 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
-import static org.hamcrest.core.IsEqual.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import javax.validation.ConstraintViolationException;
 
-import org.junit.ClassRule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
-import org.springframework.data.util.Version;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 /**
  * Integration test for {@link ValidatingMongoEventListener}.
@@ -37,29 +34,25 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration
-public class ValidatingMongoEventListenerTests {
-
-	public static @ClassRule MongoVersionRule version = MongoVersionRule.atLeast(new Version(2, 6));
+class ValidatingMongoEventListenerTests {
 
 	@Autowired MongoTemplate mongoTemplate;
 
 	@Test // DATAMONGO-36
-	public void shouldThrowConstraintViolationException() {
+	void shouldThrowConstraintViolationException() {
 
 		User user = new User("john", 17);
 
-		try {
-			mongoTemplate.save(user);
-			fail();
-		} catch (ConstraintViolationException e) {
-			assertThat(e.getConstraintViolations().size(), equalTo(2));
-		}
+		assertThatExceptionOfType(ConstraintViolationException.class).isThrownBy(() -> mongoTemplate.save(user))
+				.satisfies(e -> {
+					assertThat(e.getConstraintViolations()).hasSize(2);
+				});
 	}
 
 	@Test
-	public void shouldNotThrowAnyExceptions() {
+	void shouldNotThrowAnyExceptions() {
 		mongoTemplate.save(new User("john smith", 18));
 	}
 }

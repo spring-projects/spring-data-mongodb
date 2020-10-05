@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ class GeoCommandStatistics {
 	 * Creates a new {@link GeoCommandStatistics} from the given command result extracting the statistics.
 	 *
 	 * @param commandResult must not be {@literal null}.
-	 * @return
+	 * @return never {@literal null}.
 	 */
 	public static GeoCommandStatistics from(Document commandResult) {
 
@@ -61,7 +61,7 @@ class GeoCommandStatistics {
 	 * Returns the average distance reported by the command result. Mitigating a removal of the field in case the command
 	 * didn't return any result introduced in MongoDB 3.2 RC1.
 	 *
-	 * @return
+	 * @return never {@literal null}, uses {@link Double#NaN} if {@literal avgDistance} does not exist.
 	 * @see <a href="https://jira.mongodb.org/browse/SERVER-21024">MongoDB Jira SERVER-21024</a>
 	 */
 	public double getAverageDistance() {

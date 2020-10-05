@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,6 @@
  */
 package org.springframework.data.mongodb.core;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-
 import java.util.Collection;
 import java.util.List;
 
@@ -27,8 +24,6 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.util.StreamUtils;
 
-import com.mongodb.client.model.Filters;
-
 /**
  * A MongoDB document in its mapped state. I.e. after a source document has been mapped using mapping information of the
  * entity the source document was supposed to represent.
@@ -36,13 +31,20 @@ import com.mongodb.client.model.Filters;
  * @author Oliver Gierke
  * @since 2.1
  */
-@RequiredArgsConstructor(staticName = "of")
 public class MappedDocument {
 
 	private static final String ID_FIELD = "_id";
 	private static final Document ID_ONLY_PROJECTION = new Document(ID_FIELD, 1);
 
-	private final @Getter Document document;
+	private final Document document;
+
+	private MappedDocument(Document document) {
+		this.document = document;
+	}
+
+	public static MappedDocument of(Document document) {
+		return new MappedDocument(document);
+	}
 
 	public static Document getIdOnlyProjection() {
 		return ID_ONLY_PROJECTION;
@@ -80,11 +82,19 @@ public class MappedDocument {
 	}
 
 	public Bson getIdFilter() {
-		return Filters.eq(ID_FIELD, document.get(ID_FIELD));
+		return new Document(ID_FIELD, document.get(ID_FIELD));
+	}
+
+	public Object get(String key) {
+		return document.get(key);
 	}
 
 	public UpdateDefinition updateWithoutId() {
 		return new MappedUpdate(Update.fromDocument(document, ID_FIELD));
+	}
+
+	public Document getDocument() {
+		return this.document;
 	}
 
 	/**

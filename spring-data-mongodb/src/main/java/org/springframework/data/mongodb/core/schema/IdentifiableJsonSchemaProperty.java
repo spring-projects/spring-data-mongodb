@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,12 @@ package org.springframework.data.mongodb.core.schema;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.bson.Document;
+
 import org.springframework.data.domain.Range;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ArrayJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.BooleanJsonSchemaObject;
@@ -30,7 +33,9 @@ import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.Numeri
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ObjectJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.StringJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.TimestampJsonSchemaObject;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 
 /**
  * {@link JsonSchemaProperty} implementation.
@@ -360,7 +365,6 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		/**
 		 * @param range must not be {@literal null}.
 		 * @return new instance of {@link ObjectJsonSchemaProperty}.
-		 * @see ObjectJsonSchemaObject#propertiesCount
 		 */
 		public ObjectJsonSchemaProperty propertiesCount(Range<Integer> range) {
 			return new ObjectJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.propertiesCount(range));
@@ -1042,6 +1046,155 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		@Override
 		public boolean isRequired() {
 			return required;
+		}
+	}
+
+	/**
+	 * {@link JsonSchemaProperty} implementation for encrypted fields.
+	 *
+	 * @author Christoph Strobl
+	 * @since 2.2
+	 */
+	public static class EncryptedJsonSchemaProperty implements JsonSchemaProperty {
+
+		private final JsonSchemaProperty targetProperty;
+		private final @Nullable String algorithm;
+		private final @Nullable String keyId;
+		private final @Nullable List<UUID> keyIds;
+
+		/**
+		 * Create new instance of {@link EncryptedJsonSchemaProperty} wrapping the given {@link JsonSchemaProperty target}.
+		 *
+		 * @param target must not be {@literal null}.
+		 */
+		public EncryptedJsonSchemaProperty(JsonSchemaProperty target) {
+			this(target, null, null, null);
+		}
+
+		private EncryptedJsonSchemaProperty(JsonSchemaProperty target, @Nullable String algorithm, @Nullable String keyId,
+				@Nullable List<UUID> keyIds) {
+
+			Assert.notNull(target, "Target must not be null!");
+			this.targetProperty = target;
+			this.algorithm = algorithm;
+			this.keyId = keyId;
+			this.keyIds = keyIds;
+		}
+
+		/**
+		 * Create new instance of {@link EncryptedJsonSchemaProperty} wrapping the given {@link JsonSchemaProperty target}.
+		 *
+		 * @param target must not be {@literal null}.
+		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
+		 */
+		public static EncryptedJsonSchemaProperty encrypted(JsonSchemaProperty target) {
+			return new EncryptedJsonSchemaProperty(target);
+		}
+
+		/**
+		 * Use {@literal AEAD_AES_256_CBC_HMAC_SHA_512-Random} algorithm.
+		 *
+		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
+		 */
+		public EncryptedJsonSchemaProperty aead_aes_256_cbc_hmac_sha_512_random() {
+			return algorithm("AEAD_AES_256_CBC_HMAC_SHA_512-Random");
+		}
+
+		/**
+		 * Use {@literal AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic} algorithm.
+		 *
+		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
+		 */
+		public EncryptedJsonSchemaProperty aead_aes_256_cbc_hmac_sha_512_deterministic() {
+			return algorithm("AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic");
+		}
+
+		/**
+		 * Use the given algorithm identified via its name.
+		 *
+		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
+		 */
+		public EncryptedJsonSchemaProperty algorithm(String algorithm) {
+			return new EncryptedJsonSchemaProperty(targetProperty, algorithm, keyId, keyIds);
+		}
+
+		/**
+		 * @param keyId must not be {@literal null}.
+		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
+		 */
+		public EncryptedJsonSchemaProperty keyId(String keyId) {
+			return new EncryptedJsonSchemaProperty(targetProperty, algorithm, keyId, null);
+		}
+
+		/**
+		 * @param keyId must not be {@literal null}.
+		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
+		 */
+		public EncryptedJsonSchemaProperty keys(UUID... keyId) {
+			return new EncryptedJsonSchemaProperty(targetProperty, algorithm, null, Arrays.asList(keyId));
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.schema.JsonSchemaObject#toDocument()
+		 */
+		@Override
+		public Document toDocument() {
+
+			Document doc = targetProperty.toDocument();
+			Document propertySpecification = doc.get(targetProperty.getIdentifier(), Document.class);
+
+			Document enc = new Document();
+
+			if (!ObjectUtils.isEmpty(keyId)) {
+				enc.append("keyId", keyId);
+			} else if (!ObjectUtils.isEmpty(keyIds)) {
+				enc.append("keyId", keyIds);
+			}
+
+			Type type = extractPropertyType(propertySpecification);
+			if (type != null) {
+
+				propertySpecification.remove(type.representation());
+				enc.append("bsonType", type.toBsonType().value()); // TODO: no samples with type -> is it bson type all the way?
+			}
+
+			enc.append("algorithm", algorithm);
+
+			propertySpecification.append("encrypt", enc);
+
+			return doc;
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.schema.JsonSchemaProperty#getIdentifier()
+		 */
+		@Override
+		public String getIdentifier() {
+			return targetProperty.getIdentifier();
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.schema.JsonSchemaObject#getTypes()
+		 */
+		@Override
+		public Set<Type> getTypes() {
+			return targetProperty.getTypes();
+		}
+
+		@Nullable
+		private Type extractPropertyType(Document source) {
+
+			if (source.containsKey("type")) {
+				return Type.of(source.get("type", String.class));
+			}
+			if (source.containsKey("bsonType")) {
+				return Type.of(source.get("bsonType", String.class));
+			}
+
+			return null;
 		}
 	}
 }

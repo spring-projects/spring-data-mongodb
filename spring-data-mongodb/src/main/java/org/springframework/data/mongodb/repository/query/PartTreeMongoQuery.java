@@ -1,5 +1,5 @@
 /*
- * Copyright 2002-2019 the original author or authors.
+ * Copyright 2002-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ReturnedType;
 import org.springframework.data.repository.query.parser.PartTree;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.ExpressionParser;
 import org.springframework.util.StringUtils;
 
 /**
@@ -59,7 +59,7 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 	 * @param evaluationContextProvider must not be {@literal null}.
 	 */
 	public PartTreeMongoQuery(MongoQueryMethod method, MongoOperations mongoOperations,
-			SpelExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			ExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
 
 		super(method, mongoOperations, expressionParser, evaluationContextProvider);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,7 @@
 package org.springframework.data.mongodb.core.convert;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
@@ -25,15 +24,18 @@ import java.util.Collections;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+
 import org.springframework.dao.InvalidDataAccessApiUsageException;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 
 import com.mongodb.DBRef;
@@ -47,19 +49,20 @@ import com.mongodb.client.MongoDatabase;
  * @author Christoph Strobl
  * @author Oliver Gierke
  */
-@RunWith(MockitoJUnitRunner.class)
-public class DefaultDbRefResolverUnitTests {
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
+class DefaultDbRefResolverUnitTests {
 
-	@Mock MongoDbFactory factoryMock;
+	@Mock MongoDatabaseFactory factoryMock;
 	@Mock MongoDatabase dbMock;
 	@Mock MongoCollection<Document> collectionMock;
 	@Mock FindIterable<Document> cursorMock;
-	DefaultDbRefResolver resolver;
+	private DefaultDbRefResolver resolver;
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	void setUp() {
 
-		when(factoryMock.getDb()).thenReturn(dbMock);
+		when(factoryMock.getMongoDatabase()).thenReturn(dbMock);
 		when(dbMock.getCollection(anyString(), any(Class.class))).thenReturn(collectionMock);
 		when(collectionMock.find(any(Document.class))).thenReturn(cursorMock);
 
@@ -68,7 +71,7 @@ public class DefaultDbRefResolverUnitTests {
 
 	@Test // DATAMONGO-1194
 	@SuppressWarnings("unchecked")
-	public void bulkFetchShouldLoadDbRefsCorrectly() {
+	void bulkFetchShouldLoadDbRefsCorrectly() {
 
 		DBRef ref1 = new DBRef("collection-1", new ObjectId());
 		DBRef ref2 = new DBRef("collection-1", new ObjectId());
@@ -85,25 +88,26 @@ public class DefaultDbRefResolverUnitTests {
 		assertThat($in).hasSize(2);
 	}
 
-	@Test(expected = InvalidDataAccessApiUsageException.class) // DATAMONGO-1194
-	public void bulkFetchShouldThrowExceptionWhenUsingDifferntCollectionsWithinSetOfReferences() {
+	@Test // DATAMONGO-1194
+	void bulkFetchShouldThrowExceptionWhenUsingDifferntCollectionsWithinSetOfReferences() {
 
 		DBRef ref1 = new DBRef("collection-1", new ObjectId());
 		DBRef ref2 = new DBRef("collection-2", new ObjectId());
 
-		resolver.bulkFetch(Arrays.asList(ref1, ref2));
+		assertThatThrownBy(() -> resolver.bulkFetch(Arrays.asList(ref1, ref2)))
+				.isInstanceOf(InvalidDataAccessApiUsageException.class);
 	}
 
 	@Test // DATAMONGO-1194
-	public void bulkFetchShouldReturnEarlyForEmptyLists() {
+	void bulkFetchShouldReturnEarlyForEmptyLists() {
 
-		resolver.bulkFetch(Collections.<DBRef> emptyList());
+		resolver.bulkFetch(Collections.emptyList());
 
 		verify(collectionMock, never()).find(Mockito.any(Document.class));
 	}
 
 	@Test // DATAMONGO-1194
-	public void bulkFetchShouldRestoreOriginalOrder() {
+	void bulkFetchShouldRestoreOriginalOrder() {
 
 		Document o1 = new Document("_id", new ObjectId());
 		Document o2 = new Document("_id", new ObjectId());
@@ -117,7 +121,7 @@ public class DefaultDbRefResolverUnitTests {
 	}
 
 	@Test // DATAMONGO-1765
-	public void bulkFetchContainsDuplicates() {
+	void bulkFetchContainsDuplicates() {
 
 		Document document = new Document("_id", new ObjectId());
 

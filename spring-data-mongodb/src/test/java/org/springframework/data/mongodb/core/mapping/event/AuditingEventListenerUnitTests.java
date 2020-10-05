@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,8 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import lombok.AllArgsConstructor;
@@ -30,11 +27,11 @@ import lombok.experimental.Wither;
 import java.util.Arrays;
 import java.util.Date;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.AdditionalAnswers;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.core.Ordered;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -49,33 +46,29 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
  * @author Oliver Gierke
  * @author Thomas Darimont
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class AuditingEventListenerUnitTests {
 
-	IsNewAwareAuditingHandler handler;
-	AuditingEventListener listener;
+	private IsNewAwareAuditingHandler handler;
+	private AuditingEventListener listener;
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	void setUp() {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		mappingContext.getPersistentEntity(Sample.class);
 
 		handler = spy(new IsNewAwareAuditingHandler(new PersistentEntities(Arrays.asList(mappingContext))));
-
-		doAnswer(AdditionalAnswers.returnsArgAt(0)).when(handler).markCreated(any());
-		doAnswer(AdditionalAnswers.returnsArgAt(0)).when(handler).markModified(any());
-
 		listener = new AuditingEventListener(() -> handler);
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-577
-	public void rejectsNullAuditingHandler() {
-		new AuditingEventListener(null);
+	@Test // DATAMONGO-577
+	void rejectsNullAuditingHandler() {
+		assertThatIllegalArgumentException().isThrownBy(() -> new AuditingEventListener(null));
 	}
 
 	@Test // DATAMONGO-577
-	public void triggersCreationMarkForObjectWithEmptyId() {
+	void triggersCreationMarkForObjectWithEmptyId() {
 
 		Sample sample = new Sample();
 		listener.onApplicationEvent(new BeforeConvertEvent<Object>(sample, "collection-1"));
@@ -85,7 +78,7 @@ public class AuditingEventListenerUnitTests {
 	}
 
 	@Test // DATAMONGO-577
-	public void triggersModificationMarkForObjectWithSetId() {
+	void triggersModificationMarkForObjectWithSetId() {
 
 		Sample sample = new Sample();
 		sample.id = "id";
@@ -96,14 +89,14 @@ public class AuditingEventListenerUnitTests {
 	}
 
 	@Test
-	public void hasExplicitOrder() {
+	void hasExplicitOrder() {
 
-		assertThat(listener, is(instanceOf(Ordered.class)));
-		assertThat(listener.getOrder(), is(100));
+		assertThat(listener).isInstanceOf(Ordered.class);
+		assertThat(listener.getOrder()).isEqualTo(100);
 	}
 
 	@Test // DATAMONGO-1992
-	public void propagatesChangedInstanceToEvent() {
+	void propagatesChangedInstanceToEvent() {
 
 		ImmutableSample sample = new ImmutableSample();
 		BeforeConvertEvent<Object> event = new BeforeConvertEvent<>(sample, "collection");
@@ -129,7 +122,7 @@ public class AuditingEventListenerUnitTests {
 	@Wither
 	@AllArgsConstructor
 	@NoArgsConstructor(force = true)
-	static class ImmutableSample {
+	private static class ImmutableSample {
 
 		@Id String id;
 		@CreatedDate Date created;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,28 +15,93 @@
  */
 package org.springframework.data.mongodb.util.json;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
+import org.springframework.data.mapping.model.SpELExpressionEvaluator;
+import org.springframework.data.spel.ExpressionDependencies;
+import org.springframework.data.util.Lazy;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
+import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 
 /**
- * Reusable context for binding parameters to an placeholder or a SpEL expression within a JSON structure. <br />
+ * Reusable context for binding parameters to a placeholder or a SpEL expression within a JSON structure. <br />
  * To be used along with {@link ParameterBindingDocumentCodec#decode(String, ParameterBindingContext)}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.2
  */
-@RequiredArgsConstructor
-@Getter
 public class ParameterBindingContext {
 
 	private final ValueProvider valueProvider;
-	private final SpelExpressionParser expressionParser;
-	private final EvaluationContext evaluationContext;
+	private final SpELExpressionEvaluator expressionEvaluator;
+
+	/**
+	 * @param valueProvider
+	 * @param expressionParser
+	 * @param evaluationContext
+	 */
+	public ParameterBindingContext(ValueProvider valueProvider, SpelExpressionParser expressionParser,
+			EvaluationContext evaluationContext) {
+		this(valueProvider, expressionParser, () -> evaluationContext);
+	}
+
+	/**
+	 * @param valueProvider
+	 * @param expressionParser
+	 * @param evaluationContext a {@link Supplier} for {@link Lazy} context retrieval.
+	 * @since 2.2.3
+	 */
+	public ParameterBindingContext(ValueProvider valueProvider, ExpressionParser expressionParser,
+			Supplier<EvaluationContext> evaluationContext) {
+
+		this(valueProvider, new SpELExpressionEvaluator() {
+			@Override
+			public <T> T evaluate(String expressionString) {
+				return (T) expressionParser.parseExpression(expressionString).getValue(evaluationContext.get(), Object.class);
+			}
+		});
+	}
+
+	/**
+	 * @param valueProvider
+	 * @param expressionEvaluator
+	 * @since 3.1
+	 */
+	public ParameterBindingContext(ValueProvider valueProvider, SpELExpressionEvaluator expressionEvaluator) {
+		this.valueProvider = valueProvider;
+		this.expressionEvaluator = expressionEvaluator;
+	}
+
+	/**
+	 * Create a new {@link ParameterBindingContext} that is capable of expression parsing and can provide a
+	 * {@link EvaluationContext} based on {@link ExpressionDependencies}.
+	 *
+	 * @param valueProvider
+	 * @param expressionParser
+	 * @param contextFunction
+	 * @return
+	 * @since 3.1
+	 */
+	public static ParameterBindingContext forExpressions(ValueProvider valueProvider,
+			ExpressionParser expressionParser, Function<ExpressionDependencies, EvaluationContext> contextFunction) {
+
+		return new ParameterBindingContext(valueProvider, new SpELExpressionEvaluator() {
+			@Override
+			public <T> T evaluate(String expressionString) {
+
+				Expression expression = expressionParser.parseExpression(expressionString);
+				ExpressionDependencies dependencies = ExpressionDependencies.discover(expression);
+				EvaluationContext evaluationContext = contextFunction.apply(dependencies);
+
+				return (T) expression.getValue(evaluationContext, Object.class);
+			}
+		});
+	}
 
 	@Nullable
 	public Object bindableValueForIndex(int index) {
@@ -45,8 +110,10 @@ public class ParameterBindingContext {
 
 	@Nullable
 	public Object evaluateExpression(String expressionString) {
+		return expressionEvaluator.evaluate(expressionString);
+	}
 
-		Expression expression = expressionParser.parseExpression(expressionString);
-		return expression.getValue(this.evaluationContext, Object.class);
+	public ValueProvider getValueProvider() {
+		return valueProvider;
 	}
 }

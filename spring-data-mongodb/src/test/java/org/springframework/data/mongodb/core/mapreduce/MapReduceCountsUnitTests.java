@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,9 @@
  */
 package org.springframework.data.mongodb.core.mapreduce;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link MapReduceCounts}.
@@ -33,9 +32,9 @@ public class MapReduceCountsUnitTests {
 		MapReduceCounts left = new MapReduceCounts(1L, 1L, 1L);
 		MapReduceCounts right = new MapReduceCounts(1L, 1L, 1L);
 
-		assertThat(left, is(right));
-		assertThat(right, is(left));
-		assertThat(left.hashCode(), is(right.hashCode()));
+		assertThat(left).isEqualTo(right);
+		assertThat(right).isEqualTo(left);
+		assertThat(left.hashCode()).isEqualTo(right.hashCode());
 	}
 
 	@Test // DATACMNS-378
@@ -44,8 +43,8 @@ public class MapReduceCountsUnitTests {
 		MapReduceCounts left = new MapReduceCounts(1L, 1L, 1L);
 		MapReduceCounts right = new MapReduceCounts(1L, 2L, 1L);
 
-		assertThat(left, is(not(right)));
-		assertThat(right, is(not(left)));
-		assertThat(left.hashCode(), is(not(right.hashCode())));
+		assertThat(left).isNotEqualTo(right);
+		assertThat(right).isNotEqualTo(left);
+		assertThat(left.hashCode()).isNotEqualTo(right.hashCode());
 	}
 }

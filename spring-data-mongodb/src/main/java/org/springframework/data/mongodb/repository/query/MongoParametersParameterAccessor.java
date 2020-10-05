@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 package org.springframework.data.mongodb.repository.query;
-
-import java.util.Arrays;
-import java.util.List;
 
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
@@ -41,7 +38,6 @@ import org.springframework.util.ClassUtils;
 public class MongoParametersParameterAccessor extends ParametersParameterAccessor implements MongoParameterAccessor {
 
 	private final MongoQueryMethod method;
-	private final List<Object> values;
 
 	/**
 	 * Creates a new {@link MongoParametersParameterAccessor}.
@@ -54,7 +50,6 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 		super(method.getParameters(), values);
 
 		this.method = method;
-		this.values = Arrays.asList(values);
 	}
 
 	public Range<Distance> getDistanceRange() {
@@ -156,6 +151,6 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 	 */
 	@Override
 	public Object[] getValues() {
-		return values.toArray();
+		return super.getValues();
 	}
 }

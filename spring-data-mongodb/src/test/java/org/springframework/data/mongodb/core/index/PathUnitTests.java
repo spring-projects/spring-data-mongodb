@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.core.index;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import org.junit.Before;
@@ -25,6 +24,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.CycleGuard.Path;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -54,9 +54,9 @@ public class PathUnitTests {
 
 		Path path = Path.of(foo).append(bar).append(bar);
 
-		assertThat(path.isCycle(), is(true));
-		assertThat(path.toCyclePath(), is(equalTo("bar -> bar")));
-		assertThat(path.toString(), is(equalTo("foo -> bar -> bar")));
+		assertThat(path.isCycle()).isTrue();
+		assertThat(path.toCyclePath()).isEqualTo("bar -> bar");
+		assertThat(path.toString()).isEqualTo("foo -> bar -> bar");
 	}
 
 	@Test // DATAMONGO-1782
@@ -67,9 +67,9 @@ public class PathUnitTests {
 
 		Path path = Path.of(foo).append(bar);
 
-		assertThat(path.isCycle(), is(false));
-		assertThat(path.toCyclePath(), is(equalTo("")));
-		assertThat(path.toString(), is(equalTo("foo -> bar")));
+		assertThat(path.isCycle()).isFalse();
+		assertThat(path.toCyclePath()).isEqualTo("");
+		assertThat(path.toString()).isEqualTo("foo -> bar");
 	}
 
 	@Test // DATAMONGO-1782
@@ -79,7 +79,7 @@ public class PathUnitTests {
 		MongoPersistentProperty bar = createPersistentPropertyMock(entityMock, "bar");
 		MongoPersistentProperty bar2 = createPersistentPropertyMock(mock(MongoPersistentEntity.class), "bar");
 
-		assertThat(Path.of(foo).append(bar).append(bar2).isCycle(), is(false));
+		assertThat(Path.of(foo).append(bar).append(bar2).isCycle()).isFalse();
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,17 +15,16 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
-import static org.hamcrest.core.StringStartsWith.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 
 import org.bson.Document;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -40,7 +39,7 @@ public class LoggingEventListenerTests {
 	ch.qos.logback.classic.Logger logger;
 	LoggingEventListener listener;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		appender = new ListAppender<ILoggingEvent>();
@@ -57,7 +56,7 @@ public class LoggingEventListenerTests {
 		listener = new LoggingEventListener();
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
 
 		// cleanup
@@ -78,7 +77,7 @@ public class LoggingEventListenerTests {
 
 		listener.onAfterConvert(new AfterConvertEvent<Object>(new Document("foo", new Foo()), this, "collection"));
 
-		assertThat(appender.list.get(0).getFormattedMessage(), startsWith("onAfterConvert: { \"foo\""));
+		assertThat(appender.list.get(0).getFormattedMessage()).startsWith("onAfterConvert: { \"foo\"");
 	}
 
 	@Test // DATAMONGO-1645
@@ -86,8 +85,8 @@ public class LoggingEventListenerTests {
 
 		listener.onBeforeSave(new BeforeSaveEvent<Object>(new Foo(), new Document("foo", new Foo()), "collection"));
 
-		assertThat(appender.list.get(0).getFormattedMessage(),
-				startsWith("onBeforeSave: org.springframework.data.mongodb.core."));
+		assertThat(appender.list.get(0).getFormattedMessage())
+				.startsWith("onBeforeSave: org.springframework.data.mongodb.core.");
 	}
 
 	@Test // DATAMONGO-1645
@@ -95,8 +94,8 @@ public class LoggingEventListenerTests {
 
 		listener.onAfterSave(new AfterSaveEvent<Object>(new Foo(), new Document("foo", new Foo()), "collection"));
 
-		assertThat(appender.list.get(0).getFormattedMessage(),
-				startsWith("onAfterSave: org.springframework.data.mongodb.core."));
+		assertThat(appender.list.get(0).getFormattedMessage())
+				.startsWith("onAfterSave: org.springframework.data.mongodb.core.");
 	}
 
 	@Test // DATAMONGO-1645
@@ -104,7 +103,7 @@ public class LoggingEventListenerTests {
 
 		listener.onBeforeDelete(new BeforeDeleteEvent<Object>(new Document("foo", new Foo()), Object.class, "collection"));
 
-		assertThat(appender.list.get(0).getFormattedMessage(), startsWith("onBeforeDelete: { \"foo\""));
+		assertThat(appender.list.get(0).getFormattedMessage()).startsWith("onBeforeDelete: { \"foo\"");
 	}
 
 	@Test // DATAMONGO-1645
@@ -112,7 +111,7 @@ public class LoggingEventListenerTests {
 
 		listener.onAfterDelete(new AfterDeleteEvent<Object>(new Document("foo", new Foo()), Object.class, "collection"));
 
-		assertThat(appender.list.get(0).getFormattedMessage(), startsWith("onAfterDelete: { \"foo\""));
+		assertThat(appender.list.get(0).getFormattedMessage()).startsWith("onAfterDelete: { \"foo\"");
 	}
 
 	static class Foo {

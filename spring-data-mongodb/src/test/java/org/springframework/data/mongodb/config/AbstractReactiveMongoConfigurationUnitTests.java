@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import example.first.First;
 import example.second.Second;
@@ -26,27 +25,27 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.AbstractApplicationContext;
+import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.MongoTypeMapper;
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.spel.ExtensionAwareEvaluationContextProvider;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.mongodb.Mongo;
 import com.mongodb.reactivestreams.client.MongoClient;
-import com.mongodb.reactivestreams.client.MongoClients;
 
 /**
  * Unit tests for {@link AbstractReactiveMongoConfiguration}.
@@ -55,15 +54,13 @@ import com.mongodb.reactivestreams.client.MongoClients;
  */
 public class AbstractReactiveMongoConfigurationUnitTests {
 
-	@Rule public ExpectedException exception = ExpectedException.none();
-
 	@Test // DATAMONGO-1444
 	public void usesConfigClassPackageAsBaseMappingPackage() throws ClassNotFoundException {
 
 		AbstractReactiveMongoConfiguration configuration = new SampleMongoConfiguration();
-		assertThat(configuration.getMappingBasePackages(), hasItem(SampleMongoConfiguration.class.getPackage().getName()));
-		assertThat(configuration.getInitialEntitySet(), hasSize(2));
-		assertThat(configuration.getInitialEntitySet(), hasItem(Entity.class));
+		assertThat(configuration.getMappingBasePackages()).contains(SampleMongoConfiguration.class.getPackage().getName());
+		assertThat(configuration.getInitialEntitySet()).hasSize(2);
+		assertThat(configuration.getInitialEntitySet()).contains(Entity.class);
 	}
 
 	@Test // DATAMONGO-1444
@@ -83,26 +80,22 @@ public class AbstractReactiveMongoConfigurationUnitTests {
 
 		AbstractApplicationContext context = new AnnotationConfigApplicationContext(SampleMongoConfiguration.class);
 
-		assertThat(context.getBean(SimpleReactiveMongoDatabaseFactory.class), is(notNullValue()));
+		assertThat(context.getBean(SimpleReactiveMongoDatabaseFactory.class)).isNotNull();
+		assertThatExceptionOfType(NoSuchBeanDefinitionException.class)
+				.isThrownBy(() -> context.getBean(com.mongodb.client.MongoClient.class));
 
-		exception.expect(NoSuchBeanDefinitionException.class);
-
-		try {
-			context.getBean(Mongo.class);
-		} finally {
-			context.close();
-		}
+		context.close();
 	}
 
 	@Test // DATAMONGO-1444
 	public void returnsUninitializedMappingContext() throws Exception {
 
 		SampleMongoConfiguration configuration = new SampleMongoConfiguration();
-		MongoMappingContext context = configuration.mongoMappingContext();
+		MongoMappingContext context = configuration.mongoMappingContext(configuration.customConversions());
 
-		assertThat(context.getPersistentEntities(), is(emptyIterable()));
+		assertThat(context.getPersistentEntities()).isEmpty();
 		context.initialize();
-		assertThat(context.getPersistentEntities(), is(not(emptyIterable())));
+		assertThat(context.getPersistentEntities()).isNotEmpty();
 	}
 
 	@Test // DATAMONGO-1444
@@ -114,7 +107,7 @@ public class AbstractReactiveMongoConfigurationUnitTests {
 		EvaluationContextProvider provider = (EvaluationContextProvider) ReflectionTestUtils.getField(entity,
 				"evaluationContextProvider");
 
-		assertThat(provider, is(instanceOf(ExtensionAwareEvaluationContextProvider.class)));
+		assertThat(provider).isInstanceOf(ExtensionAwareEvaluationContextProvider.class);
 		context.close();
 	}
 
@@ -125,8 +118,8 @@ public class AbstractReactiveMongoConfigurationUnitTests {
 		MongoTypeMapper typeMapper = context.getBean(CustomMongoTypeMapper.class);
 		MappingMongoConverter mmc = context.getBean(MappingMongoConverter.class);
 
-		assertThat(mmc, is(notNullValue()));
-		assertThat(mmc.getTypeMapper(), is(typeMapper));
+		assertThat(mmc).isNotNull();
+		assertThat(mmc.getTypeMapper()).isEqualTo(typeMapper);
 		context.close();
 	}
 
@@ -137,8 +130,8 @@ public class AbstractReactiveMongoConfigurationUnitTests {
 		ConfigurationWithMultipleBasePackages config = new ConfigurationWithMultipleBasePackages();
 		Set<Class<?>> entities = config.getInitialEntitySet();
 
-		assertThat(entities, hasSize(2));
-		assertThat(entities, hasItems(First.class, Second.class));
+		assertThat(entities).hasSize(2);
+		assertThat(entities).contains(First.class, Second.class);
 	}
 
 	private static void assertScanningDisabled(final String value) throws ClassNotFoundException {
@@ -150,8 +143,8 @@ public class AbstractReactiveMongoConfigurationUnitTests {
 			}
 		};
 
-		assertThat(configuration.getMappingBasePackages(), hasItem(value));
-		assertThat(configuration.getInitialEntitySet(), hasSize(0));
+		assertThat(configuration.getMappingBasePackages()).contains(value);
+		assertThat(configuration.getInitialEntitySet()).hasSize(0);
 	}
 
 	@Configuration
@@ -164,14 +157,14 @@ public class AbstractReactiveMongoConfigurationUnitTests {
 
 		@Override
 		public MongoClient reactiveMongoClient() {
-			return MongoClients.create();
+			return MongoTestUtils.reactiveClient();
 		}
 
-		@Bean
 		@Override
-		public MappingMongoConverter mappingMongoConverter() throws Exception {
+		public MappingMongoConverter mappingMongoConverter(ReactiveMongoDatabaseFactory databaseFactory,
+				MongoCustomConversions customConversions, MongoMappingContext mappingContext) {
 
-			MappingMongoConverter converter = super.mappingMongoConverter();
+			MappingMongoConverter converter = super.mappingMongoConverter(databaseFactory, customConversions, mappingContext);
 			converter.setTypeMapper(typeMapper());
 
 			return converter;
@@ -192,7 +185,7 @@ public class AbstractReactiveMongoConfigurationUnitTests {
 
 		@Override
 		public MongoClient reactiveMongoClient() {
-			return MongoClients.create();
+			return Mockito.mock(MongoClient.class);
 		}
 
 		@Override

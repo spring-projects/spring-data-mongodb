@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,8 +25,10 @@ public class LazyLoadingException extends UncategorizedDataAccessException {
 	private static final long serialVersionUID = -7089224903873220037L;
 
 	/**
-	 * @param msg
-	 * @param cause
+	 * Constructor for LazyLoadingException.
+	 *
+	 * @param msg the detail message.
+	 * @param cause the exception thrown by underlying data access API.
 	 */
 	public LazyLoadingException(String msg, Throwable cause) {
 		super(msg, cause);

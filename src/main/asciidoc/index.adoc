@@ -14,6 +14,7 @@ toc::[]
 include::preface.adoc[]
 
 include::new-features.adoc[leveloffset=+1]
+include::upgrading.adoc[leveloffset=+1]
 include::{spring-data-commons-docs}/dependencies.adoc[leveloffset=+1]
 include::{spring-data-commons-docs}/repositories.adoc[leveloffset=+1]
 
@@ -29,9 +30,9 @@ include::reference/reactive-mongo-repositories.adoc[leveloffset=+1]
 include::{spring-data-commons-docs}/auditing.adoc[leveloffset=+1]
 include::reference/mongo-auditing.adoc[leveloffset=+1]
 include::reference/mapping.adoc[leveloffset=+1]
-include::reference/cross-store.adoc[leveloffset=+1]
+include::reference/sharding.adoc[leveloffset=+1]
+include::reference/kotlin.adoc[leveloffset=+1]
 include::reference/jmx.adoc[leveloffset=+1]
-include::reference/mongo-3.adoc[leveloffset=+1]
 
 [[appendix]]
 = Appendix

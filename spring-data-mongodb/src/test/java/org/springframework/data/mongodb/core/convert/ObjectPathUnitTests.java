@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,8 @@ package org.springframework.data.mongodb.core.convert;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
@@ -36,7 +36,7 @@ public class ObjectPathUnitTests {
 	MongoPersistentEntity<EntityTwo> two;
 	MongoPersistentEntity<EntityThree> three;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		one = new BasicMongoPersistentEntity<>(ClassTypeInformation.from(EntityOne.class));

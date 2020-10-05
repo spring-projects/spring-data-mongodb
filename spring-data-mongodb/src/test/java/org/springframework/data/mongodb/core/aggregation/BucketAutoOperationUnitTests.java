@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,15 +15,14 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.hamcrest.core.Is.*;
-import static org.junit.Assert.*;
-import static org.springframework.data.mongodb.core.DocumentTestUtils.getAsDocument;
+import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
-import org.junit.Test;
-import org.springframework.data.mongodb.core.aggregation.BucketAutoOperation.Granularities;
-
 import org.bson.Document;
+import org.junit.jupiter.api.Test;
+
+import org.springframework.data.mongodb.core.aggregation.BucketAutoOperation.Granularities;
 
 /**
  * Unit tests for {@link BucketAutoOperation}.
@@ -32,14 +31,14 @@ import org.bson.Document;
  */
 public class BucketAutoOperationUnitTests {
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1552
+	@Test // DATAMONGO-1552
 	public void rejectsNullFields() {
-		new BucketAutoOperation((Field) null, 0);
+		assertThatIllegalArgumentException().isThrownBy(() -> new BucketAutoOperation((Field) null, 0));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1552
+	@Test // DATAMONGO-1552
 	public void rejectsNonPositiveIntegerNullFields() {
-		new BucketAutoOperation(Fields.field("field"), 0);
+		assertThatIllegalArgumentException().isThrownBy(() -> new BucketAutoOperation(Fields.field("field"), 0));
 	}
 
 	@Test // DATAMONGO-1552
@@ -50,13 +49,13 @@ public class BucketAutoOperationUnitTests {
 				.andOutput("title").push().as("titles");
 
 		Document agg = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		assertThat(extractOutput(agg), is(Document.parse(
-				"{ \"grossSalesPrice\" : { \"$multiply\" : [ { \"$add\" : [ \"$netPrice\" , \"$surCharge\"]} , \"$taxrate\" , 2]} , \"titles\" : { $push: \"$title\" } }}")));
+		assertThat(extractOutput(agg)).isEqualTo(Document.parse(
+				"{ \"grossSalesPrice\" : { \"$multiply\" : [ { \"$add\" : [ \"$netPrice\" , \"$surCharge\"]} , \"$taxrate\" , 2]} , \"titles\" : { $push: \"$title\" } }}"));
 	}
 
-	@Test(expected = IllegalStateException.class) // DATAMONGO-1552
+	@Test // DATAMONGO-1552
 	public void shouldRenderEmptyAggregationExpression() {
-		bucket("groupby").andOutput("field").as("alias");
+		assertThatIllegalStateException().isThrownBy(() -> bucket("groupby").andOutput("field").as("alias"));
 	}
 
 	@Test // DATAMONGO-1552
@@ -66,7 +65,7 @@ public class BucketAutoOperationUnitTests {
 				.andOutputCount().as("titles");
 
 		Document agg = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		assertThat(extractOutput(agg), is(Document.parse("{ titles : { $sum: 1 } }")));
+		assertThat(extractOutput(agg)).isEqualTo(Document.parse("{ titles : { $sum: 1 } }"));
 	}
 
 	@Test // DATAMONGO-1552
@@ -74,7 +73,7 @@ public class BucketAutoOperationUnitTests {
 
 		Document agg = bucketAuto("field", 1).withBuckets(5).toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $bucketAuto: { groupBy: \"$field\", buckets: 5 } }")));
+		assertThat(agg).isEqualTo(Document.parse("{ $bucketAuto: { groupBy: \"$field\", buckets: 5 } }"));
 	}
 
 	@Test // DATAMONGO-1552
@@ -84,7 +83,8 @@ public class BucketAutoOperationUnitTests {
 				.withGranularity(Granularities.E24) //
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(agg, is(Document.parse("{ $bucketAuto: { buckets: 1, granularity: \"E24\", groupBy: \"$field\" } }")));
+		assertThat(agg)
+				.isEqualTo(Document.parse("{ $bucketAuto: { buckets: 1, granularity: \"E24\", groupBy: \"$field\" } }"));
 	}
 
 	@Test // DATAMONGO-1552
@@ -94,7 +94,7 @@ public class BucketAutoOperationUnitTests {
 				.andOutput("score").sum().as("cummulated_score");
 
 		Document agg = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		assertThat(extractOutput(agg), is(Document.parse("{ cummulated_score : { $sum: \"$score\" } }")));
+		assertThat(extractOutput(agg)).isEqualTo(Document.parse("{ cummulated_score : { $sum: \"$score\" } }"));
 	}
 
 	@Test // DATAMONGO-1552
@@ -104,8 +104,8 @@ public class BucketAutoOperationUnitTests {
 				.andOutputExpression("netPrice + tax").apply("$multiply", 5).as("total");
 
 		Document agg = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		assertThat(extractOutput(agg),
-				is(Document.parse("{ total : { $multiply: [ {$add : [\"$netPrice\", \"$tax\"]}, 5] } }")));
+		assertThat(extractOutput(agg))
+				.isEqualTo(Document.parse("{ total : { $multiply: [ {$add : [\"$netPrice\", \"$tax\"]}, 5] } }"));
 	}
 
 	private static Document extractOutput(Document fromBucketClause) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,51 +16,65 @@
 package org.springframework.data.mongodb.config;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
+import org.springframework.core.ResolvableType;
+import org.springframework.data.mapping.callback.EntityCallback;
+import org.springframework.data.mongodb.core.mapping.event.AuditingEntityCallback;
+import org.springframework.data.mongodb.core.mapping.event.ReactiveAuditingEntityCallback;
+import org.springframework.test.util.ReflectionTestUtils;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.data.annotation.Version;
-import org.springframework.data.domain.AuditorAware;
+import org.springframework.data.domain.ReactiveAuditorAware;
 import org.springframework.data.mongodb.core.AuditablePerson;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.mongodb.reactivestreams.client.MongoClient;
-import com.mongodb.reactivestreams.client.MongoClients;
 
 /**
  * Integration test for the auditing support via {@link org.springframework.data.mongodb.core.ReactiveMongoTemplate}.
  *
  * @author Mark Paluch
  */
-@RunWith(SpringRunner.class)
+@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 @ContextConfiguration
-public class ReactiveAuditingTests {
+class ReactiveAuditingTests {
+
+	static @Client MongoClient mongoClient;
 
 	@Autowired ReactiveAuditablePersonRepository auditablePersonRepository;
-	@Autowired AuditorAware<AuditablePerson> auditorAware;
 	@Autowired MongoMappingContext context;
 	@Autowired ReactiveMongoOperations operations;
 
 	@Configuration
-	@EnableMongoAuditing(auditorAwareRef = "auditorProvider")
-	@EnableReactiveMongoRepositories(basePackageClasses = ReactiveAuditingTests.class, considerNestedRepositories = true)
+	@EnableReactiveMongoAuditing
+	@EnableReactiveMongoRepositories(basePackageClasses = ReactiveAuditingTests.class, considerNestedRepositories = true,
+			includeFilters = @Filter(type = FilterType.ASSIGNABLE_TYPE, classes = ReactiveAuditablePersonRepository.class))
 	static class Config extends AbstractReactiveMongoConfiguration {
 
 		@Override
@@ -70,18 +84,27 @@ public class ReactiveAuditingTests {
 
 		@Override
 		public MongoClient reactiveMongoClient() {
-			return MongoClients.create();
+			return mongoClient;
+		}
+
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() {
+			return new HashSet<>(
+					Arrays.asList(AuditablePerson.class, VersionedAuditablePerson.class, SimpleVersionedAuditablePerson.class));
 		}
 
 		@Bean
-		@SuppressWarnings("unchecked")
-		public AuditorAware<AuditablePerson> auditorProvider() {
-			return mock(AuditorAware.class);
+		public ReactiveAuditorAware<AuditablePerson> auditorProvider() {
+
+			AuditablePerson person = new AuditablePerson("some-person");
+			person.setId("foo");
+
+			return () -> Mono.just(person);
 		}
 	}
 
-	@Test // DATAMONGO-2139, DATAMONGO-2150
-	public void auditingWorksForVersionedEntityWithWrapperVersion() {
+	@Test // DATAMONGO-2139, DATAMONGO-2150, DATAMONGO-2586
+	void auditingWorksForVersionedEntityWithWrapperVersion() {
 
 		verifyAuditingViaVersionProperty(new VersionedAuditablePerson(), //
 				it -> it.version, //
@@ -91,7 +114,7 @@ public class ReactiveAuditingTests {
 	}
 
 	@Test // DATAMONGO-2179
-	public void auditingWorksForVersionedEntityBatchWithWrapperVersion() {
+	void auditingWorksForVersionedEntityBatchWithWrapperVersion() {
 
 		verifyAuditingViaVersionProperty(new VersionedAuditablePerson(), //
 				it -> it.version, //
@@ -100,8 +123,8 @@ public class ReactiveAuditingTests {
 				null, 0L, 1L);
 	}
 
-	@Test // DATAMONGO-2139, DATAMONGO-2150
-	public void auditingWorksForVersionedEntityWithSimpleVersion() {
+	@Test // DATAMONGO-2139, DATAMONGO-2150, DATAMONGO-2586
+	void auditingWorksForVersionedEntityWithSimpleVersion() {
 
 		verifyAuditingViaVersionProperty(new SimpleVersionedAuditablePerson(), //
 				it -> it.version, //
@@ -110,8 +133,8 @@ public class ReactiveAuditingTests {
 				0L, 1L, 2L);
 	}
 
-	@Test // DATAMONGO-2139, DATAMONGO-2150
-	public void auditingWorksForVersionedEntityWithWrapperVersionOnTemplate() {
+	@Test // DATAMONGO-2139, DATAMONGO-2150, DATAMONGO-2586
+	void auditingWorksForVersionedEntityWithWrapperVersionOnTemplate() {
 
 		verifyAuditingViaVersionProperty(new VersionedAuditablePerson(), //
 				it -> it.version, //
@@ -120,13 +143,26 @@ public class ReactiveAuditingTests {
 				null, 0L, 1L);
 	}
 
-	@Test // DATAMONGO-2139, DATAMONGO-2150
-	public void auditingWorksForVersionedEntityWithSimpleVersionOnTemplate() {
+	@Test // DATAMONGO-2139, DATAMONGO-2150, DATAMONGO-2586
+	void auditingWorksForVersionedEntityWithSimpleVersionOnTemplate() {
 		verifyAuditingViaVersionProperty(new SimpleVersionedAuditablePerson(), //
 				it -> it.version, //
 				AuditablePerson::getCreatedAt, //
 				operations::save, //
 				0L, 1L, 2L);
+	}
+
+	@Test // DATAMONGO-2586
+	void auditingShouldOnlyRegisterReactiveAuditingCallback() {
+
+		Object callbacks = ReflectionTestUtils.getField(operations, "entityCallbacks");
+		Object callbackDiscoverer = ReflectionTestUtils.getField(callbacks, "callbackDiscoverer");
+		List<EntityCallback<?>> actualCallbacks = ReflectionTestUtils.invokeMethod(callbackDiscoverer, "getEntityCallbacks",
+				AuditablePerson.class, ResolvableType.forClass(EntityCallback.class));
+
+		assertThat(actualCallbacks) //
+				.hasAtLeastOneElementOfType(ReactiveAuditingEntityCallback.class) //
+				.doesNotHaveAnyElementsOfTypes(AuditingEntityCallback.class);
 	}
 
 	private <T extends AuditablePerson> void verifyAuditingViaVersionProperty(T instance,

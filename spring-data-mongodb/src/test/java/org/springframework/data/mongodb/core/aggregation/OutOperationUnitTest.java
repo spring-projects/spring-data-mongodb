@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import static org.springframework.data.mongodb.test.util.Assertions.*;
 import java.util.Arrays;
 
 import org.bson.Document;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link OutOperation}.
@@ -32,9 +32,9 @@ import org.junit.Test;
  */
 public class OutOperationUnitTest {
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1418
+	@Test // DATAMONGO-1418
 	public void shouldCheckNPEInCreation() {
-		new OutOperation(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> new OutOperation(null));
 	}
 
 	@Test // DATAMONGO-2259

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,7 @@
 package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.Mockito.anyList;
 
@@ -25,12 +24,13 @@ import lombok.Data;
 
 import java.util.Arrays;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.data.annotation.Id;
 
 /**
@@ -38,21 +38,19 @@ import org.springframework.data.annotation.Id;
  *
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ReactiveInsertOperationSupportUnitTests {
 
 	private static final String STAR_WARS = "star-wars";
 
 	@Mock ReactiveMongoTemplate template;
 
-	ReactiveInsertOperationSupport ops;
+	private ReactiveInsertOperationSupport ops;
 
-	Person luke, han;
+	private Person luke, han;
 
-	@Before
-	public void setUp() {
-
-		when(template.determineCollectionName(any(Class.class))).thenReturn(STAR_WARS);
+	@BeforeEach
+	void setUp() {
 
 		ops = new ReactiveInsertOperationSupport(template);
 
@@ -65,39 +63,43 @@ public class ReactiveInsertOperationSupportUnitTests {
 		han.id = "id-2";
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1719
-	public void nullCollectionShouldThrowException() {
-		ops.insert(Person.class).inCollection(null);
+	@Test // DATAMONGO-1719
+	void nullCollectionShouldThrowException() {
+		assertThatIllegalArgumentException().isThrownBy(() -> ops.insert(Person.class).inCollection(null));
 	}
 
 	@Test // DATAMONGO-1719
-	public void insertShouldUseDerivedCollectionName() {
+	void insertShouldUseDerivedCollectionName() {
+
+		when(template.getCollectionName(any(Class.class))).thenReturn(STAR_WARS);
 
 		ops.insert(Person.class).one(luke);
 
 		ArgumentCaptor<Class> captor = ArgumentCaptor.forClass(Class.class);
 
-		verify(template).determineCollectionName(captor.capture());
+		verify(template).getCollectionName(captor.capture());
 		verify(template).insert(eq(luke), eq(STAR_WARS));
 
 		assertThat(captor.getAllValues()).containsExactly(Person.class);
 	}
 
 	@Test // DATAMONGO-1719
-	public void insertShouldUseExplicitCollectionName() {
+	void insertShouldUseExplicitCollectionName() {
 
 		ops.insert(Person.class).inCollection(STAR_WARS).one(luke);
 
-		verify(template, never()).determineCollectionName(any(Class.class));
+		verify(template, never()).getCollectionName(any(Class.class));
 		verify(template).insert(eq(luke), eq(STAR_WARS));
 	}
 
 	@Test // DATAMONGO-1719
-	public void insertCollectionShouldDelegateCorrectly() {
+	void insertCollectionShouldDelegateCorrectly() {
+
+		when(template.getCollectionName(any(Class.class))).thenReturn(STAR_WARS);
 
 		ops.insert(Person.class).all(Arrays.asList(luke, han));
 
-		verify(template).determineCollectionName(any(Class.class));
+		verify(template).getCollectionName(any(Class.class));
 		verify(template).insert(anyList(), eq(STAR_WARS));
 	}
 

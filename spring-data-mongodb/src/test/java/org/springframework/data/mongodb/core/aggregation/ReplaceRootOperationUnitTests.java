@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,11 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import org.bson.Document;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
 import org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.ReplaceRootDocumentOperation;
 
 /**
@@ -29,14 +29,14 @@ import org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.Re
  */
 public class ReplaceRootOperationUnitTests {
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1550
+	@Test // DATAMONGO-1550
 	public void rejectsNullField() {
-		new ReplaceRootOperation((Field) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> new ReplaceRootOperation((Field) null));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1550
+	@Test // DATAMONGO-1550
 	public void rejectsNullExpression() {
-		new ReplaceRootOperation((AggregationExpression) null);
+		assertThatIllegalArgumentException().isThrownBy(() -> new ReplaceRootOperation((AggregationExpression) null));
 	}
 
 	@Test // DATAMONGO-1550
@@ -46,7 +46,7 @@ public class ReplaceRootOperationUnitTests {
 				.withDocument(new Document("hello", "world"));
 		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(dbObject, is(Document.parse("{ $replaceRoot : { newRoot: { hello: \"world\" } } }")));
+		assertThat(dbObject).isEqualTo(Document.parse("{ $replaceRoot : { newRoot: { hello: \"world\" } } }"));
 	}
 
 	@Test // DATAMONGO-1550
@@ -59,8 +59,8 @@ public class ReplaceRootOperationUnitTests {
 
 		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(dbObject, is(Document.parse("{ $replaceRoot : { newRoot : { "
-				+ "$map : { input : \"$array\" , as : \"element\" , in : { $multiply : [ \"$$element\" , 10]} } " + "} } }")));
+		assertThat(dbObject).isEqualTo(Document.parse("{ $replaceRoot : { newRoot : { "
+				+ "$map : { input : \"$array\" , as : \"element\" , in : { $multiply : [ \"$$element\" , 10]} } " + "} } }"));
 	}
 
 	@Test // DATAMONGO-1550
@@ -72,8 +72,8 @@ public class ReplaceRootOperationUnitTests {
 
 		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(dbObject, is(Document
-				.parse("{ $replaceRoot : { newRoot: { key: \"value\", multiply: { $multiply : [ \"$$element\" , 10]} } } }")));
+		assertThat(dbObject).isEqualTo(Document
+				.parse("{ $replaceRoot : { newRoot: { key: \"value\", multiply: { $multiply : [ \"$$element\" , 10]} } } }"));
 	}
 
 	@Test // DATAMONGO-1550
@@ -87,7 +87,8 @@ public class ReplaceRootOperationUnitTests {
 
 		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		assertThat(dbObject, is(Document.parse("{ $replaceRoot : { newRoot: { key: \"override\", key2: \"value2\"} } } }")));
+		assertThat(dbObject)
+				.isEqualTo(Document.parse("{ $replaceRoot : { newRoot: { key: \"override\", key2: \"value2\"} } } }"));
 	}
 
 	@Test // DATAMONGO-1550
@@ -95,7 +96,7 @@ public class ReplaceRootOperationUnitTests {
 
 		ReplaceRootOperation operation = new ReplaceRootOperation(Fields.field("field"));
 
-		assertThat(operation.getFields().exposesNoFields(), is(true));
-		assertThat(operation.getFields().exposesSingleFieldOnly(), is(false));
+		assertThat(operation.getFields().exposesNoFields()).isTrue();
+		assertThat(operation.getFields().exposesSingleFieldOnly()).isFalse();
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the original author or authors.
+ * Copyright 2010-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
-
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
@@ -68,7 +67,7 @@ public class Query {
 	 * Static factory method to create a {@link Query} using the provided {@link CriteriaDefinition}.
 	 *
 	 * @param criteriaDefinition must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link Query}.
 	 * @since 1.6
 	 */
 	public static Query query(CriteriaDefinition criteriaDefinition) {
@@ -91,10 +90,12 @@ public class Query {
 	 * Adds the given {@link CriteriaDefinition} to the current {@link Query}.
 	 *
 	 * @param criteriaDefinition must not be {@literal null}.
-	 * @return
+	 * @return this.
 	 * @since 1.6
 	 */
 	public Query addCriteria(CriteriaDefinition criteriaDefinition) {
+
+		Assert.notNull(criteriaDefinition, "CriteriaDefinition must not be null!");
 
 		CriteriaDefinition existing = this.criteria.get(criteriaDefinition.getKey());
 		String key = criteriaDefinition.getKey();
@@ -123,7 +124,7 @@ public class Query {
 	 * Set number of documents to skip before returning results.
 	 *
 	 * @param skip
-	 * @return
+	 * @return this.
 	 */
 	public Query skip(long skip) {
 		this.skip = skip;
@@ -134,7 +135,7 @@ public class Query {
 	 * Limit the number of returned documents to {@code limit}.
 	 *
 	 * @param limit
-	 * @return
+	 * @return this.
 	 */
 	public Query limit(int limit) {
 		this.limit = limit;
@@ -142,14 +143,31 @@ public class Query {
 	}
 
 	/**
-	 * Configures the query to use the given hint when being executed.
+	 * Configures the query to use the given hint when being executed. The {@code hint} can either be an index name or a
+	 * json {@link Document} representation.
 	 *
-	 * @param name must not be {@literal null} or empty.
-	 * @return
+	 * @param hint must not be {@literal null} or empty.
+	 * @return this.
+	 * @see Document#parse(String)
 	 */
-	public Query withHint(String name) {
-		Assert.hasText(name, "Hint must not be empty or null!");
-		this.hint = name;
+	public Query withHint(String hint) {
+
+		Assert.hasText(hint, "Hint must not be empty or null!");
+		this.hint = hint;
+		return this;
+	}
+
+	/**
+	 * Configures the query to use the given {@link Document hint} when being executed.
+	 *
+	 * @param hint must not be {@literal null}.
+	 * @return this.
+	 * @since 2.2
+	 */
+	public Query withHint(Document hint) {
+
+		Assert.notNull(hint, "Hint must not be null!");
+		this.hint = hint.toJson();
 		return this;
 	}
 
@@ -157,8 +175,8 @@ public class Query {
 	 * Sets the given pagination information on the {@link Query} instance. Will transparently set {@code skip} and
 	 * {@code limit} as well as applying the {@link Sort} instance defined with the {@link Pageable}.
 	 *
-	 * @param pageable
-	 * @return
+	 * @param pageable must not be {@literal null}.
+	 * @return this.
 	 */
 	public Query with(Pageable pageable) {
 
@@ -175,8 +193,8 @@ public class Query {
 	/**
 	 * Adds a {@link Sort} to the {@link Query} instance.
 	 *
-	 * @param sort
-	 * @return
+	 * @param sort must not be {@literal null}.
+	 * @return this.
 	 */
 	public Query with(Sort sort) {
 
@@ -209,7 +227,7 @@ public class Query {
 	 *
 	 * @param type may not be {@literal null}
 	 * @param additionalTypes may not be {@literal null}
-	 * @return
+	 * @return this.
 	 */
 	public Query restrict(Class<?> type, Class<?>... additionalTypes) {
 
@@ -265,9 +283,20 @@ public class Query {
 	}
 
 	/**
+	 * Returns {@literal true} if the {@link Query} has a sort parameter.
+	 *
+	 * @return {@literal true} if sorted.
+	 * @see Sort#isSorted()
+	 * @since 2.2
+	 */
+	public boolean isSorted() {
+		return sort.isSorted();
+	}
+
+	/**
 	 * Get the number of documents to skip.
 	 *
-	 * @return
+	 * @return number of documents to skip
 	 */
 	public long getSkip() {
 		return this.skip;
@@ -276,14 +305,14 @@ public class Query {
 	/**
 	 * Get the maximum number of documents to be return.
 	 *
-	 * @return
+	 * @return number of documents to return.
 	 */
 	public int getLimit() {
 		return this.limit;
 	}
 
 	/**
-	 * @return
+	 * @return can be {@literal null}.
 	 */
 	@Nullable
 	public String getHint() {
@@ -304,7 +333,7 @@ public class Query {
 
 	/**
 	 * @param timeout
-	 * @param timeUnit
+	 * @param timeUnit must not be {@literal null}.
 	 * @return this.
 	 * @see Meta#setMaxTime(long, TimeUnit)
 	 * @since 1.6
@@ -318,7 +347,7 @@ public class Query {
 	}
 
 	/**
-	 * @param timeout
+	 * @param timeout must not be {@literal null}.
 	 * @return this.
 	 * @see Meta#setMaxTime(Duration)
 	 * @since 2.1
@@ -330,23 +359,9 @@ public class Query {
 	}
 
 	/**
-	 * @param maxScan
-	 * @return this.
-	 * @see Meta#setMaxScan(long)
-	 * @since 1.6
-	 * @deprecated since 2.1 due to deprecation in MongoDB 4.0.
-	 */
-	@Deprecated
-	public Query maxScan(long maxScan) {
-
-		meta.setMaxScan(maxScan);
-		return this;
-	}
-
-	/**
 	 * Add a comment to the query that is propagated to the profile log.
 	 *
-	 * @param comment
+	 * @param comment must not be {@literal null}.
 	 * @return this.
 	 * @see Meta#setComment(String)
 	 * @since 1.6
@@ -354,19 +369,6 @@ public class Query {
 	public Query comment(String comment) {
 
 		meta.setComment(comment);
-		return this;
-	}
-
-	/**
-	 * @return this.
-	 * @see Meta#setSnapshot(boolean)
-	 * @since 1.6
-	 * @deprecated since 2.1 due to deprecation as of MongoDB 3.6
-	 */
-	@Deprecated
-	public Query useSnapshot() {
-
-		meta.setSnapshot(true);
 		return this;
 	}
 
@@ -409,15 +411,30 @@ public class Query {
 	}
 
 	/**
-	 * Allows querying of a replica slave.
+	 * Allows querying of a replica.
 	 *
 	 * @return this.
 	 * @see org.springframework.data.mongodb.core.query.Meta.CursorOption#SLAVE_OK
 	 * @since 1.10
+	 * @deprecated since 3.0.2, use {@link #allowSecondaryReads()}.
 	 */
+	@Deprecated
 	public Query slaveOk() {
 
 		meta.addFlag(Meta.CursorOption.SLAVE_OK);
+		return this;
+	}
+
+	/**
+	 * Allows querying of a replica.
+	 *
+	 * @return this.
+	 * @see org.springframework.data.mongodb.core.query.Meta.CursorOption#SECONDARY_READS
+	 * @since 3.0.2
+	 */
+	public Query allowSecondaryReads() {
+
+		meta.addFlag(Meta.CursorOption.SECONDARY_READS);
 		return this;
 	}
 
@@ -454,7 +471,7 @@ public class Query {
 	 * Set the {@link Collation} applying language-specific rules for string comparison.
 	 *
 	 * @param collation can be {@literal null}.
-	 * @return
+	 * @return this.
 	 * @since 2.0
 	 */
 	public Query collation(@Nullable Collation collation) {
@@ -466,7 +483,7 @@ public class Query {
 	/**
 	 * Get the {@link Collation} defining language-specific rules for string comparison.
 	 *
-	 * @return
+	 * @return never {@literal null}.
 	 * @since 2.0
 	 */
 	public Optional<Collation> getCollation() {
@@ -510,15 +527,18 @@ public class Query {
 			public Document getQueryObject() {
 				return BsonUtils.merge(sourceQuery, super.getQueryObject());
 			}
+
+			@Override
+			public boolean isSorted() {
+				return source.isSorted() || super.isSorted();
+			}
 		};
 
-		target.criteria.putAll(source.criteria);
-		target.skip = source.skip;
-		target.limit = source.limit;
-		target.sort = Sort.unsorted().and(source.sort);
-		target.hint = source.hint;
-		target.collation = source.collation;
-		target.restrictedTypes.addAll(source.restrictedTypes);
+		target.skip = source.getSkip();
+		target.limit = source.getLimit();
+		target.hint = source.getHint();
+		target.collation = source.getCollation();
+		target.restrictedTypes.addAll(source.getRestrictedTypes());
 
 		if (source.getMeta().hasValues()) {
 			target.setMeta(new Meta(source.getMeta()));

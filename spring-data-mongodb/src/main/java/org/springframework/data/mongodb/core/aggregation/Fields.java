@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -112,7 +112,7 @@ public final class Fields implements Iterable<Field> {
 		this.fields = verify(fields);
 	}
 
-	private static final List<Field> verify(List<Field> fields) {
+	private static List<Field> verify(List<Field> fields) {
 
 		Map<String, Field> reference = new HashMap<String, Field>();
 
@@ -281,6 +281,11 @@ public final class Fields implements Iterable<Field> {
 		@Override
 		public boolean isAliased() {
 			return !getName().equals(getTarget());
+		}
+
+		@Override
+		public boolean isInternal() {
+			return getRaw().endsWith("$$this") || getRaw().endsWith("$$value");
 		}
 
 		/**

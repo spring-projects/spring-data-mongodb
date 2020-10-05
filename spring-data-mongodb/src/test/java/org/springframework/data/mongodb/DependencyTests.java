@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,11 @@
 package org.springframework.data.mongodb;
 
 import static de.schauderhaft.degraph.check.JCheck.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.*;
 
 import de.schauderhaft.degraph.configuration.NamedPattern;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests package dependency constraints.
@@ -28,10 +28,10 @@ import org.junit.Test;
  * @author Jens Schauder
  * @author Oliver Gierke
  */
-public class DependencyTests {
+class DependencyTests {
 
 	@Test
-	public void noInternalPackageCycles() {
+	void noInternalPackageCycles() {
 
 		assertThat(classpath() //
 				.noJars() //
@@ -43,7 +43,7 @@ public class DependencyTests {
 	}
 
 	@Test
-	public void onlyConfigMayUseRepository() {
+	void onlyConfigMayUseRepository() {
 
 		assertThat(classpath() //
 				.including("org.springframework.data.**") //
@@ -60,7 +60,7 @@ public class DependencyTests {
 	}
 
 	@Test
-	public void commonsInternaly() {
+	void commonsInternaly() {
 
 		assertThat(classpath() //
 				.noJars() //

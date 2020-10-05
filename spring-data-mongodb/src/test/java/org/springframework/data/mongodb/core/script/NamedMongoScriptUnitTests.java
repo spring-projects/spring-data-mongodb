@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,9 @@
  */
 package org.springframework.data.mongodb.core.script;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link NamedMongoScript}.
@@ -29,19 +28,19 @@ import org.junit.Test;
  */
 public class NamedMongoScriptUnitTests {
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-479
+	@Test // DATAMONGO-479
 	public void shouldThrowExceptionWhenScriptNameIsNull() {
-		new NamedMongoScript(null, "return 1;");
+		assertThatIllegalArgumentException().isThrownBy(() -> new NamedMongoScript(null, "return 1;"));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-479
+	@Test // DATAMONGO-479
 	public void shouldThrowExceptionWhenScriptNameIsEmptyString() {
-		new NamedMongoScript("", "return 1");
+		assertThatIllegalArgumentException().isThrownBy(() -> new NamedMongoScript("", "return 1"));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-479
+	@Test // DATAMONGO-479
 	public void shouldThrowExceptionWhenRawScriptIsEmptyString() {
-		new NamedMongoScript("foo", "");
+		assertThatIllegalArgumentException().isThrownBy(() -> new NamedMongoScript("foo", ""));
 	}
 
 	@Test // DATAMONGO-479
@@ -49,6 +48,6 @@ public class NamedMongoScriptUnitTests {
 
 		String jsFunction = "function(x) { return x; }";
 
-		assertThat(new NamedMongoScript("echo", jsFunction).getCode(), is(jsFunction));
+		assertThat(new NamedMongoScript("echo", jsFunction).getCode()).isEqualTo(jsFunction);
 	}
 }

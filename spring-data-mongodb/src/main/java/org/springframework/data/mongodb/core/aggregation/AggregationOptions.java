@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,13 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import java.time.Duration;
 import java.util.Optional;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-
-import com.mongodb.DBObject;
 
 /**
  * Holds a set of configurable aggregation options that can be used within an aggregation pipeline. A list of support
@@ -33,6 +32,7 @@ import com.mongodb.DBObject;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Yadhukrishna S Pai
  * @see Aggregation#withOptions(AggregationOptions)
  * @see TypedAggregation#withOptions(AggregationOptions)
  * @since 1.6
@@ -45,12 +45,17 @@ public class AggregationOptions {
 	private static final String ALLOW_DISK_USE = "allowDiskUse";
 	private static final String COLLATION = "collation";
 	private static final String COMMENT = "comment";
+	private static final String MAX_TIME = "maxTimeMS";
+	private static final String HINT = "hint";
 
 	private final boolean allowDiskUse;
 	private final boolean explain;
 	private final Optional<Document> cursor;
 	private final Optional<Collation> collation;
 	private final Optional<String> comment;
+	private final Optional<Document> hint;
+	private Duration maxTime = Duration.ZERO;
+	private ResultOptions resultOptions = ResultOptions.READ;
 
 	/**
 	 * Creates a new {@link AggregationOptions}.
@@ -75,7 +80,7 @@ public class AggregationOptions {
 	 */
 	public AggregationOptions(boolean allowDiskUse, boolean explain, @Nullable Document cursor,
 			@Nullable Collation collation) {
-		this(allowDiskUse, explain, cursor, collation, null);
+		this(allowDiskUse, explain, cursor, collation, null, null);
 	}
 
 	/**
@@ -91,12 +96,30 @@ public class AggregationOptions {
 	 */
 	public AggregationOptions(boolean allowDiskUse, boolean explain, @Nullable Document cursor,
 			@Nullable Collation collation, @Nullable String comment) {
+		this(allowDiskUse, explain, cursor, collation, comment, null);
+	}
+
+	/**
+	 * Creates a new {@link AggregationOptions}.
+	 *
+	 * @param allowDiskUse whether to off-load intensive sort-operations to disk.
+	 * @param explain whether to get the execution plan for the aggregation instead of the actual results.
+	 * @param cursor can be {@literal null}, used to pass additional options (such as {@code batchSize}) to the
+	 *          aggregation.
+	 * @param collation collation for string comparison. Can be {@literal null}.
+	 * @param comment execution comment. Can be {@literal null}.
+	 * @param hint can be {@literal null}, used to provide an index that would be forcibly used by query optimizer.
+	 * @since 3.1
+	 */
+	private AggregationOptions(boolean allowDiskUse, boolean explain, @Nullable Document cursor,
+			@Nullable Collation collation, @Nullable String comment, @Nullable Document hint) {
 
 		this.allowDiskUse = allowDiskUse;
 		this.explain = explain;
 		this.cursor = Optional.ofNullable(cursor);
 		this.collation = Optional.ofNullable(collation);
 		this.comment = Optional.ofNullable(comment);
+		this.hint = Optional.ofNullable(hint);
 	}
 
 	/**
@@ -112,7 +135,7 @@ public class AggregationOptions {
 	}
 
 	/**
-	 * Creates new {@link AggregationOptions} given {@link DBObject} containing aggregation options.
+	 * Creates new {@link AggregationOptions} given {@link Document} containing aggregation options.
 	 *
 	 * @param document must not be {@literal null}.
 	 * @return the {@link AggregationOptions}.
@@ -128,8 +151,13 @@ public class AggregationOptions {
 		Collation collation = document.containsKey(COLLATION) ? Collation.from(document.get(COLLATION, Document.class))
 				: null;
 		String comment = document.getString(COMMENT);
+		Document hint = document.get(HINT, Document.class);
 
-		return new AggregationOptions(allowDiskUse, explain, cursor, collation, comment);
+		AggregationOptions options = new AggregationOptions(allowDiskUse, explain, cursor, collation, comment, hint);
+		if (document.containsKey(MAX_TIME)) {
+			options.maxTime = Duration.ofMillis(document.getLong(MAX_TIME));
+		}
+		return options;
 	}
 
 	/**
@@ -146,7 +174,7 @@ public class AggregationOptions {
 	 * Enables writing to temporary files. When set to true, aggregation stages can write data to the _tmp subdirectory in
 	 * the dbPath directory.
 	 *
-	 * @return
+	 * @return {@literal true} if enabled.
 	 */
 	public boolean isAllowDiskUse() {
 		return allowDiskUse;
@@ -155,7 +183,7 @@ public class AggregationOptions {
 	/**
 	 * Specifies to return the information on the processing of the pipeline.
 	 *
-	 * @return
+	 * @return {@literal true} if enabled.
 	 */
 	public boolean isExplain() {
 		return explain;
@@ -180,7 +208,7 @@ public class AggregationOptions {
 	/**
 	 * Specify a document that contains options that control the creation of the cursor object.
 	 *
-	 * @return
+	 * @return never {@literal null}.
 	 */
 	public Optional<Document> getCursor() {
 		return cursor;
@@ -189,7 +217,7 @@ public class AggregationOptions {
 	/**
 	 * Get collation settings for string comparison.
 	 *
-	 * @return
+	 * @return never {@literal null}.
 	 * @since 2.0
 	 */
 	public Optional<Collation> getCollation() {
@@ -199,11 +227,38 @@ public class AggregationOptions {
 	/**
 	 * Get the comment for the aggregation.
 	 *
-	 * @return
+	 * @return never {@literal null}.
 	 * @since 2.2
 	 */
 	public Optional<String> getComment() {
 		return comment;
+	}
+
+	/**
+	 * Get the hint used to to fulfill the aggregation.
+	 *
+	 * @return never {@literal null}.
+	 * @since 3.1
+	 */
+	public Optional<Document> getHint() {
+		return hint;
+	}
+
+	/**
+	 * @return the time limit for processing. {@link Duration#ZERO} is used for the default unbounded behavior.
+	 * @since 3.0
+	 */
+	public Duration getMaxTime() {
+		return maxTime;
+	}
+
+	/**
+	 * @return {@literal true} to skip results when running an aggregation. Useful in combination with {@code $merge} or
+	 *         {@code $out}.
+	 * @since 3.0.2
+	 */
+	public boolean isSkipResults() {
+		return ResultOptions.SKIP.equals(resultOptions);
 	}
 
 	/**
@@ -225,6 +280,10 @@ public class AggregationOptions {
 			result.put(EXPLAIN, explain);
 		}
 
+		if (result.containsKey(HINT)) {
+			hint.ifPresent(val -> result.append(HINT, val));
+		}
+
 		if (!result.containsKey(CURSOR)) {
 			cursor.ifPresent(val -> result.put(CURSOR, val));
 		}
@@ -233,13 +292,17 @@ public class AggregationOptions {
 			collation.map(Collation::toDocument).ifPresent(val -> result.append(COLLATION, val));
 		}
 
+		if (hasExecutionTimeLimit() && !result.containsKey(MAX_TIME)) {
+			result.append(MAX_TIME, maxTime.toMillis());
+		}
+
 		return result;
 	}
 
 	/**
 	 * Returns a {@link Document} representation of this {@link AggregationOptions}.
 	 *
-	 * @return
+	 * @return never {@literal null}.
 	 */
 	public Document toDocument() {
 
@@ -250,8 +313,21 @@ public class AggregationOptions {
 		cursor.ifPresent(val -> document.put(CURSOR, val));
 		collation.ifPresent(val -> document.append(COLLATION, val.toDocument()));
 		comment.ifPresent(val -> document.append(COMMENT, val));
+		hint.ifPresent(val -> document.append(HINT, val));
+
+		if (hasExecutionTimeLimit()) {
+			document.append(MAX_TIME, maxTime.toMillis());
+		}
 
 		return document;
+	}
+
+	/**
+	 * @return {@literal true} if {@link #maxTime} is set to a positive value.
+	 * @since 3.0
+	 */
+	public boolean hasExecutionTimeLimit() {
+		return !maxTime.isZero() && !maxTime.isNegative();
 	}
 
 	/* (non-Javadoc)
@@ -279,12 +355,15 @@ public class AggregationOptions {
 		private @Nullable Document cursor;
 		private @Nullable Collation collation;
 		private @Nullable String comment;
+		private @Nullable Document hint;
+		private @Nullable Duration maxTime;
+		private @Nullable ResultOptions resultOptions;
 
 		/**
 		 * Defines whether to off-load intensive sort-operations to disk.
 		 *
-		 * @param allowDiskUse
-		 * @return
+		 * @param allowDiskUse use {@literal true} to allow disk use during the aggregation.
+		 * @return this.
 		 */
 		public Builder allowDiskUse(boolean allowDiskUse) {
 
@@ -295,8 +374,8 @@ public class AggregationOptions {
 		/**
 		 * Defines whether to get the execution plan for the aggregation instead of the actual results.
 		 *
-		 * @param explain
-		 * @return
+		 * @param explain use {@literal true} to enable explain feature.
+		 * @return this.
 		 */
 		public Builder explain(boolean explain) {
 
@@ -307,8 +386,8 @@ public class AggregationOptions {
 		/**
 		 * Additional options to the aggregation.
 		 *
-		 * @param cursor
-		 * @return
+		 * @param cursor must not be {@literal null}.
+		 * @return this.
 		 */
 		public Builder cursor(Document cursor) {
 
@@ -319,8 +398,8 @@ public class AggregationOptions {
 		/**
 		 * Define the initial cursor batch size.
 		 *
-		 * @param batchSize
-		 * @return
+		 * @param batchSize use a positive int.
+		 * @return this.
 		 * @since 2.0
 		 */
 		public Builder cursorBatchSize(int batchSize) {
@@ -333,7 +412,7 @@ public class AggregationOptions {
 		 * Define collation settings for string comparison.
 		 *
 		 * @param collation can be {@literal null}.
-		 * @return
+		 * @return this.
 		 * @since 2.0
 		 */
 		public Builder collation(@Nullable Collation collation) {
@@ -346,7 +425,7 @@ public class AggregationOptions {
 		 * Define a comment to describe the execution.
 		 *
 		 * @param comment can be {@literal null}.
-		 * @return
+		 * @return this.
 		 * @since 2.2
 		 */
 		public Builder comment(@Nullable String comment) {
@@ -356,12 +435,77 @@ public class AggregationOptions {
 		}
 
 		/**
+		 * Define a hint that is used by query optimizer to to fulfill the aggregation.
+		 *
+		 * @param hint can be {@literal null}.
+		 * @return this.
+		 * @since 3.1
+		 */
+		public Builder hint(@Nullable Document hint) {
+
+			this.hint = hint;
+			return this;
+		}
+
+		/**
+		 * Set the time limit for processing.
+		 *
+		 * @param maxTime {@link Duration#ZERO} is used for the default unbounded behavior. {@link Duration#isNegative()
+		 *          Negative} values will be ignored.
+		 * @return this.
+		 * @since 3.0
+		 */
+		public Builder maxTime(@Nullable Duration maxTime) {
+
+			this.maxTime = maxTime;
+			return this;
+		}
+
+		/**
+		 * Run the aggregation, but do NOT read the aggregation result from the store. <br />
+		 * If the expected result of the aggregation is rather large, eg. when using an {@literal $out} operation, this
+		 * option allows to execute the aggregation without having the cursor return the operation result.
+		 *
+		 * @return this.
+		 * @since 3.0.2
+		 */
+		public Builder skipOutput() {
+
+			this.resultOptions = ResultOptions.SKIP;
+			return this;
+		}
+
+		/**
 		 * Returns a new {@link AggregationOptions} instance with the given configuration.
 		 *
-		 * @return
+		 * @return new instance of {@link AggregationOptions}.
 		 */
 		public AggregationOptions build() {
-			return new AggregationOptions(allowDiskUse, explain, cursor, collation, comment);
+
+			AggregationOptions options = new AggregationOptions(allowDiskUse, explain, cursor, collation, comment, hint);
+			if (maxTime != null) {
+				options.maxTime = maxTime;
+			}
+			if (resultOptions != null) {
+				options.resultOptions = resultOptions;
+			}
+
+			return options;
 		}
+	}
+
+	/**
+	 * @since 3.0
+	 */
+	private enum ResultOptions {
+
+		/**
+		 * Just do it!, and do not read the operation result.
+		 */
+		SKIP,
+		/**
+		 * Read the aggregation result from the cursor.
+		 */
+		READ;
 	}
 }

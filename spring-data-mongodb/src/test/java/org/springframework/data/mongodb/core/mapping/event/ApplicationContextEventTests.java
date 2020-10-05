@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,12 +28,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.data.annotation.Id;
@@ -46,9 +45,11 @@ import org.springframework.data.mongodb.repository.QPerson;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactory;
 import org.springframework.data.mongodb.repository.support.QuerydslMongoPredicateExecutor;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 
-import com.mongodb.MongoClient;
 import com.mongodb.WriteConcern;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 
 /**
@@ -59,6 +60,7 @@ import com.mongodb.client.MongoDatabase;
  * @author Jordi Llach
  * @author Mark Paluch
  */
+@ExtendWith({ MongoClientExtension.class })
 public class ApplicationContextEventTests {
 
 	private static final String COLLECTION_NAME = "personPojoStringId";
@@ -68,22 +70,13 @@ public class ApplicationContextEventTests {
 	private final String[] collectionsToDrop = new String[] { COLLECTION_NAME, ROOT_COLLECTION_NAME,
 			RELATED_COLLECTION_NAME };
 
-	private static MongoClient mongo;
+	static @Client MongoClient mongoClient;
+
 	private ApplicationContext applicationContext;
 	private MongoTemplate template;
 	private SimpleMappingEventListener listener;
 
-	@BeforeClass
-	public static void beforeClass() {
-		mongo = new MongoClient();
-	}
-
-	@AfterClass
-	public static void afterClass() {
-		mongo.close();
-	}
-
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		cleanDb();
@@ -94,14 +87,14 @@ public class ApplicationContextEventTests {
 		listener = applicationContext.getBean(SimpleMappingEventListener.class);
 	}
 
-	@After
+	@AfterEach
 	public void cleanUp() {
 		cleanDb();
 	}
 
 	private void cleanDb() {
 
-		MongoDatabase db = mongo.getDatabase("database");
+		MongoDatabase db = mongoClient.getDatabase("database");
 		for (String coll : collectionsToDrop) {
 			db.getCollection(coll).drop();
 		}
@@ -132,8 +125,8 @@ public class ApplicationContextEventTests {
 		assertThat(listener.onBeforeSaveEvents.get(0).getCollectionName()).isEqualTo(COLLECTION_NAME);
 		assertThat(listener.onAfterSaveEvents.get(0).getCollectionName()).isEqualTo(COLLECTION_NAME);
 
-		Assert.assertTrue(personBeforeSaveListener.seenEvents.get(0) instanceof BeforeSaveEvent<?>);
-		Assert.assertTrue(afterSaveListener.seenEvents.get(0) instanceof AfterSaveEvent<?>);
+		assertThat(personBeforeSaveListener.seenEvents.get(0) instanceof BeforeSaveEvent<?>).isTrue();
+		assertThat(afterSaveListener.seenEvents.get(0) instanceof AfterSaveEvent<?>).isTrue();
 
 		BeforeSaveEvent<PersonPojoStringId> beforeSaveEvent = (BeforeSaveEvent<PersonPojoStringId>) personBeforeSaveListener.seenEvents
 				.get(0);
@@ -143,7 +136,7 @@ public class ApplicationContextEventTests {
 		comparePersonAndDocument(p, p2, document);
 
 		AfterSaveEvent<Object> afterSaveEvent = (AfterSaveEvent<Object>) afterSaveListener.seenEvents.get(0);
-		Assert.assertTrue(afterSaveEvent.getSource() instanceof PersonPojoStringId);
+		assertThat(afterSaveEvent.getSource() instanceof PersonPojoStringId).isTrue();
 		p2 = (PersonPojoStringId) afterSaveEvent.getSource();
 		document = beforeSaveEvent.getDocument();
 

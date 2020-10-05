@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the original author or authors.
+ * Copyright 2010-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -119,8 +119,8 @@ public interface MongoConverter
 	/**
 	 * Converts the given raw id value into either {@link ObjectId} or {@link String}.
 	 *
-	 * @param id
-	 * @param targetType
+	 * @param id can be {@literal null}.
+	 * @param targetType must not be {@literal null}.
 	 * @return {@literal null} if source {@literal id} is already {@literal null}.
 	 * @since 2.2
 	 */

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,7 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -28,11 +26,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import org.bson.Document;
 import org.bson.types.ObjectId;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.MappingException;
@@ -55,33 +53,31 @@ public class BasicMongoPersistentPropertyUnitTests {
 
 	MongoPersistentEntity<Person> entity;
 
-	@Rule public ExpectedException exception = ExpectedException.none();
-
-	@Before
+	@BeforeEach
 	public void setup() {
-		entity = new BasicMongoPersistentEntity<Person>(ClassTypeInformation.from(Person.class));
+		entity = new BasicMongoPersistentEntity<>(ClassTypeInformation.from(Person.class));
 	}
 
 	@Test
 	public void usesAnnotatedFieldName() {
 
 		Field field = ReflectionUtils.findField(Person.class, "firstname");
-		assertThat(getPropertyFor(field).getFieldName(), is("foo"));
+		assertThat(getPropertyFor(field).getFieldName()).isEqualTo("foo");
 	}
 
 	@Test
 	public void returns_IdForIdProperty() {
 		Field field = ReflectionUtils.findField(Person.class, "id");
 		MongoPersistentProperty property = getPropertyFor(field);
-		assertThat(property.isIdProperty(), is(true));
-		assertThat(property.getFieldName(), is("_id"));
+		assertThat(property.isIdProperty()).isTrue();
+		assertThat(property.getFieldName()).isEqualTo("_id");
 	}
 
 	@Test
 	public void returnsPropertyNameForUnannotatedProperties() {
 
 		Field field = ReflectionUtils.findField(Person.class, "lastname");
-		assertThat(getPropertyFor(field).getFieldName(), is("lastname"));
+		assertThat(getPropertyFor(field).getFieldName()).isEqualTo("lastname");
 	}
 
 	@Test
@@ -96,7 +92,7 @@ public class BasicMongoPersistentPropertyUnitTests {
 				ClassTypeInformation.from(Throwable.class));
 		MongoPersistentProperty property = getPropertyFor(entity, "cause");
 
-		assertThat(property.usePropertyAccess(), is(true));
+		assertThat(property.usePropertyAccess()).isTrue();
 	}
 
 	@Test // DATAMONGO-607
@@ -107,13 +103,13 @@ public class BasicMongoPersistentPropertyUnitTests {
 
 		MongoPersistentProperty property = new BasicMongoPersistentProperty(Property.of(type, field), entity,
 				SimpleTypeHolder.DEFAULT, UppercaseFieldNamingStrategy.INSTANCE);
-		assertThat(property.getFieldName(), is("LASTNAME"));
+		assertThat(property.getFieldName()).isEqualTo("LASTNAME");
 
 		field = ReflectionUtils.findField(Person.class, "firstname");
 
 		property = new BasicMongoPersistentProperty(Property.of(type, field), entity, SimpleTypeHolder.DEFAULT,
 				UppercaseFieldNamingStrategy.INSTANCE);
-		assertThat(property.getFieldName(), is("foo"));
+		assertThat(property.getFieldName()).isEqualTo("foo");
 	}
 
 	@Test // DATAMONGO-607
@@ -125,46 +121,43 @@ public class BasicMongoPersistentPropertyUnitTests {
 		MongoPersistentProperty property = new BasicMongoPersistentProperty(Property.of(type, field), entity,
 				SimpleTypeHolder.DEFAULT, InvalidFieldNamingStrategy.INSTANCE);
 
-		exception.expect(MappingException.class);
-		exception.expectMessage(InvalidFieldNamingStrategy.class.getName());
-		exception.expectMessage(property.toString());
-
-		property.getFieldName();
+		assertThatExceptionOfType(MappingException.class).isThrownBy(property::getFieldName)
+				.withMessageContaining(InvalidFieldNamingStrategy.class.getName()).withMessageContaining(property.toString());
 	}
 
 	@Test // DATAMONGO-937
 	public void shouldDetectAnnotatedLanguagePropertyCorrectly() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithLanguageProperty.class, "lang");
-		assertThat(property.isLanguageProperty(), is(true));
+		assertThat(property.isLanguageProperty()).isTrue();
 	}
 
 	@Test // DATAMONGO-937
-	public void shouldDetectIplicitLanguagePropertyCorrectly() {
+	public void shouldDetectImplicitLanguagePropertyCorrectly() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithImplicitLanguageProperty.class, "language");
-		assertThat(property.isLanguageProperty(), is(true));
+		assertThat(property.isLanguageProperty()).isTrue();
 	}
 
 	@Test // DATAMONGO-976
 	public void shouldDetectTextScorePropertyCorrectly() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithTextScoreProperty.class, "score");
-		assertThat(property.isTextScoreProperty(), is(true));
+		assertThat(property.isTextScoreProperty()).isTrue();
 	}
 
 	@Test // DATAMONGO-976
 	public void shouldDetectTextScoreAsReadOnlyProperty() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithTextScoreProperty.class, "score");
-		assertThat(property.isWritable(), is(false));
+		assertThat(property.isWritable()).isFalse();
 	}
 
 	@Test // DATAMONGO-1050
 	public void shouldNotConsiderExplicitlyNameFieldAsIdProperty() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithExplicitlyRenamedIdProperty.class, "id");
-		assertThat(property.isIdProperty(), is(false));
+		assertThat(property.isIdProperty()).isFalse();
 	}
 
 	@Test // DATAMONGO-1050
@@ -172,22 +165,22 @@ public class BasicMongoPersistentPropertyUnitTests {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithExplicitlyRenamedIdPropertyHavingIdAnnotation.class,
 				"id");
-		assertThat(property.isIdProperty(), is(true));
+		assertThat(property.isIdProperty()).isTrue();
 	}
 
 	@Test // DATAMONGO-1373
 	public void shouldConsiderComposedAnnotationsForIdField() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithComposedAnnotations.class, "myId");
-		assertThat(property.isIdProperty(), is(true));
-		assertThat(property.getFieldName(), is("_id"));
+		assertThat(property.isIdProperty()).isTrue();
+		assertThat(property.getFieldName()).isEqualTo("_id");
 	}
 
 	@Test // DATAMONGO-1373
 	public void shouldConsiderComposedAnnotationsForFields() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithComposedAnnotations.class, "myField");
-		assertThat(property.getFieldName(), is("myField"));
+		assertThat(property.getFieldName()).isEqualTo("myField");
 	}
 
 	@Test // DATAMONGO-1737
@@ -231,12 +224,19 @@ public class BasicMongoPersistentPropertyUnitTests {
 		assertThat(property.getFieldType()).isEqualTo(ObjectId.class);
 	}
 
+	@Test // DATAMONGO-2460
+	public void fieldTypeShouldBeDocumentForPropertiesAnnotatedIdWhenAComplexTypeAndFieldTypeImplicit() {
+
+		MongoPersistentProperty property = getPropertyFor(WithComplexId.class, "id");
+		assertThat(property.getFieldType()).isEqualTo(Document.class);
+	}
+
 	private MongoPersistentProperty getPropertyFor(Field field) {
 		return getPropertyFor(entity, field);
 	}
 
 	private static <T> MongoPersistentProperty getPropertyFor(Class<T> type, String fieldname) {
-		return getPropertyFor(new BasicMongoPersistentEntity<T>(ClassTypeInformation.from(type)), fieldname);
+		return getPropertyFor(new BasicMongoPersistentEntity<>(ClassTypeInformation.from(type)), fieldname);
 	}
 
 	private static MongoPersistentProperty getPropertyFor(MongoPersistentEntity<?> entity, String fieldname) {
@@ -336,5 +336,15 @@ public class BasicMongoPersistentPropertyUnitTests {
 	static class WithStringMongoIdMappedToObjectId {
 
 		@MongoId(FieldType.OBJECT_ID) String id;
+	}
+
+	static class ComplexId {
+
+		String value;
+	}
+
+	static class WithComplexId {
+
+		@Id @org.springframework.data.mongodb.core.mapping.Field ComplexId id;
 	}
 }

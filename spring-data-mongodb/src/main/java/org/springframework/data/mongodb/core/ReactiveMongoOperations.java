@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import org.springframework.data.geo.GeoResult;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
+import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -39,6 +40,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.lang.Nullable;
 import org.springframework.transaction.reactive.TransactionalOperator;
 import org.springframework.util.Assert;
@@ -64,6 +66,7 @@ import com.mongodb.reactivestreams.client.MongoCollection;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Mathieu Ouellet
  * @since 2.0
  * @see Flux
  * @see Mono
@@ -296,7 +299,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param collectionName name of the collection.
 	 * @return an existing collection or one created on first server interaction.
 	 */
-	MongoCollection<Document> getCollection(String collectionName);
+	Mono<MongoCollection<Document>> getCollection(String collectionName);
 
 	/**
 	 * Check to see if a collection with a name indicated by the entity class exists.
@@ -678,11 +681,14 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification. Must not be {@literal null}.
-	 * @param update the {@link Update} to apply on matching documents. Must not be {@literal null}.
+	 * @param update the {@link UpdateDefinition} to apply on matching documents. Must not be {@literal null}.
 	 * @param entityClass the parametrized type. Must not be {@literal null}.
 	 * @return the converted object that was updated before it was updated.
+	 * @since 3.0
+	 * @see Update
+	 * @see AggregationUpdate
 	 */
-	<T> Mono<T> findAndModify(Query query, Update update, Class<T> entityClass);
+	<T> Mono<T> findAndModify(Query query, UpdateDefinition update, Class<T> entityClass);
 
 	/**
 	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify<a/>
@@ -690,12 +696,15 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification. Must not be {@literal null}.
-	 * @param update the {@link Update} to apply on matching documents. Must not be {@literal null}.
+	 * @param update the {@link UpdateDefinition} to apply on matching documents. Must not be {@literal null}.
 	 * @param entityClass the parametrized type. Must not be {@literal null}.
 	 * @param collectionName the collection to query. Must not be {@literal null}.
 	 * @return the converted object that was updated before it was updated.
+	 * @since 3.0
+	 * @see Update
+	 * @see AggregationUpdate
 	 */
-	<T> Mono<T> findAndModify(Query query, Update update, Class<T> entityClass, String collectionName);
+	<T> Mono<T> findAndModify(Query query, UpdateDefinition update, Class<T> entityClass, String collectionName);
 
 	/**
 	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify<a/>
@@ -704,13 +713,16 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification.
-	 * @param update the {@link Update} to apply on matching documents.
+	 * @param update the {@link UpdateDefinition} to apply on matching documents.
 	 * @param options the {@link FindAndModifyOptions} holding additional information.
 	 * @param entityClass the parametrized type.
 	 * @return the converted object that was updated. Depending on the value of {@link FindAndModifyOptions#isReturnNew()}
 	 *         this will either be the object as it was before the update or as it is after the update.
+	 * @since 3.0
+	 * @see Update
+	 * @see AggregationUpdate
 	 */
-	<T> Mono<T> findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass);
+	<T> Mono<T> findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options, Class<T> entityClass);
 
 	/**
 	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify<a/>
@@ -719,14 +731,17 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
 	 *          fields specification. Must not be {@literal null}.
-	 * @param update the {@link Update} to apply on matching documents. Must not be {@literal null}.
+	 * @param update the {@link UpdateDefinition} to apply on matching documents. Must not be {@literal null}.
 	 * @param options the {@link FindAndModifyOptions} holding additional information. Must not be {@literal null}.
 	 * @param entityClass the parametrized type. Must not be {@literal null}.
 	 * @param collectionName the collection to query. Must not be {@literal null}.
 	 * @return the converted object that was updated. Depending on the value of {@link FindAndModifyOptions#isReturnNew()}
 	 *         this will either be the object as it was before the update or as it is after the update.
+	 * @since 3.0
+	 * @see Update
+	 * @see AggregationUpdate
 	 */
-	<T> Mono<T> findAndModify(Query query, Update update, FindAndModifyOptions options, Class<T> entityClass,
+	<T> Mono<T> findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options, Class<T> entityClass,
 			String collectionName);
 
 	/**
@@ -966,11 +981,34 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	Mono<Long> count(Query query, @Nullable Class<?> entityClass, String collectionName);
 
 	/**
+	 * Estimate the number of documents, in the collection {@link #getCollectionName(Class) identified by the given type},
+	 * based on collection statistics.
+	 *
+	 * @param entityClass must not be {@literal null}.
+	 * @return a {@link Mono} emitting the estimated number of documents.
+	 * @since 3.1
+	 */
+	default Mono<Long> estimatedCount(Class<?> entityClass) {
+
+		Assert.notNull(entityClass, "Entity class must not be null!");
+		return estimatedCount(getCollectionName(entityClass));
+	}
+
+	/**
+	 * Estimate the number of documents in the given collection based on collection statistics.
+	 *
+	 * @param collectionName must not be {@literal null}.
+	 * @return a {@link Mono} emitting the estimated number of documents.
+	 * @since 3.1
+	 */
+	Mono<Long> estimatedCount(String collectionName);
+
+	/**
 	 * Insert the object into the collection for the entity type of the object to save.
 	 * <p/>
 	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}.
 	 * <p/>
-	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
+	 * If your object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
 	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's
@@ -1030,7 +1068,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * <p/>
 	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}.
 	 * <p/>
-	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
+	 * If your object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
 	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's
@@ -1078,7 +1116,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}. Unless
 	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
 	 * <p/>
-	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
+	 * If your object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
 	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's
@@ -1096,7 +1134,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}. Unless
 	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
 	 * <p/>
-	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
+	 * If your object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See <a
 	 * https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation">Spring's Type
@@ -1115,7 +1153,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}. Unless
 	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
 	 * <p/>
-	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
+	 * If your object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
 	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's
@@ -1133,7 +1171,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}. Unless
 	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
 	 * <p/>
-	 * If you object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
+	 * If your object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See <a
 	 * https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation">Spring's Type
@@ -1147,31 +1185,40 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 
 	/**
 	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
-	 * combining the query document and the update document.
+	 * combining the query document and the update document. <br />
+	 * <strong>NOTE:</strong> {@link Query#getSortObject() sorting} is not supported by {@code db.collection.updateOne}.
+	 * Use {@link #findAndModify(Query, UpdateDefinition, Class)} instead.
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be upserted. Must not be
 	 *          {@literal null}.
-	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
-	 *          object. Must not be {@literal null}.
+	 * @param update the {@link UpdateDefinition} that contains the updated object or {@code $} operators to manipulate
+	 *          the existing object. Must not be {@literal null}.
 	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 3.0
+	 * @see Update
+	 * @see AggregationUpdate
 	 */
-	Mono<UpdateResult> upsert(Query query, Update update, Class<?> entityClass);
+	Mono<UpdateResult> upsert(Query query, UpdateDefinition update, Class<?> entityClass);
 
 	/**
 	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
 	 * combining the query document and the update document. <br />
 	 * <strong>NOTE:</strong> Any additional support for field mapping, versions, etc. is not available due to the lack of
-	 * domain type information. Use {@link #upsert(Query, Update, Class, String)} to get full type specific support.
+	 * domain type information. Use {@link #upsert(Query, UpdateDefinition, Class, String)} to get full type specific
+	 * support.
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be upserted. Must not be
 	 *          {@literal null}.
-	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
-	 *          object. Must not be {@literal null}.
+	 * @param update the {@link UpdateDefinition} that contains the updated object or {@code $} operators to manipulate
+	 *          the existing object. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 3.0
+	 * @see Update
+	 * @see AggregationUpdate
 	 */
-	Mono<UpdateResult> upsert(Query query, Update update, String collectionName);
+	Mono<UpdateResult> upsert(Query query, UpdateDefinition update, String collectionName);
 
 	/**
 	 * Performs an upsert. If no document is found that matches the query, a new document is created and inserted by
@@ -1179,41 +1226,55 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be upserted. Must not be
 	 *          {@literal null}.
-	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
-	 *          object. Must not be {@literal null}.
+	 * @param update the {@link UpdateDefinition} that contains the updated object or {@code $} operators to manipulate
+	 *          the existing object. Must not be {@literal null}.
 	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 3.0
+	 * @see Update
+	 * @see AggregationUpdate
 	 */
-	Mono<UpdateResult> upsert(Query query, Update update, Class<?> entityClass, String collectionName);
+	Mono<UpdateResult> upsert(Query query, UpdateDefinition update, Class<?> entityClass, String collectionName);
 
 	/**
 	 * Updates the first object that is found in the collection of the entity class that matches the query document with
-	 * the provided update document.
+	 * the provided update document. <br />
+	 * <strong>NOTE:</strong> {@link Query#getSortObject() sorting} is not supported by {@code db.collection.updateOne}.
+	 * Use {@link #findAndModify(Query, UpdateDefinition, Class)} instead.
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
 	 *          {@literal null}.
-	 * @param update the update document that contains the updated object or $ operators to manipulate the existing. Must
-	 *          not be {@literal null}.
+	 * @param update the {@link UpdateDefinition} that contains the updated object or {@code $} operators to manipulate
+	 *          the existing. Must not be {@literal null}.
 	 * @param entityClass class that determines the collection to use.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 3.0
+	 * @see Update
+	 * @see AggregationUpdate
 	 */
-	Mono<UpdateResult> updateFirst(Query query, Update update, Class<?> entityClass);
+	Mono<UpdateResult> updateFirst(Query query, UpdateDefinition update, Class<?> entityClass);
 
 	/**
 	 * Updates the first object that is found in the specified collection that matches the query document criteria with
 	 * the provided updated document. <br />
 	 * <strong>NOTE:</strong> Any additional support for field mapping, versions, etc. is not available due to the lack of
-	 * domain type information. Use {@link #updateFirst(Query, Update, Class, String)} to get full type specific support.
+	 * domain type information. Use {@link #updateFirst(Query, UpdateDefinition, Class, String)} to get full type specific
+	 * support. <br />
+	 * <strong>NOTE:</strong> {@link Query#getSortObject() sorting} is not supported by {@code db.collection.updateOne}.
+	 * Use {@link #findAndModify(Query, UpdateDefinition, Class, String)} instead.
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
 	 *          {@literal null}.
-	 * @param update the update document that contains the updated object or $ operators to manipulate the existing. Must
-	 *          not be {@literal null}.
+	 * @param update the {@link UpdateDefinition} that contains the updated object or {@code $} operators to manipulate
+	 *          the existing. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 3.0
+	 * @see Update
+	 * @see AggregationUpdate
 	 */
-	Mono<UpdateResult> updateFirst(Query query, Update update, String collectionName);
+	Mono<UpdateResult> updateFirst(Query query, UpdateDefinition update, String collectionName);
 
 	/**
 	 * Updates the first object that is found in the specified collection that matches the query document criteria with
@@ -1221,13 +1282,16 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
 	 *          {@literal null}.
-	 * @param update the update document that contains the updated object or $ operators to manipulate the existing. Must
-	 *          not be {@literal null}.
+	 * @param update the {@link UpdateDefinition} that contains the updated object or {@code $} operators to manipulate
+	 *          the existing. Must not be {@literal null}.
 	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 3.0
+	 * @see Update
+	 * @see AggregationUpdate
 	 */
-	Mono<UpdateResult> updateFirst(Query query, Update update, Class<?> entityClass, String collectionName);
+	Mono<UpdateResult> updateFirst(Query query, UpdateDefinition update, Class<?> entityClass, String collectionName);
 
 	/**
 	 * Updates all objects that are found in the collection for the entity class that matches the query document criteria
@@ -1235,27 +1299,34 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
 	 *          {@literal null}.
-	 * @param update the update document that contains the updated object or $ operators to manipulate the existing. Must
-	 *          not be {@literal null}.
+	 * @param update the {@link UpdateDefinition} that contains the updated object or {@code $} operators to manipulate
+	 *          the existing. Must not be {@literal null}.
 	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 3.0
+	 * @see Update
+	 * @see AggregationUpdate
 	 */
-	Mono<UpdateResult> updateMulti(Query query, Update update, Class<?> entityClass);
+	Mono<UpdateResult> updateMulti(Query query, UpdateDefinition update, Class<?> entityClass);
 
 	/**
 	 * Updates all objects that are found in the specified collection that matches the query document criteria with the
 	 * provided updated document. <br />
 	 * <strong>NOTE:</strong> Any additional support for field mapping, versions, etc. is not available due to the lack of
-	 * domain type information. Use {@link #updateMulti(Query, Update, Class, String)} to get full type specific support.
+	 * domain type information. Use {@link #updateMulti(Query, UpdateDefinition, Class, String)} to get full type specific
+	 * support.
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
 	 *          {@literal null}.
-	 * @param update the update document that contains the updated object or $ operators to manipulate the existing. Must
-	 *          not be {@literal null}.
+	 * @param update the {@link UpdateDefinition} that contains the updated object or {@code $} operators to manipulate
+	 *          the existing. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 3.0
+	 * @see Update
+	 * @see AggregationUpdate
 	 */
-	Mono<UpdateResult> updateMulti(Query query, Update update, String collectionName);
+	Mono<UpdateResult> updateMulti(Query query, UpdateDefinition update, String collectionName);
 
 	/**
 	 * Updates all objects that are found in the collection for the entity class that matches the query document criteria
@@ -1263,13 +1334,16 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 *
 	 * @param query the query document that specifies the criteria used to select a record to be updated. Must not be
 	 *          {@literal null}.
-	 * @param update the update document that contains the updated object or $ operators to manipulate the existing. Must
-	 *          not be {@literal null}.
+	 * @param update the {@link UpdateDefinition} that contains the updated object or {@code $} operators to manipulate
+	 *          the existing. Must not be {@literal null}.
 	 * @param entityClass class of the pojo to be operated on. Must not be {@literal null}.
 	 * @param collectionName name of the collection to update the object in. Must not be {@literal null}.
 	 * @return the {@link UpdateResult} which lets you access the results of the previous write.
+	 * @since 3.0
+	 * @see Update
+	 * @see AggregationUpdate
 	 */
-	Mono<UpdateResult> updateMulti(Query query, Update update, Class<?> entityClass, String collectionName);
+	Mono<UpdateResult> updateMulti(Query query, UpdateDefinition update, Class<?> entityClass, String collectionName);
 
 	/**
 	 * Remove the given object from the collection by id.
@@ -1521,7 +1595,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	/**
 	 * Returns the underlying {@link MongoConverter}.
 	 *
-	 * @return
+	 * @return never {@literal null}.
 	 */
 	MongoConverter getConverter();
 
@@ -1529,7 +1603,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * The collection name used for the specified class by this template.
 	 *
 	 * @param entityClass must not be {@literal null}.
-	 * @return
+	 * @return never {@literal null}.
 	 * @since 2.1
 	 */
 	String getCollectionName(Class<?> entityClass);

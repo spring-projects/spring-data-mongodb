@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import org.springframework.data.geo.GeoResult;
+import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 
@@ -38,13 +39,14 @@ import org.springframework.data.mongodb.core.query.Query;
  *         query(Human.class)
  *             .inCollection("star-wars")
  *             .as(Jedi.class)
- *             .matching(query(where("firstname").is("luke")))
+ *             .matching(where("firstname").is("luke"))
  *             .all();
  *     </code>
  * </pre>
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Juergen Zimmermann
  * @since 2.0
  */
 public interface ReactiveFindOperation {
@@ -143,6 +145,18 @@ public interface ReactiveFindOperation {
 		 * @throws IllegalArgumentException if query is {@literal null}.
 		 */
 		TerminatingFind<T> matching(Query query);
+
+		/**
+		 * Set the filter {@link CriteriaDefinition criteria} to be used.
+		 *
+		 * @param criteria must not be {@literal null}.
+		 * @return new instance of {@link TerminatingFind}.
+		 * @throws IllegalArgumentException if criteria is {@literal null}.
+		 * @since 3.0
+		 */
+		default TerminatingFind<T> matching(CriteriaDefinition criteria) {
+			return matching(Query.query(criteria));
+		}
 
 		/**
 		 * Set the filter query for the geoNear execution.
@@ -259,9 +273,21 @@ public interface ReactiveFindOperation {
 		 *
 		 * @param query must not be {@literal null}.
 		 * @return new instance of {@link TerminatingDistinct}.
-		 * @throws IllegalArgumentException if resultType is {@literal null}.
+		 * @throws IllegalArgumentException if query is {@literal null}.
 		 */
 		TerminatingDistinct<T> matching(Query query);
+
+		/**
+		 * Set the filter {@link CriteriaDefinition criteria} to be used.
+		 *
+		 * @param criteria must not be {@literal null}.
+		 * @return new instance of {@link TerminatingDistinct}.
+		 * @throws IllegalArgumentException if criteria is {@literal null}.
+		 * @since 3.0
+		 */
+		default TerminatingDistinct<T> matching(CriteriaDefinition criteria) {
+			return matching(Query.query(criteria));
+		}
 	}
 
 	/**

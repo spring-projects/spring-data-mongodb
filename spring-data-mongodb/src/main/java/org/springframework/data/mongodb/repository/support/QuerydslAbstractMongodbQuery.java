@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,8 +18,13 @@ package org.springframework.data.mongodb.repository.support;
 import java.util.List;
 
 import org.bson.Document;
+import org.bson.codecs.DocumentCodec;
+import org.bson.json.JsonMode;
+import org.bson.json.JsonWriterSettings;
+
 import org.springframework.lang.Nullable;
 
+import com.mongodb.MongoClientSettings;
 import com.querydsl.core.DefaultQueryMetadata;
 import com.querydsl.core.QueryModifiers;
 import com.querydsl.core.SimpleQuery;
@@ -38,7 +43,7 @@ import com.querydsl.core.types.Predicate;
  * 2.0.
  * </p>
  * Modified for usage with {@link MongodbDocumentSerializer}.
- * 
+ *
  * @param <Q> concrete subtype
  * @author laimw
  * @author Mark Paluch
@@ -47,6 +52,9 @@ import com.querydsl.core.types.Predicate;
  */
 public abstract class QuerydslAbstractMongodbQuery<K, Q extends QuerydslAbstractMongodbQuery<K, Q>>
 		implements SimpleQuery<Q> {
+
+	private static final JsonWriterSettings JSON_WRITER_SETTINGS = JsonWriterSettings.builder().outputMode(JsonMode.SHELL)
+			.build();
 
 	private final MongodbDocumentSerializer serializer;
 	private final QueryMixin<Q> queryMixin;
@@ -179,7 +187,7 @@ public abstract class QuerydslAbstractMongodbQuery<K, Q extends QuerydslAbstract
 
 	/**
 	 * Get the actual {@link QueryMixin} delegate.
-	 * 
+	 *
 	 * @return
 	 */
 	QueryMixin<Q> getQueryMixin() {
@@ -195,8 +203,69 @@ public abstract class QuerydslAbstractMongodbQuery<K, Q extends QuerydslAbstract
 		return createQuery(queryMixin.getMetadata().getWhere());
 	}
 
+	/**
+	 * Returns the {@literal Mongo Shell} representation of the query. <br />
+	 * The following query
+	 *
+	 * <pre class="code">
+	 *
+	 * where(p.lastname.eq("Matthews")).orderBy(p.firstname.asc()).offset(1).limit(5);
+	 * </pre>
+	 *
+	 * results in
+	 *
+	 * <pre class="code">
+	 *
+	 * find({"lastname" : "Matthews"}).sort({"firstname" : 1}).skip(1).limit(5)
+	 * </pre>
+	 *
+	 * Note that encoding to {@link String} may fail when using data types that cannot be encoded or DBRef's without an
+	 * identifier.
+	 *
+	 * @return never {@literal null}.
+	 */
 	@Override
 	public String toString() {
-		return asDocument().toString();
+
+		Document projection = createProjection(queryMixin.getMetadata().getProjection());
+		Document sort = createSort(queryMixin.getMetadata().getOrderBy());
+		DocumentCodec codec = new DocumentCodec(MongoClientSettings.getDefaultCodecRegistry());
+
+		StringBuilder sb = new StringBuilder("find(" + asDocument().toJson(JSON_WRITER_SETTINGS, codec));
+		if (!projection.isEmpty()) {
+			sb.append(", ").append(projection.toJson(JSON_WRITER_SETTINGS, codec));
+		}
+		sb.append(")");
+		if (!sort.isEmpty()) {
+			sb.append(".sort(").append(sort.toJson(JSON_WRITER_SETTINGS, codec)).append(")");
+		}
+		if (queryMixin.getMetadata().getModifiers().getOffset() != null) {
+			sb.append(".skip(").append(queryMixin.getMetadata().getModifiers().getOffset()).append(")");
+		}
+		if (queryMixin.getMetadata().getModifiers().getLimit() != null) {
+			sb.append(".limit(").append(queryMixin.getMetadata().getModifiers().getLimit()).append(")");
+		}
+		return sb.toString();
+	}
+
+	/**
+	 * Obtain the {@literal Mongo Shell} json query representation.
+	 *
+	 * @return never {@literal null}.
+	 * @since 2.2
+	 */
+	public String toJson() {
+		return toJson(JSON_WRITER_SETTINGS);
+	}
+
+	/**
+	 * Obtain the json query representation applying given {@link JsonWriterSettings settings}.
+	 *
+	 * @param settings must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 2.2
+	 */
+	public String toJson(JsonWriterSettings settings) {
+		return asDocument().toJson(settings);
 	}
 }

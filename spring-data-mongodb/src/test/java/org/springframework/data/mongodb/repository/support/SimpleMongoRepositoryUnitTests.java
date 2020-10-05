@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,16 @@
 package org.springframework.data.mongodb.repository.support;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -36,14 +37,14 @@ import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 /**
  * @author Christoph Strobl
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class SimpleMongoRepositoryUnitTests {
 
 	SimpleMongoRepository<Object, Object> repository;
 	@Mock MongoOperations mongoOperations;
 	@Mock MongoEntityInformation<Object, Object> entityInformation;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		repository = new SimpleMongoRepository<>(entityInformation, mongoOperations);
 	}

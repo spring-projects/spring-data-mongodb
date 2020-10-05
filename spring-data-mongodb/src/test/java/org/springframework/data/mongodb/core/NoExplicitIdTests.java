@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2019 the original author or authors.
+ * Copyright 2015-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,26 +15,31 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.hamcrest.core.Is.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
+import org.springframework.context.annotation.FilterType;
+import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 
 /**
  * Integration tests for DATAMONGO-1289.
@@ -42,13 +47,15 @@ import com.mongodb.MongoClient;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 @ContextConfiguration
 public class NoExplicitIdTests {
 
+	static @Client MongoClient mongoClient;
+
 	@Configuration
-	@EnableMongoRepositories(considerNestedRepositories = true)
-	static class Config extends AbstractMongoConfiguration {
+	@EnableMongoRepositories(considerNestedRepositories = true, includeFilters=@Filter(type = FilterType.ASSIGNABLE_TYPE, classes = TypeWithoutExplicitIdPropertyRepository.class))
+	static class Config extends AbstractMongoClientConfiguration {
 
 		@Override
 		protected String getDatabaseName() {
@@ -57,14 +64,24 @@ public class NoExplicitIdTests {
 
 		@Override
 		public MongoClient mongoClient() {
-			return new MongoClient();
+			return mongoClient;
+		}
+
+		@Override
+		protected boolean autoIndexCreation() {
+			return false;
+		}
+
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+			return Collections.emptySet();
 		}
 	}
 
 	@Autowired MongoOperations mongoOps;
 	@Autowired TypeWithoutExplicitIdPropertyRepository repo;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		mongoOps.dropCollection(TypeWithoutIdProperty.class);
 	}
@@ -80,7 +97,7 @@ public class NoExplicitIdTests {
 		TypeWithoutIdProperty retrieved = mongoOps.findOne(query(where("someString").is(noid.someString)),
 				TypeWithoutIdProperty.class);
 
-		assertThat(retrieved.someString, is(noid.someString));
+		assertThat(retrieved.someString).isEqualTo(noid.someString);
 	}
 
 	@Test // DATAMONGO-1289
@@ -92,7 +109,7 @@ public class NoExplicitIdTests {
 		repo.save(noid);
 
 		TypeWithoutIdProperty retrieved = repo.findBySomeString(noid.someString);
-		assertThat(retrieved.someString, is(noid.someString));
+		assertThat(retrieved.someString).isEqualTo(noid.someString);
 	}
 
 	@Test // DATAMONGO-1289
@@ -108,7 +125,7 @@ public class NoExplicitIdTests {
 				"typeWithoutIdProperty");
 
 		Optional<TypeWithoutIdProperty> retrieved = repo.findById(map.get("_id").toString());
-		assertThat(retrieved.get().someString, is(noid.someString));
+		assertThat(retrieved.get().someString).isEqualTo(noid.someString);
 	}
 
 	static class TypeWithoutIdProperty {

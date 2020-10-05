@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,9 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Unit tests for {@link DocumentField}.
@@ -34,8 +33,8 @@ public class FieldUnitTests {
 		Field left = new Field().elemMatch("key", Criteria.where("foo").is("bar"));
 		Field right = new Field().elemMatch("key", Criteria.where("foo").is("bar"));
 
-		assertThat(left, is(right));
-		assertThat(right, is(left));
+		assertThat(left).isEqualTo(right);
+		assertThat(right).isEqualTo(left);
 	}
 
 	@Test // DATAMONGO-2294
@@ -54,8 +53,8 @@ public class FieldUnitTests {
 		Field left = new Field().elemMatch("key", Criteria.where("foo").is("bar"));
 		Field right = new Field().elemMatch("key", Criteria.where("foo").is("foo"));
 
-		assertThat(left, is(not(right)));
-		assertThat(right, is(not(left)));
+		assertThat(left).isNotEqualTo(right);
+		assertThat(right).isNotEqualTo(left);
 	}
 
 	@Test // DATAMONGO-2294

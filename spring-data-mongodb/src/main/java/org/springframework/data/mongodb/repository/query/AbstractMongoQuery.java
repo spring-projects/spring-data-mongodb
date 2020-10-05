@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the original author or authors.
+ * Copyright 2010-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 package org.springframework.data.mongodb.repository.query;
 
 import org.bson.Document;
+import org.bson.codecs.configuration.CodecRegistry;
+import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFind;
@@ -30,9 +32,13 @@ import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.data.spel.ExpressionDependencies;
+import org.springframework.expression.EvaluationContext;
+import org.springframework.expression.ExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+
+import com.mongodb.client.MongoDatabase;
 
 /**
  * Base class for {@link RepositoryQuery} implementations for Mongo.
@@ -47,7 +53,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	private final MongoQueryMethod method;
 	private final MongoOperations operations;
 	private final ExecutableFind<?> executableFind;
-	private final SpelExpressionParser expressionParser;
+	private final ExpressionParser expressionParser;
 	private final QueryMethodEvaluationContextProvider evaluationContextProvider;
 
 	/**
@@ -58,7 +64,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * @param expressionParser must not be {@literal null}.
 	 * @param evaluationContextProvider must not be {@literal null}.
 	 */
-	public AbstractMongoQuery(MongoQueryMethod method, MongoOperations operations, SpelExpressionParser expressionParser,
+	public AbstractMongoQuery(MongoQueryMethod method, MongoOperations operations, ExpressionParser expressionParser,
 			QueryMethodEvaluationContextProvider evaluationContextProvider) {
 
 		Assert.notNull(operations, "MongoOperations must not be null!");
@@ -206,6 +212,29 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 */
 	protected Query createCountQuery(ConvertingParameterAccessor accessor) {
 		return applyQueryMetaAttributesWhenPresent(createQuery(accessor));
+	}
+
+	/**
+	 * Obtain a the {@link EvaluationContext} suitable to evaluate expressions backed by the given dependencies.
+	 *
+	 * @param dependencies must not be {@literal null}.
+	 * @param accessor must not be {@literal null}.
+	 * @return the {@link SpELExpressionEvaluator}.
+	 * @since 2.4
+	 */
+	protected SpELExpressionEvaluator getSpELExpressionEvaluatorFor(ExpressionDependencies dependencies,
+			ConvertingParameterAccessor accessor) {
+
+		return new DefaultSpELExpressionEvaluator(expressionParser, evaluationContextProvider
+				.getEvaluationContext(getQueryMethod().getParameters(), accessor.getValues(), dependencies));
+	}
+
+	/**
+	 * @return the {@link CodecRegistry} used.
+	 * @since 2.4
+	 */
+	protected CodecRegistry getCodecRegistry() {
+		return operations.execute(MongoDatabase::getCodecRegistry);
 	}
 
 	/**

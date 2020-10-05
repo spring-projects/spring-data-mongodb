@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.core.aggregation.AggregationFunctionExpressions.*;
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
@@ -28,7 +28,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.bson.Document;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
@@ -41,6 +42,12 @@ import org.springframework.data.mongodb.core.aggregation.DateOperators.Timezone;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.StringOperators.Concat;
 import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
+import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 /**
  * Unit tests for {@link ProjectionOperation}.
@@ -59,9 +66,9 @@ public class ProjectionOperationUnitTests {
 	static final String DIVIDE = "$divide";
 	static final String PROJECT = "$project";
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-586
+	@Test // DATAMONGO-586
 	public void rejectsNullFields() {
-		new ProjectionOperation(null);
+		assertThatIllegalArgumentException().isThrownBy(() -> new ProjectionOperation((Fields) null));
 	}
 
 	@Test // DATAMONGO-586
@@ -120,7 +127,7 @@ public class ProjectionOperationUnitTests {
 		ProjectionOperationBuilder operation = new ProjectionOperation().and(fieldName).plus(1);
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
-		Document oper = exctractOperation(fieldName, projectClause);
+		Document oper = extractOperation(fieldName, projectClause);
 
 		assertThat(oper.containsKey(ADD)).isTrue();
 		assertThat(oper.get(ADD)).isEqualTo(Arrays.<Object> asList("$a", 1));
@@ -135,7 +142,7 @@ public class ProjectionOperationUnitTests {
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
 
-		Document oper = exctractOperation(fieldAlias, projectClause);
+		Document oper = extractOperation(fieldAlias, projectClause);
 		assertThat(oper.containsKey(ADD)).isTrue();
 		assertThat(oper.get(ADD)).isEqualTo(Arrays.<Object> asList("$a", 1));
 	}
@@ -148,7 +155,7 @@ public class ProjectionOperationUnitTests {
 		ProjectionOperation operation = new ProjectionOperation().and(fieldName).minus(1).as(fieldAlias);
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
-		Document oper = exctractOperation(fieldAlias, projectClause);
+		Document oper = extractOperation(fieldAlias, projectClause);
 
 		assertThat(oper.containsKey(SUBTRACT)).isTrue();
 		assertThat(oper.get(SUBTRACT)).isEqualTo(Arrays.<Object> asList("$a", 1));
@@ -162,7 +169,7 @@ public class ProjectionOperationUnitTests {
 		ProjectionOperation operation = new ProjectionOperation().and(fieldName).multiply(1).as(fieldAlias);
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
-		Document oper = exctractOperation(fieldAlias, projectClause);
+		Document oper = extractOperation(fieldAlias, projectClause);
 
 		assertThat(oper.containsKey(MULTIPLY)).isTrue();
 		assertThat(oper.get(MULTIPLY)).isEqualTo(Arrays.<Object> asList("$a", 1));
@@ -176,16 +183,15 @@ public class ProjectionOperationUnitTests {
 		ProjectionOperation operation = new ProjectionOperation().and(fieldName).divide(1).as(fieldAlias);
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
-		Document oper = exctractOperation(fieldAlias, projectClause);
+		Document oper = extractOperation(fieldAlias, projectClause);
 
 		assertThat(oper.containsKey(DIVIDE)).isTrue();
 		assertThat(oper.get(DIVIDE)).isEqualTo(Arrays.<Object> asList("$a", 1));
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-586
+	@Test // DATAMONGO-586
 	public void arithmeticProjectionOperationDivideByZeroException() {
-
-		new ProjectionOperation().and("a").divide(0);
+		assertThatIllegalArgumentException().isThrownBy(() -> new ProjectionOperation().and("a").divide(0));
 	}
 
 	@Test // DATAMONGO-586
@@ -196,7 +202,7 @@ public class ProjectionOperationUnitTests {
 		ProjectionOperation operation = new ProjectionOperation().and(fieldName).mod(3).as(fieldAlias);
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
-		Document oper = exctractOperation(fieldAlias, projectClause);
+		Document oper = extractOperation(fieldAlias, projectClause);
 
 		assertThat(oper.containsKey(MOD)).isTrue();
 		assertThat(oper.get(MOD)).isEqualTo(Arrays.<Object> asList("$a", 3));
@@ -261,10 +267,9 @@ public class ProjectionOperationUnitTests {
 		assertThat(projectClause.get("_id")).isEqualTo(0);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test
 	public void arithmeticProjectionOperationModByZeroException() {
-
-		new ProjectionOperation().and("a").mod(0);
+		assertThatIllegalArgumentException().isThrownBy(() -> new ProjectionOperation().and("a").mod(0));
 	}
 
 	@Test // DATAMONGO-769
@@ -323,7 +328,7 @@ public class ProjectionOperationUnitTests {
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		assertThat(document).isNotNull();
 
-		Document projected = exctractOperation("$project", document);
+		Document projected = extractOperation("$project", document);
 
 		assertThat(projected.get("hour")).isEqualTo(new Document("$hour", Arrays.asList("$date")));
 		assertThat(projected.get("min")).isEqualTo(new Document("$minute", Arrays.asList("$date")));
@@ -349,7 +354,7 @@ public class ProjectionOperationUnitTests {
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		assertThat(document).isNotNull();
 
-		Document projected = exctractOperation("$project", document);
+		Document projected = extractOperation("$project", document);
 		assertThat(projected.get("dayOfYearPlus1Day")).isEqualTo(
 				new Document("$dayOfYear", Arrays.asList(new Document("$add", Arrays.<Object> asList("$date", 86400000)))));
 	}
@@ -365,7 +370,7 @@ public class ProjectionOperationUnitTests {
 
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		Document projected = exctractOperation("$project", document);
+		Document projected = extractOperation("$project", document);
 		assertThat(projected.get("tags_count")).isEqualTo(new Document("$size", Arrays.asList("$tags")));
 	}
 
@@ -379,7 +384,7 @@ public class ProjectionOperationUnitTests {
 
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 
-		Document projected = exctractOperation("$project", document);
+		Document projected = extractOperation("$project", document);
 		assertThat(projected.get("tags_count")).isEqualTo(new Document("$size", Arrays.asList("$tags")));
 	}
 
@@ -389,7 +394,7 @@ public class ProjectionOperationUnitTests {
 		ProjectionOperation operation = Aggregation.project().and("field").slice(10).as("renamed");
 
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		Document projected = exctractOperation("$project", document);
+		Document projected = extractOperation("$project", document);
 
 		assertThat(projected.get("renamed")).isEqualTo(new Document("$slice", Arrays.<Object> asList("$field", 10)));
 	}
@@ -400,7 +405,7 @@ public class ProjectionOperationUnitTests {
 		ProjectionOperation operation = Aggregation.project().and("field").slice(10, 5).as("renamed");
 
 		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		Document projected = exctractOperation("$project", document);
+		Document projected = extractOperation("$project", document);
 
 		assertThat(projected.get("renamed")).isEqualTo(new Document("$slice", Arrays.<Object> asList("$field", 5, 10)));
 	}
@@ -1494,6 +1499,15 @@ public class ProjectionOperationUnitTests {
 		assertThat(agg).isEqualTo(Document.parse("{ $project: { eq250: { $eq: [\"$qty\", 250]} } }"));
 	}
 
+	@Test // DATAMONGO-2513
+	public void shouldRenderEqAggregationExpressionWithListComparison() {
+
+		Document agg = project().and(ComparisonOperators.valueOf("qty").equalToValue(Arrays.asList(250))).as("eq250")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse("{ $project: { eq250: { $eq: [\"$qty\", [250]]} } }"));
+	}
+
 	@Test // DATAMONGO-1536
 	public void shouldRenderGtAggregationExpression() {
 
@@ -2099,7 +2113,122 @@ public class ProjectionOperationUnitTests {
 				"{ $project : { newDate: { $dateFromString: { dateString : \"2017-02-08T12:10:40.787\", format : \"dd/mm/yyyy\" } } } }"));
 	}
 
-	private static Document exctractOperation(String field, Document fromProjectClause) {
+	@Test // DATAMONGO-2200
+	public void typeProjectionShouldIncludeTopLevelFieldsOfType() {
+
+		ProjectionOperation operation = Aggregation.project(Book.class);
+
+		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
+
+		assertThat(projectClause) //
+				.hasSize(2) //
+				.containsEntry("title", 1) //
+				.containsEntry("author", 1);
+	}
+
+	@Test // DATAMONGO-2200
+	public void typeProjectionShouldMapFieldNames() {
+
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		MongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext);
+
+		Document document = Aggregation.project(BookRenamed.class)
+				.toDocument(new TypeBasedAggregationOperationContext(Book.class, mappingContext, new QueryMapper(converter)));
+		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
+
+		assertThat(projectClause) //
+				.hasSize(2) //
+				.containsEntry("ti_tl_e", 1) //
+				.containsEntry("author", 1);
+	}
+
+	@Test // DATAMONGO-2200
+	public void typeProjectionShouldIncludeInterfaceProjectionValues() {
+
+		ProjectionOperation operation = Aggregation.project(ProjectionInterface.class);
+
+		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
+
+		assertThat(projectClause) //
+				.hasSize(1) //
+				.containsEntry("title", 1);
+	}
+
+	@Test // DATAMONGO-2200
+	public void typeProjectionShouldBeEmptyIfNoPropertiesFound() {
+
+		ProjectionOperation operation = Aggregation.project(EmptyType.class);
+
+		Document document = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		Document projectClause = DocumentTestUtils.getAsDocument(document, PROJECT);
+
+		assertThat(projectClause).isEmpty();
+	}
+
+	@Test // DATAMONGO-2312
+	public void simpleFieldReferenceAsArray() {
+
+		org.bson.Document doc = Aggregation.newAggregation(project("x", "y", "someField").asArray("myArray"))
+				.toDocument("coll", Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(doc).isEqualTo(Document.parse(
+				"{\"aggregate\":\"coll\", \"pipeline\":[ { $project: { myArray: [ \"$x\", \"$y\", \"$someField\" ] } } ] }"));
+	}
+
+	@Test // DATAMONGO-2312
+	public void mappedFieldReferenceAsArray() {
+
+		MongoMappingContext mappingContext = new MongoMappingContext();
+
+		org.bson.Document doc = Aggregation
+				.newAggregation(BookWithFieldAnnotation.class, project("title", "author").asArray("myArray"))
+				.toDocument("coll", new TypeBasedAggregationOperationContext(BookWithFieldAnnotation.class, mappingContext,
+						new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext))));
+
+		assertThat(doc).isEqualTo(Document
+				.parse("{\"aggregate\":\"coll\", \"pipeline\":[ { $project: { myArray: [ \"$ti_t_le\", \"$author\" ] } } ] }"));
+	}
+
+	@Test // DATAMONGO-2312
+	public void arrayWithNullValue() {
+
+		Document doc = project() //
+				.andArrayOf(Fields.field("field-1"), null, "value").as("myArray") //
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(doc).isEqualTo(Document.parse("{ $project: { \"myArray\" : [ \"$field-1\", null, \"value\" ] } }"));
+	}
+
+	@Test // DATAMONGO-2312
+	public void nestedArrayField() {
+
+		Document doc = project("_id", "value") //
+				.andArrayOf(Fields.field("field-1"), "plain - string", ArithmeticOperators.valueOf("field-1").sum().and(10))
+				.as("myArray") //
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(doc).isEqualTo(Document.parse(
+				"{ $project: { \"_id\" : 1, \"value\" : 1, \"myArray\" : [ \"$field-1\", \"plain - string\", { \"$sum\" : [\"$field-1\", 10] } ] } } ] }"));
+	}
+
+	@Test // DATAMONGO-2312
+	public void nestedMappedFieldReferenceInArrayField() {
+
+		MongoMappingContext mappingContext = new MongoMappingContext();
+
+		Document doc = project("author") //
+				.andArrayOf(Fields.field("title"), "plain - string", ArithmeticOperators.valueOf("title").sum().and(10))
+				.as("myArray") //
+				.toDocument(new TypeBasedAggregationOperationContext(BookWithFieldAnnotation.class, mappingContext,
+						new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext))));
+
+		assertThat(doc).isEqualTo(Document.parse(
+				"{ $project: { \"author\" : 1,  \"myArray\" : [ \"$ti_t_le\", \"plain - string\", { \"$sum\" : [\"$ti_t_le\", 10] } ] } } ] }"));
+	}
+
+	private static Document extractOperation(String field, Document fromProjectClause) {
 		return (Document) fromProjectClause.get(field);
 	}
 
@@ -2110,10 +2239,31 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Data
+	static class BookWithFieldAnnotation {
+
+		@Field("ti_t_le") String title;
+		Author author;
+	}
+
+	@Data
+	static class BookRenamed {
+		@Field("ti_tl_e") String title;
+		Author author;
+	}
+
+	@Data
 	static class Author {
 		String first;
 		String last;
 		String middle;
+	}
+
+	interface ProjectionInterface {
+		String getTitle();
+	}
+
+	static class EmptyType {
+
 	}
 
 }

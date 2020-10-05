@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2019 the original author or authors.
+ * Copyright 2014-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,45 +15,43 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
-import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
+import org.springframework.context.annotation.FilterType;
+import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
-import org.springframework.data.mongodb.test.util.MongoVersion;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.data.mongodb.test.util.Client;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 
 /**
  * @author Christoph Strobl
  * @author Oliver Gierke
  * @author Mark Paluch
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration
+@ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 public class ComplexIdRepositoryIntegrationTests {
 
-	public @Rule MongoVersionRule mongoVersionRule = MongoVersionRule.any();
+	static @Client MongoClient mongoClient;
 
 	@Configuration
-	@EnableMongoRepositories
-	static class Config extends AbstractMongoConfiguration {
+	@EnableMongoRepositories(includeFilters=@Filter(type = FilterType.ASSIGNABLE_TYPE, classes = UserWithComplexIdRepository.class))
+	static class Config extends AbstractMongoClientConfiguration {
 
 		@Override
 		protected String getDatabaseName() {
@@ -62,9 +60,13 @@ public class ComplexIdRepositoryIntegrationTests {
 
 		@Override
 		public MongoClient mongoClient() {
-			return new MongoClient();
+			return mongoClient;
 		}
 
+		@Override
+		protected Set<Class<?>> getInitialEntitySet() throws ClassNotFoundException {
+			return Collections.emptySet();
+		}
 	}
 
 	@Autowired UserWithComplexIdRepository repo;
@@ -73,7 +75,7 @@ public class ComplexIdRepositoryIntegrationTests {
 	MyId id;
 	UserWithComplexId userWithId;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		repo.deleteAll();
@@ -92,7 +94,7 @@ public class ComplexIdRepositoryIntegrationTests {
 
 		repo.save(userWithId);
 
-		assertThat(repo.getUserByComplexId(id), is(userWithId));
+		assertThat(repo.getUserByComplexId(id)).isEqualTo(userWithId);
 	}
 
 	@Test // DATAMONGO-1078
@@ -102,8 +104,8 @@ public class ComplexIdRepositoryIntegrationTests {
 
 		List<UserWithComplexId> loaded = repo.findByUserIds(Collections.singleton(id));
 
-		assertThat(loaded, hasSize(1));
-		assertThat(loaded, contains(userWithId));
+		assertThat(loaded).hasSize(1);
+		assertThat(loaded).containsExactly(userWithId);
 	}
 
 	@Test // DATAMONGO-1078
@@ -111,7 +113,7 @@ public class ComplexIdRepositoryIntegrationTests {
 
 		repo.save(userWithId);
 
-		assertThat(repo.findById(id), is(Optional.of(userWithId)));
+		assertThat(repo.findById(id)).isEqualTo(Optional.of(userWithId));
 	}
 
 	@Test // DATAMONGO-1078
@@ -121,8 +123,8 @@ public class ComplexIdRepositoryIntegrationTests {
 
 		Iterable<UserWithComplexId> loaded = repo.findAllById(Collections.singleton(id));
 
-		assertThat(loaded, is(Matchers.<UserWithComplexId> iterableWithSize(1)));
-		assertThat(loaded, contains(userWithId));
+		assertThat(loaded).hasSize(1);
+		assertThat(loaded).containsExactly(userWithId);
 	}
 
 	@Test // DATAMONGO-1373
@@ -130,16 +132,15 @@ public class ComplexIdRepositoryIntegrationTests {
 
 		repo.save(userWithId);
 
-		assertThat(repo.getUserUsingComposedAnnotationByComplexId(id), is(userWithId));
+		assertThat(repo.getUserUsingComposedAnnotationByComplexId(id)).isEqualTo(userWithId);
 	}
 
 	@Test // DATAMONGO-1373
-	@MongoVersion(until = "4.0.999")
 	public void composedAnnotationFindMetaShouldWorkWhenUsingComplexId() {
 
 		repo.save(userWithId);
 
-		assertThat(repo.findUsersUsingComposedMetaAnnotationByUserIds(Arrays.asList(id)), hasSize(0));
+		assertThat(repo.findUsersUsingComposedMetaAnnotationByUserIds(Arrays.asList(id))).hasSize(1);
 	}
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the original author or authors.
+ * Copyright 2010-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.bson.Document;
-
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
@@ -65,10 +64,10 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Static factory method to create an Update using the provided key
 	 *
-	 * @param key
-	 * @return
+	 * @param key the field to update.
+	 * @return new instance of {@link Update}.
 	 */
-	public static Update update(String key, Object value) {
+	public static Update update(String key, @Nullable Object value) {
 		return new Update().set(key, value);
 	}
 
@@ -81,7 +80,7 @@ public class Update implements UpdateDefinition {
 	 *
 	 * @param object the source {@link Document} to create the update from.
 	 * @param exclude the fields to exclude.
-	 * @return
+	 * @return new instance of {@link Update}.
 	 */
 	public static Update fromDocument(Document object, String... exclude) {
 
@@ -109,12 +108,13 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Update using the {@literal $set} update modifier
 	 *
-	 * @param key
-	 * @param value
-	 * @return
+	 * @param key the field name.
+	 * @param value can be {@literal null}. In this case the property remains in the db with a {@literal null} value. To
+	 *          remove it use {@link #unset(String)}.
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/update/set/">MongoDB Update operator: $set</a>
 	 */
-	public Update set(String key, Object value) {
+	public Update set(String key, @Nullable Object value) {
 		addMultiFieldOperation("$set", key, value);
 		return this;
 	}
@@ -122,13 +122,13 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Update using the {@literal $setOnInsert} update modifier
 	 *
-	 * @param key
-	 * @param value
-	 * @return
+	 * @param key the field name.
+	 * @param value can be {@literal null}.
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/setOnInsert/">MongoDB Update operator:
 	 *      $setOnInsert</a>
 	 */
-	public Update setOnInsert(String key, Object value) {
+	public Update setOnInsert(String key, @Nullable Object value) {
 		addMultiFieldOperation("$setOnInsert", key, value);
 		return this;
 	}
@@ -136,8 +136,8 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Update using the {@literal $unset} update modifier
 	 *
-	 * @param key
-	 * @return
+	 * @param key the field name.
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/unset/">MongoDB Update operator: $unset</a>
 	 */
 	public Update unset(String key) {
@@ -148,9 +148,9 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Update using the {@literal $inc} update modifier
 	 *
-	 * @param key
-	 * @param inc
-	 * @return
+	 * @param key the field name.
+	 * @param inc must not be {@literal null}.
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/inc/">MongoDB Update operator: $inc</a>
 	 */
 	public Update inc(String key, Number inc) {
@@ -170,12 +170,12 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Update using the {@literal $push} update modifier
 	 *
-	 * @param key
-	 * @param value
-	 * @return
+	 * @param key the field name.
+	 * @param value can be {@literal null}.
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/push/">MongoDB Update operator: $push</a>
 	 */
-	public Update push(String key, Object value) {
+	public Update push(String key, @Nullable Object value) {
 		addMultiFieldOperation("$push", key, value);
 		return this;
 	}
@@ -185,7 +185,7 @@ public class Update implements UpdateDefinition {
 	 * Allows creation of {@code $push} command for single or multiple (using {@code $each}) values as well as using
 	 * {@code $position}.
 	 *
-	 * @param key
+	 * @param key the field name.
 	 * @return {@link PushOperatorBuilder} for given key
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/push/">MongoDB Update operator: $push</a>
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/each/">MongoDB Update operator: $each</a>
@@ -204,9 +204,9 @@ public class Update implements UpdateDefinition {
 	 * <b>Important:</b> As of MongoDB 3.6 {@code $pushAll} is not longer supported. Use {@code $push $each} instead.
 	 * {@link #push(String)}) returns a builder that can be used to populate the {@code $each} object.
 	 *
-	 * @param key
-	 * @param values
-	 * @return
+	 * @param key the field name.
+	 * @param values must not be {@literal null}.
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/pushAll/">MongoDB Update operator:
 	 *      $pushAll</a>
 	 * @deprecated as of MongoDB 2.4. Removed in MongoDB 3.6. Use {@link #push(String) $push $each} instead.
@@ -221,8 +221,8 @@ public class Update implements UpdateDefinition {
 	 * Update using {@code $addToSet} modifier. <br/>
 	 * Allows creation of {@code $push} command for single or multiple (using {@code $each}) values
 	 *
-	 * @param key
-	 * @return
+	 * @param key the field name.
+	 * @return new instance of {@link AddToSetBuilder}.
 	 * @since 1.5
 	 */
 	public AddToSetBuilder addToSet(String key) {
@@ -232,13 +232,13 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Update using the {@literal $addToSet} update modifier
 	 *
-	 * @param key
-	 * @param value
-	 * @return
+	 * @param key the field name.
+	 * @param value can be {@literal null}.
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/addToSet/">MongoDB Update operator:
 	 *      $addToSet</a>
 	 */
-	public Update addToSet(String key, Object value) {
+	public Update addToSet(String key, @Nullable Object value) {
 		addMultiFieldOperation("$addToSet", key, value);
 		return this;
 	}
@@ -246,9 +246,9 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Update using the {@literal $pop} update modifier
 	 *
-	 * @param key
-	 * @param pos
-	 * @return
+	 * @param key the field name.
+	 * @param pos must not be {@literal null}.
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/pop/">MongoDB Update operator: $pop</a>
 	 */
 	public Update pop(String key, Position pos) {
@@ -259,12 +259,12 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Update using the {@literal $pull} update modifier
 	 *
-	 * @param key
-	 * @param value
-	 * @return
+	 * @param key the field name.
+	 * @param value can be {@literal null}.
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/pull/">MongoDB Update operator: $pull</a>
 	 */
-	public Update pull(String key, Object value) {
+	public Update pull(String key, @Nullable Object value) {
 		addMultiFieldOperation("$pull", key, value);
 		return this;
 	}
@@ -272,9 +272,9 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Update using the {@literal $pullAll} update modifier
 	 *
-	 * @param key
-	 * @param values
-	 * @return
+	 * @param key the field name.
+	 * @param values must not be {@literal null}.
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/pullAll/">MongoDB Update operator:
 	 *      $pullAll</a>
 	 */
@@ -286,9 +286,9 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Update using the {@literal $rename} update modifier
 	 *
-	 * @param oldName
-	 * @param newName
-	 * @return
+	 * @param oldName must not be {@literal null}.
+	 * @param newName must not be {@literal null}.
+	 * @return this.
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/rename/">MongoDB Update operator:
 	 *      $rename</a>
 	 */
@@ -300,8 +300,8 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Update given key to current date using {@literal $currentDate} modifier.
 	 *
-	 * @param key
-	 * @return
+	 * @param key the field name.
+	 * @return this.
 	 * @since 1.6
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/currentDate/">MongoDB Update operator:
 	 *      $currentDate</a>
@@ -315,8 +315,8 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Update given key to current date using {@literal $currentDate : &#123; $type : "timestamp" &#125;} modifier.
 	 *
-	 * @param key
-	 * @return
+	 * @param key the field name.
+	 * @return this.
 	 * @since 1.6
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/currentDate/">MongoDB Update operator:
 	 *      $currentDate</a>
@@ -332,7 +332,7 @@ public class Update implements UpdateDefinition {
 	 *
 	 * @param key must not be {@literal null}.
 	 * @param multiplier must not be {@literal null}.
-	 * @return
+	 * @return this.
 	 * @since 1.7
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/mul/">MongoDB Update operator: $mul</a>
 	 */
@@ -348,7 +348,7 @@ public class Update implements UpdateDefinition {
 	 *
 	 * @param key must not be {@literal null}.
 	 * @param value must not be {@literal null}.
-	 * @return
+	 * @return this.
 	 * @since 1.10
 	 * @see <a href="https://docs.mongodb.com/manual/reference/bson-type-comparison-order/">Comparison/Sort Order</a>
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/max/">MongoDB Update operator: $max</a>
@@ -365,7 +365,7 @@ public class Update implements UpdateDefinition {
 	 *
 	 * @param key must not be {@literal null}.
 	 * @param value must not be {@literal null}.
-	 * @return
+	 * @return this.
 	 * @since 1.10
 	 * @see <a href="https://docs.mongodb.com/manual/reference/bson-type-comparison-order/">Comparison/Sort Order</a>
 	 * @see <a href="https://docs.mongodb.org/manual/reference/operator/update/min/">MongoDB Update operator: $min</a>
@@ -380,8 +380,8 @@ public class Update implements UpdateDefinition {
 	/**
 	 * The operator supports bitwise {@code and}, bitwise {@code or}, and bitwise {@code xor} operations.
 	 *
-	 * @param key
-	 * @return
+	 * @param key the field name.
+	 * @return this.
 	 * @since 1.7
 	 */
 	public BitwiseOperatorBuilder bitwise(String key) {
@@ -391,9 +391,9 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Prevents a write operation that affects <strong>multiple</strong> documents from yielding to other reads or writes
 	 * once the first document is written. <br />
-	 * Use with {@link org.springframework.data.mongodb.core.MongoOperations#updateMulti(Query, Update, Class)}.
+	 * Use with {@link org.springframework.data.mongodb.core.MongoOperations#updateMulti(Query, UpdateDefinition, Class)}.
 	 *
-	 * @return never {@literal null}.
+	 * @return this.
 	 * @since 2.0
 	 */
 	public Update isolated() {
@@ -472,7 +472,7 @@ public class Update implements UpdateDefinition {
 		this.keysToUpdate.add(key);
 	}
 
-	protected void addMultiFieldOperation(String operator, String key, Object value) {
+	protected void addMultiFieldOperation(String operator, String key, @Nullable Object value) {
 
 		Assert.hasText(key, "Key/Path for update must not be null or blank.");
 		Object existingValue = this.modifierOps.get(operator);
@@ -497,8 +497,8 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Determine if a given {@code key} will be touched on execution.
 	 *
-	 * @param key
-	 * @return
+	 * @param key the field name.
+	 * @return {@literal true} if given field is updated.
 	 */
 	public boolean modifies(String key) {
 		return this.keysToUpdate.contains(key);
@@ -507,8 +507,8 @@ public class Update implements UpdateDefinition {
 	/**
 	 * Inspects given {@code key} for '$'.
 	 *
-	 * @param key
-	 * @return
+	 * @param key the field name.
+	 * @return {@literal true} if given key is prefixed.
 	 */
 	private static boolean isKeyword(String key) {
 		return StringUtils.startsWithIgnoreCase(key, "$");
@@ -1046,8 +1046,8 @@ public class Update implements UpdateDefinition {
 		/**
 		 * Propagates {@code $each} to {@code $addToSet}
 		 *
-		 * @param values
-		 * @return
+		 * @param values must not be {@literal null}.
+		 * @return never {@literal null}.
 		 */
 		public Update each(Object... values) {
 			return Update.this.addToSet(this.key, new Each(values));
@@ -1056,8 +1056,8 @@ public class Update implements UpdateDefinition {
 		/**
 		 * Propagates {@link #value(Object)} to {@code $addToSet}
 		 *
-		 * @param values
-		 * @return
+		 * @param value
+		 * @return never {@literal null}.
 		 */
 		public Update value(Object value) {
 			return Update.this.addToSet(this.key, value);
@@ -1102,7 +1102,7 @@ public class Update implements UpdateDefinition {
 		 * Updates to the result of a bitwise and operation between the current value and the given one.
 		 *
 		 * @param value
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		public Update and(long value) {
 
@@ -1114,7 +1114,7 @@ public class Update implements UpdateDefinition {
 		 * Updates to the result of a bitwise or operation between the current value and the given one.
 		 *
 		 * @param value
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		public Update or(long value) {
 
@@ -1126,7 +1126,7 @@ public class Update implements UpdateDefinition {
 		 * Updates to the result of a bitwise xor operation between the current value and the given one.
 		 *
 		 * @param value
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		public Update xor(long value) {
 

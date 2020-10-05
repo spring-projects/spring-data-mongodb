@@ -531,7 +531,7 @@ This controls whether or not to fsync.  The 'fsync' option to the getlasterror c
 		<xsd:attribute name="slave-ok" type="xsd:string">
 			<xsd:annotation>
 				<xsd:documentation><![CDATA[
-This controls if the driver is allowed to read from secondaries or slaves.  Defaults to false.
+This controls if the driver is allowed to read from secondaries or replicas.  Defaults to false.
 				]]></xsd:documentation>
 			</xsd:annotation>
 		</xsd:attribute>

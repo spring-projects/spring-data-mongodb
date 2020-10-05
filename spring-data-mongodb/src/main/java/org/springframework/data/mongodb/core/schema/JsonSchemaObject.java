@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 package org.springframework.data.mongodb.core.schema;
-
-import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -43,6 +41,7 @@ import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.String
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.TimestampJsonSchemaObject;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ObjectUtils;
 
 /**
  * Interface that can be implemented by objects that know how to serialize themselves to JSON schema using
@@ -429,6 +428,23 @@ public interface JsonSchemaObject {
 		}
 
 		/**
+		 * Create a {@link Type} with its default {@link Type#representation() representation} via the name.
+		 * 
+		 * @param name must not be {@literal null}.
+		 * @return the matching type instance.
+		 * @since 2.2
+		 */
+		static Type of(String name) {
+
+			Type type = jsonTypeOf(name);
+			if (jsonTypes().contains(type)) {
+				return type;
+			}
+
+			return bsonTypeOf(name);
+		}
+
+		/**
 		 * @return all known JSON types.
 		 */
 		static Set<Type> jsonTypes() {
@@ -457,13 +473,38 @@ public interface JsonSchemaObject {
 		Object value();
 
 		/**
+		 * Get the {@literal bsonType} representation of the given type.
+		 * 
+		 * @return never {@literal null}.
+		 * @since 2.2
+		 */
+		default Type toBsonType() {
+
+			if (representation().equals("bsonType")) {
+				return this;
+			}
+
+			if (value().equals(Type.booleanType().value())) {
+				return bsonTypeOf("bool");
+			}
+			if (value().equals(Type.numberType().value())) {
+				return bsonTypeOf("long");
+			}
+
+			return bsonTypeOf((String) value());
+		}
+
+		/**
 		 * @author Christpoh Strobl
 		 * @since 2.1
 		 */
-		@RequiredArgsConstructor
 		class JsonType implements Type {
 
 			private final String name;
+
+			public JsonType(String name) {
+				this.name = name;
+			}
 
 			/*
 			 * (non-Javadoc)
@@ -482,16 +523,36 @@ public interface JsonSchemaObject {
 			public String value() {
 				return name;
 			}
+
+			@Override
+			public boolean equals(Object o) {
+				if (this == o)
+					return true;
+				if (o == null || getClass() != o.getClass())
+					return false;
+
+				JsonType jsonType = (JsonType) o;
+
+				return ObjectUtils.nullSafeEquals(name, jsonType.name);
+			}
+
+			@Override
+			public int hashCode() {
+				return ObjectUtils.nullSafeHashCode(name);
+			}
 		}
 
 		/**
 		 * @author Christpoh Strobl
 		 * @since 2.1
 		 */
-		@RequiredArgsConstructor
 		class BsonType implements Type {
 
 			private final String name;
+
+			BsonType(String name) {
+				this.name = name;
+			}
 
 			/*
 			 * (non-Javadoc)
@@ -509,6 +570,24 @@ public interface JsonSchemaObject {
 			@Override
 			public String value() {
 				return name;
+			}
+
+			@Override
+			public boolean equals(Object o) {
+
+				if (this == o)
+					return true;
+				if (o == null || getClass() != o.getClass())
+					return false;
+
+				BsonType bsonType = (BsonType) o;
+
+				return ObjectUtils.nullSafeEquals(name, bsonType.name);
+			}
+
+			@Override
+			public int hashCode() {
+				return ObjectUtils.nullSafeHashCode(name);
 			}
 		}
 	}

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,28 +15,28 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
+import org.reactivestreams.Publisher;
 import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.convert.EntityInstantiators;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mapping.model.EntityInstantiators;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ReturnedType;
 import org.springframework.data.repository.util.ReactiveWrappers;
+import org.springframework.data.util.ReflectionUtils;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
-
-import com.mongodb.client.result.DeleteResult;
 
 /**
  * Set of classes to contain query execution strategies. Depending (mostly) on the return type of a
@@ -49,26 +49,33 @@ import com.mongodb.client.result.DeleteResult;
  */
 interface ReactiveMongoQueryExecution {
 
-	Object execute(Query query, Class<?> type, String collection);
+	Publisher<? extends Object> execute(Query query, Class<?> type, String collection);
 
 	/**
 	 * {@link MongoQueryExecution} to execute geo-near queries.
 	 *
 	 * @author Mark Paluch
 	 */
-	@RequiredArgsConstructor
 	class GeoNearExecution implements ReactiveMongoQueryExecution {
 
 		private final ReactiveMongoOperations operations;
 		private final MongoParameterAccessor accessor;
 		private final TypeInformation<?> returnType;
 
+		public GeoNearExecution(ReactiveMongoOperations operations, MongoParameterAccessor accessor,
+				TypeInformation<?> returnType) {
+
+			this.operations = operations;
+			this.accessor = accessor;
+			this.returnType = returnType;
+		}
+
 		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
 		 */
 		@Override
-		public Object execute(Query query, Class<?> type, String collection) {
+		public Publisher<? extends Object> execute(Query query, Class<?> type, String collection) {
 
 			Flux<GeoResult<Object>> results = doExecuteQuery(query, type, collection);
 			return isStreamOfGeoResult() ? results : results.map(GeoResult::getContent);
@@ -109,25 +116,35 @@ interface ReactiveMongoQueryExecution {
 	 * {@link ReactiveMongoQueryExecution} removing documents matching the query.
 	 *
 	 * @author Mark Paluch
+	 * @author Artyom Gabeev
 	 */
-	@RequiredArgsConstructor
 	final class DeleteExecution implements ReactiveMongoQueryExecution {
 
 		private final ReactiveMongoOperations operations;
 		private final MongoQueryMethod method;
+
+		public DeleteExecution(ReactiveMongoOperations operations, MongoQueryMethod method) {
+			this.operations = operations;
+			this.method = method;
+		}
 
 		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
 		 */
 		@Override
-		public Object execute(Query query, Class<?> type, String collection) {
+		public Publisher<? extends Object> execute(Query query, Class<?> type, String collection) {
 
 			if (method.isCollectionQuery()) {
 				return operations.findAllAndRemove(query, type, collection);
 			}
 
-			return operations.remove(query, type, collection).map(DeleteResult::getDeletedCount);
+			if (method.isQueryForEntity() && !ClassUtils.isPrimitiveOrWrapper(method.getReturnedObjectType())) {
+				return operations.findAndRemove(query, type, collection);
+			}
+
+			return operations.remove(query, type, collection)
+					.map(deleteResult -> deleteResult.wasAcknowledged() ? deleteResult.getDeletedCount() : 0L);
 		}
 	}
 
@@ -135,15 +152,23 @@ interface ReactiveMongoQueryExecution {
 	 * An {@link ReactiveMongoQueryExecution} that wraps the results of the given delegate with the given result
 	 * processing.
 	 */
-	@RequiredArgsConstructor
 	final class ResultProcessingExecution implements ReactiveMongoQueryExecution {
 
-		private final @NonNull ReactiveMongoQueryExecution delegate;
-		private final @NonNull Converter<Object, Object> converter;
+		private final ReactiveMongoQueryExecution delegate;
+		private final Converter<Object, Object> converter;
+
+		public ResultProcessingExecution(ReactiveMongoQueryExecution delegate, Converter<Object, Object> converter) {
+
+			Assert.notNull(delegate, "Delegate must not be null!");
+			Assert.notNull(converter, "Converter must not be null!");
+
+			this.delegate = delegate;
+			this.converter = converter;
+		}
 
 		@Override
-		public Object execute(Query query, Class<?> type, String collection) {
-			return converter.convert(delegate.execute(query, type, collection));
+		public Publisher<? extends Object> execute(Query query, Class<?> type, String collection) {
+			return (Publisher) converter.convert(delegate.execute(query, type, collection));
 		}
 	}
 
@@ -152,12 +177,23 @@ interface ReactiveMongoQueryExecution {
 	 *
 	 * @author Mark Paluch
 	 */
-	@RequiredArgsConstructor
 	final class ResultProcessingConverter implements Converter<Object, Object> {
 
-		private final @NonNull ResultProcessor processor;
-		private final @NonNull ReactiveMongoOperations operations;
-		private final @NonNull EntityInstantiators instantiators;
+		private final ResultProcessor processor;
+		private final ReactiveMongoOperations operations;
+		private final EntityInstantiators instantiators;
+
+		public ResultProcessingConverter(ResultProcessor processor, ReactiveMongoOperations operations,
+				EntityInstantiators instantiators) {
+
+			Assert.notNull(processor, "Processor must not be null!");
+			Assert.notNull(operations, "Operations must not be null!");
+			Assert.notNull(instantiators, "Instantiators must not be null!");
+
+			this.processor = processor;
+			this.operations = operations;
+			this.instantiators = instantiators;
+		}
 
 		/*
 		 * (non-Javadoc)
@@ -168,7 +204,22 @@ interface ReactiveMongoQueryExecution {
 
 			ReturnedType returnedType = processor.getReturnedType();
 
+			if (ReflectionUtils.isVoid(returnedType.getReturnedType())) {
+
+				if (source instanceof Mono) {
+					return ((Mono<?>) source).then();
+				}
+
+				if (source instanceof Publisher) {
+					return Flux.from((Publisher<?>) source).then();
+				}
+			}
+
 			if (ClassUtils.isPrimitiveOrWrapper(returnedType.getReturnedType())) {
+				return source;
+			}
+
+			if (!operations.getConverter().getMappingContext().hasPersistentEntityFor(returnedType.getReturnedType())) {
 				return source;
 			}
 

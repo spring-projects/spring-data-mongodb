@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,15 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
-import static org.springframework.data.mongodb.test.util.IsBsonObject.*;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
 
 import org.bson.Document;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 
@@ -41,7 +40,7 @@ public class BasicQueryUnitTests {
 	public void createsQueryFromPlainJson() {
 		Query q = new BasicQuery("{ \"name\" : \"Thomas\"}");
 		Document reference = new Document("name", "Thomas");
-		assertThat(q.getQueryObject(), is(reference));
+		assertThat(q.getQueryObject()).isEqualTo(reference);
 	}
 
 	@Test
@@ -49,7 +48,7 @@ public class BasicQueryUnitTests {
 		Query q = new BasicQuery("{ \"name\" : \"Thomas\"}").addCriteria(where("age").lt(80));
 		Document reference = new Document("name", "Thomas");
 		reference.put("age", new Document("$lt", 80));
-		assertThat(q.getQueryObject(), is(reference));
+		assertThat(q.getQueryObject()).isEqualTo(reference);
 	}
 
 	@Test
@@ -61,7 +60,7 @@ public class BasicQueryUnitTests {
 
 		Document sortReference = new Document("name", -1);
 		sortReference.put("lastname", 1);
-		assertThat(query.getSortObject(), is(sortReference));
+		assertThat(query.getSortObject()).isEqualTo(sortReference);
 	}
 
 	@Test // DATAMONGO-1093
@@ -91,9 +90,9 @@ public class BasicQueryUnitTests {
 		BasicQuery query2 = new BasicQuery(qry, fields);
 		query2.setSortObject(new Document("name", -1));
 
-		assertThat(query1, is(equalTo(query1)));
-		assertThat(query1, is(equalTo(query2)));
-		assertThat(query1.hashCode(), is(query2.hashCode()));
+		assertThat(query1).isEqualTo(query1);
+		assertThat(query1).isEqualTo(query2);
+		assertThat(query1.hashCode()).isEqualTo(query2.hashCode());
 	}
 
 	@Test // DATAMONGO-1093
@@ -108,8 +107,8 @@ public class BasicQueryUnitTests {
 		BasicQuery query2 = new BasicQuery(qry, fields);
 		query2.setSortObject(new Document("name", 1));
 
-		assertThat(query1, is(not(equalTo(query2))));
-		assertThat(query1.hashCode(), is(not(query2.hashCode())));
+		assertThat(query1).isNotEqualTo(query2);
+		assertThat(query1.hashCode()).isNotEqualTo(query2.hashCode());
 	}
 
 	@Test // DATAMONGO-1093
@@ -124,8 +123,8 @@ public class BasicQueryUnitTests {
 		BasicQuery query2 = new BasicQuery(qry, fields);
 		query2.getMeta().setComment("bar");
 
-		assertThat(query1, is(not(equalTo(query2))));
-		assertThat(query1.hashCode(), is(not(query2.hashCode())));
+		assertThat(query1).isNotEqualTo(query2);
+		assertThat(query1.hashCode()).isNotEqualTo(query2.hashCode());
 	}
 
 	@Test // DATAMONGO-1387
@@ -136,7 +135,7 @@ public class BasicQueryUnitTests {
 
 		BasicQuery query1 = new BasicQuery(qry, fields);
 
-		assertThat(query1.getFieldsObject(), isBsonObject().containing("name").containing("age"));
+		assertThat(query1.getFieldsObject()).containsKeys("name", "age");
 	}
 
 	@Test // DATAMONGO-1387
@@ -147,7 +146,7 @@ public class BasicQueryUnitTests {
 		BasicQuery query1 = new BasicQuery(qry);
 		query1.fields().include("name");
 
-		assertThat(query1.getFieldsObject(), isBsonObject().containing("name"));
+		assertThat(query1.getFieldsObject()).containsKey("name");
 	}
 
 	@Test // DATAMONGO-1387
@@ -159,6 +158,6 @@ public class BasicQueryUnitTests {
 		BasicQuery query1 = new BasicQuery(qry, fields);
 		query1.fields().include("gender");
 
-		assertThat(query1.getFieldsObject(), isBsonObject().containing("name").containing("age").containing("gender"));
+		assertThat(query1.getFieldsObject()).containsKeys("name", "age", "gender");
 	}
 }

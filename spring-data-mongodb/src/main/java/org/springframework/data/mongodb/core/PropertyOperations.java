@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 package org.springframework.data.mongodb.core;
-
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
 
 import org.bson.Document;
 import org.springframework.data.mapping.SimplePropertyHandler;
@@ -33,10 +30,13 @@ import org.springframework.util.ClassUtils;
  * @author Christoph Strobl
  * @since 2.1
  */
-@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 class PropertyOperations {
 
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+
+	PropertyOperations(MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+		this.mappingContext = mappingContext;
+	}
 
 	/**
 	 * For cases where {@code fields} is {@link Document#isEmpty() empty} include only fields that are required for
@@ -66,8 +66,12 @@ class PropertyOperations {
 				projectionInformation.getInputProperties().forEach(it -> projectedFields.append(it.getName(), 1));
 			}
 		} else {
-			mappingContext.getRequiredPersistentEntity(targetType).doWithProperties(
-					(SimplePropertyHandler) persistentProperty -> projectedFields.append(persistentProperty.getName(), 1));
+
+			MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(targetType);
+			if (entity != null) {
+				entity.doWithProperties(
+						(SimplePropertyHandler) persistentProperty -> projectedFields.append(persistentProperty.getName(), 1));
+			}
 		}
 
 		return projectedFields;

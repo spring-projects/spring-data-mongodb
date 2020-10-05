@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,17 +15,17 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.io.Serializable;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -39,7 +39,7 @@ import org.springframework.data.repository.Repository;
  *
  * @author Oliver Gierke
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class MongoRepositoryFactoryUnitTests {
 
 	@Mock MongoTemplate template;
@@ -50,7 +50,7 @@ public class MongoRepositoryFactoryUnitTests {
 
 	@Mock @SuppressWarnings("rawtypes") MongoPersistentEntity entity;
 
-	@Before
+	@BeforeEach
 	@SuppressWarnings("unchecked")
 	public void setUp() {
 		when(template.getConverter()).thenReturn(converter);
@@ -65,7 +65,7 @@ public class MongoRepositoryFactoryUnitTests {
 
 		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
 		MongoEntityInformation<Person, Serializable> entityInformation = factory.getEntityInformation(Person.class);
-		assertTrue(entityInformation instanceof MappingMongoEntityInformation);
+		assertThat(entityInformation instanceof MappingMongoEntityInformation).isTrue();
 	}
 
 	@Test // DATAMONGO-385
@@ -76,7 +76,7 @@ public class MongoRepositoryFactoryUnitTests {
 
 		MongoRepositoryFactory factory = new MongoRepositoryFactory(template);
 		MyPersonRepository repository = factory.getRepository(MyPersonRepository.class);
-		assertThat(repository, is(notNullValue()));
+		assertThat(repository).isNotNull();
 	}
 
 	interface MyPersonRepository extends Repository<Person, Long> {

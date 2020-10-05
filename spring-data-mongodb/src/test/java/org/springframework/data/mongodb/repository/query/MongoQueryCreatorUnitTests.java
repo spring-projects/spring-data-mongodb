@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,10 +27,8 @@ import java.util.regex.Pattern;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.geo.Distance;
@@ -39,7 +37,7 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.geo.Shape;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.Venue;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
@@ -74,14 +72,12 @@ public class MongoQueryCreatorUnitTests {
 	MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context;
 	MongoConverter converter;
 
-	@Rule public ExpectedException expection = ExpectedException.none();
-
-	@Before
-	public void setUp() {
+	@BeforeEach
+	public void beforeEach() {
 
 		context = new MongoMappingContext();
 
-		DbRefResolver resolver = new DefaultDbRefResolver(mock(MongoDbFactory.class));
+		DbRefResolver resolver = new DefaultDbRefResolver(mock(MongoDatabaseFactory.class));
 		converter = new MappingMongoConverter(resolver, context);
 	}
 
@@ -324,13 +320,11 @@ public class MongoQueryCreatorUnitTests {
 	@Test // DATAMONGO-770
 	public void shouldThrowExceptionForQueryWithFindByIgnoreCaseOnNonStringProperty() {
 
-		expection.expect(IllegalArgumentException.class);
-		expection.expectMessage("must be of type String");
-
 		PartTree tree = new PartTree("findByFirstNameAndAgeIgnoreCase", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "foo", 42), context);
 
-		creator.createQuery();
+		assertThatIllegalArgumentException().isThrownBy(creator::createQuery)
+				.withMessageContaining("must be of type String");
 	}
 
 	@Test // DATAMONGO-770
@@ -620,14 +614,12 @@ public class MongoQueryCreatorUnitTests {
 	@Test // DATAMONGO-1588
 	public void queryShouldThrowExceptionWhenArgumentDoesNotMatchDeclaration() {
 
-		expection.expect(IllegalArgumentException.class);
-		expection.expectMessage("Expected parameter type of " + Point.class);
-
 		PartTree tree = new PartTree("findByLocationNear", User.class);
 		ConvertingParameterAccessor accessor = getAccessor(converter,
 				new GeoJsonLineString(new Point(-74.044502D, 40.689247D), new Point(-73.997330D, 40.730824D)));
 
-		new MongoQueryCreator(tree, accessor, context).createQuery();
+		assertThatIllegalArgumentException().isThrownBy(() -> new MongoQueryCreator(tree, accessor, context).createQuery())
+				.withMessageContaining("Expected parameter type of " + Point.class);
 	}
 
 	@Test // DATAMONGO-2003
@@ -657,6 +649,17 @@ public class MongoQueryCreatorUnitTests {
 				getAccessor(converter, Range.of(Bound.exclusive(10), Bound.exclusive(11))), context);
 
 		assertThat(creator.createQuery()).isEqualTo(query(where("age").gt(10).lt(11)));
+	}
+
+	@Test // DATAMONGO-2394
+	public void nearShouldUseMetricDistanceForGeoJsonTypes() {
+
+		GeoJsonPoint point = new GeoJsonPoint(27.987901, 86.9165379);
+		PartTree tree = new PartTree("findByLocationNear", User.class);
+		MongoQueryCreator creator = new MongoQueryCreator(tree,
+				getAccessor(converter, point, new Distance(1, Metrics.KILOMETERS)), context);
+
+		assertThat(creator.createQuery()).isEqualTo(query(where("location").nearSphere(point).maxDistance(1000.0D)));
 	}
 
 	interface PersonRepository extends Repository<Person, Long> {

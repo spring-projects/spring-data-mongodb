@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2019 the original author or authors.
+ * Copyright 2013-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,9 +23,11 @@ import java.util.List;
 import org.bson.Document;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.mongodb.core.aggregation.AddFieldsOperation.AddFieldsOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.CountOperation.CountOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.FacetOperation.FacetOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.GraphLookupOperation.StartWithBuilder;
+import org.springframework.data.mongodb.core.aggregation.MergeOperation.MergeOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.ReplaceRootDocumentOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.ReplaceRootOperationBuilder;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -94,7 +96,7 @@ public class Aggregation {
 	public static final AggregationOperationContext DEFAULT_CONTEXT = AggregationOperationRenderer.DEFAULT_CONTEXT;
 	public static final AggregationOptions DEFAULT_OPTIONS = newAggregationOptions().build();
 
-	protected final List<AggregationOperation> operations;
+	protected final AggregationPipeline pipeline;
 	private final AggregationOptions options;
 
 	/**
@@ -116,17 +118,28 @@ public class Aggregation {
 	}
 
 	/**
+	 * Creates a new {@link AggregationUpdate} from the given {@link AggregationOperation}s.
+	 *
+	 * @param operations can be {@literal empty} but must not be {@literal null}.
+	 * @return new instance of {@link AggregationUpdate}.
+	 * @since 3.0
+	 */
+	public static AggregationUpdate newUpdate(AggregationOperation... operations) {
+		return AggregationUpdate.from(Arrays.asList(operations));
+	}
+
+	/**
 	 * Returns a copy of this {@link Aggregation} with the given {@link AggregationOptions} set. Note that options are
 	 * supported in MongoDB version 2.6+.
 	 *
 	 * @param options must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link Aggregation}.
 	 * @since 1.6
 	 */
 	public Aggregation withOptions(AggregationOptions options) {
 
 		Assert.notNull(options, "AggregationOptions must not be null.");
-		return new Aggregation(this.operations, options);
+		return new Aggregation(this.pipeline.getOperations(), options);
 	}
 
 	/**
@@ -181,28 +194,16 @@ public class Aggregation {
 	/**
 	 * Creates a new {@link Aggregation} from the given {@link AggregationOperation}s.
 	 *
-	 * @param aggregationOperations must not be {@literal null} or empty.
+	 * @param aggregationOperations must not be {@literal null}.
 	 * @param options must not be {@literal null} or empty.
 	 */
 	protected Aggregation(List<AggregationOperation> aggregationOperations, AggregationOptions options) {
 
 		Assert.notNull(aggregationOperations, "AggregationOperations must not be null!");
-		Assert.isTrue(!aggregationOperations.isEmpty(), "At least one AggregationOperation has to be provided");
 		Assert.notNull(options, "AggregationOptions must not be null!");
 
-		// check $out is the last operation if it exists
-		for (AggregationOperation aggregationOperation : aggregationOperations) {
-			if (aggregationOperation instanceof OutOperation && !isLast(aggregationOperation, aggregationOperations)) {
-				throw new IllegalArgumentException("The $out operator must be the last stage in the pipeline.");
-			}
-		}
-
-		this.operations = aggregationOperations;
+		this.pipeline = new AggregationPipeline(aggregationOperations);
 		this.options = options;
-	}
-
-	private boolean isLast(AggregationOperation aggregationOperation, List<AggregationOperation> aggregationOperations) {
-		return aggregationOperations.indexOf(aggregationOperation) == aggregationOperations.size() - 1;
 	}
 
 	/**
@@ -225,10 +226,24 @@ public class Aggregation {
 	}
 
 	/**
+	 * Obtain an {@link AddFieldsOperationBuilder builder} instance to create a new {@link AddFieldsOperation}.
+	 * <p/>
+	 * Starting in version 4.2, MongoDB adds a new aggregation pipeline stage {@link AggregationUpdate#set $set} that is
+	 * an alias for {@code $addFields}.
+	 *
+	 * @return new instance of {@link AddFieldsOperationBuilder}.
+	 * @see AddFieldsOperation
+	 * @since 3.0
+	 */
+	public static AddFieldsOperationBuilder addFields() {
+		return AddFieldsOperation.builder();
+	}
+
+	/**
 	 * Creates a new {@link ProjectionOperation} including the given fields.
 	 *
 	 * @param fields must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link ProjectionOperation}.
 	 */
 	public static ProjectionOperation project(String... fields) {
 		return project(fields(fields));
@@ -238,17 +253,30 @@ public class Aggregation {
 	 * Creates a new {@link ProjectionOperation} including the given {@link Fields}.
 	 *
 	 * @param fields must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link ProjectionOperation}.
 	 */
 	public static ProjectionOperation project(Fields fields) {
 		return new ProjectionOperation(fields);
 	}
 
 	/**
+	 * Creates a new {@link ProjectionOperation} including all top level fields of the given given {@link Class}.
+	 *
+	 * @param type must not be {@literal null}.
+	 * @return new instance of {@link ProjectionOperation}.
+	 * @since 2.2
+	 */
+	public static ProjectionOperation project(Class<?> type) {
+
+		Assert.notNull(type, "Type must not be null!");
+		return new ProjectionOperation(type);
+	}
+
+	/**
 	 * Factory method to create a new {@link UnwindOperation} for the field with the given name.
 	 *
 	 * @param field must not be {@literal null} or empty.
-	 * @return
+	 * @return new instance of {@link UnwindOperation}.
 	 */
 	public static UnwindOperation unwind(String field) {
 		return new UnwindOperation(field(field));
@@ -258,7 +286,7 @@ public class Aggregation {
 	 * Factory method to create a new {@link ReplaceRootOperation} for the field with the given name.
 	 *
 	 * @param fieldName must not be {@literal null} or empty.
-	 * @return
+	 * @return new instance of {@link ReplaceRootOperation}.
 	 * @since 1.10
 	 */
 	public static ReplaceRootOperation replaceRoot(String fieldName) {
@@ -270,7 +298,7 @@ public class Aggregation {
 	 * {@link AggregationExpression}.
 	 *
 	 * @param aggregationExpression must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link ReplaceRootOperation}.
 	 * @since 1.10
 	 */
 	public static ReplaceRootOperation replaceRoot(AggregationExpression aggregationExpression) {
@@ -336,7 +364,7 @@ public class Aggregation {
 	 * Creates a new {@link GroupOperation} for the given fields.
 	 *
 	 * @param fields must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link GroupOperation}.
 	 */
 	public static GroupOperation group(String... fields) {
 		return group(fields(fields));
@@ -357,7 +385,7 @@ public class Aggregation {
 	 * {@link GraphLookupOperation} given {@literal fromCollection}.
 	 *
 	 * @param fromCollection must not be {@literal null} or empty.
-	 * @return
+	 * @return new instance of {@link StartWithBuilder} for creating a {@link GraphLookupOperation}.
 	 * @since 1.10
 	 */
 	public static StartWithBuilder graphLookup(String fromCollection) {
@@ -368,7 +396,7 @@ public class Aggregation {
 	 * Factory method to create a new {@link SortOperation} for the given {@link Sort}.
 	 *
 	 * @param sort must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link SortOperation}.
 	 */
 	public static SortOperation sort(Sort sort) {
 		return new SortOperation(sort);
@@ -379,7 +407,7 @@ public class Aggregation {
 	 *
 	 * @param direction must not be {@literal null}.
 	 * @param fields must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link SortOperation}.
 	 */
 	public static SortOperation sort(Direction direction, String... fields) {
 		return new SortOperation(Sort.by(direction, fields));
@@ -389,7 +417,7 @@ public class Aggregation {
 	 * Creates a new {@link SortByCountOperation} given {@literal groupByField}.
 	 *
 	 * @param field must not be {@literal null} or empty.
-	 * @return
+	 * @return new instance of {@link SortByCountOperation}.
 	 * @since 2.1
 	 */
 	public static SortByCountOperation sortByCount(String field) {
@@ -400,7 +428,7 @@ public class Aggregation {
 	 * Creates a new {@link SortByCountOperation} given {@link AggregationExpression group and sort expression}.
 	 *
 	 * @param groupAndSortExpression must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link SortByCountOperation}.
 	 * @since 2.1
 	 */
 	public static SortByCountOperation sortByCount(AggregationExpression groupAndSortExpression) {
@@ -411,9 +439,10 @@ public class Aggregation {
 	 * Creates a new {@link SkipOperation} skipping the given number of elements.
 	 *
 	 * @param elementsToSkip must not be less than zero.
-	 * @return
+	 * @return new instance of {@link SkipOperation}.
 	 * @deprecated prepare to get this one removed in favor of {@link #skip(long)}.
 	 */
+	@Deprecated
 	public static SkipOperation skip(int elementsToSkip) {
 		return new SkipOperation(elementsToSkip);
 	}
@@ -422,7 +451,7 @@ public class Aggregation {
 	 * Creates a new {@link SkipOperation} skipping the given number of elements.
 	 *
 	 * @param elementsToSkip must not be less than zero.
-	 * @return
+	 * @return new instance of {@link SkipOperation}.
 	 */
 	public static SkipOperation skip(long elementsToSkip) {
 		return new SkipOperation(elementsToSkip);
@@ -432,7 +461,7 @@ public class Aggregation {
 	 * Creates a new {@link LimitOperation} limiting the result to the given number of elements.
 	 *
 	 * @param maxElements must not be less than zero.
-	 * @return
+	 * @return new instance of {@link LimitOperation}.
 	 */
 	public static LimitOperation limit(long maxElements) {
 		return new LimitOperation(maxElements);
@@ -442,7 +471,7 @@ public class Aggregation {
 	 * Creates a new {@link SampleOperation} to select the specified number of documents from its input randomly.
 	 *
 	 * @param sampleSize must not be less than zero.
-	 * @return
+	 * @return new instance of {@link SampleOperation}.
 	 * @since 2.0
 	 */
 	public static SampleOperation sample(long sampleSize) {
@@ -453,7 +482,7 @@ public class Aggregation {
 	 * Creates a new {@link MatchOperation} using the given {@link Criteria}.
 	 *
 	 * @param criteria must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link MatchOperation}.
 	 */
 	public static MatchOperation match(Criteria criteria) {
 		return new MatchOperation(criteria);
@@ -463,11 +492,35 @@ public class Aggregation {
 	 * Creates a new {@link MatchOperation} using the given {@link CriteriaDefinition}.
 	 *
 	 * @param criteria must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link MatchOperation}.
 	 * @since 1.10
 	 */
 	public static MatchOperation match(CriteriaDefinition criteria) {
 		return new MatchOperation(criteria);
+	}
+
+	/**
+	 * Creates a new {@link GeoNearOperation} instance from the given {@link NearQuery} and the {@code distanceField}. The
+	 * {@code distanceField} defines output field that contains the calculated distance.
+	 *
+	 * @param query must not be {@literal null}.
+	 * @param distanceField must not be {@literal null} or empty.
+	 * @return new instance of {@link GeoNearOperation}.
+	 * @since 1.7
+	 */
+	public static GeoNearOperation geoNear(NearQuery query, String distanceField) {
+		return new GeoNearOperation(query, distanceField);
+	}
+
+	/**
+	 * Obtain a {@link MergeOperationBuilder builder} instance to create a new {@link MergeOperation}.
+	 *
+	 * @return new instance of {@link MergeOperationBuilder}.
+	 * @see MergeOperation
+	 * @since 3.0
+	 */
+	public static MergeOperationBuilder merge() {
+		return MergeOperation.builder();
 	}
 
 	/**
@@ -478,7 +531,7 @@ public class Aggregation {
 	 *          collection in the current database if one does not already exist. The collection is not visible until the
 	 *          aggregation completes. If the aggregation fails, MongoDB does not create the collection. Must not be
 	 *          {@literal null}.
-	 * @return
+	 * @return new instance of {@link OutOperation}.
 	 */
 	public static OutOperation out(String outCollectionName) {
 		return new OutOperation(outCollectionName);
@@ -488,7 +541,7 @@ public class Aggregation {
 	 * Creates a new {@link BucketOperation} given {@literal groupByField}.
 	 *
 	 * @param groupByField must not be {@literal null} or empty.
-	 * @return
+	 * @return new instance of {@link BucketOperation}.
 	 * @since 1.10
 	 */
 	public static BucketOperation bucket(String groupByField) {
@@ -499,7 +552,7 @@ public class Aggregation {
 	 * Creates a new {@link BucketOperation} given {@link AggregationExpression group-by expression}.
 	 *
 	 * @param groupByExpression must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link BucketOperation}.
 	 * @since 1.10
 	 */
 	public static BucketOperation bucket(AggregationExpression groupByExpression) {
@@ -511,7 +564,7 @@ public class Aggregation {
 	 *
 	 * @param groupByField must not be {@literal null} or empty.
 	 * @param buckets number of buckets, must be a positive integer.
-	 * @return
+	 * @return new instance of {@link BucketAutoOperation}.
 	 * @since 1.10
 	 */
 	public static BucketAutoOperation bucketAuto(String groupByField, int buckets) {
@@ -523,7 +576,7 @@ public class Aggregation {
 	 *
 	 * @param groupByExpression must not be {@literal null}.
 	 * @param buckets number of buckets, must be a positive integer.
-	 * @return
+	 * @return new instance of {@link BucketAutoOperation}.
 	 * @since 1.10
 	 */
 	public static BucketAutoOperation bucketAuto(AggregationExpression groupByExpression, int buckets) {
@@ -533,7 +586,7 @@ public class Aggregation {
 	/**
 	 * Creates a new {@link FacetOperation}.
 	 *
-	 * @return
+	 * @return new instance of {@link FacetOperation}.
 	 * @since 1.10
 	 */
 	public static FacetOperation facet() {
@@ -544,7 +597,7 @@ public class Aggregation {
 	 * Creates a new {@link FacetOperationBuilder} given {@link Aggregation}.
 	 *
 	 * @param aggregationOperations the sub-pipeline, must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link FacetOperation}.
 	 * @since 1.10
 	 */
 	public static FacetOperationBuilder facet(AggregationOperation... aggregationOperations) {
@@ -590,10 +643,30 @@ public class Aggregation {
 	}
 
 	/**
+	 * Creates a new {@link RedactOperation} that can restrict the content of a document based on information stored
+	 * within the document itself.
+	 *
+	 * <pre class="code">
+	 *
+	 * Aggregation.redact(ConditionalOperators.when(Criteria.where("level").is(5)) //
+	 * 		.then(RedactOperation.PRUNE) //
+	 * 		.otherwise(RedactOperation.DESCEND));
+	 * </pre>
+	 *
+	 * @param condition Any {@link AggregationExpression} that resolves to {@literal $$DESCEND}, {@literal $$PRUNE}, or
+	 *          {@literal $$KEEP}. Must not be {@literal null}.
+	 * @return new instance of {@link RedactOperation}. Never {@literal null}.
+	 * @since 3.0
+	 */
+	public static RedactOperation redact(AggregationExpression condition) {
+		return new RedactOperation(condition);
+	}
+
+	/**
 	 * Creates a new {@link Fields} instance for the given field names.
 	 *
 	 * @param fields must not be {@literal null}.
-	 * @return
+	 * @return new instance of {@link Fields}.
 	 * @see Fields#fields(String...)
 	 */
 	public static Fields fields(String... fields) {
@@ -605,29 +678,16 @@ public class Aggregation {
 	 *
 	 * @param name must not be {@literal null} or empty.
 	 * @param target must not be {@literal null} or empty.
-	 * @return
+	 * @return new instance of {@link Fields}.
 	 */
 	public static Fields bind(String name, String target) {
 		return Fields.from(field(name, target));
 	}
 
 	/**
-	 * Creates a new {@link GeoNearOperation} instance from the given {@link NearQuery} and the {@code distanceField}. The
-	 * {@code distanceField} defines output field that contains the calculated distance.
-	 *
-	 * @param query must not be {@literal null}.
-	 * @param distanceField must not be {@literal null} or empty.
-	 * @return
-	 * @since 1.7
-	 */
-	public static GeoNearOperation geoNear(NearQuery query, String distanceField) {
-		return new GeoNearOperation(query, distanceField);
-	}
-
-	/**
 	 * Returns a new {@link AggregationOptions.Builder}.
 	 *
-	 * @return
+	 * @return new instance of {@link AggregationOptions.Builder}.
 	 * @since 1.6
 	 */
 	public static AggregationOptions.Builder newAggregationOptions() {
@@ -642,7 +702,15 @@ public class Aggregation {
 	 * @since 2.1
 	 */
 	public List<Document> toPipeline(AggregationOperationContext rootContext) {
-		return AggregationOperationRenderer.toDocument(operations, rootContext);
+		return pipeline.toDocuments(rootContext);
+	}
+
+	/**
+	 * @return the {@link AggregationPipeline}.
+	 * @since 3.0.2
+	 */
+	public AggregationPipeline getPipeline() {
+		return pipeline;
 	}
 
 	/**
@@ -689,7 +757,7 @@ public class Aggregation {
 		 * otherwise.
 		 *
 		 * @param fieldRef may be {@literal null}.
-		 * @return
+		 * @return {@literal true} if the given field refers to a {@link SystemVariable}.
 		 */
 		public static boolean isReferingToSystemVariable(@Nullable String fieldRef) {
 

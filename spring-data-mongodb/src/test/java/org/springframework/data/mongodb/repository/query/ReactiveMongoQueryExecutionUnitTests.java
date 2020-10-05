@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,21 +15,24 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.reactivestreams.Publisher;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
@@ -41,20 +44,25 @@ import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Person;
+import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.DeleteExecution;
 import org.springframework.data.mongodb.repository.query.ReactiveMongoQueryExecution.GeoNearExecution;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.util.ClassUtils;
+
+import com.mongodb.client.result.DeleteResult;
 
 /**
  * Unit tests for {@link ReactiveMongoQueryExecution}.
  *
  * @author Mark Paluch
+ * @author Artyom Gabeev
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ReactiveMongoQueryExecutionUnitTests {
 
 	@Mock private ReactiveMongoOperations operations;
 	@Mock private MongoParameterAccessor parameterAccessor;
+	@Mock private MongoQueryMethod method;
 
 	@Test // DATAMONGO-1444
 	public void geoNearExecutionShouldApplyQuerySettings() throws Exception {
@@ -73,10 +81,10 @@ public class ReactiveMongoQueryExecutionUnitTests {
 		verify(operations).geoNear(queryArgumentCaptor.capture(), eq(Person.class), eq("person"));
 
 		NearQuery nearQuery = queryArgumentCaptor.getValue();
-		assertThat(nearQuery.toDocument().get("near"), is(equalTo(Arrays.asList(1d, 2d))));
-		assertThat(nearQuery.getSkip(), is(10L));
-		assertThat(nearQuery.getMinDistance(), is(equalTo(new Distance(10))));
-		assertThat(nearQuery.getMaxDistance(), is(equalTo(new Distance(15))));
+		assertThat(nearQuery.toDocument().get("near")).isEqualTo(Arrays.asList(1d, 2d));
+		assertThat(nearQuery.getSkip()).isEqualTo(10L);
+		assertThat(nearQuery.getMinDistance()).isEqualTo(new Distance(10));
+		assertThat(nearQuery.getMaxDistance()).isEqualTo(new Distance(15));
 	}
 
 	@Test // DATAMONGO-1444
@@ -95,10 +103,34 @@ public class ReactiveMongoQueryExecutionUnitTests {
 		verify(operations).geoNear(queryArgumentCaptor.capture(), eq(Person.class), eq("person"));
 
 		NearQuery nearQuery = queryArgumentCaptor.getValue();
-		assertThat(nearQuery.toDocument().get("near"), is(equalTo(Arrays.asList(1d, 2d))));
-		assertThat(nearQuery.getSkip(), is(0L));
-		assertThat(nearQuery.getMinDistance(), is(nullValue()));
-		assertThat(nearQuery.getMaxDistance(), is(nullValue()));
+		assertThat(nearQuery.toDocument().get("near")).isEqualTo(Arrays.asList(1d, 2d));
+		assertThat(nearQuery.getSkip()).isEqualTo(0L);
+		assertThat(nearQuery.getMinDistance()).isNull();
+		assertThat(nearQuery.getMaxDistance()).isNull();
+	}
+
+	@Test // DATAMONGO-2351
+	public void acknowledgedDeleteReturnsDeletedCount() {
+
+		when(operations.remove(any(Query.class), any(Class.class), anyString()))
+				.thenReturn(Mono.just(DeleteResult.acknowledged(10)));
+
+		Mono.from((Publisher<Long>) new DeleteExecution(operations, method).execute(new Query(), Class.class, "")) //
+				.as(StepVerifier::create) //
+				.expectNext(10L) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-2351
+	public void unacknowledgedDeleteReturnsZeroDeletedCount() {
+
+		when(operations.remove(any(Query.class), any(Class.class), anyString()))
+				.thenReturn(Mono.just(DeleteResult.unacknowledged()));
+
+		Mono.from((Publisher<Long>) new DeleteExecution(operations, method).execute(new Query(), Class.class, "")) //
+				.as(StepVerifier::create) //
+				.expectNext(0L) //
+				.verifyComplete();
 	}
 
 	interface GeoRepo {

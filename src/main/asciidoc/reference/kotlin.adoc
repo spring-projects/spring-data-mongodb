@@ -1,0 +1,29 @@
+include::../{spring-data-commons-docs}/kotlin.adoc[]
+
+include::../{spring-data-commons-docs}/kotlin-extensions.adoc[leveloffset=+1]
+
+To retrieve a list of `SWCharacter` objects in Java, you would normally write the following:
+
+[source,java]
+----
+Flux<SWCharacter> characters  = template.find(SWCharacter.class).inCollection("star-wars").all()
+----
+
+With Kotlin and the Spring Data extensions, you can instead write the following:
+
+[source,kotlin]
+----
+val characters = template.find<SWCharacter>().inCollection("star-wars").all()
+// or (both are equivalent)
+val characters : Flux<SWCharacter> = template.find().inCollection("star-wars").all()
+----
+
+As in Java, `characters` in Kotlin is strongly typed, but Kotlin's clever type inference allows for shorter syntax.
+
+Spring Data MongoDB provides the following extensions:
+
+* Reified generics support for `MongoOperations`, `ReactiveMongoOperations`, `FluentMongoOperations`, `ReactiveFluentMongoOperations`, and `Criteria`.
+* <<mongo.query.kotlin-support>>
+* <<kotlin.coroutines>> extensions for `ReactiveFluentMongoOperations`.
+
+include::../{spring-data-commons-docs}/kotlin-coroutines.adoc[leveloffset=+1]

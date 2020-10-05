@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,14 +24,16 @@ import java.util.Collections;
 import org.bson.Document;
 import org.bson.codecs.BsonValueCodec;
 import org.bson.codecs.configuration.CodecRegistry;
+import org.bson.conversions.Bson;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
-import org.springframework.data.mongodb.MongoDbFactory;
+import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.MongoTemplate.SessionBoundMongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -43,11 +45,12 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
-import com.mongodb.MongoClient;
 import com.mongodb.client.AggregateIterable;
+import com.mongodb.client.ClientSession;
 import com.mongodb.client.DistinctIterable;
 import com.mongodb.client.FindIterable;
 import com.mongodb.client.MapReduceIterable;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
@@ -56,7 +59,6 @@ import com.mongodb.client.model.CountOptions;
 import com.mongodb.client.model.DeleteOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.UpdateOptions;
-import com.mongodb.client.ClientSession;
 
 /**
  * Unit test for {@link SessionBoundMongoTemplate} making sure a proxied {@link MongoCollection} and
@@ -66,6 +68,7 @@ import com.mongodb.client.ClientSession;
  * control the behavior by using the methods dedicated for {@link ClientSession} directly.
  *
  * @author Christoph Strobl
+ * @author Jens Schauder
  */
 @SuppressWarnings("unchecked")
 @RunWith(MockitoJUnitRunner.Silent.class)
@@ -75,9 +78,9 @@ public class SessionBoundMongoTemplateUnitTests {
 
 	SessionBoundMongoTemplate template;
 
-	MongoDbFactory factory;
+	MongoDatabaseFactory factory;
 
-	@Mock MongoCollection collection;
+	@Mock(answer = Answers.RETURNS_DEEP_STUBS) MongoCollection collection;
 	@Mock MongoDatabase database;
 	@Mock MongoClient client;
 	@Mock ClientSession clientSession;
@@ -109,7 +112,6 @@ public class SessionBoundMongoTemplateUnitTests {
 		when(aggregateIterable.allowDiskUse(anyBoolean())).thenReturn(aggregateIterable);
 		when(aggregateIterable.batchSize(anyInt())).thenReturn(aggregateIterable);
 		when(aggregateIterable.map(any())).thenReturn(aggregateIterable);
-		when(aggregateIterable.useCursor(anyBoolean())).thenReturn(aggregateIterable);
 		when(aggregateIterable.into(any())).thenReturn(Collections.emptyList());
 		when(mongoIterable.iterator()).thenReturn(cursor);
 		when(distinctIterable.map(any())).thenReturn(distinctIterable);
@@ -121,7 +123,7 @@ public class SessionBoundMongoTemplateUnitTests {
 		when(cursor.hasNext()).thenReturn(false);
 		when(findIterable.projection(any())).thenReturn(findIterable);
 
-		factory = new SimpleMongoDbFactory(client, "foo");
+		factory = new SimpleMongoClientDatabaseFactory(client, "foo");
 
 		this.mappingContext = new MongoMappingContext();
 		this.converter = new MappingMongoConverter(new DefaultDbRefResolver(factory), mappingContext);
@@ -223,7 +225,7 @@ public class SessionBoundMongoTemplateUnitTests {
 
 		template.count(new Query(), Person.class);
 
-		verify(collection).count(eq(clientSession), any(), any(CountOptions.class));
+		verify(collection).countDocuments(eq(clientSession), any(), any(CountOptions.class));
 	}
 
 	@Test // DATAMONGO-1880
@@ -247,7 +249,7 @@ public class SessionBoundMongoTemplateUnitTests {
 
 		template.findAndModify(new Query(), new Update().set("foo", "bar"), Person.class);
 
-		verify(collection).findOneAndUpdate(eq(clientSession), any(), any(), any(FindOneAndUpdateOptions.class));
+		verify(collection).findOneAndUpdate(eq(clientSession), any(), any(Bson.class), any(FindOneAndUpdateOptions.class));
 	}
 
 	@Test // DATAMONGO-1880
@@ -300,7 +302,7 @@ public class SessionBoundMongoTemplateUnitTests {
 
 		template.updateFirst(new Query(), Update.update("foo", "bar"), Person.class);
 
-		verify(collection).updateOne(eq(clientSession), any(), any(), any(UpdateOptions.class));
+		verify(collection).updateOne(eq(clientSession), any(), any(Bson.class), any(UpdateOptions.class));
 	}
 
 	@Test // DATAMONGO-1880
@@ -308,7 +310,7 @@ public class SessionBoundMongoTemplateUnitTests {
 
 		template.updateMulti(new Query(), Update.update("foo", "bar"), Person.class);
 
-		verify(collection).updateMany(eq(clientSession), any(), any(), any(UpdateOptions.class));
+		verify(collection).updateMany(eq(clientSession), any(), any(Bson.class), any(UpdateOptions.class));
 	}
 
 	@Test // DATAMONGO-1880
@@ -316,7 +318,7 @@ public class SessionBoundMongoTemplateUnitTests {
 
 		template.upsert(new Query(), Update.update("foo", "bar"), Person.class);
 
-		verify(collection).updateOne(eq(clientSession), any(), any(), any(UpdateOptions.class));
+		verify(collection).updateOne(eq(clientSession), any(), any(Bson.class), any(UpdateOptions.class));
 	}
 
 	@Test // DATAMONGO-1880

@@ -1,7 +1,7 @@
 [[mongo.custom-converters]]
 == Custom Conversions - Overriding Default Mapping
 
-The most trivial way of influencing the the mapping result is by specifying the desired native MongoDB target type via the
+The most trivial way of influencing the mapping result is by specifying the desired native MongoDB target type via the
 `@Field` annotation. This allows to work with non MongoDB types like `BigDecimal` in the domain model while persisting
 values in native `org.bson.types.Decimal128` format.
 
@@ -85,50 +85,21 @@ public class PersonReadConverter implements Converter<Document, Person> {
 [[mongo.custom-converters.xml]]
 === Registering Spring Converters with the `MongoConverter`
 
-The Mongo Spring namespace provides a convenient way to register Spring `Converter` instances with the `MappingMongoConverter`. The following configuration snippet shows how to manually register converter beans as well as configure the wrapping `MappingMongoConverter` into a `MongoTemplate`:
-
-[source,xml]
-----
-<mongo:db-factory dbname="database"/>
-
-<mongo:mapping-converter>
-  <mongo:custom-converters>
-    <mongo:converter ref="readConverter"/>
-    <mongo:converter>
-      <bean class="org.springframework.data.mongodb.test.PersonWriteConverter"/>
-    </mongo:converter>
-  </mongo:custom-converters>
-</mongo:mapping-converter>
-
-<bean id="readConverter" class="org.springframework.data.mongodb.test.PersonReadConverter"/>
-
-<bean id="mongoTemplate" class="org.springframework.data.mongodb.core.MongoTemplate">
-  <constructor-arg name="mongoDbFactory" ref="mongoDbFactory"/>
-  <constructor-arg name="mongoConverter" ref="mappingConverter"/>
-</bean>
-----
-
-You can also use the `base-package` attribute of the `custom-converters` element to enable classpath scanning for all `Converter` and `GenericConverter` implementations below the given package, as the following example shows:
-
-[source,xml]
-----
-<mongo:mapping-converter>
-  <mongo:custom-converters base-package="com.acme.**.converters" />
-</mongo:mapping-converter>
-----
-
-[[mongo.converter-disambiguation]]
-=== Converter Disambiguation
-
-Generally, we inspect the `Converter` implementations for the source and target types they convert from and to. Depending on whether one of those is a type MongoDB can handle natively, we register the converter instance as a reading or a writing converter. The following examples show a writer converter and a read converter (note the difference is in the order of the qualifiers on `Converter`):
-
 [source,java]
 ----
-// Write converter as only the target type is one Mongo can handle natively
-class MyConverter implements Converter<Person, String> { … }
+class MyMongoConfiguration extends AbstractMongoClientConfiguration {
 
-// Read converter as only the source type is one Mongo can handle natively
-class MyConverter implements Converter<String, Person> { … }
+	@Override
+	public String getDatabaseName() {
+		return "database";
+	}
+
+	@Override
+	protected void configureConverters(MongoConverterConfigurationAdapter adapter) {
+		adapter.registerConverter(new com.example.PersonReadConverter());
+		adapter.registerConverter(new com.example.PersonWriteConverter());
+	}
+}
 ----
 
-If you write a `Converter` whose source and target type are native Mongo types, we cannot determine whether we should consider it as a reading or a writing converter. Registering the converter instance as both might lead to unwanted results. For example, a `Converter<String, Long>` is ambiguous, although it probably does not make sense to try to convert all `String` instances into `Long` instances when writing. To let you force the infrastructure to register a converter for only one way, we provide `@ReadingConverter` and `@WritingConverter` annotations to be used in the converter implementation.
+include::../{spring-data-commons-docs}/custom-conversions.adoc[leveloffset=+3]

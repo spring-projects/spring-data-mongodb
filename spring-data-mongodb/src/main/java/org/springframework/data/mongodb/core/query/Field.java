@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the original author or authors.
+ * Copyright 2010-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import lombok.EqualsAndHashCode;
 import org.bson.Document;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 
 /**
  * @author Thomas Risberg
@@ -34,7 +35,6 @@ import org.springframework.util.Assert;
  * @author Mark Paluch
  * @author Owen Q
  */
-@EqualsAndHashCode
 public class Field {
 
 	private final Map<String, Integer> criteria = new HashMap<String, Integer>();
@@ -120,5 +120,41 @@ public class Field {
 		}
 
 		return document;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
+
+		Field field = (Field) o;
+
+		if (positionValue != field.positionValue) {
+			return false;
+		}
+		if (!ObjectUtils.nullSafeEquals(criteria, field.criteria)) {
+			return false;
+		}
+		if (!ObjectUtils.nullSafeEquals(slices, field.slices)) {
+			return false;
+		}
+		if (!ObjectUtils.nullSafeEquals(elemMatchs, field.elemMatchs)) {
+			return false;
+		}
+		return ObjectUtils.nullSafeEquals(positionKey, field.positionKey);
+	}
+
+	@Override
+	public int hashCode() {
+
+		int result = ObjectUtils.nullSafeHashCode(criteria);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(slices);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(elemMatchs);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(positionKey);
+		result = 31 * result + positionValue;
+		return result;
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 the original author or authors.
+ * Copyright 2018-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,61 +23,56 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import org.bson.Document;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestRule;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
+import org.springframework.data.mongodb.test.util.EnableIfReplicaSetAvailable;
+import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
-import org.springframework.data.mongodb.test.util.MongoVersion;
-import org.springframework.data.mongodb.test.util.MongoVersionRule;
-import org.springframework.data.mongodb.test.util.ReplicaSet;
-import org.springframework.data.util.Version;
+import org.springframework.data.mongodb.test.util.ReplSetClient;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.ClientSessionOptions;
-import com.mongodb.MongoClient;
 import com.mongodb.client.ClientSession;
+import com.mongodb.client.MongoClient;
 
 /**
+ * Integration tests for {@link ClientSession} through {@link MongoTemplate#withSession(ClientSession)}.
+ *
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-public class ClientSessionTests {
-
-	public static @ClassRule TestRule replSet = ReplicaSet.required();
-	public @Rule MongoVersionRule REQUIRES_AT_LEAST_3_6_0 = MongoVersionRule.atLeast(Version.parse("3.6.0"));
+@ExtendWith({ MongoClientExtension.class })
+@EnableIfReplicaSetAvailable
+@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
+class ClientSessionTests {
 
 	private static final String DB_NAME = "client-session-tests";
 	private static final String COLLECTION_NAME = "test";
+	private static final String REF_COLLECTION_NAME = "test-with-ref";
 
-	MongoTemplate template;
-	MongoClient client;
+	private static @ReplSetClient MongoClient mongoClient;
 
-	@Before
-	public void setUp() {
+	private MongoTemplate template;
 
-		client = MongoTestUtils.replSetClient();
+	@BeforeEach
+	void setUp() {
 
-		MongoTestUtils.createOrReplaceCollection(DB_NAME, COLLECTION_NAME, client);
+		MongoTestUtils.createOrReplaceCollection(DB_NAME, COLLECTION_NAME, mongoClient);
 
-		template = new MongoTemplate(client, DB_NAME);
+		template = new MongoTemplate(mongoClient, DB_NAME);
 		template.getDb().getCollection(COLLECTION_NAME).insertOne(new Document("_id", "id-1").append("value", "spring"));
 	}
 
-	@After
-	public void tearDown() {
-		client.close();
-	}
-
 	@Test // DATAMONGO-1880
-	public void shouldApplyClientSession() {
+	void shouldApplyClientSession() {
 
-		ClientSession session = client.startSession(ClientSessionOptions.builder().causallyConsistent(true).build());
+		ClientSession session = mongoClient.startSession(ClientSessionOptions.builder().causallyConsistent(true).build());
 
 		assertThat(session.getOperationTime()).isNull();
 
@@ -92,9 +87,9 @@ public class ClientSessionTests {
 	}
 
 	@Test // DATAMONGO-2241
-	public void shouldReuseConfiguredInfrastructure() {
+	void shouldReuseConfiguredInfrastructure() {
 
-		ClientSession session = client.startSession(ClientSessionOptions.builder().causallyConsistent(true).build());
+		ClientSession session = mongoClient.startSession(ClientSessionOptions.builder().causallyConsistent(true).build());
 
 		MappingMongoConverter source = MappingMongoConverter.class.cast(template.getConverter());
 		MappingMongoConverter sessionTemplateConverter = MappingMongoConverter.class
@@ -108,10 +103,9 @@ public class ClientSessionTests {
 	}
 
 	@Test // DATAMONGO-1920
-	@MongoVersion(asOf = "3.7.3")
-	public void withCommittedTransaction() {
+	void withCommittedTransaction() {
 
-		ClientSession session = client.startSession(ClientSessionOptions.builder().causallyConsistent(true).build());
+		ClientSession session = mongoClient.startSession(ClientSessionOptions.builder().causallyConsistent(true).build());
 
 		assertThat(session.getOperationTime()).isNull();
 
@@ -134,10 +128,9 @@ public class ClientSessionTests {
 	}
 
 	@Test // DATAMONGO-1920
-	@MongoVersion(asOf = "3.7.3")
-	public void withAbortedTransaction() {
+	void withAbortedTransaction() {
 
-		ClientSession session = client.startSession(ClientSessionOptions.builder().causallyConsistent(true).build());
+		ClientSession session = mongoClient.startSession(ClientSessionOptions.builder().causallyConsistent(true).build());
 
 		assertThat(session.getOperationTime()).isNull();
 
@@ -159,6 +152,31 @@ public class ClientSessionTests {
 		assertThat(template.exists(query(where("id").is(saved.getId())), SomeDoc.class)).isFalse();
 	}
 
+	@Test // DATAMONGO-2490
+	void shouldBeAbleToReadDbRefDuringTransaction() {
+
+		SomeDoc ref = new SomeDoc("ref-1", "da value");
+		WithDbRef source = new WithDbRef("source-1", "da source", ref);
+
+		ClientSession session = mongoClient.startSession(ClientSessionOptions.builder().causallyConsistent(true).build());
+
+		assertThat(session.getOperationTime()).isNull();
+
+		session.startTransaction();
+
+		WithDbRef saved = template.withSession(() -> session).execute(action -> {
+
+			template.save(ref);
+			template.save(source);
+
+			return template.findOne(query(where("id").is(source.id)), WithDbRef.class);
+		});
+
+		assertThat(saved.getSomeDocRef()).isEqualTo(ref);
+
+		session.abortTransaction();
+	}
+
 	@Data
 	@AllArgsConstructor
 	@org.springframework.data.mongodb.core.mapping.Document(COLLECTION_NAME)
@@ -166,6 +184,16 @@ public class ClientSessionTests {
 
 		@Id String id;
 		String value;
+	}
+
+	@Data
+	@AllArgsConstructor
+	@org.springframework.data.mongodb.core.mapping.Document(REF_COLLECTION_NAME)
+	static class WithDbRef {
+
+		@Id String id;
+		String value;
+		@DBRef SomeDoc someDocRef;
 	}
 
 }

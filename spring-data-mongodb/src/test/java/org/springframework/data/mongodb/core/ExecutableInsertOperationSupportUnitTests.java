@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 the original author or authors.
+ * Copyright 2017-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,12 +23,13 @@ import lombok.Data;
 
 import java.util.Arrays;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 
@@ -38,7 +39,7 @@ import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ExecutableInsertOperationSupportUnitTests {
 
 	private static final String STAR_WARS = "star-wars";
@@ -46,16 +47,12 @@ public class ExecutableInsertOperationSupportUnitTests {
 	@Mock MongoTemplate template;
 	@Mock BulkOperations bulkOperations;
 
-	ExecutableInsertOperationSupport ops;
+	private ExecutableInsertOperationSupport ops;
 
-	Person luke, han;
+	private Person luke, han;
 
-	@Before
-	public void setUp() {
-
-		when(template.bulkOps(any(), any(), any())).thenReturn(bulkOperations);
-		when(template.getCollectionName(any(Class.class))).thenReturn(STAR_WARS);
-		when(bulkOperations.insert(anyList())).thenReturn(bulkOperations);
+	@BeforeEach
+	void setUp() {
 
 		ops = new ExecutableInsertOperationSupport(template);
 
@@ -68,19 +65,20 @@ public class ExecutableInsertOperationSupportUnitTests {
 		han.id = "id-2";
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1563
-	public void nullCollectionShouldThrowException() {
-		ops.insert(Person.class).inCollection(null);
-
-	}
-
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-1563
-	public void nullBulkModeShouldThrowException() {
-		ops.insert(Person.class).withBulkMode(null);
+	@Test // DATAMONGO-1563
+	void nullCollectionShouldThrowException() {
+		assertThatIllegalArgumentException().isThrownBy(() -> ops.insert(Person.class).inCollection(null));
 	}
 
 	@Test // DATAMONGO-1563
-	public void insertShouldUseDerivedCollectionName() {
+	void nullBulkModeShouldThrowException() {
+		assertThatIllegalArgumentException().isThrownBy(() -> ops.insert(Person.class).withBulkMode(null));
+	}
+
+	@Test // DATAMONGO-1563
+	void insertShouldUseDerivedCollectionName() {
+
+		when(template.getCollectionName(any(Class.class))).thenReturn(STAR_WARS);
 
 		ops.insert(Person.class).one(luke);
 
@@ -93,7 +91,7 @@ public class ExecutableInsertOperationSupportUnitTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void insertShouldUseExplicitCollectionName() {
+	void insertShouldUseExplicitCollectionName() {
 
 		ops.insert(Person.class).inCollection(STAR_WARS).one(luke);
 
@@ -102,7 +100,9 @@ public class ExecutableInsertOperationSupportUnitTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void insertCollectionShouldDelegateCorrectly() {
+	void insertCollectionShouldDelegateCorrectly() {
+
+		when(template.getCollectionName(any(Class.class))).thenReturn(STAR_WARS);
 
 		ops.insert(Person.class).all(Arrays.asList(luke, han));
 
@@ -111,7 +111,11 @@ public class ExecutableInsertOperationSupportUnitTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void bulkInsertCollectionShouldDelegateCorrectly() {
+	void bulkInsertCollectionShouldDelegateCorrectly() {
+
+		when(template.getCollectionName(any(Class.class))).thenReturn(STAR_WARS);
+		when(template.bulkOps(any(), any(), any())).thenReturn(bulkOperations);
+		when(bulkOperations.insert(anyList())).thenReturn(bulkOperations);
 
 		ops.insert(Person.class).bulk(Arrays.asList(luke, han));
 
@@ -124,7 +128,11 @@ public class ExecutableInsertOperationSupportUnitTests {
 	}
 
 	@Test // DATAMONGO-1563
-	public void bulkInsertWithBulkModeShouldDelegateCorrectly() {
+	void bulkInsertWithBulkModeShouldDelegateCorrectly() {
+
+		when(template.getCollectionName(any(Class.class))).thenReturn(STAR_WARS);
+		when(template.bulkOps(any(), any(), any())).thenReturn(bulkOperations);
+		when(bulkOperations.insert(anyList())).thenReturn(bulkOperations);
 
 		ops.insert(Person.class).withBulkMode(BulkMode.UNORDERED).bulk(Arrays.asList(luke, han));
 

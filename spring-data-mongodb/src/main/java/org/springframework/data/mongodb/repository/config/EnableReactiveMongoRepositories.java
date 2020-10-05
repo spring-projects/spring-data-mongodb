@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -84,7 +84,7 @@ public @interface EnableReactiveMongoRepositories {
 	 * for a repository named {@code PersonRepository} the corresponding implementation class will be looked up scanning
 	 * for {@code PersonRepositoryImpl}.
 	 *
-	 * @return
+	 * @return {@literal Impl} by default.
 	 */
 	String repositoryImplementationPostfix() default "Impl";
 
@@ -92,7 +92,7 @@ public @interface EnableReactiveMongoRepositories {
 	 * Configures the location of where to find the Spring Data named queries properties file. Will default to
 	 * {@code META-INF/mongo-named-queries.properties}.
 	 *
-	 * @return
+	 * @return empty {@link String} by default.
 	 */
 	String namedQueriesLocation() default "";
 
@@ -100,7 +100,7 @@ public @interface EnableReactiveMongoRepositories {
 	 * Returns the key of the {@link QueryLookupStrategy} to be used for lookup queries for query methods. Defaults to
 	 * {@link Key#CREATE_IF_NOT_FOUND}.
 	 *
-	 * @return
+	 * @return {@link Key#CREATE_IF_NOT_FOUND} by default.
 	 */
 	Key queryLookupStrategy() default Key.CREATE_IF_NOT_FOUND;
 
@@ -108,34 +108,36 @@ public @interface EnableReactiveMongoRepositories {
 	 * Returns the {@link FactoryBean} class to be used for each repository instance. Defaults to
 	 * {@link MongoRepositoryFactoryBean}.
 	 *
-	 * @return
+	 * @return {@link ReactiveMongoRepositoryFactoryBean} by default.
 	 */
 	Class<?> repositoryFactoryBeanClass() default ReactiveMongoRepositoryFactoryBean.class;
 
 	/**
 	 * Configure the repository base class to be used to create repository proxies for this particular configuration.
 	 *
-	 * @return
+	 * @return {@link DefaultRepositoryBaseClass} by default.
 	 */
 	Class<?> repositoryBaseClass() default DefaultRepositoryBaseClass.class;
 
 	/**
 	 * Configures the name of the {@link MongoTemplate} bean to be used with the repositories detected.
 	 *
-	 * @return
+	 * @return {@literal reactiveMongoTemplate} by default.
 	 */
 	String reactiveMongoTemplateRef() default "reactiveMongoTemplate";
 
 	/**
 	 * Whether to automatically create indexes for query methods defined in the repository interface.
 	 *
-	 * @return
+	 * @return {@literal false} by default.
 	 */
 	boolean createIndexesForQueryMethods() default false;
 
 	/**
 	 * Configures whether nested repository-interfaces (e.g. defined as inner classes) should be discovered by the
 	 * repositories infrastructure.
+	 * 
+	 * @return {@literal false} by default.
 	 */
 	boolean considerNestedRepositories() default false;
 }

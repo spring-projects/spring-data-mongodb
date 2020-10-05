@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2019 the original author or authors.
+ * Copyright 2011-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,13 +18,15 @@ package org.springframework.data.mongodb.repository.query;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.util.json.ParameterBindingContext;
 import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.spel.ExpressionDependencies;
+import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
 
@@ -40,12 +42,11 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 
 	private static final String COUNT_EXISTS_AND_DELETE = "Manually defined query for %s cannot be a count and exists or delete query at the same time!";
 	private static final Logger LOG = LoggerFactory.getLogger(StringBasedMongoQuery.class);
-	private static final ParameterBindingDocumentCodec CODEC = new ParameterBindingDocumentCodec();
 
 	private final String query;
 	private final String fieldSpec;
 
-	private final SpelExpressionParser expressionParser;
+	private final ExpressionParser expressionParser;
 	private final QueryMethodEvaluationContextProvider evaluationContextProvider;
 
 	private final boolean isCountQuery;
@@ -62,7 +63,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	 * @param evaluationContextProvider must not be {@literal null}.
 	 */
 	public StringBasedMongoQuery(MongoQueryMethod method, MongoOperations mongoOperations,
-			SpelExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			ExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
 		this(method.getAnnotatedQuery(), method, mongoOperations, expressionParser, evaluationContextProvider);
 	}
 
@@ -76,7 +77,7 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	 * @param expressionParser must not be {@literal null}.
 	 */
 	public StringBasedMongoQuery(String query, MongoQueryMethod method, MongoOperations mongoOperations,
-			SpelExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			ExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
 
 		super(method, mongoOperations, expressionParser, evaluationContextProvider);
 
@@ -115,11 +116,10 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	@Override
 	protected Query createQuery(ConvertingParameterAccessor accessor) {
 
-		ParameterBindingContext bindingContext = new ParameterBindingContext((accessor::getBindableValue), expressionParser,
-				evaluationContextProvider.getEvaluationContext(getQueryMethod().getParameters(), accessor.getValues()));
+		ParameterBindingDocumentCodec codec = getParameterBindingCodec();
 
-		Document queryObject = CODEC.decode(this.query, bindingContext);
-		Document fieldsObject = CODEC.decode(this.fieldSpec, bindingContext);
+		Document queryObject = codec.decode(this.query, getBindingContext(this.query, accessor, codec));
+		Document fieldsObject = codec.decode(this.fieldSpec, getBindingContext(this.fieldSpec, accessor, codec));
 
 		Query query = new BasicQuery(queryObject, fieldsObject).with(accessor.getSort());
 
@@ -128,6 +128,16 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		}
 
 		return query;
+	}
+
+	private ParameterBindingContext getBindingContext(String json, ConvertingParameterAccessor accessor,
+			ParameterBindingDocumentCodec codec) {
+
+		ExpressionDependencies dependencies = codec.captureExpressionDependencies(json, accessor::getBindableValue,
+				expressionParser);
+
+		SpELExpressionEvaluator evaluator = getSpELExpressionEvaluatorFor(dependencies, accessor);
+		return new ParameterBindingContext(accessor::getBindableValue, evaluator);
 	}
 
 	/*
@@ -169,5 +179,9 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	private static boolean hasAmbiguousProjectionFlags(boolean isCountQuery, boolean isExistsQuery,
 			boolean isDeleteQuery) {
 		return BooleanUtil.countBooleanTrueValues(isCountQuery, isExistsQuery, isDeleteQuery) > 1;
+	}
+
+	private ParameterBindingDocumentCodec getParameterBindingCodec() {
+		return new ParameterBindingDocumentCodec(getCodecRegistry());
 	}
 }

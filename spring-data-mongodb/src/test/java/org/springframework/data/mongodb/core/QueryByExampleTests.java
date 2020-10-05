@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,17 +15,16 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
-import java.net.UnknownHostException;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
@@ -34,8 +33,9 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UntypedExampleMatcher;
-
-import com.mongodb.MongoClient;
+import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
+import org.springframework.data.mongodb.test.util.MongoTestTemplate;
+import org.springframework.data.mongodb.test.util.Template;
 
 /**
  * Integration tests for Query-by-example.
@@ -44,16 +44,18 @@ import com.mongodb.MongoClient;
  * @author Mark Paluch
  * @author Oliver Gierke
  */
+@ExtendWith(MongoTemplateExtension.class)
 public class QueryByExampleTests {
 
-	MongoOperations operations;
+	@Template(initialEntitySet = Person.class) //
+	static MongoTestTemplate operations;
+
 	Person p1, p2, p3;
 
-	@Before
-	public void setUp() throws UnknownHostException {
+	@BeforeEach
+	public void setUp() {
 
-		operations = new MongoTemplate(new MongoClient(), "query-by-example");
-		operations.remove(new Query(), Person.class);
+		operations.flush();
 
 		p1 = new Person();
 		p1.firstname = "bran";
@@ -82,8 +84,7 @@ public class QueryByExampleTests {
 		Query query = new Query(new Criteria().alike(Example.of(sample)));
 		List<Person> result = operations.find(query, Person.class);
 
-		assertThat(result, hasSize(2));
-		assertThat(result, hasItems(p1, p3));
+		assertThat(result).containsExactlyInAnyOrder(p1, p3);
 	}
 
 	@Test // DATAMONGO-1245
@@ -96,8 +97,7 @@ public class QueryByExampleTests {
 		Query query = new Query(new Criteria().alike(Example.of(sample)));
 		List<Person> result = operations.find(query, Person.class);
 
-		assertThat(result, hasSize(1));
-		assertThat(result, hasItem(p3));
+		assertThat(result).containsExactly(p3);
 	}
 
 	@Test // DATAMONGO-1245
@@ -112,8 +112,7 @@ public class QueryByExampleTests {
 		Query query = new Query(new Criteria().alike(Example.of(sample)));
 		List<Person> result = operations.find(query, Person.class);
 
-		assertThat(result, hasSize(1));
-		assertThat(result, hasItem(p4));
+		assertThat(result).containsExactly(p4);
 	}
 
 	@Test // DATAMONGO-1245
@@ -126,7 +125,7 @@ public class QueryByExampleTests {
 		Query query = new Query(new Criteria().alike(Example.of(sample)));
 		List<Person> result = operations.find(query, Person.class);
 
-		assertThat(result, is(empty()));
+		assertThat(result).isEmpty();
 	}
 
 	@Test // DATAMONGO-1245
@@ -137,8 +136,7 @@ public class QueryByExampleTests {
 		Query query = new Query(new Criteria().alike(Example.of(sample)));
 		List<Person> result = operations.find(query, Person.class);
 
-		assertThat(result, hasSize(3));
-		assertThat(result, hasItems(p1, p2, p3));
+		assertThat(result).containsExactlyInAnyOrder(p1, p2, p3);
 	}
 
 	@Test // DATAMONGO-1245
@@ -150,7 +148,7 @@ public class QueryByExampleTests {
 		Query query = new Query(new Criteria().alike(Example.of(sample)).and("firstname").regex("^ary*"));
 
 		List<Person> result = operations.find(query, Person.class);
-		assertThat(result.size(), is(1));
+		assertThat(result).hasSize(1);
 	}
 
 	@Test // DATAMONGO-1459
@@ -163,8 +161,7 @@ public class QueryByExampleTests {
 		Query query = Query.query(Criteria.byExample(Example.of(probe, ExampleMatcher.matchingAny())));
 		List<Person> result = operations.find(query, Person.class);
 
-		assertThat(result, hasSize(2));
-		assertThat(result, hasItems(p1, p2));
+		assertThat(result).containsExactlyInAnyOrder(p1, p2);
 	}
 
 	@Test // DATAMONGO-1768
@@ -176,7 +173,7 @@ public class QueryByExampleTests {
 		Query query = new Query(new Criteria().alike(Example.of(probe)));
 		List<Person> result = operations.find(query, Person.class);
 
-		assertThat(result, hasSize(0));
+		assertThat(result).isEmpty();
 	}
 
 	@Test // DATAMONGO-1768
@@ -189,8 +186,7 @@ public class QueryByExampleTests {
 				new Criteria().alike(Example.of(probe, ExampleMatcher.matching().withIgnorePaths("_class"))));
 		List<Person> result = operations.find(query, Person.class);
 
-		assertThat(result, hasSize(2));
-		assertThat(result, hasItems(p1, p3));
+		assertThat(result).containsExactlyInAnyOrder(p1, p3);
 	}
 
 	@Test // DATAMONGO-1768
@@ -202,8 +198,28 @@ public class QueryByExampleTests {
 		Query query = new Query(new Criteria().alike(Example.of(probe, UntypedExampleMatcher.matching())));
 		List<Person> result = operations.find(query, Person.class);
 
-		assertThat(result, hasSize(2));
-		assertThat(result, hasItems(p1, p3));
+		assertThat(result).containsExactlyInAnyOrder(p1, p3);
+	}
+
+	@Test // DATAMONGO-2314
+	public void alikeShouldWorkOnNestedProperties() {
+
+		PersonWrapper source1 = new PersonWrapper();
+		source1.id = "with-child-doc-1";
+		source1.child = p1;
+
+		PersonWrapper source2 = new PersonWrapper();
+		source2.id = "with-child-doc-2";
+		source2.child = p2;
+
+		operations.save(source1);
+		operations.save(source2);
+
+		Query query = new Query(
+				new Criteria("child").alike(Example.of(p1, ExampleMatcher.matching().withIgnorePaths("_class"))));
+		List<PersonWrapper> result = operations.find(query, PersonWrapper.class);
+
+		assertThat(result).containsExactly(source1);
 	}
 
 	@Document("dramatis-personae")
@@ -222,5 +238,14 @@ public class QueryByExampleTests {
 
 		String firstname, middlename;
 		@Field("last_name") String lastname;
+	}
+
+	@Document("dramatis-personae")
+	@EqualsAndHashCode
+	@ToString
+	static class PersonWrapper {
+
+		@Id String id;
+		Person child;
 	}
 }

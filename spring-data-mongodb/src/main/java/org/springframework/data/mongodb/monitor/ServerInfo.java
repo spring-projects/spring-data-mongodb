@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,8 +21,9 @@ import org.springframework.jmx.export.annotation.ManagedMetric;
 import org.springframework.jmx.export.annotation.ManagedOperation;
 import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.jmx.support.MetricType;
+import org.springframework.util.StringUtils;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 
 /**
  * Expose basic server information via JMX
@@ -34,7 +35,11 @@ import com.mongodb.MongoClient;
 @ManagedResource(description = "Server Information")
 public class ServerInfo extends AbstractMonitor {
 
-	public ServerInfo(MongoClient mongoClient) {
+	/**
+	 * @param mongoClient
+	 * @since 2.2
+	 */
+	protected ServerInfo(MongoClient mongoClient) {
 		super(mongoClient);
 	}
 
@@ -51,7 +56,7 @@ public class ServerInfo extends AbstractMonitor {
 		 * UnknownHostException is not necessary anymore, but clients could have
 		 * called this method in a try..catch(UnknownHostException) already
 		 */
-		return getMongoClient().getAddress().getHost();
+		return StringUtils.collectionToDelimitedString(hosts(), ",");
 	}
 
 	@ManagedMetric(displayName = "Uptime Estimate")

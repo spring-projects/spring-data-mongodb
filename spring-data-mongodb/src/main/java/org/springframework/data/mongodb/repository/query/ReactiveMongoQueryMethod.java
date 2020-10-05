@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2019 the original author or authors.
+ * Copyright 2016-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.util.ReactiveWrapperConverters;
 import org.springframework.data.repository.util.ReactiveWrappers;
 import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.Lazy;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.ClassUtils;
 
@@ -50,6 +51,7 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 	private static final ClassTypeInformation<Slice> SLICE_TYPE = ClassTypeInformation.from(Slice.class);
 
 	private final Method method;
+	private final Lazy<Boolean> isCollectionQuery;
 
 	/**
 	 * Creates a new {@link ReactiveMongoQueryMethod} from the given {@link Method}.
@@ -87,11 +89,13 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 
 			if (hasParameterOfType(method, Sort.class)) {
 				throw new IllegalStateException(String.format("Method must not have Pageable *and* Sort parameter. "
-						+ "Use sorting capabilities on Pageble instead! Offending method: %s", method.toString()));
+						+ "Use sorting capabilities on Pageable instead! Offending method: %s", method.toString()));
 			}
 		}
 
 		this.method = method;
+		this.isCollectionQuery = Lazy.of(() -> (!(isPageQuery() || isSliceQuery())
+				&& ReactiveWrappers.isMultiValueType(metadata.getReturnType(method).getType()) || super.isCollectionQuery()));
 	}
 
 	/*
@@ -109,7 +113,7 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 	 */
 	@Override
 	public boolean isCollectionQuery() {
-		return !(isPageQuery() || isSliceQuery()) && ReactiveWrappers.isMultiValueType(method.getReturnType());
+		return isCollectionQuery.get();
 	}
 
 	/*

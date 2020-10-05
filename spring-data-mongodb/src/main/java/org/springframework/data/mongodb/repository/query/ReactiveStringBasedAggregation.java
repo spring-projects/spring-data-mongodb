@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 the original author or authors.
+ * Copyright 2019-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,13 @@
 package org.springframework.data.mongodb.repository.query;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.bson.Document;
-
+import org.reactivestreams.Publisher;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
@@ -29,9 +31,12 @@ import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.mongodb.util.json.ParameterBindingContext;
+import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
+import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.ResultProcessor;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.data.spel.ExpressionDependencies;
+import org.springframework.expression.ExpressionParser;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -44,8 +49,8 @@ import org.springframework.util.ClassUtils;
  */
 public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 
-	private final SpelExpressionParser expressionParser;
-	private final QueryMethodEvaluationContextProvider evaluationContextProvider;
+	private final ExpressionParser expressionParser;
+	private final ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider;
 	private final ReactiveMongoOperations reactiveMongoOperations;
 	private final MongoConverter mongoConverter;
 
@@ -56,8 +61,8 @@ public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 	 * @param evaluationContextProvider must not be {@literal null}.
 	 */
 	public ReactiveStringBasedAggregation(ReactiveMongoQueryMethod method,
-			ReactiveMongoOperations reactiveMongoOperations, SpelExpressionParser expressionParser,
-			QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			ReactiveMongoOperations reactiveMongoOperations, ExpressionParser expressionParser,
+			ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider) {
 
 		super(method, reactiveMongoOperations, expressionParser, evaluationContextProvider);
 
@@ -72,45 +77,75 @@ public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#doExecute(org.springframework.data.mongodb.repository.query.ReactiveMongoQueryMethod, org.springframework.data.repository.query.ResultProcessor, org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor, java.lang.Class)
 	 */
 	@Override
-	protected Object doExecute(ReactiveMongoQueryMethod method, ResultProcessor processor,
+	protected Publisher<Object> doExecute(ReactiveMongoQueryMethod method, ResultProcessor processor,
 			ConvertingParameterAccessor accessor, Class<?> typeToRead) {
 
-		Class<?> sourceType = method.getDomainClass();
-		Class<?> targetType = typeToRead;
+		return computePipeline(accessor).flatMapMany(it -> {
 
-		List<AggregationOperation> pipeline = computePipeline(accessor);
-		AggregationUtils.appendSortIfPresent(pipeline, accessor, typeToRead);
-		AggregationUtils.appendLimitAndOffsetIfPresent(pipeline, accessor);
+			Class<?> sourceType = method.getDomainClass();
+			Class<?> targetType = typeToRead;
 
-		boolean isSimpleReturnType = isSimpleReturnType(typeToRead);
-		boolean isRawReturnType = ClassUtils.isAssignable(org.bson.Document.class, typeToRead);
+			List<AggregationOperation> pipeline = it;
 
-		if (isSimpleReturnType || isRawReturnType) {
-			targetType = Document.class;
-		}
+			AggregationUtils.appendSortIfPresent(pipeline, accessor, typeToRead);
+			AggregationUtils.appendLimitAndOffsetIfPresent(pipeline, accessor);
 
-		AggregationOptions options = computeOptions(method, accessor);
-		TypedAggregation<?> aggregation = new TypedAggregation<>(sourceType, pipeline, options);
+			boolean isSimpleReturnType = isSimpleReturnType(typeToRead);
+			boolean isRawReturnType = ClassUtils.isAssignable(org.bson.Document.class, typeToRead);
 
-		Flux<?> flux = reactiveMongoOperations.aggregate(aggregation, targetType);
+			if (isSimpleReturnType || isRawReturnType) {
+				targetType = Document.class;
+			}
 
-		if (isSimpleReturnType && !isRawReturnType) {
-			flux = flux.map(it -> AggregationUtils.extractSimpleTypeResult((Document) it, typeToRead, mongoConverter));
-		}
+			AggregationOptions options = computeOptions(method, accessor);
+			TypedAggregation<?> aggregation = new TypedAggregation<>(sourceType, pipeline, options);
 
-		if (method.isCollectionQuery()) {
-			return flux;
-		} else {
-			return flux.next();
-		}
+			Flux<?> flux = reactiveMongoOperations.aggregate(aggregation, targetType);
+
+			if (isSimpleReturnType && !isRawReturnType) {
+				flux = flux.handle((item, sink) -> {
+
+					Object result = AggregationUtils.extractSimpleTypeResult((Document) item, typeToRead, mongoConverter);
+
+					if (result != null) {
+						sink.next(result);
+					}
+				});
+			}
+
+			return method.isCollectionQuery() ? flux : flux.next();
+		});
 	}
 
 	private boolean isSimpleReturnType(Class<?> targetType) {
 		return MongoSimpleTypes.HOLDER.isSimpleType(targetType);
 	}
 
-	List<AggregationOperation> computePipeline(ConvertingParameterAccessor accessor) {
-		return AggregationUtils.computePipeline(getQueryMethod(), accessor, expressionParser, evaluationContextProvider);
+	private Mono<List<AggregationOperation>> computePipeline(ConvertingParameterAccessor accessor) {
+
+		return getCodecRegistry().map(ParameterBindingDocumentCodec::new).flatMap(codec -> {
+
+			String[] sourcePipeline = getQueryMethod().getAnnotatedAggregation();
+
+			List<Mono<AggregationOperation>> stages = new ArrayList<>(sourcePipeline.length);
+			for (String source : sourcePipeline) {
+				stages.add(computePipelineStage(source, accessor, codec));
+			}
+			return Flux.concat(stages).collectList();
+		});
+	}
+
+	private Mono<AggregationOperation> computePipelineStage(String source, ConvertingParameterAccessor accessor,
+			ParameterBindingDocumentCodec codec) {
+
+		ExpressionDependencies dependencies = codec.captureExpressionDependencies(source, accessor::getBindableValue,
+				expressionParser);
+
+		return getSpelEvaluatorFor(dependencies, accessor).map(it -> {
+
+			ParameterBindingContext bindingContext = new ParameterBindingContext(accessor::getBindableValue, it);
+			return ctx -> ctx.getMappedObject(codec.decode(source, bindingContext), getQueryMethod().getDomainClass());
+		});
 	}
 
 	private AggregationOptions computeOptions(MongoQueryMethod method, ConvertingParameterAccessor accessor) {
@@ -129,7 +164,7 @@ public class ReactiveStringBasedAggregation extends AbstractReactiveMongoQuery {
 	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#createQuery(org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor)
 	 */
 	@Override
-	protected Query createQuery(ConvertingParameterAccessor accessor) {
+	protected Mono<Query> createQuery(ConvertingParameterAccessor accessor) {
 		throw new UnsupportedOperationException("No query support for aggregation");
 	}
 

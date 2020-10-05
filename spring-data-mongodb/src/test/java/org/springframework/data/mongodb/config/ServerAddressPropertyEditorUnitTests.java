@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2019 the original author or authors.
+ * Copyright 2012-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,7 @@
  */
 package org.springframework.data.mongodb.config;
 
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -24,11 +23,9 @@ import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 import com.mongodb.ServerAddress;
 
@@ -40,16 +37,14 @@ import com.mongodb.ServerAddress;
  */
 public class ServerAddressPropertyEditorUnitTests {
 
-	@Rule public ExpectedException expectedException = ExpectedException.none();
-
 	ServerAddressPropertyEditor editor;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		editor = new ServerAddressPropertyEditor();
 	}
 
-	@Test(expected = IllegalArgumentException.class) // DATAMONGO-454, DATAMONGO-1062
+	@Test // DATAMONGO-454, DATAMONGO-1062
 	public void rejectsAddressConfigWithoutASingleParsableAndResolvableServerAddress() {
 
 		String unknownHost1 = "gugu.nonexistant.example.org";
@@ -57,10 +52,12 @@ public class ServerAddressPropertyEditorUnitTests {
 
 		assertUnresolveableHostnames(unknownHost1, unknownHost2);
 
-		editor.setAsText(unknownHost1 + "," + unknownHost2);
+		assertThatExceptionOfType(IllegalArgumentException.class)
+				.isThrownBy(() -> editor.setAsText(unknownHost1 + "," + unknownHost2));
 	}
 
 	@Test // DATAMONGO-454
+	@EnabledIfSystemProperty(named = "user.name", matches = "jenkins")
 	public void skipsUnparsableAddressIfAtLeastOneIsParsable() throws UnknownHostException {
 
 		editor.setAsText("foo, localhost");
@@ -78,7 +75,7 @@ public class ServerAddressPropertyEditorUnitTests {
 	public void interpretEmptyStringAsNull() {
 
 		editor.setAsText("");
-		assertNull(editor.getValue());
+		assertThat(editor.getValue()).isNull();
 	}
 
 	@Test // DATAMONGO-808
@@ -125,13 +122,11 @@ public class ServerAddressPropertyEditorUnitTests {
 	 * We can't tell whether the last part of the hostAddress represents a port or not.
 	 */
 	@Test // DATAMONGO-808
-	public void shouldFailToHandleAmbiguousIPv6HostaddressLongWithoutPortAndWithoutBrackets()
-			throws UnknownHostException {
-
-		expectedException.expect(IllegalArgumentException.class);
+	public void shouldFailToHandleAmbiguousIPv6HostaddressLongWithoutPortAndWithoutBrackets() {
 
 		String hostAddress = "0000:0000:0000:0000:0000:0000:0000:128";
-		editor.setAsText(hostAddress);
+
+		assertThatIllegalArgumentException().isThrownBy(() -> editor.setAsText(hostAddress));
 	}
 
 	@Test // DATAMONGO-808
@@ -161,13 +156,13 @@ public class ServerAddressPropertyEditorUnitTests {
 	private static void assertSingleAddressWithPort(String hostAddress, Integer port, Object result)
 			throws UnknownHostException {
 
-		assertThat(result, is(instanceOf(ServerAddress[].class)));
+		assertThat(result).isInstanceOf(ServerAddress[].class);
 		Collection<ServerAddress> addresses = Arrays.asList((ServerAddress[]) result);
-		assertThat(addresses, hasSize(1));
+		assertThat(addresses).hasSize(1);
 		if (port == null) {
-			assertThat(addresses, hasItem(new ServerAddress(InetAddress.getByName(hostAddress))));
+			assertThat(addresses).contains(new ServerAddress(InetAddress.getByName(hostAddress)));
 		} else {
-			assertThat(addresses, hasItem(new ServerAddress(InetAddress.getByName(hostAddress), port)));
+			assertThat(addresses).contains(new ServerAddress(InetAddress.getByName(hostAddress), port));
 		}
 	}
 
@@ -176,7 +171,7 @@ public class ServerAddressPropertyEditorUnitTests {
 		for (String hostname : hostnames) {
 			try {
 				InetAddress.getByName(hostname).isReachable(1500);
-				Assert.fail("Supposedly unresolveable hostname '" + hostname + "' can be resolved.");
+				fail("Supposedly unresolveable hostname '" + hostname + "' can be resolved.");
 			} catch (IOException expected) {
 				// ok
 			}

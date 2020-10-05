@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2019 the original author or authors.
+ * Copyright 2010-2020 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,7 +73,7 @@ public class Index implements IndexDefinition {
 	/**
 	 * Reject all documents that contain a duplicate value for the indexed field.
 	 *
-	 * @return
+	 * @return this.
 	 * @see <a href=
 	 *      "https://docs.mongodb.org/manual/core/index-unique/">https://docs.mongodb.org/manual/core/index-unique/</a>
 	 */
@@ -85,7 +85,7 @@ public class Index implements IndexDefinition {
 	/**
 	 * Skip over any document that is missing the indexed field.
 	 *
-	 * @return
+	 * @return this.
 	 * @see <a href=
 	 *      "https://docs.mongodb.org/manual/core/index-sparse/">https://docs.mongodb.org/manual/core/index-sparse/</a>
 	 */
@@ -97,7 +97,7 @@ public class Index implements IndexDefinition {
 	/**
 	 * Build the index in background (non blocking).
 	 *
-	 * @return
+	 * @return this.
 	 * @since 1.5
 	 */
 	public Index background() {
@@ -110,7 +110,7 @@ public class Index implements IndexDefinition {
 	 * Specifies TTL in seconds.
 	 *
 	 * @param value
-	 * @return
+	 * @return this.
 	 * @since 1.5
 	 */
 	public Index expire(long value) {
@@ -135,8 +135,8 @@ public class Index implements IndexDefinition {
 	 * Specifies TTL with given {@link TimeUnit}.
 	 *
 	 * @param value
-	 * @param unit
-	 * @return
+	 * @param unit must not be {@literal null}.
+	 * @return this.
 	 * @since 1.5
 	 */
 	public Index expire(long value, TimeUnit unit) {
@@ -150,7 +150,7 @@ public class Index implements IndexDefinition {
 	 * Only index the documents in a collection that meet a specified {@link IndexFilter filter expression}.
 	 *
 	 * @param filter can be {@literal null}.
-	 * @return
+	 * @return this.
 	 * @see <a href=
 	 *      "https://docs.mongodb.com/manual/core/index-partial/">https://docs.mongodb.com/manual/core/index-partial/</a>
 	 * @since 1.10
@@ -168,7 +168,7 @@ public class Index implements IndexDefinition {
 	 * index.
 	 *
 	 * @param collation can be {@literal null}.
-	 * @return
+	 * @return this.
 	 * @since 2.0
 	 */
 	public Index collation(@Nullable Collation collation) {
@@ -192,6 +192,10 @@ public class Index implements IndexDefinition {
 		return document;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.index.IndexDefinition#getIndexOptions()
+	 */
 	public Document getIndexOptions() {
 
 		Document document = new Document();
