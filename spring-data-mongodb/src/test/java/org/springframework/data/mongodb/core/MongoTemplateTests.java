@@ -15,17 +15,17 @@
  */
 package org.springframework.data.mongodb.core;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.*;
-import static org.junit.Assume.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 import static org.springframework.data.mongodb.core.query.Update.*;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.Value;
+import lombok.With;
 
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
@@ -37,13 +37,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.Value;
-import lombok.experimental.Wither;
 
 import org.bson.types.ObjectId;
 import org.joda.time.DateTime;
@@ -98,7 +91,6 @@ import org.springframework.util.StringUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.DBRef;
-import com.mongodb.MongoClient;
 import com.mongodb.MongoException;
 import com.mongodb.ReadPreference;
 import com.mongodb.WriteConcern;
@@ -1847,7 +1839,7 @@ public class MongoTemplateTests {
 		assertThat(result.property3).isEqualTo(obj.property3);
 	}
 
-	@Test // DATAMONGO-702
+	@Test // DATAMONGO-702, DATAMONGO-2294
 	public void queryShouldSupportRealAndAliasedPropertyNamesForFieldExclusions() {
 
 		ObjectWith3AliasedFields obj = new ObjectWith3AliasedFields();
@@ -1860,8 +1852,7 @@ public class MongoTemplateTests {
 
 		Query query = new Query(Criteria.where("id").is(obj.id));
 		query.fields() //
-				.exclude("property2") // real property name
-				.exclude("prop3"); // aliased property name
+				.exclude("property2", "prop3"); // real property name, aliased property name
 
 		ObjectWith3AliasedFields result = template.findOne(query, ObjectWith3AliasedFields.class);
 
@@ -3688,7 +3679,7 @@ public class MongoTemplateTests {
 		queryByChainedInclude.fields().include("id").include("name");
 
 		Query queryByCollectionInclude = query(where("name").is("Walter"));
-		queryByCollectionInclude.fields().includes("id", "name");
+		queryByCollectionInclude.fields().include("id", "name");
 
 		MyPerson first = template.findAndReplace(queryByChainedInclude, new MyPerson("Walter"));
 		MyPerson second = template.findAndReplace(queryByCollectionInclude, new MyPerson("Walter"));
@@ -4209,7 +4200,7 @@ public class MongoTemplateTests {
 	// DATAMONGO-1992
 
 	@AllArgsConstructor
-	@Wither
+	@With
 	static class ImmutableVersioned {
 
 		final @Id String id;
@@ -4222,7 +4213,7 @@ public class MongoTemplateTests {
 	}
 
 	@Value
-	@Wither
+	@With
 	static class ImmutableAudited {
 		@Id String id;
 		@LastModifiedDate Instant modified;

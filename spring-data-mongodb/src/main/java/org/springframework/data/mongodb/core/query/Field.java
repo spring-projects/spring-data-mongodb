@@ -15,19 +15,19 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import lombok.EqualsAndHashCode;
-
 import org.bson.Document;
+
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
 /**
+ * Field projection.
+ *
  * @author Thomas Risberg
  * @author Oliver Gierke
  * @author Patryk Wasik
@@ -37,50 +37,112 @@ import org.springframework.util.ObjectUtils;
  */
 public class Field {
 
-	private final Map<String, Integer> criteria = new HashMap<String, Integer>();
-	private final Map<String, Object> slices = new HashMap<String, Object>();
-	private final Map<String, Criteria> elemMatchs = new HashMap<String, Criteria>();
+	private final Map<String, Integer> criteria = new HashMap<>();
+	private final Map<String, Object> slices = new HashMap<>();
+	private final Map<String, Criteria> elemMatchs = new HashMap<>();
 	private @Nullable String positionKey;
 	private int positionValue;
 
-	public Field include(String key) {
-		criteria.put(key, Integer.valueOf(1));
+	/**
+	 * Include a single {@code field} to be returned by the query operation.
+	 *
+	 * @param field the document field name to be included.
+	 * @return {@code this} field projection instance.
+	 */
+	public Field include(String field) {
+
+		Assert.notNull(field, "Key must not be null!");
+
+		criteria.put(field, 1);
+
 		return this;
 	}
 
-	public Field includes(String... keys) {
-		Assert.notNull(keys, "Keys must not be null!");
-		Assert.notEmpty(keys, "Keys must not be empty!");
+	/**
+	 * Include one or more {@code fields} to be returned by the query operation.
+	 *
+	 * @param fields the document field names to be included.
+	 * @return {@code this} field projection instance.
+	 * @since 3.1
+	 */
+	public Field include(String... fields) {
 
-		Arrays.asList(keys).stream().forEach(this::include);
+		Assert.notNull(fields, "Keys must not be null!");
+
+		for (String key : fields) {
+			criteria.put(key, 1);
+		}
+
 		return this;
 	}
 
-	public Field exclude(String key) {
-		criteria.put(key, Integer.valueOf(0));
+	/**
+	 * Exclude a single {@code field} from being returned by the query operation.
+	 *
+	 * @param field the document field name to be included.
+	 * @return {@code this} field projection instance.
+	 */
+	public Field exclude(String field) {
+
+		Assert.notNull(field, "Key must not be null!");
+
+		criteria.put(field, 0);
+
 		return this;
 	}
 
-	public Field excludes(String... keys) {
-		Assert.notNull(keys, "Keys must not be null!");
-		Assert.notEmpty(keys, "Keys must not be empty!");
+	/**
+	 * Exclude one or more {@code fields} from being returned by the query operation.
+	 *
+	 * @param fields the document field names to be included.
+	 * @return {@code this} field projection instance.
+	 * @since 3.1
+	 */
+	public Field exclude(String... fields) {
 
-		Arrays.asList(keys).stream().forEach(this::exclude);
+		Assert.notNull(fields, "Keys must not be null!");
+
+		for (String key : fields) {
+			criteria.put(key, 0);
+		}
+
 		return this;
 	}
 
-	public Field slice(String key, int size) {
-		slices.put(key, Integer.valueOf(size));
+	/**
+	 * Project a {@code $slice} of the array {@code field} using the first {@code size} elements.
+	 *
+	 * @param field the document field name to project, must be an array field.
+	 * @param size the number of elements to include.
+	 * @return {@code this} field projection instance.
+	 */
+	public Field slice(String field, int size) {
+
+		Assert.notNull(field, "Key must not be null!");
+
+		slices.put(field, size);
+
 		return this;
 	}
 
-	public Field slice(String key, int offset, int size) {
-		slices.put(key, new Integer[] { Integer.valueOf(offset), Integer.valueOf(size) });
+	/**
+	 * Project a {@code $slice} of the array {@code field} using the first {@code size} elements starting at
+	 * {@code offset}.
+	 *
+	 * @param field the document field name to project, must be an array field.
+	 * @param offset the offset to start at.
+	 * @param size the number of elements to include.
+	 * @return {@code this} field projection instance.
+	 */
+	public Field slice(String field, int offset, int size) {
+
+		slices.put(field, new Integer[] { offset, size });
 		return this;
 	}
 
-	public Field elemMatch(String key, Criteria elemMatchCriteria) {
-		elemMatchs.put(key, elemMatchCriteria);
+	public Field elemMatch(String field, Criteria elemMatchCriteria) {
+
+		elemMatchs.put(field, elemMatchCriteria);
 		return this;
 	}
 
@@ -90,7 +152,7 @@ public class Field {
 	 *
 	 * @param field query array field, must not be {@literal null} or empty.
 	 * @param value
-	 * @return
+	 * @return {@code this} field projection instance.
 	 */
 	public Field position(String field, int value) {
 

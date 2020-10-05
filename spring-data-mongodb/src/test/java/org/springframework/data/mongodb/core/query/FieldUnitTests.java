@@ -15,40 +15,40 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
 /**
- * Unit tests for {@link DocumentField}.
+ * Unit tests for {@link Field}.
  *
  * @author Oliver Gierke
  * @author Owen Q
+ * @author Mark Paluch
  */
-public class FieldUnitTests {
+class FieldUnitTests {
 
 	@Test
-	public void sameObjectSetupCreatesEqualField() {
+	void sameObjectSetupCreatesEqualField() {
 
 		Field left = new Field().elemMatch("key", Criteria.where("foo").is("bar"));
 		Field right = new Field().elemMatch("key", Criteria.where("foo").is("bar"));
 
 		assertThat(left).isEqualTo(right);
 		assertThat(right).isEqualTo(left);
+		assertThat(left.getFieldsObject()).isEqualTo("{key: { $elemMatch: {foo:\"bar\"}}}");
 	}
 
 	@Test // DATAMONGO-2294
-	public void sameObjectSetupCreatesEqualFieldByCollections() {
+	void rendersInclusionCorrectly() {
 
-		Field left = new Field().includes("foo", "bar");
-		Field right = new Field().include("foo").include("bar");
+		Field fields = new Field().include("foo", "bar").include("baz");
 
-		assertThat(left, is(right));
-		assertThat(right, is(left));
+		assertThat(fields.getFieldsObject()).isEqualTo("{foo:1, bar:1, baz:1}");
 	}
 
 	@Test
-	public void differentObjectSetupCreatesEqualField() {
+	void differentObjectSetupCreatesEqualField() {
 
 		Field left = new Field().elemMatch("key", Criteria.where("foo").is("bar"));
 		Field right = new Field().elemMatch("key", Criteria.where("foo").is("foo"));
@@ -58,12 +58,10 @@ public class FieldUnitTests {
 	}
 
 	@Test // DATAMONGO-2294
-	public void differentObjectSetupCreatesEqualFieldByCollections() {
+	void rendersExclusionCorrectly() {
 
-		Field left = new Field().includes("foo", "bar");
-		Field right = new Field().include("foo").include("zoo");
+		Field fields = new Field().exclude("foo", "bar").exclude("baz");
 
-		assertThat(left, is(not(right)));
-		assertThat(right, is(not(left)));
+		assertThat(fields.getFieldsObject()).isEqualTo("{foo:0, bar:0, baz:0}");
 	}
 }
