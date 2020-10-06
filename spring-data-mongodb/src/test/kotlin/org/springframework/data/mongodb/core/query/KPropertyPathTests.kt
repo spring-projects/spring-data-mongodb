@@ -19,8 +19,11 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 
 /**
+ * Unit tests for [KPropertyPath] and its extensions.
+ *
  * @author Tjeu Kayim
  * @author Yoann de Martino
+ * @author Mark Paluch
  */
 class KPropertyPathTests {
 
@@ -62,21 +65,30 @@ class KPropertyPathTests {
 	}
 
 	@Test
-	fun `Convert nested KProperty to field name using toString()`() {
+	fun `Convert simple KProperty to property path using toPath`() {
 
-		val property = (Book::author / Author::name).toString()
+		class AnotherEntity(val entity: String)
+
+		val property = (AnotherEntity::entity).toPath()
+
+		assertThat(property).isEqualTo("entity")
+	}
+
+	@Test
+	fun `Convert nested KProperty to field name using toPath()`() {
+
+		val property = (Book::author / Author::name).toPath()
 
 		assertThat(property).isEqualTo("author.name")
 	}
 
-
 	@Test
-	fun `Convert triple nested KProperty to field name using toString()`() {
+	fun `Convert triple nested KProperty to property path using toPath`() {
 
 		class Entity(val book: Book)
 		class AnotherEntity(val entity: Entity)
 
-		val property = (AnotherEntity::entity / Entity::book / Book::author / Author::name).toString()
+		val property = (AnotherEntity::entity / Entity::book / Book::author / Author::name).toPath()
 
 		assertThat(property).isEqualTo("entity.book.author.name")
 	}

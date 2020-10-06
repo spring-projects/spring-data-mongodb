@@ -20,6 +20,7 @@ import kotlin.reflect.KProperty1
 
 /**
  * Abstraction of a property path consisting of [KProperty].
+ *
  * @author Tjeu Kayim
  * @author Mark Paluch
  * @author Yoann de Martino
@@ -28,11 +29,7 @@ import kotlin.reflect.KProperty1
 class KPropertyPath<T, U>(
 		internal val parent: KProperty<U>,
 		internal val child: KProperty1<U, T>
-) : KProperty<T> by child {
-	override fun toString(): String {
-		return asString(this)
-	}
-}
+) : KProperty<T> by child
 
 /**
  * Recursively construct field name for a nested property.
