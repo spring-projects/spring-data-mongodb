@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.data.mongodb.core.aggregation.ScriptOperators.Accumulator.AccumulatorBuilder;
+import org.springframework.data.mongodb.core.aggregation.ScriptOperators.Accumulator.AccumulatorInitBuilder;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
@@ -54,9 +55,9 @@ public class ScriptOperators {
 	 * Create a custom <a href="https://docs.mongodb.com/master/reference/operator/aggregation/accumulator/">$accumulator
 	 * operator</a> in Javascript.
 	 *
-	 * @return new instance of {@link Function}.
+	 * @return new instance of {@link AccumulatorInitBuilder}.
 	 */
-	public static AccumulatorBuilder accumulator() {
+	public static AccumulatorInitBuilder accumulatorBuilder() {
 		return new AccumulatorBuilder();
 	}
 
@@ -232,15 +233,7 @@ public class ScriptOperators {
 			}
 		}
 
-		public static class AccumulatorBuilder {
-
-			private List<Object> initArgs;
-			private String initFunction;
-			private List<Object> accumulateArgs;
-			private String accumulateFunction;
-			private String mergeFunction;
-			private String finalizeFunction;
-			private String lang = "js";
+		public interface AccumulatorInitBuilder {
 
 			/**
 			 * Define the {@code init} {@link Function} for the {@link Accumulator accumulators} initial state. The function
@@ -256,9 +249,168 @@ public class ScriptOperators {
 			 * @param function must not be {@literal null}.
 			 * @return this.
 			 */
-			public AccumulatorBuilder init(Function function) {
+			default AccumulatorAccumulateBuilder init(Function function) {
 				return init(function.getBody()).initArgs(function.getArgs());
 			}
+
+			/**
+			 * Define the {@code init} function for the {@link Accumulator accumulators} initial state. The function receives
+			 * its arguments from the {@link AccumulatorInitArgsBuilder#initArgs(Object...)} array expression.
+			 * <p />
+			 * <code class="java">
+			 * function(initArg1, initArg2, ...) {
+			 *   ...
+			 *   return initialState
+			 * }
+			 * </code>
+			 *
+			 * @param function must not be {@literal null}.
+			 * @return this.
+			 */
+			AccumulatorInitArgsBuilder init(String function);
+
+			/**
+			 * The language used in the {@code $accumulator} code.
+			 *
+			 * @param lang must not be {@literal null}. Default is {@literal js}.
+			 * @return this.
+			 */
+			AccumulatorInitBuilder lang(String lang);
+		}
+
+		public interface AccumulatorInitArgsBuilder extends AccumulatorAccumulateBuilder {
+
+			/**
+			 * Define the optional {@code initArgs} for the {@link AccumulatorInitBuilder#init(String)} function.
+			 *
+			 * @param args must not be {@literal null}.
+			 * @return this.
+			 */
+			default AccumulatorAccumulateBuilder initArgs(Object... args) {
+				return initArgs(Arrays.asList(args));
+			}
+
+			/**
+			 * Define the optional {@code initArgs} for the {@link AccumulatorInitBuilder#init(String)} function.
+			 *
+			 * @param args can be {@literal null}.
+			 * @return this.
+			 */
+			AccumulatorAccumulateBuilder initArgs(@Nullable List<Object> args);
+		}
+
+		public interface AccumulatorAccumulateBuilder {
+
+			/**
+			 * Set the {@code accumulate} {@link Function} that updates the state for each document. The functions first
+			 * argument is the current {@code state}, additional arguments can be defined via {@link Function#args(Object...)
+			 * accumulateArgs}.
+			 * <p />
+			 * <code class="java">
+			 * function(state, accumArg1, accumArg2, ...) {
+			 *   ...
+			 *   return newState
+			 * }
+			 * </code>
+			 *
+			 * @param function must not be {@literal null}.
+			 * @return this.
+			 */
+			default AccumulatorMergeBuilder accumulate(Function function) {
+				return accumulate(function.getBody()).accumulateArgs(function.getArgs());
+			}
+
+			/**
+			 * Set the {@code accumulate} function that updates the state for each document. The functions first argument is
+			 * the current {@code state}, additional arguments can be defined via
+			 * {@link AccumulatorAccumulateArgsBuilder#accumulateArgs(Object...)}.
+			 * <p />
+			 * <code class="java">
+			 * function(state, accumArg1, accumArg2, ...) {
+			 *   ...
+			 *   return newState
+			 * }
+			 * </code>
+			 *
+			 * @param function must not be {@literal null}.
+			 * @return this.
+			 */
+			AccumulatorAccumulateArgsBuilder accumulate(String function);
+		}
+
+		public interface AccumulatorAccumulateArgsBuilder extends AccumulatorMergeBuilder {
+
+			/**
+			 * Define additional {@code accumulateArgs} for the {@link AccumulatorAccumulateBuilder#accumulate(String)}
+			 * function.
+			 *
+			 * @param args must not be {@literal null}.
+			 * @return this.
+			 */
+			default AccumulatorMergeBuilder accumulateArgs(Object... args) {
+				return accumulateArgs(Arrays.asList(args));
+			}
+
+			/**
+			 * Define additional {@code accumulateArgs} for the {@link AccumulatorAccumulateBuilder#accumulate(String)}
+			 * function.
+			 *
+			 * @param args can be {@literal null}.
+			 * @return this.
+			 */
+			AccumulatorMergeBuilder accumulateArgs(@Nullable List<Object> args);
+		}
+
+		public interface AccumulatorMergeBuilder {
+
+			/**
+			 * Set the {@code merge} function used to merge two internal states. <br />
+			 * This might be required because the operation is run on a sharded cluster or when the operator exceeds its
+			 * memory limit.
+			 * <p />
+			 * <code class="java">
+			 * function(state1, state2) {
+			 *   ...
+			 *   return newState
+			 * }
+			 * </code>
+			 *
+			 * @param function must not be {@literal null}.
+			 * @return this.
+			 */
+			AccumulatorFinalizeBuilder merge(String function);
+		}
+
+		public interface AccumulatorFinalizeBuilder {
+
+			/**
+			 * Set the {@code finalize} function used to update the result of the accumulation when all documents have been
+			 * processed.
+			 * <p />
+			 * <code class="java">
+			 * function(state) {
+			 *   ...
+			 *   return finalState
+			 * }
+			 * </code>
+			 *
+			 * @param function must not be {@literal null}.
+			 * @return new instance of {@link Accumulator}.
+			 */
+			Accumulator finalize(String function);
+		}
+
+		public static class AccumulatorBuilder
+				implements AccumulatorInitBuilder, AccumulatorInitArgsBuilder, AccumulatorAccumulateBuilder,
+				AccumulatorAccumulateArgsBuilder, AccumulatorMergeBuilder, AccumulatorFinalizeBuilder {
+
+			private List<Object> initArgs;
+			private String initFunction;
+			private List<Object> accumulateArgs;
+			private String accumulateFunction;
+			private String mergeFunction;
+			private String finalizeFunction;
+			private String lang = "js";
 
 			/**
 			 * Define the {@code init} function for the {@link Accumulator accumulators} initial state. The function receives
@@ -283,16 +435,6 @@ public class ScriptOperators {
 			/**
 			 * Define the optional {@code initArgs} for the {@link #init(String)} function.
 			 *
-			 * @param args must not be {@literal null}.
-			 * @return this.
-			 */
-			public AccumulatorBuilder initArgs(Object... args) {
-				return initArgs(Arrays.asList(args));
-			}
-
-			/**
-			 * Define the optional {@code initArgs} for the {@link #init(String)} function.
-			 *
 			 * @param args can be {@literal null}.
 			 * @return this.
 			 */
@@ -300,25 +442,6 @@ public class ScriptOperators {
 
 				this.initArgs = args != null ? new ArrayList<>(args) : Collections.emptyList();
 				return this;
-			}
-
-			/**
-			 * Set the {@code accumulate} {@link Function} that updates the state for each document. The functions first
-			 * argument is the current {@code state}, additional arguments can be defined via {@link Function#args(Object...)
-			 * accumulateArgs}.
-			 * <p />
-			 * <code class="java">
-			 * function(state, accumArg1, accumArg2, ...) {
-			 *   ...
-			 *   return newState
-			 * }
-			 * </code>
-			 *
-			 * @param function must not be {@literal null}.
-			 * @return this.
-			 */
-			public AccumulatorBuilder accumulate(Function function) {
-				return accumulate(function.getBody()).accumulateArgs(function.getArgs());
 			}
 
 			/**
@@ -339,16 +462,6 @@ public class ScriptOperators {
 
 				this.accumulateFunction = function;
 				return this;
-			}
-
-			/**
-			 * Define additional {@code accumulateArgs} for the {@link #accumulate(String)} function.
-			 *
-			 * @param args must not be {@literal null}.
-			 * @return this.
-			 */
-			public AccumulatorBuilder accumulateArgs(Object... args) {
-				return accumulateArgs(Arrays.asList(args));
 			}
 
 			/**

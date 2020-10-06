@@ -67,7 +67,7 @@ class ScriptOperatorsUnitTests {
 	@Test // DATAMONGO-2623
 	void accumulatorWithStringInput() {
 
-		Accumulator accumulator = accumulator() //
+		Accumulator accumulator = accumulatorBuilder() //
 				.init(INIT_FUNCTION) //
 				.accumulate(ACC_FUNCTION).accumulateArgs("$copies") //
 				.merge(MERGE_FUNCTION) //
@@ -79,7 +79,7 @@ class ScriptOperatorsUnitTests {
 	@Test // DATAMONGO-2623
 	void accumulatorWithFunctionInput() {
 
-		Accumulator accumulator = accumulator() //
+		Accumulator accumulator = accumulatorBuilder() //
 				.init(function(INIT_FUNCTION)) //
 				.accumulate(function(ACC_FUNCTION).args("$copies")) //
 				.merge(MERGE_FUNCTION) //
