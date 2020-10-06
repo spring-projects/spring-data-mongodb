@@ -88,30 +88,6 @@ class ScriptOperatorsUnitTests {
 		assertThat(accumulator.toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo($ACCUMULATOR);
 	}
 
-	@Test // DATAMONGO-2623
-	void accumulatorRemovesOptionalAccumulatorArgsFieldsWhenEmpty() {
-
-		Accumulator source = accumulator().accumulateArgs("$copies");
-		Accumulator target = source.accumulate(function(ACC_FUNCTION).args(Collections.emptyList())); //
-
-		assertThat(source.toDocument(Aggregation.DEFAULT_CONTEXT).get("$accumulator", Document.class)) //
-				.containsKey("accumulateArgs");
-		assertThat(target.toDocument(Aggregation.DEFAULT_CONTEXT).get("$accumulator", Document.class)) //
-				.doesNotContainKey("accumulateArgs");
-	}
-
-	@Test // DATAMONGO-2623
-	void accumulatorRemovesOptionalInitArgsFieldsWhenEmpty() {
-
-		Accumulator source = accumulator().initArgs(10);
-		Accumulator target = source.init(function(INIT_FUNCTION).args(Collections.emptyList())); //
-
-		assertThat(source.toDocument(Aggregation.DEFAULT_CONTEXT).get("$accumulator", Document.class)) //
-				.containsKey("initArgs");
-		assertThat(target.toDocument(Aggregation.DEFAULT_CONTEXT).get("$accumulator", Document.class)) //
-				.doesNotContainKey("initArgs");
-	}
-
 	static Document $function(Document source) {
 		return new Document("$function", source);
 	}
