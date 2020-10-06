@@ -82,7 +82,7 @@ class AggregationUtil {
 
 		Class<?> inputType = ((TypedAggregation) aggregation).getInputType();
 
-		if (aggregation.getPipeline().requiresRelaxedChecking()) {
+		if (aggregation.getPipeline().containsUnionWith()) {
 			return new RelaxedTypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper);
 		}
 

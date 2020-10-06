@@ -45,13 +45,13 @@ public class UnionWithOperation implements AggregationOperation {
 
 	private final String collection;
 
-	@Nullable //
-	private final AggregationPipeline pipeline;
+	private final @Nullable AggregationPipeline pipeline;
 
-	@Nullable //
-	private final Class<?> domainType;
+	private final @Nullable Class<?> domainType;
 
 	public UnionWithOperation(String collection, @Nullable AggregationPipeline pipeline, @Nullable Class<?> domainType) {
+
+		Assert.notNull(collection, "Collection must not be null!");
 
 		this.collection = collection;
 		this.pipeline = pipeline;
@@ -67,8 +67,6 @@ public class UnionWithOperation implements AggregationOperation {
 	 * @throws IllegalArgumentException if the required argument is {@literal null}.
 	 */
 	public static UnionWithOperation unionWith(String collection) {
-
-		Assert.notNull(collection, "Collection must not be null!");
 		return new UnionWithOperation(collection, null, null);
 	}
 
@@ -76,7 +74,7 @@ public class UnionWithOperation implements AggregationOperation {
 	 * Set the {@link AggregationPipeline} to apply to the specified collection. The pipeline corresponds to the optional
 	 * {@code pipeline} field of the {@code $unionWith} aggregation stage and is used to compute the documents going into
 	 * the result set.
-	 * 
+	 *
 	 * @param pipeline the {@link AggregationPipeline} that computes the documents. Must not be {@literal null}.
 	 * @return new instance of {@link UnionWithOperation}.
 	 * @throws IllegalArgumentException if the required argument is {@literal null}.

@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.aggregation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 
 import org.bson.Document;
 import org.springframework.util.Assert;
@@ -26,6 +27,7 @@ import org.springframework.util.Assert;
  * The {@link AggregationPipeline} holds the collection of {@link AggregationOperation aggregation stages}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 3.0.2
  */
 public class AggregationPipeline {
@@ -84,42 +86,39 @@ public class AggregationPipeline {
 	 */
 	public boolean isOutOrMerge() {
 
-		if (pipeline.isEmpty()) {
+		if (isEmpty()) {
 			return false;
 		}
 
-		String operator = pipeline.get(pipeline.size() - 1).getOperator();
-		return operator.equals("$out") || operator.equals("$merge");
+		AggregationOperation operation = pipeline.get(pipeline.size() - 1);
+		return isOut(operation) || isMerge(operation);
 	}
 
 	void verify() {
 
 		// check $out/$merge is the last operation if it exists
-		for (AggregationOperation aggregationOperation : pipeline) {
+		for (AggregationOperation operation : pipeline) {
 
-			if (aggregationOperation instanceof OutOperation && !isLast(aggregationOperation)) {
+			if (isOut(operation) && !isLast(operation)) {
 				throw new IllegalArgumentException("The $out operator must be the last stage in the pipeline.");
 			}
 
-			if (aggregationOperation instanceof MergeOperation && !isLast(aggregationOperation)) {
+			if (isMerge(operation) && !isLast(operation)) {
 				throw new IllegalArgumentException("The $merge operator must be the last stage in the pipeline.");
 			}
 		}
 	}
 
-	private boolean isLast(AggregationOperation aggregationOperation) {
-		return pipeline.indexOf(aggregationOperation) == pipeline.size() - 1;
-	}
-
 	/**
-	 * @return {@literal true} if field names might get computed by one of the pipeline stages, that the
-	 *         {@link AggregationOperationContext} might not be aware of. A strongly typed context might fail to resolve
-	 *         field references, so if {@literal true} usage of a {@link RelaxedTypeBasedAggregationOperationContext}
-	 *         might be the better choice.
+	 * Return whether this aggregation pipeline defines a {@code $unionWith} stage that may contribute documents from
+	 * other collections. Checking for presence of union stages is useful when attempting to determine the aggregation
+	 * element type for mapping metadata computation.
+	 *
+	 * @return {@literal true} the aggregation pipeline makes use of {@code $unionWith}.
 	 * @since 3.1
 	 */
-	public boolean requiresRelaxedChecking() {
-		return pipelineContainsValueOfType(UnionWithOperation.class);
+	public boolean containsUnionWith() {
+		return containsOperation(AggregationPipeline::isUnionWith);
 	}
 
 	/**
@@ -130,17 +129,34 @@ public class AggregationPipeline {
 		return pipeline.isEmpty();
 	}
 
-	private boolean pipelineContainsValueOfType(Class<?> type) {
+	private boolean containsOperation(Predicate<AggregationOperation> predicate) {
 
 		if (isEmpty()) {
 			return false;
 		}
 
-		for (Object element : pipeline) {
-			if (type.isInstance(element)) {
+		for (AggregationOperation element : pipeline) {
+			if (predicate.test(element)) {
 				return true;
 			}
 		}
+
 		return false;
+	}
+
+	private boolean isLast(AggregationOperation aggregationOperation) {
+		return pipeline.indexOf(aggregationOperation) == pipeline.size() - 1;
+	}
+
+	private static boolean isUnionWith(AggregationOperation operator) {
+		return operator instanceof UnionWithOperation || operator.getOperator().equals("$unionWith");
+	}
+
+	private static boolean isMerge(AggregationOperation operator) {
+		return operator instanceof MergeOperation || operator.getOperator().equals("$merge");
+	}
+
+	private static boolean isOut(AggregationOperation operator) {
+		return operator instanceof OutOperation || operator.getOperator().equals("$out");
 	}
 }

@@ -30,6 +30,8 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.lang.Nullable;
 
 /**
+ * Unit tests for {@link UnionWithOperation}.
+ *
  * @author Christoph Strobl
  */
 class UnionWithOperationUnitTests {
