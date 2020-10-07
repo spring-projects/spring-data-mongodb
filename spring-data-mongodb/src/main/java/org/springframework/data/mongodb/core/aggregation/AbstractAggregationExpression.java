@@ -29,8 +29,11 @@ import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 
 /**
+ * Support class for {@link AggregationExpression} implementations.
+ *
  * @author Christoph Strobl
  * @author Matt Morrissette
+ * @author Mark Paluch
  * @since 1.10
  */
 abstract class AbstractAggregationExpression implements AggregationExpression {
@@ -49,7 +52,6 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 		return toDocument(this.value, context);
 	}
 
-	@SuppressWarnings("unchecked")
 	public Document toDocument(Object value, AggregationOperationContext context) {
 		return new Document(getMongoMethod(), unpack(value, context));
 	}
@@ -101,17 +103,19 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 		return value;
 	}
 
+	@SuppressWarnings("unchecked")
 	protected List<Object> append(Object value, Expand expandList) {
 
 		if (this.value instanceof List) {
 
-			List<Object> clone = new ArrayList<Object>((List) this.value);
+			List<Object> clone = new ArrayList<>((List<Object>) this.value);
 
 			if (value instanceof Collection && Expand.EXPAND_VALUES.equals(expandList)) {
 				clone.addAll((Collection<?>) value);
 			} else {
 				clone.add(value);
 			}
+
 			return clone;
 		}
 
@@ -129,22 +133,23 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 		return append(value, Expand.EXPAND_VALUES);
 	}
 
-	@SuppressWarnings("unchecked")
-	protected java.util.Map<String, Object> append(String key, Object value) {
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	protected Map<String, Object> append(String key, Object value) {
 
 		Assert.isInstanceOf(Map.class, this.value, "Value must be a type of Map!");
 
-		java.util.Map<String, Object> clone = new LinkedHashMap<>((java.util.Map) this.value);
+		Map<String, Object> clone = new LinkedHashMap<>((java.util.Map) this.value);
 		clone.put(key, value);
 		return clone;
 
 	}
 
-	protected java.util.Map<String, Object> remove(String key) {
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	protected Map<String, Object> remove(String key) {
 
 		Assert.isInstanceOf(Map.class, this.value, "Value must be a type of Map!");
 
-		java.util.Map<String, Object> clone = new LinkedHashMap<>((java.util.Map) this.value);
+		Map<String, Object> clone = new LinkedHashMap<>((java.util.Map) this.value);
 		clone.remove(key);
 		return clone;
 	}
@@ -158,14 +163,15 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 	 * @return
 	 * @since 3.1
 	 */
-	protected java.util.Map<String, Object> appendAt(int index, String key, Object value) {
+	@SuppressWarnings({ "unchecked" })
+	protected Map<String, Object> appendAt(int index, String key, Object value) {
 
 		Assert.isInstanceOf(Map.class, this.value, "Value must be a type of Map!");
 
-		java.util.LinkedHashMap<String, Object> clone = new java.util.LinkedHashMap<>();
+		Map<String, Object> clone = new LinkedHashMap<>();
 
 		int i = 0;
-		for (Map.Entry<String, Object> entry : ((java.util.Map<String, Object>) this.value).entrySet()) {
+		for (Map.Entry<String, Object> entry : ((Map<String, Object>) this.value).entrySet()) {
 
 			if (i == index) {
 				clone.put(key, value);
@@ -182,14 +188,17 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 
 	}
 
+	@SuppressWarnings({ "rawtypes" })
 	protected List<Object> values() {
 
 		if (value instanceof List) {
 			return new ArrayList<Object>((List) value);
 		}
+
 		if (value instanceof java.util.Map) {
 			return new ArrayList<Object>(((java.util.Map) value).values());
 		}
+
 		return new ArrayList<>(Collections.singletonList(value));
 	}
 
@@ -219,7 +228,7 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 
 		Assert.isInstanceOf(Map.class, this.value, "Value must be a type of Map!");
 
-		return (T) ((java.util.Map<String, Object>) this.value).get(key);
+		return (T) ((Map<String, Object>) this.value).get(key);
 	}
 
 	/**
@@ -229,11 +238,11 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	protected java.util.Map<String, Object> argumentMap() {
+	protected Map<String, Object> argumentMap() {
 
 		Assert.isInstanceOf(Map.class, this.value, "Value must be a type of Map!");
 
-		return Collections.unmodifiableMap((java.util.Map) value);
+		return Collections.unmodifiableMap((java.util.Map<String, Object>) value);
 	}
 
 	/**
@@ -250,7 +259,7 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 			return false;
 		}
 
-		return ((java.util.Map<String, Object>) this.value).containsKey(key);
+		return ((Map<String, Object>) this.value).containsKey(key);
 	}
 
 	protected abstract String getMongoMethod();

@@ -24,6 +24,8 @@ import org.bson.Document;
 import org.junit.jupiter.api.Test;
 
 /**
+ * Unit tests for {@link ScriptOperators}.
+ *
  * @author Christoph Strobl
  */
 class ScriptOperatorsUnitTests {
@@ -31,20 +33,6 @@ class ScriptOperatorsUnitTests {
 	private static final String FUNCTION_BODY = "function(name) { return hex_md5(name) == \"15b0a220baa16331e8d80e15367677ad\" }";
 	private static final Document EMPTY_ARGS_FUNCTION_DOCUMENT = new Document("body", FUNCTION_BODY)
 			.append("args", Collections.emptyList()).append("lang", "js");
-
-	@Test // DATAMONGO-2623
-	void functionWithoutArgsShouldBeRenderedCorrectly() {
-
-		assertThat(function(FUNCTION_BODY).toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo($function(EMPTY_ARGS_FUNCTION_DOCUMENT));
-	}
-
-	@Test // DATAMONGO-2623
-	void functionWithArgsShouldBeRenderedCorrectly() {
-
-		assertThat(function(FUNCTION_BODY).args("$name").toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo(
-				$function(new Document(EMPTY_ARGS_FUNCTION_DOCUMENT).append("args", Collections.singletonList("$name"))));
-	}
 
 	private static final String INIT_FUNCTION = "function() { return { count: 0, sum: 0 } }";
 	private static final String ACC_FUNCTION = "function(state, numCopies) { return { count: state.count + 1, sum: state.sum + numCopies } }";
@@ -63,6 +51,20 @@ class ScriptOperatorsUnitTests {
 			"      }" + //
 			"    }" + //
 			"  }");
+
+	@Test // DATAMONGO-2623
+	void functionWithoutArgsShouldBeRenderedCorrectly() {
+
+		assertThat(function(FUNCTION_BODY).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo($function(EMPTY_ARGS_FUNCTION_DOCUMENT));
+	}
+
+	@Test // DATAMONGO-2623
+	void functionWithArgsShouldBeRenderedCorrectly() {
+
+		assertThat(function(FUNCTION_BODY).args("$name").toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo(
+				$function(new Document(EMPTY_ARGS_FUNCTION_DOCUMENT).append("args", Collections.singletonList("$name"))));
+	}
 
 	@Test // DATAMONGO-2623
 	void accumulatorWithStringInput() {

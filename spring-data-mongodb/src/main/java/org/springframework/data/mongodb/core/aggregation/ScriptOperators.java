@@ -36,6 +36,7 @@ import org.springframework.util.CollectionUtils;
  * <a href="https://docs.mongodb.com/master/reference/configuration-options/#security.javascriptEnabled">enabled</a>.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 3.1
  */
 public class ScriptOperators {
@@ -83,7 +84,6 @@ public class ScriptOperators {
 	 *
 	 * @see <a href="https://docs.mongodb.com/master/reference/operator/aggregation/function/">MongoDB Documentation:
 	 *      $function</a>
-	 * @since 3.1
 	 */
 	public static class Function extends AbstractAggregationExpression {
 
@@ -98,6 +98,8 @@ public class ScriptOperators {
 		 * @return new instance of {@link Function}.
 		 */
 		public static Function function(String body) {
+
+			Assert.notNull(body, "Function body must not be null!");
 
 			Map<String, Object> function = new LinkedHashMap<>(2);
 			function.put(Fields.BODY.toString(), body);
@@ -126,6 +128,7 @@ public class ScriptOperators {
 		public Function args(List<Object> args) {
 
 			Assert.notNull(args, "Args must not be null! Use an empty list instead.");
+
 			return new Function(appendAt(1, Fields.ARGS.toString(), args));
 		}
 
@@ -137,7 +140,8 @@ public class ScriptOperators {
 		 */
 		public Function lang(String lang) {
 
-			Assert.hasText(lang, "Lang must not be null nor emtpy! The default would be 'js'.");
+			Assert.hasText(lang, "Lang must not be null nor empty! The default would be 'js'.");
+
 			return new Function(appendAt(2, Fields.LANG.toString(), lang));
 		}
 
@@ -198,7 +202,6 @@ public class ScriptOperators {
 	 *
 	 * @see <a href="https://docs.mongodb.com/master/reference/operator/aggregation/accumulator/">MongoDB Documentation:
 	 *      $accumulator</a>
-	 * @since 3.1
 	 */
 	public static class Accumulator extends AbstractAggregationExpression {
 
@@ -293,10 +296,10 @@ public class ScriptOperators {
 			/**
 			 * Define the optional {@code initArgs} for the {@link AccumulatorInitBuilder#init(String)} function.
 			 *
-			 * @param args can be {@literal null}.
+			 * @param args must not be {@literal null}.
 			 * @return this.
 			 */
-			AccumulatorAccumulateBuilder initArgs(@Nullable List<Object> args);
+			AccumulatorAccumulateBuilder initArgs(List<Object> args);
 		}
 
 		public interface AccumulatorAccumulateBuilder {
@@ -355,10 +358,10 @@ public class ScriptOperators {
 			 * Define additional {@code accumulateArgs} for the {@link AccumulatorAccumulateBuilder#accumulate(String)}
 			 * function.
 			 *
-			 * @param args can be {@literal null}.
+			 * @param args must not be {@literal null}.
 			 * @return this.
 			 */
-			AccumulatorMergeBuilder accumulateArgs(@Nullable List<Object> args);
+			AccumulatorMergeBuilder accumulateArgs(List<Object> args);
 		}
 
 		public interface AccumulatorMergeBuilder {
@@ -398,9 +401,16 @@ public class ScriptOperators {
 			 * @return new instance of {@link Accumulator}.
 			 */
 			Accumulator finalize(String function);
+
+			/**
+			 * Build the {@link Accumulator} object without specifying a {@link #finalize(String) finalize function}.
+			 *
+			 * @return new instance of {@link Accumulator}.
+			 */
+			Accumulator build();
 		}
 
-		public static class AccumulatorBuilder
+		static class AccumulatorBuilder
 				implements AccumulatorInitBuilder, AccumulatorInitArgsBuilder, AccumulatorAccumulateBuilder,
 				AccumulatorAccumulateArgsBuilder, AccumulatorMergeBuilder, AccumulatorFinalizeBuilder {
 
@@ -426,6 +436,7 @@ public class ScriptOperators {
 			 * @param function must not be {@literal null}.
 			 * @return this.
 			 */
+			@Override
 			public AccumulatorBuilder init(String function) {
 
 				this.initFunction = function;
@@ -435,12 +446,15 @@ public class ScriptOperators {
 			/**
 			 * Define the optional {@code initArgs} for the {@link #init(String)} function.
 			 *
-			 * @param args can be {@literal null}.
+			 * @param function must not be {@literal null}.
 			 * @return this.
 			 */
-			public AccumulatorBuilder initArgs(@Nullable List<Object> args) {
+			@Override
+			public AccumulatorBuilder initArgs(List<Object> args) {
 
-				this.initArgs = args != null ? new ArrayList<>(args) : Collections.emptyList();
+				Assert.notNull(args, "Args must not be null");
+
+				this.initArgs = new ArrayList<>(args);
 				return this;
 			}
 
@@ -458,7 +472,10 @@ public class ScriptOperators {
 			 * @param function must not be {@literal null}.
 			 * @return this.
 			 */
+			@Override
 			public AccumulatorBuilder accumulate(String function) {
+
+				Assert.notNull(function, "Accumulate function must not be null");
 
 				this.accumulateFunction = function;
 				return this;
@@ -467,12 +484,15 @@ public class ScriptOperators {
 			/**
 			 * Define additional {@code accumulateArgs} for the {@link #accumulate(String)} function.
 			 *
-			 * @param args can be {@literal null}.
+			 * @param args must not be {@literal null}.
 			 * @return this.
 			 */
-			public AccumulatorBuilder accumulateArgs(@Nullable List<Object> args) {
+			@Override
+			public AccumulatorBuilder accumulateArgs(List<Object> args) {
 
-				this.accumulateArgs = args != null ? new ArrayList<>(args) : Collections.emptyList();
+				Assert.notNull(args, "Args must not be null");
+
+				this.accumulateArgs = new ArrayList<>(args);
 				return this;
 			}
 
@@ -491,7 +511,10 @@ public class ScriptOperators {
 			 * @param function must not be {@literal null}.
 			 * @return this.
 			 */
+			@Override
 			public AccumulatorBuilder merge(String function) {
+
+				Assert.notNull(function, "Merge function must not be null");
 
 				this.mergeFunction = function;
 				return this;
@@ -504,6 +527,8 @@ public class ScriptOperators {
 			 * @return this.
 			 */
 			public AccumulatorBuilder lang(String lang) {
+
+				Assert.hasText(lang, "Lang must not be null nor empty! The default would be 'js'.");
 
 				this.lang = lang;
 				return this;
@@ -523,9 +548,25 @@ public class ScriptOperators {
 			 * @param function must not be {@literal null}.
 			 * @return new instance of {@link Accumulator}.
 			 */
+			@Override
 			public Accumulator finalize(String function) {
 
+				Assert.notNull(function, "Finalize function must not be null");
+
 				this.finalizeFunction = function;
+
+				Map<String, Object> args = createArgumentMap();
+				args.put(Fields.FINALIZE.toString(), finalizeFunction);
+
+				return new Accumulator(args);
+			}
+
+			@Override
+			public Accumulator build() {
+				return new Accumulator(createArgumentMap());
+			}
+
+			private Map<String, Object> createArgumentMap() {
 
 				Map<String, Object> args = new LinkedHashMap<>();
 				args.put(Fields.INIT.toString(), initFunction);
@@ -537,12 +578,10 @@ public class ScriptOperators {
 					args.put(Fields.ACCUMULATE_ARGS.toString(), accumulateArgs);
 				}
 				args.put(Fields.MERGE.toString(), mergeFunction);
-				args.put(Fields.FINALIZE.toString(), finalizeFunction);
 				args.put(Fields.LANG.toString(), lang);
 
-				return new Accumulator(args);
+				return args;
 			}
-
 		}
 	}
 }
