@@ -127,11 +127,7 @@ public interface MongoConverter
 	@Nullable
 	default Object convertId(@Nullable Object id, Class<?> targetType) {
 
-		if (id == null) {
-			return null;
-		}
-
-		if(ClassUtils.isAssignableValue(targetType, id)) {
+		if (id == null || ClassUtils.isAssignableValue(targetType, id)) {
 			return id;
 		}
 
