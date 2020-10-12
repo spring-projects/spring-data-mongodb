@@ -17,8 +17,11 @@ package org.springframework.data.mapping.model;
 
 import java.beans.FeatureDescriptor;
 import java.beans.PropertyDescriptor;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
@@ -41,6 +44,8 @@ import org.springframework.util.StringUtils;
 public class Property {
 
 	private @Nullable TypeInformation<?> typeInformation;
+	private List<Annotation> annotations;
+
 	private final Optional<Field> field;
 	private final Optional<PropertyDescriptor> descriptor;
 
@@ -53,8 +58,9 @@ public class Property {
 	private final Lazy<String> toString;
 	private final Lazy<Optional<Method>> wither;
 
-	private Property(String name, TypeInformation<?> typeInformation) {
+	private Property(String name, TypeInformation<?> typeInformation, List<Annotation> annotations) {
 
+		this.annotations = annotations;
 		this.typeInformation = typeInformation;
 		this.field = Optional.empty();
 		this.descriptor = Optional.empty();
@@ -73,6 +79,7 @@ public class Property {
 		Assert.notNull(type, "Type must not be null!");
 		Assert.isTrue(Optionals.isAnyPresent(field, descriptor), "Either field or descriptor has to be given!");
 
+		this.annotations = Collections.emptyList();
 		this.field = field;
 		this.descriptor = descriptor;
 
@@ -135,7 +142,11 @@ public class Property {
 	 * @return
 	 */
 	public static Property of(TypeInformation<?> type, String name) {
-		return new Property(name, type);
+		return new Property(name, type, Collections.emptyList());
+	}
+
+	public static Property of(TypeInformation<?> type, String name, List<Annotation> annotations) {
+		return new Property(name, type, annotations != null ? annotations : Collections.emptyList());
 	}
 
 	/**
@@ -238,6 +249,10 @@ public class Property {
 	 */
 	public Class<?> getType() {
 		return rawType;
+	}
+
+	public List<Annotation> getAnnotations() {
+		return annotations;
 	}
 
 	/*

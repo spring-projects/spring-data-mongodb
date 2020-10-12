@@ -23,6 +23,7 @@ import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 
+import java.lang.annotation.Annotation;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URL;
@@ -78,12 +79,11 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.PersonPojoStringId;
 import org.springframework.data.mongodb.core.mapping.TextScore;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertCallback;
-import org.springframework.data.util.Address;
 import org.springframework.data.util.AddressTypeInformation;
 import org.springframework.data.util.ClassTypeInformation;
-import org.springframework.data.util.Person;
 import org.springframework.data.util.PersonTypeInformation;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.util.StopWatch;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -2182,14 +2182,75 @@ public class MappingMongoConverterUnitTests {
 
 		assertThat(((LinkedHashMap) result.get("cluster")).get("_id")).isEqualTo(100L);
 	}
-	
+
+	@Test
+	public void perf1() {
+
+		ClassTypeInformation.warmCache(new PersonTypeInformation(), new AddressTypeInformation());
+
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		mappingContext.setInitialEntitySet(new LinkedHashSet<>(
+				Arrays.asList(org.springframework.data.util.Person.class, org.springframework.data.util.Address.class)));
+		mappingContext.initialize();
+
+		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext);
+
+		org.springframework.data.util.Person source = new org.springframework.data.util.Person("spring", "data");
+		source.setAddress(new org.springframework.data.util.Address("the city", "never sleeps"));
+		source.setAge(10);
+		source.setId(9876);
+		source.setNicknames(Arrays.asList("tick", "trick", "track"));
+
+		StopWatch stopWatch = new StopWatch();
+
+		List<org.bson.Document> sources = new ArrayList<>();
+		stopWatch.start("write");
+		for (int i = 0; i < 10000; i++) {
+
+			org.bson.Document targetDocument = new org.bson.Document();
+			converter.write(source, targetDocument);
+
+			sources.add(targetDocument);
+		}
+		stopWatch.stop();
+
+		stopWatch.start("read");
+		for (org.bson.Document sourceDoc : sources) {
+			assertThat(converter.read(org.springframework.data.util.Person.class, sourceDoc)).isEqualTo(source);
+		}
+		stopWatch.stop();
+
+		System.out.println(stopWatch.prettyPrint());
+
+	}
+
+	// public void perf2() {
+	//
+	// ClassTypeInformation.warmCache(new PersonTypeInformation(), new AddressTypeInformation());
+	//
+	// MongoMappingContext mappingContext = new MongoMappingContext();
+	// mappingContext.setInitialEntitySet(new LinkedHashSet<>(Arrays.asList(org.springframework.data.util.Person.class,
+	// org.springframework.data.util.Address.class)));
+	// mappingContext.initialize();
+	//
+	// MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext);
+	//
+	// org.springframework.data.util.Person source = new org.springframework.data.util.Person("spring", "data");
+	// source.setAddress(new org.springframework.data.util.Address("the city", "never sleeps"));
+	// source.setAge(10);
+	// source.setId(9876);
+	// source.setNicknames(Arrays.asList("tick", "trick", "track"));
+	//
+	// }
+
 	@Test
 	public void xxx() {
 
 		ClassTypeInformation.warmCache(new PersonTypeInformation(), new AddressTypeInformation());
-		
+
 		MongoMappingContext mappingContext = new MongoMappingContext();
-		mappingContext.setInitialEntitySet(new LinkedHashSet<>(Arrays.asList(org.springframework.data.util.Person.class, org.springframework.data.util.Address.class)));
+		mappingContext.setInitialEntitySet(new LinkedHashSet<>(
+				Arrays.asList(org.springframework.data.util.Person.class, org.springframework.data.util.Address.class)));
 		mappingContext.initialize();
 
 		org.springframework.data.util.Person source = new org.springframework.data.util.Person("spring", "data");
@@ -2197,17 +2258,17 @@ public class MappingMongoConverterUnitTests {
 		source.setAge(10);
 		source.setId(9876);
 		source.setNicknames(Arrays.asList("tick", "trick", "track"));
-		
+
 		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext);
 		org.bson.Document targetDocument = new org.bson.Document();
 		converter.write(source, targetDocument);
-		
+
 		System.out.println("target: " + targetDocument);
 
-		org.springframework.data.util.Person targetEntity = converter.read(org.springframework.data.util.Person.class, targetDocument);
+		org.springframework.data.util.Person targetEntity = converter.read(org.springframework.data.util.Person.class,
+				targetDocument);
 		System.out.println("targetEntity: " + targetEntity);
 
-		
 	}
 
 	static class GenericType<T> {
@@ -2679,5 +2740,35 @@ public class MappingMongoConverterUnitTests {
 
 			return entity;
 		}
+	}
+
+	void xxx2() {
+
+		new Field() {
+			@Override
+			public Class<? extends Annotation> annotationType() {
+				return null;
+			}
+
+			@Override
+			public String value() {
+				return null;
+			}
+
+			@Override
+			public String name() {
+				return null;
+			}
+
+			@Override
+			public int order() {
+				return 0;
+			}
+
+			@Override
+			public FieldType targetType() {
+				return null;
+			}
+		};
 	}
 }

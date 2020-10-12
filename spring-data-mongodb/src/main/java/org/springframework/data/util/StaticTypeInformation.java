@@ -31,6 +31,7 @@
  */
 package org.springframework.data.util;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -62,6 +63,7 @@ public class StaticTypeInformation<S> extends ClassTypeInformation<S> {
 	private final Map<String, TypeInformation<?>> properties;
 	private final Map<String, BiFunction<S,Object,S>> setter;
 	private final Map<String, Function<S,Object>> getter;
+	private final Map<String, List<Annotation>> propertyAnnotations;
 
 	private EntityInstantiator instantiator;
 	private PreferredConstructor preferredConstructor;
@@ -83,6 +85,7 @@ public class StaticTypeInformation<S> extends ClassTypeInformation<S> {
 		this.setter = computeSetter();
 		this.getter = computeGetter();
 		this.preferredConstructor =  computePreferredConstructor();
+		this.propertyAnnotations = computePropertyAnnotations();
 	}
 
 	protected Map<String, TypeInformation<?>> computePropertiesMap() {
@@ -113,6 +116,10 @@ public class StaticTypeInformation<S> extends ClassTypeInformation<S> {
 		return Collections.emptyMap();
 	}
 
+	protected Map<String, List<Annotation>> computePropertyAnnotations() {
+		return Collections.emptyMap();
+	}
+
 	public Map<String, TypeInformation<?>> getProperties() {
 		return properties;
 	}
@@ -127,6 +134,10 @@ public class StaticTypeInformation<S> extends ClassTypeInformation<S> {
 
 	public EntityInstantiator getInstantiator() {
 		return instantiator;
+	}
+
+	public Map<String, List<Annotation>> getPropertyAnnotations() {
+		return propertyAnnotations;
 	}
 
 	@Override

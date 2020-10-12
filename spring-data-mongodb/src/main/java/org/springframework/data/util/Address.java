@@ -31,6 +31,8 @@
  */
 package org.springframework.data.util;
 
+import org.springframework.util.ObjectUtils;
+
 /**
  * @author Christoph Strobl
  * @since 2020/10
@@ -53,19 +55,38 @@ public class Address {
 		return street;
 	}
 
-//	public void setCity(String city) {
-//		this.city = city;
-//	}
-//
-//	public void setStreet(String street) {
-//		this.street = street;
-//	}
+	// public void setCity(String city) {
+	// this.city = city;
+	// }
+	//
+	// public void setStreet(String street) {
+	// this.street = street;
+	// }
 
 	@Override
 	public String toString() {
-		return "Address{" +
-				"city='" + city + '\'' +
-				", street='" + street + '\'' +
-				'}';
+		return "Address{" + "city='" + city + '\'' + ", street='" + street + '\'' + '}';
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
+
+		Address address = (Address) o;
+
+		if (!ObjectUtils.nullSafeEquals(city, address.city)) {
+			return false;
+		}
+		return ObjectUtils.nullSafeEquals(street, address.street);
+	}
+
+	@Override
+	public int hashCode() {
+		int result = ObjectUtils.nullSafeHashCode(city);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(street);
+		return result;
 	}
 }

@@ -16,12 +16,14 @@
 package org.springframework.data.mapping.context;
 
 import java.beans.PropertyDescriptor;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -380,9 +382,10 @@ public abstract class AbstractMappingContext<E extends MutablePersistentEntity<?
 				// ((StaticTypeInformation<?>)typeInformation).doWithProperties()
 
 				Map<String, TypeInformation<?>> properties = ((StaticTypeInformation<?>) typeInformation).getProperties();
+				Map<String, List<Annotation>> annotations = ((StaticTypeInformation<?>) typeInformation).getPropertyAnnotations();
 				for (Entry<String, TypeInformation<?>> entry : properties.entrySet()) {
 
-					P target = createPersistentProperty(Property.of(typeInformation, entry.getKey()), entity, simpleTypeHolder);
+					P target = createPersistentProperty(Property.of(entry.getValue(), entry.getKey(), annotations.get(entry.getKey())), entity, simpleTypeHolder);
 					entity.addPersistentProperty(target);
 
 				}

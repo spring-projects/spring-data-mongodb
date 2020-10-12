@@ -33,6 +33,8 @@ package org.springframework.data.util;
 
 import java.util.List;
 
+import org.springframework.util.ObjectUtils;
+
 /**
  * @author Christoph Strobl
  * @since 2020/10
@@ -100,13 +102,43 @@ public class Person {
 
 	@Override
 	public String toString() {
-		return "Person{" +
-				"id=" + id +
-				", firstname='" + firstname + '\'' +
-				", lastname='" + lastname + '\'' +
-				", age=" + age +
-				", address=" + address +
-				", nicknames=" + nicknames +
-				'}';
+		return "Person{" + "id=" + id + ", firstname='" + firstname + '\'' + ", lastname='" + lastname + '\'' + ", age="
+				+ age + ", address=" + address + ", nicknames=" + nicknames + '}';
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
+
+		Person person = (Person) o;
+
+		if (id != person.id)
+			return false;
+		if (age != person.age)
+			return false;
+		if (!ObjectUtils.nullSafeEquals(firstname, person.firstname)) {
+			return false;
+		}
+		if (!ObjectUtils.nullSafeEquals(lastname, person.lastname)) {
+			return false;
+		}
+		if (!ObjectUtils.nullSafeEquals(address, person.address)) {
+			return false;
+		}
+		return ObjectUtils.nullSafeEquals(nicknames, person.nicknames);
+	}
+
+	@Override
+	public int hashCode() {
+		int result = (int) (id ^ (id >>> 32));
+		result = 31 * result + ObjectUtils.nullSafeHashCode(firstname);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(lastname);
+		result = 31 * result + age;
+		result = 31 * result + ObjectUtils.nullSafeHashCode(address);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(nicknames);
+		return result;
 	}
 }

@@ -32,6 +32,7 @@
 package org.springframework.data.util;
 
 import java.lang.annotation.Annotation;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +45,8 @@ import org.springframework.data.mapping.PreferredConstructor;
 import org.springframework.data.mapping.PreferredConstructor.Parameter;
 import org.springframework.data.mapping.model.EntityInstantiator;
 import org.springframework.data.mapping.model.ParameterValueProvider;
+import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.FieldType;
 
 /**
  * @author Christoph Strobl
@@ -132,5 +135,40 @@ public class PersonTypeInformation extends StaticTypeInformation<Person> {
 	@Override
 	protected PreferredConstructor computePreferredConstructor() {
 		return StaticPreferredConstructor.of("firstname", "lastname");
+	}
+
+	@Override
+	protected Map<String, List<Annotation>> computePropertyAnnotations() {
+
+		Map<String, List<Annotation>> annotationMap = new LinkedHashMap<>();
+		annotationMap.put("firstname", Collections.singletonList(new Field() {
+
+			@Override
+			public Class<? extends Annotation> annotationType() {
+				return Field.class;
+			}
+
+			@Override
+			public String value() {
+				return "first-name";
+			}
+
+			@Override
+			public String name() {
+				return value();
+			}
+
+			@Override
+			public int order() {
+				return 0;
+			}
+
+			@Override
+			public FieldType targetType() {
+				return FieldType.IMPLICIT;
+			}
+		}));
+
+		return annotationMap;
 	}
 }
