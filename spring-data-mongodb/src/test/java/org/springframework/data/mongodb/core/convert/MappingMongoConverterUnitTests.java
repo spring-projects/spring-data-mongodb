@@ -78,7 +78,11 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.PersonPojoStringId;
 import org.springframework.data.mongodb.core.mapping.TextScore;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertCallback;
+import org.springframework.data.util.Address;
+import org.springframework.data.util.AddressTypeInformation;
 import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.Person;
+import org.springframework.data.util.PersonTypeInformation;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.BasicDBList;
@@ -2177,6 +2181,34 @@ public class MappingMongoConverterUnitTests {
 		Map<Object, Object> result = spyConverter.readMap(ClassTypeInformation.MAP, data, ObjectPath.ROOT);
 
 		assertThat(((LinkedHashMap) result.get("cluster")).get("_id")).isEqualTo(100L);
+	}
+	
+	@Test
+	public void xxx() {
+
+		ClassTypeInformation.warmCache(new PersonTypeInformation(), new AddressTypeInformation());
+		
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		mappingContext.setInitialEntitySet(new LinkedHashSet<>(Arrays.asList(org.springframework.data.util.Person.class, org.springframework.data.util.Address.class)));
+		mappingContext.initialize();
+
+		org.springframework.data.util.Person source = new org.springframework.data.util.Person("spring", "data");
+		source.setAddress(new org.springframework.data.util.Address("the city", "never sleeps"));
+		source.setAge(10);
+		source.setId(9876);
+		
+		
+		
+		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext);
+		org.bson.Document targetDocument = new org.bson.Document();
+		converter.write(source, targetDocument);
+		
+		System.out.println("target: " + targetDocument);
+
+		org.springframework.data.util.Person targetEntity = converter.read(org.springframework.data.util.Person.class, targetDocument);
+		System.out.println("targetEntity: " + targetEntity);
+
+		
 	}
 
 	static class GenericType<T> {
