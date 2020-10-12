@@ -2196,8 +2196,7 @@ public class MappingMongoConverterUnitTests {
 		source.setAddress(new org.springframework.data.util.Address("the city", "never sleeps"));
 		source.setAge(10);
 		source.setId(9876);
-		
-		
+		source.setNicknames(Arrays.asList("tick", "trick", "track"));
 		
 		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext);
 		org.bson.Document targetDocument = new org.bson.Document();

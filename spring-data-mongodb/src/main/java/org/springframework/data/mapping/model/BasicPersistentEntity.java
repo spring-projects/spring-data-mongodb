@@ -109,7 +109,7 @@ public class BasicPersistentEntity<T, P extends PersistentProperty<P>> implement
 		this.properties = new ArrayList<>();
 		this.persistentPropertiesCache = new ArrayList<>();
 		this.comparator = comparator;
-		this.constructor = information instanceof StaticTypeInformation ? null : PreferredConstructorDiscoverer.discover(this);
+		this.constructor = information instanceof StaticTypeInformation ? ((StaticTypeInformation)information).getPreferredConstructor() : PreferredConstructorDiscoverer.discover(this);
 		this.associations = comparator == null ? new HashSet<>() : new TreeSet<>(new AssociationComparator<>(comparator));
 
 		this.propertyCache = new HashMap<>(16, 1f);

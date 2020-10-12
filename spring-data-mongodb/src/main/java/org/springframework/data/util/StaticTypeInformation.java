@@ -33,12 +33,14 @@ package org.springframework.data.util;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PreferredConstructor;
 import org.springframework.data.mapping.model.EntityInstantiator;
 import org.springframework.lang.Nullable;
@@ -62,6 +64,7 @@ public class StaticTypeInformation<S> extends ClassTypeInformation<S> {
 	private final Map<String, Function<S,Object>> getter;
 
 	private EntityInstantiator instantiator;
+	private PreferredConstructor preferredConstructor;
 
 	public StaticTypeInformation(Class<S> type) {
 		this(type, null, null);
@@ -79,6 +82,7 @@ public class StaticTypeInformation<S> extends ClassTypeInformation<S> {
 		this.instantiator = computeEntityInstantiator();
 		this.setter = computeSetter();
 		this.getter = computeGetter();
+		this.preferredConstructor =  computePreferredConstructor();
 	}
 
 	protected Map<String, TypeInformation<?>> computePropertiesMap() {
@@ -91,6 +95,14 @@ public class StaticTypeInformation<S> extends ClassTypeInformation<S> {
 
 	protected EntityInstantiator computeEntityInstantiator() {
 		return null;
+	}
+
+	protected PreferredConstructor computePreferredConstructor() {
+		return null;
+	}
+
+	public PreferredConstructor getPreferredConstructor() {
+		return preferredConstructor;
 	}
 
 	protected Map<String, BiFunction<S,Object,S>> computeSetter() {
@@ -241,5 +253,31 @@ public class StaticTypeInformation<S> extends ClassTypeInformation<S> {
 		return result;
 	}
 
-	PreferredConstructor
+	public static class StaticPreferredConstructor extends PreferredConstructor {
+
+		private List<String> args;
+
+		public StaticPreferredConstructor(List<String> args) {
+			this.args = args;
+		}
+
+		public static StaticPreferredConstructor of(String... args) {
+			return new StaticPreferredConstructor(Arrays.asList(args));
+		}
+
+		@Override
+		public boolean isConstructorParameter(PersistentProperty property) {
+
+			if(args.contains(property.getName())) {
+				return true;
+			}
+
+			return super.isConstructorParameter(property);
+		}
+
+		@Override
+		public boolean hasParameters() {
+			return !args.isEmpty();
+		}
+	}
 }

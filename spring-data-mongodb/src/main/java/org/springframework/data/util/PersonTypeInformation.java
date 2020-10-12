@@ -40,6 +40,7 @@ import java.util.function.Function;
 
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
+import org.springframework.data.mapping.PreferredConstructor;
 import org.springframework.data.mapping.PreferredConstructor.Parameter;
 import org.springframework.data.mapping.model.EntityInstantiator;
 import org.springframework.data.mapping.model.ParameterValueProvider;
@@ -71,14 +72,25 @@ public class PersonTypeInformation extends StaticTypeInformation<Person> {
 	@Override
 	protected Map<String, BiFunction<Person, Object, Person>> computeSetter() {
 
-
 		Map<String, BiFunction<Person, Object, Person>> setter = new LinkedHashMap<>();
-		setter.put("id", (bean, id) -> {bean.setId((Long)id); return bean;});
-		setter.put("age", (bean, id) -> {bean.setAge((int)id); return bean;});
-		setter.put("firstname", (bean, id) -> {bean.setFirstname((String)id); return bean;});
-		setter.put("lastname", (bean, id) -> {bean.setLastname((String)id); return bean;});
-		setter.put("address", (bean, id) -> {bean.setAddress((Address) id); return bean;});
-		setter.put("nicknames", (bean, id) -> {bean.setNicknames((List<String>) id); return bean;});
+		setter.put("id", (bean, id) -> {
+			bean.setId((Long) id);
+			return bean;
+		});
+		setter.put("age", (bean, id) -> {
+			bean.setAge((int) id);
+			return bean;
+		});
+		// setter.put("firstname", (bean, id) -> {bean.setFirstname((String)id); return bean;});
+		// setter.put("lastname", (bean, id) -> {bean.setLastname((String)id); return bean;});
+		setter.put("address", (bean, id) -> {
+			bean.setAddress((Address) id);
+			return bean;
+		});
+		setter.put("nicknames", (bean, id) -> {
+			bean.setNicknames((List<String>) id);
+			return bean;
+		});
 
 		return setter;
 	}
@@ -108,12 +120,17 @@ public class PersonTypeInformation extends StaticTypeInformation<Person> {
 					ParameterValueProvider<P> provider) {
 
 				String firstname = (String) provider
-						.getParameterValue(new Parameter("firstanme", new StringTypeInformation(), new Annotation[] {}, entity));
+						.getParameterValue(new Parameter("firstname", new StringTypeInformation(), new Annotation[] {}, entity));
 				String lastname = (String) provider
-						.getParameterValue(new Parameter("firstanme", new StringTypeInformation(), new Annotation[] {}, entity));
+						.getParameterValue(new Parameter("lastname", new StringTypeInformation(), new Annotation[] {}, entity));
 
 				return (T) new Person(firstname, lastname);
 			}
 		};
+	}
+
+	@Override
+	protected PreferredConstructor computePreferredConstructor() {
+		return StaticPreferredConstructor.of("firstname", "lastname");
 	}
 }
