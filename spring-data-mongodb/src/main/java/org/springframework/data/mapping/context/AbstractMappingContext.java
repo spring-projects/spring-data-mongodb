@@ -16,16 +16,13 @@
 package org.springframework.data.mapping.context;
 
 import java.beans.PropertyDescriptor;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
@@ -379,18 +376,17 @@ public abstract class AbstractMappingContext<E extends MutablePersistentEntity<?
 
 			if (typeInformation instanceof StaticTypeInformation<?>) {
 
-				// ((StaticTypeInformation<?>)typeInformation).doWithProperties()
+				final E pEntity = entity;
+				((StaticTypeInformation<?>) typeInformation).doWithFields((fieldName, field) -> {
 
-				Map<String, TypeInformation<?>> properties = ((StaticTypeInformation<?>) typeInformation).getProperties();
-				Map<String, List<Annotation>> annotations = ((StaticTypeInformation<?>) typeInformation).getPropertyAnnotations();
-				for (Entry<String, TypeInformation<?>> entry : properties.entrySet()) {
+					System.out.println("Creating PersistentProperty for " + fieldName + " via static configuration.");
+					P target = createPersistentProperty(
+							Property.of(field.getTypeInformation(), fieldName, field.getAnnotations()), pEntity, simpleTypeHolder);
+					pEntity.addPersistentProperty(target);
 
-					P target = createPersistentProperty(Property.of(entry.getValue(), entry.getKey(), annotations.get(entry.getKey())), entity, simpleTypeHolder);
-					entity.addPersistentProperty(target);
-
-				}
-				entity.setPersistentPropertyAccessorFactory(new StaticPropertyAccessorFactory());
-				return Optional.of(entity);
+				});
+				pEntity.setPersistentPropertyAccessorFactory(StaticPropertyAccessorFactory.instance());
+				return Optional.of(pEntity);
 			}
 
 			PropertyDescriptor[] pds = BeanUtils.getPropertyDescriptors(type);

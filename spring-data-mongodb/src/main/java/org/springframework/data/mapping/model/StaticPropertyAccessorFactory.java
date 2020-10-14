@@ -31,13 +31,9 @@
  */
 package org.springframework.data.mapping.model;
 
-import java.util.function.BiFunction;
-import java.util.function.Function;
-
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
-import org.springframework.data.util.StaticTypeInformation;
 import org.springframework.lang.Nullable;
 
 /**
@@ -46,13 +42,21 @@ import org.springframework.lang.Nullable;
  */
 public class StaticPropertyAccessorFactory implements PersistentPropertyAccessorFactory {
 
+	private static final StaticPropertyAccessorFactory INSTANCE = new StaticPropertyAccessorFactory();
+
+	public static StaticPropertyAccessorFactory instance() {
+		return INSTANCE;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mapping.model.PersistentPropertyAccessorFactory#getPropertyAccessor(org.springframework.data.mapping.PersistentEntity, java.lang.Object)
 	 */
 	@Override
 	public <T> PersistentPropertyAccessor<T> getPropertyAccessor(PersistentEntity<?, ?> entity, T bean) {
-		return new StaticPropertyAccessor<>((StaticTypeInformation<T>) entity.getTypeInformation(), bean);
+
+		System.out.println("Obtaining static property acessor for entity " + entity.getName());
+		return new StaticPropertyAccessor<>((AccessorFunctionProvider<T>) entity.getTypeInformation(), bean);
 	}
 
 	/*
@@ -62,7 +66,7 @@ public class StaticPropertyAccessorFactory implements PersistentPropertyAccessor
 	@Override
 	public boolean isSupported(PersistentEntity<?, ?> entity) {
 
-		boolean isStaticTypedEntity = entity.getTypeInformation() instanceof StaticTypeInformation;
+		boolean isStaticTypedEntity = entity.getTypeInformation() instanceof AccessorFunctionProvider;
 		System.out.println(entity.getName() + " isStaticTypedEntity: " + isStaticTypedEntity);
 		return isStaticTypedEntity;
 	}
@@ -70,32 +74,36 @@ public class StaticPropertyAccessorFactory implements PersistentPropertyAccessor
 	static class StaticPropertyAccessor<T> implements PersistentPropertyAccessor<T> {
 
 		T bean;
-		StaticTypeInformation<T> typeInformation;
+		AccessorFunctionProvider<T> accessorFunctionProvider;
 
-		public StaticPropertyAccessor(StaticTypeInformation<T> typeInformation, T bean) {
+		public StaticPropertyAccessor(AccessorFunctionProvider<T> accessorFunctionProvider, T bean) {
 			this.bean = bean;
-			this.typeInformation = typeInformation;
+			this.accessorFunctionProvider = accessorFunctionProvider;
 		}
 
 		@Override
 		public void setProperty(PersistentProperty<?> property, @Nullable Object value) {
 
-			BiFunction<T, Object, T> setFunction = typeInformation.getSetter().get(property.getName());
-			if (setFunction == null) {
+			if (!accessorFunctionProvider.hasSetFunctionFor(property.getName())) {
 				return;
 			}
-			this.bean = setFunction.apply(bean, value);
+
+			this.bean = accessorFunctionProvider.getSetFunctionFor(property.getName()).apply(bean, value);
+			System.out.println(
+					"setting value " + value + " via setter function for " + property.getName() + " resulting in " + bean);
 		}
 
 		@Nullable
 		@Override
 		public Object getProperty(PersistentProperty<?> property) {
 
-			Function<T, Object> getFunction = typeInformation.getGetter().get(property.getName());
-			if (getFunction == null) {
+			if (!accessorFunctionProvider.hasGetFunctionFor(property.getName())) {
 				return null;
 			}
-			return getFunction.apply(bean);
+
+			Object value = accessorFunctionProvider.getGetFunctionFor(property.getName()).apply(bean);
+			System.out.println("obtaining value " + value + " from getter function for " + property.getName());
+			return value;
 		}
 
 		@Override

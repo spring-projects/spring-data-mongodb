@@ -29,26 +29,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.util;
+package org.springframework.data.mapping.model;
 
-import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * @author Christoph Strobl
  * @since 2020/10
  */
-public class ListTypeInformation<S> extends StaticTypeInformation<List<S>> {
+public interface AccessorFunctionProvider<S> {
 
-	public ListTypeInformation(TypeInformation<S> componentType) {
-		super((Class) List.class, componentType, null);
+	default boolean hasSetFunctionFor(String fieldName) {
+		return getSetFunctionFor(fieldName) != null;
 	}
 
-	public static <S> ListTypeInformation<S> listOf(TypeInformation<S> componentType) {
-		return new ListTypeInformation<>(componentType);
+	default boolean hasGetFunctionFor(String fieldName) {
+		return getGetFunctionFor(fieldName) != null;
 	}
 
-	@Override
-	public boolean isCollectionLike() {
-		return true;
-	}
+	BiFunction<S, Object, S> getSetFunctionFor(String fieldName);
+
+	Function<S, Object> getGetFunctionFor(String fieldName);
 }

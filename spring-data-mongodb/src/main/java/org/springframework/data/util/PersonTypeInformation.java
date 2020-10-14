@@ -32,20 +32,16 @@
 package org.springframework.data.util;
 
 import java.lang.annotation.Annotation;
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PreferredConstructor;
 import org.springframework.data.mapping.PreferredConstructor.Parameter;
 import org.springframework.data.mapping.model.EntityInstantiator;
 import org.springframework.data.mapping.model.ParameterValueProvider;
-import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 
 /**
@@ -54,63 +50,63 @@ import org.springframework.data.mongodb.core.mapping.FieldType;
  */
 public class PersonTypeInformation extends StaticTypeInformation<Person> {
 
-	public PersonTypeInformation() {
+	private static final PersonTypeInformation INSTANCE = new PersonTypeInformation();
+
+	private PersonTypeInformation() {
 		super(Person.class);
 	}
 
-	@Override
-	protected Map<String, TypeInformation<?>> computePropertiesMap() {
-
-		LinkedHashMap<String, TypeInformation<?>> properties = new LinkedHashMap<>();
-		properties.put("firstname", new StringTypeInformation());
-		properties.put("lastname", new StringTypeInformation());
-		properties.put("id", new StaticTypeInformation<>(Long.class));
-		properties.put("age", new StaticTypeInformation<>(int.class));
-		properties.put("address", new AddressTypeInformation());
-		properties.put("nicknames", new ListTypeInformation(new StringTypeInformation()));
-
-		return properties;
+	public static PersonTypeInformation instance() {
+		return INSTANCE;
 	}
 
 	@Override
-	protected Map<String, BiFunction<Person, Object, Person>> computeSetter() {
+	protected void computeFields() {
 
-		Map<String, BiFunction<Person, Object, Person>> setter = new LinkedHashMap<>();
-		setter.put("id", (bean, id) -> {
-			bean.setId((Long) id);
-			return bean;
-		});
-		setter.put("age", (bean, id) -> {
-			bean.setAge((int) id);
-			return bean;
-		});
-		// setter.put("firstname", (bean, id) -> {bean.setFirstname((String)id); return bean;});
-		// setter.put("lastname", (bean, id) -> {bean.setLastname((String)id); return bean;});
-		setter.put("address", (bean, id) -> {
-			bean.setAddress((Address) id);
-			return bean;
-		});
-		setter.put("nicknames", (bean, id) -> {
-			bean.setNicknames((List<String>) id);
-			return bean;
-		});
-
-		return setter;
+		addField(
+				Field.<Person> int64("id").getter(Person::getId).wither((bean, id) -> bean.withId(id)).annotation(new Id() {
+					@Override
+					public Class<? extends Annotation> annotationType() {
+						return Id.class;
+					}
+				}));
+		addField(Field.<Person> string("firstname").getter(Person::getFirstname).annotation(atFieldOnFirstname()));
+		addField(Field.<Person> string("lastname").getter(Person::getLastname));
+		addField(Field.<Person> int32("age").getter(Person::getAge).setter(Person::setAge));
+		addField(Field.<Person, Address> type("address", AddressTypeInformation.instance()).getter(Person::getAddress)
+				.setter(Person::setAddress));
+		addField(Field.<Person, List<String>> type("nicknames", new ListTypeInformation<>(StringTypeInformation.instance()))
+				.getter(Person::getNicknames).setter(Person::setNicknames));
 	}
 
 	@Override
-	protected Map<String, Function<Person, Object>> computeGetter() {
+	protected void computeAnnotations() {
+		addAnnotation(new Document() {
+			@Override
+			public Class<? extends Annotation> annotationType() {
+				return Document.class;
+			}
 
-		Map<String, Function<Person, Object>> getter = new LinkedHashMap<>();
+			@Override
+			public String value() {
+				return collection();
+			}
 
-		getter.put("firstname", Person::getFirstname);
-		getter.put("lastname", Person::getLastname);
-		getter.put("id", Person::getId);
-		getter.put("address", Person::getAddress);
-		getter.put("nicknames", Person::getNicknames);
-		getter.put("age", Person::getAge);
+			@Override
+			public String collection() {
+				return "star-wars";
+			}
 
-		return getter;
+			@Override
+			public String language() {
+				return "";
+			}
+
+			@Override
+			public String collation() {
+				return "";
+			}
+		});
 	}
 
 	@Override
@@ -122,12 +118,15 @@ public class PersonTypeInformation extends StaticTypeInformation<Person> {
 			public <T, E extends PersistentEntity<? extends T, P>, P extends PersistentProperty<P>> T createInstance(E entity,
 					ParameterValueProvider<P> provider) {
 
-				String firstname = (String) provider
-						.getParameterValue(new Parameter("firstname", new StringTypeInformation(), new Annotation[] {}, entity));
-				String lastname = (String) provider
-						.getParameterValue(new Parameter("lastname", new StringTypeInformation(), new Annotation[] {}, entity));
+				String firstname = (String) provider.getParameterValue(
+						new Parameter("firstname", StringTypeInformation.instance(), new Annotation[] {}, entity));
+				String lastname = (String) provider.getParameterValue(
+						new Parameter("lastname", StringTypeInformation.instance(), new Annotation[] {}, entity));
 
-				return (T) new Person(firstname, lastname);
+				T person = (T) new Person(firstname, lastname);
+				System.out.println("Created new Person instance via constructor using values (" + firstname + ", " + lastname
+						+ ") resulting in " + person);
+				return person;
 			}
 		};
 	}
@@ -137,15 +136,13 @@ public class PersonTypeInformation extends StaticTypeInformation<Person> {
 		return StaticPreferredConstructor.of("firstname", "lastname");
 	}
 
-	@Override
-	protected Map<String, List<Annotation>> computePropertyAnnotations() {
+	Annotation atFieldOnFirstname() {
 
-		Map<String, List<Annotation>> annotationMap = new LinkedHashMap<>();
-		annotationMap.put("firstname", Collections.singletonList(new Field() {
+		return new org.springframework.data.mongodb.core.mapping.Field() {
 
 			@Override
 			public Class<? extends Annotation> annotationType() {
-				return Field.class;
+				return org.springframework.data.mongodb.core.mapping.Field.class;
 			}
 
 			@Override
@@ -167,8 +164,6 @@ public class PersonTypeInformation extends StaticTypeInformation<Person> {
 			public FieldType targetType() {
 				return FieldType.IMPLICIT;
 			}
-		}));
-
-		return annotationMap;
+		};
 	}
 }

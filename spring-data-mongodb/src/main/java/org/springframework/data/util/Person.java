@@ -52,6 +52,15 @@ public class Person {
 		this.lastname = lastname;
 	}
 
+	private Person(long id, String firstname, String lastname, int age, Address address, List<String> nicknames) {
+		this.id = id;
+		this.firstname = firstname;
+		this.lastname = lastname;
+		this.age = age;
+		this.address = address;
+		this.nicknames = nicknames;
+	}
+
 	public String getFirstname() {
 		return firstname;
 	}
@@ -72,8 +81,10 @@ public class Person {
 		return id;
 	}
 
-	public void setId(long id) {
-		id = id;
+	public Person withId(long id) {
+
+		return new Person(id, firstname, lastname, age, address, nicknames);
+
 	}
 
 	public Address getAddress() {

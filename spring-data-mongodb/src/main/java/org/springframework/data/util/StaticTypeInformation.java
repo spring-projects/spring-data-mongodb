@@ -34,24 +34,35 @@ package org.springframework.data.util;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PreferredConstructor;
+import org.springframework.data.mapping.PreferredConstructorProvider;
+import org.springframework.data.mapping.model.AccessorFunctionProvider;
 import org.springframework.data.mapping.model.EntityInstantiator;
+import org.springframework.data.mapping.model.EntiyInstantiatorProvider;
+import org.springframework.data.mapping.model.PersistentPropertyAccessorFactory;
+import org.springframework.data.mapping.model.PersistentPropertyAccessorFactoryProvider;
+import org.springframework.data.mapping.model.StaticPropertyAccessorFactory;
 import org.springframework.lang.Nullable;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.util.ObjectUtils;
 
 /**
  * @author Christoph Strobl
  * @since 2020/10
  */
-public class StaticTypeInformation<S> extends ClassTypeInformation<S> {
+public class StaticTypeInformation<S> extends ClassTypeInformation<S>
+		implements AnnotationProvider, EntiyInstantiatorProvider, PreferredConstructorProvider<S>,
+		PersistentPropertyAccessorFactoryProvider, AccessorFunctionProvider<S> {
 
 	private final Class<S> type;
 
@@ -60,13 +71,12 @@ public class StaticTypeInformation<S> extends ClassTypeInformation<S> {
 
 	private StaticTypeInformation<?> superTypeInformation;
 	private List<TypeInformation<?>> typeArguments;
-	private final Map<String, TypeInformation<?>> properties;
-	private final Map<String, BiFunction<S,Object,S>> setter;
-	private final Map<String, Function<S,Object>> getter;
-	private final Map<String, List<Annotation>> propertyAnnotations;
+	private MultiValueMap<Class<? extends Annotation>, Annotation> annotations;
+
+	private final Fields fields;
 
 	private EntityInstantiator instantiator;
-	private PreferredConstructor preferredConstructor;
+	private PreferredConstructor<S, ?> preferredConstructor;
 
 	public StaticTypeInformation(Class<S> type) {
 		this(type, null, null);
@@ -79,18 +89,19 @@ public class StaticTypeInformation<S> extends ClassTypeInformation<S> {
 		this.type = type;
 		this.componentType = componentType;
 		this.keyType = keyType;
-		this.properties = computePropertiesMap();
 		this.typeArguments = computeTypeArguments();
 		this.instantiator = computeEntityInstantiator();
-		this.setter = computeSetter();
-		this.getter = computeGetter();
-		this.preferredConstructor =  computePreferredConstructor();
-		this.propertyAnnotations = computePropertyAnnotations();
+		this.preferredConstructor = computePreferredConstructor();
+		this.annotations = new LinkedMultiValueMap<>();
+		this.fields = new Fields(type);
+
+		computeFields();
+		computeAnnotations();
 	}
 
-	protected Map<String, TypeInformation<?>> computePropertiesMap() {
-		return Collections.emptyMap();
-	};
+	protected void addField(Field<?, S> field) {
+		this.fields.add(field);
+	}
 
 	protected List<TypeInformation<?>> computeTypeArguments() {
 		return Collections.emptyList();
@@ -100,44 +111,29 @@ public class StaticTypeInformation<S> extends ClassTypeInformation<S> {
 		return null;
 	}
 
-	protected PreferredConstructor computePreferredConstructor() {
+	protected PreferredConstructor<S, ?> computePreferredConstructor() {
 		return null;
 	}
 
-	public PreferredConstructor getPreferredConstructor() {
+	@Override
+	public PreferredConstructor<S, ?> getPreferredConstructor() {
 		return preferredConstructor;
 	}
 
-	protected Map<String, BiFunction<S,Object,S>> computeSetter() {
-		return Collections.emptyMap();
+	protected void computeFields() {
+		//
 	}
 
-	protected Map<String, Function<S,Object>> computeGetter() {
-		return Collections.emptyMap();
+	protected void computeAnnotations() {
+
 	}
 
-	protected Map<String, List<Annotation>> computePropertyAnnotations() {
-		return Collections.emptyMap();
+	protected void addAnnotation(Annotation annotation) {
+		this.annotations.add(annotation.annotationType(), annotation);
 	}
 
-	public Map<String, TypeInformation<?>> getProperties() {
-		return properties;
-	}
-
-	public Map<String, BiFunction<S, Object, S>> getSetter() {
-		return setter;
-	}
-
-	public Map<String, Function<S, Object>> getGetter() {
-		return getter;
-	}
-
-	public EntityInstantiator getInstantiator() {
-		return instantiator;
-	}
-
-	public Map<String, List<Annotation>> getPropertyAnnotations() {
-		return propertyAnnotations;
+	public void doWithFields(BiConsumer<String, Field<?, S>> consumer) {
+		fields.doWithFields(consumer);
 	}
 
 	@Override
@@ -148,7 +144,12 @@ public class StaticTypeInformation<S> extends ClassTypeInformation<S> {
 	@Nullable
 	@Override
 	public TypeInformation<?> getProperty(String property) {
-		return properties.get(property);
+
+		if (!fields.hasField(property)) {
+			return null;
+		}
+
+		return fields.getField(property).getTypeInformation();
 	}
 
 	@Override
@@ -216,9 +217,12 @@ public class StaticTypeInformation<S> extends ClassTypeInformation<S> {
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-		if (!super.equals(o)) return false;
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
+		if (!super.equals(o))
+			return false;
 
 		StaticTypeInformation<?> that = (StaticTypeInformation<?>) o;
 
@@ -237,13 +241,7 @@ public class StaticTypeInformation<S> extends ClassTypeInformation<S> {
 		if (!ObjectUtils.nullSafeEquals(typeArguments, that.typeArguments)) {
 			return false;
 		}
-		if (!ObjectUtils.nullSafeEquals(properties, that.properties)) {
-			return false;
-		}
-		if (!ObjectUtils.nullSafeEquals(setter, that.setter)) {
-			return false;
-		}
-		if (!ObjectUtils.nullSafeEquals(getter, that.getter)) {
+		if (!ObjectUtils.nullSafeEquals(fields, that.fields)) {
 			return false;
 		}
 		return ObjectUtils.nullSafeEquals(instantiator, that.instantiator);
@@ -257,11 +255,62 @@ public class StaticTypeInformation<S> extends ClassTypeInformation<S> {
 		result = 31 * result + ObjectUtils.nullSafeHashCode(keyType);
 		result = 31 * result + ObjectUtils.nullSafeHashCode(superTypeInformation);
 		result = 31 * result + ObjectUtils.nullSafeHashCode(typeArguments);
-		result = 31 * result + ObjectUtils.nullSafeHashCode(properties);
-		result = 31 * result + ObjectUtils.nullSafeHashCode(setter);
-		result = 31 * result + ObjectUtils.nullSafeHashCode(getter);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(fields);
+
 		result = 31 * result + ObjectUtils.nullSafeHashCode(instantiator);
 		return result;
+	}
+
+	@Nullable
+	@Override
+	public EntityInstantiator getEntityInstantiator() {
+		return instantiator;
+	}
+
+	@Override
+	public List<Annotation> getAnnotations() {
+
+		List<Annotation> all = new ArrayList<>();
+		annotations.values().forEach(all::addAll);
+		return all;
+	}
+
+	@Override
+	public boolean hasAnnotation(Class<?> annotationType) {
+		return annotations.containsKey(annotationType);
+	}
+
+	@Override
+	public <T extends Annotation> List<T> findAnnotation(Class<T> annotation) {
+		return (List<T>) annotations.getOrDefault(annotation, Collections.emptyList());
+	}
+
+	@Nullable
+	@Override
+	public PersistentPropertyAccessorFactory getPersistentPropertyAccessorFactory() {
+		return StaticPropertyAccessorFactory.instance();
+	}
+
+	@Override
+	public BiFunction<S, Object, S> getSetFunctionFor(String fieldName) {
+
+		Field<Object, S> entityField = fields.getField(fieldName);
+		if (entityField == null) {
+			return null;
+		}
+
+		return entityField.getSetter();
+	}
+
+	@Override
+	public Function<S, Object> getGetFunctionFor(String fieldName) {
+
+		Field<Object, S> entityField = fields.getField(fieldName);
+		if (entityField == null) {
+			return null;
+		}
+
+		return entityField.getGetter();
 	}
 
 	public static class StaticPreferredConstructor extends PreferredConstructor {
@@ -279,7 +328,7 @@ public class StaticTypeInformation<S> extends ClassTypeInformation<S> {
 		@Override
 		public boolean isConstructorParameter(PersistentProperty property) {
 
-			if(args.contains(property.getName())) {
+			if (args.contains(property.getName())) {
 				return true;
 			}
 

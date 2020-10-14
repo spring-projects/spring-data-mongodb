@@ -29,26 +29,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.util;
+package org.springframework.data.mapping.model;
 
-import java.util.List;
+import org.springframework.lang.Nullable;
 
 /**
  * @author Christoph Strobl
  * @since 2020/10
  */
-public class ListTypeInformation<S> extends StaticTypeInformation<List<S>> {
+public interface EntiyInstantiatorProvider {
 
-	public ListTypeInformation(TypeInformation<S> componentType) {
-		super((Class) List.class, componentType, null);
-	}
+	@Nullable
+	EntityInstantiator getEntityInstantiator();
 
-	public static <S> ListTypeInformation<S> listOf(TypeInformation<S> componentType) {
-		return new ListTypeInformation<>(componentType);
-	}
+	default EntityInstantiator getEntiyInstantiatorOrDefault(EntityInstantiator fallback) {
 
-	@Override
-	public boolean isCollectionLike() {
-		return true;
+		EntityInstantiator entityInstantiator = getEntityInstantiator();
+		return entityInstantiator != null ? entityInstantiator : fallback;
 	}
 }

@@ -37,8 +37,8 @@ import org.springframework.data.mapping.*;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.support.IsNewStrategy;
 import org.springframework.data.support.PersistableIsNewStrategy;
+import org.springframework.data.util.AnnotationProvider;
 import org.springframework.data.util.Lazy;
-import org.springframework.data.util.StaticTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.lang.Nullable;
@@ -109,14 +109,30 @@ public class BasicPersistentEntity<T, P extends PersistentProperty<P>> implement
 		this.properties = new ArrayList<>();
 		this.persistentPropertiesCache = new ArrayList<>();
 		this.comparator = comparator;
-		this.constructor = information instanceof StaticTypeInformation ? ((StaticTypeInformation)information).getPreferredConstructor() : PreferredConstructorDiscoverer.discover(this);
+
+		this.constructor = information instanceof PreferredConstructorProvider
+				? ((PreferredConstructorProvider<T>) information).getPreferredConstructor()
+				: PreferredConstructorDiscoverer.discover(this);
+
 		this.associations = comparator == null ? new HashSet<>() : new TreeSet<>(new AssociationComparator<>(comparator));
 
 		this.propertyCache = new HashMap<>(16, 1f);
+
 		this.annotationCache = new ConcurrentReferenceHashMap<>(16, ReferenceType.WEAK);
+		if(information instanceof AnnotationProvider) {
+			for(Annotation annotation : ((AnnotationProvider)information).getAnnotations()) {
+				annotationCache.put(annotation.annotationType(), Optional.of(annotation));
+			}
+		}
+
+
 		this.propertyAnnotationCache = CollectionUtils
 				.toMultiValueMap(new ConcurrentReferenceHashMap<>(16, ReferenceType.WEAK));
-		this.propertyAccessorFactory = BeanWrapperPropertyAccessorFactory.INSTANCE;
+
+		this.propertyAccessorFactory = information instanceof PersistentPropertyAccessorFactoryProvider
+				? ((PersistentPropertyAccessorFactoryProvider) information).getPersistentPropertyAccessorFactory()
+				: BeanWrapperPropertyAccessorFactory.INSTANCE;
+
 		this.typeAlias = Lazy.of(() -> getAliasFromAnnotation(getType()));
 		this.isNewStrategy = Lazy.of(() -> Persistable.class.isAssignableFrom(information.getType()) //
 				? PersistableIsNewStrategy.INSTANCE

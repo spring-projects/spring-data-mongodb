@@ -52,7 +52,6 @@ public class PreferredConstructor<T, P extends PersistentProperty<P>> {
 	public PreferredConstructor() {
 		this.constructor = null;
 		this.parameters = Collections.emptyList();
-
 	}
 
 	/**

@@ -37,8 +37,13 @@ package org.springframework.data.util;
  */
 public class StringTypeInformation extends StaticTypeInformation<String> {
 
+	private static final StringTypeInformation INSTANCE = new StringTypeInformation();
+
 	public StringTypeInformation() {
 		super(String.class);
 	}
 
+	public static TypeInformation<String> instance() {
+		return INSTANCE;
+	}
 }

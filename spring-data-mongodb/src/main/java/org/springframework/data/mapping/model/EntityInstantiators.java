@@ -19,7 +19,6 @@ import java.util.Collections;
 import java.util.Map;
 
 import org.springframework.data.mapping.PersistentEntity;
-import org.springframework.data.util.StaticTypeInformation;
 import org.springframework.util.Assert;
 
 /**
@@ -92,9 +91,8 @@ public class EntityInstantiators {
 
 		if (!customInstantiators.containsKey(type)) {
 
-			if(entity.getTypeInformation() instanceof StaticTypeInformation) {
-				EntityInstantiator instantiator = ((StaticTypeInformation)entity.getTypeInformation()).getInstantiator();
-				return instantiator != null ? instantiator : fallback;
+			if (entity.getTypeInformation() instanceof EntiyInstantiatorProvider) {
+				return ((EntiyInstantiatorProvider) entity.getTypeInformation()).getEntiyInstantiatorOrDefault(fallback);
 			}
 			return fallback;
 		}

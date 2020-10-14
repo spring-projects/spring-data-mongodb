@@ -32,10 +32,6 @@
 package org.springframework.data.util;
 
 import java.lang.annotation.Annotation;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
@@ -50,40 +46,21 @@ import org.springframework.data.mapping.model.ParameterValueProvider;
  */
 public class AddressTypeInformation extends StaticTypeInformation<Address> {
 
-	public AddressTypeInformation() {
+	private static final AddressTypeInformation INSTANCE = new AddressTypeInformation();
+
+	private AddressTypeInformation() {
 		super(Address.class);
 	}
 
-	@Override
-	protected Map<String, TypeInformation<?>> computePropertiesMap() {
-
-		Map<String, TypeInformation<?>> properties = new LinkedHashMap<>();
-		properties.put("city", new StringTypeInformation());
-		properties.put("street", new StringTypeInformation());
-		return properties;
+	public static AddressTypeInformation instance() {
+		return INSTANCE;
 	}
 
 	@Override
-	protected Map<String, Function<Address, Object>> computeGetter() {
-		Map<String, Function<Address, Object>> getters = new LinkedHashMap<>();
-		getters.put("city", Address::getCity);
-		getters.put("street", Address::getStreet);
+	protected void computeFields() {
 
-		return getters;
-	}
-
-	@Override
-	protected Map<String, BiFunction<Address, Object, Address>> computeSetter() {
-		Map<String, BiFunction<Address, Object, Address>> setter = new LinkedHashMap<>();
-//		setter.put("city", (bean, id) -> {
-//			bean.setCity((String) id);
-//			return bean;
-//		});
-//		setter.put("street", (bean, id) -> {
-//			bean.setStreet((String) id);
-//			return bean;
-//		});
-		return setter;
+		addField(Field.<Address> string("city").getter(Address::getCity));
+		addField(Field.<Address> string("street").getter(Address::getStreet));
 	}
 
 	@Override
@@ -99,7 +76,10 @@ public class AddressTypeInformation extends StaticTypeInformation<Address> {
 				String street = (String) provider
 						.getParameterValue(new Parameter("street", new StringTypeInformation(), new Annotation[] {}, entity));
 
-				return (T) new Address(city, street);
+				T address = (T) new Address(city, street);
+				System.out.println("Created new Address instance via constructor using values (" + city + ", " + street
+						+ ") resulting in " + address);
+				return address;
 			}
 		};
 	}

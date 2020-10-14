@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.util.Assert;
@@ -48,8 +49,8 @@ public class ClassTypeInformation<S> extends TypeDiscoverer<S> {
 	public static final ClassTypeInformation<Map> MAP = new ClassTypeInformation(Map.class);
 	public static final ClassTypeInformation<Object> OBJECT = new ClassTypeInformation(Object.class);
 
-	private static final Map<Class<?>, ClassTypeInformation<?>> cache = new ConcurrentReferenceHashMap<>(64,
-			ReferenceType.WEAK);
+	// cannot use reference hash map cause static type information might not be referenced from outside and get discarded
+	private static final Map<Class<?>, ClassTypeInformation<?>> cache = new ConcurrentHashMap<>();
 
 	static {
 		Arrays.asList(COLLECTION, LIST, SET, MAP, OBJECT).forEach(it -> cache.put(it.getType(), it));

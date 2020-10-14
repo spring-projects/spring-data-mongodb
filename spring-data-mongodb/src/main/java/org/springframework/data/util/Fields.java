@@ -31,24 +31,46 @@
  */
 package org.springframework.data.util;
 
-import java.util.List;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.function.BiConsumer;
 
 /**
  * @author Christoph Strobl
  * @since 2020/10
  */
-public class ListTypeInformation<S> extends StaticTypeInformation<List<S>> {
+public class Fields<O> implements Iterable<Field<?, O>> {
 
-	public ListTypeInformation(TypeInformation<S> componentType) {
-		super((Class) List.class, componentType, null);
+	private final Class<O> owner;
+	private final Map<String, Field<?, O>> fields;
+
+	public Fields(Class<O> owner) {
+
+		this.owner = owner;
+		this.fields = new LinkedHashMap<>();
 	}
 
-	public static <S> ListTypeInformation<S> listOf(TypeInformation<S> componentType) {
-		return new ListTypeInformation<>(componentType);
+	public Fields<O> add(Field<?, O> field) {
+
+		this.fields.put(field.getFieldName(), field.owner(owner));
+		return this;
+	}
+
+	public boolean hasField(String fieldName) {
+		return this.fields.containsKey(fieldName);
+	}
+
+	public <S> Field<S, O> getField(String fieldName) {
+		return (Field<S, O>) this.fields.get(fieldName);
+	}
+
+	public void doWithFields(BiConsumer<String, Field<?, O>> consumer) {
+		fields.forEach(consumer);
 	}
 
 	@Override
-	public boolean isCollectionLike() {
-		return true;
+	public Iterator<Field<?, O>> iterator() {
+		return fields.values().iterator();
 	}
 }
