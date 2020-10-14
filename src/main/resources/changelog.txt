@@ -1,6 +1,17 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.1.0-RC2 (2020-10-14)
+-----------------------------------------
+* DATAMONGO-2633 - @Query annotation does not support $centerSphere.
+* DATAMONGO-2630 - Add support for suspend repository query methods returning List<T>.
+* DATAMONGO-2626 - Release 3.1 RC2 (2020.0.0).
+* DATAMONGO-2623 - Add support for custom Aggregation expressions.
+* DATAMONGO-2622 - Add support for $unionWith aggregation.
+* DATAMONGO-2596 - Introduce extension to render KProperty/KPropertyPath as property path.
+* DATAMONGO-2294 - Support multiple parameters for query field projections.
+
+
 Changes in version 3.1.0-RC1 (2020-09-16)
 -----------------------------------------
 * DATAMONGO-2621 - Adapt to changed array assertions in AssertJ.
@@ -3137,6 +3148,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
