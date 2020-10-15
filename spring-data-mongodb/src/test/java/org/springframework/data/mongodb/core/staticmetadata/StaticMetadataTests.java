@@ -47,10 +47,11 @@ import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-import org.springframework.data.util.AddressTypeInformation;
+import org.springframework.data.mongodb.buildtimetypeinfo.Address;
+import org.springframework.data.mongodb.buildtimetypeinfo.AddressTypeInformation;
 import org.springframework.data.util.ClassTypeInformation;
-import org.springframework.data.util.Person;
-import org.springframework.data.util.PersonTypeInformation;
+import org.springframework.data.mongodb.buildtimetypeinfo.Person;
+import org.springframework.data.mongodb.buildtimetypeinfo.PersonTypeInformation;
 
 import com.mongodb.client.MongoClients;
 
@@ -76,7 +77,7 @@ public class StaticMetadataTests {
 
 		mappingContext = new MongoMappingContext();
 		mappingContext.setInitialEntitySet(new LinkedHashSet<>(
-				Arrays.asList(org.springframework.data.util.Person.class, org.springframework.data.util.Address.class)));
+				Arrays.asList(Person.class, Address.class)));
 		mappingContext.initialize();
 
 		mongoConverter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext);
@@ -85,7 +86,7 @@ public class StaticMetadataTests {
 		template = new MongoTemplate(new SimpleMongoClientDatabaseFactory(MongoClients.create(), "sem"), mongoConverter);
 
 		luke = new Person("luke", "skywalker");
-		luke.setAddress(new org.springframework.data.util.Address("Mos Eisley", "WB154"));
+		luke.setAddress(new Address("Mos Eisley", "WB154"));
 		luke.setAge(22);
 		luke = luke.withId(9876);
 		luke.setNicknames(Arrays.asList("jedi", "wormie"));

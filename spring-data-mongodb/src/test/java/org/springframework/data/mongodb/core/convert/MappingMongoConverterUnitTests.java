@@ -80,12 +80,10 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.PersonPojoStringId;
 import org.springframework.data.mongodb.core.mapping.TextScore;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertCallback;
-import org.springframework.data.util.AddressTypeInformation;
+import org.springframework.data.mongodb.buildtimetypeinfo.AddressTypeInformation;
 import org.springframework.data.util.ClassTypeInformation;
-import org.springframework.data.util.Person;
-import org.springframework.data.util.PersonTypeInformation;
+import org.springframework.data.mongodb.buildtimetypeinfo.PersonTypeInformation;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.util.StopWatch;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -2192,13 +2190,13 @@ public class MappingMongoConverterUnitTests {
 //
 //		MongoMappingContext mappingContext = new MongoMappingContext();
 //		mappingContext.setInitialEntitySet(new LinkedHashSet<>(
-//				Arrays.asList(org.springframework.data.util.Person.class, org.springframework.data.util.Address.class)));
+//				Arrays.asList(org.springframework.data.mongodb.xxx.Person.class, org.springframework.data.mongodb.xxx.Address.class)));
 //		mappingContext.initialize();
 //
 //		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext);
 //
-//		org.springframework.data.util.Person source = new org.springframework.data.util.Person("spring", "data");
-//		source.setAddress(new org.springframework.data.util.Address("the city", "never sleeps"));
+//		org.springframework.data.mongodb.xxx.Person source = new org.springframework.data.mongodb.xxx.Person("spring", "data");
+//		source.setAddress(new org.springframework.data.mongodb.xxx.Address("the city", "never sleeps"));
 //		source.setAge(10);
 //		source = source.withId(9876);
 //		source.setNicknames(Arrays.asList("tick", "trick", "track"));
@@ -2218,7 +2216,7 @@ public class MappingMongoConverterUnitTests {
 //
 //		stopWatch.start("read");
 //		for (org.bson.Document sourceDoc : sources) {
-//			assertThat(converter.read(org.springframework.data.util.Person.class, sourceDoc)).isEqualTo(source);
+//			assertThat(converter.read(org.springframework.data.mongodb.xxx.Person.class, sourceDoc)).isEqualTo(source);
 //		}
 //		stopWatch.stop();
 //
@@ -2231,14 +2229,14 @@ public class MappingMongoConverterUnitTests {
 	// ClassTypeInformation.warmCache(new PersonTypeInformation(), new AddressTypeInformation());
 	//
 	// MongoMappingContext mappingContext = new MongoMappingContext();
-	// mappingContext.setInitialEntitySet(new LinkedHashSet<>(Arrays.asList(org.springframework.data.util.Person.class,
-	// org.springframework.data.util.Address.class)));
+	// mappingContext.setInitialEntitySet(new LinkedHashSet<>(Arrays.asList(org.springframework.data.mongodb.xxx.Person.class,
+	// org.springframework.data.mongodb.xxx.Address.class)));
 	// mappingContext.initialize();
 	//
 	// MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext);
 	//
-	// org.springframework.data.util.Person source = new org.springframework.data.util.Person("spring", "data");
-	// source.setAddress(new org.springframework.data.util.Address("the city", "never sleeps"));
+	// org.springframework.data.mongodb.xxx.Person source = new org.springframework.data.mongodb.xxx.Person("spring", "data");
+	// source.setAddress(new org.springframework.data.mongodb.xxx.Address("the city", "never sleeps"));
 	// source.setAge(10);
 	// source.setId(9876);
 	// source.setNicknames(Arrays.asList("tick", "trick", "track"));
@@ -2252,11 +2250,11 @@ public class MappingMongoConverterUnitTests {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		mappingContext.setInitialEntitySet(new LinkedHashSet<>(
-				Arrays.asList(org.springframework.data.util.Person.class, org.springframework.data.util.Address.class)));
+				Arrays.asList(org.springframework.data.mongodb.buildtimetypeinfo.Person.class, org.springframework.data.mongodb.buildtimetypeinfo.Address.class)));
 		mappingContext.initialize();
 
-		org.springframework.data.util.Person source = new org.springframework.data.util.Person("spring", "data");
-		source.setAddress(new org.springframework.data.util.Address("the city", "never sleeps"));
+		org.springframework.data.mongodb.buildtimetypeinfo.Person source = new org.springframework.data.mongodb.buildtimetypeinfo.Person("spring", "data");
+		source.setAddress(new org.springframework.data.mongodb.buildtimetypeinfo.Address("the city", "never sleeps"));
 		source.setAge(10);
 		source = source.withId(9876);
 		source.setNicknames(Arrays.asList("tick", "trick", "track"));
@@ -2277,13 +2275,13 @@ public class MappingMongoConverterUnitTests {
 				new org.bson.Document("city", "the city").append("street", "never sleeps"));
 		assertThat(targetDocument).containsEntry("nicknames", Arrays.asList("tick", "trick", "track"));
 
-		org.springframework.data.util.Person targetEntity = converter.read(org.springframework.data.util.Person.class,
+		org.springframework.data.mongodb.buildtimetypeinfo.Person targetEntity = converter.read(org.springframework.data.mongodb.buildtimetypeinfo.Person.class,
 				targetDocument);
 		System.out.println();
 		System.out.println("targetEntity: " + targetEntity);
 		assertThat(targetEntity).isEqualTo(source);
 
-		BasicMongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(org.springframework.data.util.Person.class);
+		BasicMongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(org.springframework.data.mongodb.buildtimetypeinfo.Person.class);
 		assertThat(entity.getCollection()).isEqualTo("star-wars");
 	}
 
