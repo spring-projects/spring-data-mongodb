@@ -38,7 +38,7 @@ import java.util.function.Function;
  * @author Christoph Strobl
  * @since 2020/10
  */
-public interface AccessorFunctionProvider<S> {
+public interface AccessorFunctionAware<S> {
 
 	default boolean hasSetFunctionFor(String fieldName) {
 		return getSetFunctionFor(fieldName) != null;

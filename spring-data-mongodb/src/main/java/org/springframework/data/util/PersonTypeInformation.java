@@ -48,7 +48,7 @@ import org.springframework.data.mongodb.core.mapping.FieldType;
  * @author Christoph Strobl
  * @since 2020/10
  */
-public class PersonTypeInformation extends StaticTypeInformation<Person> {
+public class PersonTypeInformation extends DomainTypeInformation<Person> {
 
 	private static final PersonTypeInformation INSTANCE = new PersonTypeInformation();
 

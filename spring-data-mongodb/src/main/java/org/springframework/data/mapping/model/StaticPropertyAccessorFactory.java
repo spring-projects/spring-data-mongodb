@@ -56,7 +56,7 @@ public class StaticPropertyAccessorFactory implements PersistentPropertyAccessor
 	public <T> PersistentPropertyAccessor<T> getPropertyAccessor(PersistentEntity<?, ?> entity, T bean) {
 
 		System.out.println("Obtaining static property acessor for entity " + entity.getName());
-		return new StaticPropertyAccessor<>((AccessorFunctionProvider<T>) entity.getTypeInformation(), bean);
+		return new StaticPropertyAccessor<>((AccessorFunctionAware<T>) entity.getTypeInformation(), bean);
 	}
 
 	/*
@@ -66,7 +66,7 @@ public class StaticPropertyAccessorFactory implements PersistentPropertyAccessor
 	@Override
 	public boolean isSupported(PersistentEntity<?, ?> entity) {
 
-		boolean isStaticTypedEntity = entity.getTypeInformation() instanceof AccessorFunctionProvider;
+		boolean isStaticTypedEntity = entity.getTypeInformation() instanceof AccessorFunctionAware;
 		System.out.println(entity.getName() + " isStaticTypedEntity: " + isStaticTypedEntity);
 		return isStaticTypedEntity;
 	}
@@ -74,21 +74,21 @@ public class StaticPropertyAccessorFactory implements PersistentPropertyAccessor
 	static class StaticPropertyAccessor<T> implements PersistentPropertyAccessor<T> {
 
 		T bean;
-		AccessorFunctionProvider<T> accessorFunctionProvider;
+		AccessorFunctionAware<T> accessorFunctionAware;
 
-		public StaticPropertyAccessor(AccessorFunctionProvider<T> accessorFunctionProvider, T bean) {
+		public StaticPropertyAccessor(AccessorFunctionAware<T> accessorFunctionAware, T bean) {
 			this.bean = bean;
-			this.accessorFunctionProvider = accessorFunctionProvider;
+			this.accessorFunctionAware = accessorFunctionAware;
 		}
 
 		@Override
 		public void setProperty(PersistentProperty<?> property, @Nullable Object value) {
 
-			if (!accessorFunctionProvider.hasSetFunctionFor(property.getName())) {
+			if (!accessorFunctionAware.hasSetFunctionFor(property.getName())) {
 				return;
 			}
 
-			this.bean = accessorFunctionProvider.getSetFunctionFor(property.getName()).apply(bean, value);
+			this.bean = accessorFunctionAware.getSetFunctionFor(property.getName()).apply(bean, value);
 			System.out.println(
 					"setting value " + value + " via setter function for " + property.getName() + " resulting in " + bean);
 		}
@@ -97,11 +97,11 @@ public class StaticPropertyAccessorFactory implements PersistentPropertyAccessor
 		@Override
 		public Object getProperty(PersistentProperty<?> property) {
 
-			if (!accessorFunctionProvider.hasGetFunctionFor(property.getName())) {
+			if (!accessorFunctionAware.hasGetFunctionFor(property.getName())) {
 				return null;
 			}
 
-			Object value = accessorFunctionProvider.getGetFunctionFor(property.getName()).apply(bean);
+			Object value = accessorFunctionAware.getGetFunctionFor(property.getName()).apply(bean);
 			System.out.println("obtaining value " + value + " from getter function for " + property.getName());
 			return value;
 		}

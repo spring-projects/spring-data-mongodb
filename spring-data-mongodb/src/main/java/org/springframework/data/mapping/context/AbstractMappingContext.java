@@ -56,9 +56,9 @@ import org.springframework.data.mapping.model.StaticPropertyAccessorFactory;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.spel.ExtensionAwareEvaluationContextProvider;
 import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.DomainTypeInformation;
 import org.springframework.data.util.KotlinReflectionUtils;
 import org.springframework.data.util.Optionals;
-import org.springframework.data.util.StaticTypeInformation;
 import org.springframework.data.util.Streamable;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
@@ -374,10 +374,10 @@ public abstract class AbstractMappingContext<E extends MutablePersistentEntity<?
 			// Eagerly cache the entity as we might have to find it during recursive lookups.
 			persistentEntities.put(typeInformation, Optional.of(entity));
 
-			if (typeInformation instanceof StaticTypeInformation<?>) {
+			if (typeInformation instanceof DomainTypeInformation<?>) {
 
 				final E pEntity = entity;
-				((StaticTypeInformation<?>) typeInformation).doWithFields((fieldName, field) -> {
+				((DomainTypeInformation<?>) typeInformation).doWithFields((fieldName, field) -> {
 
 					System.out.println("Creating PersistentProperty for " + fieldName + " via static configuration.");
 					P target = createPersistentProperty(

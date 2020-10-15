@@ -37,7 +37,7 @@ import org.springframework.data.mapping.*;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.support.IsNewStrategy;
 import org.springframework.data.support.PersistableIsNewStrategy;
-import org.springframework.data.util.AnnotationProvider;
+import org.springframework.data.util.AnnotationAware;
 import org.springframework.data.util.Lazy;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.EvaluationContext;
@@ -119,8 +119,8 @@ public class BasicPersistentEntity<T, P extends PersistentProperty<P>> implement
 		this.propertyCache = new HashMap<>(16, 1f);
 
 		this.annotationCache = new ConcurrentReferenceHashMap<>(16, ReferenceType.WEAK);
-		if(information instanceof AnnotationProvider) {
-			for(Annotation annotation : ((AnnotationProvider)information).getAnnotations()) {
+		if(information instanceof AnnotationAware) {
+			for(Annotation annotation : ((AnnotationAware)information).getAnnotations()) {
 				annotationCache.put(annotation.annotationType(), Optional.of(annotation));
 			}
 		}

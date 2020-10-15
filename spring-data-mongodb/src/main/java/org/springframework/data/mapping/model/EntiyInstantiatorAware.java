@@ -37,7 +37,7 @@ import org.springframework.lang.Nullable;
  * @author Christoph Strobl
  * @since 2020/10
  */
-public interface EntiyInstantiatorProvider {
+public interface EntiyInstantiatorAware {
 
 	@Nullable
 	EntityInstantiator getEntityInstantiator();

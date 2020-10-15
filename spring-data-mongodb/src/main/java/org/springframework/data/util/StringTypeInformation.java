@@ -35,7 +35,7 @@ package org.springframework.data.util;
  * @author Christoph Strobl
  * @since 2020/10
  */
-public class StringTypeInformation extends StaticTypeInformation<String> {
+public class StringTypeInformation extends DomainTypeInformation<String> {
 
 	private static final StringTypeInformation INSTANCE = new StringTypeInformation();
 

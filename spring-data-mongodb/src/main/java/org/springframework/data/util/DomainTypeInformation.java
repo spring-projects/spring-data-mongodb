@@ -45,9 +45,9 @@ import java.util.function.Function;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PreferredConstructor;
 import org.springframework.data.mapping.PreferredConstructorProvider;
-import org.springframework.data.mapping.model.AccessorFunctionProvider;
+import org.springframework.data.mapping.model.AccessorFunctionAware;
 import org.springframework.data.mapping.model.EntityInstantiator;
-import org.springframework.data.mapping.model.EntiyInstantiatorProvider;
+import org.springframework.data.mapping.model.EntiyInstantiatorAware;
 import org.springframework.data.mapping.model.PersistentPropertyAccessorFactory;
 import org.springframework.data.mapping.model.PersistentPropertyAccessorFactoryProvider;
 import org.springframework.data.mapping.model.StaticPropertyAccessorFactory;
@@ -60,16 +60,16 @@ import org.springframework.util.ObjectUtils;
  * @author Christoph Strobl
  * @since 2020/10
  */
-public class StaticTypeInformation<S> extends ClassTypeInformation<S>
-		implements AnnotationProvider, EntiyInstantiatorProvider, PreferredConstructorProvider<S>,
-		PersistentPropertyAccessorFactoryProvider, AccessorFunctionProvider<S> {
+public class DomainTypeInformation<S> extends ClassTypeInformation<S>
+		implements AnnotationAware, EntiyInstantiatorAware, PreferredConstructorProvider<S>,
+		PersistentPropertyAccessorFactoryProvider, AccessorFunctionAware<S> {
 
 	private final Class<S> type;
 
 	@Nullable private final TypeInformation<?> componentType;
 	@Nullable private final TypeInformation<?> keyType;
 
-	private StaticTypeInformation<?> superTypeInformation;
+	private DomainTypeInformation<?> superTypeInformation;
 	private List<TypeInformation<?>> typeArguments;
 	private MultiValueMap<Class<? extends Annotation>, Annotation> annotations;
 
@@ -78,11 +78,11 @@ public class StaticTypeInformation<S> extends ClassTypeInformation<S>
 	private EntityInstantiator instantiator;
 	private PreferredConstructor<S, ?> preferredConstructor;
 
-	public StaticTypeInformation(Class<S> type) {
+	public DomainTypeInformation(Class<S> type) {
 		this(type, null, null);
 	}
 
-	public StaticTypeInformation(Class<S> type, @Nullable TypeInformation<?> componentType,
+	public DomainTypeInformation(Class<S> type, @Nullable TypeInformation<?> componentType,
 			@Nullable TypeInformation<?> keyType) {
 
 		super(type, componentType, keyType);
@@ -224,7 +224,7 @@ public class StaticTypeInformation<S> extends ClassTypeInformation<S>
 		if (!super.equals(o))
 			return false;
 
-		StaticTypeInformation<?> that = (StaticTypeInformation<?>) o;
+		DomainTypeInformation<?> that = (DomainTypeInformation<?>) o;
 
 		if (!ObjectUtils.nullSafeEquals(type, that.type)) {
 			return false;

@@ -44,7 +44,7 @@ import org.springframework.data.mapping.model.ParameterValueProvider;
  * @author Christoph Strobl
  * @since 2020/10
  */
-public class AddressTypeInformation extends StaticTypeInformation<Address> {
+public class AddressTypeInformation extends DomainTypeInformation<Address> {
 
 	private static final AddressTypeInformation INSTANCE = new AddressTypeInformation();
 

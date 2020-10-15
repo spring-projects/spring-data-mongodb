@@ -91,8 +91,8 @@ public class EntityInstantiators {
 
 		if (!customInstantiators.containsKey(type)) {
 
-			if (entity.getTypeInformation() instanceof EntiyInstantiatorProvider) {
-				return ((EntiyInstantiatorProvider) entity.getTypeInformation()).getEntiyInstantiatorOrDefault(fallback);
+			if (entity.getTypeInformation() instanceof EntiyInstantiatorAware) {
+				return ((EntiyInstantiatorAware) entity.getTypeInformation()).getEntiyInstantiatorOrDefault(fallback);
 			}
 			return fallback;
 		}

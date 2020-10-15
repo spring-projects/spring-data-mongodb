@@ -22,7 +22,7 @@ import java.util.List;
  * @author Christoph Strobl
  * @since 2020/10
  */
-public interface AnnotationProvider {
+public interface AnnotationAware {
 
 	List<Annotation> getAnnotations();
 

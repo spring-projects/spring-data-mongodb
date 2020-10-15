@@ -37,7 +37,7 @@ import java.util.List;
  * @author Christoph Strobl
  * @since 2020/10
  */
-public class ListTypeInformation<S> extends StaticTypeInformation<List<S>> {
+public class ListTypeInformation<S> extends DomainTypeInformation<List<S>> {
 
 	public ListTypeInformation(TypeInformation<S> componentType) {
 		super((Class) List.class, componentType, null);

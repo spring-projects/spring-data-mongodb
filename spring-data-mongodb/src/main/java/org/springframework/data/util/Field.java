@@ -47,7 +47,7 @@ import org.springframework.util.MultiValueMap;
  * @author Christoph Strobl
  * @since 2020/10
  */
-public class Field<T, O> implements AnnotationProvider {
+public class Field<T, O> implements AnnotationAware {
 
 	@Nullable Class<O> owner;
 	String propertyName;
@@ -82,11 +82,11 @@ public class Field<T, O> implements AnnotationProvider {
 	}
 
 	public static <S> Field<Long, S> int64(String propertyName) {
-		return new Field<>(propertyName, StaticTypeInformation.from(Long.class));
+		return new Field<>(propertyName, DomainTypeInformation.from(Long.class));
 	}
 
 	public static <S> Field<Integer, S> int32(String propertyName) {
-		return new Field<>(propertyName, StaticTypeInformation.from(Integer.class));
+		return new Field<>(propertyName, DomainTypeInformation.from(Integer.class));
 	}
 
 	public static <S, T> Field<T, S> type(String propertyName, TypeInformation<T> type) {
