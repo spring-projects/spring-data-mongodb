@@ -1884,8 +1884,7 @@ public class MappingMongoConverterUnitTests {
 
 		WithNestedLists result = converter.read(WithNestedLists.class, document);
 
-		assertThat(result.nestedFloats).hasSize(1);
-		assertThat(result.nestedFloats).isEqualTo(new float[][][] { { { 1.0f, 2.0f } } });
+		assertThat(result.nestedFloats).hasDimensions(1, 1).isEqualTo(new float[][][] { { { 1.0f, 2.0f } } });
 	}
 
 	@Test // DATAMONGO-1992
