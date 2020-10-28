@@ -1,6 +1,13 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.1.0 (2020-10-28)
+-------------------------------------
+* DATAMONGO-2642 - Upgrade to MongoDB Driver 4.1.1.
+* DATAMONGO-2639 - Release 3.1 GA (2020.0.0).
+* DATAMONGO-2638 - Fix documentation issues.
+
+
 Changes in version 3.0.5.RELEASE (2020-10-28)
 ---------------------------------------------
 * DATAMONGO-2643 - Adopt to AssertJ API changes.
@@ -3168,6 +3175,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
