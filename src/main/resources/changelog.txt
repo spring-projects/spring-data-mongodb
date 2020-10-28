@@ -1,6 +1,14 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.0.5.RELEASE (2020-10-28)
+---------------------------------------------
+* DATAMONGO-2643 - Adopt to AssertJ API changes.
+* DATAMONGO-2638 - Fix documentation issues.
+* DATAMONGO-2633 - @Query annotation does not support $centerSphere.
+* DATAMONGO-2625 - Release 3.0.5 (Neumann SR5).
+
+
 Changes in version 2.2.11.RELEASE (2020-10-28)
 ----------------------------------------------
 * DATAMONGO-2638 - Fix documentation issues.
@@ -3160,6 +3168,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
