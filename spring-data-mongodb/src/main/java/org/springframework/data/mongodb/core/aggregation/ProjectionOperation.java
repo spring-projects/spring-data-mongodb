@@ -264,7 +264,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		return new Document(getOperator(), fieldObject);
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
 	 */
@@ -1448,6 +1448,14 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 
 					if (Aggregation.SystemVariable.isReferingToSystemVariable(field.getTarget())) {
 						return field.getTarget();
+					}
+
+					if (field.getTarget().equals(Fields.UNDERSCORE_ID)) {
+						try {
+							return context.getReference(field).getReferenceValue();
+						} catch (java.lang.IllegalArgumentException e) {
+							return Fields.UNDERSCORE_ID_REF;
+						}
 					}
 
 					// check whether referenced field exists in the context
