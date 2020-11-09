@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
+import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -2112,7 +2113,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			AggregationOperationContext context = agg instanceof TypedAggregation
 					? new TypeBasedAggregationOperationContext(((TypedAggregation<?>) agg).getInputType(),
 							getConverter().getMappingContext(), queryMapper)
-					: Aggregation.DEFAULT_CONTEXT;
+					: new RelaxedTypeBasedAggregationOperationContext(Object.class, mappingContext, queryMapper);
 
 			return agg.toPipeline(new PrefixingDelegatingAggregationOperationContext(context, "fullDocument",
 					Arrays.asList("operationType", "fullDocument", "documentKey", "updateDescription", "ns")));

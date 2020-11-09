@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bson.Document;
+import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentPropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFieldReference;
@@ -29,6 +30,7 @@ import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldRefe
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.util.Lazy;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -46,6 +48,7 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 	private final Class<?> type;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private final QueryMapper mapper;
+	private final Lazy<MongoPersistentEntity<?>> entity;
 
 	/**
 	 * Creates a new {@link TypeBasedAggregationOperationContext} for the given type, {@link MappingContext} and
@@ -65,6 +68,7 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 		this.type = type;
 		this.mappingContext = mappingContext;
 		this.mapper = mapper;
+		this.entity = Lazy.of(() -> mappingContext.getPersistentEntity(type));
 	}
 
 	/*
@@ -151,10 +155,14 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 
 	protected FieldReference getReferenceFor(Field field) {
 
+		if(entity.getNullable() == null) {
+			return new DirectFieldReference(new ExposedField(field, true));
+		}
+
 		PersistentPropertyPath<MongoPersistentProperty> propertyPath = mappingContext
-				.getPersistentPropertyPath(field.getTarget(), type);
+					.getPersistentPropertyPath(field.getTarget(), type);
 		Field mappedField = field(field.getName(),
-				propertyPath.toDotPath(MongoPersistentProperty.PropertyToFieldNameConverter.INSTANCE));
+					propertyPath.toDotPath(MongoPersistentProperty.PropertyToFieldNameConverter.INSTANCE));
 
 		return new DirectFieldReference(new ExposedField(mappedField, true));
 	}
