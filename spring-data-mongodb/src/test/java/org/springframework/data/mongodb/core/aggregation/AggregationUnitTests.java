@@ -29,6 +29,11 @@ import org.bson.Document;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond;
+import org.springframework.data.mongodb.core.aggregation.ProjectionOperationUnitTests.BookWithFieldAnnotation;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
+import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 /**
@@ -580,6 +585,17 @@ public class AggregationUnitTests {
 
 		assertThat(extractPipelineElement(untyped, 1, "$project")).isEqualTo(Document.parse(
 				"{\"attributeRecordArrays\": {\"$reduce\": {\"input\": \"$attributeRecordArrays\", \"initialValue\": [], \"in\": {\"$concatArrays\": [\"$$value\", \"$$this\"]}}}}"));
+	}
+
+	@Test // DATAMONGO-2644
+	void projectOnIdIsAlwaysValid() {
+
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		Document target = new Aggregation(bucket("start"), project("_id")).toDocument("collection-1",
+				new RelaxedTypeBasedAggregationOperationContext(BookWithFieldAnnotation.class, mappingContext,
+						new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext))));
+
+		assertThat(extractPipelineElement(target, 1, "$project")).isEqualTo(Document.parse(" { \"_id\" : \"$_id\" }"));
 	}
 
 	private Document extractPipelineElement(Document agg, int index, String operation) {
