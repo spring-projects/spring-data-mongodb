@@ -1928,6 +1928,22 @@ public class AggregationTests {
 		assertThat(results.getRawResults()).isEmpty();
 	}
 
+	@Test // DATAMONGO-2635
+	void mapsEnumsInMatchClauseUsingInCriteriaCorrectly() {
+
+		WithEnum source = new WithEnum();
+		source.enumValue = MyEnum.TWO;
+		source.id = "id-1";
+
+		mongoTemplate.save(source);
+
+		Aggregation agg = newAggregation(match(where("enumValue").in(Collections.singletonList(MyEnum.TWO))));
+
+		AggregationResults<Document> results = mongoTemplate.aggregate(agg, mongoTemplate.getCollectionName(WithEnum.class),
+				Document.class);
+		assertThat(results.getMappedResults()).hasSize(1);
+	}
+
 	private void createUsersWithReferencedPersons() {
 
 		mongoTemplate.dropCollection(User.class);
@@ -2239,5 +2255,16 @@ public class AggregationTests {
 	static class ComplexId {
 		String p1;
 		String p2;
+	}
+
+	static enum MyEnum {
+		ONE, TWO
+	}
+
+	@lombok.Data
+	static class WithEnum {
+
+		@Id String id;
+		MyEnum enumValue;
 	}
 }
