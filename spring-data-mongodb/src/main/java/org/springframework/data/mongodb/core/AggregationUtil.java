@@ -77,7 +77,7 @@ class AggregationUtil {
 		}
 
 		if (!(aggregation instanceof TypedAggregation)) {
-			return Aggregation.DEFAULT_CONTEXT;
+			return new RelaxedTypeBasedAggregationOperationContext(Object.class, mappingContext, queryMapper);
 		}
 
 		Class<?> inputType = ((TypedAggregation) aggregation).getInputType();
@@ -98,7 +98,7 @@ class AggregationUtil {
 	 */
 	List<Document> createPipeline(Aggregation aggregation, AggregationOperationContext context) {
 
-		if (!ObjectUtils.nullSafeEquals(context, Aggregation.DEFAULT_CONTEXT)) {
+		if (ObjectUtils.nullSafeEquals(context, Aggregation.DEFAULT_CONTEXT)) {
 			return aggregation.toPipeline(context);
 		}
 

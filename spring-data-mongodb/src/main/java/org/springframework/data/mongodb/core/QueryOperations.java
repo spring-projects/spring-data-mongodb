@@ -707,10 +707,9 @@ class QueryOperations {
 		 */
 		List<Document> getUpdatePipeline(@Nullable Class<?> domainType) {
 
-			AggregationOperationContext context = domainType != null
-					? new RelaxedTypeBasedAggregationOperationContext(domainType, mappingContext, queryMapper)
-					: Aggregation.DEFAULT_CONTEXT;
+			Class<?> type = domainType != null ? domainType : Object.class;
 
+			AggregationOperationContext context = new RelaxedTypeBasedAggregationOperationContext(type, mappingContext, queryMapper);
 			return aggregationUtil.createPipeline((AggregationUpdate) update, context);
 		}
 
