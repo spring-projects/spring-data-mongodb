@@ -1450,6 +1450,14 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 						return field.getTarget();
 					}
 
+					if(field.getTarget().equals(Fields.UNDERSCORE_ID)) {
+						try {
+							return context.getReference(field).getReferenceValue();
+						} catch (java.lang.IllegalArgumentException e) {
+							return Fields.UNDERSCORE_ID_REF;
+						}
+					}
+
 					// check whether referenced field exists in the context
 					return context.getReference(field).getReferenceValue();
 
