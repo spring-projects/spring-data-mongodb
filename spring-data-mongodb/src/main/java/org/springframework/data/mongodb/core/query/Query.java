@@ -373,7 +373,7 @@ public class Query {
 	}
 
 	/**
-	 * Add a comment to the query that is propagated to the profile log.
+	 * Set a allowDiskUse to the query that is propagated to the profile log.
 	 *
 	 * @param allowDiskUse must not be {@literal null}.
 	 * @return this.
