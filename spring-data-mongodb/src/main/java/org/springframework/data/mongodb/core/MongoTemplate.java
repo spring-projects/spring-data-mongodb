@@ -3289,6 +3289,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 						cursorToUse = cursorToUse.batchSize(meta.getCursorBatchSize());
 					}
 
+					if (meta.getAllowDiskUse() != null) {
+						cursorToUse = cursorToUse.allowDiskUse(meta.getAllowDiskUse());
+					}
+
 					for (Meta.CursorOption option : meta.getFlags()) {
 
 						switch (option) {
