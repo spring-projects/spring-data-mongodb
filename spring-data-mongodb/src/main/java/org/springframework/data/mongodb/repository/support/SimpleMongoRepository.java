@@ -51,6 +51,7 @@ import com.mongodb.client.result.DeleteResult;
  * @author Thomas Darimont
  * @author Mark Paluch
  * @author Mehran Behnam
+ * @author Jens Schauder
  */
 public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
@@ -182,9 +183,17 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	@Override
 	public void deleteAll(Iterable<? extends T> entities) {
 
-		Assert.notNull(entities, "The given Iterable of entities not be null!");
+		Assert.notNull(entities, "The given Iterable of entities must not be null!");
 
 		entities.forEach(this::delete);
+	}
+
+	@Override
+	public void deleteAllById(Iterable<? extends ID> ids) {
+
+		Assert.notNull(ids, "The given Iterable of ids must not be null!");
+
+		ids.forEach(this::deleteById);
 	}
 
 	/*

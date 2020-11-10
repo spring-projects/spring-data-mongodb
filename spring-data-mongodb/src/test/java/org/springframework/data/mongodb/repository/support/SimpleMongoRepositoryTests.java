@@ -15,11 +15,11 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
+import static java.util.Arrays.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.domain.ExampleMatcher.*;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -58,6 +58,7 @@ import org.springframework.transaction.support.TransactionTemplate;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Jens Schauder
  */
 @ExtendWith({ MongoTemplateExtension.class, MongoServerCondition.class })
 public class SimpleMongoRepositoryTests {
@@ -85,11 +86,11 @@ public class SimpleMongoRepositoryTests {
 		leroi = new Person("Leroi", "Moore", 41);
 		alicia = new Person("Alicia", "Keys", 30, Sex.FEMALE);
 
-		all = repository.saveAll(Arrays.asList(oliver, dave, carter, boyd, stefan, leroi, alicia));
+		all = repository.saveAll(asList(oliver, dave, carter, boyd, stefan, leroi, alicia));
 	}
 
 	@Test
-	public void findALlFromCustomCollectionName() {
+	public void findAllFromCustomCollectionName() {
 		assertThat(repository.findAll()).hasSize(all.size());
 	}
 
@@ -384,7 +385,7 @@ public class SimpleMongoRepositoryTests {
 
 		repository.deleteAll();
 
-		repository.saveAll(Arrays.asList(first, second));
+		repository.saveAll(asList(first, second));
 
 		assertThat(repository.findAll()).containsExactlyInAnyOrder(first, second);
 	}
@@ -433,6 +434,17 @@ public class SimpleMongoRepositoryTests {
 		});
 
 		assertThat(exists).isTrue();
+	}
+
+	@Test // DATAMONGO-2652
+	public void deleteAllByIds() {
+
+		repository.deleteAllById(asList(dave.getId(), carter.getId()));
+
+		assertThat(repository.findAll()) //
+				.hasSize(all.size() - 2) //
+				.doesNotContain(dave) //
+				.doesNotContain(carter);
 	}
 
 	private void assertThatAllReferencePersonsWereStoredCorrectly(Map<String, Person> references, List<Person> saved) {
