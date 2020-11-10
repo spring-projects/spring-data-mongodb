@@ -156,6 +156,7 @@ import com.mongodb.client.result.UpdateResult;
  * @author Michael J. Simons
  * @author Roman Puchkovskiy
  * @author Yadhukrishna S Pai
+ * @author Anton Barkan
  */
 public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider {
 
@@ -3287,6 +3288,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 					if (meta.getCursorBatchSize() != null) {
 						cursorToUse = cursorToUse.batchSize(meta.getCursorBatchSize());
+					}
+
+					if (meta.getAllowDiskUse() != null) {
+						cursorToUse = cursorToUse.allowDiskUse(meta.getAllowDiskUse());
 					}
 
 					for (Meta.CursorOption option : meta.getFlags()) {

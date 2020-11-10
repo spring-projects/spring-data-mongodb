@@ -46,6 +46,7 @@ import org.springframework.util.Assert;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Anton Barkan
  */
 public class Query {
 
@@ -369,6 +370,19 @@ public class Query {
 	public Query comment(String comment) {
 
 		meta.setComment(comment);
+		return this;
+	}
+
+	/**
+	 * Set a allowDiskUse to the query that is propagated to the profile log.
+	 *
+	 * @param allowDiskUse must not be {@literal null}.
+	 * @return this.
+	 * @see Meta#setAllowDiskUse(Boolean)
+	 */
+	public Query allowDiskUse(Boolean allowDiskUse) {
+
+		meta.setAllowDiskUse(allowDiskUse);
 		return this;
 	}
 
