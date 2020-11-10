@@ -61,6 +61,7 @@ class QueryCursorPreparerUnitTests {
 		when(factory.getCodecRegistry()).thenReturn(MongoClientSettings.getDefaultCodecRegistry());
 		when(cursor.batchSize(anyInt())).thenReturn(cursor);
 		when(cursor.comment(anyString())).thenReturn(cursor);
+		when(cursor.allowDiskUse(anyBoolean())).thenReturn(cursor);
 		when(cursor.maxTime(anyLong(), any())).thenReturn(cursor);
 		when(cursor.hint(any())).thenReturn(cursor);
 		when(cursor.noCursorTimeout(anyBoolean())).thenReturn(cursor);
@@ -131,6 +132,15 @@ class QueryCursorPreparerUnitTests {
 		prepare(query);
 
 		verify(cursor).comment("spring data");
+	}
+
+	@Test
+	void appliesAllowDiskUseCorrectly() {
+
+		Query query = query(where("foo").is("bar")).allowDiskUse(true);
+		prepare(query);
+
+		verify(cursor).allowDiskUse(true);
 	}
 
 	// TODO
