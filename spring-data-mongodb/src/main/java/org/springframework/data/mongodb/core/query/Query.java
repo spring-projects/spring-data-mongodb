@@ -46,6 +46,7 @@ import org.springframework.util.Assert;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Anton Barkan
  */
 public class Query {
 
