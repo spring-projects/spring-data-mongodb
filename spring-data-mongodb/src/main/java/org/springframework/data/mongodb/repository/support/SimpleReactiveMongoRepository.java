@@ -17,10 +17,8 @@ package org.springframework.data.mongodb.repository.support;
 
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,6 +38,9 @@ import org.springframework.util.Assert;
 
 import com.mongodb.client.result.DeleteResult;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 /**
  * Reactive repository base implementation for Mongo.
  *
@@ -47,6 +48,7 @@ import com.mongodb.client.result.DeleteResult;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Ruben J Garcia
+ * @author Jens Schauder
  * @since 2.0
  */
 public class SimpleReactiveMongoRepository<T, ID extends Serializable> implements ReactiveMongoRepository<T, ID> {
@@ -401,7 +403,28 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		Assert.notNull(entities, "The given Iterable of entities must not be null!");
 
-		return Flux.fromIterable(entities).flatMap(this::delete).then();
+		Collection<?> idCollection = StreamUtils.createStreamFromIterator(entities.iterator())
+				.map(entityInformation::getId)
+				.collect(Collectors.toList());
+
+		Criteria idsInCriteria = where(entityInformation.getIdAttribute()).in(idCollection);
+
+		return mongoOperations
+				.remove(new Query(idsInCriteria), entityInformation.getJavaType(), entityInformation.getCollectionName())
+				.then();
+	}
+
+	@Override
+	public Mono<Void> deleteAllById(Iterable<? extends ID> ids) {
+
+		Assert.notNull(ids, "The given Iterable of ids must not be null!");
+
+		Collection<?> idCollection = StreamUtils.createStreamFromIterator(ids.iterator()).collect(Collectors.toList());
+		Criteria idsInCriteria = where(entityInformation.getIdAttribute()).in(idCollection);
+
+		return mongoOperations
+				.remove(new Query(idsInCriteria), entityInformation.getJavaType(), entityInformation.getCollectionName())
+				.then();
 	}
 
 	/*

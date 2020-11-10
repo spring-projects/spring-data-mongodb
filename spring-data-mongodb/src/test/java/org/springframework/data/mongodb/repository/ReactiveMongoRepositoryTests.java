@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.repository;
 
+import static java.util.Arrays.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.domain.Sort.Direction.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
@@ -66,7 +67,6 @@ import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor;
 import org.springframework.data.repository.Repository;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -77,10 +77,12 @@ import com.mongodb.reactivestreams.client.MongoClient;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Jens Schauder
  */
 @ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 public class ReactiveMongoRepositoryTests {
 
+	public static final int PERSON_COUNT = 7;
 	static @Client MongoClient mongoClient;
 
 	@Autowired ReactiveMongoTemplate template;
@@ -154,17 +156,17 @@ public class ReactiveMongoRepositoryTests {
 		dave = new Person("Dave", "Matthews", 42);
 		oliver = new Person("Oliver August", "Matthews", 4);
 		carter = new Person("Carter", "Beauford", 49);
-		carter.setSkills(Arrays.asList("Drums", "percussion", "vocals"));
+		carter.setSkills(asList("Drums", "percussion", "vocals"));
 		Thread.sleep(10);
 		boyd = new Person("Boyd", "Tinsley", 45);
-		boyd.setSkills(Arrays.asList("Violin", "Electric Violin", "Viola", "Mandolin", "Vocals", "Guitar"));
+		boyd.setSkills(asList("Violin", "Electric Violin", "Viola", "Mandolin", "Vocals", "Guitar"));
 		stefan = new Person("Stefan", "Lessard", 34);
 		leroi = new Person("Leroi", "Moore", 41);
 
 		alicia = new Person("Alicia", "Keys", 30, Sex.FEMALE);
 
-		repository.saveAll(Arrays.asList(oliver, carter, boyd, stefan, leroi, alicia, dave)).as(StepVerifier::create) //
-				.expectNextCount(7) //
+		repository.saveAll(asList(oliver, carter, boyd, stefan, leroi, alicia, dave)).as(StepVerifier::create) //
+				.expectNextCount(PERSON_COUNT) //
 				.verifyComplete();
 	}
 
@@ -411,7 +413,7 @@ public class ReactiveMongoRepositoryTests {
 
 		leroi.id = null;
 		boyd.id = null;
-		contactRepository.saveAll(Arrays.asList(leroi, boyd)) //
+		contactRepository.saveAll(asList(leroi, boyd)) //
 				.as(StepVerifier::create) //
 				.expectNextCount(2) //
 				.verifyComplete();
@@ -430,7 +432,7 @@ public class ReactiveMongoRepositoryTests {
 	@Test // DATAMONGO-2182
 	public void shouldFindPersonsWhenUsingQueryDslPerdicatedOnIdProperty() {
 
-		repository.findAll(person.id.in(Arrays.asList(dave.id, carter.id))) //
+		repository.findAll(person.id.in(asList(dave.id, carter.id))) //
 				.collectList() //
 				.as(StepVerifier::create) //
 				.assertNext(actual -> {
@@ -468,7 +470,7 @@ public class ReactiveMongoRepositoryTests {
 							.contains(new PersonAggregate("Tinsley", "Boyd")) //
 							.contains(new PersonAggregate("Beauford", "Carter")) //
 							.contains(new PersonAggregate("Moore", "Leroi")) //
-							.contains(new PersonAggregate("Matthews", Arrays.asList("Dave", "Oliver August")));
+							.contains(new PersonAggregate("Matthews", asList("Dave", "Oliver August")));
 				}).verifyComplete();
 	}
 
@@ -484,7 +486,7 @@ public class ReactiveMongoRepositoryTests {
 									new PersonAggregate("Beauford", "Carter"), //
 									new PersonAggregate("Keys", "Alicia"), //
 									new PersonAggregate("Lessard", "Stefan"), //
-									new PersonAggregate("Matthews", Arrays.asList("Dave", "Oliver August")), //
+									new PersonAggregate("Matthews", asList("Dave", "Oliver August")), //
 									new PersonAggregate("Moore", "Leroi"), //
 									new PersonAggregate("Tinsley", "Boyd"));
 				}) //
@@ -501,7 +503,7 @@ public class ReactiveMongoRepositoryTests {
 					assertThat(actual) //
 							.containsExactly( //
 									new PersonAggregate("Lessard", "Stefan"), //
-									new PersonAggregate("Matthews", Arrays.asList("Dave", "Oliver August")));
+									new PersonAggregate("Matthews", asList("Dave", "Oliver August")));
 				}) //
 				.verifyComplete();
 	}
@@ -576,7 +578,7 @@ public class ReactiveMongoRepositoryTests {
 		Person p3 = new Person(firstname, null);
 		p3.setEmail("p3@example.com");
 
-		repository.saveAll(Arrays.asList(p1, p2, p3)).then().as(StepVerifier::create).verifyComplete();
+		repository.saveAll(asList(p1, p2, p3)).then().as(StepVerifier::create).verifyComplete();
 
 		repository.projectToLastnameAndRemoveId(firstname) //
 				.as(StepVerifier::create) //
@@ -614,6 +616,18 @@ public class ReactiveMongoRepositoryTests {
 
 		repository.deleteSinglePersonByLastname("dorfuaeB") //
 				.as(StepVerifier::create) //
+				.verifyComplete();
+	}
+
+	@Test // DATAMONGO-2652
+	public void deleteAllById() {
+
+		repository.deleteAllById(asList(carter.id, dave.id)) //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+
+		repository.count().as(StepVerifier::create) //
+				.expectNext(PERSON_COUNT - 2L) //
 				.verifyComplete();
 	}
 
