@@ -1,6 +1,13 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.1.1 (2020-11-11)
+-------------------------------------
+* DATAMONGO-2648 - Release 3.1.1 (2020.0.1).
+* DATAMONGO-2644 - Invalid reference '_id'! Error In spring data mongodb.
+* DATAMONGO-2635 - Enums Don't Properly Serialize In Aggregation Pipeline Facet.
+
+
 Changes in version 3.1.0 (2020-10-28)
 -------------------------------------
 * DATAMONGO-2642 - Upgrade to MongoDB Driver 4.1.1.
@@ -3175,6 +3182,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
