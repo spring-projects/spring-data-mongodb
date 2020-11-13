@@ -47,6 +47,7 @@ import com.mongodb.client.result.DeleteResult;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Ruben J Garcia
+ * @author Jens Schauder
  * @since 2.0
  */
 public class SimpleReactiveMongoRepository<T, ID extends Serializable> implements ReactiveMongoRepository<T, ID> {
@@ -402,6 +403,14 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		Assert.notNull(entities, "The given Iterable of entities must not be null!");
 
 		return Flux.fromIterable(entities).flatMap(this::delete).then();
+	}
+
+	@Override
+	public Mono<Void> deleteAllById(Iterable<? extends ID> ids) {
+
+		Assert.notNull(ids, "The given Iterable of ids must not be null!");
+
+		return Flux.fromIterable(ids).flatMap(this::deleteById).then();
 	}
 
 	/*
