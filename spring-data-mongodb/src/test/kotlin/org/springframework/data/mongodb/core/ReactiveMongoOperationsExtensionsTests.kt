@@ -19,6 +19,8 @@ import example.first.First
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Test
+import org.springframework.data.mongodb.core.aggregation.Aggregation
+import org.springframework.data.mongodb.core.aggregation.TypedAggregation
 import org.springframework.data.mongodb.core.query.NearQuery
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.Update
@@ -598,7 +600,6 @@ class ReactiveMongoOperationsExtensionsTests {
 		verify { operations.findDistinct(query, "field", "collection", First::class.java, String::class.java) }
 	}
 
-
 	@Test // DATAMONGO-1761
 	@Suppress("DEPRECATION")
 	fun `findDistinct(Query, String,  KClass) should call java counterpart`() {
@@ -607,5 +608,41 @@ class ReactiveMongoOperationsExtensionsTests {
 
 		operations.findDistinct<String>(query, "field", First::class)
 		verify { operations.findDistinct(query, "field", First::class.java, String::class.java) }
+	}
+
+	@Test
+	fun `aggregate(TypedAggregation, String, KClass) should call java counterpart`() {
+
+		val aggregation = mockk<TypedAggregation<String>>()
+
+		operations.aggregate<First>(aggregation, "foo")
+		verify { operations.aggregate(aggregation, "foo", First::class.java) }
+	}
+
+	@Test
+	fun `aggregate(TypedAggregation, KClass) should call java counterpart`() {
+
+		val aggregation = mockk<TypedAggregation<String>>()
+
+		operations.aggregate<First>(aggregation)
+		verify { operations.aggregate(aggregation, First::class.java) }
+	}
+
+	@Test
+	fun `aggregate(Aggregation, KClass) should call java counterpart`() {
+
+		val aggregation = mockk<Aggregation>()
+
+		operations.aggregate<First>(aggregation, String::class)
+		verify { operations.aggregate(aggregation, String::class.java, First::class.java) }
+	}
+
+	@Test
+	fun `aggregate(Aggregation, String) should call java counterpart`() {
+
+		val aggregation = mockk<Aggregation>()
+
+		operations.aggregate<First>(aggregation, "foo")
+		verify { operations.aggregate(aggregation, "foo", First::class.java) }
 	}
 }
