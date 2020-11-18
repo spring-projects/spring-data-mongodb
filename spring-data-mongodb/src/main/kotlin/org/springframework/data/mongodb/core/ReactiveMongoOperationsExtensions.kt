@@ -20,6 +20,8 @@ import com.mongodb.client.result.UpdateResult
 import com.mongodb.reactivestreams.client.MongoCollection
 import org.bson.Document
 import org.springframework.data.geo.GeoResult
+import org.springframework.data.mongodb.core.aggregation.Aggregation
+import org.springframework.data.mongodb.core.aggregation.TypedAggregation
 import org.springframework.data.mongodb.core.index.ReactiveIndexOperations
 import org.springframework.data.mongodb.core.query.NearQuery
 import org.springframework.data.mongodb.core.query.Query
@@ -209,6 +211,43 @@ inline fun <reified T : Any> ReactiveMongoOperations.findDistinct(query: Query, 
 inline fun <reified T : Any, reified E : Any> ReactiveMongoOperations.findDistinct(query: Query, field: String, collectionName: String? = null): Flux<T> =
 		if (collectionName != null) findDistinct(query, field, collectionName, E::class.java, T::class.java)
 		else findDistinct(query, field, E::class.java, T::class.java)
+
+
+/**
+ * Extension for [ReactiveMongoOperations.aggregate] leveraging reified type parameters.
+ *
+ * @author Wonwoo Lee
+ * @since 3.1
+ */
+inline fun <reified T : Any> ReactiveMongoOperations.aggregate(aggregation: TypedAggregation<*>, collectionName: String): Flux<T> =
+		this.aggregate(aggregation, collectionName, T::class.java)
+
+/**
+ * Extension for [ReactiveMongoOperations.aggregate] leveraging reified type parameters.
+ *
+ * @author Wonwoo Lee
+ * @since 3.1
+ */
+inline fun <reified T : Any> ReactiveMongoOperations.aggregate(aggregation: TypedAggregation<*>): Flux<T> =
+		this.aggregate(aggregation, T::class.java)
+
+/**
+ * Extension for [ReactiveMongoOperations.aggregate] leveraging reified type parameters.
+ *
+ * @author Wonwoo Lee
+ * @since 3.1
+ */
+inline fun <reified T : Any> ReactiveMongoOperations.aggregate(aggregation: Aggregation, entityClass: KClass<*>): Flux<T> =
+		this.aggregate(aggregation, entityClass.java, T::class.java)
+
+/**
+ * Extension for [ReactiveMongoOperations.aggregate] leveraging reified type parameters.
+ *
+ * @author Wonwoo Lee
+ * @since 3.1
+ */
+inline fun <reified T : Any> ReactiveMongoOperations.aggregate(aggregation: Aggregation, collectionName: String): Flux<T> =
+		this.aggregate(aggregation, collectionName, T::class.java)
 
 /**
  * Extension for [ReactiveMongoOperations.geoNear] leveraging reified type parameters.
