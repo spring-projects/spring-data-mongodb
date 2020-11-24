@@ -25,7 +25,7 @@ import kotlin.reflect.KProperty1
  * @since 2.2
  */
 class KPropertyPath<T, U>(
-		internal val parent: KProperty<U>,
+		internal val parent: KProperty<U?>,
 		internal val child: KProperty1<U, T>
 ) : KProperty<T> by child
 
@@ -50,7 +50,8 @@ internal fun asString(property: KProperty<*>): String {
  * Book::author / Author::name isEqualTo "Herman Melville"
  * ```
  * @author Tjeu Kayim
+ * @author Yoann de Martino
  * @since 2.2
  */
-operator fun <T, U> KProperty<T>.div(other: KProperty1<T, U>) =
+operator fun <T, U> KProperty<T?>.div(other: KProperty1<T, U>) =
 		KPropertyPath(this, other)

@@ -60,6 +60,15 @@ class KPropertyPathTests {
 		assertThat(property).isEqualTo("entity.book.author.name")
 	}
 
+	@Test
+	fun `Convert nullable KProperty to field name`() {
+		class Cat(val name: String)
+		class Owner(val cat: Cat?)
+
+		val property = asString(Owner::cat / Cat::name)
+		assertThat(property).isEqualTo("cat.name")
+	}
+
 	class Book(val title: String, val author: Author)
 	class Author(val name: String)
 }
