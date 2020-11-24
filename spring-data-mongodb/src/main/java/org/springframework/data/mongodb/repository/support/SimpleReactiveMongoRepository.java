@@ -17,10 +17,8 @@ package org.springframework.data.mongodb.repository.support;
 
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,6 +37,9 @@ import org.springframework.data.util.Streamable;
 import org.springframework.util.Assert;
 
 import com.mongodb.client.result.DeleteResult;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 /**
  * Reactive repository base implementation for Mongo.
@@ -410,7 +411,12 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		Assert.notNull(ids, "The given Iterable of ids must not be null!");
 
-		return Flux.fromIterable(ids).flatMap(this::deleteById).then();
+		Collection<?> idCollection = StreamUtils.createStreamFromIterator(ids.iterator()).collect(Collectors.toList());
+		Criteria idsInCriteria = where(entityInformation.getIdAttribute()).in(idCollection);
+
+		return mongoOperations
+				.remove(new Query(idsInCriteria), entityInformation.getJavaType(), entityInformation.getCollectionName())
+				.then();
 	}
 
 	/*
