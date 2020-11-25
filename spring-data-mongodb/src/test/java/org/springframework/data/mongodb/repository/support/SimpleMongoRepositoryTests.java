@@ -61,10 +61,10 @@ import org.springframework.transaction.support.TransactionTemplate;
  * @author Jens Schauder
  */
 @ExtendWith({ MongoTemplateExtension.class, MongoServerCondition.class })
-public class SimpleMongoRepositoryTests {
+class SimpleMongoRepositoryTests {
 
 	@Template(initialEntitySet = Person.class) //
-	static MongoTestTemplate template;
+	private static MongoTestTemplate template;
 
 	private Person oliver, dave, carter, boyd, stefan, leroi, alicia;
 	private List<Person> all;
@@ -74,7 +74,7 @@ public class SimpleMongoRepositoryTests {
 			template);
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 
 		repository.deleteAll();
 
@@ -90,17 +90,17 @@ public class SimpleMongoRepositoryTests {
 	}
 
 	@Test
-	public void findAllFromCustomCollectionName() {
-		assertThat(repository.findAll()).hasSize(all.size());
+	void findAllFromCustomCollectionName() {
+		assertThat(repository.findAll()).hasSameSizeAs(all);
 	}
 
 	@Test
-	public void findOneFromCustomCollectionName() {
-		assertThat(repository.findById(dave.getId()).get()).isEqualTo(dave);
+	void findOneFromCustomCollectionName() {
+		assertThat(repository.findById(dave.getId())).contains(dave);
 	}
 
 	@Test
-	public void deleteFromCustomCollectionName() {
+	void deleteFromCustomCollectionName() {
 
 		repository.delete(dave);
 
@@ -108,7 +108,7 @@ public class SimpleMongoRepositoryTests {
 	}
 
 	@Test
-	public void deleteByIdFromCustomCollectionName() {
+	void deleteByIdFromCustomCollectionName() {
 
 		repository.deleteById(dave.getId());
 
@@ -116,7 +116,7 @@ public class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1054
-	public void shouldInsertSingle() {
+	void shouldInsertSingle() {
 
 		String randomId = UUID.randomUUID().toString();
 
@@ -127,7 +127,7 @@ public class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1054
-	public void shouldInsertMultipleFromList() {
+	void shouldInsertMultipleFromList() {
 
 		String randomId = UUID.randomUUID().toString();
 		Map<String, Person> idToPerson = new HashMap<String, Person>();
@@ -141,12 +141,12 @@ public class SimpleMongoRepositoryTests {
 
 		List<Person> saved = repository.insert(persons);
 
-		assertThat(saved).hasSize(persons.size());
+		assertThat(saved).hasSameSizeAs(persons);
 		assertThatAllReferencePersonsWereStoredCorrectly(idToPerson, saved);
 	}
 
 	@Test // DATAMONGO-1054
-	public void shouldInsertMutlipleFromSet() {
+	void shouldInsertMutlipleFromSet() {
 
 		String randomId = UUID.randomUUID().toString();
 		Map<String, Person> idToPerson = new HashMap<String, Person>();
@@ -160,12 +160,12 @@ public class SimpleMongoRepositoryTests {
 
 		List<Person> saved = repository.insert(persons);
 
-		assertThat(saved).hasSize(persons.size());
+		assertThat(saved).hasSameSizeAs(persons);
 		assertThatAllReferencePersonsWereStoredCorrectly(idToPerson, saved);
 	}
 
 	@Test // DATAMONGO-1245, DATAMONGO-1464
-	public void findByExampleShouldLookUpEntriesCorrectly() {
+	void findByExampleShouldLookUpEntriesCorrectly() {
 
 		Person sample = new Person();
 		sample.setLastname("Matthews");
@@ -178,7 +178,7 @@ public class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1464
-	public void findByExampleMultiplePagesShouldLookUpEntriesCorrectly() {
+	void findByExampleMultiplePagesShouldLookUpEntriesCorrectly() {
 
 		Person sample = new Person();
 		sample.setLastname("Matthews");
@@ -191,7 +191,7 @@ public class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void findAllByExampleShouldLookUpEntriesCorrectly() {
+	void findAllByExampleShouldLookUpEntriesCorrectly() {
 
 		Person sample = new Person();
 		sample.setLastname("Matthews");
@@ -201,7 +201,7 @@ public class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void findAllByExampleShouldLookUpEntriesCorrectlyWhenUsingNestedObject() {
+	void findAllByExampleShouldLookUpEntriesCorrectlyWhenUsingNestedObject() {
 
 		dave.setAddress(new Address("1600 Pennsylvania Ave NW", "20500", "Washington"));
 		repository.save(dave);
@@ -217,7 +217,7 @@ public class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void findAllByExampleShouldLookUpEntriesCorrectlyWhenUsingPartialNestedObject() {
+	void findAllByExampleShouldLookUpEntriesCorrectlyWhenUsingPartialNestedObject() {
 
 		dave.setAddress(new Address("1600 Pennsylvania Ave NW", "20500", "Washington"));
 		repository.save(dave);
@@ -233,7 +233,7 @@ public class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void findAllByExampleShouldNotFindEntriesWhenUsingPartialNestedObjectInStrictMode() {
+	void findAllByExampleShouldNotFindEntriesWhenUsingPartialNestedObjectInStrictMode() {
 
 		dave.setAddress(new Address("1600 Pennsylvania Ave NW", "20500", "Washington"));
 		repository.save(dave);
@@ -248,7 +248,7 @@ public class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void findAllByExampleShouldLookUpEntriesCorrectlyWhenUsingNestedObjectInStrictMode() {
+	void findAllByExampleShouldLookUpEntriesCorrectlyWhenUsingNestedObjectInStrictMode() {
 
 		dave.setAddress(new Address("1600 Pennsylvania Ave NW", "20500", "Washington"));
 		repository.save(dave);
@@ -263,7 +263,7 @@ public class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void findAllByExampleShouldRespectStringMatchMode() {
+	void findAllByExampleShouldRespectStringMatchMode() {
 
 		Person sample = new Person();
 		sample.setLastname("Mat");
@@ -275,7 +275,7 @@ public class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void findAllByExampleShouldResolveDbRefCorrectly() {
+	void findAllByExampleShouldResolveDbRefCorrectly() {
 
 		User user = new User();
 		user.setId("c0nf1ux");
@@ -295,7 +295,7 @@ public class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void findAllByExampleShouldResolveLegacyCoordinatesCorrectly() {
+	void findAllByExampleShouldResolveLegacyCoordinatesCorrectly() {
 
 		Person megan = new Person("megan", "tarash");
 		megan.setLocation(new Point(41.85003D, -87.65005D));
@@ -310,7 +310,7 @@ public class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void findAllByExampleShouldResolveGeoJsonCoordinatesCorrectly() {
+	void findAllByExampleShouldResolveGeoJsonCoordinatesCorrectly() {
 
 		Person megan = new Person("megan", "tarash");
 		megan.setLocation(new GeoJsonPoint(41.85003D, -87.65005D));
@@ -325,7 +325,7 @@ public class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void findAllByExampleShouldProcessInheritanceCorrectly() {
+	void findAllByExampleShouldProcessInheritanceCorrectly() {
 
 		PersonExtended reference = new PersonExtended();
 		reference.setLastname("Matthews");
@@ -341,7 +341,7 @@ public class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void findOneByExampleShouldLookUpEntriesCorrectly() {
+	void findOneByExampleShouldLookUpEntriesCorrectly() {
 
 		Person sample = new Person();
 		sample.setFirstname("Dave");
@@ -352,7 +352,7 @@ public class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void existsByExampleShouldLookUpEntriesCorrectly() {
+	void existsByExampleShouldLookUpEntriesCorrectly() {
 
 		Person sample = new Person();
 		sample.setFirstname("Dave");
@@ -363,7 +363,7 @@ public class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void countByExampleShouldLookUpEntriesCorrectly() {
+	void countByExampleShouldLookUpEntriesCorrectly() {
 
 		Person sample = new Person();
 		sample.setLastname("Matthews");
@@ -373,7 +373,7 @@ public class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1896
-	public void saveAllUsesEntityCollection() {
+	void saveAllUsesEntityCollection() {
 
 		Person first = new PersonExtended();
 		first.setEmail("foo@bar.com");
@@ -393,7 +393,7 @@ public class SimpleMongoRepositoryTests {
 	@Test // DATAMONGO-2130
 	@EnableIfReplicaSetAvailable
 	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
-	public void countShouldBePossibleInTransaction() {
+	void countShouldBePossibleInTransaction() {
 
 		MongoTransactionManager txmgr = new MongoTransactionManager(template.getMongoDbFactory());
 		TransactionTemplate tt = new TransactionTemplate(txmgr);
@@ -417,7 +417,7 @@ public class SimpleMongoRepositoryTests {
 	@Test // DATAMONGO-2130
 	@EnableIfReplicaSetAvailable
 	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.0")
-	public void existsShouldBePossibleInTransaction() {
+	void existsShouldBePossibleInTransaction() {
 
 		MongoTransactionManager txmgr = new MongoTransactionManager(template.getMongoDbFactory());
 		TransactionTemplate tt = new TransactionTemplate(txmgr);
@@ -437,14 +437,12 @@ public class SimpleMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-2652
-	public void deleteAllByIds() {
+	void deleteAllByIds() {
 
 		repository.deleteAllById(asList(dave.getId(), carter.getId()));
 
 		assertThat(repository.findAll()) //
-				.hasSize(all.size() - 2) //
-				.doesNotContain(dave) //
-				.doesNotContain(carter);
+				.hasSize(all.size() - 2).doesNotContain(dave, carter);
 	}
 
 	private void assertThatAllReferencePersonsWereStoredCorrectly(Map<String, Person> references, List<Person> saved) {

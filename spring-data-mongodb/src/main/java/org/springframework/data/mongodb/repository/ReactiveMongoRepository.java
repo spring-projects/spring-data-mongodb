@@ -64,16 +64,4 @@ public interface ReactiveMongoRepository<T, ID> extends ReactiveSortingRepositor
 	 */
 	<S extends T> Flux<S> insert(Publisher<S> entities);
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.QueryByExampleExecutor#findAll(org.springframework.data.domain.Example)
-	 */
-	<S extends T> Flux<S> findAll(Example<S> example);
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.QueryByExampleExecutor#findAll(org.springframework.data.domain.Example, org.springframework.data.domain.Sort)
-	 */
-	<S extends T> Flux<S> findAll(Example<S> example, Sort sort);
-
 }

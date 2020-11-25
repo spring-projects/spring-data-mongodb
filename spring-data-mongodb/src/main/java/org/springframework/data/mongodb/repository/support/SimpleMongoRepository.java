@@ -73,6 +73,10 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		this.mongoOperations = mongoOperations;
 	}
 
+	// -------------------------------------------------------------------------
+	// Methods from CrudRepository
+	// -------------------------------------------------------------------------
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#save(java.lang.Object)
@@ -138,6 +142,27 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.CrudRepository#findAll()
+	 */
+	@Override
+	public List<T> findAll() {
+		return findAll(new Query());
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.CrudRepository#findAllById(java.lang.Iterable)
+	 */
+	@Override
+	public Iterable<T> findAllById(Iterable<ID> ids) {
+
+		Assert.notNull(ids, "The given Ids of entities not be null!");
+
+		return findAll(getIdQuery(ids));
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#count()
 	 */
 	@Override
@@ -178,6 +203,19 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.CrudRepository#deleteAllById(java.lang.Iterable)
+	 */
+	@Override
+	public void deleteAllById(Iterable<? extends ID> ids) {
+
+		Assert.notNull(ids, "The given Iterable of ids must not be null!");
+
+		mongoOperations.remove(getIdQuery(ids), entityInformation.getJavaType(),
+				entityInformation.getCollectionName());
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.CrudRepository#delete(java.lang.Iterable)
 	 */
 	@Override
@@ -186,14 +224,6 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		Assert.notNull(entities, "The given Iterable of entities must not be null!");
 
 		entities.forEach(this::delete);
-	}
-
-	@Override
-	public void deleteAllById(Iterable<? extends ID> ids) {
-
-		Assert.notNull(ids, "The given Iterable of ids must not be null!");
-
-		ids.forEach(this::deleteById);
 	}
 
 	/*
@@ -205,27 +235,9 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		mongoOperations.remove(new Query(), entityInformation.getCollectionName());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.CrudRepository#findAll()
-	 */
-	@Override
-	public List<T> findAll() {
-		return findAll(new Query());
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.CrudRepository#findAllById(java.lang.Iterable)
-	 */
-	@Override
-	public Iterable<T> findAllById(Iterable<ID> ids) {
-
-		Assert.notNull(ids, "The given Ids of entities not be null!");
-
-		return findAll(new Query(new Criteria(entityInformation.getIdAttribute())
-				.in(Streamable.of(ids).stream().collect(StreamUtils.toUnmodifiableList()))));
-	}
+	// -------------------------------------------------------------------------
+	// Methods from PagingAndSortingRepository
+	// -------------------------------------------------------------------------
 
 	/*
 	 * (non-Javadoc)
@@ -253,6 +265,10 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		return findAll(new Query().with(sort));
 	}
+
+	// -------------------------------------------------------------------------
+	// Methods from MongoRepository
+	// -------------------------------------------------------------------------
 
 	/*
 	 * (non-Javadoc)
@@ -284,23 +300,33 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		return new ArrayList<>(mongoOperations.insertAll(list));
 	}
 
+	// -------------------------------------------------------------------------
+	// Methods from QueryByExampleExecutor
+	// -------------------------------------------------------------------------
+
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.MongoRepository#findAllByExample(org.springframework.data.domain.Example, org.springframework.data.domain.Pageable)
+	 * @see org.springframework.data.repository.query.QueryByExampleExecutor#findOne(org.springframework.data.domain.Example)
 	 */
 	@Override
-	public <S extends T> Page<S> findAll(final Example<S> example, Pageable pageable) {
+	public <S extends T> Optional<S> findOne(Example<S> example) {
 
 		Assert.notNull(example, "Sample must not be null!");
-		Assert.notNull(pageable, "Pageable must not be null!");
 
 		Query query = new Query(new Criteria().alike(example)) //
-				.collation(entityInformation.getCollation()).with(pageable); //
+				.collation(entityInformation.getCollation());
 
-		List<S> list = mongoOperations.find(query, example.getProbeType(), entityInformation.getCollectionName());
+		return Optional
+				.ofNullable(mongoOperations.findOne(query, example.getProbeType(), entityInformation.getCollectionName()));
+	}
 
-		return PageableExecutionUtils.getPage(list, pageable,
-				() -> mongoOperations.count(Query.of(query).limit(-1).skip(-1), example.getProbeType(), entityInformation.getCollectionName()));
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.repository.MongoRepository#findAllByExample(org.springframework.data.domain.Example)
+	 */
+	@Override
+	public <S extends T> List<S> findAll(Example<S> example) {
+		return findAll(example, Sort.unsorted());
 	}
 
 	/*
@@ -322,27 +348,21 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.MongoRepository#findAllByExample(org.springframework.data.domain.Example)
+	 * @see org.springframework.data.mongodb.repository.MongoRepository#findAllByExample(org.springframework.data.domain.Example, org.springframework.data.domain.Pageable)
 	 */
 	@Override
-	public <S extends T> List<S> findAll(Example<S> example) {
-		return findAll(example, Sort.unsorted());
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.QueryByExampleExecutor#findOne(org.springframework.data.domain.Example)
-	 */
-	@Override
-	public <S extends T> Optional<S> findOne(Example<S> example) {
+	public <S extends T> Page<S> findAll(Example<S> example, Pageable pageable) {
 
 		Assert.notNull(example, "Sample must not be null!");
+		Assert.notNull(pageable, "Pageable must not be null!");
 
 		Query query = new Query(new Criteria().alike(example)) //
-				.collation(entityInformation.getCollation());
+				.collation(entityInformation.getCollation()).with(pageable); //
 
-		return Optional
-				.ofNullable(mongoOperations.findOne(query, example.getProbeType(), entityInformation.getCollectionName()));
+		List<S> list = mongoOperations.find(query, example.getProbeType(), entityInformation.getCollectionName());
+
+		return PageableExecutionUtils.getPage(list, pageable,
+				() -> mongoOperations.count(Query.of(query).limit(-1).skip(-1), example.getProbeType(), entityInformation.getCollectionName()));
 	}
 
 	/*
@@ -375,12 +395,21 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		return mongoOperations.exists(query, example.getProbeType(), entityInformation.getCollectionName());
 	}
 
+	// -------------------------------------------------------------------------
+	// Utility methods
+	// -------------------------------------------------------------------------
+
 	private Query getIdQuery(Object id) {
 		return new Query(getIdCriteria(id));
 	}
 
 	private Criteria getIdCriteria(Object id) {
 		return where(entityInformation.getIdAttribute()).is(id);
+	}
+
+	private Query getIdQuery(Iterable<? extends ID> ids) {
+		return new Query(new Criteria(entityInformation.getIdAttribute())
+				.in(Streamable.of(ids).stream().collect(StreamUtils.toUnmodifiableList())));
 	}
 
 	private List<T> findAll(@Nullable Query query) {
@@ -391,4 +420,5 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		return mongoOperations.find(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}
+
 }

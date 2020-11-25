@@ -15,7 +15,6 @@
  */
 package org.springframework.data.mongodb.repository;
 
-import static java.util.Arrays.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.domain.Sort.Direction.*;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
@@ -80,10 +79,10 @@ import com.mongodb.reactivestreams.client.MongoClient;
  * @author Jens Schauder
  */
 @ExtendWith({ MongoClientExtension.class, SpringExtension.class })
-public class ReactiveMongoRepositoryTests {
+class ReactiveMongoRepositoryTests {
 
-	public static final int PERSON_COUNT = 7;
-	static @Client MongoClient mongoClient;
+	private static final int PERSON_COUNT = 7;
+	private static @Client MongoClient mongoClient;
 
 	@Autowired ReactiveMongoTemplate template;
 
@@ -91,8 +90,8 @@ public class ReactiveMongoRepositoryTests {
 	@Autowired ReactiveContactRepository contactRepository;
 	@Autowired ReactiveCappedCollectionRepository cappedRepository;
 
-	Person dave, oliver, carter, boyd, stefan, leroi, alicia;
-	QPerson person = QPerson.person;
+	private Person dave, oliver, carter, boyd, stefan, leroi, alicia;
+	private QPerson person = QPerson.person;
 
 	@Configuration
 	static class Config extends AbstractReactiveMongoConfiguration {
@@ -142,59 +141,59 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@BeforeAll
-	public static void cleanDb() {
+	static void cleanDb() {
 
 		MongoTestUtils.createOrReplaceCollectionNow("reactive", "person", mongoClient);
 		MongoTestUtils.createOrReplaceCollectionNow("reactive", "capped", mongoClient);
 	}
 
 	@BeforeEach
-	public void setUp() throws Exception {
+	void setUp() throws Exception {
 
 		repository.deleteAll().as(StepVerifier::create).verifyComplete();
 
 		dave = new Person("Dave", "Matthews", 42);
 		oliver = new Person("Oliver August", "Matthews", 4);
 		carter = new Person("Carter", "Beauford", 49);
-		carter.setSkills(asList("Drums", "percussion", "vocals"));
+		carter.setSkills(Arrays.asList("Drums", "percussion", "vocals"));
 		Thread.sleep(10);
 		boyd = new Person("Boyd", "Tinsley", 45);
-		boyd.setSkills(asList("Violin", "Electric Violin", "Viola", "Mandolin", "Vocals", "Guitar"));
+		boyd.setSkills(Arrays.asList("Violin", "Electric Violin", "Viola", "Mandolin", "Vocals", "Guitar"));
 		stefan = new Person("Stefan", "Lessard", 34);
 		leroi = new Person("Leroi", "Moore", 41);
 
 		alicia = new Person("Alicia", "Keys", 30, Sex.FEMALE);
 
-		repository.saveAll(asList(oliver, carter, boyd, stefan, leroi, alicia, dave)).as(StepVerifier::create) //
+		repository.saveAll(Arrays.asList(oliver, carter, boyd, stefan, leroi, alicia, dave)).as(StepVerifier::create) //
 				.expectNextCount(PERSON_COUNT) //
 				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void shouldFindByLastName() {
+	void shouldFindByLastName() {
 		repository.findByLastname(dave.getLastname()).as(StepVerifier::create).expectNextCount(2).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void shouldFindOneByLastName() {
+	void shouldFindOneByLastName() {
 		repository.findOneByLastname(carter.getLastname()).as(StepVerifier::create).expectNext(carter).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void shouldFindOneByPublisherOfLastName() {
+	void shouldFindOneByPublisherOfLastName() {
 		repository.findByLastname(Mono.just(carter.getLastname())).as(StepVerifier::create).expectNext(carter)
 				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void shouldFindByPublisherOfLastNameIn() {
+	void shouldFindByPublisherOfLastNameIn() {
 		repository.findByLastnameIn(Flux.just(carter.getLastname(), dave.getLastname())).as(StepVerifier::create) //
 				.expectNextCount(3) //
 				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void shouldFindByPublisherOfLastNameInAndAgeGreater() {
+	void shouldFindByPublisherOfLastNameInAndAgeGreater() {
 
 		repository.findByLastnameInAndAgeGreaterThan(Flux.just(carter.getLastname(), dave.getLastname()), 41)
 				.as(StepVerifier::create) //
@@ -203,7 +202,7 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void shouldFindUsingPublishersInStringQuery() {
+	void shouldFindUsingPublishersInStringQuery() {
 
 		repository.findStringQuery(Flux.just("Beauford", "Matthews"), Mono.just(41)).as(StepVerifier::create) //
 				.expectNextCount(2) //
@@ -211,7 +210,7 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void shouldFindByLastNameAndSort() {
+	void shouldFindByLastNameAndSort() {
 
 		repository.findByLastname("Matthews", Sort.by(ASC, "age")).as(StepVerifier::create) //
 				.expectNext(oliver, dave) //
@@ -223,7 +222,7 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void shouldUseTailableCursor() throws Exception {
+	void shouldUseTailableCursor() throws Exception {
 
 		template.dropCollection(Capped.class) //
 				.then(template.createCollection(Capped.class, //
@@ -248,7 +247,7 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void shouldUseTailableCursorWithProjection() throws Exception {
+	void shouldUseTailableCursorWithProjection() throws Exception {
 
 		template.dropCollection(Capped.class) //
 				.then(template.createCollection(Capped.class, //
@@ -279,7 +278,7 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-2080
-	public void shouldUseTailableCursorWithDtoProjection() {
+	void shouldUseTailableCursorWithDtoProjection() {
 
 		template.dropCollection(Capped.class) //
 				.then(template.createCollection(Capped.class, //
@@ -292,7 +291,7 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void findsPeopleByLocationWithinCircle() {
+	void findsPeopleByLocationWithinCircle() {
 
 		Point point = new Point(-73.99171, 40.738868);
 		dave.setLocation(point);
@@ -304,7 +303,7 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void findsPeopleByPageableLocationWithinCircle() {
+	void findsPeopleByPageableLocationWithinCircle() {
 
 		Point point = new Point(-73.99171, 40.738868);
 		dave.setLocation(point);
@@ -317,7 +316,7 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void findsPeopleGeoresultByLocationWithinBox() {
+	void findsPeopleGeoresultByLocationWithinBox() {
 
 		Point point = new Point(-73.99171, 40.738868);
 		dave.setLocation(point);
@@ -332,7 +331,7 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void findsPeoplePageableGeoresultByLocationWithinBox() throws InterruptedException {
+	void findsPeoplePageableGeoresultByLocationWithinBox() throws InterruptedException {
 
 		Point point = new Point(-73.99171, 40.738868);
 		dave.setLocation(point);
@@ -352,7 +351,7 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1444
-	public void findsPeopleByLocationWithinBox() throws InterruptedException {
+	void findsPeopleByLocationWithinBox() throws InterruptedException {
 
 		Point point = new Point(-73.99171, 40.738868);
 		dave.setLocation(point);
@@ -368,23 +367,23 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1865
-	public void shouldErrorOnFindOneWithNonUniqueResult() {
+	void shouldErrorOnFindOneWithNonUniqueResult() {
 		repository.findOneByLastname(dave.getLastname()).as(StepVerifier::create)
 				.expectError(IncorrectResultSizeDataAccessException.class).verify();
 	}
 
 	@Test // DATAMONGO-1865
-	public void shouldReturnFirstFindFirstWithMoreResults() {
+	void shouldReturnFirstFindFirstWithMoreResults() {
 		repository.findFirstByLastname(dave.getLastname()).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 	}
 
 	@Test // DATAMONGO-2030
-	public void shouldReturnExistsBy() {
+	void shouldReturnExistsBy() {
 		repository.existsByLastname(dave.getLastname()).as(StepVerifier::create).expectNext(true).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1979
-	public void findAppliesAnnotatedSort() {
+	void findAppliesAnnotatedSort() {
 
 		repository.findByAgeGreaterThan(40).collectList().as(StepVerifier::create).consumeNextWith(result -> {
 			assertThat(result).containsSequence(carter, boyd, dave, leroi);
@@ -392,7 +391,7 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1979
-	public void findWithSortOverwritesAnnotatedSort() {
+	void findWithSortOverwritesAnnotatedSort() {
 
 		repository.findByAgeGreaterThan(40, Sort.by(Direction.ASC, "age")).collectList().as(StepVerifier::create)
 				.consumeNextWith(result -> {
@@ -401,7 +400,7 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-2181
-	public void considersRepositoryCollectionName() {
+	void considersRepositoryCollectionName() {
 
 		repository.deleteAll() //
 				.as(StepVerifier::create) //
@@ -413,7 +412,7 @@ public class ReactiveMongoRepositoryTests {
 
 		leroi.id = null;
 		boyd.id = null;
-		contactRepository.saveAll(asList(leroi, boyd)) //
+		contactRepository.saveAll(Arrays.asList(leroi, boyd)) //
 				.as(StepVerifier::create) //
 				.expectNextCount(2) //
 				.verifyComplete();
@@ -430,9 +429,9 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-2182
-	public void shouldFindPersonsWhenUsingQueryDslPerdicatedOnIdProperty() {
+	void shouldFindPersonsWhenUsingQueryDslPerdicatedOnIdProperty() {
 
-		repository.findAll(person.id.in(asList(dave.id, carter.id))) //
+		repository.findAll(person.id.in(Arrays.asList(dave.id, carter.id))) //
 				.collectList() //
 				.as(StepVerifier::create) //
 				.assertNext(actual -> {
@@ -441,24 +440,19 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-2153
-	public void findListOfSingleValue() {
+	void findListOfSingleValue() {
 
 		repository.findAllLastnames() //
 				.collectList() //
 				.as(StepVerifier::create) //
 				.assertNext(actual -> {
-					assertThat(actual) //
-							.contains("Lessard") //
-							.contains("Keys") //
-							.contains("Tinsley") //
-							.contains("Beauford") //
-							.contains("Moore") //
-							.contains("Matthews");
+					assertThat(actual)
+							.contains("Lessard", "Keys", "Tinsley", "Beauford", "Moore", "Matthews");
 				}).verifyComplete();
 	}
 
 	@Test // DATAMONGO-2153
-	public void annotatedAggregationWithPlaceholderValue() {
+	void annotatedAggregationWithPlaceholderValue() {
 
 		repository.groupByLastnameAnd("firstname") //
 				.collectList() //
@@ -470,12 +464,12 @@ public class ReactiveMongoRepositoryTests {
 							.contains(new PersonAggregate("Tinsley", "Boyd")) //
 							.contains(new PersonAggregate("Beauford", "Carter")) //
 							.contains(new PersonAggregate("Moore", "Leroi")) //
-							.contains(new PersonAggregate("Matthews", asList("Dave", "Oliver August")));
+							.contains(new PersonAggregate("Matthews", Arrays.asList("Dave", "Oliver August")));
 				}).verifyComplete();
 	}
 
 	@Test // DATAMONGO-2153
-	public void annotatedAggregationWithSort() {
+	void annotatedAggregationWithSort() {
 
 		repository.groupByLastnameAnd("firstname", Sort.by("lastname")) //
 				.collectList() //
@@ -486,7 +480,7 @@ public class ReactiveMongoRepositoryTests {
 									new PersonAggregate("Beauford", "Carter"), //
 									new PersonAggregate("Keys", "Alicia"), //
 									new PersonAggregate("Lessard", "Stefan"), //
-									new PersonAggregate("Matthews", asList("Dave", "Oliver August")), //
+									new PersonAggregate("Matthews", Arrays.asList("Dave", "Oliver August")), //
 									new PersonAggregate("Moore", "Leroi"), //
 									new PersonAggregate("Tinsley", "Boyd"));
 				}) //
@@ -494,7 +488,7 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-2153
-	public void annotatedAggregationWithPageable() {
+	void annotatedAggregationWithPageable() {
 
 		repository.groupByLastnameAnd("firstname", PageRequest.of(1, 2, Sort.by("lastname"))) //
 				.collectList() //
@@ -503,13 +497,13 @@ public class ReactiveMongoRepositoryTests {
 					assertThat(actual) //
 							.containsExactly( //
 									new PersonAggregate("Lessard", "Stefan"), //
-									new PersonAggregate("Matthews", asList("Dave", "Oliver August")));
+									new PersonAggregate("Matthews", Arrays.asList("Dave", "Oliver August")));
 				}) //
 				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-2153
-	public void annotatedAggregationWithSingleSimpleResult() {
+	void annotatedAggregationWithSingleSimpleResult() {
 
 		repository.sumAge() //
 				.as(StepVerifier::create) //
@@ -518,7 +512,7 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-2153
-	public void annotatedAggregationWithAggregationResultAsReturnType() {
+	void annotatedAggregationWithAggregationResultAsReturnType() {
 
 		repository.sumAgeAndReturnRawResult() //
 				.as(StepVerifier::create) //
@@ -527,7 +521,7 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-2153
-	public void annotatedAggregationWithAggregationResultAsReturnTypeAndProjection() {
+	void annotatedAggregationWithAggregationResultAsReturnTypeAndProjection() {
 
 		repository.sumAgeAndReturnSumWrapper() //
 				.as(StepVerifier::create) //
@@ -536,7 +530,7 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-2374
-	public void findsWithNativeProjection() {
+	void findsWithNativeProjection() {
 
 		repository.findDocumentById(dave.getId()) //
 				.as(StepVerifier::create) //
@@ -546,7 +540,7 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-2153
-	public void annotatedAggregationWithAggregationResultAsMap() {
+	void annotatedAggregationWithAggregationResultAsMap() {
 
 		repository.sumAgeAndReturnSumAsMap() //
 				.as(StepVerifier::create) //
@@ -556,7 +550,7 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-2403
-	public void annotatedAggregationExtractingSimpleValueIsEmptyForEmptyDocument() {
+	void annotatedAggregationExtractingSimpleValueIsEmptyForEmptyDocument() {
 
 		Person p = new Person("project-on-lastanme", null);
 		repository.save(p).then().as(StepVerifier::create).verifyComplete();
@@ -567,7 +561,7 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-2403
-	public void annotatedAggregationSkipsEmptyDocumentsWhenExtractingSimpleValue() {
+	void annotatedAggregationSkipsEmptyDocumentsWhenExtractingSimpleValue() {
 
 		String firstname = "project-on-lastanme";
 
@@ -578,7 +572,7 @@ public class ReactiveMongoRepositoryTests {
 		Person p3 = new Person(firstname, null);
 		p3.setEmail("p3@example.com");
 
-		repository.saveAll(asList(p1, p2, p3)).then().as(StepVerifier::create).verifyComplete();
+		repository.saveAll(Arrays.asList(p1, p2, p3)).then().as(StepVerifier::create).verifyComplete();
 
 		repository.projectToLastnameAndRemoveId(firstname) //
 				.as(StepVerifier::create) //
@@ -586,7 +580,7 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-2406
-	public void deleteByShouldHandleVoidResultTypeCorrectly() {
+	void deleteByShouldHandleVoidResultTypeCorrectly() {
 
 		repository.deleteByLastname(dave.getLastname()) //
 				.as(StepVerifier::create) //
@@ -598,7 +592,7 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1997
-	public void deleteByShouldAllowDeletedCountAsResult() {
+	void deleteByShouldAllowDeletedCountAsResult() {
 
 		repository.deleteCountByLastname(dave.getLastname()) //
 				.as(StepVerifier::create) //
@@ -607,7 +601,7 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-1997
-	public void deleteByShouldAllowSingleDocumentRemovalCorrectly() {
+	void deleteByShouldAllowSingleDocumentRemovalCorrectly() {
 
 		repository.deleteSinglePersonByLastname(carter.getLastname()) //
 				.as(StepVerifier::create) //
@@ -620,9 +614,9 @@ public class ReactiveMongoRepositoryTests {
 	}
 
 	@Test // DATAMONGO-2652
-	public void deleteAllById() {
+	void deleteAllById() {
 
-		repository.deleteAllById(asList(carter.id, dave.id)) //
+		repository.deleteAllById(Arrays.asList(carter.id, dave.id)) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
@@ -731,7 +725,7 @@ public class ReactiveMongoRepositoryTests {
 		String key;
 		double random;
 
-		public Capped(String key, double random) {
+		Capped(String key, double random) {
 			this.key = key;
 			this.random = random;
 		}
