@@ -3329,6 +3329,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 					if (meta.getCursorBatchSize() != null) {
 						findPublisherToUse = findPublisherToUse.batchSize(meta.getCursorBatchSize());
 					}
+
+					if (meta.getAllowDiskUse() != null) {
+						findPublisherToUse = findPublisherToUse.allowDiskUse(meta.getAllowDiskUse());
+					}
 				}
 
 			} catch (RuntimeException e) {

@@ -180,6 +180,7 @@ public class ReactiveMongoTemplateUnitTests {
 		when(findPublisher.limit(anyInt())).thenReturn(findPublisher);
 		when(findPublisher.collation(any())).thenReturn(findPublisher);
 		when(findPublisher.first()).thenReturn(findPublisher);
+		when(findPublisher.allowDiskUse(anyBoolean())).thenReturn(findPublisher);
 		when(aggregatePublisher.allowDiskUse(anyBoolean())).thenReturn(aggregatePublisher);
 		when(aggregatePublisher.collation(any())).thenReturn(aggregatePublisher);
 		when(aggregatePublisher.maxTime(anyLong(), any())).thenReturn(aggregatePublisher);
@@ -229,6 +230,17 @@ public class ReactiveMongoTemplateUnitTests {
 		template.find(query, Person.class).subscribe();
 
 		verify(findPublisher).batchSize(1234);
+	}
+
+	@Test // DATAMONGO-2659
+	void executeQueryShouldUseAllowDiskSizeWhenPresent() {
+
+		when(findPublisher.batchSize(anyInt())).thenReturn(findPublisher);
+
+		Query query = new Query().allowDiskUse(true);
+		template.find(query, Person.class).subscribe();
+
+		verify(findPublisher).allowDiskUse(true);
 	}
 
 	@Test // DATAMONGO-1518

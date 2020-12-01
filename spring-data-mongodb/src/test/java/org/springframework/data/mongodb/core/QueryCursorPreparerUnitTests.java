@@ -96,27 +96,6 @@ class QueryCursorPreparerUnitTests {
 		verify(cursor).hint(new Document("age", 1));
 	}
 
-	// TODO
-	// @Test // DATAMONGO-957
-	// public void doesNotApplyMetaWhenEmpty() {
-	//
-	// Query query = query(where("foo").is("bar"));
-	// query.setMeta(new Meta());
-	//
-	// prepare(query);
-	//
-	// verify(cursor, never()).modifiers(any(Document.class));
-	// }
-
-	// @Test // DATAMONGO-957
-	// public void appliesMaxScanCorrectly() {
-	//
-	// Query query = query(where("foo").is("bar")).maxScan(100);
-	// prepare(query);
-	//
-	// verify(cursor).maxScan(100);
-	// }
-
 	@Test // DATAMONGO-957
 	void appliesMaxTimeCorrectly() {
 
@@ -135,7 +114,7 @@ class QueryCursorPreparerUnitTests {
 		verify(cursor).comment("spring data");
 	}
 
-	@Test
+	@Test // DATAMONGO-2659
 	void appliesAllowDiskUseCorrectly() {
 
 		Query query = query(where("foo").is("bar")).allowDiskUse(true);
@@ -143,16 +122,6 @@ class QueryCursorPreparerUnitTests {
 
 		verify(cursor).allowDiskUse(true);
 	}
-
-	// TODO
-	// @Test // DATAMONGO-957
-	// public void appliesSnapshotCorrectly() {
-	//
-	// Query query = query(where("foo").is("bar")).useSnapshot();
-	// prepare(query);
-	//
-	// verify(cursor).snapshot(true);
-	// }
 
 	@Test // DATAMONGO-1480
 	void appliesNoCursorTimeoutCorrectly() {

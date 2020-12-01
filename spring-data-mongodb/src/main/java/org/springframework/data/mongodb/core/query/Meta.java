@@ -181,7 +181,11 @@ public class Meta {
 	}
 
 	/**
-	 * Set to {@literal true}, to allow aggregation stages to write data to disk.
+	 * Enables writing to temporary files for aggregation stages and queries. When set to {@literal true}, aggregation
+	 * stages can write data to the {@code _tmp} subdirectory in the {@code dbPath} directory.
+	 * <p>
+	 * Starting in MongoDB 4.2, the profiler log messages and diagnostic log messages includes a {@code usedDisk}
+	 * indicator if any aggregation stage wrote data to temporary files due to memory restrictions.
 	 *
 	 * @param allowDiskUse use {@literal null} for server defaults.
 	 * @since 3.0
