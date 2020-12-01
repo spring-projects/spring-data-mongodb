@@ -41,7 +41,62 @@ The starting point for learning about MongoDB is https://www.mongodb.org/[www.mo
 
 The Spring Data MongoDB 2.x binaries require JDK level 8.0 and above and https://spring.io/docs[Spring Framework] {springVersion} and above.
 
-In terms of document stores, you need at least version 2.6 of https://www.mongodb.org/[MongoDB].
+In terms of document stores, you need at least version 3.6 of https://www.mongodb.org/[MongoDB], though we recommend a more recent version.
+
+[[compatibility.matrix]]
+=== Compatibility Matrix
+
+The following compatibility matrix summarizes Spring Data versions to MongoDB driver/database versions.
+Database versions show the highest supported server version that pass the Spring Data test suite.
+You can use newer server versions unless your application uses functionality that is affected by <<compatibility.changes,changes in the MongoDB server>>.
+
+[cols="h,m,m,m", options="header"]
+|===
+
+|Spring Data Release Train
+|Spring Data MongoDB
+|Driver Version
+|Server Version
+
+|2021.0
+|3.2.x
+|4.1.x
+|4.4.x
+
+|2020.0
+|3.1.x
+|4.1.x
+|4.4.x
+
+|Neumann
+|3.0.x
+|4.0.x
+|4.4.x
+
+|Moore
+|2.2.x
+|3.11.x/Reactive Streams 1.12.x
+|4.2.x
+
+|Lovelace
+|2.1.x
+|3.8.x/Reactive Streams 1.9.x
+|4.0.x
+
+|===
+
+[[compatibility.changes]]
+[[compatibility.changes-4.4]]
+==== Relevant Changes in MongoDB 4.4
+
+* Fields list must not contain text search score property when no `$text` criteria present. See also https://docs.mongodb.com/manual/reference/operator/query/text/[`$text` operator]
+* Sort must not be an empty document when running map reduce.
+
+[[compatibility.changes-4.2]]
+==== Relevant Changes in MongoDB 4.2
+
+* Removal of `geoNear` command. See also https://docs.mongodb.com/manual/release-notes/4.2-compatibility/#remove-support-for-the-geonear-command[Removal of `geoNear`]
+* Removal of `eval` command. See also https://docs.mongodb.com/manual/release-notes/4.2-compatibility/#remove-support-for-the-eval-command[Removal of `eval`]
 
 [[get-started:help]]
 == Additional Help Resources
