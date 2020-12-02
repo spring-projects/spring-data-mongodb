@@ -62,6 +62,8 @@ import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mapping.model.SpELExpressionParameterValueProvider;
 import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.data.mongodb.core.mapping.Embedded;
+import org.springframework.data.mongodb.core.mapping.Embedded.OnEmpty;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertCallback;
@@ -427,6 +429,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				continue;
 			}
 
+			if (prop.isEmbedded()) {
+
+				accessor.setProperty(prop,
+						readEmbedded(documentAccessor, currentPath, prop, mappingContext.getPersistentEntity(prop)));
+				continue;
+			}
+
 			// We skip the id property since it was already set
 
 			if (entity.isIdProperty(prop)) {
@@ -470,6 +479,22 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		DBRef dbref = value instanceof DBRef ? (DBRef) value : null;
 		accessor.setProperty(property, dbRefResolver.resolveDbRef(property, dbref, callback, handler));
+	}
+
+	@Nullable
+	private Object readEmbedded(DocumentAccessor documentAccessor, ObjectPath currentPath, MongoPersistentProperty prop,
+			MongoPersistentEntity<?> embeddedEntity) {
+
+		if (prop.findAnnotation(Embedded.class).onEmpty().equals(OnEmpty.USE_EMPTY)) {
+			return read(embeddedEntity, (Document) documentAccessor.getDocument(), currentPath);
+		}
+
+		for (MongoPersistentProperty persistentProperty : embeddedEntity) {
+			if (documentAccessor.hasValue(persistentProperty)) {
+				return read(embeddedEntity, (Document) documentAccessor.getDocument(), currentPath);
+			}
+		}
+		return null;
 	}
 
 	/*
@@ -641,6 +666,15 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		TypeInformation<?> valueType = ClassTypeInformation.from(obj.getClass());
 		TypeInformation<?> type = prop.getTypeInformation();
+
+		if (prop.isEmbedded()) {
+
+			Document target = new Document();
+			writeInternal(obj, target, mappingContext.getPersistentEntity(prop));
+
+			accessor.putAll(prop, target);
+			return;
+		}
 
 		if (valueType.isCollectionLike()) {
 			List<Object> collectionInternal = createCollection(asCollection(obj), prop);
@@ -1350,6 +1384,14 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		return !obj.getClass().equals(typeInformation.getType()) ? newDocument : removeTypeInfo(newDocument, true);
+	}
+
+	@Nullable
+	@Override
+	public Object convertToMongoType(@Nullable Object obj, MongoPersistentEntity entity) {
+		Document newDocument = new Document();
+		writeInternal(obj, newDocument, entity);
+		return newDocument;
 	}
 
 	public List<Object> maybeConvertList(Iterable<?> source, TypeInformation<?> typeInformation) {

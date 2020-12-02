@@ -30,10 +30,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AliasFor;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mapping.MappingException;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.spel.ExtensionAwareEvaluationContextProvider;
 import org.springframework.data.spel.spi.EvaluationContextExtension;
@@ -63,8 +64,7 @@ public class BasicMongoPersistentEntityUnitTests {
 	@Test
 	void evaluatesSpELExpression() {
 
-		MongoPersistentEntity<Company> entity = new BasicMongoPersistentEntity<>(
-				ClassTypeInformation.from(Company.class));
+		MongoPersistentEntity<Company> entity = new BasicMongoPersistentEntity<>(ClassTypeInformation.from(Company.class));
 		assertThat(entity.getCollection()).isEqualTo("35");
 	}
 
@@ -364,16 +364,13 @@ public class BasicMongoPersistentEntityUnitTests {
 	class WithDocumentCollation {}
 
 	@Sharded
-	private
-	class WithDefaultShardKey {}
+	private class WithDefaultShardKey {}
 
 	@Sharded("country")
-	private
-	class WithSingleShardKey {}
+	private class WithSingleShardKey {}
 
 	@Sharded({ "country", "userid" })
-	private
-	class WithMultiShardKey {}
+	private class WithMultiShardKey {}
 
 	static class SampleExtension implements EvaluationContextExtension {
 

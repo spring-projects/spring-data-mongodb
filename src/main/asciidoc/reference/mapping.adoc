@@ -833,4 +833,6 @@ Events are fired throughout the lifecycle of the mapping process. This is descri
 
 Declaring these beans in your Spring ApplicationContext causes them to be invoked whenever the event is dispatched.
 
+include::embedded-documents.adoc[]
+
 include::mongo-custom-conversions.adoc[]

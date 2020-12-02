@@ -135,8 +135,9 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		try {
 			if (persistentProperty.isEntity()) {
-				indexes.addAll(resolveIndexForClass(persistentProperty.getTypeInformation().getActualType(),
-						persistentProperty.getFieldName(), Path.of(persistentProperty), root.getCollection(), guard));
+				indexes.addAll(resolveIndexForEntity(mappingContext.getPersistentEntity(persistentProperty),
+						persistentProperty.isEmbedded() ? "" : persistentProperty.getFieldName(), Path.of(persistentProperty),
+						root.getCollection(), guard));
 			}
 
 			List<IndexDefinitionHolder> indexDefinitions = createIndexDefinitionHolderForProperty(
@@ -163,7 +164,11 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	private List<IndexDefinitionHolder> resolveIndexForClass(final TypeInformation<?> type, final String dotPath,
 			final Path path, final String collection, final CycleGuard guard) {
 
-		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(type);
+		return resolveIndexForEntity(mappingContext.getRequiredPersistentEntity(type), dotPath, path, collection, guard);
+	}
+
+	private List<IndexDefinitionHolder> resolveIndexForEntity(MongoPersistentEntity<?> entity, final String dotPath,
+			final Path path, final String collection, final CycleGuard guard) {
 
 		final List<IndexDefinitionHolder> indexInformation = new ArrayList<>();
 		indexInformation.addAll(potentiallyCreateCompoundIndexDefinitions(dotPath, collection, entity));
@@ -179,14 +184,18 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	private void guardAndPotentiallyAddIndexForProperty(MongoPersistentProperty persistentProperty, String dotPath,
 			Path path, String collection, List<IndexDefinitionHolder> indexes, CycleGuard guard) {
 
-		String propertyDotPath = (StringUtils.hasText(dotPath) ? dotPath + "." : "") + persistentProperty.getFieldName();
+		String propertyDotPath = dotPath;
+
+		if (!persistentProperty.isEmbedded()) {
+			propertyDotPath = (StringUtils.hasText(dotPath) ? dotPath + "." : "") + persistentProperty.getFieldName();
+		}
 
 		Path propertyPath = path.append(persistentProperty);
 		guard.protect(persistentProperty, propertyPath);
 
 		if (persistentProperty.isEntity()) {
 			try {
-				indexes.addAll(resolveIndexForClass(persistentProperty.getTypeInformation().getActualType(), propertyDotPath,
+				indexes.addAll(resolveIndexForEntity(mappingContext.getPersistentEntity(persistentProperty), propertyDotPath,
 						propertyPath, collection, guard));
 			} catch (CyclicPropertyReferenceException e) {
 				LOGGER.info(e.getMessage());
@@ -205,6 +214,13 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			MongoPersistentProperty persistentProperty) {
 
 		List<IndexDefinitionHolder> indices = new ArrayList<>(2);
+
+		if (persistentProperty.isEmbedded() && (persistentProperty.isAnnotationPresent(Indexed.class)
+				|| persistentProperty.isAnnotationPresent(HashIndexed.class)
+				|| persistentProperty.isAnnotationPresent(GeoSpatialIndexed.class))) {
+			throw new InvalidDataAccessApiUsageException(
+					String.format("Index annotation not allowed on embedded object for path '%s'.", dotPath));
+		}
 
 		if (persistentProperty.isAnnotationPresent(Indexed.class)) {
 			indices.add(createIndexDefinition(dotPath, collection, persistentProperty));
@@ -482,7 +498,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
 	}
 
-	private PartialIndexFilter evaluatePartialFilter(String filterExpression, PersistentEntity<?,?> entity) {
+	private PartialIndexFilter evaluatePartialFilter(String filterExpression, PersistentEntity<?, ?> entity) {
 
 		Object result = evaluate(filterExpression, getEvaluationContextForProperty(entity));
 
@@ -492,7 +508,6 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		return PartialIndexFilter.of(BsonUtils.parse(filterExpression, null));
 	}
-
 
 	/**
 	 * Creates {@link HashedIndex} wrapped in {@link IndexDefinitionHolder} out of {@link HashIndexed} for a given

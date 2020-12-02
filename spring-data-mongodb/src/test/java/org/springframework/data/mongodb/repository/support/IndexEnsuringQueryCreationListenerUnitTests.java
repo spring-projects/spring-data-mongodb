@@ -66,7 +66,7 @@ class IndexEnsuringQueryCreationListenerUnitTests {
 
 		partTreeQuery = mock(PartTreeMongoQuery.class, Answers.RETURNS_MOCKS);
 		when(partTreeQuery.getTree()).thenReturn(partTree);
-		when(provider.indexOps(anyString())).thenReturn(indexOperations);
+		when(provider.indexOps(anyString(), any())).thenReturn(indexOperations);
 		when(queryMethod.getEntityInformation()).thenReturn(entityInformation);
 		when(entityInformation.getCollectionName()).thenReturn("persons");
 	}

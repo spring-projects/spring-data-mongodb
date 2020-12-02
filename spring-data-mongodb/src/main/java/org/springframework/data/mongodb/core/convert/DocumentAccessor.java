@@ -67,6 +67,10 @@ class DocumentAccessor {
 		return this.document;
 	}
 
+	public void putAll(MongoPersistentProperty prop,  Document value) {
+		value.entrySet().forEach(entry -> BsonUtils.asMap(document).put(entry.getKey(), entry.getValue()));
+	}
+
 	/**
 	 * Puts the given value into the backing {@link Document} based on the coordinates defined through the given
 	 * {@link MongoPersistentProperty}. By default this will be the plain field name. But field names might also consist

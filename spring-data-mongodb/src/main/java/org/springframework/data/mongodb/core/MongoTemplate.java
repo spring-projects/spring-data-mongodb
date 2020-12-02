@@ -715,12 +715,18 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		});
 	}
 
+
+	@Override
+	public IndexOperations indexOps(String collectionName) {
+		return indexOps(collectionName, null);
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.ExecutableInsertOperation#indexOps(java.lang.String)
 	 */
-	public IndexOperations indexOps(String collectionName) {
-		return new DefaultIndexOperations(this, collectionName, null);
+	public IndexOperations indexOps(String collectionName, @Nullable Class<?> type) {
+		return new DefaultIndexOperations(this, collectionName, type);
 	}
 
 	/*
@@ -728,7 +734,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @see org.springframework.data.mongodb.core.ExecutableInsertOperation#indexOps(java.lang.Class)
 	 */
 	public IndexOperations indexOps(Class<?> entityClass) {
-		return new DefaultIndexOperations(this, getCollectionName(entityClass), entityClass);
+		return indexOps(getCollectionName(entityClass), entityClass);
 	}
 
 	/*

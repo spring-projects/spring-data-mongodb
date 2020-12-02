@@ -78,6 +78,7 @@ public class RepositoryIndexCreationIntegrationTests {
 
 		assertHasIndexForField(indexInfo, "lastname");
 		assertHasIndexForField(indexInfo, "firstname");
+		assertHasIndexForField(indexInfo, "add");
 	}
 
 	private static void assertHasIndexForField(List<IndexInfo> indexInfo, String... fields) {

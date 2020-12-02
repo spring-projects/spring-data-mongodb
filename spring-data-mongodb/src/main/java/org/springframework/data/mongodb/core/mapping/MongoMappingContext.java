@@ -36,7 +36,7 @@ import org.springframework.lang.Nullable;
  * @author Jon Brisbin
  * @author Oliver Gierke
  */
-public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersistentEntity<?>, MongoPersistentProperty>
+public class MongoMappingContext extends AbstractMappingContext<MongoPersistentEntity<?>, MongoPersistentProperty>
 		implements ApplicationContextAware {
 
 	private static final FieldNamingStrategy DEFAULT_NAMING_STRATEGY = PropertyNameFieldNamingStrategy.INSTANCE;
@@ -76,10 +76,15 @@ public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersis
 	 * @see org.springframework.data.mapping.AbstractMappingContext#createPersistentProperty(java.lang.reflect.Field, java.beans.PropertyDescriptor, org.springframework.data.mapping.MutablePersistentEntity, org.springframework.data.mapping.SimpleTypeHolder)
 	 */
 	@Override
-	public MongoPersistentProperty createPersistentProperty(Property property, BasicMongoPersistentEntity<?> owner,
+	public MongoPersistentProperty createPersistentProperty(Property property, MongoPersistentEntity<?> owner,
 			SimpleTypeHolder simpleTypeHolder) {
 		return new CachingMongoPersistentProperty(property, owner, simpleTypeHolder, fieldNamingStrategy);
 	}
+
+//	@Override
+//	protected MongoPersistentProperty createPersistentProperty(Property property, MongoPersistentEntity<?> owner, SimpleTypeHolder simpleTypeHolder) {
+//		return null;
+//	}
 
 	/*
 	 * (non-Javadoc)
@@ -125,5 +130,18 @@ public class MongoMappingContext extends AbstractMappingContext<BasicMongoPersis
 	 */
 	public void setAutoIndexCreation(boolean autoCreateIndexes) {
 		this.autoIndexCreation = autoCreateIndexes;
+	}
+
+
+	@Nullable
+	@Override
+	public MongoPersistentEntity<?> getPersistentEntity(MongoPersistentProperty persistentProperty) {
+
+		MongoPersistentEntity entity = super.getPersistentEntity(persistentProperty);
+		if(entity == null || !persistentProperty.isEmbedded()) {
+			return entity;
+		}
+
+		return new EmbeddedMongoPersistentEntity(entity, new EmbeddedEntityContext(persistentProperty));
 	}
 }

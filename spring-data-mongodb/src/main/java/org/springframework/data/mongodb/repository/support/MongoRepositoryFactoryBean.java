@@ -90,7 +90,7 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 
 		if (createIndexesForQueryMethods) {
 			factory.addQueryCreationListener(
-					new IndexEnsuringQueryCreationListener(collectionName -> operations.indexOps(collectionName)));
+					new IndexEnsuringQueryCreationListener((collectionName, javaType) -> operations.indexOps(javaType)));
 		}
 
 		return factory;

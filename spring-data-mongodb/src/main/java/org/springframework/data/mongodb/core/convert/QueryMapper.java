@@ -32,6 +32,7 @@ import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyPath;
+import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.data.mapping.context.InvalidPersistentPropertyPath;
@@ -140,9 +141,23 @@ public class QueryMapper {
 			try {
 
 				Field field = createPropertyField(entity, key, mappingContext);
-				Entry<String, Object> entry = getMappedObjectForField(field, BsonUtils.get(query, key));
 
-				result.put(entry.getKey(), entry.getValue());
+				// TODO: move to dedicated method
+				if (field.getProperty() != null && field.getProperty().isEmbedded()) {
+
+					Object theNestedObject = BsonUtils.get(query, key);
+					Document mappedValue = (Document) getMappedValue(field, theNestedObject);
+					if (!StringUtils.hasText(field.getMappedKey())) {
+						result.putAll(mappedValue);
+					} else {
+						result.put(field.getMappedKey(), mappedValue);
+					}
+				} else {
+
+					Entry<String, Object> entry = getMappedObjectForField(field, BsonUtils.get(query, key));
+
+					result.put(entry.getKey(), entry.getValue());
+				}
 			} catch (InvalidPersistentPropertyPath invalidPathException) {
 
 				// in case the object has not already been mapped
@@ -173,10 +188,16 @@ public class QueryMapper {
 			return new Document();
 		}
 
+		sortObject = filterEmbeddedObjects(sortObject, entity);
+
 		Document mappedSort = new Document();
 		for (Map.Entry<String, Object> entry : BsonUtils.asMap(sortObject).entrySet()) {
 
 			Field field = createPropertyField(entity, entry.getKey(), mappingContext);
+			if (field.getProperty() != null && field.getProperty().isEmbedded()) {
+				continue;
+			}
+
 			mappedSort.put(field.getMappedKey(), entry.getValue());
 		}
 
@@ -197,7 +218,9 @@ public class QueryMapper {
 
 		Assert.notNull(fieldsObject, "FieldsObject must not be null!");
 
-		Document mappedFields = fieldsObject.isEmpty() ? new Document() : getMappedObject(fieldsObject, entity);
+		fieldsObject = filterEmbeddedObjects(fieldsObject, entity);
+
+		Document mappedFields = getMappedObject(fieldsObject, entity);
 		mapMetaAttributes(mappedFields, entity, MetaMapping.FORCE);
 		return mappedFields;
 	}
@@ -215,6 +238,43 @@ public class QueryMapper {
 				source.putAll(getMappedTextScoreField(textScoreProperty));
 			}
 		}
+	}
+
+	private Document filterEmbeddedObjects(Document fieldsObject, @Nullable MongoPersistentEntity<?> entity) {
+
+		if (fieldsObject.isEmpty() || entity == null) {
+			return fieldsObject;
+		}
+
+		Document target = new Document();
+
+		for (Entry<String, Object> field : fieldsObject.entrySet()) {
+
+			try {
+
+				PropertyPath path = PropertyPath.from(field.getKey(), entity.getTypeInformation());
+				PersistentPropertyPath<MongoPersistentProperty> persistentPropertyPath = mappingContext
+						.getPersistentPropertyPath(path);
+				MongoPersistentProperty property = mappingContext.getPersistentPropertyPath(path).getLeafProperty();
+
+				if (property.isEmbedded() && property.isEntity()) {
+
+					mappingContext.getPersistentEntity(property)
+							.doWithProperties((PropertyHandler<MongoPersistentProperty>) embedded -> {
+
+								String dotPath = persistentPropertyPath.toDotPath();
+								dotPath = dotPath + (StringUtils.hasText(dotPath) ? "." : "") + embedded.getName();
+								target.put(dotPath, field.getValue());
+							});
+				} else {
+					target.put(field.getKey(), field.getValue());
+				}
+			} catch (RuntimeException e) {
+				target.put(field.getKey(), field.getValue());
+			}
+
+		}
+		return target;
 	}
 
 	private Document getMappedTextScoreField(MongoPersistentProperty property) {
@@ -497,6 +557,11 @@ public class QueryMapper {
 	 */
 	@Nullable
 	protected Object delegateConvertToMongoType(Object source, @Nullable MongoPersistentEntity<?> entity) {
+
+		if (entity != null && entity.isEmbedded()) {
+			return converter.convertToMongoType(source, entity);
+		}
+
 		return converter.convertToMongoType(source, entity == null ? null : entity.getTypeInformation());
 	}
 
@@ -912,6 +977,7 @@ public class QueryMapper {
 		public TypeInformation<?> getTypeHint() {
 			return ClassTypeInformation.OBJECT;
 		}
+
 	}
 
 	/**

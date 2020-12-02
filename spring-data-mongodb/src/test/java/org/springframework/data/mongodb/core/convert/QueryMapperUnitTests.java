@@ -37,6 +37,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.geo.Point;
@@ -45,9 +46,9 @@ import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
-import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Embedded;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -389,7 +390,7 @@ public class QueryMapperUnitTests {
 
 		Query query = query(where("reference").exists(false));
 
-		BasicMongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(WithDBRef.class);
+		MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(WithDBRef.class);
 		org.bson.Document mappedObject = mapper.getMappedObject(query.getQueryObject(), entity);
 
 		org.bson.Document reference = getAsDocument(mappedObject, "reference");
@@ -405,7 +406,7 @@ public class QueryMapperUnitTests {
 
 		Query query = query(where("someString").is("foo").andOperator(where("reference").in(reference)));
 
-		BasicMongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(WithDBRef.class);
+		MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(WithDBRef.class);
 		org.bson.Document mappedObject = mapper.getMappedObject(query.getQueryObject(), entity);
 
 		assertThat(mappedObject).containsEntry("someString", "foo");
@@ -446,7 +447,7 @@ public class QueryMapperUnitTests {
 		Query query = query(where("someString").is("foo"));
 		query.fields().exclude("reference");
 
-		BasicMongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(WithDBRef.class);
+		MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(WithDBRef.class);
 		org.bson.Document queryResult = mapper.getMappedObject(query.getQueryObject(), entity);
 		org.bson.Document fieldsResult = mapper.getMappedObject(query.getFieldsObject(), entity);
 
@@ -457,7 +458,7 @@ public class QueryMapperUnitTests {
 	@Test // DATAMONGO-686
 	void queryMapperShouldNotChangeStateInGivenQueryObjectWhenIdConstrainedByInList() {
 
-		BasicMongoPersistentEntity<?> persistentEntity = context.getRequiredPersistentEntity(Sample.class);
+		MongoPersistentEntity<?> persistentEntity = context.getRequiredPersistentEntity(Sample.class);
 		String idPropertyName = persistentEntity.getIdProperty().getName();
 		org.bson.Document queryObject = query(where(idPropertyName).in("42")).getQueryObject();
 
@@ -515,7 +516,7 @@ public class QueryMapperUnitTests {
 	@Test // DATAMONGO-773
 	void queryMapperShouldBeAbleToProcessQueriesThatIncludeDbRefFields() {
 
-		BasicMongoPersistentEntity<?> persistentEntity = context.getRequiredPersistentEntity(WithDBRef.class);
+		MongoPersistentEntity<?> persistentEntity = context.getRequiredPersistentEntity(WithDBRef.class);
 
 		Query qry = query(where("someString").is("abc"));
 		qry.fields().include("reference");
@@ -781,7 +782,8 @@ public class QueryMapperUnitTests {
 		Query query = query(byExample(probe).and("listOfItems").exists(true));
 		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(Foo.class));
 
-		assertThat(document).containsEntry("embedded\\._id", "conflux").containsEntry("my_items", new org.bson.Document("$exists", true));
+		assertThat(document).containsEntry("embedded\\._id", "conflux").containsEntry("my_items",
+				new org.bson.Document("$exists", true));
 	}
 
 	@Test // DATAMONGO-1988
@@ -1011,6 +1013,184 @@ public class QueryMapperUnitTests {
 		assertThat(target).isEqualTo(org.bson.Document.parse("{\"$text\" : { \"$search\" : \"test\" }}"));
 	}
 
+	@Test // DATAMONGO-1902
+	void rendersQueryOnEmbeddedObjectCorrectly() {
+
+		EmbeddableType embeddableType = new EmbeddableType();
+		embeddableType.stringValue = "test";
+
+		Query source = query(Criteria.where("embeddableValue").is(embeddableType));
+
+		org.bson.Document target = mapper.getMappedObject(source.getQueryObject(),
+				context.getPersistentEntity(WithEmbedded.class));
+
+		assertThat(target).isEqualTo(new org.bson.Document("stringValue", "test"));
+	}
+
+	@Test // DATAMONGO-1902
+	void rendersQueryOnEmbeddedCorrectly() {
+
+		Query source = query(Criteria.where("embeddableValue.stringValue").is("test"));
+
+		org.bson.Document target = mapper.getMappedObject(source.getQueryObject(),
+				context.getPersistentEntity(WithEmbedded.class));
+
+		assertThat(target).isEqualTo(new org.bson.Document("stringValue", "test"));
+	}
+
+	@Test // DATAMONGO-1902
+	void rendersQueryOnPrefixedEmbeddedCorrectly() {
+
+		Query source = query(Criteria.where("embeddableValue.stringValue").is("test"));
+
+		org.bson.Document target = mapper.getMappedObject(source.getQueryObject(),
+				context.getPersistentEntity(WithPrefixedEmbedded.class));
+
+		assertThat(target).isEqualTo(new org.bson.Document("prefix-stringValue", "test"));
+	}
+
+	@Test // DATAMONGO-1902
+	void rendersQueryOnNestedEmbeddedObjectCorrectly() {
+
+		EmbeddableType embeddableType = new EmbeddableType();
+		embeddableType.stringValue = "test";
+		Query source = query(Criteria.where("withEmbedded.embeddableValue").is(embeddableType));
+
+		org.bson.Document target = mapper.getMappedObject(source.getQueryObject(),
+				context.getPersistentEntity(WrapperAroundWithEmbedded.class));
+
+		assertThat(target).isEqualTo(new org.bson.Document("withEmbedded", new org.bson.Document("stringValue", "test")));
+	}
+
+	@Test // DATAMONGO-1902
+	void rendersQueryOnNestedPrefixedEmbeddedObjectCorrectly() {
+
+		EmbeddableType embeddableType = new EmbeddableType();
+		embeddableType.stringValue = "test";
+		Query source = query(Criteria.where("withPrefixedEmbedded.embeddableValue").is(embeddableType));
+
+		org.bson.Document target = mapper.getMappedObject(source.getQueryObject(),
+				context.getPersistentEntity(WrapperAroundWithEmbedded.class));
+
+		assertThat(target)
+				.isEqualTo(new org.bson.Document("withPrefixedEmbedded", new org.bson.Document("prefix-stringValue", "test")));
+	}
+
+	@Test // DATAMONGO-1902
+	void rendersQueryOnNestedEmbeddedCorrectly() {
+
+		Query source = query(Criteria.where("withEmbedded.embeddableValue.stringValue").is("test"));
+
+		org.bson.Document target = mapper.getMappedObject(source.getQueryObject(),
+				context.getPersistentEntity(WrapperAroundWithEmbedded.class));
+
+		assertThat(target).isEqualTo(new org.bson.Document("withEmbedded.stringValue", "test"));
+	}
+
+	@Test // DATAMONGO-1902
+	void rendersQueryOnNestedPrefixedEmbeddedCorrectly() {
+
+		Query source = query(Criteria.where("withPrefixedEmbedded.embeddableValue.stringValue").is("test"));
+
+		org.bson.Document target = mapper.getMappedObject(source.getQueryObject(),
+				context.getPersistentEntity(WrapperAroundWithEmbedded.class));
+
+		assertThat(target).isEqualTo(new org.bson.Document("withPrefixedEmbedded.prefix-stringValue", "test"));
+	}
+
+	@Test // DATAMONGO-1902
+	void sortByEmbeddableIsEmpty() {
+
+		Query query = new Query().with(Sort.by("embeddableValue"));
+
+		org.bson.Document document = mapper.getMappedSort(query.getSortObject(),
+				context.getPersistentEntity(WithEmbedded.class));
+
+		assertThat(document).isEqualTo(
+				new org.bson.Document("stringValue", 1).append("listValue", 1).append("with-at-field-annotation", 1));
+	}
+
+	@Test // DATAMONGO-1902
+	void sortByEmbeddableValue() {
+
+		// atFieldAnnotatedValue
+		Query query = new Query().with(Sort.by("embeddableValue.stringValue"));
+
+		org.bson.Document document = mapper.getMappedSort(query.getSortObject(),
+				context.getPersistentEntity(WithEmbedded.class));
+
+		assertThat(document).isEqualTo(new org.bson.Document("stringValue", 1));
+	}
+
+	@Test // DATAMONGO-1902
+	void sortByEmbeddableValueWithFieldAnnotation() {
+
+		Query query = new Query().with(Sort.by("embeddableValue.atFieldAnnotatedValue"));
+
+		org.bson.Document document = mapper.getMappedSort(query.getSortObject(),
+				context.getPersistentEntity(WithEmbedded.class));
+
+		assertThat(document).isEqualTo(new org.bson.Document("with-at-field-annotation", 1));
+	}
+
+	@Test // DATAMONGO-1902
+	void sortByPrefixedEmbeddableValueWithFieldAnnotation() {
+
+		Query query = new Query().with(Sort.by("embeddableValue.atFieldAnnotatedValue"));
+
+		org.bson.Document document = mapper.getMappedSort(query.getSortObject(),
+				context.getPersistentEntity(WithPrefixedEmbedded.class));
+
+		assertThat(document).isEqualTo(new org.bson.Document("prefix-with-at-field-annotation", 1));
+	}
+
+	@Test // DATAMONGO-1902
+	void sortByNestedEmbeddableValueWithFieldAnnotation() {
+
+		Query query = new Query().with(Sort.by("withEmbedded.embeddableValue.atFieldAnnotatedValue"));
+
+		org.bson.Document document = mapper.getMappedSort(query.getSortObject(),
+				context.getPersistentEntity(WrapperAroundWithEmbedded.class));
+
+		assertThat(document).isEqualTo(new org.bson.Document("withEmbedded.with-at-field-annotation", 1));
+	}
+
+	@Test // DATAMONGO-1902
+	void sortByNestedPrefixedEmbeddableValueWithFieldAnnotation() {
+
+		Query query = new Query().with(Sort.by("withPrefixedEmbedded.embeddableValue.atFieldAnnotatedValue"));
+
+		org.bson.Document document = mapper.getMappedSort(query.getSortObject(),
+				context.getPersistentEntity(WrapperAroundWithEmbedded.class));
+
+		assertThat(document).isEqualTo(new org.bson.Document("withPrefixedEmbedded.prefix-with-at-field-annotation", 1));
+	}
+
+	@Test // DATAMONGO-1902
+	void projectOnEmbeddableUsesFields() {
+
+		Query query = new Query();
+		query.fields().include("embeddableValue");
+
+		org.bson.Document document = mapper.getMappedFields(query.getFieldsObject(),
+				context.getPersistentEntity(WithEmbedded.class));
+
+		assertThat(document).isEqualTo(
+				new org.bson.Document("stringValue", 1).append("listValue", 1).append("with-at-field-annotation", 1));
+	}
+
+	@Test // DATAMONGO-1902
+	void projectOnEmbeddableValue() {
+
+		Query query = new Query();
+		query.fields().include("embeddableValue.stringValue");
+
+		org.bson.Document document = mapper.getMappedFields(query.getFieldsObject(),
+				context.getPersistentEntity(WithEmbedded.class));
+
+		assertThat(document).isEqualTo(new org.bson.Document("stringValue", 1));
+	}
+
 	class WithDeepArrayNesting {
 
 		List<WithNestedArray> level0;
@@ -1194,4 +1374,38 @@ public class QueryMapperUnitTests {
 			this.value = value;
 		}
 	}
+
+	static class WrapperAroundWithEmbedded {
+
+		String someValue;
+		WithEmbedded withEmbedded;
+		WithPrefixedEmbedded withPrefixedEmbedded;
+	}
+
+	static class WithEmbedded {
+
+		String id;
+
+		@Embedded.Nullable EmbeddableType embeddableValue;
+	}
+
+	static class WithPrefixedEmbedded {
+
+		String id;
+
+		@Embedded.Nullable("prefix-") EmbeddableType embeddableValue;
+	}
+
+	static class EmbeddableType {
+
+		String stringValue;
+		List<String> listValue;
+
+		@Field("with-at-field-annotation") //
+		String atFieldAnnotatedValue;
+
+		@Transient //
+		String transientValue;
+	}
+
 }

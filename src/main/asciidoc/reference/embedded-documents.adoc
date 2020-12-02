@@ -1,0 +1,370 @@
+[[embedded-entities]]
+== Embedded Types
+
+Embedded entities are used to design value objects in your Java domain model whose properties are flattened out into the MongoDB Document.
+
+[[embedded-entities.mapping]]
+=== Embedded Types Mapping
+
+In the example below you see, that `User.name` is annotated with `@Embedded`.
+The consequence of this is that all properties of `UserName` are folded into the `user` document.
+
+.Sample Code of embedding objects
+====
+[source,java]
+----
+public class User {
+
+	@Id
+    private String userId;
+
+    @Embedded(onEmpty = USE_NULL) <1>
+    UserName name;
+}
+
+public class UserName {
+    private String firstname;
+    private String lastname;
+}
+----
+
+[source,json]
+----
+{
+  "_id" : "1da2ba06-3ba7",
+  "firstname" : "Emma",
+  "lastname" : "Frost"
+}
+----
+<1> When loading the `name` property its value is set to `null` if both `firstname` and `lastname` are either `null` or not present.
+By using `onEmpty=USE_EMPTY` an empty `UserName`, with potential `null` value for its properties, will be created.
+====
+
+For less verbose embeddable type declarations use `@Embedded.Nullable` and `@Embedded.Empty` instead `@Embedded(onEmpty = USE_NULL)` and `@Embedded(onEmpty = USE_EMPTY)`.
+Using those annotations simultaneously set JSR-305 `@javax.annotation.Nonnull` accordingly.
+
+[WARNING]
+====
+It is possible to use complex types within an embedded object.
+However those must not be, nor contain embedded fields themselves.
+====
+
+[[embedded-entities.mapping.field-names]]
+=== Embedded Types field names
+
+A value object can be embedded multiple times by using the optional `prefix` attribute of the `@Embedded` annotation.
+By dosing so the chosen prefix is prepended to each property or `@Field("...")` name in the embedded object.
+Please note that values will overwrite each other if multiple properties render to the same field name.
+
+.Sample Code of embedded object with name prefix
+====
+[source,java]
+----
+public class User {
+
+	@Id
+    private String userId;
+
+    @Embedded.Nullable(prefix = "u") <1>
+    UserName name;
+}
+
+public class UserName {
+    private String firstname;
+    private String lastname;
+}
+----
+
+[source,json]
+----
+{
+  "_id" : "a6a805bd-f95f",
+  "ufirstname" : "Jean",
+  "ulastname" : "Grey"
+}
+----
+<1> The prefix `u` is prepended to all properties of `UserName`.
+====
+
+While combining the `@Field` annotation with `@Embedded` on the very same property does not make sense and therefore leads to an error.
+It is a totally valid approach to use `@Field` on any of the embedded types properties.
+
+.Sample Code embedded object with `@Field` annotation
+====
+[source,java]
+----
+public class User {
+
+	@Id
+    private String userId;
+
+    @Embedded.Nullable(prefix = "u-") <1>
+    UserName name;
+}
+
+public class UserName {
+
+	@Field("first-name") <2>
+    private String firstname;
+
+	@Field("last-name")
+    private String lastname;
+}
+----
+
+[source,json]
+----
+{
+  "_id" : "2647f7b9-89da",
+  "u-first-name" : "Barbara", <2>
+  "u-last-name" : "Gordon"
+}
+----
+<1> The prefix `u-` is prepended to all properties of `UserName`.
+<2> The field name is the result of the combination of the annotated field name an the chosen prefix.
+====
+
+[[embedded-entities.queries]]
+=== Query on Embedded Objects
+
+Defining queries on embedded properties is possible on type as well as field level as the provided `Critieria` is matched against the domain type.
+Prefixes and potential custom field names will be considered when rendering the actual query.
+Use the property name of the embedded object to match against all contained fields as shown in the sample below.
+
+.Query on embedded object
+====
+[source,java]
+----
+UserName userName = new UserName("Carol", "Danvers")
+Query findByUserName = query(where("name").is(userName));
+User user = template.findOne(findByUserName, User.class);
+----
+
+[source,json]
+----
+db.collection.find({
+  "firstname" : "Carol",
+  "lastname" : "Danvers"
+})
+----
+====
+
+It is also possible to address any field of the embedded object directly via its property name as shown in the snippet below.
+
+.Query on field of embedded object
+====
+[source,java]
+----
+Query findByUserFirstName = query(where("name.firstname").is("Shuri"));
+List<User> users = template.findAll(findByUserFirstName, User.class);
+----
+
+[source,json]
+----
+db.collection.find({
+  "firstname" : "Shuri"
+})
+----
+====
+
+[[embedded-entities.queries.sort]]
+==== Sort by embedded field.
+
+Fields of embedded objects can be used for sorting via their property path as shown in the sample below.
+
+.Sort on embedded field
+====
+[source,java]
+----
+Query findByUserLastName = query(where("name.lastname").is("Romanoff"));
+List<User> user = template.findAll(findByUserName.withSort(Sort.by("name.firstname")), User.class);
+----
+
+[source,json]
+----
+db.collection.find({
+  "lastname" : "Romanoff"
+}).sort({ "firstname" : 1 })
+----
+====
+
+[NOTE]
+====
+Though possible, using the embedded object itself as sort criteria includes all of its fields in unpredictable order and may result in inaccurate ordering.
+====
+
+[[embedded-entities.queries.project]]
+==== Project on embedded object
+
+Fields of embedded objects can be subject for projection either as a whole or via single fields as shown in the samples below.
+
+.Project on embedded object.
+====
+[source,java]
+----
+Query findByUserLastName = query(where("name.firstname").is("Gamora"));
+findByUserLastName.fields().include("name"); <1>
+List<User> user = template.findAll(findByUserName, User.class);
+----
+
+[source,json]
+----
+db.collection.find({
+  "lastname" : "Gamora"
+},
+{
+  "firstname" : 1,
+  "lastname" : 1
+})
+----
+<1> A field projection on an embedded object includes all of its properties.
+====
+
+.Project on a field of an embedded object.
+====
+[source,java]
+----
+Query findByUserLastName = query(where("name.lastname").is("Smoak"));
+findByUserLastName.fields().include("name.firstname"); <1>
+List<User> user = template.findAll(findByUserName, User.class);
+----
+
+[source,json]
+----
+db.collection.find({
+  "lastname" : "Smoak"
+},
+{
+  "firstname" : 1
+})
+----
+<1> A field projection on an embedded object includes all of its properties.
+====
+
+[[embedded-entities.queries.by-example]]
+==== Query By Example on embedded object.
+
+Embedded objects can be used within an `Example` probe just as any other type.
+Please review the <<query-by-example.running,Query By Example>> section, to learn more about this feature.
+
+[[embedded-entities.queries.repository]]
+==== Repository Queries on embedded objects.
+
+The `Repository` abstraction allows deriving queries on fields of embedded objects as well as the entire object.
+
+.Repository queries on embedded objects.
+====
+[source,java]
+----
+interface UserRepository extends CrudRepository<User, String> {
+
+	List<User> findByName(UserName username); <1>
+
+	List<User> findByNameFirstname(String firstname); <1>
+}
+----
+<1> Matches against all fields of the embedded object.
+<2> Matches against the `firstname`.
+====
+
+[NOTE]
+====
+Index creation for embedded objects is suspended even if the repository `create-query-indexes` namespace attribute is set to `true`.
+====
+
+[[embedded-entities.update]]
+=== Update on Embedded Objects
+
+Embedded objects can be updated as any other object that is part of the domain model.
+The mapping layer takes care of flattening embedded structures into their surroundings.
+It is possible to update single attributes of the embedded object as well as the entire value as shown in the examples below.
+
+.Update a single field of an embedded object.
+====
+[source,java]
+----
+Update update = new Update().set("name.firstname", "Janet");
+template.update(User.class).matching(where("id").is("Wasp"))
+   .apply(update).first()
+----
+
+[source,json]
+----
+db.collection.update({
+  "_id" : "Wasp"
+},
+{
+  "$set" { "firstname" : "Janet" }
+},
+{ ... }
+)
+----
+====
+
+.Update an embedded object.
+====
+[source,java]
+----
+Update update = new Update().set("name", new Name("Janet", "van Dyne"));
+template.update(User.class).matching(where("id").is("Wasp"))
+   .apply(update).first()
+----
+
+[source,json]
+----
+db.collection.update({
+  "_id" : "Wasp"
+},
+{
+  "$set" {
+    "firstname" : "Janet",
+    "lastname" : "van Dyne",
+  }
+},
+{ ... }
+)
+----
+====
+
+[[embedded-entities.aggregations]]
+=== Aggregations on Embedded Objects
+
+The <<mongo.aggregation,Aggregation Framework>> will attempt to map embedded values of typed aggregations.
+Please make sure to work with the properties path including the embedded wrapper object when referencing one of it's values.
+Other than that no special action is required.
+
+[[embedded-entities.indexes]]
+=== Index on Embedded Objects
+
+It is possible to attach the `@Indexed` annotation to properties of an embedded type just as it is done with regular objects.
+However it is not possible to use `@Indexed` along with the `@Embedded` annotation on the very same property of an object.
+
+====
+[source,java]
+----
+public class User {
+
+	@Id
+    private String userId;
+
+    @Embedded(onEmpty = USE_NULL)
+    UserName name; <1>
+
+    @Indexed <2> // Invalid -> InvalidDataAccessApiUsageException
+    @Embedded(onEmpty = USE_Empty)
+    Address address;
+}
+
+public class UserName {
+
+    private String firstname;
+
+    @Indexed
+    private String lastname; <1>
+}
+----
+<1> Index created for `lastname` in `users` collection.
+<2> Invalid `@Indexed` usage along with `@Embedded`
+====
+
+

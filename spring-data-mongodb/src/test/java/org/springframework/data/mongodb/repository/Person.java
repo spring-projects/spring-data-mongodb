@@ -27,6 +27,7 @@ import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Embedded;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 /**
@@ -69,6 +70,9 @@ public class Person extends Contact {
 	@DBRef(lazy = true) ArrayList<User> realFans;
 
 	Credentials credentials;
+
+	@Embedded.Nullable(prefix = "u") //
+	User embeddedUser;
 
 	public Person() {
 
@@ -294,6 +298,14 @@ public class Person extends Contact {
 
 	public List<String> getSkills() {
 		return skills;
+	}
+
+	public User getEmbeddedUser() {
+		return embeddedUser;
+	}
+
+	public void setEmbeddedUser(User embeddedUser) {
+		this.embeddedUser = embeddedUser;
 	}
 
 	/*

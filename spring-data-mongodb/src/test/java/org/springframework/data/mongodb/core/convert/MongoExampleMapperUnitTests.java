@@ -32,7 +32,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
@@ -41,8 +40,10 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.QueryMapperUnitTests.ClassWithGeoTypes;
 import org.springframework.data.mongodb.core.convert.QueryMapperUnitTests.WithDBRef;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Embedded;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.UntypedExampleMatcher;
@@ -454,6 +455,60 @@ public class MongoExampleMapperUnitTests {
 		assertThat(document).doesNotContainKey("_class");
 	}
 
+	@Test // DATAMONGO-1902
+	void mapsEmbeddedType() {
+
+		WithEmbedded probe = new WithEmbedded();
+		probe.embeddableType = new EmbeddableType();
+		probe.embeddableType.atFieldAnnotatedValue = "@Field";
+		probe.embeddableType.stringValue = "string-value";
+
+		org.bson.Document document = mapper.getMappedExample(Example.of(probe, UntypedExampleMatcher.matching()));
+		assertThat(document).containsEntry("stringValue", "string-value").containsEntry("with-at-field-annotation",
+				"@Field");
+	}
+
+	@Test // DATAMONGO-1902
+	void mapsPrefixedEmbeddedType() {
+
+		WithEmbedded probe = new WithEmbedded();
+		probe.prefixedEmbeddableValue = new EmbeddableType();
+		probe.prefixedEmbeddableValue.atFieldAnnotatedValue = "@Field";
+		probe.prefixedEmbeddableValue.stringValue = "string-value";
+
+		org.bson.Document document = mapper.getMappedExample(Example.of(probe, UntypedExampleMatcher.matching()));
+		assertThat(document).containsEntry("prefix-stringValue", "string-value")
+				.containsEntry("prefix-with-at-field-annotation", "@Field");
+	}
+
+	@Test // DATAMONGO-1902
+	void mapsNestedEmbeddedType() {
+
+		WrapperAroundWithEmbedded probe = new WrapperAroundWithEmbedded();
+		probe.withEmbedded = new WithEmbedded();
+		probe.withEmbedded.embeddableType = new EmbeddableType();
+		probe.withEmbedded.embeddableType.atFieldAnnotatedValue = "@Field";
+		probe.withEmbedded.embeddableType.stringValue = "string-value";
+
+		org.bson.Document document = mapper.getMappedExample(Example.of(probe, UntypedExampleMatcher.matching()));
+		assertThat(document).containsEntry("withEmbedded.stringValue", "string-value")
+				.containsEntry("withEmbedded.with-at-field-annotation", "@Field");
+	}
+
+	@Test // DATAMONGO-1902
+	void mapsNestedPrefixedEmbeddedType() {
+
+		WrapperAroundWithEmbedded probe = new WrapperAroundWithEmbedded();
+		probe.withEmbedded = new WithEmbedded();
+		probe.withEmbedded.prefixedEmbeddableValue = new EmbeddableType();
+		probe.withEmbedded.prefixedEmbeddableValue.atFieldAnnotatedValue = "@Field";
+		probe.withEmbedded.prefixedEmbeddableValue.stringValue = "string-value";
+
+		org.bson.Document document = mapper.getMappedExample(Example.of(probe, UntypedExampleMatcher.matching()));
+		assertThat(document).containsEntry("withEmbedded.prefix-stringValue", "string-value")
+				.containsEntry("withEmbedded.prefix-with-at-field-annotation", "@Field");
+	}
+
 	static class FlatDocument {
 
 		@Id String id;
@@ -480,5 +535,30 @@ public class MongoExampleMapperUnitTests {
 
 		@Id String id;
 		String value;
+	}
+
+	@Document
+	static class WrapperAroundWithEmbedded {
+
+		String id;
+		WithEmbedded withEmbedded;
+	}
+
+	@Document
+	static class WithEmbedded {
+
+		String id;
+
+		@Embedded.Nullable EmbeddableType embeddableType;
+		@Embedded.Nullable("prefix-") EmbeddableType prefixedEmbeddableValue;
+	}
+
+	static class EmbeddableType {
+
+		@Indexed String stringValue;
+
+		@Indexed //
+		@Field("with-at-field-annotation") //
+		String atFieldAnnotatedValue;
 	}
 }

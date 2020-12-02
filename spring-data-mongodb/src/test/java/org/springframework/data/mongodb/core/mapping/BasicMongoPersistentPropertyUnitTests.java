@@ -187,7 +187,7 @@ public class BasicMongoPersistentPropertyUnitTests {
 	public void honorsFieldOrderWhenIteratingOverProperties() {
 
 		MongoMappingContext context = new MongoMappingContext();
-		BasicMongoPersistentEntity<?> entity = context.getPersistentEntity(Sample.class);
+		MongoPersistentEntity<?> entity = context.getPersistentEntity(Sample.class);
 
 		List<String> properties = new ArrayList<>();
 

@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.index;
 
+import org.springframework.lang.Nullable;
+
 /**
  * Provider interface to obtain {@link IndexOperations} by MongoDB collection name.
  *
@@ -29,7 +31,19 @@ public interface IndexOperationsProvider {
 	 * Returns the operations that can be performed on indexes
 	 *
 	 * @param collectionName name of the MongoDB collection, must not be {@literal null}.
+	 * @param type the type used for field mapping. Can be {@literal null}.
+	 * @return index operations on the named collection
+	 * @since 2.5
+	 */
+	IndexOperations indexOps(String collectionName, @Nullable Class<?> type);
+
+	/**
+	 * Returns the operations that can be performed on indexes
+	 *
+	 * @param collectionName name of the MongoDB collection, must not be {@literal null}.
 	 * @return index operations on the named collection
 	 */
-	IndexOperations indexOps(String collectionName);
+	default IndexOperations indexOps(String collectionName) {
+		return indexOps(collectionName, null);
+	}
 }

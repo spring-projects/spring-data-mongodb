@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.mapping;
 
 import org.springframework.data.mapping.PersistentEntity;
+import org.springframework.data.mapping.model.MutablePersistentEntity;
 import org.springframework.lang.Nullable;
 
 /**
@@ -24,7 +25,7 @@ import org.springframework.lang.Nullable;
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
-public interface MongoPersistentEntity<T> extends PersistentEntity<T, MongoPersistentProperty> {
+public interface MongoPersistentEntity<T> extends MutablePersistentEntity<T, MongoPersistentProperty> {
 
 	/**
 	 * Returns the collection the entity shall be persisted to.
@@ -91,6 +92,10 @@ public interface MongoPersistentEntity<T> extends PersistentEntity<T, MongoPersi
 	 */
 	default boolean isSharded() {
 		return getShardKey().isSharded();
+	}
+
+	default boolean isEmbedded() {
+		return false;
 	}
 
 }
