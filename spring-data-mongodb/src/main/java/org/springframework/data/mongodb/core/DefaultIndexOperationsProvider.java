@@ -47,7 +47,7 @@ class DefaultIndexOperationsProvider implements IndexOperationsProvider {
 	 * @see org.springframework.data.mongodb.core.index.IndexOperationsProvider#reactiveIndexOps(java.lang.String)
 	 */
 	@Override
-	public IndexOperations indexOps(String collectionName) {
-		return new DefaultIndexOperations(mongoDbFactory, collectionName, mapper);
+	public IndexOperations indexOps(String collectionName, Class<?> type) {
+		return new DefaultIndexOperations(mongoDbFactory, collectionName, mapper, type);
 	}
 }

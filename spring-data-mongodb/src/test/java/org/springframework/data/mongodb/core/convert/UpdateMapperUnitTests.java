@@ -37,9 +37,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.domain.Sort;
@@ -48,6 +48,7 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
+import org.springframework.data.mongodb.core.mapping.Embedded;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -1089,6 +1090,76 @@ class UpdateMapperUnitTests {
 		assertThat(mappedUpdate).isEqualTo(new Document("$set", new Document("aliased.$[element].value", 10)));
 	}
 
+	@Test // DATAMONGO-1902
+	void mappingShouldConsiderValueOfEmbeddedType() {
+
+		Update update = new Update().set("embeddableValue.stringValue", "updated");
+
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(WithEmbedded.class));
+
+		assertThat(mappedUpdate).isEqualTo(new Document("$set", new Document("stringValue", "updated")));
+	}
+
+	@Test // DATAMONGO-1902
+	void mappingShouldConsiderEmbeddedType() {
+
+		EmbeddableType embeddableType = new EmbeddableType();
+		embeddableType.stringValue = "updated";
+		embeddableType.listValue = Arrays.asList("val-1", "val-2");
+		Update update = new Update().set("embeddableValue", embeddableType);
+
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(WithEmbedded.class));
+
+		assertThat(mappedUpdate).isEqualTo(new Document("$set",
+				new Document("stringValue", "updated").append("listValue", Arrays.asList("val-1", "val-2"))));
+	}
+
+	@Test // DATAMONGO-1902
+	void mappingShouldConsiderValueOfPrefixedEmbeddedType() {
+
+		Update update = new Update().set("embeddableValue.stringValue", "updated");
+
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(WithPrefixedEmbedded.class));
+
+		assertThat(mappedUpdate).isEqualTo(new Document("$set", new Document("prefix-stringValue", "updated")));
+	}
+
+	@Test // DATAMONGO-1902
+	void mappingShouldConsiderPrefixedEmbeddedType() {
+
+		EmbeddableType embeddableType = new EmbeddableType();
+		embeddableType.stringValue = "updated";
+		embeddableType.listValue = Arrays.asList("val-1", "val-2");
+
+		Update update = new Update().set("embeddableValue", embeddableType);
+
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(WithPrefixedEmbedded.class));
+
+		assertThat(mappedUpdate).isEqualTo(new Document("$set",
+				new Document("prefix-stringValue", "updated").append("prefix-listValue", Arrays.asList("val-1", "val-2"))));
+	}
+
+	@Test // DATAMONGO-1902
+	void mappingShouldConsiderNestedPrefixedEmbeddedType() {
+
+		EmbeddableType embeddableType = new EmbeddableType();
+		embeddableType.stringValue = "updated";
+		embeddableType.listValue = Arrays.asList("val-1", "val-2");
+
+		Update update = new Update().set("withPrefixedEmbedded.embeddableValue", embeddableType);
+
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(WrapperAroundWithEmbedded.class));
+
+		System.out.println("mappedUpdate.toJson(): " + mappedUpdate.toJson());
+		assertThat(mappedUpdate).isEqualTo(new Document("$set", new Document("withPrefixedEmbedded",
+				new Document("prefix-stringValue", "updated").append("prefix-listValue", Arrays.asList("val-1", "val-2")))));
+	}
+
 	static class DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes {
 		ListModelWrapper concreteTypeWithListAttributeOfInterfaceType;
 	}
@@ -1416,6 +1487,39 @@ class UpdateMapperUnitTests {
 
 		@Field("AValue") private Long aValue = 0L;
 
+	}
+
+	static class WrapperAroundWithEmbedded {
+
+		String someValue;
+		WithEmbedded withEmbedded;
+		WithPrefixedEmbedded withPrefixedEmbedded;
+	}
+
+	static class WithEmbedded {
+
+		String id;
+
+		@Embedded.Nullable EmbeddableType embeddableValue;
+	}
+
+	static class WithPrefixedEmbedded {
+
+		String id;
+
+		@Embedded.Nullable("prefix-") EmbeddableType embeddableValue;
+	}
+
+	static class EmbeddableType {
+
+		String stringValue;
+		List<String> listValue;
+
+		@Field("with-at-field-annotation") //
+		String atFieldAnnotatedValue;
+
+		@Transient //
+		String transientValue;
 	}
 
 }

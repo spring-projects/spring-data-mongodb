@@ -111,7 +111,7 @@ public class MongoMappingContextUnitTests {
 	void mappingContextShouldAcceptClassWithImplicitIdProperty() {
 
 		MongoMappingContext context = new MongoMappingContext();
-		BasicMongoPersistentEntity<?> pe = context.getRequiredPersistentEntity(ClassWithImplicitId.class);
+		MongoPersistentEntity<?> pe = context.getRequiredPersistentEntity(ClassWithImplicitId.class);
 
 		assertThat(pe).isNotNull();
 		assertThat(pe.isIdProperty(pe.getRequiredPersistentProperty("id"))).isTrue();
@@ -121,7 +121,7 @@ public class MongoMappingContextUnitTests {
 	void mappingContextShouldAcceptClassWithExplicitIdProperty() {
 
 		MongoMappingContext context = new MongoMappingContext();
-		BasicMongoPersistentEntity<?> pe = context.getRequiredPersistentEntity(ClassWithExplicitId.class);
+		MongoPersistentEntity<?> pe = context.getRequiredPersistentEntity(ClassWithExplicitId.class);
 
 		assertThat(pe).isNotNull();
 		assertThat(pe.isIdProperty(pe.getRequiredPersistentProperty("myId"))).isTrue();
@@ -131,7 +131,7 @@ public class MongoMappingContextUnitTests {
 	void mappingContextShouldAcceptClassWithExplicitAndImplicitIdPropertyByGivingPrecedenceToExplicitIdProperty() {
 
 		MongoMappingContext context = new MongoMappingContext();
-		BasicMongoPersistentEntity<?> pe = context.getRequiredPersistentEntity(ClassWithExplicitIdAndImplicitId.class);
+		MongoPersistentEntity<?> pe = context.getRequiredPersistentEntity(ClassWithExplicitIdAndImplicitId.class);
 		assertThat(pe).isNotNull();
 	}
 
@@ -166,7 +166,7 @@ public class MongoMappingContextUnitTests {
 
 		MongoMappingContext context = new MongoMappingContext();
 
-		BasicMongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(ClassWithChronoUnit.class);
+		MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(ClassWithChronoUnit.class);
 
 		assertThat(entity.getPersistentProperty("unit").isEntity()).isFalse();
 		assertThat(context.hasPersistentEntityFor(ChronoUnit.class)).isFalse();

@@ -32,7 +32,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.annotation.Id;
@@ -46,6 +45,7 @@ import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
+import org.springframework.data.mongodb.core.mapping.Embedded;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Criteria;
 
@@ -357,6 +357,103 @@ public class TypeBasedAggregationOperationContextUnitTests {
 				.isEqualTo(new Document("val", new Document("$add", Arrays.asList("$nested1.value1", "$field2.nestedValue2"))));
 	}
 
+	@Test // DATAMONGO-1902
+	void rendersProjectOnEmbeddedFieldCorrectly() {
+
+		AggregationOperationContext context = getContext(WithEmbedded.class);
+
+		Document agg = newAggregation(WithEmbedded.class, project().and("embeddableType.stringValue").as("val"))
+				.toDocument("collection", context);
+
+		assertThat(getPipelineElementFromAggregationAt(agg, 0).get("$project"))
+				.isEqualTo(new Document("val", "$stringValue"));
+	}
+
+	@Test // DATAMONGO-1902
+	void rendersProjectOnEmbeddedFieldWithAtFieldAnnotationCorrectly() {
+
+		AggregationOperationContext context = getContext(WithEmbedded.class);
+
+		Document agg = newAggregation(WithEmbedded.class, project().and("embeddableType.atFieldAnnotatedValue").as("val"))
+				.toDocument("collection", context);
+
+		assertThat(getPipelineElementFromAggregationAt(agg, 0).get("$project"))
+				.isEqualTo(new Document("val", "$with-at-field-annotation"));
+	}
+
+	@Test // DATAMONGO-1902
+	void rendersProjectOnPrefixedEmbeddedFieldCorrectly() {
+
+		AggregationOperationContext context = getContext(WithEmbedded.class);
+
+		Document agg = newAggregation(WithEmbedded.class, project().and("prefixedEmbeddableValue.stringValue").as("val"))
+				.toDocument("collection", context);
+
+		assertThat(getPipelineElementFromAggregationAt(agg, 0).get("$project"))
+				.isEqualTo(new Document("val", "$prefix-stringValue"));
+	}
+
+	@Test // DATAMONGO-1902
+	void rendersProjectOnPrefixedEmbeddedFieldWithAtFieldAnnotationCorrectly() {
+
+		AggregationOperationContext context = getContext(WithEmbedded.class);
+
+		Document agg = newAggregation(WithEmbedded.class,
+				project().and("prefixedEmbeddableValue.atFieldAnnotatedValue").as("val")).toDocument("collection", context);
+
+		assertThat(getPipelineElementFromAggregationAt(agg, 0).get("$project"))
+				.isEqualTo(new Document("val", "$prefix-with-at-field-annotation"));
+	}
+
+	@Test // DATAMONGO-1902
+	void rendersProjectOnNestedEmbeddedFieldCorrectly() {
+
+		AggregationOperationContext context = getContext(WrapperAroundWithEmbedded.class);
+
+		Document agg = newAggregation(WrapperAroundWithEmbedded.class,
+				project().and("withEmbedded.embeddableType.stringValue").as("val")).toDocument("collection", context);
+
+		assertThat(getPipelineElementFromAggregationAt(agg, 0).get("$project"))
+				.isEqualTo(new Document("val", "$withEmbedded.stringValue"));
+	}
+
+	@Test // DATAMONGO-1902
+	void rendersProjectOnNestedEmbeddedFieldWithAtFieldAnnotationCorrectly() {
+
+		AggregationOperationContext context = getContext(WrapperAroundWithEmbedded.class);
+
+		Document agg = newAggregation(WrapperAroundWithEmbedded.class,
+				project().and("withEmbedded.embeddableType.atFieldAnnotatedValue").as("val")).toDocument("collection", context);
+
+		assertThat(getPipelineElementFromAggregationAt(agg, 0).get("$project"))
+				.isEqualTo(new Document("val", "$withEmbedded.with-at-field-annotation"));
+	}
+
+	@Test // DATAMONGO-1902
+	void rendersProjectOnNestedPrefixedEmbeddedFieldCorrectly() {
+
+		AggregationOperationContext context = getContext(WrapperAroundWithEmbedded.class);
+
+		Document agg = newAggregation(WrapperAroundWithEmbedded.class,
+				project().and("withEmbedded.prefixedEmbeddableValue.stringValue").as("val")).toDocument("collection", context);
+
+		assertThat(getPipelineElementFromAggregationAt(agg, 0).get("$project"))
+				.isEqualTo(new Document("val", "$withEmbedded.prefix-stringValue"));
+	}
+
+	@Test // DATAMONGO-1902
+	void rendersProjectOnNestedPrefixedEmbeddedFieldWithAtFieldAnnotationCorrectly() {
+
+		AggregationOperationContext context = getContext(WrapperAroundWithEmbedded.class);
+
+		Document agg = newAggregation(WrapperAroundWithEmbedded.class,
+				project().and("withEmbedded.prefixedEmbeddableValue.atFieldAnnotatedValue").as("val")).toDocument("collection",
+						context);
+
+		assertThat(getPipelineElementFromAggregationAt(agg, 0).get("$project"))
+				.isEqualTo(new Document("val", "$withEmbedded.prefix-with-at-field-annotation"));
+	}
+
 	@org.springframework.data.mongodb.core.mapping.Document(collection = "person")
 	@AllArgsConstructor
 	public static class FooPerson {
@@ -432,5 +529,27 @@ public class TypeBasedAggregationOperationContextUnitTests {
 	static class Nested {
 		String value1;
 		@org.springframework.data.mongodb.core.mapping.Field("nestedValue2") String value2;
+	}
+
+	static class WrapperAroundWithEmbedded {
+
+		String id;
+		WithEmbedded withEmbedded;
+	}
+
+	static class WithEmbedded {
+
+		String id;
+
+		@Embedded.Nullable EmbeddableType embeddableType;
+		@Embedded.Nullable("prefix-") EmbeddableType prefixedEmbeddableValue;
+	}
+
+	static class EmbeddableType {
+
+		String stringValue;
+
+		@org.springframework.data.mongodb.core.mapping.Field("with-at-field-annotation") //
+		String atFieldAnnotatedValue;
 	}
 }

@@ -39,6 +39,7 @@ import org.springframework.data.mongodb.core.convert.MongoTypeMapper;
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.spel.ExtensionAwareEvaluationContextProvider;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -103,7 +104,7 @@ public class AbstractMongoConfigurationUnitTests {
 
 		AbstractApplicationContext context = new AnnotationConfigApplicationContext(SampleMongoConfiguration.class);
 		MongoMappingContext mappingContext = context.getBean(MongoMappingContext.class);
-		BasicMongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(Entity.class);
+		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(Entity.class);
 		EvaluationContextProvider provider = (EvaluationContextProvider) ReflectionTestUtils.getField(entity,
 				"evaluationContextProvider");
 

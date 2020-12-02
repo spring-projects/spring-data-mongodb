@@ -1361,6 +1361,41 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	void spelExpressionArgumentsGetReevaluatedOnEveryInvocation() {
 
 		assertThat(repository.findWithSpelByFirstnameForSpELExpressionWithParameterIndexOnly("Dave")).containsExactly(dave);
-		assertThat(repository.findWithSpelByFirstnameForSpELExpressionWithParameterIndexOnly("Carter")).containsExactly(carter);
+		assertThat(repository.findWithSpelByFirstnameForSpELExpressionWithParameterIndexOnly("Carter"))
+				.containsExactly(carter);
+	}
+
+	@Test // DATAMONGO-1902
+	void findByValueInsideEmbedded() {
+
+		Person bart = new Person("bart", "simpson");
+		User user = new User();
+		user.setUsername("bartman");
+		user.setId("84r1m4n");
+		bart.setEmbeddedUser(user);
+
+		operations.save(bart);
+
+		List<Person> result = repository.findByEmbeddedUserUsername(user.getUsername());
+
+		assertThat(result).hasSize(1);
+		assertThat(result.get(0).getId().equals(bart.getId()));
+	}
+
+	@Test // DATAMONGO-1902
+	void findByEmbedded() {
+
+		Person bart = new Person("bart", "simpson");
+		User user = new User();
+		user.setUsername("bartman");
+		user.setId("84r1m4n");
+		bart.setEmbeddedUser(user);
+
+		operations.save(bart);
+
+		List<Person> result = repository.findByEmbeddedUser(user);
+
+		assertThat(result).hasSize(1);
+		assertThat(result.get(0).getId().equals(bart.getId()));
 	}
 }

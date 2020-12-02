@@ -97,7 +97,7 @@ public class ReactiveMongoRepositoryFactoryBean<T extends Repository<S, ID>, S, 
 
 		if (createIndexesForQueryMethods) {
 			factory.addQueryCreationListener(new IndexEnsuringQueryCreationListener(
-					collectionName -> IndexOperationsAdapter.blocking(operations.indexOps(collectionName))));
+					(collectionName, javaType) -> IndexOperationsAdapter.blocking(operations.indexOps(javaType))));
 		}
 
 		return factory;

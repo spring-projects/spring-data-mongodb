@@ -26,6 +26,7 @@ import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.util.BsonUtils;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -144,9 +145,9 @@ public interface MongoConverter
 		try {
 			return getConversionService().canConvert(id.getClass(), targetType)
 					? getConversionService().convert(id, targetType)
-					: convertToMongoType(id, null);
+					: convertToMongoType(id, (TypeInformation<?>) null);
 		} catch (ConversionException o_O) {
-			return convertToMongoType(id, null);
+			return convertToMongoType(id,(TypeInformation<?>)  null);
 		}
 	}
 }

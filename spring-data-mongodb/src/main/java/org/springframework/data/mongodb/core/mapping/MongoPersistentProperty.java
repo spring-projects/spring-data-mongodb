@@ -15,10 +15,14 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
+import java.lang.annotation.ElementType;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
+import org.springframework.data.mongodb.core.mapping.Embedded.OnEmpty;
+import org.springframework.data.util.NullableUtils;
 import org.springframework.lang.Nullable;
 
 /**
@@ -124,6 +128,24 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	}
 
 	/**
+	 * @return {@literal true} if the property should be embedded.
+	 * @since 3.2
+	 */
+	default boolean isEmbedded() {
+		return isEntity() && findAnnotation(Embedded.class) != null;
+	}
+
+	/**
+	 * @return {@literal true} if the property generally allows {@literal null} values;
+	 * @since 3.2
+	 */
+	default boolean isNullable() {
+
+		return (isEmbedded() && findAnnotation(Embedded.class).onEmpty().equals(OnEmpty.USE_NULL))
+				&& !NullableUtils.isNonNull(getField(), ElementType.FIELD);
+	}
+
+	/**
 	 * Simple {@link Converter} implementation to transform a {@link MongoPersistentProperty} into its field name.
 	 *
 	 * @author Oliver Gierke
@@ -137,7 +159,10 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
 		 */
 		public String convert(MongoPersistentProperty source) {
-			return source.getFieldName();
+			if (!source.isEmbedded()) {
+				return source.getFieldName();
+			}
+			return "";
 		}
 	}
 }
