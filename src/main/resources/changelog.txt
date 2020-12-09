@@ -1,6 +1,13 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.1.2 (2020-12-09)
+-------------------------------------
+* DATAMONGO-2663 - Document Spring Data to MongoDB compatibility.
+* DATAMONGO-2661 - Handle nullable types for KPropertyPath.
+* DATAMONGO-2653 - Release 3.1.2 (2020.0.2).
+
+
 Changes in version 3.2.0-M1 (2020-12-09)
 ----------------------------------------
 * DATAMONGO-2663 - Document Spring Data to MongoDB compatibility.
@@ -3216,6 +3223,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
