@@ -1,6 +1,12 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 2.2.12.RELEASE (2020-12-09)
+----------------------------------------------
+* DATAMONGO-2663 - Document Spring Data to MongoDB compatibility.
+* DATAMONGO-2646 - Release 2.2.12 (Moore SR12).
+
+
 Changes in version 3.1.1 (2020-11-11)
 -------------------------------------
 * DATAMONGO-2648 - Release 3.1.1 (2020.0.1).
@@ -3191,6 +3197,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
