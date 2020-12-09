@@ -1,6 +1,17 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.2.0-M1 (2020-12-09)
+----------------------------------------
+* DATAMONGO-2663 - Document Spring Data to MongoDB compatibility.
+* DATAMONGO-2661 - Handle nullable types for KPropertyPath.
+* DATAMONGO-2659 - Allow disk use on Query.
+* DATAMONGO-2652 - Implement CrudRepository.delete(Iterable<ID> ids).
+* DATAMONGO-2649 - Release 3.2 M1 (2021.0.0).
+* DATAMONGO-2644 - Invalid reference '_id'! Error In spring data mongodb.
+* DATAMONGO-2635 - Enums Don't Properly Serialize In Aggregation Pipeline Facet.
+
+
 Changes in version 3.0.6.RELEASE (2020-12-09)
 ---------------------------------------------
 * DATAMONGO-2663 - Document Spring Data to MongoDB compatibility.
@@ -3196,6 +3207,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
