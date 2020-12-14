@@ -73,21 +73,22 @@ pipeline {
 				}
 			}
 			agent {
-				docker {
-					image 'springci/spring-data-openjdk8-with-mongodb-4.2.0:latest'
-					label 'data'
-					args '-v $HOME:/tmp/jenkins-home'
-				}
+				label 'data'
 			}
 			options { timeout(time: 30, unit: 'MINUTES') }
 			steps {
-				sh 'rm -rf ?'
-				sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
-				sh 'mongod --setParameter transactionLifetimeLimitSeconds=90 --setParameter maxTransactionLockRequestTimeoutMillis=10000 --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
-				sh 'sleep 10'
-				sh 'mongo --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
-				sh 'sleep 15'
-				sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw clean dependency:list test -Duser.name=jenkins -Dsort -U -B'
+				script {
+					docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
+						docker.image('springci/spring-data-openjdk8-with-mongodb-4.2.0:latest').inside('-v $HOME:/tmp/jenkins-home') {
+							sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
+							sh 'mongod --setParameter transactionLifetimeLimitSeconds=90 --setParameter maxTransactionLockRequestTimeoutMillis=10000 --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
+							sh 'sleep 10'
+							sh 'mongo --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
+							sh 'sleep 15'
+							sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw clean dependency:list test -Duser.name=jenkins -Dsort -U -B'
+						}
+					}
+				}
 			}
 		}
 
@@ -101,61 +102,64 @@ pipeline {
 			parallel {
 				stage("test: mongodb 4.0 (jdk8)") {
 					agent {
-						docker {
-							image 'springci/spring-data-openjdk8-with-mongodb-4.0:latest'
-							label 'data'
-							args '-v $HOME:/tmp/jenkins-home'
-						}
+						label 'data'
 					}
 					options { timeout(time: 30, unit: 'MINUTES') }
 					steps {
-						sh 'rm -rf ?'
-						sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
-						sh 'mongod --setParameter transactionLifetimeLimitSeconds=90 --setParameter maxTransactionLockRequestTimeoutMillis=10000 --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
-						sh 'sleep 10'
-						sh 'mongo --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
-						sh 'sleep 15'
-						sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw clean dependency:list test -Duser.name=jenkins -Dsort -U -B'
+						script {
+							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
+								docker.image('springci/spring-data-openjdk8-with-mongodb-4.0:latest').inside('-v $HOME:/tmp/jenkins-home') {
+									sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
+									sh 'mongod --setParameter transactionLifetimeLimitSeconds=90 --setParameter maxTransactionLockRequestTimeoutMillis=10000 --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
+									sh 'sleep 10'
+									sh 'mongo --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
+									sh 'sleep 15'
+									sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw clean dependency:list test -Duser.name=jenkins -Dsort -U -B'
+								}
+							}
+						}
 					}
 				}
 
 				stage("test: mongodb 4.2 (jdk8)") {
 					agent {
-						docker {
-							image 'springci/spring-data-openjdk8-with-mongodb-4.2.0:latest'
-							label 'data'
-							args '-v $HOME:/tmp/jenkins-home'
-						}
+						label 'data'
 					}
 					options { timeout(time: 30, unit: 'MINUTES') }
 					steps {
-						sh 'rm -rf ?'
-						sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
-						sh 'mongod --setParameter transactionLifetimeLimitSeconds=90 --setParameter maxTransactionLockRequestTimeoutMillis=10000 --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
-						sh 'sleep 10'
-						sh 'mongo --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
-						sh 'sleep 15'
-						sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw clean dependency:list test -Duser.name=jenkins -Dsort -U -B'
+						script {
+							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
+								docker.image('springci/spring-data-openjdk8-with-mongodb-4.2.0:latest').inside('-v $HOME:/tmp/jenkins-home') {
+									sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
+									sh 'mongod --setParameter transactionLifetimeLimitSeconds=90 --setParameter maxTransactionLockRequestTimeoutMillis=10000 --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
+									sh 'sleep 10'
+									sh 'mongo --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
+									sh 'sleep 15'
+									sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw clean dependency:list test -Duser.name=jenkins -Dsort -U -B'
+								}
+							}
+						}
 					}
 				}
 
 				stage("test: baseline (jdk15)") {
 					agent {
-						docker {
-							image 'springci/spring-data-openjdk15-with-mongodb-4.2.0:latest'
-							label 'data'
-							args '-v $HOME:/tmp/jenkins-home'
-						}
+						label 'data'
 					}
 					options { timeout(time: 30, unit: 'MINUTES') }
 					steps {
-						sh 'rm -rf ?'
-						sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
-						sh 'mongod --setParameter transactionLifetimeLimitSeconds=90 --setParameter maxTransactionLockRequestTimeoutMillis=10000 --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
-						sh 'sleep 10'
-						sh 'mongo --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
-						sh 'sleep 15'
-						sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -Pjava11 clean dependency:list test -Duser.name=jenkins -Dsort -U -B'
+						script {
+							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
+								docker.image('springci/spring-data-openjdk15-with-mongodb-4.2.0:latest').inside('-v $HOME:/tmp/jenkins-home') {
+									sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
+									sh 'mongod --setParameter transactionLifetimeLimitSeconds=90 --setParameter maxTransactionLockRequestTimeoutMillis=10000 --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
+									sh 'sleep 10'
+									sh 'mongo --eval "rs.initiate({_id: \'rs0\', members:[{_id: 0, host: \'127.0.0.1:27017\'}]});"'
+									sh 'sleep 15'
+									sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -Pjava11 clean dependency:list test -Duser.name=jenkins -Dsort -U -B'
+								}
+							}
+						}
 					}
 				}
 			}
@@ -169,11 +173,7 @@ pipeline {
 				}
 			}
 			agent {
-				docker {
-					image 'adoptopenjdk/openjdk8:latest'
-					label 'data'
-					args '-v $HOME:/tmp/jenkins-home'
-				}
+				label 'data'
 			}
 			options { timeout(time: 20, unit: 'MINUTES') }
 
@@ -182,15 +182,20 @@ pipeline {
 			}
 
 			steps {
-				sh 'rm -rf ?'
-				sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -Pci,artifactory ' +
-						'-Dartifactory.server=https://repo.spring.io ' +
-						"-Dartifactory.username=${ARTIFACTORY_USR} " +
-						"-Dartifactory.password=${ARTIFACTORY_PSW} " +
-						"-Dartifactory.staging-repository=libs-snapshot-local " +
-						"-Dartifactory.build-name=spring-data-mongodb " +
-						"-Dartifactory.build-number=${BUILD_NUMBER} " +
-						'-Dmaven.test.skip=true clean deploy -U -B'
+				script {
+					docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
+						docker.image('adoptopenjdk/openjdk8:latest').inside('-v $HOME:/tmp/jenkins-home') {
+							sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -Pci,artifactory ' +
+									'-Dartifactory.server=https://repo.spring.io ' +
+									"-Dartifactory.username=${ARTIFACTORY_USR} " +
+									"-Dartifactory.password=${ARTIFACTORY_PSW} " +
+									"-Dartifactory.staging-repository=libs-snapshot-local " +
+									"-Dartifactory.build-name=spring-data-mongodb " +
+									"-Dartifactory.build-number=${BUILD_NUMBER} " +
+									'-Dmaven.test.skip=true clean deploy -U -B'
+						}
+					}
+				}
 			}
 		}
 
@@ -199,11 +204,7 @@ pipeline {
 				branch '3.1.x'
 			}
 			agent {
-				docker {
-					image 'adoptopenjdk/openjdk8:latest'
-					label 'data'
-					args '-v $HOME:/tmp/jenkins-home'
-				}
+				label 'data'
 			}
 			options { timeout(time: 20, unit: 'MINUTES') }
 
@@ -212,12 +213,18 @@ pipeline {
 			}
 
 			steps {
-				sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -Pci,distribute ' +
-						'-Dartifactory.server=https://repo.spring.io ' +
-						"-Dartifactory.username=${ARTIFACTORY_USR} " +
-						"-Dartifactory.password=${ARTIFACTORY_PSW} " +
-						"-Dartifactory.distribution-repository=temp-private-local " +
-						'-Dmaven.test.skip=true clean deploy -U -B'
+				script {
+					docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
+						docker.image('adoptopenjdk/openjdk8:latest').inside('-v $HOME:/tmp/jenkins-home') {
+							sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -Pci,distribute ' +
+									'-Dartifactory.server=https://repo.spring.io ' +
+									"-Dartifactory.username=${ARTIFACTORY_USR} " +
+									"-Dartifactory.password=${ARTIFACTORY_PSW} " +
+									"-Dartifactory.distribution-repository=temp-private-local " +
+									'-Dmaven.test.skip=true clean deploy -U -B'
+						}
+					}
+				}
 			}
 		}
 	}
