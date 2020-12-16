@@ -1990,15 +1990,15 @@ public class ProjectionOperationUnitTests {
 		assertThat(agg).isEqualTo(Document.parse("{ $project : { newDate: { $dateFromParts: { year : 2018 } } } }"));
 	}
 
-	@Test // DATAMONGO-1834
+	@Test // DATAMONGO-1834, DATAMONGO-2671
 	public void shouldRenderDateFromParts() {
 
 		Document agg = project()
-				.and(DateOperators.dateFromParts().year(2018).month(3).day(23).hour(14).minute(25).second(10).milliseconds(2))
+				.and(DateOperators.dateFromParts().year(2018).month(3).day(23).hour(14).minute(25).second(10).millisecond(2))
 				.as("newDate").toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg).isEqualTo(Document.parse(
-				"{ $project : { newDate: { $dateFromParts: { year : 2018, month : 3, day : 23, hour : 14, minute : 25, second : 10, milliseconds : 2 } } } }"));
+				"{ $project : { newDate: { $dateFromParts: { year : 2018, month : 3, day : 23, hour : 14, minute : 25, second : 10, millisecond : 2 } } } }"));
 	}
 
 	@Test // DATAMONGO-1834
@@ -2021,14 +2021,14 @@ public class ProjectionOperationUnitTests {
 		assertThat(agg).isEqualTo(Document.parse("{ $project : { newDate: { $dateFromParts: { isoWeekYear : 2018 } } } }"));
 	}
 
-	@Test // DATAMONGO-1834
+	@Test // DATAMONGO-1834, DATAMONGO-2671
 	public void shouldRenderIsoDateFromParts() {
 
 		Document agg = project().and(DateOperators.dateFromParts().isoWeekYear(2018).isoWeek(12).isoDayOfWeek(5).hour(14)
-				.minute(30).second(42).milliseconds(2)).as("newDate").toDocument(Aggregation.DEFAULT_CONTEXT);
+				.minute(30).second(42).millisecond(2)).as("newDate").toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg).isEqualTo(Document.parse(
-				"{ $project : { newDate: { $dateFromParts: { isoWeekYear : 2018, isoWeek : 12, isoDayOfWeek : 5, hour : 14, minute : 30, second : 42, milliseconds : 2 } } } }"));
+				"{ $project : { newDate: { $dateFromParts: { isoWeekYear : 2018, isoWeek : 12, isoDayOfWeek : 5, hour : 14, minute : 30, second : 42, millisecond : 2 } } } }"));
 	}
 
 	@Test // DATAMONGO-1834

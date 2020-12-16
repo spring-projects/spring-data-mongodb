@@ -902,18 +902,18 @@ public class SpelExpressionTransformerUnitTests {
 				"{ \"$dateFromString\" : {\"dateString\" : \"$field\", \"format\" : \"DD-MM-YYYY\", \"timezone\" : \"UTC\", \"onError\" : -1,  \"onNull\" : -2}}"));
 	}
 
-	@Test // DATAMONGO-2077
+	@Test // DATAMONGO-2077, DATAMONGO-2671
 	public void shouldRenderDateFromParts() {
 
 		assertThat(transform("dateFromParts(y, m, d, h, mm, s, ms, 'UTC')")).isEqualTo(Document.parse(
-				"{ \"$dateFromParts\" : {\"year\" : \"$y\", \"month\" : \"$m\", \"day\" : \"$d\", \"hour\" : \"$h\",  \"minute\" : \"$mm\",  \"second\" : \"$s\", \"milliseconds\" : \"$ms\", \"timezone\" : \"UTC\"}}"));
+				"{ \"$dateFromParts\" : {\"year\" : \"$y\", \"month\" : \"$m\", \"day\" : \"$d\", \"hour\" : \"$h\",  \"minute\" : \"$mm\",  \"second\" : \"$s\", \"millisecond\" : \"$ms\", \"timezone\" : \"UTC\"}}"));
 	}
 
-	@Test // DATAMONGO-2077
+	@Test // DATAMONGO-2077, DATAMONGO-2671
 	public void shouldRenderIsoDateFromParts() {
 
 		assertThat(transform("isoDateFromParts(y, m, d, h, mm, s, ms, 'UTC')")).isEqualTo(Document.parse(
-				"{ \"$dateFromParts\" : {\"isoWeekYear\" : \"$y\", \"isoWeek\" : \"$m\", \"isoDayOfWeek\" : \"$d\", \"hour\" : \"$h\",  \"minute\" : \"$mm\",  \"second\" : \"$s\", \"milliseconds\" : \"$ms\", \"timezone\" : \"UTC\"}}"));
+				"{ \"$dateFromParts\" : {\"isoWeekYear\" : \"$y\", \"isoWeek\" : \"$m\", \"isoDayOfWeek\" : \"$d\", \"hour\" : \"$h\",  \"minute\" : \"$mm\",  \"second\" : \"$s\", \"millisecond\" : \"$ms\", \"timezone\" : \"UTC\"}}"));
 	}
 
 	@Test // DATAMONGO-2077
