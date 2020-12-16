@@ -1829,24 +1829,64 @@ public class DateOperators {
 		}
 
 		/**
-		 * Set the {@literal milliseconds} to the given value which must resolve to a value in range {@code 0 - 999}. Can be
+		 * Set the {@literal millisecond} to the given value which must resolve to a value in range {@code 0 - 999}. Can be
 		 * a simple value, {@link Field field reference} or {@link AggregationExpression expression}.
 		 *
-		 * @param milliseconds must not be {@literal null}.
+		 * @param millisecond must not be {@literal null}.
 		 * @return new instance.
-		 * @throws IllegalArgumentException if given {@literal milliseconds} is {@literal null}
+		 * @throws IllegalArgumentException if given {@literal millisecond} is {@literal null}
+		 * @deprecated use {@link #millisecond(Object)} instead.
 		 */
-		T milliseconds(Object milliseconds);
+		@Deprecated
+		default T milliseconds(Object millisecond) {
+			return millisecond(millisecond);
+		}
 
 		/**
-		 * Set the {@literal milliseconds} to the value resolved by following the given {@link Field field reference}.
+		 * Set the {@literal millisecond} to the given value which must resolve to a value in range {@code 0 - 999}. Can be
+		 * a simple value, {@link Field field reference} or {@link AggregationExpression expression}.
+		 *
+		 * @param millisecond must not be {@literal null}.
+		 * @return new instance.
+		 * @throws IllegalArgumentException if given {@literal millisecond} is {@literal null}
+		 */
+		T millisecond(Object millisecond);
+
+		/**
+		 * Set the {@literal millisecond} to the value resolved by following the given {@link Field field reference}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance.
+		 * @throws IllegalArgumentException if given {@literal fieldReference} is {@literal null}.
+		 * @deprecated use {@link #millisecondOf(String)} instead.
+		 */
+		@Deprecated
+		default T millisecondsOf(String fieldReference) {
+			return millisecondOf(fieldReference);
+		}
+
+		/**
+		 * Set the {@literal millisecond} to the value resolved by following the given {@link Field field reference}.
 		 *
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance.
 		 * @throws IllegalArgumentException if given {@literal fieldReference} is {@literal null}.
 		 */
-		default T millisecondsOf(String fieldReference) {
+		default T millisecondOf(String fieldReference) {
 			return milliseconds(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Set the {@literal millisecond} to the result of the given {@link AggregationExpression expression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance.
+		 * @throws IllegalArgumentException if given {@literal expression} is {@literal null}.
+		 * @deprecated use {@link #millisecondOf(AggregationExpression)} instead.
+		 */
+		@Deprecated
+		default T millisecondsOf(AggregationExpression expression) {
+			return millisecondOf(expression);
 		}
 
 		/**
@@ -1856,7 +1896,7 @@ public class DateOperators {
 		 * @return new instance.
 		 * @throws IllegalArgumentException if given {@literal expression} is {@literal null}.
 		 */
-		default T millisecondsOf(AggregationExpression expression) {
+		default T millisecondOf(AggregationExpression expression) {
 			return milliseconds(expression);
 		}
 	}
@@ -1971,8 +2011,8 @@ public class DateOperators {
 		}
 
 		@Override
-		public DateFromParts milliseconds(Object milliseconds) {
-			return new DateFromParts(append("milliseconds", milliseconds));
+		public DateFromParts millisecond(Object millisecond) {
+			return new DateFromParts(append("millisecond", millisecond));
 		}
 
 		/**
@@ -2147,8 +2187,8 @@ public class DateOperators {
 		}
 
 		@Override
-		public IsoDateFromParts milliseconds(Object milliseconds) {
-			return new IsoDateFromParts(append("milliseconds", milliseconds));
+		public IsoDateFromParts millisecond(Object millisecond) {
+			return new IsoDateFromParts(append("millisecond", millisecond));
 		}
 
 		/**

@@ -145,9 +145,9 @@ public class MethodReferenceNode extends ExpressionNode {
 		map.put("dateFromString", mapArgRef().forOperator("$dateFromString") //
 				.mappingParametersTo("dateString", "format", "timezone", "onError", "onNull"));
 		map.put("dateFromParts", mapArgRef().forOperator("$dateFromParts").mappingParametersTo("year", "month", "day",
-				"hour", "minute", "second", "milliseconds", "timezone"));
+				"hour", "minute", "second", "millisecond", "timezone"));
 		map.put("isoDateFromParts", mapArgRef().forOperator("$dateFromParts").mappingParametersTo("isoWeekYear", "isoWeek",
-				"isoDayOfWeek", "hour", "minute", "second", "milliseconds", "timezone"));
+				"isoDayOfWeek", "hour", "minute", "second", "millisecond", "timezone"));
 		map.put("dateToParts", mapArgRef().forOperator("$dateToParts") //
 				.mappingParametersTo("date", "timezone", "iso8601"));
 		map.put("isoDayOfWeek", singleArgRef().forOperator("$isoDayOfWeek"));
