@@ -23,7 +23,6 @@ import java.util.Arrays;
 
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.query.Criteria;
 
@@ -239,6 +238,20 @@ public class GroupOperationUnitTests {
 	public void sumWithNullExpressionShouldThrowException() {
 		assertThatIllegalArgumentException()
 				.isThrownBy(() -> Aggregation.group("username").sum((AggregationExpression) null));
+	}
+
+	@Test // DATAMONGO-2651
+	void accumulatorShouldBeAllowedOnGroupOperation() {
+
+		GroupOperation groupOperation = Aggregation.group("id")
+				.accumulate(
+						ScriptOperators.accumulatorBuilder().init("inti").accumulate("acc").merge("merge").finalize("finalize"))
+				.as("accumulated-value");
+
+		Document groupClause = extractDocumentFromGroupOperation(groupOperation);
+		Document accumulatedValue = DocumentTestUtils.getAsDocument(groupClause, "accumulated-value");
+
+		assertThat(accumulatedValue.get("$accumulator")).isNotNull();
 	}
 
 	private Document extractDocumentFromGroupOperation(GroupOperation groupOperation) {
