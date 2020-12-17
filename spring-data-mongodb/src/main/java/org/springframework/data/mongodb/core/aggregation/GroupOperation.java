@@ -23,6 +23,7 @@ import java.util.List;
 import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference;
+import org.springframework.data.mongodb.core.aggregation.ScriptOperators.Accumulator;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -375,6 +376,17 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 		return newBuilder(GroupOps.STD_DEV_POP, null, expr);
 	}
 
+	/**
+	 * Generates an {@link GroupOperationBuilder} for an {@code $accumulator}-expression.
+	 *
+	 * @param accumulator must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 1.10
+	 */
+	public GroupOperationBuilder accumulate(Accumulator accumulator) {
+		return new GroupOperationBuilder(this, new Operation(accumulator));
+	}
+
 	private GroupOperationBuilder newBuilder(Keyword keyword, @Nullable String reference, @Nullable Object value) {
 		return new GroupOperationBuilder(this, new Operation(keyword, null, reference, value));
 	}
@@ -465,12 +477,16 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 
 	static class Operation implements AggregationOperation {
 
-		private final Keyword op;
+		private final @Nullable Keyword op;
 		private final @Nullable String key;
 		private final @Nullable String reference;
 		private final @Nullable Object value;
 
-		public Operation(Keyword op, @Nullable String key, @Nullable String reference, @Nullable Object value) {
+		Operation(AggregationExpression expression) {
+			this(null, null, null, expression);
+		}
+
+		public Operation(@Nullable Keyword op, @Nullable String key, @Nullable String reference, @Nullable Object value) {
 
 			this.op = op;
 			this.key = key;
@@ -487,7 +503,12 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 		}
 
 		public Document toDocument(AggregationOperationContext context) {
-			return new Document(key, new Document(op.toString(), getValue(context)));
+
+			Object value = getValue(context);
+			if(op == null && value instanceof Document) {
+				return new Document(key, value);
+			}
+			return new Document(key, new Document(op.toString(), value));
 		}
 
 		public Object getValue(AggregationOperationContext context) {
