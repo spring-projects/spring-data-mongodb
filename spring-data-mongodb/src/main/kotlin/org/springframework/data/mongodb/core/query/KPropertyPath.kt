@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.query
 
+import org.springframework.data.mapping.toDotPath
 import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty1
 
@@ -25,7 +26,9 @@ import kotlin.reflect.KProperty1
  * @author Mark Paluch
  * @author Yoann de Martino
  * @since 2.2
+ * @deprecated since 3.2, KPropertyPath from Spring Data Commons.
  */
+@Deprecated("use KPropertyPath from Spring Data Commons", replaceWith = ReplaceWith("KPropertyPath", "org.springframework.data.mapping.KPropertyPath"))
 class KPropertyPath<T, U>(
 		internal val parent: KProperty<U?>,
 		internal val child: KProperty1<U, T>
@@ -39,7 +42,7 @@ internal fun asString(property: KProperty<*>): String {
 	return when (property) {
 		is KPropertyPath<*, *> ->
 			"${asString(property.parent)}.${property.child.name}"
-		else -> property.name
+		else -> property.toDotPath()
 	}
 }
 
@@ -54,6 +57,8 @@ internal fun asString(property: KProperty<*>): String {
  * @author Tjeu Kayim
  * @author Yoann de Martino
  * @since 2.2
+ * @deprecated since 3.2, KPropertyPath.div from Spring Data Commons.
  */
+@Deprecated("use KPropertyPath.div from Spring Data Commons", replaceWith = ReplaceWith("this / other", "org.springframework.data.mapping.div"))
 operator fun <T, U> KProperty<T?>.div(other: KProperty1<T, U>) =
 		KPropertyPath(this, other)
