@@ -1,5 +1,5 @@
 /*
- * Copyright 2016. the original author or authors.
+ * Copyright 2016-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -644,7 +644,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Add the value stored at the given field.
-		 * 
+		 *
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Add}.
 		 */
@@ -656,7 +656,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Add the evaluation result of the given {@link AggregationExpression}.
-		 * 
+		 *
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Add}.
 		 */
@@ -668,7 +668,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Add the given value.
-		 * 
+		 *
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link Add}.
 		 */
@@ -784,7 +784,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Divide by the value stored at the given field.
-		 * 
+		 *
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Divide}.
 		 */
@@ -796,7 +796,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Divide by the evaluation results of the given {@link AggregationExpression}.
-		 * 
+		 *
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Divide}.
 		 */
@@ -808,7 +808,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Divide by the given value.
-		 * 
+		 *
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link Divide}.
 		 */
@@ -1030,7 +1030,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Use the value stored at the given field as log base.
-		 * 
+		 *
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Log}.
 		 */
@@ -1042,7 +1042,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Use the evaluated value of the given {@link AggregationExpression} as log base.
-		 * 
+		 *
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Log}.
 		 */
@@ -1054,7 +1054,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Use the given value as log base.
-		 * 
+		 *
 		 * @param base must not be {@literal null}.
 		 * @return new instance of {@link Log}.
 		 */
@@ -1170,7 +1170,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Use the value stored at the given field as mod base.
-		 * 
+		 *
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Mod}.
 		 */
@@ -1182,7 +1182,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Use evaluated value of the given {@link AggregationExpression} as mod base.
-		 * 
+		 *
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Mod}.
 		 */
@@ -1194,7 +1194,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Use the given value as mod base.
-		 * 
+		 *
 		 * @param base must not be {@literal null}.
 		 * @return new instance of {@link Mod}.
 		 */
@@ -1257,7 +1257,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Multiply by the value stored at the given field.
-		 * 
+		 *
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Multiply}.
 		 */
@@ -1269,7 +1269,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Multiply by the evaluated value of the given {@link AggregationExpression}.
-		 * 
+		 *
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Multiply}.
 		 */
@@ -1281,7 +1281,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Multiply by the given value.
-		 * 
+		 *
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link Multiply}.
 		 */
@@ -1344,7 +1344,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Pow by the value stored at the given field.
-		 * 
+		 *
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Pow}.
 		 */
@@ -1356,7 +1356,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Pow by the evaluated value of the given {@link AggregationExpression}.
-		 * 
+		 *
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Pow}.
 		 */
@@ -1368,7 +1368,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Pow by the given value.
-		 * 
+		 *
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link Pow}.
 		 */
@@ -1484,7 +1484,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Subtract the value stored at the given field.
-		 * 
+		 *
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link Pow}.
 		 */
@@ -1496,7 +1496,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Subtract the evaluated value of the given {@link AggregationExpression}.
-		 * 
+		 *
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Pow}.
 		 */
@@ -1508,7 +1508,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Subtract the given value.
-		 * 
+		 *
 		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link Pow}.
 		 */
