@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2018. the original author or authors.
+ * Copyright 2016-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1835,7 +1835,7 @@ public class DateOperators {
 		 * @param millisecond must not be {@literal null}.
 		 * @return new instance.
 		 * @throws IllegalArgumentException if given {@literal millisecond} is {@literal null}
-		 * @deprecated use {@link #millisecond(Object)} instead.
+		 * @deprecated since 3.0.7, use {@link #millisecond(Object)} instead.
 		 */
 		@Deprecated
 		default T milliseconds(Object millisecond) {
@@ -1849,6 +1849,7 @@ public class DateOperators {
 		 * @param millisecond must not be {@literal null}.
 		 * @return new instance.
 		 * @throws IllegalArgumentException if given {@literal millisecond} is {@literal null}
+		 * @since 3.0.7
 		 */
 		T millisecond(Object millisecond);
 
@@ -1858,7 +1859,7 @@ public class DateOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance.
 		 * @throws IllegalArgumentException if given {@literal fieldReference} is {@literal null}.
-		 * @deprecated use {@link #millisecondOf(String)} instead.
+		 * @deprecated since 3.0.7,use {@link #millisecondOf(String)} instead.
 		 */
 		@Deprecated
 		default T millisecondsOf(String fieldReference) {
@@ -1871,6 +1872,7 @@ public class DateOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance.
 		 * @throws IllegalArgumentException if given {@literal fieldReference} is {@literal null}.
+		 * @since 3.0.7
 		 */
 		default T millisecondOf(String fieldReference) {
 			return milliseconds(Fields.field(fieldReference));
@@ -1882,7 +1884,7 @@ public class DateOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance.
 		 * @throws IllegalArgumentException if given {@literal expression} is {@literal null}.
-		 * @deprecated use {@link #millisecondOf(AggregationExpression)} instead.
+		 * @deprecated since 3.0.7, use {@link #millisecondOf(AggregationExpression)} instead.
 		 */
 		@Deprecated
 		default T millisecondsOf(AggregationExpression expression) {
@@ -1895,6 +1897,7 @@ public class DateOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance.
 		 * @throws IllegalArgumentException if given {@literal expression} is {@literal null}.
+		 * @since 3.0.7
 		 */
 		default T millisecondOf(AggregationExpression expression) {
 			return milliseconds(expression);
