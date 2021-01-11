@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import static org.springframework.data.mongodb.core.aggregation.AggregationFunct
 import static org.springframework.data.mongodb.core.aggregation.Fields.*;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
@@ -33,15 +34,15 @@ import org.springframework.data.mongodb.core.query.Criteria;
  * @author Thomas Darimont
  * @author Gustavo de Geus
  */
-public class GroupOperationUnitTests {
+class GroupOperationUnitTests {
 
 	@Test
-	public void rejectsNullFields() {
+	void rejectsNullFields() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new GroupOperation((Fields) null));
 	}
 
 	@Test // DATAMONGO-759
-	public void groupOperationWithNoGroupIdFieldsShouldGenerateNullAsGroupId() {
+	void groupOperationWithNoGroupIdFieldsShouldGenerateNullAsGroupId() {
 
 		GroupOperation operation = new GroupOperation(Fields.from());
 		ExposedFields fields = operation.getFields();
@@ -53,7 +54,7 @@ public class GroupOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-759
-	public void groupOperationWithNoGroupIdFieldsButAdditionalFieldsShouldGenerateNullAsGroupId() {
+	void groupOperationWithNoGroupIdFieldsButAdditionalFieldsShouldGenerateNullAsGroupId() {
 
 		GroupOperation operation = new GroupOperation(Fields.from()).count().as("cnt").last("foo").as("foo");
 		ExposedFields fields = operation.getFields();
@@ -67,62 +68,62 @@ public class GroupOperationUnitTests {
 	}
 
 	@Test
-	public void createsGroupOperationWithSingleField() {
+	void createsGroupOperationWithSingleField() {
 
 		GroupOperation operation = new GroupOperation(fields("a"));
 
 		Document groupClause = extractDocumentFromGroupOperation(operation);
 
-		assertThat(groupClause.get(UNDERSCORE_ID)).isEqualTo((Object) "$a");
+		assertThat(groupClause).containsEntry(UNDERSCORE_ID, "$a");
 	}
 
 	@Test
-	public void createsGroupOperationWithMultipleFields() {
+	void createsGroupOperationWithMultipleFields() {
 
 		GroupOperation operation = new GroupOperation(fields("a").and("b", "c"));
 
 		Document groupClause = extractDocumentFromGroupOperation(operation);
 		Document idClause = DocumentTestUtils.getAsDocument(groupClause, UNDERSCORE_ID);
 
-		assertThat(idClause.get("a")).isEqualTo((Object) "$a");
-		assertThat(idClause.get("b")).isEqualTo((Object) "$c");
+		assertThat(idClause).containsEntry("a", "$a")
+				.containsEntry("b", "$c");
 	}
 
 	@Test
-	public void groupFactoryMethodWithMultipleFieldsAndSumOperation() {
+	void groupFactoryMethodWithMultipleFieldsAndSumOperation() {
 
 		GroupOperation groupOperation = Aggregation.group(fields("a", "b").and("c")) //
 				.sum("e").as("e");
 
 		Document groupClause = extractDocumentFromGroupOperation(groupOperation);
 		Document eOp = DocumentTestUtils.getAsDocument(groupClause, "e");
-		assertThat(eOp).isEqualTo((Document) new Document("$sum", "$e"));
+		assertThat(eOp).isEqualTo(new Document("$sum", "$e"));
 	}
 
 	@Test
-	public void groupFactoryMethodWithMultipleFieldsAndSumOperationWithAlias() {
+	void groupFactoryMethodWithMultipleFieldsAndSumOperationWithAlias() {
 
 		GroupOperation groupOperation = Aggregation.group(fields("a", "b").and("c")) //
 				.sum("e").as("ee");
 
 		Document groupClause = extractDocumentFromGroupOperation(groupOperation);
 		Document eOp = DocumentTestUtils.getAsDocument(groupClause, "ee");
-		assertThat(eOp).isEqualTo((Document) new Document("$sum", "$e"));
+		assertThat(eOp).isEqualTo(new Document("$sum", "$e"));
 	}
 
 	@Test
-	public void groupFactoryMethodWithMultipleFieldsAndCountOperationWithout() {
+	void groupFactoryMethodWithMultipleFieldsAndCountOperationWithout() {
 
 		GroupOperation groupOperation = Aggregation.group(fields("a", "b").and("c")) //
 				.count().as("count");
 
 		Document groupClause = extractDocumentFromGroupOperation(groupOperation);
 		Document eOp = DocumentTestUtils.getAsDocument(groupClause, "count");
-		assertThat(eOp).isEqualTo((Document) new Document("$sum", 1));
+		assertThat(eOp).isEqualTo(new Document("$sum", 1));
 	}
 
 	@Test
-	public void groupFactoryMethodWithMultipleFieldsAndMultipleAggregateOperationsWithAlias() {
+	void groupFactoryMethodWithMultipleFieldsAndMultipleAggregateOperationsWithAlias() {
 
 		GroupOperation groupOperation = Aggregation.group(fields("a", "b").and("c")) //
 				.sum("e").as("sum") //
@@ -130,58 +131,58 @@ public class GroupOperationUnitTests {
 
 		Document groupClause = extractDocumentFromGroupOperation(groupOperation);
 		Document sum = DocumentTestUtils.getAsDocument(groupClause, "sum");
-		assertThat(sum).isEqualTo((Document) new Document("$sum", "$e"));
+		assertThat(sum).isEqualTo(new Document("$sum", "$e"));
 
 		Document min = DocumentTestUtils.getAsDocument(groupClause, "min");
-		assertThat(min).isEqualTo((Document) new Document("$min", "$e"));
+		assertThat(min).isEqualTo(new Document("$min", "$e"));
 	}
 
 	@Test
-	public void groupOperationPushWithValue() {
+	void groupOperationPushWithValue() {
 
 		GroupOperation groupOperation = Aggregation.group("a", "b").push(1).as("x");
 
 		Document groupClause = extractDocumentFromGroupOperation(groupOperation);
 		Document push = DocumentTestUtils.getAsDocument(groupClause, "x");
 
-		assertThat(push).isEqualTo((Document) new Document("$push", 1));
+		assertThat(push).isEqualTo(new Document("$push", 1));
 	}
 
 	@Test
-	public void groupOperationPushWithReference() {
+	void groupOperationPushWithReference() {
 
 		GroupOperation groupOperation = Aggregation.group("a", "b").push("ref").as("x");
 
 		Document groupClause = extractDocumentFromGroupOperation(groupOperation);
 		Document push = DocumentTestUtils.getAsDocument(groupClause, "x");
 
-		assertThat(push).isEqualTo((Document) new Document("$push", "$ref"));
+		assertThat(push).isEqualTo(new Document("$push", "$ref"));
 	}
 
 	@Test
-	public void groupOperationAddToSetWithReference() {
+	void groupOperationAddToSetWithReference() {
 
 		GroupOperation groupOperation = Aggregation.group("a", "b").addToSet("ref").as("x");
 
 		Document groupClause = extractDocumentFromGroupOperation(groupOperation);
 		Document push = DocumentTestUtils.getAsDocument(groupClause, "x");
 
-		assertThat(push).isEqualTo((Document) new Document("$addToSet", "$ref"));
+		assertThat(push).isEqualTo(new Document("$addToSet", "$ref"));
 	}
 
 	@Test
-	public void groupOperationAddToSetWithValue() {
+	void groupOperationAddToSetWithValue() {
 
 		GroupOperation groupOperation = Aggregation.group("a", "b").addToSet(42).as("x");
 
 		Document groupClause = extractDocumentFromGroupOperation(groupOperation);
 		Document push = DocumentTestUtils.getAsDocument(groupClause, "x");
 
-		assertThat(push).isEqualTo((Document) new Document("$addToSet", 42));
+		assertThat(push).isEqualTo(new Document("$addToSet", 42));
 	}
 
 	@Test // DATAMONGO-979
-	public void shouldRenderSizeExpressionInGroup() {
+	void shouldRenderSizeExpressionInGroup() {
 
 		GroupOperation groupOperation = Aggregation //
 				.group("username") //
@@ -191,11 +192,13 @@ public class GroupOperationUnitTests {
 		Document groupClause = extractDocumentFromGroupOperation(groupOperation);
 		Document tagsCount = DocumentTestUtils.getAsDocument(groupClause, "tags_count");
 
-		assertThat(tagsCount.get("$first")).isEqualTo((Object) new Document("$size", Arrays.asList("$tags")));
+		assertThat(tagsCount)
+				.containsEntry("$first", new Document("$size", Collections
+						.singletonList("$tags")));
 	}
 
 	@Test // DATAMONGO-1327
-	public void groupOperationStdDevSampWithValue() {
+	void groupOperationStdDevSampWithValue() {
 
 		GroupOperation groupOperation = Aggregation.group("a", "b").stdDevSamp("field").as("fieldStdDevSamp");
 
@@ -206,7 +209,7 @@ public class GroupOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1327
-	public void groupOperationStdDevPopWithValue() {
+	void groupOperationStdDevPopWithValue() {
 
 		GroupOperation groupOperation = Aggregation.group("a", "b").stdDevPop("field").as("fieldStdDevPop");
 
@@ -217,7 +220,7 @@ public class GroupOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1784
-	public void shouldRenderSumWithExpressionInGroup() {
+	void shouldRenderSumWithExpressionInGroup() {
 
 		GroupOperation groupOperation = Aggregation //
 				.group("username") //
@@ -230,12 +233,12 @@ public class GroupOperationUnitTests {
 		Document groupClause = extractDocumentFromGroupOperation(groupOperation);
 		Document foobar = DocumentTestUtils.getAsDocument(groupClause, "foobar");
 
-		assertThat(foobar.get("$sum")).isEqualTo(new Document("$cond",
+		assertThat(foobar).containsEntry("$sum", new Document("$cond",
 				new Document("if", new Document("$eq", Arrays.asList("$foo", "bar"))).append("then", 1).append("else", -1)));
 	}
 
 	@Test // DATAMONGO-1784
-	public void sumWithNullExpressionShouldThrowException() {
+	void sumWithNullExpressionShouldThrowException() {
 		assertThatIllegalArgumentException()
 				.isThrownBy(() -> Aggregation.group("username").sum((AggregationExpression) null));
 	}
@@ -251,7 +254,7 @@ public class GroupOperationUnitTests {
 		Document groupClause = extractDocumentFromGroupOperation(groupOperation);
 		Document accumulatedValue = DocumentTestUtils.getAsDocument(groupClause, "accumulated-value");
 
-		assertThat(accumulatedValue.get("$accumulator")).isNotNull();
+		assertThat(accumulatedValue).containsKey("$accumulator");
 	}
 
 	private Document extractDocumentFromGroupOperation(GroupOperation groupOperation) {
