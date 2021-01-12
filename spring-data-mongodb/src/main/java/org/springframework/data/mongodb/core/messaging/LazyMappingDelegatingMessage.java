@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 the original author or authors.
+ * Copyright 2018-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ class LazyMappingDelegatingMessage<S, T> implements Message<S, T> {
 		this.converter = converter;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.messaging.Message#getRaw()
 	 */
@@ -46,7 +46,7 @@ class LazyMappingDelegatingMessage<S, T> implements Message<S, T> {
 		return delegate.getRaw();
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.messaging.Message#getBody()
 	 */
@@ -71,7 +71,7 @@ class LazyMappingDelegatingMessage<S, T> implements Message<S, T> {
 				String.format("No converter found capable of converting %s to %s", messageBody.getClass(), targetType));
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.messaging.Message#getProperties()
 	 */

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the original author or authors.
+ * Copyright 2019-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -110,7 +110,7 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 		this.options = options;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.transaction.reactive.AbstractReactiveTransactionManager#doGetTransaction(org.springframework.transaction.reactive.TransactionSynchronizationManager)
 	 */
@@ -123,7 +123,7 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 		return new ReactiveMongoTransactionObject(resourceHolder);
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.transaction.reactive.AbstractReactiveTransactionManager#isExistingTransaction(java.lang.Object)
 	 */
@@ -132,7 +132,7 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 		return extractMongoTransaction(transaction).hasResourceHolder();
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.transaction.reactive.AbstractReactiveTransactionManager#doBegin(org.springframework.transaction.reactive.TransactionSynchronizationManager, java.lang.Object, org.springframework.transaction.TransactionDefinition)
 	 */
@@ -175,7 +175,7 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 		});
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.transaction.reactive.AbstractReactiveTransactionManager#doSuspend(org.springframework.transaction.reactive.TransactionSynchronizationManager, java.lang.Object)
 	 */
@@ -192,7 +192,7 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 		});
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.transaction.reactive.AbstractReactiveTransactionManager#doResume(org.springframework.transaction.reactive.TransactionSynchronizationManager, java.lang.Object, java.lang.Object)
 	 */
@@ -203,7 +203,7 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 				.fromRunnable(() -> synchronizationManager.bindResource(getRequiredDatabaseFactory(), suspendedResources));
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.transaction.reactive.AbstractReactiveTransactionManager#doCommit(org.springframework.transaction.reactive.TransactionSynchronizationManager, org.springframework.transaction.reactive.GenericReactiveTransaction)
 	 */
@@ -243,7 +243,7 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 		return transactionObject.commitTransaction();
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.transaction.reactive.AbstractReactiveTransactionManager#doRollback(org.springframework.transaction.reactive.TransactionSynchronizationManager, org.springframework.transaction.reactive.GenericReactiveTransaction)
 	 */
@@ -268,7 +268,7 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 		});
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.transaction.reactive.AbstractReactiveTransactionManager#doSetRollbackOnly(org.springframework.transaction.reactive.TransactionSynchronizationManager, org.springframework.transaction.reactive.GenericReactiveTransaction)
 	 */
@@ -282,7 +282,7 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 		});
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.transaction.reactive.AbstractReactiveTransactionManager#doCleanupAfterCompletion(org.springframework.transaction.reactive.TransactionSynchronizationManager, java.lang.Object)
 	 */
@@ -509,7 +509,7 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 			return session;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.transaction.support.SmartTransactionObject#isRollbackOnly()
 		 */
@@ -518,7 +518,7 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 			return this.resourceHolder != null && this.resourceHolder.isRollbackOnly();
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.transaction.support.SmartTransactionObject#flush()
 		 */
