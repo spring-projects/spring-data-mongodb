@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -107,7 +107,7 @@ public interface AggregationOperationContext {
 	 * This toggle allows the {@link AggregationOperationContext context} to use any given field name without checking for
 	 * its existence. Typically the {@link AggregationOperationContext} fails when referencing unknown fields, those that
 	 * are not present in one of the previous stages or the input source, throughout the pipeline.
-	 * 
+	 *
 	 * @return a more relaxed {@link AggregationOperationContext}.
 	 * @since 3.0
 	 */
