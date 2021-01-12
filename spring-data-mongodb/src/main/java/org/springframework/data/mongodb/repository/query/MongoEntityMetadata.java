@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2020 the original author or authors.
+ * Copyright 2012-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ public interface MongoEntityMetadata<T> extends EntityMetadata<T> {
 
 	/**
 	 * Returns the {@link MongoPersistentEntity} that supposed to determine the collection to be queried.
-	 * 
+	 *
 	 * @return
 	 * @since 2.0.4
 	 */

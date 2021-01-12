@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1548,7 +1548,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 				final Field aliasedField = Fields.field(alias, this.field.getName());
 				return new OperationProjection(aliasedField, operation, values.toArray()) {
 
-					/* 
+					/*
 					 * (non-Javadoc)
 					 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder.OperationProjection#getField()
 					 */
@@ -1749,7 +1749,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			this.expression = expression;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 		 */
@@ -1877,7 +1877,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			this.projections = projections;
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 		 */

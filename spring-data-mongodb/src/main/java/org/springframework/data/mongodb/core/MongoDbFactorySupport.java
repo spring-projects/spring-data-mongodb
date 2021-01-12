@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 the original author or authors.
+ * Copyright 2018-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ public abstract class MongoDbFactorySupport<C> implements MongoDbFactory {
 	/**
 	 * Create a new {@link MongoDbFactorySupport} object given {@code mongoClient}, {@code databaseName},
 	 * {@code mongoInstanceCreated} and {@link PersistenceExceptionTranslator}.
-	 * 
+	 *
 	 * @param mongoClient must not be {@literal null}.
 	 * @param databaseName must not be {@literal null} or empty.
 	 * @param mongoInstanceCreated {@literal true} if the client instance was created by a subclass of
@@ -115,7 +115,7 @@ public abstract class MongoDbFactorySupport<C> implements MongoDbFactory {
 
 	/**
 	 * Get the actual {@link MongoDatabase} from the client.
-	 * 
+	 *
 	 * @param dbName must not be {@literal null} or empty.
 	 * @return
 	 */

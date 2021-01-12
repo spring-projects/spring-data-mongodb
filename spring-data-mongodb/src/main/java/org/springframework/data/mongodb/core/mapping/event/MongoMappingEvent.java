@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2020 the original author or authors.
+ * Copyright 2011-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -77,7 +77,7 @@ public class MongoMappingEvent<T> extends ApplicationEvent {
 
 	/**
 	 * Allows client code to change the underlying source instance by applying the given {@link Function}.
-	 * 
+	 *
 	 * @param mapper the {@link Function} to apply, will only be applied if the source is not {@literal null}.
 	 * @since 2.1
 	 */

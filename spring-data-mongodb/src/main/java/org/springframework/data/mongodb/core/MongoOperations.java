@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2020 the original author or authors.
+ * Copyright 2011-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1320,7 +1320,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * combining the query document and the update document. <br />
 	 * <strong>NOTE:</strong> {@link Query#getSortObject() sorting} is not supported by {@code db.collection.updateOne}.
 	 * Use {@link #findAndModify(Query, Update, FindAndModifyOptions, Class, String)} instead.
-	 * 
+	 *
 	 * @param query the query document that specifies the criteria used to select a record to be upserted. Must not be
 	 *          {@literal null}.
 	 * @param update the update document that contains the updated object or $ operators to manipulate the existing
