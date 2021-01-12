@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2020 the original author or authors.
+ * Copyright 2011-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,7 +43,7 @@ import org.springframework.util.ObjectUtils;
  * <p />
  * In other words: <br />
  * Assume you've got 5 Documents like the ones below <br />
- * 
+ *
  * <pre>
  *     <code>
  * {
@@ -73,10 +73,10 @@ import org.springframework.util.ObjectUtils;
  * }
  *      </code>
  * </pre>
- * 
+ *
  * Fetching all Documents within a 400 Meter radius from {@code [-73.99171, 40.738868] } would look like this using
  * {@literal GeoJSON}:
- * 
+ *
  * <pre>
  *     <code>
  * {
@@ -92,9 +92,9 @@ import org.springframework.util.ObjectUtils;
  *
  *     </code>
  * </pre>
- * 
+ *
  * resulting in the following 3 Documents.
- * 
+ *
  * <pre>
  *     <code>
  * {
@@ -117,11 +117,11 @@ import org.springframework.util.ObjectUtils;
  * }
  *     </code>
  * </pre>
- * 
+ *
  * Using legacy coordinate pairs one operates upon radians as discussed before. Assume we use {@link Metrics#KILOMETERS}
  * when constructing the geoNear command. The {@link Metric} will make sure the distance multiplier is set correctly, so
  * the command is rendered like
- * 
+ *
  * <pre>
  *     <code>
  * {
@@ -137,12 +137,12 @@ import org.springframework.util.ObjectUtils;
  * }
  *     </code>
  * </pre>
- * 
+ *
  * Please note the calculated distance now uses {@literal Kilometers} instead of {@literal Meters} as unit of measure,
  * so we need to take it times 1000 to match up to {@literal Meters} as in the {@literal GeoJSON} variant. <br />
  * Still as we've been requesting the {@link Distance} in {@link Metrics#KILOMETERS} the {@link Distance#getValue()}
  * reflects exactly this.
- * 
+ *
  * <pre>
  *     <code>
  * {
@@ -558,7 +558,7 @@ public final class NearQuery {
 
 	/**
 	 * Get the {@link Collation} to use along with the {@link #query(Query)}.
-	 * 
+	 *
 	 * @return the {@link Collation} if set. {@literal null} otherwise.
 	 * @since 2.2
 	 */

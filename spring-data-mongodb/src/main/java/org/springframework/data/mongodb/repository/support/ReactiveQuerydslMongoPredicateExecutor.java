@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2020 the original author or authors.
+ * Copyright 2019-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,7 +73,7 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 		this.mongoOperations = mongoOperations;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor#findOne(com.querydsl.core.types.Predicate)
 	 */
@@ -85,7 +85,7 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 		return createQueryFor(predicate).fetchOne();
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor#findAll(com.querydsl.core.types.Predicate)
 	 */
@@ -97,7 +97,7 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 		return createQueryFor(predicate).fetch();
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor#findAll(com.querydsl.core.types.Predicate, com.querydsl.core.types.OrderSpecifier[])
 	 */
@@ -110,7 +110,7 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 		return createQueryFor(predicate).orderBy(orders).fetch();
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor#findAll(com.querydsl.core.types.Predicate, org.springframework.data.domain.Sort)
 	 */
@@ -123,7 +123,7 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 		return applySorting(createQueryFor(predicate), sort).fetch();
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor#findAll(com.querydsl.core.types.OrderSpecifier[])
 	 */
@@ -135,7 +135,7 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 		return createQuery().orderBy(orders).fetch();
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor#count(com.querydsl.core.types.Predicate)
 	 */
@@ -147,7 +147,7 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 		return createQueryFor(predicate).fetchCount();
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor#exists(com.querydsl.core.types.Predicate)
 	 */

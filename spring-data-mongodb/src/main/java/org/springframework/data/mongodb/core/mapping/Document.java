@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2020 the original author or authors.
+ * Copyright 2011-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ public @interface Document {
 	 * The collection the document representing the entity is supposed to be stored in. If not configured, a default
 	 * collection name will be derived from the type's name. The attribute supports SpEL expressions to dynamically
 	 * calculate the collection to based on a per operation basis.
-	 * 
+	 *
 	 * @return the name of the collection to be used.
 	 */
 	@AliasFor("collection")
@@ -51,7 +51,7 @@ public @interface Document {
 	 * The collection the document representing the entity is supposed to be stored in. If not configured, a default
 	 * collection name will be derived from the type's name. The attribute supports SpEL expressions to dynamically
 	 * calculate the collection to based on a per operation basis.
-	 * 
+	 *
 	 * @return the name of the collection to be used.
 	 */
 	@AliasFor("value")
