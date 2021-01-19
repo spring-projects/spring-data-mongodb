@@ -64,16 +64,33 @@ public interface ReactiveMongoRepository<T, ID> extends ReactiveSortingRepositor
 	 */
 	<S extends T> Flux<S> insert(Publisher<S> entities);
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.QueryByExampleExecutor#findAll(org.springframework.data.domain.Example)
+	/**
+	 * Returns all entities matching the given {@link Example}. In case no match could be found an empty {@link Flux} is
+	 * returned. <br />
+	 * By default the {@link Example} uses typed matching restricting it to probe assignable types. For example, when
+	 * sticking with the default type key ({@code _class}), the query has restrictions such as
+	 * <code>_class : &#123; $in : [com.acme.Person] &#125;</code>. <br />
+	 * To avoid the above mentioned type restriction use an {@link org.springframework.data.mongodb.core.query.UntypedExampleMatcher} with
+	 * {@link Example#of(Object, org.springframework.data.domain.ExampleMatcher)}.
+	 *
+	 * @see org.springframework.data.repository.query.ReactiveQueryByExampleExecutor#findAll(org.springframework.data.domain.Example)
 	 */
+	@Override
 	<S extends T> Flux<S> findAll(Example<S> example);
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.QueryByExampleExecutor#findAll(org.springframework.data.domain.Example, org.springframework.data.domain.Sort)
+	/**
+	 * Returns all entities matching the given {@link Example} applying the given {@link Sort}. In case no match could be
+	 * found an empty {@link Flux} is returned. <br />
+	 * By default the {@link Example} uses typed matching restricting it to probe assignable types. For example, when
+	 * sticking with the default type key ({@code _class}), the query has restrictions such as
+	 * <code>_class : &#123; $in : [com.acme.Person] &#125;</code>. <br />
+	 * To avoid the above mentioned type restriction use an {@link org.springframework.data.mongodb.core.query.UntypedExampleMatcher} with
+	 * {@link Example#of(Object, org.springframework.data.domain.ExampleMatcher)}.
+	 *
+	 * @see org.springframework.data.repository.query.ReactiveQueryByExampleExecutor#findAll(org.springframework.data.domain.Example,
+	 *      org.springframework.data.domain.Sort)
 	 */
+	@Override
 	<S extends T> Flux<S> findAll(Example<S> example, Sort sort);
 
 }
