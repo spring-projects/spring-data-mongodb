@@ -124,7 +124,12 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * Static factory method to create a {@link Criteria} matching an example object.
+	 * Static factory method to create a {@link Criteria} matching an example object. <br />
+	 * By default the {@link Example} uses typed matching restricting it to probe assignable types. For example, when
+	 * sticking with the default type key ({@code _class}), the query has restrictions such as
+	 * <code>_class : &#123; $in : [com.acme.Person] &#125; </code>. <br />
+	 * To avoid the above mentioned type restriction use an {@link UntypedExampleMatcher} with
+	 * {@link Example#of(Object, org.springframework.data.domain.ExampleMatcher)}.
 	 *
 	 * @param example must not be {@literal null}.
 	 * @return new instance of {@link Criteria}.
