@@ -1731,7 +1731,7 @@ A query searching for `coffee cake` can be defined and run as follows:
 [source,java]
 ----
 Query query = TextQuery
-  .searching(new TextCriteria().matchingAny("coffee", "cake"));
+  .queryText(new TextCriteria().matchingAny("coffee", "cake"));
 
 List<Document> page = template.find(query, Document.class);
 ----
@@ -1744,7 +1744,7 @@ To sort results by relevance according to the `weights` use `TextQuery.sortBySco
 [source,java]
 ----
 Query query = TextQuery
-  .searching(new TextCriteria().matchingAny("coffee", "cake"))
+  .queryText(new TextCriteria().matchingAny("coffee", "cake"))
   .sortByScore() <1>
   .includeScore(); <2>
 
@@ -1759,8 +1759,8 @@ You can exclude search terms by prefixing the term with `-` or by using `notMatc
 [source,java]
 ----
 // search for 'coffee' and not 'cake'
-TextQuery.searching(new TextCriteria().matching("coffee").matching("-cake"));
-TextQuery.searching(new TextCriteria().matching("coffee").notMatching("cake"));
+TextQuery.queryText(new TextCriteria().matching("coffee").matching("-cake"));
+TextQuery.queryText(new TextCriteria().matching("coffee").notMatching("cake"));
 ----
 
 `TextCriteria.matching` takes the provided term as is. Therefore, you can define phrases by putting them between double quotation marks (for example, `\"coffee cake\")` or using by `TextCriteria.phrase.` The following example shows both ways of defining a phrase:
@@ -1768,8 +1768,8 @@ TextQuery.searching(new TextCriteria().matching("coffee").notMatching("cake"));
 [source,java]
 ----
 // search for phrase 'coffee cake'
-TextQuery.searching(new TextCriteria().matching("\"coffee cake\""));
-TextQuery.searching(new TextCriteria().phrase("coffee cake"));
+TextQuery.queryText(new TextCriteria().matching("\"coffee cake\""));
+TextQuery.queryText(new TextCriteria().phrase("coffee cake"));
 ----
 
 You can set flags for `$caseSensitive` and `$diacriticSensitive` by using the corresponding methods on `TextCriteria`. Note that these two optional flags have been introduced in MongoDB 3.2 and are not included in the query unless explicitly set.
