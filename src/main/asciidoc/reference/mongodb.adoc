@@ -2221,6 +2221,7 @@ With the introduction of <<mongo.transactions>> this was no longer possible beca
 So in version 2.x `MongoOperations.count()` would use the collection statistics if no transaction was in progress, and the aggregation variant if so.
 
 As of Spring Data MongoDB 3.x any `count` operation uses regardless the existence of filter criteria the aggregation-based count approach via MongoDBs `countDocuments`.
+If the application is fine with the limitations of working upon collection statistics `MongoOperations.estimatedCount()` offers an alternative.
 
 [NOTE]
 ====
