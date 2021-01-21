@@ -2716,6 +2716,14 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return potentiallyForceAcknowledgedWrite(wc);
 	}
 
+	/**
+	 * @return the {@link MongoDatabaseFactory} in use.
+	 * @since 3.1.4
+	 */
+	public ReactiveMongoDatabaseFactory getMongoDatabaseFactory() {
+		return mongoDatabaseFactory;
+	}
+
 	@Nullable
 	private WriteConcern potentiallyForceAcknowledgedWrite(@Nullable WriteConcern wc) {
 

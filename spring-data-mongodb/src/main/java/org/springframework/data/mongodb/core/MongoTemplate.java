@@ -28,7 +28,6 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -3463,7 +3462,20 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 	}
 
+	/**
+	 * @deprecated since 3.1.4. Use {@link #getMongoDatabaseFactory()} instead.
+	 * @return the {@link MongoDatabaseFactory} in use.
+	 */
+	@Deprecated
 	public MongoDatabaseFactory getMongoDbFactory() {
+		return getMongoDatabaseFactory();
+	}
+
+	/**
+	 * @return the {@link MongoDatabaseFactory} in use.
+	 * @since 3.1.4
+	 */
+	public MongoDatabaseFactory getMongoDatabaseFactory() {
 		return mongoDbFactory;
 	}
 
