@@ -1160,6 +1160,12 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
 	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
 	 * count all matches.
+	 * <p />
+	 * This method uses an
+	 * {@link com.mongodb.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
+	 * aggregation execution} even for empty {@link Query queries} which may have an impact on performance, but guarantees
+	 * shard, session and transaction compliance. In case an inaccurate count satisfies the applications needs use
+	 * {@link #estimatedCount(Class)} for empty queries instead.
 	 *
 	 * @param query the {@link Query} class that specifies the criteria used to find documents. Must not be
 	 *          {@literal null}.
@@ -1176,6 +1182,12 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
 	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
 	 * count all matches.
+	 * <p />
+	 * This method uses an
+	 * {@link com.mongodb.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
+	 * aggregation execution} even for empty {@link Query queries} which may have an impact on performance, but guarantees
+	 * shard, session and transaction compliance. In case an inaccurate count satisfies the applications needs use
+	 * {@link #estimatedCount(String)} for empty queries instead.
 	 *
 	 * @param query the {@link Query} class that specifies the criteria used to find documents.
 	 * @param collectionName must not be {@literal null} or empty.
@@ -1187,6 +1199,9 @@ public interface MongoOperations extends FluentMongoOperations {
 	/**
 	 * Estimate the number of documents, in the collection {@link #getCollectionName(Class) identified by the given type},
 	 * based on collection statistics.
+	 * <p />
+	 * Please make sure to read the MongoDB reference documentation about limitations on eg. sharded cluster or inside
+	 * transactions.
 	 *
 	 * @param entityClass must not be {@literal null}.
 	 * @return the estimated number of documents.
@@ -1200,6 +1215,9 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Estimate the number of documents in the given collection based on collection statistics.
+	 * <p />
+	 * Please make sure to read the MongoDB reference documentation about limitations on eg. sharded cluster or inside
+	 * transactions.
 	 *
 	 * @param collectionName must not be {@literal null}.
 	 * @return the estimated number of documents.
@@ -1214,6 +1232,12 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
 	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
 	 * count all matches.
+	 * <p />
+	 * This method uses an
+	 * {@link com.mongodb.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
+	 * aggregation execution} even for empty {@link Query queries} which may have an impact on performance, but guarantees
+	 * shard, session and transaction compliance. In case an inaccurate count satisfies the applications needs use
+	 * {@link #estimatedCount(String)} for empty queries instead.
 	 *
 	 * @param query the {@link Query} class that specifies the criteria used to find documents. Must not be
 	 *          {@literal null}.
