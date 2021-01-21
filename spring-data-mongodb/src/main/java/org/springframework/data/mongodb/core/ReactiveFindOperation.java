@@ -106,6 +106,12 @@ public interface ReactiveFindOperation {
 
 		/**
 		 * Get the number of matching elements.
+		 * <p />
+		 * This method uses an
+		 * {@link com.mongodb.reactivestreams.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
+		 * aggregation execution} even for empty {@link Query queries} which may have an impact on performance, but
+		 * guarantees shard, session and transaction compliance. In case an inaccurate count satisfies the applications
+		 * needs use {@link ReactiveMongoOperations#estimatedCount(String)} for empty queries instead.
 		 *
 		 * @return {@link Mono} emitting total number of matching elements. Never {@literal null}.
 		 */
