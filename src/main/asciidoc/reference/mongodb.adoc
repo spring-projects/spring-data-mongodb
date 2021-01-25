@@ -2514,7 +2514,11 @@ The actual aggregate operation is run by the `aggregate` method of the `MongoTem
 +
 A `TypedAggregation`, just like an `Aggregation`, holds the instructions of the aggregation pipeline and a reference to the input type, that is used for mapping domain properties to actual document fields.
 +
-At runtime, field references get checked against the given input type, considering potential `@Field` annotations and raising errors when referencing nonexistent properties.
+At runtime, field references get checked against the given input type, considering potential `@Field` annotations.
+[NOTE]
+====
+Changed in 3.2 referencing nonexistent properties does no longer raise errors. To restore the previous behaviour use the `strictMapping` option of `AggregationOptions`.
+====
 +
 * `AggregationOperation`
 +

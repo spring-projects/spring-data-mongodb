@@ -27,6 +27,7 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
+import org.springframework.data.mongodb.core.aggregation.AggregationOptions.DomainTypeMapping;
 import org.springframework.data.mongodb.core.aggregation.CountOperation;
 import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
@@ -36,6 +37,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.util.Lazy;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
@@ -52,41 +54,44 @@ class AggregationUtil {
 
 	QueryMapper queryMapper;
 	MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+	Lazy<AggregationOperationContext> untypedMappingContext;
 
 	AggregationUtil(QueryMapper queryMapper,
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 
 		this.queryMapper = queryMapper;
 		this.mappingContext = mappingContext;
+		this.untypedMappingContext = Lazy
+				.of(() -> new RelaxedTypeBasedAggregationOperationContext(Object.class, mappingContext, queryMapper));
 	}
 
-	/**
-	 * Prepare the {@link AggregationOperationContext} for a given aggregation by either returning the context itself it
-	 * is not {@literal null}, create a {@link TypeBasedAggregationOperationContext} if the aggregation contains type
-	 * information (is a {@link TypedAggregation}) or use the {@link Aggregation#DEFAULT_CONTEXT}.
-	 *
-	 * @param aggregation must not be {@literal null}.
-	 * @param context can be {@literal null}.
-	 * @return the root {@link AggregationOperationContext} to use.
-	 */
-	AggregationOperationContext prepareAggregationContext(Aggregation aggregation,
-			@Nullable AggregationOperationContext context) {
+	AggregationOperationContext createAggregationContext(Aggregation aggregation, @Nullable Class<?> inputType) {
 
-		if (context != null) {
-			return context;
+		if (aggregation.getOptions().getDomainTypeMapping() == DomainTypeMapping.NONE) {
+			return Aggregation.DEFAULT_CONTEXT;
 		}
 
 		if (!(aggregation instanceof TypedAggregation)) {
-			return new RelaxedTypeBasedAggregationOperationContext(Object.class, mappingContext, queryMapper);
-		}
 
-		Class<?> inputType = ((TypedAggregation) aggregation).getInputType();
+			if(inputType == null) {
+				return untypedMappingContext.get();
+			}
 
-		if (aggregation.getPipeline().containsUnionWith()) {
+			if (aggregation.getOptions().getDomainTypeMapping() == DomainTypeMapping.STRICT
+					&& !aggregation.getPipeline().containsUnionWith()) {
+				return new TypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper);
+			}
+
 			return new RelaxedTypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper);
 		}
 
-		return new TypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper);
+		inputType = ((TypedAggregation) aggregation).getInputType();
+		if (aggregation.getOptions().getDomainTypeMapping() == DomainTypeMapping.STRICT
+				&& !aggregation.getPipeline().containsUnionWith()) {
+			return new TypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper);
+		}
+
+		return new RelaxedTypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper);
 	}
 
 	/**
