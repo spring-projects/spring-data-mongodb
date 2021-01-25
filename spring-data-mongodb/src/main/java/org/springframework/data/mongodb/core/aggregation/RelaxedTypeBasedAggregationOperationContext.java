@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.context.InvalidPersistentPropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFieldReference;
@@ -55,7 +56,7 @@ public class RelaxedTypeBasedAggregationOperationContext extends TypeBasedAggreg
 
 		try {
 			return super.getReferenceFor(field);
-		} catch (InvalidPersistentPropertyPath e) {
+		} catch (MappingException e) {
 			return new DirectFieldReference(new ExposedField(field, true));
 		}
 	}

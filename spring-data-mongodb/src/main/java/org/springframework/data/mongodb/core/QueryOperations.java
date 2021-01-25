@@ -34,8 +34,12 @@ import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.data.mongodb.core.MappedDocument.MappedUpdate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
+import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
+import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
 import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
+import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
+import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.convert.UpdateMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
@@ -48,6 +52,7 @@ import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.projection.ProjectionFactory;
+import org.springframework.data.util.Lazy;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
@@ -192,6 +197,31 @@ class QueryOperations {
 	 */
 	DeleteContext deleteSingleContext(Query query) {
 		return new DeleteContext(query, false);
+	}
+
+	/**
+	 * Create a new {@link AggregateContext} for the given {@link Aggregation}.
+	 *
+	 * @param aggregation must not be {@literal null}.
+	 * @param inputType fallback mapping type in case of untyped aggregation. Can be {@literal null}.
+	 * @return new instance of {@link AggregateContext}.
+	 * @since 3.2
+	 */
+	AggregateContext createAggregationContext(Aggregation aggregation, @Nullable Class<?> inputType) {
+		return new AggregateContext(aggregation, inputType);
+	}
+
+	/**
+	 * Create a new {@link AggregateContext} for the given {@link Aggregation}.
+	 *
+	 * @param aggregation must not be {@literal null}.
+	 * @param aggregationOperationContext the {@link AggregationOperationContext} to use. Can be {@literal null}.
+	 * @return new instance of {@link AggregateContext}.
+	 * @since 3.2
+	 */
+	AggregateContext createAggregationContext(Aggregation aggregation,
+			@Nullable AggregationOperationContext aggregationOperationContext) {
+		return new AggregateContext(aggregation, aggregationOperationContext);
 	}
 
 	/**
@@ -341,7 +371,8 @@ class QueryOperations {
 		}
 
 		@Override
-		Document getMappedFields(@Nullable MongoPersistentEntity<?> entity, Class<?> targetType, ProjectionFactory projectionFactory) {
+		Document getMappedFields(@Nullable MongoPersistentEntity<?> entity, Class<?> targetType,
+				ProjectionFactory projectionFactory) {
 			return getMappedFields(entity);
 		}
 
@@ -709,7 +740,8 @@ class QueryOperations {
 
 			Class<?> type = domainType != null ? domainType : Object.class;
 
-			AggregationOperationContext context = new RelaxedTypeBasedAggregationOperationContext(type, mappingContext, queryMapper);
+			AggregationOperationContext context = new RelaxedTypeBasedAggregationOperationContext(type, mappingContext,
+					queryMapper);
 			return aggregationUtil.createPipeline((AggregationUpdate) update, context);
 		}
 
@@ -757,6 +789,107 @@ class QueryOperations {
 		 */
 		boolean isMulti() {
 			return multi;
+		}
+	}
+
+	/**
+	 * A context class that encapsulates common tasks required when running {@literal aggregations}.
+	 *
+	 * @since 3.2
+	 */
+	class AggregateContext {
+
+		private Aggregation aggregation;
+		private Lazy<AggregationOperationContext> aggregationOperationContext;
+		private Lazy<List<Document>> pipeline;
+		private @Nullable Class<?> inputType;
+
+		/**
+		 * Creates new instance of {@link AggregateContext} extracting the input type from either the
+		 * {@link org.springframework.data.mongodb.core.aggregation.Aggregation} in case of a {@link TypedAggregation} or
+		 * the given {@literal aggregationOperationContext} if present. <br />
+		 * Creates a new {@link AggregationOperationContext} if none given, based on the {@link Aggregation} input type and
+		 * the desired {@link AggregationOptions#getDomainTypeMapping() domain type mapping}. <br />
+		 * Pipelines are mapped on first access of {@link #getAggregationPipeline()} and cached for reuse.
+		 *
+		 * @param aggregation the source aggregation.
+		 * @param aggregationOperationContext can be {@literal null}.
+		 */
+		AggregateContext(Aggregation aggregation, @Nullable AggregationOperationContext aggregationOperationContext) {
+
+			this.aggregation = aggregation;
+			if (aggregation instanceof TypedAggregation) {
+				this.inputType = ((TypedAggregation) aggregation).getInputType();
+			} else if (aggregationOperationContext instanceof TypeBasedAggregationOperationContext) {
+				this.inputType = ((TypeBasedAggregationOperationContext) aggregationOperationContext).getType();
+			}
+			this.aggregationOperationContext = Lazy.of(() -> aggregationOperationContext != null ? aggregationOperationContext
+					: aggregationUtil.createAggregationContext(aggregation, getInputType()));
+			this.pipeline = Lazy.of(() -> aggregationUtil.createPipeline(this.aggregation, getAggregationOperationContext()));
+		}
+
+		/**
+		 * Creates new instance of {@link AggregateContext} extracting the input type from either the
+		 * {@link org.springframework.data.mongodb.core.aggregation.Aggregation} in case of a {@link TypedAggregation} or
+		 * the given {@literal aggregationOperationContext} if present. <br />
+		 * Creates a new {@link AggregationOperationContext} based on the {@link Aggregation} input type and the desired
+		 * {@link AggregationOptions#getDomainTypeMapping() domain type mapping}. <br />
+		 * Pipelines are mapped on first access of {@link #getAggregationPipeline()} and cached for reuse.
+		 *
+		 * @param aggregation the source aggregation.
+		 * @param inputType can be {@literal null}.
+		 */
+		AggregateContext(Aggregation aggregation, @Nullable Class<?> inputType) {
+
+			this.aggregation = aggregation;
+
+			if (aggregation instanceof TypedAggregation) {
+				this.inputType = ((TypedAggregation) aggregation).getInputType();
+			} else {
+				this.inputType = inputType;
+			}
+
+			this.aggregationOperationContext = Lazy
+					.of(() -> aggregationUtil.createAggregationContext(aggregation, getInputType()));
+			this.pipeline = Lazy.of(() -> aggregationUtil.createPipeline(this.aggregation, getAggregationOperationContext()));
+		}
+
+		/**
+		 * Obtain the already mapped pipeline.
+		 *
+		 * @return never {@literal null}.
+		 */
+		List<Document> getAggregationPipeline() {
+			return pipeline.get();
+		}
+
+		/**
+		 * @return {@literal true} if the last aggregation stage is either {@literal $out} or {@literal $merge}.
+		 * @see AggregationPipeline#isOutOrMerge()
+		 */
+		boolean isOutOrMerge() {
+			return aggregation.getPipeline().isOutOrMerge();
+		}
+
+		/**
+		 * Obtain the {@link AggregationOperationContext} used for mapping the pipeline.
+		 *
+		 * @return never {@literal null}.
+		 */
+		AggregationOperationContext getAggregationOperationContext() {
+			return aggregationOperationContext.get();
+		}
+
+		/**
+		 * @return the input type to map the pipeline against. Can be {@literal null}.
+		 */
+		@Nullable
+		Class<?> getInputType() {
+			return inputType;
+		}
+
+		Document getAggregationCommand(String collectionName) {
+			return aggregationUtil.createCommand(collectionName, aggregation, getAggregationOperationContext());
 		}
 	}
 }

@@ -166,4 +166,8 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 
 		return new DirectFieldReference(new ExposedField(mappedField, true));
 	}
+
+	public Class<?> getType() {
+		return type;
+	}
 }

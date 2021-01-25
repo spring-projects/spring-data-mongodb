@@ -55,6 +55,7 @@ import org.springframework.data.mongodb.SessionSynchronization;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.DefaultBulkOperations.BulkOperationContext;
 import org.springframework.data.mongodb.core.EntityOperations.AdaptibleEntity;
+import org.springframework.data.mongodb.core.QueryOperations.AggregateContext;
 import org.springframework.data.mongodb.core.QueryOperations.CountContext;
 import org.springframework.data.mongodb.core.QueryOperations.DeleteContext;
 import org.springframework.data.mongodb.core.QueryOperations.DistinctQueryContext;
@@ -1988,7 +1989,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	public <O> AggregationResults<O> aggregate(Aggregation aggregation, Class<?> inputType, Class<O> outputType) {
 
 		return aggregate(aggregation, getCollectionName(inputType), outputType,
-				new TypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper));
+				queryOperations.createAggregationContext(aggregation, inputType).getAggregationOperationContext());
 	}
 
 	/* (non-Javadoc)
@@ -2095,9 +2096,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
 		Assert.notNull(outputType, "Output type must not be null!");
 
-		AggregationOperationContext contextToUse = new AggregationUtil(queryMapper, mappingContext)
-				.prepareAggregationContext(aggregation, context);
-		return doAggregate(aggregation, collectionName, outputType, contextToUse);
+		return doAggregate(aggregation, collectionName, outputType, queryOperations.createAggregationContext(aggregation, context));
+	}
+
+	private <O> AggregationResults<O> doAggregate(Aggregation aggregation, String collectionName, Class<O> outputType,
+			AggregateContext context) {
+		return doAggregate(aggregation, collectionName, outputType, context.getAggregationOperationContext());
 	}
 
 	@SuppressWarnings("ConstantConditions")
@@ -2185,11 +2189,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(outputType, "Output type must not be null!");
 		Assert.isTrue(!aggregation.getOptions().isExplain(), "Can't use explain option with streaming!");
 
-		AggregationUtil aggregationUtil = new AggregationUtil(queryMapper, mappingContext);
-		AggregationOperationContext rootContext = aggregationUtil.prepareAggregationContext(aggregation, context);
+		AggregateContext aggregateContext = queryOperations.createAggregationContext(aggregation, context);
 
 		AggregationOptions options = aggregation.getOptions();
-		List<Document> pipeline = aggregationUtil.createPipeline(aggregation, rootContext);
+		List<Document> pipeline = aggregateContext.getAggregationPipeline();
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("Streaming aggregation: {} in collection {}", serializeToJsonSafely(pipeline), collectionName);

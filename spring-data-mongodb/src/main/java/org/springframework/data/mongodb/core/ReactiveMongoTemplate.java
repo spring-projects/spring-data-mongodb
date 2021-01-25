@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
+import org.springframework.data.mongodb.core.QueryOperations.AggregateContext;
 import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -946,9 +947,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
 
-		AggregationOperationContext context = new TypeBasedAggregationOperationContext(aggregation.getInputType(),
-				mappingContext, queryMapper);
-		return aggregate(aggregation, inputCollectionName, outputType, context);
+		return doAggregate(aggregation, inputCollectionName, aggregation.getInputType(), outputType);
 	}
 
 	/*
@@ -966,9 +965,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	@Override
 	public <O> Flux<O> aggregate(Aggregation aggregation, Class<?> inputType, Class<O> outputType) {
-
-		return aggregate(aggregation, getCollectionName(inputType), outputType,
-				new TypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper));
+		return doAggregate(aggregation, getCollectionName(inputType), inputType, outputType);
 	}
 
 	/*
@@ -977,40 +974,29 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	@Override
 	public <O> Flux<O> aggregate(Aggregation aggregation, String collectionName, Class<O> outputType) {
-		return aggregate(aggregation, collectionName, outputType, null);
+		return doAggregate(aggregation, collectionName, null, outputType);
 	}
 
-	/**
-	 * @param aggregation must not be {@literal null}.
-	 * @param collectionName must not be {@literal null}.
-	 * @param outputType must not be {@literal null}.
-	 * @param context can be {@literal null} and will be defaulted to {@link Aggregation#DEFAULT_CONTEXT}.
-	 * @return never {@literal null}.
-	 */
-	protected <O> Flux<O> aggregate(Aggregation aggregation, String collectionName, Class<O> outputType,
-			@Nullable AggregationOperationContext context) {
+	protected <O> Flux<O> doAggregate(Aggregation aggregation, String collectionName,  @Nullable Class<?> inputType, Class<O> outputType) {
 
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 		Assert.notNull(outputType, "Output type must not be null!");
 
-		AggregationUtil aggregationUtil = new AggregationUtil(queryMapper, mappingContext);
-		AggregationOperationContext rootContext = aggregationUtil.prepareAggregationContext(aggregation, context);
-
 		AggregationOptions options = aggregation.getOptions();
-		List<Document> pipeline = aggregationUtil.createPipeline(aggregation, rootContext);
-
 		Assert.isTrue(!options.isExplain(), "Cannot use explain option with streaming!");
 
+		AggregateContext ctx = queryOperations.createAggregationContext(aggregation, inputType);
+
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Streaming aggregation: {} in collection {}", serializeToJsonSafely(pipeline), collectionName);
+			LOGGER.debug("Streaming aggregation: {} in collection {}", serializeToJsonSafely(ctx.getAggregationPipeline()), collectionName);
 		}
 
 		ReadDocumentCallback<O> readCallback = new ReadDocumentCallback<>(mongoConverter, outputType, collectionName);
 		return execute(collectionName,
-				collection -> aggregateAndMap(collection, pipeline, aggregation.getPipeline().isOutOrMerge(), options,
+				collection -> aggregateAndMap(collection, ctx.getAggregationPipeline(), ctx.isOutOrMerge(), options,
 						readCallback,
-						aggregation instanceof TypedAggregation ? ((TypedAggregation<?>) aggregation).getInputType() : null));
+						ctx.getInputType()));
 	}
 
 	private <O> Flux<O> aggregateAndMap(MongoCollection<Document> collection, List<Document> pipeline,

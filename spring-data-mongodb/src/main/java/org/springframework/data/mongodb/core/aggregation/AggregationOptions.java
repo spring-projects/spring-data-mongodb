@@ -56,6 +56,7 @@ public class AggregationOptions {
 	private final Optional<Document> hint;
 	private Duration maxTime = Duration.ZERO;
 	private ResultOptions resultOptions = ResultOptions.READ;
+	private DomainTypeMapping domainTypeMapping = DomainTypeMapping.RELAXED;
 
 	/**
 	 * Creates a new {@link AggregationOptions}.
@@ -262,6 +263,14 @@ public class AggregationOptions {
 	}
 
 	/**
+	 * @return the domain type mapping strategy do apply. Never {@literal null}.
+	 * @since 3.2
+	 */
+	public DomainTypeMapping getDomainTypeMapping() {
+		return domainTypeMapping;
+	}
+
+	/**
 	 * Returns a new potentially adjusted copy for the given {@code aggregationCommandObject} with the configuration
 	 * applied.
 	 *
@@ -358,6 +367,7 @@ public class AggregationOptions {
 		private @Nullable Document hint;
 		private @Nullable Duration maxTime;
 		private @Nullable ResultOptions resultOptions;
+		private @Nullable DomainTypeMapping domainTypeMapping;
 
 		/**
 		 * Defines whether to off-load intensive sort-operations to disk.
@@ -476,6 +486,44 @@ public class AggregationOptions {
 		}
 
 		/**
+		 * Apply a strict domain type mapping considering {@link org.springframework.data.mongodb.core.mapping.Field}
+		 * annotations throwing errors for non existing, but referenced fields.
+		 *
+		 * @return this.
+		 * @since 3.2
+		 */
+		public Builder strictMapping() {
+
+			this.domainTypeMapping = DomainTypeMapping.STRICT;
+			return this;
+		}
+
+		/**
+		 * Apply a relaxed domain type mapping considering {@link org.springframework.data.mongodb.core.mapping.Field}
+		 * annotations using the user provided name if a referenced field does not exist.
+		 *
+		 * @return this.
+		 * @since 3.2
+		 */
+		public Builder relaxedMapping() {
+
+			this.domainTypeMapping = DomainTypeMapping.RELAXED;
+			return this;
+		}
+
+		/**
+		 * Apply no domain type mapping at all taking the pipeline as is.
+		 *
+		 * @return this.
+		 * @since 3.2
+		 */
+		public Builder noMapping() {
+
+			this.domainTypeMapping = DomainTypeMapping.NONE;
+			return this;
+		}
+
+		/**
 		 * Returns a new {@link AggregationOptions} instance with the given configuration.
 		 *
 		 * @return new instance of {@link AggregationOptions}.
@@ -488,6 +536,9 @@ public class AggregationOptions {
 			}
 			if (resultOptions != null) {
 				options.resultOptions = resultOptions;
+			}
+			if (domainTypeMapping != null) {
+				options.domainTypeMapping = domainTypeMapping;
 			}
 
 			return options;
@@ -507,5 +558,26 @@ public class AggregationOptions {
 		 * Read the aggregation result from the cursor.
 		 */
 		READ;
+	}
+
+	/**
+	 * Aggregation pipeline Domain type mappings supported by the mapping layer.
+	 *
+	 * @since 3.2
+	 */
+	public enum DomainTypeMapping {
+
+		/**
+		 * Mapping throws errors for non existing, but referenced fields.
+		 */
+		STRICT,
+		/**
+		 * Fields that do not exist in the model are treated as is.
+		 */
+		RELAXED,
+		/**
+		 * Do not attempt to map fields against the model and treat the entire pipeline as is.
+		 */
+		NONE
 	}
 }

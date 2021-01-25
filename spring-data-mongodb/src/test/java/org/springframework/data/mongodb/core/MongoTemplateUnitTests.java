@@ -50,7 +50,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
@@ -66,16 +65,11 @@ import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mapping.callback.EntityCallbacks;
+import org.springframework.data.mapping.context.InvalidPersistentPropertyPath;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
-import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
-import org.springframework.data.mongodb.core.aggregation.ArithmeticOperators;
+import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.aggregation.ComparisonOperators.Gte;
-import org.springframework.data.mongodb.core.aggregation.ConditionalOperators;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Switch.CaseOperator;
-import org.springframework.data.mongodb.core.aggregation.Fields;
-import org.springframework.data.mongodb.core.aggregation.SetOperation;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
@@ -478,6 +472,44 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.aggregate(newAggregation(Aggregation.unwind("foo")).withOptions(options), "collection-1", Wrapper.class);
 
 		verify(aggregateIterable).hint(hint);
+	}
+
+	@Test // GH-3542
+	void aggregateShouldUseRelaxedMappingByDefault() {
+
+		MongoTemplate template = new MongoTemplate(factory, converter) {
+
+			@Override
+			protected <O> AggregationResults<O> doAggregate(Aggregation aggregation, String collectionName,
+					Class<O> outputType, AggregationOperationContext context) {
+
+				assertThat(context).isInstanceOf(RelaxedTypeBasedAggregationOperationContext.class);
+				return super.doAggregate(aggregation, collectionName, outputType, context);
+			}
+		};
+
+		template.aggregate(
+				newAggregation(Jedi.class, Aggregation.unwind("foo")).withOptions(AggregationOptions.builder().build()),
+				Jedi.class);
+	}
+
+	@Test // GH-3542
+	void aggregateShouldUseStrictMappingIfOptionsIndicate() {
+
+		MongoTemplate template = new MongoTemplate(factory, converter) {
+
+			@Override
+			protected <O> AggregationResults<O> doAggregate(Aggregation aggregation, String collectionName,
+					Class<O> outputType, AggregationOperationContext context) {
+
+				assertThat(context).isInstanceOf(TypeBasedAggregationOperationContext.class);
+				return super.doAggregate(aggregation, collectionName, outputType, context);
+			}
+		};
+
+		assertThatExceptionOfType(InvalidPersistentPropertyPath.class)
+				.isThrownBy(() -> template.aggregate(newAggregation(Jedi.class, Aggregation.unwind("foo"))
+						.withOptions(AggregationOptions.builder().strictMapping().build()), Jedi.class));
 	}
 
 	@Test // DATAMONGO-1166, DATAMONGO-2264
