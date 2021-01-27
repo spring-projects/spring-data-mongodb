@@ -220,9 +220,24 @@ inline fun <reified T : Any> MongoOperations.group(criteria: Criteria, inputColl
  * @author Sebastien Deleuze
  * @since 2.0
  */
-@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("aggregate<T>(aggregation)"))
-inline fun <reified O : Any> MongoOperations.aggregate(aggregation: Aggregation, inputType: KClass<*>): AggregationResults<O> =
-		aggregate(aggregation, inputType.java, O::class.java)
+@Deprecated(
+	"Since 2.2, use the reified variant",
+	replaceWith = ReplaceWith("aggregate<I, O>(aggregation)")
+)
+inline fun <reified O : Any> MongoOperations.aggregate(
+	aggregation: Aggregation,
+	inputType: KClass<*>
+): AggregationResults<O> =
+	aggregate(aggregation, inputType.java, O::class.java)
+
+/**
+ * Extension for [MongoOperations.aggregate] leveraging reified type parameters.
+ *
+ * @author Mark Paluch
+ * @since 3.2
+ */
+inline fun <reified I : Any, reified O : Any> MongoOperations.aggregate(aggregation: Aggregation): AggregationResults<O> =
+	aggregate(aggregation, I::class.java, O::class.java)
 
 /**
  * Extension for [MongoOperations.aggregate] leveraging reified type parameters.
@@ -230,8 +245,11 @@ inline fun <reified O : Any> MongoOperations.aggregate(aggregation: Aggregation,
  * @author Sebastien Deleuze
  * @since 2.0
  */
-inline fun <reified O : Any> MongoOperations.aggregate(aggregation: Aggregation, collectionName: String): AggregationResults<O> =
-		aggregate(aggregation, collectionName, O::class.java)
+inline fun <reified O : Any> MongoOperations.aggregate(
+	aggregation: Aggregation,
+	collectionName: String
+): AggregationResults<O> =
+	aggregate(aggregation, collectionName, O::class.java)
 
 /**
  * Extension for [MongoOperations.aggregateStream] leveraging reified type parameters.
@@ -239,9 +257,24 @@ inline fun <reified O : Any> MongoOperations.aggregate(aggregation: Aggregation,
  * @author Sebastien Deleuze
  * @since 2.0
  */
-@Deprecated("Since 2.2, use the reified variant", replaceWith = ReplaceWith("aggregateStream<T>(aggregation)"))
-inline fun <reified O : Any> MongoOperations.aggregateStream(aggregation: Aggregation, inputType: KClass<*>): CloseableIterator<O> =
-		aggregateStream(aggregation, inputType.java, O::class.java)
+@Deprecated(
+	"Since 2.2, use the reified variant",
+	replaceWith = ReplaceWith("aggregateStream<I, O>(aggregation)")
+)
+inline fun <reified O : Any> MongoOperations.aggregateStream(
+	aggregation: Aggregation,
+	inputType: KClass<*>
+): CloseableIterator<O> =
+	aggregateStream(aggregation, inputType.java, O::class.java)
+
+/**
+ * Extension for [MongoOperations.aggregateStream] leveraging reified type parameters.
+ *
+ * @author Mark Paluch
+ * @since 3.2
+ */
+inline fun <reified I : Any, reified O : Any> MongoOperations.aggregateStream(aggregation: Aggregation): CloseableIterator<O> =
+	aggregateStream(aggregation, I::class.java, O::class.java)
 
 /**
  * Extension for [MongoOperations.aggregateStream] leveraging reified type parameters.
@@ -249,8 +282,11 @@ inline fun <reified O : Any> MongoOperations.aggregateStream(aggregation: Aggreg
  * @author Sebastien Deleuze
  * @since 2.0
  */
-inline fun <reified O : Any> MongoOperations.aggregateStream(aggregation: Aggregation, collectionName: String): CloseableIterator<O> =
-		aggregateStream(aggregation, collectionName, O::class.java)
+inline fun <reified O : Any> MongoOperations.aggregateStream(
+	aggregation: Aggregation,
+	collectionName: String
+): CloseableIterator<O> =
+	aggregateStream(aggregation, collectionName, O::class.java)
 
 /**
  * Extension for [MongoOperations.mapReduce] leveraging reified type parameters.

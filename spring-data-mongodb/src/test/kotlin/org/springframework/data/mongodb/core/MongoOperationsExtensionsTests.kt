@@ -241,7 +241,28 @@ class MongoOperationsExtensionsTests {
 		val aggregation = mockk<Aggregation>()
 
 		operations.aggregate<First>(aggregation, Second::class)
-		verify { operations.aggregate(aggregation, Second::class.java, First::class.java) }
+		verify {
+			operations.aggregate(
+				aggregation,
+				Second::class.java,
+				First::class.java
+			)
+		}
+	}
+
+	@Test // #3508
+	fun `aggregate(Aggregation) with reified type parameter extension should call its Java counterpart`() {
+
+		val aggregation = mockk<Aggregation>()
+
+		operations.aggregate<Second, First>(aggregation)
+		verify {
+			operations.aggregate(
+				aggregation,
+				Second::class.java,
+				First::class.java
+			)
+		}
 	}
 
 	@Test // DATAMONGO-1689
@@ -261,7 +282,28 @@ class MongoOperationsExtensionsTests {
 		val aggregation = mockk<Aggregation>()
 
 		operations.aggregateStream<First>(aggregation, Second::class)
-		verify { operations.aggregateStream(aggregation, Second::class.java, First::class.java) }
+		verify {
+			operations.aggregateStream(
+				aggregation,
+				Second::class.java,
+				First::class.java
+			)
+		}
+	}
+
+	@Test // #3508
+	fun `aggregateStream(Aggregation) with reified type parameter extension should call its Java counterpart`() {
+
+		val aggregation = mockk<Aggregation>()
+
+		operations.aggregateStream<Second, First>(aggregation)
+		verify {
+			operations.aggregateStream(
+				aggregation,
+				Second::class.java,
+				First::class.java
+			)
+		}
 	}
 
 	@Test // DATAMONGO-1689
@@ -271,7 +313,13 @@ class MongoOperationsExtensionsTests {
 		val collectionName = "foo"
 
 		operations.aggregateStream<First>(aggregation, collectionName)
-		verify { operations.aggregateStream(aggregation, collectionName, First::class.java) }
+		verify {
+			operations.aggregateStream(
+				aggregation,
+				collectionName,
+				First::class.java
+			)
+		}
 	}
 
 	@Test // DATAMONGO-1689
