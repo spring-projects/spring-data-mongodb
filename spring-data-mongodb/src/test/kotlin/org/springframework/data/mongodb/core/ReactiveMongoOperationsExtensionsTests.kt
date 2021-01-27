@@ -30,6 +30,7 @@ import reactor.core.publisher.Mono
  * @author Sebastien Deleuze
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Wonwoo Lee
  */
 class ReactiveMongoOperationsExtensionsTests {
 
@@ -607,10 +608,17 @@ class ReactiveMongoOperationsExtensionsTests {
 		val query = mockk<Query>()
 
 		operations.findDistinct<String>(query, "field", First::class)
-		verify { operations.findDistinct(query, "field", First::class.java, String::class.java) }
+		verify {
+			operations.findDistinct(
+				query,
+				"field",
+				First::class.java,
+				String::class.java
+			)
+		}
 	}
 
-	@Test
+	@Test  // #893
 	fun `aggregate(TypedAggregation, String, KClass) should call java counterpart`() {
 
 		val aggregation = mockk<TypedAggregation<String>>()
@@ -619,7 +627,7 @@ class ReactiveMongoOperationsExtensionsTests {
 		verify { operations.aggregate(aggregation, "foo", First::class.java) }
 	}
 
-	@Test
+	@Test // #893
 	fun `aggregate(TypedAggregation, KClass) should call java counterpart`() {
 
 		val aggregation = mockk<TypedAggregation<String>>()
@@ -628,16 +636,22 @@ class ReactiveMongoOperationsExtensionsTests {
 		verify { operations.aggregate(aggregation, First::class.java) }
 	}
 
-	@Test
+	@Test // #893
 	fun `aggregate(Aggregation, KClass) should call java counterpart`() {
 
 		val aggregation = mockk<Aggregation>()
 
-		operations.aggregate<First>(aggregation, String::class)
-		verify { operations.aggregate(aggregation, String::class.java, First::class.java) }
+		operations.aggregate<String, First>(aggregation)
+		verify {
+			operations.aggregate(
+				aggregation,
+				String::class.java,
+				First::class.java
+			)
+		}
 	}
 
-	@Test
+	@Test // #893
 	fun `aggregate(Aggregation, String) should call java counterpart`() {
 
 		val aggregation = mockk<Aggregation>()

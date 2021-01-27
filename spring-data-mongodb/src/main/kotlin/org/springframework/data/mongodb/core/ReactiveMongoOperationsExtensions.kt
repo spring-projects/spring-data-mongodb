@@ -217,37 +217,46 @@ inline fun <reified T : Any, reified E : Any> ReactiveMongoOperations.findDistin
  * Extension for [ReactiveMongoOperations.aggregate] leveraging reified type parameters.
  *
  * @author Wonwoo Lee
- * @since 3.1
+ * @since 3.1.4
  */
-inline fun <reified T : Any> ReactiveMongoOperations.aggregate(aggregation: TypedAggregation<*>, collectionName: String): Flux<T> =
-		this.aggregate(aggregation, collectionName, T::class.java)
+inline fun <reified O : Any> ReactiveMongoOperations.aggregate(
+	aggregation: TypedAggregation<*>,
+	collectionName: String
+): Flux<O> =
+	this.aggregate(aggregation, collectionName, O::class.java)
 
 /**
  * Extension for [ReactiveMongoOperations.aggregate] leveraging reified type parameters.
  *
  * @author Wonwoo Lee
- * @since 3.1
+ * @since 3.1.4
  */
-inline fun <reified T : Any> ReactiveMongoOperations.aggregate(aggregation: TypedAggregation<*>): Flux<T> =
-		this.aggregate(aggregation, T::class.java)
+inline fun <reified O : Any> ReactiveMongoOperations.aggregate(aggregation: TypedAggregation<*>): Flux<O> =
+	this.aggregate(aggregation, O::class.java)
 
 /**
  * Extension for [ReactiveMongoOperations.aggregate] leveraging reified type parameters.
  *
  * @author Wonwoo Lee
- * @since 3.1
+ * @author Mark Paluch
+ * @since 3.1.4
  */
-inline fun <reified T : Any> ReactiveMongoOperations.aggregate(aggregation: Aggregation, entityClass: KClass<*>): Flux<T> =
-		this.aggregate(aggregation, entityClass.java, T::class.java)
+inline fun <reified I : Any, reified O : Any> ReactiveMongoOperations.aggregate(
+	aggregation: Aggregation
+): Flux<O> =
+	this.aggregate(aggregation, I::class.java, O::class.java)
 
 /**
  * Extension for [ReactiveMongoOperations.aggregate] leveraging reified type parameters.
  *
  * @author Wonwoo Lee
- * @since 3.1
+ * @since 3.1.4
  */
-inline fun <reified T : Any> ReactiveMongoOperations.aggregate(aggregation: Aggregation, collectionName: String): Flux<T> =
-		this.aggregate(aggregation, collectionName, T::class.java)
+inline fun <reified O : Any> ReactiveMongoOperations.aggregate(
+	aggregation: Aggregation,
+	collectionName: String
+): Flux<O> =
+	this.aggregate(aggregation, collectionName, O::class.java)
 
 /**
  * Extension for [ReactiveMongoOperations.geoNear] leveraging reified type parameters.
