@@ -487,7 +487,7 @@ public class AggregationOptions {
 
 		/**
 		 * Apply a strict domain type mapping considering {@link org.springframework.data.mongodb.core.mapping.Field}
-		 * annotations throwing errors for non existing, but referenced fields.
+		 * annotations throwing errors for non-existent, but referenced fields.
 		 *
 		 * @return this.
 		 * @since 3.2
@@ -512,7 +512,7 @@ public class AggregationOptions {
 		}
 
 		/**
-		 * Apply no domain type mapping at all taking the pipeline as is.
+		 * Apply no domain type mapping at all taking the pipeline as-is.
 		 *
 		 * @return this.
 		 * @since 3.2
@@ -568,15 +568,17 @@ public class AggregationOptions {
 	public enum DomainTypeMapping {
 
 		/**
-		 * Mapping throws errors for non existing, but referenced fields.
+		 * Mapping throws errors for non-existent, but referenced fields.
 		 */
 		STRICT,
+
 		/**
-		 * Fields that do not exist in the model are treated as is.
+		 * Fields that do not exist in the model are treated as-is.
 		 */
 		RELAXED,
+
 		/**
-		 * Do not attempt to map fields against the model and treat the entire pipeline as is.
+		 * Do not attempt to map fields against the model and treat the entire pipeline as-is.
 		 */
 		NONE
 	}

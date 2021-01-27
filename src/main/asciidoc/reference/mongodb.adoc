@@ -2502,7 +2502,7 @@ For further information, see the full https://docs.mongodb.org/manual/aggregatio
 [[mongo.aggregation.basic-concepts]]
 === Basic Concepts
 
-The Aggregation Framework support in Spring Data MongoDB is based on the following key abstractions: `Aggregation`, `AggregationOperation`, and `AggregationResults`.
+The Aggregation Framework support in Spring Data MongoDB is based on the following key abstractions: `Aggregation`, `AggregationDefinition`, and `AggregationResults`.
 
 * `Aggregation`
 +
@@ -2517,12 +2517,12 @@ A `TypedAggregation`, just like an `Aggregation`, holds the instructions of the 
 At runtime, field references get checked against the given input type, considering potential `@Field` annotations.
 [NOTE]
 ====
-Changed in 3.2 referencing nonexistent properties does no longer raise errors. To restore the previous behaviour use the `strictMapping` option of `AggregationOptions`.
+Changed in 3.2 referencing none-xistent properties does no longer raise errors. To restore the previous behaviour use the `strictMapping` option of `AggregationOptions`.
 ====
 +
-* `AggregationOperation`
+* `AggregationDefinition`
 +
-An `AggregationOperation` represents a MongoDB aggregation pipeline operation and describes the processing that should be performed in this aggregation step. Although you could manually create an `AggregationOperation`, we recommend using the static factory methods provided by the `Aggregate` class to construct an `AggregateOperation`.
+An `AggregationDefinition` represents a MongoDB aggregation pipeline operation and describes the processing that should be performed in this aggregation step. Although you could manually create an `AggregationDefinition`, we recommend using the static factory methods provided by the `Aggregate` class to construct an `AggregateOperation`.
 +
 * `AggregationResults`
 +

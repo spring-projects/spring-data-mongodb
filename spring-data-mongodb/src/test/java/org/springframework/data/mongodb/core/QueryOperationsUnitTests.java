@@ -25,7 +25,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
-import org.springframework.data.mongodb.core.QueryOperations.AggregateContext;
+import org.springframework.data.mongodb.core.QueryOperations.AggregationDefinition;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
@@ -35,8 +35,9 @@ import org.springframework.data.mongodb.core.convert.UpdateMapper;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 /**
+ * Unit tests for {@link QueryOperations}.
+ *
  * @author Christoph Strobl
- * @since 2021/01
  */
 @ExtendWith(MockitoExtension.class)
 class QueryOperationsUnitTests {
@@ -66,7 +67,7 @@ class QueryOperationsUnitTests {
 	void createAggregationContextUsesRelaxedOneForUntypedAggregationsWhenNoInputTypeProvided() {
 
 		Aggregation aggregation = Aggregation.newAggregation(Aggregation.project("name"));
-		AggregateContext ctx = queryOperations.createAggregationContext(aggregation, (Class<?>) null);
+		AggregationDefinition ctx = queryOperations.createAggregation(aggregation, (Class<?>) null);
 
 		assertThat(ctx.getAggregationOperationContext()).isInstanceOf(RelaxedTypeBasedAggregationOperationContext.class);
 	}
@@ -75,7 +76,7 @@ class QueryOperationsUnitTests {
 	void createAggregationContextUsesRelaxedOneForTypedAggregationsWhenNoInputTypeProvided() {
 
 		Aggregation aggregation = Aggregation.newAggregation(Person.class, Aggregation.project("name"));
-		AggregateContext ctx = queryOperations.createAggregationContext(aggregation, (Class<?>) null);
+		AggregationDefinition ctx = queryOperations.createAggregation(aggregation, (Class<?>) null);
 
 		assertThat(ctx.getAggregationOperationContext()).isInstanceOf(RelaxedTypeBasedAggregationOperationContext.class);
 	}
@@ -84,7 +85,7 @@ class QueryOperationsUnitTests {
 	void createAggregationContextUsesRelaxedOneForUntypedAggregationsWhenInputTypeProvided() {
 
 		Aggregation aggregation = Aggregation.newAggregation(Aggregation.project("name"));
-		AggregateContext ctx = queryOperations.createAggregationContext(aggregation, Person.class);
+		AggregationDefinition ctx = queryOperations.createAggregation(aggregation, Person.class);
 
 		assertThat(ctx.getAggregationOperationContext()).isInstanceOf(RelaxedTypeBasedAggregationOperationContext.class);
 	}
@@ -93,7 +94,7 @@ class QueryOperationsUnitTests {
 	void createAggregationContextUsesDefaultIfNoMappingDesired() {
 
 		Aggregation aggregation = Aggregation.newAggregation(Aggregation.project("name")).withOptions(NO_MAPPING);
-		AggregateContext ctx = queryOperations.createAggregationContext(aggregation, Person.class);
+		AggregationDefinition ctx = queryOperations.createAggregation(aggregation, Person.class);
 
 		assertThat(ctx.getAggregationOperationContext()).isEqualTo(Aggregation.DEFAULT_CONTEXT);
 	}
@@ -103,7 +104,7 @@ class QueryOperationsUnitTests {
 
 		Aggregation aggregation = Aggregation.newAggregation(Person.class, Aggregation.project("name"))
 				.withOptions(STRICT_MAPPING);
-		AggregateContext ctx = queryOperations.createAggregationContext(aggregation, (Class<?>) null);
+		AggregationDefinition ctx = queryOperations.createAggregation(aggregation, (Class<?>) null);
 
 		assertThat(ctx.getAggregationOperationContext()).isInstanceOf(TypeBasedAggregationOperationContext.class);
 	}

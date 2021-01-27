@@ -67,7 +67,9 @@ class AggregationUtil {
 
 	AggregationOperationContext createAggregationContext(Aggregation aggregation, @Nullable Class<?> inputType) {
 
-		if (aggregation.getOptions().getDomainTypeMapping() == DomainTypeMapping.NONE) {
+		DomainTypeMapping domainTypeMapping = aggregation.getOptions().getDomainTypeMapping();
+
+		if (domainTypeMapping == DomainTypeMapping.NONE) {
 			return Aggregation.DEFAULT_CONTEXT;
 		}
 
@@ -77,7 +79,7 @@ class AggregationUtil {
 				return untypedMappingContext.get();
 			}
 
-			if (aggregation.getOptions().getDomainTypeMapping() == DomainTypeMapping.STRICT
+			if (domainTypeMapping == DomainTypeMapping.STRICT
 					&& !aggregation.getPipeline().containsUnionWith()) {
 				return new TypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper);
 			}
@@ -85,8 +87,8 @@ class AggregationUtil {
 			return new RelaxedTypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper);
 		}
 
-		inputType = ((TypedAggregation) aggregation).getInputType();
-		if (aggregation.getOptions().getDomainTypeMapping() == DomainTypeMapping.STRICT
+		inputType = ((TypedAggregation<?>) aggregation).getInputType();
+		if (domainTypeMapping == DomainTypeMapping.STRICT
 				&& !aggregation.getPipeline().containsUnionWith()) {
 			return new TypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper);
 		}
@@ -128,53 +130,6 @@ class AggregationUtil {
 		command.put("pipeline", mapAggregationPipeline(command.get("pipeline", List.class)));
 
 		return command;
-	}
-
-	/**
-	 * Create a {@code $count} aggregation for {@link Query} and optionally a {@link Class entity class}.
-	 *
-	 * @param query must not be {@literal null}.
-	 * @param entityClass can be {@literal null} if the {@link Query} object is empty.
-	 * @return the {@link Aggregation} pipeline definition to run a {@code $count} aggregation.
-	 */
-	Aggregation createCountAggregation(Query query, @Nullable Class<?> entityClass) {
-
-		List<AggregationOperation> pipeline = computeCountAggregationPipeline(query, entityClass);
-
-		Aggregation aggregation = entityClass != null ? Aggregation.newAggregation(entityClass, pipeline)
-				: Aggregation.newAggregation(pipeline);
-		aggregation.withOptions(AggregationOptions.builder().collation(query.getCollation().orElse(null)).build());
-
-		return aggregation;
-	}
-
-	private List<AggregationOperation> computeCountAggregationPipeline(Query query, @Nullable Class<?> entityType) {
-
-		CountOperation count = Aggregation.count().as("totalEntityCount");
-		if (query.getQueryObject().isEmpty()) {
-			return Collections.singletonList(count);
-		}
-
-		Assert.notNull(entityType, "Entity type must not be null!");
-
-		Document mappedQuery = queryMapper.getMappedObject(query.getQueryObject(),
-				mappingContext.getPersistentEntity(entityType));
-
-		CriteriaDefinition criteria = new CriteriaDefinition() {
-
-			@Override
-			public Document getCriteriaObject() {
-				return mappedQuery;
-			}
-
-			@Nullable
-			@Override
-			public String getKey() {
-				return null;
-			}
-		};
-
-		return Arrays.asList(Aggregation.match(criteria), count);
 	}
 
 	private List<Document> mapAggregationPipeline(List<Document> pipeline) {

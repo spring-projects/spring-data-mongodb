@@ -17,7 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
-import org.springframework.data.mongodb.core.QueryOperations.AggregateContext;
+import org.springframework.data.mongodb.core.QueryOperations.AggregationDefinition;
 import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -986,7 +986,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		AggregationOptions options = aggregation.getOptions();
 		Assert.isTrue(!options.isExplain(), "Cannot use explain option with streaming!");
 
-		AggregateContext ctx = queryOperations.createAggregationContext(aggregation, inputType);
+		AggregationDefinition ctx = queryOperations.createAggregation(aggregation, inputType);
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug("Streaming aggregation: {} in collection {}", serializeToJsonSafely(ctx.getAggregationPipeline()), collectionName);

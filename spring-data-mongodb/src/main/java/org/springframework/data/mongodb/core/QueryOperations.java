@@ -200,33 +200,33 @@ class QueryOperations {
 	}
 
 	/**
-	 * Create a new {@link AggregateContext} for the given {@link Aggregation}.
+	 * Create a new {@link AggregationDefinition} for the given {@link Aggregation}.
 	 *
 	 * @param aggregation must not be {@literal null}.
 	 * @param inputType fallback mapping type in case of untyped aggregation. Can be {@literal null}.
-	 * @return new instance of {@link AggregateContext}.
+	 * @return new instance of {@link AggregationDefinition}.
 	 * @since 3.2
 	 */
-	AggregateContext createAggregationContext(Aggregation aggregation, @Nullable Class<?> inputType) {
-		return new AggregateContext(aggregation, inputType);
+	AggregationDefinition createAggregation(Aggregation aggregation, @Nullable Class<?> inputType) {
+		return new AggregationDefinition(aggregation, inputType);
 	}
 
 	/**
-	 * Create a new {@link AggregateContext} for the given {@link Aggregation}.
+	 * Create a new {@link AggregationDefinition} for the given {@link Aggregation}.
 	 *
 	 * @param aggregation must not be {@literal null}.
 	 * @param aggregationOperationContext the {@link AggregationOperationContext} to use. Can be {@literal null}.
-	 * @return new instance of {@link AggregateContext}.
+	 * @return new instance of {@link AggregationDefinition}.
 	 * @since 3.2
 	 */
-	AggregateContext createAggregationContext(Aggregation aggregation,
+	AggregationDefinition createAggregation(Aggregation aggregation,
 			@Nullable AggregationOperationContext aggregationOperationContext) {
-		return new AggregateContext(aggregation, aggregationOperationContext);
+		return new AggregationDefinition(aggregation, aggregationOperationContext);
 	}
 
 	/**
 	 * {@link QueryContext} encapsulates common tasks required to convert a {@link Query} into its MongoDB document
-	 * representation, mapping fieldnames, as well as determinging and applying {@link Collation collations}.
+	 * representation, mapping field names, as well as determining and applying {@link Collation collations}.
 	 *
 	 * @author Christoph Strobl
 	 */
@@ -235,7 +235,7 @@ class QueryOperations {
 		private final Query query;
 
 		/**
-		 * Create new a {@link QueryContext} instance from the given {@literal query} (can be eihter a {@link Query} or a
+		 * Create new a {@link QueryContext} instance from the given {@literal query} (can be either a {@link Query} or a
 		 * plain {@link Document}.
 		 *
 		 * @param query can be {@literal null}.
@@ -305,7 +305,7 @@ class QueryOperations {
 						mappingContext.getRequiredPersistentEntity(targetType));
 			}
 
-			if (entity != null && entity.hasTextScoreProperty() && !query.getQueryObject().containsKey("$text")) {
+			if (entity.hasTextScoreProperty() && !query.getQueryObject().containsKey("$text")) {
 				mappedFields.remove(entity.getTextScoreProperty().getFieldName());
 			}
 
@@ -793,19 +793,19 @@ class QueryOperations {
 	}
 
 	/**
-	 * A context class that encapsulates common tasks required when running {@literal aggregations}.
+	 * A value object that encapsulates common tasks required when running {@literal aggregations}.
 	 *
 	 * @since 3.2
 	 */
-	class AggregateContext {
+	class AggregationDefinition {
 
-		private Aggregation aggregation;
-		private Lazy<AggregationOperationContext> aggregationOperationContext;
-		private Lazy<List<Document>> pipeline;
-		private @Nullable Class<?> inputType;
+		private final Aggregation aggregation;
+		private final Lazy<AggregationOperationContext> aggregationOperationContext;
+		private final Lazy<List<Document>> pipeline;
+		private final @Nullable Class<?> inputType;
 
 		/**
-		 * Creates new instance of {@link AggregateContext} extracting the input type from either the
+		 * Creates new instance of {@link AggregationDefinition} extracting the input type from either the
 		 * {@link org.springframework.data.mongodb.core.aggregation.Aggregation} in case of a {@link TypedAggregation} or
 		 * the given {@literal aggregationOperationContext} if present. <br />
 		 * Creates a new {@link AggregationOperationContext} if none given, based on the {@link Aggregation} input type and
@@ -815,21 +815,25 @@ class QueryOperations {
 		 * @param aggregation the source aggregation.
 		 * @param aggregationOperationContext can be {@literal null}.
 		 */
-		AggregateContext(Aggregation aggregation, @Nullable AggregationOperationContext aggregationOperationContext) {
+		AggregationDefinition(Aggregation aggregation, @Nullable AggregationOperationContext aggregationOperationContext) {
 
 			this.aggregation = aggregation;
+
 			if (aggregation instanceof TypedAggregation) {
-				this.inputType = ((TypedAggregation) aggregation).getInputType();
+				this.inputType = ((TypedAggregation<?>) aggregation).getInputType();
 			} else if (aggregationOperationContext instanceof TypeBasedAggregationOperationContext) {
 				this.inputType = ((TypeBasedAggregationOperationContext) aggregationOperationContext).getType();
+			} else {
+				this.inputType = null;
 			}
+
 			this.aggregationOperationContext = Lazy.of(() -> aggregationOperationContext != null ? aggregationOperationContext
 					: aggregationUtil.createAggregationContext(aggregation, getInputType()));
 			this.pipeline = Lazy.of(() -> aggregationUtil.createPipeline(this.aggregation, getAggregationOperationContext()));
 		}
 
 		/**
-		 * Creates new instance of {@link AggregateContext} extracting the input type from either the
+		 * Creates new instance of {@link AggregationDefinition} extracting the input type from either the
 		 * {@link org.springframework.data.mongodb.core.aggregation.Aggregation} in case of a {@link TypedAggregation} or
 		 * the given {@literal aggregationOperationContext} if present. <br />
 		 * Creates a new {@link AggregationOperationContext} based on the {@link Aggregation} input type and the desired
@@ -839,12 +843,12 @@ class QueryOperations {
 		 * @param aggregation the source aggregation.
 		 * @param inputType can be {@literal null}.
 		 */
-		AggregateContext(Aggregation aggregation, @Nullable Class<?> inputType) {
+		AggregationDefinition(Aggregation aggregation, @Nullable Class<?> inputType) {
 
 			this.aggregation = aggregation;
 
 			if (aggregation instanceof TypedAggregation) {
-				this.inputType = ((TypedAggregation) aggregation).getInputType();
+				this.inputType = ((TypedAggregation<?>) aggregation).getInputType();
 			} else {
 				this.inputType = inputType;
 			}
@@ -886,10 +890,6 @@ class QueryOperations {
 		@Nullable
 		Class<?> getInputType() {
 			return inputType;
-		}
-
-		Document getAggregationCommand(String collectionName) {
-			return aggregationUtil.createCommand(collectionName, aggregation, getAggregationOperationContext());
 		}
 	}
 }
