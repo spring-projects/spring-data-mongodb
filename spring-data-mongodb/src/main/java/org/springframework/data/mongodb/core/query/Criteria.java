@@ -615,8 +615,15 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria alike(Example<?> sample) {
 
-		criteria.put("$example", sample);
-		return this;
+		if (StringUtils.hasText(this.getKey())) {
+
+			criteria.put("$example", sample);
+			return this;
+		}
+
+		Criteria exampleCriteria = new Criteria();
+		exampleCriteria.criteria.put("$example", sample);
+		return registerCriteriaChainElement(exampleCriteria);
 	}
 
 	/**
