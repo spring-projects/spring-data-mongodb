@@ -771,6 +771,19 @@ public class QueryMapperUnitTests {
 		assertThat(document).containsEntry("legacyPoint.y", 20D);
 	}
 
+	@Test // GH-3544
+	void exampleWithCombinedCriteriaShouldBeMappedCorrectly() {
+
+		Foo probe = new Foo();
+		probe.embedded = new EmbeddedClass();
+		probe.embedded.id = "conflux";
+
+		Query query = query(byExample(probe).and("listOfItems").exists(true));
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(Foo.class));
+
+		assertThat(document).containsEntry("embedded\\._id", "conflux").containsEntry("my_items", new org.bson.Document("$exists", true));
+	}
+
 	@Test // DATAMONGO-1988
 	void mapsStringObjectIdRepresentationToObjectIdWhenReferencingIdProperty() {
 

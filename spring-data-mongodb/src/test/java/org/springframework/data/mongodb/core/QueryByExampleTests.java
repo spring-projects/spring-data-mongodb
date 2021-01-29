@@ -139,16 +139,14 @@ public class QueryByExampleTests {
 		assertThat(result).containsExactlyInAnyOrder(p1, p2, p3);
 	}
 
-	@Test // DATAMONGO-1245
+	@Test // DATAMONGO-1245, GH-3544
 	public void findByExampleWithCriteria() {
 
 		Person sample = new Person();
 		sample.lastname = "stark";
 
-		Query query = new Query(new Criteria().alike(Example.of(sample)).and("firstname").regex("^ary*"));
-
-		List<Person> result = operations.find(query, Person.class);
-		assertThat(result).hasSize(1);
+		Query query = new Query(new Criteria().alike(Example.of(sample)).and("firstname").regex(".*n.*"));
+		assertThat(operations.find(query, Person.class)).containsExactly(p1);
 	}
 
 	@Test // DATAMONGO-1459
