@@ -21,10 +21,16 @@ import java.util.Collections;
 import java.util.List;
 
 import org.springframework.data.geo.Point;
+import org.springframework.data.mongodb.core.geo.GeoJsonSerializersModule.GeoJsonLineStringSerializer;
+import org.springframework.data.mongodb.core.geo.GeoJsonSerializersModule.GeoJsonMultiLineStringSerializer;
+import org.springframework.data.mongodb.core.geo.GeoJsonSerializersModule.GeoJsonMultiPointSerializer;
+import org.springframework.data.mongodb.core.geo.GeoJsonSerializersModule.GeoJsonMultiPolygonSerializer;
+import org.springframework.data.mongodb.core.geo.GeoJsonSerializersModule.GeoJsonPointSerializer;
+import org.springframework.data.mongodb.core.geo.GeoJsonSerializersModule.GeoJsonPolygonSerializer;
 import org.springframework.lang.Nullable;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -34,7 +40,10 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
 /**
- * A Jackson {@link Module} to register custom {@link JsonSerializer} and {@link JsonDeserializer}s for GeoJSON types.
+ * A Jackson {@link Module} to register custom {@link JsonDeserializer}s for GeoJSON types.
+ * <p />
+ * Use {@link #geoJsonModule()} to obtain a {@link Module} containing both {@link JsonSerializer serializers} and
+ * {@link JsonDeserializer deserializers}.
  *
  * @author Christoph Strobl
  * @author Oliver Gierke
@@ -47,12 +56,97 @@ public class GeoJsonModule extends SimpleModule {
 
 	public GeoJsonModule() {
 
-		addDeserializer(GeoJsonPoint.class, new GeoJsonPointDeserializer());
-		addDeserializer(GeoJsonMultiPoint.class, new GeoJsonMultiPointDeserializer());
-		addDeserializer(GeoJsonLineString.class, new GeoJsonLineStringDeserializer());
-		addDeserializer(GeoJsonMultiLineString.class, new GeoJsonMultiLineStringDeserializer());
-		addDeserializer(GeoJsonPolygon.class, new GeoJsonPolygonDeserializer());
-		addDeserializer(GeoJsonMultiPolygon.class, new GeoJsonMultiPolygonDeserializer());
+		registerDeserializersIn(this);
+		// TODO: add serializers as of next major version (4.0).
+	}
+
+	/**
+	 * Obtain a {@link Module} containing {@link JsonDeserializer deserializers} for the following {@link GeoJson} types:
+	 * <ul>
+	 * <li>{@link GeoJsonPoint}</li>
+	 * <li>{@link GeoJsonMultiPoint}</li>
+	 * <li>{@link GeoJsonLineString}</li>
+	 * <li>{@link GeoJsonMultiLineString}</li>
+	 * <li>{@link GeoJsonPolygon}</li>
+	 * <li>{@link GeoJsonMultiPolygon}</li>
+	 * </ul>
+	 * 
+	 * @return a {@link Module} containing {@link JsonDeserializer deserializers} for {@link GeoJson} types.
+	 * @since 3.2
+	 */
+	public static Module deserializers() {
+
+		SimpleModule module = new SimpleModule("Spring Data MongoDB GeoJson - Deserializers",
+				new Version(3, 2, 0, null, "org.springframework.data", "spring-data-mongodb-geojson"));
+		registerDeserializersIn(module);
+		return module;
+	}
+
+	/**
+	 * Obtain a {@link Module} containing {@link JsonSerializer serializers} for the following {@link GeoJson} types:
+	 * <ul>
+	 * <li>{@link GeoJsonPoint}</li>
+	 * <li>{@link GeoJsonMultiPoint}</li>
+	 * <li>{@link GeoJsonLineString}</li>
+	 * <li>{@link GeoJsonMultiLineString}</li>
+	 * <li>{@link GeoJsonPolygon}</li>
+	 * <li>{@link GeoJsonMultiPolygon}</li>
+	 * </ul>
+	 *
+	 * @return a {@link Module} containing {@link JsonSerializer serializers} for {@link GeoJson} types.
+	 * @since 3.2
+	 */
+	public static Module serializers() {
+
+		SimpleModule module = new SimpleModule("Spring Data MongoDB GeoJson - Serializers",
+				new Version(3, 2, 0, null, "org.springframework.data", "spring-data-mongodb-geojson"));
+		registerSerializersIn(module);
+		return module;
+	}
+
+	/**
+	 * Obtain a {@link Module} containing {@link JsonSerializer serializers} and {@link JsonDeserializer deserializers}
+	 * for the following {@link GeoJson} types:
+	 * <ul>
+	 * <li>{@link GeoJsonPoint}</li>
+	 * <li>{@link GeoJsonMultiPoint}</li>
+	 * <li>{@link GeoJsonLineString}</li>
+	 * <li>{@link GeoJsonMultiLineString}</li>
+	 * <li>{@link GeoJsonPolygon}</li>
+	 * <li>{@link GeoJsonMultiPolygon}</li>
+	 * </ul>
+	 *
+	 * @return a {@link Module} containing {@link JsonSerializer serializers} and {@link JsonDeserializer deserializers}
+	 *         for {@link GeoJson} types.
+	 * @since 3.2
+	 */
+	public static Module geoJsonModule() {
+
+		SimpleModule module = new SimpleModule("Spring Data MongoDB GeoJson",
+				new Version(3, 2, 0, null, "org.springframework.data", "spring-data-mongodb-geojson"));
+		registerSerializersIn(module);
+		registerDeserializersIn(module);
+		return module;
+	}
+
+	private static void registerSerializersIn(SimpleModule module) {
+
+		module.addSerializer(GeoJsonPoint.class, new GeoJsonPointSerializer());
+		module.addSerializer(GeoJsonMultiPoint.class, new GeoJsonMultiPointSerializer());
+		module.addSerializer(GeoJsonLineString.class, new GeoJsonLineStringSerializer());
+		module.addSerializer(GeoJsonMultiLineString.class, new GeoJsonMultiLineStringSerializer());
+		module.addSerializer(GeoJsonPolygon.class, new GeoJsonPolygonSerializer());
+		module.addSerializer(GeoJsonMultiPolygon.class, new GeoJsonMultiPolygonSerializer());
+	}
+
+	private static void registerDeserializersIn(SimpleModule module) {
+
+		module.addDeserializer(GeoJsonPoint.class, new GeoJsonPointDeserializer());
+		module.addDeserializer(GeoJsonMultiPoint.class, new GeoJsonMultiPointDeserializer());
+		module.addDeserializer(GeoJsonLineString.class, new GeoJsonLineStringDeserializer());
+		module.addDeserializer(GeoJsonMultiLineString.class, new GeoJsonMultiLineStringDeserializer());
+		module.addDeserializer(GeoJsonPolygon.class, new GeoJsonPolygonDeserializer());
+		module.addDeserializer(GeoJsonMultiPolygon.class, new GeoJsonMultiPolygonDeserializer());
 	}
 
 	/**
@@ -67,8 +161,7 @@ public class GeoJsonModule extends SimpleModule {
 		 */
 		@Nullable
 		@Override
-		public T deserialize(@Nullable JsonParser jp, @Nullable DeserializationContext ctxt)
-				throws IOException, JsonProcessingException {
+		public T deserialize(@Nullable JsonParser jp, @Nullable DeserializationContext ctxt) throws IOException {
 
 			JsonNode node = jp.readValueAsTree();
 			JsonNode coordinates = node.get("coordinates");

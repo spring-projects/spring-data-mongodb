@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2021 the original author or authors.
+ * Copyright 2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,29 +15,29 @@
  */
 package org.springframework.data.mongodb.core.geo;
 
+import java.io.IOException;
+
+import org.springframework.data.geo.Point;
+
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import org.springframework.data.geo.Point;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * A Jackson {@link Module} to register custom {@link JsonSerializer}s for GeoJSON types.
  *
  * @author Bjorn Harvold
- * @since 
+ * @author Christoph Strobl
+ * @since 3.2
  */
-public class GeoJsonSerializersModule extends SimpleModule {
+class GeoJsonSerializersModule extends SimpleModule {
 
 	private static final long serialVersionUID = 1340494654898895610L;
 
-	public GeoJsonSerializersModule() {
+	GeoJsonSerializersModule() {
+
 		addSerializer(GeoJsonPoint.class, new GeoJsonPointSerializer());
 		addSerializer(GeoJsonMultiPoint.class, new GeoJsonMultiPointSerializer());
 		addSerializer(GeoJsonLineString.class, new GeoJsonLineStringSerializer());
@@ -46,111 +46,263 @@ public class GeoJsonSerializersModule extends SimpleModule {
 		addSerializer(GeoJsonMultiPolygon.class, new GeoJsonMultiPolygonSerializer());
 	}
 
-	public static class GeoJsonPointSerializer extends JsonSerializer<GeoJsonPoint> {
+	/**
+	 * @param <T>
+	 * @author Christoph Strobl
+	 */
+	private static abstract class GeoJsonSerializer<T extends GeoJson<? extends Iterable>> extends JsonSerializer<T> {
+
+		/*
+		 * (non-Javadoc)
+		 * @see com.fasterxml.jackson.databind.JsonSerializer#serialize(java.lang.Object, com.fasterxml.jackson.core.JsonGenerator, com.fasterxml.jackson.databind.SerializerProvider)
+		 */
 		@Override
-		public void serialize(GeoJsonPoint value, JsonGenerator gen, SerializerProvider serializers) throws IOException, JsonProcessingException {
-			gen.writeStartObject();
-			gen.writeStringField("type", value.getType());
-			gen.writeObjectField("coordinates", value.getCoordinates());
-			gen.writeEndObject();
+		public void serialize(T shape, JsonGenerator jsonGenerator, SerializerProvider serializers) throws IOException {
+
+			jsonGenerator.writeStartObject();
+			jsonGenerator.writeStringField("type", shape.getType());
+			jsonGenerator.writeArrayFieldStart("coordinates");
+
+			doSerialize(shape, jsonGenerator);
+
+			jsonGenerator.writeEndArray();
+			jsonGenerator.writeEndObject();
 		}
 
-	}
+		/**
+		 * Perform the actual serialization given the {@literal shape} as {@link GeoJson}.
+		 *
+		 * @param shape
+		 * @param jsonGenerator
+		 * @return
+		 */
+		protected abstract void doSerialize(T shape, JsonGenerator jsonGenerator) throws IOException;
 
-	public static class GeoJsonLineStringSerializer extends JsonSerializer<GeoJsonLineString> {
+		/**
+		 * Write a {@link Point} as array. <br />
+		 * {@code [10.0, 20.0]}
+		 *
+		 * @param point
+		 * @param jsonGenerator
+		 * @throws IOException
+		 */
+		protected void writePoint(Point point, JsonGenerator jsonGenerator) throws IOException {
 
-		@Override
-		public void serialize(GeoJsonLineString value, JsonGenerator gen, SerializerProvider serializers) throws IOException, JsonProcessingException {
-			gen.writeStartObject();
-			gen.writeStringField("type", value.getType());
-			gen.writeArrayFieldStart("coordinates");
-			for (Point p : value.getCoordinates()) {
-				gen.writeObject(new double[]{p.getX(), p.getY()});
+			jsonGenerator.writeStartArray();
+			writeRawCoordinates(point, jsonGenerator);
+			jsonGenerator.writeEndArray();
+		}
+
+		/**
+		 * Write the {@link Point} coordinates. <br />
+		 * {@code 10.0, 20.0}
+		 *
+		 * @param point
+		 * @param jsonGenerator
+		 * @throws IOException
+		 */
+		protected void writeRawCoordinates(Point point, JsonGenerator jsonGenerator) throws IOException {
+
+			jsonGenerator.writeNumber(point.getX());
+			jsonGenerator.writeNumber(point.getY());
+		}
+
+		/**
+		 * Write an {@link Iterable} of {@link Point} as array. <br />
+		 * {@code [ [10.0, 20.0], [30.0, 40.0], [50.0, 60.0] ]}
+		 *
+		 * @param points
+		 * @param jsonGenerator
+		 * @throws IOException
+		 */
+		protected void writeLine(Iterable<Point> points, JsonGenerator jsonGenerator) throws IOException {
+
+			jsonGenerator.writeStartArray();
+			writeRawLine(points, jsonGenerator);
+			jsonGenerator.writeEndArray();
+		}
+
+		/**
+		 * Write an {@link Iterable} of {@link Point}. <br />
+		 * {@code [10.0, 20.0], [30.0, 40.0], [50.0, 60.0]}
+		 *
+		 * @param points
+		 * @param jsonGenerator
+		 * @throws IOException
+		 */
+		protected void writeRawLine(Iterable<Point> points, JsonGenerator jsonGenerator) throws IOException {
+
+			for (Point point : points) {
+				writePoint(point, jsonGenerator);
 			}
-			gen.writeEndArray();
-			gen.writeEndObject();
 		}
 	}
 
-	public static class GeoJsonMultiPointSerializer extends JsonSerializer<GeoJsonMultiPoint> {
+	/**
+	 * {@link JsonSerializer} converting {@link GeoJsonPoint} to:
+	 *
+	 * <pre>
+	 * <code>
+	 * { "type": "Point", "coordinates": [10.0, 20.0] }
+	 * </code>
+	 * </pre>
+	 *
+	 * @author Bjorn Harvold
+	 * @author Christoph Strobl
+	 * @since 3.2
+	 */
+	static class GeoJsonPointSerializer extends GeoJsonSerializer<GeoJsonPoint> {
 
 		@Override
-		public void serialize(GeoJsonMultiPoint value, JsonGenerator gen, SerializerProvider serializers) throws IOException, JsonProcessingException {
-			gen.writeStartObject();
-			gen.writeStringField("type", value.getType());
-			gen.writeArrayFieldStart("coordinates");
-			for (Point p : value.getCoordinates()) {
-				gen.writeObject(new double[]{p.getX(), p.getY()});
-			}
-			gen.writeEndArray();
-			gen.writeEndObject();
+		protected void doSerialize(GeoJsonPoint value, JsonGenerator jsonGenerator) throws IOException {
+			writeRawCoordinates(value, jsonGenerator);
 		}
 	}
 
-	public static class GeoJsonMultiLineStringSerializer extends JsonSerializer<GeoJsonMultiLineString> {
+	/**
+	 * {@link JsonSerializer} converting {@link GeoJsonLineString} to:
+	 *
+	 * <pre>
+	 * <code>
+	 * {
+	 *   "type": "LineString",
+	 *   "coordinates": [
+	 *     [10.0, 20.0], [30.0, 40.0], [50.0, 60.0]
+	 *   ]
+	 * }
+	 * </code>
+	 * </pre>
+	 *
+	 * @author Bjorn Harvold
+	 * @author Christoph Strobl
+	 * @since 3.2
+	 */
+	static class GeoJsonLineStringSerializer extends GeoJsonSerializer<GeoJsonLineString> {
 
 		@Override
-		public void serialize(GeoJsonMultiLineString value, JsonGenerator gen, SerializerProvider serializers) throws IOException, JsonProcessingException {
-			gen.writeStartObject();
-			gen.writeStringField("type", value.getType());
-			gen.writeArrayFieldStart("coordinates");
+		protected void doSerialize(GeoJsonLineString value, JsonGenerator jsonGenerator) throws IOException {
+			writeRawLine(value.getCoordinates(), jsonGenerator);
+		}
+	}
+
+	/**
+	 * {@link JsonSerializer} converting {@link GeoJsonMultiPoint} to:
+	 *
+	 * <pre>
+	 * <code>
+	 * {
+	 *   "type": "MultiPoint",
+	 *   "coordinates": [
+	 *     [10.0, 20.0], [30.0, 40.0], [50.0, 60.0]
+	 *   ]
+	 * }
+	 * </code>
+	 * </pre>
+	 *
+	 * @author Bjorn Harvold
+	 * @author Christoph Strobl
+	 * @since 3.2
+	 */
+	static class GeoJsonMultiPointSerializer extends GeoJsonSerializer<GeoJsonMultiPoint> {
+
+		@Override
+		protected void doSerialize(GeoJsonMultiPoint value, JsonGenerator jsonGenerator) throws IOException {
+			writeRawLine(value.getCoordinates(), jsonGenerator);
+		}
+	}
+
+	/**
+	 * {@link JsonSerializer} converting {@link GeoJsonMultiLineString} to:
+	 *
+	 * <pre>
+	 * <code>
+	 * {
+	 *   "type": "MultiLineString",
+	 *   "coordinates": [
+	 *     [ [10.0, 20.0], [30.0, 40.0] ],
+	 *     [ [50.0, 60.0] , [70.0, 80.0] ]
+	 *   ]
+	 * }
+	 * </code>
+	 * </pre>
+	 *
+	 * @author Bjorn Harvold
+	 * @author Christoph Strobl
+	 * @since 3.2
+	 */
+	static class GeoJsonMultiLineStringSerializer extends GeoJsonSerializer<GeoJsonMultiLineString> {
+
+		@Override
+		protected void doSerialize(GeoJsonMultiLineString value, JsonGenerator jsonGenerator) throws IOException {
+
 			for (GeoJsonLineString lineString : value.getCoordinates()) {
-				List<double[]> arrayList = new ArrayList<>();
-				for (Point p : lineString.getCoordinates()) {
-					arrayList.add(new double[]{p.getX(), p.getY()});
-				}
-				double[][] doubles = arrayList.toArray(new double[0][0]);
-				gen.writeObject(doubles);
+				writeLine(lineString.getCoordinates(), jsonGenerator);
 			}
-			gen.writeEndArray();
-			gen.writeEndObject();
 		}
 	}
 
-	public static class GeoJsonPolygonSerializer extends JsonSerializer<GeoJsonPolygon> {
+	/**
+	 * {@link JsonSerializer} converting {@link GeoJsonPolygon} to:
+	 *
+	 * <pre>
+	 * <code>
+	 * {
+	 *   "type": "Polygon",
+	 *   "coordinates": [
+	 *     [ [100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0] ]
+	 *   ]
+	 * }
+	 * </code>
+	 * </pre>
+	 *
+	 * @author Bjorn Harvold
+	 * @author Christoph Strobl
+	 * @since 3.2
+	 */
+	static class GeoJsonPolygonSerializer extends GeoJsonSerializer<GeoJsonPolygon> {
 
 		@Override
-		public void serialize(GeoJsonPolygon value, JsonGenerator gen, SerializerProvider serializers) throws IOException, JsonProcessingException {
-			gen.writeStartObject();
-			gen.writeStringField("type", value.getType());
-			gen.writeArrayFieldStart("coordinates");
-			for (GeoJsonLineString ls : value.getCoordinates()) {
-				gen.writeStartArray();
-				for (Point p : ls.getCoordinates()) {
-					gen.writeObject(new double[]{p.getX(), p.getY()});
-				}
-				gen.writeEndArray();
+		protected void doSerialize(GeoJsonPolygon value, JsonGenerator jsonGenerator) throws IOException {
+
+			for (GeoJsonLineString lineString : value.getCoordinates()) {
+				writeLine(lineString.getCoordinates(), jsonGenerator);
 			}
-			gen.writeEndArray();
-			gen.writeEndObject();
 		}
 	}
 
-	public static class GeoJsonMultiPolygonSerializer extends JsonSerializer<GeoJsonMultiPolygon> {
+	/**
+	 * {@link JsonSerializer} converting {@link GeoJsonMultiPolygon} to:
+	 *
+	 * <pre>
+	 * <code>
+	 * {
+	 *   "type": "MultiPolygon",
+	 *   "coordinates": [
+	 *     [[[102.0, 2.0], [103.0, 2.0], [103.0, 3.0], [102.0, 3.0], [102.0, 2.0]]],
+	 *     [[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]],
+	 *     [[100.2, 0.2], [100.8, 0.2], [100.8, 0.8], [100.2, 0.8], [100.2, 0.2]]]
+	 *   ]
+	 * }
+	 * </code>
+	 * </pre>
+	 *
+	 * @author Bjorn Harvold
+	 * @author Christoph Strobl
+	 * @since 3.2
+	 */
+	static class GeoJsonMultiPolygonSerializer extends GeoJsonSerializer<GeoJsonMultiPolygon> {
 
 		@Override
-		public void serialize(GeoJsonMultiPolygon value, JsonGenerator gen, SerializerProvider serializers) throws IOException, JsonProcessingException {
-			gen.writeStartObject();
-			gen.writeStringField("type", value.getType());
-			gen.writeArrayFieldStart("coordinates");
+		protected void doSerialize(GeoJsonMultiPolygon value, JsonGenerator jsonGenerator) throws IOException {
+
 			for (GeoJsonPolygon polygon : value.getCoordinates()) {
 
-				gen.writeStartArray();
-
-				gen.writeStartArray();
+				jsonGenerator.writeStartArray();
 				for (GeoJsonLineString lineString : polygon.getCoordinates()) {
-
-					for (Point p : lineString.getCoordinates()) {
-						gen.writeObject(new double[]{p.getX(), p.getY()});
-					}
-
+					writeLine(lineString.getCoordinates(), jsonGenerator);
 				}
-
-				gen.writeEndArray();
-				gen.writeEndArray();
+				jsonGenerator.writeEndArray();
 			}
-			gen.writeEndArray();
-			gen.writeEndObject();
 		}
 	}
 }

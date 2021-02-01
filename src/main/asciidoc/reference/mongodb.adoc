@@ -1700,6 +1700,43 @@ Returning the 3 Documents just like the GeoJSON variant:
 <4> Distance from center point in _Kilometers_ - take it times 1000 to match _Meters_ of the GeoJSON variant.
 ====
 
+==== GeoJSON Jackson Modules
+
+By using the <<core.web>>, Spring Data adds additional Jackson ``Modules``s to the `ObjectMapper` for de-/serializing common types used by the Spring Data domain.
+Please refer to the <<core.web.basic.jackson-mappers>> section to learn more about the infrastructure setup of this feature.
+
+The MongoDB module additionally registers ``JsonDeserializer``s for the following GeoJSON types via its `GeoJsonConfiguration` exposing the `GeoJsonModule`.
+----
+org.springframework.data.mongodb.core.geo.GeoJsonPoint
+org.springframework.data.mongodb.core.geo.GeoJsonMultiPoint
+org.springframework.data.mongodb.core.geo.GeoJsonLineString
+org.springframework.data.mongodb.core.geo.GeoJsonMultiLineString
+org.springframework.data.mongodb.core.geo.GeoJsonPolygon
+org.springframework.data.mongodb.core.geo.GeoJsonMultiPolygon
+----
+
+[NOTE]
+====
+The `GeoJsonModule` only registers ``JsonDeserializer``s! +
+To equip the `ObjectMapper` with a symmetric set of ``JsonSerializer``s you need to either manually configure those for the `ObjectMapper` or provide a custom `SpringDataJacksonModules` configuration exposing  `GeoJsonModule.serializers()` as a Spring Bean.
+
+[source,java]
+----
+class GeoJsonConfiguration implements SpringDataJacksonModules {
+
+	@Bean
+	public Module geoJsonSerializers() {
+		return GeoJsonModule.serializers();
+	}
+}
+----
+====
+
+[WARNING]
+====
+The next major version (`4.0`) will by default register both, ``JsonDeserializer``s and ``JsonSerializer``s for GeoJSON types.
+====
+
 [[mongo.textsearch]]
 === Full-text Queries
 
