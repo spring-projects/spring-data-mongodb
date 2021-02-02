@@ -28,12 +28,14 @@ import org.springframework.data.geo.Point;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
+ * Unit tests for {@link GeoJsonSerializersModule}.
+ *
  * @author Bjorn Harvold
  * @author Christoph Strobl
  */
 class GeoJsonSerializersUnitTests {
 
-	ObjectMapper mapper;
+	private ObjectMapper mapper;
 
 	@BeforeEach
 	void beforeEach() {
@@ -51,7 +53,7 @@ class GeoJsonSerializersUnitTests {
 	}
 
 	@Test // GH-3517
-	public void shouldSerializeGeoJsonLineStringCorrectly() throws IOException {
+	void shouldSerializeGeoJsonLineStringCorrectly() throws IOException {
 
 		GeoJsonLineString lineString = new GeoJsonLineString(
 				Arrays.asList(new Point(10, 20), new Point(30, 40), new Point(50, 60)));
@@ -61,7 +63,7 @@ class GeoJsonSerializersUnitTests {
 	}
 
 	@Test // GH-3517
-	public void shouldSerializeGeoJsonMultiPointCorrectly() throws IOException {
+	void shouldSerializeGeoJsonMultiPointCorrectly() throws IOException {
 
 		GeoJsonMultiPoint multiPoint = new GeoJsonMultiPoint(
 				Arrays.asList(new Point(10, 20), new Point(30, 40), new Point(50, 60)));
@@ -71,7 +73,7 @@ class GeoJsonSerializersUnitTests {
 	}
 
 	@Test // GH-3517
-	public void shouldSerializeJsonMultiLineStringCorrectly() throws IOException {
+	void shouldSerializeJsonMultiLineStringCorrectly() throws IOException {
 
 		GeoJsonMultiLineString multiLineString = new GeoJsonMultiLineString(
 				Arrays.asList(new Point(10, 20), new Point(30, 40)), Arrays.asList(new Point(50, 60), new Point(70, 80)));
@@ -81,17 +83,18 @@ class GeoJsonSerializersUnitTests {
 	}
 
 	@Test // GH-3517
-	public void shouldSerializeGeoJsonPolygonCorrectly() throws IOException {
+	void shouldSerializeGeoJsonPolygonCorrectly() throws IOException {
 
 		List<Point> points = Arrays.asList(new Point(100, 0), new Point(101, 0), new Point(101, 1), new Point(100, 1),
 				new Point(100, 0));
 		GeoJsonPolygon polygon = new GeoJsonPolygon(points);
 
-		assertThat(mapper.writeValueAsString(polygon)).isEqualTo("{\"type\":\"Polygon\",\"coordinates\":[[[100.0,0.0],[101.0,0.0],[101.0,1.0],[100.0,1.0],[100.0,0.0]]]}");
+		assertThat(mapper.writeValueAsString(polygon)).isEqualTo(
+				"{\"type\":\"Polygon\",\"coordinates\":[[[100.0,0.0],[101.0,0.0],[101.0,1.0],[100.0,1.0],[100.0,0.0]]]}");
 	}
 
 	@Test // GH-3517
-	public void shouldSerializeGeoJsonMultiPolygonCorrectly() throws IOException {
+	void shouldSerializeGeoJsonMultiPolygonCorrectly() throws IOException {
 
 		String json = "{\"type\":\"MultiPolygon\",\"coordinates\":[" + "[" + "["
 				+ "[102.0,2.0],[103.0,2.0],[103.0,3.0],[102.0,3.0],[102.0,2.0]" + "]" + "]," + "[" + "["

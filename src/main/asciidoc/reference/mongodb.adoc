@@ -1446,6 +1446,7 @@ The geo-near operations return a `GeoResults` wrapper object that encapsulates `
 
 MongoDB supports https://geojson.org/[GeoJSON] and simple (legacy) coordinate pairs for geospatial data. Those formats can both be used for storing as well as querying data. See the https://docs.mongodb.org/manual/core/2dsphere/#geospatial-indexes-store-geojson/[MongoDB manual on GeoJSON support] to learn about requirements and restrictions.
 
+[[mongo.geo-json.domain.classes]]
 ==== GeoJSON Types in Domain Classes
 
 Usage of https://geojson.org/[GeoJSON] types in domain classes is straightforward. The `org.springframework.data.mongodb.core.geo` package contains types such as `GeoJsonPoint`, `GeoJsonPolygon`, and others. These types are extend the existing `org.springframework.data.geo` types. The following example uses a `GeoJsonPoint`:
@@ -1469,6 +1470,7 @@ public class Store {
 ----
 ====
 
+[[mongo.geo-json.query-methods]]
 ==== GeoJSON Types in Repository Query Methods
 
 Using GeoJSON types as repository query parameters forces usage of the `$geometry` operator when creating the query, as the following example shows:
@@ -1529,6 +1531,7 @@ repo.findByLocationWithin(                              <4>
 <4> Use the legacy format `$polygon` operator.
 ====
 
+[[mongo.geo-json.metrics]]
 ==== Metrics and Distance calculation
 
 Then MongoDB `$geoNear` operator allows usage of a GeoJSON Point or legacy coordinate pairs.
@@ -1700,9 +1703,10 @@ Returning the 3 Documents just like the GeoJSON variant:
 <4> Distance from center point in _Kilometers_ - take it times 1000 to match _Meters_ of the GeoJSON variant.
 ====
 
+[[mongo.geo-json.jackson-modules]]
 ==== GeoJSON Jackson Modules
 
-By using the <<core.web>>, Spring Data adds additional Jackson ``Modules``s to the `ObjectMapper` for de-/serializing common types used by the Spring Data domain.
+By using the <<core.web>>, Spring Data registers additional Jackson ``Modules``s to the `ObjectMapper` for de-/serializing common Spring Data domain types.
 Please refer to the <<core.web.basic.jackson-mappers>> section to learn more about the infrastructure setup of this feature.
 
 The MongoDB module additionally registers ``JsonDeserializer``s for the following GeoJSON types via its `GeoJsonConfiguration` exposing the `GeoJsonModule`.
@@ -1734,7 +1738,7 @@ class GeoJsonConfiguration implements SpringDataJacksonModules {
 
 [WARNING]
 ====
-The next major version (`4.0`) will by default register both, ``JsonDeserializer``s and ``JsonSerializer``s for GeoJSON types.
+The next major version (`4.0`) will register both, ``JsonDeserializer``s and ``JsonSerializer``s for GeoJSON types by default.
 ====
 
 [[mongo.textsearch]]

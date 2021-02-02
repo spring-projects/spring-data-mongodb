@@ -21,12 +21,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.springframework.data.geo.Point;
-import org.springframework.data.mongodb.core.geo.GeoJsonSerializersModule.GeoJsonLineStringSerializer;
-import org.springframework.data.mongodb.core.geo.GeoJsonSerializersModule.GeoJsonMultiLineStringSerializer;
-import org.springframework.data.mongodb.core.geo.GeoJsonSerializersModule.GeoJsonMultiPointSerializer;
-import org.springframework.data.mongodb.core.geo.GeoJsonSerializersModule.GeoJsonMultiPolygonSerializer;
-import org.springframework.data.mongodb.core.geo.GeoJsonSerializersModule.GeoJsonPointSerializer;
-import org.springframework.data.mongodb.core.geo.GeoJsonSerializersModule.GeoJsonPolygonSerializer;
 import org.springframework.lang.Nullable;
 
 import com.fasterxml.jackson.core.JsonParser;
@@ -70,7 +64,7 @@ public class GeoJsonModule extends SimpleModule {
 	 * <li>{@link GeoJsonPolygon}</li>
 	 * <li>{@link GeoJsonMultiPolygon}</li>
 	 * </ul>
-	 * 
+	 *
 	 * @return a {@link Module} containing {@link JsonDeserializer deserializers} for {@link GeoJson} types.
 	 * @since 3.2
 	 */
@@ -100,7 +94,7 @@ public class GeoJsonModule extends SimpleModule {
 
 		SimpleModule module = new SimpleModule("Spring Data MongoDB GeoJson - Serializers",
 				new Version(3, 2, 0, null, "org.springframework.data", "spring-data-mongodb-geojson"));
-		registerSerializersIn(module);
+		GeoJsonSerializersModule.registerSerializersIn(module);
 		return module;
 	}
 
@@ -124,19 +118,9 @@ public class GeoJsonModule extends SimpleModule {
 
 		SimpleModule module = new SimpleModule("Spring Data MongoDB GeoJson",
 				new Version(3, 2, 0, null, "org.springframework.data", "spring-data-mongodb-geojson"));
-		registerSerializersIn(module);
+		GeoJsonSerializersModule.registerSerializersIn(module);
 		registerDeserializersIn(module);
 		return module;
-	}
-
-	private static void registerSerializersIn(SimpleModule module) {
-
-		module.addSerializer(GeoJsonPoint.class, new GeoJsonPointSerializer());
-		module.addSerializer(GeoJsonMultiPoint.class, new GeoJsonMultiPointSerializer());
-		module.addSerializer(GeoJsonLineString.class, new GeoJsonLineStringSerializer());
-		module.addSerializer(GeoJsonMultiLineString.class, new GeoJsonMultiLineStringSerializer());
-		module.addSerializer(GeoJsonPolygon.class, new GeoJsonPolygonSerializer());
-		module.addSerializer(GeoJsonMultiPolygon.class, new GeoJsonMultiPolygonSerializer());
 	}
 
 	private static void registerDeserializersIn(SimpleModule module) {
@@ -227,7 +211,7 @@ public class GeoJsonModule extends SimpleModule {
 				return Collections.emptyList();
 			}
 
-			List<Point> points = new ArrayList<Point>(node.size());
+			List<Point> points = new ArrayList<>(node.size());
 
 			for (JsonNode coordinatePair : node) {
 				if (coordinatePair.isArray()) {
@@ -238,7 +222,7 @@ public class GeoJsonModule extends SimpleModule {
 		}
 
 		protected GeoJsonLineString toLineString(ArrayNode node) {
-			return new GeoJsonLineString(toPoints((ArrayNode) node));
+			return new GeoJsonLineString(toPoints(node));
 		}
 	}
 
@@ -352,7 +336,7 @@ public class GeoJsonModule extends SimpleModule {
 		@Override
 		protected GeoJsonMultiLineString doDeserialize(ArrayNode coordinates) {
 
-			List<GeoJsonLineString> lines = new ArrayList<GeoJsonLineString>(coordinates.size());
+			List<GeoJsonLineString> lines = new ArrayList<>(coordinates.size());
 
 			for (JsonNode lineString : coordinates) {
 				if (lineString.isArray()) {
@@ -429,7 +413,7 @@ public class GeoJsonModule extends SimpleModule {
 		@Override
 		protected GeoJsonMultiPolygon doDeserialize(ArrayNode coordinates) {
 
-			List<GeoJsonPolygon> polygones = new ArrayList<GeoJsonPolygon>(coordinates.size());
+			List<GeoJsonPolygon> polygones = new ArrayList<>(coordinates.size());
 
 			for (JsonNode polygon : coordinates) {
 				for (JsonNode ring : polygon) {

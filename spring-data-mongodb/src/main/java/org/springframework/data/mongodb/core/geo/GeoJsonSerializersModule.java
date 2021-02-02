@@ -37,13 +37,18 @@ class GeoJsonSerializersModule extends SimpleModule {
 	private static final long serialVersionUID = 1340494654898895610L;
 
 	GeoJsonSerializersModule() {
+		registerSerializersIn(this);
+	}
 
-		addSerializer(GeoJsonPoint.class, new GeoJsonPointSerializer());
-		addSerializer(GeoJsonMultiPoint.class, new GeoJsonMultiPointSerializer());
-		addSerializer(GeoJsonLineString.class, new GeoJsonLineStringSerializer());
-		addSerializer(GeoJsonMultiLineString.class, new GeoJsonMultiLineStringSerializer());
-		addSerializer(GeoJsonPolygon.class, new GeoJsonPolygonSerializer());
-		addSerializer(GeoJsonMultiPolygon.class, new GeoJsonMultiPolygonSerializer());
+
+	static void registerSerializersIn(SimpleModule module) {
+
+		module.addSerializer(GeoJsonPoint.class, new GeoJsonPointSerializer());
+		module.addSerializer(GeoJsonMultiPoint.class, new GeoJsonMultiPointSerializer());
+		module.addSerializer(GeoJsonLineString.class, new GeoJsonLineStringSerializer());
+		module.addSerializer(GeoJsonMultiLineString.class, new GeoJsonMultiLineStringSerializer());
+		module.addSerializer(GeoJsonPolygon.class, new GeoJsonPolygonSerializer());
+		module.addSerializer(GeoJsonMultiPolygon.class, new GeoJsonMultiPolygonSerializer());
 	}
 
 	/**
