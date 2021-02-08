@@ -22,6 +22,7 @@ import java.net.URI;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Currency;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -29,7 +30,6 @@ import org.assertj.core.data.TemporalUnitLessThanOffset;
 import org.bson.BsonTimestamp;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.core.convert.support.ConfigurableConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.geo.Box;
@@ -42,6 +42,7 @@ import org.springframework.data.mongodb.core.convert.MongoConverters.AtomicLongT
 import org.springframework.data.mongodb.core.convert.MongoConverters.BigDecimalToStringConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.BsonTimestampToInstantConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.CurrencyToStringConverter;
+import org.springframework.data.mongodb.core.convert.MongoConverters.DocumentToStringConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.IntegerToAtomicIntegerConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.LongToAtomicLongConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToBigDecimalConverter;
@@ -172,5 +173,13 @@ public class MongoConvertersUnitTests {
 
 		assertThat(conversionService.convert(URI.create("/segment"), String.class)).isEqualTo("/segment");
 		assertThat(conversionService.convert("/segment", URI.class)).isEqualTo(URI.create("/segment"));
+	}
+
+	@Test // GH-3546
+	void convertsDocumentWithUUidToString() {
+
+		UUID uuid = UUID.randomUUID();
+		assertThat(DocumentToStringConverter.INSTANCE.convert(new Document("_id", uuid)))
+				.isEqualTo("{\"_id\": \"" + uuid.toString() + "\"}");
 	}
 }
