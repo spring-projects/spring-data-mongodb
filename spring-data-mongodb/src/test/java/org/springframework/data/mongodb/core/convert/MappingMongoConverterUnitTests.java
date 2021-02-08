@@ -30,6 +30,8 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+import javax.persistence.metamodel.EmbeddableType;
+
 import org.assertj.core.api.Assertions;
 import org.bson.types.Code;
 import org.bson.types.Decimal128;
@@ -2177,6 +2179,15 @@ public class MappingMongoConverterUnitTests {
 		Map<Object, Object> result = spyConverter.readMap(ClassTypeInformation.MAP, data, ObjectPath.ROOT);
 
 		assertThat(((LinkedHashMap) result.get("cluster")).get("_id")).isEqualTo(100L);
+	}
+
+	@Test // GH-3546
+	void readFlattensNestedDocumentToStringIfNecessary() {
+
+		org.bson.Document source = new org.bson.Document("street", new org.bson.Document("json", "string").append("_id", UUID.randomUUID()));
+
+		Address target = converter.read(Address.class, source);
+		assertThat(target.street).isNotNull();
 	}
 
 	static class GenericType<T> {
