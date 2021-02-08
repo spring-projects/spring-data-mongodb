@@ -97,7 +97,7 @@ import com.mongodb.DBRef;
  * @author Heesu Jung
  */
 @ExtendWith(MockitoExtension.class)
-public class MappingMongoConverterUnitTests {
+class MappingMongoConverterUnitTests {
 
 	private MappingMongoConverter converter;
 	private MongoMappingContext mappingContext;
@@ -105,7 +105,7 @@ public class MappingMongoConverterUnitTests {
 	@Mock DbRefResolver resolver;
 
 	@BeforeEach
-	void setUp() {
+	void beforeEach() {
 
 		MongoCustomConversions conversions = new MongoCustomConversions();
 
@@ -524,6 +524,7 @@ public class MappingMongoConverterUnitTests {
 		assertThat(result.get("_id")).isInstanceOf(String.class);
 	}
 
+	@Test
 	public void convertsObjectsIfNecessary() {
 
 		ObjectId id = new ObjectId();
