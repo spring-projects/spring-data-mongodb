@@ -294,7 +294,7 @@ abstract class MongoConverters {
 		@Override
 		public NamedMongoScript convert(Document source) {
 
-			if(source.isEmpty()) {
+			if (source.isEmpty()) {
 				return null;
 			}
 

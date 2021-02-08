@@ -56,10 +56,10 @@ import org.springframework.data.mongodb.core.geo.Sphere;
  * @author Thomas Darimont
  * @author Christoph Strobl
  */
-public class MongoConvertersUnitTests {
+class MongoConvertersUnitTests {
 
 	@Test
-	public void convertsBigDecimalToStringAndBackCorrectly() {
+	void convertsBigDecimalToStringAndBackCorrectly() {
 
 		BigDecimal bigDecimal = BigDecimal.valueOf(254, 1);
 		String value = BigDecimalToStringConverter.INSTANCE.convert(bigDecimal);
@@ -70,7 +70,7 @@ public class MongoConvertersUnitTests {
 	}
 
 	@Test // DATAMONGO-858
-	public void convertsBoxToDocumentAndBackCorrectly() {
+	void convertsBoxToDocumentAndBackCorrectly() {
 
 		Box box = new Box(new Point(1, 2), new Point(3, 4));
 
@@ -81,7 +81,7 @@ public class MongoConvertersUnitTests {
 	}
 
 	@Test // DATAMONGO-858
-	public void convertsCircleToDocumentAndBackCorrectly() {
+	void convertsCircleToDocumentAndBackCorrectly() {
 
 		Circle circle = new Circle(new Point(1, 2), 3);
 
@@ -92,7 +92,7 @@ public class MongoConvertersUnitTests {
 	}
 
 	@Test // DATAMONGO-858
-	public void convertsPolygonToDocumentAndBackCorrectly() {
+	void convertsPolygonToDocumentAndBackCorrectly() {
 
 		Polygon polygon = new Polygon(new Point(1, 2), new Point(2, 3), new Point(3, 4), new Point(5, 6));
 
@@ -103,7 +103,7 @@ public class MongoConvertersUnitTests {
 	}
 
 	@Test // DATAMONGO-858
-	public void convertsSphereToDocumentAndBackCorrectly() {
+	void convertsSphereToDocumentAndBackCorrectly() {
 
 		Sphere sphere = new Sphere(new Point(1, 2), 3);
 
@@ -114,7 +114,7 @@ public class MongoConvertersUnitTests {
 	}
 
 	@Test // DATAMONGO-858
-	public void convertsPointToListAndBackCorrectly() {
+	void convertsPointToListAndBackCorrectly() {
 
 		Point point = new Point(1, 2);
 
@@ -125,44 +125,44 @@ public class MongoConvertersUnitTests {
 	}
 
 	@Test // DATAMONGO-1372
-	public void convertsCurrencyToStringCorrectly() {
+	void convertsCurrencyToStringCorrectly() {
 		assertThat(CurrencyToStringConverter.INSTANCE.convert(Currency.getInstance("USD"))).isEqualTo("USD");
 	}
 
 	@Test // DATAMONGO-1372
-	public void convertsStringToCurrencyCorrectly() {
+	void convertsStringToCurrencyCorrectly() {
 		assertThat(StringToCurrencyConverter.INSTANCE.convert("USD")).isEqualTo(Currency.getInstance("USD"));
 	}
 
 	@Test // DATAMONGO-1416
-	public void convertsAtomicLongToLongCorrectly() {
+	void convertsAtomicLongToLongCorrectly() {
 		assertThat(AtomicLongToLongConverter.INSTANCE.convert(new AtomicLong(100L))).isEqualTo(100L);
 	}
 
 	@Test // DATAMONGO-1416
-	public void convertsAtomicIntegerToIntegerCorrectly() {
+	void convertsAtomicIntegerToIntegerCorrectly() {
 		assertThat(AtomicIntegerToIntegerConverter.INSTANCE.convert(new AtomicInteger(100))).isEqualTo(100);
 	}
 
 	@Test // DATAMONGO-1416
-	public void convertsLongToAtomicLongCorrectly() {
+	void convertsLongToAtomicLongCorrectly() {
 		assertThat(LongToAtomicLongConverter.INSTANCE.convert(100L)).isInstanceOf(AtomicLong.class);
 	}
 
 	@Test // DATAMONGO-1416
-	public void convertsIntegerToAtomicIntegerCorrectly() {
+	void convertsIntegerToAtomicIntegerCorrectly() {
 		assertThat(IntegerToAtomicIntegerConverter.INSTANCE.convert(100)).isInstanceOf(AtomicInteger.class);
 	}
 
 	@Test // DATAMONGO-2113
-	public void convertsBsonTimestampToInstantCorrectly() {
+	void convertsBsonTimestampToInstantCorrectly() {
 
 		assertThat(BsonTimestampToInstantConverter.INSTANCE.convert(new BsonTimestamp(6615900307735969796L)))
 				.isCloseTo(Instant.ofEpochSecond(1540384327), new TemporalUnitLessThanOffset(100, ChronoUnit.MILLIS));
 	}
 
 	@Test // DATAMONGO-2210
-	public void convertsUrisToString() {
+	void convertsUrisToString() {
 
 		MongoCustomConversions conversions = new MongoCustomConversions();
 
