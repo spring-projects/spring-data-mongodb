@@ -27,14 +27,18 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Currency;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.bson.BsonReader;
 import org.bson.BsonTimestamp;
+import org.bson.BsonWriter;
 import org.bson.Document;
-import org.bson.UuidRepresentation;
 import org.bson.codecs.Codec;
-import org.bson.internal.CodecRegistryHelper;
+import org.bson.codecs.DecoderContext;
+import org.bson.codecs.EncoderContext;
+import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.types.Binary;
 import org.bson.types.Code;
 import org.bson.types.Decimal128;
@@ -240,9 +244,23 @@ abstract class MongoConverters {
 
 		INSTANCE;
 
-		private final Codec<Document> codec = CodecRegistryHelper
-				.createRegistry(MongoClientSettings.getDefaultCodecRegistry(), UuidRepresentation.JAVA_LEGACY)
-				.get(Document.class);
+		private final Codec<Document> codec = CodecRegistries.fromRegistries(CodecRegistries.fromCodecs(new Codec<UUID>() {
+
+			@Override
+			public void encode(BsonWriter writer, UUID value, EncoderContext encoderContext) {
+				writer.writeString(value.toString());
+			}
+
+			@Override
+			public Class<UUID> getEncoderClass() {
+				return UUID.class;
+			}
+
+			@Override
+			public UUID decode(BsonReader reader, DecoderContext decoderContext) {
+				throw new IllegalStateException("decode not supported");
+			}
+		}), MongoClientSettings.getDefaultCodecRegistry()).get(Document.class);
 
 		@Override
 		public String convert(Document source) {
