@@ -32,6 +32,9 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.bson.BsonTimestamp;
 import org.bson.Document;
+import org.bson.UuidRepresentation;
+import org.bson.codecs.Codec;
+import org.bson.internal.CodecRegistryHelper;
 import org.bson.types.Binary;
 import org.bson.types.Code;
 import org.bson.types.Decimal128;
@@ -45,10 +48,11 @@ import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.core.query.Term;
 import org.springframework.data.mongodb.core.script.NamedMongoScript;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.NumberUtils;
 import org.springframework.util.StringUtils;
+
+import com.mongodb.MongoClientSettings;
 
 /**
  * Wrapper class to contain useful converters for the usage with Mongo.
@@ -236,9 +240,13 @@ abstract class MongoConverters {
 
 		INSTANCE;
 
+		private final Codec<Document> codec = CodecRegistryHelper
+				.createRegistry(MongoClientSettings.getDefaultCodecRegistry(), UuidRepresentation.JAVA_LEGACY)
+				.get(Document.class);
+
 		@Override
 		public String convert(Document source) {
-			return source.toJson();
+			return source.toJson(codec);
 		}
 	}
 
