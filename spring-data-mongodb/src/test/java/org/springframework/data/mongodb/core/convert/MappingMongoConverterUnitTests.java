@@ -2179,6 +2179,15 @@ public class MappingMongoConverterUnitTests {
 		assertThat(((LinkedHashMap) result.get("cluster")).get("_id")).isEqualTo(100L);
 	}
 
+	@Test // GH-3546
+	void readFlattensNestedDocumentToStringIfNecessary() {
+
+		org.bson.Document source = new org.bson.Document("street", new org.bson.Document("json", "string").append("_id", UUID.randomUUID()));
+
+		Address target = converter.read(Address.class, source);
+		assertThat(target.street).isNotNull();
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
