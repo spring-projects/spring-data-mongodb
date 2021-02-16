@@ -1356,4 +1356,19 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 				this.alicia.getEmail(), this.alicia.getAge(), Sex.FEMALE, this.alicia.createdAt, alicia.getSkills(), "street",
 				"zipCode", "city", alicia.getUniqueId(), credentials.username, credentials.password)).isNotNull();
 	}
+
+	@Test // GH-3395
+	void caseInSensitiveInClause() {
+		assertThat(repository.findByLastnameIgnoreCaseIn("bEAuFoRd", "maTTheWs")).hasSize(3);
+	}
+
+	@Test // GH-3395
+	void caseInSensitiveInClauseQuotesExpressions() {
+		assertThat(repository.findByLastnameIgnoreCaseIn(".*")).isEmpty();
+	}
+
+	@Test // GH-3395
+	void caseSensitiveInClauseIgnoresExpressions() {
+		assertThat(repository.findByFirstnameIn(".*")).isEmpty();
+	}
 }

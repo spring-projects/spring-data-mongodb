@@ -25,7 +25,6 @@ import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.domain.Sort;
@@ -51,8 +50,10 @@ import org.springframework.data.repository.query.parser.Part;
 import org.springframework.data.repository.query.parser.Part.IgnoreCaseType;
 import org.springframework.data.repository.query.parser.Part.Type;
 import org.springframework.data.repository.query.parser.PartTree;
+import org.springframework.data.util.Streamable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ObjectUtils;
 
 /**
  * Custom query creator to create Mongo criterias.
@@ -196,9 +197,9 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			case IS_NULL:
 				return criteria.is(null);
 			case NOT_IN:
-				return criteria.nin(nextAsArray(parameters));
+				return criteria.nin(nextAsList(parameters, part));
 			case IN:
-				return criteria.in(nextAsArray(parameters));
+				return criteria.in(nextAsList(parameters, part));
 			case LIKE:
 			case STARTING_WITH:
 			case ENDING_WITH:
@@ -337,7 +338,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 			Iterator<Object> parameters) {
 
 		if (property.isCollectionLike()) {
-			return criteria.in(nextAsArray(parameters));
+			return criteria.in(nextAsList(parameters, part));
 		}
 
 		return addAppropriateLikeRegexTo(criteria, part, parameters.next());
@@ -400,17 +401,24 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 				String.format("Expected parameter type of %s but got %s!", type, parameter.getClass()));
 	}
 
-	private Object[] nextAsArray(Iterator<Object> iterator) {
-
-		Object next = iterator.next();
-
-		if (next instanceof Collection) {
-			return ((Collection<?>) next).toArray();
-		} else if (next != null && next.getClass().isArray()) {
-			return (Object[]) next;
+	private java.util.List<?> nextAsList(Iterator<Object> iterator, Part part) {
+		
+		Streamable<?> streamable = asStreamable(iterator.next());
+		if(!isSimpleComparisionPossible(part))  {
+			streamable = streamable.map(MongoRegexCreator.INSTANCE::toCaseInsensitiveMatch);
 		}
+		
+		return streamable.toList();
+	}
 
-		return new Object[] { next };
+	private Streamable<?> asStreamable(Object value) {
+
+		if (value instanceof Collection) {
+			return Streamable.of((Collection<?>) value);
+		} else if (ObjectUtils.isArray(value)) {
+			return Streamable.of((Object[]) value);
+		}
+		return Streamable.of(value);
 	}
 
 	private String toLikeRegex(String source, Part part) {

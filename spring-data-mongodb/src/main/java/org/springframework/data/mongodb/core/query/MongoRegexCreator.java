@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.query;
 
 import java.util.regex.Pattern;
 
+import org.bson.BsonRegularExpression;
 import org.springframework.lang.Nullable;
 
 /**
@@ -100,6 +101,10 @@ public enum MongoRegexCreator {
 			default:
 				return regex;
 		}
+	}
+
+	public Object toCaseInsensitiveMatch(Object source) {
+		return source instanceof String ? new BsonRegularExpression(Pattern.quote((String)source), "i") : source;
 	}
 
 	private String prepareAndEscapeStringBeforeApplyingLikeRegex(String source, MatchMode matcherType) {
