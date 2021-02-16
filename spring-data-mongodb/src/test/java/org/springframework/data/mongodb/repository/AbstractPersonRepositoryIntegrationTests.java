@@ -1325,4 +1325,19 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(repository.findDocumentById(dave.getId()).get()).containsEntry("firstname", dave.getFirstname())
 				.containsEntry("lastname", dave.getLastname());
 	}
+
+	@Test // GH-3395
+	public void caseInSensitiveInClause() {
+		assertThat(repository.findByLastnameIgnoreCaseIn("bEAuFoRd", "maTTheWs")).hasSize(3);
+	}
+
+	@Test // GH-3395
+	public void caseInSensitiveInClauseQuotesExpressions() {
+		assertThat(repository.findByLastnameIgnoreCaseIn(".*")).isEmpty();
+	}
+
+	@Test // GH-3395
+	public void caseSensitiveInClauseIgnoresExpressions() {
+		assertThat(repository.findByFirstnameIn(".*")).isEmpty();
+	}
 }

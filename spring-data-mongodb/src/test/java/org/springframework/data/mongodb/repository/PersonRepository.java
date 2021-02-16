@@ -125,6 +125,8 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	@Query("{ 'lastname' : { '$regex' : '?0', '$options' : 'i'}}")
 	Page<Person> findByLastnameLikeWithPageable(String lastname, Pageable pageable);
 
+	List<Person> findByLastnameIgnoreCaseIn(String... lastname);
+
 	/**
 	 * Returns all {@link Person}s with a firstname contained in the given varargs.
 	 *
