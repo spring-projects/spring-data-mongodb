@@ -1363,4 +1363,19 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(repository.findWithSpelByFirstnameForSpELExpressionWithParameterIndexOnly("Dave")).containsExactly(dave);
 		assertThat(repository.findWithSpelByFirstnameForSpELExpressionWithParameterIndexOnly("Carter")).containsExactly(carter);
 	}
+
+	@Test // GH-3395
+	void caseInSensitiveInClause() {
+		assertThat(repository.findByLastnameIgnoreCaseIn("bEAuFoRd", "maTTheWs")).hasSize(3);
+	}
+
+	@Test // GH-3395
+	void caseInSensitiveInClauseQuotesExpressions() {
+		assertThat(repository.findByLastnameIgnoreCaseIn(".*")).isEmpty();
+	}
+
+	@Test // GH-3395
+	void caseSensitiveInClauseIgnoresExpressions() {
+		assertThat(repository.findByFirstnameIn(".*")).isEmpty();
+	}
 }
