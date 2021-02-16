@@ -94,6 +94,10 @@ public interface MongoPersistentEntity<T> extends MutablePersistentEntity<T, Mon
 		return getShardKey().isSharded();
 	}
 
+	/**
+	 * @return {@literal true} if the entity should be embedded.
+	 * @since 3.2
+	 */
 	default boolean isEmbedded() {
 		return false;
 	}

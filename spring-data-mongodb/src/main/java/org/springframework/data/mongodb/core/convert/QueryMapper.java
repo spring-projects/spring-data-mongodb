@@ -24,6 +24,7 @@ import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
+
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.domain.Example;
@@ -32,7 +33,6 @@ import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyPath;
-import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.data.mapping.context.InvalidPersistentPropertyPath;
@@ -43,6 +43,7 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty.PropertyToFieldNameConverter;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.util.BsonUtils;
+import org.springframework.data.mongodb.util.DotPath;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
@@ -255,17 +256,18 @@ public class QueryMapper {
 				PropertyPath path = PropertyPath.from(field.getKey(), entity.getTypeInformation());
 				PersistentPropertyPath<MongoPersistentProperty> persistentPropertyPath = mappingContext
 						.getPersistentPropertyPath(path);
-				MongoPersistentProperty property = mappingContext.getPersistentPropertyPath(path).getLeafProperty();
+				MongoPersistentProperty property = mappingContext.getPersistentPropertyPath(path).getRequiredLeafProperty();
 
 				if (property.isEmbedded() && property.isEntity()) {
 
-					mappingContext.getPersistentEntity(property)
-							.doWithProperties((PropertyHandler<MongoPersistentProperty>) embedded -> {
+					MongoPersistentEntity<?> embeddedEntity = mappingContext.getRequiredPersistentEntity(property);
 
-								String dotPath = persistentPropertyPath.toDotPath();
-								dotPath = dotPath + (StringUtils.hasText(dotPath) ? "." : "") + embedded.getName();
-								target.put(dotPath, field.getValue());
-							});
+					for (MongoPersistentProperty embedded : embeddedEntity) {
+
+						DotPath dotPath = DotPath.from(persistentPropertyPath.toDotPath()).append(embedded.getName());
+						target.put(dotPath.toString(), field.getValue());
+					}
+
 				} else {
 					target.put(field.getKey(), field.getValue());
 				}

@@ -40,6 +40,7 @@ import org.springframework.data.mongodb.core.query.MongoRegexCreator;
 import org.springframework.data.mongodb.core.query.MongoRegexCreator.MatchMode;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
 import org.springframework.data.mongodb.core.query.UntypedExampleMatcher;
+import org.springframework.data.mongodb.util.DotPath;
 import org.springframework.data.support.ExampleMatcherAccessor;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
@@ -134,7 +135,7 @@ public class MongoExampleMapper {
 		while (iter.hasNext()) {
 
 			Map.Entry<String, Object> entry = iter.next();
-			String propertyPath = StringUtils.hasText(path) ? path + "." + entry.getKey() : entry.getKey();
+			String propertyPath = DotPath.from(path).append(entry.getKey()).toString();
 			String mappedPropertyPath = getMappedPropertyPath(propertyPath, probeType);
 
 			if (isEmptyIdProperty(entry)) {

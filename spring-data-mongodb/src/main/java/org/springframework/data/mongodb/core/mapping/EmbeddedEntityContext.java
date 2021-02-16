@@ -19,7 +19,7 @@ package org.springframework.data.mongodb.core.mapping;
  * @author Christoph Strobl
  * @since 3.2
  */
-public class EmbeddedEntityContext {
+class EmbeddedEntityContext {
 
 	private final MongoPersistentProperty property;
 

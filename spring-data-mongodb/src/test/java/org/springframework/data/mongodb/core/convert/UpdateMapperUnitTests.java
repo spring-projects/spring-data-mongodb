@@ -1155,7 +1155,6 @@ class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(WrapperAroundWithEmbedded.class));
 
-		System.out.println("mappedUpdate.toJson(): " + mappedUpdate.toJson());
 		assertThat(mappedUpdate).isEqualTo(new Document("$set", new Document("withPrefixedEmbedded",
 				new Document("prefix-stringValue", "updated").append("prefix-listValue", Arrays.asList("val-1", "val-2")))));
 	}

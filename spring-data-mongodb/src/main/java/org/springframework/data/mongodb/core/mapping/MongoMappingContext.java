@@ -35,6 +35,7 @@ import org.springframework.lang.Nullable;
  *
  * @author Jon Brisbin
  * @author Oliver Gierke
+ * @author Christoph Strobl
  */
 public class MongoMappingContext extends AbstractMappingContext<MongoPersistentEntity<?>, MongoPersistentProperty>
 		implements ApplicationContextAware {
@@ -81,18 +82,13 @@ public class MongoMappingContext extends AbstractMappingContext<MongoPersistentE
 		return new CachingMongoPersistentProperty(property, owner, simpleTypeHolder, fieldNamingStrategy);
 	}
 
-//	@Override
-//	protected MongoPersistentProperty createPersistentProperty(Property property, MongoPersistentEntity<?> owner, SimpleTypeHolder simpleTypeHolder) {
-//		return null;
-//	}
-
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mapping.BasicMappingContext#createPersistentEntity(org.springframework.data.util.TypeInformation, org.springframework.data.mapping.model.MappingContext)
 	 */
 	@Override
 	protected <T> BasicMongoPersistentEntity<T> createPersistentEntity(TypeInformation<T> typeInformation) {
-		return new BasicMongoPersistentEntity<T>(typeInformation);
+		return new BasicMongoPersistentEntity<>(typeInformation);
 	}
 
 	/*
@@ -101,7 +97,6 @@ public class MongoMappingContext extends AbstractMappingContext<MongoPersistentE
 	 */
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-
 		super.setApplicationContext(applicationContext);
 	}
 
@@ -132,16 +127,16 @@ public class MongoMappingContext extends AbstractMappingContext<MongoPersistentE
 		this.autoIndexCreation = autoCreateIndexes;
 	}
 
-
 	@Nullable
 	@Override
 	public MongoPersistentEntity<?> getPersistentEntity(MongoPersistentProperty persistentProperty) {
 
-		MongoPersistentEntity entity = super.getPersistentEntity(persistentProperty);
+		MongoPersistentEntity<?> entity = super.getPersistentEntity(persistentProperty);
+
 		if(entity == null || !persistentProperty.isEmbedded()) {
 			return entity;
 		}
 
-		return new EmbeddedMongoPersistentEntity(entity, new EmbeddedEntityContext(persistentProperty));
+		return new EmbeddedMongoPersistentEntity<>(entity, new EmbeddedEntityContext(persistentProperty));
 	}
 }

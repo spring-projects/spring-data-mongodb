@@ -26,10 +26,13 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 
 /**
+ * Embedded variant of {@link MongoPersistentProperty}.
+ *
  * @author Christoph Strobl
- * @since 2020/12
+ * @since 3.2
+ * @see Embedded
  */
-public class EmbeddedMongoPersistentProperty implements MongoPersistentProperty {
+class EmbeddedMongoPersistentProperty implements MongoPersistentProperty {
 
 	private final MongoPersistentProperty delegate;
 	private final EmbeddedEntityContext context;
@@ -40,6 +43,7 @@ public class EmbeddedMongoPersistentProperty implements MongoPersistentProperty 
 		this.context = context;
 	}
 
+	@Override
 	public String getFieldName() {
 
 		if (!context.getProperty().isEmbedded()) {
@@ -49,210 +53,254 @@ public class EmbeddedMongoPersistentProperty implements MongoPersistentProperty 
 		return context.getProperty().findAnnotation(Embedded.class).prefix() + delegate.getFieldName();
 	}
 
+	@Override
 	public Class<?> getFieldType() {
 		return delegate.getFieldType();
 	}
 
+	@Override
 	public int getFieldOrder() {
 		return delegate.getFieldOrder();
 	}
 
+	@Override
 	public boolean isDbReference() {
 		return delegate.isDbReference();
 	}
 
+	@Override
 	public boolean isExplicitIdProperty() {
 		return delegate.isExplicitIdProperty();
 	}
 
+	@Override
 	public boolean isLanguageProperty() {
 		return delegate.isLanguageProperty();
 	}
 
+	@Override
 	public boolean isExplicitLanguageProperty() {
 		return delegate.isExplicitLanguageProperty();
 	}
 
+	@Override
 	public boolean isTextScoreProperty() {
 		return delegate.isTextScoreProperty();
 	}
 
+	@Override
 	@Nullable
 	public DBRef getDBRef() {
 		return delegate.getDBRef();
 	}
 
+	@Override
 	public boolean usePropertyAccess() {
 		return delegate.usePropertyAccess();
 	}
 
+	@Override
 	public boolean hasExplicitWriteTarget() {
 		return delegate.hasExplicitWriteTarget();
 	}
 
+	@Override
 	public PersistentEntity<?, MongoPersistentProperty> getOwner() {
 		return delegate.getOwner();
 	}
 
+	@Override
 	public String getName() {
 		return delegate.getName();
 	}
 
+	@Override
 	public Class<?> getType() {
 		return delegate.getType();
 	}
 
+	@Override
 	public TypeInformation<?> getTypeInformation() {
 		return delegate.getTypeInformation();
 	}
 
+	@Override
 	public Iterable<? extends TypeInformation<?>> getPersistentEntityTypes() {
 		return delegate.getPersistentEntityTypes();
 	}
 
+	@Override
 	@Nullable
 	public Method getGetter() {
 		return delegate.getGetter();
 	}
 
+	@Override
 	public Method getRequiredGetter() {
 		return delegate.getRequiredGetter();
 	}
 
+	@Override
 	@Nullable
 	public Method getSetter() {
 		return delegate.getSetter();
 	}
 
+	@Override
 	public Method getRequiredSetter() {
 		return delegate.getRequiredSetter();
 	}
 
+	@Override
 	@Nullable
 	public Method getWither() {
 		return delegate.getWither();
 	}
 
+	@Override
 	public Method getRequiredWither() {
 		return delegate.getRequiredWither();
 	}
 
+	@Override
 	@Nullable
 	public Field getField() {
 		return delegate.getField();
 	}
 
+	@Override
 	public Field getRequiredField() {
 		return delegate.getRequiredField();
 	}
 
+	@Override
 	@Nullable
 	public String getSpelExpression() {
 		return delegate.getSpelExpression();
 	}
 
+	@Override
 	@Nullable
 	public Association<MongoPersistentProperty> getAssociation() {
 		return delegate.getAssociation();
 	}
 
+	@Override
 	public Association<MongoPersistentProperty> getRequiredAssociation() {
 		return delegate.getRequiredAssociation();
 	}
 
+	@Override
 	public boolean isEntity() {
 		return delegate.isEntity();
 	}
 
+	@Override
 	public boolean isIdProperty() {
 		return delegate.isIdProperty();
 	}
 
+	@Override
 	public boolean isVersionProperty() {
 		return delegate.isVersionProperty();
 	}
 
+	@Override
 	public boolean isCollectionLike() {
 		return delegate.isCollectionLike();
 	}
 
+	@Override
 	public boolean isMap() {
 		return delegate.isMap();
 	}
 
+	@Override
 	public boolean isArray() {
 		return delegate.isArray();
 	}
 
+	@Override
 	public boolean isTransient() {
 		return delegate.isTransient();
 	}
 
+	@Override
 	public boolean isWritable() {
 		return delegate.isWritable();
 	}
 
+	@Override
 	public boolean isImmutable() {
 		return delegate.isImmutable();
 	}
 
+	@Override
 	public boolean isAssociation() {
 		return delegate.isAssociation();
 	}
 
+	@Override
 	public boolean isEmbedded() {
 		return delegate.isEmbedded();
 	}
 
-	public boolean isNullable() {
-		return delegate.isNullable();
-	}
-
+	@Override
 	@Nullable
 	public Class<?> getComponentType() {
 		return delegate.getComponentType();
 	}
 
+	@Override
 	public Class<?> getRawType() {
 		return delegate.getRawType();
 	}
 
+	@Override
 	@Nullable
 	public Class<?> getMapValueType() {
 		return delegate.getMapValueType();
 	}
 
+	@Override
 	public Class<?> getActualType() {
 		return delegate.getActualType();
 	}
 
+	@Override
 	@Nullable
 	public <A extends Annotation> A findAnnotation(Class<A> annotationType) {
 		return delegate.findAnnotation(annotationType);
 	}
 
+	@Override
 	public <A extends Annotation> A getRequiredAnnotation(Class<A> annotationType) throws IllegalStateException {
 		return delegate.getRequiredAnnotation(annotationType);
 	}
 
+	@Override
 	@Nullable
 	public <A extends Annotation> A findPropertyOrOwnerAnnotation(Class<A> annotationType) {
 		return delegate.findPropertyOrOwnerAnnotation(annotationType);
 	}
 
+	@Override
 	public boolean isAnnotationPresent(Class<? extends Annotation> annotationType) {
 		return delegate.isAnnotationPresent(annotationType);
 	}
 
+	@Override
 	public boolean hasActualTypeAnnotation(Class<? extends Annotation> annotationType) {
 		return delegate.hasActualTypeAnnotation(annotationType);
 	}
 
+	@Override
 	@Nullable
 	public Class<?> getAssociationTargetType() {
 		return delegate.getAssociationTargetType();
 	}
 
+	@Override
 	public <T> PersistentPropertyAccessor<T> getAccessorForOwner(T owner) {
 		return delegate.getAccessorForOwner(owner);
 	}

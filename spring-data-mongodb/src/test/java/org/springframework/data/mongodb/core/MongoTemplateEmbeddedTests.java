@@ -24,6 +24,7 @@ import lombok.EqualsAndHashCode;
 import java.util.Arrays;
 import java.util.List;
 
+import lombok.ToString;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.mongodb.core.mapping.Embedded;
@@ -33,6 +34,8 @@ import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.Template;
 
 /**
+ * Integration tests for {@link Embedded}.
+ *
  * @author Christoph Strobl
  */
 @ExtendWith(MongoTemplateExtension.class)
@@ -105,6 +108,7 @@ class MongoTemplateEmbeddedTests {
 	}
 
 	@EqualsAndHashCode
+	@ToString
 	static class WithEmbedded {
 
 		String id;
@@ -113,6 +117,7 @@ class MongoTemplateEmbeddedTests {
 	}
 
 	@EqualsAndHashCode
+	@ToString
 	static class WithPrefixedEmbedded {
 
 		String id;
@@ -121,6 +126,7 @@ class MongoTemplateEmbeddedTests {
 	}
 
 	@EqualsAndHashCode
+	@ToString
 	static class EmbeddableType {
 
 		String stringValue;

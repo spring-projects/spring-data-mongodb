@@ -672,7 +672,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			Document target = new Document();
 			writeInternal(obj, target, mappingContext.getPersistentEntity(prop));
 
-			accessor.putAll(prop, target);
+			accessor.putAll(target);
 			return;
 		}
 

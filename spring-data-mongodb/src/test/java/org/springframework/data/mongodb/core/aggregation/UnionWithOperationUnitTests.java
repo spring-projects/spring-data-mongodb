@@ -83,7 +83,6 @@ class UnionWithOperationUnitTests {
 				UnionWithOperation.unionWith("coll-1").pipeline(Aggregation.project().and("name").as("name")));
 
 		List<Document> pipeline = agg.toPipeline(contextFor(Supplier.class));
-		System.out.println("pipeline: " + pipeline);
 		assertThat(pipeline).containsExactly(new Document("$project", new Document("supplier", 1)), //
 				new Document("$unionWith", new Document("coll", "coll-1").append("pipeline",
 						Arrays.asList(new Document("$project", new Document("name", 1))))));
