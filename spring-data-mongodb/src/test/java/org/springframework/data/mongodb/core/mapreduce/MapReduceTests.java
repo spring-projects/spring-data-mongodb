@@ -79,19 +79,6 @@ public class MapReduceTests {
 		template.getMongoDbFactory().getMongoDatabase("jmr1-out-db").drop();
 	}
 
-	@Test // DATADOC-7
-	@Ignore
-	public void testForDocs() {
-
-		createMapReduceData();
-		MapReduceResults<ValueObject> results = mongoTemplate.mapReduce("jmr1", MAP_FUNCTION, REDUCE_FUNCTION,
-				ValueObject.class);
-
-		for (ValueObject valueObject : results) {
-			System.out.println(valueObject);
-		}
-	}
-
 	@Test // DATAMONGO-260
 	public void testIssue260() {
 

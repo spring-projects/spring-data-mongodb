@@ -26,10 +26,12 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 
 /**
+ * Embedded variant of {@link MongoPersistentProperty}.
+ *
  * @author Christoph Strobl
- * @since 2020/12
+ * @see Embedded
  */
-public class EmbeddedMongoPersistentProperty implements MongoPersistentProperty {
+class EmbeddedMongoPersistentProperty implements MongoPersistentProperty {
 
 	private final MongoPersistentProperty delegate;
 	private final EmbeddedEntityContext context;
@@ -202,10 +204,6 @@ public class EmbeddedMongoPersistentProperty implements MongoPersistentProperty 
 
 	public boolean isEmbedded() {
 		return delegate.isEmbedded();
-	}
-
-	public boolean isNullable() {
-		return delegate.isNullable();
 	}
 
 	@Nullable

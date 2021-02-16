@@ -26,7 +26,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mongodb.core.mapping.EmbeddedMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Query;
@@ -162,10 +161,6 @@ public class UpdateMapper extends QueryMapper {
 
 		if (isUpdateModifier(rawValue)) {
 			return getMappedUpdateModifier(field, rawValue);
-		}
-
-		if(field.getProperty() != null && field.getProperty().isEmbedded()) {
-			System.out.println("here we are: ");
 		}
 
 		return super.getMappedObjectForField(field, rawValue);

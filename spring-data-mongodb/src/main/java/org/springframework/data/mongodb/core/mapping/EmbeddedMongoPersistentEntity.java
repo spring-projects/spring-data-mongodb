@@ -32,13 +32,15 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 
 /**
+ * Embedded variant of {@link MongoPersistentEntity}.
+ *
  * @author Christoph Strobl
- * @since 2020/12
+ * @see Embedded
  */
-public class EmbeddedMongoPersistentEntity<T> implements MongoPersistentEntity<T> {
+class EmbeddedMongoPersistentEntity<T> implements MongoPersistentEntity<T> {
 
-	private EmbeddedEntityContext context;
-	private MongoPersistentEntity<T> delegate;
+	private final EmbeddedEntityContext context;
+	private final MongoPersistentEntity<T> delegate;
 
 	public EmbeddedMongoPersistentEntity(MongoPersistentEntity<T> delegate, EmbeddedEntityContext context) {
 

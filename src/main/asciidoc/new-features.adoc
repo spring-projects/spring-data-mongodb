@@ -1,6 +1,11 @@
 [[new-features]]
 = New & Noteworthy
 
+[[new-features.3.2]]
+== What's New in Spring Data MongoDB 3.2
+
+* Support for <<embedded-entities,Embedded Types>> to unwrap nested objects into the parent `Document`.
+
 [[new-features.3.1]]
 == What's New in Spring Data MongoDB 3.1
 

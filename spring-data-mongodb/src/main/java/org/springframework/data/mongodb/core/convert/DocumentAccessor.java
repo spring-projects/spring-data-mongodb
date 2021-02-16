@@ -67,8 +67,17 @@ class DocumentAccessor {
 		return this.document;
 	}
 
-	public void putAll(MongoPersistentProperty prop,  Document value) {
-		value.entrySet().forEach(entry -> BsonUtils.asMap(document).put(entry.getKey(), entry.getValue()));
+	/**
+	 * Copies all of the mappings from the given {@link Document} to the underlying target {@link Document}. These
+	 * mappings will replace any mappings that the target document had for any of the keys currently in the specified map.
+	 *
+	 * @param source
+	 */
+	public void putAll(Document source) {
+
+		Map<String, Object> target = BsonUtils.asMap(document);
+
+		target.putAll(source);
 	}
 
 	/**
