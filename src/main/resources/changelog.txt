@@ -1,6 +1,18 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.1.4 (2021-02-17)
+-------------------------------------
+* #3546 - org.bson.codecs.configuration.CodecConfigurationException: The uuidRepresentation has not been specified, so the UUID cannot be encoded.
+* #3544 - alike Criteria can't add andOperator.
+* #3540 - Allow access to mongoDatabaseFactory used in ReactiveMongoTemplate.
+* #3525 - Bug in full text query documentation [DATAMONGO-2673].
+* #3517 - GeoJson: Improper Deserialization of Document with a GeoJsonPolygon [DATAMONGO-2664].
+* #3508 - Add  ReactiveMongoOperations.aggregate(…) Kotlin extension [DATAMONGO-2655].
+* #3474 - Search by alike() criteria is broken when type alias information is not available [DATAMONGO-2620].
+* #3055 - Improve count() and countDocuments() mapping documentation and/or method availability [DATAMONGO-2192].
+
+
 Changes in version 3.0.7.RELEASE (2021-02-17)
 ---------------------------------------------
 * DATAMONGO-2671 - DateFromParts millisecondsOf returns "milliseconds" as $dateFromParts function but it should be millisecond.
@@ -3261,6 +3273,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
