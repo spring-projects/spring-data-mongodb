@@ -1,6 +1,22 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.2.0-M3 (2021-02-17)
+----------------------------------------
+* #3553 - Upgrade to MongoDB driver 4.2.0.
+* #3546 - org.bson.codecs.configuration.CodecConfigurationException: The uuidRepresentation has not been specified, so the UUID cannot be encoded.
+* #3544 - alike Criteria can't add andOperator.
+* #3542 - Relax field name checks for TypedAggregations.
+* #3540 - Allow access to mongoDatabaseFactory used in ReactiveMongoTemplate.
+* #3529 - Update repository after GitHub issues migration.
+* #3525 - Bug in full text query documentation [DATAMONGO-2673].
+* #3517 - GeoJson: Improper Deserialization of Document with a GeoJsonPolygon [DATAMONGO-2664].
+* #3508 - Add  ReactiveMongoOperations.aggregate(…) Kotlin extension [DATAMONGO-2655].
+* #3474 - Search by alike() criteria is broken when type alias information is not available [DATAMONGO-2620].
+* #3055 - Improve count() and countDocuments() mapping documentation and/or method availability [DATAMONGO-2192].
+* #2803 - Support flattening embedded/nested objects [DATAMONGO-1902].
+
+
 Changes in version 3.1.4 (2021-02-17)
 -------------------------------------
 * #3546 - org.bson.codecs.configuration.CodecConfigurationException: The uuidRepresentation has not been specified, so the UUID cannot be encoded.
@@ -3273,6 +3289,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
