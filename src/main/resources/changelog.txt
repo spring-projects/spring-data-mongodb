@@ -1,6 +1,10 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.2.0-M4 (2021-02-18)
+----------------------------------------
+
+
 Changes in version 3.1.5 (2021-02-18)
 -------------------------------------
 
@@ -3284,6 +3288,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
