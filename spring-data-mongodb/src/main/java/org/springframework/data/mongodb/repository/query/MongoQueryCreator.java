@@ -402,12 +402,12 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	}
 
 	private java.util.List<?> nextAsList(Iterator<Object> iterator, Part part) {
-		
+
 		Streamable<?> streamable = asStreamable(iterator.next());
-		if(!isSimpleComparisionPossible(part))  {
+		if (!isSimpleComparisionPossible(part)) {
 			streamable = streamable.map(MongoRegexCreator.INSTANCE::toCaseInsensitiveMatch);
 		}
-		
+
 		return streamable.toList();
 	}
 
