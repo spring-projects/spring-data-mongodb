@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 
@@ -40,6 +41,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.ObjectUtils;
 
 /**
  * Common operations performed on an entity in the context of it's mapping metadata.
@@ -105,6 +107,20 @@ class EntityOperations {
 		}
 
 		return AdaptibleMappedEntity.of(entity, context, conversionService);
+	}
+
+	/**
+	 * @param source can be {@literal null}.
+	 * @return {@literal true} if the given value is an {@literal array}, {@link Collection} or {@link Iterator}.
+	 * @since 3.2
+	 */
+	static boolean isCollectionLike(@Nullable Object source) {
+
+		if (source == null) {
+			return false;
+		}
+
+		return ObjectUtils.isArray(source) || source instanceof Collection || source instanceof Iterator;
 	}
 
 	/**

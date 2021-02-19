@@ -1400,6 +1400,15 @@ public class ReactiveMongoTemplateUnitTests {
 		verify(collection).estimatedDocumentCount(any());
 	}
 
+	@Test // GH-2911
+	void insertErrorsOnPublisher() {
+
+		Publisher<String> publisher = Mono.just("data");
+
+		assertThatExceptionOfType(IllegalArgumentException.class)
+				.isThrownBy(() -> template.insert(publisher));
+	}
+
 	private void stubFindSubscribe(Document document) {
 
 		Publisher<Document> realPublisher = Flux.just(document);

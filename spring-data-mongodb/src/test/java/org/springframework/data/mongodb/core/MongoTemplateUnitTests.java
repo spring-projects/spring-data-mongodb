@@ -2206,6 +2206,13 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(collection).estimatedDocumentCount(any());
 	}
 
+	@Test // GH-2911
+	void insertErrorsOnCustomIteratorImplementation() {
+
+		assertThatExceptionOfType(IllegalArgumentException.class)
+				.isThrownBy(() -> template.insert(new TypeImplementingIterator()));
+	}
+
 	class AutogenerateableId {
 
 		@Id BigInteger id;
@@ -2297,6 +2304,19 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	static class Sith {
 
 		@Field("firstname") String name;
+	}
+
+	static class TypeImplementingIterator implements Iterator {
+
+		@Override
+		public boolean hasNext() {
+			return false;
+		}
+
+		@Override
+		public Object next() {
+			return null;
+		}
 	}
 
 	/**

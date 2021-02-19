@@ -17,8 +17,6 @@ package org.springframework.data.mongodb.core;
 
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
-import org.springframework.data.mongodb.core.QueryOperations.AggregationDefinition;
-import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -38,7 +36,6 @@ import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -63,6 +60,7 @@ import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseUtils;
 import org.springframework.data.mongodb.SessionSynchronization;
 import org.springframework.data.mongodb.core.EntityOperations.AdaptibleEntity;
+import org.springframework.data.mongodb.core.QueryOperations.AggregationDefinition;
 import org.springframework.data.mongodb.core.QueryOperations.CountContext;
 import org.springframework.data.mongodb.core.QueryOperations.DeleteContext;
 import org.springframework.data.mongodb.core.QueryOperations.DistinctQueryContext;
@@ -72,6 +70,7 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.PrefixingDelegatingAggregationOperationContext;
+import org.springframework.data.mongodb.core.aggregation.RelaxedTypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
@@ -157,18 +156,6 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ReactiveMongoTemplate.class);
 	private static final WriteResultChecking DEFAULT_WRITE_RESULT_CHECKING = WriteResultChecking.NONE;
-	private static final Collection<Class<?>> ITERABLE_CLASSES;
-
-	static {
-
-		Set<Class<?>> iterableClasses = new HashSet<>();
-		iterableClasses.add(List.class);
-		iterableClasses.add(Collection.class);
-		iterableClasses.add(Iterator.class);
-		iterableClasses.add(Publisher.class);
-
-		ITERABLE_CLASSES = Collections.unmodifiableCollection(iterableClasses);
-	}
 
 	private final MongoConverter mongoConverter;
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
@@ -2668,13 +2655,27 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		}
 	}
 
-	protected void ensureNotIterable(Object o) {
+	/**
+	 * Ensure the given {@literal source} is not an {@link java.lang.reflect.Array}, {@link Collection} or
+	 * {@link Iterator}.
+	 *
+	 * @param source can be {@literal null}.
+	 * @deprecated since 3.2. Call {@link #ensureNotCollectionLike(Object)} instead.
+	 */
+	protected void ensureNotIterable(@Nullable Object source) {
+		ensureNotCollectionLike(source);
+	}
 
-		boolean isIterable = o.getClass().isArray()
-				|| ITERABLE_CLASSES.stream().anyMatch(iterableClass -> iterableClass.isAssignableFrom(o.getClass())
-						|| o.getClass().getName().equals(iterableClass.getName()));
+	/**
+	 * Ensure the given {@literal source} is not an {@link java.lang.reflect.Array}, {@link Collection} or
+	 * {@link Iterator}.
+	 *
+	 * @param source can be {@literal null}.
+	 * @since 3.2.
+	 */
+	protected void ensureNotCollectionLike(@Nullable Object source) {
 
-		if (isIterable) {
+		if (EntityOperations.isCollectionLike(source) || source instanceof Publisher) {
 			throw new IllegalArgumentException("Cannot use a collection here.");
 		}
 	}

@@ -705,7 +705,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		});
 	}
 
-
 	@Override
 	public IndexOperations indexOps(String collectionName) {
 		return indexOps(collectionName, null);
@@ -1154,7 +1153,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		Assert.notNull(objectToSave, "ObjectToSave must not be null!");
 
-		ensureNotAnArrayOrCollection(objectToSave);
+		ensureNotIterable(objectToSave);
 		return insert(objectToSave, getCollectionName(ClassUtils.getUserClass(objectToSave)));
 	}
 
@@ -1169,15 +1168,32 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.notNull(objectToSave, "ObjectToSave must not be null!");
 		Assert.notNull(collectionName, "CollectionName must not be null!");
 
-		ensureNotAnArrayOrCollection(objectToSave);
+		ensureNotIterable(objectToSave);
 		return (T) doInsert(collectionName, objectToSave, this.mongoConverter);
 	}
 
-	protected void ensureNotAnArrayOrCollection(@Nullable Object o) {
-		if (null != o) {
-			if (o.getClass().isArray() || (o instanceof Collection) || (o instanceof Iterator)) {
-				throw new IllegalArgumentException("Cannot use a collection here.");
-			}
+	/**
+	 * Ensure the given {@literal source} is not an {@link java.lang.reflect.Array}, {@link Collection} or
+	 * {@link Iterator}.
+	 *
+	 * @param source can be {@literal null}.
+	 * @deprecated since 3.2. Call {@link #ensureNotCollectionLike(Object)} instead.
+	 */
+	protected void ensureNotIterable(@Nullable Object source) {
+		ensureNotCollectionLike(source);
+	}
+
+	/**
+	 * Ensure the given {@literal source} is not an {@link java.lang.reflect.Array}, {@link Collection} or
+	 * {@link Iterator}.
+	 *
+	 * @param source can be {@literal null}.
+	 * @since 3.2.
+	 */
+	protected void ensureNotCollectionLike(@Nullable Object source) {
+
+		if (EntityOperations.isCollectionLike(source)) {
+			throw new IllegalArgumentException("Cannot use a collection here.");
 		}
 	}
 
