@@ -50,7 +50,7 @@ import com.mongodb.BasicDBList;
 
 /**
  * Central class for creating queries. It follows a fluent API style so that you can easily chain together multiple
- * criteria. Static import of the 'Criteria.where' method will improve readability.
+ * criteria. Static import of the {@link Criteria#where Criteria.where} method improves readability.
  *
  * @author Thomas Risberg
  * @author Oliver Gierke
@@ -388,7 +388,22 @@ public class Criteria implements CriteriaDefinition {
 		Assert.notNull(types, "Types must not be null!");
 		Assert.noNullElements(types, "Types must not contain null.");
 
-		criteria.put("$type", Arrays.asList(types).stream().map(Type::value).collect(Collectors.toList()));
+		return type(Arrays.asList(types));
+	}
+
+	/**
+	 * Creates a criterion using the {@literal $type} operator.
+	 *
+	 * @param types must not be {@literal null}.
+	 * @return this.
+	 * @since 3.2
+	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/query/type/">MongoDB Query operator: $type</a>
+	 */
+	public Criteria type(Collection<Type> types) {
+
+		Assert.notNull(types, "Types must not be null!");
+
+		criteria.put("$type", types.stream().map(Type::value).collect(Collectors.toList()));
 		return this;
 	}
 
@@ -669,67 +684,103 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	/**
-	 * Creates an 'or' criteria using the $or operator for all of the provided criteria
+	 * Creates a criteria using the {@code $or} operator for all of the provided criteria.
 	 * <p>
-	 * Note that mongodb doesn't support an $or operator to be wrapped in a $not operator.
-	 * <p>
+	 * Note that MongoDB doesn't support an {@code $nor} operator to be wrapped in a {@code $not} operator.
 	 *
-	 * @throws IllegalArgumentException if {@link #orOperator(Criteria...)} follows a not() call directly.
+	 * @throws IllegalArgumentException if this method follows a {@link #not()} call directly.
 	 * @param criteria must not be {@literal null}.
 	 * @return this.
 	 */
 	public Criteria orOperator(Criteria... criteria) {
+
+		Assert.notNull(criteria, "Criteria must not be null!");
+
 		return orOperator(Arrays.asList(criteria));
 	}
 
 	/**
-	 * {@link #orOperator(Criteria...)}
+	 * Creates a criteria using the {@code $or} operator for all of the provided criteria.
+	 * <p>
+	 * Note that MongoDB doesn't support an {@code $nor} operator to be wrapped in a {@code $not} operator.
+	 *
+	 * @throws IllegalArgumentException if this method follows a {@link #not()} call directly.
+	 * @param criteria must not be {@literal null}.
+	 * @return this.
+	 * @since 3.2
 	 */
 	public Criteria orOperator(Collection<Criteria> criteria) {
+
+		Assert.notNull(criteria, "Criteria must not be null!");
+
 		BasicDBList bsonList = createCriteriaList(criteria);
 		return registerCriteriaChainElement(new Criteria("$or").is(bsonList));
 	}
 
 	/**
-	 * Creates a 'nor' criteria using the $nor operator for all of the provided criteria.
+	 * Creates a criteria using the {@code $nor} operator for all of the provided criteria.
 	 * <p>
-	 * Note that mongodb doesn't support an $nor operator to be wrapped in a $not operator.
-	 * <p>
+	 * Note that MongoDB doesn't support an {@code $nor} operator to be wrapped in a {@code $not} operator.
 	 *
-	 * @throws IllegalArgumentException if {@link #norOperator(Criteria...)} follows a not() call directly.
+	 * @throws IllegalArgumentException if this method follows a {@link #not()} call directly.
 	 * @param criteria must not be {@literal null}.
 	 * @return this.
 	 */
 	public Criteria norOperator(Criteria... criteria) {
+
+		Assert.notNull(criteria, "Criteria must not be null!");
+
 		return norOperator(Arrays.asList(criteria));
 	}
 
 	/**
-	 * {@link #norOperator(Criteria...)}
+	 * Creates a criteria using the {@code $nor} operator for all of the provided criteria.
+	 * <p>
+	 * Note that MongoDB doesn't support an {@code $nor} operator to be wrapped in a {@code $not} operator.
+	 *
+	 * @throws IllegalArgumentException if this method follows a {@link #not()} call directly.
+	 * @param criteria must not be {@literal null}.
+	 * @return this.
+	 * @since 3.2
 	 */
 	public Criteria norOperator(Collection<Criteria> criteria) {
+
+		Assert.notNull(criteria, "Criteria must not be null!");
+
 		BasicDBList bsonList = createCriteriaList(criteria);
 		return registerCriteriaChainElement(new Criteria("$nor").is(bsonList));
 	}
 
 	/**
-	 * Creates an 'and' criteria using the $and operator for all of the provided criteria.
+	 * Creates a criteria using the {@code $and} operator for all of the provided criteria.
 	 * <p>
-	 * Note that mongodb doesn't support an $and operator to be wrapped in a $not operator.
-	 * <p>
+	 * Note that MongoDB doesn't support an {@code $and} operator to be wrapped in a {@code $not} operator.
 	 *
-	 * @throws IllegalArgumentException if {@link #andOperator(Criteria...)} follows a not() call directly.
+	 * @throws IllegalArgumentException if this method follows a {@link #not()} call directly.
 	 * @param criteria must not be {@literal null}.
 	 * @return this.
 	 */
 	public Criteria andOperator(Criteria... criteria) {
+
+		Assert.notNull(criteria, "Criteria must not be null!");
+
 		return andOperator(Arrays.asList(criteria));
 	}
 
 	/**
-	 * {@link #andOperator(Criteria...)}
+	 * Creates a criteria using the {@code $and} operator for all of the provided criteria.
+	 * <p>
+	 * Note that MongoDB doesn't support an {@code $and} operator to be wrapped in a {@code $not} operator.
+	 *
+	 * @throws IllegalArgumentException if this method follows a {@link #not()} call directly.
+	 * @param criteria must not be {@literal null}.
+	 * @return this.
+	 * @since 3.2
 	 */
 	public Criteria andOperator(Collection<Criteria> criteria) {
+
+		Assert.notNull(criteria, "Criteria must not be null!");
+
 		BasicDBList bsonList = createCriteriaList(criteria);
 		return registerCriteriaChainElement(new Criteria("$and").is(bsonList));
 	}
@@ -832,11 +883,13 @@ public class Criteria implements CriteriaDefinition {
 	}
 
 	private void setValue(Document document, String key, Object value) {
+
 		Object existing = document.get(key);
+
 		if (existing == null) {
 			document.put(key, value);
 		} else {
-			throw new InvalidMongoDbApiUsageException("Due to limitations of the com.mongodb.BasicDocument, "
+			throw new InvalidMongoDbApiUsageException("Due to limitations of the org.bson.Document, "
 					+ "you can't add a second '" + key + "' expression specified as '" + key + " : " + value + "'. "
 					+ "Criteria already contains '" + key + " : " + existing + "'.");
 		}

@@ -31,6 +31,8 @@ import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 
 /**
+ * Unit tests for {@link Criteria}.
+ *
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
@@ -82,52 +84,43 @@ public class CriteriaUnitTests {
 		assertThat(right).isNotEqualTo(left);
 	}
 
-	@Test
+	@Test // GH-3286
 	public void shouldBuildCorrectAndOperator() {
-		//given
+
 		Collection<Criteria> operatorCriteria = Arrays.asList(Criteria.where("x").is(true),
 				Criteria.where("y").is(42),
 				Criteria.where("z").is("value"));
-		Document expectedResult = Document
-				.parse("{\"$and\":[{\"x\":true}, {\"y\":42}, {\"z\":\"value\"}], \"foo\":\"bar\"}");
 
-		//when
 		Criteria criteria = Criteria.where("foo").is("bar").andOperator(operatorCriteria);
 
-		//then
-		assertThat(criteria.getCriteriaObject()).isEqualTo(expectedResult);
+		assertThat(criteria.getCriteriaObject())
+				.isEqualTo("{\"$and\":[{\"x\":true}, {\"y\":42}, {\"z\":\"value\"}], \"foo\":\"bar\"}");
 	}
 
-	@Test
+	@Test // GH-3286
 	public void shouldBuildCorrectOrOperator() {
-		//given
+
 		Collection<Criteria> operatorCriteria = Arrays.asList(Criteria.where("x").is(true),
 				Criteria.where("y").is(42),
 				Criteria.where("z").is("value"));
-		Document expectedResult = Document
-				.parse("{\"$or\":[{\"x\":true}, {\"y\":42}, {\"z\":\"value\"}], \"foo\":\"bar\"}");
 
-		//when
 		Criteria criteria = Criteria.where("foo").is("bar").orOperator(operatorCriteria);
 
-		//then
-		assertThat(criteria.getCriteriaObject()).isEqualTo(expectedResult);
+		assertThat(criteria.getCriteriaObject())
+				.isEqualTo("{\"$or\":[{\"x\":true}, {\"y\":42}, {\"z\":\"value\"}], \"foo\":\"bar\"}");
 	}
 
-	@Test
+	@Test // GH-3286
 	public void shouldBuildCorrectNorOperator() {
-		//given
+
 		Collection<Criteria> operatorCriteria = Arrays.asList(Criteria.where("x").is(true),
 				Criteria.where("y").is(42),
 				Criteria.where("z").is("value"));
-		Document expectedResult = Document
-				.parse("{\"$nor\":[{\"x\":true}, {\"y\":42}, {\"z\":\"value\"}], \"foo\":\"bar\"}");
 
-		//when
 		Criteria criteria = Criteria.where("foo").is("bar").norOperator(operatorCriteria);
 
-		//then
-		assertThat(criteria.getCriteriaObject()).isEqualTo(expectedResult);
+		assertThat(criteria.getCriteriaObject())
+				.isEqualTo("{\"$nor\":[{\"x\":true}, {\"y\":42}, {\"z\":\"value\"}], \"foo\":\"bar\"}");
 	}
 
 	@Test // DATAMONGO-507
