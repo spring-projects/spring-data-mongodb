@@ -1329,9 +1329,9 @@ public class QueryMapper {
 
 					String partial = iterator.next();
 
-					boolean isPositional = (isPositionalParameter(partial) && (property.isMap() || property.isCollectionLike()));
+					boolean isPositional = isPositionalParameter(partial) && property.isCollectionLike();
 
-					if (isPositional) {
+					if (isPositional || property.isMap()) {
 						mappedName.append(".").append(partial);
 					}
 

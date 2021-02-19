@@ -1159,6 +1159,27 @@ class UpdateMapperUnitTests {
 				new Document("prefix-stringValue", "updated").append("prefix-listValue", Arrays.asList("val-1", "val-2")))));
 	}
 
+	@Test // GH-3552
+	void numericKeyForMap() {
+
+		Update update = new Update().set("map.601218778970110001827396", "testing");
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(EntityWithObjectMap.class));
+
+		assertThat(mappedUpdate).isEqualTo(Document.parse("{\"$set\": {\"map.601218778970110001827396\": \"testing\"}}"));
+	}
+
+	@Test // GH-3552
+	void numericKeyInMapOfNestedPath() {
+
+		Update update = new Update().set("map.601218778970110001827396.value", "testing");
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(EntityWithObjectMap.class));
+
+		assertThat(mappedUpdate)
+				.isEqualTo(Document.parse("{\"$set\": {\"map.601218778970110001827396.value\": \"testing\"}}"));
+	}
+
 	static class DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes {
 		ListModelWrapper concreteTypeWithListAttributeOfInterfaceType;
 	}
