@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.query;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 
 import org.bson.Document;
@@ -34,6 +35,7 @@ import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Andreas Zink
+ * @author Ziemowit Stolarczyk
  */
 public class CriteriaUnitTests {
 
@@ -78,6 +80,54 @@ public class CriteriaUnitTests {
 
 		assertThat(left).isNotEqualTo(right);
 		assertThat(right).isNotEqualTo(left);
+	}
+
+	@Test
+	public void shouldBuildCorrectAndOperator() {
+		//given
+		Collection<Criteria> operatorCriteria = Arrays.asList(Criteria.where("x").is(true),
+				Criteria.where("y").is(42),
+				Criteria.where("z").is("value"));
+		Document expectedResult = Document
+				.parse("{\"$and\":[{\"x\":true}, {\"y\":42}, {\"z\":\"value\"}], \"foo\":\"bar\"}");
+
+		//when
+		Criteria criteria = Criteria.where("foo").is("bar").andOperator(operatorCriteria);
+
+		//then
+		assertThat(criteria.getCriteriaObject()).isEqualTo(expectedResult);
+	}
+
+	@Test
+	public void shouldBuildCorrectOrOperator() {
+		//given
+		Collection<Criteria> operatorCriteria = Arrays.asList(Criteria.where("x").is(true),
+				Criteria.where("y").is(42),
+				Criteria.where("z").is("value"));
+		Document expectedResult = Document
+				.parse("{\"$or\":[{\"x\":true}, {\"y\":42}, {\"z\":\"value\"}], \"foo\":\"bar\"}");
+
+		//when
+		Criteria criteria = Criteria.where("foo").is("bar").orOperator(operatorCriteria);
+
+		//then
+		assertThat(criteria.getCriteriaObject()).isEqualTo(expectedResult);
+	}
+
+	@Test
+	public void shouldBuildCorrectNorOperator() {
+		//given
+		Collection<Criteria> operatorCriteria = Arrays.asList(Criteria.where("x").is(true),
+				Criteria.where("y").is(42),
+				Criteria.where("z").is("value"));
+		Document expectedResult = Document
+				.parse("{\"$nor\":[{\"x\":true}, {\"y\":42}, {\"z\":\"value\"}], \"foo\":\"bar\"}");
+
+		//when
+		Criteria criteria = Criteria.where("foo").is("bar").norOperator(operatorCriteria);
+
+		//then
+		assertThat(criteria.getCriteriaObject()).isEqualTo(expectedResult);
 	}
 
 	@Test // DATAMONGO-507

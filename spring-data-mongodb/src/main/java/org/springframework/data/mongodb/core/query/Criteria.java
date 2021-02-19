@@ -58,6 +58,7 @@ import com.mongodb.BasicDBList;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Andreas Zink
+ * @author Ziemowit Stolarczyk
  */
 public class Criteria implements CriteriaDefinition {
 
@@ -678,6 +679,13 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 */
 	public Criteria orOperator(Criteria... criteria) {
+		return orOperator(Arrays.asList(criteria));
+	}
+
+	/**
+	 * {@link #orOperator(Criteria...)}
+	 */
+	public Criteria orOperator(Collection<Criteria> criteria) {
 		BasicDBList bsonList = createCriteriaList(criteria);
 		return registerCriteriaChainElement(new Criteria("$or").is(bsonList));
 	}
@@ -693,6 +701,13 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 */
 	public Criteria norOperator(Criteria... criteria) {
+		return norOperator(Arrays.asList(criteria));
+	}
+
+	/**
+	 * {@link #norOperator(Criteria...)}
+	 */
+	public Criteria norOperator(Collection<Criteria> criteria) {
 		BasicDBList bsonList = createCriteriaList(criteria);
 		return registerCriteriaChainElement(new Criteria("$nor").is(bsonList));
 	}
@@ -708,6 +723,13 @@ public class Criteria implements CriteriaDefinition {
 	 * @return this.
 	 */
 	public Criteria andOperator(Criteria... criteria) {
+		return andOperator(Arrays.asList(criteria));
+	}
+
+	/**
+	 * {@link #andOperator(Criteria...)}
+	 */
+	public Criteria andOperator(Collection<Criteria> criteria) {
 		BasicDBList bsonList = createCriteriaList(criteria);
 		return registerCriteriaChainElement(new Criteria("$and").is(bsonList));
 	}
@@ -801,7 +823,7 @@ public class Criteria implements CriteriaDefinition {
 		return queryCriteria;
 	}
 
-	private BasicDBList createCriteriaList(Criteria[] criteria) {
+	private BasicDBList createCriteriaList(Collection<Criteria> criteria) {
 		BasicDBList bsonList = new BasicDBList();
 		for (Criteria c : criteria) {
 			bsonList.add(c.getCriteriaObject());

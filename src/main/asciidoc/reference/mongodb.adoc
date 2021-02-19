@@ -1200,6 +1200,7 @@ The `Criteria` class provides the following methods, all of which correspond to 
 * `Criteria` *all* `(Object o)` Creates a criterion using the `$all` operator
 * `Criteria` *and* `(String key)` Adds a chained `Criteria` with the specified `key` to the current `Criteria` and returns the newly created one
 * `Criteria` *andOperator* `(Criteria... criteria)` Creates an and query using the `$and` operator for all of the provided criteria (requires MongoDB 2.0 or later)
+* `Criteria` *andOperator* `(Collection<Criteria> criteria)` Creates an and query using the `$and` operator for all of the provided criteria (requires MongoDB 2.0 or later)
 * `Criteria` *elemMatch* `(Criteria c)` Creates a criterion using the `$elemMatch` operator
 * `Criteria` *exists* `(boolean b)` Creates a criterion using the `$exists` operator
 * `Criteria` *gt* `(Object o)` Creates a criterion using the `$gt` operator
@@ -1213,8 +1214,10 @@ The `Criteria` class provides the following methods, all of which correspond to 
 * `Criteria` *ne* `(Object o)` Creates a criterion using the `$ne` operator
 * `Criteria` *nin* `(Object... o)` Creates a criterion using the `$nin` operator
 * `Criteria` *norOperator* `(Criteria... criteria)` Creates an nor query using the `$nor` operator for all of the provided criteria
+* `Criteria` *norOperator* `(Collection<Criteria> criteria)` Creates an nor query using the `$nor` operator for all of the provided criteria
 * `Criteria` *not* `()` Creates a criterion using the `$not` meta operator which affects the clause directly following
 * `Criteria` *orOperator* `(Criteria... criteria)` Creates an or query using the `$or` operator for all of the provided  criteria
+* `Criteria` *orOperator* `(Collection<Criteria> criteria)` Creates an or query using the `$or` operator for all of the provided  criteria
 * `Criteria` *regex* `(String re)` Creates a criterion using a `$regex`
 * `Criteria` *size* `(int s)` Creates a criterion using the `$size` operator
 * `Criteria` *type* `(int t)` Creates a criterion using the `$type` operator
