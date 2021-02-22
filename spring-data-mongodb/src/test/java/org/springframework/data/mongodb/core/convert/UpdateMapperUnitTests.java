@@ -1166,7 +1166,7 @@ class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(EntityWithObjectMap.class));
 
-		assertThat(mappedUpdate).isEqualTo(Document.parse("{\"$set\": {\"map.601218778970110001827396\": \"testing\"}}"));
+		assertThat(mappedUpdate).isEqualTo("{\"$set\": {\"map.601218778970110001827396\": \"testing\"}}");
 	}
 
 	@Test // GH-3552
@@ -1177,7 +1177,7 @@ class UpdateMapperUnitTests {
 				context.getPersistentEntity(EntityWithObjectMap.class));
 
 		assertThat(mappedUpdate)
-				.isEqualTo(Document.parse("{\"$set\": {\"map.601218778970110001827396.value\": \"testing\"}}"));
+				.isEqualTo("{\"$set\": {\"map.601218778970110001827396.value\": \"testing\"}}");
 	}
 
 	static class DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes {
