@@ -1220,7 +1220,8 @@ public class QueryMapper {
 
 		private boolean isPathToJavaLangClassProperty(PropertyPath path) {
 
-			if (path.getType().equals(Class.class) && path.getLeafProperty().getOwningType().getType().equals(Class.class)) {
+			if ((path.getType() == Class.class || path.getType().equals(Object.class))
+					&& path.getLeafProperty().getType() == Class.class) {
 				return true;
 			}
 			return false;

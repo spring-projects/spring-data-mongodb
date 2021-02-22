@@ -1180,6 +1180,17 @@ class UpdateMapperUnitTests {
 				.isEqualTo("{\"$set\": {\"map.601218778970110001827396.value\": \"testing\"}}");
 	}
 
+	@Test // GH-3566
+	void mapsObjectClassPropertyFieldInMapValueTypeAsKey() {
+
+		Update update = new Update().set("map.class", "value");
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(EntityWithObjectMap.class));
+
+		assertThat(mappedUpdate)
+				.isEqualTo("{\"$set\": {\"map.class\": \"value\"}}");
+	}
+
 	static class DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes {
 		ListModelWrapper concreteTypeWithListAttributeOfInterfaceType;
 	}
