@@ -17,7 +17,8 @@ package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
 
-import java.net.UnknownHostException;
+import com.mongodb.MongoSocketReadTimeoutException;
+import com.mongodb.MongoSocketWriteException;
 
 import org.bson.BsonDocument;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,9 +46,11 @@ import com.mongodb.ServerAddress;
  * @author Michal Vich
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Brice Vandeputte
  */
 public class MongoExceptionTranslatorUnitTests {
 
+	public static final String EXCEPTION_MESSAGE = "IOException";
 	MongoExceptionTranslator translator;
 
 	@BeforeEach
@@ -68,13 +71,30 @@ public class MongoExceptionTranslatorUnitTests {
 	public void translateSocketException() {
 
 		expectExceptionWithCauseMessage(
-				translator.translateExceptionIfPossible(new MongoSocketException("IOException", new ServerAddress())),
-				DataAccessResourceFailureException.class, "IOException");
+				translator.translateExceptionIfPossible(new MongoSocketException(EXCEPTION_MESSAGE, new ServerAddress())),
+				DataAccessResourceFailureException.class, EXCEPTION_MESSAGE);
+
+	}
+
+	@Test // GH-3568
+	public void translateSocketChildrenExceptions() {
+
+		expectExceptionWithCauseMessage(
+				translator.translateExceptionIfPossible(
+						new MongoSocketWriteException("intermediate message", new ServerAddress(), new Exception(EXCEPTION_MESSAGE))
+				),
+				DataAccessResourceFailureException.class, EXCEPTION_MESSAGE);
+
+		expectExceptionWithCauseMessage(
+				translator.translateExceptionIfPossible(
+						new MongoSocketReadTimeoutException("intermediate message", new ServerAddress(), new Exception(EXCEPTION_MESSAGE))
+				),
+				DataAccessResourceFailureException.class, EXCEPTION_MESSAGE);
 
 	}
 
 	@Test
-	public void translateCursorNotFound() throws UnknownHostException {
+	public void translateCursorNotFound() {
 
 		expectExceptionWithCauseMessage(
 				translator.translateExceptionIfPossible(new MongoCursorNotFoundException(1L, new ServerAddress())),
