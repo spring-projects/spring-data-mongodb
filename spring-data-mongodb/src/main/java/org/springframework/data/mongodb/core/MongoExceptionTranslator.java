@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import com.mongodb.MongoSocketException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -49,6 +50,7 @@ import com.mongodb.bulk.BulkWriteError;
  * @author Oliver Gierke
  * @author Michal Vich
  * @author Christoph Strobl
+ * @author Brice Vandeputte
  */
 public class MongoExceptionTranslator implements PersistenceExceptionTranslator {
 
@@ -78,6 +80,10 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 			throw new InvalidDataAccessApiUsageException(ex.getMessage(), ex);
 		}
 
+		if (ex instanceof MongoSocketException) {
+			return new DataAccessResourceFailureException(ex.getMessage(), ex);
+		}
+
 		String exception = ClassUtils.getShortName(ClassUtils.getUserClass(ex.getClass()));
 
 		if (DUPLICATE_KEY_EXCEPTIONS.contains(exception)) {
@@ -87,6 +93,7 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 		if (RESOURCE_FAILURE_EXCEPTIONS.contains(exception)) {
 			return new DataAccessResourceFailureException(ex.getMessage(), ex);
 		}
+
 
 		if (RESOURCE_USAGE_EXCEPTIONS.contains(exception)) {
 			return new InvalidDataAccessResourceUsageException(ex.getMessage(), ex);
