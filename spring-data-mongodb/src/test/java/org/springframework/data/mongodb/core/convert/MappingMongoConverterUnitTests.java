@@ -2177,9 +2177,10 @@ class MappingMongoConverterUnitTests {
 		MappingMongoConverter spyConverter = spy(converter);
 		Mockito.doReturn(cluster).when(spyConverter).readRef(dbRef);
 
-		Map<Object, Object> result = spyConverter.readMap(ClassTypeInformation.MAP, data, ObjectPath.ROOT);
+		Map<Object, Object> result = spyConverter.readMap(spyConverter.getConversionContext(ObjectPath.ROOT), data,
+				ClassTypeInformation.MAP);
 
-		assertThat(((LinkedHashMap) result.get("cluster")).get("_id")).isEqualTo(100L);
+		assertThat(((Map) result.get("cluster")).get("_id")).isEqualTo(100L);
 	}
 
 	@Test // GH-3546

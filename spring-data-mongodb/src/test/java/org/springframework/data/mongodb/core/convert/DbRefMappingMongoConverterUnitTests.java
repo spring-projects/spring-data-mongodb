@@ -62,7 +62,7 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 
 /**
- * Unit tests for {@link DbRefMappingMongoConverter}.
+ * Unit tests for {@link MappingMongoConverter}.
  *
  * @author Oliver Gierke
  * @author Thomas Darimont
