@@ -1145,28 +1145,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		for (Object element : source) {
-
-			if (element instanceof DBRef) {
-				items.add(DBRef.class.equals(rawComponentType) ? element
-						: readAndConvertDBRef((DBRef) element, componentType, path, rawComponentType));
-			} else if (element instanceof Document) {
-				items.add(read(componentType, (Document) element, path));
-			} else if (element instanceof BasicDBObject) {
-				items.add(read(componentType, (BasicDBObject) element, path));
-			} else {
-
-				if (!Object.class.equals(rawComponentType) && element instanceof Collection) {
-					if (!rawComponentType.isArray() && !ClassUtils.isAssignable(Iterable.class, rawComponentType)) {
-						throw new MappingException(
-								String.format(INCOMPATIBLE_TYPES, element, element.getClass(), rawComponentType, path));
-					}
-				}
-				if (element instanceof List) {
-					items.add(readCollectionOrArray(componentType, (Collection<Object>) element, path));
-				} else {
-					items.add(getPotentiallyConvertedSimpleRead(element, rawComponentType));
-				}
-			}
+			items.add(readValue(element, componentType, path));
 		}
 
 		return getPotentiallyConvertedSimpleRead(items, targetType.getType());
@@ -1216,24 +1195,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 			Object value = entry.getValue();
 			TypeInformation<?> defaultedValueType = valueType != null ? valueType : ClassTypeInformation.OBJECT;
-
-			if (value instanceof Document) {
-				map.put(key, read(defaultedValueType, (Document) value, path));
-			} else if (value instanceof BasicDBObject) {
-				map.put(key, read(defaultedValueType, (BasicDBObject) value, path));
-			} else if (value instanceof DBRef) {
-				map.put(key, DBRef.class.equals(rawValueType) ? value
-						: readAndConvertDBRef((DBRef) value, defaultedValueType, ObjectPath.ROOT, rawValueType));
-			} else if (value instanceof List) {
-				map.put(key, readCollectionOrArray(valueType != null ? valueType : ClassTypeInformation.LIST,
-						(List<Object>) value, path));
-			} else {
-				map.put(key, getPotentiallyConvertedSimpleRead(value, rawValueType));
-			}
+			map.put(key, readValue(value, defaultedValueType, path));
 		}
 
 		return map;
 	}
+
 
 	@SuppressWarnings("unchecked")
 	private static Map<String, Object> asMap(Bson bson) {
@@ -1608,7 +1575,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	@Nullable
 	@SuppressWarnings("unchecked")
-	<T> T readValue(Object value, TypeInformation<?> type, ObjectPath path) {
+	<T> T readValue(@Nullable Object value, TypeInformation<?> type, ObjectPath path) {
+
+		if (value == null) {
+			return null;
+		}
+
+		Assert.notNull(type, "TypeInformation must not be null");
 
 		Class<?> rawType = type.getType();
 
@@ -1616,8 +1589,14 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return (T) conversionService.convert(value, rawType);
 		} else if (value instanceof DBRef) {
 			return potentiallyReadOrResolveDbRef((DBRef) value, type, path, rawType);
-		} else if (value instanceof List) {
-			return (T) readCollectionOrArray(type, (List<Object>) value, path);
+		} else if (value instanceof Collection) {
+
+			if (!Object.class.equals(rawType)) {
+				if (!rawType.isArray() && !ClassUtils.isAssignable(Iterable.class, rawType)) {
+					throw new MappingException(String.format(INCOMPATIBLE_TYPES, value, value.getClass(), rawType, path));
+				}
+			}
+			return (T) readCollectionOrArray(type, (Collection<?>) value, path);
 		} else if (value instanceof Document) {
 			return (T) read(type, (Document) value, path);
 		} else if (value instanceof DBObject) {
