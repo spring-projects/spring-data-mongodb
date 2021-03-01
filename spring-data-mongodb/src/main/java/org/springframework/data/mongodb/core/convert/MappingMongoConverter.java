@@ -149,7 +149,16 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				});
 	}
 
-	ConversionContext getConversionContext(ObjectPath path) {
+	/**
+	 * Creates a new {@link ConversionContext} given {@link ObjectPath}.
+	 *
+	 * @param path the current {@link ObjectPath}, must not be {@literal null}.
+	 * @return the {@link ConversionContext}.
+	 */
+	protected ConversionContext getConversionContext(ObjectPath path) {
+
+		Assert.notNull(path, "ObjectPath must not be null");
+
 		return new ConversionContext(path, this::readDocument, this::readCollectionOrArray, this::readMap, this::readDBRef,
 				this::getPotentiallyConvertedSimpleRead);
 	}
@@ -294,11 +303,21 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return (S) bson;
 		}
 
-		return context.convert(typeToUse, bson);
+		return context.convert(bson, typeToUse);
 	}
 
+	/**
+	 * Conversion method to materialize an object from a {@link Bson document}. Can be overridden by subclasses.
+	 *
+	 * @param context must not be {@literal null}
+	 * @param bson must not be {@literal null}
+	 * @param typeHint the {@link TypeInformation} to be used to unmarshall this {@link Document}.
+	 * @return the converted object, will never be {@literal null}.
+	 * @since 3.2
+	 */
 	@SuppressWarnings("unchecked")
-	private <S extends Object> S readDocument(ConversionContext ctx, Bson bson, TypeInformation<? extends S> typeHint) {
+	protected <S extends Object> S readDocument(ConversionContext context, Bson bson,
+			TypeInformation<? extends S> typeHint) {
 
 		// TODO: Cleanup duplication
 
@@ -306,8 +325,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		TypeInformation<? extends S> typeToRead = typeMapper.readType(document, typeHint);
 		Class<? extends S> rawType = typeToRead.getType();
 
-		// Discuss: Potentially the wrong thing to do. In a Map<…, Object> if the database type is Person we would apply a
-		// custom converter if registered for Person
 		if (conversions.hasCustomReadTarget(bson.getClass(), rawType)) {
 			return doConvert(bson, rawType);
 		}
@@ -335,7 +352,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			throw new MappingException(String.format(INVALID_TYPE_TO_READ, document, rawType));
 		}
 
-		return read(ctx, (MongoPersistentEntity<S>) entity, document);
+		return read(context, (MongoPersistentEntity<S>) entity, document);
 	}
 
 	private ParameterValueProvider<MongoPersistentProperty> getParameterProvider(ConversionContext context,
@@ -395,13 +412,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	/**
 	 * Reads the identifier from either the bean backing the {@link PersistentPropertyAccessor} or the source document in
 	 * case the identifier has not be populated yet. In this case the identifier is set on the bean for further reference.
-	 *
-	 * @param context must not be {@literal null}.
-	 * @param accessor must not be {@literal null}.
-	 * @param document must not be {@literal null}.
-	 * @param entity must not be {@literal null}.
-	 * @param evaluator must not be {@literal null}.
-	 * @return
 	 */
 	@Nullable
 	private Object readAndPopulateIdentifier(ConversionContext context, PersistentPropertyAccessor<?> accessor,
@@ -1033,9 +1043,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	/**
 	 * Checks whether we have a custom conversion for the given simple object. Converts the given value if so, applies
-	 * {@link Enum} handling or returns the value as is.
+	 * {@link Enum} handling or returns the value as is. Can be overridden by subclasses.
+	 *
+	 * @since 3.2
 	 */
-	private Object getPotentiallyConvertedSimpleRead(Object value, TypeInformation<?> target) {
+	protected Object getPotentiallyConvertedSimpleRead(Object value, TypeInformation<?> target) {
 		return getPotentiallyConvertedSimpleRead(value, target.getType());
 	}
 
@@ -1103,15 +1115,18 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	/**
-	 * Reads the given {@link BasicDBList} into a collection of the given {@link TypeInformation}.
+	 * Reads the given {@link Collection} into a collection of the given {@link TypeInformation}. Can be overridden by
+	 * subclasses.
 	 *
-	 * @param source must not be {@literal null}.
-	 * @param targetType must not be {@literal null}.
-	 * @param path must not be {@literal null}.
+	 * @param context must not be {@literal null}
+	 * @param source must not be {@literal null}
+	 * @param targetType the {@link Map} {@link TypeInformation} to be used to unmarshall this {@link Document}.
+	 * @since 3.2
 	 * @return the converted {@link Collection} or array, will never be {@literal null}.
 	 */
 	@SuppressWarnings("unchecked")
-	private Object readCollectionOrArray(ConversionContext context, Collection<?> source, TypeInformation<?> targetType) {
+	protected Object readCollectionOrArray(ConversionContext context, Collection<?> source,
+			TypeInformation<?> targetType) {
 
 		Assert.notNull(targetType, "Target type must not be null!");
 
@@ -1139,7 +1154,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		for (Object element : source) {
-			items.add(context.convert(componentType, element));
+			items.add(context.convert(element, componentType));
 		}
 
 		return getPotentiallyConvertedSimpleRead(items, targetType.getType());
@@ -1148,19 +1163,37 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	/**
 	 * Reads the given {@link Document} into a {@link Map}. will recursively resolve nested {@link Map}s as well.
 	 *
-	 * @param bson must not be {@literal null}
 	 * @param type the {@link Map} {@link TypeInformation} to be used to unmarshall this {@link Document}.
+	 * @param bson must not be {@literal null}
+	 * @param path must not be {@literal null}
+	 * @return
+	 * @deprecated since 3.2. Use {@link #readMap(ConversionContext, Bson, TypeInformation)} instead.
 	 */
-	protected Map<Object, Object> readMap(ConversionContext context, Bson bson, TypeInformation<?> type) {
+	@Deprecated
+	protected Map<Object, Object> readMap(TypeInformation<?> type, Bson bson, ObjectPath path) {
+		return readMap(getConversionContext(path), bson, type);
+	}
+
+	/**
+	 * Reads the given {@link Document} into a {@link Map}. will recursively resolve nested {@link Map}s as well. Can be
+	 * overridden by subclasses.
+	 *
+	 * @param context must not be {@literal null}
+	 * @param bson must not be {@literal null}
+	 * @param targetType the {@link Map} {@link TypeInformation} to be used to unmarshall this {@link Document}.
+	 * @return the converted {@link Map}, will never be {@literal null}.
+	 * @since 3.2
+	 */
+	protected Map<Object, Object> readMap(ConversionContext context, Bson bson, TypeInformation<?> targetType) {
 
 		Assert.notNull(bson, "Document must not be null!");
-		Assert.notNull(type, "TypeInformation must not be null!");
+		Assert.notNull(targetType, "TypeInformation must not be null!");
 
-		Class<?> mapType = typeMapper.readType(bson, type).getType();
+		Class<?> mapType = typeMapper.readType(bson, targetType).getType();
 
-		TypeInformation<?> keyType = type.getComponentType();
-		TypeInformation<?> valueType = type.getMapValueType() == null ? ClassTypeInformation.OBJECT
-				: type.getRequiredMapValueType();
+		TypeInformation<?> keyType = targetType.getComponentType();
+		TypeInformation<?> valueType = targetType.getMapValueType() == null ? ClassTypeInformation.OBJECT
+				: targetType.getRequiredMapValueType();
 
 		Class<?> rawKeyType = keyType != null ? keyType.getType() : Object.class;
 		Class<?> rawValueType = valueType.getType();
@@ -1186,7 +1219,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			}
 
 			Object value = entry.getValue();
-			map.put(key, context.convert(valueType, value));
+			map.put(key, context.convert(value, valueType));
 		}
 
 		return map;
@@ -1372,7 +1405,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return (T) readDBRef(context, (DBRef) value, type);
 		}
 
-		return (T) context.convert(type, value);
+		return (T) context.convert(value, type);
 	}
 
 	@Nullable
@@ -1610,7 +1643,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				return null;
 			}
 
-			return (T) context.convert(property.getTypeInformation(), value);
+			return (T) context.convert(value, property.getTypeInformation());
 		}
 	}
 
@@ -1699,7 +1732,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		 */
 		@Override
 		protected <T> T potentiallyConvertSpelValue(Object object, Parameter<T, MongoPersistentProperty> parameter) {
-			return context.convert(parameter.getType(), object);
+			return context.convert(object, parameter.getType());
 		}
 	}
 
@@ -1819,8 +1852,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	/**
 	 * Conversion context holding references to simple {@link ValueConverter} and {@link ContainerValueConverter}.
+	 * Entrypoint for recursive conversion of {@link Document} and other types.
+	 *
+	 * @since 3.2
 	 */
-	static class ConversionContext {
+	protected static class ConversionContext {
 
 		private final ObjectPath path;
 		private final ContainerValueConverter<Bson> documentConverter;
@@ -1841,12 +1877,21 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			this.elementConverter = elementConverter;
 		}
 
+		/**
+		 * Converts a source object into {@link TypeInformation target}.
+		 *
+		 * @param source must not be {@literal null}.
+		 * @param typeHint must not be {@literal null}.
+		 * @return the converted object.
+		 */
 		@SuppressWarnings("unchecked")
-		public <S extends Object> S convert(TypeInformation<? extends S> typeToUse, Object source) {
+		public <S extends Object> S convert(Object source, TypeInformation<? extends S> typeHint) {
+
+			Assert.notNull(typeHint, "TypeInformation must not be null");
 
 			if (source instanceof Collection) {
 
-				Class<?> rawType = typeToUse.getType();
+				Class<?> rawType = typeHint.getType();
 				if (!Object.class.equals(rawType)) {
 					if (!rawType.isArray() && !ClassUtils.isAssignable(Iterable.class, rawType)) {
 						throw new MappingException(
@@ -1854,29 +1899,29 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					}
 				}
 
-				if (typeToUse.isCollectionLike() || typeToUse.getType().isAssignableFrom(Collection.class)) {
-					return (S) collectionConverter.convert(this, (Collection<?>) source, typeToUse);
+				if (typeHint.isCollectionLike() || typeHint.getType().isAssignableFrom(Collection.class)) {
+					return (S) collectionConverter.convert(this, (Collection<?>) source, typeHint);
 				}
 			}
 
-			if (typeToUse.isMap()) {
-				return (S) mapConverter.convert(this, (Bson) source, typeToUse);
+			if (typeHint.isMap()) {
+				return (S) mapConverter.convert(this, (Bson) source, typeHint);
 			}
 
 			if (source instanceof DBRef) {
-				return (S) dbRefConverter.convert(this, (DBRef) source, typeToUse);
+				return (S) dbRefConverter.convert(this, (DBRef) source, typeHint);
 			}
 
 			if (source instanceof Collection) {
 				throw new MappingException(
-						String.format(INCOMPATIBLE_TYPES, source, BasicDBList.class, typeToUse.getType(), getPath()));
+						String.format(INCOMPATIBLE_TYPES, source, BasicDBList.class, typeHint.getType(), getPath()));
 			}
 
 			if (source instanceof Bson) {
-				return (S) documentConverter.convert(this, (Bson) source, typeToUse);
+				return (S) documentConverter.convert(this, (Bson) source, typeHint);
 			}
 
-			return (S) elementConverter.convert(source, typeToUse);
+			return (S) elementConverter.convert(source, typeHint);
 		}
 
 		/**
