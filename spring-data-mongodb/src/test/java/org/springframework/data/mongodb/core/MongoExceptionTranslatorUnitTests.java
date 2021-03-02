@@ -17,9 +17,6 @@ package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
 
-import com.mongodb.MongoSocketReadTimeoutException;
-import com.mongodb.MongoSocketWriteException;
-
 import org.bson.BsonDocument;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,11 +30,14 @@ import org.springframework.dao.InvalidDataAccessResourceUsageException;
 import org.springframework.data.mongodb.ClientSessionException;
 import org.springframework.data.mongodb.MongoTransactionException;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
+import org.springframework.lang.Nullable;
 
 import com.mongodb.MongoCursorNotFoundException;
 import com.mongodb.MongoException;
 import com.mongodb.MongoInternalException;
 import com.mongodb.MongoSocketException;
+import com.mongodb.MongoSocketReadTimeoutException;
+import com.mongodb.MongoSocketWriteException;
 import com.mongodb.ServerAddress;
 
 /**
@@ -48,18 +48,18 @@ import com.mongodb.ServerAddress;
  * @author Christoph Strobl
  * @author Brice Vandeputte
  */
-public class MongoExceptionTranslatorUnitTests {
+class MongoExceptionTranslatorUnitTests {
 
-	public static final String EXCEPTION_MESSAGE = "IOException";
-	MongoExceptionTranslator translator;
+	private static final String EXCEPTION_MESSAGE = "IOException";
+	private MongoExceptionTranslator translator;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 		translator = new MongoExceptionTranslator();
 	}
 
 	@Test
-	public void translateDuplicateKey() {
+	void translateDuplicateKey() {
 
 		expectExceptionWithCauseMessage(
 				translator.translateExceptionIfPossible(
@@ -67,17 +67,16 @@ public class MongoExceptionTranslatorUnitTests {
 				DuplicateKeyException.class, null);
 	}
 
-	@Test
-	public void translateSocketException() {
+	@Test // GH-3568
+	void translateSocketException() {
 
 		expectExceptionWithCauseMessage(
 				translator.translateExceptionIfPossible(new MongoSocketException(EXCEPTION_MESSAGE, new ServerAddress())),
 				DataAccessResourceFailureException.class, EXCEPTION_MESSAGE);
-
 	}
 
 	@Test // GH-3568
-	public void translateSocketChildrenExceptions() {
+	void translateSocketExceptionSubclasses() {
 
 		expectExceptionWithCauseMessage(
 				translator.translateExceptionIfPossible(
@@ -94,7 +93,7 @@ public class MongoExceptionTranslatorUnitTests {
 	}
 
 	@Test
-	public void translateCursorNotFound() {
+	void translateCursorNotFound() {
 
 		expectExceptionWithCauseMessage(
 				translator.translateExceptionIfPossible(new MongoCursorNotFoundException(1L, new ServerAddress())),
@@ -102,21 +101,21 @@ public class MongoExceptionTranslatorUnitTests {
 	}
 
 	@Test
-	public void translateToDuplicateKeyException() {
+	void translateToDuplicateKeyException() {
 
 		checkTranslatedMongoException(DuplicateKeyException.class, 11000);
 		checkTranslatedMongoException(DuplicateKeyException.class, 11001);
 	}
 
 	@Test
-	public void translateToDataAccessResourceFailureException() {
+	void translateToDataAccessResourceFailureException() {
 
 		checkTranslatedMongoException(DataAccessResourceFailureException.class, 12000);
 		checkTranslatedMongoException(DataAccessResourceFailureException.class, 13440);
 	}
 
 	@Test
-	public void translateToInvalidDataAccessApiUsageException() {
+	void translateToInvalidDataAccessApiUsageException() {
 
 		checkTranslatedMongoException(InvalidDataAccessApiUsageException.class, 10003);
 		checkTranslatedMongoException(InvalidDataAccessApiUsageException.class, 12001);
@@ -126,7 +125,7 @@ public class MongoExceptionTranslatorUnitTests {
 	}
 
 	@Test
-	public void translateToUncategorizedMongoDbException() {
+	void translateToUncategorizedMongoDbException() {
 
 		MongoException exception = new MongoException(0, "");
 		DataAccessException translatedException = translator.translateExceptionIfPossible(exception);
@@ -135,7 +134,7 @@ public class MongoExceptionTranslatorUnitTests {
 	}
 
 	@Test
-	public void translateMongoInternalException() {
+	void translateMongoInternalException() {
 
 		MongoInternalException exception = new MongoInternalException("Internal exception");
 		DataAccessException translatedException = translator.translateExceptionIfPossible(exception);
@@ -144,14 +143,14 @@ public class MongoExceptionTranslatorUnitTests {
 	}
 
 	@Test
-	public void translateUnsupportedException() {
+	void translateUnsupportedException() {
 
 		RuntimeException exception = new RuntimeException();
 		assertThat(translator.translateExceptionIfPossible(exception)).isNull();
 	}
 
 	@Test // DATAMONGO-2045
-	public void translateSessionExceptions() {
+	void translateSessionExceptions() {
 
 		checkTranslatedMongoException(ClientSessionException.class, 206);
 		checkTranslatedMongoException(ClientSessionException.class, 213);
@@ -160,7 +159,7 @@ public class MongoExceptionTranslatorUnitTests {
 	}
 
 	@Test // DATAMONGO-2045
-	public void translateTransactionExceptions() {
+	void translateTransactionExceptions() {
 
 		checkTranslatedMongoException(MongoTransactionException.class, 217);
 		checkTranslatedMongoException(MongoTransactionException.class, 225);
@@ -183,13 +182,13 @@ public class MongoExceptionTranslatorUnitTests {
 		assertThat(((MongoException) cause).getCode()).isEqualTo(code);
 	}
 
-	private static void expectExceptionWithCauseMessage(NestedRuntimeException e,
+	private static void expectExceptionWithCauseMessage(@Nullable NestedRuntimeException e,
 			Class<? extends NestedRuntimeException> type) {
 		expectExceptionWithCauseMessage(e, type, null);
 	}
 
-	private static void expectExceptionWithCauseMessage(NestedRuntimeException e,
-			Class<? extends NestedRuntimeException> type, String message) {
+	private static void expectExceptionWithCauseMessage(@Nullable NestedRuntimeException e,
+			Class<? extends NestedRuntimeException> type, @Nullable String message) {
 
 		assertThat(e).isInstanceOf(type);
 
