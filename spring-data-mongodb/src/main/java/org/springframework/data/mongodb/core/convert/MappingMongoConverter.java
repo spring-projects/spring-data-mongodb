@@ -271,40 +271,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	protected <S extends Object> S read(TypeInformation<S> type, Bson bson) {
-		return doRead(getConversionContext(ObjectPath.ROOT), type, bson);
-	}
-
-	@SuppressWarnings("unchecked")
-	private <S extends Object> S doRead(ConversionContext context, TypeInformation<S> type, Bson bson) {
-
-		Assert.notNull(bson, "Bson must not be null!");
-
-		// TODO: Cleanup duplication
-		TypeInformation<? extends S> typeToUse = typeMapper.readType(bson, type);
-		Class<? extends S> rawType = typeToUse.getType();
-
-		if (conversions.hasCustomReadTarget(bson.getClass(), rawType)) {
-			return doConvert(bson, rawType);
-		}
-
-		if (Document.class.isAssignableFrom(rawType)) {
-			return (S) bson;
-		}
-
-		if (DBObject.class.isAssignableFrom(rawType)) {
-
-			if (bson instanceof DBObject) {
-				return (S) bson;
-			}
-
-			if (bson instanceof Document) {
-				return (S) new BasicDBObject((Document) bson);
-			}
-
-			return (S) bson;
-		}
-
-		return context.convert(bson, typeToUse);
+		return readDocument(getConversionContext(ObjectPath.ROOT), bson, type);
 	}
 
 	/**
@@ -330,8 +297,25 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return doConvert(bson, rawType);
 		}
 
-		if (typeToRead.isMap()) {
+		if (Document.class.isAssignableFrom(rawType)) {
 			return (S) bson;
+		}
+
+		if (DBObject.class.isAssignableFrom(rawType)) {
+
+			if (bson instanceof DBObject) {
+				return (S) bson;
+			}
+
+			if (bson instanceof Document) {
+				return (S) new BasicDBObject((Document) bson);
+			}
+
+			return (S) bson;
+		}
+
+		if (typeToRead.isMap()) {
+			return context.convert(bson, typeToRead);
 		}
 
 		if (BSON.isAssignableFrom(typeHint)) {
@@ -1463,7 +1447,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 				maybeEmitEvent(
 						new AfterLoadEvent<>(document, (Class<T>) type.getType(), collectionName));
-				target = (T) doRead(context, type, document);
+				target = (T) readDocument(context, document, type);
 			}
 
 			if (target != null) {
