@@ -1258,11 +1258,13 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's
 	 * Type Conversion"</a> for more details.
 	 * <p/>
-	 * <p/>
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
+	 * <p/>
+	 * The {@code objectToSave} must not be collection-like.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @return the inserted object.
+	 * @throws IllegalArgumentException in case the {@code objectToSave} is collection-like.
 	 */
 	<T> T insert(T objectToSave);
 
@@ -1273,10 +1275,13 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
 	 * <p/>
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
+	 * <p/>
+	 * The {@code objectToSave} must not be collection-like.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @param collectionName name of the collection to store the object in. Must not be {@literal null}.
 	 * @return the inserted object.
+	 * @throws IllegalArgumentException in case the {@code objectToSave} is collection-like.
 	 */
 	<T> T insert(T objectToSave, String collectionName);
 
@@ -1320,11 +1325,11 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's
 	 * Type Conversion"</a> for more details.
 	 * <p />
-	 * The {@literal objectToSave} must not be collection like.
+	 * The {@code objectToSave} must not be collection-like.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @return the saved object.
-	 * @throws IllegalArgumentException in case the objectToSave is collection like.
+	 * @throws IllegalArgumentException in case the {@code objectToSave} is collection-like.
 	 */
 	<T> T save(T objectToSave);
 
@@ -1341,13 +1346,12 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation">Spring's Type
 	 * Conversion"</a> for more details.
 	 * <p />
-	 * The {@literal objectToSave} must not be collection like.
-	 *
+	 * The {@code objectToSave} must not be collection-like.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @param collectionName name of the collection to store the object in. Must not be {@literal null}.
 	 * @return the saved object.
-	 * @throws IllegalArgumentException in case the objectToSave is collection like.
+	 * @throws IllegalArgumentException in case the {@code objectToSave} is collection-like.
 	 */
 	<T> T save(T objectToSave, String collectionName);
 

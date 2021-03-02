@@ -1038,11 +1038,13 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's
 	 * Type Conversion"</a> for more details.
 	 * <p/>
-	 * <p/>
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
+	 * <p />
+	 * The {@code objectToSave} must not be collection-like.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @return the inserted object.
+	 * @throws IllegalArgumentException in case the {@code objectToSave} is collection-like.
 	 */
 	<T> Mono<T> insert(T objectToSave);
 
@@ -1053,10 +1055,13 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
 	 * <p/>
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
+	 * <p />
+	 * The {@code objectToSave} must not be collection-like.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @param collectionName name of the collection to store the object in. Must not be {@literal null}.
 	 * @return the inserted object.
+	 * @throws IllegalArgumentException in case the {@code objectToSave} is collection-like.
 	 */
 	<T> Mono<T> insert(T objectToSave, String collectionName);
 
@@ -1097,7 +1102,6 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
 	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's
 	 * Type Conversion"</a> for more details.
-	 * <p/>
 	 * <p/>
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
 	 *
@@ -1145,9 +1149,12 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
 	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's
 	 * Type Conversion"</a> for more details.
+	 * <p />
+	 * The {@code objectToSave} must not be collection-like.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @return the saved object.
+	 * @throws IllegalArgumentException in case the {@code objectToSave} is collection-like.
 	 */
 	<T> Mono<T> save(T objectToSave);
 
@@ -1167,6 +1174,7 @@ public interface ReactiveMongoOperations extends ReactiveFluentMongoOperations {
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @param collectionName name of the collection to store the object in. Must not be {@literal null}.
 	 * @return the saved object.
+	 * @throws IllegalArgumentException in case the {@code objectToSave} is collection-like.
 	 */
 	<T> Mono<T> save(T objectToSave, String collectionName);
 
