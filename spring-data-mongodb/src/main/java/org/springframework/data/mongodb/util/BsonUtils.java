@@ -17,12 +17,14 @@ package org.springframework.data.mongodb.util;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.function.Function;
 import java.util.stream.StreamSupport;
 
+import org.bson.BSONObject;
 import org.bson.BsonBinary;
 import org.bson.BsonBoolean;
 import org.bson.BsonDouble;
@@ -36,11 +38,11 @@ import org.bson.codecs.DocumentCodec;
 import org.bson.conversions.Bson;
 import org.bson.json.JsonParseException;
 import org.bson.types.ObjectId;
-
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
@@ -50,6 +52,8 @@ import com.mongodb.DBRef;
 import com.mongodb.MongoClientSettings;
 
 /**
+ * Internal API for operations on {@link Bson} elements that can be either {@link Document} or {@link DBObject}.
+ *
  * @author Christoph Strobl
  * @author Mark Paluch
  * @since 2.0
@@ -70,6 +74,9 @@ public class BsonUtils {
 		if (bson instanceof BasicDBObject) {
 			return ((BasicDBObject) bson);
 		}
+		if (bson instanceof DBObject) {
+			return ((DBObject) bson).toMap();
+		}
 
 		return (Map) bson.toBsonDocument(Document.class, MongoClientSettings.getDefaultCodecRegistry());
 	}
@@ -77,14 +84,110 @@ public class BsonUtils {
 	public static void addToMap(Bson bson, String key, @Nullable Object value) {
 
 		if (bson instanceof Document) {
+
 			((Document) bson).put(key, value);
 			return;
 		}
-		if (bson instanceof DBObject) {
-			((DBObject) bson).put(key, value);
+		if (bson instanceof BSONObject) {
+
+			((BSONObject) bson).put(key, value);
 			return;
 		}
-		throw new IllegalArgumentException("o_O what's that? Cannot add value to " + bson.getClass());
+
+		throw new IllegalArgumentException(String.format(
+				"Cannot add key/value pair to %s. as map. Given Bson must be a Document or BSONObject!", bson.getClass()));
+	}
+
+	/**
+	 * Add all entries from the given {@literal source} {@link Map} to the {@literal target}.
+	 *
+	 * @param target must not be {@literal null}.
+	 * @param source must not be {@literal null}.
+	 * @since 3.2
+	 */
+	public static void addAllToMap(Bson target, Map<String, ?> source) {
+
+		if (target instanceof Document) {
+
+			((Document) target).putAll(source);
+			return;
+		}
+
+		if (target instanceof BSONObject) {
+
+			((BSONObject) target).putAll(source);
+			return;
+		}
+
+		throw new IllegalArgumentException(
+				String.format("Cannot add all to %s. Given Bson must be a Document or BSONObject.", target.getClass()));
+	}
+
+	/**
+	 * Check if a given entry (key/value pair) is present in the given {@link Bson}.
+	 *
+	 * @param bson must not be {@literal null}.
+	 * @param key must not be {@literal null}.
+	 * @param value can be {@literal null}.
+	 * @return {@literal true} if (key/value pair) is present.
+	 * @since 3.2
+	 */
+	public static boolean contains(Bson bson, String key, @Nullable Object value) {
+
+		if (bson instanceof Document) {
+
+			Document doc = (Document) bson;
+			return doc.containsKey(key) && ObjectUtils.nullSafeEquals(doc.get(key), value);
+		}
+		if (bson instanceof BSONObject) {
+
+			BSONObject bsonObject = (BSONObject) bson;
+			return bsonObject.containsField(key) && ObjectUtils.nullSafeEquals(bsonObject.get(key), value);
+		}
+
+		Map<String, Object> map = asMap(bson);
+		return map.containsKey(key) && ObjectUtils.nullSafeEquals(map.get(key), value);
+	}
+
+	/**
+	 * Remove {@code _id : null} from the given {@link Bson} if present.
+	 *
+	 * @param bson must not be {@literal null}.
+	 * @since 3.2
+	 */
+	public static boolean removeNullId(Bson bson) {
+
+		if (!contains(bson, "_id", null)) {
+			return false;
+		}
+
+		removeFrom(bson, "_id");
+		return true;
+	}
+
+	/**
+	 * Remove the given {@literal key} from the {@link Bson} value.
+	 *
+	 * @param bson must not be {@literal null}.
+	 * @param key must not be {@literal null}.
+	 * @since 3.2
+	 */
+	static void removeFrom(Bson bson, String key) {
+
+		if (bson instanceof Document) {
+
+			((Document) bson).remove(key);
+			return;
+		}
+
+		if (bson instanceof BSONObject) {
+
+			((BSONObject) bson).removeField(key);
+			return;
+		}
+
+		throw new IllegalArgumentException(
+				String.format("Cannot remove from %s. Given Bson must be a Document or BSONObject.", bson.getClass()));
 	}
 
 	/**
@@ -280,6 +383,24 @@ public class BsonUtils {
 
 		return Document.parse(json, codecRegistryProvider.getCodecFor(Document.class)
 				.orElseGet(() -> new DocumentCodec(codecRegistryProvider.getCodecRegistry())));
+	}
+
+	/**
+	 * Returns given object as {@link Collection}. Will return the {@link Collection} as is if the source is a
+	 * {@link Collection} already, will convert an array into a {@link Collection} or simply create a single element
+	 * collection for everything else.
+	 *
+	 * @param source must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 3.2
+	 */
+	public static Collection<?> asCollection(Object source) {
+
+		if (source instanceof Collection) {
+			return (Collection<?>) source;
+		}
+
+		return source.getClass().isArray() ? CollectionUtils.arrayToList(source) : Collections.singleton(source);
 	}
 
 	@Nullable

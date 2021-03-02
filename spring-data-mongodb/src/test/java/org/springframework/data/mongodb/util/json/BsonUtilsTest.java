@@ -17,11 +17,16 @@ package org.springframework.data.mongodb.util.json;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import org.bson.BsonDouble;
 import org.bson.BsonInt32;
 import org.bson.BsonInt64;
 import org.bson.BsonObjectId;
 import org.bson.BsonString;
+import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.util.BsonUtils;
@@ -63,5 +68,47 @@ class BsonUtilsTest {
 	void unsupportedToBsonValue() {
 		assertThatExceptionOfType(IllegalArgumentException.class)
 				.isThrownBy(() -> BsonUtils.simpleToBsonValue(new Object()));
+	}
+
+	@Test // GH-3571
+	void removeNullIdIfNull() {
+
+		Document source = new Document("_id", null).append("value", "v-1");
+
+		assertThat(BsonUtils.removeNullId(source)).isTrue();
+		assertThat(source).doesNotContainKey("_id").containsKey("value");
+	}
+
+	@Test // GH-3571
+	void removeNullIdDoesNotTouchNonNullOn() {
+
+		Document source = new Document("_id", "id-value").append("value", "v-1");
+
+		assertThat(BsonUtils.removeNullId(source)).isFalse();
+		assertThat(source).containsKeys("_id", "value");
+	}
+
+	@Test // GH-3571
+	void asCollectionDoesNotModifyCollection() {
+
+		Object source = new ArrayList<>(0);
+
+		assertThat(BsonUtils.asCollection(source)).isSameAs(source);
+	}
+
+	@Test // GH-3571
+	void asCollectionConvertsArrayToCollection() {
+
+		Object source = new String[]{"one", "two"};
+
+		assertThat((Collection)BsonUtils.asCollection(source)).containsExactly("one", "two");
+	}
+
+	@Test // GH-3571
+	void asCollectionConvertsWrapsNonIterable() {
+
+		Object source = 100L;
+
+		assertThat((Collection)BsonUtils.asCollection(source)).containsExactly(source);
 	}
 }
