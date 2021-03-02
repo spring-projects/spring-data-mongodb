@@ -1319,9 +1319,12 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
 	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's
 	 * Type Conversion"</a> for more details.
+	 * <p />
+	 * The {@literal objectToSave} must not be collection like.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @return the saved object.
+	 * @throws IllegalArgumentException in case the objectToSave is collection like.
 	 */
 	<T> T save(T objectToSave);
 
@@ -1337,10 +1340,14 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See <a
 	 * https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation">Spring's Type
 	 * Conversion"</a> for more details.
+	 * <p />
+	 * The {@literal objectToSave} must not be collection like.
+	 *
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
 	 * @param collectionName name of the collection to store the object in. Must not be {@literal null}.
 	 * @return the saved object.
+	 * @throws IllegalArgumentException in case the objectToSave is collection like.
 	 */
 	<T> T save(T objectToSave, String collectionName);
 
