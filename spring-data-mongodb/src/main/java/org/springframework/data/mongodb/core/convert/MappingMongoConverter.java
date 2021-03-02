@@ -70,6 +70,7 @@ import org.springframework.data.mongodb.core.mapping.event.AfterConvertCallback;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterLoadEvent;
 import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
@@ -572,9 +573,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		Object target = obj instanceof LazyLoadingProxy ? ((LazyLoadingProxy) obj).getTarget() : obj;
 
 		writeInternal(target, bson, type);
-		if (MapUtils.asMap(bson).containsKey("_id") && MapUtils.asMap(bson).get("_id") == null) {
-			MapUtils.removeFromMap(bson, "_id");
-		}
+		BsonUtils.removeNullId(bson);
 
 		if (requiresTypeHint(entityType)) {
 			typeMapper.writeType(type, bson);
@@ -608,7 +607,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		if (customTarget.isPresent()) {
 			Document result = doConvert(obj, Document.class);
-			MapUtils.addAllToMap(bson, result);
+			BsonUtils.addAllToMap(bson, result);
 			return;
 		}
 
@@ -709,12 +708,14 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		if (valueType.isCollectionLike()) {
-			List<Object> collectionInternal = createCollection(MapUtils.asCollection(obj), prop);
+
+			List<Object> collectionInternal = createCollection(BsonUtils.asCollection(obj), prop);
 			accessor.put(prop, collectionInternal);
 			return;
 		}
 
 		if (valueType.isMap()) {
+
 			Bson mapDbObj = createMap((Map<Object, Object>) obj, prop);
 			accessor.put(prop, mapDbObj);
 			return;
@@ -859,7 +860,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				collection.add(getPotentiallyConvertedSimpleWrite(element,
 						componentType != null ? componentType.getType() : Object.class));
 			} else if (element instanceof Collection || elementType.isArray()) {
-				collection.add(writeCollectionInternal(MapUtils.asCollection(element), componentType, new BasicDBList()));
+				collection.add(writeCollectionInternal(BsonUtils.asCollection(element), componentType, new BasicDBList()));
 			} else {
 				Document document = new Document();
 				writeInternal(element, document, componentType);
@@ -890,14 +891,14 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				if (val == null || conversions.isSimpleType(val.getClass())) {
 					writeSimpleInternal(val, bson, simpleKey);
 				} else if (val instanceof Collection || val.getClass().isArray()) {
-					MapUtils.addToMap(bson, simpleKey,
-							writeCollectionInternal(MapUtils.asCollection(val), propertyType.getMapValueType(), new BasicDBList()));
+					BsonUtils.addToMap(bson, simpleKey,
+							writeCollectionInternal(BsonUtils.asCollection(val), propertyType.getMapValueType(), new BasicDBList()));
 				} else {
 					Document document = new Document();
 					TypeInformation<?> valueTypeInfo = propertyType.isMap() ? propertyType.getMapValueType()
 							: ClassTypeInformation.OBJECT;
 					writeInternal(val, document, valueTypeInfo);
-					MapUtils.addToMap(bson, simpleKey, document);
+					BsonUtils.addToMap(bson, simpleKey, document);
 				}
 			} else {
 				throw new MappingException("Cannot use a complex object as a key value.");
@@ -997,7 +998,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @param key must not be {@literal null}.
 	 */
 	private void writeSimpleInternal(@Nullable Object value, Bson bson, String key) {
-		MapUtils.addToMap(bson, key, getPotentiallyConvertedSimpleWrite(value, Object.class));
+		BsonUtils.addToMap(bson, key, getPotentiallyConvertedSimpleWrite(value, Object.class));
 	}
 
 	private void writeSimpleInternal(@Nullable Object value, Bson bson, MongoPersistentProperty property) {
@@ -1035,7 +1036,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			if (value instanceof byte[]) {
 				return value;
 			}
-			return MapUtils.asCollection(value);
+			return BsonUtils.asCollection(value);
 		}
 
 		return Enum.class.isAssignableFrom(value.getClass()) ? ((Enum<?>) value).name() : value;
@@ -1198,7 +1199,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		Class<?> rawKeyType = keyType != null ? keyType.getType() : Object.class;
 		Class<?> rawValueType = valueType.getType();
 
-		Map<String, Object> sourceMap = MapUtils.asMap(bson);
+		Map<String, Object> sourceMap = BsonUtils.asMap(bson);
 		Map<Object, Object> map = CollectionFactory.createMap(mapType, rawKeyType, sourceMap.keySet().size());
 
 		if (!DBRef.class.equals(rawValueType) && isCollectionOfDbRefWhereBulkFetchIsPossible(sourceMap.values())) {
