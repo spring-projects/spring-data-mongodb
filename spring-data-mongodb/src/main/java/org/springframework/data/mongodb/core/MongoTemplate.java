@@ -1376,6 +1376,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		Assert.notNull(objectToSave, "Object to save must not be null!");
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
+		ensureNotCollectionLike(objectToSave);
 
 		AdaptibleEntity<T> source = operations.forEntity(objectToSave, mongoConverter.getConversionService());
 

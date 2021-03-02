@@ -2213,6 +2213,13 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 				.isThrownBy(() -> template.insert(new TypeImplementingIterator()));
 	}
 
+	@Test // GH-3570
+	void saveErrorsOnCollectionLikeObjects() {
+
+		assertThatExceptionOfType(IllegalArgumentException.class)
+				.isThrownBy(() -> template.save(new ArrayList<>(Arrays.asList(1, 2, 3)), "myList"));
+	}
+
 	class AutogenerateableId {
 
 		@Id BigInteger id;
