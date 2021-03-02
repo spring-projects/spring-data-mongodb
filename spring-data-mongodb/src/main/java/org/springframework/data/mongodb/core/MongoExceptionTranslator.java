@@ -15,13 +15,13 @@
  */
 package org.springframework.data.mongodb.core;
 
-import com.mongodb.MongoSocketException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.bson.BsonInvalidOperationException;
+
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -40,6 +40,7 @@ import org.springframework.util.ClassUtils;
 import com.mongodb.MongoBulkWriteException;
 import com.mongodb.MongoException;
 import com.mongodb.MongoServerException;
+import com.mongodb.MongoSocketException;
 import com.mongodb.bulk.BulkWriteError;
 
 /**
@@ -93,7 +94,6 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 		if (RESOURCE_FAILURE_EXCEPTIONS.contains(exception)) {
 			return new DataAccessResourceFailureException(ex.getMessage(), ex);
 		}
-
 
 		if (RESOURCE_USAGE_EXCEPTIONS.contains(exception)) {
 			return new InvalidDataAccessResourceUsageException(ex.getMessage(), ex);
