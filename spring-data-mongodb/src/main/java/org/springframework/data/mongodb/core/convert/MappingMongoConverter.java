@@ -292,7 +292,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		Class<? extends S> rawType = typeToRead.getType();
 
 		if (conversions.hasCustomReadTarget(bson.getClass(), rawType)) {
-			return doConvert(bson, rawType);
+			return doConvert(bson, rawType, typeHint.getType());
 		}
 
 		if (Document.class.isAssignableFrom(rawType)) {
@@ -1532,9 +1532,17 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return target;
 	}
 
+	private <T extends Object> T doConvert(Object value, Class<? extends T> target) {
+		return doConvert(value, target, null);
+	}
+
 	@SuppressWarnings("ConstantConditions")
-	private <T> T doConvert(Object value, Class<T> target) {
-		return conversionService.convert(value, target);
+	private <T extends Object> T doConvert(Object value, Class<? extends T> target, @Nullable Class<? extends T> fallback) {
+
+		if(conversionService.canConvert(value.getClass(), target) || fallback == null) {
+			return conversionService.convert(value, target);
+		}
+		return conversionService.convert(value, fallback);
 	}
 
 	/**

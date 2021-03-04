@@ -2383,6 +2383,51 @@ class MappingMongoConverterUnitTests {
 				.doesNotContainKey("address.city");
 	}
 
+	@Test // GH-3580
+	void shouldFallbackToConfiguredCustomConversionTargetOnRead() {
+
+		GenericTypeConverter genericTypeConverter = spy(new GenericTypeConverter());
+
+		converter = new MappingMongoConverter(resolver, mappingContext);
+		converter.setCustomConversions(MongoCustomConversions.create(it -> {
+			it.registerConverter(genericTypeConverter);
+		}));
+		converter.afterPropertiesSet();
+
+		org.bson.Document source = new org.bson.Document("_class", SubTypeOfGenericType.class.getName()).append("value",
+				"v1");
+		GenericType target = converter.read(GenericType.class, source);
+
+		assertThat(target).isInstanceOf(GenericType.class);
+		assertThat(target.content).isEqualTo("v1");
+
+		verify(genericTypeConverter).convert(eq(source));
+	}
+
+	@Test // GH-3580
+	void shouldUseMostConcreteCustomConversionTargetOnRead() {
+
+		GenericTypeConverter genericTypeConverter = spy(new GenericTypeConverter());
+		SubTypeOfGenericTypeConverter subTypeOfGenericTypeConverter = spy(new SubTypeOfGenericTypeConverter());
+
+		converter = new MappingMongoConverter(resolver, mappingContext);
+		converter.setCustomConversions(MongoCustomConversions.create(it -> {
+			it.registerConverter(genericTypeConverter);
+			it.registerConverter(subTypeOfGenericTypeConverter);
+		}));
+		converter.afterPropertiesSet();
+
+		org.bson.Document source = new org.bson.Document("_class", SubTypeOfGenericType.class.getName()).append("value",
+				"v1");
+		GenericType target = converter.read(GenericType.class, source);
+
+		assertThat(target).isInstanceOf(SubTypeOfGenericType.class);
+		assertThat(target.content).isEqualTo("v1_s");
+
+		verify(genericTypeConverter, never()).convert(any());
+		verify(subTypeOfGenericTypeConverter).convert(eq(source));
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -2899,4 +2944,31 @@ class MappingMongoConverterUnitTests {
 		}
 	}
 
+	static class SubTypeOfGenericType extends GenericType<String> {
+
+	}
+
+	@ReadingConverter
+	static class GenericTypeConverter implements Converter<org.bson.Document, GenericType<?>> {
+
+		@Override
+		public GenericType<?> convert(org.bson.Document source) {
+
+			GenericType<Object> target = new GenericType<>();
+			target.content = source.get("value");
+			return target;
+		}
+	}
+
+	@ReadingConverter
+	static class SubTypeOfGenericTypeConverter implements Converter<org.bson.Document, SubTypeOfGenericType> {
+
+		@Override
+		public SubTypeOfGenericType convert(org.bson.Document source) {
+
+			SubTypeOfGenericType target = new SubTypeOfGenericType();
+			target.content = source.getString("value") + "_s";
+			return target;
+		}
+	}
 }
