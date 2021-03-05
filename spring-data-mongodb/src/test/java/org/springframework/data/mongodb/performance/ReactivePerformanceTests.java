@@ -18,13 +18,21 @@ package org.springframework.data.mongodb.performance;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
+import org.bson.conversions.Bson;
+import org.springframework.data.mongodb.core.convert.ReferenceLoader;
+import org.springframework.data.mongodb.core.convert.ReferenceLoader.ReferenceFilter;
+import org.springframework.data.mongodb.core.convert.ReferenceReader;
+import org.springframework.data.util.Streamable;
+import org.springframework.lang.Nullable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.text.DecimalFormat;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -96,6 +104,13 @@ public class ReactivePerformanceTests {
 		context.afterPropertiesSet();
 
 		converter = new MappingMongoConverter(new DbRefResolver() {
+
+			@Nullable
+			@Override
+			public Object resolveReference(MongoPersistentProperty property, Object source, ReferenceReader referenceReader, BiFunction<ReferenceContext, ReferenceFilter, Stream<Document>> lookupFunction) {
+				return null;
+			}
+
 			@Override
 			public Object resolveDbRef(MongoPersistentProperty property, DBRef dbref, DbRefResolverCallback callback,
 					DbRefProxyHandler proxyHandler) {
@@ -115,6 +130,11 @@ public class ReactivePerformanceTests {
 
 			@Override
 			public List<Document> bulkFetch(List<DBRef> dbRefs) {
+				return null;
+			}
+
+			@Override
+			public ReferenceLoader getReferenceLoader() {
 				return null;
 			}
 		}, context);
