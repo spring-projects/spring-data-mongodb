@@ -33,7 +33,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
@@ -65,6 +64,8 @@ class DefaultDbRefResolverUnitTests {
 		when(factoryMock.getMongoDatabase()).thenReturn(dbMock);
 		when(dbMock.getCollection(anyString(), any(Class.class))).thenReturn(collectionMock);
 		when(collectionMock.find(any(Document.class))).thenReturn(cursorMock);
+		when(cursorMock.sort(any(Document.class))).thenReturn(cursorMock);
+		when(cursorMock.spliterator()).thenReturn(Collections.<Document> emptyList().spliterator());
 
 		resolver = new DefaultDbRefResolver(factoryMock);
 	}
@@ -115,7 +116,7 @@ class DefaultDbRefResolverUnitTests {
 		DBRef ref1 = new DBRef("collection-1", o1.get("_id"));
 		DBRef ref2 = new DBRef("collection-1", o2.get("_id"));
 
-		when(cursorMock.into(any())).then(invocation -> Arrays.asList(o2, o1));
+		when(cursorMock.spliterator()).thenReturn(Arrays.asList(o2, o1).spliterator());
 
 		assertThat(resolver.bulkFetch(Arrays.asList(ref1, ref2))).containsExactly(o1, o2);
 	}
@@ -128,7 +129,7 @@ class DefaultDbRefResolverUnitTests {
 		DBRef ref1 = new DBRef("collection-1", document.get("_id"));
 		DBRef ref2 = new DBRef("collection-1", document.get("_id"));
 
-		when(cursorMock.into(any())).then(invocation -> Arrays.asList(document));
+		when(cursorMock.spliterator()).thenReturn(Arrays.asList(document).spliterator());
 
 		assertThat(resolver.bulkFetch(Arrays.asList(ref1, ref2))).containsExactly(document, document);
 	}
