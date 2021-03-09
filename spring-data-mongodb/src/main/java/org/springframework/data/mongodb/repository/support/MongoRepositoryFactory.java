@@ -199,6 +199,8 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 				NamedQueries namedQueries) {
 
 			MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, mappingContext);
+			queryMethod.verify();
+
 			String namedQueryName = queryMethod.getNamedQueryName();
 
 			if (namedQueries.hasQuery(namedQueryName)) {

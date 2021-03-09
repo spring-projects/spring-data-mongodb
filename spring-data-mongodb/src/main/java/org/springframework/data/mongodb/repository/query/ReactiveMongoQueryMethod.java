@@ -66,33 +66,6 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 
 		super(method, metadata, projectionFactory, mappingContext);
 
-		if (hasParameterOfType(method, Pageable.class)) {
-
-			TypeInformation<?> returnType = ClassTypeInformation.fromReturnTypeOf(method);
-
-			boolean multiWrapper = ReactiveWrappers.isMultiValueType(returnType.getType());
-			boolean singleWrapperWithWrappedPageableResult = ReactiveWrappers.isSingleValueType(returnType.getType())
-					&& (PAGE_TYPE.isAssignableFrom(returnType.getRequiredComponentType())
-							|| SLICE_TYPE.isAssignableFrom(returnType.getRequiredComponentType()));
-
-			if (singleWrapperWithWrappedPageableResult) {
-				throw new InvalidDataAccessApiUsageException(
-						String.format("'%s.%s' must not use sliced or paged execution. Please use Flux.buffer(size, skip).",
-								ClassUtils.getShortName(method.getDeclaringClass()), method.getName()));
-			}
-
-			if (!multiWrapper) {
-				throw new IllegalStateException(String.format(
-						"Method has to use a either multi-item reactive wrapper return type or a wrapped Page/Slice type. Offending method: %s",
-						method.toString()));
-			}
-
-			if (hasParameterOfType(method, Sort.class)) {
-				throw new IllegalStateException(String.format("Method must not have Pageable *and* Sort parameter. "
-						+ "Use sorting capabilities on Pageable instead! Offending method: %s", method.toString()));
-			}
-		}
-
 		this.method = method;
 		this.isCollectionQuery = Lazy.of(() -> (!(isPageQuery() || isSliceQuery())
 				&& ReactiveWrappers.isMultiValueType(metadata.getReturnType(method).getType()) || super.isCollectionQuery()));
@@ -179,4 +152,36 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 		return false;
 	}
 
+	@Override
+	public void verify() {
+
+		if (hasParameterOfType(method, Pageable.class)) {
+
+			TypeInformation<?> returnType = ClassTypeInformation.fromReturnTypeOf(method);
+
+			boolean multiWrapper = ReactiveWrappers.isMultiValueType(returnType.getType());
+			boolean singleWrapperWithWrappedPageableResult = ReactiveWrappers.isSingleValueType(returnType.getType())
+					&& (PAGE_TYPE.isAssignableFrom(returnType.getRequiredComponentType())
+					|| SLICE_TYPE.isAssignableFrom(returnType.getRequiredComponentType()));
+
+			if (singleWrapperWithWrappedPageableResult) {
+				throw new InvalidDataAccessApiUsageException(
+						String.format("'%s.%s' must not use sliced or paged execution. Please use Flux.buffer(size, skip).",
+								ClassUtils.getShortName(method.getDeclaringClass()), method.getName()));
+			}
+
+			if (!multiWrapper) {
+				throw new IllegalStateException(String.format(
+						"Method has to use a either multi-item reactive wrapper return type or a wrapped Page/Slice type. Offending method: %s",
+						method.toString()));
+			}
+
+			if (hasParameterOfType(method, Sort.class)) {
+				throw new IllegalStateException(String.format("Method must not have Pageable *and* Sort parameter. "
+						+ "Use sorting capabilities on Pageable instead! Offending method: %s", method.toString()));
+			}
+		}
+
+		super.verify();
+	}
 }

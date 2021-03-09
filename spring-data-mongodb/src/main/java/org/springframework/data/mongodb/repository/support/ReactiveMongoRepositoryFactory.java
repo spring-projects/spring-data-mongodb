@@ -189,6 +189,8 @@ public class ReactiveMongoRepositoryFactory extends ReactiveRepositoryFactorySup
 				NamedQueries namedQueries) {
 
 			ReactiveMongoQueryMethod queryMethod = new ReactiveMongoQueryMethod(method, metadata, factory, mappingContext);
+			queryMethod.verify();
+
 			String namedQueryName = queryMethod.getNamedQueryName();
 
 			if (namedQueries.hasQuery(namedQueryName)) {

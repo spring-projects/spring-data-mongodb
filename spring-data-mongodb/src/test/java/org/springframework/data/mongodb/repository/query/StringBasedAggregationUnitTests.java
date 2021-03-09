@@ -262,13 +262,6 @@ public class StringBasedAggregationUnitTests {
 		assertThat(result).isInstanceOf(Stream.class);
 	}
 
-	@Test // DATAMONGO-2557
-	void aggregationRetrievesCodecFromDriverJustOnceForMultipleAggregationOperationsInPipeline() {
-
-		executeAggregation("multiOperationPipeline", "firstname");
-		verify(operations).execute(any());
-	}
-
 	@Test // DATAMONGO-2506
 	void aggregateRaisesErrorOnInvalidReturnType() {
 

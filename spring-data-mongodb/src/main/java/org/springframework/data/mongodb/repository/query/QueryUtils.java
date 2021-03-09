@@ -15,6 +15,9 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.aopalliance.intercept.MethodInterceptor;
 import org.bson.Document;
 import org.springframework.aop.framework.ProxyFactory;
@@ -22,8 +25,8 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.expression.ExpressionParser;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
+import org.springframework.util.ClassUtils;
 
 /**
  * Internal utility class to help avoid duplicate code required in both the reactive and the sync {@link Query} support
@@ -83,5 +86,41 @@ class QueryUtils {
 		Collation collation = CollationUtils.computeCollation(collationExpression, accessor, parameters, expressionParser,
 				evaluationContextProvider);
 		return collation == null ? query : query.collation(collation);
+	}
+
+	/**
+	 * Get the first index of the parameter that can be assigned to the given type.
+	 *
+	 * @param type the type to look for.
+	 * @param parameters the actual parameters.
+	 * @return -1 if not found.
+	 * @since 3.4
+	 */
+	static int indexOfAssignableParameter(Class<?> type, Class<?>[] parameters) {
+		return indexOfAssignableParameter(type, Arrays.asList(parameters));
+	}
+
+	/**
+	 * Get the first index of the parameter that can be assigned to the given type.
+	 *
+	 * @param type the type to look for.
+	 * @param parameters the actual parameters.
+	 * @return -1 if not found.
+	 * @since 3.4
+	 */
+	static int indexOfAssignableParameter(Class<?> type, List<Class<?>> parameters) {
+
+		if(parameters.isEmpty()) {
+			return -1;
+		}
+		
+		int i = 0;
+		for(Class<?> parameterType : parameters) {
+			if(ClassUtils.isAssignable(type, parameterType)) {
+				return i;
+			}
+			i++;
+		}
+		return -1;
 	}
 }

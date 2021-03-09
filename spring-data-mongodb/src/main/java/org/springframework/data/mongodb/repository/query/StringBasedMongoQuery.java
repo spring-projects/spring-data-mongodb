@@ -47,8 +47,6 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	private final String query;
 	private final String fieldSpec;
 
-	private final ExpressionParser expressionParser;
-
 	private final boolean isCountQuery;
 	private final boolean isExistsQuery;
 	private final boolean isDeleteQuery;
@@ -85,7 +83,6 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		Assert.notNull(expressionParser, "SpelExpressionParser must not be null!");
 
 		this.query = query;
-		this.expressionParser = expressionParser;
 		this.fieldSpec = method.getFieldSpecification();
 
 		if (method.hasAnnotatedQuery()) {
@@ -115,10 +112,8 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	@Override
 	protected Query createQuery(ConvertingParameterAccessor accessor) {
 
-		ParameterBindingDocumentCodec codec = getParameterBindingCodec();
-
-		Document queryObject = codec.decode(this.query, getBindingContext(this.query, accessor, codec));
-		Document fieldsObject = codec.decode(this.fieldSpec, getBindingContext(this.fieldSpec, accessor, codec));
+		Document queryObject = decode(this.query, prepareBindingContext(this.query, accessor));
+		Document fieldsObject = decode(this.fieldSpec, prepareBindingContext(this.fieldSpec, accessor));
 
 		Query query = new BasicQuery(queryObject, fieldsObject).with(accessor.getSort());
 
@@ -127,16 +122,6 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		}
 
 		return query;
-	}
-
-	private ParameterBindingContext getBindingContext(String json, ConvertingParameterAccessor accessor,
-			ParameterBindingDocumentCodec codec) {
-
-		ExpressionDependencies dependencies = codec.captureExpressionDependencies(json, accessor::getBindableValue,
-				expressionParser);
-
-		SpELExpressionEvaluator evaluator = getSpELExpressionEvaluatorFor(dependencies, accessor);
-		return new ParameterBindingContext(accessor::getBindableValue, evaluator);
 	}
 
 	/*
@@ -178,9 +163,5 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	private static boolean hasAmbiguousProjectionFlags(boolean isCountQuery, boolean isExistsQuery,
 			boolean isDeleteQuery) {
 		return BooleanUtil.countBooleanTrueValues(isCountQuery, isExistsQuery, isDeleteQuery) > 1;
-	}
-
-	private ParameterBindingDocumentCodec getParameterBindingCodec() {
-		return new ParameterBindingDocumentCodec(getCodecRegistry());
 	}
 }

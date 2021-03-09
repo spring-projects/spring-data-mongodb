@@ -289,6 +289,56 @@ lower / upper bounds (`$gt` / `$gte` & `$lt` / `$lte`) according to `Range`
 
 NOTE: If the property criterion compares a document, the order of the fields and exact equality in the document matters.
 
+[[mongodb.repositories.queries.update]]
+=== Repository Update Methods
+
+The keywords in the preceding table can also be used to create queries that identify matching documents for running updates on them.
+The actual update action is defined via the `@Update` annotation on the method itself as shown in the snippet below. +
+Please note that the naming schema for derived queries starts with `find`.
+Using _update_ (as in `updateAllByLastname(...)`) is only allowed in combination with `@Query`.
+
+The update is applied to *all* matching documents and it is *not* possible to limit the scope by passing in a `Page` nor using any of the <<repositories.limit-query-result,limiting keywords>>. +
+The return type can be either `void` or a _numeric_ type, such as `long` which holds the number of modified documents.
+
+.Update Methods
+====
+[source,java]
+----
+public interface PersonRepository extends CrudRepository<Person, String> {
+
+  @Update("{ '$inc' : { 'visits' : 1 } }")
+  long findAndIncrementVisitsByLastname(String lastname); <1>
+
+  @Update("{ '$inc' : { 'visits' : ?1 } }")
+  void findAndIncrementVisitsByLastname(String lastname, int increment); <2>
+
+  @Update("{ '$inc' : { 'visits' : ?#{[1]} } }")
+  long findAndIncrementVisitsUsingSpELByLastname(String lastname, int increment); <3>
+
+  @Update(pipeline = {"{ '$set' : { 'visits' : { '$add' : [ '$visits', ?1 ] } } }"})
+  void findAndIncrementVisitsViaPipelineByLastname(String lastname, int increment); <4>
+
+  @Update("{ '$push' : { 'shippingAddresses' : ?1 } }")
+  long findAndPushShippingAddressByEmail(String email, Address address); <5>
+
+  @Query("{ 'lastname' : ?0 }")
+  @Update("{ '$inc' : { 'visits' : ?1 } }")
+  void updateAllByLastname(String lastname, int increment); <6>
+}
+----
+<1> The filter query for the update is derived from the method name. The update is as is and does not bind any parameters.
+<2> The actual increment value is defined by the _increment_ method argument that is bound to the `?1` placeholder.
+<3> It is possible to use SpEL for parameter binding.
+<4> Use the `pipeline` attribute to issue <<mongo-template.aggregation-update,aggregation pipeline updates>>.
+<5> The update may contain complex objects.
+<6> Combine a <<mongodb.repositories.queries.json-based,string based query>> with an update.
+====
+
+[WARNING]
+====
+Repository updates do not emit persistence nor mapping lifecycle events.
+====
+
 [[mongodb.repositories.queries.delete]]
 === Repository Delete Queries
 

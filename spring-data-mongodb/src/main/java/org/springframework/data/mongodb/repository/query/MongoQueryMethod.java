@@ -30,15 +30,18 @@ import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.Tailable;
+import org.springframework.data.mongodb.repository.Update;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethod;
+import org.springframework.data.repository.util.ReactiveWrappers;
 import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.Lazy;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -64,6 +67,7 @@ public class MongoQueryMethod extends QueryMethod {
 	private final Map<Class<? extends Annotation>, Optional<Annotation>> annotationCache;
 
 	private @Nullable MongoEntityMetadata<?> metadata;
+	private Lazy<Boolean> isModifying = Lazy.of(this::resolveModifyingQueryIndicators);
 
 	/**
 	 * Creates a new {@link MongoQueryMethod} from the given {@link Method}.
@@ -393,6 +397,10 @@ public class MongoQueryMethod extends QueryMethod {
 		return doFindAnnotation(Aggregation.class);
 	}
 
+	Optional<Update> lookupUpdateAnnotation() {
+		return doFindAnnotation(Update.class);
+	}
+
 	@SuppressWarnings("unchecked")
 	private <A extends Annotation> Optional<A> doFindAnnotation(Class<A> annotationType) {
 
@@ -402,8 +410,66 @@ public class MongoQueryMethod extends QueryMethod {
 
 	@Override
 	public boolean isModifyingQuery() {
+		return isModifying.get();
+	}
 
-		Class<?>[] parameterTypes = this.method.getParameterTypes();
-		return parameterTypes.length > 0 && parameterTypes[parameterTypes.length - 1] == Update.class;
+	private boolean resolveModifyingQueryIndicators() {
+		return hasAnnotatedUpdate()
+				|| QueryUtils.indexOfAssignableParameter(UpdateDefinition.class, method.getParameterTypes()) != -1;
+	}
+
+	/**
+	 * @return {@literal true} if {@link Update} annotation is present.
+	 * @since 3.4
+	 */
+	public boolean hasAnnotatedUpdate() {
+		return lookupUpdateAnnotation().isPresent();
+	}
+
+	/**
+	 * @return the {@link Update} or {@literal null} if not present.
+	 * @since 3.4
+	 */
+	public Update getUpdateSource() {
+		return lookupUpdateAnnotation().get();
+	}
+
+	/**
+	 * Verify the actual {@link QueryMethod} is valid in terms of supported return and parameter types.
+	 *
+	 * @since 3.4
+	 * @throws IllegalStateException
+	 */
+	public void verify() {
+
+		if (isModifyingQuery()) {
+
+			if (isCollectionQuery() || isSliceQuery() || isPageQuery() || isGeoNearQuery() || !isNumericOrVoidReturnValue()) { //
+				throw new IllegalStateException(
+						String.format("Update method may be void or return a numeric value (the number of updated documents)."
+								+ "Offending method: %s", method));
+			}
+
+			if (hasAnnotatedUpdate()) { // must define either an update or an update pipeline
+				if (!StringUtils.hasText(getUpdateSource().update()) && ObjectUtils.isEmpty(getUpdateSource().pipeline())) {
+					throw new IllegalStateException(
+							String.format("Update method must define either 'Update#update' or 'Update#pipeline' attribute. "
+									+ "Offending method: %s", method));
+				}
+			}
+		}
+	}
+
+	private boolean isNumericOrVoidReturnValue() {
+
+		Class<?> resultType = getReturnedObjectType();
+		if(ReactiveWrappers.usesReactiveType(resultType)) {
+			resultType = getReturnType().getComponentType().getType();
+		}
+
+		boolean isUpdateCountReturnType = ClassUtils.isAssignable(Number.class, resultType);
+		boolean isVoidReturnType = ClassUtils.isAssignable(Void.class, resultType);
+
+		return isUpdateCountReturnType || isVoidReturnType;
 	}
 }

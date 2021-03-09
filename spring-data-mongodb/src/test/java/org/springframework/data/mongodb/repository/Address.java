@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2021 the original author or authors.
+ * Copyright 2011-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 package org.springframework.data.mongodb.repository;
+
+import org.springframework.util.ObjectUtils;
 
 import com.querydsl.core.annotations.QueryEmbeddable;
 
@@ -82,5 +84,29 @@ public class Address {
 	 */
 	public void setCity(String city) {
 		this.city = city;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		Address address = (Address) o;
+
+		if (!ObjectUtils.nullSafeEquals(street, address.street)) {
+			return false;
+		}
+		if (!ObjectUtils.nullSafeEquals(zipCode, address.zipCode)) {
+			return false;
+		}
+		return ObjectUtils.nullSafeEquals(city, address.city);
+	}
+
+	@Override
+	public int hashCode() {
+		int result = ObjectUtils.nullSafeHashCode(street);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(zipCode);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(city);
+		return result;
 	}
 }

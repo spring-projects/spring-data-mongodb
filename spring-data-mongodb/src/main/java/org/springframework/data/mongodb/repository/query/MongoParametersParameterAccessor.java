@@ -22,7 +22,7 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Term;
 import org.springframework.data.mongodb.core.query.TextCriteria;
-import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -156,9 +156,9 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 	}
 
 	@Override
-	public Update getUpdate() {
+	public UpdateDefinition getUpdate() {
 
 		int updateIndex = method.getParameters().getUpdateIndex();
-		return updateIndex == -1 ? null : (Update) getValue(updateIndex);
+		return updateIndex == -1 ? null : (UpdateDefinition) getValue(updateIndex);
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2021 the original author or authors.
+ * Copyright 2014-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import java.util.Locale;
 import java.util.Optional;
 
 import org.bson.Document;
+import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,7 +36,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -45,6 +45,10 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
+import org.springframework.data.mongodb.core.ExecutableUpdateOperation.ExecutableUpdate;
+import org.springframework.data.mongodb.core.ExecutableUpdateOperation.TerminatingUpdate;
+import org.springframework.data.mongodb.core.ExecutableUpdateOperation.UpdateWithQuery;
+import org.springframework.data.mongodb.core.ExecutableUpdateOperation.UpdateWithUpdate;
 import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.Person;
@@ -56,8 +60,10 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.repository.Meta;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Update;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
@@ -65,7 +71,9 @@ import org.springframework.data.repository.core.support.DefaultRepositoryMetadat
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
+import com.mongodb.MongoClientSettings;
 import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.UpdateResult;
 
 /**
  * Unit tests for {@link AbstractMongoQuery}.
@@ -82,9 +90,14 @@ class AbstractMongoQueryUnitTests {
 	@Mock MongoOperations mongoOperationsMock;
 	@Mock ExecutableFind<?> executableFind;
 	@Mock FindWithQuery<?> withQueryMock;
+	@Mock ExecutableUpdate executableUpdate;
+	@Mock UpdateWithQuery updateWithQuery;
+	@Mock UpdateWithUpdate updateWithUpdate;
+	@Mock TerminatingUpdate terminatingUpdate;
 	@Mock BasicMongoPersistentEntity<?> persitentEntityMock;
 	@Mock MongoMappingContext mappingContextMock;
 	@Mock DeleteResult deleteResultMock;
+	@Mock UpdateResult updateResultMock;
 
 	@BeforeEach
 	void setUp() {
@@ -104,8 +117,12 @@ class AbstractMongoQueryUnitTests {
 		doReturn(executableFind).when(mongoOperationsMock).query(any());
 		doReturn(withQueryMock).when(executableFind).as(any());
 		doReturn(withQueryMock).when(withQueryMock).matching(any(Query.class));
+		doReturn(executableUpdate).when(mongoOperationsMock).update(any());
+		doReturn(updateWithQuery).when(executableUpdate).matching(any(Query.class));
+		doReturn(terminatingUpdate).when(updateWithQuery).apply(any(UpdateDefinition.class));
 
 		when(mongoOperationsMock.remove(any(), any(), anyString())).thenReturn(deleteResultMock);
+		when(mongoOperationsMock.updateMulti(any(), any(), any(), anyString())).thenReturn(updateResultMock);
 	}
 
 	@Test // DATAMONGO-566
@@ -437,6 +454,21 @@ class AbstractMongoQueryUnitTests {
 				.contains(Collation.of("en_US").toDocument());
 	}
 
+	@Test // GH-2107
+	void updateExecutionCallsUpdateAllCorrectly() {
+
+		when(terminatingUpdate.all()).thenReturn(updateResultMock);
+		
+		createQueryForMethod("findAndIncreaseVisitsByLastname", String.class, int.class) //
+				.execute(new Object[] { "dalinar", 100 });
+
+		ArgumentCaptor<UpdateDefinition> update = ArgumentCaptor.forClass(UpdateDefinition.class);
+		verify(updateWithQuery).apply(update.capture());
+		verify(terminatingUpdate).all();
+
+		assertThat(update.getValue().getUpdateObject()).isEqualTo(Document.parse("{ '$inc' : { 'visits' : 100 } }"));
+	}
+
 	private MongoQueryFake createQueryForMethod(String methodName, Class<?>... paramTypes) {
 		return createQueryForMethod(Repo.class, methodName, paramTypes);
 	}
@@ -500,6 +532,11 @@ class AbstractMongoQueryUnitTests {
 			isLimitingQuery = limitingQuery;
 			return this;
 		}
+
+		@Override
+		protected CodecRegistry getCodecRegistry() {
+			return MongoClientSettings.getDefaultCodecRegistry();
+		}
 	}
 
 	private interface Repo extends MongoRepository<Person, Long> {
@@ -546,6 +583,9 @@ class AbstractMongoQueryUnitTests {
 
 		@org.springframework.data.mongodb.repository.Query(collation = "{ 'locale' : 'en_US' }")
 		List<Person> findWithWithCollationParameterAndAnnotationByFirstName(String firstname, Collation collation);
+
+		@Update("{ '$inc' : { 'visits' : ?1 } }")
+		void findAndIncreaseVisitsByLastname(String lastname, int value);
 	}
 
 	// DATAMONGO-1872

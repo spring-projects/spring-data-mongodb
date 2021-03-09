@@ -48,7 +48,7 @@ public class Person extends Contact {
 
 	private String firstname;
 	private String lastname;
-	@Indexed(unique = true, dropDups = true) private String email;
+	@Indexed(unique = true) private String email;
 	private Integer age;
 	@SuppressWarnings("unused") private Sex sex;
 	Date createdAt;
