@@ -15,30 +15,44 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.bson.Document;
 import org.bson.codecs.configuration.CodecRegistry;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFind;
+import org.springframework.data.mongodb.core.ExecutableUpdateOperation.ExecutableUpdate;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.aggregation.AggregationOperation;
+import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
+import org.springframework.data.mongodb.core.query.BasicUpdate;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
+import org.springframework.data.mongodb.repository.Update;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.DeleteExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.GeoNearExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.PagedExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.PagingGeoNearExecution;
 import org.springframework.data.mongodb.repository.query.MongoQueryExecution.SlicedExecution;
+import org.springframework.data.mongodb.repository.query.MongoQueryExecution.UpdateExecution;
+import org.springframework.data.mongodb.util.json.ParameterBindingContext;
+import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.spel.ExpressionDependencies;
+import org.springframework.data.util.Lazy;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.ExpressionParser;
+import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 import com.mongodb.client.MongoDatabase;
 
@@ -55,8 +69,11 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	private final MongoQueryMethod method;
 	private final MongoOperations operations;
 	private final ExecutableFind<?> executableFind;
+	private final ExecutableUpdate<?> executableUpdate;
 	private final ExpressionParser expressionParser;
 	private final QueryMethodEvaluationContextProvider evaluationContextProvider;
+	private final Lazy<ParameterBindingDocumentCodec> codec = Lazy
+			.of(() -> new ParameterBindingDocumentCodec(getCodecRegistry()));
 
 	/**
 	 * Creates a new {@link AbstractMongoQuery} from the given {@link MongoQueryMethod} and {@link MongoOperations}.
@@ -81,6 +98,7 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		Class<?> type = metadata.getCollectionEntity().getType();
 
 		this.executableFind = operations.query(type);
+		this.executableUpdate = operations.update(type);
 		this.expressionParser = expressionParser;
 		this.evaluationContextProvider = evaluationContextProvider;
 	}
@@ -130,7 +148,17 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 
 		if (isDeleteQuery()) {
 			return new DeleteExecution(operations, method);
-		} else if (method.isGeoNearQuery() && method.isPageQuery()) {
+		}
+
+		if (method.isModifyingQuery()) {
+			if (isLimiting()) {
+				throw new IllegalStateException(
+						String.format("Update method must not be limiting. Offending method: %s", method));
+			}
+			return new UpdateExecution(executableUpdate, method, () -> createUpdate(accessor), accessor);
+		}
+
+		if (method.isGeoNearQuery() && method.isPageQuery()) {
 			return new PagingGeoNearExecution(operation, method, accessor, this);
 		} else if (method.isGeoNearQuery()) {
 			return new GeoNearExecution(operation, method, accessor);
@@ -139,11 +167,6 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		} else if (method.isStreamQuery()) {
 			return q -> operation.matching(q).stream();
 		} else if (method.isCollectionQuery()) {
-
-			if (method.isModifyingQuery()) {
-				return q -> new UpdatingCollectionExecution(accessor.getPageable(), accessor.getUpdate()).execute(q);
-			}
-
 			return q -> operation.matching(q.with(accessor.getPageable()).with(accessor.getSort())).all();
 		} else if (method.isPageQuery()) {
 			return new PagedExecution(operation, accessor.getPageable());
@@ -153,11 +176,6 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 			return q -> operation.matching(q).exists();
 		} else {
 			return q -> {
-
-				if (method.isModifyingQuery()) {
-					return new UpdatingSingleEntityExecution(accessor.getUpdate()).execute(q);
-				}
-
 				TerminatingFind<?> find = operation.matching(q);
 				return isLimiting() ? find.firstValue() : find.oneValue();
 			};
@@ -215,6 +233,94 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 */
 	protected Query createCountQuery(ConvertingParameterAccessor accessor) {
 		return applyQueryMetaAttributesWhenPresent(createQuery(accessor));
+	}
+
+	/**
+	 * Retrieves the {@link UpdateDefinition update} from the given
+	 * {@link org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getUpdate() accessor} or creates
+	 * one via by parsing the annotated statement extracted from {@link Update}.
+	 *
+	 * @param accessor never {@literal null}.
+	 * @return the computed {@link UpdateDefinition}.
+	 * @throws IllegalStateException if no update could be found.
+	 * @since 3.4
+	 */
+	protected UpdateDefinition createUpdate(ConvertingParameterAccessor accessor) {
+
+		if (accessor.getUpdate() != null) {
+			return accessor.getUpdate();
+		}
+
+		if (method.hasAnnotatedUpdate()) {
+
+			Update updateSource = method.getUpdateSource();
+			if (StringUtils.hasText(updateSource.update())) {
+				return new BasicUpdate(bindParameters(updateSource.update(), accessor));
+			}
+			if (!ObjectUtils.isEmpty(updateSource.pipeline())) {
+				return AggregationUpdate.from(parseAggregationPipeline(updateSource.pipeline(), accessor));
+			}
+		}
+
+		throw new IllegalStateException(String.format("No Update provided for method %s.", method));
+	}
+
+	/**
+	 * Parse the given aggregation pipeline stages applying values to placeholders to compute the actual list of
+	 * {@link AggregationOperation operations}.
+	 *
+	 * @param sourcePipeline must not be {@literal null}.
+	 * @param accessor must not be {@literal null}.
+	 * @return the parsed aggregation pipeline.
+	 * @since 3.4
+	 */
+	protected List<AggregationOperation> parseAggregationPipeline(String[] sourcePipeline,
+			ConvertingParameterAccessor accessor) {
+
+		List<AggregationOperation> stages = new ArrayList<>(sourcePipeline.length);
+		for (String source : sourcePipeline) {
+			stages.add(computePipelineStage(source, accessor));
+		}
+		return stages;
+	}
+
+	private AggregationOperation computePipelineStage(String source, ConvertingParameterAccessor accessor) {
+		return ctx -> ctx.getMappedObject(bindParameters(source, accessor), getQueryMethod().getDomainClass());
+	}
+
+	protected Document decode(String source, ParameterBindingContext bindingContext) {
+		return getParameterBindingCodec().decode(source, bindingContext);
+	}
+
+	private Document bindParameters(String source, ConvertingParameterAccessor accessor) {
+		return decode(source, prepareBindingContext(source, accessor));
+	}
+
+	/**
+	 * Create the {@link ParameterBindingContext binding context} used for SpEL evaluation.
+	 *
+	 * @param source the JSON source.
+	 * @param accessor value provider for parameter binding.
+	 * @return never {@literal null}.
+	 * @since 3.4
+	 */
+	protected ParameterBindingContext prepareBindingContext(String source, ConvertingParameterAccessor accessor) {
+
+		ExpressionDependencies dependencies = getParameterBindingCodec().captureExpressionDependencies(source,
+				accessor::getBindableValue, expressionParser);
+
+		SpELExpressionEvaluator evaluator = getSpELExpressionEvaluatorFor(dependencies, accessor);
+		return new ParameterBindingContext(accessor::getBindableValue, evaluator);
+	}
+
+	/**
+	 * Obtain the {@link ParameterBindingDocumentCodec} used for parsing JSON expressions.
+	 *
+	 * @return never {@literal null}.
+	 * @since 3.4
+	 */
+	protected ParameterBindingDocumentCodec getParameterBindingCodec() {
+		return codec.get();
 	}
 
 	/**
@@ -278,53 +384,4 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 	 * @since 2.0.4
 	 */
 	protected abstract boolean isLimiting();
-
-	/**
-	 * {@link MongoQueryExecution} for collection returning find and update queries.
-	 *
-	 * @author Thomas Darimont
-	 */
-	final class UpdatingCollectionExecution implements MongoQueryExecution {
-
-		private final Pageable pageable;
-		private final Update update;
-
-		UpdatingCollectionExecution(Pageable pageable, Update update) {
-			this.pageable = pageable;
-			this.update = update;
-		}
-
-		@Override
-		public Object execute(Query query) {
-
-			MongoEntityMetadata<?> metadata = method.getEntityInformation();
-			return operations.findAndModify(query.with(pageable), update, metadata.getJavaType(),
-					metadata.getCollectionName());
-		}
-	}
-
-	/**
-	 * {@link MongoQueryExecution} to return a single entity with update.
-	 *
-	 * @author Thomas Darimont
-	 */
-	final class UpdatingSingleEntityExecution implements MongoQueryExecution {
-
-		private final Update update;
-
-		private UpdatingSingleEntityExecution(Update update) {
-			this.update = update;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.repository.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.core.query.Query)
-		 */
-		@Override
-		public Object execute(Query query) {
-
-			MongoEntityMetadata<?> metadata = method.getEntityInformation();
-			return operations.findAndModify(query.limit(1), update, metadata.getJavaType(), metadata.getCollectionName());
-		}
-	}
 }

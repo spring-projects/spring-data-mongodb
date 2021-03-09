@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.repository.query;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,9 +31,11 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.ExecutableFindOperation;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFind;
+import org.springframework.data.mongodb.core.ExecutableUpdateOperation.ExecutableUpdate;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
@@ -276,6 +279,37 @@ interface MongoQueryExecution {
 
 			DeleteResult writeResult = operations.remove(query, type, collectionName);
 			return writeResult.wasAcknowledged() ? writeResult.getDeletedCount() : 0L;
+		}
+	}
+
+	/**
+	 * {@link MongoQueryExecution} updating documents matching the query.
+	 *
+	 * @author Christph Strobl
+	 * @since 3.4
+	 */
+	final class UpdateExecution implements MongoQueryExecution {
+
+		private final ExecutableUpdate<?> updateOps;
+		private final MongoQueryMethod method;
+		private Supplier<UpdateDefinition> updateDefinitionSupplier;
+		private final MongoParameterAccessor accessor;
+
+		UpdateExecution(ExecutableUpdate<?> updateOps, MongoQueryMethod method, Supplier<UpdateDefinition> updateSupplier,
+				MongoParameterAccessor accessor) {
+
+			this.updateOps = updateOps;
+			this.method = method;
+			this.updateDefinitionSupplier = updateSupplier;
+			this.accessor = accessor;
+		}
+
+		@Override
+		public Object execute(Query query) {
+
+			return updateOps.matching(query.with(accessor.getSort())) //
+					.apply(updateDefinitionSupplier.get()) //
+					.all().getModifiedCount();
 		}
 	}
 }

@@ -36,7 +36,7 @@ import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
-import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.query.Param;
@@ -420,12 +420,27 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 
 	List<Person> findByUnwrappedUser(User user);
 
-	List<Person> findAndModifyByFirstname(String firstname, Update update);
+	int findAndUpdateViaMethodArgAllByLastname(String lastname, UpdateDefinition update);
 
-	Person findOneAndModifyByFirstname(String firstname, Update update);
+	@Update("{ '$inc' : { 'visits' : ?1 } }")
+	int findAndIncrementVisitsByLastname(String lastname, int increment);
+
+	@Query("{ 'lastname' : ?0 }")
+	@Update("{ '$inc' : { 'visits' : ?1 } }")
+	int updateAllByLastname(String lastname, int increment);
+
+	@Update( pipeline = {"{ '$set' : { 'visits' : { '$add' : [ '$visits', ?1 ] } } }"})
+	void findAndIncrementVisitsViaPipelineByLastname(String lastname, int increment);
+
+	@Update("{ '$inc' : { 'visits' : ?#{[1]} } }")
+	int findAndIncrementVisitsUsingSpELByLastname(String lastname, int increment);
+
+	@Update("{ '$push' : { 'shippingAddresses' : ?1 } }")
+	int findAndPushShippingAddressByEmail(String email, Address address);
 
 	@Query("{ 'age' : null }")
 	Person findByQueryWithNullEqualityCheck();
 
 	List<Person> findBySpiritAnimal(User user);
+
 }

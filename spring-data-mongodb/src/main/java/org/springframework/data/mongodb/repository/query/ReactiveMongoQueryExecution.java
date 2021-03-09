@@ -28,8 +28,10 @@ import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mapping.model.EntityInstantiators;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
+import org.springframework.data.mongodb.core.ReactiveUpdateOperation.ReactiveUpdate;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.ReturnedType;
 import org.springframework.data.repository.util.ReactiveWrappers;
@@ -38,6 +40,8 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
+
+import com.mongodb.client.result.UpdateResult;
 
 /**
  * Set of classes to contain query execution strategies. Depending (mostly) on the return type of a
@@ -138,6 +142,39 @@ interface ReactiveMongoQueryExecution {
 
 			return operations.remove(query, type, collection)
 					.map(deleteResult -> deleteResult.wasAcknowledged() ? deleteResult.getDeletedCount() : 0L);
+		}
+	}
+
+	/**
+	 * {@link MongoQueryExecution} updating documents matching the query.
+	 *
+	 * @author Christph Strobl
+	 * @since 3.4
+	 */
+	final class UpdateExecution implements ReactiveMongoQueryExecution {
+
+		private final ReactiveUpdate<?> updateOps;
+		private final MongoQueryMethod method;
+		private final MongoParameterAccessor accessor;
+		private Mono<UpdateDefinition> update;
+
+		UpdateExecution(ReactiveUpdate<?> updateOps, ReactiveMongoQueryMethod method, MongoParameterAccessor accessor,
+				Mono<UpdateDefinition> update) {
+
+			this.updateOps = updateOps;
+			this.method = method;
+			this.accessor = accessor;
+			this.update = update;
+		}
+
+		@Override
+		public Publisher<? extends Object> execute(Query query, Class<?> type, String collection) {
+
+			return update.flatMap(it -> updateOps.inCollection(collection) //
+					.matching(query.with(accessor.getSort())) // actually we could do it unsorted
+					.apply(it) //
+					.all() //
+					.map(UpdateResult::getModifiedCount));
 		}
 	}
 

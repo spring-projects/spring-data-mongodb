@@ -23,6 +23,7 @@ import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -44,6 +45,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -58,6 +60,8 @@ import org.springframework.data.mongodb.core.CollectionOptions;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.mongodb.repository.support.ReactiveMongoRepositoryFactory;
 import org.springframework.data.mongodb.repository.support.SimpleReactiveMongoRepository;
@@ -625,6 +629,90 @@ class ReactiveMongoRepositoryTests {
 				.verifyComplete();
 	}
 
+	@Test // GH-2107
+	void shouldAllowToUpdateAllElements() {
+		repository.findAndUpdateViaMethodArgAllByLastname("Matthews", new Update().inc("visits", 1337))
+				.as(StepVerifier::create)
+				.expectNext(2L)
+				.verifyComplete();
+	}
+
+	@Test // GH-2107
+	void mixAnnotatedUpdateWithAnnotatedQuery() {
+
+		repository.updateAllByLastname("Matthews", 1337)
+				.as(StepVerifier::create)
+				.expectNext(2L)
+				.verifyComplete();
+
+		repository.findByLastname("Matthews")
+				.map(Person::getVisits)
+				.as(StepVerifier::create)
+				.expectNext(1337, 1337)
+				.verifyComplete();
+	}
+
+	@Test // GH-2107
+	void annotatedUpdateWithSpELIsAppliedCorrectly() {
+
+		repository.findAndIncrementVisitsUsingSpELByLastname("Matthews", 1337)
+				.as(StepVerifier::create)
+				.expectNext(2L)
+				.verifyComplete();
+
+		repository.findByLastname("Matthews")
+				.map(Person::getVisits)
+				.as(StepVerifier::create)
+				.expectNext(1337, 1337)
+				.verifyComplete();
+	}
+
+	@Test // GH-2107
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.2")
+	void annotatedAggregationUpdateIsAppliedCorrectly() {
+
+		repository.findAndIncrementVisitsViaPipelineByLastname("Matthews", 1337)
+				.as(StepVerifier::create)
+				.verifyComplete();
+
+		repository.findByLastname("Matthews")
+				.map(Person::getVisits)
+				.as(StepVerifier::create)
+				.expectNext(1337, 1337)
+				.verifyComplete();
+	}
+
+	@Test // GH-2107
+	void shouldAllowToUpdateAllElementsWithVoidReturn() {
+
+		repository.findAndIncrementVisitsByLastname("Matthews", 1337)
+				.as(StepVerifier::create)
+				.expectNext(2L)
+				.verifyComplete();
+
+		repository.findByLastname("Matthews")
+				.map(Person::getVisits)
+				.as(StepVerifier::create)
+				.expectNext(1337, 1337)
+				.verifyComplete();
+	}
+
+	@Test // GH-2107
+	void allowsToUseComplexTypesInUpdate() {
+
+		Address address = new Address("1007 Mountain Drive", "53540", "Gotham");
+
+		repository.findAndPushShippingAddressByEmail(dave.getEmail(), address) //
+				.as(StepVerifier::create) //
+				.expectNext(1L) //
+				.verifyComplete();
+
+		repository.findById(dave.getId()).map(Person::getShippingAddresses)
+				.as(StepVerifier::create)
+				.consumeNextWith(it -> assertThat(it).containsExactly(address))
+				.verifyComplete();
+	}
+
 	interface ReactivePersonRepository
 			extends ReactiveMongoRepository<Person, String>, ReactiveQuerydslPredicateExecutor<Person> {
 
@@ -701,6 +789,24 @@ class ReactiveMongoRepositoryTests {
 		Mono<Long> deleteCountByLastname(String lastname);
 
 		Mono<Person> deleteSinglePersonByLastname(String lastname);
+
+		Mono<Long> findAndUpdateViaMethodArgAllByLastname(String lastname, UpdateDefinition update);
+
+		@org.springframework.data.mongodb.repository.Update("{ '$inc' : { 'visits' : ?1 } }")
+		Mono<Long> findAndIncrementVisitsByLastname(String lastname, int increment);
+
+		@Query("{ 'lastname' : ?0 }")
+		@org.springframework.data.mongodb.repository.Update("{ '$inc' : { 'visits' : ?1 } }")
+		Mono<Long> updateAllByLastname(String lastname, int increment);
+
+		@org.springframework.data.mongodb.repository.Update( pipeline = {"{ '$set' : { 'visits' : { '$add' : [ '$visits', ?1 ] } } }"})
+		Mono<Void> findAndIncrementVisitsViaPipelineByLastname(String lastname, int increment);
+
+		@org.springframework.data.mongodb.repository.Update("{ '$inc' : { 'visits' : ?#{[1]} } }")
+		Mono<Long> findAndIncrementVisitsUsingSpELByLastname(String lastname, int increment);
+
+		@org.springframework.data.mongodb.repository.Update("{ '$push' : { 'shippingAddresses' : ?1 } }")
+		Mono<Long> findAndPushShippingAddressByEmail(String email, Address address);
 	}
 
 	interface ReactiveContactRepository extends ReactiveMongoRepository<Contact, String> {}

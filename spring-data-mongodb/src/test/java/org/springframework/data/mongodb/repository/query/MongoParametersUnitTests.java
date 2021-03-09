@@ -25,12 +25,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.TextCriteria;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.repository.Near;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.repository.query.Parameter;
@@ -163,6 +165,24 @@ class MongoParametersUnitTests {
 		assertThat(parameters.getCollationParameterIndex()).isOne();
 	}
 
+	@Test // GH-2107
+	void shouldReturnIndexUpdateIfExists() throws NoSuchMethodException, SecurityException {
+
+		Method method = PersonRepository.class.getMethod("findAndModifyByFirstname", String.class, UpdateDefinition.class, Pageable.class);
+		MongoParameters parameters = new MongoParameters(method, false);
+
+		assertThat(parameters.getUpdateIndex()).isOne();
+	}
+
+	@Test // GH-2107
+	void shouldReturnInvalidIndexIfUpdateDoesNotExist() throws NoSuchMethodException, SecurityException {
+
+		Method method = PersonRepository.class.getMethod("someOtherMethod", Point.class, Point.class);
+		MongoParameters parameters = new MongoParameters(method, false);
+
+		assertThat(parameters.getUpdateIndex()).isEqualTo(-1);
+	}
+
 	interface PersonRepository {
 
 		List<Person> findByLocationNear(Point point, Distance distance);
@@ -182,5 +202,7 @@ class MongoParametersUnitTests {
 		List<Person> findByLocationNear(Point point, Range<Distance> range);
 
 		List<Person> findByText(String text, Collation collation);
+
+		List<Person> findAndModifyByFirstname(String firstname, UpdateDefinition update, Pageable page);
 	}
 }

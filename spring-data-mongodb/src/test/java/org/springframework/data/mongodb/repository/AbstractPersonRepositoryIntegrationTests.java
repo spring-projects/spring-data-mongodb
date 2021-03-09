@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.repository;
 
 import static java.util.Arrays.*;
 import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assumptions.*;
 import static org.springframework.data.geo.Metrics.*;
 
 import java.util.ArrayList;
@@ -40,6 +41,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -375,7 +377,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test
 	void rejectsDuplicateEmailAddressOnSave() {
 
-		assertThat(dave.getEmail()).isEqualTo("dave@dmband.com");
+		assumeThat(repository.findById(dave.getId()).map(Person::getEmail)).contains("dave@dmband.com");
 
 		Person daveSyer = new Person("Dave", "Syer");
 		assertThat(daveSyer.getEmail()).isEqualTo("dave@dmband.com");
@@ -1440,7 +1442,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test // GH-3633
 	void annotatedQueryWithNullEqualityCheckShouldWork() {
 
-		operations.updateFirst(Query.query(Criteria.where("id").is(dave.getId())), Update.update("age", null), Person.class);
+		operations.updateFirst(Query.query(Criteria.where("id").is(dave.getId())), Update.update("age", null),
+				Person.class);
 
 		Person byQueryWithNullEqualityCheck = repository.findByQueryWithNullEqualityCheck();
 		assertThat(byQueryWithNullEqualityCheck.getId()).isEqualTo(dave.getId());
@@ -1461,7 +1464,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result).map(Person::getId).containsExactly(josh.getId());
 	}
 
-	@Test //GH-3656
+	@Test // GH-3656
 	void resultProjectionWithOptionalIsExcecutedCorrectly() {
 
 		carter.setAddress(new Address("batman", "robin", "gotham"));
@@ -1474,35 +1477,58 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(result.getFirstname()).contains("Carter");
 	}
 
-	/**
-	 * @see DATAMONGO-1188
-	 */
-	@Test
-	public void shouldSupportFindAndModfiyForQueryDerivationWithCollectionResult() {
-
-		List<Person> result = repository.findAndModifyByFirstname("Dave", new Update().inc("visits", 42));
-
-		assertThat(result.size()).isOne();
-		assertThat(result.get(0)).isEqualTo(dave);
-
-		Person dave = repository.findById(result.get(0).getId()).get();
-
-		assertThat(dave.visits).isEqualTo(42);
+	@Test // GH-2107
+	void shouldAllowToUpdateAllElements() {
+		assertThat(repository.findAndUpdateViaMethodArgAllByLastname("Matthews", new Update().inc("visits", 1337))).isEqualTo(2);
 	}
 
-	/**
-	 * @see DATAMONGO-1188
-	 */
-	@Test
-	public void shouldSupportFindAndModfiyForQueryDerivationWithSingleResult() {
+	@Test // GH-2107
+	void annotatedUpdateIsAppliedCorrectly() {
 
-		Person result = repository.findOneAndModifyByFirstname("Dave", new Update().inc("visits", 1337));
+		assertThat(repository.findAndIncrementVisitsByLastname("Matthews", 1337)).isEqualTo(2);
 
-		assertThat(result).isEqualTo(dave);
-
-		Person dave = repository.findById(result.getId()).get();
-
-		assertThat(dave.visits).isEqualTo(1337);
+		assertThat(repository.findByLastname("Matthews")).extracting(Person::getVisits).allMatch(it -> it.equals(1337));
 	}
 
+	@Test // GH-2107
+	void mixAnnotatedUpdateWithAnnotatedQuery() {
+
+		assertThat(repository.updateAllByLastname("Matthews", 1337)).isEqualTo(2);
+
+		assertThat(repository.findByLastname("Matthews")).extracting(Person::getVisits).allMatch(it -> it.equals(1337));
+	}
+
+	@Test // GH-2107
+	void annotatedUpdateWithSpELIsAppliedCorrectly() {
+
+		assertThat(repository.findAndIncrementVisitsUsingSpELByLastname("Matthews", 1337)).isEqualTo(2);
+
+		assertThat(repository.findByLastname("Matthews")).extracting(Person::getVisits).allMatch(it -> it.equals(1337));
+	}
+
+	@Test // GH-2107
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.2")
+	void annotatedAggregationUpdateIsAppliedCorrectly() {
+
+		repository.findAndIncrementVisitsViaPipelineByLastname("Matthews", 1337);
+
+		assertThat(repository.findByLastname("Matthews")).extracting(Person::getVisits).allMatch(it -> it.equals(1337));
+	}
+
+	@Test // GH-2107
+	void shouldAllowToUpdateAllElementsWithVoidReturn() {
+
+		repository.findAndUpdateViaMethodArgAllByLastname("Matthews", new Update().inc("visits", 1337));
+
+		assertThat(repository.findByLastname("Matthews")).extracting(Person::getVisits).allMatch(visits -> visits == 1337);
+	}
+
+	@Test // GH-2107
+	void allowsToUseComplexTypesInUpdate() {
+
+		Address address = new Address("1007 Mountain Drive", "53540", "Gotham");
+
+		assertThat(repository.findAndPushShippingAddressByEmail(dave.getEmail(), address)).isEqualTo(1);
+		assertThat(repository.findById(dave.getId()).map(Person::getShippingAddresses)).contains(Collections.singleton(address));
+	}
 }

@@ -1,6 +1,11 @@
 [[new-features]]
 = New & Noteworthy
 
+[[new-features.3.4]]
+== What's New in Spring Data MongoDB 3.4
+
+* Find and update ``Document``s via <<mongodb.repositories.queries.update,Repository method>>.
+
 [[new-features.3.3]]
 == What's New in Spring Data MongoDB 3.3
 

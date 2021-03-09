@@ -30,6 +30,8 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.TextCriteria;
+import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
@@ -126,6 +128,31 @@ public class MongoParametersParameterAccessorUnitTests {
 		assertThat(accessor.getCollation()).isEqualTo(collation);
 	}
 
+	@Test // GH-2107
+	public void shouldReturnUpdateIfPresent() throws NoSuchMethodException, SecurityException {
+
+		Method method = PersonRepository.class.getMethod("findAndModifyByFirstname", String.class, UpdateDefinition.class);
+		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
+
+		Update update = new Update();
+		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod,
+				new Object[] { "dalinar", update });
+
+		assertThat(accessor.getUpdate()).isSameAs(update);
+	}
+
+	@Test // GH-2107
+	public void shouldReturnNullIfNoUpdatePresent() throws NoSuchMethodException, SecurityException {
+
+		Method method = PersonRepository.class.getMethod("findByLocationNear", Point.class);
+		MongoQueryMethod queryMethod = new MongoQueryMethod(method, metadata, factory, context);
+
+		MongoParameterAccessor accessor = new MongoParametersParameterAccessor(queryMethod,
+				new Object[] { new Point(0,0) });
+
+		assertThat(accessor.getUpdate()).isNull();
+	}
+
 	interface PersonRepository extends Repository<Person, Long> {
 
 		List<Person> findByLocationNear(Point point);
@@ -137,6 +164,8 @@ public class MongoParametersParameterAccessorUnitTests {
 		List<Person> findByFirstname(String firstname, TextCriteria fullText);
 
 		List<Person> findByFirstname(String firstname, Collation collation);
+
+		List<Person> findAndModifyByFirstname(String firstname, UpdateDefinition update);
 
 	}
 }

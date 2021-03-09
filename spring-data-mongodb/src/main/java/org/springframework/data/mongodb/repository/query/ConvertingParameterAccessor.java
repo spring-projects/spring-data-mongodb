@@ -31,7 +31,7 @@ import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.TextCriteria;
-import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
@@ -105,6 +105,11 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 	@Override
 	public Collation getCollation() {
 		return delegate.getCollation();
+	}
+
+	@Override
+	public UpdateDefinition getUpdate() {
+		return delegate.getUpdate();
 	}
 
 	/**
@@ -224,13 +229,5 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 		 * @return
 		 */
 		Object nextConverted(MongoPersistentProperty property);
-	}
-
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getUpdate()
-	 */
-	@Override
-	public Update getUpdate() {
-		return delegate.getUpdate();
 	}
 }

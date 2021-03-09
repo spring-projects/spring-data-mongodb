@@ -21,6 +21,7 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.lang.Nullable;
 
@@ -77,10 +78,11 @@ public interface MongoParameterAccessor extends ParameterAccessor {
 	Object[] getValues();
 
 	/**
-	 * Returns the {@link Update} to be used for findAndUpdate query.
+	 * Returns the {@link Update} to be used for an update execution.
 	 *
-	 * @return
-	 * @since 1.7
+	 * @return {@literal null} if not present.
+	 * @since 3.4
 	 */
-	Update getUpdate();
+	@Nullable
+	UpdateDefinition getUpdate();
 }
