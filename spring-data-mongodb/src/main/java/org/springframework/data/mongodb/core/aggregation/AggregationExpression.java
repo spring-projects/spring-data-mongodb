@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import org.bson.Document;
+import org.springframework.data.mongodb.MongoExpression;
 
 /**
  * An {@link AggregationExpression} can be used with field expressions in aggregation pipeline stages like
@@ -25,7 +26,36 @@ import org.bson.Document;
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
-public interface AggregationExpression {
+public interface AggregationExpression extends MongoExpression {
+
+	/**
+	 * Obtain the as is (unmapped) representation of the {@link AggregationExpression}. Use
+	 * {@link #toDocument(AggregationOperationContext)} with a matching {@link AggregationOperationContext context} to
+	 * engage domain type mapping including field name resolution.
+	 *
+	 * @see org.springframework.data.mongodb.MongoExpression#toDocument()
+	 */
+	@Override
+	default Document toDocument() {
+		return toDocument(Aggregation.DEFAULT_CONTEXT);
+	}
+
+	/**
+	 * Create an {@link AggregationExpression} out of a given {@link MongoExpression}. <br />
+	 * If the given expression is already an {@link AggregationExpression} return the very same instance.
+	 *
+	 * @param expression must not be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 3.2
+	 */
+	static AggregationExpression create(MongoExpression expression) {
+
+		if (expression instanceof AggregationExpression) {
+			return AggregationExpression.class.cast(expression);
+		}
+
+		return (context) -> context.getMappedObject(expression.toDocument());
+	}
 
 	/**
 	 * Turns the {@link AggregationExpression} into a {@link Document} within the given

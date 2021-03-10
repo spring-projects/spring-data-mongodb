@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,8 +32,10 @@ import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.CodecRegistryProvider;
+import org.springframework.data.mongodb.MongoExpression;
 import org.springframework.data.mongodb.core.MappedDocument.MappedUpdate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpression;
 import org.springframework.data.mongodb.core.aggregation.AggregationOperationContext;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationPipeline;
@@ -288,7 +291,22 @@ class QueryOperations {
 		Document getMappedFields(@Nullable MongoPersistentEntity<?> entity, Class<?> targetType,
 				ProjectionFactory projectionFactory) {
 
-			Document fields = query.getFieldsObject();
+			Document fields = new Document();
+
+			for (Entry<String, Object> entry : query.getFieldsObject().entrySet()) {
+
+				if (entry.getValue() instanceof MongoExpression) {
+
+					AggregationOperationContext ctx = entity == null ? Aggregation.DEFAULT_CONTEXT
+							: new RelaxedTypeBasedAggregationOperationContext(entity.getType(), mappingContext, queryMapper);
+
+					fields.put(entry.getKey(),
+							((MongoExpression) entry.getValue()).as(AggregationExpression::create).toDocument(ctx));
+				} else {
+					fields.put(entry.getKey(), entry.getValue());
+				}
+			}
+
 			Document mappedFields = fields;
 
 			if (entity == null) {
