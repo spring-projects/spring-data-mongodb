@@ -24,7 +24,6 @@ import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
-
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.domain.Example;
@@ -37,6 +36,7 @@ import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.data.mapping.context.InvalidPersistentPropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mongodb.MongoExpression;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter.NestedDocument;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -294,6 +294,10 @@ public class QueryMapper {
 
 		String key = field.getMappedKey();
 		Object value;
+
+		if (rawValue instanceof MongoExpression) {
+			return createMapEntry(key, getMappedObject(((MongoExpression) rawValue).toDocument(), field.getEntity()));
+		}
 
 		if (isNestedKeyword(rawValue) && !field.isIdField()) {
 			Keyword keyword = new Keyword((Document) rawValue);
@@ -934,6 +938,11 @@ public class QueryMapper {
 			return null;
 		}
 
+		@Nullable
+		MongoPersistentEntity<?> getEntity() {
+			return null;
+		}
+
 		/**
 		 * Returns whether the field represents an association.
 		 *
@@ -1084,6 +1093,12 @@ public class QueryMapper {
 		public MongoPersistentEntity<?> getPropertyEntity() {
 			MongoPersistentProperty property = getProperty();
 			return property == null ? null : mappingContext.getPersistentEntity(property);
+		}
+
+		@Nullable
+		@Override
+		public MongoPersistentEntity<?> getEntity() {
+			return entity;
 		}
 
 		/*

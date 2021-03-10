@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.bson.Document;
-
+import org.springframework.data.mongodb.MongoExpression;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
@@ -37,7 +37,7 @@ import org.springframework.util.ObjectUtils;
  */
 public class Field {
 
-	private final Map<String, Integer> criteria = new HashMap<>();
+	private final Map<String, Object> criteria = new HashMap<>();
 	private final Map<String, Object> slices = new HashMap<>();
 	private final Map<String, Criteria> elemMatchs = new HashMap<>();
 	private @Nullable String positionKey;
@@ -55,6 +55,62 @@ public class Field {
 
 		criteria.put(field, 1);
 
+		return this;
+	}
+
+	/**
+	 * Project a given {@link MongoExpression} to a {@link FieldProjectionExpression#as(String) field} included in the
+	 * result.
+	 *
+	 * <pre class="code">
+	 * 
+	 * // { 'name' : { '$toUpper' : '$name' } }
+	 * 
+	 * // native MongoDB expression
+	 * .project(MongoExpression.expressionFromString("'$toUpper' : '$name'")).as("name");
+	 * 
+	 * // Aggregation Framework expression
+	 * .project(StringOperators.valueOf("name").toUpper()).as("name");
+	 * 
+	 * // Aggregation Framework SpEL expression
+	 * .project(AggregationSpELExpression.expressionOf("toUpper(name)")).as("name");
+	 * </pre>
+	 *
+	 * @param expression must not be {@literal null}.
+	 * @return new instance of {@link FieldProjectionExpression} - you still need to define the target field name via
+	 *         {@link FieldProjectionExpression#as(String) as(String)}.
+	 * @since 3.2
+	 */
+	public FieldProjectionExpression project(MongoExpression expression) {
+		return field -> Field.this.projectAs(expression, field);
+	}
+
+	/**
+	 * Project a given {@link MongoExpression} to a {@link FieldProjectionExpression#as(String) field} included in the
+	 * result.
+	 *
+	 * <pre class="code">
+	 *
+	 * // { 'name' : { '$toUpper' : '$name' } }
+	 *
+	 * // native MongoDB expression
+	 * .projectAs(MongoExpression.expressionFromString("'$toUpper' : '$name'"), "name");
+	 *
+	 * // Aggregation Framework expression
+	 * .projectAs(StringOperators.valueOf("name").toUpper(), "name");
+	 *
+	 * // Aggregation Framework SpEL expression
+	 * .projectAs(AggregationSpELExpression.expressionOf("toUpper(name)"), "name");
+	 * </pre>
+	 *
+	 * @param expression must not be {@literal null}.
+	 * @param field the field name used in the result.
+	 * @return new instance of {@link FieldProjectionExpression}.
+	 * @since 3.2
+	 */
+	public Field projectAs(MongoExpression expression, String field) {
+
+		criteria.put(field, expression);
 		return this;
 	}
 
@@ -166,8 +222,7 @@ public class Field {
 
 	public Document getFieldsObject() {
 
-		@SuppressWarnings({ "unchecked", "rawtypes" })
-		Document document = new Document((Map) criteria);
+		Document document = new Document(criteria);
 
 		for (Entry<String, Object> entry : slices.entrySet()) {
 			document.put(entry.getKey(), new Document("$slice", entry.getValue()));
@@ -218,5 +273,22 @@ public class Field {
 		result = 31 * result + ObjectUtils.nullSafeHashCode(positionKey);
 		result = 31 * result + positionValue;
 		return result;
+	}
+
+	/**
+	 * Intermediate builder part for projecting a {@link MongoExpression} to a result field.
+	 * 
+	 * @since 3.2
+	 * @author Christoph Strobl
+	 */
+	public interface FieldProjectionExpression {
+
+		/**
+		 * Set the name to be used in the result.
+		 * 
+		 * @param name must not be {@literal null}.
+		 * @return the calling instance {@link Field}.
+		 */
+		Field as(String name);
 	}
 }

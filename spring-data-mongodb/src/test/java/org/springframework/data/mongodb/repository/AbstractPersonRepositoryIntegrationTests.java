@@ -1413,4 +1413,11 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	void caseSensitiveInClauseIgnoresExpressions() {
 		assertThat(repository.findByFirstnameIn(".*")).isEmpty();
 	}
+
+	@Test // GH-23583
+	void annotatedQueryShouldAllowAggregationInProjection() {
+
+		Person target = repository.findWithAggregationInProjection(alicia.getId());
+		assertThat(target.getFirstname()).isEqualTo(alicia.getFirstname().toUpperCase());
+	}
 }
