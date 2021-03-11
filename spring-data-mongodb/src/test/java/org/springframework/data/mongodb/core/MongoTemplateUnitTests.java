@@ -84,6 +84,7 @@ import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCreator;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.Sharded;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertCallback;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveCallback;
@@ -1910,6 +1911,24 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(findIterable, never()).first();
 	}
 
+	@Test // GH-3590
+	void shouldIncludeValueFromNestedShardKeyPath() {
+
+		WithShardKeyPoitingToNested source = new WithShardKeyPoitingToNested();
+		source.id = "id-1";
+		source.value = "v1";
+		source.nested = new WithNamedFields();
+		source.nested.customName = "cname";
+		source.nested.name = "name";
+
+		template.save(source);
+
+		ArgumentCaptor<Bson> filter = ArgumentCaptor.forClass(Bson.class);
+		verify(collection).replaceOne(filter.capture(), any(), any());
+
+		assertThat(filter.getValue()).isEqualTo(new Document("_id", "id-1").append("value", "v1").append("nested.custom-named-field", "cname"));
+	}
+
 	@Test // DATAMONGO-2341
 	void saveShouldProjectOnShardKeyWhenLoadingExistingDocument() {
 
@@ -2244,6 +2263,13 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	static class Sith {
 
 		@Field("firstname") String name;
+	}
+
+	@Sharded(shardKey = {"value", "nested.customName"})
+	static class WithShardKeyPoitingToNested {
+		String id;
+		String value;
+		WithNamedFields nested;
 	}
 
 	/**
