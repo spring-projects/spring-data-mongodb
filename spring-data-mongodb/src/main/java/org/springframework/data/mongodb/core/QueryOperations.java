@@ -689,7 +689,8 @@ class QueryOperations {
 					: mappedDocument != null ? mappedDocument.getDocument() : getMappedUpdate(domainType);
 
 			Document filterWithShardKey = new Document(filter);
-			getMappedShardKeyFields(domainType).forEach(key -> filterWithShardKey.putIfAbsent(key, shardKeySource.get(key)));
+			getMappedShardKeyFields(domainType)
+					.forEach(key -> filterWithShardKey.putIfAbsent(key, BsonUtils.resolveValue(shardKeySource, key)));
 
 			return filterWithShardKey;
 		}
