@@ -26,7 +26,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
-import org.springframework.data.annotation.Persistent;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.mapping.model.CamelCaseAbbreviatingFieldNamingStrategy;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
@@ -140,8 +139,7 @@ public abstract class MongoConfigurationSupport {
 	}
 
 	/**
-	 * Scans the given base package for entities, i.e. MongoDB specific types annotated with {@link Document} and
-	 * {@link Persistent}.
+	 * Scans the given base package for entities, i.e. MongoDB specific types annotated with {@link Document}.
 	 *
 	 * @param basePackage must not be {@literal null}.
 	 * @return
@@ -161,7 +159,6 @@ public abstract class MongoConfigurationSupport {
 			ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(
 					false);
 			componentProvider.addIncludeFilter(new AnnotationTypeFilter(Document.class));
-			componentProvider.addIncludeFilter(new AnnotationTypeFilter(Persistent.class));
 
 			for (BeanDefinition candidate : componentProvider.findCandidateComponents(basePackage)) {
 
