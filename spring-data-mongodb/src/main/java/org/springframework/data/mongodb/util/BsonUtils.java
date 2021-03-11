@@ -386,6 +386,41 @@ public class BsonUtils {
 	}
 
 	/**
+	 * Resolve a the value for a given key. If the given {@link Bson} value contains the key the value is immediately
+	 * returned. If not and the key contains a path using the dot ({@code .}) notation it will try to resolve the path by
+	 * inspecting the individual parts. If one of the intermediate ones is {@literal null} or cannot be inspected further
+	 * (wrong) type, {@literal null} is returned.
+	 * 
+	 * @param bson the source to inspect. Must not be {@literal null}.
+	 * @param key the key to lookup. Must not be {@literal null}.
+	 * @return can be {@literal null}.
+	 */
+	@Nullable
+	public static Object resolveValue(Bson bson, String key) {
+
+		Map<String, Object> source = asMap(bson);
+
+		if (source.containsKey(key) || !key.contains(".")) {
+			return source.get(key);
+		}
+
+		String[] parts = key.split("\\.");
+
+		for (int i = 1; i < parts.length; i++) {
+
+			Object result = source.get(parts[i - 1]);
+
+			if (result == null || !(result instanceof Bson)) {
+				return null;
+			}
+
+			source = asMap((Bson) result);
+		}
+
+		return source.get(parts[parts.length - 1]);
+	}
+
+	/**
 	 * Returns given object as {@link Collection}. Will return the {@link Collection} as is if the source is a
 	 * {@link Collection} already, will convert an array into a {@link Collection} or simply create a single element
 	 * collection for everything else.
