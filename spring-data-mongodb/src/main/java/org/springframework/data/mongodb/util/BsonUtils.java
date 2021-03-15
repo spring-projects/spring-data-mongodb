@@ -291,6 +291,7 @@ public class BsonUtils {
 	 * @param bson the source to inspect. Must not be {@literal null}.
 	 * @param key the key to lookup. Must not be {@literal null}.
 	 * @return can be {@literal null}.
+	 * @since 3.0.8
 	 */
 	@Nullable
 	public static Object resolveValue(Bson bson, String key) {
@@ -307,7 +308,7 @@ public class BsonUtils {
 
 			Object result = source.get(parts[i - 1]);
 
-			if (result == null || !(result instanceof Bson)) {
+			if (!(result instanceof Bson)) {
 				return null;
 			}
 
@@ -315,6 +316,73 @@ public class BsonUtils {
 		}
 
 		return source.get(parts[parts.length - 1]);
+	}
+
+	/**
+	 * Returns whether the underlying {@link Bson bson} has a value ({@literal null} or non-{@literal null}) for the given
+	 * {@code key}.
+	 *
+	 * @param bson the source to inspect. Must not be {@literal null}.
+	 * @param key the key to lookup. Must not be {@literal null}.
+	 * @return {@literal true} if no non {@literal null} value present.
+	 * @since 3.0.8
+	 */
+	public static boolean hasValue(Bson bson, String key) {
+
+		Map<String, Object> source = asMap(bson);
+
+		if (source.get(key) != null) {
+			return true;
+		}
+
+		if (!key.contains(".")) {
+			return false;
+		}
+
+		String[] parts = key.split("\\.");
+
+		Object result;
+
+		for (int i = 1; i < parts.length; i++) {
+
+			result = source.get(parts[i - 1]);
+			source = getAsMap(result);
+
+			if (source == null) {
+				return false;
+			}
+		}
+
+		return source.containsKey(parts[parts.length - 1]);
+	}
+
+	/**
+	 * Returns the given source object as map, i.e. {@link Document}s and maps as is or {@literal null} otherwise.
+	 *
+	 * @param source can be {@literal null}.
+	 * @return can be {@literal null}.
+	 */
+	@Nullable
+	@SuppressWarnings("unchecked")
+	private static Map<String, Object> getAsMap(Object source) {
+
+		if (source instanceof Document) {
+			return (Document) source;
+		}
+
+		if (source instanceof BasicDBObject) {
+			return (BasicDBObject) source;
+		}
+
+		if (source instanceof DBObject) {
+			return ((DBObject) source).toMap();
+		}
+
+		if (source instanceof Map) {
+			return (Map<String, Object>) source;
+		}
+
+		return null;
 	}
 
 	@Nullable
