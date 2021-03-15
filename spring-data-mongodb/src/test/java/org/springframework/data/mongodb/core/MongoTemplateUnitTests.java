@@ -1914,7 +1914,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // GH-3590
 	void shouldIncludeValueFromNestedShardKeyPath() {
 
-		WithShardKeyPoitingToNested source = new WithShardKeyPoitingToNested();
+		WithShardKeyPointingToNested source = new WithShardKeyPointingToNested();
 		source.id = "id-1";
 		source.value = "v1";
 		source.nested = new WithNamedFields();
@@ -2266,7 +2266,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	}
 
 	@Sharded(shardKey = {"value", "nested.customName"})
-	static class WithShardKeyPoitingToNested {
+	static class WithShardKeyPointingToNested {
 		String id;
 		String value;
 		WithNamedFields nested;
