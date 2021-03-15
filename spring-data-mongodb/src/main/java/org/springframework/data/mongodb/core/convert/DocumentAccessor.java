@@ -21,13 +21,13 @@ import java.util.Map;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
+
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
-import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
 /**
@@ -123,28 +123,7 @@ class DocumentAccessor {
 	 */
 	@Nullable
 	public Object get(MongoPersistentProperty property) {
-
-		String fieldName = property.getFieldName();
-		Map<String, Object> map = BsonUtils.asMap(document);
-
-		if (!fieldName.contains(".")) {
-			return map.get(fieldName);
-		}
-
-		Iterator<String> parts = Arrays.asList(fieldName.split("\\.")).iterator();
-		Map<String, Object> source = map;
-		Object result = null;
-
-		while (source != null && parts.hasNext()) {
-
-			result = source.get(parts.next());
-
-			if (parts.hasNext()) {
-				source = getAsMap(result);
-			}
-		}
-
-		return result;
+		return BsonUtils.resolveValue(document, property.getFieldName());
 	}
 
 	/**
@@ -171,71 +150,7 @@ class DocumentAccessor {
 
 		Assert.notNull(property, "Property must not be null!");
 
-		String fieldName = property.getFieldName();
-
-
-		if (this.document instanceof Document) {
-
-			if (((Document) this.document).containsKey(fieldName)) {
-				return true;
-			}
-		} else if (this.document instanceof DBObject) {
-			if (((DBObject) this.document).containsField(fieldName)) {
-				return true;
-			}
-		}
-
-		if (!fieldName.contains(".")) {
-			return false;
-		}
-
-		String[] parts = fieldName.split("\\.");
-		Map<String, Object> source;
-
-		if (this.document instanceof Document) {
-			source = ((Document) this.document);
-		} else {
-			source = ((DBObject) this.document).toMap();
-		}
-
-		Object result = null;
-
-		for (int i = 1; i < parts.length; i++) {
-
-			result = source.get(parts[i - 1]);
-			source = getAsMap(result);
-
-			if (source == null) {
-				return false;
-			}
-		}
-
-		return source.containsKey(parts[parts.length - 1]);
-	}
-
-	/**
-	 * Returns the given source object as map, i.e. {@link Document}s and maps as is or {@literal null} otherwise.
-	 *
-	 * @param source can be {@literal null}.
-	 * @return can be {@literal null}.
-	 */
-	@Nullable
-	@SuppressWarnings("unchecked")
-	private static Map<String, Object> getAsMap(Object source) {
-
-		if (source instanceof Document) {
-			return (Document) source;
-		}
-
-		if (source instanceof BasicDBObject) {
-			return (BasicDBObject) source;
-		}
-
-		if (source instanceof Map) {
-			return (Map<String, Object>) source;
-		}
-
-		return null;
+		return BsonUtils.hasValue(document, property.getFieldName());
 	}
 
 	/**
