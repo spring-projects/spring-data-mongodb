@@ -1,6 +1,17 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.0.8.RELEASE (2021-03-17)
+---------------------------------------------
+* #3590 - Embedded sharding keys are not correctly picked up from the shardKeySource Document.
+* #3588 - Upgrade to MongoDB Driver 4.0.6.
+* #3573 - Json Schema section appears twice in reference documentation.
+* #3568 - MongoSocketWriteException may be translated into DataAccessResourceFailureException.
+* #3566 - Couldn't find PersistentEntity for type java.lang.Object when updating a field with suffix "class".
+* #3552 - UpdateMapper drops numeric keys in Maps.
+* #3395 - Derived findBy…IgnoreCaseIn query doesn't return expected results [DATAMONGO-2540].
+
+
 Changes in version 3.2.0-M4 (2021-02-18)
 ----------------------------------------
 
@@ -3297,6 +3308,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
