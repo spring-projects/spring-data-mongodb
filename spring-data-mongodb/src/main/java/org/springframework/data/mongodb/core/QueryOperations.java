@@ -300,8 +300,7 @@ class QueryOperations {
 					AggregationOperationContext ctx = entity == null ? Aggregation.DEFAULT_CONTEXT
 							: new RelaxedTypeBasedAggregationOperationContext(entity.getType(), mappingContext, queryMapper);
 
-					fields.put(entry.getKey(),
-							((MongoExpression) entry.getValue()).as(AggregationExpression::create).toDocument(ctx));
+					fields.put(entry.getKey(), AggregationExpression.from((MongoExpression) entry.getValue()).toDocument(ctx));
 				} else {
 					fields.put(entry.getKey(), entry.getValue());
 				}

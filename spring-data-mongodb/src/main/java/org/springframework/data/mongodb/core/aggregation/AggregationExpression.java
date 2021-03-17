@@ -41,14 +41,15 @@ public interface AggregationExpression extends MongoExpression {
 	}
 
 	/**
-	 * Create an {@link AggregationExpression} out of a given {@link MongoExpression}. <br />
-	 * If the given expression is already an {@link AggregationExpression} return the very same instance.
+	 * Create an {@link AggregationExpression} out of a given {@link MongoExpression} to ensure the resulting
+	 * {@link MongoExpression#toDocument() Document} is mapped against the {@link AggregationOperationContext}. <br />
+	 * If the given expression is already an {@link AggregationExpression} the very same instance is returned.
 	 *
 	 * @param expression must not be {@literal null}.
 	 * @return never {@literal null}.
 	 * @since 3.2
 	 */
-	static AggregationExpression create(MongoExpression expression) {
+	static AggregationExpression from(MongoExpression expression) {
 
 		if (expression instanceof AggregationExpression) {
 			return AggregationExpression.class.cast(expression);

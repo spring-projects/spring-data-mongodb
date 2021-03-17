@@ -25,9 +25,10 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
- * A {@link MongoExpression} using the {@link ParameterBindingDocumentCodec} for parsing the {@literal json} expression.
- * The expression will be wrapped within <code>{ }</code> if necessary. Placeholders like {@code ?0} are resolved when
- * first obtaining the target {@link Document} via {@link #toDocument()}.
+ * A {@link MongoExpression} using the {@link ParameterBindingDocumentCodec} for parsing a raw ({@literal json})
+ * expression. The expression will be wrapped within <code>{ ... }</code> if necessary. The actual parsing and parameter
+ * binding of placeholders like {@code ?0} is delayed upon first call on the the target {@link Document} via
+ * {@link #toDocument()}.
  * <p />
  * 
  * <pre class="code">
@@ -38,16 +39,15 @@ import org.springframework.util.StringUtils;
  * { '$toUpper' : '?0' }, "$name"  -> { '$toUpper' : '$name' }
  * </pre>
  * 
- * Some types (like {@link java.util.UUID}) cannot be used directly but require a special {@link org.bson.codecs.Codec}.
- * Make sure to provide a {@link CodecRegistry} containing the required {@link org.bson.codecs.Codec codecs} via
- * {@link #withCodecRegistry(CodecRegistry)}.
+ * Some types might require a special {@link org.bson.codecs.Codec}. If so, make sure to provide a {@link CodecRegistry}
+ * containing the required {@link org.bson.codecs.Codec codec} via {@link #withCodecRegistry(CodecRegistry)}.
  *
  * @author Christoph Strobl
  * @since 3.2
  */
 public class BindableMongoExpression implements MongoExpression {
 
-	private final String json;
+	private final String expressionString;
 
 	@Nullable //
 	private final CodecRegistryProvider codecRegistryProvider;
@@ -60,24 +60,24 @@ public class BindableMongoExpression implements MongoExpression {
 	/**
 	 * Create a new instance of {@link BindableMongoExpression}.
 	 *
-	 * @param json must not be {@literal null}.
+	 * @param expression must not be {@literal null}.
 	 * @param args can be {@literal null}.
 	 */
-	public BindableMongoExpression(String json, @Nullable Object[] args) {
-		this(json, null, args);
+	public BindableMongoExpression(String expression, @Nullable Object[] args) {
+		this(expression, null, args);
 	}
 
 	/**
 	 * Create a new instance of {@link BindableMongoExpression}.
 	 *
-	 * @param json must not be {@literal null}.
+	 * @param expression must not be {@literal null}.
 	 * @param codecRegistryProvider can be {@literal null}.
 	 * @param args can be {@literal null}.
 	 */
-	public BindableMongoExpression(String json, @Nullable CodecRegistryProvider codecRegistryProvider,
+	public BindableMongoExpression(String expression, @Nullable CodecRegistryProvider codecRegistryProvider,
 			@Nullable Object[] args) {
 
-		this.json = wrapJsonIfNecessary(json);
+		this.expressionString = expression;
 		this.codecRegistryProvider = codecRegistryProvider;
 		this.args = args;
 		this.target = Lazy.of(this::parse);
@@ -90,7 +90,7 @@ public class BindableMongoExpression implements MongoExpression {
 	 * @return new instance of {@link BindableMongoExpression}.
 	 */
 	public BindableMongoExpression withCodecRegistry(CodecRegistry codecRegistry) {
-		return new BindableMongoExpression(json, () -> codecRegistry, args);
+		return new BindableMongoExpression(expressionString, () -> codecRegistry, args);
 	}
 
 	/**
@@ -100,17 +100,25 @@ public class BindableMongoExpression implements MongoExpression {
 	 * @return new instance of {@link BindableMongoExpression}.
 	 */
 	public BindableMongoExpression bind(Object... args) {
-		return new BindableMongoExpression(json, codecRegistryProvider, args);
+		return new BindableMongoExpression(expressionString, codecRegistryProvider, args);
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * 
 	 * @see org.springframework.data.mongodb.MongoExpression#toDocument()
 	 */
 	@Override
 	public Document toDocument() {
 		return target.get();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "BindableMongoExpression{" + "expressionString='" + expressionString + '\'' + ", args=" + args + '}';
 	}
 
 	private String wrapJsonIfNecessary(String json) {
@@ -124,18 +132,20 @@ public class BindableMongoExpression implements MongoExpression {
 
 	private Document parse() {
 
+		String expression = wrapJsonIfNecessary(expressionString);
+
 		if (ObjectUtils.isEmpty(args)) {
 
 			if (codecRegistryProvider == null) {
-				return Document.parse(json);
+				return Document.parse(expression);
 			}
 
-			return Document.parse(json, codecRegistryProvider.getCodecFor(Document.class)
+			return Document.parse(expression, codecRegistryProvider.getCodecFor(Document.class)
 					.orElseGet(() -> new DocumentCodec(codecRegistryProvider.getCodecRegistry())));
 		}
 
 		ParameterBindingDocumentCodec codec = codecRegistryProvider == null ? new ParameterBindingDocumentCodec()
 				: new ParameterBindingDocumentCodec(codecRegistryProvider.getCodecRegistry());
-		return codec.decode(json, args);
+		return codec.decode(expression, args);
 	}
 }

@@ -15,8 +15,6 @@
  */
 package org.springframework.data.mongodb;
 
-import java.util.function.Function;
-
 /**
  * Wrapper object for MongoDB expressions like {@code $toUpper : $name} that manifest as {@link org.bson.Document} when
  * passed on to the driver.
@@ -36,7 +34,7 @@ import java.util.function.Function;
  * @see org.springframework.data.mongodb.core.aggregation.DateOperators
  * @see org.springframework.data.mongodb.core.aggregation.ObjectOperators
  * @see org.springframework.data.mongodb.core.aggregation.SetOperators
- * @see org.springframework.data.mongodb.core.aggregation.StringOperators @
+ * @see org.springframework.data.mongodb.core.aggregation.StringOperators
  */
 @FunctionalInterface
 public interface MongoExpression {
@@ -49,38 +47,27 @@ public interface MongoExpression {
 	org.bson.Document toDocument();
 
 	/**
-	 * Convert this instance to another expression applying the given conversion {@link Function}.
+	 * Create a new {@link MongoExpression} from plain {@link String} (eg. {@code $toUpper : $name}). <br />
+	 * The given expression will be wrapped with <code>{ ... }</code> to match an actual MongoDB {@link org.bson.Document}
+	 * if necessary.
 	 *
-	 * @param function must not be {@literal null}.
-	 * @param <T>
-	 * @return never {@literal null}.
+	 * @param expression must not be {@literal null}.
+	 * @return new instance of {@link MongoExpression}.
 	 */
-	default <T extends MongoExpression> T as(Function<MongoExpression, T> function) {
-		return function.apply(this);
+	static MongoExpression create(String expression) {
+		return new BindableMongoExpression(expression, null);
 	}
 
 	/**
-	 * Create a new {@link MongoExpression} from plain String (eg. {@code $toUpper : $name}). <br />
-	 * The given source value will be wrapped with <code>{ }</code> to match an actual MongoDB {@link org.bson.Document}
+	 * Create a new {@link MongoExpression} from plain {@link String} containing placeholders (eg. {@code $toUpper : ?0})
+	 * that will be resolved on first call of {@link #toDocument()}. <br />
+	 * The given expression will be wrapped with <code>{ ... }</code> to match an actual MongoDB {@link org.bson.Document}
 	 * if necessary.
 	 *
-	 * @param json must not be {@literal null}.
+	 * @param expression must not be {@literal null}.
 	 * @return new instance of {@link MongoExpression}.
 	 */
-	static MongoExpression expressionFromString(String json) {
-		return new BindableMongoExpression(json, null);
-	}
-
-	/**
-	 * Create a new {@link MongoExpression} from plain String containing placeholders (eg. {@code $toUpper : ?0}) that
-	 * will be resolved on {@link #toDocument()}. <br />
-	 * The given source value will be wrapped with <code>{ }</code> to match an actual MongoDB {@link org.bson.Document}
-	 * if necessary.
-	 *
-	 * @param json must not be {@literal null}.
-	 * @return new instance of {@link MongoExpression}.
-	 */
-	static MongoExpression expressionFromString(String json, Object... args) {
-		return new BindableMongoExpression(json, args);
+	static MongoExpression create(String expression, Object... args) {
+		return new BindableMongoExpression(expression, args);
 	}
 }

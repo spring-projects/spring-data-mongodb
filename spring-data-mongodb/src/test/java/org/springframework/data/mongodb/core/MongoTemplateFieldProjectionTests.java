@@ -68,7 +68,7 @@ class MongoTemplateFieldProjectionTests {
 	void usesMongoExpressionAsIs() {
 
 		Person result = findLuke(fields -> {
-			fields.include("firstname").project(MongoExpression.expressionFromString("'$toUpper' : '$last_name'"))
+			fields.include("firstname").project(MongoExpression.create("'$toUpper' : '$last_name'"))
 					.as("last_name");
 		});
 
@@ -79,7 +79,7 @@ class MongoTemplateFieldProjectionTests {
 	void usesMongoExpressionWithPlaceholdersAsIs() {
 
 		Person result = findLuke(fields -> {
-			fields.include("firstname").project(MongoExpression.expressionFromString("'$toUpper' : '$?0'", "last_name"))
+			fields.include("firstname").project(MongoExpression.create("'$toUpper' : '$?0'", "last_name"))
 					.as("last_name");
 		});
 

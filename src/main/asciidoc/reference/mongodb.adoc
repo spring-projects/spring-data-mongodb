@@ -1291,7 +1291,7 @@ Starting with MongoDB 4.4 it is possible to use the aggregation expressions synt
 [source,java]
 ----
 query.fields()
-  .project(MongoExpression.expressionFromString("'$toUpper' : '$last_name'")) <1>
+  .project(MongoExpression.create("'$toUpper' : '$last_name'")) <1>
   .as("last_name"); <2>
 
 query.fields()
