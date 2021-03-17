@@ -1,6 +1,25 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.2.0-M5 (2021-03-17)
+----------------------------------------
+* #3592 - Remove @Persistent from entity-scan include filters.
+* #3590 - Embedded sharding keys are not correctly picked up from the shardKeySource Document.
+* #3580 - Fix CustomConverter conversion lookup.
+* #3579 - Upgrade to MongoDB Java Drivers 4.2.2.
+* #3575 - Introduce ConversionContext and clean up MappingMongoConverter.
+* #3573 - Json Schema section appears twice in reference documentation.
+* #3571 - Introduce ConversionContext and clean up MappingMongoConverter.
+* #3570 - Incorrect class casting cause ClassCastException when save java.util.Collection using MongoTemplate.
+* #3568 - MongoSocketWriteException may be translated into DataAccessResourceFailureException.
+* #3566 - Couldn't find PersistentEntity for type java.lang.Object when updating a field with suffix "class".
+* #3552 - UpdateMapper drops numeric keys in Maps.
+* #3395 - Derived findBy…IgnoreCaseIn query doesn't return expected results [DATAMONGO-2540].
+* #3286 - Add possibility to use Collection<Criteria> as parameter in and/or/nor operators [DATAMONGO-2428].
+* #2911 - ensureNotIterable in MongoTemplate only checks for array type [DATAMONGO-2044].
+* #590 - DATAMONGO-2044 make ensureNotIterable actually check if object is iterable.
+
+
 Changes in version 3.1.6 (2021-03-17)
 -------------------------------------
 * #3592 - Remove @Persistent from entity-scan include filters.
@@ -3311,6 +3330,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
