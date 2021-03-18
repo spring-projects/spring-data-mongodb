@@ -40,13 +40,6 @@ package org.springframework.data.mongodb;
 public interface MongoExpression {
 
 	/**
-	 * Obtain the native {@link org.bson.Document} representation.
-	 *
-	 * @return never {@literal null}.
-	 */
-	org.bson.Document toDocument();
-
-	/**
 	 * Create a new {@link MongoExpression} from plain {@link String} (eg. {@code $toUpper : $name}). <br />
 	 * The given expression will be wrapped with <code>{ ... }</code> to match an actual MongoDB {@link org.bson.Document}
 	 * if necessary.
@@ -70,4 +63,11 @@ public interface MongoExpression {
 	static MongoExpression create(String expression, Object... args) {
 		return new BindableMongoExpression(expression, args);
 	}
+
+	/**
+	 * Obtain the native {@link org.bson.Document} representation.
+	 *
+	 * @return never {@literal null}.
+	 */
+	org.bson.Document toDocument();
 }

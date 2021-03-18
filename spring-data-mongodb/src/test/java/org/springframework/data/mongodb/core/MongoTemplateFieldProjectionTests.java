@@ -39,6 +39,8 @@ import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
 
 /**
+ * Integration tests for {@link org.springframework.data.mongodb.core.query.Field}.
+ *
  * @author Christoph Strobl
  */
 @ExtendWith(MongoTemplateExtension.class)

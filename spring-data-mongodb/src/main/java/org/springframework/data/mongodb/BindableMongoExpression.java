@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb;
 
+import java.util.Arrays;
+
 import org.bson.Document;
 import org.bson.codecs.DocumentCodec;
 import org.bson.codecs.configuration.CodecRegistry;
@@ -30,15 +32,15 @@ import org.springframework.util.StringUtils;
  * binding of placeholders like {@code ?0} is delayed upon first call on the the target {@link Document} via
  * {@link #toDocument()}.
  * <p />
- * 
+ *
  * <pre class="code">
  * $toUpper : $name                -> { '$toUpper' : '$name' }
- * 
+ *
  * { '$toUpper' : '$name' }        -> { '$toUpper' : '$name' }
- * 
+ *
  * { '$toUpper' : '?0' }, "$name"  -> { '$toUpper' : '$name' }
  * </pre>
- * 
+ *
  * Some types might require a special {@link org.bson.codecs.Codec}. If so, make sure to provide a {@link CodecRegistry}
  * containing the required {@link org.bson.codecs.Codec codec} via {@link #withCodecRegistry(CodecRegistry)}.
  *
@@ -49,11 +51,9 @@ public class BindableMongoExpression implements MongoExpression {
 
 	private final String expressionString;
 
-	@Nullable //
-	private final CodecRegistryProvider codecRegistryProvider;
+	private final @Nullable CodecRegistryProvider codecRegistryProvider;
 
-	@Nullable //
-	private final Object[] args;
+	private final @Nullable Object[] args;
 
 	private final Lazy<Document> target;
 
@@ -118,16 +118,8 @@ public class BindableMongoExpression implements MongoExpression {
 	 */
 	@Override
 	public String toString() {
-		return "BindableMongoExpression{" + "expressionString='" + expressionString + '\'' + ", args=" + args + '}';
-	}
-
-	private String wrapJsonIfNecessary(String json) {
-
-		if (StringUtils.hasText(json) && (json.startsWith("{") && json.endsWith("}"))) {
-			return json;
-		}
-
-		return "{" + json + "}";
+		return "BindableMongoExpression{" + "expressionString='" + expressionString + '\'' + ", args="
+				+ Arrays.toString(args) + '}';
 	}
 
 	private Document parse() {
@@ -147,5 +139,14 @@ public class BindableMongoExpression implements MongoExpression {
 		ParameterBindingDocumentCodec codec = codecRegistryProvider == null ? new ParameterBindingDocumentCodec()
 				: new ParameterBindingDocumentCodec(codecRegistryProvider.getCodecRegistry());
 		return codec.decode(expression, args);
+	}
+
+	private static String wrapJsonIfNecessary(String json) {
+
+		if (StringUtils.hasText(json) && (json.startsWith("{") && json.endsWith("}"))) {
+			return json;
+		}
+
+		return "{" + json + "}";
 	}
 }

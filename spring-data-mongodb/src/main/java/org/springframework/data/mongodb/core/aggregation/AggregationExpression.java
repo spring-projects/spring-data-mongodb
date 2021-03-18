@@ -29,18 +29,6 @@ import org.springframework.data.mongodb.MongoExpression;
 public interface AggregationExpression extends MongoExpression {
 
 	/**
-	 * Obtain the as is (unmapped) representation of the {@link AggregationExpression}. Use
-	 * {@link #toDocument(AggregationOperationContext)} with a matching {@link AggregationOperationContext context} to
-	 * engage domain type mapping including field name resolution.
-	 *
-	 * @see org.springframework.data.mongodb.MongoExpression#toDocument()
-	 */
-	@Override
-	default Document toDocument() {
-		return toDocument(Aggregation.DEFAULT_CONTEXT);
-	}
-
-	/**
 	 * Create an {@link AggregationExpression} out of a given {@link MongoExpression} to ensure the resulting
 	 * {@link MongoExpression#toDocument() Document} is mapped against the {@link AggregationOperationContext}. <br />
 	 * If the given expression is already an {@link AggregationExpression} the very same instance is returned.
@@ -56,6 +44,18 @@ public interface AggregationExpression extends MongoExpression {
 		}
 
 		return (context) -> context.getMappedObject(expression.toDocument());
+	}
+
+	/**
+	 * Obtain the as is (unmapped) representation of the {@link AggregationExpression}. Use
+	 * {@link #toDocument(AggregationOperationContext)} with a matching {@link AggregationOperationContext context} to
+	 * engage domain type mapping including field name resolution.
+	 *
+	 * @see org.springframework.data.mongodb.MongoExpression#toDocument()
+	 */
+	@Override
+	default Document toDocument() {
+		return toDocument(Aggregation.DEFAULT_CONTEXT);
 	}
 
 	/**

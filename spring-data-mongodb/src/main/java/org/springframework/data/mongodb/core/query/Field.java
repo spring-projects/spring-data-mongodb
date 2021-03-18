@@ -63,21 +63,21 @@ public class Field {
 	 * result.
 	 *
 	 * <pre class="code">
-	 * 
+	 *
 	 * // { 'name' : { '$toUpper' : '$name' } }
-	 * 
+	 *
 	 * // native MongoDB expression
 	 * .project(MongoExpression.expressionFromString("'$toUpper' : '$name'")).as("name");
-	 * 
+	 *
 	 * // Aggregation Framework expression
 	 * .project(StringOperators.valueOf("name").toUpper()).as("name");
-	 * 
+	 *
 	 * // Aggregation Framework SpEL expression
 	 * .project(AggregationSpELExpression.expressionOf("toUpper(name)")).as("name");
 	 * </pre>
 	 *
 	 * @param expression must not be {@literal null}.
-	 * @return new instance of {@link FieldProjectionExpression} - you still need to define the target field name via
+	 * @return new instance of {@link FieldProjectionExpression}. Define the target field name through
 	 *         {@link FieldProjectionExpression#as(String) as(String)}.
 	 * @since 3.2
 	 */
@@ -277,15 +277,15 @@ public class Field {
 
 	/**
 	 * Intermediate builder part for projecting a {@link MongoExpression} to a result field.
-	 * 
+	 *
 	 * @since 3.2
 	 * @author Christoph Strobl
 	 */
 	public interface FieldProjectionExpression {
 
 		/**
-		 * Set the name to be used in the result.
-		 * 
+		 * Set the name to be used in the result and return a {@link Field}.
+		 *
 		 * @param name must not be {@literal null}.
 		 * @return the calling instance {@link Field}.
 		 */
