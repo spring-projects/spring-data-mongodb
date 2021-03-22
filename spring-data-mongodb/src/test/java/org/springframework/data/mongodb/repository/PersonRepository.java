@@ -407,7 +407,7 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 			Date createdAt, List<String> skills, String street, String zipCode, //
 			String city, UUID uniqueId, String username, String password);
 
-	List<Person> findByEmbeddedUserUsername(String username);
+	List<Person> findByUnwrappedUserUsername(String username);
 
-	List<Person> findByEmbeddedUser(User user);
+	List<Person> findByUnwrappedUser(User user);
 }

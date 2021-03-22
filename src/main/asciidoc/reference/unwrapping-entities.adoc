@@ -1,15 +1,15 @@
-[[embedded-entities]]
-== Embedded Types
+[[unwrapped-entities]]
+== Unwrapping Types
 
-Embedded entities are used to design value objects in your Java domain model whose properties are flattened out into the parent's MongoDB Document.
+Unwrapped entities are used to design value objects in your Java domain model whose properties are flattened out into the parent's MongoDB Document.
 
-[[embedded-entities.mapping]]
-=== Embedded Types Mapping
+[[unwrapped-entities.mapping]]
+=== Unwrapped Types Mapping
 
-Consider the following domain model where `User.name` is annotated with `@Embedded`.
-The `@Embedded` annotation signals that all properties of `UserName` should be unwrapped into the `user` document that owns the `name` property.
+Consider the following domain model where `User.name` is annotated with `@Unwrapped`.
+The `@Unwrapped` annotation signals that all properties of `UserName` should be flattened out into the `user` document that owns the `name` property.
 
-.Sample Code of embedding objects
+.Sample Code of unwrapping objects
 ====
 [source,java]
 ----
@@ -18,7 +18,7 @@ class User {
     @Id
     String userId;
 
-    @Embedded(onEmpty = USE_NULL) <1>
+    @Unwrapped(onEmpty = USE_NULL) <1>
     UserName name;
 }
 
@@ -43,23 +43,23 @@ class UserName {
 By using `onEmpty=USE_EMPTY` an empty `UserName`, with potential `null` value for its properties, will be created.
 ====
 
-For less verbose embeddable type declarations use `@Embedded.Nullable` and `@Embedded.Empty` instead `@Embedded(onEmpty = USE_NULL)` and `@Embedded(onEmpty = USE_EMPTY)`.
+For less verbose embeddable type declarations use `@Unwrapped.Nullable` and `@Unwrapped.Empty` instead `@Unwrapped(onEmpty = USE_NULL)` and `@Unwrapped(onEmpty = USE_EMPTY)`.
 Both annotations are meta-annotated with JSR-305 `@javax.annotation.Nonnull` to aid with nullability inspections.
 
 [WARNING]
 ====
-It is possible to use complex types within an embedded object.
-However, those must not be, nor contain embedded fields themselves.
+It is possible to use complex types within an unwrapped object.
+However, those must not be, nor contain unwrapped fields themselves.
 ====
 
-[[embedded-entities.mapping.field-names]]
-=== Embedded Types field names
+[[unwrapped-entities.mapping.field-names]]
+=== Unwrapped Types field names
 
-A value object can be embedded multiple times by using the optional `prefix` attribute of the `@Embedded` annotation.
-By dosing so the chosen prefix is prepended to each property or `@Field("…")` name in the embedded object.
+A value object can be unwrapped multiple times by using the optional `prefix` attribute of the `@Unwrapped` annotation.
+By dosing so the chosen prefix is prepended to each property or `@Field("…")` name in the unwrapped object.
 Please note that values will overwrite each other if multiple properties render to the same field name.
 
-.Sample Code of embedded object with name prefix
+.Sample Code of unwrapped object with name prefix
 ====
 [source,java]
 ----
@@ -68,10 +68,10 @@ class User {
     @Id
     String userId;
 
-    @Embedded.Nullable(prefix = "u_") <1>
+    @Unwrapped.Nullable(prefix = "u_") <1>
     UserName name;
 
-    @Embedded.Nullable(prefix = "a_") <2>
+    @Unwrapped.Nullable(prefix = "a_") <2>
     UserName name;
 }
 
@@ -97,10 +97,10 @@ class UserName {
 <2> All properties of `UserName` are prefixed with `a_`.
 ====
 
-While combining the `@Field` annotation with `@Embedded` on the very same property does not make sense and therefore leads to an error.
-It is a totally valid approach to use `@Field` on any of the embedded types properties.
+While combining the `@Field` annotation with `@Unwrapped` on the very same property does not make sense and therefore leads to an error.
+It is a totally valid approach to use `@Field` on any of the unwrapped types properties.
 
-.Sample Code embedded object with `@Field` annotation
+.Sample Code unwrapping objects with `@Field` annotation
 ====
 [source,java]
 ----
@@ -109,7 +109,7 @@ public class User {
 	@Id
     private String userId;
 
-    @Embedded.Nullable(prefix = "u-") <1>
+    @Unwrapped.Nullable(prefix = "u-") <1>
     UserName name;
 }
 
@@ -132,17 +132,17 @@ public class UserName {
 }
 ----
 <1> All properties of `UserName` are prefixed with `u-`.
-<2> Final field names are a result of concatenating `@Embedded(prefix)` and `@Field(name)`.
+<2> Final field names are a result of concatenating `@Unwrapped(prefix)` and `@Field(name)`.
 ====
 
-[[embedded-entities.queries]]
-=== Query on Embedded Objects
+[[unwrapped-entities.queries]]
+=== Query on Unwrapped Objects
 
-Defining queries on embedded properties is possible on type- as well as field-level as the provided `Criteria` is matched against the domain type.
+Defining queries on unwrapped properties is possible on type- as well as field-level as the provided `Criteria` is matched against the domain type.
 Prefixes and potential custom field names will be considered when rendering the actual query.
-Use the property name of the embedded object to match against all contained fields as shown in the sample below.
+Use the property name of the unwrapped object to match against all contained fields as shown in the sample below.
 
-.Query on embedded object
+.Query on unwrapped object
 ====
 [source,java]
 ----
@@ -160,9 +160,9 @@ db.collection.find({
 ----
 ====
 
-It is also possible to address any field of the embedded object directly using its property name as shown in the snippet below.
+It is also possible to address any field of the unwrapped object directly using its property name as shown in the snippet below.
 
-.Query on field of embedded object
+.Query on field of unwrapped object
 ====
 [source,java]
 ----
@@ -178,12 +178,12 @@ db.collection.find({
 ----
 ====
 
-[[embedded-entities.queries.sort]]
-==== Sort by embedded field.
+[[unwrapped-entities.queries.sort]]
+==== Sort by unwrapped field.
 
-Fields of embedded objects can be used for sorting via their property path as shown in the sample below.
+Fields of unwrapped objects can be used for sorting via their property path as shown in the sample below.
 
-.Sort on embedded field
+.Sort on unwrapped field
 ====
 [source,java]
 ----
@@ -201,15 +201,15 @@ db.collection.find({
 
 [NOTE]
 ====
-Though possible, using the embedded object itself as sort criteria includes all of its fields in unpredictable order and may result in inaccurate ordering.
+Though possible, using the unwrapped object itself as sort criteria includes all of its fields in unpredictable order and may result in inaccurate ordering.
 ====
 
-[[embedded-entities.queries.project]]
-==== Field projection on embedded objects
+[[unwrapped-entities.queries.project]]
+==== Field projection on unwrapped objects
 
-Fields of embedded objects can be subject for projection either as a whole or via single fields as shown in the samples below.
+Fields of unwrapped objects can be subject for projection either as a whole or via single fields as shown in the samples below.
 
-.Project on embedded object.
+.Project on unwrapped object.
 ====
 [source,java]
 ----
@@ -228,10 +228,10 @@ db.collection.find({
   "lastname" : 1
 })
 ----
-<1> A field projection on an embedded object includes all of its properties.
+<1> A field projection on an unwrapped object includes all of its properties.
 ====
 
-.Project on a field of an embedded object.
+.Project on a field of an unwrapped object.
 ====
 [source,java]
 ----
@@ -249,21 +249,21 @@ db.collection.find({
   "firstname" : 1
 })
 ----
-<1> A field projection on an embedded object includes all of its properties.
+<1> A field projection on an unwrapped object includes all of its properties.
 ====
 
-[[embedded-entities.queries.by-example]]
-==== Query By Example on embedded object.
+[[unwrapped-entities.queries.by-example]]
+==== Query By Example on unwrapped object.
 
-Embedded objects can be used within an `Example` probe just as any other type.
+Unwrapped objects can be used within an `Example` probe just as any other type.
 Please review the <<query-by-example.running,Query By Example>> section, to learn more about this feature.
 
-[[embedded-entities.queries.repository]]
-==== Repository Queries on embedded objects.
+[[unwrapped-entities.queries.repository]]
+==== Repository Queries on unwrapped objects.
 
-The `Repository` abstraction allows deriving queries on fields of embedded objects as well as the entire object.
+The `Repository` abstraction allows deriving queries on fields of unwrapped objects as well as the entire object.
 
-.Repository queries on embedded objects.
+.Repository queries on unwrapped objects.
 ====
 [source,java]
 ----
@@ -274,23 +274,23 @@ interface UserRepository extends CrudRepository<User, String> {
 	List<User> findByNameFirstname(String firstname); <2>
 }
 ----
-<1> Matches against all fields of the embedded object.
+<1> Matches against all fields of the unwrapped object.
 <2> Matches against the `firstname`.
 ====
 
 [NOTE]
 ====
-Index creation for embedded objects is suspended even if the repository `create-query-indexes` namespace attribute is set to `true`.
+Index creation for unwrapped objects is suspended even if the repository `create-query-indexes` namespace attribute is set to `true`.
 ====
 
-[[embedded-entities.update]]
-=== Update on Embedded Objects
+[[unwrapped-entities.update]]
+=== Update on Unwrapped Objects
 
-Embedded objects can be updated as any other object that is part of the domain model.
-The mapping layer takes care of flattening embedded structures into their surroundings.
-It is possible to update single attributes of the embedded object as well as the entire value as shown in the examples below.
+Unwrapped objects can be updated as any other object that is part of the domain model.
+The mapping layer takes care of flattening structures into their surroundings.
+It is possible to update single attributes of the unwrapped object as well as the entire value as shown in the examples below.
 
-.Update a single field of an embedded object.
+.Update a single field of an unwrapped object.
 ====
 [source,java]
 ----
@@ -312,7 +312,7 @@ db.collection.update({
 ----
 ====
 
-.Update an embedded object.
+.Update an unwrapped object.
 ====
 [source,java]
 ----
@@ -337,18 +337,18 @@ db.collection.update({
 ----
 ====
 
-[[embedded-entities.aggregations]]
-=== Aggregations on Embedded Objects
+[[unwrapped-entities.aggregations]]
+=== Aggregations on Unwrapped Objects
 
-The <<mongo.aggregation,Aggregation Framework>> will attempt to map embedded values of typed aggregations.
-Please make sure to work with the property path including the embedded wrapper object when referencing one of its values.
+The <<mongo.aggregation,Aggregation Framework>> will attempt to map unwrapped values of typed aggregations.
+Please make sure to work with the property path including the wrapper object when referencing one of its values.
 Other than that no special action is required.
 
-[[embedded-entities.indexes]]
-=== Index on Embedded Objects
+[[unwrapped-entities.indexes]]
+=== Index on Unwrapped Objects
 
-It is possible to attach the `@Indexed` annotation to properties of an embedded type just as it is done with regular objects.
-It is not possible to use `@Indexed` along with the `@Embedded` annotation on the owning property.
+It is possible to attach the `@Indexed` annotation to properties of an unwrapped type just as it is done with regular objects.
+It is not possible to use `@Indexed` along with the `@Unwrapped` annotation on the owning property.
 
 ====
 [source,java]
@@ -358,12 +358,12 @@ public class User {
 	@Id
     private String userId;
 
-    @Embedded(onEmpty = USE_NULL)
+    @Unwrapped(onEmpty = USE_NULL)
     UserName name;                    <1>
 
     // Invalid -> InvalidDataAccessApiUsageException
     @Indexed                          <2>
-    @Embedded(onEmpty = USE_Empty)
+    @Unwrapped(onEmpty = USE_Empty)
     Address address;
 }
 
@@ -376,7 +376,7 @@ public class UserName {
 }
 ----
 <1> Index created for `lastname` in `users` collection.
-<2> Invalid `@Indexed` usage along with `@Embedded`
+<2> Invalid `@Indexed` usage along with `@Unwrapped`
 ====
 
 

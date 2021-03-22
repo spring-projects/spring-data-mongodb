@@ -72,13 +72,13 @@ import org.springframework.data.mongodb.core.convert.DocumentAccessorUnitTests.P
 import org.springframework.data.mongodb.core.convert.MappingMongoConverterUnitTests.ClassWithMapUsingEnumAsKey.FooBarEnum;
 import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Embedded;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.PersonPojoStringId;
 import org.springframework.data.mongodb.core.mapping.TextScore;
+import org.springframework.data.mongodb.core.mapping.Unwrapped;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertCallback;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -2193,9 +2193,9 @@ class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1902
-	void writeFlattensEmbeddedType() {
+	void writeFlattensUnwrappedType() {
 
-		WithNullableEmbedded source = new WithNullableEmbedded();
+		WithNullableUnwrapped source = new WithNullableUnwrapped();
 		source.id = "id-1";
 		source.embeddableValue = new EmbeddableType();
 		source.embeddableValue.listValue = Arrays.asList("list-val-1", "list-val-2");
@@ -2215,9 +2215,9 @@ class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1902
-	void writePrefixesEmbeddedType() {
+	void writePrefixesUnwrappedType() {
 
-		WithPrefixedNullableEmbedded source = new WithPrefixedNullableEmbedded();
+		WithPrefixedNullableUnwrapped source = new WithPrefixedNullableUnwrapped();
 		source.id = "id-1";
 		source.embeddableValue = new EmbeddableType();
 		source.embeddableValue.listValue = Arrays.asList("list-val-1", "list-val-2");
@@ -2238,9 +2238,9 @@ class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1902
-	void writeNullEmbeddedType() {
+	void writeNullUnwrappedType() {
 
-		WithNullableEmbedded source = new WithNullableEmbedded();
+		WithNullableUnwrapped source = new WithNullableUnwrapped();
 		source.id = "id-1";
 		source.embeddableValue = null;
 
@@ -2253,11 +2253,11 @@ class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1902
-	void writeDeepNestedEmbeddedType() {
+	void writeDeepNestedUnwrappedType() {
 
-		WrapperAroundWithEmbedded source = new WrapperAroundWithEmbedded();
+		WrapperAroundWithUnwrapped source = new WrapperAroundWithUnwrapped();
 		source.someValue = "root-level-value";
-		source.nullableEmbedded = new WithNullableEmbedded();
+		source.nullableEmbedded = new WithNullableUnwrapped();
 		source.nullableEmbedded.id = "id-1";
 		source.nullableEmbedded.embeddableValue = new EmbeddableType();
 		source.nullableEmbedded.embeddableValue.listValue = Arrays.asList("list-val-1", "list-val-2");
@@ -2275,7 +2275,7 @@ class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1902
-	void readEmbeddedType() {
+	void readUnwrappedType() {
 
 		org.bson.Document source = new org.bson.Document("_id", "id-1") //
 				.append("stringValue", "string-val") //
@@ -2287,12 +2287,12 @@ class MappingMongoConverterUnitTests {
 		embeddableValue.listValue = Arrays.asList("list-val-1", "list-val-2");
 		embeddableValue.atFieldAnnotatedValue = "@Field";
 
-		WithNullableEmbedded target = converter.read(WithNullableEmbedded.class, source);
+		WithNullableUnwrapped target = converter.read(WithNullableUnwrapped.class, source);
 		assertThat(target.embeddableValue).isEqualTo(embeddableValue);
 	}
 
 	@Test // DATAMONGO-1902
-	void readPrefixedEmbeddedType() {
+	void readPrefixedUnwrappedType() {
 
 		org.bson.Document source = new org.bson.Document("_id", "id-1") //
 				.append("prefix-stringValue", "string-val") //
@@ -2304,37 +2304,37 @@ class MappingMongoConverterUnitTests {
 		embeddableValue.listValue = Arrays.asList("list-val-1", "list-val-2");
 		embeddableValue.atFieldAnnotatedValue = "@Field";
 
-		WithPrefixedNullableEmbedded target = converter.read(WithPrefixedNullableEmbedded.class, source);
+		WithPrefixedNullableUnwrapped target = converter.read(WithPrefixedNullableUnwrapped.class, source);
 		assertThat(target.embeddableValue).isEqualTo(embeddableValue);
 	}
 
 	@Test // DATAMONGO-1902
-	void readNullableEmbeddedTypeWhenSourceDoesNotContainValues() {
+	void readNullableUnwrappedTypeWhenSourceDoesNotContainValues() {
 
 		org.bson.Document source = new org.bson.Document("_id", "id-1");
 
-		WithNullableEmbedded target = converter.read(WithNullableEmbedded.class, source);
+		WithNullableUnwrapped target = converter.read(WithNullableUnwrapped.class, source);
 		assertThat(target.embeddableValue).isNull();
 	}
 
 	@Test // DATAMONGO-1902
-	void readEmptyEmbeddedTypeWhenSourceDoesNotContainValues() {
+	void readEmptyUnwrappedTypeWhenSourceDoesNotContainValues() {
 
 		org.bson.Document source = new org.bson.Document("_id", "id-1");
 
-		WithEmptyEmbeddedType target = converter.read(WithEmptyEmbeddedType.class, source);
+		WithEmptyUnwrappedType target = converter.read(WithEmptyUnwrappedType.class, source);
 		assertThat(target.embeddableValue).isNotNull();
 	}
 
 	@Test // DATAMONGO-1902
-	void readDeepNestedEmbeddedType() {
+	void readDeepNestedUnwrappedType() {
 
 		org.bson.Document source = new org.bson.Document("someValue", "root-level-value").append("nullableEmbedded",
 				new org.bson.Document("_id", "id-1").append("stringValue", "string-val") //
 						.append("listValue", Arrays.asList("list-val-1", "list-val-2")) //
 						.append("with-at-field-annotation", "@Field"));
 
-		WrapperAroundWithEmbedded target = converter.read(WrapperAroundWithEmbedded.class, source);
+		WrapperAroundWithUnwrapped target = converter.read(WrapperAroundWithUnwrapped.class, source);
 
 		EmbeddableType embeddableValue = new EmbeddableType();
 		embeddableValue.stringValue = "string-val";
@@ -2347,12 +2347,12 @@ class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1902
-	void readEmbeddedTypeWithComplexValue() {
+	void readUnwrappedTypeWithComplexValue() {
 
 		org.bson.Document source = new org.bson.Document("_id", "id-1").append("address",
 				new org.bson.Document("street", "1007 Mountain Drive").append("city", "Gotham"));
 
-		WithNullableEmbedded target = converter.read(WithNullableEmbedded.class, source);
+		WithNullableUnwrapped target = converter.read(WithNullableUnwrapped.class, source);
 
 		Address expected = new Address();
 		expected.city = "Gotham";
@@ -2363,9 +2363,9 @@ class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1902
-	void writeEmbeddedTypeWithComplexValue() {
+	void writeUnwrappedTypeWithComplexValue() {
 
-		WithNullableEmbedded source = new WithNullableEmbedded();
+		WithNullableUnwrapped source = new WithNullableUnwrapped();
 		source.id = "id-1";
 		source.embeddableValue = new EmbeddableType();
 		source.embeddableValue.address = new Address();
@@ -2891,33 +2891,33 @@ class MappingMongoConverterUnitTests {
 		Date dateAsObjectId;
 	}
 
-	static class WrapperAroundWithEmbedded {
+	static class WrapperAroundWithUnwrapped {
 
 		String someValue;
-		WithNullableEmbedded nullableEmbedded;
-		WithEmptyEmbeddedType emptyEmbedded;
-		WithPrefixedNullableEmbedded prefixedEmbedded;
+		WithNullableUnwrapped nullableEmbedded;
+		WithEmptyUnwrappedType emptyEmbedded;
+		WithPrefixedNullableUnwrapped prefixedEmbedded;
 	}
 
-	static class WithNullableEmbedded {
+	static class WithNullableUnwrapped {
 
 		String id;
 
-		@Embedded.Nullable EmbeddableType embeddableValue;
+		@Unwrapped.Nullable EmbeddableType embeddableValue;
 	}
 
-	static class WithPrefixedNullableEmbedded {
+	static class WithPrefixedNullableUnwrapped {
 
 		String id;
 
-		@Embedded.Nullable("prefix-") EmbeddableType embeddableValue;
+		@Unwrapped.Nullable("prefix-") EmbeddableType embeddableValue;
 	}
 
-	static class WithEmptyEmbeddedType {
+	static class WithEmptyUnwrappedType {
 
 		String id;
 
-		@Embedded.Empty EmbeddableType embeddableValue;
+		@Unwrapped.Empty EmbeddableType embeddableValue;
 	}
 
 	@EqualsAndHashCode

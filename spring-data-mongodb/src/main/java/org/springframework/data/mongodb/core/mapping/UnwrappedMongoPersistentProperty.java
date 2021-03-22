@@ -26,18 +26,18 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 
 /**
- * Embedded variant of {@link MongoPersistentProperty}.
+ * Unwrapped variant of {@link MongoPersistentProperty}.
  *
  * @author Christoph Strobl
  * @since 3.2
- * @see Embedded
+ * @see Unwrapped
  */
-class EmbeddedMongoPersistentProperty implements MongoPersistentProperty {
+class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 
 	private final MongoPersistentProperty delegate;
-	private final EmbeddedEntityContext context;
+	private final UnwrapEntityContext context;
 
-	public EmbeddedMongoPersistentProperty(MongoPersistentProperty delegate, EmbeddedEntityContext context) {
+	public UnwrappedMongoPersistentProperty(MongoPersistentProperty delegate, UnwrapEntityContext context) {
 
 		this.delegate = delegate;
 		this.context = context;
@@ -46,11 +46,11 @@ class EmbeddedMongoPersistentProperty implements MongoPersistentProperty {
 	@Override
 	public String getFieldName() {
 
-		if (!context.getProperty().isEmbedded()) {
+		if (!context.getProperty().isUnwrapped()) {
 			return delegate.getFieldName();
 		}
 
-		return context.getProperty().findAnnotation(Embedded.class).prefix() + delegate.getFieldName();
+		return context.getProperty().findAnnotation(Unwrapped.class).prefix() + delegate.getFieldName();
 	}
 
 	@Override
@@ -241,8 +241,8 @@ class EmbeddedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 
 	@Override
-	public boolean isEmbedded() {
-		return delegate.isEmbedded();
+	public boolean isUnwrapped() {
+		return delegate.isUnwrapped();
 	}
 
 	@Override

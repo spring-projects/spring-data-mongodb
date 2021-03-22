@@ -137,7 +137,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		try {
 			if (persistentProperty.isEntity()) {
 				indexes.addAll(resolveIndexForEntity(mappingContext.getPersistentEntity(persistentProperty),
-						persistentProperty.isEmbedded() ? "" : persistentProperty.getFieldName(), Path.of(persistentProperty),
+						persistentProperty.isUnwrapped() ? "" : persistentProperty.getFieldName(), Path.of(persistentProperty),
 						root.getCollection(), guard));
 			}
 
@@ -187,7 +187,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		DotPath propertyDotPath = DotPath.from(dotPath);
 
-		if (!persistentProperty.isEmbedded()) {
+		if (!persistentProperty.isUnwrapped()) {
 			propertyDotPath = propertyDotPath.append(persistentProperty.getFieldName());
 		}
 
@@ -216,11 +216,11 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		List<IndexDefinitionHolder> indices = new ArrayList<>(2);
 
-		if (persistentProperty.isEmbedded() && (persistentProperty.isAnnotationPresent(Indexed.class)
+		if (persistentProperty.isUnwrapped() && (persistentProperty.isAnnotationPresent(Indexed.class)
 				|| persistentProperty.isAnnotationPresent(HashIndexed.class)
 				|| persistentProperty.isAnnotationPresent(GeoSpatialIndexed.class))) {
 			throw new InvalidDataAccessApiUsageException(
-					String.format("Index annotation not allowed on embedded object for path '%s'.", dotPath));
+					String.format("Index annotation not allowed on unwrapped object for path '%s'.", dotPath));
 		}
 
 		if (persistentProperty.isAnnotationPresent(Indexed.class)) {

@@ -27,8 +27,8 @@ import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Embedded;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.Unwrapped;
 
 /**
  * Sample domain class.
@@ -71,8 +71,8 @@ public class Person extends Contact {
 
 	Credentials credentials;
 
-	@Embedded.Nullable(prefix = "u") //
-	User embeddedUser;
+	@Unwrapped.Nullable(prefix = "u") //
+	User unwrappedUser;
 
 	public Person() {
 
@@ -300,12 +300,12 @@ public class Person extends Contact {
 		return skills;
 	}
 
-	public User getEmbeddedUser() {
-		return embeddedUser;
+	public User getUnwrappedUser() {
+		return unwrappedUser;
 	}
 
-	public void setEmbeddedUser(User embeddedUser) {
-		this.embeddedUser = embeddedUser;
+	public void setUnwrappedUser(User unwrappedUser) {
+		this.unwrappedUser = unwrappedUser;
 	}
 
 	/*

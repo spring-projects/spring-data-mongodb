@@ -48,12 +48,12 @@ import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Embedded;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.TextScore;
+import org.springframework.data.mongodb.core.mapping.Unwrapped;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -1014,179 +1014,179 @@ public class QueryMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1902
-	void rendersQueryOnEmbeddedObjectCorrectly() {
+	void rendersQueryOnUnwrappedObjectCorrectly() {
 
-		EmbeddableType embeddableType = new EmbeddableType();
-		embeddableType.stringValue = "test";
+		UnwrappableType unwrappableType = new UnwrappableType();
+		unwrappableType.stringValue = "test";
 
-		Query source = query(Criteria.where("embeddableValue").is(embeddableType));
+		Query source = query(Criteria.where("unwrappedValue").is(unwrappableType));
 
 		org.bson.Document target = mapper.getMappedObject(source.getQueryObject(),
-				context.getPersistentEntity(WithEmbedded.class));
+				context.getPersistentEntity(WithUnwrapped.class));
 
 		assertThat(target).isEqualTo(new org.bson.Document("stringValue", "test"));
 	}
 
 	@Test // DATAMONGO-1902
-	void rendersQueryOnEmbeddedCorrectly() {
+	void rendersQueryOnUnwrappedCorrectly() {
 
-		Query source = query(Criteria.where("embeddableValue.stringValue").is("test"));
+		Query source = query(Criteria.where("unwrappedValue.stringValue").is("test"));
 
 		org.bson.Document target = mapper.getMappedObject(source.getQueryObject(),
-				context.getPersistentEntity(WithEmbedded.class));
+				context.getPersistentEntity(WithUnwrapped.class));
 
 		assertThat(target).isEqualTo(new org.bson.Document("stringValue", "test"));
 	}
 
 	@Test // DATAMONGO-1902
-	void rendersQueryOnPrefixedEmbeddedCorrectly() {
+	void rendersQueryOnPrefixedUnwrappedCorrectly() {
 
-		Query source = query(Criteria.where("embeddableValue.stringValue").is("test"));
+		Query source = query(Criteria.where("unwrappedValue.stringValue").is("test"));
 
 		org.bson.Document target = mapper.getMappedObject(source.getQueryObject(),
-				context.getPersistentEntity(WithPrefixedEmbedded.class));
+				context.getPersistentEntity(WithPrefixedUnwrapped.class));
 
 		assertThat(target).isEqualTo(new org.bson.Document("prefix-stringValue", "test"));
 	}
 
 	@Test // DATAMONGO-1902
-	void rendersQueryOnNestedEmbeddedObjectCorrectly() {
+	void rendersQueryOnNestedUnwrappedObjectCorrectly() {
 
-		EmbeddableType embeddableType = new EmbeddableType();
-		embeddableType.stringValue = "test";
-		Query source = query(Criteria.where("withEmbedded.embeddableValue").is(embeddableType));
+		UnwrappableType unwrappableType = new UnwrappableType();
+		unwrappableType.stringValue = "test";
+		Query source = query(Criteria.where("withUnwrapped.unwrappedValue").is(unwrappableType));
 
 		org.bson.Document target = mapper.getMappedObject(source.getQueryObject(),
-				context.getPersistentEntity(WrapperAroundWithEmbedded.class));
+				context.getPersistentEntity(WrapperAroundWithUnwrapped.class));
 
-		assertThat(target).isEqualTo(new org.bson.Document("withEmbedded", new org.bson.Document("stringValue", "test")));
+		assertThat(target).isEqualTo(new org.bson.Document("withUnwrapped", new org.bson.Document("stringValue", "test")));
 	}
 
 	@Test // DATAMONGO-1902
-	void rendersQueryOnNestedPrefixedEmbeddedObjectCorrectly() {
+	void rendersQueryOnNestedPrefixedUnwrappedObjectCorrectly() {
 
-		EmbeddableType embeddableType = new EmbeddableType();
-		embeddableType.stringValue = "test";
-		Query source = query(Criteria.where("withPrefixedEmbedded.embeddableValue").is(embeddableType));
+		UnwrappableType unwrappableType = new UnwrappableType();
+		unwrappableType.stringValue = "test";
+		Query source = query(Criteria.where("withPrefixedUnwrapped.unwrappedValue").is(unwrappableType));
 
 		org.bson.Document target = mapper.getMappedObject(source.getQueryObject(),
-				context.getPersistentEntity(WrapperAroundWithEmbedded.class));
+				context.getPersistentEntity(WrapperAroundWithUnwrapped.class));
 
 		assertThat(target)
-				.isEqualTo(new org.bson.Document("withPrefixedEmbedded", new org.bson.Document("prefix-stringValue", "test")));
+				.isEqualTo(new org.bson.Document("withPrefixedUnwrapped", new org.bson.Document("prefix-stringValue", "test")));
 	}
 
 	@Test // DATAMONGO-1902
-	void rendersQueryOnNestedEmbeddedCorrectly() {
+	void rendersQueryOnNestedUnwrappedCorrectly() {
 
-		Query source = query(Criteria.where("withEmbedded.embeddableValue.stringValue").is("test"));
+		Query source = query(Criteria.where("withUnwrapped.unwrappedValue.stringValue").is("test"));
 
 		org.bson.Document target = mapper.getMappedObject(source.getQueryObject(),
-				context.getPersistentEntity(WrapperAroundWithEmbedded.class));
+				context.getPersistentEntity(WrapperAroundWithUnwrapped.class));
 
-		assertThat(target).isEqualTo(new org.bson.Document("withEmbedded.stringValue", "test"));
+		assertThat(target).isEqualTo(new org.bson.Document("withUnwrapped.stringValue", "test"));
 	}
 
 	@Test // DATAMONGO-1902
-	void rendersQueryOnNestedPrefixedEmbeddedCorrectly() {
+	void rendersQueryOnNestedPrefixedUnwrappedCorrectly() {
 
-		Query source = query(Criteria.where("withPrefixedEmbedded.embeddableValue.stringValue").is("test"));
+		Query source = query(Criteria.where("withPrefixedUnwrapped.unwrappedValue.stringValue").is("test"));
 
 		org.bson.Document target = mapper.getMappedObject(source.getQueryObject(),
-				context.getPersistentEntity(WrapperAroundWithEmbedded.class));
+				context.getPersistentEntity(WrapperAroundWithUnwrapped.class));
 
-		assertThat(target).isEqualTo(new org.bson.Document("withPrefixedEmbedded.prefix-stringValue", "test"));
+		assertThat(target).isEqualTo(new org.bson.Document("withPrefixedUnwrapped.prefix-stringValue", "test"));
 	}
 
 	@Test // DATAMONGO-1902
-	void sortByEmbeddableIsEmpty() {
+	void sortByUnwrappedIsEmpty() {
 
-		Query query = new Query().with(Sort.by("embeddableValue"));
+		Query query = new Query().with(Sort.by("unwrappedValue"));
 
 		org.bson.Document document = mapper.getMappedSort(query.getSortObject(),
-				context.getPersistentEntity(WithEmbedded.class));
+				context.getPersistentEntity(WithUnwrapped.class));
 
 		assertThat(document).isEqualTo(
 				new org.bson.Document("stringValue", 1).append("listValue", 1).append("with-at-field-annotation", 1));
 	}
 
 	@Test // DATAMONGO-1902
-	void sortByEmbeddableValue() {
+	void sortByUnwrappedValue() {
 
 		// atFieldAnnotatedValue
-		Query query = new Query().with(Sort.by("embeddableValue.stringValue"));
+		Query query = new Query().with(Sort.by("unwrappedValue.stringValue"));
 
 		org.bson.Document document = mapper.getMappedSort(query.getSortObject(),
-				context.getPersistentEntity(WithEmbedded.class));
+				context.getPersistentEntity(WithUnwrapped.class));
 
 		assertThat(document).isEqualTo(new org.bson.Document("stringValue", 1));
 	}
 
 	@Test // DATAMONGO-1902
-	void sortByEmbeddableValueWithFieldAnnotation() {
+	void sortByUnwrappedValueWithFieldAnnotation() {
 
-		Query query = new Query().with(Sort.by("embeddableValue.atFieldAnnotatedValue"));
+		Query query = new Query().with(Sort.by("unwrappedValue.atFieldAnnotatedValue"));
 
 		org.bson.Document document = mapper.getMappedSort(query.getSortObject(),
-				context.getPersistentEntity(WithEmbedded.class));
+				context.getPersistentEntity(WithUnwrapped.class));
 
 		assertThat(document).isEqualTo(new org.bson.Document("with-at-field-annotation", 1));
 	}
 
 	@Test // DATAMONGO-1902
-	void sortByPrefixedEmbeddableValueWithFieldAnnotation() {
+	void sortByPrefixedUnwrappedValueWithFieldAnnotation() {
 
-		Query query = new Query().with(Sort.by("embeddableValue.atFieldAnnotatedValue"));
+		Query query = new Query().with(Sort.by("unwrappedValue.atFieldAnnotatedValue"));
 
 		org.bson.Document document = mapper.getMappedSort(query.getSortObject(),
-				context.getPersistentEntity(WithPrefixedEmbedded.class));
+				context.getPersistentEntity(WithPrefixedUnwrapped.class));
 
 		assertThat(document).isEqualTo(new org.bson.Document("prefix-with-at-field-annotation", 1));
 	}
 
 	@Test // DATAMONGO-1902
-	void sortByNestedEmbeddableValueWithFieldAnnotation() {
+	void sortByNestedUnwrappedValueWithFieldAnnotation() {
 
-		Query query = new Query().with(Sort.by("withEmbedded.embeddableValue.atFieldAnnotatedValue"));
+		Query query = new Query().with(Sort.by("withUnwrapped.unwrappedValue.atFieldAnnotatedValue"));
 
 		org.bson.Document document = mapper.getMappedSort(query.getSortObject(),
-				context.getPersistentEntity(WrapperAroundWithEmbedded.class));
+				context.getPersistentEntity(WrapperAroundWithUnwrapped.class));
 
-		assertThat(document).isEqualTo(new org.bson.Document("withEmbedded.with-at-field-annotation", 1));
+		assertThat(document).isEqualTo(new org.bson.Document("withUnwrapped.with-at-field-annotation", 1));
 	}
 
 	@Test // DATAMONGO-1902
-	void sortByNestedPrefixedEmbeddableValueWithFieldAnnotation() {
+	void sortByNestedPrefixedUnwrappedValueWithFieldAnnotation() {
 
-		Query query = new Query().with(Sort.by("withPrefixedEmbedded.embeddableValue.atFieldAnnotatedValue"));
+		Query query = new Query().with(Sort.by("withPrefixedUnwrapped.unwrappedValue.atFieldAnnotatedValue"));
 
 		org.bson.Document document = mapper.getMappedSort(query.getSortObject(),
-				context.getPersistentEntity(WrapperAroundWithEmbedded.class));
+				context.getPersistentEntity(WrapperAroundWithUnwrapped.class));
 
-		assertThat(document).isEqualTo(new org.bson.Document("withPrefixedEmbedded.prefix-with-at-field-annotation", 1));
+		assertThat(document).isEqualTo(new org.bson.Document("withPrefixedUnwrapped.prefix-with-at-field-annotation", 1));
 	}
 
 	@Test // DATAMONGO-1902
-	void projectOnEmbeddableUsesFields() {
+	void projectOnUnwrappedUsesFields() {
 
 		Query query = new Query();
-		query.fields().include("embeddableValue");
+		query.fields().include("unwrappedValue");
 
 		org.bson.Document document = mapper.getMappedFields(query.getFieldsObject(),
-				context.getPersistentEntity(WithEmbedded.class));
+				context.getPersistentEntity(WithUnwrapped.class));
 
 		assertThat(document).isEqualTo(
 				new org.bson.Document("stringValue", 1).append("listValue", 1).append("with-at-field-annotation", 1));
 	}
 
 	@Test // DATAMONGO-1902
-	void projectOnEmbeddableValue() {
+	void projectOnUnwrappedValue() {
 
 		Query query = new Query();
-		query.fields().include("embeddableValue.stringValue");
+		query.fields().include("unwrappedValue.stringValue");
 
 		org.bson.Document document = mapper.getMappedFields(query.getFieldsObject(),
-				context.getPersistentEntity(WithEmbedded.class));
+				context.getPersistentEntity(WithUnwrapped.class));
 
 		assertThat(document).isEqualTo(new org.bson.Document("stringValue", 1));
 	}
@@ -1375,28 +1375,28 @@ public class QueryMapperUnitTests {
 		}
 	}
 
-	static class WrapperAroundWithEmbedded {
+	static class WrapperAroundWithUnwrapped {
 
 		String someValue;
-		WithEmbedded withEmbedded;
-		WithPrefixedEmbedded withPrefixedEmbedded;
+		WithUnwrapped withUnwrapped;
+		WithPrefixedUnwrapped withPrefixedUnwrapped;
 	}
 
-	static class WithEmbedded {
+	static class WithUnwrapped {
 
 		String id;
 
-		@Embedded.Nullable EmbeddableType embeddableValue;
+		@Unwrapped.Nullable UnwrappableType unwrappedValue;
 	}
 
-	static class WithPrefixedEmbedded {
+	static class WithPrefixedUnwrapped {
 
 		String id;
 
-		@Embedded.Nullable("prefix-") EmbeddableType embeddableValue;
+		@Unwrapped.Nullable("prefix-") UnwrappableType unwrappedValue;
 	}
 
-	static class EmbeddableType {
+	static class UnwrappableType {
 
 		String stringValue;
 		List<String> listValue;

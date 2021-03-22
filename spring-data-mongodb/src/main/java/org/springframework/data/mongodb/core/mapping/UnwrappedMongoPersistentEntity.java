@@ -32,18 +32,18 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 
 /**
- * Embedded variant of {@link MongoPersistentEntity}.
+ * Unwrapped variant of {@link MongoPersistentEntity}.
  *
  * @author Christoph Strobl
  * @since 3.2
- * @see Embedded
+ * @see Unwrapped
  */
-class EmbeddedMongoPersistentEntity<T> implements MongoPersistentEntity<T> {
+class UnwrappedMongoPersistentEntity<T> implements MongoPersistentEntity<T> {
 
-	private final EmbeddedEntityContext context;
+	private final UnwrapEntityContext context;
 	private final MongoPersistentEntity<T> delegate;
 
-	public EmbeddedMongoPersistentEntity(MongoPersistentEntity<T> delegate, EmbeddedEntityContext context) {
+	public UnwrappedMongoPersistentEntity(MongoPersistentEntity<T> delegate, UnwrapEntityContext context) {
 
 		this.context = context;
 		this.delegate = delegate;
@@ -153,7 +153,7 @@ class EmbeddedMongoPersistentEntity<T> implements MongoPersistentEntity<T> {
 			return persistentProperty;
 		}
 
-		throw new RuntimeException(":kladjnf");
+		throw new IllegalStateException(String.format("Required property %s not found for %s!", name, getType()));
 	}
 
 	@Override
@@ -291,7 +291,7 @@ class EmbeddedMongoPersistentEntity<T> implements MongoPersistentEntity<T> {
 		if (source == null) {
 			return source;
 		}
-		return new EmbeddedMongoPersistentProperty(source, context);
+		return new UnwrappedMongoPersistentProperty(source, context);
 	}
 
 	@Override
@@ -320,7 +320,7 @@ class EmbeddedMongoPersistentEntity<T> implements MongoPersistentEntity<T> {
 	}
 
 	@Override
-	public boolean isEmbedded() {
-		return context.getProperty().isEmbedded();
+	public boolean isUnwrapped() {
+		return context.getProperty().isUnwrapped();
 	}
 }

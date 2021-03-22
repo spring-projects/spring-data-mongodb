@@ -62,10 +62,10 @@ import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mapping.model.SpELExpressionParameterValueProvider;
 import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
-import org.springframework.data.mongodb.core.mapping.Embedded;
-import org.springframework.data.mongodb.core.mapping.Embedded.OnEmpty;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.mapping.Unwrapped;
+import org.springframework.data.mongodb.core.mapping.Unwrapped.OnEmpty;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertCallback;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertEvent;
 import org.springframework.data.mongodb.core.mapping.event.AfterLoadEvent;
@@ -447,10 +447,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				continue;
 			}
 
-			if (prop.isEmbedded()) {
+			if (prop.isUnwrapped()) {
 
 				accessor.setProperty(prop,
-						readEmbedded(context, documentAccessor, prop, mappingContext.getRequiredPersistentEntity(prop)));
+						readUnwrapped(context, documentAccessor, prop, mappingContext.getRequiredPersistentEntity(prop)));
 				continue;
 			}
 
@@ -500,17 +500,17 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	@Nullable
-	private Object readEmbedded(ConversionContext context, DocumentAccessor documentAccessor,
+	private Object readUnwrapped(ConversionContext context, DocumentAccessor documentAccessor,
 			MongoPersistentProperty prop,
-			MongoPersistentEntity<?> embeddedEntity) {
+			MongoPersistentEntity<?> unwrappedEntity) {
 
-		if (prop.findAnnotation(Embedded.class).onEmpty().equals(OnEmpty.USE_EMPTY)) {
-			return read(context, embeddedEntity, (Document) documentAccessor.getDocument());
+		if (prop.findAnnotation(Unwrapped.class).onEmpty().equals(OnEmpty.USE_EMPTY)) {
+			return read(context, unwrappedEntity, (Document) documentAccessor.getDocument());
 		}
 
-		for (MongoPersistentProperty persistentProperty : embeddedEntity) {
+		for (MongoPersistentProperty persistentProperty : unwrappedEntity) {
 			if (documentAccessor.hasValue(persistentProperty)) {
-				return read(context, embeddedEntity, (Document) documentAccessor.getDocument());
+				return read(context, unwrappedEntity, (Document) documentAccessor.getDocument());
 			}
 		}
 		return null;
@@ -680,7 +680,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		TypeInformation<?> valueType = ClassTypeInformation.from(obj.getClass());
 		TypeInformation<?> type = prop.getTypeInformation();
 
-		if (prop.isEmbedded()) {
+		if (prop.isUnwrapped()) {
 
 			Document target = new Document();
 			writeInternal(obj, target, mappingContext.getPersistentEntity(prop));
