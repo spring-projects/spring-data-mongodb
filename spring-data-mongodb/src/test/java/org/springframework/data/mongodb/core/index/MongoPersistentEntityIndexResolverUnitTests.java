@@ -44,12 +44,12 @@ import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexRes
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Embedded;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.Language;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.mapping.Unwrapped;
 import org.springframework.data.util.ClassTypeInformation;
 
 /**
@@ -1286,10 +1286,10 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 
 		@Test // DATAMONGO-1902
-		public void resolvedIndexOnEmbeddedType() {
+		public void resolvedIndexOnUnwrappedType() {
 
-			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(WithEmbedded.class,
-					EmbeddableType.class);
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(WithUnwrapped.class,
+					UnwrappableType.class);
 
 			assertThat(indexDefinitions).hasSize(2);
 			assertThat(indexDefinitions.get(0)).satisfies(it -> {
@@ -1301,10 +1301,10 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 
 		@Test // DATAMONGO-1902
-		public void resolvedIndexOnNestedEmbeddedType() {
+		public void resolvedIndexOnNestedUnwrappedType() {
 
 			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
-					WrapperAroundWithEmbedded.class, WithEmbedded.class, EmbeddableType.class);
+					WrapperAroundWithUnwrapped.class, WithUnwrapped.class, UnwrappableType.class);
 
 			assertThat(indexDefinitions).hasSize(2);
 			assertThat(indexDefinitions.get(0)).satisfies(it -> {
@@ -1319,7 +1319,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		public void errorsOnIndexOnEmbedded() {
 
 			assertThatExceptionOfType(InvalidDataAccessApiUsageException.class)
-					.isThrownBy(() -> prepareMappingContextAndResolveIndexForType(InvalidIndexOnEmbedded.class));
+					.isThrownBy(() -> prepareMappingContextAndResolveIndexForType(InvalidIndexOnUnwrapped.class));
 
 		}
 
@@ -1514,30 +1514,30 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 
 		@Document
-		static class WrapperAroundWithEmbedded {
+		static class WrapperAroundWithUnwrapped {
 
 			String id;
-			WithEmbedded withEmbedded;
+			WithUnwrapped withEmbedded;
 		}
 
 		@Document
-		static class WithEmbedded {
+		static class WithUnwrapped {
 
 			String id;
 
-			@Embedded.Nullable EmbeddableType embeddableType;
+			@Unwrapped.Nullable UnwrappableType unwrappableType;
 		}
 
 		@Document
-		class InvalidIndexOnEmbedded {
+		class InvalidIndexOnUnwrapped {
 
 			@Indexed //
-			@Embedded.Nullable //
-			EmbeddableType embeddableType;
+			@Unwrapped.Nullable //
+					UnwrappableType unwrappableType;
 
 		}
 
-		static class EmbeddableType {
+		static class UnwrappableType {
 
 			@Indexed String stringValue;
 

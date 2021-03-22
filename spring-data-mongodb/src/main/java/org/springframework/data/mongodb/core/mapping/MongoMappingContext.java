@@ -133,10 +133,10 @@ public class MongoMappingContext extends AbstractMappingContext<MongoPersistentE
 
 		MongoPersistentEntity<?> entity = super.getPersistentEntity(persistentProperty);
 
-		if(entity == null || !persistentProperty.isEmbedded()) {
+		if(entity == null || !persistentProperty.isUnwrapped()) {
 			return entity;
 		}
 
-		return new EmbeddedMongoPersistentEntity<>(entity, new EmbeddedEntityContext(persistentProperty));
+		return new UnwrappedMongoPersistentEntity<>(entity, new UnwrapEntityContext(persistentProperty));
 	}
 }

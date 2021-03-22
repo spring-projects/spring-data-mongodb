@@ -1366,34 +1366,34 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	}
 
 	@Test // DATAMONGO-1902
-	void findByValueInsideEmbedded() {
+	void findByValueInsideUnwrapped() {
 
 		Person bart = new Person("bart", "simpson");
 		User user = new User();
 		user.setUsername("bartman");
 		user.setId("84r1m4n");
-		bart.setEmbeddedUser(user);
+		bart.setUnwrappedUser(user);
 
 		operations.save(bart);
 
-		List<Person> result = repository.findByEmbeddedUserUsername(user.getUsername());
+		List<Person> result = repository.findByUnwrappedUserUsername(user.getUsername());
 
 		assertThat(result).hasSize(1);
 		assertThat(result.get(0).getId().equals(bart.getId()));
 	}
 
 	@Test // DATAMONGO-1902
-	void findByEmbedded() {
+	void findByUnwrapped() {
 
 		Person bart = new Person("bart", "simpson");
 		User user = new User();
 		user.setUsername("bartman");
 		user.setId("84r1m4n");
-		bart.setEmbeddedUser(user);
+		bart.setUnwrappedUser(user);
 
 		operations.save(bart);
 
-		List<Person> result = repository.findByEmbeddedUser(user);
+		List<Person> result = repository.findByUnwrappedUser(user);
 
 		assertThat(result).hasSize(1);
 		assertThat(result.get(0).getId().equals(bart.getId()));

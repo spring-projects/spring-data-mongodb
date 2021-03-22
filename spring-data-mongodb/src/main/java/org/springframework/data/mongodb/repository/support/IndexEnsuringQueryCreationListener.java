@@ -30,7 +30,7 @@ import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexOperationsProvider;
-import org.springframework.data.mongodb.core.mapping.Embedded;
+import org.springframework.data.mongodb.core.mapping.Unwrapped;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.repository.query.MongoEntityMetadata;
 import org.springframework.data.mongodb.repository.query.PartTreeMongoQuery;
@@ -90,7 +90,7 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 			if (GEOSPATIAL_TYPES.contains(part.getType())) {
 				return;
 			}
-			if (isIndexOnEmbeddedType(part)) {
+			if (isIndexOnUnwrappedType(part)) {
 				return;
 			}
 
@@ -138,7 +138,7 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 		LOG.debug(String.format("Created %s!", index));
 	}
 
-	public boolean isIndexOnEmbeddedType(Part part) {
+	public boolean isIndexOnUnwrappedType(Part part) {
 
 		// TODO we could do it for nested fields in the
 		Field field = ReflectionUtils.findField(part.getProperty().getOwningType().getType(),
@@ -148,7 +148,7 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 			return false;
 		}
 
-		return AnnotatedElementUtils.hasAnnotation(field, Embedded.class);
+		return AnnotatedElementUtils.hasAnnotation(field, Unwrapped.class);
 	}
 
 	private static Direction toDirection(Sort sort, String property) {

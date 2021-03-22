@@ -26,10 +26,10 @@ import javax.annotation.meta.When;
 import org.springframework.core.annotation.AliasFor;
 
 /**
- * The annotation to configure a value object as embedded (flattened out) in the target document.
+ * The annotation to configure a value object as flattened out in the target document.
  * <p />
  * Depending on the {@link OnEmpty value} of {@link #onEmpty()} the property is set to {@literal null} or an empty
- * instance in the case all embedded values are {@literal null} when reading from the result set.
+ * instance in the case all unwrapped values are {@literal null} when reading from the result set.
  *
  * @author Christoph Strobl
  * @since 3.2
@@ -37,24 +37,24 @@ import org.springframework.core.annotation.AliasFor;
 @Documented
 @Retention(value = RetentionPolicy.RUNTIME)
 @Target(value = { ElementType.ANNOTATION_TYPE, ElementType.FIELD, ElementType.METHOD })
-public @interface Embedded {
+public @interface Unwrapped {
 
 	/**
-	 * Set the load strategy for the embedded object if all contained fields yield {@literal null} values.
+	 * Set the load strategy for the unwrapped object if all contained fields yield {@literal null} values.
 	 * <p />
-	 * {@link Nullable @Embedded.Nullable} and {@link Empty @Embedded.Empty} offer shortcuts for this.
+	 * {@link Nullable @Unwrapped.Nullable} and {@link Empty @Unwrapped.Empty} offer shortcuts for this.
 	 *
 	 * @return never {@link} null.
 	 */
 	OnEmpty onEmpty();
 
 	/**
-	 * @return prefix for columns in the embedded value object. An empty {@link String} by default.
+	 * @return prefix for columns in the unwrapped value object. An empty {@link String} by default.
 	 */
 	String prefix() default "";
 
 	/**
-	 * Load strategy to be used {@link Embedded#onEmpty()}.
+	 * Load strategy to be used {@link Unwrapped#onEmpty()}.
 	 *
 	 * @author Christoph Strobl
 	 */
@@ -63,22 +63,22 @@ public @interface Embedded {
 	}
 
 	/**
-	 * Shortcut for a nullable embedded property.
+	 * Shortcut for a nullable unwrapped property.
 	 *
 	 * <pre class="code">
-	 * &#64;Embedded.Nullable private Address address;
+	 * &#64;Unwrapped.Nullable private Address address;
 	 * </pre>
 	 *
 	 * as alternative to the more verbose
 	 *
 	 * <pre class="code">
-	 * &#64;Embedded(onEmpty = USE_NULL) &#64;javax.annotation.Nonnull(when = When.MAYBE) private Address address;
+	 * &#64;Unwrapped(onEmpty = USE_NULL) &#64;javax.annotation.Nonnull(when = When.MAYBE) private Address address;
 	 * </pre>
 	 *
 	 * @author Christoph Strobl
-	 * @see Embedded#onEmpty()
+	 * @see Unwrapped#onEmpty()
 	 */
-	@Embedded(onEmpty = OnEmpty.USE_NULL)
+	@Unwrapped(onEmpty = OnEmpty.USE_NULL)
 	@Documented
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target({ ElementType.FIELD, ElementType.METHOD })
@@ -86,35 +86,35 @@ public @interface Embedded {
 	@interface Nullable {
 
 		/**
-		 * @return prefix for columns in the embedded value object. An empty {@link String} by default.
+		 * @return prefix for columns in the unwrapped value object. An empty {@link String} by default.
 		 */
-		@AliasFor(annotation = Embedded.class, attribute = "prefix")
+		@AliasFor(annotation = Unwrapped.class, attribute = "prefix")
 		String prefix() default "";
 
 		/**
-		 * @return value for columns in the embedded value object. An empty {@link String} by default.
+		 * @return value for columns in the unwrapped value object. An empty {@link String} by default.
 		 */
-		@AliasFor(annotation = Embedded.class, attribute = "prefix")
+		@AliasFor(annotation = Unwrapped.class, attribute = "prefix")
 		String value() default "";
 	}
 
 	/**
-	 * Shortcut for an empty embedded property.
+	 * Shortcut for an empty unwrapped property.
 	 *
 	 * <pre class="code">
-	 * &#64;Embedded.Empty private Address address;
+	 * &#64;Unwrapped.Empty private Address address;
 	 * </pre>
 	 *
 	 * as alternative to the more verbose
 	 *
 	 * <pre class="code">
-	 * &#64;Embedded(onEmpty = USE_EMPTY) &#64;javax.annotation.Nonnull(when = When.NEVER) private Address address;
+	 * &#64;Unwrapped(onEmpty = USE_EMPTY) &#64;javax.annotation.Nonnull(when = When.NEVER) private Address address;
 	 * </pre>
 	 *
 	 * @author Christoph Strobl
-	 * @see Embedded#onEmpty()
+	 * @see Unwrapped#onEmpty()
 	 */
-	@Embedded(onEmpty = OnEmpty.USE_EMPTY)
+	@Unwrapped(onEmpty = OnEmpty.USE_EMPTY)
 	@Documented
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target({ ElementType.FIELD, ElementType.METHOD })
@@ -122,15 +122,15 @@ public @interface Embedded {
 	@interface Empty {
 
 		/**
-		 * @return prefix for columns in the embedded value object. An empty {@link String} by default.
+		 * @return prefix for columns in the unwrapped value object. An empty {@link String} by default.
 		 */
-		@AliasFor(annotation = Embedded.class, attribute = "prefix")
+		@AliasFor(annotation = Unwrapped.class, attribute = "prefix")
 		String prefix() default "";
 
 		/**
-		 * @return value for columns in the embedded value object. An empty {@link String} by default.
+		 * @return value for columns in the unwrapped value object. An empty {@link String} by default.
 		 */
-		@AliasFor(annotation = Embedded.class, attribute = "prefix")
+		@AliasFor(annotation = Unwrapped.class, attribute = "prefix")
 		String value() default "";
 	}
 }

@@ -124,11 +124,11 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	}
 
 	/**
-	 * @return {@literal true} if the property should be embedded.
+	 * @return {@literal true} if the property should be unwrapped.
 	 * @since 3.2
 	 */
-	default boolean isEmbedded() {
-		return isEntity() && isAnnotationPresent(Embedded.class);
+	default boolean isUnwrapped() {
+		return isEntity() && isAnnotationPresent(Unwrapped.class);
 	}
 
 	/**
@@ -145,7 +145,7 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
 		 */
 		public String convert(MongoPersistentProperty source) {
-			if (!source.isEmbedded()) {
+			if (!source.isUnwrapped()) {
 				return source.getFieldName();
 			}
 			return "";

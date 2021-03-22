@@ -20,50 +20,50 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.util.Arrays;
 import java.util.List;
 
-import lombok.ToString;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.data.mongodb.core.mapping.Embedded;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.Unwrapped;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.Template;
 
 /**
- * Integration tests for {@link Embedded}.
+ * Integration tests for {@link Unwrapped}.
  *
  * @author Christoph Strobl
  */
 @ExtendWith(MongoTemplateExtension.class)
-class MongoTemplateEmbeddedTests {
+class MongoTemplateUnwrappedTests {
 
 	private static @Template MongoTemplate template;
 
 	@Test // DATAMONGO-1902
 	void readWrite() {
 
-		WithEmbedded source = new WithEmbedded();
+		WithUnwrapped source = new WithUnwrapped();
 		source.id = "id-1";
-		source.embeddableValue = new EmbeddableType();
+		source.embeddableValue = new UnwrappableType();
 		source.embeddableValue.stringValue = "string-val";
 		source.embeddableValue.listValue = Arrays.asList("list-val-1", "list-val-2");
 		source.embeddableValue.atFieldAnnotatedValue = "@Field";
 
 		template.save(source);
 
-		assertThat(template.findOne(query(where("id").is(source.id)), WithEmbedded.class)).isEqualTo(source);
+		assertThat(template.findOne(query(where("id").is(source.id)), WithUnwrapped.class)).isEqualTo(source);
 	}
 
 	@Test // DATAMONGO-1902
-	void filterOnEmbeddedValue() {
+	void filterOnUnwrappedValue() {
 
-		WithEmbedded source = new WithEmbedded();
+		WithUnwrapped source = new WithUnwrapped();
 		source.id = "id-1";
-		source.embeddableValue = new EmbeddableType();
+		source.embeddableValue = new UnwrappableType();
 		source.embeddableValue.stringValue = "string-val";
 		source.embeddableValue.listValue = Arrays.asList("list-val-1", "list-val-2");
 		source.embeddableValue.atFieldAnnotatedValue = "@Field";
@@ -71,31 +71,31 @@ class MongoTemplateEmbeddedTests {
 		template.save(source);
 
 		assertThat(template.findOne(
-				Query.query(where("embeddableValue.stringValue").is(source.embeddableValue.stringValue)), WithEmbedded.class))
+				Query.query(where("embeddableValue.stringValue").is(source.embeddableValue.stringValue)), WithUnwrapped.class))
 						.isEqualTo(source);
 	}
 
 	@Test // DATAMONGO-1902
 	void readWritePrefixed() {
 
-		WithPrefixedEmbedded source = new WithPrefixedEmbedded();
+		WithPrefixedUnwrapped source = new WithPrefixedUnwrapped();
 		source.id = "id-1";
-		source.embeddableValue = new EmbeddableType();
+		source.embeddableValue = new UnwrappableType();
 		source.embeddableValue.stringValue = "string-val";
 		source.embeddableValue.listValue = Arrays.asList("list-val-1", "list-val-2");
 		source.embeddableValue.atFieldAnnotatedValue = "@Field";
 
 		template.save(source);
 
-		assertThat(template.findOne(query(where("id").is(source.id)), WithPrefixedEmbedded.class)).isEqualTo(source);
+		assertThat(template.findOne(query(where("id").is(source.id)), WithPrefixedUnwrapped.class)).isEqualTo(source);
 	}
 
 	@Test // DATAMONGO-1902
-	void filterOnPrefixedEmbeddedValue() {
+	void filterOnPrefixedUnwrappedValue() {
 
-		WithPrefixedEmbedded source = new WithPrefixedEmbedded();
+		WithPrefixedUnwrapped source = new WithPrefixedUnwrapped();
 		source.id = "id-1";
-		source.embeddableValue = new EmbeddableType();
+		source.embeddableValue = new UnwrappableType();
 		source.embeddableValue.stringValue = "string-val";
 		source.embeddableValue.listValue = Arrays.asList("list-val-1", "list-val-2");
 		source.embeddableValue.atFieldAnnotatedValue = "@Field";
@@ -104,30 +104,30 @@ class MongoTemplateEmbeddedTests {
 
 		assertThat(
 				template.findOne(Query.query(where("embeddableValue.stringValue").is(source.embeddableValue.stringValue)),
-						WithPrefixedEmbedded.class)).isEqualTo(source);
+						WithPrefixedUnwrapped.class)).isEqualTo(source);
 	}
 
 	@EqualsAndHashCode
 	@ToString
-	static class WithEmbedded {
+	static class WithUnwrapped {
 
 		String id;
 
-		@Embedded.Nullable EmbeddableType embeddableValue;
+		@Unwrapped.Nullable UnwrappableType embeddableValue;
 	}
 
 	@EqualsAndHashCode
 	@ToString
-	static class WithPrefixedEmbedded {
+	static class WithPrefixedUnwrapped {
 
 		String id;
 
-		@Embedded.Nullable("prefix-") EmbeddableType embeddableValue;
+		@Unwrapped.Nullable("prefix-") UnwrappableType embeddableValue;
 	}
 
 	@EqualsAndHashCode
 	@ToString
-	static class EmbeddableType {
+	static class UnwrappableType {
 
 		String stringValue;
 		List<String> listValue;

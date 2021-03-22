@@ -30,8 +30,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.MongoExpression;
 import org.springframework.data.mongodb.core.aggregation.AggregationSpELExpression;
 import org.springframework.data.mongodb.core.aggregation.StringOperators;
-import org.springframework.data.mongodb.core.mapping.Embedded;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.Unwrapped;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
@@ -126,7 +126,7 @@ class MongoTemplateFieldProjectionTests {
 	}
 
 	@Test // GH-3583
-	void mapsProjectionOnEmbedded() {
+	void mapsProjectionOnUnwrapped() {
 
 		luke.address = new Address();
 		luke.address.planet = "tatoine";
@@ -164,7 +164,7 @@ class MongoTemplateFieldProjectionTests {
 		@Field("last_name") //
 		String lastname;
 
-		@Embedded.Nullable Address address;
+		@Unwrapped.Nullable Address address;
 
 		Person toUpperCaseLastnameClone(Person source) {
 

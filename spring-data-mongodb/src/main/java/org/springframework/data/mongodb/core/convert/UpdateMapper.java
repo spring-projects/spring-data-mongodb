@@ -133,7 +133,7 @@ public class UpdateMapper extends QueryMapper {
 	@Override
 	protected Object delegateConvertToMongoType(Object source, @Nullable MongoPersistentEntity<?> entity) {
 
-		if(entity != null && entity.isEmbedded()) {
+		if(entity != null && entity.isUnwrapped()) {
 			return converter.convertToMongoType(source, entity);
 		}
 

@@ -144,7 +144,7 @@ public class QueryMapper {
 				Field field = createPropertyField(entity, key, mappingContext);
 
 				// TODO: move to dedicated method
-				if (field.getProperty() != null && field.getProperty().isEmbedded()) {
+				if (field.getProperty() != null && field.getProperty().isUnwrapped()) {
 
 					Object theNestedObject = BsonUtils.get(query, key);
 					Document mappedValue = (Document) getMappedValue(field, theNestedObject);
@@ -189,13 +189,13 @@ public class QueryMapper {
 			return new Document();
 		}
 
-		sortObject = filterEmbeddedObjects(sortObject, entity);
+		sortObject = filterUnwrappedObjects(sortObject, entity);
 
 		Document mappedSort = new Document();
 		for (Map.Entry<String, Object> entry : BsonUtils.asMap(sortObject).entrySet()) {
 
 			Field field = createPropertyField(entity, entry.getKey(), mappingContext);
-			if (field.getProperty() != null && field.getProperty().isEmbedded()) {
+			if (field.getProperty() != null && field.getProperty().isUnwrapped()) {
 				continue;
 			}
 
@@ -219,7 +219,7 @@ public class QueryMapper {
 
 		Assert.notNull(fieldsObject, "FieldsObject must not be null!");
 
-		fieldsObject = filterEmbeddedObjects(fieldsObject, entity);
+		fieldsObject = filterUnwrappedObjects(fieldsObject, entity);
 
 		Document mappedFields = getMappedObject(fieldsObject, entity);
 		mapMetaAttributes(mappedFields, entity, MetaMapping.FORCE);
@@ -241,7 +241,7 @@ public class QueryMapper {
 		}
 	}
 
-	private Document filterEmbeddedObjects(Document fieldsObject, @Nullable MongoPersistentEntity<?> entity) {
+	private Document filterUnwrappedObjects(Document fieldsObject, @Nullable MongoPersistentEntity<?> entity) {
 
 		if (fieldsObject.isEmpty() || entity == null) {
 			return fieldsObject;
@@ -258,13 +258,13 @@ public class QueryMapper {
 						.getPersistentPropertyPath(path);
 				MongoPersistentProperty property = mappingContext.getPersistentPropertyPath(path).getRequiredLeafProperty();
 
-				if (property.isEmbedded() && property.isEntity()) {
+				if (property.isUnwrapped() && property.isEntity()) {
 
-					MongoPersistentEntity<?> embeddedEntity = mappingContext.getRequiredPersistentEntity(property);
+					MongoPersistentEntity<?> unwrappedEntity = mappingContext.getRequiredPersistentEntity(property);
 
-					for (MongoPersistentProperty embedded : embeddedEntity) {
+					for (MongoPersistentProperty unwrappedProperty : unwrappedEntity) {
 
-						DotPath dotPath = DotPath.from(persistentPropertyPath.toDotPath()).append(embedded.getName());
+						DotPath dotPath = DotPath.from(persistentPropertyPath.toDotPath()).append(unwrappedProperty.getName());
 						target.put(dotPath.toString(), field.getValue());
 					}
 
@@ -564,7 +564,7 @@ public class QueryMapper {
 	@Nullable
 	protected Object delegateConvertToMongoType(Object source, @Nullable MongoPersistentEntity<?> entity) {
 
-		if (entity != null && entity.isEmbedded()) {
+		if (entity != null && entity.isUnwrapped()) {
 			return converter.convertToMongoType(source, entity);
 		}
 

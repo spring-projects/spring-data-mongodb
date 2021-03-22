@@ -95,10 +95,10 @@ public interface MongoPersistentEntity<T> extends MutablePersistentEntity<T, Mon
 	}
 
 	/**
-	 * @return {@literal true} if the entity should be embedded.
+	 * @return {@literal true} if the entity should be unwrapped.
 	 * @since 3.2
 	 */
-	default boolean isEmbedded() {
+	default boolean isUnwrapped() {
 		return false;
 	}
 

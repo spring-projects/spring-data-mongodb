@@ -45,8 +45,8 @@ import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
-import org.springframework.data.mongodb.core.mapping.Embedded;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.Unwrapped;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 /**
@@ -358,11 +358,11 @@ public class TypeBasedAggregationOperationContextUnitTests {
 	}
 
 	@Test // DATAMONGO-1902
-	void rendersProjectOnEmbeddedFieldCorrectly() {
+	void rendersProjectOnUnwrappableTypeFieldCorrectly() {
 
-		AggregationOperationContext context = getContext(WithEmbedded.class);
+		AggregationOperationContext context = getContext(WithUnwrapped.class);
 
-		Document agg = newAggregation(WithEmbedded.class, project().and("embeddableType.stringValue").as("val"))
+		Document agg = newAggregation(WithUnwrapped.class, project().and("unwrappedValue.stringValue").as("val"))
 				.toDocument("collection", context);
 
 		assertThat(getPipelineElementFromAggregationAt(agg, 0).get("$project"))
@@ -370,11 +370,11 @@ public class TypeBasedAggregationOperationContextUnitTests {
 	}
 
 	@Test // DATAMONGO-1902
-	void rendersProjectOnEmbeddedFieldWithAtFieldAnnotationCorrectly() {
+	void rendersProjectOnUnwrappedFieldWithAtFieldAnnotationCorrectly() {
 
-		AggregationOperationContext context = getContext(WithEmbedded.class);
+		AggregationOperationContext context = getContext(WithUnwrapped.class);
 
-		Document agg = newAggregation(WithEmbedded.class, project().and("embeddableType.atFieldAnnotatedValue").as("val"))
+		Document agg = newAggregation(WithUnwrapped.class, project().and("unwrappedValue.atFieldAnnotatedValue").as("val"))
 				.toDocument("collection", context);
 
 		assertThat(getPipelineElementFromAggregationAt(agg, 0).get("$project"))
@@ -382,11 +382,11 @@ public class TypeBasedAggregationOperationContextUnitTests {
 	}
 
 	@Test // DATAMONGO-1902
-	void rendersProjectOnPrefixedEmbeddedFieldCorrectly() {
+	void rendersProjectOnPrefixedUnwrappedFieldCorrectly() {
 
-		AggregationOperationContext context = getContext(WithEmbedded.class);
+		AggregationOperationContext context = getContext(WithUnwrapped.class);
 
-		Document agg = newAggregation(WithEmbedded.class, project().and("prefixedEmbeddableValue.stringValue").as("val"))
+		Document agg = newAggregation(WithUnwrapped.class, project().and("prefixedUnwrappedValue.stringValue").as("val"))
 				.toDocument("collection", context);
 
 		assertThat(getPipelineElementFromAggregationAt(agg, 0).get("$project"))
@@ -394,64 +394,65 @@ public class TypeBasedAggregationOperationContextUnitTests {
 	}
 
 	@Test // DATAMONGO-1902
-	void rendersProjectOnPrefixedEmbeddedFieldWithAtFieldAnnotationCorrectly() {
+	void rendersProjectOnPrefixedUnwrappedFieldWithAtFieldAnnotationCorrectly() {
 
-		AggregationOperationContext context = getContext(WithEmbedded.class);
+		AggregationOperationContext context = getContext(WithUnwrapped.class);
 
-		Document agg = newAggregation(WithEmbedded.class,
-				project().and("prefixedEmbeddableValue.atFieldAnnotatedValue").as("val")).toDocument("collection", context);
+		Document agg = newAggregation(WithUnwrapped.class,
+				project().and("prefixedUnwrappedValue.atFieldAnnotatedValue").as("val")).toDocument("collection", context);
 
 		assertThat(getPipelineElementFromAggregationAt(agg, 0).get("$project"))
 				.isEqualTo(new Document("val", "$prefix-with-at-field-annotation"));
 	}
 
 	@Test // DATAMONGO-1902
-	void rendersProjectOnNestedEmbeddedFieldCorrectly() {
+	void rendersProjectOnNestedUnwrappedFieldCorrectly() {
 
-		AggregationOperationContext context = getContext(WrapperAroundWithEmbedded.class);
+		AggregationOperationContext context = getContext(WrapperAroundWithUnwrapped.class);
 
-		Document agg = newAggregation(WrapperAroundWithEmbedded.class,
-				project().and("withEmbedded.embeddableType.stringValue").as("val")).toDocument("collection", context);
+		Document agg = newAggregation(WrapperAroundWithUnwrapped.class,
+				project().and("withUnwrapped.unwrappedValue.stringValue").as("val")).toDocument("collection", context);
 
 		assertThat(getPipelineElementFromAggregationAt(agg, 0).get("$project"))
-				.isEqualTo(new Document("val", "$withEmbedded.stringValue"));
+				.isEqualTo(new Document("val", "$withUnwrapped.stringValue"));
 	}
 
 	@Test // DATAMONGO-1902
-	void rendersProjectOnNestedEmbeddedFieldWithAtFieldAnnotationCorrectly() {
+	void rendersProjectOnNestedUnwrappedFieldWithAtFieldAnnotationCorrectly() {
 
-		AggregationOperationContext context = getContext(WrapperAroundWithEmbedded.class);
+		AggregationOperationContext context = getContext(WrapperAroundWithUnwrapped.class);
 
-		Document agg = newAggregation(WrapperAroundWithEmbedded.class,
-				project().and("withEmbedded.embeddableType.atFieldAnnotatedValue").as("val")).toDocument("collection", context);
-
-		assertThat(getPipelineElementFromAggregationAt(agg, 0).get("$project"))
-				.isEqualTo(new Document("val", "$withEmbedded.with-at-field-annotation"));
-	}
-
-	@Test // DATAMONGO-1902
-	void rendersProjectOnNestedPrefixedEmbeddedFieldCorrectly() {
-
-		AggregationOperationContext context = getContext(WrapperAroundWithEmbedded.class);
-
-		Document agg = newAggregation(WrapperAroundWithEmbedded.class,
-				project().and("withEmbedded.prefixedEmbeddableValue.stringValue").as("val")).toDocument("collection", context);
-
-		assertThat(getPipelineElementFromAggregationAt(agg, 0).get("$project"))
-				.isEqualTo(new Document("val", "$withEmbedded.prefix-stringValue"));
-	}
-
-	@Test // DATAMONGO-1902
-	void rendersProjectOnNestedPrefixedEmbeddedFieldWithAtFieldAnnotationCorrectly() {
-
-		AggregationOperationContext context = getContext(WrapperAroundWithEmbedded.class);
-
-		Document agg = newAggregation(WrapperAroundWithEmbedded.class,
-				project().and("withEmbedded.prefixedEmbeddableValue.atFieldAnnotatedValue").as("val")).toDocument("collection",
+		Document agg = newAggregation(WrapperAroundWithUnwrapped.class,
+				project().and("withUnwrapped.unwrappedValue.atFieldAnnotatedValue").as("val")).toDocument("collection",
 						context);
 
 		assertThat(getPipelineElementFromAggregationAt(agg, 0).get("$project"))
-				.isEqualTo(new Document("val", "$withEmbedded.prefix-with-at-field-annotation"));
+				.isEqualTo(new Document("val", "$withUnwrapped.with-at-field-annotation"));
+	}
+
+	@Test // DATAMONGO-1902
+	void rendersProjectOnNestedPrefixedUnwrappedFieldCorrectly() {
+
+		AggregationOperationContext context = getContext(WrapperAroundWithUnwrapped.class);
+
+		Document agg = newAggregation(WrapperAroundWithUnwrapped.class,
+				project().and("withUnwrapped.prefixedUnwrappedValue.stringValue").as("val")).toDocument("collection", context);
+
+		assertThat(getPipelineElementFromAggregationAt(agg, 0).get("$project"))
+				.isEqualTo(new Document("val", "$withUnwrapped.prefix-stringValue"));
+	}
+
+	@Test // DATAMONGO-1902
+	void rendersProjectOnNestedPrefixedUnwrappedFieldWithAtFieldAnnotationCorrectly() {
+
+		AggregationOperationContext context = getContext(WrapperAroundWithUnwrapped.class);
+
+		Document agg = newAggregation(WrapperAroundWithUnwrapped.class,
+				project().and("withUnwrapped.prefixedUnwrappedValue.atFieldAnnotatedValue").as("val")).toDocument("collection",
+						context);
+
+		assertThat(getPipelineElementFromAggregationAt(agg, 0).get("$project"))
+				.isEqualTo(new Document("val", "$withUnwrapped.prefix-with-at-field-annotation"));
 	}
 
 	@org.springframework.data.mongodb.core.mapping.Document(collection = "person")
@@ -531,21 +532,21 @@ public class TypeBasedAggregationOperationContextUnitTests {
 		@org.springframework.data.mongodb.core.mapping.Field("nestedValue2") String value2;
 	}
 
-	static class WrapperAroundWithEmbedded {
+	static class WrapperAroundWithUnwrapped {
 
 		String id;
-		WithEmbedded withEmbedded;
+		WithUnwrapped withUnwrapped;
 	}
 
-	static class WithEmbedded {
+	static class WithUnwrapped {
 
 		String id;
 
-		@Embedded.Nullable EmbeddableType embeddableType;
-		@Embedded.Nullable("prefix-") EmbeddableType prefixedEmbeddableValue;
+		@Unwrapped.Nullable UnwrappableType unwrappedValue;
+		@Unwrapped.Nullable("prefix-") UnwrappableType prefixedUnwrappedValue;
 	}
 
-	static class EmbeddableType {
+	static class UnwrappableType {
 
 		String stringValue;
 

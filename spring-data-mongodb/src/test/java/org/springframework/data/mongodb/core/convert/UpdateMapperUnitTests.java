@@ -48,9 +48,9 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
-import org.springframework.data.mongodb.core.mapping.Embedded;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.Unwrapped;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -1091,71 +1091,71 @@ class UpdateMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1902
-	void mappingShouldConsiderValueOfEmbeddedType() {
+	void mappingShouldConsiderValueOfUnwrappedType() {
 
-		Update update = new Update().set("embeddableValue.stringValue", "updated");
+		Update update = new Update().set("unwrappedValue.stringValue", "updated");
 
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
-				context.getPersistentEntity(WithEmbedded.class));
+				context.getPersistentEntity(WithUnwrapped.class));
 
 		assertThat(mappedUpdate).isEqualTo(new Document("$set", new Document("stringValue", "updated")));
 	}
 
 	@Test // DATAMONGO-1902
-	void mappingShouldConsiderEmbeddedType() {
+	void mappingShouldConsiderUnwrappedType() {
 
-		EmbeddableType embeddableType = new EmbeddableType();
-		embeddableType.stringValue = "updated";
-		embeddableType.listValue = Arrays.asList("val-1", "val-2");
-		Update update = new Update().set("embeddableValue", embeddableType);
+		UnwrappableType unwrappableType = new UnwrappableType();
+		unwrappableType.stringValue = "updated";
+		unwrappableType.listValue = Arrays.asList("val-1", "val-2");
+		Update update = new Update().set("unwrappedValue", unwrappableType);
 
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
-				context.getPersistentEntity(WithEmbedded.class));
+				context.getPersistentEntity(WithUnwrapped.class));
 
 		assertThat(mappedUpdate).isEqualTo(new Document("$set",
 				new Document("stringValue", "updated").append("listValue", Arrays.asList("val-1", "val-2"))));
 	}
 
 	@Test // DATAMONGO-1902
-	void mappingShouldConsiderValueOfPrefixedEmbeddedType() {
+	void mappingShouldConsiderValueOfPrefixedUnwrappedType() {
 
-		Update update = new Update().set("embeddableValue.stringValue", "updated");
+		Update update = new Update().set("unwrappedValue.stringValue", "updated");
 
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
-				context.getPersistentEntity(WithPrefixedEmbedded.class));
+				context.getPersistentEntity(WithPrefixedUnwrapped.class));
 
 		assertThat(mappedUpdate).isEqualTo(new Document("$set", new Document("prefix-stringValue", "updated")));
 	}
 
 	@Test // DATAMONGO-1902
-	void mappingShouldConsiderPrefixedEmbeddedType() {
+	void mappingShouldConsiderPrefixedUnwrappedType() {
 
-		EmbeddableType embeddableType = new EmbeddableType();
-		embeddableType.stringValue = "updated";
-		embeddableType.listValue = Arrays.asList("val-1", "val-2");
+		UnwrappableType unwrappableType = new UnwrappableType();
+		unwrappableType.stringValue = "updated";
+		unwrappableType.listValue = Arrays.asList("val-1", "val-2");
 
-		Update update = new Update().set("embeddableValue", embeddableType);
+		Update update = new Update().set("unwrappedValue", unwrappableType);
 
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
-				context.getPersistentEntity(WithPrefixedEmbedded.class));
+				context.getPersistentEntity(WithPrefixedUnwrapped.class));
 
 		assertThat(mappedUpdate).isEqualTo(new Document("$set",
 				new Document("prefix-stringValue", "updated").append("prefix-listValue", Arrays.asList("val-1", "val-2"))));
 	}
 
 	@Test // DATAMONGO-1902
-	void mappingShouldConsiderNestedPrefixedEmbeddedType() {
+	void mappingShouldConsiderNestedPrefixedUnwrappedType() {
 
-		EmbeddableType embeddableType = new EmbeddableType();
-		embeddableType.stringValue = "updated";
-		embeddableType.listValue = Arrays.asList("val-1", "val-2");
+		UnwrappableType unwrappableType = new UnwrappableType();
+		unwrappableType.stringValue = "updated";
+		unwrappableType.listValue = Arrays.asList("val-1", "val-2");
 
-		Update update = new Update().set("withPrefixedEmbedded.embeddableValue", embeddableType);
+		Update update = new Update().set("withPrefixedUnwrapped.unwrappedValue", unwrappableType);
 
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
-				context.getPersistentEntity(WrapperAroundWithEmbedded.class));
+				context.getPersistentEntity(WrapperAroundWithUnwrapped.class));
 
-		assertThat(mappedUpdate).isEqualTo(new Document("$set", new Document("withPrefixedEmbedded",
+		assertThat(mappedUpdate).isEqualTo(new Document("$set", new Document("withPrefixedUnwrapped",
 				new Document("prefix-stringValue", "updated").append("prefix-listValue", Arrays.asList("val-1", "val-2")))));
 	}
 
@@ -1176,8 +1176,7 @@ class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(EntityWithObjectMap.class));
 
-		assertThat(mappedUpdate)
-				.isEqualTo("{\"$set\": {\"map.601218778970110001827396.value\": \"testing\"}}");
+		assertThat(mappedUpdate).isEqualTo("{\"$set\": {\"map.601218778970110001827396.value\": \"testing\"}}");
 	}
 
 	@Test // GH-3566
@@ -1187,8 +1186,7 @@ class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(EntityWithObjectMap.class));
 
-		assertThat(mappedUpdate)
-				.isEqualTo("{\"$set\": {\"map.class\": \"value\"}}");
+		assertThat(mappedUpdate).isEqualTo("{\"$set\": {\"map.class\": \"value\"}}");
 	}
 
 	static class DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes {
@@ -1520,28 +1518,28 @@ class UpdateMapperUnitTests {
 
 	}
 
-	static class WrapperAroundWithEmbedded {
+	static class WrapperAroundWithUnwrapped {
 
 		String someValue;
-		WithEmbedded withEmbedded;
-		WithPrefixedEmbedded withPrefixedEmbedded;
+		WithUnwrapped withUnwrapped;
+		WithPrefixedUnwrapped withPrefixedUnwrapped;
 	}
 
-	static class WithEmbedded {
+	static class WithUnwrapped {
 
 		String id;
 
-		@Embedded.Nullable EmbeddableType embeddableValue;
+		@Unwrapped.Nullable UnwrappableType unwrappedValue;
 	}
 
-	static class WithPrefixedEmbedded {
+	static class WithPrefixedUnwrapped {
 
 		String id;
 
-		@Embedded.Nullable("prefix-") EmbeddableType embeddableValue;
+		@Unwrapped.Nullable("prefix-") UnwrappableType unwrappedValue;
 	}
 
-	static class EmbeddableType {
+	static class UnwrappableType {
 
 		String stringValue;
 		List<String> listValue;

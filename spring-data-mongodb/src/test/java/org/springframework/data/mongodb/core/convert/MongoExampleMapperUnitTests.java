@@ -43,9 +43,9 @@ import org.springframework.data.mongodb.core.convert.QueryMapperUnitTests.WithDB
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Embedded;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.Unwrapped;
 import org.springframework.data.mongodb.core.query.UntypedExampleMatcher;
 import org.springframework.data.util.TypeInformation;
 
@@ -456,12 +456,12 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1902
-	void mapsEmbeddedType() {
+	void mapsUnwrappedType() {
 
-		WithEmbedded probe = new WithEmbedded();
-		probe.embeddableType = new EmbeddableType();
-		probe.embeddableType.atFieldAnnotatedValue = "@Field";
-		probe.embeddableType.stringValue = "string-value";
+		WithUnwrapped probe = new WithUnwrapped();
+		probe.unwrappedValue = new UnwrappableType();
+		probe.unwrappedValue.atFieldAnnotatedValue = "@Field";
+		probe.unwrappedValue.stringValue = "string-value";
 
 		org.bson.Document document = mapper.getMappedExample(Example.of(probe, UntypedExampleMatcher.matching()));
 		assertThat(document).containsEntry("stringValue", "string-value").containsEntry("with-at-field-annotation",
@@ -469,12 +469,12 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1902
-	void mapsPrefixedEmbeddedType() {
+	void mapsPrefixedUnwrappedType() {
 
-		WithEmbedded probe = new WithEmbedded();
-		probe.prefixedEmbeddableValue = new EmbeddableType();
-		probe.prefixedEmbeddableValue.atFieldAnnotatedValue = "@Field";
-		probe.prefixedEmbeddableValue.stringValue = "string-value";
+		WithUnwrapped probe = new WithUnwrapped();
+		probe.prefixedUnwrappedValue = new UnwrappableType();
+		probe.prefixedUnwrappedValue.atFieldAnnotatedValue = "@Field";
+		probe.prefixedUnwrappedValue.stringValue = "string-value";
 
 		org.bson.Document document = mapper.getMappedExample(Example.of(probe, UntypedExampleMatcher.matching()));
 		assertThat(document).containsEntry("prefix-stringValue", "string-value")
@@ -482,31 +482,31 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1902
-	void mapsNestedEmbeddedType() {
+	void mapsNestedUnwrappedType() {
 
-		WrapperAroundWithEmbedded probe = new WrapperAroundWithEmbedded();
-		probe.withEmbedded = new WithEmbedded();
-		probe.withEmbedded.embeddableType = new EmbeddableType();
-		probe.withEmbedded.embeddableType.atFieldAnnotatedValue = "@Field";
-		probe.withEmbedded.embeddableType.stringValue = "string-value";
+		WrapperAroundWithUnwrapped probe = new WrapperAroundWithUnwrapped();
+		probe.withUnwrapped = new WithUnwrapped();
+		probe.withUnwrapped.unwrappedValue = new UnwrappableType();
+		probe.withUnwrapped.unwrappedValue.atFieldAnnotatedValue = "@Field";
+		probe.withUnwrapped.unwrappedValue.stringValue = "string-value";
 
 		org.bson.Document document = mapper.getMappedExample(Example.of(probe, UntypedExampleMatcher.matching()));
-		assertThat(document).containsEntry("withEmbedded.stringValue", "string-value")
-				.containsEntry("withEmbedded.with-at-field-annotation", "@Field");
+		assertThat(document).containsEntry("withUnwrapped.stringValue", "string-value")
+				.containsEntry("withUnwrapped.with-at-field-annotation", "@Field");
 	}
 
 	@Test // DATAMONGO-1902
-	void mapsNestedPrefixedEmbeddedType() {
+	void mapsNestedPrefixedUnwrappedType() {
 
-		WrapperAroundWithEmbedded probe = new WrapperAroundWithEmbedded();
-		probe.withEmbedded = new WithEmbedded();
-		probe.withEmbedded.prefixedEmbeddableValue = new EmbeddableType();
-		probe.withEmbedded.prefixedEmbeddableValue.atFieldAnnotatedValue = "@Field";
-		probe.withEmbedded.prefixedEmbeddableValue.stringValue = "string-value";
+		WrapperAroundWithUnwrapped probe = new WrapperAroundWithUnwrapped();
+		probe.withUnwrapped = new WithUnwrapped();
+		probe.withUnwrapped.prefixedUnwrappedValue = new UnwrappableType();
+		probe.withUnwrapped.prefixedUnwrappedValue.atFieldAnnotatedValue = "@Field";
+		probe.withUnwrapped.prefixedUnwrappedValue.stringValue = "string-value";
 
 		org.bson.Document document = mapper.getMappedExample(Example.of(probe, UntypedExampleMatcher.matching()));
-		assertThat(document).containsEntry("withEmbedded.prefix-stringValue", "string-value")
-				.containsEntry("withEmbedded.prefix-with-at-field-annotation", "@Field");
+		assertThat(document).containsEntry("withUnwrapped.prefix-stringValue", "string-value")
+				.containsEntry("withUnwrapped.prefix-with-at-field-annotation", "@Field");
 	}
 
 	static class FlatDocument {
@@ -538,22 +538,22 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Document
-	static class WrapperAroundWithEmbedded {
+	static class WrapperAroundWithUnwrapped {
 
 		String id;
-		WithEmbedded withEmbedded;
+		WithUnwrapped withUnwrapped;
 	}
 
 	@Document
-	static class WithEmbedded {
+	static class WithUnwrapped {
 
 		String id;
 
-		@Embedded.Nullable EmbeddableType embeddableType;
-		@Embedded.Nullable("prefix-") EmbeddableType prefixedEmbeddableValue;
+		@Unwrapped.Nullable UnwrappableType unwrappedValue;
+		@Unwrapped.Nullable("prefix-") UnwrappableType prefixedUnwrappedValue;
 	}
 
-	static class EmbeddableType {
+	static class UnwrappableType {
 
 		@Indexed String stringValue;
 

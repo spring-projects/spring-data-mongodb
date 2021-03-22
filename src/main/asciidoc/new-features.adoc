@@ -4,7 +4,7 @@
 [[new-features.3.2]]
 == What's New in Spring Data MongoDB 3.2
 
-* Support for <<embedded-entities,Embedded Types>> to unwrap nested objects into the parent `Document`.
+* Support for <<unwrapped-entities,unwrapping>> nested objects into the parent `Document`.
 * <<mongo-template.querying.field-selection,Support expressions to define field projections>>.
 
 [[new-features.3.1]]
