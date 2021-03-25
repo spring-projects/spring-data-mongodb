@@ -1191,6 +1191,72 @@ public class QueryMapperUnitTests {
 		assertThat(document).isEqualTo(new org.bson.Document("stringValue", 1));
 	}
 
+	@Test // GH-3601
+	void resolvesFieldnameWithUnderscoresCorrectly() {
+
+		Query query = query(where("fieldname_with_underscores").exists(true));
+
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(WithPropertyUsingUnderscoreInName.class));
+
+		assertThat(document).isEqualTo(new org.bson.Document("fieldname_with_underscores", new org.bson.Document("$exists", true)));
+	}
+
+	@Test // GH-3601
+	void resolvesMappedFieldnameWithUnderscoresCorrectly() {
+
+		Query query = query(where("renamed_fieldname_with_underscores").exists(true));
+
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(WithPropertyUsingUnderscoreInName.class));
+
+		assertThat(document).isEqualTo(new org.bson.Document("renamed", new org.bson.Document("$exists", true)));
+	}
+
+	@Test // GH-3601
+	void resolvesSimpleNestedFieldnameWithUnderscoresCorrectly() {
+
+		Query query = query(where("simple.fieldname_with_underscores").exists(true));
+
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(WrapperAroundWithPropertyUsingUnderscoreInName.class));
+
+		assertThat(document).isEqualTo(new org.bson.Document("simple.fieldname_with_underscores", new org.bson.Document("$exists", true)));
+	}
+
+	@Test // GH-3601
+	void resolvesSimpleNestedMappedFieldnameWithUnderscoresCorrectly() {
+
+		Query query = query(where("simple.renamed_fieldname_with_underscores").exists(true));
+
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(WrapperAroundWithPropertyUsingUnderscoreInName.class));
+
+		assertThat(document).isEqualTo(new org.bson.Document("simple.renamed", new org.bson.Document("$exists", true)));
+	}
+
+	@Test // GH-3601
+	void resolvesFieldNameWithUnderscoreOnNestedFieldnameWithUnderscoresCorrectly() {
+
+		Query query = query(where("double_underscore.fieldname_with_underscores").exists(true));
+
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(WrapperAroundWithPropertyUsingUnderscoreInName.class));
+
+		assertThat(document).isEqualTo(new org.bson.Document("double_underscore.fieldname_with_underscores", new org.bson.Document("$exists", true)));
+	}
+
+	@Test // GH-3601
+	void resolvesFieldNameWithUnderscoreOnNestedMappedFieldnameWithUnderscoresCorrectly() {
+
+		Query query = query(where("double_underscore.renamed_fieldname_with_underscores").exists(true));
+
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(WrapperAroundWithPropertyUsingUnderscoreInName.class));
+
+		assertThat(document).isEqualTo(new org.bson.Document("double_underscore.renamed", new org.bson.Document("$exists", true)));
+	}
+
 	class WithDeepArrayNesting {
 
 		List<WithNestedArray> level0;
@@ -1408,4 +1474,17 @@ public class QueryMapperUnitTests {
 		String transientValue;
 	}
 
+	static class WrapperAroundWithPropertyUsingUnderscoreInName {
+
+		WithPropertyUsingUnderscoreInName simple;
+		WithPropertyUsingUnderscoreInName double_underscore;
+	}
+
+	static class WithPropertyUsingUnderscoreInName {
+
+		String fieldname_with_underscores;
+
+		@Field("renamed")
+		String renamed_fieldname_with_underscores;
+	}
 }

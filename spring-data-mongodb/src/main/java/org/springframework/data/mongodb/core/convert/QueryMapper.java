@@ -1170,7 +1170,7 @@ public class QueryMapper {
 
 			if (sourceProperty != null && sourceProperty.getOwner().equals(entity)) {
 				return mappingContext
-						.getPersistentPropertyPath(PropertyPath.from(sourceProperty.getName(), entity.getTypeInformation()));
+						.getPersistentPropertyPath(PropertyPath.from(Pattern.quote(sourceProperty.getName()), entity.getTypeInformation()));
 			}
 
 			PropertyPath path = forName(rawPath);
@@ -1227,6 +1227,13 @@ public class QueryMapper {
 
 				if (path.endsWith("_id")) {
 					return forName(path.substring(0, path.length() - 3) + "id");
+				}
+
+				// Ok give it another try quoting
+				try {
+					return PropertyPath.from(Pattern.quote(path), entity.getTypeInformation());
+				} catch (PropertyReferenceException | InvalidPersistentPropertyPath ex) {
+
 				}
 
 				return null;
