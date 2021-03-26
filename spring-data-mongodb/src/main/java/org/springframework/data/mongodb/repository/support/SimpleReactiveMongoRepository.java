@@ -49,6 +49,7 @@ import com.mongodb.client.result.DeleteResult;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Ruben J Garcia
+ * @author Clément Petit
  * @since 2.0
  */
 @RequiredArgsConstructor
@@ -326,8 +327,8 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		Assert.notNull(entityStream, "The given Publisher of entities must not be null!");
 
 		return Flux.from(entityStream).flatMap(entity -> entityInformation.isNew(entity) ? //
-				mongoOperations.insert(entity, entityInformation.getCollectionName()).then(Mono.just(entity)) : //
-				mongoOperations.save(entity, entityInformation.getCollectionName()).then(Mono.just(entity)));
+				mongoOperations.insert(entity, entityInformation.getCollectionName()) : //
+				mongoOperations.save(entity, entityInformation.getCollectionName()));
 	}
 
 	/*

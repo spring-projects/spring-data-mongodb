@@ -20,16 +20,19 @@ import static org.springframework.data.domain.ExampleMatcher.*;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Value;
+import lombok.With;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.Arrays;
 
+import javax.annotation.Nullable;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.BeanFactory;
@@ -55,6 +58,7 @@ import org.springframework.util.ClassUtils;
  * @author Mark Paluch
  * @author Christoph Strobl
  * @author Ruben J Garcia
+ * @author Clément Petit
  */
 @RunWith(SpringRunner.class)
 @ContextConfiguration("classpath:reactive-infrastructure.xml")
@@ -65,9 +69,11 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	ReactiveMongoRepositoryFactory factory;
 	ClassLoader classLoader;
 	BeanFactory beanFactory;
-	ReactivePersonRepostitory repository;
+	ReactivePersonRepository repository;
+	ReactiveImmutablePersonRepository immutableRepository;
 
 	private ReactivePerson dave, oliver, carter, boyd, stefan, leroi, alicia;
+	private ImmutableReactivePerson keith, james, mariah;
 
 	@Override
 	public void setBeanClassLoader(ClassLoader classLoader) {
@@ -88,9 +94,11 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		factory.setBeanFactory(beanFactory);
 		factory.setEvaluationContextProvider(QueryMethodEvaluationContextProvider.DEFAULT);
 
-		repository = factory.getRepository(ReactivePersonRepostitory.class);
+		repository = factory.getRepository(ReactivePersonRepository.class);
+		immutableRepository = factory.getRepository(ReactiveImmutablePersonRepository.class);
 
 		repository.deleteAll().as(StepVerifier::create).verifyComplete();
+		immutableRepository.deleteAll().as(StepVerifier::create).verifyComplete();
 
 		dave = new ReactivePerson("Dave", "Matthews", 42);
 		oliver = new ReactivePerson("Oliver August", "Matthews", 4);
@@ -99,6 +107,9 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		stefan = new ReactivePerson("Stefan", "Lessard", 34);
 		leroi = new ReactivePerson("Leroi", "Moore", 41);
 		alicia = new ReactivePerson("Alicia", "Keys", 30);
+		keith = new ImmutableReactivePerson(null, "Keith", "Urban", 53);
+		james = new ImmutableReactivePerson(null, "James", "Arthur", 33);
+		mariah = new ImmutableReactivePerson(null, "Mariah", "Carey", 51);
 
 		repository.saveAll(Arrays.asList(oliver, dave, carter, boyd, stefan, leroi, alicia)).as(StepVerifier::create) //
 				.expectNextCount(7) //
@@ -324,6 +335,20 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		assertThat(boyd.getId()).isNotNull();
 	}
 
+	@Test // GH-3609
+	public void savePublisherOfImmutableEntitiesShouldInsertEntity() {
+
+		immutableRepository.deleteAll().as(StepVerifier::create).verifyComplete();
+
+		immutableRepository.saveAll(Flux.just(keith, james, mariah)).as(StepVerifier::create)
+				.consumeNextWith(e -> keith = e).consumeNextWith(e -> james = e).consumeNextWith(e -> mariah = e)
+				.verifyComplete();
+
+		assertThat(keith.getId()).isNotNull();
+		assertThat(james.getId()).isNotNull();
+		assertThat(mariah.getId()).isNotNull();
+	}
+
 	@Test // DATAMONGO-1444
 	public void deleteAllShouldRemoveEntities() {
 
@@ -452,9 +477,13 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		repository.findOne(example).as(StepVerifier::create).verifyComplete();
 	}
 
-	interface ReactivePersonRepostitory extends ReactiveMongoRepository<ReactivePerson, String> {
+	interface ReactivePersonRepository extends ReactiveMongoRepository<ReactivePerson, String> {
 
 		Flux<ReactivePerson> findByLastname(String lastname);
+
+	}
+
+	interface ReactiveImmutablePersonRepository extends ReactiveMongoRepository<ImmutableReactivePerson, String> {
 
 	}
 
@@ -475,4 +504,23 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 			this.age = age;
 		}
 	}
+
+	@With
+	@Value
+	static class ImmutableReactivePerson {
+
+		@Id String id;
+
+		String firstname;
+		String lastname;
+		int age;
+
+		public ImmutableReactivePerson(@Nullable String id, String firstname, String lastname, int age) {
+			this.id = id;
+			this.firstname = firstname;
+			this.lastname = lastname;
+			this.age = age;
+		}
+	}
+
 }
