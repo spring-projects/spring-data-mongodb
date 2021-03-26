@@ -50,6 +50,7 @@ import com.mongodb.client.result.DeleteResult;
  * @author Christoph Strobl
  * @author Ruben J Garcia
  * @author Jens Schauder
+ * @author Clément Petit
  * @since 2.0
  */
 public class SimpleReactiveMongoRepository<T, ID extends Serializable> implements ReactiveMongoRepository<T, ID> {
@@ -113,8 +114,8 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		Assert.notNull(entityStream, "The given Publisher of entities must not be null!");
 
 		return Flux.from(entityStream).flatMap(entity -> entityInformation.isNew(entity) ? //
-				mongoOperations.insert(entity, entityInformation.getCollectionName()).then(Mono.just(entity)) : //
-				mongoOperations.save(entity, entityInformation.getCollectionName()).then(Mono.just(entity)));
+				mongoOperations.insert(entity, entityInformation.getCollectionName()) : //
+				mongoOperations.save(entity, entityInformation.getCollectionName()));
 	}
 
 	/*
