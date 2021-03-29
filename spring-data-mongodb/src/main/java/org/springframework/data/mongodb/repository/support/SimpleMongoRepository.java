@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.repository.support;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -215,7 +216,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		Assert.notNull(ids, "The given Ids of entities not be null!");
 
 		return findAll(new Query(new Criteria(entityInformation.getIdAttribute())
-				.in(Streamable.of(ids).stream().collect(StreamUtils.toUnmodifiableList()))));
+				.in(toCollection(ids))));
 	}
 
 	/*
@@ -266,10 +267,10 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Assert.notNull(entities, "The given Iterable of entities not be null!");
 
-		List<S> list = Streamable.of(entities).stream().collect(StreamUtils.toUnmodifiableList());
+		Collection<S> list = toCollection(entities);
 
 		if (list.isEmpty()) {
-			return list;
+			return Collections.emptyList();
 		}
 
 		return new ArrayList<>(mongoOperations.insertAll(list));
@@ -372,6 +373,11 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 	private Criteria getIdCriteria(Object id) {
 		return where(entityInformation.getIdAttribute()).is(id);
+	}
+
+	private static <E> Collection<E> toCollection(Iterable<E> ids) {
+		return ids instanceof Collection ? (Collection<E>) ids
+				: StreamUtils.createStreamFromIterator(ids.iterator()).collect(Collectors.toList());
 	}
 
 	private List<T> findAll(@Nullable Query query) {

@@ -21,10 +21,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.Serializable;
-import java.util.List;
+import java.util.Collection;
 import java.util.stream.Collectors;
 
 import org.reactivestreams.Publisher;
+
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Example;
@@ -174,7 +175,7 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		Assert.notNull(ids, "The given Iterable of Id's must not be null!");
 
 		return findAll(new Query(new Criteria(entityInformation.getIdAttribute())
-				.in(Streamable.of(ids).stream().collect(StreamUtils.toUnmodifiableList()))));
+				.in(toCollection(ids))));
 	}
 
 	/*
@@ -275,9 +276,9 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		Assert.notNull(entities, "The given Iterable of entities must not be null!");
 
-		List<S> source = Streamable.of(entities).stream().collect(StreamUtils.toUnmodifiableList());
+		Collection<S> source = toCollection(entities);
 
-		return source.isEmpty() ? Flux.empty() : Flux.from(mongoOperations.insertAll(source));
+		return source.isEmpty() ? Flux.empty() : mongoOperations.insertAll(source);
 	}
 
 	/*
@@ -437,8 +438,12 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		return where(entityInformation.getIdAttribute()).is(id);
 	}
 
-	private Flux<T> findAll(Query query) {
+	private static <E> Collection<E> toCollection(Iterable<E> ids) {
+		return ids instanceof Collection ? (Collection<E>) ids
+				: StreamUtils.createStreamFromIterator(ids.iterator()).collect(Collectors.toList());
+	}
 
+	private Flux<T> findAll(Query query) {
 		return mongoOperations.find(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}
 }

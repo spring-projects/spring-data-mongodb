@@ -30,9 +30,10 @@ import java.util.Arrays;
 
 import javax.annotation.Nullable;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.beans.factory.BeanFactory;
@@ -49,7 +50,7 @@ import org.springframework.data.mongodb.repository.support.ReactiveMongoReposito
 import org.springframework.data.mongodb.repository.support.SimpleReactiveMongoRepository;
 import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -60,17 +61,17 @@ import org.springframework.util.ClassUtils;
  * @author Ruben J Garcia
  * @author Clément Petit
  */
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration("classpath:reactive-infrastructure.xml")
 public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware, BeanFactoryAware {
 
 	@Autowired private ReactiveMongoTemplate template;
 
-	ReactiveMongoRepositoryFactory factory;
-	ClassLoader classLoader;
-	BeanFactory beanFactory;
-	ReactivePersonRepository repository;
-	ReactiveImmutablePersonRepository immutableRepository;
+	private ReactiveMongoRepositoryFactory factory;
+	private ClassLoader classLoader;
+	private BeanFactory beanFactory;
+	private ReactivePersonRepository repository;
+	private ReactiveImmutablePersonRepository immutableRepository;
 
 	private ReactivePerson dave, oliver, carter, boyd, stefan, leroi, alicia;
 	private ImmutableReactivePerson keith, james, mariah;
@@ -85,8 +86,8 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		this.beanFactory = beanFactory;
 	}
 
-	@Before
-	public void setUp() {
+	@BeforeEach
+	void setUp() {
 
 		factory = new ReactiveMongoRepositoryFactory(template);
 		factory.setRepositoryBaseClass(SimpleReactiveMongoRepository.class);
@@ -117,78 +118,78 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	}
 
 	@Test // DATAMONGO-1444
-	public void existsByIdShouldReturnTrueForExistingObject() {
+	void existsByIdShouldReturnTrueForExistingObject() {
 		repository.existsById(dave.id).as(StepVerifier::create).expectNext(true).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void existsByIdShouldReturnFalseForAbsentObject() {
+	void existsByIdShouldReturnFalseForAbsentObject() {
 		repository.existsById("unknown").as(StepVerifier::create).expectNext(false).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void existsByMonoOfIdShouldReturnTrueForExistingObject() {
+	void existsByMonoOfIdShouldReturnTrueForExistingObject() {
 		repository.existsById(Mono.just(dave.id)).as(StepVerifier::create).expectNext(true).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1712
-	public void existsByFluxOfIdShouldReturnTrueForExistingObject() {
+	void existsByFluxOfIdShouldReturnTrueForExistingObject() {
 		repository.existsById(Flux.just(dave.id, oliver.id)).as(StepVerifier::create).expectNext(true).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void existsByEmptyMonoOfIdShouldReturnEmptyMono() {
+	void existsByEmptyMonoOfIdShouldReturnEmptyMono() {
 		repository.existsById(Mono.empty()).as(StepVerifier::create).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void findByIdShouldReturnObject() {
+	void findByIdShouldReturnObject() {
 		repository.findById(dave.id).as(StepVerifier::create).expectNext(dave).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void findByIdShouldCompleteWithoutValueForAbsentObject() {
+	void findByIdShouldCompleteWithoutValueForAbsentObject() {
 		repository.findById("unknown").as(StepVerifier::create).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void findByIdByMonoOfIdShouldReturnTrueForExistingObject() {
+	void findByIdByMonoOfIdShouldReturnTrueForExistingObject() {
 		repository.findById(Mono.just(dave.id)).as(StepVerifier::create).expectNext(dave).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1712
-	public void findByIdByFluxOfIdShouldReturnTrueForExistingObject() {
+	void findByIdByFluxOfIdShouldReturnTrueForExistingObject() {
 		repository.findById(Flux.just(dave.id, oliver.id)).as(StepVerifier::create).expectNext(dave).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void findByIdByEmptyMonoOfIdShouldReturnEmptyMono() {
+	void findByIdByEmptyMonoOfIdShouldReturnEmptyMono() {
 		repository.findById(Mono.empty()).as(StepVerifier::create).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void findAllShouldReturnAllResults() {
+	void findAllShouldReturnAllResults() {
 		repository.findAll().as(StepVerifier::create).expectNextCount(7).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void findAllByIterableOfIdShouldReturnResults() {
+	void findAllByIterableOfIdShouldReturnResults() {
 		repository.findAllById(Arrays.asList(dave.id, boyd.id)).as(StepVerifier::create).expectNextCount(2)
 				.verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void findAllByPublisherOfIdShouldReturnResults() {
+	void findAllByPublisherOfIdShouldReturnResults() {
 		repository.findAllById(Flux.just(dave.id, boyd.id)).as(StepVerifier::create).expectNextCount(2).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void findAllByEmptyPublisherOfIdShouldReturnResults() {
+	void findAllByEmptyPublisherOfIdShouldReturnResults() {
 		repository.findAllById(Flux.empty()).as(StepVerifier::create).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void findAllWithSortShouldReturnResults() {
+	void findAllWithSortShouldReturnResults() {
 
 		repository.findAll(Sort.by(new Order(Direction.ASC, "age"))).as(StepVerifier::create) //
 				.expectNextCount(7) //
@@ -196,12 +197,12 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	}
 
 	@Test // DATAMONGO-1444
-	public void countShouldReturnNumberOfRecords() {
+	void countShouldReturnNumberOfRecords() {
 		repository.count().as(StepVerifier::create).expectNext(7L).verifyComplete();
 	}
 
 	@Test // DATAMONGO-1444
-	public void insertEntityShouldInsertEntity() {
+	void insertEntityShouldInsertEntity() {
 
 		repository.deleteAll().as(StepVerifier::create).verifyComplete();
 
@@ -213,7 +214,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	}
 
 	@Test // DATAMONGO-1444
-	public void insertShouldDeferredWrite() {
+	void insertShouldDeferredWrite() {
 
 		ReactivePerson person = new ReactivePerson("Homer", "Simpson", 36);
 
@@ -223,7 +224,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	}
 
 	@Test // DATAMONGO-1444
-	public void insertIterableOfEntitiesShouldInsertEntity() {
+	void insertIterableOfEntitiesShouldInsertEntity() {
 
 		repository.deleteAll().as(StepVerifier::create).verifyComplete();
 
@@ -241,7 +242,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	}
 
 	@Test // DATAMONGO-1444
-	public void insertPublisherOfEntitiesShouldInsertEntity() {
+	void insertPublisherOfEntitiesShouldInsertEntity() {
 
 		repository.deleteAll().as(StepVerifier::create).verifyComplete();
 
@@ -257,7 +258,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	}
 
 	@Test // DATAMONGO-1444
-	public void saveEntityShouldUpdateExistingEntity() {
+	void saveEntityShouldUpdateExistingEntity() {
 
 		dave.setFirstname("Hello, Dave");
 		dave.setLastname("Bowman");
@@ -274,7 +275,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	}
 
 	@Test // DATAMONGO-1444
-	public void saveEntityShouldInsertNewEntity() {
+	void saveEntityShouldInsertNewEntity() {
 
 		ReactivePerson person = new ReactivePerson("Homer", "Simpson", 36);
 
@@ -288,7 +289,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	}
 
 	@Test // DATAMONGO-1444
-	public void saveIterableOfNewEntitiesShouldInsertEntity() {
+	void saveIterableOfNewEntitiesShouldInsertEntity() {
 
 		repository.deleteAll().as(StepVerifier::create).verifyComplete();
 
@@ -304,7 +305,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	}
 
 	@Test // DATAMONGO-1444
-	public void saveIterableOfMixedEntitiesShouldInsertEntity() {
+	void saveIterableOfMixedEntitiesShouldInsertEntity() {
 
 		ReactivePerson person = new ReactivePerson("Homer", "Simpson", 36);
 
@@ -320,7 +321,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	}
 
 	@Test // DATAMONGO-1444
-	public void savePublisherOfEntitiesShouldInsertEntity() {
+	void savePublisherOfEntitiesShouldInsertEntity() {
 
 		repository.deleteAll().as(StepVerifier::create).verifyComplete();
 
@@ -336,23 +337,19 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	}
 
 	@Test // GH-3609
-	public void savePublisherOfImmutableEntitiesShouldInsertEntity() {
+	void savePublisherOfImmutableEntitiesShouldInsertEntity() {
 
 		immutableRepository.deleteAll().as(StepVerifier::create).verifyComplete();
 
-		immutableRepository.saveAll(Flux.just(keith, james, mariah)).as(StepVerifier::create)
-			.consumeNextWith(e -> keith = e)
-			.consumeNextWith(e -> james = e)
-			.consumeNextWith(e -> mariah = e)
+		immutableRepository.saveAll(Flux.just(keith)).as(StepVerifier::create) //
+				.consumeNextWith(actual -> {
+					assertThat(actual.id).isNotNull();
+				}) //
 			.verifyComplete();
-
-		assertThat(keith.getId()).isNotNull();
-		assertThat(james.getId()).isNotNull();
-		assertThat(mariah.getId()).isNotNull();
 	}
 
 	@Test // DATAMONGO-1444
-	public void deleteAllShouldRemoveEntities() {
+	void deleteAllShouldRemoveEntities() {
 
 		repository.deleteAll().as(StepVerifier::create).verifyComplete();
 
@@ -360,7 +357,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	}
 
 	@Test // DATAMONGO-1444
-	public void deleteByIdShouldRemoveEntity() {
+	void deleteByIdShouldRemoveEntity() {
 
 		repository.deleteById(dave.id).as(StepVerifier::create).verifyComplete();
 
@@ -368,7 +365,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	}
 
 	@Test // DATAMONGO-1712
-	public void deleteByIdUsingMonoShouldRemoveEntity() {
+	void deleteByIdUsingMonoShouldRemoveEntity() {
 
 		repository.deleteById(Mono.just(dave.id)).as(StepVerifier::create).verifyComplete();
 
@@ -376,7 +373,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	}
 
 	@Test // DATAMONGO-1712
-	public void deleteByIdUsingFluxShouldRemoveEntity() {
+	void deleteByIdUsingFluxShouldRemoveEntity() {
 
 		repository.deleteById(Flux.just(dave.id, oliver.id)).as(StepVerifier::create).verifyComplete();
 
@@ -385,7 +382,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	}
 
 	@Test // DATAMONGO-1444
-	public void deleteShouldRemoveEntity() {
+	void deleteShouldRemoveEntity() {
 
 		repository.delete(dave).as(StepVerifier::create).verifyComplete();
 
@@ -394,7 +391,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	}
 
 	@Test // DATAMONGO-1444
-	public void deleteIterableOfEntitiesShouldRemoveEntities() {
+	void deleteIterableOfEntitiesShouldRemoveEntities() {
 
 		repository.deleteAll(Arrays.asList(dave, boyd)).as(StepVerifier::create).verifyComplete();
 
@@ -404,7 +401,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	}
 
 	@Test // DATAMONGO-1444
-	public void deletePublisherOfEntitiesShouldRemoveEntities() {
+	void deletePublisherOfEntitiesShouldRemoveEntities() {
 
 		repository.deleteAll(Flux.just(dave, boyd)).as(StepVerifier::create).verifyComplete();
 
@@ -414,7 +411,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	}
 
 	@Test // DATAMONGO-1619
-	public void findOneByExampleShouldReturnObject() {
+	void findOneByExampleShouldReturnObject() {
 
 		Example<ReactivePerson> example = Example.of(dave);
 
@@ -422,7 +419,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	}
 
 	@Test // DATAMONGO-1619
-	public void findAllByExampleShouldReturnObjects() {
+	void findAllByExampleShouldReturnObjects() {
 
 		Example<ReactivePerson> example = Example.of(dave, matching().withIgnorePaths("id", "age", "firstname"));
 
@@ -430,7 +427,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	}
 
 	@Test // DATAMONGO-1619
-	public void findAllByExampleAndSortShouldReturnObjects() {
+	void findAllByExampleAndSortShouldReturnObjects() {
 
 		Example<ReactivePerson> example = Example.of(dave, matching().withIgnorePaths("id", "age", "firstname"));
 
@@ -439,7 +436,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	}
 
 	@Test // DATAMONGO-1619
-	public void countByExampleShouldCountObjects() {
+	void countByExampleShouldCountObjects() {
 
 		Example<ReactivePerson> example = Example.of(dave, matching().withIgnorePaths("id", "age", "firstname"));
 
@@ -447,7 +444,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	}
 
 	@Test // DATAMONGO-1619
-	public void existsByExampleShouldReturnExisting() {
+	void existsByExampleShouldReturnExisting() {
 
 		Example<ReactivePerson> example = Example.of(dave, matching().withIgnorePaths("id", "age", "firstname"));
 
@@ -455,7 +452,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	}
 
 	@Test // DATAMONGO-1619
-	public void existsByExampleShouldReturnNonExisting() {
+	void existsByExampleShouldReturnNonExisting() {
 
 		Example<ReactivePerson> example = Example.of(new ReactivePerson("foo", "bar", -1));
 
@@ -463,7 +460,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	}
 
 	@Test // DATAMONGO-1619
-	public void findOneShouldEmitIncorrectResultSizeDataAccessExceptionWhenMoreThanOneElementFound() {
+	void findOneShouldEmitIncorrectResultSizeDataAccessExceptionWhenMoreThanOneElementFound() {
 
 		Example<ReactivePerson> example = Example.of(new ReactivePerson(null, "Matthews", -1),
 				matching().withIgnorePaths("age"));
@@ -472,7 +469,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 	}
 
 	@Test // DATAMONGO-1907
-	public void findOneByExampleWithoutResultShouldCompleteEmpty() {
+	void findOneByExampleWithoutResultShouldCompleteEmpty() {
 
 		Example<ReactivePerson> example = Example.of(new ReactivePerson("foo", "bar", -1));
 
@@ -499,7 +496,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		String lastname;
 		int age;
 
-		public ReactivePerson(String firstname, String lastname, int age) {
+		ReactivePerson(String firstname, String lastname, int age) {
 
 			this.firstname = firstname;
 			this.lastname = lastname;
@@ -517,7 +514,7 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		String lastname;
 		int age;
 
-		public ImmutableReactivePerson(@Nullable String id, String firstname, String lastname, int age) {
+		ImmutableReactivePerson(@Nullable String id, String firstname, String lastname, int age) {
 			this.id = id;
 			this.firstname = firstname;
 			this.lastname = lastname;
