@@ -20,6 +20,7 @@ import static org.springframework.util.ObjectUtils.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -59,6 +60,7 @@ import com.mongodb.BasicDBList;
  * @author Mark Paluch
  * @author Andreas Zink
  * @author Ziemowit Stolarczyk
+ * @author Clément Petit
  */
 public class Criteria implements CriteriaDefinition {
 
@@ -976,9 +978,9 @@ public class Criteria implements CriteriaDefinition {
 			return right == null;
 		}
 
-		if (Pattern.class.isInstance(left)) {
+		if (left instanceof Pattern) {
 
-			if (!Pattern.class.isInstance(right)) {
+			if (!(right instanceof Pattern)) {
 				return false;
 			}
 
@@ -987,6 +989,34 @@ public class Criteria implements CriteriaDefinition {
 
 			return leftPattern.pattern().equals(rightPattern.pattern()) //
 					&& leftPattern.flags() == rightPattern.flags();
+		}
+
+		if (left instanceof Document) {
+			if (!(right instanceof Document)) {
+				return false;
+			}
+			Document leftDocument = (Document) left;
+			Document rightDocument = (Document) right;
+
+			return isEqual(leftDocument.values(), rightDocument.values());
+		}
+
+		if (Collection.class.isAssignableFrom(left.getClass())) {
+			if (!Collection.class.isAssignableFrom(right.getClass())) {
+				return false;
+			}
+
+			Collection leftCollection = (Collection) left;
+			Collection rightCollection = (Collection) right;
+			Iterator leftIterator = leftCollection.iterator();
+			Iterator rightIterator = rightCollection.iterator();
+
+			while (leftIterator.hasNext() && rightIterator.hasNext()) {
+				if (!isEqual(leftIterator.next(), rightIterator.next())) {
+					return false;
+				}
+			}
+			return !leftIterator.hasNext() && !rightIterator.hasNext();
 		}
 
 		return ObjectUtils.nullSafeEquals(left, right);

@@ -38,6 +38,7 @@ import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
  * @author Christoph Strobl
  * @author Andreas Zink
  * @author Ziemowit Stolarczyk
+ * @author Clément Petit
  */
 public class CriteriaUnitTests {
 
@@ -353,9 +354,33 @@ public class CriteriaUnitTests {
 	@Test // DATAMONGO-2002
 	public void shouldEqualForSamePattern() {
 
+		Criteria left = new Criteria("field").regex("foo");
+		Criteria right = new Criteria("field").regex("foo");
+
+		assertThat(left).isEqualTo(right);
+	}
+
+	@Test // DATAMONGO-2002
+	public void shouldEqualForSamePatternAndFlags() {
+
 		Criteria left = new Criteria("field").regex("foo", "iu");
 		Criteria right = new Criteria("field").regex("foo");
 
 		assertThat(left).isNotEqualTo(right);
+	}
+
+	@Test // GH-3414
+	public void shouldEqualForNestedPattern() {
+
+		Criteria left = new Criteria("a").orOperator(
+			new Criteria("foo").regex("value", "i"),
+			new Criteria("bar").regex("value")
+		);
+		Criteria right = new Criteria("a").orOperator(
+			new Criteria("foo").regex("value", "i"),
+			new Criteria("bar").regex("value")
+		);
+
+		assertThat(left).isEqualTo(right);
 	}
 }
