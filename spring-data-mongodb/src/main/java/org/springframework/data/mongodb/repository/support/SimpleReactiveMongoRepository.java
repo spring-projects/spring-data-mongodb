@@ -22,7 +22,6 @@ import reactor.core.publisher.Mono;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import org.reactivestreams.Publisher;
@@ -364,9 +363,9 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 		Assert.notNull(entities, "The given Iterable of entities must not be null!");
 
-		List<S> source = Streamable.of(entities).stream().collect(StreamUtils.toUnmodifiableList());
+		Collection<S> source = toCollection(entities);
 
-		return source.isEmpty() ? Flux.empty() : Flux.from(mongoOperations.insertAll(source));
+		return source.isEmpty() ? Flux.empty() : mongoOperations.insertAll(source);
 	}
 
 	/*
@@ -467,7 +466,6 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		return mongoOperations.exists(query, example.getProbeType(), entityInformation.getCollectionName());
 	}
 
-
 	private Query getIdQuery(Object id) {
 		return new Query(getIdCriteria(id));
 	}
@@ -477,14 +475,15 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	}
 
 	private Query getIdQuery(Iterable<? extends ID> ids) {
-		Collection<?> idCollection = StreamUtils.createStreamFromIterator(ids.iterator()).collect(Collectors.toList());
-		Criteria idsInCriteria = where(entityInformation.getIdAttribute()).in(idCollection);
+		return new Query(where(entityInformation.getIdAttribute()).in(toCollection(ids)));
+	}
 
-		return new Query(idsInCriteria);
+	private static <E> Collection<E> toCollection(Iterable<E> ids) {
+		return ids instanceof Collection ? (Collection<E>) ids
+				: StreamUtils.createStreamFromIterator(ids.iterator()).collect(Collectors.toList());
 	}
 
 	private Flux<T> findAll(Query query) {
-
 		return mongoOperations.find(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}
 }
