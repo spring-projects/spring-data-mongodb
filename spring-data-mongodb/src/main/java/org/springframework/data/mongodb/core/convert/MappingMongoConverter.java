@@ -75,6 +75,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
@@ -182,6 +183,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * any translation but rather reject a {@link Map} with keys containing dots causing the conversion for the entire
 	 * object to fail. If further customization of the translation is needed, have a look at
 	 * {@link #potentiallyEscapeMapKey(String)} as well as {@link #potentiallyUnescapeMapKey(String)}.
+	 * <p>
+	 * {@code mapKeyDotReplacement} is used as-is during replacement operations without further processing (i.e. regex or
+	 * normalization).
 	 *
 	 * @param mapKeyDotReplacement the mapKeyDotReplacement to set. Can be {@literal null}.
 	 */
@@ -900,7 +904,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					source));
 		}
 
-		return source.replaceAll("\\.", mapKeyDotReplacement);
+		return StringUtils.replace(source, ".", mapKeyDotReplacement);
 	}
 
 	/**
@@ -928,7 +932,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @return
 	 */
 	protected String potentiallyUnescapeMapKey(String source) {
-		return mapKeyDotReplacement == null ? source : source.replaceAll(mapKeyDotReplacement, "\\.");
+		return mapKeyDotReplacement == null ? source : StringUtils.replace(source, mapKeyDotReplacement, ".");
 	}
 
 	/**
