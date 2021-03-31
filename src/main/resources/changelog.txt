@@ -1,6 +1,12 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.1.7 (2021-03-31)
+-------------------------------------
+* #3613 - Use StringUtils.replace(…) instead of String.replaceAll(…) for mapKeyDotReplacement.
+* #3609 - SimpleReactiveMongoRepository#saveAll does not populate @Id property if it is immutable.
+
+
 Changes in version 3.2.0-RC1 (2021-03-31)
 -----------------------------------------
 * #3613 - Use StringUtils.replace(…) instead of String.replaceAll(…) for mapKeyDotReplacement.
@@ -3347,6 +3353,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
