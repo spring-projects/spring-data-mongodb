@@ -1,6 +1,14 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.2.0-RC1 (2021-03-31)
+-----------------------------------------
+* #3613 - Use StringUtils.replace(…) instead of String.replaceAll(…) for mapKeyDotReplacement.
+* #3609 - SimpleReactiveMongoRepository#saveAll does not populate @Id property if it is immutable.
+* #3600 - Rename Embedded annotation -> Unwrapped.
+* #3583 - Support aggregation expression on fields projection.
+
+
 Changes in version 3.2.0-M5 (2021-03-17)
 ----------------------------------------
 * #3592 - Remove @Persistent from entity-scan include filters.
@@ -3330,6 +3338,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
