@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -997,8 +998,20 @@ public class Criteria implements CriteriaDefinition {
 			}
 			Document leftDocument = (Document) left;
 			Document rightDocument = (Document) right;
+			Iterator leftIterator = leftDocument.entrySet().iterator();
+			Iterator rightIterator = rightDocument.entrySet().iterator();
 
-			return isEqual(leftDocument.values(), rightDocument.values());
+			while (leftIterator.hasNext() && rightIterator.hasNext()) {
+				Map.Entry leftEntry = (Map.Entry)leftIterator.next();
+				Map.Entry rightEntry = (Map.Entry)rightIterator.next();
+				if (!isEqual(leftEntry.getKey(), rightEntry.getKey())) {
+					return false;
+				}
+				if (!isEqual(leftEntry.getValue(), rightEntry.getValue())) {
+					return false;
+				}
+			}
+			return !leftIterator.hasNext() && !rightIterator.hasNext();
 		}
 
 		if (Collection.class.isAssignableFrom(left.getClass())) {
