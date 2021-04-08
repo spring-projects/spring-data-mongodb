@@ -23,39 +23,39 @@ pipeline {
 
 					steps {
 						script {
-							def image = docker.build("springci/spring-data-openjdk8-with-mongodb-4.0", "ci/openjdk8-mongodb-4.0/")
+							def image = docker.build("springci/spring-data-openjdk8-with-mongodb-4.0.23", "ci/openjdk8-mongodb-4.0/")
 							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
 								image.push()
 							}
 						}
 					}
 				}
-				stage('Publish JDK 8 + MongoDB 4.2') {
+				stage('Publish JDK 8 + MongoDB 4.4') {
 					when {
-						changeset "ci/openjdk8-mongodb-4.2/**"
+						changeset "ci/openjdk8-mongodb-4.4/**"
 					}
 					agent { label 'data' }
 					options { timeout(time: 30, unit: 'MINUTES') }
 
 					steps {
 						script {
-							def image = docker.build("springci/spring-data-openjdk8-with-mongodb-4.2.0", "ci/openjdk8-mongodb-4.2/")
+							def image = docker.build("springci/spring-data-openjdk8-with-mongodb-4.4.4", "ci/openjdk8-mongodb-4.4/")
 							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
 								image.push()
 							}
 						}
 					}
 				}
-				stage('Publish JDK 15 + MongoDB 4.2') {
+				stage('Publish JDK 15 + MongoDB 4.4') {
 					when {
-						changeset "ci/openjdk15-mongodb-4.2/**"
+						changeset "ci/openjdk15-mongodb-4.4/**"
 					}
 					agent { label 'data' }
 					options { timeout(time: 30, unit: 'MINUTES') }
 
 					steps {
 						script {
-							def image = docker.build("springci/spring-data-openjdk15-with-mongodb-4.2.0", "ci/openjdk15-mongodb-4.2/")
+							def image = docker.build("springci/spring-data-openjdk15-with-mongodb-4.4.4", "ci/openjdk15-mongodb-4.4/")
 							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
 								image.push()
 							}
@@ -79,7 +79,7 @@ pipeline {
 			steps {
 				script {
 					docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
-						docker.image('springci/spring-data-openjdk8-with-mongodb-4.2.0:latest').inside('-v $HOME:/tmp/jenkins-home') {
+						docker.image('springci/spring-data-openjdk8-with-mongodb-4.0.23:latest').inside('-v $HOME:/tmp/jenkins-home') {
 							sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
 							sh 'mongod --setParameter transactionLifetimeLimitSeconds=90 --setParameter maxTransactionLockRequestTimeoutMillis=10000 --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
 							sh 'sleep 10'
@@ -108,7 +108,7 @@ pipeline {
 					steps {
 						script {
 							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
-								docker.image('springci/spring-data-openjdk8-with-mongodb-4.0:latest').inside('-v $HOME:/tmp/jenkins-home') {
+								docker.image('springci/spring-data-openjdk8-with-mongodb-4.0.23:latest').inside('-v $HOME:/tmp/jenkins-home') {
 									sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
 									sh 'mongod --setParameter transactionLifetimeLimitSeconds=90 --setParameter maxTransactionLockRequestTimeoutMillis=10000 --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
 									sh 'sleep 10'
@@ -121,7 +121,7 @@ pipeline {
 					}
 				}
 
-				stage("test: mongodb 4.2 (jdk8)") {
+				stage("test: mongodb 4.4 (jdk8)") {
 					agent {
 						label 'data'
 					}
@@ -129,7 +129,7 @@ pipeline {
 					steps {
 						script {
 							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
-								docker.image('springci/spring-data-openjdk8-with-mongodb-4.2.0:latest').inside('-v $HOME:/tmp/jenkins-home') {
+								docker.image('springci/spring-data-openjdk8-with-mongodb-4.4.4:latest').inside('-v $HOME:/tmp/jenkins-home') {
 									sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
 									sh 'mongod --setParameter transactionLifetimeLimitSeconds=90 --setParameter maxTransactionLockRequestTimeoutMillis=10000 --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
 									sh 'sleep 10'
@@ -150,7 +150,7 @@ pipeline {
 					steps {
 						script {
 							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
-								docker.image('springci/spring-data-openjdk15-with-mongodb-4.2.0:latest').inside('-v $HOME:/tmp/jenkins-home') {
+								docker.image('springci/spring-data-openjdk15-with-mongodb-4.4.4:latest').inside('-v $HOME:/tmp/jenkins-home') {
 									sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
 									sh 'mongod --setParameter transactionLifetimeLimitSeconds=90 --setParameter maxTransactionLockRequestTimeoutMillis=10000 --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
 									sh 'sleep 10'

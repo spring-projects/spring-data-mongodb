@@ -10,6 +10,6 @@ RUN RUN set -eux; \
 	echo ${TZ} > /etc/timezone;
 
 RUN apt-get update ; \
-	apt-get install -y mongodb-org=4.0.14 mongodb-org-server=4.0.14 mongodb-org-shell=4.0.14 mongodb-org-mongos=4.0.14 mongodb-org-tools=4.0.14 ; \
+	apt-get install -y mongodb-org=4.0.23 mongodb-org-server=4.0.23 mongodb-org-shell=4.0.23 mongodb-org-mongos=4.0.23 mongodb-org-tools=4.0.23 ; \
 	apt-get clean; \
 	rm -rf /var/lib/apt/lists/*;
