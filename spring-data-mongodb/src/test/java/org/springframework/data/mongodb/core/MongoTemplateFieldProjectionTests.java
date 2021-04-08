@@ -34,6 +34,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.Unwrapped;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
@@ -42,8 +43,10 @@ import org.springframework.data.mongodb.test.util.Template;
  * Integration tests for {@link org.springframework.data.mongodb.core.query.Field}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 @ExtendWith(MongoTemplateExtension.class)
+@EnableIfMongoServerVersion(isGreaterThanEqual = "4.4")
 class MongoTemplateFieldProjectionTests {
 
 	private static @Template MongoTestTemplate template;

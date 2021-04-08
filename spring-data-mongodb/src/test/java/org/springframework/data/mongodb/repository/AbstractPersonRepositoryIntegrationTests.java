@@ -63,6 +63,7 @@ import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.mongodb.repository.SampleEvaluationContextExtension.SampleSecurityContextHolder;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 import org.springframework.data.querydsl.QSort;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -1414,7 +1415,8 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		assertThat(repository.findByFirstnameIn(".*")).isEmpty();
 	}
 
-	@Test // GH-23583
+	@Test // GH-3583
+	@EnableIfMongoServerVersion(isGreaterThanEqual = "4.4")
 	void annotatedQueryShouldAllowAggregationInProjection() {
 
 		Person target = repository.findWithAggregationInProjection(alicia.getId());
