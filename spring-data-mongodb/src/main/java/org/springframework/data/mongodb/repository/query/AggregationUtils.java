@@ -196,9 +196,9 @@ class AggregationUtils {
 	 * @throws IllegalArgumentException when none of the above rules is met.
 	 */
 	@Nullable
-	static <T> T extractSimpleTypeResult(Document source, Class<T> targetType, MongoConverter converter) {
+	static <T> T extractSimpleTypeResult(@Nullable Document source, Class<T> targetType, MongoConverter converter) {
 
-		if (source.isEmpty()) {
+		if (source == null || source.isEmpty()) {
 			return null;
 		}
 
