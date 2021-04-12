@@ -159,6 +159,14 @@ public class StringBasedAggregationUnitTests {
 		assertThat(executeAggregation("returnCollection").result).isEqualTo(expected);
 	}
 
+	@Test // GH-3623
+	public void returnNullWhenSingleResultIsNotPresent() {
+
+		when(aggregationResults.getMappedResults()).thenReturn(Collections.emptyList());
+
+		assertThat(executeAggregation("simpleReturnType").result).isNull();
+	}
+
 	@Test // DATAMONGO-2153
 	public void returnRawResultType() {
 		assertThat(executeAggregation("returnRawResultType").result).isEqualTo(aggregationResults);
@@ -312,6 +320,9 @@ public class StringBasedAggregationUnitTests {
 
 		@Aggregation(RAW_GROUP_BY_LASTNAME_STRING)
 		Page<Person> invalidPageReturnType(Pageable page);
+
+		@Aggregation(RAW_GROUP_BY_LASTNAME_STRING)
+		String simpleReturnType();
 	}
 
 	static class PersonAggregate {
