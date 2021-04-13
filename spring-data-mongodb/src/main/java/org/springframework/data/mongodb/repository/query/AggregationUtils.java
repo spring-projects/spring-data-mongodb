@@ -39,6 +39,7 @@ import org.springframework.data.repository.query.QueryMethodEvaluationContextPro
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -198,7 +199,7 @@ class AggregationUtils {
 	@Nullable
 	static <T> T extractSimpleTypeResult(@Nullable Document source, Class<T> targetType, MongoConverter converter) {
 
-		if (source == null || source.isEmpty()) {
+		if (ObjectUtils.isEmpty(source)) {
 			return null;
 		}
 
