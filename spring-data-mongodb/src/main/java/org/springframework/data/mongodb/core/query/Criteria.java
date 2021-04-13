@@ -898,7 +898,7 @@ public class Criteria implements CriteriaDefinition {
 	 * @param right
 	 * @return
 	 */
-	private boolean isEqual(Object left, Object right) {
+	private boolean isEqual(@Nullable Object left, @Nullable Object right) {
 
 		if (left == null) {
 			return right == null;
@@ -918,42 +918,48 @@ public class Criteria implements CriteriaDefinition {
 		}
 
 		if (left instanceof Document) {
+
 			if (!(right instanceof Document)) {
 				return false;
 			}
+
 			Document leftDocument = (Document) left;
 			Document rightDocument = (Document) right;
-			Iterator leftIterator = leftDocument.entrySet().iterator();
-			Iterator rightIterator = rightDocument.entrySet().iterator();
+			Iterator<Entry<String, Object>> leftIterator = leftDocument.entrySet().iterator();
+			Iterator<Entry<String, Object>> rightIterator = rightDocument.entrySet().iterator();
 
 			while (leftIterator.hasNext() && rightIterator.hasNext()) {
-				Map.Entry leftEntry = (Map.Entry)leftIterator.next();
-				Map.Entry rightEntry = (Map.Entry)rightIterator.next();
-				if (!isEqual(leftEntry.getKey(), rightEntry.getKey())) {
-					return false;
-				}
-				if (!isEqual(leftEntry.getValue(), rightEntry.getValue())) {
+
+				Map.Entry<String, Object> leftEntry = leftIterator.next();
+				Map.Entry<String, Object> rightEntry = rightIterator.next();
+
+				if (!isEqual(leftEntry.getKey(), rightEntry.getKey())
+						|| !isEqual(leftEntry.getValue(), rightEntry.getValue())) {
 					return false;
 				}
 			}
+
 			return !leftIterator.hasNext() && !rightIterator.hasNext();
 		}
 
 		if (Collection.class.isAssignableFrom(left.getClass())) {
+
 			if (!Collection.class.isAssignableFrom(right.getClass())) {
 				return false;
 			}
 
-			Collection leftCollection = (Collection) left;
-			Collection rightCollection = (Collection) right;
-			Iterator leftIterator = leftCollection.iterator();
-			Iterator rightIterator = rightCollection.iterator();
+			Collection<?> leftCollection = (Collection<?>) left;
+			Collection<?> rightCollection = (Collection<?>) right;
+			Iterator<?> leftIterator = leftCollection.iterator();
+			Iterator<?> rightIterator = rightCollection.iterator();
 
 			while (leftIterator.hasNext() && rightIterator.hasNext()) {
+
 				if (!isEqual(leftIterator.next(), rightIterator.next())) {
 					return false;
 				}
 			}
+
 			return !leftIterator.hasNext() && !rightIterator.hasNext();
 		}
 
