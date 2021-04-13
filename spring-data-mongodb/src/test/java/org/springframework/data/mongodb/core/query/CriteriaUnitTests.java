@@ -39,6 +39,7 @@ import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
  * @author Andreas Zink
  * @author Ziemowit Stolarczyk
  * @author Clément Petit
+ * @author Mark Paluch
  */
 public class CriteriaUnitTests {
 
@@ -361,6 +362,45 @@ public class CriteriaUnitTests {
 	}
 
 	@Test // DATAMONGO-2002
+	public void shouldEqualForDocument() {
+
+		assertThat(new Criteria("field").is(new Document("one", 1).append("two", "two").append("null", null)))
+				.isEqualTo(new Criteria("field").is(new Document("one", 1).append("two", "two").append("null", null)));
+
+		assertThat(new Criteria("field").is(new Document("one", 1).append("two", "two").append("null", null)))
+				.isNotEqualTo(new Criteria("field").is(new Document("one", 1).append("two", "two")));
+
+		assertThat(new Criteria("field").is(new Document("one", 1).append("two", "two")))
+				.isNotEqualTo(new Criteria("field").is(new Document("one", 1).append("two", "two").append("null", null)));
+
+		assertThat(new Criteria("field").is(new Document("one", 1).append("null", null).append("two", "two")))
+				.isNotEqualTo(new Criteria("field").is(new Document("one", 1).append("two", "two").append("null", null)));
+
+		assertThat(new Criteria("field").is(new Document())).isNotEqualTo(new Criteria("field").is("foo"));
+		assertThat(new Criteria("field").is("foo")).isNotEqualTo(new Criteria("field").is(new Document()));
+	}
+
+	@Test // DATAMONGO-2002
+	public void shouldEqualForCollection() {
+
+		assertThat(new Criteria("field").is(Arrays.asList("foo", "bar")))
+				.isEqualTo(new Criteria("field").is(Arrays.asList("foo", "bar")));
+
+		assertThat(new Criteria("field").is(Arrays.asList("foo", 1)))
+				.isNotEqualTo(new Criteria("field").is(Arrays.asList("foo", "bar")));
+
+		assertThat(new Criteria("field").is(Collections.singletonList("foo")))
+				.isNotEqualTo(new Criteria("field").is(Arrays.asList("foo", "bar")));
+
+		assertThat(new Criteria("field").is(Arrays.asList("foo", "bar")))
+				.isNotEqualTo(new Criteria("field").is(Collections.singletonList("foo")));
+
+		assertThat(new Criteria("field").is(Arrays.asList("foo", "bar"))).isNotEqualTo(new Criteria("field").is("foo"));
+
+		assertThat(new Criteria("field").is("foo")).isNotEqualTo(new Criteria("field").is(Arrays.asList("foo", "bar")));
+	}
+
+	@Test // GH-3414
 	public void shouldEqualForSamePatternAndFlags() {
 
 		Criteria left = new Criteria("field").regex("foo", "iu");
