@@ -1,6 +1,16 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.2.0 (2021-04-14)
+-------------------------------------
+* #3623 - `@Aggregation` repository query method causes `NullPointerException` when the result is empty.
+* #3621 - Upgrade to MongoDB Java Drivers 4.2.3.
+* #3612 - Upgrade to MongoDB 4.4 on CI.
+* #3601 - Criteria object not allowing to use field names with underscore in them.
+* #3583 - Support aggregation expression on fields projection.
+* #3414 - Criteria or toEquals fail if contains regex [DATAMONGO-2559].
+
+
 Changes in version 3.1.8 (2021-04-14)
 -------------------------------------
 * #3623 - `@Aggregation` repository query method causes `NullPointerException` when the result is empty.
@@ -3367,6 +3377,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
