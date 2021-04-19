@@ -15,29 +15,38 @@
  */
 package org.springframework.data.mongodb.core
 
-import com.mongodb.MongoClient
+import com.mongodb.client.MongoClients
 import org.junit.Test
+import org.springframework.data.mongodb.core.mapping.Field
 import org.springframework.data.mongodb.repository.MongoRepository
 import org.springframework.data.mongodb.repository.support.MongoRepositoryFactory
 import org.springframework.data.mongodb.test.util.Assertions.assertThat
 
-open class SuperType(open val field: Int)
+open class SuperType(open var field: Int)
 
-class SubType(val id: String, override var field: Int = 1) : SuperType(field)
+class SubType(val id: String, @Field("foo") override var field: Int = 1) :
+	SuperType(field) {
+
+	fun setFields(v: Int) {
+		field = v
+		super.field = v
+	}
+}
 
 interface MyRepository : MongoRepository<SubType, String>
 
 class `KotlinOverridePropertyTests` {
 
-	val template = MongoTemplate(MongoClient(), "kotlin-tests")
+	val template = MongoTemplate(MongoClients.create(), "kotlin-tests")
 
 	@Test // DATAMONGO-2250
 	fun `Ambiguous field mapping for override val field`() {
 
-		val repository = MongoRepositoryFactory(template).getRepository(MyRepository::class.java)
+		val repository =
+			MongoRepositoryFactory(template).getRepository(MyRepository::class.java)
 
 		var subType = SubType("id-1")
-		subType.field = 3
+		subType.setFields(3)
 
 		repository.save(subType)
 
