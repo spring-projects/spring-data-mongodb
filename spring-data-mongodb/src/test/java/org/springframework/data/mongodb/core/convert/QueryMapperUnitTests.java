@@ -1257,6 +1257,14 @@ public class QueryMapperUnitTests {
 		assertThat(document).isEqualTo(new org.bson.Document("double_underscore.renamed", new org.bson.Document("$exists", true)));
 	}
 
+	@Test // GH-3635
+	void $floorKeywordDoesNotMatch$or$norPattern() {
+
+		Query query = new BasicQuery(" { $expr: { $gt: [ \"$spent\" , { $floor : \"$budget\" } ] } }");
+		assertThatNoException()
+				.isThrownBy(() -> mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(Foo.class)));
+	}
+
 	class WithDeepArrayNesting {
 
 		List<WithNestedArray> level0;
