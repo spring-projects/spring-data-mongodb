@@ -797,7 +797,6 @@ public class QueryMapper {
 	 */
 	static class Keyword {
 
-		private static final String N_OR_PATTERN = "\\$.*or";
 		private static final Set<String> NON_DBREF_CONVERTING_KEYWORDS = new HashSet<>(
 				Arrays.asList("$", "$size", "$slice", "$gt", "$lt"));
 
@@ -828,7 +827,7 @@ public class QueryMapper {
 		}
 
 		public boolean isOrOrNor() {
-			return key.matches(N_OR_PATTERN);
+			return key.equalsIgnoreCase("$or") || key.equalsIgnoreCase("$nor");
 		}
 
 		/**
