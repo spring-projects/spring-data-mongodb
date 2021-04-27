@@ -39,7 +39,6 @@ import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.RepositoryComposition.RepositoryFragments;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
-import org.springframework.data.repository.core.support.RepositoryFragment;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
@@ -92,8 +91,21 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 	 */
 	@Override
 	protected RepositoryFragments getRepositoryFragments(RepositoryMetadata metadata) {
+		return getRepositoryFragments(metadata, operations);
+	}
 
-		RepositoryFragments fragments = RepositoryFragments.empty();
+	/**
+	 * Creates {@link RepositoryFragments} based on {@link RepositoryMetadata} to add Mongo-specific extensions. Typically
+	 * adds a {@link QuerydslMongoPredicateExecutor} if the repository interface uses Querydsl.
+	 * <p>
+	 * Can be overridden by subclasses to customize {@link RepositoryFragments}.
+	 *
+	 * @param metadata repository metadata.
+	 * @param operations the MongoDB operations manager.
+	 * @return
+	 * @since 3.2.1
+	 */
+	protected RepositoryFragments getRepositoryFragments(RepositoryMetadata metadata, MongoOperations operations) {
 
 		boolean isQueryDslRepository = QUERY_DSL_PRESENT
 				&& QuerydslPredicateExecutor.class.isAssignableFrom(metadata.getRepositoryInterface());
@@ -105,14 +117,11 @@ public class MongoRepositoryFactory extends RepositoryFactorySupport {
 						"Cannot combine Querydsl and reactive repository support in a single interface");
 			}
 
-			MongoEntityInformation<?, Serializable> entityInformation = getEntityInformation(metadata.getDomainType(),
-					metadata);
-
-			fragments = fragments.append(RepositoryFragment.implemented(
-					getTargetRepositoryViaReflection(QuerydslMongoPredicateExecutor.class, entityInformation, operations)));
+			return RepositoryFragments
+					.just(new QuerydslMongoPredicateExecutor<>(getEntityInformation(metadata.getDomainType()), operations));
 		}
 
-		return fragments;
+		return RepositoryFragments.empty();
 	}
 
 	/*
