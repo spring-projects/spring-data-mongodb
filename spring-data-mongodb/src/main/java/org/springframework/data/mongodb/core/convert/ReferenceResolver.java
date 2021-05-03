@@ -47,6 +47,7 @@ public interface ReferenceResolver {
 
 	ReferenceLoader getReferenceLoader();
 
+	// TODO: ReferenceCollection
 	class ReferenceContext {
 
 		@Nullable final String database;
