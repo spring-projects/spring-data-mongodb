@@ -35,8 +35,10 @@ public interface ReferenceLoader {
 		return bulkFetch(filter, context).findFirst().orElse(null);
 	}
 
+	// meh, Stream!
 	Stream<Document> bulkFetch(ReferenceFilter filter, ReferenceContext context);
 
+	// Reference query
 	interface ReferenceFilter {
 
 		Bson getFilter();
@@ -45,6 +47,8 @@ public interface ReferenceLoader {
 			return new Document();
 		}
 
+		// TODO: Move apply method into something else that holds the collection and knows about single item/multi-item
+		// processing
 		default Stream<Document> apply(MongoCollection<Document> collection) {
 			return restoreOrder(StreamSupport.stream(collection.find(getFilter()).sort(getSort()).spliterator(), false));
 		}

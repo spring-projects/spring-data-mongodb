@@ -80,6 +80,7 @@ public class ReferenceReader {
 		this.codec = new ParameterBindingDocumentCodec();
 	}
 
+	// TODO: Move documentConversionFunction to here. Having a contextual read allows projections in references
 	Object readReference(MongoPersistentProperty property, Object value,
 			BiFunction<ReferenceContext, ReferenceFilter, Stream<Document>> lookupFunction) {
 
@@ -94,6 +95,8 @@ public class ReferenceReader {
 			return result.map(it -> documentConversionFunction.apply(property, it)).collect(Collectors.toList());
 		}
 
+		// TODO: retain target type and extract types here so the conversion function doesn't require type fiddling
+		// BiFunction<TypeInformation, Document, Object> instead of MongoPersistentProperty
 		if (property.isMap()) {
 
 			// the order is a real problem here
@@ -165,7 +168,7 @@ public class ReferenceReader {
 
 		if (!BsonUtils.isJsonDocument(value) && value.contains("?#{")) {
 			String s = "{ 'target-value' : " + value + "}";
-			T evaluated = (T) new ParameterBindingDocumentCodec().decode(s, bindingContext).get("target-value ");
+			T evaluated = (T) codec.decode(s, bindingContext).get("target-value ");
 			return evaluated != null ? evaluated : defaultValue.get();
 		}
 

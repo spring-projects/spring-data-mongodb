@@ -19,6 +19,7 @@ package org.springframework.data.mongodb.core.mapping;
  * @author Christoph Strobl
  */
 @FunctionalInterface
+// TODO: ObjectPointer or DocumentPointer
 public interface ObjectReference<T> {
 	T getPointer();
 }
