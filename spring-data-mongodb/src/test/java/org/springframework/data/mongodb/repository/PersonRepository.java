@@ -403,4 +403,7 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	Person findPersonByManyArguments(String firstname, String lastname, String email, Integer age, Sex sex,
 			Date createdAt, List<String> skills, String street, String zipCode, //
 			String city, UUID uniqueId, String username, String password);
+
+	@Query("{ 'age' : null }")
+	Person findByQueryWithNullEqualityCheck();
 }

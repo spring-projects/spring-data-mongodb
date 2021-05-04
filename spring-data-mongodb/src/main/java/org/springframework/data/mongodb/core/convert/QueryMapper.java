@@ -680,12 +680,12 @@ public class QueryMapper {
 	 * converted one by one.
 	 *
 	 * @param documentField the field and its meta data
-	 * @param value the actual value
+	 * @param value the actual value. Can be {@literal null}.
 	 * @return the potentially converted target value.
 	 */
-	private Object applyFieldTargetTypeHintToValue(Field documentField, Object value) {
+	private Object applyFieldTargetTypeHintToValue(Field documentField, @Nullable Object value) {
 
-		if (documentField.getProperty() == null || !documentField.getProperty().hasExplicitWriteTarget()) {
+		if (value == null || documentField.getProperty() == null || !documentField.getProperty().hasExplicitWriteTarget()) {
 			return value;
 		}
 

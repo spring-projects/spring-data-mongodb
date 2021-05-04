@@ -1082,6 +1082,17 @@ public class QueryMapperUnitTests {
 				.isEqualTo(new org.bson.Document("double_underscore.renamed", new org.bson.Document("$exists", true)));
 	}
 
+	@Test // GH-3633
+	void mapsNullValueForFieldWithCustomTargetType() {
+
+		Query query = query(where("stringAsOid").is(null));
+
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(NonIdFieldWithObjectIdTargetType.class));
+
+		assertThat(document).isEqualTo(new org.bson.Document("stringAsOid", null));
+	}
+
 	class WithDeepArrayNesting {
 
 		List<WithNestedArray> level0;
