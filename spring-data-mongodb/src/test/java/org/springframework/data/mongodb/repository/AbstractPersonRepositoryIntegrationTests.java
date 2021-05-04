@@ -61,7 +61,9 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.query.BasicQuery;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.repository.Person.Sex;
 import org.springframework.data.mongodb.repository.SampleEvaluationContextExtension.SampleSecurityContextHolder;
 import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
@@ -1433,6 +1435,15 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 
 		Person target = repository.findWithAggregationInProjection(alicia.getId());
 		assertThat(target.getFirstname()).isEqualTo(alicia.getFirstname().toUpperCase());
+	}
+
+	@Test // GH-3633
+	void annotatedQueryWithNullEqualityCheckShouldWork() {
+
+		operations.updateFirst(Query.query(Criteria.where("id").is(dave.getId())), Update.update("age", null), Person.class);
+
+		Person byQueryWithNullEqualityCheck = repository.findByQueryWithNullEqualityCheck();
+		assertThat(byQueryWithNullEqualityCheck.getId()).isEqualTo(dave.getId());
 	}
 
 	@Test // GH-3602

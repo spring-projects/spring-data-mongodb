@@ -417,5 +417,8 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 
 	List<Person> findByUnwrappedUser(User user);
 
+	@Query("{ 'age' : null }")
+	Person findByQueryWithNullEqualityCheck();
+
 	List<Person> findBySpiritAnimal(User user);
 }
