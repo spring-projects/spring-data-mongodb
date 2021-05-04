@@ -1258,12 +1258,23 @@ public class QueryMapperUnitTests {
 	@Test // GH-3633
 	void mapsNullValueForFieldWithCustomTargetType() {
 
-		Query query = query(where("stringAsOid").is(null));
+		Query query = query(where("stringAsOid").isNull());
 
 		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(NonIdFieldWithObjectIdTargetType.class));
 
 		assertThat(document).isEqualTo(new org.bson.Document("stringAsOid", null));
+	}
+
+	@Test // GH-3633
+	void mapsNullBsonTypeForFieldWithCustomTargetType() {
+
+		Query query = query(where("stringAsOid").isNullValue());
+
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(NonIdFieldWithObjectIdTargetType.class));
+
+		assertThat(document).isEqualTo(new org.bson.Document("stringAsOid", new org.bson.Document("$type", 10)));
 	}
 
 	class WithDeepArrayNesting {
