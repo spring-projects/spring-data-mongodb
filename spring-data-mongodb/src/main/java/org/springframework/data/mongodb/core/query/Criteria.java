@@ -29,6 +29,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.bson.BsonRegularExpression;
+import org.bson.BsonType;
 import org.bson.Document;
 import org.bson.types.Binary;
 import org.springframework.data.domain.Example;
@@ -185,6 +186,42 @@ public class Criteria implements CriteriaDefinition {
 		}
 
 		this.isValue = value;
+		return this;
+	}
+
+	/**
+	 * Creates a criterion using {@literal null} equality comparison which matches documents that either contain the item
+	 * field whose value is {@literal null} or that do not contain the item field.
+	 * <p />
+	 * Use {@link #isNullValue()} to only query for documents that contain the field whose value is equal to
+	 * {@link org.bson.BsonType#NULL}. <br />
+	 * Use {@link #exists(boolean)} to query for documents that do (not) contain the field.
+	 *
+	 * @return this.
+	 * @see <a href="https://docs.mongodb.com/manual/tutorial/query-for-null-fields/#equality-filter">Query for Null or
+	 *      Missing Fields: Equality Filter</a>
+	 * @since 3.3
+	 */
+	public Criteria isNull() {
+		return is(null);
+	}
+
+	/**
+	 * Creates a criterion using a {@link org.bson.BsonType} comparison which matches only documents that contain the item
+	 * field whose value is equal to {@link org.bson.BsonType#NULL}.
+	 * <p />
+	 * Use {@link #isNull()} to query for documents that contain the field with a {@literal null} value or do not contain the
+	 * field at all. <br />
+	 * Use {@link #exists(boolean)} to query for documents that do (not) contain the field.
+	 *
+	 * @return this.
+	 * @see <a href="https://docs.mongodb.com/manual/tutorial/query-for-null-fields/#type-check">Query for Null or Missing
+	 *      Fields: Type Check</a>
+	 * @since 3.3
+	 */
+	public Criteria isNullValue() {
+
+		criteria.put("$type", BsonType.NULL.getValue());
 		return this;
 	}
 
