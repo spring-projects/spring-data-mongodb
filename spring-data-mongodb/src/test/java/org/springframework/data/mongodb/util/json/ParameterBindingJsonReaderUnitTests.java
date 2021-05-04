@@ -383,6 +383,13 @@ class ParameterBindingJsonReaderUnitTests {
 				.parse("{ 'stores.location' : { $geoWithin: { $centerSphere: [ [ 1.948516, 48.799029 ] , 0.004 ] } } }"));
 	}
 
+	@Test // GH-3633
+	void parsesNullValue() {
+
+		Document target = parse("{ 'parent' : null }");
+		assertThat(target).isEqualTo(new Document("parent", null));
+	}
+
 	private static Document parse(String json, Object... args) {
 
 		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json, args);
