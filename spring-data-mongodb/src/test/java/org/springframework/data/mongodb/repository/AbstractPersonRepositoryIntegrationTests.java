@@ -1434,4 +1434,19 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		Person target = repository.findWithAggregationInProjection(alicia.getId());
 		assertThat(target.getFirstname()).isEqualTo(alicia.getFirstname().toUpperCase());
 	}
+
+	@Test // GH-3602
+	void executesQueryWithDocumentReferenceCorrectly() {
+
+		Person josh = new Person("Josh", "Long");
+		User dave = new User();
+		dave.id = "dave";
+
+		josh.setSpiritAnimal(dave);
+
+		operations.save(josh);
+
+		List<Person> result = repository.findBySpiritAnimal(dave);
+		assertThat(result).map(Person::getId).containsExactly(josh.getId());
+	}
 }

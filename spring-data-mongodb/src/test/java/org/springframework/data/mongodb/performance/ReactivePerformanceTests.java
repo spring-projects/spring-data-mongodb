@@ -18,11 +18,10 @@ package org.springframework.data.mongodb.performance;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
-import org.bson.conversions.Bson;
 import org.springframework.data.mongodb.core.convert.ReferenceLoader;
-import org.springframework.data.mongodb.core.convert.ReferenceLoader.ReferenceFilter;
+import org.springframework.data.mongodb.core.convert.ReferenceLoader.DocumentReferenceQuery;
 import org.springframework.data.mongodb.core.convert.ReferenceReader;
-import org.springframework.data.util.Streamable;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -107,7 +106,7 @@ public class ReactivePerformanceTests {
 
 			@Nullable
 			@Override
-			public Object resolveReference(MongoPersistentProperty property, Object source, ReferenceReader referenceReader, BiFunction<ReferenceContext, ReferenceFilter, Stream<Document>> lookupFunction) {
+			public Object resolveReference(MongoPersistentProperty property, Object source, ReferenceReader referenceReader, LookupFunction lookupFunction, ResultConversionFunction resultConversionFunction) {
 				return null;
 			}
 

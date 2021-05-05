@@ -48,6 +48,7 @@ import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -1487,4 +1488,32 @@ public class QueryMapperUnitTests {
 		@Field("renamed")
 		String renamed_fieldname_with_underscores;
 	}
+
+	static class WithDocumentReferences {
+
+		@DocumentReference
+		Sample sample;
+
+		@DocumentReference
+		SimpeEntityWithoutId noId;
+
+		@DocumentReference(lookup = "{ 'stringProperty' : ?#{stringProperty} }")
+		SimpeEntityWithoutId noIdButLookupQuery;
+
+	}
+	
+	@Test
+	void xxx() {
+		
+		Sample sample = new Sample();
+		sample.foo = "sample-id";
+
+		Query query = query(where("sample").is(sample));
+		
+		org.bson.Document mappedObject = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(WithDocumentReferences.class));
+		
+		System.out.println("mappedObject.toJson(): " + mappedObject.toJson());
+	}
+
 }

@@ -19,23 +19,19 @@ import static org.springframework.util.ReflectionUtils.*;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
-import java.util.function.BiFunction;
-import java.util.stream.Stream;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import org.bson.Document;
-import org.bson.conversions.Bson;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.cglib.proxy.Callback;
 import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.Factory;
 import org.springframework.cglib.proxy.MethodProxy;
-import org.springframework.data.mongodb.core.convert.ReferenceLoader.ReferenceFilter;
-import org.springframework.data.mongodb.core.convert.ReferenceResolver.ReferenceContext;
+import org.springframework.data.mongodb.core.convert.ReferenceResolver.LookupFunction;
+import org.springframework.data.mongodb.core.convert.ReferenceResolver.ResultConversionFunction;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.objenesis.ObjenesisStd;
 import org.springframework.util.ReflectionUtils;
@@ -54,11 +50,12 @@ class LazyLoadingProxyGenerator {
 		this.objenesis = new ObjenesisStd(true);
 	}
 
-	public Object createLazyLoadingProxy(MongoPersistentProperty property, Object source,
-			BiFunction<ReferenceContext, ReferenceFilter, Stream<Document>> lookupFunction) {
+	public Object createLazyLoadingProxy(MongoPersistentProperty property, Object source, LookupFunction lookupFunction,
+			ResultConversionFunction resultConversionFunction) {
 
 		Class<?> propertyType = property.getType();
-		LazyLoadingInterceptor interceptor = new LazyLoadingInterceptor(property, source, referenceReader, lookupFunction);
+		LazyLoadingInterceptor interceptor = new LazyLoadingInterceptor(property, source, referenceReader, lookupFunction,
+				resultConversionFunction);
 
 		if (!propertyType.isInterface()) {
 
@@ -105,27 +102,30 @@ class LazyLoadingProxyGenerator {
 		private volatile boolean resolved;
 		private @org.springframework.lang.Nullable Object result;
 		private Object source;
-		private BiFunction<ReferenceContext, ReferenceFilter, Stream<Document>> lookupFunction;
+		private LookupFunction lookupFunction;
+		private ResultConversionFunction resultConversionFunction;
 
-		private final Method INITIALIZE_METHOD, TO_DBREF_METHOD, FINALIZE_METHOD;
+		private final Method INITIALIZE_METHOD, TO_DBREF_METHOD, FINALIZE_METHOD, GET_SOURCE_METHOD;
 
 		{
 			try {
 				INITIALIZE_METHOD = LazyLoadingProxy.class.getMethod("getTarget");
 				TO_DBREF_METHOD = LazyLoadingProxy.class.getMethod("toDBRef");
 				FINALIZE_METHOD = Object.class.getDeclaredMethod("finalize");
+				GET_SOURCE_METHOD = LazyLoadingProxy.class.getMethod("getSource");
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
 		}
 
 		public LazyLoadingInterceptor(MongoPersistentProperty property, Object source, ReferenceReader reader,
-				BiFunction<ReferenceContext, ReferenceFilter, Stream<Document>> lookupFunction) {
+				LookupFunction lookupFunction, ResultConversionFunction resultConversionFunction) {
 
 			this.property = property;
 			this.source = source;
 			this.referenceReader = reader;
 			this.lookupFunction = lookupFunction;
+			this.resultConversionFunction = resultConversionFunction;
 		}
 
 		@Nullable
@@ -143,6 +143,10 @@ class LazyLoadingProxyGenerator {
 
 			if (TO_DBREF_METHOD.equals(method)) {
 				return null;
+			}
+
+			if (GET_SOURCE_METHOD.equals(method)) {
+				return source;
 			}
 
 			if (isObjectMethod(method) && Object.class.equals(method.getDeclaringClass())) {
@@ -234,7 +238,7 @@ class LazyLoadingProxyGenerator {
 				// property.getOwner() != null ? property.getOwner().getName() : "unknown", property.getName());
 				// }
 
-				return referenceReader.readReference(property, source, lookupFunction);
+				return referenceReader.readReference(property, source, lookupFunction, resultConversionFunction);
 
 			} catch (RuntimeException ex) {
 				throw ex;

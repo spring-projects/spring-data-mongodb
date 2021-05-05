@@ -15,12 +15,12 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
+import java.util.Collections;
+import java.util.Iterator;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
-import org.springframework.data.mongodb.core.convert.ReferenceResolver.ReferenceContext;
+import org.springframework.data.mongodb.core.convert.ReferenceResolver.ReferenceCollection;
 import org.springframework.lang.Nullable;
 
 import com.mongodb.client.MongoCollection;
@@ -31,15 +31,15 @@ import com.mongodb.client.MongoCollection;
 public interface ReferenceLoader {
 
 	@Nullable
-	default Document fetch(ReferenceFilter filter, ReferenceContext context) {
-		return bulkFetch(filter, context).findFirst().orElse(null);
+	default Document fetch(DocumentReferenceQuery filter, ReferenceCollection context) {
+
+		Iterator<Document> it = bulkFetch(filter, context).iterator();
+		return it.hasNext() ? it.next() : null;
 	}
 
-	// meh, Stream!
-	Stream<Document> bulkFetch(ReferenceFilter filter, ReferenceContext context);
+	Iterable<Document> bulkFetch(DocumentReferenceQuery filter, ReferenceCollection context);
 
-	// Reference query
-	interface ReferenceFilter {
+	interface DocumentReferenceQuery {
 
 		Bson getFilter();
 
@@ -49,21 +49,21 @@ public interface ReferenceLoader {
 
 		// TODO: Move apply method into something else that holds the collection and knows about single item/multi-item
 		// processing
-		default Stream<Document> apply(MongoCollection<Document> collection) {
-			return restoreOrder(StreamSupport.stream(collection.find(getFilter()).sort(getSort()).spliterator(), false));
+		default Iterable<Document> apply(MongoCollection<Document> collection) {
+			return restoreOrder(collection.find(getFilter()).sort(getSort()));
+		}
+		
+		default Iterable<Document> restoreOrder(Iterable<Document> documents) {
+			return documents;
 		}
 
-		default Stream<Document> restoreOrder(Stream<Document> stream) {
-			return stream;
-		}
-
-		static ReferenceFilter referenceFilter(Bson bson) {
+		static DocumentReferenceQuery referenceFilter(Bson bson) {
 			return () -> bson;
 		}
 
-		static ReferenceFilter singleReferenceFilter(Bson bson) {
+		static DocumentReferenceQuery singleReferenceFilter(Bson bson) {
 
-			return new ReferenceFilter() {
+			return new DocumentReferenceQuery() {
 
 				@Override
 				public Bson getFilter() {
@@ -71,10 +71,10 @@ public interface ReferenceLoader {
 				}
 
 				@Override
-				public Stream<Document> apply(MongoCollection<Document> collection) {
+				public Iterable<Document> apply(MongoCollection<Document> collection) {
 
 					Document result = collection.find(getFilter()).sort(getSort()).limit(1).first();
-					return result != null ? Stream.of(result) : Stream.empty();
+					return result != null ? Collections.singleton(result) : Collections.emptyList();
 				}
 			};
 		}

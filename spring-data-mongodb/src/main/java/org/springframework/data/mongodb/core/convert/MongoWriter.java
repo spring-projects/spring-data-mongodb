@@ -70,4 +70,8 @@ public interface MongoWriter<T> extends EntityWriter<T, Bson> {
 	 * @return will never be {@literal null}.
 	 */
 	DBRef toDBRef(Object object, @Nullable MongoPersistentProperty referingProperty);
+
+	default Object toDocumentReference(Object source, @Nullable MongoPersistentProperty referringProperty) {
+		return toDBRef(source, referringProperty);
+	}
 }

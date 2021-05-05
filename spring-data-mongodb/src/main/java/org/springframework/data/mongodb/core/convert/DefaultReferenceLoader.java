@@ -15,21 +15,15 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
-
 import org.bson.Document;
-import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoDatabaseUtils;
-import org.springframework.data.mongodb.core.convert.ReferenceResolver.ReferenceContext;
-import org.springframework.lang.Nullable;
+import org.springframework.data.mongodb.core.convert.ReferenceResolver.ReferenceCollection;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 
 /**
@@ -49,7 +43,7 @@ public class DefaultReferenceLoader implements ReferenceLoader {
 	}
 
 	@Override
-	public Stream<Document> bulkFetch(ReferenceFilter filter, ReferenceContext context) {
+	public Iterable<Document> bulkFetch(DocumentReferenceQuery filter, ReferenceCollection context) {
 
 		MongoCollection<Document> collection = getCollection(context);
 
@@ -63,9 +57,9 @@ public class DefaultReferenceLoader implements ReferenceLoader {
 		return filter.apply(collection);
 	}
 
-	protected MongoCollection<Document> getCollection(ReferenceContext context) {
+	protected MongoCollection<Document> getCollection(ReferenceCollection context) {
 
-		return MongoDatabaseUtils.getDatabase(context.database, mongoDbFactory).getCollection(context.collection,
+		return MongoDatabaseUtils.getDatabase(context.getDatabase(), mongoDbFactory).getCollection(context.getCollection(),
 				Document.class);
 	}
 }

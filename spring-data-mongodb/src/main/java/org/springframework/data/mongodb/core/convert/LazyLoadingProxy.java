@@ -46,4 +46,15 @@ public interface LazyLoadingProxy {
 	 */
 	@Nullable
 	DBRef toDBRef();
+
+	/**
+	 * Returns the raw {@literal source} object that defines the reference.
+	 *
+	 * @return can be {@literal null}.
+	 * @since 3.3
+	 */
+	@Nullable
+	default Object getSource() {
+		return toDBRef();
+	}
 }
