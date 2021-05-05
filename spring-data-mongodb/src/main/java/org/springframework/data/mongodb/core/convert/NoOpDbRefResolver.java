@@ -20,9 +20,9 @@ import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import org.bson.Document;
-import org.bson.conversions.Bson;
-import org.springframework.data.mongodb.core.convert.ReferenceLoader.ReferenceFilter;
+import org.springframework.data.mongodb.core.convert.ReferenceLoader.DocumentReferenceQuery;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 
 import com.mongodb.DBRef;
@@ -77,7 +77,8 @@ public enum NoOpDbRefResolver implements DbRefResolver {
 	@Nullable
 	@Override
 	public Object resolveReference(MongoPersistentProperty property, Object source, ReferenceReader referenceReader,
-			BiFunction<ReferenceContext, ReferenceFilter, Stream<Document>> lookupFunction) {
+			LookupFunction lookupFunction,
+			ResultConversionFunction resultConversionFunction) {
 		return null;
 	}
 

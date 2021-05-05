@@ -17,24 +17,24 @@ package org.springframework.data.mongodb.core.convert;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.SpELContext;
-import org.springframework.data.mongodb.core.convert.ReferenceLoader.ReferenceFilter;
-import org.springframework.data.mongodb.core.convert.ReferenceResolver.ReferenceContext;
+import org.springframework.data.mongodb.core.convert.ReferenceLoader.DocumentReferenceQuery;
+import org.springframework.data.mongodb.core.convert.ReferenceResolver.LookupFunction;
+import org.springframework.data.mongodb.core.convert.ReferenceResolver.ReferenceCollection;
+import org.springframework.data.mongodb.core.convert.ReferenceResolver.ResultConversionFunction;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -56,61 +56,47 @@ import com.mongodb.client.MongoCollection;
  */
 public class ReferenceReader {
 
+	private final Lazy<MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty>> mappingContext;
+	private final Supplier<SpELContext> spelContextSupplier;
 	private final ParameterBindingDocumentCodec codec;
 
-	private final Lazy<MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty>> mappingContext;
-	private final BiFunction<MongoPersistentProperty, Document, Object> documentConversionFunction;
-	private final Supplier<SpELContext> spelContextSupplier;
-
 	public ReferenceReader(MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
-			BiFunction<MongoPersistentProperty, Document, Object> documentConversionFunction,
 			Supplier<SpELContext> spelContextSupplier) {
 
-		this(() -> mappingContext, documentConversionFunction, spelContextSupplier);
+		this(() -> mappingContext, spelContextSupplier);
 	}
 
 	public ReferenceReader(
 			Supplier<MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty>> mappingContextSupplier,
-			BiFunction<MongoPersistentProperty, Document, Object> documentConversionFunction,
 			Supplier<SpELContext> spelContextSupplier) {
 
 		this.mappingContext = Lazy.of(mappingContextSupplier);
-		this.documentConversionFunction = documentConversionFunction;
 		this.spelContextSupplier = spelContextSupplier;
 		this.codec = new ParameterBindingDocumentCodec();
 	}
 
-	// TODO: Move documentConversionFunction to here. Having a contextual read allows projections in references
-	Object readReference(MongoPersistentProperty property, Object value,
-			BiFunction<ReferenceContext, ReferenceFilter, Stream<Document>> lookupFunction) {
+	Object readReference(MongoPersistentProperty property, Object value, LookupFunction lookupFunction,
+			ResultConversionFunction resultConversionFunction) {
 
 		SpELContext spELContext = spelContextSupplier.get();
 
-		ReferenceFilter filter = computeFilter(property, value, spELContext);
-		ReferenceContext referenceContext = computeReferenceContext(property, value, spELContext);
+		DocumentReferenceQuery filter = computeFilter(property, value, spELContext);
+		ReferenceCollection referenceCollection = computeReferenceContext(property, value, spELContext);
 
-		Stream<Document> result = lookupFunction.apply(referenceContext, filter);
+		Iterable<Document> result = lookupFunction.apply(filter, referenceCollection);
+
+		if (!result.iterator().hasNext()) {
+			return null;
+		}
 
 		if (property.isCollectionLike()) {
-			return result.map(it -> documentConversionFunction.apply(property, it)).collect(Collectors.toList());
+			return resultConversionFunction.apply(result, property.getTypeInformation());
 		}
 
-		// TODO: retain target type and extract types here so the conversion function doesn't require type fiddling
-		// BiFunction<TypeInformation, Document, Object> instead of MongoPersistentProperty
-		if (property.isMap()) {
-
-			// the order is a real problem here
-			Iterator<Object> keyIterator = ((Map) value).keySet().iterator();
-			return result.map(it -> it.entrySet().stream().collect(Collectors.toMap(key -> key.getKey(), val -> {
-				Object apply = documentConversionFunction.apply(property, (Document) val.getValue());
-				return apply;
-			}))).findFirst().orElse(null);
-		}
-
-		return result.map(it -> documentConversionFunction.apply(property, it)).findFirst().orElse(null);
+		return resultConversionFunction.apply(result.iterator().next(), property.getTypeInformation());
 	}
 
-	private ReferenceContext computeReferenceContext(MongoPersistentProperty property, Object value,
+	private ReferenceCollection computeReferenceContext(MongoPersistentProperty property, Object value,
 			SpELContext spELContext) {
 
 		if (value instanceof Iterable) {
@@ -118,44 +104,43 @@ public class ReferenceReader {
 		}
 
 		if (value instanceof DBRef) {
-			return ReferenceContext.fromDBRef((DBRef) value);
+			return ReferenceCollection.fromDBRef((DBRef) value);
 		}
 
 		if (value instanceof Document) {
 
 			Document ref = (Document) value;
 
-			if (property.isAnnotationPresent(DocumentReference.class)) {
+			if (property.isDocumentReference()) {
 
 				ParameterBindingContext bindingContext = bindingContext(property, value, spELContext);
-				DocumentReference documentReference = property.getRequiredAnnotation(DocumentReference.class);
+				DocumentReference documentReference = property.getDocumentReference();
 
 				String targetDatabase = parseValueOrGet(documentReference.db(), bindingContext,
 						() -> ref.get("db", String.class));
 				String targetCollection = parseValueOrGet(documentReference.collection(), bindingContext,
 						() -> ref.get("collection",
 								mappingContext.get().getPersistentEntity(property.getAssociationTargetType()).getCollection()));
-				return new ReferenceContext(targetDatabase, targetCollection);
+				return new ReferenceCollection(targetDatabase, targetCollection);
 			}
 
-			return new ReferenceContext(ref.getString("db"), ref.get("collection",
+			return new ReferenceCollection(ref.getString("db"), ref.get("collection",
 					mappingContext.get().getPersistentEntity(property.getAssociationTargetType()).getCollection()));
 		}
 
-		if (property.isAnnotationPresent(DocumentReference.class)) {
+		if (property.isDocumentReference()) {
 
 			ParameterBindingContext bindingContext = bindingContext(property, value, spELContext);
-			DocumentReference documentReference = property.getRequiredAnnotation(DocumentReference.class);
+			DocumentReference documentReference = property.getDocumentReference();
 
 			String targetDatabase = parseValueOrGet(documentReference.db(), bindingContext, () -> null);
 			String targetCollection = parseValueOrGet(documentReference.collection(), bindingContext,
 					() -> mappingContext.get().getPersistentEntity(property.getAssociationTargetType()).getCollection());
-			Document sort = parseValueOrGet(documentReference.sort(), bindingContext, () -> null);
 
-			return new ReferenceContext(targetDatabase, targetCollection);
+			return new ReferenceCollection(targetDatabase, targetCollection);
 		}
 
-		return new ReferenceContext(null,
+		return new ReferenceCollection(null,
 				mappingContext.get().getPersistentEntity(property.getAssociationTargetType()).getCollection());
 	}
 
@@ -201,9 +186,9 @@ public class ReferenceReader {
 		return ctx;
 	}
 
-	ReferenceFilter computeFilter(MongoPersistentProperty property, Object value, SpELContext spELContext) {
+	DocumentReferenceQuery computeFilter(MongoPersistentProperty property, Object value, SpELContext spELContext) {
 
-		DocumentReference documentReference = property.getRequiredAnnotation(DocumentReference.class);
+		DocumentReference documentReference = property.getDocumentReference();
 		String lookup = documentReference.lookup();
 
 		Document sort = parseValueOrGet(documentReference.sort(), bindingContext(property, value, spELContext), () -> null);
@@ -217,7 +202,7 @@ public class ReferenceReader {
 				ors.add(decoded);
 			}
 
-			return new ListReferenceFilter(new Document("$or", ors), sort);
+			return new ListDocumentReferenceQuery(new Document("$or", ors), sort);
 		}
 
 		if (property.isMap() && value instanceof Map) {
@@ -230,18 +215,18 @@ public class ReferenceReader {
 				filterMap.put(entry.getKey(), decoded);
 			}
 
-			return new MapReferenceFilter(new Document("$or", filterMap.values()), sort, filterMap);
+			return new MapDocumentReferenceQuery(new Document("$or", filterMap.values()), sort, filterMap);
 		}
 
-		return new SingleReferenceFilter(codec.decode(lookup, bindingContext(property, value, spELContext)), sort);
+		return new SingleDocumentReferenceQuery(codec.decode(lookup, bindingContext(property, value, spELContext)), sort);
 	}
 
-	static class SingleReferenceFilter implements ReferenceFilter {
+	static class SingleDocumentReferenceQuery implements DocumentReferenceQuery {
 
 		Document filter;
 		Document sort;
 
-		public SingleReferenceFilter(Document filter, Document sort) {
+		public SingleDocumentReferenceQuery(Document filter, Document sort) {
 			this.filter = filter;
 			this.sort = sort;
 		}
@@ -252,24 +237,24 @@ public class ReferenceReader {
 		}
 
 		@Override
-		public Stream<Document> apply(MongoCollection<Document> collection) {
+		public Iterable<Document> apply(MongoCollection<Document> collection) {
 
 			Document result = collection.find(getFilter()).limit(1).first();
-			return result != null ? Stream.of(result) : Stream.empty();
+			return result != null ? Collections.singleton(result) : Collections.emptyList();
 		}
 	}
 
-	static class MapReferenceFilter implements ReferenceFilter {
+	static class MapDocumentReferenceQuery implements DocumentReferenceQuery {
 
-		Document filter;
-		Document sort;
-		Map<Object, Document> filterOrderMap;
+		private final Document filter;
+		private final Document sort;
+		private final Map<Object, Document> filterOrderMap;
 
-		public MapReferenceFilter(Document filter, Document sort, Map<Object, Document> filterOrderMap) {
+		public MapDocumentReferenceQuery(Document filter, Document sort, Map<Object, Document> filterOrderMap) {
 
 			this.filter = filter;
-			this.filterOrderMap = filterOrderMap;
 			this.sort = sort;
+			this.filterOrderMap = filterOrderMap;
 		}
 
 		@Override
@@ -283,45 +268,46 @@ public class ReferenceReader {
 		}
 
 		@Override
-		public Stream<Document> restoreOrder(Stream<Document> stream) {
+		public Iterable<Document> restoreOrder(Iterable<Document> documents) {
 
 			Map<String, Object> targetMap = new LinkedHashMap<>();
-			List<Document> collected = stream.collect(Collectors.toList());
+			List<Document> collected = documents instanceof List ? (List<Document>) documents
+					: Streamable.of(documents).toList();
 
 			for (Entry<Object, Document> filterMapping : filterOrderMap.entrySet()) {
 
-				String key = filterMapping.getKey().toString();
-				Optional<Document> first = collected.stream().filter(it -> {
+				Optional<Document> first = collected.stream()
+						.filter(it -> it.entrySet().containsAll(filterMapping.getValue().entrySet())).findFirst();
 
-					boolean found = it.entrySet().containsAll(filterMapping.getValue().entrySet());
-					return found;
-				}).findFirst();
-
-				targetMap.put(key, first.orElse(null));
+				targetMap.put(filterMapping.getKey().toString(), first.orElse(null));
 			}
-			return Stream.of(new Document(targetMap));
+			return Collections.singleton(new Document(targetMap));
 		}
 	}
 
-	static class ListReferenceFilter implements ReferenceFilter {
+	static class ListDocumentReferenceQuery implements DocumentReferenceQuery {
 
-		Document filter;
-		Document sort;
+		private final Document filter;
+		private final Document sort;
 
-		public ListReferenceFilter(Document filter, Document sort) {
+		public ListDocumentReferenceQuery(Document filter, Document sort) {
+
 			this.filter = filter;
 			this.sort = sort;
 		}
 
 		@Override
-		public Stream<Document> restoreOrder(Stream<Document> stream) {
+		public Iterable<Document> restoreOrder(Iterable<Document> documents) {
 
 			if (filter.containsKey("$or")) {
 				List<Document> ors = filter.get("$or", List.class);
-				return stream.sorted((o1, o2) -> compareAgainstReferenceIndex(ors, o1, o2));
+				List<Document> target = documents instanceof List ? (List<Document>) documents
+						: Streamable.of(documents).toList();
+				return target.stream().sorted((o1, o2) -> compareAgainstReferenceIndex(ors, o1, o2))
+						.collect(Collectors.toList());
 			}
 
-			return stream;
+			return documents;
 		}
 
 		public Document getFilter() {
@@ -347,7 +333,5 @@ public class ReferenceReader {
 			}
 			return referenceList.size();
 		}
-
 	}
-
 }

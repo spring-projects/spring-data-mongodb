@@ -233,11 +233,30 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#isDocumentReference()
+	 */
+	@Override
+	public boolean isDocumentReference() {
+		return isAnnotationPresent(DocumentReference.class);
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#getDBRef()
 	 */
 	@Nullable
 	public DBRef getDBRef() {
 		return findAnnotation(DBRef.class);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#getDocumentReference()
+	 */
+	@Nullable
+	@Override
+	public DocumentReference getDocumentReference() {
+		return findAnnotation(DocumentReference.class);
 	}
 
 	/*

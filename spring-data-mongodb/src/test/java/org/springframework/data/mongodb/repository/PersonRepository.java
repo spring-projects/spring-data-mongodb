@@ -416,4 +416,6 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	List<Person> findByUnwrappedUserUsername(String username);
 
 	List<Person> findByUnwrappedUser(User user);
+
+	List<Person> findBySpiritAnimal(User user);
 }

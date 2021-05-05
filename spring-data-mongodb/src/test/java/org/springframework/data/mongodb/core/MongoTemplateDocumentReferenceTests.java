@@ -23,6 +23,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -32,16 +33,17 @@ import java.util.Map;
 
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.core.convert.LazyLoadingTestUtils;
-import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.DocumentPointer;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.ObjectReference;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
@@ -51,14 +53,14 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.model.Filters;
 
 /**
- * {@link DBRef} related integration tests for {@link MongoTemplate}.
+ * {@link DocumentReference} related integration tests for {@link MongoTemplate}.
  *
  * @author Christoph Strobl
  */
 @ExtendWith(MongoClientExtension.class)
 public class MongoTemplateDocumentReferenceTests {
 
-	public static final String DB_NAME = "manual-reference-tests";
+	public static final String DB_NAME = "document-reference-tests";
 
 	static @Client MongoClient client;
 
@@ -71,7 +73,8 @@ public class MongoTemplateDocumentReferenceTests {
 		});
 
 		cfg.configureConversion(it -> {
-			it.customConverters(new ReferencableConverter());
+			it.customConverters(new ReferencableConverter(), new SimpleObjectRefWithReadingConverterToDocumentConverter(),
+					new DocumentToSimpleObjectRefWithReadingConverter());
 		});
 
 		cfg.configureMappingContext(it -> {
@@ -84,7 +87,7 @@ public class MongoTemplateDocumentReferenceTests {
 		template.flushDatabase();
 	}
 
-	@Test
+	@Test // GH-3602
 	void writeSimpleTypeReference() {
 
 		String rootCollectionName = template.getCollectionName(SingleRefRoot.class);
@@ -102,11 +105,10 @@ public class MongoTemplateDocumentReferenceTests {
 		assertThat(target.get("simpleValueRef")).isEqualTo("ref-1");
 	}
 
-	@Test
+	@Test // GH-3602
 	void writeMapTypeReference() {
 
 		String rootCollectionName = template.getCollectionName(CollectionRefRoot.class);
-
 
 		CollectionRefRoot source = new CollectionRefRoot();
 		source.id = "root-1";
@@ -120,11 +122,10 @@ public class MongoTemplateDocumentReferenceTests {
 			return db.getCollection(rootCollectionName).find(Filters.eq("_id", "root-1")).first();
 		});
 
-		System.out.println("target: " + target.toJson());
 		assertThat(target.get("mapValueRef", Map.class)).containsEntry("frodo", "ref-1").containsEntry("bilbo", "ref-2");
 	}
 
-	@Test
+	@Test // GH-3602
 	void writeCollectionOfSimpleTypeReference() {
 
 		String rootCollectionName = template.getCollectionName(CollectionRefRoot.class);
@@ -143,7 +144,7 @@ public class MongoTemplateDocumentReferenceTests {
 		assertThat(target.get("simpleValueRef", List.class)).containsExactly("ref-1", "ref-2");
 	}
 
-	@Test
+	@Test // GH-3602
 	void writeObjectTypeReference() {
 
 		String rootCollectionName = template.getCollectionName(SingleRefRoot.class);
@@ -161,7 +162,7 @@ public class MongoTemplateDocumentReferenceTests {
 		assertThat(target.get("objectValueRef")).isEqualTo(source.getObjectValueRef().toReference());
 	}
 
-	@Test
+	@Test // GH-3602
 	void writeCollectionOfObjectTypeReference() {
 
 		String rootCollectionName = template.getCollectionName(CollectionRefRoot.class);
@@ -181,7 +182,7 @@ public class MongoTemplateDocumentReferenceTests {
 				source.getObjectValueRef().get(0).toReference(), source.getObjectValueRef().get(1).toReference());
 	}
 
-	@Test
+	@Test // GH-3602
 	void readSimpleTypeObjectReference() {
 
 		String rootCollectionName = template.getCollectionName(SingleRefRoot.class);
@@ -200,7 +201,7 @@ public class MongoTemplateDocumentReferenceTests {
 		assertThat(result.getSimpleValueRef()).isEqualTo(new SimpleObjectRef("ref-1", "me-the-referenced-object"));
 	}
 
-	@Test
+	@Test // GH-3602
 	void readCollectionOfSimpleTypeObjectReference() {
 
 		String rootCollectionName = template.getCollectionName(CollectionRefRoot.class);
@@ -220,7 +221,7 @@ public class MongoTemplateDocumentReferenceTests {
 		assertThat(result.getSimpleValueRef()).containsExactly(new SimpleObjectRef("ref-1", "me-the-referenced-object"));
 	}
 
-	@Test
+	@Test // GH-3602
 	void readLazySimpleTypeObjectReference() {
 
 		String rootCollectionName = template.getCollectionName(SingleRefRoot.class);
@@ -245,7 +246,7 @@ public class MongoTemplateDocumentReferenceTests {
 		assertThat(result.getSimpleLazyValueRef()).isEqualTo(new SimpleObjectRef("ref-1", "me-the-referenced-object"));
 	}
 
-	@Test
+	@Test // GH-3602
 	void readSimpleTypeObjectReferenceFromFieldWithCustomName() {
 
 		String rootCollectionName = template.getCollectionName(SingleRefRoot.class);
@@ -266,7 +267,7 @@ public class MongoTemplateDocumentReferenceTests {
 				.isEqualTo(new SimpleObjectRef("ref-1", "me-the-referenced-object"));
 	}
 
-	@Test
+	@Test // GH-3602
 	void readCollectionTypeObjectReferenceFromFieldWithCustomName() {
 
 		String rootCollectionName = template.getCollectionName(CollectionRefRoot.class);
@@ -287,7 +288,7 @@ public class MongoTemplateDocumentReferenceTests {
 				.containsExactly(new SimpleObjectRef("ref-1", "me-the-referenced-object"));
 	}
 
-	@Test
+	@Test // GH-3602
 	void readObjectReferenceFromDocumentType() {
 
 		String rootCollectionName = template.getCollectionName(SingleRefRoot.class);
@@ -307,7 +308,7 @@ public class MongoTemplateDocumentReferenceTests {
 		assertThat(result.getObjectValueRef()).isEqualTo(new ObjectRefOfDocument("ref-1", "me-the-referenced-object"));
 	}
 
-	@Test
+	@Test // GH-3602
 	void readCollectionObjectReferenceFromDocumentType() {
 
 		String rootCollectionName = template.getCollectionName(CollectionRefRoot.class);
@@ -328,7 +329,7 @@ public class MongoTemplateDocumentReferenceTests {
 				.containsExactly(new ObjectRefOfDocument("ref-1", "me-the-referenced-object"));
 	}
 
-	@Test
+	@Test // GH-3602
 	void readObjectReferenceFromDocumentDeclaringCollectionName() {
 
 		String rootCollectionName = template.getCollectionName(SingleRefRoot.class);
@@ -351,7 +352,7 @@ public class MongoTemplateDocumentReferenceTests {
 				.isEqualTo(new ObjectRefOfDocumentWithEmbeddedCollectionName("ref-1", "me-the-referenced-object"));
 	}
 
-	@Test
+	@Test // GH-3602
 	void readCollectionObjectReferenceFromDocumentDeclaringCollectionName() {
 
 		String rootCollectionName = template.getCollectionName(CollectionRefRoot.class);
@@ -379,7 +380,7 @@ public class MongoTemplateDocumentReferenceTests {
 				new ObjectRefOfDocumentWithEmbeddedCollectionName("ref-1", "me-the-1-referenced-object"));
 	}
 
-	@Test
+	@Test // GH-3602
 	void readObjectReferenceFromDocumentNotRelatingToTheIdProperty() {
 
 		String rootCollectionName = template.getCollectionName(SingleRefRoot.class);
@@ -401,7 +402,7 @@ public class MongoTemplateDocumentReferenceTests {
 				.isEqualTo(new ObjectRefOnNonIdField("ref-1", "me-the-referenced-object", "ref-key-1", "ref-key-2"));
 	}
 
-	@Test
+	@Test // GH-3602
 	void readLazyObjectReferenceFromDocumentNotRelatingToTheIdProperty() {
 
 		String rootCollectionName = template.getCollectionName(SingleRefRoot.class);
@@ -429,7 +430,7 @@ public class MongoTemplateDocumentReferenceTests {
 				.isEqualTo(new ObjectRefOnNonIdField("ref-1", "me-the-referenced-object", "ref-key-1", "ref-key-2"));
 	}
 
-	@Test
+	@Test // GH-3602
 	void readCollectionObjectReferenceFromDocumentNotRelatingToTheIdProperty() {
 
 		String rootCollectionName = template.getCollectionName(CollectionRefRoot.class);
@@ -452,7 +453,7 @@ public class MongoTemplateDocumentReferenceTests {
 				.containsExactly(new ObjectRefOnNonIdField("ref-1", "me-the-referenced-object", "ref-key-1", "ref-key-2"));
 	}
 
-	@Test
+	@Test // GH-3602
 	void readMapOfReferences() {
 
 		String rootCollectionName = template.getCollectionName(CollectionRefRoot.class);
@@ -479,12 +480,414 @@ public class MongoTemplateDocumentReferenceTests {
 		});
 
 		CollectionRefRoot result = template.findOne(query(where("id").is("id-1")), CollectionRefRoot.class);
-		System.out.println("result: " + result);
 
-		assertThat(result.getMapValueRef()).containsEntry("frodo",
-				new SimpleObjectRef("ref-1", "me-the-1-referenced-object"))
-				.containsEntry("bilbo",
-						new SimpleObjectRef("ref-2", "me-the-2-referenced-object"));
+		assertThat(result.getMapValueRef())
+				.containsEntry("frodo", new SimpleObjectRef("ref-1", "me-the-1-referenced-object"))
+				.containsEntry("bilbo", new SimpleObjectRef("ref-2", "me-the-2-referenced-object"));
+	}
+
+	@Test // GH-3602
+	void loadLazyCyclicReference() {
+
+		WithRefA a = new WithRefA();
+		a.id = "a";
+
+		WithRefB b = new WithRefB();
+		b.id = "b";
+
+		a.toB = b;
+		b.lazyToA = a;
+
+		template.save(a);
+		template.save(b);
+
+		WithRefA loadedA = template.query(WithRefA.class).matching(where("id").is(a.id)).firstValue();
+		assertThat(loadedA).isNotNull();
+		assertThat(loadedA.getToB()).isNotNull();
+		LazyLoadingTestUtils.assertProxy(loadedA.getToB().lazyToA, (proxy) -> {
+
+			assertThat(proxy.isResolved()).isFalse();
+			assertThat(proxy.currentValue()).isNull();
+		});
+	}
+
+	@Test // GH-3602
+	void loadEagerCyclicReference() {
+
+		WithRefA a = new WithRefA();
+		a.id = "a";
+
+		WithRefB b = new WithRefB();
+		b.id = "b";
+
+		a.toB = b;
+		b.eagerToA = a;
+
+		template.save(a);
+		template.save(b);
+
+		WithRefA loadedA = template.query(WithRefA.class).matching(where("id").is(a.id)).firstValue();
+
+		assertThat(loadedA).isNotNull();
+		assertThat(loadedA.getToB()).isNotNull();
+		assertThat(loadedA.getToB().eagerToA).isSameAs(loadedA);
+	}
+
+	@Test // GH-3602
+	void loadAndStoreUnresolvedLazyDoesNotResolveTheProxy() {
+
+		String collectionB = template.getCollectionName(WithRefB.class);
+
+		WithRefA a = new WithRefA();
+		a.id = "a";
+
+		WithRefB b = new WithRefB();
+		b.id = "b";
+
+		a.toB = b;
+		b.lazyToA = a;
+
+		template.save(a);
+		template.save(b);
+
+		WithRefA loadedA = template.query(WithRefA.class).matching(where("id").is(a.id)).firstValue();
+		template.save(loadedA.getToB());
+
+		LazyLoadingTestUtils.assertProxy(loadedA.getToB().lazyToA, (proxy) -> {
+
+			assertThat(proxy.isResolved()).isFalse();
+			assertThat(proxy.currentValue()).isNull();
+		});
+
+		Document target = template.execute(db -> {
+			return db.getCollection(collectionB).find(Filters.eq("_id", "b")).first();
+		});
+		assertThat(target.get("lazyToA", Object.class)).isEqualTo("a");
+	}
+
+	@Test // GH-3602
+	void loadCollectionReferenceWithMissingRefs() {
+
+		String rootCollectionName = template.getCollectionName(CollectionRefRoot.class);
+		String refCollectionName = template.getCollectionName(SimpleObjectRef.class);
+
+		// ref-1 is missing.
+		Document refSource = new Document("_id", "ref-2").append("value", "me-the-2-referenced-object");
+		Document source = new Document("_id", "id-1").append("value", "v1").append("simpleValueRef",
+				Arrays.asList("ref-1", "ref-2"));
+
+		template.execute(db -> {
+
+			db.getCollection(refCollectionName).insertOne(refSource);
+			db.getCollection(rootCollectionName).insertOne(source);
+			return null;
+		});
+
+		CollectionRefRoot result = template.findOne(query(where("id").is("id-1")), CollectionRefRoot.class);
+		assertThat(result.getSimpleValueRef()).containsExactly(new SimpleObjectRef("ref-2", "me-the-2-referenced-object"));
+	}
+
+	@Test // GH-3602
+	void queryForReference() {
+
+		WithRefB b = new WithRefB();
+		b.id = "b";
+		template.save(b);
+
+		WithRefA a = new WithRefA();
+		a.id = "a";
+		a.toB = b;
+		template.save(a);
+
+		WithRefA a2 = new WithRefA();
+		a2.id = "a2";
+		template.save(a2);
+
+		WithRefA loadedA = template.query(WithRefA.class).matching(where("toB").is(b)).firstValue();
+		assertThat(loadedA.getId()).isEqualTo(a.getId());
+	}
+
+	@Test // GH-3602
+	void queryForReferenceInCollection() {
+
+		String rootCollectionName = template.getCollectionName(CollectionRefRoot.class);
+
+		Document shouldBeFound = new Document("_id", "id-1").append("value", "v1").append("simpleValueRef",
+				Arrays.asList("ref-1", "ref-2"));
+		Document shouldNotBeFound = new Document("_id", "id-2").append("value", "v2").append("simpleValueRef",
+				Arrays.asList("ref-1"));
+
+		template.execute(db -> {
+
+			db.getCollection(rootCollectionName).insertOne(shouldBeFound);
+			db.getCollection(rootCollectionName).insertOne(shouldNotBeFound);
+			return null;
+		});
+
+		SimpleObjectRef objectRef = new SimpleObjectRef("ref-2", "some irrelevant value");
+
+		List<CollectionRefRoot> loaded = template.query(CollectionRefRoot.class)
+				.matching(where("simpleValueRef").in(objectRef)).all();
+		assertThat(loaded).map(CollectionRefRoot::getId).containsExactly("id-1");
+	}
+
+	@Test // GH-3602
+	void queryForReferenceOnIdField() {
+
+		WithRefB b = new WithRefB();
+		b.id = "b";
+		template.save(b);
+
+		WithRefA a = new WithRefA();
+		a.id = "a";
+		a.toB = b;
+		template.save(a);
+
+		WithRefA a2 = new WithRefA();
+		a2.id = "a2";
+		template.save(a2);
+
+		WithRefA loadedA = template.query(WithRefA.class).matching(where("toB.id").is(b.id)).firstValue();
+		assertThat(loadedA.getId()).isEqualTo(a.getId());
+	}
+
+	@Test // GH-3602
+	void updateReferenceWithEntityHavingPointerConversion() {
+
+		WithRefB b = new WithRefB();
+		b.id = "b";
+		template.save(b);
+
+		WithRefA a = new WithRefA();
+		a.id = "a";
+		template.save(a);
+
+		template.update(WithRefA.class).apply(new Update().set("toB", b)).first();
+
+		String collectionA = template.getCollectionName(WithRefA.class);
+
+		Document target = template.execute(db -> {
+			return db.getCollection(collectionA).find(Filters.eq("_id", "a")).first();
+		});
+
+		assertThat(target).containsEntry("toB", "b");
+	}
+
+	@Test // GH-3602
+	void updateReferenceWithEntityWithoutPointerConversion() {
+
+		String collectionName = template.getCollectionName(SingleRefRoot.class);
+		SingleRefRoot refRoot = new SingleRefRoot();
+		refRoot.id = "root-1";
+
+		SimpleObjectRef ref = new SimpleObjectRef("ref-1", "me the referenced object");
+
+		template.save(refRoot);
+
+		template.update(SingleRefRoot.class).apply(new Update().set("simpleValueRef", ref)).first();
+
+		Document target = template.execute(db -> {
+			return db.getCollection(collectionName).find(Filters.eq("_id", "root-1")).first();
+		});
+
+		assertThat(target).containsEntry("simpleValueRef", "ref-1");
+	}
+
+	@Test // GH-3602
+	void updateReferenceWithValue() {
+
+		WithRefA a = new WithRefA();
+		a.id = "a";
+		template.save(a);
+
+		template.update(WithRefA.class).apply(new Update().set("toB", "b")).first();
+
+		String collectionA = template.getCollectionName(WithRefA.class);
+
+		Document target = template.execute(db -> {
+			return db.getCollection(collectionA).find(Filters.eq("_id", "a")).first();
+		});
+
+		assertThat(target).containsEntry("toB", "b");
+	}
+
+	@Test // GH-3602
+	void updateReferenceCollectionWithEntity() {
+
+		String rootCollectionName = template.getCollectionName(CollectionRefRoot.class);
+
+		CollectionRefRoot root = new CollectionRefRoot();
+		root.id = "root-1";
+		root.simpleValueRef = Collections.singletonList(new SimpleObjectRef("ref-1", "beastie"));
+
+		template.save(root);
+
+		template.update(CollectionRefRoot.class)
+				.apply(new Update().push("simpleValueRef").value(new SimpleObjectRef("ref-2", "boys"))).first();
+
+		Document target = template.execute(db -> {
+			return db.getCollection(rootCollectionName).find(Filters.eq("_id", "root-1")).first();
+		});
+
+		assertThat(target).containsEntry("simpleValueRef", Arrays.asList("ref-1", "ref-2"));
+	}
+
+	@Test // GH-3602
+	void updateReferenceCollectionWithValue() {
+
+		String rootCollectionName = template.getCollectionName(CollectionRefRoot.class);
+
+		CollectionRefRoot root = new CollectionRefRoot();
+		root.id = "root-1";
+		root.simpleValueRef = Collections.singletonList(new SimpleObjectRef("ref-1", "beastie"));
+
+		template.save(root);
+
+		template.update(CollectionRefRoot.class).apply(new Update().push("simpleValueRef").value("ref-2")).first();
+
+		Document target = template.execute(db -> {
+			return db.getCollection(rootCollectionName).find(Filters.eq("_id", "root-1")).first();
+		});
+
+		assertThat(target).containsEntry("simpleValueRef", Arrays.asList("ref-1", "ref-2"));
+	}
+
+	@Test // GH-3602
+	@Disabled("Property path resolution does not work inside maps, the key is considered :/")
+	void updateReferenceMapWithEntity() {
+
+		String rootCollectionName = template.getCollectionName(CollectionRefRoot.class);
+
+		CollectionRefRoot root = new CollectionRefRoot();
+		root.id = "root-1";
+		root.mapValueRef = Collections.singletonMap("beastie", new SimpleObjectRef("ref-1", "boys"));
+
+		template.save(root);
+
+		template.update(CollectionRefRoot.class)
+				.apply(new Update().set("mapValueRef.rise", new SimpleObjectRef("ref-2", "against"))).first();
+
+		Document target = template.execute(db -> {
+			return db.getCollection(rootCollectionName).find(Filters.eq("_id", "root-1")).first();
+		});
+
+		assertThat(target).containsEntry("mapValueRef", new Document("beastie", "ref-1").append("rise", "ref-2"));
+	}
+
+	@Test // GH-3602
+	void updateReferenceMapWithValue() {
+
+		String rootCollectionName = template.getCollectionName(CollectionRefRoot.class);
+
+		CollectionRefRoot root = new CollectionRefRoot();
+		root.id = "root-1";
+		root.mapValueRef = Collections.singletonMap("beastie", new SimpleObjectRef("ref-1", "boys"));
+
+		template.save(root);
+
+		template.update(CollectionRefRoot.class).apply(new Update().set("mapValueRef.rise", "ref-2")).first();
+
+		Document target = template.execute(db -> {
+			return db.getCollection(rootCollectionName).find(Filters.eq("_id", "root-1")).first();
+		});
+
+		assertThat(target).containsEntry("mapValueRef", new Document("beastie", "ref-1").append("rise", "ref-2"));
+	}
+
+	@Test // GH-3602
+	void useReadingWriterConverterPairForLoading() {
+
+		SingleRefRoot root = new SingleRefRoot();
+		root.id = "root-1";
+		root.withReadingConverter = new SimpleObjectRefWithReadingConverter("ref-1", "value-1");
+
+		template.save(root.withReadingConverter);
+
+		template.save(root);
+
+		Document target = template.execute(db -> {
+			return db.getCollection(template.getCollectionName(SingleRefRoot.class)).find(Filters.eq("_id", root.id)).first();
+		});
+
+		assertThat(target).containsEntry("withReadingConverter",
+				new Document("ref-key-from-custom-write-converter", root.withReadingConverter.id));
+
+		SingleRefRoot loaded = template.findOne(query(where("id").is(root.id)), SingleRefRoot.class);
+		assertThat(loaded.withReadingConverter).isInstanceOf(SimpleObjectRefWithReadingConverter.class);
+	}
+
+	@Test // GH-3602
+	void deriveMappingFromLookup() {
+
+		Publisher publisher = new Publisher();
+		publisher.id = "p-1";
+		publisher.acronym = "TOR";
+		publisher.name = "Tom Doherty Associates";
+
+		template.save(publisher);
+
+		Book book = new Book();
+		book.id = "book-1";
+		book.publisher = publisher;
+
+		template.save(book);
+
+		Document target = template.execute(db -> {
+			return db.getCollection(template.getCollectionName(Book.class)).find(Filters.eq("_id", book.id)).first();
+		});
+
+		assertThat(target).containsEntry("publisher", new Document("acc", publisher.acronym).append("n", publisher.name));
+
+		Book result = template.findOne(query(where("id").is(book.id)), Book.class);
+		assertThat(result.publisher).isNotNull();
+	}
+
+	@Test // GH-3602
+	void updateDerivedMappingFromLookup() {
+
+		Publisher publisher = new Publisher();
+		publisher.id = "p-1";
+		publisher.acronym = "TOR";
+		publisher.name = "Tom Doherty Associates";
+
+		template.save(publisher);
+
+		Book book = new Book();
+		book.id = "book-1";
+
+		template.save(book);
+
+		template.update(Book.class).matching(where("id").is(book.id)).apply(new Update().set("publisher", publisher)).first();
+
+		Document target = template.execute(db -> {
+			return db.getCollection(template.getCollectionName(Book.class)).find(Filters.eq("_id", book.id)).first();
+		});
+
+		assertThat(target).containsEntry("publisher", new Document("acc", publisher.acronym).append("n", publisher.name));
+
+		Book result = template.findOne(query(where("id").is(book.id)), Book.class);
+		assertThat(result.publisher).isNotNull();
+	}
+
+	@Test // GH-3602
+	void queryDerivedMappingFromLookup() {
+
+		Publisher publisher = new Publisher();
+		publisher.id = "p-1";
+		publisher.acronym = "TOR";
+		publisher.name = "Tom Doherty Associates";
+
+		template.save(publisher);
+
+		Book book = new Book();
+		book.id = "book-1";
+		book.publisher = publisher;
+
+		template.save(book);
+		book.publisher = publisher;
+
+		Book result = template.findOne(query(where("publisher").is(publisher)), Book.class);
+		assertThat(result.publisher).isNotNull();
 	}
 
 	@Data
@@ -556,16 +959,16 @@ public class MongoTemplateDocumentReferenceTests {
 
 		@Id String id;
 		String value;
-
 	}
 
 	@Getter
 	@Setter
 	static class SimpleObjectRefWithReadingConverter extends SimpleObjectRef {
 
-		public SimpleObjectRefWithReadingConverter(String id, String value, String id1, String value1) {
+		public SimpleObjectRefWithReadingConverter(String id, String value) {
 			super(id, value);
 		}
+
 	}
 
 	@Data
@@ -609,41 +1012,94 @@ public class MongoTemplateDocumentReferenceTests {
 		}
 	}
 
-	static class ReferencableConverter implements Converter<ReferenceAble, ObjectReference> {
+	static class ReferencableConverter implements Converter<ReferenceAble, DocumentPointer> {
 
 		@Nullable
 		@Override
-		public ObjectReference convert(ReferenceAble source) {
+		public DocumentPointer convert(ReferenceAble source) {
 			return source::toReference;
 		}
 	}
 
 	@WritingConverter
 	class DocumentToSimpleObjectRefWithReadingConverter
-			implements Converter<ObjectReference<Document>, SimpleObjectRefWithReadingConverter> {
-
-		private final MongoTemplate template;
-
-		public DocumentToSimpleObjectRefWithReadingConverter(MongoTemplate template) {
-			this.template = template;
-		}
+			implements Converter<DocumentPointer<Document>, SimpleObjectRefWithReadingConverter> {
 
 		@Nullable
 		@Override
-		public SimpleObjectRefWithReadingConverter convert(ObjectReference<Document> source) {
-			return template.findOne(query(where("id").is(source.getPointer().get("the-ref-key-you-did-not-expect"))),
-					SimpleObjectRefWithReadingConverter.class);
+		public SimpleObjectRefWithReadingConverter convert(DocumentPointer<Document> source) {
+
+			Document document = client.getDatabase(DB_NAME).getCollection("simple-object-ref")
+					.find(Filters.eq("_id", source.getPointer().get("ref-key-from-custom-write-converter"))).first();
+			return new SimpleObjectRefWithReadingConverter(document.getString("_id"), document.getString("value"));
 		}
 	}
 
 	@WritingConverter
 	class SimpleObjectRefWithReadingConverterToDocumentConverter
-			implements Converter<SimpleObjectRefWithReadingConverter, ObjectReference<Document>> {
+			implements Converter<SimpleObjectRefWithReadingConverter, DocumentPointer<Document>> {
 
 		@Nullable
 		@Override
-		public ObjectReference<Document> convert(SimpleObjectRefWithReadingConverter source) {
-			return () -> new Document("the-ref-key-you-did-not-expect", source.getId());
+		public DocumentPointer<Document> convert(SimpleObjectRefWithReadingConverter source) {
+			return () -> new Document("ref-key-from-custom-write-converter", source.getId());
 		}
 	}
+
+	@Getter
+	@Setter
+	static class WithRefA/* to B */ implements ReferenceAble {
+
+		@Id String id;
+		@DocumentReference WithRefB toB;
+
+		@Override
+		public Object toReference() {
+			return id;
+		}
+	}
+
+	@Getter
+	@Setter
+	@ToString
+	static class WithRefB/* to A */ implements ReferenceAble {
+
+		@Id String id;
+		@DocumentReference(lazy = true) WithRefA lazyToA;
+
+		@DocumentReference WithRefA eagerToA;
+
+		@Override
+		public Object toReference() {
+			return id;
+		}
+	}
+
+	static class ReferencedObject {}
+
+	class ToDocumentPointerConverter implements Converter<ReferencedObject, DocumentPointer<Document>> {
+
+		@Nullable
+		@Override
+		public DocumentPointer<Document> convert(ReferencedObject source) {
+			return () -> new Document("", source);
+		}
+	}
+
+	@Data
+	static class Book {
+
+		String id;
+
+		@DocumentReference(lookup = "{ 'acronym' : ?#{acc}, 'name' : ?#{n} }") Publisher publisher;
+
+	}
+
+	static class Publisher {
+
+		String id;
+		String acronym;
+		String name;
+	}
+
 }

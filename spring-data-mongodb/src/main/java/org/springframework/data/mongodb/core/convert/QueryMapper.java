@@ -605,7 +605,7 @@ public class QueryMapper {
 		if (source instanceof Iterable) {
 			BasicDBList result = new BasicDBList();
 			for (Object element : (Iterable<?>) source) {
-				result.add(createDbRefFor(element, property));
+				result.add(createReferenceFor(element, property));
 			}
 			return result;
 		}
@@ -614,12 +614,12 @@ public class QueryMapper {
 			Document result = new Document();
 			Document dbObject = (Document) source;
 			for (String key : dbObject.keySet()) {
-				result.put(key, createDbRefFor(dbObject.get(key), property));
+				result.put(key, createReferenceFor(dbObject.get(key), property));
 			}
 			return result;
 		}
 
-		return createDbRefFor(source, property);
+		return createReferenceFor(source, property);
 	}
 
 	/**
@@ -666,10 +666,14 @@ public class QueryMapper {
 		return Collections.singletonMap(key, value).entrySet().iterator().next();
 	}
 
-	private DBRef createDbRefFor(Object source, MongoPersistentProperty property) {
+	private Object createReferenceFor(Object source, MongoPersistentProperty property) {
 
 		if (source instanceof DBRef) {
 			return (DBRef) source;
+		}
+
+		if(property != null &&  property.isDocumentReference()) {
+			return converter.toDocumentReference(source, property);
 		}
 
 		return converter.toDBRef(source, property);

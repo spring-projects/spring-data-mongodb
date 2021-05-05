@@ -69,6 +69,11 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 
 	@Override
+	public boolean isDocumentReference() {
+		return delegate.isDocumentReference();
+	}
+
+	@Override
 	public boolean isExplicitIdProperty() {
 		return delegate.isExplicitIdProperty();
 	}
@@ -92,6 +97,12 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	@Nullable
 	public DBRef getDBRef() {
 		return delegate.getDBRef();
+	}
+
+	@Override
+	@Nullable
+	public DocumentReference getDocumentReference() {
+		return delegate.getDocumentReference();
 	}
 
 	@Override

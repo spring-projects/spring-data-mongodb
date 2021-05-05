@@ -46,7 +46,7 @@ import org.springframework.data.mongodb.ClientSessionException;
 import org.springframework.data.mongodb.LazyLoadingException;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoDatabaseUtils;
-import org.springframework.data.mongodb.core.convert.ReferenceLoader.ReferenceFilter;
+import org.springframework.data.mongodb.core.convert.ReferenceLoader.DocumentReferenceQuery;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.lang.Nullable;
 import org.springframework.objenesis.ObjenesisStd;
@@ -117,7 +117,8 @@ public class DefaultDbRefResolver extends DefaultReferenceResolver implements Db
 	 */
 	@Override
 	public Document fetch(DBRef dbRef) {
-		return getReferenceLoader().fetch(ReferenceFilter.singleReferenceFilter(Filters.eq("_id", dbRef.getId())), ReferenceContext.fromDBRef(dbRef));
+		return getReferenceLoader().fetch(DocumentReferenceQuery.singleReferenceFilter(Filters.eq("_id", dbRef.getId())),
+				ReferenceCollection.fromDBRef(dbRef));
 	}
 
 	/*
@@ -157,9 +158,9 @@ public class DefaultDbRefResolver extends DefaultReferenceResolver implements Db
 					databaseSource.getCollectionName());
 		}
 
-		List<Document> result = getReferenceLoader()
-				.bulkFetch(ReferenceFilter.referenceFilter(new Document("_id", new Document("$in", ids))), ReferenceContext.fromDBRef(refs.iterator().next()))
-				.collect(Collectors.toList());
+		List<Document> result = mongoCollection //
+				.find(new Document("_id", new Document("$in", ids))) //
+				.into(new ArrayList<>());
 
 		return ids.stream() //
 				.flatMap(id -> documentWithId(id, result)) //
@@ -498,9 +499,9 @@ public class DefaultDbRefResolver extends DefaultReferenceResolver implements Db
 				.getCollection(dbref.getCollectionName(), Document.class);
 	}
 
-	protected MongoCollection<Document> getCollection(ReferenceContext context) {
+	protected MongoCollection<Document> getCollection(ReferenceCollection context) {
 
-		return MongoDatabaseUtils.getDatabase(context.database, mongoDbFactory).getCollection(context.collection,
+		return MongoDatabaseUtils.getDatabase(context.getDatabase(), mongoDbFactory).getCollection(context.getCollection(),
 				Document.class);
 	}
 }

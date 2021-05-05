@@ -1,6 +1,11 @@
 [[new-features]]
 = New & Noteworthy
 
+[[new-features.3.3]]
+== What's New in Spring Data MongoDB 3.3
+
+* Extended support for <<mapping-usage.linking, linking>> entities.
+
 [[new-features.3.2]]
 == What's New in Spring Data MongoDB 3.2
 

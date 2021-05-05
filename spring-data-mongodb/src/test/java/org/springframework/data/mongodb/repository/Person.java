@@ -27,6 +27,7 @@ import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.Unwrapped;
 
@@ -73,6 +74,9 @@ public class Person extends Contact {
 
 	@Unwrapped.Nullable(prefix = "u") //
 	User unwrappedUser;
+
+	@DocumentReference
+	User spiritAnimal;
 
 	public Person() {
 
@@ -306,6 +310,14 @@ public class Person extends Contact {
 
 	public void setUnwrappedUser(User unwrappedUser) {
 		this.unwrappedUser = unwrappedUser;
+	}
+
+	public User getSpiritAnimal() {
+		return spiritAnimal;
+	}
+
+	public void setSpiritAnimal(User spiritAnimal) {
+		this.spiritAnimal = spiritAnimal;
 	}
 
 	/*

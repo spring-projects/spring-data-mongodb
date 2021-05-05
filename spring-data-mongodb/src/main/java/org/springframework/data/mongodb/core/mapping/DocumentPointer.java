@@ -16,10 +16,19 @@
 package org.springframework.data.mongodb.core.mapping;
 
 /**
+ * A custom pointer to a linked document to be used along with {@link DocumentReference} for storing the linkage value.
+ * 
  * @author Christoph Strobl
  */
 @FunctionalInterface
-// TODO: ObjectPointer or DocumentPointer
-public interface ObjectReference<T> {
+public interface DocumentPointer<T> {
+
+	/**
+	 * The actual pointer value. This can be any simple type, like a {@link String} or {@link org.bson.types.ObjectId} or
+	 * a {@link org.bson.Document} holding more information like the target collection, multiple fields forming the key,
+	 * etc.
+	 * 
+	 * @return the value stored in MongoDB and used for constructing the {@link DocumentReference#lookup() lookup query}.
+	 */
 	T getPointer();
 }

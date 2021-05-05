@@ -15,12 +15,6 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import java.util.function.BiFunction;
-import java.util.stream.Stream;
-
-import org.bson.Document;
-import org.bson.conversions.Bson;
-import org.springframework.data.mongodb.core.convert.ReferenceLoader.ReferenceFilter;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.lang.Nullable;
@@ -44,24 +38,26 @@ public class DefaultReferenceResolver implements ReferenceResolver {
 	@Nullable
 	@Override
 	public Object resolveReference(MongoPersistentProperty property, Object source, ReferenceReader referenceReader,
-			BiFunction<ReferenceContext, ReferenceFilter, Stream<Document>> lookupFunction) {
+			LookupFunction lookupFunction, ResultConversionFunction resultConversionFunction) {
 
 		if (isLazyReference(property)) {
-			return createLazyLoadingProxy(property, source, referenceReader, lookupFunction);
+			return createLazyLoadingProxy(property, source, referenceReader, lookupFunction, resultConversionFunction);
 		}
 
-		return referenceReader.readReference(property, source, lookupFunction);
+		return referenceReader.readReference(property, source, lookupFunction, resultConversionFunction);
 	}
 
 	private Object createLazyLoadingProxy(MongoPersistentProperty property, Object source,
-			ReferenceReader referenceReader, BiFunction<ReferenceContext, ReferenceFilter, Stream<Document>> lookupFunction) {
-		return new LazyLoadingProxyGenerator(referenceReader).createLazyLoadingProxy(property, source, lookupFunction);
+			ReferenceReader referenceReader, LookupFunction lookupFunction,
+			ResultConversionFunction resultConversionFunction) {
+		return new LazyLoadingProxyGenerator(referenceReader).createLazyLoadingProxy(property, source, lookupFunction,
+				resultConversionFunction);
 	}
 
 	protected boolean isLazyReference(MongoPersistentProperty property) {
 
-		if (property.findAnnotation(DocumentReference.class) != null) {
-			return property.findAnnotation(DocumentReference.class).lazy();
+		if (property.isDocumentReference()) {
+			return property.getDocumentReference().lazy();
 		}
 
 		return property.getDBRef() != null && property.getDBRef().lazy();
