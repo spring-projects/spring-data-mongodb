@@ -84,7 +84,7 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 		List<AggregationOperation> pipeline = computePipeline(method, accessor);
 		AggregationUtils.appendSortIfPresent(pipeline, accessor, typeToRead);
 		
-		if (method.isPageQuery() || method.isSliceQuery()) {
+		if (method.isSliceQuery()) {
 			AggregationUtils.appendModifiedLimitAndOffsetIfPresent(pipeline, accessor);
 		}else{
 			AggregationUtils.appendLimitAndOffsetIfPresent(pipeline, accessor);
@@ -122,7 +122,7 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 		
 		List mappedResults = result.getMappedResults(); 
 		
-		if(method.isPageQuery() || method.isSliceQuery()) {
+		if(method.isSliceQuery()) {
 			
 			Pageable pageable = accessor.getPageable();
 			int pageSize = pageable.getPageSize();
