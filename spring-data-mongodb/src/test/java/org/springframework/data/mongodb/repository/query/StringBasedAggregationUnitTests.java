@@ -36,6 +36,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -220,13 +222,10 @@ public class StringBasedAggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-2506
-	public void aggregateRaisesErrorOnInvalidReturnType() {
-
-		StringBasedAggregation sba = createAggregationForMethod("invalidPageReturnType", Pageable.class);
-		assertThatExceptionOfType(InvalidMongoDbApiUsageException.class) //
-				.isThrownBy(() -> sba.execute(new Object[] { PageRequest.of(0, 1) })) //
-				.withMessageContaining("invalidPageReturnType") //
-				.withMessageContaining("Page");
+	public void aggregationWithSliceReturnType() {
+		StringBasedAggregation sba = createAggregationForMethod("aggregationWithSliceReturnType", Pageable.class);
+		Object result = sba.execute(new Object[] { PageRequest.of(0, 1) });
+		assertThat(result.getClass()).isEqualTo(SliceImpl.class);
 	}
 
 	@Test // DATAMONGO-2557
@@ -319,7 +318,7 @@ public class StringBasedAggregationUnitTests {
 		PersonAggregate aggregateWithCollation(Collation collation);
 
 		@Aggregation(RAW_GROUP_BY_LASTNAME_STRING)
-		Page<Person> invalidPageReturnType(Pageable page);
+		Slice<Person> aggregationWithSliceReturnType(Pageable page);
 
 		@Aggregation(RAW_GROUP_BY_LASTNAME_STRING)
 		String simpleReturnType();

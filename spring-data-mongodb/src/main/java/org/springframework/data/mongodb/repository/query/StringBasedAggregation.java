@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -76,18 +78,17 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 	protected Object doExecute(MongoQueryMethod method, ResultProcessor resultProcessor,
 			ConvertingParameterAccessor accessor, Class<?> typeToRead) {
 
-		if (method.isPageQuery() || method.isSliceQuery()) {
-			throw new InvalidMongoDbApiUsageException(String.format(
-					"Repository aggregation method '%s' does not support '%s' return type. Please use eg. 'List' instead.",
-					method.getName(), method.getReturnType().getType().getSimpleName()));
-		}
-
 		Class<?> sourceType = method.getDomainClass();
 		Class<?> targetType = typeToRead;
 
 		List<AggregationOperation> pipeline = computePipeline(method, accessor);
 		AggregationUtils.appendSortIfPresent(pipeline, accessor, typeToRead);
-		AggregationUtils.appendLimitAndOffsetIfPresent(pipeline, accessor);
+		
+		if (method.isSliceQuery()) {
+			AggregationUtils.appendModifiedLimitAndOffsetIfPresent(pipeline, accessor);
+		}else{
+			AggregationUtils.appendLimitAndOffsetIfPresent(pipeline, accessor);
+		}
 
 		boolean isSimpleReturnType = isSimpleReturnType(typeToRead);
 		boolean isRawAggregationResult = ClassUtils.isAssignable(AggregationResults.class, typeToRead);
@@ -118,7 +119,17 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 
 			return result.getMappedResults();
 		}
-
+		
+		List mappedResults = result.getMappedResults(); 
+		
+		if(method.isSliceQuery()) {
+			
+			Pageable pageable = accessor.getPageable();
+			int pageSize = pageable.getPageSize();
+			boolean hasNext = mappedResults.size() > pageSize;
+			return new SliceImpl<Object>(hasNext ? mappedResults.subList(0, pageSize) : mappedResults, pageable, hasNext);
+		}
+		
 		Object uniqueResult = result.getUniqueMappedResult();
 
 		return isSimpleReturnType

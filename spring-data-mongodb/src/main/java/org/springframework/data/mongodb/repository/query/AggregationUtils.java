@@ -145,6 +145,28 @@ abstract class AggregationUtils {
 
 		aggregationPipeline.add(Aggregation.limit(pageable.getPageSize()));
 	}
+	
+	/**
+	 * Append {@code $skip} and {@code $limit} aggregation stage if {@link ConvertingParameterAccessor#getSort()} is
+	 * present.
+	 *
+	 * @param aggregationPipeline
+	 * @param accessor
+	 */
+	static void appendModifiedLimitAndOffsetIfPresent(List<AggregationOperation> aggregationPipeline,
+			ConvertingParameterAccessor accessor) {
+
+		Pageable pageable = accessor.getPageable();
+		if (pageable.isUnpaged()) {
+			return;
+		}
+
+		if (pageable.getOffset() > 0) {
+			aggregationPipeline.add(Aggregation.skip(pageable.getOffset()));
+		}
+
+		aggregationPipeline.add(Aggregation.limit(pageable.getPageSize()+1));
+	}
 
 	/**
 	 * Extract a single entry from the given {@link Document}. <br />
