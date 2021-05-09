@@ -266,4 +266,15 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	public boolean isTextScoreProperty() {
 		return isAnnotationPresent(TextScore.class);
 	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#isOmitNullProperty()
+	 */
+	public boolean isOmitNullProperty() {
+		org.springframework.data.mongodb.core.mapping.Field annotation = findAnnotation(
+				org.springframework.data.mongodb.core.mapping.Field.class);
+
+		return annotation != null ? annotation.omitNull() : true;
+	}
 }

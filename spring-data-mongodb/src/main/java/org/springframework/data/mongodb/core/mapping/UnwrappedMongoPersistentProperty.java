@@ -87,6 +87,11 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	public boolean isTextScoreProperty() {
 		return delegate.isTextScoreProperty();
 	}
+	
+	@Override
+	public boolean isOmitNullProperty() {
+		return delegate.isOmitNullProperty();
+	}
 
 	@Override
 	@Nullable

@@ -97,6 +97,15 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	boolean isTextScoreProperty();
 
 	/**
+	 * Returns whether the property is to be written to the document if the value is null <br/>
+	 * It's annotated with {@link omitNull}.
+	 *
+	 * @return
+	 * @since 1.6
+	 */
+	boolean isOmitNullProperty(); 
+
+	/**
 	 * Returns the {@link DBRef} if the property is a reference.
 	 *
 	 * @see #isDbReference()

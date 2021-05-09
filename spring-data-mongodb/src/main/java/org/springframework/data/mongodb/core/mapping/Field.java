@@ -65,4 +65,14 @@ public @interface Field {
 	 * @since 2.2
 	 */
 	FieldType targetType() default FieldType.IMPLICIT;
+	
+	/**
+	 * If set to {@literal true} {@literal null} values will be omitted.
+	 * Setting the value to {@literal false} explicitly adds an entry for the given field
+	 * holding {@literal null} as a value {@code 'fieldName' : null }.
+	 * <p />
+	 * <strong>NOTE</strong> Setting the value to {@literal false} may lead to increased document size.
+	 * @return {@literal true} by default.
+	 */
+	boolean omitNull() default true;
 }
