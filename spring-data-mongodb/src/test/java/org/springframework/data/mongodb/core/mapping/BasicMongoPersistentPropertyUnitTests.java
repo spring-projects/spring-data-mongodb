@@ -146,6 +146,13 @@ public class BasicMongoPersistentPropertyUnitTests {
 		assertThat(property.isTextScoreProperty()).isTrue();
 	}
 
+	@Test // DATAMONGO-2551
+	public void shouldDetectOmittableOnNullPropertyCorrectly() {
+
+		MongoPersistentProperty property = getPropertyFor(DocumentWithOmittableOnNullProperty.class, "write");
+		assertThat(property.isPropertyOmittableOnNull()).isTrue();
+	}
+
 	@Test // DATAMONGO-976
 	public void shouldDetectTextScoreAsReadOnlyProperty() {
 
@@ -295,6 +302,12 @@ public class BasicMongoPersistentPropertyUnitTests {
 
 	static class DocumentWithTextScoreProperty {
 		@TextScore Float score;
+	}
+
+	static class DocumentWithOmittableOnNullProperty {
+
+		@org.springframework.data.mongodb.core.mapping.Field("write") org.springframework.data.mongodb.core.mapping.Field.Write write;
+
 	}
 
 	static class DocumentWithExplicitlyRenamedIdProperty {

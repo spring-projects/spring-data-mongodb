@@ -744,6 +744,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			Object value = accessor.getProperty(prop);
 
 			if (value == null) {
+				if(!prop.isPropertyOmittableOnNull()) {
+					writeSimpleInternal(value, bson , prop);
+				}
 				continue;
 			}
 

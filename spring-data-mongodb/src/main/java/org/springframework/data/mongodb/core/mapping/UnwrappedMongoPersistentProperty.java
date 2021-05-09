@@ -92,6 +92,11 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	public boolean isTextScoreProperty() {
 		return delegate.isTextScoreProperty();
 	}
+	
+	@Override
+	public boolean isOmitNullProperty() {
+		return delegate.isOmitNullProperty();
+	}
 
 	@Override
 	@Nullable
@@ -314,5 +319,10 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	@Override
 	public <T> PersistentPropertyAccessor<T> getAccessorForOwner(T owner) {
 		return delegate.getAccessorForOwner(owner);
+	}
+
+	@Override
+	public boolean isPropertyOmittableOnNull() {
+		return delegate.isPropertyOmittableOnNull();
 	}
 }
