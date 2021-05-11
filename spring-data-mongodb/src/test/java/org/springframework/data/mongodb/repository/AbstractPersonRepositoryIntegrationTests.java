@@ -43,6 +43,7 @@ import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
@@ -1269,13 +1270,16 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 	@Test // DATAMONGO-2153
 	void findListOfSingleValue() {
 
-		assertThat(repository.findAllLastnames()) //
-				.contains("Lessard") //
-				.contains("Keys") //
-				.contains("Tinsley") //
-				.contains("Beauford") //
-				.contains("Moore") //
-				.contains("Matthews"); //
+		assertThat(repository.findAllLastnames()).contains("Lessard", "Keys", "Tinsley", "Beauford", "Moore", "Matthews");
+	}
+
+	@Test // GH-3543
+	void findStreamOfSingleValue() {
+
+		try (Stream<String> lastnames = repository.findAllLastnamesAsStream()) {
+			assertThat(lastnames) //
+					.contains("Lessard", "Keys", "Tinsley", "Beauford", "Moore", "Matthews");
+		}
 	}
 
 	@Test // DATAMONGO-2153
@@ -1288,6 +1292,14 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 				.contains(new PersonAggregate("Beauford", Collections.singletonList("Carter"))) //
 				.contains(new PersonAggregate("Moore", Collections.singletonList("Leroi"))) //
 				.contains(new PersonAggregate("Matthews", Arrays.asList("Dave", "Oliver August")));
+	}
+
+	@Test // GH-3543
+	void annotatedAggregationWithPlaceholderAsSlice() {
+
+		Slice<PersonAggregate> slice = repository.groupByLastnameAndAsSlice("firstname", Pageable.ofSize(5));
+		assertThat(slice).hasSize(5);
+		assertThat(slice.hasNext()).isTrue();
 	}
 
 	@Test // DATAMONGO-2153

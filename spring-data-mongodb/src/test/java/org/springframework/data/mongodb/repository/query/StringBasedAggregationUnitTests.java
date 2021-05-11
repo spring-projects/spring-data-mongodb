@@ -26,6 +26,7 @@ import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,11 +37,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.SliceImpl;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
@@ -64,6 +66,7 @@ import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.util.CloseableIterator;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
@@ -75,17 +78,18 @@ import com.mongodb.MongoClientSettings;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Divya Srivastava
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class StringBasedAggregationUnitTests {
 
-	SpelExpressionParser PARSER = new SpelExpressionParser();
+	private SpelExpressionParser PARSER = new SpelExpressionParser();
 
 	@Mock MongoOperations operations;
 	@Mock DbRefResolver dbRefResolver;
 	@Mock AggregationResults aggregationResults;
-	MongoConverter converter;
+	private MongoConverter converter;
 
 	private static final String RAW_SORT_STRING = "{ '$sort' : { 'lastname' : -1 } }";
 	private static final String RAW_GROUP_BY_LASTNAME_STRING = "{ '$group': { '_id' : '$lastname', 'names' : { '$addToSet' : '$firstname' } } }";
@@ -96,7 +100,7 @@ public class StringBasedAggregationUnitTests {
 	private static final Document GROUP_BY_LASTNAME = Document.parse(RAW_GROUP_BY_LASTNAME_STRING);
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 
 		converter = new MappingMongoConverter(dbRefResolver, new MongoMappingContext());
 		when(operations.getConverter()).thenReturn(converter);
@@ -105,7 +109,7 @@ public class StringBasedAggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-2153
-	public void plainStringAggregation() {
+	void plainStringAggregation() {
 
 		AggregationInvocation invocation = executeAggregation("plainStringAggregation");
 
@@ -115,7 +119,7 @@ public class StringBasedAggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-2153, DATAMONGO-2449
-	public void plainStringAggregationConsidersMeta() {
+	void plainStringAggregationConsidersMeta() {
 
 		AggregationInvocation invocation = executeAggregation("plainStringAggregation");
 		AggregationOptions options = invocation.aggregation.getOptions();
@@ -127,7 +131,7 @@ public class StringBasedAggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-2153, DATAMONGO-2449
-	public void returnSingleObject() {
+	void returnSingleObject() {
 
 		PersonAggregate expected = new PersonAggregate();
 		when(aggregationResults.getUniqueMappedResult()).thenReturn(Collections.singletonList(expected));
@@ -144,7 +148,7 @@ public class StringBasedAggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-2153
-	public void returnSingleObjectThrowsError() {
+	void returnSingleObjectThrowsError() {
 
 		when(aggregationResults.getUniqueMappedResult()).thenThrow(new IllegalArgumentException("o_O"));
 
@@ -153,7 +157,7 @@ public class StringBasedAggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-2153
-	public void returnCollection() {
+	void returnCollection() {
 
 		List<PersonAggregate> expected = Collections.singletonList(new PersonAggregate());
 		when(aggregationResults.getMappedResults()).thenReturn(expected);
@@ -162,7 +166,7 @@ public class StringBasedAggregationUnitTests {
 	}
 
 	@Test // GH-3623
-	public void returnNullWhenSingleResultIsNotPresent() {
+	void returnNullWhenSingleResultIsNotPresent() {
 
 		when(aggregationResults.getMappedResults()).thenReturn(Collections.emptyList());
 
@@ -170,12 +174,12 @@ public class StringBasedAggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-2153
-	public void returnRawResultType() {
+	void returnRawResultType() {
 		assertThat(executeAggregation("returnRawResultType").result).isEqualTo(aggregationResults);
 	}
 
 	@Test // DATAMONGO-2153
-	public void plainStringAggregationWithSortParameter() {
+	void plainStringAggregationWithSortParameter() {
 
 		AggregationInvocation invocation = executeAggregation("plainStringAggregation",
 				Sort.by(Direction.DESC, "lastname"));
@@ -186,7 +190,7 @@ public class StringBasedAggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-2153
-	public void replaceParameter() {
+	void replaceParameter() {
 
 		AggregationInvocation invocation = executeAggregation("parameterReplacementAggregation", "firstname");
 
@@ -196,7 +200,7 @@ public class StringBasedAggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-2153
-	public void replaceSpElParameter() {
+	void replaceSpElParameter() {
 
 		AggregationInvocation invocation = executeAggregation("spelParameterReplacementAggregation", "firstname");
 
@@ -206,7 +210,7 @@ public class StringBasedAggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-2153
-	public void aggregateWithCollation() {
+	void aggregateWithCollation() {
 
 		AggregationInvocation invocation = executeAggregation("aggregateWithCollation");
 
@@ -214,18 +218,48 @@ public class StringBasedAggregationUnitTests {
 	}
 
 	@Test // DATAMONGO-2153
-	public void aggregateWithCollationParameter() {
+	void aggregateWithCollationParameter() {
 
 		AggregationInvocation invocation = executeAggregation("aggregateWithCollation", Collation.of("en_US"));
 
 		assertThat(collationOf(invocation)).isEqualTo(Collation.of("en_US"));
 	}
 
-	@Test // DATAMONGO-2506
-	public void aggregationWithSliceReturnType() {
+	@Test // GH-3543
+	void aggregationWithSliceReturnType() {
+
 		StringBasedAggregation sba = createAggregationForMethod("aggregationWithSliceReturnType", Pageable.class);
+
 		Object result = sba.execute(new Object[] { PageRequest.of(0, 1) });
-		assertThat(result.getClass()).isEqualTo(SliceImpl.class);
+
+		assertThat(result).isInstanceOf(Slice.class);
+	}
+
+	@Test // GH-3543
+	void aggregationWithStreamReturnType() {
+
+		when(operations.aggregateStream(any(TypedAggregation.class), any())).thenReturn(new CloseableIterator<Object>() {
+			@Override
+			public void close() {
+
+			}
+
+			@Override
+			public boolean hasNext() {
+				return false;
+			}
+
+			@Override
+			public Object next() {
+				return null;
+			}
+		});
+
+		StringBasedAggregation sba = createAggregationForMethod("aggregationWithStreamReturnType", Pageable.class);
+
+		Object result = sba.execute(new Object[] { PageRequest.of(0, 1) });
+
+		assertThat(result).isInstanceOf(Stream.class);
 	}
 
 	@Test // DATAMONGO-2557
@@ -233,6 +267,21 @@ public class StringBasedAggregationUnitTests {
 
 		executeAggregation("multiOperationPipeline", "firstname");
 		verify(operations).execute(any());
+	}
+
+	@Test // DATAMONGO-2506
+	void aggregateRaisesErrorOnInvalidReturnType() {
+
+		Method method = ClassUtils.getMethod(UnsupportedRepository.class, "pageIsUnsupported", Pageable.class);
+		ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
+		MongoQueryMethod queryMethod = new MongoQueryMethod(method, new DefaultRepositoryMetadata(SampleRepository.class),
+				factory, converter.getMappingContext());
+
+		assertThatExceptionOfType(InvalidMongoDbApiUsageException.class) //
+				.isThrownBy(() -> new StringBasedAggregation(queryMethod, operations, PARSER,
+						QueryMethodEvaluationContextProvider.DEFAULT)) //
+				.withMessageContaining("pageIsUnsupported") //
+				.withMessageContaining("Page");
 	}
 
 	private AggregationInvocation executeAggregation(String name, Object... args) {
@@ -321,7 +370,16 @@ public class StringBasedAggregationUnitTests {
 		Slice<Person> aggregationWithSliceReturnType(Pageable page);
 
 		@Aggregation(RAW_GROUP_BY_LASTNAME_STRING)
+		Stream<Person> aggregationWithStreamReturnType(Pageable page);
+
+		@Aggregation(RAW_GROUP_BY_LASTNAME_STRING)
 		String simpleReturnType();
+	}
+
+	private interface UnsupportedRepository extends Repository<Person, Long> {
+
+		@Aggregation(RAW_GROUP_BY_LASTNAME_STRING)
+		Page<Person> pageIsUnsupported(Pageable page);
 	}
 
 	static class PersonAggregate {
@@ -329,7 +387,7 @@ public class StringBasedAggregationUnitTests {
 	}
 
 	@Value
-	static class AggregationInvocation {
+	private static class AggregationInvocation {
 
 		TypedAggregation<?> aggregation;
 		Class<?> targetType;

@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.repository.query;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.function.IntUnaryOperator;
+import java.util.function.LongUnaryOperator;
 
 import org.bson.Document;
 import org.springframework.data.domain.Pageable;
@@ -42,6 +44,7 @@ import org.springframework.util.StringUtils;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Divya Srivastava
  * @since 2.2
  */
 abstract class AggregationUtils {
@@ -133,28 +136,22 @@ abstract class AggregationUtils {
 	 */
 	static void appendLimitAndOffsetIfPresent(List<AggregationOperation> aggregationPipeline,
 			ConvertingParameterAccessor accessor) {
-
-		Pageable pageable = accessor.getPageable();
-		if (pageable.isUnpaged()) {
-			return;
-		}
-
-		if (pageable.getOffset() > 0) {
-			aggregationPipeline.add(Aggregation.skip(pageable.getOffset()));
-		}
-
-		aggregationPipeline.add(Aggregation.limit(pageable.getPageSize()));
+		appendLimitAndOffsetIfPresent(aggregationPipeline, accessor, LongUnaryOperator.identity(),
+				IntUnaryOperator.identity());
 	}
-	
+
 	/**
 	 * Append {@code $skip} and {@code $limit} aggregation stage if {@link ConvertingParameterAccessor#getSort()} is
 	 * present.
 	 *
 	 * @param aggregationPipeline
 	 * @param accessor
+	 * @param offsetOperator
+	 * @param limitOperator
+	 * @since 3.3
 	 */
-	static void appendModifiedLimitAndOffsetIfPresent(List<AggregationOperation> aggregationPipeline,
-			ConvertingParameterAccessor accessor) {
+	static void appendLimitAndOffsetIfPresent(List<AggregationOperation> aggregationPipeline,
+			ConvertingParameterAccessor accessor, LongUnaryOperator offsetOperator, IntUnaryOperator limitOperator) {
 
 		Pageable pageable = accessor.getPageable();
 		if (pageable.isUnpaged()) {
@@ -162,10 +159,10 @@ abstract class AggregationUtils {
 		}
 
 		if (pageable.getOffset() > 0) {
-			aggregationPipeline.add(Aggregation.skip(pageable.getOffset()));
+			aggregationPipeline.add(Aggregation.skip(offsetOperator.applyAsLong(pageable.getOffset())));
 		}
 
-		aggregationPipeline.add(Aggregation.limit(pageable.getPageSize()+1));
+		aggregationPipeline.add(Aggregation.limit(limitOperator.applyAsInt(pageable.getPageSize())));
 	}
 
 	/**
