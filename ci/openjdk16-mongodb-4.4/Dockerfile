@@ -1,4 +1,4 @@
-FROM adoptopenjdk/openjdk16:latest
+FROM adoptopenjdk/openjdk16:latest 
 
 ENV TZ=Etc/UTC
 ENV DEBIAN_FRONTEND=noninteractive
