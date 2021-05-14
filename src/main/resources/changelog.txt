@@ -1,6 +1,12 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.2.1 (2021-05-14)
+-------------------------------------
+* #3638 - Introduce template method for easier customization of fragments.
+* #3632 - Fix bullet points in aggregations framework asciidoc.
+
+
 Changes in version 3.1.9 (2021-05-14)
 -------------------------------------
 
@@ -3381,6 +3387,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
