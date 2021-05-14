@@ -1,6 +1,10 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.1.9 (2021-05-14)
+-------------------------------------
+
+
 Changes in version 3.2.0 (2021-04-14)
 -------------------------------------
 * #3623 - `@Aggregation` repository query method causes `NullPointerException` when the result is empty.
@@ -3377,6 +3381,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
