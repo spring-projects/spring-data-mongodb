@@ -54,7 +54,8 @@ public class LazyLoadingTestUtils {
 
 	public static void assertProxy(Object proxy, Consumer<LazyLoadingProxyValueRetriever> verification) {
 
-		LazyLoadingProxyGenerator.LazyLoadingInterceptor interceptor = (LazyLoadingProxyGenerator.LazyLoadingInterceptor) (proxy instanceof Advised ? ((Advised) proxy).getAdvisors()[0].getAdvice()
+		LazyLoadingProxyFactory.LazyLoadingInterceptor interceptor = (LazyLoadingProxyFactory.LazyLoadingInterceptor) (proxy instanceof Advised
+				? ((Advised) proxy).getAdvisors()[0].getAdvice()
 				: ((Factory) proxy).getCallback(0));
 
 		verification.accept(new LazyLoadingProxyValueRetriever(interceptor));
@@ -67,9 +68,9 @@ public class LazyLoadingTestUtils {
 
 	public static class LazyLoadingProxyValueRetriever {
 
-		LazyLoadingProxyGenerator.LazyLoadingInterceptor interceptor;
+		LazyLoadingProxyFactory.LazyLoadingInterceptor interceptor;
 
-		public LazyLoadingProxyValueRetriever(LazyLoadingProxyGenerator.LazyLoadingInterceptor interceptor) {
+		public LazyLoadingProxyValueRetriever(LazyLoadingProxyFactory.LazyLoadingInterceptor interceptor) {
 			this.interceptor = interceptor;
 		}
 

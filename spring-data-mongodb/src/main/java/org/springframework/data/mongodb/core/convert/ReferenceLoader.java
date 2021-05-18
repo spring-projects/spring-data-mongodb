@@ -31,13 +31,13 @@ import com.mongodb.client.MongoCollection;
 public interface ReferenceLoader {
 
 	@Nullable
-	default Document fetch(DocumentReferenceQuery filter, ReferenceCollection context) {
+	default Document fetchOne(DocumentReferenceQuery filter, ReferenceCollection context) {
 
-		Iterator<Document> it = bulkFetch(filter, context).iterator();
+		Iterator<Document> it = fetchMany(filter, context).iterator();
 		return it.hasNext() ? it.next() : null;
 	}
 
-	Iterable<Document> bulkFetch(DocumentReferenceQuery filter, ReferenceCollection context);
+	Iterable<Document> fetchMany(DocumentReferenceQuery filter, ReferenceCollection context);
 
 	interface DocumentReferenceQuery {
 
@@ -52,16 +52,12 @@ public interface ReferenceLoader {
 		default Iterable<Document> apply(MongoCollection<Document> collection) {
 			return restoreOrder(collection.find(getFilter()).sort(getSort()));
 		}
-		
+
 		default Iterable<Document> restoreOrder(Iterable<Document> documents) {
 			return documents;
 		}
 
-		static DocumentReferenceQuery referenceFilter(Bson bson) {
-			return () -> bson;
-		}
-
-		static DocumentReferenceQuery singleReferenceFilter(Bson bson) {
+		static DocumentReferenceQuery forSingleDocument(Bson bson) {
 
 			return new DocumentReferenceQuery() {
 
@@ -75,6 +71,22 @@ public interface ReferenceLoader {
 
 					Document result = collection.find(getFilter()).sort(getSort()).limit(1).first();
 					return result != null ? Collections.singleton(result) : Collections.emptyList();
+				}
+			};
+		}
+
+		static DocumentReferenceQuery forManyDocuments(Bson bson) {
+
+			return new DocumentReferenceQuery() {
+
+				@Override
+				public Bson getFilter() {
+					return bson;
+				}
+
+				@Override
+				public Iterable<Document> apply(MongoCollection<Document> collection) {
+					return collection.find(getFilter()).sort(getSort());
 				}
 			};
 		}

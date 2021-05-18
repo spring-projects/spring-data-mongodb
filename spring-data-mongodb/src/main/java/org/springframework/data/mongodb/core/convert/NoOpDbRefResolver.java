@@ -16,13 +16,10 @@
 package org.springframework.data.mongodb.core.convert;
 
 import java.util.List;
-import java.util.function.BiFunction;
-import java.util.stream.Stream;
 
 import org.bson.Document;
-import org.springframework.data.mongodb.core.convert.ReferenceLoader.DocumentReferenceQuery;
+
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 
 import com.mongodb.DBRef;
@@ -76,9 +73,8 @@ public enum NoOpDbRefResolver implements DbRefResolver {
 
 	@Nullable
 	@Override
-	public Object resolveReference(MongoPersistentProperty property, Object source, ReferenceReader referenceReader,
-			LookupFunction lookupFunction,
-			ResultConversionFunction resultConversionFunction) {
+	public Object resolveReference(MongoPersistentProperty property, Object source,
+			ReferenceLookupDelegate referenceLookupDelegate, MongoEntityReader entityReader) {
 		return null;
 	}
 

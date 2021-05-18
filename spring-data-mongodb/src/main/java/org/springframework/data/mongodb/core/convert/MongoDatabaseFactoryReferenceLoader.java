@@ -29,13 +29,13 @@ import com.mongodb.client.MongoCollection;
 /**
  * @author Christoph Strobl
  */
-public class DefaultReferenceLoader implements ReferenceLoader {
+public class MongoDatabaseFactoryReferenceLoader implements ReferenceLoader {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultReferenceLoader.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(MongoDatabaseFactoryReferenceLoader.class);
 
 	private final MongoDatabaseFactory mongoDbFactory;
 
-	public DefaultReferenceLoader(MongoDatabaseFactory mongoDbFactory) {
+	public MongoDatabaseFactoryReferenceLoader(MongoDatabaseFactory mongoDbFactory) {
 
 		Assert.notNull(mongoDbFactory, "MongoDbFactory translator must not be null!");
 
@@ -43,7 +43,7 @@ public class DefaultReferenceLoader implements ReferenceLoader {
 	}
 
 	@Override
-	public Iterable<Document> bulkFetch(DocumentReferenceQuery filter, ReferenceCollection context) {
+	public Iterable<Document> fetchMany(DocumentReferenceQuery filter, ReferenceCollection context) {
 
 		MongoCollection<Document> collection = getCollection(context);
 
