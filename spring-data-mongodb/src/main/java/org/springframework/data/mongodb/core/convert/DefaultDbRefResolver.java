@@ -47,6 +47,7 @@ import org.springframework.data.mongodb.LazyLoadingException;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoDatabaseUtils;
 import org.springframework.data.mongodb.core.convert.ReferenceLoader.DocumentReferenceQuery;
+import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.lang.Nullable;
 import org.springframework.objenesis.ObjenesisStd;
@@ -83,7 +84,7 @@ public class DefaultDbRefResolver extends DefaultReferenceResolver implements Db
 	 */
 	public DefaultDbRefResolver(MongoDatabaseFactory mongoDbFactory) {
 
-		super(new DefaultReferenceLoader(mongoDbFactory));
+		super(new MongoDatabaseFactoryReferenceLoader(mongoDbFactory));
 
 		Assert.notNull(mongoDbFactory, "MongoDbFactory translator must not be null!");
 
@@ -117,7 +118,7 @@ public class DefaultDbRefResolver extends DefaultReferenceResolver implements Db
 	 */
 	@Override
 	public Document fetch(DBRef dbRef) {
-		return getReferenceLoader().fetch(DocumentReferenceQuery.singleReferenceFilter(Filters.eq("_id", dbRef.getId())),
+		return getReferenceLoader().fetchOne(DocumentReferenceQuery.forSingleDocument(Filters.eq("_id", dbRef.getId())),
 				ReferenceCollection.fromDBRef(dbRef));
 	}
 
@@ -159,7 +160,7 @@ public class DefaultDbRefResolver extends DefaultReferenceResolver implements Db
 		}
 
 		List<Document> result = mongoCollection //
-				.find(new Document("_id", new Document("$in", ids))) //
+				.find(new Document(BasicMongoPersistentProperty.ID_FIELD_NAME, new Document("$in", ids))) //
 				.into(new ArrayList<>());
 
 		return ids.stream() //
@@ -239,7 +240,7 @@ public class DefaultDbRefResolver extends DefaultReferenceResolver implements Db
 	private static Stream<Document> documentWithId(Object identifier, Collection<Document> documents) {
 
 		return documents.stream() //
-				.filter(it -> it.get("_id").equals(identifier)) //
+				.filter(it -> it.get(BasicMongoPersistentProperty.ID_FIELD_NAME).equals(identifier)) //
 				.limit(1);
 	}
 

@@ -29,12 +29,12 @@ import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
+
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.SpELContext;
 import org.springframework.data.mongodb.core.convert.ReferenceLoader.DocumentReferenceQuery;
-import org.springframework.data.mongodb.core.convert.ReferenceResolver.LookupFunction;
+import org.springframework.data.mongodb.core.convert.ReferenceResolver.MongoEntityReader;
 import org.springframework.data.mongodb.core.convert.ReferenceResolver.ReferenceCollection;
-import org.springframework.data.mongodb.core.convert.ReferenceResolver.ResultConversionFunction;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -42,58 +42,59 @@ import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.mongodb.util.json.ParameterBindingContext;
 import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
 import org.springframework.data.mongodb.util.json.ValueProvider;
-import org.springframework.data.util.Lazy;
 import org.springframework.data.util.Streamable;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.DBRef;
 import com.mongodb.client.MongoCollection;
 
 /**
+ * A common delegate for {@link ReferenceResolver} implementations to resolve a reference to one/many target documents
+ * that are converted to entities.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
-public class ReferenceReader {
+public final class ReferenceLookupDelegate {
 
-	private final Lazy<MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty>> mappingContext;
-	private final Supplier<SpELContext> spelContextSupplier;
+	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+	private final SpELContext spELContext;
 	private final ParameterBindingDocumentCodec codec;
 
-	public ReferenceReader(MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
-			Supplier<SpELContext> spelContextSupplier) {
+	public ReferenceLookupDelegate(
+			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
+			SpELContext spELContext) {
 
-		this(() -> mappingContext, spelContextSupplier);
-	}
+		Assert.notNull(mappingContext, "MappingContext must not be null");
+		Assert.notNull(spELContext, "SpELContext must not be null");
 
-	public ReferenceReader(
-			Supplier<MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty>> mappingContextSupplier,
-			Supplier<SpELContext> spelContextSupplier) {
-
-		this.mappingContext = Lazy.of(mappingContextSupplier);
-		this.spelContextSupplier = spelContextSupplier;
+		this.mappingContext = mappingContext;
+		this.spELContext = spELContext;
 		this.codec = new ParameterBindingDocumentCodec();
 	}
 
+	@Nullable
 	Object readReference(MongoPersistentProperty property, Object value, LookupFunction lookupFunction,
-			ResultConversionFunction resultConversionFunction) {
+			MongoEntityReader entityReader) {
 
-		SpELContext spELContext = spelContextSupplier.get();
 
 		DocumentReferenceQuery filter = computeFilter(property, value, spELContext);
 		ReferenceCollection referenceCollection = computeReferenceContext(property, value, spELContext);
 
 		Iterable<Document> result = lookupFunction.apply(filter, referenceCollection);
 
+		if (property.isCollectionLike()) {
+			return entityReader.read(result, property.getTypeInformation());
+		}
+
 		if (!result.iterator().hasNext()) {
 			return null;
 		}
 
-		if (property.isCollectionLike()) {
-			return resultConversionFunction.apply(result, property.getTypeInformation());
-		}
-
-		return resultConversionFunction.apply(result.iterator().next(), property.getTypeInformation());
+		return entityReader.read(result.iterator().next(), property.getTypeInformation());
 	}
 
 	private ReferenceCollection computeReferenceContext(MongoPersistentProperty property, Object value,
@@ -106,6 +107,8 @@ public class ReferenceReader {
 		if (value instanceof DBRef) {
 			return ReferenceCollection.fromDBRef((DBRef) value);
 		}
+
+		String collection = mappingContext.getRequiredPersistentEntity(property.getAssociationTargetType()).getCollection();
 
 		if (value instanceof Document) {
 
@@ -120,12 +123,12 @@ public class ReferenceReader {
 						() -> ref.get("db", String.class));
 				String targetCollection = parseValueOrGet(documentReference.collection(), bindingContext,
 						() -> ref.get("collection",
-								mappingContext.get().getPersistentEntity(property.getAssociationTargetType()).getCollection()));
+								collection));
 				return new ReferenceCollection(targetDatabase, targetCollection);
 			}
 
 			return new ReferenceCollection(ref.getString("db"), ref.get("collection",
-					mappingContext.get().getPersistentEntity(property.getAssociationTargetType()).getCollection()));
+					collection));
 		}
 
 		if (property.isDocumentReference()) {
@@ -135,16 +138,16 @@ public class ReferenceReader {
 
 			String targetDatabase = parseValueOrGet(documentReference.db(), bindingContext, () -> null);
 			String targetCollection = parseValueOrGet(documentReference.collection(), bindingContext,
-					() -> mappingContext.get().getPersistentEntity(property.getAssociationTargetType()).getCollection());
+					() -> collection);
 
 			return new ReferenceCollection(targetDatabase, targetCollection);
 		}
 
 		return new ReferenceCollection(null,
-				mappingContext.get().getPersistentEntity(property.getAssociationTargetType()).getCollection());
+				collection);
 	}
 
-	@Nullable
+	@SuppressWarnings("unchecked")
 	private <T> T parseValueOrGet(String value, ParameterBindingContext bindingContext, Supplier<T> defaultValue) {
 
 		if (!StringUtils.hasText(value)) {
@@ -153,7 +156,7 @@ public class ReferenceReader {
 
 		if (!BsonUtils.isJsonDocument(value) && value.contains("?#{")) {
 			String s = "{ 'target-value' : " + value + "}";
-			T evaluated = (T) codec.decode(s, bindingContext).get("target-value ");
+			T evaluated = (T) codec.decode(s, bindingContext).get("target-value");
 			return evaluated != null ? evaluated : defaultValue.get();
 		}
 
@@ -186,6 +189,7 @@ public class ReferenceReader {
 		return ctx;
 	}
 
+	@SuppressWarnings("unchecked")
 	DocumentReferenceQuery computeFilter(MongoPersistentProperty property, Object value, SpELContext spELContext) {
 
 		DocumentReference documentReference = property.getDocumentReference();
@@ -196,7 +200,7 @@ public class ReferenceReader {
 		if (property.isCollectionLike() && value instanceof Collection) {
 
 			List<Document> ors = new ArrayList<>();
-			for (Object entry : (Collection) value) {
+			for (Object entry : (Collection<Object>) value) {
 
 				Document decoded = codec.decode(lookup, bindingContext(property, entry, spELContext));
 				ors.add(decoded);
@@ -209,7 +213,7 @@ public class ReferenceReader {
 
 			Map<Object, Document> filterMap = new LinkedHashMap<>();
 
-			for (Entry entry : ((Map<Object, Object>) value).entrySet()) {
+			for (Entry<Object, Object> entry : ((Map<Object, Object>) value).entrySet()) {
 
 				Document decoded = codec.decode(lookup, bindingContext(property, entry.getValue(), spELContext));
 				filterMap.put(entry.getKey(), decoded);
@@ -321,9 +325,9 @@ public class ReferenceReader {
 
 		int compareAgainstReferenceIndex(List<Document> referenceList, Document document1, Document document2) {
 
-			for (int i = 0; i < referenceList.size(); i++) {
+			for (Document document : referenceList) {
 
-				Set<Entry<String, Object>> entries = referenceList.get(i).entrySet();
+				Set<Entry<String, Object>> entries = document.entrySet();
 				if (document1.entrySet().containsAll(entries)) {
 					return -1;
 				}
@@ -333,5 +337,11 @@ public class ReferenceReader {
 			}
 			return referenceList.size();
 		}
+	}
+
+	@FunctionalInterface
+	interface LookupFunction {
+
+		Iterable<Document> apply(DocumentReferenceQuery referenceQuery, ReferenceCollection referenceCollection);
 	}
 }

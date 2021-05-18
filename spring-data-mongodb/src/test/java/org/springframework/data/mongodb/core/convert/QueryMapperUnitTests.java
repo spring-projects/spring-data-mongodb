@@ -1501,18 +1501,19 @@ public class QueryMapperUnitTests {
 		SimpeEntityWithoutId noIdButLookupQuery;
 
 	}
-	
+
+	// TODO
 	@Test
 	void xxx() {
-		
+
 		Sample sample = new Sample();
 		sample.foo = "sample-id";
 
 		Query query = query(where("sample").is(sample));
-		
+
 		org.bson.Document mappedObject = mapper.getMappedObject(query.getQueryObject(),
 				context.getPersistentEntity(WithDocumentReferences.class));
-		
+
 		System.out.println("mappedObject.toJson(): " + mappedObject.toJson());
 	}
 

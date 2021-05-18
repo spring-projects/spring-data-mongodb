@@ -38,6 +38,7 @@ import org.bson.json.JsonReader;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -63,6 +64,7 @@ import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mapping.model.SpELExpressionParameterValueProvider;
 import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.DocumentPointer;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -114,7 +116,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	protected final QueryMapper idMapper;
 	protected final DbRefResolver dbRefResolver;
 	protected final DefaultDbRefProxyHandler dbRefProxyHandler;
-	protected final ReferenceReader referenceReader;
+	protected final ReferenceLookupDelegate referenceLookupDelegate;
 
 	protected @Nullable ApplicationContext applicationContext;
 	protected MongoTypeMapper typeMapper;
@@ -123,7 +125,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	private SpELContext spELContext;
 	private @Nullable EntityCallbacks entityCallbacks;
-	private DocumentPointerFactory documentPointerFactory;
+	private final DocumentPointerFactory documentPointerFactory;
 
 	/**
 	 * Creates a new {@link MappingMongoConverter} given the new {@link DbRefResolver} and {@link MappingContext}.
@@ -154,7 +156,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					return MappingMongoConverter.this.getValueInternal(context, prop, bson, evaluator);
 				});
 
-		this.referenceReader = new ReferenceReader(mappingContext, () -> spELContext);
+		this.referenceLookupDelegate = new ReferenceLookupDelegate(mappingContext, spELContext);
 		this.documentPointerFactory = new DocumentPointerFactory(conversionService, mappingContext);
 	}
 
@@ -361,16 +363,15 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				parameterProvider);
 	}
 
-	private <S extends Object> S read(ConversionContext context, MongoPersistentEntity<S> entity, Document bson) {
+	private <S> S read(ConversionContext context, MongoPersistentEntity<S> entity, Document bson) {
 
 		SpELExpressionEvaluator evaluator = new DefaultSpELExpressionEvaluator(bson, spELContext);
 		DocumentAccessor documentAccessor = new DocumentAccessor(bson);
 
-		if (bson.get("_id") != null) {
-
-			Object existing = context.getPath().getPathItem(bson.get("_id"), entity.getCollection(), entity.getType());
+		if (hasIdentifier(bson)) {
+			S existing = findContextualEntity(context, entity, bson);
 			if (existing != null) {
-				return (S) existing;
+				return existing;
 			}
 		}
 
@@ -389,6 +390,16 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		return instance;
+	}
+
+	private boolean hasIdentifier(Document bson) {
+		return bson.get(BasicMongoPersistentProperty.ID_FIELD_NAME) != null;
+	}
+
+	@Nullable
+	private <S> S findContextualEntity(ConversionContext context, MongoPersistentEntity<S> entity, Document bson) {
+		return context.getPath().getPathItem(bson.get(BasicMongoPersistentProperty.ID_FIELD_NAME), entity.getCollection(),
+				entity.getType());
 	}
 
 	private <S> S populateProperties(ConversionContext context, MongoPersistentEntity<S> entity,
@@ -509,7 +520,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			ConversionContext context, SpELExpressionEvaluator evaluator) {
 
 		MongoPersistentProperty property = association.getInverse();
-		final Object value = documentAccessor.get(property);
+		Object value = documentAccessor.get(property);
 
 		if (value == null) {
 			return;
@@ -521,18 +532,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 			if (conversionService.canConvert(DocumentPointer.class, property.getActualType())) {
 
-				DocumentPointer<?> pointer = new DocumentPointer<Object>() {
-					@Override
-					public Object getPointer() {
-						return value;
-					}
-				};
+				DocumentPointer<?> pointer = () -> value;
 
 				// collection like special treatment
 				accessor.setProperty(property, conversionService.convert(pointer, property.getActualType()));
 			} else {
 				accessor.setProperty(property,
-						dbRefResolver.resolveReference(property, value, referenceReader, context::convert));
+						dbRefResolver.resolveReference(property, value, referenceLookupDelegate, context::convert));
 			}
 			return;
 		}

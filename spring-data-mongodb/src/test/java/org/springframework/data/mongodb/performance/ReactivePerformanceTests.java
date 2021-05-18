@@ -18,20 +18,13 @@ package org.springframework.data.mongodb.performance;
 import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
-import org.springframework.data.mongodb.core.convert.ReferenceLoader;
-import org.springframework.data.mongodb.core.convert.ReferenceLoader.DocumentReferenceQuery;
-import org.springframework.data.mongodb.core.convert.ReferenceReader;
-import org.springframework.data.util.TypeInformation;
-import org.springframework.lang.Nullable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.text.DecimalFormat;
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
@@ -48,12 +41,15 @@ import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DbRefResolverCallback;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.ReferenceLoader;
+import org.springframework.data.mongodb.core.convert.ReferenceLookupDelegate;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.data.mongodb.repository.support.ReactiveMongoRepositoryFactory;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StopWatch;
 import org.springframework.util.StringUtils;
@@ -106,7 +102,8 @@ public class ReactivePerformanceTests {
 
 			@Nullable
 			@Override
-			public Object resolveReference(MongoPersistentProperty property, Object source, ReferenceReader referenceReader, LookupFunction lookupFunction, ResultConversionFunction resultConversionFunction) {
+			public Object resolveReference(MongoPersistentProperty property, Object source,
+					ReferenceLookupDelegate referenceLookupDelegate, MongoEntityReader entityReader) {
 				return null;
 			}
 

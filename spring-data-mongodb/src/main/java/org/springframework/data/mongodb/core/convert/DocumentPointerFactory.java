@@ -17,12 +17,14 @@ package org.springframework.data.mongodb.core.convert;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.bson.Document;
+
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
@@ -37,9 +39,9 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
  */
 class DocumentPointerFactory {
 
-	private ConversionService conversionService;
-	private MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
-	private Map<String, LinkageDocument> linkageMap;
+	private final ConversionService conversionService;
+	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+	private final Map<String, LinkageDocument> linkageMap;
 
 	public DocumentPointerFactory(ConversionService conversionService,
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
@@ -60,15 +62,24 @@ class DocumentPointerFactory {
 		} else {
 
 			MongoPersistentEntity<?> persistentEntity = mappingContext
-					.getPersistentEntity(property.getAssociationTargetType());
+					.getRequiredPersistentEntity(property.getAssociationTargetType());
 
-			if (!property.getDocumentReference().lookup().toLowerCase().replaceAll("\\s", "").replaceAll("'", "")
+			// TODO: Extract method
+			if (!property.getDocumentReference().lookup().toLowerCase(Locale.ROOT).replaceAll("\\s", "").replaceAll("'", "")
 					.equals("{_id:?#{#target}}")) {
 
-				return () -> linkageMap.computeIfAbsent(property.getDocumentReference().lookup(), key -> {
-					return new LinkageDocument(key);
-				}).get(persistentEntity,
-						BeanWrapperPropertyAccessorFactory.INSTANCE.getPropertyAccessor(property.getOwner(), value));
+				MongoPersistentEntity<?> valueEntity = mappingContext.getPersistentEntity(value.getClass());
+				PersistentPropertyAccessor<Object> propertyAccessor;
+				if (valueEntity == null) {
+					propertyAccessor = BeanWrapperPropertyAccessorFactory.INSTANCE.getPropertyAccessor(property.getOwner(),
+							value);
+				} else {
+					propertyAccessor = valueEntity.getPropertyAccessor(value);
+
+				}
+
+				return () -> linkageMap.computeIfAbsent(property.getDocumentReference().lookup(), LinkageDocument::new)
+						.get(persistentEntity, propertyAccessor);
 			}
 
 			// just take the id as a reference
@@ -77,6 +88,8 @@ class DocumentPointerFactory {
 	}
 
 	static class LinkageDocument {
+
+		static final Pattern pattern = Pattern.compile("\\?#\\{#?[\\w\\d]*\\}");
 
 		String lookup;
 		org.bson.Document fetchDocument;
@@ -87,16 +100,18 @@ class DocumentPointerFactory {
 			this.lookup = lookup;
 			String targetLookup = lookup;
 
-			Pattern pattern = Pattern.compile("\\?#\\{#?[\\w\\d]*\\}");
 
 			Matcher matcher = pattern.matcher(lookup);
 			int index = 0;
 			mapMap = new LinkedHashMap<>();
+
+			// TODO: Make explicit what's happening here
 			while (matcher.find()) {
 
 				String expr = matcher.group();
-				mapMap.put(Integer.valueOf(index), expr.substring(0, expr.length() - 1).replace("?#{#", "").replace("?#{", "")
-						.replace("target.", "").replaceAll("'", ""));
+				String sanitized = expr.substring(0, expr.length() - 1).replace("?#{#", "").replace("?#{", "")
+						.replace("target.", "").replaceAll("'", "");
+				mapMap.put(index, sanitized);
 				targetLookup = targetLookup.replace(expr, index + "");
 				index++;
 			}

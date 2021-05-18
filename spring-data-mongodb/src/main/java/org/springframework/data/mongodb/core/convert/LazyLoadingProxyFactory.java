@@ -15,47 +15,46 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import static org.springframework.data.mongodb.core.convert.ReferenceLookupDelegate.*;
 import static org.springframework.util.ReflectionUtils.*;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.cglib.proxy.Callback;
 import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.Factory;
 import org.springframework.cglib.proxy.MethodProxy;
-import org.springframework.data.mongodb.core.convert.ReferenceResolver.LookupFunction;
-import org.springframework.data.mongodb.core.convert.ReferenceResolver.ResultConversionFunction;
+import org.springframework.data.mongodb.core.convert.ReferenceResolver.MongoEntityReader;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.lang.Nullable;
 import org.springframework.objenesis.ObjenesisStd;
 import org.springframework.util.ReflectionUtils;
 
 /**
  * @author Christoph Strobl
  */
-class LazyLoadingProxyGenerator {
+class LazyLoadingProxyFactory {
 
 	private final ObjenesisStd objenesis;
-	private final ReferenceReader referenceReader;
+	private final ReferenceLookupDelegate lookupDelegate;
 
-	public LazyLoadingProxyGenerator(ReferenceReader referenceReader) {
+	public LazyLoadingProxyFactory(ReferenceLookupDelegate lookupDelegate) {
 
-		this.referenceReader = referenceReader;
+		this.lookupDelegate = lookupDelegate;
 		this.objenesis = new ObjenesisStd(true);
 	}
 
 	public Object createLazyLoadingProxy(MongoPersistentProperty property, Object source, LookupFunction lookupFunction,
-			ResultConversionFunction resultConversionFunction) {
+			MongoEntityReader entityReader) {
 
 		Class<?> propertyType = property.getType();
-		LazyLoadingInterceptor interceptor = new LazyLoadingInterceptor(property, source, referenceReader, lookupFunction,
-				resultConversionFunction);
+		LazyLoadingInterceptor interceptor = new LazyLoadingInterceptor(property, source, lookupDelegate, lookupFunction,
+				entityReader);
 
 		if (!propertyType.isInterface()) {
 
@@ -97,13 +96,13 @@ class LazyLoadingProxyGenerator {
 	public static class LazyLoadingInterceptor
 			implements MethodInterceptor, org.springframework.cglib.proxy.MethodInterceptor, Serializable {
 
-		private final ReferenceReader referenceReader;
-		MongoPersistentProperty property;
+		private final ReferenceLookupDelegate referenceLookupDelegate;
+		private final MongoPersistentProperty property;
 		private volatile boolean resolved;
-		private @org.springframework.lang.Nullable Object result;
-		private Object source;
-		private LookupFunction lookupFunction;
-		private ResultConversionFunction resultConversionFunction;
+		private @Nullable Object result;
+		private final Object source;
+		private final LookupFunction lookupFunction;
+		private final MongoEntityReader entityReader;
 
 		private final Method INITIALIZE_METHOD, TO_DBREF_METHOD, FINALIZE_METHOD, GET_SOURCE_METHOD;
 
@@ -118,22 +117,23 @@ class LazyLoadingProxyGenerator {
 			}
 		}
 
-		public LazyLoadingInterceptor(MongoPersistentProperty property, Object source, ReferenceReader reader,
-				LookupFunction lookupFunction, ResultConversionFunction resultConversionFunction) {
+		public LazyLoadingInterceptor(MongoPersistentProperty property, Object source, ReferenceLookupDelegate reader,
+				LookupFunction lookupFunction, MongoEntityReader entityReader) {
 
 			this.property = property;
 			this.source = source;
-			this.referenceReader = reader;
+			this.referenceLookupDelegate = reader;
 			this.lookupFunction = lookupFunction;
-			this.resultConversionFunction = resultConversionFunction;
+			this.entityReader = entityReader;
 		}
 
 		@Nullable
 		@Override
-		public Object invoke(@Nonnull MethodInvocation invocation) throws Throwable {
+		public Object invoke(MethodInvocation invocation) throws Throwable {
 			return intercept(invocation.getThis(), invocation.getMethod(), invocation.getArguments(), null);
 		}
 
+		@Nullable
 		@Override
 		public Object intercept(Object o, Method method, Object[] args, MethodProxy proxy) throws Throwable {
 
@@ -180,6 +180,7 @@ class LazyLoadingProxyGenerator {
 			return method.invoke(target, args);
 		}
 
+		@Nullable
 		private Object ensureResolved() {
 
 			if (!resolved) {
@@ -190,7 +191,7 @@ class LazyLoadingProxyGenerator {
 			return this.result;
 		}
 
-		private String proxyToString(Object source) {
+		private String proxyToString(@Nullable Object source) {
 
 			StringBuilder description = new StringBuilder();
 			if (source != null) {
@@ -203,7 +204,7 @@ class LazyLoadingProxyGenerator {
 			return description.toString();
 		}
 
-		private boolean proxyEquals(@org.springframework.lang.Nullable Object proxy, Object that) {
+		private boolean proxyEquals(@Nullable Object proxy, Object that) {
 
 			if (!(that instanceof LazyLoadingProxy)) {
 				return false;
@@ -216,11 +217,11 @@ class LazyLoadingProxyGenerator {
 			return proxyToString(proxy).equals(that.toString());
 		}
 
-		private int proxyHashCode(@org.springframework.lang.Nullable Object proxy) {
+		private int proxyHashCode(@Nullable Object proxy) {
 			return proxyToString(proxy).hashCode();
 		}
 
-		@org.springframework.lang.Nullable
+		@Nullable
 		private synchronized Object resolve() {
 
 			if (resolved) {
@@ -238,7 +239,7 @@ class LazyLoadingProxyGenerator {
 				// property.getOwner() != null ? property.getOwner().getName() : "unknown", property.getName());
 				// }
 
-				return referenceReader.readReference(property, source, lookupFunction, resultConversionFunction);
+				return referenceLookupDelegate.readReference(property, source, lookupFunction, entityReader);
 
 			} catch (RuntimeException ex) {
 				throw ex;
@@ -254,4 +255,5 @@ class LazyLoadingProxyGenerator {
 			}
 		}
 	}
+
 }

@@ -15,13 +15,10 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import java.util.Collections;
-
-import org.bson.Document;
-import org.springframework.data.mongodb.core.convert.ReferenceLoader.DocumentReferenceQuery;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 
 import com.mongodb.DBRef;
 
@@ -31,22 +28,8 @@ import com.mongodb.DBRef;
 public interface ReferenceResolver {
 
 	@Nullable
-	Object resolveReference(MongoPersistentProperty property, Object source, ReferenceReader referenceReader,
-			LookupFunction lookupFunction, ResultConversionFunction resultConversionFunction);
-
-	default Object resolveReference(MongoPersistentProperty property, Object source, ReferenceReader referenceReader,
-			ResultConversionFunction resultConversionFunction) {
-
-		return resolveReference(property, source, referenceReader, (filter, ctx) -> {
-			if (property.isCollectionLike() || property.isMap()) {
-				return getReferenceLoader().bulkFetch(filter, ctx);
-
-			}
-
-			Object target = getReferenceLoader().fetch(filter, ctx);
-			return target == null ? Collections.emptyList() : Collections.singleton(getReferenceLoader().fetch(filter, ctx));
-		}, resultConversionFunction);
-	}
+	Object resolveReference(MongoPersistentProperty property, Object source,
+			ReferenceLookupDelegate referenceLookupDelegate, MongoEntityReader entityReader);
 
 	ReferenceLoader getReferenceLoader();
 
@@ -57,6 +40,8 @@ public interface ReferenceResolver {
 		private final String collection;
 
 		public ReferenceCollection(@Nullable String database, String collection) {
+
+			Assert.hasText(collection, "Collection must not be empty or null");
 
 			this.database = database;
 			this.collection = collection;
@@ -76,13 +61,9 @@ public interface ReferenceResolver {
 		}
 	}
 
-	@FunctionalInterface
-	interface LookupFunction {
-		Iterable<Document> apply(DocumentReferenceQuery referenceQuery, ReferenceCollection referenceCollection);
-	}
 
 	@FunctionalInterface
-	interface ResultConversionFunction {
-		Object apply(Object source, TypeInformation property);
+	interface MongoEntityReader {
+		Object read(Object source, TypeInformation<?> property);
 	}
 }

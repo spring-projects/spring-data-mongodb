@@ -15,7 +15,10 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import org.springframework.data.mongodb.core.mapping.DocumentReference;
+import static org.springframework.data.mongodb.core.convert.ReferenceLookupDelegate.*;
+
+import java.util.Collections;
+
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.lang.Nullable;
 
@@ -37,21 +40,32 @@ public class DefaultReferenceResolver implements ReferenceResolver {
 
 	@Nullable
 	@Override
-	public Object resolveReference(MongoPersistentProperty property, Object source, ReferenceReader referenceReader,
-			LookupFunction lookupFunction, ResultConversionFunction resultConversionFunction) {
+	public Object resolveReference(MongoPersistentProperty property, Object source,
+			ReferenceLookupDelegate referenceLookupDelegate, MongoEntityReader entityReader) {
+
+		LookupFunction lookupFunction = (filter, ctx) -> {
+			if (property.isCollectionLike() || property.isMap()) {
+				return getReferenceLoader().fetchMany(filter, ctx);
+
+			}
+
+			Object target = getReferenceLoader().fetchOne(filter, ctx);
+			return target == null ? Collections.emptyList()
+					: Collections.singleton(getReferenceLoader().fetchOne(filter, ctx));
+		};
 
 		if (isLazyReference(property)) {
-			return createLazyLoadingProxy(property, source, referenceReader, lookupFunction, resultConversionFunction);
+			return createLazyLoadingProxy(property, source, referenceLookupDelegate, lookupFunction, entityReader);
 		}
 
-		return referenceReader.readReference(property, source, lookupFunction, resultConversionFunction);
+		return referenceLookupDelegate.readReference(property, source, lookupFunction, entityReader);
 	}
 
 	private Object createLazyLoadingProxy(MongoPersistentProperty property, Object source,
-			ReferenceReader referenceReader, LookupFunction lookupFunction,
-			ResultConversionFunction resultConversionFunction) {
-		return new LazyLoadingProxyGenerator(referenceReader).createLazyLoadingProxy(property, source, lookupFunction,
-				resultConversionFunction);
+			ReferenceLookupDelegate referenceLookupDelegate, LookupFunction lookupFunction,
+			MongoEntityReader entityReader) {
+		return new LazyLoadingProxyFactory(referenceLookupDelegate).createLazyLoadingProxy(property, source, lookupFunction,
+				entityReader);
 	}
 
 	protected boolean isLazyReference(MongoPersistentProperty property) {
