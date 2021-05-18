@@ -57,7 +57,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
+import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoTemplateUnitTests.AutogenerateableId;
 import org.springframework.data.mongodb.core.aggregation.AggregationOptions;
 import org.springframework.data.mongodb.core.aggregation.AggregationUpdate;
@@ -1135,6 +1137,19 @@ public class ReactiveMongoTemplateUnitTests {
 		template.save(new ShardedVersionedEntityWithNonDefaultShardKey("id-1", 1L, "AT", 4230)).subscribe();
 
 		verify(findPublisher).projection(new Document("country", 1).append("userid", 1));
+	}
+
+	@Test // GH-3648
+	void shouldThrowExceptionIfEntityReaderReturnsNull() {
+
+		MappingMongoConverter converter = mock(MappingMongoConverter.class);
+		when(converter.getMappingContext()).thenReturn((MappingContext) mappingContext);
+		template = new ReactiveMongoTemplate(factory, converter);
+
+		when(collection.find(Document.class)).thenReturn(findPublisher);
+		stubFindSubscribe(new Document());
+
+		template.find(new Query(), Person.class).as(StepVerifier::create).verifyError(MappingException.class);
 	}
 
 	@Test // DATAMONGO-2479

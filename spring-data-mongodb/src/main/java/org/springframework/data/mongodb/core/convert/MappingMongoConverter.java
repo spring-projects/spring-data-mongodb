@@ -270,7 +270,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.core.MongoReader#read(java.lang.Class, com.mongodb.Document)
 	 */
-	public <S extends Object> S read(Class<S> clazz, final Bson bson) {
+	public <S extends Object> S read(Class<S> clazz, Bson bson) {
 		return read(ClassTypeInformation.from(clazz), bson);
 	}
 

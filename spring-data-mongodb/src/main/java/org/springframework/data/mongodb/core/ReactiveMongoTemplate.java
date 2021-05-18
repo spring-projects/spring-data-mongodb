@@ -22,7 +22,15 @@ import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -36,6 +44,7 @@ import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -51,6 +60,7 @@ import org.springframework.data.convert.EntityReader;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.Metric;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
@@ -3152,13 +3162,14 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			maybeEmitEvent(new AfterLoadEvent<>(document, type, collectionName));
 
-			T source = reader.read(type, document);
-			if (source != null) {
-				maybeEmitEvent(new AfterConvertEvent<>(document, source, collectionName));
-				return maybeCallAfterConvert(source, document, collectionName);
+			T entity = reader.read(type, document);
+
+			if (entity == null) {
+				throw new MappingException(String.format("EntityReader %s returned null", reader));
 			}
 
-			return Mono.empty();
+			maybeEmitEvent(new AfterConvertEvent<>(document, entity, collectionName));
+			return maybeCallAfterConvert(entity, document, collectionName);
 		}
 	}
 
@@ -3196,16 +3207,17 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			maybeEmitEvent(new AfterLoadEvent<>(document, typeToRead, collectionName));
 
-			Object source = reader.read(typeToRead, document);
-			Object result = targetType.isInterface() ? projectionFactory.createProjection(targetType, source) : source;
+			Object entity = reader.read(typeToRead, document);
 
-			T castEntity = (T) result;
-			if (castEntity != null) {
-				maybeEmitEvent(new AfterConvertEvent<>(document, castEntity, collectionName));
-				return maybeCallAfterConvert(castEntity, document, collectionName);
+			if (entity == null) {
+				throw new MappingException(String.format("EntityReader %s returned null", reader));
 			}
 
-			return Mono.empty();
+			Object result = targetType.isInterface() ? projectionFactory.createProjection(targetType, entity) : entity;
+
+			T castEntity = (T) result;
+			maybeEmitEvent(new AfterConvertEvent<>(document, castEntity, collectionName));
+			return maybeCallAfterConvert(castEntity, document, collectionName);
 		}
 	}
 

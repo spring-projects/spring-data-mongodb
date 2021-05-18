@@ -50,6 +50,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
@@ -64,8 +65,10 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mapping.context.InvalidPersistentPropertyPath;
+import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.aggregation.*;
 import org.springframework.data.mongodb.core.aggregation.ComparisonOperators.Gte;
@@ -394,11 +397,24 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(collection, times(1)).find(Mockito.eq(query.getQueryObject()), any(Class.class));
 	}
 
+	@Test // GH-3648
+	void shouldThrowExceptionIfEntityReaderReturnsNull() {
+
+		when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
+		when(cursor.next()).thenReturn(new org.bson.Document("_id", Integer.valueOf(0)));
+		MappingMongoConverter converter = mock(MappingMongoConverter.class);
+		when(converter.getMappingContext()).thenReturn((MappingContext) mappingContext);
+		template = new MongoTemplate(factory, converter);
+
+		assertThatExceptionOfType(MappingException.class).isThrownBy(() -> template.findAll(Person.class))
+				.withMessageContaining("returned null");
+	}
+
 	@Test // DATAMONGO-566
 	void findAllAndRemoveShouldRemoveDocumentsReturedByFindQuery() {
 
-		Mockito.when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
-		Mockito.when(cursor.next()).thenReturn(new org.bson.Document("_id", Integer.valueOf(0)))
+		when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
+		when(cursor.next()).thenReturn(new org.bson.Document("_id", Integer.valueOf(0)))
 				.thenReturn(new org.bson.Document("_id", Integer.valueOf(1)));
 
 		ArgumentCaptor<org.bson.Document> queryCaptor = ArgumentCaptor.forClass(org.bson.Document.class);

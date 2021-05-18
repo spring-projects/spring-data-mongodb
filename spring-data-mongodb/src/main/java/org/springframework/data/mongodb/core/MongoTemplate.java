@@ -28,6 +28,7 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -46,6 +47,7 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.GeoResult;
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Metric;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
@@ -102,7 +104,6 @@ import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.Optionals;
-import org.springframework.jca.cci.core.ConnectionCallback;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -972,7 +973,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		for (Document element : results) {
 
 			GeoResult<T> geoResult = callback.doWith(element);
-			aggregate = aggregate.add(new BigDecimal(geoResult.getDistance().getValue()));
+			aggregate = aggregate.add(BigDecimal.valueOf(geoResult.getDistance().getValue()));
 			result.add(geoResult);
 		}
 
@@ -2751,25 +2752,24 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * Internal method using callbacks to do queries against the datastore that requires reading a single object from a
 	 * collection of objects. It will take the following steps
 	 * <ol>
-	 * <li>Execute the given {@link ConnectionCallback} for a {@link Document}.</li>
+	 * <li>Execute the given {@link CollectionCallback} for a {@link Document}.</li>
 	 * <li>Apply the given {@link DocumentCallback} to each of the {@link Document}s to obtain the result.</li>
 	 * <ol>
 	 *
 	 * @param <T>
 	 * @param collectionCallback the callback to retrieve the {@link Document} with
-	 * @param objectCallback the {@link DocumentCallback} to transform {@link Document}s into the actual domain type
+	 * @param documentCallback the {@link DocumentCallback} to transform {@link Document}s into the actual domain type
 	 * @param collectionName the collection to be queried
 	 * @return
 	 */
 	@Nullable
 	private <T> T executeFindOneInternal(CollectionCallback<Document> collectionCallback,
-			DocumentCallback<T> objectCallback, String collectionName) {
+			DocumentCallback<T> documentCallback, String collectionName) {
 
 		try {
 
-			T result = objectCallback
-					.doWith(collectionCallback.doInCollection(getAndPrepareCollection(doGetDatabase(), collectionName)));
-			return result;
+			Document document = collectionCallback.doInCollection(getAndPrepareCollection(doGetDatabase(), collectionName));
+			return document != null ? documentCallback.doWith(document) : null;
 		} catch (RuntimeException e) {
 			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
 		}
@@ -2779,7 +2779,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * Internal method using callback to do queries against the datastore that requires reading a collection of objects.
 	 * It will take the following steps
 	 * <ol>
-	 * <li>Execute the given {@link ConnectionCallback} for a {@link FindIterable}.</li>
+	 * <li>Execute the given {@link CollectionCallback} for a {@link FindIterable}.</li>
 	 * <li>Prepare that {@link FindIterable} with the given {@link CursorPreparer} (will be skipped if
 	 * {@link CursorPreparer} is {@literal null}</li>
 	 * <li>Iterate over the {@link FindIterable} and applies the given {@link DocumentCallback} to each of the
@@ -2789,36 +2789,27 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param <T>
 	 * @param collectionCallback the callback to retrieve the {@link FindIterable} with
 	 * @param preparer the {@link CursorPreparer} to potentially modify the {@link FindIterable} before iterating over it
-	 * @param objectCallback the {@link DocumentCallback} to transform {@link Document}s into the actual domain type
+	 * @param documentCallback the {@link DocumentCallback} to transform {@link Document}s into the actual domain type
 	 * @param collectionName the collection to be queried
 	 * @return
 	 */
 	private <T> List<T> executeFindMultiInternal(CollectionCallback<FindIterable<Document>> collectionCallback,
-			CursorPreparer preparer, DocumentCallback<T> objectCallback, String collectionName) {
+			CursorPreparer preparer, DocumentCallback<T> documentCallback, String collectionName) {
 
 		try {
 
-			MongoCursor<Document> cursor = null;
-
-			try {
-
-				cursor = preparer
-						.initiateFind(getAndPrepareCollection(doGetDatabase(), collectionName), collectionCallback::doInCollection)
-						.iterator();
+			try (MongoCursor<Document> cursor = preparer
+					.initiateFind(getAndPrepareCollection(doGetDatabase(), collectionName), collectionCallback::doInCollection)
+					.iterator()) {
 
 				List<T> result = new ArrayList<>();
 
 				while (cursor.hasNext()) {
 					Document object = cursor.next();
-					result.add(objectCallback.doWith(object));
+					result.add(documentCallback.doWith(object));
 				}
 
 				return result;
-			} finally {
-
-				if (cursor != null) {
-					cursor.close();
-				}
 			}
 		} catch (RuntimeException e) {
 			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
@@ -2828,24 +2819,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	private void executeQueryInternal(CollectionCallback<FindIterable<Document>> collectionCallback,
 			CursorPreparer preparer, DocumentCallbackHandler callbackHandler, String collectionName) {
 
-		try {
-
-			MongoCursor<Document> cursor = null;
-
-			try {
-
-				cursor = preparer
-						.initiateFind(getAndPrepareCollection(doGetDatabase(), collectionName), collectionCallback::doInCollection)
-						.iterator();
+		try (MongoCursor<Document> cursor = preparer
+				.initiateFind(getAndPrepareCollection(doGetDatabase(), collectionName), collectionCallback::doInCollection)
+				.iterator()) {
 
 				while (cursor.hasNext()) {
 					callbackHandler.processDocument(cursor.next());
 				}
-			} finally {
-				if (cursor != null) {
-					cursor.close();
-				}
-			}
 		} catch (RuntimeException e) {
 			throw potentiallyConvertRuntimeException(e, exceptionTranslator);
 		}
@@ -3143,8 +3123,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	interface DocumentCallback<T> {
 
-		@Nullable
-		T doWith(@Nullable Document object);
+		T doWith(Document object);
 	}
 
 	/**
@@ -3168,22 +3147,19 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			this.collectionName = collectionName;
 		}
 
-		@Nullable
-		public T doWith(@Nullable Document document) {
+		public T doWith(Document document) {
 
-			T source = null;
-
-			if (document != null) {
 				maybeEmitEvent(new AfterLoadEvent<>(document, type, collectionName));
-				source = reader.read(type, document);
-			}
+				T entity = reader.read(type, document);
 
-			if (source != null) {
-				maybeEmitEvent(new AfterConvertEvent<>(document, source, collectionName));
-				source = maybeCallAfterConvert(source, document, collectionName);
-			}
+				if (entity == null) {
+					throw new MappingException(String.format("EntityReader %s returned null", reader));
+				}
 
-			return source;
+				maybeEmitEvent(new AfterConvertEvent<>(document, entity, collectionName));
+				entity = maybeCallAfterConvert(entity, document, collectionName);
+
+				return entity;
 		}
 	}
 
@@ -3216,8 +3192,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		 * @see org.springframework.data.mongodb.core.MongoTemplate.DocumentCallback#doWith(org.bson.Document)
 		 */
 		@SuppressWarnings("unchecked")
-		@Nullable
-		public T doWith(@Nullable Document document) {
+		public T doWith(Document document) {
 
 			if (document == null) {
 				return null;
@@ -3228,15 +3203,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			maybeEmitEvent(new AfterLoadEvent<>(document, targetType, collectionName));
 
-			Object source = reader.read(typeToRead, document);
-			Object result = targetType.isInterface() ? projectionFactory.createProjection(targetType, source) : source;
+			Object entity = reader.read(typeToRead, document);
 
-			if (result != null) {
-				maybeEmitEvent(new AfterConvertEvent<>(document, result, collectionName));
-				result = maybeCallAfterConvert(result, document, collectionName);
+			if (entity == null) {
+				throw new MappingException(String.format("EntityReader %s returned null", reader));
 			}
 
-			return (T) result;
+			Object result = targetType.isInterface() ? projectionFactory.createProjection(targetType, entity) : entity;
+
+				maybeEmitEvent(new AfterConvertEvent<>(document, result, collectionName));
+				return (T) maybeCallAfterConvert(result, document, collectionName);
 		}
 	}
 
@@ -3373,8 +3349,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			this.metric = metric;
 		}
 
-		@Nullable
-		public GeoResult<T> doWith(@Nullable Document object) {
+		public GeoResult<T> doWith(Document object) {
 
 			double distance = Double.NaN;
 			if (object.containsKey(distanceField)) {
@@ -3401,10 +3376,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		/**
 		 * Creates a new {@link CloseableIterableCursorAdapter} backed by the given {@link MongoCollection}.
-		 *
-		 * @param cursor
-		 * @param exceptionTranslator
-		 * @param objectReadCallback
 		 */
 		CloseableIterableCursorAdapter(MongoIterable<Document> cursor, PersistenceExceptionTranslator exceptionTranslator,
 				DocumentCallback<T> objectReadCallback) {
@@ -3448,8 +3419,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			try {
 				Document item = cursor.next();
-				T converted = objectReadCallback.doWith(item);
-				return converted;
+				return objectReadCallback.doWith(item);
 			} catch (RuntimeException ex) {
 				throw potentiallyConvertRuntimeException(ex, exceptionTranslator);
 			}
