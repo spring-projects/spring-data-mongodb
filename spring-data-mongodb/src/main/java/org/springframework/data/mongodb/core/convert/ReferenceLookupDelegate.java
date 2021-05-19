@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,7 +30,6 @@ import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.bson.conversions.Bson;
-
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.SpELContext;
 import org.springframework.data.mongodb.core.convert.ReferenceLoader.DocumentReferenceQuery;
@@ -64,6 +64,12 @@ public final class ReferenceLookupDelegate {
 	private final SpELContext spELContext;
 	private final ParameterBindingDocumentCodec codec;
 
+	/**
+	 * Create a new {@link ReferenceLookupDelegate}.
+	 *
+	 * @param mappingContext must not be {@literal null}.
+	 * @param spELContext must not be {@literal null}.
+	 */
 	public ReferenceLookupDelegate(
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
 			SpELContext spELContext) {
@@ -76,10 +82,19 @@ public final class ReferenceLookupDelegate {
 		this.codec = new ParameterBindingDocumentCodec();
 	}
 
+	/**
+	 * Read the reference expressed by the given property.
+	 *
+	 * @param property the reference defining property. Must not be {@literal null}. THe
+	 * @param value the source value identifying to the referenced entity. Must not be {@literal null}.
+	 * @param lookupFunction to execute a lookup query. Must not be {@literal null}.
+	 * @param entityReader the callback to convert raw source values into actual domain types. Must not be
+	 *          {@literal null}.
+	 * @return can be {@literal null}.
+	 */
 	@Nullable
-	Object readReference(MongoPersistentProperty property, Object value, LookupFunction lookupFunction,
+	public Object readReference(MongoPersistentProperty property, Object value, LookupFunction lookupFunction,
 			MongoEntityReader entityReader) {
-
 
 		DocumentReferenceQuery filter = computeFilter(property, value, spELContext);
 		ReferenceCollection referenceCollection = computeReferenceContext(property, value, spELContext);
@@ -100,10 +115,12 @@ public final class ReferenceLookupDelegate {
 	private ReferenceCollection computeReferenceContext(MongoPersistentProperty property, Object value,
 			SpELContext spELContext) {
 
+		// Use the first value as a reference for others in case of collection like
 		if (value instanceof Iterable) {
 			value = ((Iterable<?>) value).iterator().next();
 		}
 
+		// handle DBRef value
 		if (value instanceof DBRef) {
 			return ReferenceCollection.fromDBRef((DBRef) value);
 		}
@@ -112,7 +129,7 @@ public final class ReferenceLookupDelegate {
 
 		if (value instanceof Document) {
 
-			Document ref = (Document) value;
+			Document documentPointer = (Document) value;
 
 			if (property.isDocumentReference()) {
 
@@ -120,15 +137,13 @@ public final class ReferenceLookupDelegate {
 				DocumentReference documentReference = property.getDocumentReference();
 
 				String targetDatabase = parseValueOrGet(documentReference.db(), bindingContext,
-						() -> ref.get("db", String.class));
+						() -> documentPointer.get("db", String.class));
 				String targetCollection = parseValueOrGet(documentReference.collection(), bindingContext,
-						() -> ref.get("collection",
-								collection));
+						() -> documentPointer.get("collection", collection));
 				return new ReferenceCollection(targetDatabase, targetCollection);
 			}
 
-			return new ReferenceCollection(ref.getString("db"), ref.get("collection",
-					collection));
+			return new ReferenceCollection(documentPointer.getString("db"), documentPointer.get("collection", collection));
 		}
 
 		if (property.isDocumentReference()) {
@@ -137,16 +152,24 @@ public final class ReferenceLookupDelegate {
 			DocumentReference documentReference = property.getDocumentReference();
 
 			String targetDatabase = parseValueOrGet(documentReference.db(), bindingContext, () -> null);
-			String targetCollection = parseValueOrGet(documentReference.collection(), bindingContext,
-					() -> collection);
+			String targetCollection = parseValueOrGet(documentReference.collection(), bindingContext, () -> collection);
 
 			return new ReferenceCollection(targetDatabase, targetCollection);
 		}
 
-		return new ReferenceCollection(null,
-				collection);
+		return new ReferenceCollection(null, collection);
 	}
 
+	/**
+	 * Use the given {@link ParameterBindingContext} to compute potential expressions against the value.
+	 *
+	 * @param value must not be {@literal null}.
+	 * @param bindingContext must not be {@literal null}.
+	 * @param defaultValue
+	 * @param <T>
+	 * @return can be {@literal null}.
+	 */
+	@Nullable
 	@SuppressWarnings("unchecked")
 	private <T> T parseValueOrGet(String value, ParameterBindingContext bindingContext, Supplier<T> defaultValue) {
 
@@ -154,10 +177,15 @@ public final class ReferenceLookupDelegate {
 			return defaultValue.get();
 		}
 
+		// parameter binding requires a document, since we do not have one, construct it.
 		if (!BsonUtils.isJsonDocument(value) && value.contains("?#{")) {
 			String s = "{ 'target-value' : " + value + "}";
 			T evaluated = (T) codec.decode(s, bindingContext).get("target-value");
 			return evaluated != null ? evaluated : defaultValue.get();
+		}
+
+		if (BsonUtils.isJsonDocument(value)) {
+			return (T) codec.decode(value, bindingContext);
 		}
 
 		T evaluated = (T) bindingContext.evaluateExpression(value);
@@ -171,8 +199,8 @@ public final class ReferenceLookupDelegate {
 	}
 
 	ValueProvider valueProviderFor(Object source) {
-		return (index) -> {
 
+		return (index) -> {
 			if (source instanceof Document) {
 				return Streamable.of(((Document) source).values()).toList().get(index);
 			}
@@ -189,13 +217,24 @@ public final class ReferenceLookupDelegate {
 		return ctx;
 	}
 
+	/**
+	 * Compute the query to retrieve linked documents.
+	 *
+	 * @param property must not be {@literal null}.
+	 * @param value must not be {@literal null}.
+	 * @param spELContext must not be {@literal null}.
+	 * @return never {@literal null}.
+	 */
 	@SuppressWarnings("unchecked")
 	DocumentReferenceQuery computeFilter(MongoPersistentProperty property, Object value, SpELContext spELContext) {
 
-		DocumentReference documentReference = property.getDocumentReference();
+		DocumentReference documentReference = property.isDocumentReference() ? property.getDocumentReference()
+				: ReferenceEmulatingDocumentReference.INSTANCE;
+
 		String lookup = documentReference.lookup();
 
-		Document sort = parseValueOrGet(documentReference.sort(), bindingContext(property, value, spELContext), () -> null);
+		Document sort = parseValueOrGet(documentReference.sort(), bindingContext(property, value, spELContext),
+				() -> new Document());
 
 		if (property.isCollectionLike() && value instanceof Collection) {
 
@@ -225,45 +264,94 @@ public final class ReferenceLookupDelegate {
 		return new SingleDocumentReferenceQuery(codec.decode(lookup, bindingContext(property, value, spELContext)), sort);
 	}
 
+	enum ReferenceEmulatingDocumentReference implements DocumentReference {
+
+		INSTANCE;
+
+		@Override
+		public Class<? extends Annotation> annotationType() {
+			return DocumentReference.class;
+		}
+
+		@Override
+		public String db() {
+			return "";
+		}
+
+		@Override
+		public String collection() {
+			return "";
+		}
+
+		@Override
+		public String lookup() {
+			return "{ '_id' : ?#{#target} }";
+		}
+
+		@Override
+		public String sort() {
+			return "";
+		}
+
+		@Override
+		public boolean lazy() {
+			return false;
+		}
+	}
+
+	/**
+	 * {@link DocumentReferenceQuery} implementation fetching a single {@link Document}.
+	 */
 	static class SingleDocumentReferenceQuery implements DocumentReferenceQuery {
 
-		Document filter;
-		Document sort;
+		private final Document query;
+		private final Document sort;
 
-		public SingleDocumentReferenceQuery(Document filter, Document sort) {
-			this.filter = filter;
+		public SingleDocumentReferenceQuery(Document query, Document sort) {
+
+			this.query = query;
 			this.sort = sort;
 		}
 
 		@Override
-		public Bson getFilter() {
-			return filter;
+		public Bson getQuery() {
+			return query;
+		}
+
+		@Override
+		public Document getSort() {
+			return sort;
 		}
 
 		@Override
 		public Iterable<Document> apply(MongoCollection<Document> collection) {
 
-			Document result = collection.find(getFilter()).limit(1).first();
+			Document result = collection.find(getQuery()).sort(getSort()).limit(1).first();
 			return result != null ? Collections.singleton(result) : Collections.emptyList();
 		}
 	}
 
+	/**
+	 * {@link DocumentReferenceQuery} implementation to retrieve linked {@link Document documents} stored inside a
+	 * {@link Map} structure. Restores the original map order by matching individual query documents against the actual
+	 * values.
+	 */
 	static class MapDocumentReferenceQuery implements DocumentReferenceQuery {
 
-		private final Document filter;
+		private final Document query;
 		private final Document sort;
 		private final Map<Object, Document> filterOrderMap;
 
-		public MapDocumentReferenceQuery(Document filter, Document sort, Map<Object, Document> filterOrderMap) {
+		public MapDocumentReferenceQuery(Document query, Document sort, Map<Object, Document> filterOrderMap) {
 
-			this.filter = filter;
+			this.query = query;
 			this.sort = sort;
 			this.filterOrderMap = filterOrderMap;
 		}
 
 		@Override
-		public Bson getFilter() {
-			return filter;
+		public Bson getQuery() {
+			return query;
 		}
 
 		@Override
@@ -289,33 +377,38 @@ public final class ReferenceLookupDelegate {
 		}
 	}
 
+	/**
+	 * {@link DocumentReferenceQuery} implementation to retrieve linked {@link Document documents} stored inside a
+	 * {@link Collection} like structure. Restores the original order by matching individual query documents against the
+	 * actual values.
+	 */
 	static class ListDocumentReferenceQuery implements DocumentReferenceQuery {
 
-		private final Document filter;
+		private final Document query;
 		private final Document sort;
 
-		public ListDocumentReferenceQuery(Document filter, Document sort) {
+		public ListDocumentReferenceQuery(Document query, Document sort) {
 
-			this.filter = filter;
+			this.query = query;
 			this.sort = sort;
 		}
 
 		@Override
 		public Iterable<Document> restoreOrder(Iterable<Document> documents) {
 
-			if (filter.containsKey("$or")) {
-				List<Document> ors = filter.get("$or", List.class);
-				List<Document> target = documents instanceof List ? (List<Document>) documents
-						: Streamable.of(documents).toList();
-				return target.stream().sorted((o1, o2) -> compareAgainstReferenceIndex(ors, o1, o2))
-						.collect(Collectors.toList());
+			List<Document> target = documents instanceof List ? (List<Document>) documents
+					: Streamable.of(documents).toList();
+
+			if (!sort.isEmpty() || !query.containsKey("$or")) {
+				return target;
 			}
 
-			return documents;
+			List<Document> ors = query.get("$or", List.class);
+			return target.stream().sorted((o1, o2) -> compareAgainstReferenceIndex(ors, o1, o2)).collect(Collectors.toList());
 		}
 
-		public Document getFilter() {
-			return filter;
+		public Document getQuery() {
+			return query;
 		}
 
 		@Override
@@ -339,9 +432,18 @@ public final class ReferenceLookupDelegate {
 		}
 	}
 
+	/**
+	 * The function that can execute a given {@link DocumentReferenceQuery} within the {@link ReferenceCollection} to
+	 * obtain raw results.
+	 */
 	@FunctionalInterface
 	interface LookupFunction {
 
+		/**
+		 * @param referenceQuery never {@literal null}.
+		 * @param referenceCollection never {@literal null}.
+		 * @return never {@literal null}.
+		 */
 		Iterable<Document> apply(DocumentReferenceQuery referenceQuery, ReferenceCollection referenceCollection);
 	}
 }

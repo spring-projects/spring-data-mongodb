@@ -26,6 +26,7 @@ import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.annotation.Reference;
 import org.springframework.data.domain.Example;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
@@ -672,8 +673,8 @@ public class QueryMapper {
 			return (DBRef) source;
 		}
 
-		if(property != null &&  property.isDocumentReference()) {
-			return converter.toDocumentReference(source, property);
+		if(property != null && (property.isDocumentReference() || (!property.isDbReference() && property.findAnnotation(Reference.class) != null))) {
+			return converter.toDocumentPointer(source, property).getPointer();
 		}
 
 		return converter.toDBRef(source, property);

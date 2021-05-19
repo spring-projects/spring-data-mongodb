@@ -45,6 +45,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.CollectionFactory;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
+import org.springframework.data.annotation.Reference;
 import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
@@ -526,7 +527,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return;
 		}
 
-		if (property.isDocumentReference()) {
+		if (property.isDocumentReference() || (!property.isDbReference() && property.findAnnotation(Reference.class) != null)) {
 
 			// quite unusual but sounds like worth having?
 
@@ -587,43 +588,46 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return createDBRef(object, referringProperty);
 	}
 
-	public Object toDocumentReference(Object source, @Nullable MongoPersistentProperty referringProperty) {
+	@Override
+	public DocumentPointer toDocumentPointer(Object source, @Nullable MongoPersistentProperty referringProperty) {
 
 		if (source instanceof LazyLoadingProxy) {
-			return ((LazyLoadingProxy) source).getSource();
+			return () -> ((LazyLoadingProxy) source).getSource();
 		}
 
-		if (referringProperty != null) {
+		Assert.notNull(referringProperty, "Cannot create DocumentReference. The referringProperty must not be null!");
 
 			if (referringProperty.isDbReference()) {
-				return toDBRef(source, referringProperty);
+				return () -> toDBRef(source, referringProperty);
 			}
-			if (referringProperty.isDocumentReference()) {
+
+			if (referringProperty.isDocumentReference() || referringProperty.findAnnotation(Reference.class) != null) {
 				return createDocumentPointer(source, referringProperty);
 			}
-		}
 
-		throw new RuntimeException("oops - what's that " + source);
+		throw new IllegalArgumentException("The referringProperty is neither a DBRef nor a document reference");
 	}
 
-	Object createDocumentPointer(Object source, @Nullable MongoPersistentProperty referringProperty) {
+	DocumentPointer<?> createDocumentPointer(Object source, @Nullable MongoPersistentProperty referringProperty) {
 
 		if (referringProperty == null) {
-			return source;
+			return () -> source;
+		}
+
+		if(source instanceof DocumentPointer) {
+			return (DocumentPointer<?>) source;
 		}
 
 		if (ClassUtils.isAssignableValue(referringProperty.getType(), source)
 				&& conversionService.canConvert(referringProperty.getType(), DocumentPointer.class)) {
-			return conversionService.convert(source, DocumentPointer.class).getPointer();
+			return conversionService.convert(source, DocumentPointer.class);
 		}
 
 		if (ClassUtils.isAssignableValue(referringProperty.getAssociationTargetType(), source)) {
-			return documentPointerFactory.computePointer(referringProperty, source, referringProperty.getActualType())
-					.getPointer();
-
+			return documentPointerFactory.computePointer(mappingContext, referringProperty, source, referringProperty.getActualType());
 		}
 
-		return source;
+		return () -> source;
 	}
 
 	/**
@@ -813,7 +817,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		if (prop.isAssociation()) {
 
 			accessor.put(prop, new DocumentPointerFactory(conversionService, mappingContext)
-					.computePointer(prop, obj, valueType.getType()).getPointer());
+					.computePointer(mappingContext, prop, obj, valueType.getType()).getPointer());
 			return;
 		}
 
@@ -864,13 +868,14 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 						return mappingContext.getPersistentEntity(property.getAssociationTargetType()).getIdentifierAccessor(it)
 								.getIdentifier();
 					}
-				}).collect(Collectors.toList()), ClassTypeInformation.from(DocumentPointer.class), new BasicDBList());
+				}).collect(Collectors.toList()), ClassTypeInformation.from(DocumentPointer.class), new ArrayList<>());
 			}
 
 			if (property.hasExplicitWriteTarget()) {
 				return writeCollectionInternal(collection, new FieldTypeInformation<>(property), new ArrayList<>());
 			}
-			return writeCollectionInternal(collection, property.getTypeInformation(), new BasicDBList());
+
+			return writeCollectionInternal(collection, property.getTypeInformation(), new ArrayList<>());
 		}
 
 		List<Object> dbList = new ArrayList<>(collection.size());
@@ -960,7 +965,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				collection.add(getPotentiallyConvertedSimpleWrite(element,
 						componentType != null ? componentType.getType() : Object.class));
 			} else if (element instanceof Collection || elementType.isArray()) {
-				collection.add(writeCollectionInternal(BsonUtils.asCollection(element), componentType, new BasicDBList()));
+				collection.add(writeCollectionInternal(BsonUtils.asCollection(element), componentType, new ArrayList<>()));
 			} else {
 				Document document = new Document();
 				writeInternal(element, document, componentType);
@@ -992,7 +997,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					writeSimpleInternal(val, bson, simpleKey);
 				} else if (val instanceof Collection || val.getClass().isArray()) {
 					BsonUtils.addToMap(bson, simpleKey,
-							writeCollectionInternal(BsonUtils.asCollection(val), propertyType.getMapValueType(), new BasicDBList()));
+							writeCollectionInternal(BsonUtils.asCollection(val), propertyType.getMapValueType(), new ArrayList<>()));
 				} else {
 					Document document = new Document();
 					TypeInformation<?> valueTypeInfo = propertyType.isMap() ? propertyType.getMapValueType()

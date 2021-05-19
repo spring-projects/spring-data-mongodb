@@ -580,9 +580,9 @@ class MappingMongoConverterUnitTests {
 
 		org.bson.Document map = (org.bson.Document) field;
 		Object foo = map.get("Foo");
-		assertThat(foo).isInstanceOf(BasicDBList.class);
+		assertThat(foo).isInstanceOf(List.class);
 
-		BasicDBList value = (BasicDBList) foo;
+		List value = (List) foo;
 		assertThat(value.size()).isEqualTo(1);
 		assertThat(value.get(0)).isEqualTo("Bar");
 	}
@@ -695,9 +695,9 @@ class MappingMongoConverterUnitTests {
 
 		assertThat(result.containsKey("Foo")).isTrue();
 		assertThat(result.get("Foo")).isNotNull();
-		assertThat(result.get("Foo")).isInstanceOf(BasicDBList.class);
+		assertThat(result.get("Foo")).isInstanceOf(List.class);
 
-		BasicDBList list = (BasicDBList) result.get("Foo");
+		List list = (List) result.get("Foo");
 
 		assertThat(list.size()).isEqualTo(1);
 		assertThat(list.get(0)).isEqualTo(Locale.US.toString());
@@ -744,7 +744,7 @@ class MappingMongoConverterUnitTests {
 
 		org.bson.Document map = (org.bson.Document) mapObject;
 		Object valueObject = map.get("foo");
-		assertThat(valueObject).isInstanceOf(BasicDBList.class);
+		assertThat(valueObject).isInstanceOf(List.class);
 
 		List<Object> list = (List<Object>) valueObject;
 		assertThat(list.size()).isEqualTo(1);
