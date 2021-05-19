@@ -38,6 +38,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Reference;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.core.convert.LazyLoadingTestUtils;
 import org.springframework.data.mongodb.core.mapping.DocumentPointer;
@@ -378,6 +379,33 @@ public class MongoTemplateDocumentReferenceTests {
 		assertThat(result.getObjectValueRefWithEmbeddedCollectionName()).containsExactly(
 				new ObjectRefOfDocumentWithEmbeddedCollectionName("ref-2", "me-the-2-referenced-object"),
 				new ObjectRefOfDocumentWithEmbeddedCollectionName("ref-1", "me-the-1-referenced-object"));
+	}
+
+	@Test // GH-3602
+	void useOrderFromAnnotatedSort() {
+
+		String rootCollectionName = template.getCollectionName(CollectionRefRoot.class);
+		String refCollectionName = template.getCollectionName(SimpleObjectRef.class);
+		Document refSource1 = new Document("_id", "ref-1").append("value", "me-the-1-referenced-object");
+		Document refSource2 = new Document("_id", "ref-2").append("value", "me-the-2-referenced-object");
+		Document refSource3 = new Document("_id", "ref-3").append("value", "me-the-3-referenced-object");
+		Document source = new Document("_id", "id-1").append("value", "v1").append("simpleSortedValueRef",
+				Arrays.asList("ref-1", "ref-3", "ref-2"));
+
+		template.execute(db -> {
+
+			db.getCollection(refCollectionName).insertOne(refSource1);
+			db.getCollection(refCollectionName).insertOne(refSource2);
+			db.getCollection(refCollectionName).insertOne(refSource3);
+			db.getCollection(rootCollectionName).insertOne(source);
+			return null;
+		});
+
+		CollectionRefRoot result = template.findOne(query(where("id").is("id-1")), CollectionRefRoot.class);
+		assertThat(result.getSimpleSortedValueRef()).containsExactly(
+				new SimpleObjectRef("ref-3", "me-the-3-referenced-object"),
+				new SimpleObjectRef("ref-2", "me-the-2-referenced-object"),
+				new SimpleObjectRef("ref-1", "me-the-1-referenced-object"));
 	}
 
 	@Test // GH-3602
@@ -857,7 +885,8 @@ public class MongoTemplateDocumentReferenceTests {
 
 		template.save(book);
 
-		template.update(Book.class).matching(where("id").is(book.id)).apply(new Update().set("publisher", publisher)).first();
+		template.update(Book.class).matching(where("id").is(book.id)).apply(new Update().set("publisher", publisher))
+				.first();
 
 		Document target = template.execute(db -> {
 			return db.getCollection(template.getCollectionName(Book.class)).find(Filters.eq("_id", book.id)).first();
@@ -888,6 +917,56 @@ public class MongoTemplateDocumentReferenceTests {
 
 		Book result = template.findOne(query(where("publisher").is(publisher)), Book.class);
 		assertThat(result.publisher).isNotNull();
+	}
+
+	@Test // GH-3602
+	void allowsDirectUsageOfAtReference() {
+
+		Publisher publisher = new Publisher();
+		publisher.id = "p-1";
+		publisher.acronym = "TOR";
+		publisher.name = "Tom Doherty Associates";
+
+		template.save(publisher);
+
+		UsingAtReference root = new UsingAtReference();
+		root.id = "book-1";
+		root.publisher = publisher;
+
+		template.save(root);
+
+		Document target = template.execute(db -> {
+			return db.getCollection(template.getCollectionName(UsingAtReference.class)).find(Filters.eq("_id", root.id)).first();
+		});
+
+		assertThat(target).containsEntry("publisher", "p-1");
+
+		UsingAtReference result = template.findOne(query(where("id").is(root.id)), UsingAtReference.class);
+		assertThat(result.publisher).isNotNull();
+	}
+
+	@Test // GH-3602
+	void updateWhenUsingAtReferenceDirectly() {
+
+		Publisher publisher = new Publisher();
+		publisher.id = "p-1";
+		publisher.acronym = "TOR";
+		publisher.name = "Tom Doherty Associates";
+
+		template.save(publisher);
+
+		UsingAtReference root = new UsingAtReference();
+		root.id = "book-1";
+
+		template.save(root);
+		template.update(UsingAtReference.class).matching(where("id").is(root.id)).apply(new Update().set("publisher", publisher)).first();
+
+		Document target = template.execute(db -> {
+			return db.getCollection(template.getCollectionName(UsingAtReference.class)).find(Filters.eq("_id", root.id)).first();
+		});
+
+		assertThat(target).containsEntry("publisher", "p-1");
+
 	}
 
 	@Data
@@ -929,6 +1008,9 @@ public class MongoTemplateDocumentReferenceTests {
 
 		@DocumentReference(lookup = "{ '_id' : '?#{#target}' }") //
 		List<SimpleObjectRef> simpleValueRef;
+
+		@DocumentReference(lookup = "{ '_id' : '?#{#target}' }", sort = "{ '_id' : -1 } ") //
+		List<SimpleObjectRef> simpleSortedValueRef;
 
 		@DocumentReference(lookup = "{ '_id' : '?#{#target}' }") //
 		Map<String, SimpleObjectRef> mapValueRef;
@@ -1051,7 +1133,8 @@ public class MongoTemplateDocumentReferenceTests {
 	static class WithRefA/* to B */ implements ReferenceAble {
 
 		@Id String id;
-		@DocumentReference WithRefB toB;
+		@DocumentReference //
+		WithRefB toB;
 
 		@Override
 		public Object toReference() {
@@ -1065,9 +1148,11 @@ public class MongoTemplateDocumentReferenceTests {
 	static class WithRefB/* to A */ implements ReferenceAble {
 
 		@Id String id;
-		@DocumentReference(lazy = true) WithRefA lazyToA;
+		@DocumentReference(lazy = true) //
+		WithRefA lazyToA;
 
-		@DocumentReference WithRefA eagerToA;
+		@DocumentReference //
+		WithRefA eagerToA;
 
 		@Override
 		public Object toReference() {
@@ -1091,7 +1176,8 @@ public class MongoTemplateDocumentReferenceTests {
 
 		String id;
 
-		@DocumentReference(lookup = "{ 'acronym' : ?#{acc}, 'name' : ?#{n} }") Publisher publisher;
+		@DocumentReference(lookup = "{ 'acronym' : ?#{acc}, 'name' : ?#{n} }") //
+		Publisher publisher;
 
 	}
 
@@ -1100,6 +1186,15 @@ public class MongoTemplateDocumentReferenceTests {
 		String id;
 		String acronym;
 		String name;
+	}
+
+	@Data
+	static class UsingAtReference {
+
+		String id;
+
+		@Reference //
+		Publisher publisher;
 	}
 
 }

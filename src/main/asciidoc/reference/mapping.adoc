@@ -902,6 +902,10 @@ It is possible to alter resolution defaults (listed below) via the attributes of
 | The single document lookup query evaluating placeholders via SpEL expressions using `#target` as the marker for a given source value. `Collection` like or `Map` properties combine individual lookups via an `$or` operator.
 | An `_id` field based query (`{ '_id' : ?#{#target} }`) using the loaded source value.
 
+| `sort`
+| Used for sorting result documents on server side.
+| None by default. Result order of `Collection` like properties is restored based on the used lookup query.
+
 | `lazy`
 | If set to `true` value resolution is delayed upon first access of the property.
 | Resolves properties eagerly by default.
@@ -1182,7 +1186,7 @@ We know it is tempting to use all kinds of MongoDB query operators in the lookup
 * Mind that resolution takes time and consider a lazy strategy.
 * A collection of document references is bulk loaded using an `$or` operator. +
 The original element order is restored in memory which cannot be done when using MongoDB query operators.
-In this case Results will be ordered as they are received from the store.
+In this case Results will be ordered as they are received from the store or via the provided `@DocumentReference(sort = ...)` attribute.
 
 And a few more general remarks:
 

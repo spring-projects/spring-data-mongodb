@@ -27,6 +27,9 @@ import org.springframework.util.StringUtils;
 import com.mongodb.client.MongoCollection;
 
 /**
+ * {@link ReferenceLoader} implementation using a {@link MongoDatabaseFactory} to obtain raw {@link Document documents}
+ * for linked entities via a {@link ReferenceLoader.DocumentReferenceQuery}.
+ * 
  * @author Christoph Strobl
  */
 public class MongoDatabaseFactoryReferenceLoader implements ReferenceLoader {
@@ -35,6 +38,9 @@ public class MongoDatabaseFactoryReferenceLoader implements ReferenceLoader {
 
 	private final MongoDatabaseFactory mongoDbFactory;
 
+	/**
+	 * @param mongoDbFactory must not be {@literal null}.
+	 */
 	public MongoDatabaseFactoryReferenceLoader(MongoDatabaseFactory mongoDbFactory) {
 
 		Assert.notNull(mongoDbFactory, "MongoDbFactory translator must not be null!");
@@ -43,20 +49,27 @@ public class MongoDatabaseFactoryReferenceLoader implements ReferenceLoader {
 	}
 
 	@Override
-	public Iterable<Document> fetchMany(DocumentReferenceQuery filter, ReferenceCollection context) {
+	public Iterable<Document> fetchMany(DocumentReferenceQuery referenceQuery, ReferenceCollection context) {
 
 		MongoCollection<Document> collection = getCollection(context);
 
 		if (LOGGER.isTraceEnabled()) {
-			LOGGER.trace("Bulk fetching {} from {}.{}.", filter,
+			LOGGER.trace("Bulk fetching {} from {}.{}.", referenceQuery,
 					StringUtils.hasText(context.getDatabase()) ? context.getDatabase()
 							: collection.getNamespace().getDatabaseName(),
 					context.getCollection());
 		}
 
-		return filter.apply(collection);
+		return referenceQuery.apply(collection);
 	}
 
+	/**
+	 * Obtain the {@link MongoCollection} for a given {@link ReferenceCollection} from the underlying
+	 * {@link MongoDatabaseFactory}.
+	 *
+	 * @param context must not be {@literal null}.
+	 * @return the {@link MongoCollection} targeted by the {@link ReferenceCollection}.
+	 */
 	protected MongoCollection<Document> getCollection(ReferenceCollection context) {
 
 		return MongoDatabaseUtils.getDatabase(context.getDatabase(), mongoDbFactory).getCollection(context.getCollection(),

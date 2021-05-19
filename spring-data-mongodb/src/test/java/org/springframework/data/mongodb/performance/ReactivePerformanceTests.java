@@ -129,10 +129,6 @@ public class ReactivePerformanceTests {
 				return null;
 			}
 
-			@Override
-			public ReferenceLoader getReferenceLoader() {
-				return null;
-			}
 		}, context);
 		operations = new ReactiveMongoTemplate(mongoDbFactory, converter);
 

@@ -77,9 +77,4 @@ public enum NoOpDbRefResolver implements DbRefResolver {
 			ReferenceLookupDelegate referenceLookupDelegate, MongoEntityReader entityReader) {
 		return null;
 	}
-
-	@Override
-	public ReferenceLoader getReferenceLoader() {
-		return handle();
-	}
 }

@@ -26,33 +26,70 @@ import org.springframework.lang.Nullable;
 import com.mongodb.client.MongoCollection;
 
 /**
+ * The {@link ReferenceLoader} obtains raw {@link Document documents} for linked entities via a
+ * {@link ReferenceLoader.DocumentReferenceQuery}.
+ * 
  * @author Christoph Strobl
+ * @since 3.3
  */
 public interface ReferenceLoader {
 
+	/**
+	 * Obtain a single {@link Document} matching the given {@literal referenceQuery} in the {@literal context}.
+	 *
+	 * @param referenceQuery must not be {@literal null}.
+	 * @param context must not be {@literal null}.
+	 * @return the matching {@link Document} or {@literal null} if none found.
+	 */
 	@Nullable
-	default Document fetchOne(DocumentReferenceQuery filter, ReferenceCollection context) {
+	default Document fetchOne(DocumentReferenceQuery referenceQuery, ReferenceCollection context) {
 
-		Iterator<Document> it = fetchMany(filter, context).iterator();
+		Iterator<Document> it = fetchMany(referenceQuery, context).iterator();
 		return it.hasNext() ? it.next() : null;
 	}
 
-	Iterable<Document> fetchMany(DocumentReferenceQuery filter, ReferenceCollection context);
+	/**
+	 * Obtain multiple {@link Document} matching the given {@literal referenceQuery} in the {@literal context}.
+	 *
+	 * @param referenceQuery must not be {@literal null}.
+	 * @param context must not be {@literal null}.
+	 * @return the matching {@link Document} or {@literal null} if none found.
+	 */
+	Iterable<Document> fetchMany(DocumentReferenceQuery referenceQuery, ReferenceCollection context);
 
+	/**
+	 * The {@link DocumentReferenceQuery} defines the criteria by which {@link Document documents} should be matched
+	 * applying potentially given order criteria.
+	 */
 	interface DocumentReferenceQuery {
 
-		Bson getFilter();
+		/**
+		 * Get the query to obtain matching {@link Document documents}.
+		 *
+		 * @return never {@literal null}.
+		 */
+		Bson getQuery();
 
+		/**
+		 * Get the sort criteria for ordering results.
+		 *
+		 * @return an empty {@link Document} by default. Never {@literal null}.
+		 */
 		default Bson getSort() {
 			return new Document();
 		}
 
 		// TODO: Move apply method into something else that holds the collection and knows about single item/multi-item
-		// processing
 		default Iterable<Document> apply(MongoCollection<Document> collection) {
-			return restoreOrder(collection.find(getFilter()).sort(getSort()));
+			return restoreOrder(collection.find(getQuery()).sort(getSort()));
 		}
 
+		/**
+		 * Restore the order of fetched documents.
+		 *
+		 * @param documents must not be {@literal null}.
+		 * @return never {@literal null}.
+		 */
 		default Iterable<Document> restoreOrder(Iterable<Document> documents) {
 			return documents;
 		}
@@ -62,14 +99,14 @@ public interface ReferenceLoader {
 			return new DocumentReferenceQuery() {
 
 				@Override
-				public Bson getFilter() {
+				public Bson getQuery() {
 					return bson;
 				}
 
 				@Override
 				public Iterable<Document> apply(MongoCollection<Document> collection) {
 
-					Document result = collection.find(getFilter()).sort(getSort()).limit(1).first();
+					Document result = collection.find(getQuery()).sort(getSort()).limit(1).first();
 					return result != null ? Collections.singleton(result) : Collections.emptyList();
 				}
 			};
@@ -80,16 +117,15 @@ public interface ReferenceLoader {
 			return new DocumentReferenceQuery() {
 
 				@Override
-				public Bson getFilter() {
+				public Bson getQuery() {
 					return bson;
 				}
 
 				@Override
 				public Iterable<Document> apply(MongoCollection<Document> collection) {
-					return collection.find(getFilter()).sort(getSort());
+					return collection.find(getQuery()).sort(getSort());
 				}
 			};
 		}
 	}
-
 }
