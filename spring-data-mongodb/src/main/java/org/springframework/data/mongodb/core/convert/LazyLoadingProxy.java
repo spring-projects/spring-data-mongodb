@@ -15,18 +15,18 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver.LazyLoadingInterceptor;
 import org.springframework.lang.Nullable;
 
 import com.mongodb.DBRef;
 
 /**
- * Allows direct interaction with the underlying {@link LazyLoadingInterceptor}.
+ * Allows direct interaction with the underlying {@code LazyLoadingInterceptor}.
  *
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Mark Paluch
  * @since 1.5
+ * @see LazyLoadingProxyFactory
  */
 public interface LazyLoadingProxy {
 

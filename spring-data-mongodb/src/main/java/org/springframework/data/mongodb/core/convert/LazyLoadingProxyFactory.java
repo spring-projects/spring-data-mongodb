@@ -15,46 +15,59 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static org.springframework.data.mongodb.core.convert.ReferenceLookupDelegate.*;
 import static org.springframework.util.ReflectionUtils.*;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.cglib.proxy.Callback;
 import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.Factory;
 import org.springframework.cglib.proxy.MethodProxy;
-import org.springframework.data.mongodb.core.convert.ReferenceResolver.MongoEntityReader;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.support.PersistenceExceptionTranslator;
+import org.springframework.data.mongodb.ClientSessionException;
+import org.springframework.data.mongodb.LazyLoadingException;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.lang.Nullable;
 import org.springframework.objenesis.ObjenesisStd;
 import org.springframework.util.ReflectionUtils;
 
+import com.mongodb.DBRef;
+
 /**
+ * {@link ProxyFactory} to create a proxy for {@link MongoPersistentProperty#getType()} to resolve a reference lazily.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 class LazyLoadingProxyFactory {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(LazyLoadingProxyFactory.class);
+
 	private final ObjenesisStd objenesis;
-	private final ReferenceLookupDelegate lookupDelegate;
 
-	public LazyLoadingProxyFactory(ReferenceLookupDelegate lookupDelegate) {
+	private final PersistenceExceptionTranslator exceptionTranslator;
 
-		this.lookupDelegate = lookupDelegate;
+	public LazyLoadingProxyFactory(PersistenceExceptionTranslator exceptionTranslator) {
+		this.exceptionTranslator = exceptionTranslator;
 		this.objenesis = new ObjenesisStd(true);
 	}
 
-	public Object createLazyLoadingProxy(MongoPersistentProperty property, Object source, LookupFunction lookupFunction,
-			MongoEntityReader entityReader) {
+	public Object createLazyLoadingProxy(MongoPersistentProperty property, DbRefResolverCallback callback,
+			Object source) {
 
 		Class<?> propertyType = property.getType();
-		LazyLoadingInterceptor interceptor = new LazyLoadingInterceptor(property, source, lookupDelegate, lookupFunction,
-				entityReader);
+		LazyLoadingInterceptor interceptor = new LazyLoadingInterceptor(property, callback, source, exceptionTranslator);
 
 		if (!propertyType.isInterface()) {
 
@@ -96,17 +109,9 @@ class LazyLoadingProxyFactory {
 	public static class LazyLoadingInterceptor
 			implements MethodInterceptor, org.springframework.cglib.proxy.MethodInterceptor, Serializable {
 
-		private final ReferenceLookupDelegate referenceLookupDelegate;
-		private final MongoPersistentProperty property;
-		private volatile boolean resolved;
-		private @Nullable Object result;
-		private final Object source;
-		private final LookupFunction lookupFunction;
-		private final MongoEntityReader entityReader;
+		private static final Method INITIALIZE_METHOD, TO_DBREF_METHOD, FINALIZE_METHOD, GET_SOURCE_METHOD;
 
-		private final Method INITIALIZE_METHOD, TO_DBREF_METHOD, FINALIZE_METHOD, GET_SOURCE_METHOD;
-
-		{
+		static {
 			try {
 				INITIALIZE_METHOD = LazyLoadingProxy.class.getMethod("getTarget");
 				TO_DBREF_METHOD = LazyLoadingProxy.class.getMethod("toDBRef");
@@ -117,14 +122,20 @@ class LazyLoadingProxyFactory {
 			}
 		}
 
-		public LazyLoadingInterceptor(MongoPersistentProperty property, Object source, ReferenceLookupDelegate reader,
-				LookupFunction lookupFunction, MongoEntityReader entityReader) {
+		private final MongoPersistentProperty property;
+		private final DbRefResolverCallback callback;
+		private final Object source;
+		private final PersistenceExceptionTranslator exceptionTranslator;
+		private volatile boolean resolved;
+		private @Nullable Object result;
+
+		public LazyLoadingInterceptor(MongoPersistentProperty property, DbRefResolverCallback callback, Object source,
+				PersistenceExceptionTranslator exceptionTranslator) {
 
 			this.property = property;
+			this.callback = callback;
 			this.source = source;
-			this.referenceLookupDelegate = reader;
-			this.lookupFunction = lookupFunction;
-			this.entityReader = entityReader;
+			this.exceptionTranslator = exceptionTranslator;
 		}
 
 		@Nullable
@@ -142,7 +153,7 @@ class LazyLoadingProxyFactory {
 			}
 
 			if (TO_DBREF_METHOD.equals(method)) {
-				return null;
+				return source instanceof DBRef ? source : null;
 			}
 
 			if (GET_SOURCE_METHOD.equals(method)) {
@@ -152,7 +163,7 @@ class LazyLoadingProxyFactory {
 			if (isObjectMethod(method) && Object.class.equals(method.getDeclaringClass())) {
 
 				if (ReflectionUtils.isToStringMethod(method)) {
-					return proxyToString(proxy);
+					return proxyToString(source);
 				}
 
 				if (ReflectionUtils.isEqualsMethod(method)) {
@@ -160,7 +171,7 @@ class LazyLoadingProxyFactory {
 				}
 
 				if (ReflectionUtils.isHashCodeMethod(method)) {
-					return proxyHashCode(proxy);
+					return proxyHashCode();
 				}
 
 				// DATAMONGO-1076 - finalize methods should not trigger proxy initialization
@@ -195,7 +206,13 @@ class LazyLoadingProxyFactory {
 
 			StringBuilder description = new StringBuilder();
 			if (source != null) {
-				description.append(source);
+				if (source instanceof DBRef) {
+					description.append(((DBRef) source).getCollectionName());
+					description.append(":");
+					description.append(((DBRef) source).getId());
+				} else {
+					description.append(source);
+				}
 			} else {
 				description.append(System.identityHashCode(source));
 			}
@@ -217,8 +234,36 @@ class LazyLoadingProxyFactory {
 			return proxyToString(proxy).equals(that.toString());
 		}
 
-		private int proxyHashCode(@Nullable Object proxy) {
-			return proxyToString(proxy).hashCode();
+		private int proxyHashCode() {
+			return proxyToString(source).hashCode();
+		}
+
+		/**
+		 * Callback method for serialization.
+		 *
+		 * @param out
+		 * @throws IOException
+		 */
+		private void writeObject(ObjectOutputStream out) throws IOException {
+
+			ensureResolved();
+			out.writeObject(this.result);
+		}
+
+		/**
+		 * Callback method for deserialization.
+		 *
+		 * @param in
+		 * @throws IOException
+		 */
+		private void readObject(ObjectInputStream in) throws IOException {
+
+			try {
+				this.resolved = true;
+				this.result = in.readObject();
+			} catch (ClassNotFoundException e) {
+				throw new LazyLoadingException("Could not deserialize result", e);
+			}
 		}
 
 		@Nullable
@@ -226,32 +271,31 @@ class LazyLoadingProxyFactory {
 
 			if (resolved) {
 
-				// if (LOGGER.isTraceEnabled()) {
-				// LOGGER.trace("Accessing already resolved lazy loading property {}.{}",
-				// property.getOwner() != null ? property.getOwner().getName() : "unknown", property.getName());
-				// }
+				if (LOGGER.isTraceEnabled()) {
+					LOGGER.trace("Accessing already resolved lazy loading property {}.{}",
+							property.getOwner() != null ? property.getOwner().getName() : "unknown", property.getName());
+				}
 				return result;
 			}
 
 			try {
-				// if (LOGGER.isTraceEnabled()) {
-				// LOGGER.trace("Resolving lazy loading property {}.{}",
-				// property.getOwner() != null ? property.getOwner().getName() : "unknown", property.getName());
-				// }
+				if (LOGGER.isTraceEnabled()) {
+					LOGGER.trace("Resolving lazy loading property {}.{}",
+							property.getOwner() != null ? property.getOwner().getName() : "unknown", property.getName());
+				}
 
-				return referenceLookupDelegate.readReference(property, source, lookupFunction, entityReader);
+				return callback.resolve(property);
 
 			} catch (RuntimeException ex) {
-				throw ex;
 
-				// DataAccessException translatedException = this.exceptionTranslator.translateExceptionIfPossible(ex);
-				//
-				// if (translatedException instanceof ClientSessionException) {
-				// throw new LazyLoadingException("Unable to lazily resolve DBRef! Invalid session state.", ex);
-				// }
+				DataAccessException translatedException = exceptionTranslator.translateExceptionIfPossible(ex);
 
-				// throw new LazyLoadingException("Unable to lazily resolve DBRef!",
-				// translatedException != null ? translatedException : ex);
+				if (translatedException instanceof ClientSessionException) {
+					throw new LazyLoadingException("Unable to lazily resolve DBRef! Invalid session state.", ex);
+				}
+
+				throw new LazyLoadingException("Unable to lazily resolve DBRef!",
+						translatedException != null ? translatedException : ex);
 			}
 		}
 	}

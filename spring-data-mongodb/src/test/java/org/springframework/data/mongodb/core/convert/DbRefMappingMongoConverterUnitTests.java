@@ -70,16 +70,16 @@ import com.mongodb.client.MongoDatabase;
  * @author Mark Paluch
  */
 @ExtendWith(MockitoExtension.class)
-public class DbRefMappingMongoConverterUnitTests {
+class DbRefMappingMongoConverterUnitTests {
 
-	MappingMongoConverter converter;
-	MongoMappingContext mappingContext;
+	private MappingMongoConverter converter;
+	private MongoMappingContext mappingContext;
 
 	@Mock MongoDatabaseFactory dbFactory;
-	DefaultDbRefResolver dbRefResolver;
+	private DefaultDbRefResolver dbRefResolver;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 
 		when(dbFactory.getExceptionTranslator()).thenReturn(new MongoExceptionTranslator());
 
@@ -89,7 +89,7 @@ public class DbRefMappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-347
-	public void createsSimpleDBRefCorrectly() {
+	void createsSimpleDBRefCorrectly() {
 
 		Person person = new Person();
 		person.id = "foo";
@@ -100,7 +100,7 @@ public class DbRefMappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-657
-	public void convertDocumentWithMapDBRef() {
+	void convertDocumentWithMapDBRef() {
 
 		Document mapValDocument = new Document();
 		mapValDocument.put("_id", BigInteger.ONE);
@@ -145,7 +145,7 @@ public class DbRefMappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-347
-	public void createsDBRefWithClientSpecCorrectly() {
+	void createsDBRefWithClientSpecCorrectly() {
 
 		PropertyPath path = PropertyPath.from("person", PersonClient.class);
 		MongoPersistentProperty property = mappingContext.getPersistentPropertyPath(path).getLeafProperty();
@@ -159,7 +159,7 @@ public class DbRefMappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-348
-	public void lazyLoadingProxyForLazyDbRefOnInterface() {
+	void lazyLoadingProxyForLazyDbRefOnInterface() {
 
 		String id = "42";
 		String value = "bubu";
@@ -180,7 +180,7 @@ public class DbRefMappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-348
-	public void lazyLoadingProxyForLazyDbRefOnConcreteCollection() {
+	void lazyLoadingProxyForLazyDbRefOnConcreteCollection() {
 
 		String id = "42";
 		String value = "bubu";
@@ -201,7 +201,7 @@ public class DbRefMappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-348
-	public void lazyLoadingProxyForLazyDbRefOnConcreteType() {
+	void lazyLoadingProxyForLazyDbRefOnConcreteType() {
 
 		String id = "42";
 		String value = "bubu";
@@ -222,7 +222,7 @@ public class DbRefMappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-348
-	public void lazyLoadingProxyForLazyDbRefOnConcreteTypeWithPersistenceConstructor() {
+	void lazyLoadingProxyForLazyDbRefOnConcreteTypeWithPersistenceConstructor() {
 
 		String id = "42";
 		String value = "bubu";
@@ -243,7 +243,7 @@ public class DbRefMappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-348
-	public void lazyLoadingProxyForLazyDbRefOnConcreteTypeWithPersistenceConstructorButWithoutDefaultConstructor() {
+	void lazyLoadingProxyForLazyDbRefOnConcreteTypeWithPersistenceConstructorButWithoutDefaultConstructor() {
 
 		String id = "42";
 		String value = "bubu";
@@ -266,7 +266,7 @@ public class DbRefMappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-348
-	public void lazyLoadingProxyForSerializableLazyDbRefOnConcreteType() {
+	void lazyLoadingProxyForSerializableLazyDbRefOnConcreteType() {
 
 		String id = "42";
 		String value = "bubu";
@@ -288,7 +288,7 @@ public class DbRefMappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-884
-	public void lazyLoadingProxyForToStringObjectMethodOverridingDbref() {
+	void lazyLoadingProxyForToStringObjectMethodOverridingDbref() {
 
 		String id = "42";
 		String value = "bubu";
@@ -309,7 +309,7 @@ public class DbRefMappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-884
-	public void callingToStringObjectMethodOnLazyLoadingDbrefShouldNotInitializeProxy() {
+	void callingToStringObjectMethodOnLazyLoadingDbrefShouldNotInitializeProxy() {
 
 		String id = "42";
 		String value = "bubu";
@@ -337,7 +337,7 @@ public class DbRefMappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-884
-	public void equalsObjectMethodOnLazyLoadingDbrefShouldNotInitializeProxy() {
+	void equalsObjectMethodOnLazyLoadingDbrefShouldNotInitializeProxy() {
 
 		String id = "42";
 		String value = "bubu";
@@ -362,7 +362,7 @@ public class DbRefMappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-884
-	public void hashcodeObjectMethodOnLazyLoadingDbrefShouldNotInitializeProxy() {
+	void hashcodeObjectMethodOnLazyLoadingDbrefShouldNotInitializeProxy() {
 
 		String id = "42";
 		String value = "bubu";
@@ -385,7 +385,7 @@ public class DbRefMappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-884
-	public void lazyLoadingProxyForEqualsAndHashcodeObjectMethodOverridingDbref() {
+	void lazyLoadingProxyForEqualsAndHashcodeObjectMethodOverridingDbref() {
 
 		String id = "42";
 		String value = "bubu";
@@ -414,7 +414,7 @@ public class DbRefMappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-987
-	public void shouldNotGenerateLazyLoadingProxyForNullValues() {
+	void shouldNotGenerateLazyLoadingProxyForNullValues() {
 
 		Document document = new Document();
 		ClassWithLazyDbRefs lazyDbRefs = new ClassWithLazyDbRefs();
@@ -432,7 +432,7 @@ public class DbRefMappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1005
-	public void shouldBeAbleToStoreDirectReferencesToSelf() {
+	void shouldBeAbleToStoreDirectReferencesToSelf() {
 
 		Document document = new Document();
 
@@ -448,7 +448,7 @@ public class DbRefMappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1005
-	public void shouldBeAbleToStoreNestedReferencesToSelf() {
+	void shouldBeAbleToStoreNestedReferencesToSelf() {
 
 		Document document = new Document();
 
@@ -467,7 +467,7 @@ public class DbRefMappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1012
-	public void shouldEagerlyResolveIdPropertyWithFieldAccess() {
+	void shouldEagerlyResolveIdPropertyWithFieldAccess() {
 
 		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(ClassWithLazyDbRefs.class);
 		MongoPersistentProperty property = entity.getRequiredPersistentProperty("dbRefToConcreteType");
@@ -489,7 +489,7 @@ public class DbRefMappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1012
-	public void shouldNotEagerlyResolveIdPropertyWithPropertyAccess() {
+	void shouldNotEagerlyResolveIdPropertyWithPropertyAccess() {
 
 		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(ClassWithLazyDbRefs.class);
 		MongoPersistentProperty property = entity.getRequiredPersistentProperty("dbRefToConcreteTypeWithPropertyAccess");
@@ -507,7 +507,7 @@ public class DbRefMappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1076
-	public void shouldNotTriggerResolvingOfLazyLoadedProxyWhenFinalizeMethodIsInvoked() throws Exception {
+	void shouldNotTriggerResolvingOfLazyLoadedProxyWhenFinalizeMethodIsInvoked() throws Exception {
 
 		MongoPersistentEntity<?> entity = mappingContext
 				.getRequiredPersistentEntity(WithObjectMethodOverrideLazyDbRefs.class);
@@ -525,7 +525,7 @@ public class DbRefMappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1194
-	public void shouldBulkFetchListOfReferences() {
+	void shouldBulkFetchListOfReferences() {
 
 		String id1 = "1";
 		String id2 = "2";
@@ -553,7 +553,7 @@ public class DbRefMappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1666
-	public void shouldBulkFetchSetOfReferencesForConstructorCreation() {
+	void shouldBulkFetchSetOfReferencesForConstructorCreation() {
 
 		String id1 = "1";
 		String id2 = "2";
@@ -575,7 +575,7 @@ public class DbRefMappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1194
-	public void shouldFallbackToOneByOneFetchingWhenElementsInListOfReferencesPointToDifferentCollections() {
+	void shouldFallbackToOneByOneFetchingWhenElementsInListOfReferencesPointToDifferentCollections() {
 
 		String id1 = "1";
 		String id2 = "2";
@@ -603,7 +603,7 @@ public class DbRefMappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1194
-	public void shouldBulkFetchMapOfReferences() {
+	void shouldBulkFetchMapOfReferences() {
 
 		MapDBRefVal val1 = new MapDBRefVal();
 		val1.id = BigInteger.ONE;
@@ -635,7 +635,7 @@ public class DbRefMappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-1194
-	public void shouldBulkFetchLazyMapOfReferences() {
+	void shouldBulkFetchLazyMapOfReferences() {
 
 		MapDBRefVal val1 = new MapDBRefVal();
 		val1.id = BigInteger.ONE;
@@ -722,15 +722,15 @@ public class DbRefMappingMongoConverterUnitTests {
 		@Id String id;
 		String value;
 
-		public LazyDbRefTarget() {
+		LazyDbRefTarget() {
 			this(null);
 		}
 
-		public LazyDbRefTarget(String id) {
+		LazyDbRefTarget(String id) {
 			this(id, null);
 		}
 
-		public LazyDbRefTarget(String id, String value) {
+		LazyDbRefTarget(String id, String value) {
 			this.id = id;
 			this.value = value;
 		}
@@ -750,7 +750,7 @@ public class DbRefMappingMongoConverterUnitTests {
 
 		@Id @AccessType(Type.PROPERTY) String id;
 
-		public LazyDbRefTargetPropertyAccess(String id) {
+		LazyDbRefTargetPropertyAccess(String id) {
 			this.id = id;
 		}
 
@@ -767,7 +767,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		public LazyDbRefTargetWithPeristenceConstructor() {}
 
 		@PersistenceConstructor
-		public LazyDbRefTargetWithPeristenceConstructor(String id, String value) {
+		LazyDbRefTargetWithPeristenceConstructor(String id, String value) {
 			super(id, value);
 			this.persistenceConstructorCalled = true;
 		}
@@ -783,7 +783,7 @@ public class DbRefMappingMongoConverterUnitTests {
 		boolean persistenceConstructorCalled;
 
 		@PersistenceConstructor
-		public LazyDbRefTargetWithPeristenceConstructorWithoutDefaultConstructor(String id, String value) {
+		LazyDbRefTargetWithPeristenceConstructorWithoutDefaultConstructor(String id, String value) {
 			super(id, value);
 			this.persistenceConstructorCalled = true;
 		}
@@ -797,7 +797,7 @@ public class DbRefMappingMongoConverterUnitTests {
 
 		public SerializableLazyDbRefTarget() {}
 
-		public SerializableLazyDbRefTarget(String id, String value) {
+		SerializableLazyDbRefTarget(String id, String value) {
 			super(id, value);
 		}
 
@@ -810,7 +810,7 @@ public class DbRefMappingMongoConverterUnitTests {
 
 		public ToStringObjectMethodOverrideLazyDbRefTarget() {}
 
-		public ToStringObjectMethodOverrideLazyDbRefTarget(String id, String value) {
+		ToStringObjectMethodOverrideLazyDbRefTarget(String id, String value) {
 			super(id, value);
 		}
 
@@ -830,7 +830,7 @@ public class DbRefMappingMongoConverterUnitTests {
 
 		public EqualsAndHashCodeObjectMethodOverrideLazyDbRefTarget() {}
 
-		public EqualsAndHashCodeObjectMethodOverrideLazyDbRefTarget(String id, String value) {
+		EqualsAndHashCodeObjectMethodOverrideLazyDbRefTarget(String id, String value) {
 			super(id, value);
 		}
 

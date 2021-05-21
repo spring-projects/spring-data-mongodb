@@ -26,7 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.LazyLoadingException;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver.LazyLoadingInterceptor;
+import org.springframework.data.mongodb.core.convert.LazyLoadingProxyFactory.LazyLoadingInterceptor;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 
 import com.mongodb.DBRef;
@@ -37,20 +37,20 @@ import com.mongodb.DBRef;
  * @author Christoph Strobl
  */
 @ExtendWith(MockitoExtension.class)
-public class LazyLoadingInterceptorUnitTests {
+class LazyLoadingInterceptorUnitTests {
 
 	@Mock MongoPersistentProperty propertyMock;
 	@Mock DBRef dbrefMock;
 	@Mock DbRefResolverCallback callbackMock;
 
 	@Test // DATAMONGO-1437
-	public void shouldPreserveCauseForNonTranslatableExceptions() throws Throwable {
+	void shouldPreserveCauseForNonTranslatableExceptions() throws Throwable {
 
 		NullPointerException npe = new NullPointerException("Some Exception we did not think about.");
 		when(callbackMock.resolve(propertyMock)).thenThrow(npe);
 
 		assertThatExceptionOfType(LazyLoadingException.class).isThrownBy(() -> {
-			new LazyLoadingInterceptor(propertyMock, dbrefMock, new NullExceptionTranslator(), callbackMock).intercept(null,
+			new LazyLoadingInterceptor(propertyMock, callbackMock, dbrefMock, new NullExceptionTranslator()).intercept(null,
 					LazyLoadingProxy.class.getMethod("getTarget"), null, null);
 		}).withCause(npe);
 	}

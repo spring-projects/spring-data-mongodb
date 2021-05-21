@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.TypeInformation;
@@ -27,12 +28,15 @@ import com.mongodb.DBRef;
  * The {@link ReferenceResolver} allows to load and convert linked entities.
  *
  * @author Christoph Strobl
+ * @since 3.3
  */
+@FunctionalInterface
 public interface ReferenceResolver {
 
 	/**
-	 * Resolve the association defined via the given property from a given source value. May deliver a
-	 * {@link LazyLoadingProxy proxy instance} in case of a lazy loading association.
+	 * Resolve the association defined via the given property from a given source value. May return a
+	 * {@link LazyLoadingProxy proxy instance} in case of a lazy loading association. The resolved value is assignable to
+	 * {@link PersistentProperty#getType()}.
 	 *
 	 * @param property the association defining property.
 	 * @param source the association source value.
@@ -79,7 +83,7 @@ public interface ReferenceResolver {
 
 		/**
 		 * Get the target collection name.
-		 * 
+		 *
 		 * @return never {@literal null}.
 		 */
 		public String getCollection() {
@@ -98,7 +102,7 @@ public interface ReferenceResolver {
 	}
 
 	/**
-	 * Domain type conversion callback interface that allows to read
+	 * Domain type conversion callback interface that allows to read the {@code source} object into a mapped object.
 	 */
 	@FunctionalInterface
 	interface MongoEntityReader {
@@ -107,7 +111,7 @@ public interface ReferenceResolver {
 		 * Read values from the given source into an object defined via the given {@link TypeInformation}.
 		 *
 		 * @param source never {@literal null}.
-		 * @param typeInformation information abount the desired target type.
+		 * @param typeInformation information about the desired target type.
 		 * @return never {@literal null}.
 		 */
 		Object read(Object source, TypeInformation<?> typeInformation);
