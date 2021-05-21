@@ -59,18 +59,18 @@ import com.mongodb.client.MongoDatabase;
 @ExtendWith(MongoClientExtension.class)
 public class MappingMongoConverterTests {
 
-	public static final String DATABASE = "mapping-converter-tests";
+	private static final String DATABASE = "mapping-converter-tests";
 
-	static @Client MongoClient client;
+	private static @Client MongoClient client;
 
-	MongoDatabaseFactory factory = new SimpleMongoClientDatabaseFactory(client, DATABASE);
+	private MongoDatabaseFactory factory = new SimpleMongoClientDatabaseFactory(client, DATABASE);
 
-	MappingMongoConverter converter;
-	MongoMappingContext mappingContext;
-	DbRefResolver dbRefResolver;
+	private MappingMongoConverter converter;
+	private MongoMappingContext mappingContext;
+	private DbRefResolver dbRefResolver;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 
 		MongoDatabase database = client.getDatabase(DATABASE);
 
@@ -90,7 +90,7 @@ public class MappingMongoConverterTests {
 	}
 
 	@Test // DATAMONGO-2004
-	public void resolvesLazyDBRefOnAccess() {
+	void resolvesLazyDBRefOnAccess() {
 
 		client.getDatabase(DATABASE).getCollection("samples")
 				.insertMany(Arrays.asList(new Document("_id", "sample-1").append("value", "one"),
@@ -102,7 +102,6 @@ public class MappingMongoConverterTests {
 		WithLazyDBRef target = converter.read(WithLazyDBRef.class, source);
 
 		verify(dbRefResolver).resolveDbRef(any(), isNull(), any(), any());
-		verifyNoMoreInteractions(dbRefResolver);
 
 		assertThat(target.lazyList).isInstanceOf(LazyLoadingProxy.class);
 		assertThat(target.getLazyList()).contains(new Sample("sample-1", "one"), new Sample("sample-2", "two"));
@@ -111,7 +110,7 @@ public class MappingMongoConverterTests {
 	}
 
 	@Test // DATAMONGO-2004
-	public void resolvesLazyDBRefConstructorArgOnAccess() {
+	void resolvesLazyDBRefConstructorArgOnAccess() {
 
 		client.getDatabase(DATABASE).getCollection("samples")
 				.insertMany(Arrays.asList(new Document("_id", "sample-1").append("value", "one"),
@@ -123,7 +122,6 @@ public class MappingMongoConverterTests {
 		WithLazyDBRefAsConstructorArg target = converter.read(WithLazyDBRefAsConstructorArg.class, source);
 
 		verify(dbRefResolver).resolveDbRef(any(), isNull(), any(), any());
-		verifyNoMoreInteractions(dbRefResolver);
 
 		assertThat(target.lazyList).isInstanceOf(LazyLoadingProxy.class);
 		assertThat(target.getLazyList()).contains(new Sample("sample-1", "one"), new Sample("sample-2", "two"));
@@ -132,7 +130,7 @@ public class MappingMongoConverterTests {
 	}
 
 	@Test // DATAMONGO-2400
-	public void readJavaTimeValuesWrittenViaCodec() {
+	void readJavaTimeValuesWrittenViaCodec() {
 
 		configureConverterWithNativeJavaTimeCodec();
 		MongoCollection<Document> mongoCollection = client.getDatabase(DATABASE).getCollection("java-time-types");
@@ -160,7 +158,7 @@ public class MappingMongoConverterTests {
 		@Id String id;
 		@DBRef(lazy = true) List<Sample> lazyList;
 
-		public List<Sample> getLazyList() {
+		List<Sample> getLazyList() {
 			return lazyList;
 		}
 	}
@@ -176,7 +174,7 @@ public class MappingMongoConverterTests {
 			this.lazyList = lazyList;
 		}
 
-		public List<Sample> getLazyList() {
+		List<Sample> getLazyList() {
 			return lazyList;
 		}
 	}

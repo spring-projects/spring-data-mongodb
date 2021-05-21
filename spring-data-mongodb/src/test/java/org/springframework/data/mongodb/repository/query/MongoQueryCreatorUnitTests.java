@@ -38,12 +38,14 @@ import org.springframework.data.geo.Polygon;
 import org.springframework.data.geo.Shape;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.Venue;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.geo.GeoJsonLineString;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
@@ -67,22 +69,20 @@ import org.springframework.data.repository.query.parser.PartTree;
  * @author Thomas Darimont
  * @author Christoph Strobl
  */
-public class MongoQueryCreatorUnitTests {
+class MongoQueryCreatorUnitTests {
 
-	MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context;
-	MongoConverter converter;
+	private MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context;
+	private MongoConverter converter;
 
 	@BeforeEach
-	public void beforeEach() {
+	void beforeEach() {
 
 		context = new MongoMappingContext();
-
-		DbRefResolver resolver = new DefaultDbRefResolver(mock(MongoDatabaseFactory.class));
-		converter = new MappingMongoConverter(resolver, context);
+		converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, context);
 	}
 
 	@Test
-	public void createsQueryCorrectly() {
+	void createsQueryCorrectly() {
 
 		PartTree tree = new PartTree("findByFirstName", Person.class);
 
@@ -92,7 +92,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-469
-	public void createsAndQueryCorrectly() {
+	void createsAndQueryCorrectly() {
 
 		Person person = new Person();
 		MongoQueryCreator creator = new MongoQueryCreator(new PartTree("findByFirstNameAndFriend", Person.class),
@@ -103,7 +103,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test
-	public void createsNotNullQueryCorrectly() {
+	void createsNotNullQueryCorrectly() {
 
 		PartTree tree = new PartTree("findByFirstNameNotNull", Person.class);
 		Query query = new MongoQueryCreator(tree, getAccessor(converter), context).createQuery();
@@ -112,7 +112,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test
-	public void createsIsNullQueryCorrectly() {
+	void createsIsNullQueryCorrectly() {
 
 		PartTree tree = new PartTree("findByFirstNameIsNull", Person.class);
 		Query query = new MongoQueryCreator(tree, getAccessor(converter), context).createQuery();
@@ -121,7 +121,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test
-	public void bindsMetricDistanceParameterToNearSphereCorrectly() throws Exception {
+	void bindsMetricDistanceParameterToNearSphereCorrectly() throws Exception {
 
 		Point point = new Point(10, 20);
 		Distance distance = new Distance(2.5, Metrics.KILOMETERS);
@@ -132,7 +132,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test
-	public void bindsDistanceParameterToNearCorrectly() throws Exception {
+	void bindsDistanceParameterToNearCorrectly() throws Exception {
 
 		Point point = new Point(10, 20);
 		Distance distance = new Distance(2.5);
@@ -143,7 +143,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test
-	public void createsLessThanEqualQueryCorrectly() {
+	void createsLessThanEqualQueryCorrectly() {
 
 		PartTree tree = new PartTree("findByAgeLessThanEqual", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, 18), context);
@@ -153,7 +153,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test
-	public void createsGreaterThanEqualQueryCorrectly() {
+	void createsGreaterThanEqualQueryCorrectly() {
 
 		PartTree tree = new PartTree("findByAgeGreaterThanEqual", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, 18), context);
@@ -163,7 +163,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-338
-	public void createsExistsClauseCorrectly() {
+	void createsExistsClauseCorrectly() {
 
 		PartTree tree = new PartTree("findByAgeExists", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, true), context);
@@ -172,7 +172,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-338
-	public void createsRegexClauseCorrectly() {
+	void createsRegexClauseCorrectly() {
 
 		PartTree tree = new PartTree("findByFirstNameRegex", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, ".*"), context);
@@ -181,7 +181,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-338
-	public void createsTrueClauseCorrectly() {
+	void createsTrueClauseCorrectly() {
 
 		PartTree tree = new PartTree("findByActiveTrue", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter), context);
@@ -190,7 +190,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-338
-	public void createsFalseClauseCorrectly() {
+	void createsFalseClauseCorrectly() {
 
 		PartTree tree = new PartTree("findByActiveFalse", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter), context);
@@ -199,7 +199,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-413
-	public void createsOrQueryCorrectly() {
+	void createsOrQueryCorrectly() {
 
 		PartTree tree = new PartTree("findByFirstNameOrAge", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "Dave", 42), context);
@@ -209,7 +209,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-347
-	public void createsQueryReferencingADBRefCorrectly() {
+	void createsQueryReferencingADBRefCorrectly() {
 
 		User user = new User();
 		user.id = new ObjectId();
@@ -222,7 +222,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-418
-	public void createsQueryWithStartingWithPredicateCorrectly() {
+	void createsQueryWithStartingWithPredicateCorrectly() {
 
 		PartTree tree = new PartTree("findByUsernameStartingWith", User.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "Matt"), context);
@@ -232,7 +232,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-418
-	public void createsQueryWithEndingWithPredicateCorrectly() {
+	void createsQueryWithEndingWithPredicateCorrectly() {
 
 		PartTree tree = new PartTree("findByUsernameEndingWith", User.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "ews"), context);
@@ -242,7 +242,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-418
-	public void createsQueryWithContainingPredicateCorrectly() {
+	void createsQueryWithContainingPredicateCorrectly() {
 
 		PartTree tree = new PartTree("findByUsernameContaining", User.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "thew"), context);
@@ -268,7 +268,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-770
-	public void createsQueryWithFindByIgnoreCaseCorrectly() {
+	void createsQueryWithFindByIgnoreCaseCorrectly() {
 
 		PartTree tree = new PartTree("findByfirstNameIgnoreCase", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "dave"), context);
@@ -278,7 +278,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-770
-	public void createsQueryWithFindByNotIgnoreCaseCorrectly() {
+	void createsQueryWithFindByNotIgnoreCaseCorrectly() {
 
 		PartTree tree = new PartTree("findByFirstNameNotIgnoreCase", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "dave"), context);
@@ -288,7 +288,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-770
-	public void createsQueryWithFindByStartingWithIgnoreCaseCorrectly() {
+	void createsQueryWithFindByStartingWithIgnoreCaseCorrectly() {
 
 		PartTree tree = new PartTree("findByFirstNameStartingWithIgnoreCase", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "dave"), context);
@@ -298,7 +298,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-770
-	public void createsQueryWithFindByEndingWithIgnoreCaseCorrectly() {
+	void createsQueryWithFindByEndingWithIgnoreCaseCorrectly() {
 
 		PartTree tree = new PartTree("findByFirstNameEndingWithIgnoreCase", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "dave"), context);
@@ -308,7 +308,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-770
-	public void createsQueryWithFindByContainingIgnoreCaseCorrectly() {
+	void createsQueryWithFindByContainingIgnoreCaseCorrectly() {
 
 		PartTree tree = new PartTree("findByFirstNameContainingIgnoreCase", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "dave"), context);
@@ -318,7 +318,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-770
-	public void shouldThrowExceptionForQueryWithFindByIgnoreCaseOnNonStringProperty() {
+	void shouldThrowExceptionForQueryWithFindByIgnoreCaseOnNonStringProperty() {
 
 		PartTree tree = new PartTree("findByFirstNameAndAgeIgnoreCase", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "foo", 42), context);
@@ -328,7 +328,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-770
-	public void shouldOnlyGenerateLikeExpressionsForStringPropertiesIfAllIgnoreCase() {
+	void shouldOnlyGenerateLikeExpressionsForStringPropertiesIfAllIgnoreCase() {
 
 		PartTree tree = new PartTree("findByFirstNameAndAgeAllIgnoreCase", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "dave", 42), context);
@@ -338,7 +338,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-566
-	public void shouldCreateDeleteByQueryCorrectly() {
+	void shouldCreateDeleteByQueryCorrectly() {
 
 		PartTree tree = new PartTree("deleteByFirstName", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "dave", 42), context);
@@ -350,7 +350,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-566
-	public void shouldCreateDeleteByQueryCorrectlyForMultipleCriteriaAndCaseExpressions() {
+	void shouldCreateDeleteByQueryCorrectlyForMultipleCriteriaAndCaseExpressions() {
 
 		PartTree tree = new PartTree("deleteByFirstNameAndAgeAllIgnoreCase", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "dave", 42), context);
@@ -362,7 +362,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-1075
-	public void shouldCreateInClauseWhenUsingContainsOnCollectionLikeProperty() {
+	void shouldCreateInClauseWhenUsingContainsOnCollectionLikeProperty() {
 
 		PartTree tree = new PartTree("findByEmailAddressesContaining", User.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "dave"), context);
@@ -373,7 +373,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-1075
-	public void shouldCreateInClauseWhenUsingNotContainsOnCollectionLikeProperty() {
+	void shouldCreateInClauseWhenUsingNotContainsOnCollectionLikeProperty() {
 
 		PartTree tree = new PartTree("findByEmailAddressesNotContaining", User.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "dave"), context);
@@ -384,7 +384,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-1075, DATAMONGO-1425
-	public void shouldCreateRegexWhenUsingNotContainsOnStringProperty() {
+	void shouldCreateRegexWhenUsingNotContainsOnStringProperty() {
 
 		PartTree tree = new PartTree("findByUsernameNotContaining", User.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "thew"), context);
@@ -395,7 +395,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-1139
-	public void createsNonSphericalNearForDistanceWithDefaultMetric() {
+	void createsNonSphericalNearForDistanceWithDefaultMetric() {
 
 		Point point = new Point(1.0, 1.0);
 		Distance distance = new Distance(1.0);
@@ -408,7 +408,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-1136
-	public void shouldCreateWithinQueryCorrectly() {
+	void shouldCreateWithinQueryCorrectly() {
 
 		Point first = new Point(1, 1);
 		Point second = new Point(2, 2);
@@ -423,7 +423,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-1110
-	public void shouldCreateNearSphereQueryForSphericalProperty() {
+	void shouldCreateNearSphereQueryForSphericalProperty() {
 
 		Point point = new Point(10, 20);
 
@@ -435,7 +435,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-1110
-	public void shouldCreateNearSphereQueryForSphericalPropertyHavingDistanceWithDefaultMetric() {
+	void shouldCreateNearSphereQueryForSphericalPropertyHavingDistanceWithDefaultMetric() {
 
 		Point point = new Point(1.0, 1.0);
 		Distance distance = new Distance(1.0);
@@ -448,7 +448,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-1110
-	public void shouldCreateNearQueryForMinMaxDistance() {
+	void shouldCreateNearQueryForMinMaxDistance() {
 
 		Point point = new Point(10, 20);
 		Range<Distance> range = Distance.between(new Distance(10), new Distance(20));
@@ -461,7 +461,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-1229
-	public void appliesIgnoreCaseToLeafProperty() {
+	void appliesIgnoreCaseToLeafProperty() {
 
 		PartTree tree = new PartTree("findByAddressStreetIgnoreCase", User.class);
 		ConvertingParameterAccessor accessor = getAccessor(converter, "Street");
@@ -470,7 +470,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-1232
-	public void ignoreCaseShouldEscapeSource() {
+	void ignoreCaseShouldEscapeSource() {
 
 		PartTree tree = new PartTree("findByUsernameIgnoreCase", User.class);
 		ConvertingParameterAccessor accessor = getAccessor(converter, "con.flux+");
@@ -481,7 +481,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-1232
-	public void ignoreCaseShouldEscapeSourceWhenUsedForStartingWith() {
+	void ignoreCaseShouldEscapeSourceWhenUsedForStartingWith() {
 
 		PartTree tree = new PartTree("findByUsernameStartingWithIgnoreCase", User.class);
 		ConvertingParameterAccessor accessor = getAccessor(converter, "dawns.light+");
@@ -492,7 +492,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-1232
-	public void ignoreCaseShouldEscapeSourceWhenUsedForEndingWith() {
+	void ignoreCaseShouldEscapeSourceWhenUsedForEndingWith() {
 
 		PartTree tree = new PartTree("findByUsernameEndingWithIgnoreCase", User.class);
 		ConvertingParameterAccessor accessor = getAccessor(converter, "new.ton+");
@@ -503,7 +503,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-1232
-	public void likeShouldEscapeSourceWhenUsedWithLeadingAndTrailingWildcard() {
+	void likeShouldEscapeSourceWhenUsedWithLeadingAndTrailingWildcard() {
 
 		PartTree tree = new PartTree("findByUsernameLike", User.class);
 		ConvertingParameterAccessor accessor = getAccessor(converter, "*fire.fight+*");
@@ -514,7 +514,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-1232
-	public void likeShouldEscapeSourceWhenUsedWithLeadingWildcard() {
+	void likeShouldEscapeSourceWhenUsedWithLeadingWildcard() {
 
 		PartTree tree = new PartTree("findByUsernameLike", User.class);
 		ConvertingParameterAccessor accessor = getAccessor(converter, "*steel.heart+");
@@ -525,7 +525,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-1232
-	public void likeShouldEscapeSourceWhenUsedWithTrailingWildcard() {
+	void likeShouldEscapeSourceWhenUsedWithTrailingWildcard() {
 
 		PartTree tree = new PartTree("findByUsernameLike", User.class);
 		ConvertingParameterAccessor accessor = getAccessor(converter, "cala.mity+*");
@@ -535,7 +535,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-1232
-	public void likeShouldBeTreatedCorrectlyWhenUsedWithWildcardOnly() {
+	void likeShouldBeTreatedCorrectlyWhenUsedWithWildcardOnly() {
 
 		PartTree tree = new PartTree("findByUsernameLike", User.class);
 		ConvertingParameterAccessor accessor = getAccessor(converter, "*");
@@ -545,7 +545,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-1342
-	public void bindsNullValueToContainsClause() {
+	void bindsNullValueToContainsClause() {
 
 		PartTree partTree = new PartTree("emailAddressesContains", User.class);
 
@@ -556,7 +556,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-1424
-	public void notLikeShouldEscapeSourceWhenUsedWithLeadingAndTrailingWildcard() {
+	void notLikeShouldEscapeSourceWhenUsedWithLeadingAndTrailingWildcard() {
 
 		PartTree tree = new PartTree("findByUsernameNotLike", User.class);
 		ConvertingParameterAccessor accessor = getAccessor(converter, "*fire.fight+*");
@@ -568,7 +568,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-1424
-	public void notLikeShouldEscapeSourceWhenUsedWithLeadingWildcard() {
+	void notLikeShouldEscapeSourceWhenUsedWithLeadingWildcard() {
 
 		PartTree tree = new PartTree("findByUsernameNotLike", User.class);
 		ConvertingParameterAccessor accessor = getAccessor(converter, "*steel.heart+");
@@ -580,7 +580,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-1424
-	public void notLikeShouldEscapeSourceWhenUsedWithTrailingWildcard() {
+	void notLikeShouldEscapeSourceWhenUsedWithTrailingWildcard() {
 
 		PartTree tree = new PartTree("findByUsernameNotLike", User.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, "cala.mity+*"), context);
@@ -591,7 +591,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-1424
-	public void notLikeShouldBeTreatedCorrectlyWhenUsedWithWildcardOnly() {
+	void notLikeShouldBeTreatedCorrectlyWhenUsedWithWildcardOnly() {
 
 		PartTree tree = new PartTree("findByUsernameNotLike", User.class);
 		ConvertingParameterAccessor accessor = getAccessor(converter, "*");
@@ -602,7 +602,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-1588
-	public void queryShouldAcceptSubclassOfDeclaredArgument() {
+	void queryShouldAcceptSubclassOfDeclaredArgument() {
 
 		PartTree tree = new PartTree("findByLocationNear", User.class);
 		ConvertingParameterAccessor accessor = getAccessor(converter, new GeoJsonPoint(-74.044502D, 40.689247D));
@@ -612,7 +612,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-1588
-	public void queryShouldThrowExceptionWhenArgumentDoesNotMatchDeclaration() {
+	void queryShouldThrowExceptionWhenArgumentDoesNotMatchDeclaration() {
 
 		PartTree tree = new PartTree("findByLocationNear", User.class);
 		ConvertingParameterAccessor accessor = getAccessor(converter,
@@ -623,7 +623,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-2003
-	public void createsRegexQueryForPatternCorrectly() {
+	void createsRegexQueryForPatternCorrectly() {
 
 		PartTree tree = new PartTree("findByFirstNameRegex", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree, getAccessor(converter, Pattern.compile(".*")), context);
@@ -632,7 +632,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-2003
-	public void createsRegexQueryForPatternWithOptionsCorrectly() {
+	void createsRegexQueryForPatternWithOptionsCorrectly() {
 
 		Pattern pattern = Pattern.compile(".*", Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
 
@@ -642,7 +642,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-2071
-	public void betweenShouldAllowSingleRageParameter() {
+	void betweenShouldAllowSingleRageParameter() {
 
 		PartTree tree = new PartTree("findByAgeBetween", Person.class);
 		MongoQueryCreator creator = new MongoQueryCreator(tree,
@@ -652,7 +652,7 @@ public class MongoQueryCreatorUnitTests {
 	}
 
 	@Test // DATAMONGO-2394
-	public void nearShouldUseMetricDistanceForGeoJsonTypes() {
+	void nearShouldUseMetricDistanceForGeoJsonTypes() {
 
 		GeoJsonPoint point = new GeoJsonPoint(27.987901, 86.9165379);
 		PartTree tree = new PartTree("findByLocationNear", User.class);

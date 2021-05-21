@@ -38,6 +38,7 @@ import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.query.TextCriteria;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -59,33 +60,32 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
  * @author Mark Paluch
  */
 @ExtendWith(MockitoExtension.class)
-public class PartTreeMongoQueryUnitTests {
+class PartTreeMongoQueryUnitTests {
 
 	@Mock MongoOperations mongoOperationsMock;
 	@Mock ExecutableFind<?> findOperationMock;
 
-	MongoMappingContext mappingContext;
+	private MongoMappingContext mappingContext;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 
 		mappingContext = new MongoMappingContext();
-		DbRefResolver dbRefResolver = new DefaultDbRefResolver(mock(MongoDatabaseFactory.class));
-		MongoConverter converter = new MappingMongoConverter(dbRefResolver, mappingContext);
+		MongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext);
 
 		doReturn(converter).when(mongoOperationsMock).getConverter();
 		doReturn(findOperationMock).when(mongoOperationsMock).query(any());
 	}
 
 	@Test // DATAMOGO-952
-	public void rejectsInvalidFieldSpecification() {
+	void rejectsInvalidFieldSpecification() {
 
 		assertThatIllegalStateException().isThrownBy(() -> deriveQueryFromMethod("findByLastname", "foo"))
 				.withMessageContaining("findByLastname");
 	}
 
 	@Test // DATAMOGO-952
-	public void singleFieldJsonIncludeRestrictionShouldBeConsidered() {
+	void singleFieldJsonIncludeRestrictionShouldBeConsidered() {
 
 		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findByFirstname", "foo");
 
@@ -93,7 +93,7 @@ public class PartTreeMongoQueryUnitTests {
 	}
 
 	@Test // DATAMOGO-952
-	public void multiFieldJsonIncludeRestrictionShouldBeConsidered() {
+	void multiFieldJsonIncludeRestrictionShouldBeConsidered() {
 
 		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findByFirstnameAndLastname", "foo",
 				"bar");
@@ -102,7 +102,7 @@ public class PartTreeMongoQueryUnitTests {
 	}
 
 	@Test // DATAMOGO-952
-	public void multiFieldJsonExcludeRestrictionShouldBeConsidered() {
+	void multiFieldJsonExcludeRestrictionShouldBeConsidered() {
 
 		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findPersonByFirstnameAndLastname",
 				"foo", "bar");
@@ -111,7 +111,7 @@ public class PartTreeMongoQueryUnitTests {
 	}
 
 	@Test // DATAMOGO-973
-	public void shouldAddFullTextParamCorrectlyToDerivedQuery() {
+	void shouldAddFullTextParamCorrectlyToDerivedQuery() {
 
 		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findPersonByFirstname", "text",
 				TextCriteria.forDefaultLanguage().matching("search"));
@@ -120,19 +120,19 @@ public class PartTreeMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1180
-	public void propagatesRootExceptionForInvalidQuery() {
+	void propagatesRootExceptionForInvalidQuery() {
 
 		assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> deriveQueryFromMethod("findByAge", 1))
 				.withCauseInstanceOf(JsonParseException.class);
 	}
 
 	@Test // DATAMONGO-1345, DATAMONGO-1735
-	public void doesNotDeriveFieldSpecForNormalDomainType() {
+	void doesNotDeriveFieldSpecForNormalDomainType() {
 		assertThat(deriveQueryFromMethod("findPersonBy", new Object[0]).getFieldsObject()).isEqualTo(new Document());
 	}
 
 	@Test // DATAMONGO-1345
-	public void restrictsQueryToFieldsRequiredForProjection() {
+	void restrictsQueryToFieldsRequiredForProjection() {
 
 		Document fieldsObject = deriveQueryFromMethod("findPersonProjectedBy", new Object[0]).getFieldsObject();
 
@@ -141,7 +141,7 @@ public class PartTreeMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1345
-	public void restrictsQueryToFieldsRequiredForDto() {
+	void restrictsQueryToFieldsRequiredForDto() {
 
 		Document fieldsObject = deriveQueryFromMethod("findPersonDtoByAge", new Object[] { 42 }).getFieldsObject();
 
@@ -150,7 +150,7 @@ public class PartTreeMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1345
-	public void usesDynamicProjection() {
+	void usesDynamicProjection() {
 
 		Document fields = deriveQueryFromMethod("findDynamicallyProjectedBy", ExtendedProjection.class).getFieldsObject();
 
@@ -160,7 +160,7 @@ public class PartTreeMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1500
-	public void shouldLeaveParameterConversionToQueryMapper() {
+	void shouldLeaveParameterConversionToQueryMapper() {
 
 		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findBySex", Sex.FEMALE);
 
@@ -169,7 +169,7 @@ public class PartTreeMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1729, DATAMONGO-1735
-	public void doesNotCreateFieldsObjectForOpenProjection() {
+	void doesNotCreateFieldsObjectForOpenProjection() {
 
 		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findAllBy");
 
@@ -177,12 +177,12 @@ public class PartTreeMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1865
-	public void limitingReturnsTrueIfTreeIsLimiting() {
+	void limitingReturnsTrueIfTreeIsLimiting() {
 		assertThat(createQueryForMethod("findFirstBy").isLimiting()).isTrue();
 	}
 
 	@Test // DATAMONGO-1865
-	public void limitingReturnsFalseIfTreeIsNotLimiting() {
+	void limitingReturnsFalseIfTreeIsNotLimiting() {
 		assertThat(createQueryForMethod("findPersonBy").isLimiting()).isFalse();
 	}
 

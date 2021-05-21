@@ -28,6 +28,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -46,35 +47,36 @@ import com.mongodb.BasicDBList;
  * @author Christoph Strobl
  */
 @ExtendWith(MockitoExtension.class)
-public class ConvertingParameterAccessorUnitTests {
+class ConvertingParameterAccessorUnitTests {
 
 	@Mock MongoDatabaseFactory factory;
 	@Mock MongoParameterAccessor accessor;
 
-	MongoMappingContext context;
-	MappingMongoConverter converter;
-	DbRefResolver resolver;
+	private MongoMappingContext context;
+	private MappingMongoConverter converter;
+	private DbRefResolver resolver;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 
+		when(factory.getExceptionTranslator()).thenReturn(new MongoExceptionTranslator());
 		this.context = new MongoMappingContext();
 		this.resolver = new DefaultDbRefResolver(factory);
 		this.converter = new MappingMongoConverter(resolver, context);
 	}
 
 	@Test
-	public void rejectsNullDbRefResolver() {
+	void rejectsNullDbRefResolver() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new MappingMongoConverter((DbRefResolver) null, context));
 	}
 
 	@Test
-	public void rejectsNullContext() {
+	void rejectsNullContext() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new MappingMongoConverter(resolver, null));
 	}
 
 	@Test
-	public void convertsCollectionUponAccess() {
+	void convertsCollectionUponAccess() {
 
 		when(accessor.getBindableValue(0)).thenReturn(Arrays.asList("Foo"));
 
@@ -88,7 +90,7 @@ public class ConvertingParameterAccessorUnitTests {
 	}
 
 	@Test // DATAMONGO-505
-	public void convertsAssociationsToDBRef() {
+	void convertsAssociationsToDBRef() {
 
 		Property property = new Property();
 		property.id = 5L;
@@ -102,7 +104,7 @@ public class ConvertingParameterAccessorUnitTests {
 	}
 
 	@Test // DATAMONGO-505
-	public void convertsAssociationsToDBRefForCollections() {
+	void convertsAssociationsToDBRefForCollections() {
 
 		Property property = new Property();
 		property.id = 5L;

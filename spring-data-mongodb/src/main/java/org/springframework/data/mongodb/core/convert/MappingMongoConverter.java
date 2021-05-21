@@ -546,8 +546,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		DBRef dbref = value instanceof DBRef ? (DBRef) value : null;
 
-		// TODO: accessor.setProperty(property, dbRefResolver.resolveReference(property, value, referenceReader,
-		// context::convert));
 		accessor.setProperty(property, dbRefResolver.resolveDbRef(property, dbref, callback, handler));
 	}
 

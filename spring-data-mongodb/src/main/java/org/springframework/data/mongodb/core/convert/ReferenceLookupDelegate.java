@@ -57,6 +57,7 @@ import com.mongodb.client.MongoCollection;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @since 3.3
  */
 public final class ReferenceLookupDelegate {
 

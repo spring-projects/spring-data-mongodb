@@ -28,7 +28,7 @@ import com.mongodb.client.MongoCollection;
 /**
  * The {@link ReferenceLoader} obtains raw {@link Document documents} for linked entities via a
  * {@link ReferenceLoader.DocumentReferenceQuery}.
- * 
+ *
  * @author Christoph Strobl
  * @since 3.3
  */
@@ -79,7 +79,6 @@ public interface ReferenceLoader {
 			return new Document();
 		}
 
-		// TODO: Move apply method into something else that holds the collection and knows about single item/multi-item
 		default Iterable<Document> apply(MongoCollection<Document> collection) {
 			return restoreOrder(collection.find(getQuery()).sort(getSort()));
 		}

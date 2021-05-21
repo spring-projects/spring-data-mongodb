@@ -29,8 +29,9 @@ import com.mongodb.client.MongoCollection;
 /**
  * {@link ReferenceLoader} implementation using a {@link MongoDatabaseFactory} to obtain raw {@link Document documents}
  * for linked entities via a {@link ReferenceLoader.DocumentReferenceQuery}.
- * 
+ *
  * @author Christoph Strobl
+ * @since 3.3
  */
 public class MongoDatabaseFactoryReferenceLoader implements ReferenceLoader {
 

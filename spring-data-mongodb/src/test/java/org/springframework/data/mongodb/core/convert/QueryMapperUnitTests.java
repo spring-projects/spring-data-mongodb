@@ -34,14 +34,13 @@ import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.geo.Point;
-import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
@@ -80,14 +79,12 @@ public class QueryMapperUnitTests {
 	private MongoMappingContext context;
 	private MappingMongoConverter converter;
 
-	@Mock MongoDatabaseFactory factory;
-
 	@BeforeEach
 	void beforeEach() {
 
 		this.context = new MongoMappingContext();
 
-		this.converter = new MappingMongoConverter(new DefaultDbRefResolver(factory), context);
+		this.converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, context);
 		this.converter.afterPropertiesSet();
 
 		this.mapper = new QueryMapper(converter);
@@ -1500,21 +1497,6 @@ public class QueryMapperUnitTests {
 		@DocumentReference(lookup = "{ 'stringProperty' : ?#{stringProperty} }")
 		SimpeEntityWithoutId noIdButLookupQuery;
 
-	}
-
-	// TODO
-	@Test
-	void xxx() {
-
-		Sample sample = new Sample();
-		sample.foo = "sample-id";
-
-		Query query = query(where("sample").is(sample));
-
-		org.bson.Document mappedObject = mapper.getMappedObject(query.getQueryObject(),
-				context.getPersistentEntity(WithDocumentReferences.class));
-
-		System.out.println("mappedObject.toJson(): " + mappedObject.toJson());
 	}
 
 }

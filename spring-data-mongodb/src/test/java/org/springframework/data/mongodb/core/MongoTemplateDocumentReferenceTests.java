@@ -1094,17 +1094,17 @@ public class MongoTemplateDocumentReferenceTests {
 		}
 	}
 
-	static class ReferencableConverter implements Converter<ReferenceAble, DocumentPointer> {
+	static class ReferencableConverter implements Converter<ReferenceAble, DocumentPointer<Object>> {
 
 		@Nullable
 		@Override
-		public DocumentPointer convert(ReferenceAble source) {
+		public DocumentPointer<Object> convert(ReferenceAble source) {
 			return source::toReference;
 		}
 	}
 
 	@WritingConverter
-	class DocumentToSimpleObjectRefWithReadingConverter
+	static class DocumentToSimpleObjectRefWithReadingConverter
 			implements Converter<DocumentPointer<Document>, SimpleObjectRefWithReadingConverter> {
 
 		@Nullable
@@ -1118,7 +1118,7 @@ public class MongoTemplateDocumentReferenceTests {
 	}
 
 	@WritingConverter
-	class SimpleObjectRefWithReadingConverterToDocumentConverter
+	static class SimpleObjectRefWithReadingConverterToDocumentConverter
 			implements Converter<SimpleObjectRefWithReadingConverter, DocumentPointer<Document>> {
 
 		@Nullable
