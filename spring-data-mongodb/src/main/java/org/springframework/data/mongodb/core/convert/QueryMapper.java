@@ -19,11 +19,14 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.domain.Example;
@@ -65,6 +68,8 @@ import com.mongodb.DBRef;
  * @author Mark Paluch
  */
 public class QueryMapper {
+
+	protected static final Logger LOGGER = LoggerFactory.getLogger(QueryMapper.class);
 
 	private static final List<String> DEFAULT_ID_NAMES = Arrays.asList("id", "_id");
 	private static final Document META_TEXT_SCORE = new Document("$meta", "textScore");
@@ -1099,29 +1104,46 @@ public class QueryMapper {
 				return null;
 			}
 
-			try {
+			PersistentPropertyPath<MongoPersistentProperty> propertyPath = tryToResolvePersistentPropertyPath(path);
 
-				PersistentPropertyPath<MongoPersistentProperty> propertyPath = mappingContext.getPersistentPropertyPath(path);
+			if (propertyPath == null) {
 
-				Iterator<MongoPersistentProperty> iterator = propertyPath.iterator();
-				boolean associationDetected = false;
+				if (QueryMapper.LOGGER.isInfoEnabled()) {
 
-				while (iterator.hasNext()) {
+					String types = StringUtils.collectionToDelimitedString(
+							path.stream().map(it -> it.getType().getSimpleName()).collect(Collectors.toList()), " -> ");
+					QueryMapper.LOGGER.info(
+							"Could not map '{}'. Maybe a fragment in '{}' is considered a simple type. Mapper continues with {}.",
+							path, types, pathExpression);
+				}
+				return null;
+			}
 
-					MongoPersistentProperty property = iterator.next();
+			Iterator<MongoPersistentProperty> iterator = propertyPath.iterator();
+			boolean associationDetected = false;
 
-					if (property.isAssociation()) {
-						associationDetected = true;
-						continue;
-					}
+			while (iterator.hasNext()) {
 
-					if (associationDetected && !property.isIdProperty()) {
-						throw new MappingException(String.format(INVALID_ASSOCIATION_REFERENCE, pathExpression));
-					}
+				MongoPersistentProperty property = iterator.next();
+
+				if (property.isAssociation()) {
+					associationDetected = true;
+					continue;
 				}
 
-				return propertyPath;
-			} catch (InvalidPersistentPropertyPath e) {
+				if (associationDetected && !property.isIdProperty()) {
+					throw new MappingException(String.format(INVALID_ASSOCIATION_REFERENCE, pathExpression));
+				}
+			}
+
+			return propertyPath;
+		}
+
+		private PersistentPropertyPath<MongoPersistentProperty> tryToResolvePersistentPropertyPath(PropertyPath path) {
+
+			try {
+				return mappingContext.getPersistentPropertyPath(path);
+			} catch (MappingException e) {
 				return null;
 			}
 		}

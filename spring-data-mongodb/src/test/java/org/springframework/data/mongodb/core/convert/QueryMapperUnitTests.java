@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import lombok.Data;
 import org.bson.conversions.Bson;
 import org.bson.types.Code;
 import org.bson.types.ObjectId;
@@ -36,7 +37,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.geo.Point;
@@ -52,6 +56,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.TextScore;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -1101,6 +1106,28 @@ public class QueryMapperUnitTests {
 				.isThrownBy(() -> mapper.getMappedObject(query.getQueryObject(), context.getPersistentEntity(Foo.class)));
 	}
 
+	@Test // GH-3659
+	void allowsUsingFieldPathsForPropertiesHavingCustomConversionRegistered() {
+
+		Query query = query(where("address.street").is("1007 Mountain Drive"));
+
+		MongoCustomConversions mongoCustomConversions = new MongoCustomConversions(
+				Collections.singletonList(new MyAddressToDocumentConverter()));
+
+		this.context = new MongoMappingContext();
+		this.context.setSimpleTypeHolder(mongoCustomConversions.getSimpleTypeHolder());
+		this.context.afterPropertiesSet();
+
+		this.converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, context);
+		this.converter.setCustomConversions(mongoCustomConversions);
+		this.converter.afterPropertiesSet();
+
+		this.mapper = new QueryMapper(converter);
+
+		assertThat(mapper.getMappedSort(query.getQueryObject(), context.getPersistentEntity(Customer.class)))
+				.isEqualTo(new org.bson.Document("address.street", "1007 Mountain Drive"));
+	}
+
 	class WithDeepArrayNesting {
 
 		List<WithNestedArray> level0;
@@ -1296,5 +1323,28 @@ public class QueryMapperUnitTests {
 		String fieldname_with_underscores;
 
 		@Field("renamed") String renamed_fieldname_with_underscores;
+	}
+
+	@Document
+	static class Customer {
+
+		@Id private ObjectId id;
+		private String name;
+		private MyAddress address;
+	}
+
+	static class MyAddress {
+		private String street;
+	}
+
+	@WritingConverter
+	public static class MyAddressToDocumentConverter implements Converter<MyAddress, org.bson.Document> {
+
+		@Override
+		public org.bson.Document convert(MyAddress address) {
+			org.bson.Document doc = new org.bson.Document();
+			doc.put("street", address.street);
+			return doc;
+		}
 	}
 }
