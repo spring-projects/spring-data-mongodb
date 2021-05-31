@@ -81,6 +81,8 @@ import org.springframework.data.mongodb.core.mapping.TextScore;
 import org.springframework.data.mongodb.core.mapping.Unwrapped;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertCallback;
 import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.BasicDBList;
@@ -2428,6 +2430,98 @@ class MappingMongoConverterUnitTests {
 		verify(subTypeOfGenericTypeConverter).convert(eq(source));
 	}
 
+
+	@Test // GH-3660
+	void usesCustomConverterForMapTypesOnWrite() {
+
+
+		converter = new MappingMongoConverter(resolver, mappingContext);
+		converter.setCustomConversions(MongoCustomConversions.create(it -> {
+			it.registerConverter(new TypeImplementingMapToDocumentConverter());
+		}));
+		converter.afterPropertiesSet();
+
+		TypeImplementingMap source = new TypeImplementingMap("one", 2);
+		org.bson.Document target = new org.bson.Document();
+
+		converter.write(source, target);
+
+		assertThat(target).containsEntry("1st", "one").containsEntry("2nd", 2);
+	}
+
+	@Test // GH-3660
+	void usesCustomConverterForTypesImplementingMapOnWrite() {
+
+		converter = new MappingMongoConverter(resolver, mappingContext);
+		converter.setCustomConversions(MongoCustomConversions.create(it -> {
+			it.registerConverter(new TypeImplementingMapToDocumentConverter());
+		}));
+		converter.afterPropertiesSet();
+
+		TypeImplementingMap source = new TypeImplementingMap("one", 2);
+		org.bson.Document target = new org.bson.Document();
+
+		converter.write(source, target);
+
+		assertThat(target).containsEntry("1st", "one").containsEntry("2nd", 2);
+	}
+
+	@Test // GH-3660
+	void usesCustomConverterForTypesImplementingMapOnRead() {
+
+		converter = new MappingMongoConverter(resolver, mappingContext);
+		converter.setCustomConversions(MongoCustomConversions.create(it -> {
+			it.registerConverter(new DocumentToTypeImplementingMapConverter());
+		}));
+		converter.afterPropertiesSet();
+
+		org.bson.Document source = new org.bson.Document("1st", "one")
+				.append("2nd", 2)
+				.append("_class", TypeImplementingMap.class.getName());
+
+		TypeImplementingMap target = converter.read(TypeImplementingMap.class, source);
+
+		assertThat(target).isEqualTo(new TypeImplementingMap("one", 2));
+	}
+
+	@Test // GH-3660
+	void usesCustomConverterForPropertiesUsingTypesThatImplementMapOnWrite() {
+
+		converter = new MappingMongoConverter(resolver, mappingContext);
+		converter.setCustomConversions(MongoCustomConversions.create(it -> {
+			it.registerConverter(new TypeImplementingMapToDocumentConverter());
+		}));
+		converter.afterPropertiesSet();
+
+		TypeWrappingTypeImplementingMap source = new TypeWrappingTypeImplementingMap();
+		source.typeImplementingMap = new TypeImplementingMap("one", 2);
+		org.bson.Document target = new org.bson.Document();
+
+		converter.write(source, target);
+
+		assertThat(target).containsEntry("typeImplementingMap", new org.bson.Document("1st", "one").append("2nd", 2));
+	}
+
+	@Test // GH-3660
+	void usesCustomConverterForPropertiesUsingTypesImplementingMapOnRead() {
+
+		converter = new MappingMongoConverter(resolver, mappingContext);
+		converter.setCustomConversions(MongoCustomConversions.create(it -> {
+			it.registerConverter(new DocumentToTypeImplementingMapConverter());
+		}));
+		converter.afterPropertiesSet();
+
+		org.bson.Document source = new org.bson.Document("typeImplementingMap",
+		new org.bson.Document("1st", "one")
+				.append("2nd", 2))
+				.append("_class", TypeWrappingTypeImplementingMap.class.getName());
+
+		TypeWrappingTypeImplementingMap target = converter.read(TypeWrappingTypeImplementingMap.class, source);
+
+		assertThat(target.typeImplementingMap).isEqualTo(new TypeImplementingMap("one", 2));
+	}
+
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -2969,6 +3063,108 @@ class MappingMongoConverterUnitTests {
 			SubTypeOfGenericType target = new SubTypeOfGenericType();
 			target.content = source.getString("value") + "_s";
 			return target;
+		}
+	}
+
+	@WritingConverter
+	static class TypeImplementingMapToDocumentConverter implements Converter<TypeImplementingMap, org.bson.Document> {
+
+		@Nullable
+		@Override
+		public org.bson.Document convert(TypeImplementingMap source) {
+			return new org.bson.Document("1st", source.val1).append("2nd", source.val2);
+		}
+	}
+
+	@ReadingConverter
+	static class DocumentToTypeImplementingMapConverter implements Converter<org.bson.Document, TypeImplementingMap> {
+
+		@Nullable
+		@Override
+		public TypeImplementingMap convert(org.bson.Document source) {
+			return new TypeImplementingMap(source.getString("1st"), source.getInteger("2nd"));
+		}
+	}
+
+	static class TypeWrappingTypeImplementingMap {
+
+		String id;
+		TypeImplementingMap typeImplementingMap;
+	}
+
+	@EqualsAndHashCode
+	static class TypeImplementingMap implements Map<String,String> {
+
+		String val1;
+		int val2;
+
+		public TypeImplementingMap(String val1, int val2) {
+			this.val1 = val1;
+			this.val2 = val2;
+		}
+
+		@Override
+		public int size() {
+			return 0;
+		}
+
+		@Override
+		public boolean isEmpty() {
+			return false;
+		}
+
+		@Override
+		public boolean containsKey(Object key) {
+			return false;
+		}
+
+		@Override
+		public boolean containsValue(Object value) {
+			return false;
+		}
+
+		@Override
+		public String get(Object key) {
+			return null;
+		}
+
+		@Nullable
+		@Override
+		public String put(String key, String value) {
+			return null;
+		}
+
+		@Override
+		public String remove(Object key) {
+			return null;
+		}
+
+		@Override
+		public void putAll(@NonNull Map<? extends String, ? extends String> m) {
+
+		}
+
+		@Override
+		public void clear() {
+
+		}
+
+		@NonNull
+		@Override
+		public Set<String> keySet() {
+			return null;
+		}
+
+		@NonNull
+		@Override
+		public Collection<String> values() {
+			return null;
+		}
+
+		@NonNull
+		@Override
+		public Set<Entry<String, String>> entrySet() {
+			return null;
 		}
 	}
 }
