@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import lombok.Data;
 import org.bson.conversions.Bson;
 import org.bson.types.Code;
 import org.bson.types.ObjectId;
@@ -49,12 +48,10 @@ import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.TextScore;
 import org.springframework.data.mongodb.core.mapping.Unwrapped;
 import org.springframework.data.mongodb.core.query.BasicQuery;
@@ -75,7 +72,6 @@ import com.mongodb.client.model.Filters;
  * @author Christoph Strobl
  * @author Mark Paluch
  */
-@ExtendWith(MockitoExtension.class)
 public class QueryMapperUnitTests {
 
 	private QueryMapper mapper;
@@ -1417,18 +1413,18 @@ public class QueryMapperUnitTests {
 		@Field("geoJsonPointWithNameViaFieldAnnotation") GeoJsonPoint namedGeoJsonPoint;
 	}
 
-	static class SimpeEntityWithoutId {
+	static class SimpleEntityWithoutId {
 
 		String stringProperty;
 		Integer integerProperty;
 	}
 
 	static class EntityWithComplexValueTypeMap {
-		Map<Integer, SimpeEntityWithoutId> map;
+		Map<Integer, SimpleEntityWithoutId> map;
 	}
 
 	static class EntityWithComplexValueTypeList {
-		List<SimpeEntityWithoutId> list;
+		List<SimpleEntityWithoutId> list;
 	}
 
 	static class WithExplicitTargetTypes {
