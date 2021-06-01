@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import lombok.Data;
 import org.bson.conversions.Bson;
 import org.bson.types.Code;
 import org.bson.types.ObjectId;
@@ -37,6 +36,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
@@ -55,7 +57,6 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.TextScore;
 import org.springframework.data.mongodb.core.mapping.Unwrapped;
 import org.springframework.data.mongodb.core.query.BasicQuery;
@@ -77,6 +78,7 @@ import com.mongodb.client.model.Filters;
  * @author Mark Paluch
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class QueryMapperUnitTests {
 
 	private QueryMapper mapper;
@@ -1439,18 +1441,18 @@ public class QueryMapperUnitTests {
 		@Field("geoJsonPointWithNameViaFieldAnnotation") GeoJsonPoint namedGeoJsonPoint;
 	}
 
-	static class SimpeEntityWithoutId {
+	static class SimpleEntityWithoutId {
 
 		String stringProperty;
 		Integer integerProperty;
 	}
 
 	static class EntityWithComplexValueTypeMap {
-		Map<Integer, SimpeEntityWithoutId> map;
+		Map<Integer, SimpleEntityWithoutId> map;
 	}
 
 	static class EntityWithComplexValueTypeList {
-		List<SimpeEntityWithoutId> list;
+		List<SimpleEntityWithoutId> list;
 	}
 
 	static class WithExplicitTargetTypes {
