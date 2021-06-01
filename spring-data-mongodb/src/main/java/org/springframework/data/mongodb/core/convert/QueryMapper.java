@@ -1228,6 +1228,7 @@ public class QueryMapper {
 			return propertyPath;
 		}
 
+		@Nullable
 		private PersistentPropertyPath<MongoPersistentProperty> tryToResolvePersistentPropertyPath(PropertyPath path) {
 
 			try {
