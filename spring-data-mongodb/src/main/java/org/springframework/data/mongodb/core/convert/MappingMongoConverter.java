@@ -171,8 +171,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		Assert.notNull(path, "ObjectPath must not be null");
 
-		return new ConversionContext(conversions, path, this::readDocument, this::readCollectionOrArray, this::readMap, this::readDBRef,
-				this::getPotentiallyConvertedSimpleRead);
+		return new ConversionContext(conversions, path, this::readDocument, this::readCollectionOrArray, this::readMap,
+				this::readDBRef, this::getPotentiallyConvertedSimpleRead);
 	}
 
 	/**
@@ -527,7 +527,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return;
 		}
 
-		if (property.isDocumentReference() || (!property.isDbReference() && property.findAnnotation(Reference.class) != null)) {
+		if (property.isDocumentReference()
+				|| (!property.isDbReference() && property.findAnnotation(Reference.class) != null)) {
 
 			// quite unusual but sounds like worth having?
 
@@ -595,13 +596,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		Assert.notNull(referringProperty, "Cannot create DocumentReference. The referringProperty must not be null!");
 
-			if (referringProperty.isDbReference()) {
-				return () -> toDBRef(source, referringProperty);
-			}
+		if (referringProperty.isDbReference()) {
+			return () -> toDBRef(source, referringProperty);
+		}
 
-			if (referringProperty.isDocumentReference() || referringProperty.findAnnotation(Reference.class) != null) {
-				return createDocumentPointer(source, referringProperty);
-			}
+		if (referringProperty.isDocumentReference() || referringProperty.findAnnotation(Reference.class) != null) {
+			return createDocumentPointer(source, referringProperty);
+		}
 
 		throw new IllegalArgumentException("The referringProperty is neither a DBRef nor a document reference");
 	}
@@ -612,7 +613,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return () -> source;
 		}
 
-		if(source instanceof DocumentPointer) {
+		if (source instanceof DocumentPointer) {
 			return (DocumentPointer<?>) source;
 		}
 
@@ -622,7 +623,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		if (ClassUtils.isAssignableValue(referringProperty.getAssociationTargetType(), source)) {
-			return documentPointerFactory.computePointer(mappingContext, referringProperty, source, referringProperty.getActualType());
+			return documentPointerFactory.computePointer(mappingContext, referringProperty, source,
+					referringProperty.getActualType());
 		}
 
 		return () -> source;
@@ -1978,9 +1980,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		private final ContainerValueConverter<DBRef> dbRefConverter;
 		private final ValueConverter<Object> elementConverter;
 
-		ConversionContext(org.springframework.data.convert.CustomConversions customConversions, ObjectPath path, ContainerValueConverter<Bson> documentConverter,
-				ContainerValueConverter<Collection<?>> collectionConverter, ContainerValueConverter<Bson> mapConverter,
-				ContainerValueConverter<DBRef> dbRefConverter, ValueConverter<Object> elementConverter) {
+		ConversionContext(org.springframework.data.convert.CustomConversions customConversions, ObjectPath path,
+				ContainerValueConverter<Bson> documentConverter, ContainerValueConverter<Collection<?>> collectionConverter,
+				ContainerValueConverter<Bson> mapConverter, ContainerValueConverter<DBRef> dbRefConverter,
+				ValueConverter<Object> elementConverter) {
 
 			this.conversions = customConversions;
 			this.path = path;
@@ -2052,8 +2055,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 			Assert.notNull(currentPath, "ObjectPath must not be null");
 
-			return new ConversionContext(conversions, currentPath, documentConverter, collectionConverter, mapConverter, dbRefConverter,
-					elementConverter);
+			return new ConversionContext(conversions, currentPath, documentConverter, collectionConverter, mapConverter,
+					dbRefConverter, elementConverter);
 		}
 
 		public ObjectPath getPath() {
