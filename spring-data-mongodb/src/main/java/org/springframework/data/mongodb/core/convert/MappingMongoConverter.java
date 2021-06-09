@@ -141,7 +141,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				this::getWriteTarget);
 		this.idMapper = new QueryMapper(this);
 
-
 		this.spELContext = new SpELContext(DocumentPropertyAccessor.INSTANCE);
 		this.dbRefProxyHandler = new DefaultDbRefProxyHandler(spELContext, mappingContext,
 				(prop, bson, evaluator, path) -> {
@@ -161,8 +160,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		Assert.notNull(path, "ObjectPath must not be null");
 
-		return new ConversionContext(conversions, path, this::readDocument, this::readCollectionOrArray, this::readMap, this::readDBRef,
-				this::getPotentiallyConvertedSimpleRead);
+		return new ConversionContext(conversions, path, this::readDocument, this::readCollectionOrArray, this::readMap,
+				this::readDBRef, this::getPotentiallyConvertedSimpleRead);
 	}
 
 	/**
@@ -376,8 +375,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	private <S> S populateProperties(ConversionContext context, MongoPersistentEntity<S> entity,
-			DocumentAccessor documentAccessor,
-			SpELExpressionEvaluator evaluator, S instance) {
+			DocumentAccessor documentAccessor, SpELExpressionEvaluator evaluator, S instance) {
 
 		PersistentPropertyAccessor<S> accessor = new ConvertingPropertyAccessor<>(entity.getPropertyAccessor(instance),
 				conversionService);
@@ -423,8 +421,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	@Nullable
 	private Object readIdValue(ConversionContext context, SpELExpressionEvaluator evaluator,
-			MongoPersistentProperty idProperty,
-			Object rawId) {
+			MongoPersistentProperty idProperty, Object rawId) {
 
 		String expression = idProperty.getSpelExpression();
 		Object resolvedValue = expression != null ? evaluator.evaluate(expression) : rawId;
@@ -434,8 +431,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	private void readProperties(ConversionContext context, MongoPersistentEntity<?> entity,
 			PersistentPropertyAccessor<?> accessor, DocumentAccessor documentAccessor,
-			MongoDbPropertyValueProvider valueProvider,
-			SpELExpressionEvaluator evaluator) {
+			MongoDbPropertyValueProvider valueProvider, SpELExpressionEvaluator evaluator) {
 
 		DbRefResolverCallback callback = null;
 
@@ -505,8 +501,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	@Nullable
 	private Object readUnwrapped(ConversionContext context, DocumentAccessor documentAccessor,
-			MongoPersistentProperty prop,
-			MongoPersistentEntity<?> unwrappedEntity) {
+			MongoPersistentProperty prop, MongoPersistentEntity<?> unwrappedEntity) {
 
 		if (prop.findAnnotation(Unwrapped.class).onEmpty().equals(OnEmpty.USE_EMPTY)) {
 			return read(context, unwrappedEntity, (Document) documentAccessor.getDocument());
@@ -1447,8 +1442,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			T target = null;
 			if (document != null) {
 
-				maybeEmitEvent(
-						new AfterLoadEvent<>(document, (Class<T>) type.getType(), collectionName));
+				maybeEmitEvent(new AfterLoadEvent<>(document, (Class<T>) type.getType(), collectionName));
 				target = (T) readDocument(context, document, type);
 			}
 
@@ -1541,9 +1535,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	@SuppressWarnings("ConstantConditions")
-	private <T extends Object> T doConvert(Object value, Class<? extends T> target, @Nullable Class<? extends T> fallback) {
+	private <T extends Object> T doConvert(Object value, Class<? extends T> target,
+			@Nullable Class<? extends T> fallback) {
 
-		if(conversionService.canConvert(value.getClass(), target) || fallback == null) {
+		if (conversionService.canConvert(value.getClass(), target) || fallback == null) {
 			return conversionService.convert(value, target);
 		}
 		return conversionService.convert(value, fallback);
@@ -1861,9 +1856,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		private final ContainerValueConverter<DBRef> dbRefConverter;
 		private final ValueConverter<Object> elementConverter;
 
-		ConversionContext(org.springframework.data.convert.CustomConversions customConversions, ObjectPath path, ContainerValueConverter<Bson> documentConverter,
-				ContainerValueConverter<Collection<?>> collectionConverter, ContainerValueConverter<Bson> mapConverter,
-				ContainerValueConverter<DBRef> dbRefConverter, ValueConverter<Object> elementConverter) {
+		ConversionContext(org.springframework.data.convert.CustomConversions customConversions, ObjectPath path,
+				ContainerValueConverter<Bson> documentConverter, ContainerValueConverter<Collection<?>> collectionConverter,
+				ContainerValueConverter<Bson> mapConverter, ContainerValueConverter<DBRef> dbRefConverter,
+				ValueConverter<Object> elementConverter) {
 
 			this.conversions = customConversions;
 			this.path = path;
@@ -1935,8 +1931,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 			Assert.notNull(currentPath, "ObjectPath must not be null");
 
-			return new ConversionContext(conversions, currentPath, documentConverter, collectionConverter, mapConverter, dbRefConverter,
-					elementConverter);
+			return new ConversionContext(conversions, currentPath, documentConverter, collectionConverter, mapConverter,
+					dbRefConverter, elementConverter);
 		}
 
 		public ObjectPath getPath() {

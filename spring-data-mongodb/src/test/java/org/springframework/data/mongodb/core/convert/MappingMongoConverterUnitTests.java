@@ -30,7 +30,6 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-import org.assertj.core.api.Assertions;
 import org.bson.types.Code;
 import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
@@ -42,6 +41,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.ConversionNotSupportedException;
 import org.springframework.beans.factory.annotation.Value;
@@ -529,7 +529,7 @@ class MappingMongoConverterUnitTests {
 	}
 
 	@Test
-	public void convertsObjectsIfNecessary() {
+	void convertsObjectsIfNecessary() {
 
 		ObjectId id = new ObjectId();
 		assertThat(converter.convertToMongoType(id)).isEqualTo(id);
@@ -2113,21 +2113,21 @@ class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-2479
-	public void entityCallbacksAreNotSetByDefault() {
-		Assertions.assertThat(ReflectionTestUtils.getField(converter, "entityCallbacks")).isNull();
+	void entityCallbacksAreNotSetByDefault() {
+		assertThat(ReflectionTestUtils.getField(converter, "entityCallbacks")).isNull();
 	}
 
 	@Test // DATAMONGO-2479
-	public void entityCallbacksShouldBeInitiatedOnSettingApplicationContext() {
+	void entityCallbacksShouldBeInitiatedOnSettingApplicationContext() {
 
 		ApplicationContext ctx = new StaticApplicationContext();
 		converter.setApplicationContext(ctx);
 
-		Assertions.assertThat(ReflectionTestUtils.getField(converter, "entityCallbacks")).isNotNull();
+		assertThat(ReflectionTestUtils.getField(converter, "entityCallbacks")).isNotNull();
 	}
 
 	@Test // DATAMONGO-2479
-	public void setterForEntityCallbackOverridesContextInitializedOnes() {
+	void setterForEntityCallbackOverridesContextInitializedOnes() {
 
 		ApplicationContext ctx = new StaticApplicationContext();
 		converter.setApplicationContext(ctx);
@@ -2135,11 +2135,11 @@ class MappingMongoConverterUnitTests {
 		EntityCallbacks callbacks = EntityCallbacks.create();
 		converter.setEntityCallbacks(callbacks);
 
-		Assertions.assertThat(ReflectionTestUtils.getField(converter, "entityCallbacks")).isSameAs(callbacks);
+		assertThat(ReflectionTestUtils.getField(converter, "entityCallbacks")).isSameAs(callbacks);
 	}
 
 	@Test // DATAMONGO-2479
-	public void setterForApplicationContextShouldNotOverrideAlreadySetEntityCallbacks() {
+	void setterForApplicationContextShouldNotOverrideAlreadySetEntityCallbacks() {
 
 		EntityCallbacks callbacks = EntityCallbacks.create();
 		ApplicationContext ctx = new StaticApplicationContext();
@@ -2147,11 +2147,11 @@ class MappingMongoConverterUnitTests {
 		converter.setEntityCallbacks(callbacks);
 		converter.setApplicationContext(ctx);
 
-		Assertions.assertThat(ReflectionTestUtils.getField(converter, "entityCallbacks")).isSameAs(callbacks);
+		assertThat(ReflectionTestUtils.getField(converter, "entityCallbacks")).isSameAs(callbacks);
 	}
 
 	@Test // DATAMONGO-2479
-	public void resolveDBRefMapValueShouldInvokeCallbacks() {
+	void resolveDBRefMapValueShouldInvokeCallbacks() {
 
 		AfterConvertCallback<Person> afterConvertCallback = spy(new ReturningAfterConvertCallback());
 		converter.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
@@ -2168,7 +2168,7 @@ class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-2300
-	public void readAndConvertDBRefNestedByMapCorrectly() {
+	void readAndConvertDBRefNestedByMapCorrectly() {
 
 		org.bson.Document cluster = new org.bson.Document("_id", 100L);
 		DBRef dbRef = new DBRef("clusters", 100L);
@@ -2434,7 +2434,6 @@ class MappingMongoConverterUnitTests {
 	@Test // GH-3660
 	void usesCustomConverterForMapTypesOnWrite() {
 
-
 		converter = new MappingMongoConverter(resolver, mappingContext);
 		converter.setCustomConversions(MongoCustomConversions.create(it -> {
 			it.registerConverter(new TypeImplementingMapToDocumentConverter());
@@ -2520,7 +2519,6 @@ class MappingMongoConverterUnitTests {
 
 		assertThat(target.typeImplementingMap).isEqualTo(new TypeImplementingMap("one", 2));
 	}
-
 
 	static class GenericType<T> {
 		T content;
@@ -3098,7 +3096,7 @@ class MappingMongoConverterUnitTests {
 		String val1;
 		int val2;
 
-		public TypeImplementingMap(String val1, int val2) {
+		TypeImplementingMap(String val1, int val2) {
 			this.val1 = val1;
 			this.val2 = val2;
 		}
