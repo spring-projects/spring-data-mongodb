@@ -378,6 +378,10 @@ public class QueryMapper {
 			}
 		}
 
+		if (value == null) {
+			return null;
+		}
+
 		if (isNestedKeyword(value)) {
 			return getMappedKeyword(new Keyword((Bson) value), documentField.getPropertyEntity());
 		}
@@ -635,7 +639,7 @@ public class QueryMapper {
 	 * @param candidate
 	 * @return
 	 */
-	protected boolean isNestedKeyword(Object candidate) {
+	protected boolean isNestedKeyword(@Nullable Object candidate) {
 
 		if (!(candidate instanceof Document)) {
 			return false;
@@ -683,6 +687,7 @@ public class QueryMapper {
 	 * @param value the actual value. Can be {@literal null}.
 	 * @return the potentially converted target value.
 	 */
+	@Nullable
 	private Object applyFieldTargetTypeHintToValue(Field documentField, @Nullable Object value) {
 
 		if (value == null || documentField.getProperty() == null || !documentField.getProperty().hasExplicitWriteTarget()) {
