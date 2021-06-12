@@ -315,4 +315,9 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	public <T> PersistentPropertyAccessor<T> getAccessorForOwner(T owner) {
 		return delegate.getAccessorForOwner(owner);
 	}
+
+	@Override
+	public boolean isPropertyOmittableOnNull() {
+		return delegate.isPropertyOmittableOnNull();
+	}
 }
