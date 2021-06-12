@@ -32,6 +32,7 @@ import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
@@ -41,8 +42,6 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 @ExtendWith(MockitoExtension.class)
 class FilterExpressionUnitTests {
 
-	@Mock MongoDatabaseFactory mongoDbFactory;
-
 	private AggregationOperationContext aggregationContext;
 	private MongoMappingContext mappingContext;
 
@@ -51,7 +50,7 @@ class FilterExpressionUnitTests {
 
 		mappingContext = new MongoMappingContext();
 		aggregationContext = new TypeBasedAggregationOperationContext(Sales.class, mappingContext,
-				new QueryMapper(new MappingMongoConverter(new DefaultDbRefResolver(mongoDbFactory), mappingContext)));
+				new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext)));
 	}
 
 	@Test // DATAMONGO-1491

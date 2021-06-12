@@ -349,7 +349,13 @@ public class BsonUtils {
 	 * @since 3.0
 	 */
 	public static boolean isJsonDocument(@Nullable String value) {
-		return StringUtils.hasText(value) && (value.startsWith("{") && value.endsWith("}"));
+
+		if(!StringUtils.hasText(value)) {
+			return false;
+		}
+
+		String potentialJson = value.trim();
+		return potentialJson.startsWith("{") && potentialJson.endsWith("}");
 	}
 
 	/**

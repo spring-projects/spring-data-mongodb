@@ -69,6 +69,11 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 
 	@Override
+	public boolean isDocumentReference() {
+		return delegate.isDocumentReference();
+	}
+
+	@Override
 	public boolean isExplicitIdProperty() {
 		return delegate.isExplicitIdProperty();
 	}
@@ -89,14 +94,15 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 	
 	@Override
-	public boolean isOmitNullProperty() {
-		return delegate.isOmitNullProperty();
+	@Nullable
+	public DBRef getDBRef() {
+		return delegate.getDBRef();
 	}
 
 	@Override
 	@Nullable
-	public DBRef getDBRef() {
-		return delegate.getDBRef();
+	public DocumentReference getDocumentReference() {
+		return delegate.getDocumentReference();
 	}
 
 	@Override
@@ -308,5 +314,10 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	@Override
 	public <T> PersistentPropertyAccessor<T> getAccessorForOwner(T owner) {
 		return delegate.getAccessorForOwner(owner);
+	}
+
+	@Override
+	public boolean isPropertyOmittableOnNull() {
+		return delegate.isPropertyOmittableOnNull();
 	}
 }

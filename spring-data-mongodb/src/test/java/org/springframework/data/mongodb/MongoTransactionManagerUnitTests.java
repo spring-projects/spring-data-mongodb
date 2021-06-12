@@ -25,6 +25,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
@@ -37,12 +38,15 @@ import org.springframework.transaction.support.TransactionTemplate;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.session.ServerSession;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 /**
  * @author Christoph Strobl
  */
 @ExtendWith(MockitoExtension.class)
-public class MongoTransactionManagerUnitTests {
+@MockitoSettings(strictness = Strictness.LENIENT)
+class MongoTransactionManagerUnitTests {
 
 	@Mock ClientSession session;
 	@Mock ClientSession session2;
@@ -53,23 +57,25 @@ public class MongoTransactionManagerUnitTests {
 	@Mock MongoDatabase db2;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 
 		when(dbFactory.getSession(any())).thenReturn(session, session2);
+		when(dbFactory.getExceptionTranslator()).thenReturn(new MongoExceptionTranslator());
+		when(dbFactory2.getExceptionTranslator()).thenReturn(new MongoExceptionTranslator());
 		when(dbFactory.withSession(session)).thenReturn(dbFactory);
 		when(dbFactory.getMongoDatabase()).thenReturn(db);
 		when(session.getServerSession()).thenReturn(serverSession);
 	}
 
 	@AfterEach
-	public void verifyTransactionSynchronizationManager() {
+	void verifyTransactionSynchronizationManager() {
 
 		assertThat(TransactionSynchronizationManager.getResourceMap().isEmpty()).isTrue();
 		assertThat(TransactionSynchronizationManager.isSynchronizationActive()).isFalse();
 	}
 
 	@Test // DATAMONGO-1920
-	public void triggerCommitCorrectly() {
+	void triggerCommitCorrectly() {
 
 		MongoTransactionManager txManager = new MongoTransactionManager(dbFactory);
 		TransactionStatus txStatus = txManager.getTransaction(new DefaultTransactionDefinition());
@@ -91,7 +97,7 @@ public class MongoTransactionManagerUnitTests {
 	}
 
 	@Test // DATAMONGO-1920
-	public void participateInOnGoingTransactionWithCommit() {
+	void participateInOnGoingTransactionWithCommit() {
 
 		MongoTransactionManager txManager = new MongoTransactionManager(dbFactory);
 		TransactionStatus txStatus = txManager.getTransaction(new DefaultTransactionDefinition());
@@ -126,7 +132,7 @@ public class MongoTransactionManagerUnitTests {
 	}
 
 	@Test // DATAMONGO-1920
-	public void participateInOnGoingTransactionWithRollbackOnly() {
+	void participateInOnGoingTransactionWithRollbackOnly() {
 
 		MongoTransactionManager txManager = new MongoTransactionManager(dbFactory);
 		TransactionStatus txStatus = txManager.getTransaction(new DefaultTransactionDefinition());
@@ -163,7 +169,7 @@ public class MongoTransactionManagerUnitTests {
 	}
 
 	@Test // DATAMONGO-1920
-	public void triggerRollbackCorrectly() {
+	void triggerRollbackCorrectly() {
 
 		MongoTransactionManager txManager = new MongoTransactionManager(dbFactory);
 		TransactionStatus txStatus = txManager.getTransaction(new DefaultTransactionDefinition());
@@ -185,7 +191,7 @@ public class MongoTransactionManagerUnitTests {
 	}
 
 	@Test // DATAMONGO-1920
-	public void suspendTransactionWhilePropagationNotSupported() {
+	void suspendTransactionWhilePropagationNotSupported() {
 
 		MongoTransactionManager txManager = new MongoTransactionManager(dbFactory);
 		TransactionStatus txStatus = txManager.getTransaction(new DefaultTransactionDefinition());
@@ -228,7 +234,7 @@ public class MongoTransactionManagerUnitTests {
 	}
 
 	@Test // DATAMONGO-1920
-	public void suspendTransactionWhilePropagationRequiresNew() {
+	void suspendTransactionWhilePropagationRequiresNew() {
 
 		when(dbFactory.withSession(session2)).thenReturn(dbFactory2);
 		when(dbFactory2.getMongoDatabase()).thenReturn(db2);
@@ -277,7 +283,7 @@ public class MongoTransactionManagerUnitTests {
 	}
 
 	@Test // DATAMONGO-1920
-	public void readonlyShouldInitiateASessionStartAndCommitTransaction() {
+	void readonlyShouldInitiateASessionStartAndCommitTransaction() {
 
 		MongoTransactionManager txManager = new MongoTransactionManager(dbFactory);
 
@@ -303,7 +309,7 @@ public class MongoTransactionManagerUnitTests {
 	}
 
 	@Test // DATAMONGO-1920
-	public void readonlyShouldInitiateASessionStartAndRollbackTransaction() {
+	void readonlyShouldInitiateASessionStartAndRollbackTransaction() {
 
 		MongoTransactionManager txManager = new MongoTransactionManager(dbFactory);
 

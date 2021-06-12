@@ -48,6 +48,7 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
+import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.Unwrapped;
@@ -70,7 +71,6 @@ import com.mongodb.DBRef;
 @ExtendWith(MockitoExtension.class)
 class UpdateMapperUnitTests {
 
-	@Mock MongoDatabaseFactory factory;
 	private MappingMongoConverter converter;
 	private MongoMappingContext context;
 	private UpdateMapper mapper;
@@ -88,7 +88,7 @@ class UpdateMapperUnitTests {
 		this.context.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
 		this.context.initialize();
 
-		this.converter = new MappingMongoConverter(new DefaultDbRefResolver(factory), context);
+		this.converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, context);
 		this.converter.setCustomConversions(conversions);
 		this.converter.afterPropertiesSet();
 

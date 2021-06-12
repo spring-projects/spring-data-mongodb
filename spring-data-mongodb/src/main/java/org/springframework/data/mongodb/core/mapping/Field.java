@@ -33,6 +33,21 @@ import org.springframework.core.annotation.AliasFor;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD, ElementType.METHOD, ElementType.ANNOTATION_TYPE })
 public @interface Field {
+	
+	/**
+	 * Enumeration of write strategies for a field with null value.It decides whether a field with null value has to be 
+	 * written to the resulting document to be saved to the database.
+	 */
+	enum Write{
+		/*
+		 * The field will always be written to the database irrespective of null value.
+		 */
+		ALWAYS,
+		/*
+		 * The field will only be written to the database if it has a non null value.
+		 */
+		NON_NULL
+	}
 
 	/**
 	 * The key to be used to store the field inside the document. Alias for {@link #name()}.
@@ -67,12 +82,12 @@ public @interface Field {
 	FieldType targetType() default FieldType.IMPLICIT;
 	
 	/**
-	 * If set to {@literal true} {@literal null} values will be omitted.
-	 * Setting the value to {@literal false} explicitly adds an entry for the given field
+	 * If set to {@link Write#NON_NULL} {@literal null} values will be omitted.
+	 * Setting the value to {@link Write#ALWAYS} explicitly adds an entry for the given field
 	 * holding {@literal null} as a value {@code 'fieldName' : null }.
 	 * <p />
-	 * <strong>NOTE</strong> Setting the value to {@literal false} may lead to increased document size.
-	 * @return {@literal true} by default.
+	 * <strong>NOTE</strong> Setting the value to {@link Write#ALWAYS} may lead to increased document size.
+	 * @return {@link Write#NON_NULL} by default.
 	 */
-	boolean omitNull() default true;
+	Write write() default Write.NON_NULL;
 }

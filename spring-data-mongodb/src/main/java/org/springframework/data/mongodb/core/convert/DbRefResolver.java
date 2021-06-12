@@ -35,7 +35,7 @@ import com.mongodb.DBRef;
  * @author Mark Paluch
  * @since 1.4
  */
-public interface DbRefResolver {
+public interface DbRefResolver extends ReferenceResolver {
 
 	/**
 	 * Resolves the given {@link DBRef} into an object of the given {@link MongoPersistentProperty}'s type. The method

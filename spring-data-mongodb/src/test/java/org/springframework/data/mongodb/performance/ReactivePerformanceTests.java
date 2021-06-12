@@ -41,12 +41,15 @@ import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DbRefResolverCallback;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.ReferenceLoader;
+import org.springframework.data.mongodb.core.convert.ReferenceLookupDelegate;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.data.mongodb.repository.support.ReactiveMongoRepositoryFactory;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StopWatch;
 import org.springframework.util.StringUtils;
@@ -96,6 +99,14 @@ public class ReactivePerformanceTests {
 		context.afterPropertiesSet();
 
 		converter = new MappingMongoConverter(new DbRefResolver() {
+
+			@Nullable
+			@Override
+			public Object resolveReference(MongoPersistentProperty property, Object source,
+					ReferenceLookupDelegate referenceLookupDelegate, MongoEntityReader entityReader) {
+				return null;
+			}
+
 			@Override
 			public Object resolveDbRef(MongoPersistentProperty property, DBRef dbref, DbRefResolverCallback callback,
 					DbRefProxyHandler proxyHandler) {
@@ -117,6 +128,7 @@ public class ReactivePerformanceTests {
 			public List<Document> bulkFetch(List<DBRef> dbRefs) {
 				return null;
 			}
+
 		}, context);
 		operations = new ReactiveMongoTemplate(mongoDbFactory, converter);
 

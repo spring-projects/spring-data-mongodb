@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.convert;
 import java.util.List;
 
 import org.bson.Document;
+
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.lang.Nullable;
 
@@ -68,5 +69,12 @@ public enum NoOpDbRefResolver implements DbRefResolver {
 
 	private <T> T handle() throws UnsupportedOperationException {
 		throw new UnsupportedOperationException("DBRef resolution is not supported!");
+	}
+
+	@Nullable
+	@Override
+	public Object resolveReference(MongoPersistentProperty property, Object source,
+			ReferenceLookupDelegate referenceLookupDelegate, MongoEntityReader entityReader) {
+		return null;
 	}
 }

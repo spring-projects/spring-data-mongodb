@@ -49,7 +49,6 @@ class CustomConvertersUnitTests {
 
 	@Mock BarToDocumentConverter barToDocumentConverter;
 	@Mock DocumentToBarConverter documentToBarConverter;
-	@Mock MongoDatabaseFactory mongoDbFactory;
 
 	private MongoMappingContext context;
 
@@ -67,7 +66,7 @@ class CustomConvertersUnitTests {
 		context.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
 		context.initialize();
 
-		converter = new MappingMongoConverter(new DefaultDbRefResolver(mongoDbFactory), context);
+		converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, context);
 		converter.setCustomConversions(conversions);
 		converter.afterPropertiesSet();
 	}

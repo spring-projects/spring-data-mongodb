@@ -54,27 +54,25 @@ import org.springframework.data.util.TypeInformation;
  * @author Mark Paluch
  */
 @ExtendWith(MockitoExtension.class)
-public class MongoExampleMapperUnitTests {
+class MongoExampleMapperUnitTests {
 
-	MongoExampleMapper mapper;
-	MongoMappingContext context;
-	MappingMongoConverter converter;
-
-	@Mock MongoDatabaseFactory factory;
+	private MongoExampleMapper mapper;
+	private MongoMappingContext context;
+	private MappingMongoConverter converter;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 
 		this.context = new MongoMappingContext();
 
-		this.converter = new MappingMongoConverter(new DefaultDbRefResolver(factory), context);
+		this.converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, context);
 		this.converter.afterPropertiesSet();
 
 		this.mapper = new MongoExampleMapper(converter);
 	}
 
 	@Test // DATAMONGO-1245
-	public void exampleShouldBeMappedCorrectlyForFlatTypeWhenIdIsSet() {
+	void exampleShouldBeMappedCorrectlyForFlatTypeWhenIdIsSet() {
 
 		FlatDocument probe = new FlatDocument();
 		probe.id = "steelheart";
@@ -84,7 +82,7 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void exampleShouldBeMappedCorrectlyForFlatTypeWhenMultipleValuesSet() {
+	void exampleShouldBeMappedCorrectlyForFlatTypeWhenMultipleValuesSet() {
 
 		FlatDocument probe = new FlatDocument();
 		probe.id = "steelheart";
@@ -98,7 +96,7 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void exampleShouldBeMappedCorrectlyForFlatTypeWhenIdIsNotSet() {
+	void exampleShouldBeMappedCorrectlyForFlatTypeWhenIdIsNotSet() {
 
 		FlatDocument probe = new FlatDocument();
 		probe.stringValue = "firefight";
@@ -110,7 +108,7 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void exampleShouldBeMappedCorrectlyForFlatTypeWhenListHasValues() {
+	void exampleShouldBeMappedCorrectlyForFlatTypeWhenListHasValues() {
 
 		FlatDocument probe = new FlatDocument();
 		probe.listOfString = Arrays.asList("Prof", "Tia", "David");
@@ -122,7 +120,7 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void exampleShouldBeMappedCorrectlyForFlatTypeWhenFieldNameIsCustomized() {
+	void exampleShouldBeMappedCorrectlyForFlatTypeWhenFieldNameIsCustomized() {
 
 		FlatDocument probe = new FlatDocument();
 		probe.customNamedField = "Mitosis";
@@ -132,7 +130,7 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void typedExampleShouldContainTypeRestriction() {
+	void typedExampleShouldContainTypeRestriction() {
 
 		WrapperDocument probe = new WrapperDocument();
 		probe.flatDoc = new FlatDocument();
@@ -146,7 +144,7 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void exampleShouldBeMappedAsFlatMapWhenGivenNestedElementsWithLenientMatchMode() {
+	void exampleShouldBeMappedAsFlatMapWhenGivenNestedElementsWithLenientMatchMode() {
 
 		WrapperDocument probe = new WrapperDocument();
 		probe.flatDoc = new FlatDocument();
@@ -157,7 +155,7 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void exampleShouldBeMappedAsExactObjectWhenGivenNestedElementsWithStrictMatchMode() {
+	void exampleShouldBeMappedAsExactObjectWhenGivenNestedElementsWithStrictMatchMode() {
 
 		WrapperDocument probe = new WrapperDocument();
 		probe.flatDoc = new FlatDocument();
@@ -170,7 +168,7 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void exampleShouldBeMappedCorrectlyForFlatTypeWhenStringMatchModeIsStarting() {
+	void exampleShouldBeMappedCorrectlyForFlatTypeWhenStringMatchModeIsStarting() {
 
 		FlatDocument probe = new FlatDocument();
 		probe.stringValue = "firefight";
@@ -184,7 +182,7 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void exampleShouldBeMappedCorrectlyForFlatTypeContainingDotsWhenStringMatchModeIsStarting() {
+	void exampleShouldBeMappedCorrectlyForFlatTypeContainingDotsWhenStringMatchModeIsStarting() {
 
 		FlatDocument probe = new FlatDocument();
 		probe.stringValue = "fire.ight";
@@ -198,7 +196,7 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void exampleShouldBeMappedCorrectlyForFlatTypeWhenStringMatchModeIsEnding() {
+	void exampleShouldBeMappedCorrectlyForFlatTypeWhenStringMatchModeIsEnding() {
 
 		FlatDocument probe = new FlatDocument();
 		probe.stringValue = "firefight";
@@ -212,7 +210,7 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void exampleShouldBeMappedCorrectlyForFlatTypeWhenStringMatchModeRegex() {
+	void exampleShouldBeMappedCorrectlyForFlatTypeWhenStringMatchModeRegex() {
 
 		FlatDocument probe = new FlatDocument();
 		probe.stringValue = "firefight";
@@ -226,7 +224,7 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void exampleShouldBeMappedCorrectlyForFlatTypeWhenIgnoreCaseEnabledAndMatchModeSet() {
+	void exampleShouldBeMappedCorrectlyForFlatTypeWhenIgnoreCaseEnabledAndMatchModeSet() {
 
 		FlatDocument probe = new FlatDocument();
 		probe.stringValue = "firefight";
@@ -240,7 +238,7 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void exampleShouldBeMappedCorrectlyForFlatTypeWhenIgnoreCaseEnabled() {
+	void exampleShouldBeMappedCorrectlyForFlatTypeWhenIgnoreCaseEnabled() {
 
 		FlatDocument probe = new FlatDocument();
 		probe.stringValue = "firefight";
@@ -255,7 +253,7 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void exampleShouldBeMappedWhenContainingDBRef() {
+	void exampleShouldBeMappedWhenContainingDBRef() {
 
 		FlatDocument probe = new FlatDocument();
 		probe.stringValue = "steelheart";
@@ -271,7 +269,7 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void exampleShouldBeMappedWhenDBRefIsNull() {
+	void exampleShouldBeMappedWhenDBRefIsNull() {
 
 		FlatDocument probe = new FlatDocument();
 		probe.stringValue = "steelheart";
@@ -283,7 +281,7 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void exampleShouldBeMappedCorrectlyWhenContainingLegacyPoint() {
+	void exampleShouldBeMappedCorrectlyWhenContainingLegacyPoint() {
 
 		ClassWithGeoTypes probe = new ClassWithGeoTypes();
 		probe.legacyPoint = new Point(10D, 20D);
@@ -296,7 +294,7 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void mappingShouldExcludeFieldWithCustomNameCorrectly() {
+	void mappingShouldExcludeFieldWithCustomNameCorrectly() {
 
 		FlatDocument probe = new FlatDocument();
 		probe.customNamedField = "foo";
@@ -311,7 +309,7 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void mappingShouldExcludeFieldCorrectly() {
+	void mappingShouldExcludeFieldCorrectly() {
 
 		FlatDocument probe = new FlatDocument();
 		probe.customNamedField = "foo";
@@ -326,7 +324,7 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void mappingShouldExcludeNestedFieldCorrectly() {
+	void mappingShouldExcludeNestedFieldCorrectly() {
 
 		WrapperDocument probe = new WrapperDocument();
 		probe.flatDoc = new FlatDocument();
@@ -342,7 +340,7 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void mappingShouldExcludeNestedFieldWithCustomNameCorrectly() {
+	void mappingShouldExcludeNestedFieldWithCustomNameCorrectly() {
 
 		WrapperDocument probe = new WrapperDocument();
 		probe.flatDoc = new FlatDocument();
@@ -358,7 +356,7 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void mappingShouldFavorFieldSpecificationStringMatcherOverDefaultStringMatcher() {
+	void mappingShouldFavorFieldSpecificationStringMatcherOverDefaultStringMatcher() {
 
 		FlatDocument probe = new FlatDocument();
 		probe.stringValue = "firefight";
@@ -372,7 +370,7 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1245
-	public void mappingShouldIncludePropertiesFromHierarchicalDocument() {
+	void mappingShouldIncludePropertiesFromHierarchicalDocument() {
 
 		HierachicalDocument probe = new HierachicalDocument();
 		probe.stringValue = "firefight";
@@ -386,7 +384,7 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1459
-	public void mapsAnyMatchingExampleCorrectly() {
+	void mapsAnyMatchingExampleCorrectly() {
 
 		FlatDocument probe = new FlatDocument();
 		probe.stringValue = "firefight";
@@ -398,7 +396,7 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1768
-	public void allowIgnoringTypeRestrictionBySettingUpTypeKeyAsAnIgnoredPath() {
+	void allowIgnoringTypeRestrictionBySettingUpTypeKeyAsAnIgnoredPath() {
 
 		WrapperDocument probe = new WrapperDocument();
 		probe.flatDoc = new FlatDocument();
@@ -411,13 +409,13 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1768
-	public void allowIgnoringTypeRestrictionBySettingUpTypeKeyAsAnIgnoredPathWhenUsingCustomTypeMapper() {
+	void allowIgnoringTypeRestrictionBySettingUpTypeKeyAsAnIgnoredPathWhenUsingCustomTypeMapper() {
 
 		WrapperDocument probe = new WrapperDocument();
 		probe.flatDoc = new FlatDocument();
 		probe.flatDoc.stringValue = "conflux";
 
-		MappingMongoConverter mappingMongoConverter = new MappingMongoConverter(new DefaultDbRefResolver(factory), context);
+		MappingMongoConverter mappingMongoConverter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, context);
 		mappingMongoConverter.setTypeMapper(new DefaultMongoTypeMapper() {
 
 			@Override
@@ -445,7 +443,7 @@ public class MongoExampleMapperUnitTests {
 	}
 
 	@Test // DATAMONGO-1768
-	public void untypedExampleShouldNotInferTypeRestriction() {
+	void untypedExampleShouldNotInferTypeRestriction() {
 
 		WrapperDocument probe = new WrapperDocument();
 		probe.flatDoc = new FlatDocument();

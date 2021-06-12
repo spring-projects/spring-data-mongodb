@@ -27,6 +27,7 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
@@ -39,27 +40,25 @@ import org.springframework.data.mongodb.core.query.Query;
  * @author Mark Paluch
  * @author Christoph Strobl
  */
-public class CountQueryUnitTests {
+class CountQueryUnitTests {
 
-	QueryMapper mapper;
-	MongoMappingContext context;
-	MappingMongoConverter converter;
-
-	MongoDatabaseFactory factory = mock(MongoDatabaseFactory.class);
+	private QueryMapper mapper;
+	private MongoMappingContext context;
+	private MappingMongoConverter converter;
 
 	@BeforeEach
-	public void setUp() {
+	void setUp() {
 
 		this.context = new MongoMappingContext();
 
-		this.converter = new MappingMongoConverter(new DefaultDbRefResolver(factory), context);
+		this.converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, context);
 		this.converter.afterPropertiesSet();
 
 		this.mapper = new QueryMapper(converter);
 	}
 
 	@Test // DATAMONGO-2059
-	public void nearToGeoWithinWithoutDistance() {
+	void nearToGeoWithinWithoutDistance() {
 
 		Query source = query(where("location").near(new Point(-73.99171, 40.738868)));
 		org.bson.Document target = postProcessQueryForCount(source);
@@ -69,7 +68,7 @@ public class CountQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-2059
-	public void nearAndExisting$and() {
+	void nearAndExisting$and() {
 
 		Query source = query(where("location").near(new Point(-73.99171, 40.738868)).minDistance(0.01))
 				.addCriteria(new Criteria().andOperator(where("foo").is("bar")));
@@ -83,7 +82,7 @@ public class CountQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-2059
-	public void nearSphereToGeoWithinWithoutDistance() {
+	void nearSphereToGeoWithinWithoutDistance() {
 
 		Query source = query(where("location").nearSphere(new Point(-73.99171, 40.738868)));
 		org.bson.Document target = postProcessQueryForCount(source);
@@ -93,7 +92,7 @@ public class CountQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-2059
-	public void nearToGeoWithinWithMaxDistance() {
+	void nearToGeoWithinWithMaxDistance() {
 
 		Query source = query(where("location").near(new Point(-73.99171, 40.738868)).maxDistance(10));
 		org.bson.Document target = postProcessQueryForCount(source);
@@ -103,7 +102,7 @@ public class CountQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-2059
-	public void nearSphereToGeoWithinWithMaxDistance() {
+	void nearSphereToGeoWithinWithMaxDistance() {
 
 		Query source = query(where("location").nearSphere(new Point(-73.99171, 40.738868)).maxDistance(10));
 		org.bson.Document target = postProcessQueryForCount(source);
@@ -113,7 +112,7 @@ public class CountQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-2059
-	public void nearToGeoWithinWithMinDistance() {
+	void nearToGeoWithinWithMinDistance() {
 
 		Query source = query(where("location").near(new Point(-73.99171, 40.738868)).minDistance(0.01));
 		org.bson.Document target = postProcessQueryForCount(source);
@@ -124,7 +123,7 @@ public class CountQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-2059
-	public void nearToGeoWithinWithMaxDistanceAndCombinedWithOtherCriteria() {
+	void nearToGeoWithinWithMaxDistanceAndCombinedWithOtherCriteria() {
 
 		Query source = query(
 				where("name").is("food").and("location").near(new Point(-73.99171, 40.738868)).maxDistance(10));
@@ -135,7 +134,7 @@ public class CountQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-2059
-	public void nearToGeoWithinWithMinDistanceOrCombinedWithOtherCriteria() {
+	void nearToGeoWithinWithMinDistanceOrCombinedWithOtherCriteria() {
 
 		Query source = query(new Criteria().orOperator(where("name").is("food"),
 				where("location").near(new Point(-73.99171, 40.738868)).minDistance(0.01)));
@@ -146,7 +145,7 @@ public class CountQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-2059
-	public void nearToGeoWithinWithMaxDistanceOrCombinedWithOtherCriteria() {
+	void nearToGeoWithinWithMaxDistanceOrCombinedWithOtherCriteria() {
 
 		Query source = query(new Criteria().orOperator(where("name").is("food"),
 				where("location").near(new Point(-73.99171, 40.738868)).maxDistance(10)));

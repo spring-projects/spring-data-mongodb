@@ -379,8 +379,14 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	@Aggregation("{ '$project': { '_id' : '$lastname' } }")
 	List<String> findAllLastnames();
 
+	@Aggregation("{ '$project': { '_id' : '$lastname' } }")
+	Stream<String> findAllLastnamesAsStream();
+
 	@Aggregation("{ '$group': { '_id' : '$lastname', names : { $addToSet : '$?0' } } }")
 	List<PersonAggregate> groupByLastnameAnd(String property);
+
+	@Aggregation("{ '$group': { '_id' : '$lastname', names : { $addToSet : '$?0' } } }")
+	Slice<PersonAggregate> groupByLastnameAndAsSlice(String property, Pageable pageable);
 
 	@Aggregation("{ '$group': { '_id' : '$lastname', names : { $addToSet : '$?0' } } }")
 	List<PersonAggregate> groupByLastnameAnd(String property, Sort sort);
@@ -410,4 +416,9 @@ public interface PersonRepository extends MongoRepository<Person, String>, Query
 	List<Person> findByUnwrappedUserUsername(String username);
 
 	List<Person> findByUnwrappedUser(User user);
+
+	@Query("{ 'age' : null }")
+	Person findByQueryWithNullEqualityCheck();
+
+	List<Person> findBySpiritAnimal(User user);
 }

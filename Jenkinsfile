@@ -46,16 +46,16 @@ pipeline {
 						}
 					}
 				}
-				stage('Publish JDK 15 + MongoDB 4.4') {
+				stage('Publish JDK 16 + MongoDB 4.4') {
 					when {
-						changeset "ci/openjdk15-mongodb-4.4/**"
+						changeset "ci/openjdk16-mongodb-4.4/**"
 					}
 					agent { label 'data' }
 					options { timeout(time: 30, unit: 'MINUTES') }
 
 					steps {
 						script {
-							def image = docker.build("springci/spring-data-openjdk15-with-mongodb-4.4.4", "ci/openjdk15-mongodb-4.4/")
+							def image = docker.build("springci/spring-data-openjdk16-with-mongodb-4.4.4", "ci/openjdk16-mongodb-4.4/")
 							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
 								image.push()
 							}
@@ -151,7 +151,7 @@ pipeline {
 					}
 				}
 
-				stage("test: baseline (jdk15)") {
+				stage("test: baseline (jdk16)") {
 					agent {
 						label 'data'
 					}
@@ -162,7 +162,7 @@ pipeline {
 					steps {
 						script {
 							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
-								docker.image('springci/spring-data-openjdk15-with-mongodb-4.4.4:latest').inside('-v $HOME:/tmp/jenkins-home') {
+								docker.image('springci/spring-data-openjdk16-with-mongodb-4.4.4:latest').inside('-v $HOME:/tmp/jenkins-home') {
 									sh 'mkdir -p /tmp/mongodb/db /tmp/mongodb/log'
 									sh 'mongod --setParameter transactionLifetimeLimitSeconds=90 --setParameter maxTransactionLockRequestTimeoutMillis=10000 --dbpath /tmp/mongodb/db --replSet rs0 --fork --logpath /tmp/mongodb/log/mongod.log &'
 									sh 'sleep 10'

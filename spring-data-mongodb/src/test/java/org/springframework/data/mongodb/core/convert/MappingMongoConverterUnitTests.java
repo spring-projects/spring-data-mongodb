@@ -30,7 +30,6 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-import org.assertj.core.api.Assertions;
 import org.bson.types.Code;
 import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
@@ -42,6 +41,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.ConversionNotSupportedException;
 import org.springframework.beans.factory.annotation.Value;
@@ -81,6 +81,8 @@ import org.springframework.data.mongodb.core.mapping.TextScore;
 import org.springframework.data.mongodb.core.mapping.Unwrapped;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertCallback;
 import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.mongodb.BasicDBList;
@@ -527,7 +529,7 @@ class MappingMongoConverterUnitTests {
 	}
 
 	@Test
-	public void convertsObjectsIfNecessary() {
+	void convertsObjectsIfNecessary() {
 
 		ObjectId id = new ObjectId();
 		assertThat(converter.convertToMongoType(id)).isEqualTo(id);
@@ -580,9 +582,9 @@ class MappingMongoConverterUnitTests {
 
 		org.bson.Document map = (org.bson.Document) field;
 		Object foo = map.get("Foo");
-		assertThat(foo).isInstanceOf(BasicDBList.class);
+		assertThat(foo).isInstanceOf(List.class);
 
-		BasicDBList value = (BasicDBList) foo;
+		List value = (List) foo;
 		assertThat(value.size()).isEqualTo(1);
 		assertThat(value.get(0)).isEqualTo("Bar");
 	}
@@ -695,9 +697,9 @@ class MappingMongoConverterUnitTests {
 
 		assertThat(result.containsKey("Foo")).isTrue();
 		assertThat(result.get("Foo")).isNotNull();
-		assertThat(result.get("Foo")).isInstanceOf(BasicDBList.class);
+		assertThat(result.get("Foo")).isInstanceOf(List.class);
 
-		BasicDBList list = (BasicDBList) result.get("Foo");
+		List list = (List) result.get("Foo");
 
 		assertThat(list.size()).isEqualTo(1);
 		assertThat(list.get(0)).isEqualTo(Locale.US.toString());
@@ -744,7 +746,7 @@ class MappingMongoConverterUnitTests {
 
 		org.bson.Document map = (org.bson.Document) mapObject;
 		Object valueObject = map.get("foo");
-		assertThat(valueObject).isInstanceOf(BasicDBList.class);
+		assertThat(valueObject).isInstanceOf(List.class);
 
 		List<Object> list = (List<Object>) valueObject;
 		assertThat(list.size()).isEqualTo(1);
@@ -2111,21 +2113,21 @@ class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-2479
-	public void entityCallbacksAreNotSetByDefault() {
-		Assertions.assertThat(ReflectionTestUtils.getField(converter, "entityCallbacks")).isNull();
+	void entityCallbacksAreNotSetByDefault() {
+		assertThat(ReflectionTestUtils.getField(converter, "entityCallbacks")).isNull();
 	}
 
 	@Test // DATAMONGO-2479
-	public void entityCallbacksShouldBeInitiatedOnSettingApplicationContext() {
+	void entityCallbacksShouldBeInitiatedOnSettingApplicationContext() {
 
 		ApplicationContext ctx = new StaticApplicationContext();
 		converter.setApplicationContext(ctx);
 
-		Assertions.assertThat(ReflectionTestUtils.getField(converter, "entityCallbacks")).isNotNull();
+		assertThat(ReflectionTestUtils.getField(converter, "entityCallbacks")).isNotNull();
 	}
 
 	@Test // DATAMONGO-2479
-	public void setterForEntityCallbackOverridesContextInitializedOnes() {
+	void setterForEntityCallbackOverridesContextInitializedOnes() {
 
 		ApplicationContext ctx = new StaticApplicationContext();
 		converter.setApplicationContext(ctx);
@@ -2133,11 +2135,11 @@ class MappingMongoConverterUnitTests {
 		EntityCallbacks callbacks = EntityCallbacks.create();
 		converter.setEntityCallbacks(callbacks);
 
-		Assertions.assertThat(ReflectionTestUtils.getField(converter, "entityCallbacks")).isSameAs(callbacks);
+		assertThat(ReflectionTestUtils.getField(converter, "entityCallbacks")).isSameAs(callbacks);
 	}
 
 	@Test // DATAMONGO-2479
-	public void setterForApplicationContextShouldNotOverrideAlreadySetEntityCallbacks() {
+	void setterForApplicationContextShouldNotOverrideAlreadySetEntityCallbacks() {
 
 		EntityCallbacks callbacks = EntityCallbacks.create();
 		ApplicationContext ctx = new StaticApplicationContext();
@@ -2145,11 +2147,11 @@ class MappingMongoConverterUnitTests {
 		converter.setEntityCallbacks(callbacks);
 		converter.setApplicationContext(ctx);
 
-		Assertions.assertThat(ReflectionTestUtils.getField(converter, "entityCallbacks")).isSameAs(callbacks);
+		assertThat(ReflectionTestUtils.getField(converter, "entityCallbacks")).isSameAs(callbacks);
 	}
 
 	@Test // DATAMONGO-2479
-	public void resolveDBRefMapValueShouldInvokeCallbacks() {
+	void resolveDBRefMapValueShouldInvokeCallbacks() {
 
 		AfterConvertCallback<Person> afterConvertCallback = spy(new ReturningAfterConvertCallback());
 		converter.setEntityCallbacks(EntityCallbacks.create(afterConvertCallback));
@@ -2166,7 +2168,7 @@ class MappingMongoConverterUnitTests {
 	}
 
 	@Test // DATAMONGO-2300
-	public void readAndConvertDBRefNestedByMapCorrectly() {
+	void readAndConvertDBRefNestedByMapCorrectly() {
 
 		org.bson.Document cluster = new org.bson.Document("_id", 100L);
 		DBRef dbRef = new DBRef("clusters", 100L);
@@ -2426,6 +2428,96 @@ class MappingMongoConverterUnitTests {
 
 		verify(genericTypeConverter, never()).convert(any());
 		verify(subTypeOfGenericTypeConverter).convert(eq(source));
+	}
+
+
+	@Test // GH-3660
+	void usesCustomConverterForMapTypesOnWrite() {
+
+		converter = new MappingMongoConverter(resolver, mappingContext);
+		converter.setCustomConversions(MongoCustomConversions.create(it -> {
+			it.registerConverter(new TypeImplementingMapToDocumentConverter());
+		}));
+		converter.afterPropertiesSet();
+
+		TypeImplementingMap source = new TypeImplementingMap("one", 2);
+		org.bson.Document target = new org.bson.Document();
+
+		converter.write(source, target);
+
+		assertThat(target).containsEntry("1st", "one").containsEntry("2nd", 2);
+	}
+
+	@Test // GH-3660
+	void usesCustomConverterForTypesImplementingMapOnWrite() {
+
+		converter = new MappingMongoConverter(resolver, mappingContext);
+		converter.setCustomConversions(MongoCustomConversions.create(it -> {
+			it.registerConverter(new TypeImplementingMapToDocumentConverter());
+		}));
+		converter.afterPropertiesSet();
+
+		TypeImplementingMap source = new TypeImplementingMap("one", 2);
+		org.bson.Document target = new org.bson.Document();
+
+		converter.write(source, target);
+
+		assertThat(target).containsEntry("1st", "one").containsEntry("2nd", 2);
+	}
+
+	@Test // GH-3660
+	void usesCustomConverterForTypesImplementingMapOnRead() {
+
+		converter = new MappingMongoConverter(resolver, mappingContext);
+		converter.setCustomConversions(MongoCustomConversions.create(it -> {
+			it.registerConverter(new DocumentToTypeImplementingMapConverter());
+		}));
+		converter.afterPropertiesSet();
+
+		org.bson.Document source = new org.bson.Document("1st", "one")
+				.append("2nd", 2)
+				.append("_class", TypeImplementingMap.class.getName());
+
+		TypeImplementingMap target = converter.read(TypeImplementingMap.class, source);
+
+		assertThat(target).isEqualTo(new TypeImplementingMap("one", 2));
+	}
+
+	@Test // GH-3660
+	void usesCustomConverterForPropertiesUsingTypesThatImplementMapOnWrite() {
+
+		converter = new MappingMongoConverter(resolver, mappingContext);
+		converter.setCustomConversions(MongoCustomConversions.create(it -> {
+			it.registerConverter(new TypeImplementingMapToDocumentConverter());
+		}));
+		converter.afterPropertiesSet();
+
+		TypeWrappingTypeImplementingMap source = new TypeWrappingTypeImplementingMap();
+		source.typeImplementingMap = new TypeImplementingMap("one", 2);
+		org.bson.Document target = new org.bson.Document();
+
+		converter.write(source, target);
+
+		assertThat(target).containsEntry("typeImplementingMap", new org.bson.Document("1st", "one").append("2nd", 2));
+	}
+
+	@Test // GH-3660
+	void usesCustomConverterForPropertiesUsingTypesImplementingMapOnRead() {
+
+		converter = new MappingMongoConverter(resolver, mappingContext);
+		converter.setCustomConversions(MongoCustomConversions.create(it -> {
+			it.registerConverter(new DocumentToTypeImplementingMapConverter());
+		}));
+		converter.afterPropertiesSet();
+
+		org.bson.Document source = new org.bson.Document("typeImplementingMap",
+		new org.bson.Document("1st", "one")
+				.append("2nd", 2))
+				.append("_class", TypeWrappingTypeImplementingMap.class.getName());
+
+		TypeWrappingTypeImplementingMap target = converter.read(TypeWrappingTypeImplementingMap.class, source);
+
+		assertThat(target.typeImplementingMap).isEqualTo(new TypeImplementingMap("one", 2));
 	}
 
 	static class GenericType<T> {
@@ -2969,6 +3061,108 @@ class MappingMongoConverterUnitTests {
 			SubTypeOfGenericType target = new SubTypeOfGenericType();
 			target.content = source.getString("value") + "_s";
 			return target;
+		}
+	}
+
+	@WritingConverter
+	static class TypeImplementingMapToDocumentConverter implements Converter<TypeImplementingMap, org.bson.Document> {
+
+		@Nullable
+		@Override
+		public org.bson.Document convert(TypeImplementingMap source) {
+			return new org.bson.Document("1st", source.val1).append("2nd", source.val2);
+		}
+	}
+
+	@ReadingConverter
+	static class DocumentToTypeImplementingMapConverter implements Converter<org.bson.Document, TypeImplementingMap> {
+
+		@Nullable
+		@Override
+		public TypeImplementingMap convert(org.bson.Document source) {
+			return new TypeImplementingMap(source.getString("1st"), source.getInteger("2nd"));
+		}
+	}
+
+	static class TypeWrappingTypeImplementingMap {
+
+		String id;
+		TypeImplementingMap typeImplementingMap;
+	}
+
+	@EqualsAndHashCode
+	static class TypeImplementingMap implements Map<String,String> {
+
+		String val1;
+		int val2;
+
+		TypeImplementingMap(String val1, int val2) {
+			this.val1 = val1;
+			this.val2 = val2;
+		}
+
+		@Override
+		public int size() {
+			return 0;
+		}
+
+		@Override
+		public boolean isEmpty() {
+			return false;
+		}
+
+		@Override
+		public boolean containsKey(Object key) {
+			return false;
+		}
+
+		@Override
+		public boolean containsValue(Object value) {
+			return false;
+		}
+
+		@Override
+		public String get(Object key) {
+			return null;
+		}
+
+		@Nullable
+		@Override
+		public String put(String key, String value) {
+			return null;
+		}
+
+		@Override
+		public String remove(Object key) {
+			return null;
+		}
+
+		@Override
+		public void putAll(@NonNull Map<? extends String, ? extends String> m) {
+
+		}
+
+		@Override
+		public void clear() {
+
+		}
+
+		@NonNull
+		@Override
+		public Set<String> keySet() {
+			return null;
+		}
+
+		@NonNull
+		@Override
+		public Collection<String> values() {
+			return null;
+		}
+
+		@NonNull
+		@Override
+		public Set<Entry<String, String>> entrySet() {
+			return null;
 		}
 	}
 }

@@ -17,9 +17,13 @@ package org.springframework.data.mongodb.repository.query;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.function.LongUnaryOperator;
+import java.util.stream.Stream;
 
 import org.bson.Document;
+
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -40,7 +44,12 @@ import org.springframework.expression.ExpressionParser;
 import org.springframework.util.ClassUtils;
 
 /**
+ * {@link AbstractMongoQuery} implementation to run string-based aggregations using
+ * {@link org.springframework.data.mongodb.repository.Aggregation}.
+ *
  * @author Christoph Strobl
+ * @author Divya Srivastava
+ * @author Mark Paluch
  * @since 2.2
  */
 public class StringBasedAggregation extends AbstractMongoQuery {
@@ -62,6 +71,12 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 			ExpressionParser expressionParser, QueryMethodEvaluationContextProvider evaluationContextProvider) {
 		super(method, mongoOperations, expressionParser, evaluationContextProvider);
 
+		if (method.isPageQuery()) {
+			throw new InvalidMongoDbApiUsageException(String.format(
+					"Repository aggregation method '%s' does not support '%s' return type. Please use 'Slice' or 'List' instead.",
+					method.getName(), method.getReturnType().getType().getSimpleName()));
+		}
+
 		this.mongoOperations = mongoOperations;
 		this.mongoConverter = mongoOperations.getConverter();
 		this.expressionParser = expressionParser;
@@ -76,18 +91,18 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 	protected Object doExecute(MongoQueryMethod method, ResultProcessor resultProcessor,
 			ConvertingParameterAccessor accessor, Class<?> typeToRead) {
 
-		if (method.isPageQuery() || method.isSliceQuery()) {
-			throw new InvalidMongoDbApiUsageException(String.format(
-					"Repository aggregation method '%s' does not support '%s' return type. Please use eg. 'List' instead.",
-					method.getName(), method.getReturnType().getType().getSimpleName()));
-		}
-
 		Class<?> sourceType = method.getDomainClass();
 		Class<?> targetType = typeToRead;
 
 		List<AggregationOperation> pipeline = computePipeline(method, accessor);
 		AggregationUtils.appendSortIfPresent(pipeline, accessor, typeToRead);
-		AggregationUtils.appendLimitAndOffsetIfPresent(pipeline, accessor);
+
+		if (method.isSliceQuery()) {
+			AggregationUtils.appendLimitAndOffsetIfPresent(pipeline, accessor, LongUnaryOperator.identity(),
+					limit -> limit + 1);
+		} else {
+			AggregationUtils.appendLimitAndOffsetIfPresent(pipeline, accessor);
+		}
 
 		boolean isSimpleReturnType = isSimpleReturnType(typeToRead);
 		boolean isRawAggregationResult = ClassUtils.isAssignable(AggregationResults.class, typeToRead);
@@ -95,28 +110,43 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 		if (isSimpleReturnType) {
 			targetType = Document.class;
 		} else if (isRawAggregationResult) {
+
+			// 🙈
 			targetType = method.getReturnType().getRequiredActualType().getRequiredComponentType().getType();
 		}
 
 		AggregationOptions options = computeOptions(method, accessor);
 		TypedAggregation<?> aggregation = new TypedAggregation<>(sourceType, pipeline, options);
 
-		AggregationResults<?> result = mongoOperations.aggregate(aggregation, targetType);
+		if (method.isStreamQuery()) {
+
+			Stream<?> stream = mongoOperations.aggregateStream(aggregation, targetType).stream();
+
+			if (isSimpleReturnType) {
+				return stream.map(it -> AggregationUtils.extractSimpleTypeResult((Document) it, typeToRead, mongoConverter));
+			}
+
+			return stream;
+		}
+
+		AggregationResults<Object> result = (AggregationResults<Object>) mongoOperations.aggregate(aggregation, targetType);
 
 		if (isRawAggregationResult) {
 			return result;
 		}
 
+		List<Object> results = result.getMappedResults();
 		if (method.isCollectionQuery()) {
+			return isSimpleReturnType ? convertResults(typeToRead, results) : results;
+		}
 
-			if (isSimpleReturnType) {
+		if (method.isSliceQuery()) {
 
-				return result.getMappedResults().stream()
-						.map(it -> AggregationUtils.extractSimpleTypeResult((Document) it, typeToRead, mongoConverter))
-						.collect(Collectors.toList());
-			}
-
-			return result.getMappedResults();
+			Pageable pageable = accessor.getPageable();
+			int pageSize = pageable.getPageSize();
+			List<Object> resultsToUse = isSimpleReturnType ? convertResults(typeToRead, results) : results;
+			boolean hasNext = resultsToUse.size() > pageSize;
+			return new SliceImpl<>(hasNext ? resultsToUse.subList(0, pageSize) : resultsToUse, pageable, hasNext);
 		}
 
 		Object uniqueResult = result.getUniqueMappedResult();
@@ -124,6 +154,17 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 		return isSimpleReturnType
 				? AggregationUtils.extractSimpleTypeResult((Document) uniqueResult, typeToRead, mongoConverter)
 				: uniqueResult;
+	}
+
+	private List<Object> convertResults(Class<?> typeToRead, List<Object> mappedResults) {
+
+		List<Object> list = new ArrayList<>(mappedResults.size());
+		for (Object it : mappedResults) {
+			Object extractSimpleTypeResult = AggregationUtils.extractSimpleTypeResult((Document) it, typeToRead,
+					mongoConverter);
+			list.add(extractSimpleTypeResult);
+		}
+		return list;
 	}
 
 	private boolean isSimpleReturnType(Class<?> targetType) {

@@ -2,7 +2,10 @@
 [[mapping-chapter]]
 = Mapping
 
-Rich mapping support is provided by the `MappingMongoConverter`. `MappingMongoConverter` has a rich metadata model that provides a full feature set to map domain objects to MongoDB documents. The mapping metadata model is populated by using annotations on your domain objects. However, the infrastructure is not limited to using annotations as the only source of metadata information. The `MappingMongoConverter` also lets you map objects to documents without providing any additional metadata, by following a set of conventions.
+Rich mapping support is provided by the `MappingMongoConverter`. `MappingMongoConverter` has a rich metadata model that provides a full feature set to map domain objects to MongoDB documents.
+The mapping metadata model is populated by using annotations on your domain objects.
+However, the infrastructure is not limited to using annotations as the only source of metadata information.
+The `MappingMongoConverter` also lets you map objects to documents without providing any additional metadata, by following a set of conventions.
 
 This section describes the features of the `MappingMongoConverter`, including fundamentals, how to use conventions for mapping objects to documents and how to override those conventions with annotation-based mapping metadata.
 
@@ -357,7 +360,10 @@ The `base-package` property tells it where to scan for classes annotated with th
 [[mapping-usage]]
 == Metadata-based Mapping
 
-To take full advantage of the object mapping functionality inside the Spring Data MongoDB support, you should annotate your mapped objects with the `@Document` annotation. Although it is not necessary for the mapping framework to have this annotation (your POJOs are mapped correctly, even without any annotations), it lets the classpath scanner find and pre-process your domain objects to extract the necessary metadata. If you do not use this annotation, your application takes a slight performance hit the first time you store a domain object, because the mapping framework needs to build up its internal metadata model so that it knows about the properties of your domain object and how to persist them. The following example shows a domain object:
+To take full advantage of the object mapping functionality inside the Spring Data MongoDB support, you should annotate your mapped objects with the `@Document` annotation.
+Although it is not necessary for the mapping framework to have this annotation (your POJOs are mapped correctly, even without any annotations), it lets the classpath scanner find and pre-process your domain objects to extract the necessary metadata.
+If you do not use this annotation, your application takes a slight performance hit the first time you store a domain object, because the mapping framework needs to build up its internal metadata model so that it knows about the properties of your domain object and how to persist them.
+The following example shows a domain object:
 
 .Example domain object
 ====
@@ -480,6 +486,7 @@ The MappingMongoConverter can use metadata to drive the mapping of objects to do
 * `@MongoId`: Applied at the field level to mark the field used for identity purpose. Accepts an optional `FieldType` to customize id conversion.
 * `@Document`: Applied at the class level to indicate this class is a candidate for mapping to the database. You can specify the name of the collection where the data will be stored.
 * `@DBRef`: Applied at the field to indicate it is to be stored using a com.mongodb.DBRef.
+* `@DocumentReference`: Applied at the field to indicate it is to be stored as a pointer to another document. This can be a single value (the _id_ by default), or a `Document` provided via a converter.
 * `@Indexed`: Applied at the field level to describe how to index the field.
 * `@CompoundIndex` (repeatable): Applied at the type level to declare Compound Indexes.
 * `@GeoSpatialIndexed`: Applied at the field level to describe how to geoindex the field.
@@ -758,7 +765,12 @@ mongoOperations.indexOpsFor(Jedi.class)
 
 NOTE: The text index feature is disabled by default for MongoDB v.2.4.
 
-Creating a text index allows accumulating several fields into a searchable full-text index. It is only possible to have one text index per collection, so all fields marked with `@TextIndexed` are combined into this index. Properties can be weighted to influence the document score for ranking results. The default language for the text index is English. To change the default language, set the `language` attribute to whichever language you want (for example,`@Document(language="spanish")`). Using a property called `language` or `@Language` lets you define a language override on a per document base. The following example shows how to created a text index and set the language to Spanish:
+Creating a text index allows accumulating several fields into a searchable full-text index.
+It is only possible to have one text index per collection, so all fields marked with `@TextIndexed` are combined into this index.
+Properties can be weighted to influence the document score for ranking results.
+The default language for the text index is English.To change the default language, set the `language` attribute to whichever language you want (for example,`@Document(language="spanish")`).
+Using a property called `language` or `@Language` lets you define a language override on a per-document base.
+The following example shows how to created a text index and set the language to Spanish:
 
 .Example Text Index Usage
 ====
@@ -782,49 +794,7 @@ class Nested {
 ----
 ====
 
-[[mapping-usage-references]]
-=== Using DBRefs
-
-The mapping framework does not have to store child objects embedded within the document.
-You can also store them separately and use a DBRef to refer to that document.
-When the object is loaded from MongoDB, those references are eagerly resolved so that you get back a mapped object that looks the same as if it had been stored embedded within your top-level document.
-
-The following example uses a DBRef to refer to a specific document that exists independently of the object in which it is referenced (both classes are shown in-line for brevity's sake):
-
-====
-[source,java]
-----
-@Document
-public class Account {
-
-  @Id
-  private ObjectId id;
-  private Float total;
-}
-
-@Document
-public class Person {
-
-  @Id
-  private ObjectId id;
-  @Indexed
-  private Integer ssn;
-  @DBRef
-  private List<Account> accounts;
-}
-----
-====
-
-You need not use `@OneToMany` or similar mechanisms because the List of objects tells the mapping framework that you want a one-to-many relationship. When the object is stored in MongoDB, there is a list of DBRefs rather than the `Account` objects themselves.
-When it comes to loading collections of ``DBRef``s it is advisable to restrict references held in collection types to a specific MongoDB collection. This allows bulk loading of all references, whereas references pointing to different MongoDB collections need to be resolved one by one.
-
-IMPORTANT: The mapping framework does not handle cascading saves. If you change an `Account` object that is referenced by a `Person` object, you must save the `Account` object separately. Calling `save` on the `Person` object does not automatically save the `Account` objects in the `accounts` property.
-
-``DBRef``s can also be resolved lazily. In this case the actual `Object` or `Collection` of references is resolved on first access of the property. Use the `lazy` attribute of `@DBRef` to specify this.
-Required properties that are also defined as lazy loading ``DBRef`` and used as constructor arguments are also decorated with the lazy loading proxy making sure to put as little pressure on the database and network as possible.
-
-TIP: Lazily loaded ``DBRef``s can be hard to debug. Make sure tooling does not accidentally trigger proxy resolution by eg. calling `toString()` or some inline debug rendering invoking property getters.
-Please consider to enable _trace_ logging for `org.springframework.data.mongodb.core.convert.DefaultDbRefResolver` to gain insight on `DBRef` resolution.
+include::document-references.adoc[]
 
 [[mapping-usage-events]]
 === Mapping Framework Events

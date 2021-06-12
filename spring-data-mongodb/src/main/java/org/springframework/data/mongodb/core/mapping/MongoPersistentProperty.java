@@ -63,6 +63,15 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	boolean isDbReference();
 
 	/**
+	 * Returns whether the property is a {@link DocumentReference}. If this returns {@literal true} you can expect
+	 * {@link #getDocumentReference()} to return an non-{@literal null} value.
+	 *
+	 * @return
+	 * @since 3.3
+	 */
+	boolean isDocumentReference();
+
+	/**
 	 * Returns whether the property is explicitly marked as an identifier property of the owning {@link PersistentEntity}.
 	 * A property is an explicit id property if it is annotated with @see {@link Id}.
 	 *
@@ -95,15 +104,15 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	 * @since 1.6
 	 */
 	boolean isTextScoreProperty();
-
+	
 	/**
 	 * Returns whether the property is to be written to the document if the value is null <br/>
-	 * It's annotated with {@link omitNull}.
+	 * It's annotated with {@link Field.Write}.
 	 *
 	 * @return
 	 * @since 1.6
 	 */
-	boolean isOmitNullProperty(); 
+	boolean isPropertyOmittableOnNull(); 
 
 	/**
 	 * Returns the {@link DBRef} if the property is a reference.
@@ -113,6 +122,16 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	 */
 	@Nullable
 	DBRef getDBRef();
+
+	/**
+	 * Returns the {@link DocumentReference} if the property is a reference.
+	 *
+	 * @see #isDocumentReference()
+	 * @return {@literal null} if not present.
+	 * @since 3.3
+	 */
+	@Nullable
+	DocumentReference getDocumentReference();
 
 	/**
 	 * Returns whether property access shall be used for reading the property value. This means it will use the getter

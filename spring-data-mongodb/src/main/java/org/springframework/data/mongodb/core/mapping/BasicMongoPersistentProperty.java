@@ -47,7 +47,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 	private static final Logger LOG = LoggerFactory.getLogger(BasicMongoPersistentProperty.class);
 
-	private static final String ID_FIELD_NAME = "_id";
+	public static final String ID_FIELD_NAME = "_id";
 	private static final String LANGUAGE_FIELD_NAME = "language";
 	private static final Set<Class<?>> SUPPORTED_ID_TYPES = new HashSet<Class<?>>();
 	private static final Set<String> SUPPORTED_ID_PROPERTY_NAMES = new HashSet<String>();
@@ -233,11 +233,30 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#isDocumentReference()
+	 */
+	@Override
+	public boolean isDocumentReference() {
+		return isAnnotationPresent(DocumentReference.class);
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#getDBRef()
 	 */
 	@Nullable
 	public DBRef getDBRef() {
 		return findAnnotation(DBRef.class);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#getDocumentReference()
+	 */
+	@Nullable
+	@Override
+	public DocumentReference getDocumentReference() {
+		return findAnnotation(DocumentReference.class);
 	}
 
 	/*
@@ -266,15 +285,18 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	public boolean isTextScoreProperty() {
 		return isAnnotationPresent(TextScore.class);
 	}
-	
+
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#isOmitNullProperty()
+	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#isPropertyOmittableOnNull()
 	 */
-	public boolean isOmitNullProperty() {
+	public boolean isPropertyOmittableOnNull() {
 		org.springframework.data.mongodb.core.mapping.Field annotation = findAnnotation(
 				org.springframework.data.mongodb.core.mapping.Field.class);
 
-		return annotation != null ? annotation.omitNull() : true;
+		if ( annotation != null && annotation.write().equals(Field.Write.ALWAYS) ) {
+			return false;
+		}
+		return true;	
 	}
 }

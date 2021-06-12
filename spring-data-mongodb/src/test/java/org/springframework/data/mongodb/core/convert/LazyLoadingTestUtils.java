@@ -16,10 +16,13 @@
 package org.springframework.data.mongodb.core.convert;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.mongodb.core.convert.LazyLoadingProxyFactory.*;
+
+import java.util.function.Consumer;
 
 import org.springframework.aop.framework.Advised;
 import org.springframework.cglib.proxy.Factory;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver.LazyLoadingInterceptor;
+import org.springframework.data.mongodb.core.mapping.Unwrapped;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
@@ -49,8 +52,36 @@ public class LazyLoadingTestUtils {
 		}
 	}
 
+	public static void assertProxy(Object proxy, Consumer<LazyLoadingProxyValueRetriever> verification) {
+
+		LazyLoadingInterceptor interceptor = (LazyLoadingInterceptor) (proxy instanceof Advised
+				? ((Advised) proxy).getAdvisors()[0].getAdvice()
+				: ((Factory) proxy).getCallback(0));
+
+		verification.accept(new LazyLoadingProxyValueRetriever(interceptor));
+	}
+
 	private static LazyLoadingInterceptor extractInterceptor(Object proxy) {
 		return (LazyLoadingInterceptor) (proxy instanceof Advised ? ((Advised) proxy).getAdvisors()[0].getAdvice()
 				: ((Factory) proxy).getCallback(0));
+	}
+
+	public static class LazyLoadingProxyValueRetriever {
+
+		LazyLoadingInterceptor interceptor;
+
+		public LazyLoadingProxyValueRetriever(LazyLoadingInterceptor interceptor) {
+			this.interceptor = interceptor;
+		}
+
+		public boolean isResolved() {
+			return (boolean) ReflectionTestUtils.getField(interceptor, "resolved");
+		}
+
+		@Unwrapped.Nullable
+		public Object currentValue() {
+			return ReflectionTestUtils.getField(interceptor, "result");
+		}
+
 	}
 }

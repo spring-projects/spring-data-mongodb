@@ -34,20 +34,20 @@ import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.geo.Point;
-import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.Person;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -79,14 +79,12 @@ public class QueryMapperUnitTests {
 	private MongoMappingContext context;
 	private MappingMongoConverter converter;
 
-	@Mock MongoDatabaseFactory factory;
-
 	@BeforeEach
 	void beforeEach() {
 
 		this.context = new MongoMappingContext();
 
-		this.converter = new MappingMongoConverter(new DefaultDbRefResolver(factory), context);
+		this.converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, context);
 		this.converter.afterPropertiesSet();
 
 		this.mapper = new QueryMapper(converter);
@@ -1257,6 +1255,28 @@ public class QueryMapperUnitTests {
 		assertThat(document).isEqualTo(new org.bson.Document("double_underscore.renamed", new org.bson.Document("$exists", true)));
 	}
 
+	@Test // GH-3633
+	void mapsNullValueForFieldWithCustomTargetType() {
+
+		Query query = query(where("stringAsOid").isNull());
+
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(NonIdFieldWithObjectIdTargetType.class));
+
+		assertThat(document).isEqualTo(new org.bson.Document("stringAsOid", null));
+	}
+
+	@Test // GH-3633
+	void mapsNullBsonTypeForFieldWithCustomTargetType() {
+
+		Query query = query(where("stringAsOid").isNullValue());
+
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(NonIdFieldWithObjectIdTargetType.class));
+
+		assertThat(document).isEqualTo(new org.bson.Document("stringAsOid", new org.bson.Document("$type", 10)));
+	}
+
 	class WithDeepArrayNesting {
 
 		List<WithNestedArray> level0;
@@ -1487,4 +1507,18 @@ public class QueryMapperUnitTests {
 		@Field("renamed")
 		String renamed_fieldname_with_underscores;
 	}
+
+	static class WithDocumentReferences {
+
+		@DocumentReference
+		Sample sample;
+
+		@DocumentReference
+		SimpeEntityWithoutId noId;
+
+		@DocumentReference(lookup = "{ 'stringProperty' : ?#{stringProperty} }")
+		SimpeEntityWithoutId noIdButLookupQuery;
+
+	}
+
 }

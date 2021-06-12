@@ -26,6 +26,7 @@ import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.annotation.Reference;
 import org.springframework.data.domain.Example;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
@@ -444,6 +445,10 @@ public class QueryMapper {
 			}
 		}
 
+		if (value == null) {
+			return null;
+		}
+
 		if (isNestedKeyword(value)) {
 			return getMappedKeyword(new Keyword((Bson) value), documentField.getPropertyEntity());
 		}
@@ -605,7 +610,7 @@ public class QueryMapper {
 		if (source instanceof Iterable) {
 			BasicDBList result = new BasicDBList();
 			for (Object element : (Iterable<?>) source) {
-				result.add(createDbRefFor(element, property));
+				result.add(createReferenceFor(element, property));
 			}
 			return result;
 		}
@@ -614,12 +619,12 @@ public class QueryMapper {
 			Document result = new Document();
 			Document dbObject = (Document) source;
 			for (String key : dbObject.keySet()) {
-				result.put(key, createDbRefFor(dbObject.get(key), property));
+				result.put(key, createReferenceFor(dbObject.get(key), property));
 			}
 			return result;
 		}
 
-		return createDbRefFor(source, property);
+		return createReferenceFor(source, property);
 	}
 
 	/**
@@ -666,10 +671,14 @@ public class QueryMapper {
 		return Collections.singletonMap(key, value).entrySet().iterator().next();
 	}
 
-	private DBRef createDbRefFor(Object source, MongoPersistentProperty property) {
+	private Object createReferenceFor(Object source, MongoPersistentProperty property) {
 
 		if (source instanceof DBRef) {
 			return (DBRef) source;
+		}
+
+		if(property != null && (property.isDocumentReference() || (!property.isDbReference() && property.findAnnotation(Reference.class) != null))) {
+			return converter.toDocumentPointer(source, property).getPointer();
 		}
 
 		return converter.toDBRef(source, property);
@@ -706,7 +715,7 @@ public class QueryMapper {
 	 * @param candidate
 	 * @return
 	 */
-	protected boolean isNestedKeyword(Object candidate) {
+	protected boolean isNestedKeyword(@Nullable Object candidate) {
 
 		if (!(candidate instanceof Document)) {
 			return false;
@@ -751,12 +760,13 @@ public class QueryMapper {
 	 * converted one by one.
 	 *
 	 * @param documentField the field and its meta data
-	 * @param value the actual value
+	 * @param value the actual value. Can be {@literal null}.
 	 * @return the potentially converted target value.
 	 */
-	private Object applyFieldTargetTypeHintToValue(Field documentField, Object value) {
+	@Nullable
+	private Object applyFieldTargetTypeHintToValue(Field documentField, @Nullable Object value) {
 
-		if (documentField.getProperty() == null || !documentField.getProperty().hasExplicitWriteTarget()) {
+		if (value == null || documentField.getProperty() == null || !documentField.getProperty().hasExplicitWriteTarget()) {
 			return value;
 		}
 

@@ -17,6 +17,8 @@ package org.springframework.data.mongodb.core.convert;
 
 import org.bson.conversions.Bson;
 import org.springframework.data.convert.EntityWriter;
+import org.springframework.data.mongodb.core.mapping.DocumentPointer;
+import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.util.TypeInformation;
@@ -61,6 +63,7 @@ public interface MongoWriter<T> extends EntityWriter<T, Bson> {
 	default Object convertToMongoType(@Nullable Object obj, MongoPersistentEntity<?> entity) {
 		return convertToMongoType(obj, entity.getTypeInformation());
 	}
+
 	/**
 	 * Creates a {@link DBRef} to refer to the given object.
 	 *
@@ -70,4 +73,17 @@ public interface MongoWriter<T> extends EntityWriter<T, Bson> {
 	 * @return will never be {@literal null}.
 	 */
 	DBRef toDBRef(Object object, @Nullable MongoPersistentProperty referingProperty);
+
+	/**
+	 * Creates a the {@link DocumentPointer} representing the link to another entity.
+	 *
+	 * @param source the object to create a document link to.
+	 * @param referringProperty the client-side property referring to the object which might carry additional metadata for
+	 *          the {@link DBRef} object to create. Can be {@literal null}.
+	 * @return will never be {@literal null}.
+	 * @since 3.3
+	 */
+	default DocumentPointer<?> toDocumentPointer(Object source, @Nullable MongoPersistentProperty referringProperty) {
+		return () -> toDBRef(source, referringProperty);
+	}
 }
