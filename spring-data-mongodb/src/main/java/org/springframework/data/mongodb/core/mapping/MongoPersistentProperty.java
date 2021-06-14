@@ -28,6 +28,7 @@ import org.springframework.lang.Nullable;
  * @author Patryk Wasik
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Divya Srivastava
  */
 public interface MongoPersistentProperty extends PersistentProperty<MongoPersistentProperty> {
 
@@ -53,6 +54,15 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	 * @return
 	 */
 	int getFieldOrder();
+
+	/**
+	 * Returns whether the property should be written to the database if its value is {@literal null}.
+	 *
+	 * @return
+	 * @since 3.3
+	 * @see Field.Write
+	 */
+	boolean writeNullValues();
 
 	/**
 	 * Returns whether the property is a {@link com.mongodb.DBRef}. If this returns {@literal true} you can expect
@@ -104,24 +114,6 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	 * @since 1.6
 	 */
 	boolean isTextScoreProperty();
-	
-	/**
-	 * Returns whether the property is to be written to the document if the value is null <br/>
-	 * It's annotated with {@link Field.Write}.
-	 *
-	 * @return
-	 * @since 1.6
-	 */
-	boolean isPropertyOmittableOnNull(); 
-
-	/**
-	 * Returns whether the property is to be written to the document if the value is null <br/>
-	 * It's annotated with {@link omitNull}.
-	 *
-	 * @return
-	 * @since 1.6
-	 */
-	boolean isOmitNullProperty(); 
 
 	/**
 	 * Returns the {@link DBRef} if the property is a reference.

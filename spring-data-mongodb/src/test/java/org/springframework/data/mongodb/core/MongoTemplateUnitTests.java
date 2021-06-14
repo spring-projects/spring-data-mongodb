@@ -1139,7 +1139,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 				.containsEntry("$geoNear.near.coordinates.[1]", 2D);
 	}
 
-	@Test // DATAMONGO-2155
+	@Test // DATAMONGO-2155, GH-3407
 	void saveVersionedEntityShouldCallUpdateCorrectly() {
 
 		when(updateResult.getModifiedCount()).thenReturn(1L);
@@ -1157,7 +1157,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		assertThat(queryCaptor.getValue()).isEqualTo(new Document("_id", 1).append("version", 10));
 		assertThat(updateCaptor.getValue())
-				.isEqualTo(new Document("version", 11).append("_class", VersionedEntity.class.getName()));
+				.isEqualTo(new Document("version", 11).append("_class", VersionedEntity.class.getName()).append("name", null));
 	}
 
 	@Test // DATAMONGO-1783
@@ -2273,6 +2273,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		@Id Integer id;
 		@Version Integer version;
+
+		@Field(write = Field.Write.ALWAYS) String name;
 	}
 
 	enum MyConverter implements Converter<AutogenerateableId, String> {

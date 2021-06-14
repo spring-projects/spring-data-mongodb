@@ -64,6 +64,11 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 
 	@Override
+	public boolean writeNullValues() {
+		return delegate.writeNullValues();
+	}
+
+	@Override
 	public boolean isDbReference() {
 		return delegate.isDbReference();
 	}
@@ -91,11 +96,6 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	@Override
 	public boolean isTextScoreProperty() {
 		return delegate.isTextScoreProperty();
-	}
-	
-	@Override
-	public boolean isOmitNullProperty() {
-		return delegate.isOmitNullProperty();
 	}
 
 	@Override
@@ -321,8 +321,4 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 		return delegate.getAccessorForOwner(owner);
 	}
 
-	@Override
-	public boolean isPropertyOmittableOnNull() {
-		return delegate.isPropertyOmittableOnNull();
-	}
 }

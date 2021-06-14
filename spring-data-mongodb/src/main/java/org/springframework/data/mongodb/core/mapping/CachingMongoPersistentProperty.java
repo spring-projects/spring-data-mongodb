@@ -33,6 +33,7 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 	private boolean dbRefResolved;
 	private @Nullable DBRef dbref;
 	private @Nullable String fieldName;
+	private @Nullable Boolean writeNullValues;
 	private @Nullable Class<?> fieldType;
 	private @Nullable Boolean usePropertyAccess;
 	private @Nullable Boolean isTransient;
@@ -88,6 +89,20 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 		}
 
 		return this.fieldName;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.mapping.BasicMongoPersistentProperty#skipNullValues()
+	 */
+	@Override
+	public boolean writeNullValues() {
+
+		if (this.writeNullValues == null) {
+			this.writeNullValues = super.writeNullValues();
+		}
+
+		return this.writeNullValues;
 	}
 
 	/*

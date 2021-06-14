@@ -103,6 +103,7 @@ import com.mongodb.DBRef;
  * @author Mark Paluch
  * @author Roman Puchkovskiy
  * @author Heesu Jung
+ * @author Divya Srivastava
  */
 public class MappingMongoConverter extends AbstractMongoConverter implements ApplicationContextAware {
 
@@ -737,6 +738,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				continue;
 			}
 			if (prop.isAssociation()) {
+
 				writeAssociation(prop.getRequiredAssociation(), accessor, dbObjectAccessor);
 				continue;
 			}
@@ -744,13 +746,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			Object value = accessor.getProperty(prop);
 
 			if (value == null) {
-				if(!prop.isPropertyOmittableOnNull()) {
-					writeSimpleInternal(value, bson , prop);
+				if (prop.writeNullValues()) {
+					dbObjectAccessor.put(prop, null);
 				}
-				continue;
-			}
-
-			if (!conversions.isSimpleType(value.getClass())) {
+			} else if (!conversions.isSimpleType(value.getClass())) {
 				writePropertyInternal(value, dbObjectAccessor, prop);
 			} else {
 				writeSimpleInternal(value, bson, prop);
@@ -763,7 +762,14 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		MongoPersistentProperty inverseProp = association.getInverse();
 
-		writePropertyInternal(accessor.getProperty(inverseProp), dbObjectAccessor, inverseProp);
+		Object value = accessor.getProperty(inverseProp);
+
+		if (value == null && !inverseProp.isUnwrapped() && inverseProp.writeNullValues()) {
+			dbObjectAccessor.put(inverseProp, null);
+			return;
+		}
+
+		writePropertyInternal(value, dbObjectAccessor, inverseProp);
 	}
 
 	@SuppressWarnings({ "unchecked" })

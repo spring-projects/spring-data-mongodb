@@ -2520,6 +2520,18 @@ class MappingMongoConverterUnitTests {
 		assertThat(target.typeImplementingMap).isEqualTo(new TypeImplementingMap("one", 2));
 	}
 
+	@Test // GH-3407
+	void shouldWriteNullPropertyCorrectly() {
+
+		WithFieldWrite fieldWrite = new WithFieldWrite();
+
+		org.bson.Document document = new org.bson.Document();
+		converter.write(fieldWrite, document);
+
+		assertThat(document).containsEntry("writeAlways", null).doesNotContainKey("writeNonNull");
+		assertThat(document).containsEntry("writeAlwaysPerson", null).doesNotContainKey("writeNonNullPerson");
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -3164,5 +3176,21 @@ class MappingMongoConverterUnitTests {
 		public Set<Entry<String, String>> entrySet() {
 			return null;
 		}
+	}
+
+	static class WithFieldWrite {
+
+		@org.springframework.data.mongodb.core.mapping.Field(
+				write = org.springframework.data.mongodb.core.mapping.Field.Write.NON_NULL) Integer writeNonNull;
+
+		@org.springframework.data.mongodb.core.mapping.Field(
+				write = org.springframework.data.mongodb.core.mapping.Field.Write.ALWAYS) Integer writeAlways;
+
+		@org.springframework.data.mongodb.core.mapping.DBRef @org.springframework.data.mongodb.core.mapping.Field(
+				write = org.springframework.data.mongodb.core.mapping.Field.Write.NON_NULL) Person writeNonNullPerson;
+
+		@org.springframework.data.mongodb.core.mapping.DBRef @org.springframework.data.mongodb.core.mapping.Field(
+				write = org.springframework.data.mongodb.core.mapping.Field.Write.ALWAYS) Person writeAlwaysPerson;
+
 	}
 }

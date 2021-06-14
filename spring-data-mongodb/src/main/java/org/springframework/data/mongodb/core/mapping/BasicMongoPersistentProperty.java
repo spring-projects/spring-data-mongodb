@@ -41,6 +41,7 @@ import org.springframework.util.StringUtils;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Divya Srivastava
  */
 public class BasicMongoPersistentProperty extends AnnotationBasedPersistentProperty<MongoPersistentProperty>
 		implements MongoPersistentProperty {
@@ -216,6 +217,19 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#skipNullValues()
+	 */
+	@Override
+	public boolean writeNullValues() {
+
+		org.springframework.data.mongodb.core.mapping.Field annotation = findAnnotation(
+				org.springframework.data.mongodb.core.mapping.Field.class);
+
+		return annotation != null && annotation.write() == Field.Write.ALWAYS;
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.mapping.model.AbstractPersistentProperty#createAssociation()
 	 */
 	@Override
@@ -286,17 +300,4 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		return isAnnotationPresent(TextScore.class);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#isPropertyOmittableOnNull()
-	 */
-	public boolean isPropertyOmittableOnNull() {
-		org.springframework.data.mongodb.core.mapping.Field annotation = findAnnotation(
-				org.springframework.data.mongodb.core.mapping.Field.class);
-
-		if ( annotation != null && annotation.write().equals(Field.Write.ALWAYS) ) {
-			return false;
-		}
-		return true;
-	}
 }

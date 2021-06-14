@@ -24,6 +24,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import lombok.With;
 
@@ -1692,7 +1693,7 @@ public class MongoTemplateTests {
 		assertThat(template.count(query, collectionName)).isEqualTo(1L);
 	}
 
-	@Test // DATAMONGO-571
+	@Test // DATAMONGO-571, GH-3407
 	public void nullsPropertiesForVersionObjectUpdates() {
 
 		VersionedPerson person = new VersionedPerson();
@@ -1702,11 +1703,17 @@ public class MongoTemplateTests {
 		template.save(person);
 		assertThat(person.id).isNotNull();
 
+		person.firstname = null;
 		person.lastname = null;
 		template.save(person);
 
 		person = template.findOne(query(where("id").is(person.id)), VersionedPerson.class);
+		assertThat(person.firstname).isNull();
 		assertThat(person.lastname).isNull();
+
+		org.bson.Document document = template.findOne(query(where("_id").is(person.id)), org.bson.Document.class,
+				"versionedPerson");
+		assertThat(document).doesNotContainKey("firstname").containsEntry("lastname", null);
 	}
 
 	@Test // DATAMONGO-571
@@ -3703,6 +3710,64 @@ public class MongoTemplateTests {
 		assertThat(template.find(new BasicQuery("{}").with(Sort.by("id")), WithIdAndFieldAnnotation.class)).isNotEmpty();
 	}
 
+	@Test // GH-3407
+	void shouldWriteSubdocumentWithNullCorrectly() {
+
+		template.dropCollection(WithSubdocument.class);
+
+		WithSubdocument doc = new WithSubdocument();
+		SubdocumentWithWriteNull subdoc = new SubdocumentWithWriteNull("Walter", "White");
+		doc.subdocument = subdoc;
+
+		template.save(doc);
+
+		org.bson.Document loaded = template.findById(doc.id, org.bson.Document.class, "withSubdocument");
+
+		assertThat(loaded.get("subdocument", org.bson.Document.class)).hasSize(3).containsEntry("firstname", "Walter")
+				.containsEntry("nickname", null);
+	}
+
+	@Test // GH-3407
+	void shouldUpdateSubdocumentWithNullCorrectly() {
+
+		template.dropCollection(WithSubdocument.class);
+
+		WithSubdocument doc = new WithSubdocument();
+		SubdocumentWithWriteNull subdoc = new SubdocumentWithWriteNull("Walter", "White");
+		subdoc.nickname = "Heisenberg";
+		doc.subdocument = subdoc;
+
+		template.save(doc);
+
+		String id = doc.id;
+
+		doc.id = null;
+		subdoc.nickname = null;
+		template.update(WithSubdocument.class).replaceWith(doc).findAndReplaceValue();
+
+		org.bson.Document loaded = template.findById(id, org.bson.Document.class, "withSubdocument");
+
+		assertThat(loaded.get("subdocument", org.bson.Document.class)).hasSize(3).containsEntry("firstname", "Walter")
+				.containsEntry("nickname", null);
+	}
+
+	@Test // GH-3407
+	void shouldFindSubdocumentWithNullCorrectly() {
+
+		template.dropCollection(WithSubdocument.class);
+
+		WithSubdocument doc = new WithSubdocument();
+		SubdocumentWithWriteNull subdoc = new SubdocumentWithWriteNull("Walter", "White");
+		doc.subdocument = subdoc;
+
+		template.save(doc);
+
+		org.bson.Document loaded = template.findOne(query(where("subdocument").is(subdoc)), org.bson.Document.class,
+				"withSubdocument");
+
+		assertThat(loaded).isNotNull();
+	}
+
 	private AtomicReference<ImmutableVersioned> createAfterSaveReference() {
 
 		AtomicReference<ImmutableVersioned> saved = new AtomicReference<>();
@@ -4020,7 +4085,8 @@ public class MongoTemplateTests {
 	static class VersionedPerson {
 
 		@Version Long version;
-		String id, firstname, lastname;
+		String id, firstname;
+		@Field(write = Field.Write.ALWAYS) String lastname;
 	}
 
 	static class TypeWithFieldAnnotation {
@@ -4246,5 +4312,23 @@ public class MongoTemplateTests {
 		String id;
 		String value;
 
+	}
+
+	@Data
+	static class WithSubdocument {
+
+		@Id //
+		@Field(name = "_id") //
+		String id;
+		SubdocumentWithWriteNull subdocument;
+	}
+
+	@Data
+	@RequiredArgsConstructor
+	static class SubdocumentWithWriteNull {
+
+		final String firstname, lastname;
+
+		@Field(write = Field.Write.ALWAYS) String nickname;
 	}
 }

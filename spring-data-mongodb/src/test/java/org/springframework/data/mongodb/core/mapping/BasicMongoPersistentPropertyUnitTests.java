@@ -48,25 +48,26 @@ import org.springframework.util.ReflectionUtils;
  * @author Oliver Gierke
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Divya Srivastava
  */
 public class BasicMongoPersistentPropertyUnitTests {
 
-	MongoPersistentEntity<Person> entity;
+	private MongoPersistentEntity<Person> entity;
 
 	@BeforeEach
-	public void setup() {
+	void setup() {
 		entity = new BasicMongoPersistentEntity<>(ClassTypeInformation.from(Person.class));
 	}
 
 	@Test
-	public void usesAnnotatedFieldName() {
+	void usesAnnotatedFieldName() {
 
 		Field field = ReflectionUtils.findField(Person.class, "firstname");
 		assertThat(getPropertyFor(field).getFieldName()).isEqualTo("foo");
 	}
 
 	@Test
-	public void returns_IdForIdProperty() {
+	void returns_IdForIdProperty() {
 		Field field = ReflectionUtils.findField(Person.class, "id");
 		MongoPersistentProperty property = getPropertyFor(field);
 		assertThat(property.isIdProperty()).isTrue();
@@ -74,19 +75,19 @@ public class BasicMongoPersistentPropertyUnitTests {
 	}
 
 	@Test
-	public void returnsPropertyNameForUnannotatedProperties() {
+	void returnsPropertyNameForUnannotatedProperties() {
 
 		Field field = ReflectionUtils.findField(Person.class, "lastname");
 		assertThat(getPropertyFor(field).getFieldName()).isEqualTo("lastname");
 	}
 
 	@Test
-	public void preventsNegativeOrder() {
+	void preventsNegativeOrder() {
 		getPropertyFor(ReflectionUtils.findField(Person.class, "ssn"));
 	}
 
 	@Test // DATAMONGO-553
-	public void usesPropertyAccessForThrowableCause() {
+	void usesPropertyAccessForThrowableCause() {
 
 		BasicMongoPersistentEntity<Throwable> entity = new BasicMongoPersistentEntity<>(
 				ClassTypeInformation.from(Throwable.class));
@@ -96,7 +97,7 @@ public class BasicMongoPersistentPropertyUnitTests {
 	}
 
 	@Test // DATAMONGO-607
-	public void usesCustomFieldNamingStrategyByDefault() throws Exception {
+	void usesCustomFieldNamingStrategyByDefault() throws Exception {
 
 		ClassTypeInformation<Person> type = ClassTypeInformation.from(Person.class);
 		Field field = ReflectionUtils.findField(Person.class, "lastname");
@@ -113,7 +114,7 @@ public class BasicMongoPersistentPropertyUnitTests {
 	}
 
 	@Test // DATAMONGO-607
-	public void rejectsInvalidValueReturnedByFieldNamingStrategy() {
+	void rejectsInvalidValueReturnedByFieldNamingStrategy() {
 
 		ClassTypeInformation<Person> type = ClassTypeInformation.from(Person.class);
 		Field field = ReflectionUtils.findField(Person.class, "lastname");
@@ -126,49 +127,42 @@ public class BasicMongoPersistentPropertyUnitTests {
 	}
 
 	@Test // DATAMONGO-937
-	public void shouldDetectAnnotatedLanguagePropertyCorrectly() {
+	void shouldDetectAnnotatedLanguagePropertyCorrectly() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithLanguageProperty.class, "lang");
 		assertThat(property.isLanguageProperty()).isTrue();
 	}
 
 	@Test // DATAMONGO-937
-	public void shouldDetectImplicitLanguagePropertyCorrectly() {
+	void shouldDetectImplicitLanguagePropertyCorrectly() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithImplicitLanguageProperty.class, "language");
 		assertThat(property.isLanguageProperty()).isTrue();
 	}
 
 	@Test // DATAMONGO-976
-	public void shouldDetectTextScorePropertyCorrectly() {
+	void shouldDetectTextScorePropertyCorrectly() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithTextScoreProperty.class, "score");
 		assertThat(property.isTextScoreProperty()).isTrue();
 	}
 
-	@Test // DATAMONGO-2551
-	public void shouldDetectOmittableOnNullPropertyCorrectly() {
-
-		MongoPersistentProperty property = getPropertyFor(DocumentWithOmittableOnNullProperty.class, "write");
-		assertThat(property.isPropertyOmittableOnNull()).isTrue();
-	}
-
 	@Test // DATAMONGO-976
-	public void shouldDetectTextScoreAsReadOnlyProperty() {
+	void shouldDetectTextScoreAsReadOnlyProperty() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithTextScoreProperty.class, "score");
 		assertThat(property.isWritable()).isFalse();
 	}
 
 	@Test // DATAMONGO-1050
-	public void shouldNotConsiderExplicitlyNameFieldAsIdProperty() {
+	void shouldNotConsiderExplicitlyNameFieldAsIdProperty() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithExplicitlyRenamedIdProperty.class, "id");
 		assertThat(property.isIdProperty()).isFalse();
 	}
 
 	@Test // DATAMONGO-1050
-	public void shouldConsiderPropertyAsIdWhenExplicitlyAnnotatedWithIdEvenWhenExplicitlyNamePresent() {
+	void shouldConsiderPropertyAsIdWhenExplicitlyAnnotatedWithIdEvenWhenExplicitlyNamePresent() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithExplicitlyRenamedIdPropertyHavingIdAnnotation.class,
 				"id");
@@ -176,7 +170,7 @@ public class BasicMongoPersistentPropertyUnitTests {
 	}
 
 	@Test // DATAMONGO-1373
-	public void shouldConsiderComposedAnnotationsForIdField() {
+	void shouldConsiderComposedAnnotationsForIdField() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithComposedAnnotations.class, "myId");
 		assertThat(property.isIdProperty()).isTrue();
@@ -184,14 +178,14 @@ public class BasicMongoPersistentPropertyUnitTests {
 	}
 
 	@Test // DATAMONGO-1373
-	public void shouldConsiderComposedAnnotationsForFields() {
+	void shouldConsiderComposedAnnotationsForFields() {
 
 		MongoPersistentProperty property = getPropertyFor(DocumentWithComposedAnnotations.class, "myField");
 		assertThat(property.getFieldName()).isEqualTo("myField");
 	}
 
 	@Test // DATAMONGO-1737
-	public void honorsFieldOrderWhenIteratingOverProperties() {
+	void honorsFieldOrderWhenIteratingOverProperties() {
 
 		MongoMappingContext context = new MongoMappingContext();
 		MongoPersistentEntity<?> entity = context.getPersistentEntity(Sample.class);
@@ -203,36 +197,45 @@ public class BasicMongoPersistentPropertyUnitTests {
 		assertThat(properties).containsExactly("first", "second", "third");
 	}
 
+	@Test // GH-3407
+	void shouldDetectWritability() {
+
+		assertThat(getPropertyFor(WithFieldWrite.class, "fieldWithDefaults").writeNullValues()).isFalse();
+		assertThat(getPropertyFor(WithFieldWrite.class, "fieldWithField").writeNullValues()).isFalse();
+		assertThat(getPropertyFor(WithFieldWrite.class, "writeNonNull").writeNullValues()).isFalse();
+		assertThat(getPropertyFor(WithFieldWrite.class, "writeAlways").writeNullValues()).isTrue();
+	}
+
 	@Test // DATAMONGO-1798
-	public void fieldTypeShouldReturnActualTypeForNonIdProperties() {
+	void fieldTypeShouldReturnActualTypeForNonIdProperties() {
 
 		MongoPersistentProperty property = getPropertyFor(Person.class, "lastname");
 		assertThat(property.getFieldType()).isEqualTo(String.class);
 	}
 
 	@Test // DATAMONGO-1798
-	public void fieldTypeShouldBeObjectIdForPropertiesAnnotatedWithCommonsId() {
+	void fieldTypeShouldBeObjectIdForPropertiesAnnotatedWithCommonsId() {
 
 		MongoPersistentProperty property = getPropertyFor(Person.class, "id");
 		assertThat(property.getFieldType()).isEqualTo(ObjectId.class);
 	}
 
 	@Test // DATAMONGO-1798
-	public void fieldTypeShouldBeImplicitForPropertiesAnnotatedWithMongoId() {
+	void fieldTypeShouldBeImplicitForPropertiesAnnotatedWithMongoId() {
 
 		MongoPersistentProperty property = getPropertyFor(WithStringMongoId.class, "id");
 		assertThat(property.getFieldType()).isEqualTo(String.class);
 	}
 
 	@Test // DATAMONGO-1798
-	public void fieldTypeShouldBeObjectIdForPropertiesAnnotatedWithMongoIdAndTargetTypeObjectId() {
+	void fieldTypeShouldBeObjectIdForPropertiesAnnotatedWithMongoIdAndTargetTypeObjectId() {
 
 		MongoPersistentProperty property = getPropertyFor(WithStringMongoIdMappedToObjectId.class, "id");
 		assertThat(property.getFieldType()).isEqualTo(ObjectId.class);
 	}
 
 	@Test // DATAMONGO-2460
-	public void fieldTypeShouldBeDocumentForPropertiesAnnotatedIdWhenAComplexTypeAndFieldTypeImplicit() {
+	void fieldTypeShouldBeDocumentForPropertiesAnnotatedIdWhenAComplexTypeAndFieldTypeImplicit() {
 
 		MongoPersistentProperty property = getPropertyFor(WithComplexId.class, "id");
 		assertThat(property.getFieldType()).isEqualTo(Document.class);
@@ -304,9 +307,15 @@ public class BasicMongoPersistentPropertyUnitTests {
 		@TextScore Float score;
 	}
 
-	static class DocumentWithOmittableOnNullProperty {
+	static class WithFieldWrite {
 
-		@org.springframework.data.mongodb.core.mapping.Field("write") org.springframework.data.mongodb.core.mapping.Field.Write write;
+		int fieldWithDefaults;
+		@org.springframework.data.mongodb.core.mapping.Field int fieldWithField;
+		@org.springframework.data.mongodb.core.mapping.Field(
+				write = org.springframework.data.mongodb.core.mapping.Field.Write.NON_NULL) Integer writeNonNull;
+
+		@org.springframework.data.mongodb.core.mapping.Field(
+				write = org.springframework.data.mongodb.core.mapping.Field.Write.ALWAYS) Integer writeAlways;
 
 	}
 
