@@ -15,8 +15,9 @@
  */
 package org.springframework.data.mongodb.core.index;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
-import static org.springframework.data.mongodb.test.util.Assertions.*;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThatExceptionOfType;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -25,6 +26,7 @@ import java.lang.annotation.Target;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -1323,6 +1325,49 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 		}
 
+		@Test // GH-3225
+		public void resolvesWildcardOnRoot() {
+
+			List<IndexDefinitionHolder> indices = prepareMappingContextAndResolveIndexForType(
+					WithWildCardIndexOnEntity.class);
+			assertThat(indices).hasSize(1);
+			assertThat(indices.get(0)).satisfies(it -> {
+				assertThat(it.getIndexKeys()).containsEntry("$**", 1);
+			});
+		}
+
+		@Test // GH-3225
+		public void resolvesWildcardOnProperty() {
+
+			List<IndexDefinitionHolder> indices = prepareMappingContextAndResolveIndexForType(
+					WithWildCardIndexOnProperty.class);
+			assertThat(indices).hasSize(3);
+			assertThat(indices.get(0)).satisfies(it -> {
+				assertThat(it.getIndexKeys()).containsEntry("value.$**", 1);
+			});
+			assertThat(indices.get(1)).satisfies(it -> {
+				assertThat(it.getIndexKeys()).containsEntry("the_field.$**", 1);
+			});
+			assertThat(indices.get(2)).satisfies(it -> {
+				assertThat(it.getIndexKeys()).containsEntry("withOptions.$**", 1);
+				assertThat(it.getIndexOptions()).containsEntry("name",
+						"withOptions.idx")
+				.containsEntry("collation", new org.bson.Document("locale", "en_US"))
+				.containsEntry("partialFilterExpression", new org.bson.Document("$eq", 1));
+			});
+		}
+
+		@Test // GH-3225
+		public void resolvesWildcardTypeOfNestedProperty() {
+
+			List<IndexDefinitionHolder> indices = prepareMappingContextAndResolveIndexForType(
+					WithWildCardOnEntityOfNested.class);
+			assertThat(indices).hasSize(1);
+			assertThat(indices.get(0)).satisfies(it -> {
+				assertThat(it.getIndexKeys()).containsEntry("value.$**", 1);
+			});
+		}
+
 		@Document
 		class MixedIndexRoot {
 
@@ -1533,7 +1578,7 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 			@Indexed //
 			@Unwrapped.Nullable //
-					UnwrappableType unwrappableType;
+			UnwrappableType unwrappableType;
 
 		}
 
@@ -1571,6 +1616,42 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		class WithHashedIndex {
 
 			@HashIndexed String value;
+		}
+
+		@Document
+		@WildcardIndexed
+		class WithWildCardIndexOnEntity {
+
+			String value;
+		}
+
+		@Document
+		@WildcardIndexed(wildcardProjection = "{'_id' : 1, 'value' : 0}")
+		class WithWildCardIndexHavingProjectionOnEntity {
+
+			String value;
+		}
+
+		@Document
+		class WithWildCardIndexOnProperty {
+
+			@WildcardIndexed //
+			Map<String, String> value;
+
+			@WildcardIndexed //
+			@Field("the_field") //
+			Map<String, String> renamedField;
+
+			@WildcardIndexed(name = "idx", partialFilter = "{ '$eq' : 1 }", collation = "en_US") //
+			Map<String, String> withOptions;
+
+		}
+
+		@Document
+		class WithWildCardOnEntityOfNested {
+
+			WithWildCardIndexOnEntity value;
+
 		}
 
 		@Document

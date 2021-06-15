@@ -55,6 +55,7 @@ public class IndexInfo {
 	private @Nullable Duration expireAfter;
 	private @Nullable String partialFilterExpression;
 	private @Nullable Document collation;
+	private @Nullable Document wildcardProjection;
 
 	public IndexInfo(List<IndexField> indexFields, String name, boolean unique, boolean sparse, String language) {
 
@@ -99,6 +100,8 @@ public class IndexInfo {
 
 				if (ObjectUtils.nullSafeEquals("hashed", value)) {
 					indexFields.add(IndexField.hashed(key));
+				} else if (key.contains("$**")) {
+					indexFields.add(IndexField.wildcard(key));
 				} else {
 
 					Double keyValue = new Double(value.toString());
@@ -129,6 +132,10 @@ public class IndexInfo {
 
 			Number expireAfterSeconds = sourceDocument.get("expireAfterSeconds", Number.class);
 			info.expireAfter = Duration.ofSeconds(NumberUtils.convertNumberToTargetClass(expireAfterSeconds, Long.class));
+		}
+
+		if (sourceDocument.containsKey("wildcardProjection")) {
+			info.wildcardProjection = sourceDocument.get("wildcardProjection", Document.class);
 		}
 
 		return info;
@@ -217,6 +224,16 @@ public class IndexInfo {
 	}
 
 	/**
+	 * Get {@literal wildcardProjection} information.
+	 *
+	 * @return {@link Optional#empty() empty} if not set.
+	 * @since 3.3
+	 */
+	public Optional<Document> getWildcardProjection() {
+		return Optional.ofNullable(wildcardProjection);
+	}
+
+	/**
 	 * Get the duration after which documents within the index expire.
 	 *
 	 * @return the expiration time if set, {@link Optional#empty()} otherwise.
@@ -232,6 +249,14 @@ public class IndexInfo {
 	 */
 	public boolean isHashed() {
 		return getIndexFields().stream().anyMatch(IndexField::isHashed);
+	}
+
+	/**
+	 * @return {@literal true} if a wildcard index field is present.
+	 * @since 3.3
+	 */
+	public boolean isWildcard() {
+		return getIndexFields().stream().anyMatch(IndexField::isWildcard);
 	}
 
 	@Override
@@ -303,4 +328,5 @@ public class IndexInfo {
 		}
 		return true;
 	}
+
 }

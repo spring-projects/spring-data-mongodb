@@ -36,6 +36,7 @@ public class IndexInfoUnitTests {
 	static final String INDEX_WITH_PARTIAL_FILTER = "{ \"v\" : 2, \"key\" : { \"k3y\" : 1 }, \"name\" : \"partial-filter-index\", \"ns\" : \"db.collection\", \"partialFilterExpression\" : { \"quantity\" : { \"$gte\" : 10 } } }";
 	static final String INDEX_WITH_EXPIRATION_TIME = "{ \"v\" : 2, \"key\" : { \"lastModifiedDate\" : 1 },\"name\" : \"expire-after-last-modified\", \"ns\" : \"db.collectio\", \"expireAfterSeconds\" : 3600 }";
 	static final String HASHED_INDEX = "{ \"v\" : 2, \"key\" : { \"score\" : \"hashed\" }, \"name\" : \"score_hashed\", \"ns\" : \"db.collection\" }";
+	static final String WILDCARD_INDEX = "{ \"v\" : 2, \"key\" : { \"$**\" : 1 }, \"name\" : \"$**_1\", \"wildcardProjection\" : { \"fieldA\" : 0, \"fieldB.fieldC\" : 0 } }";
 
 	@Test
 	public void isIndexForFieldsCorrectly() {
@@ -77,6 +78,16 @@ public class IndexInfoUnitTests {
 	@Test // DATAMONGO-1183
 	public void hashedIndexIsMarkedAsSuch() {
 		assertThat(getIndexInfo(HASHED_INDEX).isHashed()).isTrue();
+	}
+
+	@Test // GH-3225
+	public void identifiesWildcardIndexCorrectly() {
+		assertThat(getIndexInfo(WILDCARD_INDEX).isWildcard()).isTrue();
+	}
+
+	@Test // GH-3225
+	public void readsWildcardIndexProjectionCorrectly() {
+		assertThat(getIndexInfo(WILDCARD_INDEX).getWildcardProjection()).contains(new Document("fieldA", 0).append("fieldB.fieldC", 0));
 	}
 
 	private static IndexInfo getIndexInfo(String documentJson) {
