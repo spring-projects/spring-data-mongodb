@@ -46,6 +46,7 @@ import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.mongodb.util.DotPath;
 import org.springframework.data.spel.EvaluationContextProvider;
@@ -121,6 +122,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		List<IndexDefinitionHolder> indexInformation = new ArrayList<>();
 		String collection = root.getCollection();
 		indexInformation.addAll(potentiallyCreateCompoundIndexDefinitions("", collection, root));
+		indexInformation.addAll(potentiallyCreateWildcardIndexDefinitions("", collection, root));
 		indexInformation.addAll(potentiallyCreateTextIndexDefinition(root, collection));
 
 		root.doWithProperties((PropertyHandler<MongoPersistentProperty>) property -> this
@@ -162,17 +164,18 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	 * @return List of {@link IndexDefinitionHolder} representing indexes for given type and its referenced property
 	 *         types. Will never be {@code null}.
 	 */
-	private List<IndexDefinitionHolder> resolveIndexForClass( TypeInformation<?> type,  String dotPath,
-			 Path path,  String collection,  CycleGuard guard) {
+	private List<IndexDefinitionHolder> resolveIndexForClass(TypeInformation<?> type, String dotPath, Path path,
+			String collection, CycleGuard guard) {
 
 		return resolveIndexForEntity(mappingContext.getRequiredPersistentEntity(type), dotPath, path, collection, guard);
 	}
 
-	private List<IndexDefinitionHolder> resolveIndexForEntity(MongoPersistentEntity<?> entity,  String dotPath,
-			 Path path,  String collection,  CycleGuard guard) {
+	private List<IndexDefinitionHolder> resolveIndexForEntity(MongoPersistentEntity<?> entity, String dotPath, Path path,
+			String collection, CycleGuard guard) {
 
 		List<IndexDefinitionHolder> indexInformation = new ArrayList<>();
 		indexInformation.addAll(potentiallyCreateCompoundIndexDefinitions(dotPath, collection, entity));
+		indexInformation.addAll(potentiallyCreateWildcardIndexDefinitions(dotPath, collection, entity));
 
 		entity.doWithProperties((PropertyHandler<MongoPersistentProperty>) property -> this
 				.guardAndPotentiallyAddIndexForProperty(property, dotPath, path, collection, indexInformation, guard));
@@ -196,15 +199,15 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		if (persistentProperty.isEntity()) {
 			try {
-				indexes.addAll(resolveIndexForEntity(mappingContext.getPersistentEntity(persistentProperty), propertyDotPath.toString(),
-						propertyPath, collection, guard));
+				indexes.addAll(resolveIndexForEntity(mappingContext.getPersistentEntity(persistentProperty),
+						propertyDotPath.toString(), propertyPath, collection, guard));
 			} catch (CyclicPropertyReferenceException e) {
 				LOGGER.info(e.getMessage());
 			}
 		}
 
-		List<IndexDefinitionHolder> indexDefinitions = createIndexDefinitionHolderForProperty(propertyDotPath.toString(), collection,
-				persistentProperty);
+		List<IndexDefinitionHolder> indexDefinitions = createIndexDefinitionHolderForProperty(propertyDotPath.toString(),
+				collection, persistentProperty);
 
 		if (!indexDefinitions.isEmpty()) {
 			indexes.addAll(indexDefinitions);
@@ -232,6 +235,11 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		if (persistentProperty.isAnnotationPresent(HashIndexed.class)) {
 			indices.add(createHashedIndexDefinition(dotPath, collection, persistentProperty));
 		}
+		if (persistentProperty.isAnnotationPresent(WildcardIndexed.class)) {
+			indices.add(createWildcardIndexDefinition(dotPath, collection,
+					persistentProperty.getRequiredAnnotation(WildcardIndexed.class),
+					mappingContext.getPersistentEntity(persistentProperty)));
+		}
 
 		return indices;
 	}
@@ -244,6 +252,18 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		}
 
 		return createCompoundIndexDefinitions(dotPath, collection, entity);
+	}
+
+	private List<IndexDefinitionHolder> potentiallyCreateWildcardIndexDefinitions(String dotPath, String collection,
+			MongoPersistentEntity<?> entity) {
+
+		if (entity.findAnnotation(WildcardIndexed.class) == null) {
+			return Collections.emptyList();
+		}
+
+		return Collections.singletonList(new IndexDefinitionHolder(dotPath,
+				createWildcardIndexDefinition(dotPath, collection, entity.getRequiredAnnotation(WildcardIndexed.class), entity),
+				collection));
 	}
 
 	private Collection<? extends IndexDefinitionHolder> potentiallyCreateTextIndexDefinition(
@@ -292,9 +312,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 	}
 
-	private void appendTextIndexInformation(DotPath dotPath, Path path,
-			TextIndexDefinitionBuilder indexDefinitionBuilder, MongoPersistentEntity<?> entity,
-			TextIndexIncludeOptions includeOptions, CycleGuard guard) {
+	private void appendTextIndexInformation(DotPath dotPath, Path path, TextIndexDefinitionBuilder indexDefinitionBuilder,
+			MongoPersistentEntity<?> entity, TextIndexIncludeOptions includeOptions, CycleGuard guard) {
 
 		entity.doWithProperties(new PropertyHandler<MongoPersistentProperty>() {
 
@@ -311,8 +330,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 				if (includeOptions.isForce() || indexed != null || persistentProperty.isEntity()) {
 
-					DotPath propertyDotPath = dotPath
-							.append(persistentProperty.getFieldName());
+					DotPath propertyDotPath = dotPath.append(persistentProperty.getFieldName());
 
 					Path propertyPath = path.append(persistentProperty);
 
@@ -401,6 +419,32 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		if (StringUtils.hasText(index.partialFilter())) {
 			indexDefinition.partial(evaluatePartialFilter(index.partialFilter(), entity));
+		}
+
+		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
+	}
+
+	protected IndexDefinitionHolder createWildcardIndexDefinition(String dotPath, String collection,
+			WildcardIndexed index, @Nullable MongoPersistentEntity<?> entity) {
+
+		WildcardIndex indexDefinition = new WildcardIndex(dotPath);
+
+		if (StringUtils.hasText(index.wildcardProjection())) {
+			indexDefinition.wildcardProjection(evaluateWildcardProjection(index.wildcardProjection(), entity));
+		}
+
+		if (!index.useGeneratedName()) {
+			indexDefinition.named(pathAwareIndexName(index.name(), dotPath, entity, null));
+		}
+
+		if (StringUtils.hasText(index.partialFilter())) {
+			indexDefinition.partial(evaluatePartialFilter(index.partialFilter(), entity));
+		}
+
+		if (StringUtils.hasText(index.collation())) {
+			indexDefinition.collation(evaluateCollation(index.collation(), entity));
+		} else if (entity != null && entity.hasCollation()) {
+			indexDefinition.collation(entity.getCollation());
 		}
 
 		return new IndexDefinitionHolder(dotPath, indexDefinition, collection);
@@ -508,6 +552,33 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		}
 
 		return PartialIndexFilter.of(BsonUtils.parse(filterExpression, null));
+	}
+
+	private org.bson.Document evaluateWildcardProjection(String projectionExpression, PersistentEntity<?, ?> entity) {
+
+		Object result = evaluate(projectionExpression, getEvaluationContextForProperty(entity));
+
+		if (result instanceof org.bson.Document) {
+			return (org.bson.Document) result;
+		}
+
+		return BsonUtils.parse(projectionExpression, null);
+	}
+
+	private Collation evaluateCollation(String collationExpression, PersistentEntity<?, ?> entity) {
+
+		Object result = evaluate(collationExpression, getEvaluationContextForProperty(entity));
+		if (result instanceof org.bson.Document) {
+			return Collation.from((org.bson.Document) result);
+		}
+		if (result instanceof Collation) {
+			return (Collation) result;
+		}
+		if (result instanceof String) {
+			return Collation.parse(result.toString());
+		}
+		throw new IllegalStateException("Cannot parse collation " + result);
+
 	}
 
 	/**
@@ -657,8 +728,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 							propertyDotPath));
 		}
 
-		List<IndexDefinitionHolder> indexDefinitions = createIndexDefinitionHolderForProperty(propertyDotPath.toString(), collection,
-				property);
+		List<IndexDefinitionHolder> indexDefinitions = createIndexDefinitionHolderForProperty(propertyDotPath.toString(),
+				collection, property);
 
 		if (!indexDefinitions.isEmpty()) {
 			indexes.addAll(indexDefinitions);
@@ -997,6 +1068,11 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		@Override
 		public org.bson.Document getIndexOptions() {
 			return indexDefinition.getIndexOptions();
+		}
+
+		@Override
+		public String toString() {
+			return "IndexDefinitionHolder{" + "indexKeys=" + getIndexKeys() + '}';
 		}
 	}
 

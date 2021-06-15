@@ -29,7 +29,7 @@ import org.springframework.util.ObjectUtils;
 public final class IndexField {
 
 	enum Type {
-		GEO, TEXT, DEFAULT, HASH;
+		GEO, TEXT, DEFAULT, HASH, WILDCARD;
 	}
 
 	private final String key;
@@ -48,7 +48,7 @@ public final class IndexField {
 		if (Type.GEO.equals(type) || Type.TEXT.equals(type)) {
 			Assert.isNull(direction, "Geo/Text indexes must not have a direction!");
 		} else {
-			if (!Type.HASH.equals(type)) {
+			if (!(Type.HASH.equals(type) || Type.WILDCARD.equals(type))) {
 				Assert.notNull(direction, "Default indexes require a direction");
 			}
 		}
@@ -75,6 +75,17 @@ public final class IndexField {
 	 */
 	static IndexField hashed(String key) {
 		return new IndexField(key, null, Type.HASH);
+	}
+
+	/**
+	 * Creates a {@literal wildcard} {@link IndexField} for the given key.
+	 *
+	 * @param key must not be {@literal null} or empty.
+	 * @return new instance of {@link IndexField}.
+	 * @since 3.3
+	 */
+	static IndexField wildcard(String key) {
+		return new IndexField(key, null, Type.WILDCARD);
 	}
 
 	/**
@@ -140,6 +151,16 @@ public final class IndexField {
 	 */
 	public boolean isHashed() {
 		return Type.HASH.equals(type);
+	}
+
+	/**
+	 * Returns whether the {@link IndexField} is contains a {@literal wildcard} expression.
+	 *
+	 * @return {@literal true} if {@link IndexField} contains a wildcard {@literal $**}.
+	 * @since 3.3
+	 */
+	public boolean isWildcard() {
+		return Type.WILDCARD.equals(type);
 	}
 
 	/*

@@ -760,6 +760,94 @@ mongoOperations.indexOpsFor(Jedi.class)
 ----
 ====
 
+[[mapping-usage-indexes.wildcard-index]]
+=== Wildcard Indexes
+
+A `WildcardIndex` is an index that can be used to include all fields or specific ones based a given (wildcard) pattern.
+For details, refer to the https://docs.mongodb.com/manual/core/index-wildcard/[MongoDB Documentation].
+
+The index can be set up programmatically using `WildcardIndex` via `IndexOperations`.
+
+.Programmatic WildcardIndex setup
+====
+[source,java]
+----
+mongoOperations
+    .indexOps(User.class)
+    .ensureIndex(new WildcardIndex("userMetadata"));
+----
+[source,javascript]
+----
+db.user.createIndex({ "userMetadata.$**" : 1 }, {})
+----
+====
+
+The `@WildcardIndex` annotation allows a declarative index setup an can be added on either a type or property.
+
+If placed on a type that is a root level domain entity (one having an `@Document` annotation) will advise the index creator to create a
+wildcard index for it.
+
+.Wildcard index on domain type
+====
+[source,java]
+----
+@Document
+@WildcardIndexed
+public class Product {
+    ...
+}
+----
+[source,javascript]
+----
+db.product.createIndex({ "$**" : 1 },{})
+----
+====
+
+The `wildcardProjection` can be used to specify keys to in-/exclude in the index.
+
+.Wildcard index with `wildcardProjection`
+====
+[source,java]
+----
+@Document
+@WildcardIndexed(wildcardProjection = "{ 'userMetadata.age' : 0 }")
+public class User {
+    private @Id String id;
+    private UserMetadata userMetadata;
+}
+----
+[source,javascript]
+----
+db.user.createIndex(
+  { "$**" : 1 },
+  { "wildcardProjection" :
+    { "userMetadata.age" : 0 }
+  }
+)
+----
+====
+
+Wildcard indexes can also be expressed by adding the annotation directly to the field.
+Please note that `wildcardProjection` is not allowed on nested paths.
+
+.Wildcard index on property
+====
+[source,java]
+----
+@Document
+public class User {
+    private @Id String id;
+
+    @WildcardIndexed
+    private UserMetadata userMetadata;
+}
+----
+[source,javascript]
+----
+db.user.createIndex({ "userMetadata.$**" : 1 }, {})
+----
+====
+
 [[mapping-usage-indexes.text-index]]
 === Text Indexes
 
