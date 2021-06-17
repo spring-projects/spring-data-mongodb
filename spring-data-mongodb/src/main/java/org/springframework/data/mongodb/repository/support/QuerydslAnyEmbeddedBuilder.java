@@ -37,7 +37,10 @@ import com.querydsl.mongodb.MongodbOps;
  * @author Mark Paluch
  * @author Christoph Strobl
  * @since 2.1
+ * @deprecated since 3.3, use Querydsl's {@link com.querydsl.mongodb.document.AnyEmbeddedBuilder} directly. This class
+ *             is deprecated for removal with the next major release.
  */
+@Deprecated
 public class QuerydslAnyEmbeddedBuilder<Q extends QuerydslAbstractMongodbQuery<K, Q>, K> {
 
 	private final QueryMixin<Q> queryMixin;
