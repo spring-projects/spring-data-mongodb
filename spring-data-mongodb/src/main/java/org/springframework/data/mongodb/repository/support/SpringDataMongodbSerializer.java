@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.bson.Document;
+
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
@@ -39,6 +40,7 @@ import com.querydsl.core.types.Path;
 import com.querydsl.core.types.PathMetadata;
 import com.querydsl.core.types.PathType;
 import com.querydsl.mongodb.MongodbSerializer;
+import com.querydsl.mongodb.document.MongodbDocumentSerializer;
 
 /**
  * Custom {@link MongodbSerializer} to take mapping information into account when building keys for constraints.

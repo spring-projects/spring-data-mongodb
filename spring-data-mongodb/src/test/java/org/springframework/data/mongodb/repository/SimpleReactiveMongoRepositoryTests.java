@@ -28,8 +28,6 @@ import reactor.test.StepVerifier;
 
 import java.util.Arrays;
 
-import javax.annotation.Nullable;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -49,6 +47,7 @@ import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.repository.support.ReactiveMongoRepositoryFactory;
 import org.springframework.data.mongodb.repository.support.SimpleReactiveMongoRepository;
 import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.util.ClassUtils;

@@ -34,6 +34,8 @@ import com.querydsl.core.types.FactoryExpression;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.ParamExpression;
 import com.querydsl.core.types.Predicate;
+import com.querydsl.mongodb.document.AbstractMongodbQuery;
+import com.querydsl.mongodb.document.MongodbDocumentSerializer;
 
 /**
  * {@code QuerydslAbstractMongodbQuery} provides a base class for general Querydsl query implementation.
@@ -49,8 +51,12 @@ import com.querydsl.core.types.Predicate;
  * @author Mark Paluch
  * @author Christoph Strobl
  * @since 2.1
+ * @deprecated since 3.3, use Querydsl's {@link AbstractMongodbQuery} directly. This class is deprecated for removal
+ *             with the next major release.
  */
+@Deprecated
 public abstract class QuerydslAbstractMongodbQuery<K, Q extends QuerydslAbstractMongodbQuery<K, Q>>
+		extends AbstractMongodbQuery<Q>
 		implements SimpleQuery<Q> {
 
 	private static final JsonWriterSettings JSON_WRITER_SETTINGS = JsonWriterSettings.builder().outputMode(JsonMode.SHELL)
@@ -66,6 +72,8 @@ public abstract class QuerydslAbstractMongodbQuery<K, Q extends QuerydslAbstract
 	 */
 	@SuppressWarnings("unchecked")
 	QuerydslAbstractMongodbQuery(MongodbDocumentSerializer serializer) {
+
+		super(serializer);
 
 		this.queryMixin = new QueryMixin<>((Q) this, new DefaultQueryMetadata(), false);
 		this.serializer = serializer;
@@ -159,22 +167,6 @@ public abstract class QuerydslAbstractMongodbQuery<K, Q extends QuerydslAbstract
 	}
 
 	/**
-	 * Compute the filer {@link Document} from the given {@link Predicate}.
-	 *
-	 * @param predicate can be {@literal null}.
-	 * @return an empty {@link Document} if predicate is {@literal null}.
-	 * @see MongodbDocumentSerializer#toQuery(Predicate)
-	 */
-	protected Document createQuery(@Nullable Predicate predicate) {
-
-		if (predicate == null) {
-			return new Document();
-		}
-
-		return serializer.toQuery(predicate);
-	}
-
-	/**
 	 * Compute the sort {@link Document} from the given list of {@link OrderSpecifier order specifiers}.
 	 *
 	 * @param orderSpecifiers can be {@literal null}.
@@ -194,14 +186,6 @@ public abstract class QuerydslAbstractMongodbQuery<K, Q extends QuerydslAbstract
 		return queryMixin;
 	}
 
-	/**
-	 * Get the where definition as a Document instance
-	 *
-	 * @return
-	 */
-	Document asDocument() {
-		return createQuery(queryMixin.getMetadata().getWhere());
-	}
 
 	/**
 	 * Returns the {@literal Mongo Shell} representation of the query. <br />
