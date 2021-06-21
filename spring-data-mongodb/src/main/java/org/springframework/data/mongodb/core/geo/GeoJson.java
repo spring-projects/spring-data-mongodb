@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.core.geo;
 
 /**
- * Interface definition for structures defined in <a href="https://geojson.org/>GeoJSON</a> format.
+ * Interface definition for structures defined in <a href="https://geojson.org/">GeoJSON</a> format.
  *
  * @author Christoph Strobl
  * @since 1.7
