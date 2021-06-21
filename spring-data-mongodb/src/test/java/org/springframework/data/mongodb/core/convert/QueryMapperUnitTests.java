@@ -50,6 +50,7 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
+import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.TextScore;
@@ -1304,6 +1305,13 @@ public class QueryMapperUnitTests {
 		assertThat(mapper.getMappedSort(query.getQueryObject(), context.getPersistentEntity(Customer.class))).isEqualTo(new org.bson.Document("address.street", "1007 Mountain Drive"));
 	}
 
+	@Test // GH-3668
+	void mapStringIdFieldProjection() {
+
+		org.bson.Document mappedFields = mapper.getMappedFields(new org.bson.Document("id", 1), context.getPersistentEntity(WithStringId.class));
+		assertThat(mappedFields).containsEntry("_id", 1);
+	}
+
 	class WithDeepArrayNesting {
 
 		List<WithNestedArray> level0;
@@ -1365,6 +1373,12 @@ public class QueryMapperUnitTests {
 	class Sample {
 
 		@Id private String foo;
+	}
+
+	class WithStringId {
+
+		@MongoId String id;
+		String name;
 	}
 
 	class BigIntegerId {
