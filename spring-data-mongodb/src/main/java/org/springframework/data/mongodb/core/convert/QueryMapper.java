@@ -195,19 +195,7 @@ public class QueryMapper {
 			return new Document();
 		}
 
-		sortObject = filterUnwrappedObjects(sortObject, entity);
-
-		Document mappedSort = new Document();
-		for (Map.Entry<String, Object> entry : BsonUtils.asMap(sortObject).entrySet()) {
-
-			Field field = createPropertyField(entity, entry.getKey(), mappingContext);
-			if (field.getProperty() != null && field.getProperty().isUnwrapped()) {
-				continue;
-			}
-
-			mappedSort.put(field.getMappedKey(), entry.getValue());
-		}
-
+		Document mappedSort = mapFieldsToPropertyNames(sortObject, entity);
 		mapMetaAttributes(mappedSort, entity, MetaMapping.WHEN_PRESENT);
 		return mappedSort;
 	}
@@ -225,11 +213,28 @@ public class QueryMapper {
 
 		Assert.notNull(fieldsObject, "FieldsObject must not be null!");
 
-		fieldsObject = filterUnwrappedObjects(fieldsObject, entity);
-
-		Document mappedFields = getMappedObject(fieldsObject, entity);
+		Document mappedFields = mapFieldsToPropertyNames(fieldsObject, entity);
 		mapMetaAttributes(mappedFields, entity, MetaMapping.FORCE);
 		return mappedFields;
+	}
+
+	private Document mapFieldsToPropertyNames(Document fields, @Nullable MongoPersistentEntity<?> entity) {
+
+		if(fields.isEmpty()) {
+			return new Document();
+
+		}
+		Document target = new Document();
+		for (Map.Entry<String, Object> entry : BsonUtils.asMap(filterUnwrappedObjects(fields, entity)).entrySet()) {
+
+			Field field = createPropertyField(entity, entry.getKey(), mappingContext);
+			if (field.getProperty() != null && field.getProperty().isUnwrapped()) {
+				continue;
+			}
+
+			target.put(field.getMappedKey(), entry.getValue());
+		}
+		return target;
 	}
 
 	private void mapMetaAttributes(Document source, @Nullable MongoPersistentEntity<?> entity, MetaMapping metaMapping) {
