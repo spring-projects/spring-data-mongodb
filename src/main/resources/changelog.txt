@@ -1,6 +1,15 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.1.10 (2021-06-22)
+--------------------------------------
+* #3677 - Add missing double quote to GeoJson.java JSDoc header.
+* #3666 - Documentation references outdated `Mongo` client.
+* #3659 - [3.2.1] Indexing Class with Custom Converter -> Couldn't find PersistentEntity for property private [...].
+* #3635 - $floor isOrOrNor() return true.
+* #3633 - NPE in QueryMapper when use Query with `null` as value.
+
+
 Changes in version 3.2.1 (2021-05-14)
 -------------------------------------
 * #3638 - Introduce template method for easier customization of fragments.
@@ -3387,6 +3396,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
