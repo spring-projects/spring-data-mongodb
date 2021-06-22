@@ -23,6 +23,7 @@ import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -189,6 +190,7 @@ public class ReactiveMongoTemplateUnitTests {
 		when(aggregatePublisher.first()).thenReturn(findPublisher);
 
 		this.mappingContext = new MongoMappingContext();
+		this.mappingContext.setSimpleTypeHolder(new MongoCustomConversions(Collections.emptyList()).getSimpleTypeHolder());
 		this.converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext);
 		this.template = new ReactiveMongoTemplate(factory, converter);
 	}

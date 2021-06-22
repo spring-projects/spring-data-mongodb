@@ -85,6 +85,7 @@ class DbRefMappingMongoConverterUnitTests {
 
 		this.dbRefResolver = spy(new DefaultDbRefResolver(dbFactory));
 		this.mappingContext = new MongoMappingContext();
+		this.mappingContext.setSimpleTypeHolder(new MongoCustomConversions(Collections.emptyList()).getSimpleTypeHolder());
 		this.converter = new MappingMongoConverter(dbRefResolver, mappingContext);
 	}
 

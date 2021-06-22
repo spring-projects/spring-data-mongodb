@@ -31,6 +31,7 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
@@ -80,6 +81,7 @@ public class MappingMongoConverterTests {
 		dbRefResolver = spy(new DefaultDbRefResolver(factory));
 
 		mappingContext = new MongoMappingContext();
+		mappingContext.setSimpleTypeHolder(new MongoCustomConversions(Collections.emptyList()).getSimpleTypeHolder());
 		mappingContext.setInitialEntitySet(new HashSet<>(
 				Arrays.asList(WithLazyDBRefAsConstructorArg.class, WithLazyDBRef.class, WithJavaTimeTypes.class)));
 		mappingContext.setAutoIndexCreation(false);
