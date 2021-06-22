@@ -204,6 +204,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 
 		this.mappingContext = new MongoMappingContext();
 		mappingContext.setAutoIndexCreation(true);
+		mappingContext.setSimpleTypeHolder(new MongoCustomConversions(Collections.emptyList()).getSimpleTypeHolder());
 		mappingContext.afterPropertiesSet();
 
 		this.converter = spy(new MappingMongoConverter(new DefaultDbRefResolver(factory), mappingContext));

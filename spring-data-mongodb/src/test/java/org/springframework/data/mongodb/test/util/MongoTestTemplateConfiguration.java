@@ -121,6 +121,8 @@ public class MongoTestTemplateConfiguration {
 			mappingContext.setAutoIndexCreation(mappingContextConfigurer.autocreateIndex);
 			if(mongoConverterConfigurer.customConversions != null) {
 				mappingContext.setSimpleTypeHolder(mongoConverterConfigurer.customConversions.getSimpleTypeHolder());
+			} else {
+				mappingContext.setSimpleTypeHolder(new MongoCustomConversions(Collections.emptyList()).getSimpleTypeHolder());
 			}
 			mappingContext.afterPropertiesSet();
 		}
