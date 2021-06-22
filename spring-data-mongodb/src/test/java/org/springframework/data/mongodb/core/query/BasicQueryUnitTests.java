@@ -24,6 +24,9 @@ import nl.jqno.equalsverifier.Warning;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 
+import org.junit.jupiter.api.condition.DisabledForJreRange;
+import org.junit.jupiter.api.condition.DisabledOnJre;
+import org.junit.jupiter.api.condition.JRE;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 
@@ -64,6 +67,7 @@ public class BasicQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1093
+	@DisabledForJreRange(min = JRE.JAVA_16, disabledReason = "EqualsVerifier uses reflection on Optional")
 	public void equalsContract() {
 
 		BasicQuery query1 = new BasicQuery("{ \"name\" : \"Thomas\"}", "{\"name\":1, \"age\":1}");
