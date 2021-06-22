@@ -214,7 +214,7 @@ public class AppConfig {
 ----
 ====
 
-To access the `com.mongodb.client.MongoClient` object created by the `MongoClientFactoryBean` in other `@Configuration` classes or your own classes, use a `private @Autowired Mongo mongo;` field.
+To access the `com.mongodb.client.MongoClient` object created by the `MongoClientFactoryBean` in other `@Configuration` classes or your own classes, use a `private @Autowired MongoClient mongoClient;` field.
 
 [[mongo.mongo-xml-config]]
 === Registering a Mongo Instance by Using XML-based Metadata
