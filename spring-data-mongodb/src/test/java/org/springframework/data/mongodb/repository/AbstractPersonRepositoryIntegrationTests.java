@@ -1460,4 +1460,17 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 		List<Person> result = repository.findBySpiritAnimal(dave);
 		assertThat(result).map(Person::getId).containsExactly(josh.getId());
 	}
+
+	@Test //GH-3656
+	void resultProjectionWithOptionalIsExcecutedCorrectly() {
+
+		carter.setAddress(new Address("batman", "robin", "gotham"));
+		repository.save(carter);
+
+		PersonSummaryWithOptional result = repository.findSummaryWithOptionalByLastname("Beauford");
+
+		assertThat(result).isNotNull();
+		assertThat(result.getAddress()).isPresent();
+		assertThat(result.getFirstname()).contains("Carter");
+	}
 }

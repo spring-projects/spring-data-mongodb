@@ -22,6 +22,7 @@ import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,6 +36,7 @@ import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 
 import com.mongodb.DBRef;
+import org.springframework.data.util.TypeInformation;
 
 /**
  * Unit tests for {@link MongoMappingContext}.
@@ -173,6 +175,26 @@ public class MongoMappingContextUnitTests {
 		assertThat(context.getPersistentEntity(ChronoUnit.class)).isNull();
 	}
 
+	@Test // GH-3656
+	void shouldNotCreateEntityForOptionalGetter() {
+
+		MongoMappingContext context = new MongoMappingContext();
+		MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(InterfaceWithMethodReturningOptional.class);
+
+		assertThat(context.getPersistentEntities()).map(it -> it.getType()).doesNotContain((Class)
+				Optional.class).contains((Class)Person.class);
+	}
+
+	@Test // GH-3656
+	void shouldNotCreateEntityForOptionalField() {
+
+		MongoMappingContext context = new MongoMappingContext();
+		MongoPersistentEntity<?> entity = context.getRequiredPersistentEntity(ClassWithOptionalField.class);
+
+		assertThat(context.getPersistentEntities()).map(it -> it.getType()).doesNotContain((Class)
+				Optional.class).contains((Class)Person.class);
+	}
+
 	public class SampleClass {
 
 		Map<String, SampleClass> children;
@@ -243,5 +265,14 @@ public class MongoMappingContextUnitTests {
 	class ClassWithChronoUnit {
 
 		ChronoUnit unit;
+	}
+
+	interface InterfaceWithMethodReturningOptional {
+
+		Optional<Person> getPerson();
+	}
+
+	class ClassWithOptionalField {
+		Optional<Person> person;
 	}
 }
