@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
-import java.util.Objects;
+import org.springframework.util.ObjectUtils;
 
 /**
  * @author Christoph Strobl
@@ -36,21 +36,11 @@ class UnwrapEntityContext {
 
 	/*
 	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#hashCode()
-	 */
-	@Override
-	public int hashCode() {
-		return Objects.hash(property);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
 	public boolean equals(Object obj) {
+
 		if (this == obj) {
 			return true;
 		}
@@ -59,8 +49,16 @@ class UnwrapEntityContext {
 			return false;
 		}
 
-		UnwrapEntityContext other = (UnwrapEntityContext) obj;
+		UnwrapEntityContext that = (UnwrapEntityContext) obj;
+		return ObjectUtils.nullSafeEquals(property, that.property);
+	}
 
-		return Objects.equals(property, other.property);
+	/*
+	 * (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		return ObjectUtils.nullSafeHashCode(property);
 	}
 }

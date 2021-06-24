@@ -18,13 +18,13 @@ package org.springframework.data.mongodb.core.mapping;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Objects;
 
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
+import org.springframework.util.ObjectUtils;
 
 /**
  * Unwrapped variant of {@link MongoPersistentProperty}.
@@ -325,21 +325,11 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 
 	/*
 	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#hashCode()
-	 */
-	@Override
-	public int hashCode() {
-		return Objects.hash(delegate, context);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
 	public boolean equals(Object obj) {
+
 		if (this == obj) {
 			return true;
 		}
@@ -348,8 +338,22 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 			return false;
 		}
 
-		UnwrappedMongoPersistentProperty other = (UnwrappedMongoPersistentProperty) obj;
+		UnwrappedMongoPersistentProperty that = (UnwrappedMongoPersistentProperty) obj;
+		if (!ObjectUtils.nullSafeEquals(delegate, that.delegate)) {
+			return false;
+		}
+		return ObjectUtils.nullSafeEquals(context, that.context);
+	}
 
-		return Objects.equals(delegate, other.delegate) && Objects.equals(context, other.context);
+	/*
+	 * (non-Javadoc)
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+
+		int result = ObjectUtils.nullSafeHashCode(delegate);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(context);
+		return result;
 	}
 }
