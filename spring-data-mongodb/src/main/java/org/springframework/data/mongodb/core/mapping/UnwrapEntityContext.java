@@ -15,8 +15,11 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
+import java.util.Objects;
+
 /**
  * @author Christoph Strobl
+ * @author Rogério Meneguelli Gatto
  * @since 3.2
  */
 class UnwrapEntityContext {
@@ -29,5 +32,35 @@ class UnwrapEntityContext {
 
 	public MongoPersistentProperty getProperty() {
 		return property;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		return Objects.hash(property);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+
+		if (obj == null || getClass() != obj.getClass()) {
+			return false;
+		}
+
+		UnwrapEntityContext other = (UnwrapEntityContext) obj;
+
+		return Objects.equals(property, other.property);
 	}
 }

@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.mapping;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Objects;
 
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.PersistentEntity;
@@ -29,6 +30,7 @@ import org.springframework.lang.Nullable;
  * Unwrapped variant of {@link MongoPersistentProperty}.
  *
  * @author Christoph Strobl
+ * @author Rogério Meneguelli Gatto
  * @since 3.2
  * @see Unwrapped
  */
@@ -321,4 +323,33 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 		return delegate.getAccessorForOwner(owner);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		return Objects.hash(delegate, context);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+
+		if (obj == null || getClass() != obj.getClass()) {
+			return false;
+		}
+
+		UnwrappedMongoPersistentProperty other = (UnwrappedMongoPersistentProperty) obj;
+
+		return Objects.equals(delegate, other.delegate) && Objects.equals(context, other.context);
+	}
 }
