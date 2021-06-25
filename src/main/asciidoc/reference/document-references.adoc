@@ -49,6 +49,9 @@ TIP: Lazily loaded ``DBRef``s can be hard to debug.
 Make sure tooling does not accidentally trigger proxy resolution by e.g. calling `toString()` or some inline debug rendering invoking property getters.
 Please consider to enable _trace_ logging for `org.springframework.data.mongodb.core.convert.DefaultDbRefResolver` to gain insight on `DBRef` resolution.
 
+CAUTION: Lazy loading may require class proxies, that in turn, might need access to jdk internals, that are not open, starting with Java 16+, due to https://openjdk.java.net/jeps/396[JEP 396: Strongly Encapsulate JDK Internals by Default].
+For those cases please consider falling back to an interface type (eg. switch from `ArrayList` to `List`) or provide the required `--add-opens` argument.
+
 [[mapping-usage.document-references]]
 === Using Document References
 
@@ -135,6 +138,9 @@ Result order of `Collection` like properties is restored based on the used looku
 | If set to `true` value resolution is delayed upon first access of the property.
 | Resolves properties eagerly by default.
 |===
+
+CAUTION: Lazy loading may require class proxies, that in turn, might need access to jdk internals, that are not open, starting with Java 16+, due to https://openjdk.java.net/jeps/396[JEP 396: Strongly Encapsulate JDK Internals by Default].
+For those cases please consider falling back to an interface type (eg. switch from `ArrayList` to `List`) or provide the required `--add-opens` argument.
 
 `@DocumentReference(lookup)` allows defining filter queries that can be different from the `_id` field and therefore offer a flexible way of defining references between entities as demonstrated in the sample below, where the `Publisher` of a book is referenced by its acronym instead of the internal `id`.
 

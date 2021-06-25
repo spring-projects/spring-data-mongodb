@@ -71,7 +71,7 @@ public class MongoMappingContext extends AbstractMappingContext<MongoPersistentE
 	@Override
 	protected boolean shouldCreatePersistentEntityFor(TypeInformation<?> type) {
 
-		if(NullableWrapperConverters.supports(type.getType())) {
+		if (NullableWrapperConverters.supports(type.getType())) {
 			return false;
 		}
 
@@ -139,7 +139,7 @@ public class MongoMappingContext extends AbstractMappingContext<MongoPersistentE
 
 		MongoPersistentEntity<?> entity = super.getPersistentEntity(persistentProperty);
 
-		if(entity == null || !persistentProperty.isUnwrapped()) {
+		if (entity == null || !persistentProperty.isUnwrapped()) {
 			return entity;
 		}
 
