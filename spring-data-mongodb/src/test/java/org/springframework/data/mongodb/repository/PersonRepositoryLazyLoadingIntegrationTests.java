@@ -22,14 +22,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledForJreRange;
+import org.junit.jupiter.api.condition.JRE;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 /**
  * Integration test for {@link PersonRepository} for lazy loading support.
@@ -38,13 +39,13 @@ import org.springframework.test.context.junit4.SpringRunner;
  * @author Oliver Gierke
  */
 @ContextConfiguration(locations = "PersonRepositoryIntegrationTests-context.xml")
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 public class PersonRepositoryLazyLoadingIntegrationTests {
 
 	@Autowired PersonRepository repository;
 	@Autowired MongoOperations operations;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws InterruptedException {
 
 		repository.deleteAll();
@@ -61,7 +62,6 @@ public class PersonRepositoryLazyLoadingIntegrationTests {
 		Person person = new Person();
 		person.setFirstname("Oliver");
 		person.setFans(Arrays.asList(thomas));
-		person.setRealFans(new ArrayList<User>(Arrays.asList(thomas)));
 		repository.save(person);
 
 		Person oliver = repository.findById(person.id).get();
@@ -75,7 +75,8 @@ public class PersonRepositoryLazyLoadingIntegrationTests {
 	}
 
 	@Test // DATAMONGO-348
-	public void shouldLoadAssociationWithDbRefOnConcreteCollectionAndLazyLoadingEnabled() throws Exception {
+	@DisabledForJreRange(min = JRE.JAVA_16, disabledReason = "Class Proxies for eg. ArrayList require to open java.util.")
+	public void shouldLoadAssociationWithDbRefOnConcreteCollectionAndLazyLoadingEnabled() {
 
 		User thomas = new User();
 		thomas.username = "Thomas";
@@ -83,7 +84,6 @@ public class PersonRepositoryLazyLoadingIntegrationTests {
 
 		Person person = new Person();
 		person.setFirstname("Oliver");
-		person.setFans(Arrays.asList(thomas));
 		person.setRealFans(new ArrayList<User>(Arrays.asList(thomas)));
 		repository.save(person);
 
