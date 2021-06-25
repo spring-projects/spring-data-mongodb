@@ -26,6 +26,7 @@ import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import org.springframework.data.util.NullableWrapperConverters;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 
@@ -69,6 +70,11 @@ public class MongoMappingContext extends AbstractMappingContext<MongoPersistentE
 	 */
 	@Override
 	protected boolean shouldCreatePersistentEntityFor(TypeInformation<?> type) {
+
+		if (NullableWrapperConverters.supports(type.getType())) {
+			return false;
+		}
+
 		return !MongoSimpleTypes.HOLDER.isSimpleType(type.getType()) && !AbstractMap.class.isAssignableFrom(type.getType());
 	}
 
@@ -133,7 +139,7 @@ public class MongoMappingContext extends AbstractMappingContext<MongoPersistentE
 
 		MongoPersistentEntity<?> entity = super.getPersistentEntity(persistentProperty);
 
-		if(entity == null || !persistentProperty.isUnwrapped()) {
+		if (entity == null || !persistentProperty.isUnwrapped()) {
 			return entity;
 		}
 
