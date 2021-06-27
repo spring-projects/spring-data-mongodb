@@ -65,6 +65,7 @@ import com.mongodb.DBRef;
  * @author Thomas Darimont
  * @author Mark Paluch
  * @author Pavel Vodrazka
+ * @author David Julia
  */
 @ExtendWith(MockitoExtension.class)
 class UpdateMapperUnitTests {
@@ -1110,6 +1111,16 @@ class UpdateMapperUnitTests {
 				.isEqualTo("{\"$set\": {\"map.601218778970110001827396.value\": \"testing\"}}");
 	}
 
+	@Test // GH-3688
+	void multipleNumericKeysInNestedPath() {
+
+		Update update = new Update().set("intKeyedMap.12345.map.0", "testing");
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(EntityWithIntKeyedMap.class));
+
+		assertThat(mappedUpdate).isEqualTo("{\"$set\": {\"intKeyedMap.12345.map.0\": \"testing\"}}");
+	}
+
 	@Test // GH-3566
 	void mapsObjectClassPropertyFieldInMapValueTypeAsKey() {
 
@@ -1355,6 +1366,10 @@ class UpdateMapperUnitTests {
 
 		Map<Object, Object> map;
 		Map<Object, NestedDocument> concreteMap;
+	}
+
+	static class EntityWithIntKeyedMap{
+		Map<Integer, EntityWithObjectMap> intKeyedMap;
 	}
 
 	static class ClassWithEnum {

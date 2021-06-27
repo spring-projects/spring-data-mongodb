@@ -66,6 +66,7 @@ import com.mongodb.DBRef;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author David Julia
  */
 public class QueryMapper {
 
@@ -1273,11 +1274,17 @@ public class QueryMapper {
 		static class KeyMapper {
 
 			private final Iterator<String> iterator;
+			private int currentIndex;
+			private String currentPropertyRoot;
+			private final List<String> pathParts;
 
 			public KeyMapper(String key,
 					MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 
-				this.iterator = Arrays.asList(key.split("\\.")).iterator();
+				this.pathParts = Arrays.asList(key.split("\\."));
+				this.currentPropertyRoot = pathParts.get(0);
+				this.currentIndex = 0;
+				this.iterator = pathParts.iterator();
 				this.iterator.next();
 			}
 
@@ -1295,16 +1302,25 @@ public class QueryMapper {
 				while (inspect) {
 
 					String partial = iterator.next();
+					currentIndex++;
 
-					boolean isPositional = isPositionalParameter(partial) && property.isCollectionLike();
+					boolean isPositional = isPositionalParameter(partial) && property.isCollectionLike() ;
+					if(property.isMap() && currentPropertyRoot.equals(partial) && iterator.hasNext()){
+						partial = iterator.next();
+						currentIndex++;
+					}
 
-					if (isPositional || property.isMap()) {
+					if (isPositional || property.isMap() && !currentPropertyRoot.equals(partial)) {
 						mappedName.append(".").append(partial);
 					}
 
 					inspect = isPositional && iterator.hasNext();
 				}
 
+				if(currentIndex + 1 < pathParts.size()) {
+					currentIndex++;
+					currentPropertyRoot = pathParts.get(currentIndex);
+				}
 				return mappedName.toString();
 			}
 
