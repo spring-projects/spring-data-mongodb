@@ -77,6 +77,7 @@ import com.mongodb.client.model.Filters;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author David Julia
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -737,6 +738,28 @@ public class QueryMapperUnitTests {
 				context.getPersistentEntity(EntityWithComplexValueTypeMap.class));
 
 		assertThat(document).containsKey("map.1.stringProperty");
+	}
+
+	@Test // GH-3688
+	void mappingShouldRetainNestedNumericMapKeys() {
+
+		Query query = query(where("outerMap.1.map.2.stringProperty").is("ba'alzamon"));
+
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(EntityWithIntKeyedMapOfMap.class));
+
+		assertThat(document).containsKey("outerMap.1.map.2.stringProperty");
+	}
+
+	@Test // GH-3688
+	void mappingShouldAllowSettingEntireNestedNumericKeyedMapValue() {
+
+		Query query = query(where("outerMap.1.map").is(null)); //newEntityWithComplexValueTypeMap()
+
+		org.bson.Document document = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(EntityWithIntKeyedMapOfMap.class));
+
+		assertThat(document).containsKey("outerMap.1.map");
 	}
 
 	@Test // DATAMONGO-1269
@@ -1463,6 +1486,10 @@ public class QueryMapperUnitTests {
 
 	static class EntityWithComplexValueTypeMap {
 		Map<Integer, SimpleEntityWithoutId> map;
+	}
+
+	static class EntityWithIntKeyedMapOfMap{
+		Map<Integer, EntityWithComplexValueTypeMap> outerMap;
 	}
 
 	static class EntityWithComplexValueTypeList {
