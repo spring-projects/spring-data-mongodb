@@ -2006,12 +2006,16 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		/**
 		 * Converts a source object into {@link TypeInformation target}.
 		 *
-		 * @param source must not be {@literal null}.
+		 * @param source can be {@literal null}.
 		 * @param typeHint must not be {@literal null}.
 		 * @return the converted object.
 		 */
 		@SuppressWarnings("unchecked")
-		public <S extends Object> S convert(Object source, TypeInformation<? extends S> typeHint) {
+		public <S extends Object> S convert(@Nullable Object source, TypeInformation<? extends S> typeHint) {
+
+			if(source == null) {
+				return null;
+			}
 
 			Assert.notNull(typeHint, "TypeInformation must not be null");
 
