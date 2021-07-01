@@ -110,7 +110,8 @@ public final class ReferenceLookupDelegate {
 			return null;
 		}
 
-		return entityReader.read(result.iterator().next(), property.getTypeInformation());
+		Object resultValue = result.iterator().next();
+		return resultValue != null ? entityReader.read(resultValue, property.getTypeInformation()) : null;
 	}
 
 	private ReferenceCollection computeReferenceContext(MongoPersistentProperty property, Object value,

@@ -2532,6 +2532,41 @@ class MappingMongoConverterUnitTests {
 		assertThat(document).containsEntry("writeAlwaysPerson", null).doesNotContainKey("writeNonNullPerson");
 	}
 
+	@Test // GH-3686
+	void readsCollectionContainingNullValue() {
+
+		org.bson.Document source = new org.bson.Document("items", Arrays.asList(new org.bson.Document("itemKey", "i1"), null, new org.bson.Document("itemKey", "i3")));
+
+		Order target = converter.read(Order.class, source);
+
+		assertThat(target.items)
+				.map(it -> it != null ? it.itemKey : null)
+				.containsExactly("i1", null, "i3");
+	}
+
+	@Test // GH-3686
+	void readsArrayContainingNullValue() {
+
+		org.bson.Document source = new org.bson.Document("arrayOfStrings", Arrays.asList("i1", null, "i3"));
+
+		WithArrays target = converter.read(WithArrays.class, source);
+
+		assertThat(target.arrayOfStrings).containsExactly("i1", null, "i3");
+	}
+
+	@Test // GH-3686
+	void readsMapContainingNullValue() {
+
+		org.bson.Document source = new org.bson.Document("mapOfObjects", new org.bson.Document("item1", "i1").append("item2", null).append("item3", "i3"));
+
+		ClassWithMapProperty target = converter.read(ClassWithMapProperty.class, source);
+
+		assertThat(target.mapOfObjects)
+				.containsEntry("item1", "i1")
+				.containsEntry("item2", null)
+				.containsEntry("item3", "i3");
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -2891,6 +2926,10 @@ class MappingMongoConverterUnitTests {
 
 		final String[] array;
 
+	}
+
+	static class WithArrays {
+		String[] arrayOfStrings;
 	}
 
 	// DATAMONGO-1898

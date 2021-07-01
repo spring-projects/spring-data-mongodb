@@ -1269,7 +1269,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 
 		for (Object element : source) {
-			items.add(context.convert(element, componentType));
+			items.add(element != null ? context.convert(element, componentType) : element);
 		}
 
 		return getPotentiallyConvertedSimpleRead(items, targetType.getType());
@@ -2013,6 +2013,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		@SuppressWarnings("unchecked")
 		public <S extends Object> S convert(Object source, TypeInformation<? extends S> typeHint) {
 
+			Assert.notNull(source, "Source must not be null");
 			Assert.notNull(typeHint, "TypeInformation must not be null");
 
 			if (conversions.hasCustomReadTarget(source.getClass(), typeHint.getType())) {
