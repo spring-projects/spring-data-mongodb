@@ -1370,10 +1370,9 @@ public class QueryMapper {
 					MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
 
 				this.pathParts = Arrays.asList(key.split("\\."));
-				this.currentPropertyRoot = pathParts.get(0);
-				this.currentIndex = 0;
 				this.iterator = pathParts.iterator();
-				this.iterator.next();
+				this.currentPropertyRoot = iterator.next();
+				this.currentIndex = 0;
 			}
 
 			/**
@@ -1385,6 +1384,7 @@ public class QueryMapper {
 			protected String mapPropertyName(MongoPersistentProperty property) {
 
 				StringBuilder mappedName = new StringBuilder(PropertyToFieldNameConverter.INSTANCE.convert(property));
+
 				boolean inspect = iterator.hasNext();
 
 				while (inspect) {
