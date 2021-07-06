@@ -114,7 +114,7 @@ pipeline {
 		stage("Test other configurations") {
 			when {
 				allOf {
-					branch 'main'
+					branch 'issue/3696'
 					not { triggeredBy 'UpstreamCause' }
 				}
 			}
