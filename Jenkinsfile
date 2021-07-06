@@ -15,21 +15,21 @@ pipeline {
 		stage("Docker images") {
 			parallel {
 			    stage('Publish JDK 8 + MongoDB 5.0') {
-            		when {
-            			changeset "ci/openjdk8-mongodb-5.0/**"
-            		}
-            		agent { label 'data' }
-            		options { timeout(time: 30, unit: 'MINUTES') }
+					when {
+						changeset "ci/openjdk8-mongodb-5.0/**"
+					}
+					agent { label 'data' }
+					options { timeout(time: 30, unit: 'MINUTES') }
 
-            		steps {
-            			script {
-            				def image = docker.build("springci/spring-data-openjdk8-with-mongodb-5.0.0", "ci/openjdk8-mongodb-5.0/")
-            				docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
-            					image.push()
-            				}
-            			}
-            		}
-            	}
+					steps {
+						script {
+							def image = docker.build("springci/spring-data-openjdk8-with-mongodb-5.0.0", "ci/openjdk8-mongodb-5.0/")
+								docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
+									image.push()
+								}
+							}
+						}
+					}
 				stage('Publish JDK 8 + MongoDB 4.0') {
 					when {
 						changeset "ci/openjdk8-mongodb-4.0/**"
