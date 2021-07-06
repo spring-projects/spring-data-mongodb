@@ -21,8 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.geo.Point;
@@ -35,6 +35,7 @@ import org.springframework.data.mongodb.core.index.GeoSpatialIndexed;
 import org.springframework.data.mongodb.core.index.IndexInfo;
 import org.springframework.data.mongodb.core.index.IndexOperations;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.test.util.EnableIfMongoServerVersion;
 
 import com.mongodb.MongoException;
 import com.mongodb.WriteConcern;
@@ -52,7 +53,7 @@ public class GeoSpatialIndexTests extends AbstractIntegrationTests {
 
 	@Autowired private MongoTemplate template;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 
 		template.setWriteConcern(WriteConcern.JOURNALED);
@@ -82,6 +83,7 @@ public class GeoSpatialIndexTests extends AbstractIntegrationTests {
 	}
 
 	@Test // DATAMONGO-778
+	@EnableIfMongoServerVersion(isLessThan = "5.0")
 	public void testHaystackIndex() {
 
 		try {
