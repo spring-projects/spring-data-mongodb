@@ -155,7 +155,11 @@ public class IndexingIntegrationTests {
 		});
 
 		assertThat(indexInfo).isPresent();
-		assertThat(indexInfo.get()).containsEntry("expireAfterSeconds", 11L);
+		assertThat(indexInfo.get()).hasEntrySatisfying("expireAfterSeconds", timeout -> {
+
+			// MongoDB 5 returns int not long
+			assertThat(timeout).isIn(11, 11L);
+		});
 	}
 
 	@Target({ ElementType.FIELD })

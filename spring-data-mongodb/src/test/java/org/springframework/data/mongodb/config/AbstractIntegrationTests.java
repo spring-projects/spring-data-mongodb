@@ -21,10 +21,9 @@ import java.util.Collections;
 import java.util.Set;
 
 import org.bson.Document;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.runner.RunWith;
-
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataAccessException;
@@ -32,7 +31,7 @@ import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.mongodb.MongoException;
 import com.mongodb.client.MongoClient;
@@ -41,7 +40,7 @@ import com.mongodb.client.MongoCollection;
 /**
  * @author Oliver Gierke
  */
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @ContextConfiguration
 public abstract class AbstractIntegrationTests {
 
@@ -71,8 +70,8 @@ public abstract class AbstractIntegrationTests {
 
 	@Autowired MongoOperations operations;
 
-	@Before
-	@After
+	@BeforeEach
+	@AfterEach
 	public void cleanUp() {
 
 		for (String collectionName : operations.getCollectionNames()) {
