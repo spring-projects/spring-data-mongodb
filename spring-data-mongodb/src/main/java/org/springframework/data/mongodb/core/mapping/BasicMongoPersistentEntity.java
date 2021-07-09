@@ -353,7 +353,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 			if (existingProperty != null) {
 				throw new MappingException(
-						String.format(AMBIGUOUS_FIELD_MAPPING, property.toString(), existingProperty.toString(), fieldName));
+						String.format(AMBIGUOUS_FIELD_MAPPING, property, existingProperty, fieldName));
 			}
 
 			properties.put(fieldName, property);
