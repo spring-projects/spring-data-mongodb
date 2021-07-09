@@ -148,6 +148,11 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 
 	@Override
+	public Iterable<? extends TypeInformation<?>> getPersistentEntityTypeInformation() {
+		return delegate.getPersistentEntityTypeInformation();
+	}
+
+	@Override
 	@Nullable
 	public Method getGetter() {
 		return delegate.getGetter();
@@ -316,6 +321,11 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	@Nullable
 	public Class<?> getAssociationTargetType() {
 		return delegate.getAssociationTargetType();
+	}
+
+	@Override
+	public TypeInformation<?> getAssociationTargetTypeInformation() {
+		return delegate.getAssociationTargetTypeInformation();
 	}
 
 	@Override
