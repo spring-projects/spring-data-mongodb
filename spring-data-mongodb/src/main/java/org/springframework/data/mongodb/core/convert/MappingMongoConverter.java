@@ -1907,7 +1907,19 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			}
 
 			if (typeHint.isMap()) {
-				return (S) mapConverter.convert(this, (Bson) source, typeHint);
+
+				if(ClassUtils.isAssignable(Document.class, typeHint.getType())) {
+					return (S) documentConverter.convert(this, (Bson) source, typeHint);
+				}
+
+				if(source instanceof Bson) {
+					return (S) mapConverter.convert(this, (Bson) source, typeHint);
+				}
+				if(source instanceof Map) {
+					return (S) mapConverter.convert(this, new Document((Map<String,Object>) source), typeHint);
+				}
+
+				throw new IllegalArgumentException(String.format("Expected map like structure but found %s", source.getClass()));
 			}
 
 			if (source instanceof DBRef) {
