@@ -30,6 +30,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+import org.bson.types.Binary;
 import org.bson.types.Code;
 import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
@@ -2568,6 +2569,21 @@ class MappingMongoConverterUnitTests {
 				.containsEntry("item3", "i3");
 	}
 
+	@Test // GH-3670
+	void appliesCustomConverterEvenToSimpleTypes() {
+
+		converter = new MappingMongoConverter(resolver, mappingContext);
+		converter.setCustomConversions(MongoCustomConversions.create(it -> {
+			it.registerConverter(new MongoSimpleTypeConverter());
+		}));
+		converter.afterPropertiesSet();
+
+		org.bson.Document source = new org.bson.Document("content", new Binary(new byte[] {0x00, 0x42}));
+
+		GenericType<Object> target = converter.read(GenericType.class, source);
+		assertThat(target.content).isInstanceOf(byte[].class);
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -3133,6 +3149,15 @@ class MappingMongoConverterUnitTests {
 		@Override
 		public TypeImplementingMap convert(org.bson.Document source) {
 			return new TypeImplementingMap(source.getString("1st"), source.getInteger("2nd"));
+		}
+	}
+
+	@ReadingConverter
+	public static class MongoSimpleTypeConverter implements Converter<Binary, Object> {
+
+		@Override
+		public byte[] convert(Binary source) {
+			return source.getData();
 		}
 	}
 

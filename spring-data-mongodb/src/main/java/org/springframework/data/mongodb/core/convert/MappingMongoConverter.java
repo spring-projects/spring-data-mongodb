@@ -1173,12 +1173,16 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private Object getPotentiallyConvertedSimpleRead(Object value, @Nullable Class<?> target) {
 
-		if (target == null || ClassUtils.isAssignableValue(target, value)) {
+		if (target == null) {
 			return value;
 		}
 
 		if (conversions.hasCustomReadTarget(value.getClass(), target)) {
 			return doConvert(value, target);
+		}
+
+		if(ClassUtils.isAssignableValue(target, value)) {
+			return value;
 		}
 
 		if (Enum.class.isAssignableFrom(target)) {
