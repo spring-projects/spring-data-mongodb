@@ -2568,6 +2568,38 @@ class MappingMongoConverterUnitTests {
 				.containsEntry("item3", "i3");
 	}
 
+	@Test // GH-3702
+	void readsRawDocument() {
+
+		org.bson.Document source = new org.bson.Document("_id", "id-1").append("raw", new org.bson.Document("simple", 1).append("document", new org.bson.Document("inner-doc", 1)));
+
+		WithRawDocumentProperties target = converter.read(WithRawDocumentProperties.class, source);
+
+		assertThat(target.raw).isInstanceOf(org.bson.Document.class).isEqualTo( new org.bson.Document("simple", 1).append("document", new org.bson.Document("inner-doc", 1)));
+	}
+
+	@Test // GH-3702
+	void readsListOfRawDocument() {
+
+		org.bson.Document source = new org.bson.Document("_id", "id-1").append("listOfRaw", Arrays.asList(new org.bson.Document("simple", 1).append("document", new org.bson.Document("inner-doc", 1))));
+
+		WithRawDocumentProperties target = converter.read(WithRawDocumentProperties.class, source);
+
+		assertThat(target.listOfRaw)
+				.containsExactly(new org.bson.Document("simple", 1).append("document", new org.bson.Document("inner-doc", 1)));
+	}
+
+	@Test // GH-3692
+	void readsMapThatDoesNotComeAsDocument() {
+
+		org.bson.Document source = new org.bson.Document("_id", "id-1").append("mapOfObjects", Collections.singletonMap("simple", 1));
+
+		ClassWithMapProperty target = converter.read(ClassWithMapProperty.class, source);
+
+		assertThat(target.mapOfObjects).containsEntry("simple",1);
+
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -3232,5 +3264,12 @@ class MappingMongoConverterUnitTests {
 		@org.springframework.data.mongodb.core.mapping.DBRef @org.springframework.data.mongodb.core.mapping.Field(
 				write = org.springframework.data.mongodb.core.mapping.Field.Write.ALWAYS) Person writeAlwaysPerson;
 
+	}
+
+	static class WithRawDocumentProperties {
+
+		String id;
+		org.bson.Document raw;
+		List<org.bson.Document> listOfRaw;
 	}
 }
