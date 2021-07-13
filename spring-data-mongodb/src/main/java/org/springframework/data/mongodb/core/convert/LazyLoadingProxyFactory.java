@@ -167,7 +167,7 @@ class LazyLoadingProxyFactory {
 				}
 
 				if (ReflectionUtils.isEqualsMethod(method)) {
-					return proxyEquals(proxy, args[0]);
+					return proxyEquals(o, args[0]);
 				}
 
 				if (ReflectionUtils.isHashCodeMethod(method)) {
