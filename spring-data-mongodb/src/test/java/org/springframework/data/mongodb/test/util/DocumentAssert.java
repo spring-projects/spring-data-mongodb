@@ -134,12 +134,12 @@ public class DocumentAssert extends AbstractMapAssert<DocumentAssert, Map<String
 		return containsKeys(key);
 	}
 
-	/*
+	/* 
 	 * (non-Javadoc)
-	 * @see org.assertj.core.api.AbstractMapAssert#containsKeys(java.lang.Object[])
+	 * @see org.assertj.core.api.AbstractMapAssert#containsKeysForProxy(java.lang.Object[])
 	 */
 	@Override
-	public final DocumentAssert containsKeys(String... keys) {
+	protected DocumentAssert containsKeysForProxy(String[] keys) {
 
 		Set<String> notFound = new LinkedHashSet<>();
 
@@ -166,12 +166,12 @@ public class DocumentAssert extends AbstractMapAssert<DocumentAssert, Map<String
 		return doesNotContainKeys(key);
 	}
 
-	/*
+	/* 
 	 * (non-Javadoc)
-	 * @see org.assertj.core.api.AbstractMapAssert#doesNotContainKeys(java.lang.Object[])
+	 * @see org.assertj.core.api.AbstractMapAssert#doesNotContainKeysForProxy(java.lang.Object[])
 	 */
 	@Override
-	public final DocumentAssert doesNotContainKeys(String... keys) {
+	protected DocumentAssert doesNotContainKeysForProxy(String[] keys) {
 
 		Set<String> found = new LinkedHashSet<>();
 		for (String key : keys) {
@@ -191,13 +191,8 @@ public class DocumentAssert extends AbstractMapAssert<DocumentAssert, Map<String
 	// used in soft assertions which need to be able to proxy method - @SafeVarargs requiring method to be final prevents
 	// using proxies.
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.assertj.core.api.AbstractMapAssert#contains(java.util.Map.Entry[])
-	 */
-	@SafeVarargs
 	@Override
-	public final DocumentAssert contains(Map.Entry<? extends String, ? extends Object>... entries) {
+	protected DocumentAssert containsForProxy(Entry<? extends String, ?>[] entries) {
 
 		// if both actual and values are empty, then assertion passes.
 		if (actual.isEmpty() && entries.length == 0) {
@@ -216,14 +211,8 @@ public class DocumentAssert extends AbstractMapAssert<DocumentAssert, Map<String
 		return myself;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.assertj.core.api.AbstractMapAssert#containsAnyOf(java.util.Map.Entry[])
-	 */
-	@SafeVarargs
 	@Override
-	public final DocumentAssert containsAnyOf(Map.Entry<? extends String, ? extends Object>... entries) {
-
+	protected DocumentAssert containsAnyOfForProxy(Entry<? extends String, ?>[] entries) {
 		for (Map.Entry<? extends String, ? extends Object> entry : entries) {
 			if (containsEntry(entry)) {
 				return myself;
@@ -233,24 +222,13 @@ public class DocumentAssert extends AbstractMapAssert<DocumentAssert, Map<String
 		throw Failures.instance().failure(info, ShouldContainAnyOf.shouldContainAnyOf(actual, entries));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.assertj.core.api.AbstractMapAssert#containsOnly(java.util.Map.Entry[])
-	 */
-	@SafeVarargs
 	@Override
-	public final DocumentAssert containsOnly(Map.Entry<? extends String, ? extends Object>... entries) {
+	protected DocumentAssert containsOnlyForProxy(Entry<? extends String, ?>[] entries) {
 		throw new UnsupportedOperationException();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.assertj.core.api.AbstractMapAssert#doesNotContain(java.util.Map.Entry[])
-	 */
-	@SafeVarargs
 	@Override
-	public final DocumentAssert doesNotContain(Map.Entry<? extends String, ? extends Object>... entries) {
-
+	protected DocumentAssert doesNotContainForProxy(Entry<? extends String, ?>[] entries) {
 		Set<Map.Entry<? extends String, ? extends Object>> found = new LinkedHashSet<>();
 
 		for (Map.Entry<? extends String, ? extends Object> entry : entries) {
@@ -265,13 +243,8 @@ public class DocumentAssert extends AbstractMapAssert<DocumentAssert, Map<String
 		return myself;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.assertj.core.api.AbstractMapAssert#containsExactly(java.util.Map.Entry[])
-	 */
-	@SafeVarargs
 	@Override
-	public final DocumentAssert containsExactly(Map.Entry<? extends String, ? extends Object>... entries) {
+	protected DocumentAssert containsExactlyForProxy(Entry<? extends String, ?>[] entries) {
 		throw new UnsupportedOperationException();
 	}
 
