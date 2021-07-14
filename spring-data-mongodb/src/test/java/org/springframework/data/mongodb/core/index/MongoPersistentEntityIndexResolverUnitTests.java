@@ -32,10 +32,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
+
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.geo.Point;
+import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolver.IndexDefinitionHolder;
 import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexResolverUnitTests.CompoundIndexResolutionTests;
@@ -1333,6 +1335,20 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			assertThat(indices).hasSize(1);
 			assertThat(indices.get(0)).satisfies(it -> {
 				assertThat(it.getIndexKeys()).containsEntry("$**", 1);
+				assertThat(it.getIndexOptions()).isEmpty();
+			});
+		}
+
+		@Test // GH-3225
+		public void resolvesWildcardWithProjectionOnRoot() {
+
+			List<IndexDefinitionHolder> indices = prepareMappingContextAndResolveIndexForType(
+					WithWildCardIndexHavingProjectionOnEntity.class);
+			assertThat(indices).hasSize(1);
+			assertThat(indices.get(0)).satisfies(it -> {
+				assertThat(it.getIndexKeys()).containsEntry("$**", 1);
+				assertThat(it.getIndexOptions()).containsEntry("wildcardProjection",
+						org.bson.Document.parse("{'_id' : 1, 'value' : 0}"));
 			});
 		}
 
@@ -1365,6 +1381,15 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			assertThat(indices).hasSize(1);
 			assertThat(indices.get(0)).satisfies(it -> {
 				assertThat(it.getIndexKeys()).containsEntry("value.$**", 1);
+				assertThat(it.getIndexOptions()).hasSize(1).containsKey("name");
+			});
+		}
+
+		@Test // GH-3225
+		public void rejectsWildcardProjectionOnNestedPaths() {
+
+			assertThatExceptionOfType(MappingException.class).isThrownBy(() -> {
+				prepareMappingContextAndResolveIndexForType(WildcardIndexedProjectionOnNestedPath.class);
 			});
 		}
 
@@ -1648,9 +1673,15 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 
 		@Document
+		class WildcardIndexedProjectionOnNestedPath {
+
+			@WildcardIndexed(wildcardProjection = "{}") String foo;
+		}
+
+		@Document
 		class WithWildCardOnEntityOfNested {
 
-			WithWildCardIndexOnEntity value;
+			WithWildCardIndexHavingProjectionOnEntity value;
 
 		}
 

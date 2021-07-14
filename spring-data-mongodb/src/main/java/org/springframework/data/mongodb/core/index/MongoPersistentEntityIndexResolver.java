@@ -119,6 +119,8 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		Assert.notNull(document, () -> String
 				.format("Entity %s is not a collection root. Make sure to annotate it with @Document!", root.getName()));
 
+		verifyWildcardIndexedProjection(root);
+
 		List<IndexDefinitionHolder> indexInformation = new ArrayList<>();
 		String collection = root.getCollection();
 		indexInformation.addAll(potentiallyCreateCompoundIndexDefinitions("", collection, root));
@@ -131,6 +133,24 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		indexInformation.addAll(resolveIndexesForDbrefs("", collection, root));
 
 		return indexInformation;
+	}
+
+	private void verifyWildcardIndexedProjection(MongoPersistentEntity<?> entity) {
+
+		entity.doWithAll(it -> {
+
+			if (it.isAnnotationPresent(WildcardIndexed.class)) {
+
+				WildcardIndexed indexed = it.getRequiredAnnotation(WildcardIndexed.class);
+
+				if (!ObjectUtils.isEmpty(indexed.wildcardProjection())) {
+
+					throw new MappingException(String.format(
+							"WildcardIndexed.wildcardProjection cannot be used on nested paths. Offending property: %s.%s",
+							entity.getName(), it.getName()));
+				}
+			}
+		});
 	}
 
 	private void potentiallyAddIndexForProperty(MongoPersistentEntity<?> root, MongoPersistentProperty persistentProperty,
@@ -257,7 +277,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 	private List<IndexDefinitionHolder> potentiallyCreateWildcardIndexDefinitions(String dotPath, String collection,
 			MongoPersistentEntity<?> entity) {
 
-		if (entity.findAnnotation(WildcardIndexed.class) == null) {
+		if (!entity.isAnnotationPresent(WildcardIndexed.class)) {
 			return Collections.emptyList();
 		}
 
@@ -429,7 +449,7 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		WildcardIndex indexDefinition = new WildcardIndex(dotPath);
 
-		if (StringUtils.hasText(index.wildcardProjection())) {
+		if (StringUtils.hasText(index.wildcardProjection()) && ObjectUtils.isEmpty(dotPath)) {
 			indexDefinition.wildcardProjection(evaluateWildcardProjection(index.wildcardProjection(), entity));
 		}
 

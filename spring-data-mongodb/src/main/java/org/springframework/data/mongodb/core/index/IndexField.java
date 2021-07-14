@@ -29,7 +29,17 @@ import org.springframework.util.ObjectUtils;
 public final class IndexField {
 
 	enum Type {
-		GEO, TEXT, DEFAULT, HASH, WILDCARD;
+		GEO, TEXT, DEFAULT,
+
+		/**
+		 * @since 2.2
+		 */
+		HASH,
+
+		/**
+		 * @since 3.3
+		 */
+		WILDCARD;
 	}
 
 	private final String key;
@@ -78,7 +88,8 @@ public final class IndexField {
 	}
 
 	/**
-	 * Creates a {@literal wildcard} {@link IndexField} for the given key.
+	 * Creates a {@literal wildcard} {@link IndexField} for the given key. The {@code key} must follow the
+	 * {@code fieldName.$**} notation.
 	 *
 	 * @param key must not be {@literal null} or empty.
 	 * @return new instance of {@link IndexField}.

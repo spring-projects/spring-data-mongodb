@@ -38,7 +38,7 @@ import java.lang.annotation.Target;
  *
  * db.product.createIndex({ "$**" : 1 } , {})
  * </pre>
- * 
+ *
  * {@literal wildcardProjection} can be used to specify keys to in-/exclude in the index.
  *
  * <pre class="code">
@@ -65,7 +65,7 @@ import java.lang.annotation.Target;
  * <pre class="code">
  * &#64;Document
  * public class User {
- * 
+ *
  *     private &#64;Id String id;
  *
  *     &#64;WildcardIndexed
@@ -89,9 +89,9 @@ public @interface WildcardIndexed {
 	 * expression}. <br />
 	 * <br />
 	 * The name will only be applied as is when defined on root level. For usage on nested or embedded structures the
-	 * provided name will be prefixed with the path leading to the entity. <br />
-	 * 
-	 * @return
+	 * provided name will be prefixed with the path leading to the entity.
+	 *
+	 * @return empty by default.
 	 */
 	String name() default "";
 
@@ -115,8 +115,8 @@ public @interface WildcardIndexed {
 	/**
 	 * Explicitly specify sub fields to be in-/excluded as a {@link org.bson.Document#parse(String) prasable} String.
 	 * <br />
-	 * <strong>NOTE: </strong>Can only be done on root level documents.
-	 * 
+	 * <strong>NOTE: </strong>Can only be applied on root level documents.
+	 *
 	 * @return empty by default.
 	 */
 	String wildcardProjection() default "";

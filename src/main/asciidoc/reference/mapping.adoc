@@ -782,9 +782,9 @@ db.user.createIndex({ "userMetadata.$**" : 1 }, {})
 ----
 ====
 
-The `@WildcardIndex` annotation allows a declarative index setup an can be added on either a type or property.
+The `@WildcardIndex` annotation allows a declarative index setup that can used either with a document type or property.
 
-If placed on a type that is a root level domain entity (one having an `@Document` annotation) will advise the index creator to create a
+If placed on a type that is a root level domain entity (one annotated with `@Document`) , the index resolver will create a
 wildcard index for it.
 
 .Wildcard index on domain type
@@ -794,7 +794,7 @@ wildcard index for it.
 @Document
 @WildcardIndexed
 public class Product {
-    ...
+	// …
 }
 ----
 [source,javascript]
@@ -828,7 +828,8 @@ db.user.createIndex(
 ====
 
 Wildcard indexes can also be expressed by adding the annotation directly to the field.
-Please note that `wildcardProjection` is not allowed on nested paths.
+Please note that `wildcardProjection` is not allowed on nested paths such as properties.
+Projections on types annotated with `@WildcardIndexed` are omitted during index creation.
 
 .Wildcard index on property
 ====

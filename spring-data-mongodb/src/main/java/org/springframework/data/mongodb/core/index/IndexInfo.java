@@ -100,7 +100,7 @@ public class IndexInfo {
 
 				if (ObjectUtils.nullSafeEquals("hashed", value)) {
 					indexFields.add(IndexField.hashed(key));
-				} else if (key.contains("$**")) {
+				} else if (key.endsWith("$**")) {
 					indexFields.add(IndexField.wildcard(key));
 				} else {
 

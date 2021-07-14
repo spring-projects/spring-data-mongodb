@@ -6,6 +6,7 @@
 
 * Extended support for <<mapping-usage.document-references, referencing>> entities.
 * Include/exclude `null` properties on write to `Document` through `@Field(write=…)`.
+* Support for <<mapping-usage-indexes.wildcard-index>>.
 
 [[new-features.3.2]]
 == What's New in Spring Data MongoDB 3.2

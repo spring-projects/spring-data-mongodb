@@ -51,7 +51,7 @@ import org.springframework.util.StringUtils;
 public class WildcardIndex extends Index {
 
 	private @Nullable String fieldName;
-	private Map<String, Object> wildcardProjection = new LinkedHashMap<>();
+	private final Map<String, Object> wildcardProjection = new LinkedHashMap<>();
 
 	/**
 	 * Create a new instance of {@link WildcardIndex} using {@code $**}.
@@ -97,7 +97,7 @@ public class WildcardIndex extends Index {
 	/**
 	 * Unique option is not supported.
 	 *
-	 * @throws UnsupportedOperationException
+	 * @throws UnsupportedOperationException not supported for wildcard indexes.
 	 */
 	@Override
 	public Index unique() {
@@ -107,7 +107,7 @@ public class WildcardIndex extends Index {
 	/**
 	 * ttl option is not supported.
 	 *
-	 * @throws UnsupportedOperationException
+	 * @throws UnsupportedOperationException not supported for wildcard indexes.
 	 */
 	@Override
 	public Index expire(long seconds) {
@@ -117,7 +117,7 @@ public class WildcardIndex extends Index {
 	/**
 	 * ttl option is not supported.
 	 *
-	 * @throws UnsupportedOperationException
+	 * @throws UnsupportedOperationException not supported for wildcard indexes.
 	 */
 	@Override
 	public Index expire(long value, TimeUnit timeUnit) {
@@ -127,7 +127,7 @@ public class WildcardIndex extends Index {
 	/**
 	 * ttl option is not supported.
 	 *
-	 * @throws UnsupportedOperationException
+	 * @throws UnsupportedOperationException not supported for wildcard indexes.
 	 */
 	@Override
 	public Index expire(Duration duration) {

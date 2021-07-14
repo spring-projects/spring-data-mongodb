@@ -115,7 +115,7 @@ abstract class IndexConverters {
 				ops = ops.collation(fromDocument(indexOptions.get("collation", Document.class)));
 			}
 
-			if(indexOptions.containsKey("wildcardProjection")) {
+			if (indexOptions.containsKey("wildcardProjection")) {
 				ops.wildcardProjection(indexOptions.get("wildcardProjection", Document.class));
 			}
 
