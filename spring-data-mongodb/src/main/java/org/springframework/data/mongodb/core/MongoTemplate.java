@@ -99,6 +99,7 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
+import org.springframework.data.mongodb.core.timeseries.Granularities;
 import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
@@ -597,7 +598,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @see org.springframework.data.mongodb.core.MongoOperations#createCollection(java.lang.Class)
 	 */
 	public <T> MongoCollection<Document> createCollection(Class<T> entityClass) {
-		return createCollection(entityClass, CollectionOptions.empty());
+		return createCollection(entityClass, operations.forType(entityClass).getCollectionOptions());
 	}
 
 	/*
@@ -2435,6 +2436,19 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				co.validationOptions(options);
 			}
 
+			if(collectionOptions.containsKey("timeseries")) {
+
+				Document timeSeries = collectionOptions.get("timeseries", Document.class);
+				com.mongodb.client.model.TimeSeriesOptions options = new com.mongodb.client.model.TimeSeriesOptions(timeSeries.getString("timeField"));
+				if(timeSeries.containsKey("metaField")) {
+					options.metaField(timeSeries.getString("metaField"));
+				}
+				if(timeSeries.containsKey("granularity")) {
+					options.granularity(TimeSeriesGranularity.valueOf(timeSeries.getString("granularity").toUpperCase()));
+				}
+				co.timeSeriesOptions(options);
+			}
+
 			db.createCollection(collectionName, co);
 
 			MongoCollection<Document> coll = db.getCollection(collectionName, Document.class);
@@ -2589,6 +2603,18 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			collectionOptions.getValidationOptions().ifPresent(it -> it.getValidator() //
 					.ifPresent(val -> doc.put("validator", getMappedValidator(val, targetType))));
+
+			collectionOptions.getTimeSeriesOptions().map(operations.forType(targetType)::mapTimeSeriesOptions).ifPresent(it -> {
+
+				Document timeseries = new Document("timeField", it.getTimeField());
+				if(StringUtils.hasText(it.getMetaField())) {
+					timeseries.append("metaField", it.getMetaField());
+				}
+				if(!Granularities.DEFAULT.equals(it.getGranularity())) {
+					timeseries.append("granularity", it.getGranularity().name().toLowerCase());
+				}
+				doc.put("timeseries", timeseries);
+			});
 		}
 
 		return doc;

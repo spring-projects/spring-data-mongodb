@@ -29,19 +29,23 @@ import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
+import org.springframework.data.mongodb.core.CollectionOptions.TimeSeriesOptions;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
+import org.springframework.data.mongodb.core.mapping.TimeSeries;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.timeseries.Granularities;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 /**
  * Common operations performed on an entity in the context of it's mapping metadata.
@@ -778,6 +782,24 @@ class EntityOperations {
 		 * @return
 		 */
 		Optional<Collation> getCollation(Query query);
+
+		/**
+		 * Derive the applicable {@link CollectionOptions} for the given type.
+		 *
+		 * @return never {@literal null}.
+		 * @since 3.3
+		 */
+		CollectionOptions getCollectionOptions();
+
+		/**
+		 * Map the fields of a given {@link TimeSeriesOptions} against the target domain type to consider potentially
+		 * annotated field names.
+		 *
+		 * @param options must not be {@literal null}.
+		 * @return never {@literal null}.
+		 * @since 3.3
+		 */
+		TimeSeriesOptions mapTimeSeriesOptions(TimeSeriesOptions options);
 	}
 
 	/**
@@ -817,6 +839,16 @@ class EntityOperations {
 
 			return query.getCollation();
 		}
+
+		@Override
+		public CollectionOptions getCollectionOptions() {
+			return CollectionOptions.empty();
+		}
+
+		@Override
+		public TimeSeriesOptions mapTimeSeriesOptions(TimeSeriesOptions options) {
+			return options;
+		}
 	}
 
 	/**
@@ -853,6 +885,46 @@ class EntityOperations {
 			}
 
 			return Optional.ofNullable(entity.getCollation());
+		}
+
+		@Override
+		public CollectionOptions getCollectionOptions() {
+
+			CollectionOptions collectionOptions = CollectionOptions.empty();
+			if (entity.hasCollation()) {
+				collectionOptions = collectionOptions.collation(entity.getCollation());
+			}
+
+			if (entity.isAnnotationPresent(TimeSeries.class)) {
+
+				TimeSeries timeSeries = entity.getRequiredAnnotation(TimeSeries.class);
+				TimeSeriesOptions options = TimeSeriesOptions.timeSeries(timeSeries.timeField());
+				if (StringUtils.hasText(timeSeries.metaField())) {
+					options = options.metaField(timeSeries.metaField());
+				}
+				if (!Granularities.DEFAULT.equals(timeSeries.granularity())) {
+					options = options.granularity(timeSeries.granularity());
+				}
+				collectionOptions = collectionOptions.timeSeries(options);
+			}
+
+			return collectionOptions;
+		}
+
+		@Override
+		public TimeSeriesOptions mapTimeSeriesOptions(TimeSeriesOptions source) {
+
+			TimeSeriesOptions target = TimeSeriesOptions.timeSeries(mappedNameOrDefault(source.getTimeField()));
+
+			if (StringUtils.hasText(source.getMetaField())) {
+				target = target.metaField(mappedNameOrDefault(source.getMetaField()));
+			}
+			return target.granularity(source.getGranularity());
+		}
+
+		private String mappedNameOrDefault(String name) {
+			MongoPersistentProperty persistentProperty = entity.getPersistentProperty(name);
+			return persistentProperty != null ? persistentProperty.getFieldName() : name;
 		}
 	}
 

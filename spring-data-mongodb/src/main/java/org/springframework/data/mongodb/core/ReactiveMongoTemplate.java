@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
+import org.springframework.data.mongodb.core.timeseries.Granularities;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -665,7 +666,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#createCollection(java.lang.Class)
 	 */
 	public <T> Mono<MongoCollection<Document>> createCollection(Class<T> entityClass) {
-		return createCollection(entityClass, CollectionOptions.empty());
+		return createCollection(entityClass, operations.forType(entityClass).getCollectionOptions());
 	}
 
 	/*
@@ -2503,6 +2504,20 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			it.getValidator().ifPresent(val -> validationOptions.validator(getMappedValidator(val, entityType)));
 
 			result.validationOptions(validationOptions);
+		});
+
+		collectionOptions.getTimeSeriesOptions().map(operations.forType(entityType)::mapTimeSeriesOptions).ifPresent(it -> {
+
+			TimeSeriesOptions options = new TimeSeriesOptions(it.getTimeField());
+
+			if(StringUtils.hasText(it.getMetaField())) {
+				options.metaField(it.getMetaField());
+			}
+			if(!Granularities.DEFAULT.equals(it.getGranularity())) {
+				options.granularity(TimeSeriesGranularity.valueOf(it.getGranularity().name().toUpperCase()));
+			}
+
+			result.timeSeriesOptions(options);
 		});
 
 		return result;

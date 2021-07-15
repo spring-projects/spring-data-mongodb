@@ -3382,3 +3382,4 @@ class GridFsClient {
 
 include::tailable-cursors.adoc[]
 include::change-streams.adoc[]
+include::time-series.adoc[]
