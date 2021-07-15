@@ -495,6 +495,49 @@ public class BsonUtils {
 	}
 
 	/**
+	 * Returns the given source object as {@link Bson}, i.e. {@link Document}s and maps as is or throw
+	 * {@link IllegalArgumentException}.
+	 *
+	 * @param source
+	 * @return the converted/casted source object.
+	 * @throws IllegalArgumentException if {@code source} cannot be converted/cast to {@link Bson}.
+	 * @since 3.2.3
+	 * @see #supportsBson(Object)
+	 */
+	@SuppressWarnings("unchecked")
+	public static Bson asBson(Object source) {
+
+		if (source instanceof Document) {
+			return (Document) source;
+		}
+
+		if (source instanceof BasicDBObject) {
+			return (BasicDBObject) source;
+		}
+
+		if (source instanceof DBObject) {
+			return new Document(((DBObject) source).toMap());
+		}
+
+		if (source instanceof Map) {
+			return new Document((Map<String, Object>) source);
+		}
+
+		throw new IllegalArgumentException(String.format("Cannot convert %s to Bson", source));
+	}
+
+	/**
+	 * Returns the given source can be used/converted as {@link Bson}.
+	 *
+	 * @param source
+	 * @return {@literal true} if the given source can be converted to {@link Bson}.
+	 * @since 3.2.3
+	 */
+	public static boolean supportsBson(Object source) {
+		return source instanceof DBObject || source instanceof Map;
+	}
+
+	/**
 	 * Returns given object as {@link Collection}. Will return the {@link Collection} as is if the source is a
 	 * {@link Collection} already, will convert an array into a {@link Collection} or simply create a single element
 	 * collection for everything else.
