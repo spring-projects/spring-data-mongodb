@@ -934,10 +934,11 @@ class MappingMongoConverterUnitTests {
 		assertThat(readResult.iterator().next()).isInstanceOf(Address.class);
 	}
 
-	@Test // DATAMONGO-402
+	@Test // DATAMONGO-402, GH-3702
 	void readsMemberClassCorrectly() {
 
-		org.bson.Document document = new org.bson.Document("inner", new org.bson.Document("value", "FOO!"));
+		org.bson.Document document = new org.bson.Document("inner",
+				new LinkedHashMap<>(new org.bson.Document("value", "FOO!")));
 
 		Outer outer = converter.read(Outer.class, document);
 		assertThat(outer.inner).isNotNull();

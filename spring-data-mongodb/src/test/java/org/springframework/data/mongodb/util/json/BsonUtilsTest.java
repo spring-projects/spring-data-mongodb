@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.Collections;
 
 import org.bson.BsonDouble;
 import org.bson.BsonInt32;
@@ -29,10 +29,16 @@ import org.bson.BsonString;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.data.mongodb.util.BsonUtils;
 
+import com.mongodb.BasicDBList;
+
 /**
+ * Unit tests for {@link BsonUtils}.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 class BsonUtilsTest {
 
@@ -110,5 +116,14 @@ class BsonUtilsTest {
 		Object source = 100L;
 
 		assertThat((Collection)BsonUtils.asCollection(source)).containsExactly(source);
+	}
+
+	@Test // GH-3702
+	void supportsBsonShouldReportIfConversionSupported() {
+
+		assertThat(BsonUtils.supportsBson("foo")).isFalse();
+		assertThat(BsonUtils.supportsBson(new Document())).isTrue();
+		assertThat(BsonUtils.supportsBson(new BasicDBList())).isTrue();
+		assertThat(BsonUtils.supportsBson(Collections.emptyMap())).isTrue();
 	}
 }
