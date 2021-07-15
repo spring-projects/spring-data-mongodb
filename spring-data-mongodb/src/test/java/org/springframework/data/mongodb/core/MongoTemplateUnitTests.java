@@ -19,12 +19,14 @@ import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
+import com.mongodb.client.model.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigInteger;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -82,6 +84,7 @@ import org.springframework.data.mongodb.core.index.MongoPersistentEntityIndexCre
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.Sharded;
+import org.springframework.data.mongodb.core.mapping.TimeSeries;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertCallback;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveCallback;
@@ -98,6 +101,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.timeseries.Granularities;
 import org.springframework.lang.Nullable;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.CollectionUtils;
@@ -117,15 +121,6 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.CountOptions;
-import com.mongodb.client.model.CreateCollectionOptions;
-import com.mongodb.client.model.DeleteOptions;
-import com.mongodb.client.model.FindOneAndDeleteOptions;
-import com.mongodb.client.model.FindOneAndReplaceOptions;
-import com.mongodb.client.model.FindOneAndUpdateOptions;
-import com.mongodb.client.model.MapReduceAction;
-import com.mongodb.client.model.ReplaceOptions;
-import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
@@ -2256,6 +2251,30 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 				.isThrownBy(() -> template.save(new ArrayList<>(Arrays.asList(1, 2, 3)), "myList"));
 	}
 
+	@Test // GH-3731
+	void createCollectionShouldSetUpTimeSeriesWithDefaults() {
+
+		template.createCollection(TimeSeriesTypeWithDefaults.class);
+
+		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
+		verify(db).createCollection(any(), options.capture());
+
+		assertThat(options.getValue().getTimeSeriesOptions().toString())
+				.isEqualTo(new com.mongodb.client.model.TimeSeriesOptions("timestamp").toString());
+	}
+
+	@Test // GH-3731
+	void createCollectionShouldSetUpTimeSeries() {
+
+		template.createCollection(TimeSeriesType.class);
+
+		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
+		verify(db).createCollection(any(), options.capture());
+
+		assertThat(options.getValue().getTimeSeriesOptions().toString())
+				.isEqualTo(new com.mongodb.client.model.TimeSeriesOptions("time_stamp").metaField("meta").granularity(TimeSeriesGranularity.HOURS).toString());
+	}
+
 	class AutogenerateableId {
 
 		@Id BigInteger id;
@@ -2356,6 +2375,23 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		String id;
 		String value;
 		WithNamedFields nested;
+	}
+
+	@TimeSeries(timeField = "timestamp")
+	static class TimeSeriesTypeWithDefaults {
+
+		String id;
+		Instant timestamp;
+	}
+
+	@TimeSeries(timeField = "timestamp", metaField = "meta", granularity = Granularities.HOURS)
+	static class TimeSeriesType {
+
+		String id;
+
+		@Field("time_stamp")
+		Instant timestamp;
+		Object meta;
 	}
 
 	static class TypeImplementingIterator implements Iterator {

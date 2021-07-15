@@ -17,8 +17,11 @@ package org.springframework.data.mongodb.core;
 
 import java.util.Optional;
 
+import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
+import org.springframework.data.mongodb.core.timeseries.Granularities;
+import org.springframework.data.mongodb.core.timeseries.Granularity;
 import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.util.Optionals;
 import org.springframework.lang.Nullable;
@@ -42,6 +45,7 @@ public class CollectionOptions {
 	private @Nullable Boolean capped;
 	private @Nullable Collation collation;
 	private ValidationOptions validationOptions;
+	private @Nullable TimeSeriesOptions timeSeriesOptions;
 
 	/**
 	 * Constructs a new <code>CollectionOptions</code> instance.
@@ -54,17 +58,19 @@ public class CollectionOptions {
 	 */
 	@Deprecated
 	public CollectionOptions(@Nullable Long size, @Nullable Long maxDocuments, @Nullable Boolean capped) {
-		this(size, maxDocuments, capped, null, ValidationOptions.none());
+		this(size, maxDocuments, capped, null, ValidationOptions.none(), null);
 	}
 
 	private CollectionOptions(@Nullable Long size, @Nullable Long maxDocuments, @Nullable Boolean capped,
-			@Nullable Collation collation, ValidationOptions validationOptions) {
+			@Nullable Collation collation, ValidationOptions validationOptions,
+			@Nullable TimeSeriesOptions timeSeriesOptions) {
 
 		this.maxDocuments = maxDocuments;
 		this.size = size;
 		this.capped = capped;
 		this.collation = collation;
 		this.validationOptions = validationOptions;
+		this.timeSeriesOptions = timeSeriesOptions;
 	}
 
 	/**
@@ -78,7 +84,7 @@ public class CollectionOptions {
 
 		Assert.notNull(collation, "Collation must not be null!");
 
-		return new CollectionOptions(null, null, null, collation, ValidationOptions.none());
+		return new CollectionOptions(null, null, null, collation, ValidationOptions.none(), null);
 	}
 
 	/**
@@ -88,7 +94,21 @@ public class CollectionOptions {
 	 * @since 2.0
 	 */
 	public static CollectionOptions empty() {
-		return new CollectionOptions(null, null, null, null, ValidationOptions.none());
+		return new CollectionOptions(null, null, null, null, ValidationOptions.none(), null);
+	}
+
+	/**
+	 * Quick way to set up {@link CollectionOptions} for a Time Series collection. For more advanced settings use
+	 * {@link #timeSeries(TimeSeriesOptions)}.
+	 * 
+	 * @param timeField The name of the property which contains the date in each time series document. Must not be
+	 *          {@literal null}.
+	 * @return new instance of {@link CollectionOptions}.
+	 * @see #timeSeries(TimeSeriesOptions)
+	 * @since 3.3
+	 */
+	public static CollectionOptions timeSeries(String timeField) {
+		return empty().timeSeries(TimeSeriesOptions.timeSeries(timeField));
 	}
 
 	/**
@@ -99,7 +119,7 @@ public class CollectionOptions {
 	 * @since 2.0
 	 */
 	public CollectionOptions capped() {
-		return new CollectionOptions(size, maxDocuments, true, collation, validationOptions);
+		return new CollectionOptions(size, maxDocuments, true, collation, validationOptions, null);
 	}
 
 	/**
@@ -110,7 +130,7 @@ public class CollectionOptions {
 	 * @since 2.0
 	 */
 	public CollectionOptions maxDocuments(long maxDocuments) {
-		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions);
+		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions);
 	}
 
 	/**
@@ -121,7 +141,7 @@ public class CollectionOptions {
 	 * @since 2.0
 	 */
 	public CollectionOptions size(long size) {
-		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions);
+		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions);
 	}
 
 	/**
@@ -132,7 +152,7 @@ public class CollectionOptions {
 	 * @since 2.0
 	 */
 	public CollectionOptions collation(@Nullable Collation collation) {
-		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions);
+		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions);
 	}
 
 	/**
@@ -252,7 +272,20 @@ public class CollectionOptions {
 	public CollectionOptions validation(ValidationOptions validationOptions) {
 
 		Assert.notNull(validationOptions, "ValidationOptions must not be null!");
-		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions);
+		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions);
+	}
+
+	/**
+	 * Create new {@link CollectionOptions} with the given {@link TimeSeriesOptions}.
+	 *
+	 * @param timeSeriesOptions must not be {@literal null}.
+	 * @return new instance of {@link CollectionOptions}.
+	 * @since 3.3
+	 */
+	public CollectionOptions timeSeries(TimeSeriesOptions timeSeriesOptions) {
+
+		Assert.notNull(timeSeriesOptions, "TimeSeriesOptions must not be null!");
+		return new CollectionOptions(size, maxDocuments, capped, collation, validationOptions, timeSeriesOptions);
 	}
 
 	/**
@@ -301,6 +334,16 @@ public class CollectionOptions {
 	 */
 	public Optional<ValidationOptions> getValidationOptions() {
 		return validationOptions.isEmpty() ? Optional.empty() : Optional.of(validationOptions);
+	}
+
+	/**
+	 * Get the {@link TimeSeriesOptions} if available.
+	 *
+	 * @return {@link Optional#empty()} if not specified.
+	 * @since 3.3
+	 */
+	public Optional<TimeSeriesOptions> getTimeSeriesOptions() {
+		return Optional.ofNullable(timeSeriesOptions);
 	}
 
 	/**
@@ -396,6 +439,89 @@ public class CollectionOptions {
 		 */
 		boolean isEmpty() {
 			return !Optionals.isAnyPresent(getValidator(), getValidationAction(), getValidationLevel());
+		}
+	}
+
+	/**
+	 * Options applicable to Time Series collections.
+	 *
+	 * @author Christoph Strobl
+	 * @since 3.3
+	 * @see <a href=
+	 *      "https://docs.mongodb.com/manual/core/timeseries-collections">https://docs.mongodb.com/manual/core/timeseries-collections</a>
+	 */
+	public static class TimeSeriesOptions {
+
+		private final String timeField;
+
+		@Nullable //
+		private String metaField;
+
+		private Granularity granularity;
+
+		private TimeSeriesOptions(String timeField, @Nullable String metaField, Granularity granularity) {
+
+			this.timeField = timeField;
+			this.metaField = metaField;
+			this.granularity = granularity;
+		}
+
+		/**
+		 * Create a new instance of {@link TimeSeriesOptions} using the given field as its {@literal timeField}. The one,
+		 * that contains the date in each time series document. <br />
+		 * {@link Field#name() Annotated fieldnames} will be considered during the mapping process.
+		 *
+		 * @param timeField must not be {@literal null}.
+		 * @return new instance of {@link TimeSeriesOptions}.
+		 */
+		public static TimeSeriesOptions timeSeries(String timeField) {
+			return new TimeSeriesOptions(timeField, null, Granularities.DEFAULT);
+		}
+
+		/**
+		 * Set the name of the field which contains metadata in each time series document. Should not be the {@literal id}
+		 * nor {@link TimeSeriesOptions#timeSeries(String)} timeField} nor point to an {@literal array} or
+		 * {@link java.util.Collection}. <br />
+		 * {@link Field#name() Annotated fieldnames} will be considered during the mapping process.
+		 *
+		 * @param metaField must not be {@literal null}.
+		 * @return new instance of {@link TimeSeriesOptions}.
+		 */
+		public TimeSeriesOptions metaField(String metaField) {
+			return new TimeSeriesOptions(timeField, metaField, granularity);
+		}
+
+		/**
+		 * Select the {@link Granularity} parameter to define how data in the time series collection is organized. Select
+		 * one that is closest to the time span between incoming measurements.
+		 *
+		 * @return new instance of {@link TimeSeriesOptions}.
+		 */
+		public TimeSeriesOptions granularity(Granularity granularity) {
+			return new TimeSeriesOptions(timeField, metaField, granularity);
+		}
+
+		/**
+		 * @return never {@literal null}.
+		 */
+		public String getTimeField() {
+			return timeField;
+		}
+
+		/**
+		 * @return can be {@literal null}. Might be an {@literal empty} {@link String} as well, so maybe check via
+		 *         {@link org.springframework.util.StringUtils#hasText(String)}.
+		 */
+		@Nullable
+		public String getMetaField() {
+			return metaField;
+		}
+
+		/**
+		 * @return never {@literal null}.
+		 */
+		public Granularity getGranularity() {
+			return granularity;
 		}
 	}
 }

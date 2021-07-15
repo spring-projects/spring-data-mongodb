@@ -20,15 +20,21 @@ import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
+import com.mongodb.client.model.TimeSeriesGranularity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.mongodb.core.MongoTemplateUnitTests.TimeSeriesType;
+import org.springframework.data.mongodb.core.MongoTemplateUnitTests.TimeSeriesTypeWithDefaults;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.mapping.TimeSeries;
+import org.springframework.data.mongodb.core.timeseries.Granularities;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -1426,6 +1432,30 @@ public class ReactiveMongoTemplateUnitTests {
 				.isThrownBy(() -> template.insert(publisher));
 	}
 
+	@Test // GH-3731
+	void createCollectionShouldSetUpTimeSeriesWithDefaults() {
+
+		template.createCollection(TimeSeriesTypeWithDefaults.class).subscribe();
+
+		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
+		verify(db).createCollection(any(), options.capture());
+
+		assertThat(options.getValue().getTimeSeriesOptions().toString())
+				.isEqualTo(new com.mongodb.client.model.TimeSeriesOptions("timestamp").toString());
+	}
+
+	@Test // GH-3731
+	void createCollectionShouldSetUpTimeSeries() {
+
+		template.createCollection(TimeSeriesType.class).subscribe();
+
+		ArgumentCaptor<CreateCollectionOptions> options = ArgumentCaptor.forClass(CreateCollectionOptions.class);
+		verify(db).createCollection(any(), options.capture());
+
+		assertThat(options.getValue().getTimeSeriesOptions().toString())
+				.isEqualTo(new com.mongodb.client.model.TimeSeriesOptions("time_stamp").metaField("meta").granularity(TimeSeriesGranularity.HOURS).toString());
+	}
+
 	private void stubFindSubscribe(Document document) {
 
 		Publisher<Document> realPublisher = Flux.just(document);
@@ -1481,6 +1511,23 @@ public class ReactiveMongoTemplateUnitTests {
 
 	static class EntityWithListOfSimple {
 		List<Integer> grades;
+	}
+
+	@TimeSeries(timeField = "timestamp")
+	static class TimeSeriesTypeWithDefaults {
+
+		String id;
+		Instant timestamp;
+	}
+
+	@TimeSeries(timeField = "timestamp", metaField = "meta", granularity = Granularities.HOURS)
+	static class TimeSeriesType {
+
+		String id;
+
+		@Field("time_stamp")
+		Instant timestamp;
+		Object meta;
 	}
 
 	static class ValueCapturingEntityCallback<T> {

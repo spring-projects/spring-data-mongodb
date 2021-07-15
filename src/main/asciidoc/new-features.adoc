@@ -5,6 +5,7 @@
 == What's New in Spring Data MongoDB 3.3
 
 * Extended support for <<mapping-usage.document-references, referencing>> entities.
+* Support for <<time-series, Time Series>> collections.
 * Include/exclude `null` properties on write to `Document` through `@Field(write=…)`.
 * Support for <<mapping-usage-indexes.wildcard-index>>.
 
