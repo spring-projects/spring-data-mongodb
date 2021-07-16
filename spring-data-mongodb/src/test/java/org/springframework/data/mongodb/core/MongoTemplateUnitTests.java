@@ -19,7 +19,6 @@ import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
-import com.mongodb.client.model.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -101,7 +100,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.data.mongodb.core.timeseries.Granularities;
+import org.springframework.data.mongodb.core.timeseries.Granularity;
 import org.springframework.lang.Nullable;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.CollectionUtils;
@@ -121,6 +120,16 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.CountOptions;
+import com.mongodb.client.model.CreateCollectionOptions;
+import com.mongodb.client.model.DeleteOptions;
+import com.mongodb.client.model.FindOneAndDeleteOptions;
+import com.mongodb.client.model.FindOneAndReplaceOptions;
+import com.mongodb.client.model.FindOneAndUpdateOptions;
+import com.mongodb.client.model.MapReduceAction;
+import com.mongodb.client.model.ReplaceOptions;
+import com.mongodb.client.model.TimeSeriesGranularity;
+import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 
@@ -1982,7 +1991,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		ArgumentCaptor<Bson> filter = ArgumentCaptor.forClass(Bson.class);
 		verify(collection).replaceOne(filter.capture(), any(), any());
 
-		assertThat(filter.getValue()).isEqualTo(new Document("_id", "id-1").append("value", "v1").append("nested.custom-named-field", "cname"));
+		assertThat(filter.getValue())
+				.isEqualTo(new Document("_id", "id-1").append("value", "v1").append("nested.custom-named-field", "cname"));
 	}
 
 	@Test // DATAMONGO-2341
@@ -2272,7 +2282,8 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		verify(db).createCollection(any(), options.capture());
 
 		assertThat(options.getValue().getTimeSeriesOptions().toString())
-				.isEqualTo(new com.mongodb.client.model.TimeSeriesOptions("time_stamp").metaField("meta").granularity(TimeSeriesGranularity.HOURS).toString());
+				.isEqualTo(new com.mongodb.client.model.TimeSeriesOptions("time_stamp").metaField("meta")
+						.granularity(TimeSeriesGranularity.HOURS).toString());
 	}
 
 	class AutogenerateableId {
@@ -2370,7 +2381,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		@Field("firstname") String name;
 	}
 
-	@Sharded(shardKey = {"value", "nested.customName"})
+	@Sharded(shardKey = { "value", "nested.customName" })
 	static class WithShardKeyPointingToNested {
 		String id;
 		String value;
@@ -2384,13 +2395,12 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		Instant timestamp;
 	}
 
-	@TimeSeries(timeField = "timestamp", metaField = "meta", granularity = Granularities.HOURS)
+	@TimeSeries(timeField = "timestamp", metaField = "meta", granularity = Granularity.HOURS)
 	static class TimeSeriesType {
 
 		String id;
 
-		@Field("time_stamp")
-		Instant timestamp;
+		@Field("time_stamp") Instant timestamp;
 		Object meta;
 	}
 

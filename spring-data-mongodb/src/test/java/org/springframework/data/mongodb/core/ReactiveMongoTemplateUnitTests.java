@@ -20,15 +20,9 @@ import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
-import com.mongodb.client.model.TimeSeriesGranularity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.mongodb.core.MongoTemplateUnitTests.TimeSeriesType;
-import org.springframework.data.mongodb.core.MongoTemplateUnitTests.TimeSeriesTypeWithDefaults;
-import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
-import org.springframework.data.mongodb.core.mapping.TimeSeries;
-import org.springframework.data.mongodb.core.timeseries.Granularities;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -77,9 +71,11 @@ import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Sw
 import org.springframework.data.mongodb.core.aggregation.Fields;
 import org.springframework.data.mongodb.core.aggregation.SetOperation;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.TimeSeries;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent;
 import org.springframework.data.mongodb.core.mapping.event.ReactiveAfterConvertCallback;
@@ -93,6 +89,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.timeseries.Granularity;
 import org.springframework.lang.Nullable;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.CollectionUtils;
@@ -106,6 +103,7 @@ import com.mongodb.client.model.FindOneAndDeleteOptions;
 import com.mongodb.client.model.FindOneAndReplaceOptions;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.ReplaceOptions;
+import com.mongodb.client.model.TimeSeriesGranularity;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.InsertManyResult;
@@ -951,7 +949,8 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-2344, DATAMONGO-2572
 	void allowSecondaryReadsQueryOptionShouldApplyPrimaryPreferredReadPreferenceForFindDistinct() {
 
-		template.findDistinct(new Query().allowSecondaryReads(), "name", AutogenerateableId.class, String.class).subscribe();
+		template.findDistinct(new Query().allowSecondaryReads(), "name", AutogenerateableId.class, String.class)
+				.subscribe();
 
 		verify(collection).withReadPreference(eq(ReadPreference.primaryPreferred()));
 	}
@@ -1428,8 +1427,7 @@ public class ReactiveMongoTemplateUnitTests {
 
 		Publisher<String> publisher = Mono.just("data");
 
-		assertThatExceptionOfType(IllegalArgumentException.class)
-				.isThrownBy(() -> template.insert(publisher));
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> template.insert(publisher));
 	}
 
 	@Test // GH-3731
@@ -1453,7 +1451,8 @@ public class ReactiveMongoTemplateUnitTests {
 		verify(db).createCollection(any(), options.capture());
 
 		assertThat(options.getValue().getTimeSeriesOptions().toString())
-				.isEqualTo(new com.mongodb.client.model.TimeSeriesOptions("time_stamp").metaField("meta").granularity(TimeSeriesGranularity.HOURS).toString());
+				.isEqualTo(new com.mongodb.client.model.TimeSeriesOptions("time_stamp").metaField("meta")
+						.granularity(TimeSeriesGranularity.HOURS).toString());
 	}
 
 	private void stubFindSubscribe(Document document) {
@@ -1520,13 +1519,12 @@ public class ReactiveMongoTemplateUnitTests {
 		Instant timestamp;
 	}
 
-	@TimeSeries(timeField = "timestamp", metaField = "meta", granularity = Granularities.HOURS)
+	@TimeSeries(timeField = "timestamp", metaField = "meta", granularity = Granularity.HOURS)
 	static class TimeSeriesType {
 
 		String id;
 
-		@Field("time_stamp")
-		Instant timestamp;
+		@Field("time_stamp") Instant timestamp;
 		Object meta;
 	}
 

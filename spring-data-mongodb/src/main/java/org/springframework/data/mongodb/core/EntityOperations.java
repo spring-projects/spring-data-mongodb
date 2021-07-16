@@ -38,7 +38,7 @@ import org.springframework.data.mongodb.core.mapping.TimeSeries;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
-import org.springframework.data.mongodb.core.timeseries.Granularities;
+import org.springframework.data.mongodb.core.timeseries.Granularity;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -898,11 +898,23 @@ class EntityOperations {
 			if (entity.isAnnotationPresent(TimeSeries.class)) {
 
 				TimeSeries timeSeries = entity.getRequiredAnnotation(TimeSeries.class);
+
+				if (entity.getPersistentProperty(timeSeries.timeField()) == null) {
+					throw new MappingException(String.format("Time series field '%s' does not exist in type %s",
+							timeSeries.timeField(), entity.getName()));
+				}
+
 				TimeSeriesOptions options = TimeSeriesOptions.timeSeries(timeSeries.timeField());
 				if (StringUtils.hasText(timeSeries.metaField())) {
+
+					if (entity.getPersistentProperty(timeSeries.metaField()) == null) {
+						throw new MappingException(
+								String.format("Meta field '%s' does not exist in type %s", timeSeries.metaField(), entity.getName()));
+					}
+
 					options = options.metaField(timeSeries.metaField());
 				}
-				if (!Granularities.DEFAULT.equals(timeSeries.granularity())) {
+				if (!Granularity.DEFAULT.equals(timeSeries.granularity())) {
 					options = options.granularity(timeSeries.granularity());
 				}
 				collectionOptions = collectionOptions.timeSeries(options);

@@ -20,8 +20,8 @@ import java.util.Optional;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
-import org.springframework.data.mongodb.core.timeseries.Granularities;
 import org.springframework.data.mongodb.core.timeseries.Granularity;
+import org.springframework.data.mongodb.core.timeseries.GranularityDefinition;
 import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.util.Optionals;
 import org.springframework.lang.Nullable;
@@ -100,7 +100,7 @@ public class CollectionOptions {
 	/**
 	 * Quick way to set up {@link CollectionOptions} for a Time Series collection. For more advanced settings use
 	 * {@link #timeSeries(TimeSeriesOptions)}.
-	 * 
+	 *
 	 * @param timeField The name of the property which contains the date in each time series document. Must not be
 	 *          {@literal null}.
 	 * @return new instance of {@link CollectionOptions}.
@@ -454,12 +454,13 @@ public class CollectionOptions {
 
 		private final String timeField;
 
-		@Nullable //
-		private String metaField;
+		private @Nullable final String metaField;
 
-		private Granularity granularity;
+		private final GranularityDefinition granularity;
 
-		private TimeSeriesOptions(String timeField, @Nullable String metaField, Granularity granularity) {
+		private TimeSeriesOptions(String timeField, @Nullable String metaField, GranularityDefinition granularity) {
+
+			Assert.hasText(timeField, "Time field must not be empty or null!");
 
 			this.timeField = timeField;
 			this.metaField = metaField;
@@ -475,7 +476,7 @@ public class CollectionOptions {
 		 * @return new instance of {@link TimeSeriesOptions}.
 		 */
 		public static TimeSeriesOptions timeSeries(String timeField) {
-			return new TimeSeriesOptions(timeField, null, Granularities.DEFAULT);
+			return new TimeSeriesOptions(timeField, null, Granularity.DEFAULT);
 		}
 
 		/**
@@ -492,12 +493,13 @@ public class CollectionOptions {
 		}
 
 		/**
-		 * Select the {@link Granularity} parameter to define how data in the time series collection is organized. Select
-		 * one that is closest to the time span between incoming measurements.
+		 * Select the {@link GranularityDefinition} parameter to define how data in the time series collection is organized.
+		 * Select one that is closest to the time span between incoming measurements.
 		 *
 		 * @return new instance of {@link TimeSeriesOptions}.
+		 * @see Granularity
 		 */
-		public TimeSeriesOptions granularity(Granularity granularity) {
+		public TimeSeriesOptions granularity(GranularityDefinition granularity) {
 			return new TimeSeriesOptions(timeField, metaField, granularity);
 		}
 
@@ -520,7 +522,7 @@ public class CollectionOptions {
 		/**
 		 * @return never {@literal null}.
 		 */
-		public Granularity getGranularity() {
+		public GranularityDefinition getGranularity() {
 			return granularity;
 		}
 	}

@@ -17,7 +17,6 @@ package org.springframework.data.mongodb.core;
 
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
-import org.springframework.data.mongodb.core.timeseries.Granularities;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -111,6 +110,7 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
+import org.springframework.data.mongodb.core.timeseries.Granularity;
 import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
@@ -975,7 +975,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return doAggregate(aggregation, collectionName, null, outputType);
 	}
 
-	protected <O> Flux<O> doAggregate(Aggregation aggregation, String collectionName,  @Nullable Class<?> inputType, Class<O> outputType) {
+	protected <O> Flux<O> doAggregate(Aggregation aggregation, String collectionName, @Nullable Class<?> inputType,
+			Class<O> outputType) {
 
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
@@ -987,19 +988,18 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		AggregationDefinition ctx = queryOperations.createAggregation(aggregation, inputType);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Streaming aggregation: {} in collection {}", serializeToJsonSafely(ctx.getAggregationPipeline()), collectionName);
+			LOGGER.debug("Streaming aggregation: {} in collection {}", serializeToJsonSafely(ctx.getAggregationPipeline()),
+					collectionName);
 		}
 
 		ReadDocumentCallback<O> readCallback = new ReadDocumentCallback<>(mongoConverter, outputType, collectionName);
-		return execute(collectionName,
-				collection -> aggregateAndMap(collection, ctx.getAggregationPipeline(), ctx.isOutOrMerge(), options,
-						readCallback,
-						ctx.getInputType()));
+		return execute(collectionName, collection -> aggregateAndMap(collection, ctx.getAggregationPipeline(),
+				ctx.isOutOrMerge(), options, readCallback, ctx.getInputType()));
 	}
 
 	private <O> Flux<O> aggregateAndMap(MongoCollection<Document> collection, List<Document> pipeline,
-			boolean isOutOrMerge,
-			AggregationOptions options, ReadDocumentCallback<O> readCallback, @Nullable Class<?> inputType) {
+			boolean isOutOrMerge, AggregationOptions options, ReadDocumentCallback<O> readCallback,
+			@Nullable Class<?> inputType) {
 
 		AggregatePublisher<Document> cursor = collection.aggregate(pipeline, Document.class)
 				.allowDiskUse(options.isAllowDiskUse());
@@ -2510,10 +2510,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			TimeSeriesOptions options = new TimeSeriesOptions(it.getTimeField());
 
-			if(StringUtils.hasText(it.getMetaField())) {
+			if (StringUtils.hasText(it.getMetaField())) {
 				options.metaField(it.getMetaField());
 			}
-			if(!Granularities.DEFAULT.equals(it.getGranularity())) {
+			if (!Granularity.DEFAULT.equals(it.getGranularity())) {
 				options.granularity(TimeSeriesGranularity.valueOf(it.getGranularity().name().toUpperCase()));
 			}
 

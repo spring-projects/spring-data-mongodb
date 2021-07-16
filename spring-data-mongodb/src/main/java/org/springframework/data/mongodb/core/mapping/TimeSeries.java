@@ -22,7 +22,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import org.springframework.core.annotation.AliasFor;
-import org.springframework.data.mongodb.core.timeseries.Granularities;
+import org.springframework.data.mongodb.core.timeseries.Granularity;
 
 /**
  * Identifies a domain object to be persisted to a MongoDB Time Series collection.
@@ -50,8 +50,9 @@ public @interface TimeSeries {
 	String collection() default "";
 
 	/**
-	 * The name of the property which contains the date in each time series document. <br />
-	 * {@link Field#name() Annotated fieldnames} will be considered during the mapping process.
+	 * Name of the property which contains the date in each time series document. <br />
+	 * Translation of property names to {@link Field#name() annotated fieldnames} will be considered during the mapping
+	 * process.
 	 *
 	 * @return never {@literal null}.
 	 */
@@ -60,19 +61,19 @@ public @interface TimeSeries {
 	/**
 	 * The name of the field which contains metadata in each time series document. Should not be the {@literal id} nor
 	 * {@link #timeField()} nor point to an {@literal array} or {@link java.util.Collection}. <br />
-	 * {@link Field#name() Annotated fieldnames} will be considered during the mapping process.
+	 * Translation of property names to {@link Field#name() annotated fieldnames} will be considered during the mapping
+	 * process.
 	 *
 	 * @return empty {@link String} by default.
 	 */
 	String metaField() default "";
 
 	/**
-	 * Select the {@link Granularities granularity} parameter to define how data in the time series collection is
-	 * organized.
+	 * Select the {@link Granularity granularity} parameter to define how data in the time series collection is organized.
 	 *
-	 * @return {@link Granularities#DEFAULT server default} by default.
+	 * @return {@link Granularity#DEFAULT server default} by default.
 	 */
-	Granularities granularity() default Granularities.DEFAULT;
+	Granularity granularity() default Granularity.DEFAULT;
 
 	/**
 	 * Defines the collation to apply when executing a query or creating indexes.

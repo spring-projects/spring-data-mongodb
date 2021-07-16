@@ -16,12 +16,30 @@
 package org.springframework.data.mongodb.core.timeseries;
 
 /**
- * The Granularity of time series data that is closest to the time span between incoming measurements.
+ * {@link GranularityDefinition Granularities} available for Time Series data.
  *
  * @author Christoph Strobl
  * @since 3.3
  */
-public interface Granularity {
+public enum Granularity implements GranularityDefinition {
 
-	String name();
+	/**
+	 * Server default value to indicate no explicit value should be sent.
+	 */
+	DEFAULT,
+
+	/**
+	 * High frequency ingestion.
+	 */
+	SECONDS,
+
+	/**
+	 * Medium frequency ingestion.
+	 */
+	MINUTES,
+
+	/**
+	 * Low frequency ingestion.
+	 */
+	HOURS
 }
