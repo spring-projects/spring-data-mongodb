@@ -1,6 +1,12 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.1.11 (2021-07-16)
+--------------------------------------
+* #3689 - Fix Regression in generating queries with nested maps with numeric keys.
+* #3688 - Multiple maps with numeric keys in a single update produces the wrong query (Regression).
+
+
 Changes in version 3.2.2 (2021-06-22)
 -------------------------------------
 * #3677 - Add missing double quote to GeoJson.java JSDoc header.
@@ -3407,6 +3413,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
