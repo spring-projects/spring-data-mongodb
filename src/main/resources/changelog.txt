@@ -1,6 +1,17 @@
 Spring Data MongoDB Changelog
 =============================
 
+Changes in version 3.2.3 (2021-07-16)
+-------------------------------------
+* #3702 - `MappingMongoConverter` incorrectly processes an object property of type `org.bson.Document`.
+* #3689 - Fix Regression in generating queries with nested maps with numeric keys.
+* #3688 - Multiple maps with numeric keys in a single update produces the wrong query (Regression).
+* #3686 - reading a document with a list with a null element fails with Spring Data Mongo 3.2.2, works with 3.2.1.
+* #3684 - Add equals and hashcode to UnwrappedMongoPersistentProperty (fixes #3683).
+* #3683 - Memory Leak: instances of UnwrappedMongoPersistentProperty are accumulating in PreferredConstructor.isPropertyParameterCache.
+* #3670 - `Binary` not deserialized to `byte[]` for property of type `Object`.
+
+
 Changes in version 3.2.2 (2021-06-22)
 -------------------------------------
 * #3677 - Add missing double quote to GeoJson.java JSDoc header.
@@ -3407,6 +3418,7 @@ Repository
 * Automatic implementation of interface query method names on repositories.
 * Namespace support for Mongo repositories
 * Allow usage of pagination and sorting with repositories
+
 
 
 
