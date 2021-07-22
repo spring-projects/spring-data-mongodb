@@ -500,7 +500,10 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 					dbo.put(methodReference.getArgumentMap()[i++], transform(child, context));
 				}
 				args = dbo;
-			} else {
+			} else if (ObjectUtils.nullSafeEquals(methodReference.getArgumentType(), ArgumentType.EMPTY_DOCUMENT)) {
+				args = new Document();
+			}
+			else {
 
 				List<Object> argList = new ArrayList<Object>();
 

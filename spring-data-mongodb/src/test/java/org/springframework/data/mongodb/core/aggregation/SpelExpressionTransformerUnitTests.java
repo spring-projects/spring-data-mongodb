@@ -956,6 +956,16 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(transform("covarianceSamp(field1, field2)")).isEqualTo(Document.parse("{ \"$covarianceSamp\" : [\"$field1\", \"$field2\"]}"));
 	}
 
+	@Test // GH-3715
+	void shouldRenderRank() {
+		assertThat(transform("rank()")).isEqualTo(Document.parse("{ $rank : {} }"));
+	}
+
+	@Test // GH-3715
+	void shouldRenderDenseRank() {
+		assertThat(transform("denseRank()")).isEqualTo(Document.parse("{ $denseRank : {} }"));
+	}
+
 	private Object transform(String expression, Object... params) {
 		Object result = transformer.transform(expression, Aggregation.DEFAULT_CONTEXT, params);
 		return result == null ? null : (!(result instanceof org.bson.Document) ? result.toString() : result);
