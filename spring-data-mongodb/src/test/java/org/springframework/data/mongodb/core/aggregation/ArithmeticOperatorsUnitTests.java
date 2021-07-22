@@ -59,4 +59,11 @@ public class ArithmeticOperatorsUnitTests {
 				.toDocument(Aggregation.DEFAULT_CONTEXT))
 						.isEqualTo(new Document("$round", Arrays.asList("$field", new Document("$first", "$source"))));
 	}
+
+	@Test // GH-3716
+	void rendersDerivativeCorrectly() {
+
+		assertThat(valueOf("miles").derivative("hour").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $derivative: { input: \"$miles\", unit: \"hour\" } }"));
+	}
 }

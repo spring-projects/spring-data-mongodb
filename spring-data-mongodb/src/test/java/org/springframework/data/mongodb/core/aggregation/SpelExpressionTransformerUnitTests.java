@@ -946,6 +946,11 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(transform("round(field, 2)")).isEqualTo(Document.parse("{ \"$round\" : [\"$field\", 2]}"));
 	}
 
+	@Test // GH-3716
+	void shouldRenderDerivative() {
+		assertThat(transform("derivative(miles, 'hour')")).isEqualTo(Document.parse("{ \"$derivative\" : { input : '$miles', unit : 'hour'} }"));
+	}
+
 	private Object transform(String expression, Object... params) {
 		Object result = transformer.transform(expression, Aggregation.DEFAULT_CONTEXT, params);
 		return result == null ? null : (!(result instanceof org.bson.Document) ? result.toString() : result);

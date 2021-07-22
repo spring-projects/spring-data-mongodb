@@ -24,7 +24,9 @@ import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Mi
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.StdDevPop;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.StdDevSamp;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Sum;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 /**
  * Gateway to {@literal Arithmetic} aggregation operations that perform math operations on numbers.
@@ -530,6 +532,31 @@ public class ArithmeticOperators {
 		 */
 		public Round roundToPlace(int place) {
 			return round().place(place);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the mathematical derivative value.
+		 *
+		 * @return new instance of {@link Derivative}.
+		 * @since 3.3
+		 */
+		public Derivative derivative() {
+			return derivative(null);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the mathematical derivative value.
+		 *
+		 * @param unit The time unit ({@literal week, day, hour, minute, second, millisecond}) to apply can be
+		 *          {@literal null}.
+		 * @return new instance of {@link Derivative}.
+		 * @since 3.3
+		 */
+		public Derivative derivative(@Nullable String unit) {
+
+			Derivative derivative = usesFieldRef() ? Derivative.derivativeOf(fieldReference)
+					: Derivative.derivativeOf(expression);
+			return StringUtils.hasText(unit) ? derivative.unit(unit) : derivative;
 		}
 
 		private boolean usesFieldRef() {
@@ -1663,6 +1690,34 @@ public class ArithmeticOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$round";
+		}
+	}
+
+	public static class Derivative extends AbstractAggregationExpression {
+
+		private Derivative(Object value) {
+			super(value);
+		}
+
+		public static Derivative derivativeOf(String fieldReference) {
+			return new Derivative(Collections.singletonMap("input", Fields.field(fieldReference)));
+		}
+
+		public static Derivative derivativeOf(AggregationExpression expression) {
+			return new Derivative(Collections.singletonMap("input", expression));
+		}
+
+		public static Derivative derivativeOfValue(Number value) {
+			return new Derivative(Collections.singletonMap("input", value));
+		}
+
+		public Derivative unit(String unit) {
+			return new Derivative(append("unit", unit));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$derivative";
 		}
 	}
 }
