@@ -178,16 +178,6 @@ public abstract class QuerydslAbstractMongodbQuery<K, Q extends QuerydslAbstract
 	}
 
 	/**
-	 * Get the actual {@link QueryMixin} delegate.
-	 *
-	 * @return
-	 */
-	QueryMixin<Q> getQueryMixin() {
-		return queryMixin;
-	}
-
-
-	/**
 	 * Returns the {@literal Mongo Shell} representation of the query. <br />
 	 * The following query
 	 *

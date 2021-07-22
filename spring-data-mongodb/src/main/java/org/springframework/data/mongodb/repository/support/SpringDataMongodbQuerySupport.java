@@ -139,9 +139,4 @@ abstract class SpringDataMongodbQuerySupport<Q extends SpringDataMongodbQuerySup
 	protected Document createSort(List<OrderSpecifier<?>> orderSpecifiers) {
 		return serializer.toSort(orderSpecifiers);
 	}
-
-	// TODO: Remove once https://github.com/querydsl/querydsl/pull/2916 is merged
-	QueryMixin<Q> getQueryMixin() {
-		return superQueryMixin;
-	}
 }
