@@ -142,6 +142,63 @@ public class AccumulatorOperators {
 			return usesFieldRef() ? StdDevSamp.stdDevSampOf(fieldReference) : StdDevSamp.stdDevSampOf(expression);
 		}
 
+		/**
+		 * Creates new {@link AggregationExpression} that uses the previous input (field/expression) and the value of the given
+		 * field to calculate the population covariance of the two.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link CovariancePop}.
+		 * @since 3.3
+		 */
+		public CovariancePop covariancePop(String fieldReference) {
+			return covariancePop().and(fieldReference);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that uses the previous input (field/expression) and the result of the given
+		 * {@link AggregationExpression expression} to calculate the population covariance of the two.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link CovariancePop}.
+		 * @since 3.3
+		 */
+		public CovariancePop covariancePop(AggregationExpression expression) {
+			return covariancePop().and(expression);
+		}
+
+		private CovariancePop covariancePop() {
+			return usesFieldRef() ? CovariancePop.covariancePopOf(fieldReference) : CovariancePop.covariancePopOf(expression);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that uses the previous input (field/expression) and the value of the given
+		 * field to calculate the sample covariance of the two.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link CovariancePop}.
+		 * @since 3.3
+		 */
+		public CovarianceSamp covarianceSamp(String fieldReference) {
+			return covarianceSamp().and(fieldReference);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that uses the previous input (field/expression) and the result of the given
+		 * {@link AggregationExpression expression} to calculate the sample covariance of the two.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link CovariancePop}.
+		 * @since 3.3
+		 */
+		public CovarianceSamp covarianceSamp(AggregationExpression expression) {
+			return covarianceSamp().and(expression);
+		}
+
+		private CovarianceSamp covarianceSamp() {
+			return usesFieldRef() ? CovarianceSamp.covarianceSampOf(fieldReference)
+					: CovarianceSamp.covarianceSampOf(expression);
+		}
+
 		private boolean usesFieldRef() {
 			return fieldReference != null;
 		}
@@ -656,6 +713,126 @@ public class AccumulatorOperators {
 			}
 
 			return super.toDocument(value, context);
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $covariancePop}.
+	 *
+	 * @author Christoph Strobl
+	 * @since 3.3
+	 */
+	public static class CovariancePop extends AbstractAggregationExpression {
+
+		private CovariancePop(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates new {@link CovariancePop}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link CovariancePop}.
+		 */
+		public static CovariancePop covariancePopOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new CovariancePop(asFields(fieldReference));
+		}
+
+		/**
+		 * Creates new {@link CovariancePop}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link CovariancePop}.
+		 */
+		public static CovariancePop covariancePopOf(AggregationExpression expression) {
+			return new CovariancePop(Collections.singletonList(expression));
+		}
+
+		/**
+		 * Creates new {@link CovariancePop} with all previously added arguments appending the given one.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link CovariancePop}.
+		 */
+		public CovariancePop and(String fieldReference) {
+			return new CovariancePop(append(asFields(fieldReference)));
+		}
+
+		/**
+		 * Creates new {@link CovariancePop} with all previously added arguments appending the given one.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link CovariancePop}.
+		 */
+		public CovariancePop and(AggregationExpression expression) {
+			return new CovariancePop(append(expression));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$covariancePop";
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $covarianceSamp}.
+	 *
+	 * @author Christoph Strobl
+	 * @since 3.3
+	 */
+	public static class CovarianceSamp extends AbstractAggregationExpression {
+
+		private CovarianceSamp(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates new {@link CovarianceSamp}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link CovarianceSamp}.
+		 */
+		public static CovarianceSamp covarianceSampOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new CovarianceSamp(asFields(fieldReference));
+		}
+
+		/**
+		 * Creates new {@link CovarianceSamp}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link CovarianceSamp}.
+		 */
+		public static CovarianceSamp covarianceSampOf(AggregationExpression expression) {
+			return new CovarianceSamp(Collections.singletonList(expression));
+		}
+
+		/**
+		 * Creates new {@link CovarianceSamp} with all previously added arguments appending the given one.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link CovarianceSamp}.
+		 */
+		public CovarianceSamp and(String fieldReference) {
+			return new CovarianceSamp(append(asFields(fieldReference)));
+		}
+
+		/**
+		 * Creates new {@link CovarianceSamp} with all previously added arguments appending the given one.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link CovarianceSamp}.
+		 */
+		public CovarianceSamp and(AggregationExpression expression) {
+			return new CovarianceSamp(append(expression));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$covarianceSamp";
 		}
 	}
 }

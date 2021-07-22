@@ -19,6 +19,8 @@ import java.util.Collections;
 import java.util.List;
 
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Avg;
+import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.CovariancePop;
+import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.CovarianceSamp;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Max;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Min;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.StdDevPop;
@@ -509,6 +511,63 @@ public class ArithmeticOperators {
 		public StdDevSamp stdDevSamp() {
 			return usesFieldRef() ? AccumulatorOperators.StdDevSamp.stdDevSampOf(fieldReference)
 					: AccumulatorOperators.StdDevSamp.stdDevSampOf(expression);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that uses the previous input (field/expression) and the value of the given
+		 * field to calculate the population covariance of the two.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link CovariancePop}.
+		 * @since 3.3
+		 */
+		public CovariancePop covariancePop(String fieldReference) {
+			return covariancePop().and(fieldReference);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that uses the previous input (field/expression) and the result of the given
+		 * {@link AggregationExpression expression} to calculate the population covariance of the two.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link CovariancePop}.
+		 * @since 3.3
+		 */
+		public CovariancePop covariancePop(AggregationExpression expression) {
+			return covariancePop().and(expression);
+		}
+
+		private CovariancePop covariancePop() {
+			return usesFieldRef() ? CovariancePop.covariancePopOf(fieldReference) : CovariancePop.covariancePopOf(expression);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that uses the previous input (field/expression) and the value of the given
+		 * field to calculate the sample covariance of the two.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link CovariancePop}.
+		 * @since 3.3
+		 */
+		public CovarianceSamp covarianceSamp(String fieldReference) {
+			return covarianceSamp().and(fieldReference);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that uses the previous input (field/expression) and the result of the given
+		 * {@link AggregationExpression expression} to calculate the sample covariance of the two.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link CovariancePop}.
+		 * @since 3.3
+		 */
+		public CovarianceSamp covarianceSamp(AggregationExpression expression) {
+			return covarianceSamp().and(expression);
+		}
+
+		private CovarianceSamp covarianceSamp() {
+			return usesFieldRef() ? CovarianceSamp.covarianceSampOf(fieldReference)
+					: CovarianceSamp.covarianceSampOf(expression);
 		}
 
 		/**
