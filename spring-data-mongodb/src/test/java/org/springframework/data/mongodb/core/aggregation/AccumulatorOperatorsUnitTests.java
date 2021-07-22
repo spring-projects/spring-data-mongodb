@@ -27,6 +27,8 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.util.aggregation.TestAggregationContext;
 
 /**
+ * Unit tests for {@link AccumulatorOperators}.
+ *
  * @author Christoph Strobl
  */
 class AccumulatorOperatorsUnitTests {

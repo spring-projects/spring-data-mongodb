@@ -143,8 +143,8 @@ public class AccumulatorOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that uses the previous input (field/expression) and the value of the given
-		 * field to calculate the population covariance of the two.
+		 * Creates new {@link AggregationExpression} that uses the previous input (field/expression) and the value of the
+		 * given field to calculate the population covariance of the two.
 		 *
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link CovariancePop}.
@@ -155,8 +155,8 @@ public class AccumulatorOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that uses the previous input (field/expression) and the result of the given
-		 * {@link AggregationExpression expression} to calculate the population covariance of the two.
+		 * Creates new {@link AggregationExpression} that uses the previous input (field/expression) and the result of the
+		 * given {@link AggregationExpression expression} to calculate the population covariance of the two.
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link CovariancePop}.
@@ -171,8 +171,8 @@ public class AccumulatorOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that uses the previous input (field/expression) and the value of the given
-		 * field to calculate the sample covariance of the two.
+		 * Creates new {@link AggregationExpression} that uses the previous input (field/expression) and the value of the
+		 * given field to calculate the sample covariance of the two.
 		 *
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link CovariancePop}.
@@ -183,8 +183,8 @@ public class AccumulatorOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that uses the previous input (field/expression) and the result of the given
-		 * {@link AggregationExpression expression} to calculate the sample covariance of the two.
+		 * Creates new {@link AggregationExpression} that uses the previous input (field/expression) and the result of the
+		 * given {@link AggregationExpression expression} to calculate the sample covariance of the two.
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link CovariancePop}.
