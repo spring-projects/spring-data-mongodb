@@ -946,6 +946,16 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(transform("round(field, 2)")).isEqualTo(Document.parse("{ \"$round\" : [\"$field\", 2]}"));
 	}
 
+	@Test // GH-3712
+	void shouldRenderCovariancePop() {
+		assertThat(transform("covariancePop(field1, field2)")).isEqualTo(Document.parse("{ \"$covariancePop\" : [\"$field1\", \"$field2\"]}"));
+	}
+
+	@Test // GH-3712
+	void shouldRenderCovarianceSamp() {
+		assertThat(transform("covarianceSamp(field1, field2)")).isEqualTo(Document.parse("{ \"$covarianceSamp\" : [\"$field1\", \"$field2\"]}"));
+	}
+
 	private Object transform(String expression, Object... params) {
 		Object result = transformer.transform(expression, Aggregation.DEFAULT_CONTEXT, params);
 		return result == null ? null : (!(result instanceof org.bson.Document) ? result.toString() : result);

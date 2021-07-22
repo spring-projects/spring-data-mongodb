@@ -170,6 +170,8 @@ public class MethodReferenceNode extends ExpressionNode {
 		map.put("addToSet", singleArgRef().forOperator("$addToSet"));
 		map.put("stdDevPop", arrayArgRef().forOperator("$stdDevPop"));
 		map.put("stdDevSamp", arrayArgRef().forOperator("$stdDevSamp"));
+		map.put("covariancePop", arrayArgRef().forOperator("$covariancePop"));
+		map.put("covarianceSamp", arrayArgRef().forOperator("$covarianceSamp"));
 
 		// TYPE OPERATORS
 		map.put("type", singleArgRef().forOperator("$type"));
