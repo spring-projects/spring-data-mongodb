@@ -71,6 +71,7 @@ public class MethodReferenceNode extends ExpressionNode {
 		// DOCUMENT OPERATORS
 		map.put("rank", emptyRef().forOperator("$rank"));
 		map.put("denseRank", emptyRef().forOperator("$denseRank"));
+		map.put("documentNumber", emptyRef().forOperator("$documentNumber"));
 
 		// ARITHMETIC OPERATORS
 		map.put("abs", singleArgRef().forOperator("$abs"));

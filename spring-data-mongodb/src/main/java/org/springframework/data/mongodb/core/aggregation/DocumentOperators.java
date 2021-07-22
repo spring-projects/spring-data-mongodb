@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core.aggregation;
 import org.bson.Document;
 
 /**
+ * Gateway to {@literal document expressions} such as {@literal $rank, $documentNumber, etc.}
+ *
  * @author Christoph Strobl
  * @since 3.3
  */
@@ -41,6 +43,16 @@ public class DocumentOperators {
 	 */
 	public static DenseRank denseRank() {
 		return new DenseRank();
+	}
+
+	/**
+	 * Obtain the current document position.
+	 *
+	 * @return new instance of {@link DocumentNumber}.
+	 * @since 3.3
+	 */
+	public static DocumentNumber documentNumber() {
+		return new DocumentNumber();
 	}
 
 	/**
@@ -71,6 +83,20 @@ public class DocumentOperators {
 		@Override
 		public Document toDocument(AggregationOperationContext context) {
 			return new Document("$denseRank", new Document());
+		}
+	}
+
+	/**
+	 * {@link DocumentNumber} resolves the current document position.
+	 *
+	 * @author Christoph Strobl
+	 * @since 3.3
+	 */
+	public static class DocumentNumber implements AggregationExpression {
+
+		@Override
+		public Document toDocument(AggregationOperationContext context) {
+			return new Document("$documentNumber", new Document());
 		}
 	}
 }
