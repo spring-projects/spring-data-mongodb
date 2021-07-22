@@ -36,4 +36,9 @@ class DocumentOperatorsUnitTests {
 		assertThat(denseRank().toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo(new Document("$denseRank", new Document()));
 	}
+
+	@Test // GH-3717
+	void rendersDocumentNumber() {
+		assertThat(documentNumber().toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo(new Document("$documentNumber", new Document()));
+	}
 }
