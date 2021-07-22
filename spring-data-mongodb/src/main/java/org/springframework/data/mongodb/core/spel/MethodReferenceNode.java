@@ -68,6 +68,10 @@ public class MethodReferenceNode extends ExpressionNode {
 		map.put("lte", arrayArgRef().forOperator("$lte"));
 		map.put("ne", arrayArgRef().forOperator("$ne"));
 
+		// DOCUMENT OPERATORS
+		map.put("rank", emptyRef().forOperator("$rank"));
+		map.put("denseRank", emptyRef().forOperator("$denseRank"));
+
 		// ARITHMETIC OPERATORS
 		map.put("abs", singleArgRef().forOperator("$abs"));
 		map.put("add", arrayArgRef().forOperator("$add"));
@@ -306,6 +310,16 @@ public class MethodReferenceNode extends ExpressionNode {
 		}
 
 		/**
+		 * Create a new {@link AggregationMethodReference} for a {@link ArgumentType#EMPTY_DOCUMENT} argument.
+		 *
+		 * @return never {@literal null}.
+		 * @since 3.3
+		 */
+		static AggregationMethodReference emptyRef() {
+			return new AggregationMethodReference(null, ArgumentType.EMPTY_DOCUMENT, null);
+		}
+
+		/**
 		 * Create a new {@link AggregationMethodReference} for a given {@literal aggregationExpressionOperator} reusing
 		 * previously set arguments.
 		 *
@@ -340,7 +354,7 @@ public class MethodReferenceNode extends ExpressionNode {
 		 * @since 1.10
 		 */
 		public enum ArgumentType {
-			SINGLE, ARRAY, MAP
+			SINGLE, ARRAY, MAP, EMPTY_DOCUMENT
 		}
 	}
 
