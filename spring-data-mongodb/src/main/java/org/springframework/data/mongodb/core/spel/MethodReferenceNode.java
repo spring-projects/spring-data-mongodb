@@ -92,6 +92,7 @@ public class MethodReferenceNode extends ExpressionNode {
 		map.put("trunc", singleArgRef().forOperator("$trunc"));
 		map.put("round", arrayArgRef().forOperator("$round"));
 		map.put("derivative", mapArgRef().forOperator("$derivative").mappingParametersTo("input", "unit"));
+		map.put("integral", mapArgRef().forOperator("$integral").mappingParametersTo("input", "unit"));
 
 		// STRING OPERATORS
 		map.put("concat", arrayArgRef().forOperator("$concat"));

@@ -994,6 +994,16 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(transform("derivative(miles, 'hour')")).isEqualTo(Document.parse("{ \"$derivative\" : { input : '$miles', unit : 'hour'} }"));
 	}
 
+	@Test // GH-3721
+	public void shouldRenderIntegral() {
+		assertThat(transform("integral(field)")).isEqualTo(Document.parse("{ \"$integral\" : { \"input\" : \"$field\" }}"));
+	}
+
+	@Test // GH-3721
+	public void shouldIntegralWithUnit() {
+		assertThat(transform("integral(field, 'hour')")).isEqualTo(Document.parse("{ \"$integral\" : { \"input\" : \"$field\", \"unit\" : \"hour\" }}"));
+	}
+
 	private Object transform(String expression, Object... params) {
 		Object result = transformer.transform(expression, Aggregation.DEFAULT_CONTEXT, params);
 		return result == null ? null : (!(result instanceof org.bson.Document) ? result.toString() : result);
