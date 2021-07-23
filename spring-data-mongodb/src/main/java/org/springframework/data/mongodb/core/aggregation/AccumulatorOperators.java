@@ -199,9 +199,59 @@ public class AccumulatorOperators {
 					: CovarianceSamp.covarianceSampOf(expression);
 		}
 
+		/**
+		 * Creates new {@link ExpMovingAvgBuilder} that to build {@link AggregationExpression expMovingAvg} that calculates
+		 * the exponential moving average of numeric values
+		 *
+		 * @return new instance of {@link ExpMovingAvg}.
+		 * @since 3.3
+		 */
+		public ExpMovingAvgBuilder expMovingAvg() {
+
+			ExpMovingAvg expMovingAvg = usesFieldRef() ? ExpMovingAvg.expMovingAvgOf(fieldReference)
+					: ExpMovingAvg.expMovingAvgOf(expression);
+			return new ExpMovingAvgBuilder() {
+
+				@Override
+				public ExpMovingAvg historicalDocuments(int numberOfHistoricalDocuments) {
+					return expMovingAvg.n(numberOfHistoricalDocuments);
+				}
+
+				@Override
+				public ExpMovingAvg alpha(double exponentialDecayValue) {
+					return expMovingAvg.alpha(exponentialDecayValue);
+				}
+			};
+		}
+
 		private boolean usesFieldRef() {
 			return fieldReference != null;
 		}
+	}
+
+	/**
+	 * Builder for {@link ExpMovingAvg}.
+	 *
+	 * @since 3.3
+	 */
+	public interface ExpMovingAvgBuilder {
+
+		/**
+		 * Define the number of historical documents with significant mathematical weight.
+		 *
+		 * @param numberOfHistoricalDocuments
+		 * @return new instance of {@link ExpMovingAvg}.
+		 */
+		ExpMovingAvg historicalDocuments(int numberOfHistoricalDocuments);
+
+		/**
+		 * Define the exponential decay value.
+		 *
+		 * @param exponentialDecayValue
+		 * @return new instance of {@link ExpMovingAvg}.
+		 */
+		ExpMovingAvg alpha(double exponentialDecayValue);
+
 	}
 
 	/**
@@ -833,6 +883,67 @@ public class AccumulatorOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$covarianceSamp";
+		}
+	}
+
+	/**
+	 * {@link ExpMovingAvg} calculates the exponential moving average of numeric values.
+	 *
+	 * @author Christoph Strobl
+	 * @since 3.3
+	 */
+	public static class ExpMovingAvg extends AbstractAggregationExpression {
+
+		private ExpMovingAvg(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Create a new {@link ExpMovingAvg} by defining the field holding the value to be used as input.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link ExpMovingAvg}.
+		 */
+		public static ExpMovingAvg expMovingAvgOf(String fieldReference) {
+			return new ExpMovingAvg(Collections.singletonMap("input", Fields.field(fieldReference)));
+		}
+
+		/**
+		 * Create a new {@link ExpMovingAvg} by defining the {@link AggregationExpression expression} to compute the value
+		 * to be used as input.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link ExpMovingAvg}.
+		 */
+		public static ExpMovingAvg expMovingAvgOf(AggregationExpression expression) {
+			return new ExpMovingAvg(Collections.singletonMap("input", expression));
+		}
+
+		/**
+		 * Define the number of historical documents with significant mathematical weight. <br />
+		 * Specify either {@link #n(int) N} or {@link #alpha(double) aplha}. Not both!
+		 *
+		 * @param numberOfHistoricalDocuments
+		 * @return new instance of {@link ExpMovingAvg}.
+		 */
+		public ExpMovingAvg n/*umber of historical documents*/(int numberOfHistoricalDocuments) {
+			return new ExpMovingAvg(append("N", numberOfHistoricalDocuments));
+		}
+
+		/**
+		 * Define the exponential decay value. <br />
+		 * Specify either {@link #alpha(double) aplha} or {@link #n(int) N}. Not both!
+		 *
+		 * @param exponentialDecayValue
+		 * @return new instance of {@link ExpMovingAvg}.
+		 */
+		public ExpMovingAvg alpha(double exponentialDecayValue) {
+			return new ExpMovingAvg(append("alpha", exponentialDecayValue));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$expMovingAvg";
 		}
 	}
 }

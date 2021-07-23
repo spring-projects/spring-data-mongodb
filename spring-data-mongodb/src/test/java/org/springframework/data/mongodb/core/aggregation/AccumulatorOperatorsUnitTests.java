@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.*;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -46,7 +47,7 @@ class AccumulatorOperatorsUnitTests {
 
 		assertThat(AccumulatorOperators.valueOf(Year.yearOf("birthdate")).covariancePop("midichlorianCount")
 				.toDocument(TestAggregationContext.contextFor(Jedi.class)))
-				.isEqualTo(new Document("$covariancePop", Arrays.asList(new Document("$year", "$birthdate"), "$force")));
+						.isEqualTo(new Document("$covariancePop", Arrays.asList(new Document("$year", "$birthdate"), "$force")));
 	}
 
 	@Test // GH-3712
@@ -54,7 +55,7 @@ class AccumulatorOperatorsUnitTests {
 
 		assertThat(AccumulatorOperators.valueOf("balance").covarianceSamp("midichlorianCount")
 				.toDocument(TestAggregationContext.contextFor(Jedi.class)))
-				.isEqualTo(new Document("$covarianceSamp", Arrays.asList("$balance", "$force")));
+						.isEqualTo(new Document("$covarianceSamp", Arrays.asList("$balance", "$force")));
 	}
 
 	@Test // GH-3712
@@ -62,7 +63,21 @@ class AccumulatorOperatorsUnitTests {
 
 		assertThat(AccumulatorOperators.valueOf(Year.yearOf("birthdate")).covarianceSamp("midichlorianCount")
 				.toDocument(TestAggregationContext.contextFor(Jedi.class)))
-				.isEqualTo(new Document("$covarianceSamp", Arrays.asList(new Document("$year", "$birthdate"), "$force")));
+						.isEqualTo(new Document("$covarianceSamp", Arrays.asList(new Document("$year", "$birthdate"), "$force")));
+	}
+
+	@Test // GH-3718
+	void rendersExpMovingAvgWithNumberOfHistoricDocuments() {
+
+		assertThat(valueOf("price").expMovingAvg().historicalDocuments(2).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $expMovingAvg: { input: \"$price\", N: 2 } }"));
+	}
+
+	@Test // GH-3718
+	void rendersExpMovingAvgWithAlpha() {
+
+		assertThat(valueOf("price").expMovingAvg().alpha(0.75).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $expMovingAvg: { input: \"$price\", alpha: 0.75 } }"));
 	}
 
 	static class Jedi {
@@ -71,8 +86,7 @@ class AccumulatorOperatorsUnitTests {
 
 		Date birthdate;
 
-		@Field("force")
-		Integer midichlorianCount;
+		@Field("force") Integer midichlorianCount;
 
 		Integer balance;
 	}
