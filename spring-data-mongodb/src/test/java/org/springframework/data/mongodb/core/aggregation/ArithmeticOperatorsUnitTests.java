@@ -59,4 +59,14 @@ public class ArithmeticOperatorsUnitTests {
 				.toDocument(Aggregation.DEFAULT_CONTEXT))
 						.isEqualTo(new Document("$round", Arrays.asList("$field", new Document("$first", "$source"))));
 	}
+
+	@Test // GH-3721
+	void rendersIntegral() {
+		assertThat(valueOf("kilowatts").integral().toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo(Document.parse("{ $integral : { input : \"$kilowatts\" } }"));
+	}
+
+	@Test // GH-3721
+	void rendersIntegralWithUnit() {
+		assertThat(valueOf("kilowatts").integral("hour").toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo(Document.parse("{ $integral : { input : \"$kilowatts\", unit : \"hour\" } }"));
+	}
 }

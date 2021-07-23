@@ -946,6 +946,16 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(transform("round(field, 2)")).isEqualTo(Document.parse("{ \"$round\" : [\"$field\", 2]}"));
 	}
 
+	@Test // GH-3721
+	public void shouldIntegral() {
+		assertThat(transform("integral(field)")).isEqualTo(Document.parse("{ \"$integral\" : { \"input\" : \"$field\" }}"));
+	}
+
+	@Test // GH-3721
+	public void shouldIntegralWithUnit() {
+		assertThat(transform("integral(field, 'hour')")).isEqualTo(Document.parse("{ \"$integral\" : { \"input\" : \"$field\", \"unit\" : \"hour\" }}"));
+	}
+
 	private Object transform(String expression, Object... params) {
 		Object result = transformer.transform(expression, Aggregation.DEFAULT_CONTEXT, params);
 		return result == null ? null : (!(result instanceof org.bson.Document) ? result.toString() : result);

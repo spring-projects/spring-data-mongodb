@@ -209,6 +209,27 @@ public class ArithmeticOperators {
 		}
 
 		/**
+		 * Creates new {@link AggregationExpression} that calculates the approximation for the mathematical integral value.
+		 *
+		 * @return new instance of {@link Integral}.
+		 * @since 3.3
+		 */
+		public Integral integral() {
+			return usesFieldRef() ? Integral.integralOf(fieldReference) : Integral.integralOf(expression);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the approximation for the mathematical integral value.
+		 *
+		 * @param unit the unit of measure.
+		 * @return new instance of {@link Integral}.
+		 * @since 3.3
+		 */
+		public Integral integral(String unit) {
+			return integral().unit(unit);
+		}
+
+		/**
 		 * Creates new {@link AggregationExpression} that calculates the natural logarithm ln (i.e loge) of the assoicated
 		 * number.
 		 *
@@ -1663,6 +1684,54 @@ public class ArithmeticOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$round";
+		}
+	}
+
+	/**
+	 * Value object to represent an {@link AggregationExpression expression} that calculates the approximation for the mathematical integral value.
+	 *
+	 * @author Christoph Strobl
+	 * @since 3.3
+	 */
+	public static class Integral extends AbstractAggregationExpression {
+
+		private Integral(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Create a new instance of {@link Integral} for the value stored at the given field holding a numeric value.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link Integral}.
+		 */
+		public static Integral integralOf(String fieldReference) {
+			return new Integral(Collections.singletonMap("input", Fields.field(fieldReference)));
+		}
+
+		/**
+		 * Create a new instance of {@link Integral} for the value provided by the given expression that resolves to a numeric value.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Integral}.
+		 */
+		public static Integral integralOf(AggregationExpression expression) {
+			return new Integral(Collections.singletonMap("input", expression));
+		}
+
+		/**
+		 * Set the unit of measure.
+		 *
+		 * @param unit the unit of measure.
+		 * @return new instance of {@link Integral}.
+		 */
+		public Integral unit(String unit) {
+			return new Integral(append("unit", unit));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$integral";
 		}
 	}
 }
