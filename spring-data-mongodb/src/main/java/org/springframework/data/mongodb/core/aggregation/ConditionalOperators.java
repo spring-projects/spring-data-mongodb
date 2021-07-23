@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -282,17 +283,27 @@ public class ConditionalOperators {
 
 			List<Object> list = new ArrayList<Object>();
 
-			if (condition instanceof Field) {
-				list.add(context.getReference((Field) condition).toString());
-			} else if (condition instanceof AggregationExpression) {
-				list.add(((AggregationExpression) condition).toDocument(context));
+			if(condition instanceof Collection) {
+				for(Object val : ((Collection)this.condition)) {
+					list.add(mapCondition(val, context));
+				}
 			} else {
-				list.add(condition);
+				list.add(mapCondition(condition, context));
 			}
 
 			list.add(resolve(value, context));
-
 			return new Document("$ifNull", list);
+		}
+
+		private Object mapCondition(Object condition, AggregationOperationContext context) {
+
+			if (condition instanceof Field) {
+				return context.getReference((Field) condition).toString();
+			} else if (condition instanceof AggregationExpression) {
+				return ((AggregationExpression) condition).toDocument(context);
+			} else {
+				return condition;
+			}
 		}
 
 		private Object resolve(Object value, AggregationOperationContext context) {
@@ -323,15 +334,34 @@ public class ConditionalOperators {
 			/**
 			 * @param expression the expression to check for a {@literal null} value, field name must not be {@literal null}
 			 * or empty.
-			 * @return the {@link ThenBuilder}
+			 * @return the {@link ThenBuilder}.
 			 */
 			ThenBuilder ifNull(AggregationExpression expression);
 		}
 
 		/**
+		 * @author Christoph Strobl
+		 * @since 3.3
+		 */
+		public interface OrBuilder {
+
+			/**
+			 * @param fieldReference the field to check for a {@literal null} value, field reference must not be {@literal null}.
+			 * @return the {@link ThenBuilder}
+			 */
+			ThenBuilder orIfNull(String fieldReference);
+
+			/**
+			 * @param expression the expression to check for a {@literal null} value,
+			 * @return the {@link ThenBuilder}.
+			 */
+			ThenBuilder orIfNull(AggregationExpression expression);
+		}
+
+		/**
 		 * @author Mark Paluch
 		 */
-		public interface ThenBuilder {
+		public interface ThenBuilder extends OrBuilder {
 
 			/**
 			 * @param value the value to be used if the {@code $ifNull} condition evaluates {@literal true}. Can be a
@@ -361,9 +391,10 @@ public class ConditionalOperators {
 		 */
 		static final class IfNullOperatorBuilder implements IfNullBuilder, ThenBuilder {
 
-			private @Nullable Object condition;
+			private @Nullable List<Object> conditions;
 
 			private IfNullOperatorBuilder() {
+				conditions = new ArrayList<>();
 			}
 
 			/**
@@ -381,7 +412,7 @@ public class ConditionalOperators {
 			public ThenBuilder ifNull(String fieldReference) {
 
 				Assert.hasText(fieldReference, "FieldReference name must not be null or empty!");
-				this.condition = Fields.field(fieldReference);
+				this.conditions.add(Fields.field(fieldReference));
 				return this;
 			}
 
@@ -392,15 +423,25 @@ public class ConditionalOperators {
 			public ThenBuilder ifNull(AggregationExpression expression) {
 
 				Assert.notNull(expression, "AggregationExpression name must not be null or empty!");
-				this.condition = expression;
+				this.conditions.add(expression);
 				return this;
+			}
+
+			@Override
+			public ThenBuilder orIfNull(String fieldReference) {
+				return ifNull(fieldReference);
+			}
+
+			@Override
+			public ThenBuilder orIfNull(AggregationExpression expression) {
+				return ifNull(expression);
 			}
 
 			/* (non-Javadoc)
 			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.IfNull.ThenBuilder#then(java.lang.Object)
 			 */
 			public IfNull then(Object value) {
-				return new IfNull(condition, value);
+				return new IfNull(conditions, value);
 			}
 
 			/* (non-Javadoc)
@@ -409,7 +450,7 @@ public class ConditionalOperators {
 			public IfNull thenValueOf(String fieldReference) {
 
 				Assert.notNull(fieldReference, "FieldReference must not be null!");
-				return new IfNull(condition, Fields.field(fieldReference));
+				return new IfNull(conditions, Fields.field(fieldReference));
 			}
 
 			/* (non-Javadoc)
@@ -418,7 +459,7 @@ public class ConditionalOperators {
 			public IfNull thenValueOf(AggregationExpression expression) {
 
 				Assert.notNull(expression, "Expression must not be null!");
-				return new IfNull(condition, expression);
+				return new IfNull(conditions, expression);
 			}
 		}
 	}
