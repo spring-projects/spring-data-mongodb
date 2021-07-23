@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import java.util.Collections;
+
 import org.bson.Document;
 
 /**
@@ -46,6 +48,26 @@ public class DocumentOperators {
 	}
 
 	/**
+	 * Take the field referenced by given {@literal fieldReference}.
+	 *
+	 * @param fieldReference must not be {@literal null}.
+	 * @return new instance of {@link DocumentOperatorsFactory}.
+	 */
+	public static DocumentOperatorsFactory valueOf(String fieldReference) {
+		return new DocumentOperatorsFactory(fieldReference);
+	}
+
+	/**
+	 * Take the value resulting from the given {@link AggregationExpression}.
+	 *
+	 * @param expression must not be {@literal null}.
+	 * @return new instance of {@link DocumentOperatorsFactory}.
+	 */
+	public static DocumentOperatorsFactory valueOf(AggregationExpression expression) {
+		return new DocumentOperatorsFactory(expression);
+	}
+
+	/**
 	 * Obtain the current document position.
 	 *
 	 * @return new instance of {@link DocumentNumber}.
@@ -53,6 +75,35 @@ public class DocumentOperators {
 	 */
 	public static DocumentNumber documentNumber() {
 		return new DocumentNumber();
+	}
+
+	/**
+	 * @author Christoph Strobl
+	 */
+	public static class DocumentOperatorsFactory {
+
+		private Object target;
+
+		public DocumentOperatorsFactory(Object target) {
+			this.target = target;
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that applies the expression to a document at specified position
+		 * relative to the current document.
+		 *
+		 * @param by the value to add to the current position.
+		 * @return new instance of {@link Shift}.
+		 */
+		public Shift shift(int by) {
+
+			Shift shift = usesExpression() ? Shift.shift((AggregationExpression) target) : Shift.shift(target.toString());
+			return shift.by(by);
+		}
+
+		private boolean usesExpression() {
+			return target instanceof AggregationExpression;
+		}
 	}
 
 	/**
@@ -72,8 +123,8 @@ public class DocumentOperators {
 
 	/**
 	 * {@link DenseRank} resolves the current document position (the rank) relative to other documents. If multiple
-	 * documents occupy the same rank, {@literal $denseRank} places the document with the subsequent value at the next rank without
-	 * any gaps.
+	 * documents occupy the same rank, {@literal $denseRank} places the document with the subsequent value at the next
+	 * rank without any gaps.
 	 *
 	 * @author Christoph Strobl
 	 * @since 3.3
@@ -97,6 +148,75 @@ public class DocumentOperators {
 		@Override
 		public Document toDocument(AggregationOperationContext context) {
 			return new Document("$documentNumber", new Document());
+		}
+	}
+
+	/**
+	 * Shift applies an expression to a document in a specified position relative to the current document.
+	 *
+	 * @author Christoph Strobl
+	 * @since 3.3
+	 */
+	public static class Shift extends AbstractAggregationExpression {
+
+		private Shift(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Specifies the field to evaluate and return.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link Shift}.
+		 */
+		public static Shift shift(String fieldReference) {
+			return new Shift(Collections.singletonMap("output", Fields.field(fieldReference)));
+		}
+
+		/**
+		 * Specifies the {@link AggregationExpression expression} to evaluate and return.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Shift}.
+		 */
+		public static Shift shift(AggregationExpression expression) {
+			return new Shift(Collections.singletonMap("output", expression));
+		}
+
+		/**
+		 * Shift the document position relative to the current. Use a positive value for follow up documents (eg. 1 for the
+		 * next) or a negative value for the predecessor documents (eg. -1 for the previous).
+		 *
+		 * @param shiftBy value to add to the current position.
+		 * @return new instance of {@link Shift}.
+		 */
+		public Shift by(int shiftBy) {
+			return new Shift(append("by", shiftBy));
+		}
+
+		/**
+		 * Define the default value if the target document is out of range.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return new instance of {@link Shift}.
+		 */
+		public Shift defaultTo(Object value) {
+			return new Shift(append("default", value));
+		}
+
+		/**
+		 * Define the {@link AggregationExpression expression} to evaluate if the target document is out of range.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Shift}.
+		 */
+		public Shift defaultToValueOf(AggregationExpression expression) {
+			return defaultTo(expression);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$shift";
 		}
 	}
 }

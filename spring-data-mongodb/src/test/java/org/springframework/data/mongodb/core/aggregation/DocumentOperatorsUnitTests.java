@@ -39,6 +39,21 @@ class DocumentOperatorsUnitTests {
 
 	@Test // GH-3717
 	void rendersDocumentNumber() {
-		assertThat(documentNumber().toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo(new Document("$documentNumber", new Document()));
+		assertThat(documentNumber().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(new Document("$documentNumber", new Document()));
+	}
+
+	@Test // GH-3727
+	void rendersShift() {
+
+		assertThat(valueOf("quantity").shift(1).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $shift: { output: \"$quantity\", by: 1 } }"));
+	}
+
+	@Test // GH-3727
+	void rendersShiftWithDefault() {
+
+		assertThat(valueOf("quantity").shift(1).defaultTo("Not available").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $shift: { output: \"$quantity\", by: 1, default: \"Not available\" } }"));
 	}
 }
