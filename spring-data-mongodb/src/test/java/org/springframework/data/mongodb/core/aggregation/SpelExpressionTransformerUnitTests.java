@@ -961,6 +961,20 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(transform("documentNumber()")).isEqualTo(Document.parse("{ $documentNumber : {} }"));
 	}
 
+	@Test // GH-3727
+	void rendersShift() {
+
+		assertThat(transform("shift(quantity, 1)"))
+				.isEqualTo(Document.parse("{ $shift: { output: \"$quantity\", by: 1 } }"));
+	}
+
+	@Test // GH-3727
+	void rendersShiftWithDefault() {
+
+		assertThat(transform("shift(quantity, 1, 'Not available')"))
+				.isEqualTo(Document.parse("{ $shift: { output: \"$quantity\", by: 1, default: \"Not available\" } }"));
+	}
+
 	private Object transform(String expression, Object... params) {
 		Object result = transformer.transform(expression, Aggregation.DEFAULT_CONTEXT, params);
 		return result == null ? null : (!(result instanceof org.bson.Document) ? result.toString() : result);
