@@ -47,6 +47,19 @@ public class DateOperators {
 	}
 
 	/**
+	 * Take the date referenced by given {@literal fieldReference}.
+	 *
+	 * @param fieldReference must not be {@literal null}.
+	 * @return new instance of {@link DateOperatorFactory}.
+	 * @since 3.3
+	 */
+	public static DateOperatorFactory zonedDateOf(String fieldReference, Timezone timezone) {
+
+		Assert.notNull(fieldReference, "FieldReference must not be null!");
+		return new DateOperatorFactory(fieldReference).withTimezone(timezone);
+	}
+
+	/**
 	 * Take the date resulting from the given {@link AggregationExpression}.
 	 *
 	 * @param expression must not be {@literal null}.
@@ -56,6 +69,19 @@ public class DateOperators {
 
 		Assert.notNull(expression, "Expression must not be null!");
 		return new DateOperatorFactory(expression);
+	}
+
+	/**
+	 * Take the date resulting from the given {@link AggregationExpression}.
+	 *
+	 * @param expression must not be {@literal null}.
+	 * @return new instance of {@link DateOperatorFactory}.
+	 * @since 3.3
+	 */
+	public static DateOperatorFactory zonedDateOf(AggregationExpression expression, Timezone timezone) {
+
+		Assert.notNull(expression, "Expression must not be null!");
+		return new DateOperatorFactory(expression).withTimezone(timezone);
 	}
 
 	/**
