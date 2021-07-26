@@ -35,8 +35,8 @@ class DateOperatorsUnitTests {
 
 	@Test // GH-3713
 	void rendersDateAddWithTimezone() {
-		
-		assertThat(DateOperators.dateOf("purchaseDate").withTimezone(Timezone.valueOf("America/Chicago")).add(3, "day")
+
+		assertThat(DateOperators.zonedDateOf("purchaseDate", Timezone.valueOf("America/Chicago")).add(3, "day")
 				.toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo(Document.parse(
 						"{ $dateAdd: { startDate: \"$purchaseDate\", unit: \"day\", amount: 3, timezone : \"America/Chicago\" } }"));
 	}
@@ -53,7 +53,7 @@ class DateOperatorsUnitTests {
 	@Test // GH-3713
 	void rendersDateDiffWithTimezone() {
 
-		assertThat(DateOperators.dateOf("purchaseDate").withTimezone(Timezone.valueOf("America/Chicago"))
+		assertThat(DateOperators.zonedDateOf("purchaseDate", Timezone.valueOf("America/Chicago"))
 				.diffValueOf("delivered", "day").toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo(Document.parse(
 						"{ $dateDiff: { startDate: \"$purchaseDate\", endDate: \"$delivered\", unit: \"day\", timezone : \"America/Chicago\" } }"));
 	}
