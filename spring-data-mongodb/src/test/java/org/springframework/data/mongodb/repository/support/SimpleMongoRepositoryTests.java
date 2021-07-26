@@ -30,10 +30,11 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.ExampleMatcher.*;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
@@ -172,6 +173,19 @@ class SimpleMongoRepositoryTests {
 		trimDomainType(sample, "id", "createdAt", "email");
 
 		Page<Person> result = repository.findAll(Example.of(sample), PageRequest.of(0, 10));
+
+		assertThat(result.getContent()).hasSize(2).contains(dave, oliver);
+		assertThat(result.getTotalPages()).isEqualTo(1);
+	}
+
+	@Test // GH-3751
+	void findByExampleShouldReturnUnpagedResults() {
+
+		Person sample = new Person();
+		sample.setLastname("Matthews");
+		trimDomainType(sample, "id", "createdAt", "email");
+
+		Page<Person> result = repository.findAll(Example.of(sample), Pageable.unpaged());
 
 		assertThat(result.getContent()).hasSize(2).contains(dave, oliver);
 		assertThat(result.getTotalPages()).isEqualTo(1);
