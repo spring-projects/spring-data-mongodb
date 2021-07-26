@@ -27,6 +27,8 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.dao.PermissionDeniedDataAccessException;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
@@ -120,6 +122,20 @@ public class QuerydslMongoPredicateExecutorIntegrationTests {
 		assertThat(repository.findAll(
 				person.lastname.startsWith(oliver.getLastname()).and(person.firstname.startsWith(dave.getFirstname()))))
 						.containsExactly(dave);
+	}
+
+	@Test // GH-3751
+	public void findPage() {
+
+		assertThat(repository
+				.findAll(person.lastname.startsWith(oliver.getLastname()).and(person.firstname.startsWith(dave.getFirstname())),
+						PageRequest.of(0, 10))
+				.getContent()).containsExactly(dave);
+
+		assertThat(repository
+				.findAll(person.lastname.startsWith(oliver.getLastname()).and(person.firstname.startsWith(dave.getFirstname())),
+						Pageable.unpaged())
+				.getContent()).containsExactly(dave);
 	}
 
 	@Test // DATAMONGO-362, DATAMONGO-1848

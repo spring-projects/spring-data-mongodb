@@ -212,6 +212,10 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 	 */
 	private SpringDataMongodbQuery<T> applyPagination(SpringDataMongodbQuery<T> query, Pageable pageable) {
 
+		if (pageable.isUnpaged()) {
+			return query;
+		}
+
 		query = query.offset(pageable.getOffset()).limit(pageable.getPageSize());
 		return applySorting(query, pageable.getSort());
 	}
