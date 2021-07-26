@@ -1039,6 +1039,12 @@ public class SpelExpressionTransformerUnitTests {
 	}
 
 	private Object transformValue(String expression, Object... params) {
+	@Test // GH-3713
+	void shouldRenderDateAdd() {
+		assertThat(transform("dateAdd(purchaseDate, 'day', 3)")).isEqualTo(Document.parse("{ $dateAdd: { startDate: \"$purchaseDate\", unit: \"day\", amount: 3 } }"));
+	}
+
+	private Object transform(String expression, Object... params) {
 		Object result = transformer.transform(expression, Aggregation.DEFAULT_CONTEXT, params);
 		return result == null ? null : (!(result instanceof org.bson.Document) ? result.toString() : result);
 	}

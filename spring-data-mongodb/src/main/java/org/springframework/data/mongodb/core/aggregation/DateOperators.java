@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -156,7 +157,7 @@ public class DateOperators {
 		 * representing an Olson Timezone Identifier or UTC Offset.
 		 *
 		 * @param value the plain timezone {@link String}, a {@link Field} holding the timezone or an
-		 *          {@link AggregationExpression} resulting in the timezone.
+		 * {@link AggregationExpression} resulting in the timezone.
 		 * @return new instance of {@link Timezone}.
 		 */
 		public static Timezone valueOf(Object value) {
@@ -272,6 +273,41 @@ public class DateOperators {
 
 			Assert.notNull(timezone, "Timezone must not be null!");
 			return new DateOperatorFactory(fieldReference, expression, dateValue, timezone);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that adds the value of the given {@link AggregationExpression
+		 * expression} (in {@literal units). @param expression must not be {@literal null}.
+		 * 
+		 * @param unit the unit of measure. Must not be {@literal null}.
+		 * @return new instance of {@link DateAdd}.
+		 * @since 3.3
+		 */
+		public DateAdd addValueOf(AggregationExpression expression, String unit) {
+			return applyTimezone(DateAdd.addValueOf(expression, unit).toDate(dateReference()), timezone);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that adds the value stored at the given {@literal field} (in
+		 * {@literal units). @param fieldReference must not be {@literal null}.
+		 * 
+		 * @param unit the unit of measure. Must not be {@literal null}.
+		 * @return new instance of {@link DateAdd}.
+		 * @since 3.3
+		 */
+		public DateAdd addValueOf(String fieldReference, String unit) {
+			return applyTimezone(DateAdd.addValueOf(fieldReference, unit).toDate(dateReference()), timezone);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that adds the given value (in {@literal units). @param value must not
+		 * be {@literal null}. @param unit the unit of measure. Must not be {@literal null}.
+		 * 
+		 * @return
+		 * @since 3.3 new instance of {@link DateAdd}.
+		 */
+		public DateAdd add(Object value, String unit) {
+			return applyTimezone(DateAdd.addValue(value, unit).toDate(dateReference()), timezone);
 		}
 
 		/**
@@ -1480,7 +1516,6 @@ public class DateOperators {
 				} else {
 					clone.put("timezone", ((Timezone) value).value);
 				}
-
 			} else {
 				clone.put(key, value);
 			}
@@ -1911,7 +1946,7 @@ public class DateOperators {
 	 * @author Matt Morrissette
 	 * @author Christoph Strobl
 	 * @see <a href=
-	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromParts/">https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromParts/</a>
+	 * "https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromParts/">https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromParts/</a>
 	 * @since 2.1
 	 */
 	public static class DateFromParts extends TimezonedDateAggregationExpression implements DateParts<DateFromParts> {
@@ -2086,7 +2121,7 @@ public class DateOperators {
 	 * @author Matt Morrissette
 	 * @author Christoph Strobl
 	 * @see <a href=
-	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromParts/">https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromParts/</a>
+	 * "https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromParts/">https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromParts/</a>
 	 * @since 2.1
 	 */
 	public static class IsoDateFromParts extends TimezonedDateAggregationExpression
@@ -2262,7 +2297,7 @@ public class DateOperators {
 	 * @author Matt Morrissette
 	 * @author Christoph Strobl
 	 * @see <a href=
-	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/dateToParts/">https://docs.mongodb.com/manual/reference/operator/aggregation/dateToParts/</a>
+	 * "https://docs.mongodb.com/manual/reference/operator/aggregation/dateToParts/">https://docs.mongodb.com/manual/reference/operator/aggregation/dateToParts/</a>
 	 * @since 2.1
 	 */
 	public static class DateToParts extends TimezonedDateAggregationExpression {
@@ -2343,7 +2378,7 @@ public class DateOperators {
 	 * @author Matt Morrissette
 	 * @author Christoph Strobl
 	 * @see <a href=
-	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromString/">https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromString/</a>
+	 * "https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromString/">https://docs.mongodb.com/manual/reference/operator/aggregation/dateFromString/</a>
 	 * @since 2.1
 	 */
 	public static class DateFromString extends TimezonedDateAggregationExpression {
@@ -2415,6 +2450,103 @@ public class DateOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$dateFromString";
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $dateAdd}.<br />
+	 * <strong>NOTE:</strong> Requires MongoDB 5.0 or later.
+	 *
+	 * @author Christoph Strobl
+	 * @since 3.3
+	 */
+	public static class DateAdd extends TimezonedDateAggregationExpression {
+
+		private DateAdd(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Add the number of {@literal units} of the result of the given {@link AggregationExpression expression} to a
+		 * {@link #toDate(Object) start date}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @param unit must not be {@literal null}.
+		 * @return new instance of {@link DateAdd}.
+		 */
+		public static DateAdd addValueOf(AggregationExpression expression, String unit) {
+			return addValue(expression, unit);
+		}
+
+		/**
+		 * Add the number of {@literal units} from a {@literal field} to a {@link #toDate(Object) start date}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @param unit must not be {@literal null}.
+		 * @return new instance of {@link DateAdd}.
+		 */
+		public static DateAdd addValueOf(String fieldReference, String unit) {
+			return addValue(Fields.field(fieldReference), unit);
+		}
+
+		/**
+		 * Add the number of {@literal units} to a {@link #toDate(Object) start date}.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @param unit must not be {@literal null}.
+		 * @return new instance of {@link DateAdd}.
+		 */
+		public static DateAdd addValue(Object value, String unit) {
+
+			Map<String, Object> args = new HashMap<>();
+			args.put("unit", unit);
+			args.put("amount", value);
+			return new DateAdd(args);
+		}
+
+		/**
+		 * Define the start date, in UTC, for the addition operation.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link DateAdd}.
+		 */
+		public DateAdd toDateOf(AggregationExpression expression) {
+			return toDate(expression);
+		}
+
+		/**
+		 * Define the start date, in UTC, for the addition operation.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link DateAdd}.
+		 */
+		public DateAdd toDateOf(String fieldReference) {
+			return toDate(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Define the start date, in UTC, for the addition operation.
+		 *
+		 * @param dateExpression anything that evaluates to a valid date. Must not be {@literal null}.
+		 * @return new instance of {@link DateAdd}.
+		 */
+		public DateAdd toDate(Object dateExpression) {
+			return new DateAdd(append("startDate", dateExpression));
+		}
+
+		/**
+		 * Optionally set the {@link Timezone} to use. If not specified {@literal UTC} is used.
+		 *
+		 * @param timezone must not be {@literal null}. Consider {@link Timezone#none()} instead.
+		 * @return new instance of {@link DateAdd}.
+		 */
+		public DateAdd withTimezone(Timezone timezone) {
+			return new DateAdd(appendTimezone(argumentMap(), timezone));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$dateAdd";
 		}
 	}
 
