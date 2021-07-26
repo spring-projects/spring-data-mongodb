@@ -16,20 +16,15 @@
 package org.springframework.data.mongodb.test.util;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.auditing.IsNewAwareAuditingHandler;
-import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
@@ -115,16 +110,7 @@ public class MongoTestTemplateConfiguration {
 	MongoMappingContext mappingContext() {
 
 		if (mappingContext == null) {
-
-			mappingContext = new MongoMappingContext();
-			mappingContext.setInitialEntitySet(mappingContextConfigurer.initialEntitySet());
-			mappingContext.setAutoIndexCreation(mappingContextConfigurer.autocreateIndex);
-			if(mongoConverterConfigurer.customConversions != null) {
-				mappingContext.setSimpleTypeHolder(mongoConverterConfigurer.customConversions.getSimpleTypeHolder());
-			} else {
-				mappingContext.setSimpleTypeHolder(new MongoCustomConversions(Collections.emptyList()).getSimpleTypeHolder());
-			}
-			mappingContext.afterPropertiesSet();
+			mappingContext = new MongoTestMappingContext(mappingContextConfigurer).customConversions(mongoConverterConfigurer).init();
 		}
 
 		return mappingContext;
@@ -219,41 +205,6 @@ public class MongoTestTemplateConfiguration {
 
 		public void defaultDb(String defaultDatabase) {
 			this.defaultDatabase = defaultDatabase;
-		}
-	}
-
-	public static class MongoConverterConfigurer {
-
-		CustomConversions customConversions;
-
-		public void customConversions(CustomConversions customConversions) {
-			this.customConversions = customConversions;
-		}
-
-		public void customConverters(Converter<?, ?>... converters) {
-			customConversions(new MongoCustomConversions(Arrays.asList(converters)));
-		}
-	}
-
-	public static class MappingContextConfigurer {
-
-		Set<Class<?>> intitalEntitySet;
-		boolean autocreateIndex = false;
-
-		public void autocreateIndex(boolean autocreateIndex) {
-			this.autocreateIndex = autocreateIndex;
-		}
-
-		public void intitalEntitySet(Set<Class<?>> intitalEntitySet) {
-			this.intitalEntitySet = intitalEntitySet;
-		}
-
-		public void intitalEntitySet(Class<?>... initialEntitySet) {
-			this.intitalEntitySet = new HashSet<>(Arrays.asList(initialEntitySet));
-		}
-
-		Set<Class<?>> initialEntitySet() {
-			return intitalEntitySet != null ? intitalEntitySet : Collections.emptySet();
 		}
 	}
 

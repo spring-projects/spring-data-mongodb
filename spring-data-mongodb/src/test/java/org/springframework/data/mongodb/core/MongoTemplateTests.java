@@ -138,7 +138,7 @@ public class MongoTemplateTests {
 
 		cfg.configureMappingContext(it -> {
 			it.autocreateIndex(false);
-			it.intitalEntitySet(AuditablePerson.class);
+			it.initialEntitySet(AuditablePerson.class);
 
 		});
 
