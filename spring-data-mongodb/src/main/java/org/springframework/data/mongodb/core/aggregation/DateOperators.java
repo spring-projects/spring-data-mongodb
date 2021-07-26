@@ -341,6 +341,42 @@ public class DateOperators {
 		}
 
 		/**
+		 * Creates new {@link AggregationExpression} that calculates the difference (in {@literal units) to the date
+		 * computed by the given {@link AggregationExpression expression}. @param expression must not be {@literal null}.
+		 * 
+		 * @param unit the unit of measure. Must not be {@literal null}.
+		 * @return new instance of {@link DateAdd}.
+		 * @since 3.3
+		 */
+		public DateDiff diffValueOf(AggregationExpression expression, String unit) {
+			return applyTimezone(DateDiff.diffValueOf(expression, unit).toDate(dateReference()), timezone);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the difference (in {@literal units) to the date stored
+		 * at the given {@literal field}. @param expression must not be {@literal null}.
+		 * 
+		 * @param unit the unit of measure. Must not be {@literal null}.
+		 * @return new instance of {@link DateAdd}.
+		 * @since 3.3
+		 */
+		public DateDiff diffValueOf(String fieldReference, String unit) {
+			return applyTimezone(DateDiff.diffValueOf(fieldReference, unit).toDate(dateReference()), timezone);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the difference (in {@literal units) to the date given
+		 * {@literal value}. @param value anything the resolves to a valid date. Must not be {@literal null}.
+		 * 
+		 * @param unit the unit of measure. Must not be {@literal null}.
+		 * @return new instance of {@link DateAdd}.
+		 * @since 3.3
+		 */
+		public DateDiff diff(Object value, String unit) {
+			return applyTimezone(DateDiff.diffValue(value, unit).toDate(dateReference()), timezone);
+		}
+
+		/**
 		 * Creates new {@link AggregationExpression} that returns the year portion of a date.
 		 *
 		 * @return new instance of {@link Year}.
@@ -2547,6 +2583,114 @@ public class DateOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$dateAdd";
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $dateDiff}.<br />
+	 * <strong>NOTE:</strong> Requires MongoDB 5.0 or later.
+	 *
+	 * @author Christoph Strobl
+	 * @since 3.3
+	 */
+	public static class DateDiff extends TimezonedDateAggregationExpression {
+
+		private DateDiff(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Add the number of {@literal units} of the result of the given {@link AggregationExpression expression} to a
+		 * {@link #toDate(Object) start date}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @param unit must not be {@literal null}.
+		 * @return new instance of {@link DateAdd}.
+		 */
+		public static DateDiff diffValueOf(AggregationExpression expression, String unit) {
+			return diffValue(expression, unit);
+		}
+
+		/**
+		 * Add the number of {@literal units} from a {@literal field} to a {@link #toDate(Object) start date}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @param unit must not be {@literal null}.
+		 * @return new instance of {@link DateAdd}.
+		 */
+		public static DateDiff diffValueOf(String fieldReference, String unit) {
+			return diffValue(Fields.field(fieldReference), unit);
+		}
+
+		/**
+		 * Add the number of {@literal units} to a {@link #toDate(Object) start date}.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @param unit must not be {@literal null}.
+		 * @return new instance of {@link DateAdd}.
+		 */
+		public static DateDiff diffValue(Object value, String unit) {
+
+			Map<String, Object> args = new HashMap<>();
+			args.put("unit", unit);
+			args.put("endDate", value);
+			return new DateDiff(args);
+		}
+
+		/**
+		 * Define the start date, in UTC, for the addition operation.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link DateAdd}.
+		 */
+		public DateDiff toDateOf(AggregationExpression expression) {
+			return toDate(expression);
+		}
+
+		/**
+		 * Define the start date, in UTC, for the addition operation.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link DateAdd}.
+		 */
+		public DateDiff toDateOf(String fieldReference) {
+			return toDate(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Define the start date, in UTC, for the addition operation.
+		 *
+		 * @param dateExpression anything that evaluates to a valid date. Must not be {@literal null}.
+		 * @return new instance of {@link DateAdd}.
+		 */
+		public DateDiff toDate(Object dateExpression) {
+			return new DateDiff(append("startDate", dateExpression));
+		}
+
+		/**
+		 * Optionally set the {@link Timezone} to use. If not specified {@literal UTC} is used.
+		 *
+		 * @param timezone must not be {@literal null}. Consider {@link Timezone#none()} instead.
+		 * @return new instance of {@link DateAdd}.
+		 */
+		public DateDiff withTimezone(Timezone timezone) {
+			return new DateDiff(appendTimezone(argumentMap(), timezone));
+		}
+
+		/**
+		 * Set the start day of the week if the unit if measure is set to {@literal week}. Uses {@literal Sunday} by
+		 * default.
+		 *
+		 * @param day must not be {@literal null}.
+		 * @return new instance of {@link DateDiff}.
+		 */
+		public DateDiff startOfWeek(Object day) {
+			return new DateDiff(append("startOfWeek", day));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$dateDiff";
 		}
 	}
 

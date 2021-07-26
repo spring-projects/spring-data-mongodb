@@ -1044,6 +1044,11 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(transform("dateAdd(purchaseDate, 'day', 3)")).isEqualTo(Document.parse("{ $dateAdd: { startDate: \"$purchaseDate\", unit: \"day\", amount: 3 } }"));
 	}
 
+	@Test // GH-3713
+	void shouldRenderDateDiff() {
+		assertThat(transform("dateDiff(purchaseDate, delivered, 'day')")).isEqualTo(Document.parse("{ $dateDiff: { startDate: \"$purchaseDate\", endDate: \"$delivered\", unit: \"day\" } }"));
+	}
+
 	private Object transform(String expression, Object... params) {
 		Object result = transformer.transform(expression, Aggregation.DEFAULT_CONTEXT, params);
 		return result == null ? null : (!(result instanceof org.bson.Document) ? result.toString() : result);
