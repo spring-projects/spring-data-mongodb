@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.TimeSeries;
+import org.springframework.data.mongodb.test.util.MongoTestMappingContext;
 
 /**
  * Unit tests for {@link EntityOperations}.
@@ -32,7 +33,7 @@ import org.springframework.data.mongodb.core.mapping.TimeSeries;
  */
 class EntityOperationsUnitTests {
 
-	EntityOperations operations = new EntityOperations(new MongoMappingContext());
+	EntityOperations operations = new EntityOperations(MongoTestMappingContext.newTestContext());
 
 	@Test // GH-3731
 	void shouldReportInvalidTimeField() {

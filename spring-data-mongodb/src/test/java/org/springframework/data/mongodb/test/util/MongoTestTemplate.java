@@ -50,7 +50,7 @@ public class MongoTestTemplate extends MongoTemplate {
 			cfg.configureMappingContext(it -> {
 
 				it.autocreateIndex(false);
-				it.intitalEntitySet(initialEntities);
+				it.initialEntitySet(initialEntities);
 			});
 		});
 	}

@@ -56,7 +56,7 @@ public class ReactiveMongoTestTemplate extends ReactiveMongoTemplate {
 			cfg.configureMappingContext(it -> {
 
 				it.autocreateIndex(false);
-				it.intitalEntitySet(initialEntities);
+				it.initialEntitySet(initialEntities);
 			});
 		});
 	}
