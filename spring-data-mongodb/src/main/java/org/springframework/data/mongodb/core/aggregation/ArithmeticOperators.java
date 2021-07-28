@@ -576,6 +576,51 @@ public class ArithmeticOperators {
 		}
 
 		/**
+		 * Creates new {@link AggregationExpression} that calculates the cosine of a numeric value given in
+		 * {@link AngularDimension#RADIANS radians}.
+		 *
+		 * @return new instance of {@link Sin}.
+		 * @since 3.3
+		 */
+		public Cos cos() {
+			return cos(AngularDimension.RADIANS);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the cosine of a numeric value in the given
+		 * {@link AngularDimension unit}.
+		 *
+		 * @param unit the unit of measure.
+		 * @return new instance of {@link Sin}.
+		 * @since 3.3
+		 */
+		public Cos cos(AngularDimension unit) {
+			return usesFieldRef() ? Cos.cosOf(fieldReference, unit) : Cos.cosOf(expression, unit);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the hyperbolic cosine of a numeric value given in
+		 * {@link AngularDimension#RADIANS radians}.
+		 *
+		 * @return new instance of {@link Sin}.
+		 * @since 3.3
+		 */
+		public Cosh cosh() {
+			return cosh(AngularDimension.RADIANS);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the hyperbolic cosine of a numeric value.
+		 *
+		 * @param unit the unit of measure.
+		 * @return new instance of {@link Sin}.
+		 * @since 3.3
+		 */
+		public Cosh cosh(AngularDimension unit) {
+			return usesFieldRef() ? Cosh.coshOf(fieldReference, unit) : Cosh.coshOf(expression, unit);
+		}
+
+		/**
 		 * Creates new {@link AggregationExpression} that calculates the tangent of a numeric value given in
 		 * {@link AngularDimension#RADIANS radians}.
 		 *
@@ -1954,6 +1999,212 @@ public class ArithmeticOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$sinh";
+		}
+	}
+
+	/**
+	 * An {@link AggregationExpression expression} that calculates the cosine of a value that is measured in radians.
+	 *
+	 * @author Christoph Strobl
+	 * @since 3.3
+	 */
+	public static class Cos extends AbstractAggregationExpression {
+
+		private Cos(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the cosine of a value that is measured in
+		 * {@link AngularDimension#RADIANS radians}.
+		 * <p />
+		 * Use {@code cosOf("angle", DEGREES)} as shortcut for
+		 * 
+		 * <pre>
+		 * { $cos : { $degreesToRadians : "$angle" } }
+		 * </pre>
+		 * 
+		 * .
+		 *
+		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
+		 * @return new instance of {@link Cos}.
+		 */
+		public static Cos cosOf(String fieldReference) {
+			return cosOf(fieldReference, AngularDimension.RADIANS);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the cosine of a value that is measured in the given
+		 * {@link AngularDimension unit}.
+		 *
+		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
+		 * @param unit the unit of measure used by the value of the given field.
+		 * @return new instance of {@link Cos}.
+		 */
+		public static Cos cosOf(String fieldReference, AngularDimension unit) {
+			return cos(Fields.field(fieldReference), unit);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the cosine of a value that is measured in
+		 * {@link AngularDimension#RADIANS}.
+		 *
+		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
+		 * @return new instance of {@link Cos}.
+		 */
+		public static Cos cosOf(AggregationExpression expression) {
+			return cosOf(expression, AngularDimension.RADIANS);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the cosine of a value that is measured in the given
+		 * {@link AngularDimension unit}.
+		 *
+		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
+		 * @param unit the unit of measure used by the value of the given field.
+		 * @return new instance of {@link Cos}.
+		 */
+		public static Cos cosOf(AggregationExpression expression, AngularDimension unit) {
+			return cos(expression, unit);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the cosine of a value that is measured in
+		 * {@link AngularDimension#RADIANS}.
+		 *
+		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
+		 *          numeric value
+		 * @return new instance of {@link Cos}.
+		 */
+		public static Cos cos(Object value) {
+			return cos(value, AngularDimension.RADIANS);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the cosine of a value that is measured in the given
+		 * {@link AngularDimension unit}.
+		 *
+		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
+		 *          numeric value.
+		 * @param unit the unit of measure used by the value of the given field.
+		 * @return new instance of {@link Cos}.
+		 */
+		public static Cos cos(Object value, AngularDimension unit) {
+
+			if (ObjectUtils.nullSafeEquals(AngularDimension.DEGREES, unit)) {
+				return new Cos(ConvertOperators.DegreesToRadians.degreesToRadians(value));
+			}
+			return new Cos(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$cos";
+		}
+	}
+
+	/**
+	 * An {@link AggregationExpression expression} that calculates the hyperbolic cosine of a value that is measured in
+	 * {@link AngularDimension#RADIANS}.
+	 *
+	 * @author Christoph Strobl
+	 * @since 3.3
+	 */
+	public static class Cosh extends AbstractAggregationExpression {
+
+		private Cosh(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic cosine of a value that is measured in
+		 * {@link AngularDimension#RADIANS}.
+		 *
+		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
+		 * @return new instance of {@link Cosh}.
+		 */
+		public static Cosh coshOf(String fieldReference) {
+			return coshOf(fieldReference, AngularDimension.RADIANS);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic cosine of a value that is measured in
+		 * the given {@link AngularDimension unit}.
+		 * <p />
+		 * Use {@code coshOf("angle", DEGREES)} as shortcut for
+		 * 
+		 * <pre>
+		 * { $cosh : { $degreesToRadians : "$angle" } }
+		 * </pre>
+		 * 
+		 * .
+		 *
+		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
+		 * @param unit the unit of measure used by the value of the given field.
+		 * @return new instance of {@link Cosh}.
+		 */
+		public static Cosh coshOf(String fieldReference, AngularDimension unit) {
+			return cosh(Fields.field(fieldReference), unit);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic cosine of a value that is measured in
+		 * {@link AngularDimension#RADIANS}.
+		 * <p />
+		 * Use {@code sinhOf("angle", DEGREES)} as shortcut for eg.
+		 * {@code sinhOf(ConvertOperators.valueOf("angle").degreesToRadians())}.
+		 *
+		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
+		 * @return new instance of {@link Cosh}.
+		 */
+		public static Cosh coshOf(AggregationExpression expression) {
+			return coshOf(expression, AngularDimension.RADIANS);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic cosine of a value that is measured in
+		 * the given {@link AngularDimension unit}.
+		 *
+		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
+		 * @param unit the unit of measure used by the value of the given field.
+		 * @return new instance of {@link Cosh}.
+		 */
+		public static Cosh coshOf(AggregationExpression expression, AngularDimension unit) {
+			return cosh(expression, unit);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic cosine of a value that is measured in
+		 * {@link AngularDimension#RADIANS}.
+		 *
+		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
+		 *          numeric value.
+		 * @return new instance of {@link Cosh}.
+		 */
+		public static Cosh cosh(Object value) {
+			return cosh(value, AngularDimension.RADIANS);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic cosine of a value that is measured in
+		 * the given {@link AngularDimension unit}.
+		 *
+		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
+		 *          numeric value
+		 * @param unit the unit of measure used by the value of the given field.
+		 * @return new instance of {@link Cosh}.
+		 */
+		public static Cosh cosh(Object value, AngularDimension unit) {
+
+			if (ObjectUtils.nullSafeEquals(AngularDimension.DEGREES, unit)) {
+				return new Cosh(ConvertOperators.DegreesToRadians.degreesToRadians(value));
+			}
+			return new Cosh(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$cosh";
 		}
 	}
 
