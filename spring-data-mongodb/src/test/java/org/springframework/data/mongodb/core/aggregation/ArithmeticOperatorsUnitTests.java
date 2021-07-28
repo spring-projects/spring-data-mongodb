@@ -110,6 +110,34 @@ class ArithmeticOperatorsUnitTests {
 				.isEqualTo(Document.parse("{ $sinh : { $degreesToRadians : \"$angle\" } }"));
 	}
 
+	@Test // GH-3710
+	void rendersCos() {
+
+		assertThat(valueOf("angle").cos().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $cos : \"$angle\" }"));
+	}
+
+	@Test // GH-3710
+	void rendersCosWithValueInDegrees() {
+
+		assertThat(valueOf("angle").cos(AngularDimension.DEGREES).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $cos : { $degreesToRadians : \"$angle\" } }"));
+	}
+
+	@Test // GH-3710
+	void rendersCosh() {
+
+		assertThat(valueOf("angle").cosh().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $cosh : \"$angle\" }"));
+	}
+
+	@Test // GH-3710
+	void rendersCoshWithValueInDegrees() {
+
+		assertThat(valueOf("angle").cosh(AngularDimension.DEGREES).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $cosh : { $degreesToRadians : \"$angle\" } }"));
+	}
+
 	@Test // GH-3730
 	void rendersTan() {
 

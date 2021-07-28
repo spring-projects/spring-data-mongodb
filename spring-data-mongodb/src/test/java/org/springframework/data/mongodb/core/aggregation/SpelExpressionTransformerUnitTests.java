@@ -1014,6 +1014,16 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(transform("sinh(angle)")).isEqualTo(Document.parse("{ \"$sinh\" : \"$angle\"}"));
 	}
 
+	@Test // GH-3710
+	void shouldRenderCos() {
+		assertThat(transform("cos(angle)")).isEqualTo(Document.parse("{ \"$cos\" : \"$angle\"}"));
+	}
+
+	@Test // GH-3710
+	void shouldRenderCosh() {
+		assertThat(transform("cosh(angle)")).isEqualTo(Document.parse("{ \"$cosh\" : \"$angle\"}"));
+	}
+
 	@Test // GH-3730
 	void shouldRenderTan() {
 		assertThat(transform("tan(angle)")).isEqualTo(Document.parse("{ \"$tan\" : \"$angle\"}"));
