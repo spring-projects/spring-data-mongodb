@@ -222,4 +222,11 @@ public class ConvertOperatorsUnitTests {
 		assertThat(ConvertOperators.valueOf(EXPRESSION).convertToString().toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo(Document.parse("{ $toString: " + EXPRESSION_STRING + " } "));
 	}
+
+	@Test // GH-3714
+	void degreesToRadiansUsingFieldReference() {
+
+		assertThat(ConvertOperators.valueOf("angle_a").convertDegreesToRadians().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $degreesToRadians : \"$angle_a\"}"));
+	}
 }

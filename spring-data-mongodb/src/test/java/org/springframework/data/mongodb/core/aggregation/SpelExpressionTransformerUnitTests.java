@@ -941,6 +941,11 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(transform("round(field, 2)")).isEqualTo(Document.parse("{ \"$round\" : [\"$field\", 2]}"));
 	}
 
+	@Test // GH-3714
+	void shouldRenderDegreesToRadians() {
+		assertThat(transform("degreesToRadians(angle_a)")).isEqualTo(Document.parse("{ \"$degreesToRadians\" : \"$angle_a\"}"));
+	}
+
 	@Test // GH-3712
 	void shouldRenderCovariancePop() {
 		assertThat(transform("covariancePop(field1, field2)"))

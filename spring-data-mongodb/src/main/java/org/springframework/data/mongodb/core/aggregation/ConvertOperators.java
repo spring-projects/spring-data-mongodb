@@ -231,6 +231,16 @@ public class ConvertOperators {
 			return ToString.toString(valueObject());
 		}
 
+		/**
+		 * {@link AggregationExpression} for {@code $degreesToRadians} that converts an input value measured in degrees to radians.\
+		 *
+		 * @return new instance of {@link DegreesToRadians}.
+		 * @since 3.3
+		 */
+		public DegreesToRadians convertDegreesToRadians() {
+			return DegreesToRadians.degreesToRadians(valueObject());
+		}
+
 		private Convert createConvert() {
 			return usesFieldRef() ? Convert.convertValueOf(fieldReference) : Convert.convertValueOf(expression);
 		}
@@ -690,6 +700,54 @@ public class ConvertOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$toString";
+		}
+	}
+
+	/**
+	 * {@link AggregationExpression} for {@code $degreesToRadians} that converts an input value measured in degrees to radians.
+	 *
+	 * @author Christoph Strobl
+	 * @since 3.3
+	 */
+	public static class DegreesToRadians extends AbstractAggregationExpression {
+
+		private DegreesToRadians(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Create a new instance of {@link DegreesToRadians} that converts the value of the given field, measured in degrees, to radians.
+		 *
+		 * @param fieldName must not be {@literal null}.
+		 * @return new instance of {@link DegreesToRadians}.
+		 */
+		public static DegreesToRadians degreesToRadiansOf(String fieldName) {
+			return degreesToRadians(Fields.field(fieldName));
+		}
+
+		/**
+		 * Create a new instance of {@link DegreesToRadians} that converts the result of the given {@link AggregationExpression expression}, measured in degrees, to radians.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link DegreesToRadians}.
+		 */
+		public static DegreesToRadians degreesToRadiansOf(AggregationExpression expression) {
+			return degreesToRadians(expression);
+		}
+
+		/**
+		 * Create a new instance of {@link DegreesToRadians} that converts the given value, measured in degrees, to radians.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return new instance of {@link DegreesToRadians}.
+		 */
+		public static DegreesToRadians degreesToRadians(Object value) {
+			return new DegreesToRadians(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$degreesToRadians";
 		}
 	}
 }
