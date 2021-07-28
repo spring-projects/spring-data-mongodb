@@ -951,6 +951,16 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(transform("degreesToRadians(angle_a)")).isEqualTo(Document.parse("{ \"$degreesToRadians\" : \"$angle_a\"}"));
 	}
 
+	@Test // GH-3728
+	void shouldRenderSin() {
+		assertThat(transform("sin(angle)")).isEqualTo(Document.parse("{ \"$sin\" : \"$angle\"}"));
+	}
+
+	@Test // GH-3728
+	void shouldRenderSinh() {
+		assertThat(transform("sinh(angle)")).isEqualTo(Document.parse("{ \"$sinh\" : \"$angle\"}"));
+	}
+
 	private Object transform(String expression, Object... params) {
 		Object result = transformer.transform(expression, Aggregation.DEFAULT_CONTEXT, params);
 		return result == null ? null : (!(result instanceof org.bson.Document) ? result.toString() : result);
