@@ -719,6 +719,51 @@ public class ArithmeticOperators {
 			return usesFieldRef() ? Sinh.sinhOf(fieldReference, unit) : Sinh.sinhOf(expression, unit);
 		}
 
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the tangent of a numeric value given in
+		 * {@link AngularDimension#RADIANS radians}.
+		 *
+		 * @return new instance of {@link Sin}.
+		 * @since 3.3
+		 */
+		public Tan tan() {
+			return tan(AngularDimension.RADIANS);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the tangent of a numeric value in the given
+		 * {@link AngularDimension unit}.
+		 *
+		 * @param unit the unit of measure.
+		 * @return new instance of {@link Sin}.
+		 * @since 3.3
+		 */
+		public Tan tan(AngularDimension unit) {
+			return usesFieldRef() ? Tan.tanOf(fieldReference, unit) : Tan.tanOf(expression, unit);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the hyperbolic tangent of a numeric value given in
+		 * {@link AngularDimension#RADIANS radians}.
+		 *
+		 * @return new instance of {@link Sin}.
+		 * @since 3.3
+		 */
+		public Tanh tanh() {
+			return tanh(AngularDimension.RADIANS);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the hyperbolic tangent of a numeric value.
+		 *
+		 * @param unit the unit of measure.
+		 * @return new instance of {@link Sin}.
+		 * @since 3.3
+		 */
+		public Tanh tanh(AngularDimension unit) {
+			return usesFieldRef() ? Tanh.tanhOf(fieldReference, unit) : Tanh.tanhOf(expression, unit);
+		}
+
 		private boolean usesFieldRef() {
 			return fieldReference != null;
 		}
@@ -2151,6 +2196,212 @@ public class ArithmeticOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$sinh";
+		}
+	}
+
+	/**
+	 * An {@link AggregationExpression expression} that calculates the tangent of a value that is measured in radians.
+	 *
+	 * @author Christoph Strobl
+	 * @since 3.3
+	 */
+	public static class Tan extends AbstractAggregationExpression {
+
+		private Tan(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the tangent of a value that is measured in
+		 * {@link AngularDimension#RADIANS radians}.
+		 * <p />
+		 * Use {@code tanOf("angle", DEGREES)} as shortcut for
+		 * 
+		 * <pre>
+		 * { $tan : { $degreesToRadians : "$angle" } }
+		 * </pre>
+		 * 
+		 * .
+		 *
+		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
+		 * @return new instance of {@link Tan}.
+		 */
+		public static Tan tanOf(String fieldReference) {
+			return tanOf(fieldReference, AngularDimension.RADIANS);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the tangent of a value that is measured in the given
+		 * {@link AngularDimension unit}.
+		 *
+		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
+		 * @param unit the unit of measure used by the value of the given field.
+		 * @return new instance of {@link Tan}.
+		 */
+		public static Tan tanOf(String fieldReference, AngularDimension unit) {
+			return tan(Fields.field(fieldReference), unit);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the tangent of a value that is measured in
+		 * {@link AngularDimension#RADIANS}.
+		 *
+		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
+		 * @return new instance of {@link Tan}.
+		 */
+		public static Tan tanOf(AggregationExpression expression) {
+			return tanOf(expression, AngularDimension.RADIANS);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the tangent of a value that is measured in the given
+		 * {@link AngularDimension unit}.
+		 *
+		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
+		 * @param unit the unit of measure used by the value of the given field.
+		 * @return new instance of {@link Tan}.
+		 */
+		public static Tan tanOf(AggregationExpression expression, AngularDimension unit) {
+			return tan(expression, unit);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the tangent of a value that is measured in
+		 * {@link AngularDimension#RADIANS}.
+		 *
+		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
+		 *          numeric value
+		 * @return new instance of {@link Tan}.
+		 */
+		public static Tan tan(Object value) {
+			return tan(value, AngularDimension.RADIANS);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the tangent of a value that is measured in the given
+		 * {@link AngularDimension unit}.
+		 *
+		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
+		 *          numeric value.
+		 * @param unit the unit of measure used by the value of the given field.
+		 * @return new instance of {@link Tan}.
+		 */
+		public static Tan tan(Object value, AngularDimension unit) {
+
+			if (ObjectUtils.nullSafeEquals(AngularDimension.DEGREES, unit)) {
+				return new Tan(ConvertOperators.DegreesToRadians.degreesToRadians(value));
+			}
+			return new Tan(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$tan";
+		}
+	}
+
+	/**
+	 * An {@link AggregationExpression expression} that calculates the hyperbolic tangent of a value that is measured in
+	 * {@link AngularDimension#RADIANS}.
+	 *
+	 * @author Christoph Strobl
+	 * @since 3.3
+	 */
+	public static class Tanh extends AbstractAggregationExpression {
+
+		private Tanh(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic tangent of a value that is measured in
+		 * {@link AngularDimension#RADIANS}.
+		 *
+		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
+		 * @return new instance of {@link Tanh}.
+		 */
+		public static Tanh tanhOf(String fieldReference) {
+			return tanhOf(fieldReference, AngularDimension.RADIANS);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic tangent of a value that is measured in
+		 * the given {@link AngularDimension unit}.
+		 * <p />
+		 * Use {@code tanhOf("angle", DEGREES)} as shortcut for
+		 * 
+		 * <pre>
+		 * { $tanh : { $degreesToRadians : "$angle" } }
+		 * </pre>
+		 * 
+		 * .
+		 *
+		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
+		 * @param unit the unit of measure used by the value of the given field.
+		 * @return new instance of {@link Tanh}.
+		 */
+		public static Tanh tanhOf(String fieldReference, AngularDimension unit) {
+			return tanh(Fields.field(fieldReference), unit);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic tangent of a value that is measured in
+		 * {@link AngularDimension#RADIANS}.
+		 * <p />
+		 * Use {@code sinhOf("angle", DEGREES)} as shortcut for eg.
+		 * {@code sinhOf(ConvertOperators.valueOf("angle").degreesToRadians())}.
+		 *
+		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
+		 * @return new instance of {@link Tanh}.
+		 */
+		public static Tanh tanhOf(AggregationExpression expression) {
+			return tanhOf(expression, AngularDimension.RADIANS);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic tangent of a value that is measured in
+		 * the given {@link AngularDimension unit}.
+		 *
+		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
+		 * @param unit the unit of measure used by the value of the given field.
+		 * @return new instance of {@link Tanh}.
+		 */
+		public static Tanh tanhOf(AggregationExpression expression, AngularDimension unit) {
+			return tanh(expression, unit);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic tangent of a value that is measured in
+		 * {@link AngularDimension#RADIANS}.
+		 *
+		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
+		 *          numeric value.
+		 * @return new instance of {@link Tanh}.
+		 */
+		public static Tanh tanh(Object value) {
+			return tanh(value, AngularDimension.RADIANS);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic tangent of a value that is measured in
+		 * the given {@link AngularDimension unit}.
+		 *
+		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
+		 *          numeric value
+		 * @param unit the unit of measure used by the value of the given field.
+		 * @return new instance of {@link Tanh}.
+		 */
+		public static Tanh tanh(Object value, AngularDimension unit) {
+
+			if (ObjectUtils.nullSafeEquals(AngularDimension.DEGREES, unit)) {
+				return new Tanh(ConvertOperators.DegreesToRadians.degreesToRadians(value));
+			}
+			return new Tanh(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$tanh";
 		}
 	}
 }
