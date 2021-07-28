@@ -87,4 +87,33 @@ public class ArithmeticOperatorsUnitTests {
 		assertThat(valueOf("angle").sinh(AngularDimension.DEGREES).toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo(Document.parse("{ $sinh : { $degreesToRadians : \"$angle\" } }"));
 	}
+
+	@Test // GH-3730
+	void rendersTan() {
+
+		assertThat(valueOf("angle").tan().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $tan : \"$angle\" }"));
+	}
+
+	@Test // GH-3730
+	void rendersTanWithValueInDegrees() {
+
+		assertThat(valueOf("angle").tan(AngularDimension.DEGREES).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $tan : { $degreesToRadians : \"$angle\" } }"));
+	}
+
+	@Test // GH-3730
+	void rendersTanh() {
+
+		assertThat(valueOf("angle").tanh().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $tanh : \"$angle\" }"));
+	}
+
+	@Test // GH-3730
+	void rendersTanhWithValueInDegrees() {
+
+		assertThat(valueOf("angle").tanh(AngularDimension.DEGREES).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $tanh : { $degreesToRadians : \"$angle\" } }"));
+	}
+
 }
