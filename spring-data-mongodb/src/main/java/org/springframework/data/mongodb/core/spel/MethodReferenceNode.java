@@ -189,6 +189,7 @@ public class MethodReferenceNode extends ExpressionNode {
 		map.put("toLong", singleArgRef().forOperator("$toLong"));
 		map.put("toObjectId", singleArgRef().forOperator("$toObjectId"));
 		map.put("toString", singleArgRef().forOperator("$toString"));
+		map.put("degreesToRadians", singleArgRef().forOperator("$degreesToRadians"));
 
 		FUNCTIONS = Collections.unmodifiableMap(map);
 	}
