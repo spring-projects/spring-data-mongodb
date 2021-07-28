@@ -81,4 +81,32 @@ class ArithmeticOperatorsUnitTests {
 				.toDocument(Aggregation.DEFAULT_CONTEXT))
 						.isEqualTo("{ $integral : { input : \"$kilowatts\", unit : \"hour\" } }");
 	}
+
+	@Test // GH-3728
+	void rendersSin() {
+
+		assertThat(valueOf("angle").sin().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $sin : \"$angle\" }"));
+	}
+
+	@Test // GH-3728
+	void rendersSinWithValueInDegrees() {
+
+		assertThat(valueOf("angle").sin(AngularDimension.DEGREES).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $sin : { $degreesToRadians : \"$angle\" } }"));
+	}
+
+	@Test // GH-3728
+	void rendersSinh() {
+
+		assertThat(valueOf("angle").sinh().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $sinh : \"$angle\" }"));
+	}
+
+	@Test // GH-3728
+	void rendersSinhWithValueInDegrees() {
+
+		assertThat(valueOf("angle").sinh(AngularDimension.DEGREES).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $sinh : { $degreesToRadians : \"$angle\" } }"));
+	}
 }

@@ -31,6 +31,7 @@ import org.springframework.data.mongodb.core.aggregation.SetWindowFieldsOperatio
 import org.springframework.data.mongodb.core.aggregation.SetWindowFieldsOperation.WindowUnits;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -674,6 +675,48 @@ public class ArithmeticOperators {
 		 */
 		public Round roundToPlace(int place) {
 			return round().place(place);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the sine of a numeric value given in {@link AngularDimension#RADIANS radians}.
+		 *
+		 * @return new instance of {@link Sin}.
+		 * @since 3.3
+		 */
+		public Sin sin() {
+			return sin(AngularDimension.RADIANS);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the sine of a numeric value in the given {@link AngularDimension unit}.
+		 *
+		 * @param unit the unit of measure.
+		 * @return new instance of {@link Sin}.
+		 * @since 3.3
+		 */
+		public Sin sin(AngularDimension unit) {
+			return usesFieldRef() ? Sin.sinOf(fieldReference, unit) : Sin.sinOf(expression, unit);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the sine of a numeric value given in {@link AngularDimension#RADIANS radians}.
+		 *
+		 * @return new instance of {@link Sin}.
+		 * @since 3.3
+		 */
+		public Sinh sinh() {
+			return sinh(AngularDimension.RADIANS);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the sine of a numeric value.
+		 *
+		 * @param unit the unit of measure.
+		 * @return new instance of {@link Sin}.
+		 * @since 3.3
+		 */
+		public Sinh sinh(AngularDimension unit) {
+			return usesFieldRef() ? Sinh.sinhOf(fieldReference, unit) : Sinh.sinhOf(expression, unit);
 		}
 
 		private boolean usesFieldRef() {
@@ -1905,6 +1948,209 @@ public class ArithmeticOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$integral";
+		}
+	}
+
+	/**
+	 * The unit of measure for computations that operate upon angles.
+	 *
+	 * @author Christoph Strobl
+	 * @since 3.3
+	 */
+	public enum AngularDimension {
+		RADIANS, DEGREES
+	}
+
+	/**
+	 * An {@link AggregationExpression expression} that calculates the sine of a value that is measured in radians.
+	 *
+	 * @author Christoph Strobl
+	 * @since 3.3
+	 */
+	public static class Sin extends AbstractAggregationExpression {
+
+		private Sin(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the sine of a value that is measured in
+		 * {@link AngularDimension#RADIANS radians}.
+		 * <p />
+		 * Use {@code sinhOf("angle", DEGREES)} as shortcut for <pre>{ $sinh : { $degreesToRadians : "$angle" } }</pre>.
+		 *
+		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
+		 * @return new instance of {@link Sin}.
+		 */
+		public static Sin sinOf(String fieldReference) {
+			return sinOf(fieldReference, AngularDimension.RADIANS);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the sine of a value that is measured in the given
+		 * {@link AngularDimension unit}.
+		 *
+		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
+		 * @param unit the unit of measure used by the value of the given field.
+		 * @return new instance of {@link Sin}.
+		 */
+		public static Sin sinOf(String fieldReference, AngularDimension unit) {
+			return sin(Fields.field(fieldReference), unit);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the sine of a value that is measured in
+		 * {@link AngularDimension#RADIANS}.
+		 *
+		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
+		 * @return new instance of {@link Sin}.
+		 */
+		public static Sin sinOf(AggregationExpression expression) {
+			return sinOf(expression, AngularDimension.RADIANS);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the sine of a value that is measured in the given
+		 * {@link AngularDimension unit}.
+		 *
+		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
+		 * @param unit the unit of measure used by the value of the given field.
+		 * @return new instance of {@link Sin}.
+		 */
+		public static Sin sinOf(AggregationExpression expression, AngularDimension unit) {
+			return sin(expression, unit);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the sine of a value that is measured in
+		 * {@link AngularDimension#RADIANS}.
+		 *
+		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
+		 *          numeric value
+		 * @return new instance of {@link Sin}.
+		 */
+		public static Sin sin(Object value) {
+			return sin(value, AngularDimension.RADIANS);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the sine of a value that is measured in the given
+		 * {@link AngularDimension unit}.
+		 *
+		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
+		 *          numeric value.
+		 * @param unit the unit of measure used by the value of the given field.
+		 * @return new instance of {@link Sin}.
+		 */
+		public static Sin sin(Object value, AngularDimension unit) {
+
+			if (ObjectUtils.nullSafeEquals(AngularDimension.DEGREES, unit)) {
+				return new Sin(ConvertOperators.DegreesToRadians.degreesToRadians(value));
+			}
+			return new Sin(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$sin";
+		}
+	}
+
+	/**
+	 * An {@link AggregationExpression expression} that calculates the hyperbolic sine of a value that is measured in
+	 * {@link AngularDimension#RADIANS}.
+	 *
+	 * @author Christoph Strobl
+	 * @since 3.3
+	 */
+	public static class Sinh extends AbstractAggregationExpression {
+
+		private Sinh(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic sine of a value that is measured in
+		 * {@link AngularDimension#RADIANS}.
+		 *
+		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
+		 * @return new instance of {@link Sin}.
+		 */
+		public static Sinh sinhOf(String fieldReference) {
+			return sinhOf(fieldReference, AngularDimension.RADIANS);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic sine of a value that is measured in
+		 * the given {@link AngularDimension unit}.
+		 * <p />
+		 * Use {@code sinhOf("angle", DEGREES)} as shortcut for <pre>{ $sinh : { $degreesToRadians : "$angle" } }</pre>.
+		 *
+		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
+		 * @param unit the unit of measure used by the value of the given field.
+		 * @return new instance of {@link Sin}.
+		 */
+		public static Sinh sinhOf(String fieldReference, AngularDimension unit) {
+			return sinh(Fields.field(fieldReference), unit);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic sine of a value that is measured in
+		 * {@link AngularDimension#RADIANS}.
+		 * <p />
+		 * Use {@code sinhOf("angle", DEGREES)} as shortcut for eg. {@code sinhOf(ConvertOperators.valueOf("angle").degreesToRadians())}.
+		 *
+		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
+		 * @return new instance of {@link Sin}.
+		 */
+		public static Sinh sinhOf(AggregationExpression expression) {
+			return sinhOf(expression, AngularDimension.RADIANS);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic sine of a value that is measured in
+		 * the given {@link AngularDimension unit}.
+		 *
+		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
+		 * @param unit the unit of measure used by the value of the given field.
+		 * @return new instance of {@link Sin}.
+		 */
+		public static Sinh sinhOf(AggregationExpression expression, AngularDimension unit) {
+			return sinh(expression, unit);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic sine of a value that is measured in
+		 * {@link AngularDimension#RADIANS}.
+		 *
+		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
+		 *          numeric value.
+		 * @return new instance of {@link Sin}.
+		 */
+		public static Sinh sinh(Object value) {
+			return sinh(value, AngularDimension.RADIANS);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic sine of a value that is measured in
+		 * the given {@link AngularDimension unit}.
+		 *
+		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
+		 *          numeric value
+		 * @param unit the unit of measure used by the value of the given field.
+		 * @return new instance of {@link Sin}.
+		 */
+		public static Sinh sinh(Object value, AngularDimension unit) {
+
+			if (ObjectUtils.nullSafeEquals(AngularDimension.DEGREES, unit)) {
+				return new Sinh(ConvertOperators.DegreesToRadians.degreesToRadians(value));
+			}
+			return new Sinh(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$sinh";
 		}
 	}
 }
