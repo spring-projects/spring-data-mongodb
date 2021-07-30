@@ -39,13 +39,14 @@ import com.mongodb.DBRef;
  * @author Thomas Darimont
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Ryan Gibb
  */
 public interface MongoConverter
 		extends EntityConverter<MongoPersistentEntity<?>, MongoPersistentProperty, Object, Bson>, MongoWriter<Object>,
 		EntityReader<Object, Bson> {
 
 	/**
-	 * Returns thw {@link TypeMapper} being used to write type information into {@link Document}s created with that
+	 * Returns the {@link TypeMapper} being used to write type information into {@link Document}s created with that
 	 * converter.
 	 *
 	 * @return will never be {@literal null}.
