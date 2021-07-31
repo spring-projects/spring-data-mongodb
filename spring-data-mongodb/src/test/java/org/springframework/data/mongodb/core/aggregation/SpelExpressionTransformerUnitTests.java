@@ -975,6 +975,11 @@ public class SpelExpressionTransformerUnitTests {
 				.isEqualTo(Document.parse("{ $shift: { output: \"$quantity\", by: 1, default: \"Not available\" } }"));
 	}
 
+	@Test // GH-3724
+	void shouldRenderRand() {
+		assertThat(transform("rand()")).isEqualTo(Document.parse("{ $rand : {} }"));
+	}
+
 	private Object transform(String expression, Object... params) {
 		Object result = transformer.transform(expression, Aggregation.DEFAULT_CONTEXT, params);
 		return result == null ? null : (!(result instanceof org.bson.Document) ? result.toString() : result);

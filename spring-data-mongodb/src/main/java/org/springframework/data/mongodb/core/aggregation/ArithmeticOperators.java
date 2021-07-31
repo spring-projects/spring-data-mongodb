@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.aggregation;
 import java.util.Collections;
 import java.util.List;
 
+import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Avg;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Max;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Min;
@@ -52,6 +53,16 @@ public class ArithmeticOperators {
 	 */
 	public static ArithmeticOperatorFactory valueOf(AggregationExpression expression) {
 		return new ArithmeticOperatorFactory(expression);
+	}
+
+	/**
+	 * Creates new {@link AggregationExpression} that returns a random float between 0 and 1 each time it is called.
+	 *
+	 * @return new instance of {@link Rand}.
+	 * @since 3.3
+	 */
+	public static Rand rand() {
+		return new Rand();
 	}
 
 	/**
@@ -1663,6 +1674,20 @@ public class ArithmeticOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$round";
+		}
+	}
+
+	/**
+	 * {@link Rand} returns a floating value between 0 and 1.
+	 *
+	 * @author Mushtaq Ahmed
+	 * @since 3.3
+	 */
+	public static class Rand implements AggregationExpression {
+
+		@Override
+		public Document toDocument(AggregationOperationContext context) {
+			return new Document("$rand", new Document());
 		}
 	}
 }

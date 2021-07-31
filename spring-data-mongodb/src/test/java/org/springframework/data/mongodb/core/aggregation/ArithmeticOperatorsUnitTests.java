@@ -59,4 +59,9 @@ public class ArithmeticOperatorsUnitTests {
 				.toDocument(Aggregation.DEFAULT_CONTEXT))
 						.isEqualTo(new Document("$round", Arrays.asList("$field", new Document("$first", "$source"))));
 	}
+
+	@Test // GH-3724
+	void rendersRank() {
+		assertThat(rand().toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo(new Document("$rand", new Document()));
+	}
 }
