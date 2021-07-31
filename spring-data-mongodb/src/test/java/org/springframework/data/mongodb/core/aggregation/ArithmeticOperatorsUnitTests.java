@@ -166,4 +166,9 @@ class ArithmeticOperatorsUnitTests {
 				.isEqualTo("{ $tanh : { $degreesToRadians : \"$angle\" } }");
 	}
 
+
+	@Test // GH-3724
+	void rendersRank() {
+		assertThat(rand().toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo(new Document("$rand", new Document()));
+	}
 }

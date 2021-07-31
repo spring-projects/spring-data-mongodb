@@ -1044,6 +1044,11 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(transform("dateDiff(purchaseDate, delivered, 'day')")).isEqualTo(Document.parse("{ $dateDiff: { startDate: \"$purchaseDate\", endDate: \"$delivered\", unit: \"day\" } }"));
 	}
 
+	@Test // GH-3724
+	void shouldRenderRand() {
+		assertThat(transform("rand()")).isEqualTo(Document.parse("{ $rand : {} }"));
+	}
+
 	private Document transform(String expression, Object... params) {
 		return (Document) transformer.transform(expression, Aggregation.DEFAULT_CONTEXT, params);
 	}
