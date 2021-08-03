@@ -318,6 +318,54 @@ class TypedCriteriaExtensionsTests {
 	}
 
 	@Test
+	fun `maxDistance() should equal expected criteria with nearSphere`() {
+		val point = Point(0.0, 0.0)
+
+		val typed = Building::location nearSphere point maxDistance 3.0
+		val expected = Criteria("location")
+			.nearSphere(point)
+			.maxDistance(3.0)
+
+		assertThat(typed).isEqualTo(expected)
+	}
+
+	@Test
+	fun `minDistance() should equal expected criteria with nearSphere`() {
+		val point = Point(0.0, 0.0)
+
+		val typed = Building::location nearSphere point minDistance 3.0
+		val expected = Criteria("location")
+			.nearSphere(point)
+			.minDistance(3.0)
+
+		assertThat(typed).isEqualTo(expected)
+	}
+
+	@Test
+	fun `maxDistance() should equal expected criteria with near`() {
+		val point = Point(0.0, 0.0)
+
+		val typed = Building::location near point maxDistance 3.0
+		val expected = Criteria("location")
+			.near(point)
+			.maxDistance(3.0)
+
+		assertThat(typed).isEqualTo(expected)
+	}
+
+	@Test
+	fun `minDistance() should equal expected criteria with near`() {
+		val point = Point(0.0, 0.0)
+
+		val typed = Building::location near point minDistance 3.0
+		val expected = Criteria("location")
+			.near(point)
+			.minDistance(3.0)
+
+		assertThat(typed).isEqualTo(expected)
+	}
+
+	@Test
 	fun `elemMatch() should equal expected criteria`() {
 
 		val value = Criteria("price").lt(950)
