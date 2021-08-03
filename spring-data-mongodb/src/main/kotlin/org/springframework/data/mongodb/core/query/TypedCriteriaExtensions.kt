@@ -365,6 +365,28 @@ infix fun KProperty<GeoJson<*>>.minDistance(d: Double): Criteria =
 		Criteria(asString(this)).minDistance(d)
 
 /**
+ * Creates a geo-spatial criterion using a $maxDistance operation, for use with $near
+ *
+ * See [MongoDB Query operator:
+ * $maxDistance](https://docs.mongodb.com/manual/reference/operator/query/maxDistance/)
+ * @author Sangyong Choi
+ * @since 3.2
+ * @see Criteria.maxDistance
+ */
+infix fun Criteria.maxDistance(d: Double): Criteria =
+		this.maxDistance(d)
+
+/**
+ * Creates a geospatial criterion using a $minDistance operation, for use with $near or
+ * $nearSphere.
+ * @author Sangyong Choi
+ * @since 3.2
+ * @see Criteria.minDistance
+ */
+infix fun Criteria.minDistance(d: Double): Criteria =
+		this.minDistance(d)
+
+/**
  * Creates a criterion using the $elemMatch operator
  *
  * See [MongoDB Query operator:
