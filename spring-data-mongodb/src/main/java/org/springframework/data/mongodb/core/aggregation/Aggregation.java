@@ -50,6 +50,7 @@ import org.springframework.util.Assert;
  * @author Nikolay Bogdanov
  * @author Gustavo de Geus
  * @author Jérôme Guyon
+ * @author James McNee
  * @since 1.3
  */
 public class Aggregation {
@@ -476,6 +477,17 @@ public class Aggregation {
 	 */
 	public static SampleOperation sample(long sampleSize) {
 		return new SampleOperation(sampleSize);
+	}
+
+	/**
+	 * Creates a new {@link SampleRateOperation} to select the documents from its input randomly using the provided sample rate.
+	 *
+	 * @param sampleRate must not be less than zero or more than one.
+	 * @return new instance of {@link SampleRateOperation}.
+	 * @since 3.2.4
+	 */
+	public static SampleRateOperation sampleRate(double sampleRate) {
+		return new SampleRateOperation(sampleRate);
 	}
 
 	/**
