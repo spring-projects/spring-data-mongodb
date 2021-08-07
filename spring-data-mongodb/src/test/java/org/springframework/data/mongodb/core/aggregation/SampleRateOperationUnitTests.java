@@ -31,7 +31,7 @@ public class SampleRateOperationUnitTests {
 	private static final String OPERATION = "$sampleRate";
 
 	@Test // GH-3726
-	public void shouldRejectSampleNegativeSampleRate() {
+	public void shouldRejectNegativeSampleRate() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new SampleRateOperation(-1.0));
 	}
 
