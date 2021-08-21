@@ -63,6 +63,7 @@ import com.mongodb.client.MongoCollection;
 /**
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Ivan Volzhev
  */
 @ExtendWith({ MongoClientExtension.class, SpringExtension.class })
 @ContextConfiguration
@@ -320,6 +321,21 @@ public class GeoJsonTests {
 		DocumentWithPropertyUsingGeoJsonType obj = new DocumentWithPropertyUsingGeoJsonType();
 		obj.id = "geoJsonMultiPoint";
 		obj.geoJsonMultiPoint = new GeoJsonMultiPoint(Arrays.asList(new Point(0, 0), new Point(0, 1), new Point(1, 1)));
+
+		template.save(obj);
+
+		DocumentWithPropertyUsingGeoJsonType result = template.findOne(query(where("id").is(obj.id)),
+				DocumentWithPropertyUsingGeoJsonType.class);
+
+		assertThat(result.geoJsonMultiPoint).isEqualTo(obj.geoJsonMultiPoint);
+	}
+
+	@Test // DATAMONGO-3776
+	public void shouldSaveAndRetrieveDocumentWithGeoJsonMultiPointTypeWithOnePointCorrectly() {
+
+		DocumentWithPropertyUsingGeoJsonType obj = new DocumentWithPropertyUsingGeoJsonType();
+		obj.id = "geoJsonMultiPoint";
+		obj.geoJsonMultiPoint = new GeoJsonMultiPoint(new Point(0, 0));
 
 		template.save(obj);
 
