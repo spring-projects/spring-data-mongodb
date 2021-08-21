@@ -28,6 +28,7 @@ import org.springframework.util.ObjectUtils;
  * {@link GeoJsonMultiPoint} is defined as list of {@link Point}s.
  *
  * @author Christoph Strobl
+ * @author Ivan Volzhev
  * @since 1.7
  * @see <a href="https://geojson.org/geojson-spec.html#multipoint">https://geojson.org/geojson-spec.html#multipoint</a>
  */
@@ -40,12 +41,12 @@ public class GeoJsonMultiPoint implements GeoJson<Iterable<Point>> {
 	/**
 	 * Creates a new {@link GeoJsonMultiPoint} for the given {@link Point}s.
 	 *
-	 * @param points points must not be {@literal null} and have at least 2 entries.
+	 * @param points points must not be {@literal null} and have at least 1 entry.
 	 */
 	public GeoJsonMultiPoint(List<Point> points) {
 
 		Assert.notNull(points, "Points must not be null.");
-		Assert.isTrue(points.size() >= 2, "Minimum of 2 Points required.");
+		Assert.isTrue(points.size() >= 1, "Minimum of 1 Point required.");
 
 		this.points = new ArrayList<Point>(points);
 	}
@@ -67,6 +68,19 @@ public class GeoJsonMultiPoint implements GeoJson<Iterable<Point>> {
 		this.points.add(first);
 		this.points.add(second);
 		this.points.addAll(Arrays.asList(others));
+	}
+
+	/**
+	 * Creates a new {@link GeoJsonMultiPoint} for the given {@link Point}.
+	 *
+	 * @param point must not be {@literal null}.
+	 */
+	public GeoJsonMultiPoint(Point point) {
+
+		Assert.notNull(point, "First point must not be null!");
+
+		this.points = new ArrayList<Point>();
+		this.points.add(point);
 	}
 
 	/*
