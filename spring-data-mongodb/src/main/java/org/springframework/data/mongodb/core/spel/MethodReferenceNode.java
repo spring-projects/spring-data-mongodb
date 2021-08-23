@@ -101,6 +101,9 @@ public class MethodReferenceNode extends ExpressionNode {
 		map.put("trim", mapArgRef().forOperator("$trim").mappingParametersTo("input", "chars"));
 		map.put("ltrim", mapArgRef().forOperator("$ltrim").mappingParametersTo("input", "chars"));
 		map.put("rtrim", mapArgRef().forOperator("$rtrim").mappingParametersTo("input", "chars"));
+		map.put("regexFind", mapArgRef().forOperator("$regexFind").mappingParametersTo("input", "regex" , "options"));
+		map.put("regexFindAll", mapArgRef().forOperator("$regexFindAll").mappingParametersTo("input", "regex" , "options"));
+		map.put("regexMatch", mapArgRef().forOperator("$regexMatch").mappingParametersTo("input", "regex" , "options"));
 
 		// TEXT SEARCH OPERATORS
 		map.put("meta", singleArgRef().forOperator("$meta"));

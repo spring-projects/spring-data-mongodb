@@ -144,5 +144,111 @@ public class StringOperatorsUnitTests {
 		assertThat(StringOperators.valueOf("shrewd").rtrim(EXPRESSION).toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo(Document.parse("{ $rtrim: { \"input\" : \"$shrewd\", \"chars\" : " + EXPRESSION_STRING + " } } "));
 	}
+	
+	@Test // DATAMONGO - 3725
+	public void shouldRenderRegexFindAll() {
+
+		assertThat(StringOperators.valueOf("shrewd").regexFindAll("e").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $regexFindAll: { \"input\" : \"$shrewd\" , \"regex\" : \"e\" } }"));
+	}
+	
+	@Test // DATAMONGO - 3725
+	public void shouldRenderRegexFindAllForExpression() {
+
+		assertThat(StringOperators.valueOf(EXPRESSION).regexFindAll("e").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $regexFindAll: { \"input\" : " + EXPRESSION_STRING + " , \"regex\" : \"e\" } } "));
+	}
+	
+	@Test // DATAMONGO - 3725
+	public void shouldRenderRegexFindAllForRegexExpression() {
+
+		assertThat(StringOperators.valueOf("shrewd").regexFindAll(EXPRESSION).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $regexFindAll: { \"input\" : \"$shrewd\" , \"regex\" : " + EXPRESSION_STRING + " } } "));
+	}
+	
+	@Test // DATAMONGO - 3725
+	public void shouldRenderRegexFindAllWithOptions() {
+
+		assertThat(StringOperators.valueOf("shrewd").regexFindAll("e").options("i").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $regexFindAll: { \"input\" : \"$shrewd\", \"regex\" : \"e\" , \"options\" : \"i\" } } "));
+	}
+	
+	@Test // DATAMONGO - 3725
+	public void shouldRenderRegexFindAllWithOptionsExpression() {
+
+		assertThat(StringOperators.valueOf("shrewd").regexFindAll("e").optionsOf(EXPRESSION).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $regexFindAll: { \"input\" : \"$shrewd\", \"regex\" : \"e\" , \"options\" : " + EXPRESSION_STRING + " } } "));
+	}
+	
+	@Test // DATAMONGO - 3725
+	public void shouldRenderRegexMatch() {
+
+		assertThat(StringOperators.valueOf("shrewd").regexMatch("e").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $regexMatch: { \"input\" : \"$shrewd\" , \"regex\" : \"e\" } }"));
+	}
+	
+	@Test // DATAMONGO - 3725
+	public void shouldRenderRegexMatchForExpression() {
+
+		assertThat(StringOperators.valueOf(EXPRESSION).regexMatch("e").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $regexMatch: { \"input\" : " + EXPRESSION_STRING + " , \"regex\" : \"e\" } } "));
+	}
+	
+	@Test // DATAMONGO - 3725
+	public void shouldRenderRegexMatchForRegexExpression() {
+
+		assertThat(StringOperators.valueOf("shrewd").regexMatch(EXPRESSION).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $regexMatch: { \"input\" : \"$shrewd\" , \"regex\" : " + EXPRESSION_STRING + " } } "));
+	}
+	
+	@Test // DATAMONGO - 3725
+	public void shouldRenderRegexMatchWithOptions() {
+
+		assertThat(StringOperators.valueOf("shrewd").regexMatch("e").options("i").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $regexMatch: { \"input\" : \"$shrewd\", \"regex\" : \"e\" , \"options\" : \"i\" } } "));
+	}
+	
+	@Test // DATAMONGO - 3725
+	public void shouldRenderRegexMatchWithOptionsExpression() {
+
+		assertThat(StringOperators.valueOf("shrewd").regexMatch("e").optionsOf(EXPRESSION).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $regexMatch: { \"input\" : \"$shrewd\", \"regex\" : \"e\" , \"options\" : " + EXPRESSION_STRING + " } } "));
+	}
+
+	@Test // DATAMONGO - 3725
+	public void shouldRenderRegexFind() {
+
+		assertThat(StringOperators.valueOf("shrewd").regexFind("e").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $regexFind: { \"input\" : \"$shrewd\" , \"regex\" : \"e\" } }"));
+	}
+	
+	@Test // DATAMONGO - 3725
+	public void shouldRenderRegexFindForExpression() {
+
+		assertThat(StringOperators.valueOf(EXPRESSION).regexFind("e").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $regexFind: { \"input\" : " + EXPRESSION_STRING + " , \"regex\" : \"e\" } } "));
+	}
+	
+	@Test // DATAMONGO - 3725
+	public void shouldRenderRegexFindForRegexExpression() {
+
+		assertThat(StringOperators.valueOf("shrewd").regexFind(EXPRESSION).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $regexFind: { \"input\" : \"$shrewd\" , \"regex\" : " + EXPRESSION_STRING + " } } "));
+	}
+	
+	@Test // DATAMONGO - 3725
+	public void shouldRenderRegexFindWithOptions() {
+
+		assertThat(StringOperators.valueOf("shrewd").regexFind("e").options("i").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $regexFind: { \"input\" : \"$shrewd\", \"regex\" : \"e\" , \"options\" : \"i\" } } "));
+	}
+	
+	@Test // DATAMONGO - 3725
+	public void shouldRenderRegexFindWithOptionsExpression() {
+
+		assertThat(StringOperators.valueOf("shrewd").regexFind("e").optionsOf(EXPRESSION).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo(Document.parse("{ $regexFind: { \"input\" : \"$shrewd\", \"regex\" : \"e\" , \"options\" : " + EXPRESSION_STRING + " } } "));
+	}
+
 
 }
