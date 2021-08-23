@@ -33,9 +33,11 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.lang.Nullable;
 
 /**
+ * Unit tests for {@link SetWindowFieldsOperation}.
+ *
  * @author Christoph Strobl
  */
-public class SetWindowFieldsOperationUnitTests {
+class SetWindowFieldsOperationUnitTests {
 
 	@Test // GH-3711
 	void rendersTargetFieldNamesCorrectly() {

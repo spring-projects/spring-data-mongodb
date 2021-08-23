@@ -37,6 +37,8 @@ import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
 
 /**
+ * Integration tests for {@link SetWindowFieldsOperation}.
+ *
  * @author Christoph Strobl
  */
 @ExtendWith(MongoTemplateExtension.class)

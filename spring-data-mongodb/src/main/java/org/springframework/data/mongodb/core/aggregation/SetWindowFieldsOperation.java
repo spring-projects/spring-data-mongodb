@@ -25,6 +25,8 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
+ * Encapsulates the {@code setWindowFields}-operation.
+ *
  * @author Christoph Strobl
  * @since 3.3
  * @see <a href=
@@ -33,13 +35,12 @@ import org.springframework.util.Assert;
 public class SetWindowFieldsOperation
 		implements AggregationOperation, FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation {
 
-	@Nullable //
-	private Object partitionBy;
+	private static final String CURRENT = "current";
+	private static final String UNBOUNDED = "unbounded";
 
-	@Nullable //
-	private AggregationOperation sortBy;
-
-	private WindowOutput output;
+	private final @Nullable Object partitionBy;
+	private final @Nullable AggregationOperation sortBy;
+	private final WindowOutput output;
 
 	/**
 	 * Create a new {@link SetWindowFieldsOperation} with given args.
@@ -49,7 +50,7 @@ public class SetWindowFieldsOperation
 	 * @param output the {@link WindowOutput} containing the fields to add and the rules to calculate their respective
 	 *          values.
 	 */
-	public SetWindowFieldsOperation(@Nullable Object partitionBy, @Nullable AggregationOperation sortBy,
+	protected SetWindowFieldsOperation(@Nullable Object partitionBy, @Nullable AggregationOperation sortBy,
 			WindowOutput output) {
 
 		this.partitionBy = partitionBy;
@@ -59,7 +60,7 @@ public class SetWindowFieldsOperation
 
 	/**
 	 * Obtain a {@link SetWindowFieldsOperationBuilder builder} to create a {@link SetWindowFieldsOperation}.
-	 * 
+	 *
 	 * @return new instance of {@link SetWindowFieldsOperationBuilder}.
 	 */
 	public static SetWindowFieldsOperationBuilder builder() {
@@ -118,7 +119,7 @@ public class SetWindowFieldsOperation
 	 */
 	public static class WindowOutput {
 
-		private List<ComputedField> fields;
+		private final List<ComputedField> fields;
 
 		/**
 		 * Create a new output containing the single given {@link ComputedField field}.
@@ -128,6 +129,7 @@ public class SetWindowFieldsOperation
 		public WindowOutput(ComputedField outputField) {
 
 			Assert.notNull(outputField, "OutputField must not be null!");
+
 			this.fields = new ArrayList<>();
 			this.fields.add(outputField);
 		}
@@ -141,6 +143,7 @@ public class SetWindowFieldsOperation
 		public WindowOutput append(ComputedField field) {
 
 			Assert.notNull(field, "Field must not be null!");
+
 			fields.add(field);
 			return this;
 		}
@@ -202,11 +205,9 @@ public class SetWindowFieldsOperation
 	 */
 	public static class ComputedField implements Field {
 
-		private String name;
-		private AggregationExpression windowOperator;
-
-		@Nullable //
-		private Window window;
+		private final String name;
+		private final AggregationExpression windowOperator;
+		private final @Nullable Window window;
 
 		/**
 		 * Create a new {@link ComputedField}.
@@ -286,7 +287,7 @@ public class SetWindowFieldsOperation
 		 * @return new instance of {@link RangeWindow}.
 		 */
 		static RangeWindow range(Object lower, Object upper, @Nullable WindowUnit unit) {
-			return new RangeWindow(lower, upper, unit);
+			return new RangeWindow(lower, upper, unit == null ? WindowUnits.DEFAULT : unit);
 		}
 
 		/**
@@ -314,18 +315,18 @@ public class SetWindowFieldsOperation
 	public interface Window {
 
 		/**
+		 * The lower (inclusive) boundary.
+		 *
+		 * @return
+		 */
+		Object getLower();
+
+		/**
 		 * The upper (inclusive) boundary.
 		 *
 		 * @return
 		 */
 		Object getUpper();
-
-		/**
-		 * The lower (inclusive) boundary.
-		 * 
-		 * @return
-		 */
-		Object getLower();
 
 		/**
 		 * Obtain the document representation of the window in a default {@link AggregationOperationContext context}.
@@ -351,26 +352,9 @@ public class SetWindowFieldsOperation
 	 */
 	public static class RangeWindowBuilder {
 
-		@Nullable //
-		private Object upper;
-
-		@Nullable //
-		private Object lower;
-
-		@Nullable //
-		private WindowUnit unit;
-
-		/**
-		 * The upper (inclusive) range limit based on the sortBy field.
-		 *
-		 * @param upper eg. {@literal current} or {@literal unbounded}.
-		 * @return this.
-		 */
-		public RangeWindowBuilder to(String upper) {
-
-			this.upper = upper;
-			return this;
-		}
+		private @Nullable Object lower;
+		private @Nullable Object upper;
+		private @Nullable WindowUnit unit;
 
 		/**
 		 * The lower (inclusive) range limit based on the sortBy field.
@@ -385,19 +369,21 @@ public class SetWindowFieldsOperation
 		}
 
 		/**
-		 * The upper (inclusive) range limit value to add to the value based on the sortBy field.
+		 * The upper (inclusive) range limit based on the sortBy field.
 		 *
-		 * @param upper
+		 * @param upper eg. {@literal current} or {@literal unbounded}.
 		 * @return this.
 		 */
-		public RangeWindowBuilder to(Number upper) {
+		public RangeWindowBuilder to(String upper) {
 
 			this.upper = upper;
 			return this;
 		}
 
 		/**
-		 * The lower (inclusive) range limit value to add to the value based on the sortBy field.
+		 * The lower (inclusive) range limit value to add to the value based on the sortBy field. Use a negative integer for
+		 * a position before the current document. Use a positive integer for a position after the current document.
+		 * {@code 0} is the current document position.
 		 *
 		 * @param lower
 		 * @return this.
@@ -409,12 +395,26 @@ public class SetWindowFieldsOperation
 		}
 
 		/**
+		 * The upper (inclusive) range limit value to add to the value based on the sortBy field. Use a negative integer for
+		 * a position before the current document. Use a positive integer for a position after the current document.
+		 * {@code 0} is the current document position.
+		 *
+		 * @param upper
+		 * @return this.
+		 */
+		public RangeWindowBuilder to(Number upper) {
+
+			this.upper = upper;
+			return this;
+		}
+
+		/**
 		 * Use {@literal current} as {@link #from(String) lower} limit.
 		 *
 		 * @return this.
 		 */
 		public RangeWindowBuilder fromCurrent() {
-			return from("current");
+			return from(CURRENT);
 		}
 
 		/**
@@ -423,7 +423,7 @@ public class SetWindowFieldsOperation
 		 * @return this.
 		 */
 		public RangeWindowBuilder fromUnbounded() {
-			return from("unbounded");
+			return from(UNBOUNDED);
 		}
 
 		/**
@@ -432,7 +432,7 @@ public class SetWindowFieldsOperation
 		 * @return this.
 		 */
 		public RangeWindowBuilder toCurrent() {
-			return to("current");
+			return to(CURRENT);
 		}
 
 		/**
@@ -441,7 +441,7 @@ public class SetWindowFieldsOperation
 		 * @return this.
 		 */
 		public RangeWindowBuilder toUnbounded() {
-			return to("unbounded");
+			return to(UNBOUNDED);
 		}
 
 		/**
@@ -452,7 +452,8 @@ public class SetWindowFieldsOperation
 		 */
 		public RangeWindowBuilder unit(WindowUnit windowUnit) {
 
-			this.unit = unit;
+			Assert.notNull(windowUnit, "WindowUnit must not be null");
+			this.unit = windowUnit;
 			return this;
 		}
 
@@ -462,6 +463,11 @@ public class SetWindowFieldsOperation
 		 * @return new instance of {@link RangeWindow}.
 		 */
 		public RangeWindow build() {
+
+			Assert.notNull(lower, "Lower bound must not be null");
+			Assert.notNull(upper, "Upper bound must not be null");
+			Assert.notNull(unit, "WindowUnit bound must not be null");
+
 			return new RangeWindow(lower, upper, unit);
 		}
 	}
@@ -473,12 +479,17 @@ public class SetWindowFieldsOperation
 	 */
 	public static class DocumentWindowBuilder {
 
-		@Nullable //
-		private Object upper;
+		private @Nullable Object lower;
+		private @Nullable Object upper;
 
-		@Nullable //
-		private Object lower;
-
+		/**
+		 * The lower (inclusive) range limit based on current document. Use a negative integer for a position before the
+		 * current document. Use a positive integer for a position after the current document. {@code 0} is the current
+		 * document position.
+		 *
+		 * @param lower
+		 * @return this.
+		 */
 		public DocumentWindowBuilder from(Number lower) {
 
 			this.lower = lower;
@@ -486,11 +497,11 @@ public class SetWindowFieldsOperation
 		}
 
 		public DocumentWindowBuilder fromCurrent() {
-			return from("current");
+			return from(CURRENT);
 		}
 
 		public DocumentWindowBuilder fromUnbounded() {
-			return from("unbounded");
+			return from(UNBOUNDED);
 		}
 
 		public DocumentWindowBuilder to(String upper) {
@@ -512,9 +523,11 @@ public class SetWindowFieldsOperation
 		}
 
 		/**
-		 * The upper (inclusive) range limit based on current document.
+		 * The upper (inclusive) range limit based on current document. Use a negative integer for a position before the
+		 * current document. Use a positive integer for a position after the current document. {@code 0} is the current
+		 * document position.
 		 *
-		 * @param upper eg. {@literal current} or {@literal unbounded}.
+		 * @param upper
 		 * @return this.
 		 */
 		public DocumentWindowBuilder to(Number upper) {
@@ -524,14 +537,18 @@ public class SetWindowFieldsOperation
 		}
 
 		public DocumentWindowBuilder toCurrent() {
-			return to("current");
+			return to(CURRENT);
 		}
 
 		public DocumentWindowBuilder toUnbounded() {
-			return to("unbounded");
+			return to(UNBOUNDED);
 		}
 
 		public DocumentWindow build() {
+
+			Assert.notNull(lower, "Lower bound must not be null");
+			Assert.notNull(upper, "Upper bound must not be null");
+
 			return new DocumentWindow(lower, upper);
 		}
 	}
@@ -541,24 +558,24 @@ public class SetWindowFieldsOperation
 	 *
 	 * @author Christoph Strobl
 	 */
-	abstract static class WindowImp implements Window {
+	static abstract class WindowImpl implements Window {
 
-		private final Object upper;
 		private final Object lower;
+		private final Object upper;
 
-		protected WindowImp(Object lower, Object upper) {
-			this.upper = upper;
+		protected WindowImpl(Object lower, Object upper) {
 			this.lower = lower;
-		}
-
-		@Override
-		public Object getUpper() {
-			return upper;
+			this.upper = upper;
 		}
 
 		@Override
 		public Object getLower() {
 			return lower;
+		}
+
+		@Override
+		public Object getUpper() {
+			return upper;
 		}
 	}
 
@@ -567,7 +584,7 @@ public class SetWindowFieldsOperation
 	 *
 	 * @author Christoph Strobl
 	 */
-	public static class DocumentWindow extends WindowImp {
+	public static class DocumentWindow extends WindowImpl {
 
 		DocumentWindow(Object lower, Object upper) {
 			super(lower, upper);
@@ -584,10 +601,9 @@ public class SetWindowFieldsOperation
 	 *
 	 * @author Christoph Strobl
 	 */
-	public static class RangeWindow extends WindowImp {
+	public static class RangeWindow extends WindowImpl {
 
-		@Nullable //
-		private WindowUnit unit;
+		private final WindowUnit unit;
 
 		protected RangeWindow(Object lower, Object upper, WindowUnit unit) {
 
@@ -634,10 +650,12 @@ public class SetWindowFieldsOperation
 		/**
 		 * Specify the field to group by.
 		 *
-		 * @param fieldName must not be {@literal null}.
+		 * @param fieldName must not be {@literal null} or null.
 		 * @return this.
 		 */
 		public SetWindowFieldsOperationBuilder partitionByField(String fieldName) {
+
+			Assert.hasText(fieldName, "Field name must not be empty or null");
 			return partitionBy(Fields.field("$" + fieldName, fieldName));
 		}
 
@@ -679,6 +697,8 @@ public class SetWindowFieldsOperation
 		 */
 		public SetWindowFieldsOperationBuilder sortBy(SortOperation sort) {
 
+			Assert.notNull(sort, "SortOperation must not be null");
+
 			this.sortOperation = sort;
 			return this;
 		}
@@ -690,6 +710,8 @@ public class SetWindowFieldsOperation
 		 * @return this.
 		 */
 		public SetWindowFieldsOperationBuilder output(WindowOutput output) {
+
+			Assert.notNull(output, "WindowOutput must not be null");
 
 			this.output = output;
 			return this;
@@ -710,12 +732,16 @@ public class SetWindowFieldsOperation
 				@Override
 				public As within(Window window) {
 
+					Assert.notNull(window, "Window must not be null");
+
 					this.window = window;
 					return this;
 				}
 
 				@Override
 				public SetWindowFieldsOperationBuilder as(String targetFieldName) {
+
+					Assert.hasText(targetFieldName, "Target field name must not be empty or null");
 
 					ComputedField computedField = new ComputedField(targetFieldName, expression, window);
 
@@ -738,7 +764,7 @@ public class SetWindowFieldsOperation
 			/**
 			 * Define the target name field name to hold the computation result.
 			 *
-			 * @param targetFieldName must not be {@literal null}.
+			 * @param targetFieldName must not be {@literal null} or empty.
 			 * @return the starting point {@link SetWindowFieldsOperationBuilder builder} instance.
 			 */
 			SetWindowFieldsOperationBuilder as(String targetFieldName);
@@ -760,12 +786,14 @@ public class SetWindowFieldsOperation
 		}
 
 		/**
-		 * Partition by a value that transaltes to a valid mongodb expression.
+		 * Partition by a value that translates to a valid mongodb expression.
 		 *
 		 * @param value must not be {@literal null}.
 		 * @return this.
 		 */
 		public SetWindowFieldsOperationBuilder partitionBy(Object value) {
+
+			Assert.notNull(value, "Partition By must not be null");
 
 			partitionBy = value;
 			return this;
@@ -773,7 +801,7 @@ public class SetWindowFieldsOperation
 
 		/**
 		 * Obtain a new instance of {@link SetWindowFieldsOperation} with previously set arguments.
-		 * 
+		 *
 		 * @return new instance of {@link SetWindowFieldsOperation}.
 		 */
 		public SetWindowFieldsOperation build() {
