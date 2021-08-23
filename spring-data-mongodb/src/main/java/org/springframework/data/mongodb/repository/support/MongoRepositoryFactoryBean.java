@@ -70,7 +70,7 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 	 * @see org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport#setMappingContext(org.springframework.data.mapping.context.MappingContext)
 	 */
 	@Override
-	protected void setMappingContext(MappingContext<?, ?> mappingContext) {
+	public void setMappingContext(MappingContext<?, ?> mappingContext) {
 
 		super.setMappingContext(mappingContext);
 		this.mappingContextConfigured = true;
