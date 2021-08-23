@@ -515,6 +515,120 @@ public class StringOperators {
 		private RTrim createRTrim() {
 			return usesFieldRef() ? RTrim.valueOf(fieldReference) : RTrim.valueOf(expression);
 		}
+		
+		/**
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and applies the given 
+		 * regular expression to find the document with the first match.<br />
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @return new instance of {@link RegexFind}.
+		 */
+		public RegexFind regexFind(String regex) {
+			return createRegexFind().regex(regex);
+		}
+		
+		/**
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and applies the regular 
+		 * expression resulting from the given {@link AggregationExpression} to find the document with the first match.<br />
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @return new instance of {@link RegexFind}.
+		 */
+		public RegexFind regexFind(AggregationExpression expression) {
+			return createRegexFind().regexOf(expression);
+		}
+		
+		/**
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and applies the regular 
+		 * expression with the options specified in the argument to find the document with the first match.
+		 *
+		 * @param regex the regular expression to apply
+		 * @param options the options to use
+		 * @return new instance of {@link RegexFind}.
+		 */
+		public RegexFind regexFind(String regex,String options) {
+			return createRegexFind().regex(regex).options(options);
+		}
+		
+		private RegexFind createRegexFind() {
+			return usesFieldRef() ? RegexFind.valueOf(fieldReference) : RegexFind.valueOf(expression);
+		}
+		
+		/**
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and applies the given 
+		 * regular expression to find all the documents with the match.<br />
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @return new instance of {@link RegexFindAll}.
+		 */
+		public RegexFindAll regexFindAll(String regex) {
+			return createRegexFindAll().regex(regex);
+		}
+		
+		/**
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and applies the regular 
+		 * expression resulting from the given {@link AggregationExpression} to find all the documents with the match..<br />
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @return new instance of {@link RegexFindAll}.
+		 */
+		public RegexFindAll regexFindAll(AggregationExpression expression) {
+			return createRegexFindAll().regexOf(expression);
+		}
+		
+		/**
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and applies the regular 
+		 * expression with the options specified in the argument to find all the documents with the match..
+		 *
+		 * @param regex the regular expression to apply
+		 * @param options the options to use
+		 * @return new instance of {@link RegexFindAll}.
+		 */
+		public RegexFindAll regexFindAll(String regex,String options) {
+			return createRegexFindAll().regex(regex).options(options);
+		}
+		
+		private RegexFindAll createRegexFindAll() {
+			return usesFieldRef() ? RegexFindAll.valueOf(fieldReference) : RegexFindAll.valueOf(expression);
+		}
+		
+		/**
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and applies the given 
+		 * regular expression to find if a match is found or not.<br />
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @return new instance of {@link RegexMatch}.
+		 */
+		public RegexMatch regexMatch(String regex) {
+			return createRegexMatch().regex(regex);
+		}
+		
+		/**
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and applies the regular 
+		 * expression resulting from the given {@link AggregationExpression} to find if a match is found or not.<br />
+		 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+		 *
+		 * @return new instance of {@link RegexMatch}.
+		 */
+		public RegexMatch regexMatch(AggregationExpression expression) {
+			return createRegexMatch().regexOf(expression);
+		}
+		
+		/**
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and applies the regular 
+		 * expression with the options specified in the argument to find if a match is found or not.
+		 *
+		 * @param regex the regular expression to apply
+		 * @param options the options to use
+		 * @return new instance of {@link RegexMatch}.
+		 */
+		public RegexMatch regexMatch(String regex,String options) {
+			return createRegexMatch().regex(regex).options(options);
+		}
+		
+		private RegexMatch createRegexMatch() {
+			return usesFieldRef() ? RegexMatch.valueOf(fieldReference) : RegexMatch.valueOf(expression);
+		}
 
 		private boolean usesFieldRef() {
 			return fieldReference != null;
@@ -1476,5 +1590,329 @@ public class StringOperators {
 		protected String getMongoMethod() {
 			return "$rtrim";
 		}
+	}
+	
+	/**
+	 * {@link AggregationExpression} for {@code $regexFind} which applies a regular expression (regex) to a string and 
+	 * returns information on the first matched substring. <br />
+	 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+	 *
+	 */
+	public static class RegexFind extends AbstractAggregationExpression {
+		
+		protected RegexFind(Object value) {
+			super(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$regexFind";
+		}
+		
+		/**
+		 * Creates new {@link RegexFind} using the value of the provided {@link Field fieldReference} as {@literal input} value.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link RegexFind}.
+		 */
+		public static RegexFind valueOf(String fieldReference) {
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new RegexFind(Collections.singletonMap("input", Fields.field(fieldReference)));
+		}
+		
+		/**
+		 * Creates new {@link RegexFind} using the result of the provided {@link AggregationExpression} as {@literal input}
+		 * value.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link RegexFind}.
+		 */
+		public static RegexFind valueOf(AggregationExpression expression) {
+			Assert.notNull(expression, "Expression must not be null!");
+			return new RegexFind(Collections.singletonMap("input", expression));
+		}
+		
+		/**
+		 * Optional specify the options to use with the regular expression.
+		 *
+		 * @param options must not be {@literal null}.
+		 * @return new instance of {@link RegexFind}.
+		 */
+		public RegexFind options(String options) {
+			Assert.notNull(options, "Options must not be null!");
+			return new RegexFind(append("options", options));
+		}
+		
+		/**
+		 * Optional specify the reference to the {@link Field field} holding the options values to use with the regular expression.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link RegexFind}.
+		 */
+		public RegexFind optionsOf(String fieldReference) {
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new RegexFind(append("options", Fields.field(fieldReference)));
+		}
+		
+		/**
+		 * Optional specify the {@link AggregationExpression} evaluating to the options values to use with the regular expression.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link RegexFind}.
+		 */
+		public RegexFind optionsOf(AggregationExpression expression) {
+			Assert.notNull(expression, "Expression must not be null!");
+			return new RegexFind(append("options", expression));
+		}
+		
+		/**
+		 * Optional specify the regular expression to apply.
+		 *
+		 * @param regex must not be {@literal null}.
+		 * @return new instance of {@link RegexFind}.
+		 */
+		public RegexFind regex(String regex) {
+			Assert.notNull(regex, "Regex must not be null!");
+			return new RegexFind(append("regex",regex));
+		}
+		
+		/**
+		 * Optional specify the reference to the {@link Field field} holding the regular expression to apply.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link RegexFind}.
+		 */
+		public RegexFind regexOf(String fieldReference) {
+			Assert.notNull(fieldReference, "fieldReference must not be null!");
+			return new RegexFind(append("regex",Fields.field(fieldReference)));
+		}
+		
+		/**
+		 * Optional specify the {@link AggregationExpression} evaluating to the regular expression to apply.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link RegexFind}.
+		 */
+		public RegexFind regexOf(AggregationExpression expression) {
+			Assert.notNull(expression, "Expression must not be null!");
+			return new RegexFind(append("regex",expression));
+		}
+
+	}
+	
+	/**
+	 * {@link AggregationExpression} for {@code $regexFindAll} which applies a regular expression (regex) to a string and 
+	 * returns information on all the matched substrings. <br />
+	 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+	 *
+	 */
+	public static class RegexFindAll extends AbstractAggregationExpression {
+
+		protected RegexFindAll(Object value) {
+			super(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$regexFindAll";
+		}
+		
+		/**
+		 * Creates new {@link RegexFindAll} using the value of the provided {@link Field fieldReference} as {@literal input} value.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link RegexFindAll}.
+		 */
+		public static RegexFindAll valueOf(String fieldReference) {
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new RegexFindAll(Collections.singletonMap("input", Fields.field(fieldReference)));
+		}
+		
+		/**
+		 * Creates new {@link RegexFindAll} using the result of the provided {@link AggregationExpression} as {@literal input}
+		 * value.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link RegexFindAll}.
+		 */
+		public static RegexFindAll valueOf(AggregationExpression expression) {
+			Assert.notNull(expression, "Expression must not be null!");
+			return new RegexFindAll(Collections.singletonMap("input", expression));
+		}
+		
+		/**
+		 * Optional specify the options to use with the regular expression.
+		 *
+		 * @param options must not be {@literal null}.
+		 * @return new instance of {@link RegexFindAll}.
+		 */
+		public RegexFindAll options(String options) {
+			Assert.notNull(options, "Options must not be null!");
+			return new RegexFindAll(append("options", options));
+		}
+		
+		/**
+		 * Optional specify the reference to the {@link Field field} holding the options values to use with the regular expression.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link RegexFindAll}.
+		 */
+		public RegexFindAll optionsOf(String fieldReference) {
+			Assert.notNull(fieldReference, "fieldReference must not be null!");
+			return new RegexFindAll(append("options", Fields.field(fieldReference)));
+		}
+		
+		/**
+		 * Optional specify the {@link AggregationExpression} evaluating to the options values to use with the regular expression.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link RegexFindAll}.
+		 */
+		public RegexFindAll optionsOf(AggregationExpression expression) {
+			Assert.notNull(expression, "Expression must not be null!");
+			return new RegexFindAll(append("options", expression));
+		}
+		
+		/**
+		 * Optional specify the regular expression to apply.
+		 *
+		 * @param regex must not be {@literal null}.
+		 * @return new instance of {@link RegexFindAll}.
+		 */
+		public RegexFindAll regex(String regex) {
+			Assert.notNull(regex, "Regex must not be null!");
+			return new RegexFindAll(append("regex",regex));
+		}
+		
+		/**
+		 * Optional specify the reference to the {@link Field field} holding the regular expression to apply.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link RegexFindAll}.
+		 */
+		public RegexFindAll regexOf(String fieldReference) {
+			Assert.notNull(fieldReference, "fieldReference must not be null!");
+			return new RegexFindAll(append("regex",Fields.field(fieldReference)));
+		}
+		
+		/**
+		 * Optional specify the {@link AggregationExpression} evaluating to the regular expression to apply.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link RegexFindAll}.
+		 */
+		public RegexFindAll regexOf(AggregationExpression expression) {
+			Assert.notNull(expression, "Expression must not be null!");
+			return new RegexFindAll(append("regex",expression));
+		}
+
+	}
+	
+	/**
+	 * {@link AggregationExpression} for {@code $regexMatch} which applies a regular expression (regex) to a string and 
+	 * returns a boolean that indicates if a match is found or not. <br />
+	 * <strong>NOTE:</strong> Requires MongoDB 4.0 or later.
+	 *
+	 */
+	public static class RegexMatch extends AbstractAggregationExpression {
+
+		protected RegexMatch(Object value) {
+			super(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$regexMatch";
+		}
+		
+		/**
+		 * Creates new {@link RegexMatch} using the value of the provided {@link Field fieldReference} as {@literal input} value.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link RegexMatch}.
+		 */
+		public static RegexMatch valueOf(String fieldReference) {
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new RegexMatch(Collections.singletonMap("input", Fields.field(fieldReference)));
+		}
+		
+		/**
+		 * Creates new {@link RegexMatch} using the result of the provided {@link AggregationExpression} as {@literal input}
+		 * value.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link RegexMatch}.
+		 */
+		public static RegexMatch valueOf(AggregationExpression expression) {
+			Assert.notNull(expression, "Expression must not be null!");
+			return new RegexMatch(Collections.singletonMap("input", expression));
+		}
+		
+		/**
+		 * Optional specify the options to use with the regular expression.
+		 *
+		 * @param options must not be {@literal null}.
+		 * @return new instance of {@link RegexMatch}.
+		 */
+		public RegexMatch options(String options) {
+			Assert.notNull(options, "Options must not be null!");
+			return new RegexMatch(append("options", options));
+		}
+		
+		/**
+		 * Optional specify the reference to the {@link Field field} holding the options values to use with the regular expression.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link RegexMatch}.
+		 */
+		public RegexMatch optionsOf(String fieldReference) {
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new RegexMatch(append("options", Fields.field(fieldReference)));
+		}
+		
+		/**
+		 * Optional specify the {@link AggregationExpression} evaluating to the options values to use with the regular expression.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link RegexMatch}.
+		 */
+		public RegexMatch optionsOf(AggregationExpression expression) {
+			Assert.notNull(expression, "Expression must not be null!");
+			return new RegexMatch(append("options", expression));
+		}
+		
+		/**
+		 * Optional specify the regular expression to apply.
+		 *
+		 * @param regex must not be {@literal null}.
+		 * @return new instance of {@link RegexMatch}.
+		 */
+		public RegexMatch regex(String regex) {
+			Assert.notNull(regex, "Regex must not be null!");
+			return new RegexMatch(append("regex",regex));
+		}
+		
+		/**
+		 * Optional specify the reference to the {@link Field field} holding the regular expression to apply.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link RegexMatch}.
+		 */
+		public RegexMatch regexOf(String fieldReference) {
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new RegexMatch(append("regex",Fields.field(fieldReference)));
+		}
+		
+		/**
+		 * Optional specify the {@link AggregationExpression} evaluating to the regular expression to apply.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link RegexMatch}.
+		 */
+		public RegexMatch regexOf(AggregationExpression expression) {
+			Assert.notNull(expression, "Expression must not be null!");
+			return new RegexMatch(append("regex",expression));
+		}
+
 	}
 }

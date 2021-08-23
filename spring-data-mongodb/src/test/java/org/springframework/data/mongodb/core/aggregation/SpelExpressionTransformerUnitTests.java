@@ -800,6 +800,70 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(transform("rtrim(field1, field2)"))
 				.isEqualTo("{ \"$rtrim\" : {\"input\" : \"$field1\", \"chars\" : \"$field2\" }}");
 	}
+	
+	@Test // DATAMONGO-3725
+	public void shouldRenderRegexFindWithoutOptions() {
+		
+		assertThat(transform("regexFind(field1,'e')"))
+				.isEqualTo(Document.parse("{ \"$regexFind\" : {\"input\" : \"$field1\" , \"regex\" : \"e\"}}"));
+	}
+	
+	@Test // DATAMONGO-3725
+	public void shouldRenderRegexFindWithOptions() {
+		
+		assertThat(transform("regexFind(field1,'e','i')"))
+				.isEqualTo(Document.parse("{ \"$regexFind\" : {\"input\" : \"$field1\" , \"regex\" : \"e\" , \"options\" : \"i\"}}"));
+	}
+	
+	@Test // DATAMONGO-3725
+	public void shouldRenderRegexFindWithOptionsFromFieldReference() {
+		
+		assertThat(transform("regexFind(field1,'e',field2)"))
+				.isEqualTo(Document.parse("{ \"$regexFind\" : {\"input\" : \"$field1\" , \"regex\" : \"e\" , \"options\" : \"$field2\"}}"));
+	}
+	
+	@Test // DATAMONGO-3725
+	public void shouldRenderRegexFindAllWithoutOptions() {
+		
+		assertThat(transform("regexFindAll(field1,'e')"))
+				.isEqualTo(Document.parse("{ \"$regexFindAll\" : {\"input\" : \"$field1\" , \"regex\" : \"e\"}}"));
+	}
+	
+	@Test // DATAMONGO-3725
+	public void shouldRenderRegexFindAllWithOptions() {
+		
+		assertThat(transform("regexFindAll(field1,'e','i')"))
+				.isEqualTo(Document.parse("{ \"$regexFindAll\" : {\"input\" : \"$field1\" , \"regex\" : \"e\" , \"options\" : \"i\"}}"));
+	}
+	
+	@Test // DATAMONGO-3725
+	public void shouldRenderRegexFindAllWithOptionsFromFieldReference() {
+		
+		assertThat(transform("regexFindAll(field1,'e',field2)"))
+				.isEqualTo(Document.parse("{ \"$regexFindAll\" : {\"input\" : \"$field1\" , \"regex\" : \"e\" , \"options\" : \"$field2\"}}"));
+	}
+
+	@Test // DATAMONGO-3725
+	public void shouldRenderRegexMatchWithoutOptions() {
+		
+		assertThat(transform("regexMatch(field1,'e')"))
+				.isEqualTo(Document.parse("{ \"$regexMatch\" : {\"input\" : \"$field1\" , \"regex\" : \"e\"}}"));
+	}
+	
+	@Test // DATAMONGO-3725
+	public void shouldRenderRegexMatchWithOptions() {
+		
+		assertThat(transform("regexMatch(field1,'e','i')"))
+				.isEqualTo(Document.parse("{ \"$regexMatch\" : {\"input\" : \"$field1\" , \"regex\" : \"e\" , \"options\" : \"i\"}}"));
+	}
+	
+	@Test // DATAMONGO-3725
+	public void shouldRenderRegexMatchWithOptionsFromFieldReference() {
+		
+		assertThat(transform("regexMatch(field1,'e',field2)"))
+				.isEqualTo(Document.parse("{ \"$regexMatch\" : {\"input\" : \"$field1\" , \"regex\" : \"e\" , \"options\" : \"$field2\"}}"));
+	}
+
 
 	@Test // DATAMONGO-2077
 	void shouldRenderConvertWithoutOptionalParameters() {

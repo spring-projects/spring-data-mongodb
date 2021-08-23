@@ -1766,6 +1766,33 @@ public class ProjectionOperationUnitTests {
 		assertThat(agg)
 				.isEqualTo(Document.parse("{ $project : { yearSubstring: { $substrCP: [ \"$quarter\", 0, 2 ] } } }"));
 	}
+	
+	@Test // DATAMONGO - 3725
+	public void shouldRenderRegexFindCorrectly() {
+
+		Document agg = project().and(StringOperators.valueOf("field1").regexFind("e")).as("regex")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse("{ $project : { regex: { $regexFind: { \"input\" : \"$field1\", \"regex\" : \"e\" } } } }"));
+	}
+	
+	@Test // DATAMONGO - 3725
+	public void shouldRenderRegexFindAllCorrectly() {
+
+		Document agg = project().and(StringOperators.valueOf("field1").regexFindAll("e")).as("regex")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse("{ $project : { regex: { $regexFindAll: { \"input\" : \"$field1\", \"regex\" : \"e\" } } } }"));
+	}
+	
+	@Test // DATAMONGO - 3725
+	public void shouldRenderRegexMatchCorrectly() {
+
+		Document agg = project().and(StringOperators.valueOf("field1").regexMatch("e")).as("regex")
+				.toDocument(Aggregation.DEFAULT_CONTEXT);
+
+		assertThat(agg).isEqualTo(Document.parse("{ $project : { regex: { $regexMatch: { \"input\" : \"$field1\", \"regex\" : \"e\" } } } }"));
+	}
 
 	@Test // DATAMONGO-1548
 	public void shouldRenderIndexOfArrayCorrectly() {
