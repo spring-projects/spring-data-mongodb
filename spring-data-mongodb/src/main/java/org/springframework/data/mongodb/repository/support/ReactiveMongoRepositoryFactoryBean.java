@@ -80,7 +80,7 @@ public class ReactiveMongoRepositoryFactoryBean<T extends Repository<S, ID>, S, 
 	 * @see org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport#setMappingContext(org.springframework.data.mapping.context.MappingContext)
 	 */
 	@Override
-	protected void setMappingContext(MappingContext<?, ?> mappingContext) {
+	public void setMappingContext(MappingContext<?, ?> mappingContext) {
 
 		super.setMappingContext(mappingContext);
 		this.mappingContextConfigured = true;
