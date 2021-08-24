@@ -15,45 +15,46 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.aggregation.DocumentOperators.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
-import org.bson.Document;
 import org.junit.jupiter.api.Test;
 
 /**
+ * Unit tests for {@link DocumentOperators}.
+ *
  * @author Christoph Strobl
  */
 class DocumentOperatorsUnitTests {
 
 	@Test // GH-3715
 	void rendersRank() {
-		assertThat(rank().toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo(new Document("$rank", new Document()));
+		assertThat(rank().toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo("{ $rank: {  } }");
 	}
 
 	@Test // GH-3715
 	void rendersDenseRank() {
 		assertThat(denseRank().toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo(new Document("$denseRank", new Document()));
+				.isEqualTo("{ $denseRank: {  } }");
 	}
 
 	@Test // GH-3717
 	void rendersDocumentNumber() {
 		assertThat(documentNumber().toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo(new Document("$documentNumber", new Document()));
+				.isEqualTo("{ $documentNumber: {  } }");
 	}
 
 	@Test // GH-3727
 	void rendersShift() {
 
 		assertThat(valueOf("quantity").shift(1).toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo(Document.parse("{ $shift: { output: \"$quantity\", by: 1 } }"));
+				.isEqualTo("{ $shift: { output: \"$quantity\", by: 1 } }");
 	}
 
 	@Test // GH-3727
 	void rendersShiftWithDefault() {
 
 		assertThat(valueOf("quantity").shift(1).defaultTo("Not available").toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo(Document.parse("{ $shift: { output: \"$quantity\", by: 1, default: \"Not available\" } }"));
+				.isEqualTo("{ $shift: { output: \"$quantity\", by: 1, default: \"Not available\" } }");
 	}
 }

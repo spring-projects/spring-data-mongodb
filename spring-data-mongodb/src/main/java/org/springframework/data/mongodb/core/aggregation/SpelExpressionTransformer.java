@@ -102,7 +102,7 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 		ExpressionState state = new ExpressionState(new StandardEvaluationContext(params), CONFIG);
 		ExpressionNode node = ExpressionNode.from(spelExpression.getAST(), state);
 
-		return transform(new AggregationExpressionTransformationContext<ExpressionNode>(node, null, null, context));
+		return transform(new AggregationExpressionTransformationContext<>(node, null, null, context));
 	}
 
 	/*

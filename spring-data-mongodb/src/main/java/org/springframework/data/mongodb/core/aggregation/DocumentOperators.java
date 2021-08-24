@@ -82,7 +82,7 @@ public class DocumentOperators {
 	 */
 	public static class DocumentOperatorsFactory {
 
-		private Object target;
+		private final Object target;
 
 		public DocumentOperatorsFactory(Object target) {
 			this.target = target;

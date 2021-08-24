@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.core.spel;
 
 /**
- * SPI interface to implement components that can transfrom an {@link ExpressionTransformationContextSupport} into an
+ * SPI interface to implement components that can transform an {@link ExpressionTransformationContextSupport} into an
  * object.
  *
  * @author Oliver Gierke
