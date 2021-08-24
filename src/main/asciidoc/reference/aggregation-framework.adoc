@@ -54,7 +54,7 @@ Note that, if you provide an input class as the first parameter to the `newAggre
 The MongoDB Aggregation Framework provides the following types of aggregation operations:
 
 * Pipeline Aggregation Operators
-* Group Aggregation Operators
+* Group/Accumulator Aggregation Operators
 * Boolean Aggregation Operators
 * Comparison Aggregation Operators
 * Arithmetic Aggregation Operators
@@ -78,17 +78,17 @@ At the time of this writing, we provide support for the following Aggregation Op
 | Set Aggregation Operators
 | `setEquals`, `setIntersection`, `setUnion`, `setDifference`, `setIsSubset`, `anyElementTrue`, `allElementsTrue`
 
-| Group Aggregation Operators
-| `addToSet`, `first`, `last`, `max`, `min`, `avg`, `push`, `sum`, `(*count)`, `stdDevPop`, `stdDevSamp`
+| Group/Accumulator Aggregation Operators
+| `addToSet`, `first`, `last`, `max`, `min`, `avg`, `push`, `sum`, `count` (+++*+++), `stdDevPop`, `stdDevSamp`
 
 | Arithmetic Aggregation Operators
-| `abs`, `add` (*via `plus`), `ceil`, `divide`, `exp`, `floor`, `ln`, `log`, `log10`, `mod`, `multiply`, `pow`, `round`, `sqrt`, `subtract` (*via `minus`), `trunc`
+| `abs`, `add` (+++*+++ via `plus`), `ceil`, `divide`, `exp`, `floor`, `ln`, `log`, `log10`, `mod`, `multiply`, `pow`, `round`, `sqrt`, `subtract` (+++*+++ via `minus`), `trunc`
 
 | String Aggregation Operators
 | `concat`, `substr`, `toLower`, `toUpper`, `stcasecmp`, `indexOfBytes`, `indexOfCP`, `split`, `strLenBytes`, `strLenCP`, `substrCP`, `trim`, `ltrim`, `rtim`
 
 | Comparison Aggregation Operators
-| `eq` (*via: `is`), `gt`, `gte`, `lt`, `lte`, `ne`
+| `eq` (+++*+++ via `is`), `gt`, `gte`, `lt`, `lte`, `ne`
 
 | Array Aggregation Operators
 | `arrayElementAt`, `arrayToObject`, `concatArrays`, `filter`, `in`, `indexOfArray`, `isArray`, `range`, `reverseArray`, `reduce`, `size`, `slice`, `zip`
@@ -118,7 +118,7 @@ At the time of this writing, we provide support for the following Aggregation Op
 | `function`, `accumulator`
 |===
 
-* The operation is mapped or added by Spring Data MongoDB.
++++*+++ The operation is mapped or added by Spring Data MongoDB.
 
 Note that the aggregation operations not listed here are currently not supported by Spring Data MongoDB. Comparison aggregation operators are expressed as `Criteria` expressions.
 
