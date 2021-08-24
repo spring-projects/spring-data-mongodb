@@ -236,7 +236,7 @@ public class ConditionalOperators {
 	 *
 	 * @author Mark Paluch
 	 * @see <a href=
-	 * "https://docs.mongodb.com/manual/reference/operator/aggregation/ifNull/">https://docs.mongodb.com/manual/reference/operator/aggregation/ifNull/</a>
+	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/ifNull/">https://docs.mongodb.com/manual/reference/operator/aggregation/ifNull/</a>
 	 */
 	public static class IfNull implements AggregationExpression {
 
@@ -252,7 +252,8 @@ public class ConditionalOperators {
 		/**
 		 * Creates new {@link IfNull}.
 		 *
-		 * @param fieldReference the field to check for a {@literal null} value, field reference must not be {@literal null}.
+		 * @param fieldReference the field to check for a {@literal null} value, field reference must not be
+		 *          {@literal null}.
 		 * @return never {@literal null}.
 		 */
 		public static ThenBuilder ifNull(String fieldReference) {
@@ -265,7 +266,7 @@ public class ConditionalOperators {
 		 * Creates new {@link IfNull}.
 		 *
 		 * @param expression the expression to check for a {@literal null} value, field reference must not be
-		 * {@literal null}.
+		 *          {@literal null}.
 		 * @return never {@literal null}.
 		 */
 		public static ThenBuilder ifNull(AggregationExpression expression) {
@@ -283,8 +284,8 @@ public class ConditionalOperators {
 
 			List<Object> list = new ArrayList<Object>();
 
-			if(condition instanceof Collection) {
-				for(Object val : ((Collection)this.condition)) {
+			if (condition instanceof Collection) {
+				for (Object val : ((Collection) this.condition)) {
 					list.add(mapCondition(val, context));
 				}
 			} else {
@@ -326,14 +327,14 @@ public class ConditionalOperators {
 
 			/**
 			 * @param fieldReference the field to check for a {@literal null} value, field reference must not be
-			 * {@literal null}.
+			 *          {@literal null}.
 			 * @return the {@link ThenBuilder}
 			 */
 			ThenBuilder ifNull(String fieldReference);
 
 			/**
 			 * @param expression the expression to check for a {@literal null} value, field name must not be {@literal null}
-			 * or empty.
+			 *          or empty.
 			 * @return the {@link ThenBuilder}.
 			 */
 			ThenBuilder ifNull(AggregationExpression expression);
@@ -346,7 +347,8 @@ public class ConditionalOperators {
 		public interface OrBuilder {
 
 			/**
-			 * @param fieldReference the field to check for a {@literal null} value, field reference must not be {@literal null}.
+			 * @param fieldReference the field to check for a {@literal null} value, field reference must not be
+			 *          {@literal null}.
 			 * @return the {@link ThenBuilder}
 			 */
 			ThenBuilder orIfNull(String fieldReference);
@@ -365,8 +367,8 @@ public class ConditionalOperators {
 
 			/**
 			 * @param value the value to be used if the {@code $ifNull} condition evaluates {@literal true}. Can be a
-			 * {@link Document}, a value that is supported by MongoDB or a value that can be converted to a MongoDB
-			 * representation but must not be {@literal null}.
+			 *          {@link Document}, a value that is supported by MongoDB or a value that can be converted to a MongoDB
+			 *          representation but must not be {@literal null}.
 			 * @return new instance of {@link IfNull}.
 			 */
 			IfNull then(Object value);
@@ -499,7 +501,7 @@ public class ConditionalOperators {
 		public static Switch switchCases(List<CaseOperator> conditions) {
 
 			Assert.notNull(conditions, "Conditions must not be null!");
-			return new Switch(Collections.<String, Object>singletonMap("branches", new ArrayList<CaseOperator>(conditions)));
+			return new Switch(Collections.<String, Object> singletonMap("branches", new ArrayList<CaseOperator>(conditions)));
 		}
 
 		/**
@@ -586,7 +588,7 @@ public class ConditionalOperators {
 	 * @author Mark Paluch
 	 * @author Christoph Strobl
 	 * @see <a href=
-	 * "https://docs.mongodb.com/manual/reference/operator/aggregation/cond/">https://docs.mongodb.com/manual/reference/operator/aggregation/cond/</a>
+	 *      "https://docs.mongodb.com/manual/reference/operator/aggregation/cond/">https://docs.mongodb.com/manual/reference/operator/aggregation/cond/</a>
 	 */
 	public static class Cond implements AggregationExpression {
 
@@ -847,8 +849,8 @@ public class ConditionalOperators {
 
 			/**
 			 * @param value the value to be used if the condition evaluates {@literal true}. Can be a {@link Document}, a
-			 * value that is supported by MongoDB or a value that can be converted to a MongoDB representation but
-			 * must not be {@literal null}.
+			 *          value that is supported by MongoDB or a value that can be converted to a MongoDB representation but
+			 *          must not be {@literal null}.
 			 * @return the {@link OtherwiseBuilder}
 			 */
 			OtherwiseBuilder then(Object value);
@@ -873,8 +875,8 @@ public class ConditionalOperators {
 
 			/**
 			 * @param value the value to be used if the condition evaluates {@literal false}. Can be a {@link Document}, a
-			 * value that is supported by MongoDB or a value that can be converted to a MongoDB representation but
-			 * must not be {@literal null}.
+			 *          value that is supported by MongoDB or a value that can be converted to a MongoDB representation but
+			 *          must not be {@literal null}.
 			 * @return the {@link Cond}
 			 */
 			Cond otherwise(Object value);
@@ -902,8 +904,7 @@ public class ConditionalOperators {
 			private @Nullable Object condition;
 			private @Nullable Object thenValue;
 
-			private ConditionalExpressionBuilder() {
-			}
+			private ConditionalExpressionBuilder() {}
 
 			/**
 			 * Creates a new builder for {@link Cond}.

@@ -22,9 +22,11 @@ import org.bson.Document;
 import org.junit.jupiter.api.Test;
 
 /**
+ * Unit tests for {@link ConditionalOperators}.
+ *
  * @author Christoph Strobl
  */
-public class ConditionalOperatorsUnitTests {
+class ConditionalOperatorsUnitTests {
 
 	@Test // GH-3720
 	void rendersIfNullWithMultipleConditionalValuesCorrectly() {
