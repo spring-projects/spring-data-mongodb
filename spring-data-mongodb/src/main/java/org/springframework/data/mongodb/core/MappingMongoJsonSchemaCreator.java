@@ -20,13 +20,16 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.UUID;
 
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.mapping.EncryptedField;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.EncryptedJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.ObjectJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.JsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type;
@@ -128,7 +131,18 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 			return createEnumSchemaProperty(fieldName, targetType, required);
 		}
 
-		return createSchemaProperty(fieldName, targetType, required);
+		JsonSchemaProperty schemaProperty = createSchemaProperty(fieldName, targetType, required);
+
+
+		if(property.findAnnotation(EncryptedField.class) != null) {
+			EncryptedJsonSchemaProperty enc = new EncryptedJsonSchemaProperty(schemaProperty);
+
+			EncryptedField annotation = property.findAnnotation(EncryptedField.class);
+			enc = enc.algorithm(annotation.algorithm());
+			enc = enc.keys(UUID.fromString(annotation.keyId()));
+			return enc;
+		}
+		return schemaProperty;
 	}
 
 	private JsonSchemaProperty createObjectSchemaPropertyForEntity(List<MongoPersistentProperty> path,

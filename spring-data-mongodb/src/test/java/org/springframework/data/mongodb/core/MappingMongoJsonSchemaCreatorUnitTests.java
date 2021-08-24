@@ -31,6 +31,7 @@ import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
+import org.springframework.data.mongodb.core.mapping.EncryptedField;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoId;
@@ -101,11 +102,19 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 
 	static final String JUST_SOME_ENUM = "{ 'type' : 'string', 'enum' : ['ONE', 'TWO'] }";
 
+
+
 	enum JustSomeEnum {
 		ONE, TWO
 	}
 
 	// --> VARIOUS FIELD TYPES
+
+	static String ENCR = "{ \"encrypt\" : {\n" +
+			"              \"keyId\" : [UUID(\"e114f7ad-ad7a-4a68-81a7-ebcb9ea0953a\")],\n" +
+			"              \"algorithm\" : \"AEAD_AES_256_CBC_HMAC_SHA_512-Random\",\n" +
+			"              \"bsonType\":\"string\"" +
+			"            }}";
 
 	static final String VARIOUS_FIELD_TYPES = "" + //
 			"{" + //
@@ -125,9 +134,11 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 			"        'collectionProperty' : { 'type' : 'array' }," + //
 			"        'mapProperty' : { 'type' : 'object' }," + //
 			"        'objectProperty' : { 'type' : 'object' }," + //
-			"        'enumProperty' : " + JUST_SOME_ENUM + //
+			"        'enumProperty' : " + JUST_SOME_ENUM + //,
+			"        'encryptedProperty' : " + ENCR + //
 			"     }" + //
 			"}";
+
 
 	static class VariousFieldTypes {
 
@@ -146,6 +157,8 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 		Map<String, String> mapProperty;
 		Object objectProperty;
 		JustSomeEnum enumProperty;
+		@EncryptedField(algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Random", keyId = "e114f7ad-ad7a-4a68-81a7-ebcb9ea0953a")
+		String encryptedProperty;
 	}
 
 	// --> NESTED DOMAIN TYPE
