@@ -869,15 +869,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		if (!property.isDbReference()) {
 
 			if (property.isAssociation()) {
-				return writeCollectionInternal(collection.stream().map(it -> {
-					if (conversionService.canConvert(it.getClass(), DocumentPointer.class)) {
-						return conversionService.convert(it, DocumentPointer.class).getPointer();
-					} else {
-						// just take the id as a reference
-						return mappingContext.getPersistentEntity(property.getAssociationTargetType()).getIdentifierAccessor(it)
-								.getIdentifier();
-					}
-				}).collect(Collectors.toList()), ClassTypeInformation.from(DocumentPointer.class), new ArrayList<>());
+
+				List<Object> targetCollection = collection.stream().map(it -> {
+						return documentPointerFactory.computePointer(mappingContext, property, it, property.getActualType()).getPointer();
+				}).collect(Collectors.toList());
+
+				return writeCollectionInternal(targetCollection, ClassTypeInformation.from(DocumentPointer.class), new ArrayList<>());
 			}
 
 			if (property.hasExplicitWriteTarget()) {
@@ -930,13 +927,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				if (property.isDbReference()) {
 					document.put(simpleKey, value != null ? createDBRef(value, property) : null);
 				} else {
-					if (conversionService.canConvert(value.getClass(), DocumentPointer.class)) {
-						document.put(simpleKey, conversionService.convert(value, DocumentPointer.class).getPointer());
-					} else {
-						// just take the id as a reference
-						document.put(simpleKey, mappingContext.getPersistentEntity(property.getAssociationTargetType())
-								.getIdentifierAccessor(value).getIdentifier());
-					}
+					document.put(simpleKey, documentPointerFactory.computePointer(mappingContext, property, value, property.getActualType()).getPointer());
 				}
 
 			} else {

@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -44,6 +45,8 @@ import org.springframework.data.mongodb.core.convert.LazyLoadingTestUtils;
 import org.springframework.data.mongodb.core.mapping.DocumentPointer;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.FieldType;
+import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
@@ -106,6 +109,26 @@ public class MongoTemplateDocumentReferenceTests {
 		assertThat(target.get("simpleValueRef")).isEqualTo("ref-1");
 	}
 
+	@Test // GH-3782
+	void writeTypeReferenceHavingCustomizedIdTargetType() {
+
+		ObjectId expectedIdValue = new ObjectId();
+		String rootCollectionName = template.getCollectionName(SingleRefRoot.class);
+
+		SingleRefRoot source = new SingleRefRoot();
+		source.id = "root-1";
+		source.customIdTargetRef = new ObjectRefHavingCustomizedIdTargetType(expectedIdValue.toString(),
+				"me-the-referenced-object");
+
+		template.save(source);
+
+		Document target = template.execute(db -> {
+			return db.getCollection(rootCollectionName).find(Filters.eq("_id", "root-1")).first();
+		});
+
+		assertThat(target.get("customIdTargetRef")).isEqualTo(expectedIdValue);
+	}
+
 	@Test // GH-3602
 	void writeMapTypeReference() {
 
@@ -126,6 +149,26 @@ public class MongoTemplateDocumentReferenceTests {
 		assertThat(target.get("mapValueRef", Map.class)).containsEntry("frodo", "ref-1").containsEntry("bilbo", "ref-2");
 	}
 
+	@Test // GH-3782
+	void writeMapOfTypeReferenceHavingCustomizedIdTargetType() {
+
+		ObjectId expectedIdValue = new ObjectId();
+		String rootCollectionName = template.getCollectionName(CollectionRefRoot.class);
+
+		CollectionRefRoot source = new CollectionRefRoot();
+		source.id = "root-1";
+		source.customIdTargetRefMap = Collections.singletonMap("frodo",
+				new ObjectRefHavingCustomizedIdTargetType(expectedIdValue.toString(), "me-the-referenced-object"));
+
+		template.save(source);
+
+		Document target = template.execute(db -> {
+			return db.getCollection(rootCollectionName).find(Filters.eq("_id", "root-1")).first();
+		});
+
+		assertThat(target.get("customIdTargetRefMap", Map.class)).containsEntry("frodo", expectedIdValue);
+	}
+
 	@Test // GH-3602
 	void writeCollectionOfSimpleTypeReference() {
 
@@ -143,6 +186,26 @@ public class MongoTemplateDocumentReferenceTests {
 		});
 
 		assertThat(target.get("simpleValueRef", List.class)).containsExactly("ref-1", "ref-2");
+	}
+
+	@Test // GH-3782
+	void writeListOfTypeReferenceHavingCustomizedIdTargetType() {
+
+		ObjectId expectedIdValue = new ObjectId();
+		String rootCollectionName = template.getCollectionName(CollectionRefRoot.class);
+
+		CollectionRefRoot source = new CollectionRefRoot();
+		source.id = "root-1";
+		source.customIdTargetRefList = Collections.singletonList(
+				new ObjectRefHavingCustomizedIdTargetType(expectedIdValue.toString(), "me-the-referenced-object"));
+
+		template.save(source);
+
+		Document target = template.execute(db -> {
+			return db.getCollection(rootCollectionName).find(Filters.eq("_id", "root-1")).first();
+		});
+
+		assertThat(target.get("customIdTargetRefList", List.class)).containsExactly(expectedIdValue);
 	}
 
 	@Test // GH-3602
@@ -739,6 +802,26 @@ public class MongoTemplateDocumentReferenceTests {
 		assertThat(target).containsEntry("toB", "b");
 	}
 
+	@Test // GH-3782
+	void updateReferenceHavingCustomizedIdTargetType() {
+
+		ObjectId expectedIdValue = new ObjectId();
+		String rootCollectionName = template.getCollectionName(SingleRefRoot.class);
+
+		SingleRefRoot root = new SingleRefRoot();
+		root.id = "root-1";
+		template.save(root);
+
+		template.update(SingleRefRoot.class).apply(new Update().set("customIdTargetRef",
+				new ObjectRefHavingCustomizedIdTargetType(expectedIdValue.toString(), "b"))).first();
+
+		Document target = template.execute(db -> {
+			return db.getCollection(rootCollectionName).find(Filters.eq("_id", "root-1")).first();
+		});
+
+		assertThat(target).containsEntry("customIdTargetRef", expectedIdValue);
+	}
+
 	@Test // GH-3602
 	void updateReferenceCollectionWithEntity() {
 
@@ -998,6 +1081,8 @@ public class MongoTemplateDocumentReferenceTests {
 
 		@DocumentReference(lookup = "{ 'refKey1' : '?#{refKey1}', 'refKey2' : '?#{refKey2}' }", lazy = true) //
 		ObjectRefOnNonIdField lazyObjectValueRefOnNonIdFields;
+
+		@DocumentReference ObjectRefHavingCustomizedIdTargetType customIdTargetRef;
 	}
 
 	@Data
@@ -1027,6 +1112,10 @@ public class MongoTemplateDocumentReferenceTests {
 
 		@DocumentReference(lookup = "{ 'refKey1' : '?#{refKey1}', 'refKey2' : '?#{refKey2}' }") //
 		List<ObjectRefOnNonIdField> objectValueRefOnNonIdFields;
+
+		@DocumentReference List<ObjectRefHavingCustomizedIdTargetType> customIdTargetRefList;
+
+		@DocumentReference Map<String, ObjectRefHavingCustomizedIdTargetType> customIdTargetRefMap;
 	}
 
 	@FunctionalInterface
@@ -1092,6 +1181,14 @@ public class MongoTemplateDocumentReferenceTests {
 		public Object toReference() {
 			return new Document("refKey1", refKey1).append("refKey2", refKey2);
 		}
+	}
+
+	@Data
+	@AllArgsConstructor
+	static class ObjectRefHavingCustomizedIdTargetType {
+
+		@MongoId(targetType = FieldType.OBJECT_ID) String id;
+		String name;
 	}
 
 	static class ReferencableConverter implements Converter<ReferenceAble, DocumentPointer<Object>> {
@@ -1196,5 +1293,4 @@ public class MongoTemplateDocumentReferenceTests {
 		@Reference //
 		Publisher publisher;
 	}
-
 }
