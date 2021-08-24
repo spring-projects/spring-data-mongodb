@@ -20,6 +20,7 @@ import java.util.Set;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ObjectJsonSchemaObject;
+import org.springframework.lang.Nullable;
 
 /**
  * Interface defining MongoDB-specific JSON schema object. New objects can be built with {@link #builder()}, for
@@ -62,13 +63,25 @@ import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.Object
 public interface MongoJsonSchema {
 
 	/**
-	 * Create the {@link Document} containing the specified {@code $jsonSchema}. <br />
+	 * Create the {@code $jsonSchema} {@link Document} containing the specified {@link #schemaDocument()}. <br />
 	 * Property and field names need to be mapped to the domain type ones by running the {@link Document} through a
 	 * {@link org.springframework.data.mongodb.core.convert.JsonSchemaMapper} to apply field name customization.
 	 *
 	 * @return never {@literal null}.
 	 */
-	Document toDocument();
+	default Document toDocument() {
+		return new Document("$jsonSchema", schemaDocument());
+	}
+
+	/**
+	 * Create the {@link Document} defining the schema. <br />
+	 * Property and field names need to be mapped to the domain type ones by running the {@link Document} through a
+	 * {@link org.springframework.data.mongodb.core.convert.JsonSchemaMapper} to apply field name customization.
+	 *
+	 * @return never {@literal null}.
+	 * @since 3.3
+	 */
+	Document schemaDocument();
 
 	/**
 	 * Create a new {@link MongoJsonSchema} for a given root object.
@@ -107,6 +120,9 @@ public interface MongoJsonSchema {
 	class MongoJsonSchemaBuilder {
 
 		private ObjectJsonSchemaObject root;
+
+		@Nullable //
+		private Document encryptionMetadata;
 
 		MongoJsonSchemaBuilder() {
 			root = new ObjectJsonSchemaObject();
@@ -267,12 +283,22 @@ public interface MongoJsonSchema {
 		}
 
 		/**
+		 * Define the {@literal encryptMetadata} element of the schema.
+		 *
+		 * @param encryptionMetadata can be {@literal null}.
+		 * @since 3.3
+		 */
+		public void encryptionMetadata(@Nullable Document encryptionMetadata) {
+			this.encryptionMetadata = encryptionMetadata;
+		}
+
+		/**
 		 * Obtain the {@link MongoJsonSchema}.
 		 *
 		 * @return new instance of {@link MongoJsonSchema}.
 		 */
 		public MongoJsonSchema build() {
-			return MongoJsonSchema.of(root);
+			return new DefaultMongoJsonSchema(root, encryptionMetadata);
 		}
 	}
 }
