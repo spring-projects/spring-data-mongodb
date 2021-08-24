@@ -28,8 +28,9 @@ import org.junit.jupiter.api.Test;
  * Unit tests for {@link Round}.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
-public class ArithmeticOperatorsUnitTests {
+class ArithmeticOperatorsUnitTests {
 
 	@Test // DATAMONGO-2370
 	void roundShouldWithoutPlace() {
@@ -63,7 +64,8 @@ public class ArithmeticOperatorsUnitTests {
 	@Test // GH-3716
 	void rendersDerivativeCorrectly() {
 
-		assertThat(valueOf("miles").derivative("hour").toDocument(Aggregation.DEFAULT_CONTEXT))
+		assertThat(
+				valueOf("miles").derivative(SetWindowFieldsOperation.WindowUnits.HOUR).toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo(Document.parse("{ $derivative: { input: \"$miles\", unit: \"hour\" } }"));
 	}
 }

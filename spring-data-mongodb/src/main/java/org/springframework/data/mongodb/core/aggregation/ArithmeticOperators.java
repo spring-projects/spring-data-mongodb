@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Avg;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.CovariancePop;
@@ -26,6 +27,8 @@ import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Mi
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.StdDevPop;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.StdDevSamp;
 import org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.Sum;
+import org.springframework.data.mongodb.core.aggregation.SetWindowFieldsOperation.WindowUnit;
+import org.springframework.data.mongodb.core.aggregation.SetWindowFieldsOperation.WindowUnits;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -34,6 +37,7 @@ import org.springframework.util.StringUtils;
  * Gateway to {@literal Arithmetic} aggregation operations that perform math operations on numbers.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 1.10
  */
 public class ArithmeticOperators {
@@ -600,7 +604,22 @@ public class ArithmeticOperators {
 		 * @since 3.3
 		 */
 		public Derivative derivative() {
-			return derivative(null);
+			return derivative((String) null);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the mathematical derivative value.
+		 *
+		 * @param unit The time unit ({@link WindowUnits#WEEK}, {@link WindowUnits#DAY}, {@link WindowUnits#HOUR},
+		 *          {@link WindowUnits#MINUTE}, {@link WindowUnits#SECOND}, {@link WindowUnits#MILLISECOND}) to apply.
+		 * @return new instance of {@link Derivative}.
+		 * @since 3.3
+		 */
+		public Derivative derivative(WindowUnit unit) {
+
+			Assert.notNull(unit, "Window unit must not be null");
+
+			return derivative(unit.name().toLowerCase(Locale.ROOT));
 		}
 
 		/**
