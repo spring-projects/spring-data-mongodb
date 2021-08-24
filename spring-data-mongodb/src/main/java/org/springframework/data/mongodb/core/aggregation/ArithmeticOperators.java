@@ -678,34 +678,37 @@ public class ArithmeticOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that calculates the sine of a numeric value given in {@link AngularDimension#RADIANS radians}.
+		 * Creates new {@link AggregationExpression} that calculates the sine of a numeric value given in
+		 * {@link AngularUnit#RADIANS radians}.
 		 *
 		 * @return new instance of {@link Sin}.
 		 * @since 3.3
 		 */
 		public Sin sin() {
-			return sin(AngularDimension.RADIANS);
+			return sin(AngularUnit.RADIANS);
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that calculates the sine of a numeric value in the given {@link AngularDimension unit}.
+		 * Creates new {@link AggregationExpression} that calculates the sine of a numeric value in the given
+		 * {@link AngularUnit unit}.
 		 *
 		 * @param unit the unit of measure.
 		 * @return new instance of {@link Sin}.
 		 * @since 3.3
 		 */
-		public Sin sin(AngularDimension unit) {
+		public Sin sin(AngularUnit unit) {
 			return usesFieldRef() ? Sin.sinOf(fieldReference, unit) : Sin.sinOf(expression, unit);
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that calculates the sine of a numeric value given in {@link AngularDimension#RADIANS radians}.
+		 * Creates new {@link AggregationExpression} that calculates the sine of a numeric value given in
+		 * {@link AngularUnit#RADIANS radians}.
 		 *
 		 * @return new instance of {@link Sin}.
 		 * @since 3.3
 		 */
 		public Sinh sinh() {
-			return sinh(AngularDimension.RADIANS);
+			return sinh(AngularUnit.RADIANS);
 		}
 
 		/**
@@ -715,42 +718,42 @@ public class ArithmeticOperators {
 		 * @return new instance of {@link Sin}.
 		 * @since 3.3
 		 */
-		public Sinh sinh(AngularDimension unit) {
+		public Sinh sinh(AngularUnit unit) {
 			return usesFieldRef() ? Sinh.sinhOf(fieldReference, unit) : Sinh.sinhOf(expression, unit);
 		}
 
 		/**
 		 * Creates new {@link AggregationExpression} that calculates the cosine of a numeric value given in
-		 * {@link AngularDimension#RADIANS radians}.
+		 * {@link AngularUnit#RADIANS radians}.
 		 *
 		 * @return new instance of {@link Sin}.
 		 * @since 3.3
 		 */
 		public Cos cos() {
-			return cos(AngularDimension.RADIANS);
+			return cos(AngularUnit.RADIANS);
 		}
 
 		/**
 		 * Creates new {@link AggregationExpression} that calculates the cosine of a numeric value in the given
-		 * {@link AngularDimension unit}.
+		 * {@link AngularUnit unit}.
 		 *
 		 * @param unit the unit of measure.
 		 * @return new instance of {@link Sin}.
 		 * @since 3.3
 		 */
-		public Cos cos(AngularDimension unit) {
+		public Cos cos(AngularUnit unit) {
 			return usesFieldRef() ? Cos.cosOf(fieldReference, unit) : Cos.cosOf(expression, unit);
 		}
 
 		/**
 		 * Creates new {@link AggregationExpression} that calculates the hyperbolic cosine of a numeric value given in
-		 * {@link AngularDimension#RADIANS radians}.
+		 * {@link AngularUnit#RADIANS radians}.
 		 *
 		 * @return new instance of {@link Sin}.
 		 * @since 3.3
 		 */
 		public Cosh cosh() {
-			return cosh(AngularDimension.RADIANS);
+			return cosh(AngularUnit.RADIANS);
 		}
 
 		/**
@@ -760,42 +763,42 @@ public class ArithmeticOperators {
 		 * @return new instance of {@link Sin}.
 		 * @since 3.3
 		 */
-		public Cosh cosh(AngularDimension unit) {
+		public Cosh cosh(AngularUnit unit) {
 			return usesFieldRef() ? Cosh.coshOf(fieldReference, unit) : Cosh.coshOf(expression, unit);
 		}
 
 		/**
 		 * Creates new {@link AggregationExpression} that calculates the tangent of a numeric value given in
-		 * {@link AngularDimension#RADIANS radians}.
+		 * {@link AngularUnit#RADIANS radians}.
 		 *
 		 * @return new instance of {@link Sin}.
 		 * @since 3.3
 		 */
 		public Tan tan() {
-			return tan(AngularDimension.RADIANS);
+			return tan(AngularUnit.RADIANS);
 		}
 
 		/**
 		 * Creates new {@link AggregationExpression} that calculates the tangent of a numeric value in the given
-		 * {@link AngularDimension unit}.
+		 * {@link AngularUnit unit}.
 		 *
 		 * @param unit the unit of measure.
 		 * @return new instance of {@link Sin}.
 		 * @since 3.3
 		 */
-		public Tan tan(AngularDimension unit) {
+		public Tan tan(AngularUnit unit) {
 			return usesFieldRef() ? Tan.tanOf(fieldReference, unit) : Tan.tanOf(expression, unit);
 		}
 
 		/**
 		 * Creates new {@link AggregationExpression} that calculates the hyperbolic tangent of a numeric value given in
-		 * {@link AngularDimension#RADIANS radians}.
+		 * {@link AngularUnit#RADIANS radians}.
 		 *
 		 * @return new instance of {@link Sin}.
 		 * @since 3.3
 		 */
 		public Tanh tanh() {
-			return tanh(AngularDimension.RADIANS);
+			return tanh(AngularUnit.RADIANS);
 		}
 
 		/**
@@ -805,7 +808,7 @@ public class ArithmeticOperators {
 		 * @return new instance of {@link Sin}.
 		 * @since 3.3
 		 */
-		public Tanh tanh(AngularDimension unit) {
+		public Tanh tanh(AngularUnit unit) {
 			return usesFieldRef() ? Tanh.tanhOf(fieldReference, unit) : Tanh.tanhOf(expression, unit);
 		}
 
@@ -2047,7 +2050,7 @@ public class ArithmeticOperators {
 	 * @author Christoph Strobl
 	 * @since 3.3
 	 */
-	public enum AngularDimension {
+	public enum AngularUnit {
 		RADIANS, DEGREES
 	}
 
@@ -2065,76 +2068,82 @@ public class ArithmeticOperators {
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the sine of a value that is measured in
-		 * {@link AngularDimension#RADIANS radians}.
+		 * {@link AngularUnit#RADIANS radians}.
 		 * <p />
-		 * Use {@code sinhOf("angle", DEGREES)} as shortcut for <pre>{ $sinh : { $degreesToRadians : "$angle" } }</pre>.
+		 * Use {@code sinhOf("angle", DEGREES)} as shortcut for
+		 *
+		 * <pre>
+		 * { $sinh : { $degreesToRadians : "$angle" } }
+		 * </pre>
+		 *
+		 * .
 		 *
 		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
 		 * @return new instance of {@link Sin}.
 		 */
 		public static Sin sinOf(String fieldReference) {
-			return sinOf(fieldReference, AngularDimension.RADIANS);
+			return sinOf(fieldReference, AngularUnit.RADIANS);
 		}
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the sine of a value that is measured in the given
-		 * {@link AngularDimension unit}.
+		 * {@link AngularUnit unit}.
 		 *
 		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
 		 * @param unit the unit of measure used by the value of the given field.
 		 * @return new instance of {@link Sin}.
 		 */
-		public static Sin sinOf(String fieldReference, AngularDimension unit) {
+		public static Sin sinOf(String fieldReference, AngularUnit unit) {
 			return sin(Fields.field(fieldReference), unit);
 		}
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the sine of a value that is measured in
-		 * {@link AngularDimension#RADIANS}.
+		 * {@link AngularUnit#RADIANS}.
 		 *
 		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
 		 * @return new instance of {@link Sin}.
 		 */
 		public static Sin sinOf(AggregationExpression expression) {
-			return sinOf(expression, AngularDimension.RADIANS);
+			return sinOf(expression, AngularUnit.RADIANS);
 		}
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the sine of a value that is measured in the given
-		 * {@link AngularDimension unit}.
+		 * {@link AngularUnit unit}.
 		 *
 		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
 		 * @param unit the unit of measure used by the value of the given field.
 		 * @return new instance of {@link Sin}.
 		 */
-		public static Sin sinOf(AggregationExpression expression, AngularDimension unit) {
+		public static Sin sinOf(AggregationExpression expression, AngularUnit unit) {
 			return sin(expression, unit);
 		}
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the sine of a value that is measured in
-		 * {@link AngularDimension#RADIANS}.
+		 * {@link AngularUnit#RADIANS}.
 		 *
 		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
 		 *          numeric value
 		 * @return new instance of {@link Sin}.
 		 */
 		public static Sin sin(Object value) {
-			return sin(value, AngularDimension.RADIANS);
+			return sin(value, AngularUnit.RADIANS);
 		}
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the sine of a value that is measured in the given
-		 * {@link AngularDimension unit}.
+		 * {@link AngularUnit unit}.
 		 *
 		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
 		 *          numeric value.
 		 * @param unit the unit of measure used by the value of the given field.
 		 * @return new instance of {@link Sin}.
 		 */
-		public static Sin sin(Object value, AngularDimension unit) {
+		public static Sin sin(Object value, AngularUnit unit) {
 
-			if (ObjectUtils.nullSafeEquals(AngularDimension.DEGREES, unit)) {
+			if (ObjectUtils.nullSafeEquals(AngularUnit.DEGREES, unit)) {
 				return new Sin(ConvertOperators.DegreesToRadians.degreesToRadians(value));
 			}
 			return new Sin(value);
@@ -2148,7 +2157,7 @@ public class ArithmeticOperators {
 
 	/**
 	 * An {@link AggregationExpression expression} that calculates the hyperbolic sine of a value that is measured in
-	 * {@link AngularDimension#RADIANS}.
+	 * {@link AngularUnit#RADIANS}.
 	 *
 	 * @author Christoph Strobl
 	 * @since 3.3
@@ -2161,78 +2170,85 @@ public class ArithmeticOperators {
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic sine of a value that is measured in
-		 * {@link AngularDimension#RADIANS}.
+		 * {@link AngularUnit#RADIANS}.
 		 *
 		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
 		 * @return new instance of {@link Sin}.
 		 */
 		public static Sinh sinhOf(String fieldReference) {
-			return sinhOf(fieldReference, AngularDimension.RADIANS);
+			return sinhOf(fieldReference, AngularUnit.RADIANS);
 		}
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic sine of a value that is measured in
-		 * the given {@link AngularDimension unit}.
+		 * the given {@link AngularUnit unit}.
 		 * <p />
-		 * Use {@code sinhOf("angle", DEGREES)} as shortcut for <pre>{ $sinh : { $degreesToRadians : "$angle" } }</pre>.
+		 * Use {@code sinhOf("angle", DEGREES)} as shortcut for
+		 *
+		 * <pre>
+		 * { $sinh : { $degreesToRadians : "$angle" } }
+		 * </pre>
+		 *
+		 * .
 		 *
 		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
 		 * @param unit the unit of measure used by the value of the given field.
 		 * @return new instance of {@link Sin}.
 		 */
-		public static Sinh sinhOf(String fieldReference, AngularDimension unit) {
+		public static Sinh sinhOf(String fieldReference, AngularUnit unit) {
 			return sinh(Fields.field(fieldReference), unit);
 		}
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic sine of a value that is measured in
-		 * {@link AngularDimension#RADIANS}.
+		 * {@link AngularUnit#RADIANS}.
 		 * <p />
-		 * Use {@code sinhOf("angle", DEGREES)} as shortcut for eg. {@code sinhOf(ConvertOperators.valueOf("angle").degreesToRadians())}.
+		 * Use {@code sinhOf("angle", DEGREES)} as shortcut for eg.
+		 * {@code sinhOf(ConvertOperators.valueOf("angle").degreesToRadians())}.
 		 *
 		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
 		 * @return new instance of {@link Sin}.
 		 */
 		public static Sinh sinhOf(AggregationExpression expression) {
-			return sinhOf(expression, AngularDimension.RADIANS);
+			return sinhOf(expression, AngularUnit.RADIANS);
 		}
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic sine of a value that is measured in
-		 * the given {@link AngularDimension unit}.
+		 * the given {@link AngularUnit unit}.
 		 *
 		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
 		 * @param unit the unit of measure used by the value of the given field.
 		 * @return new instance of {@link Sin}.
 		 */
-		public static Sinh sinhOf(AggregationExpression expression, AngularDimension unit) {
+		public static Sinh sinhOf(AggregationExpression expression, AngularUnit unit) {
 			return sinh(expression, unit);
 		}
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic sine of a value that is measured in
-		 * {@link AngularDimension#RADIANS}.
+		 * {@link AngularUnit#RADIANS}.
 		 *
 		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
 		 *          numeric value.
 		 * @return new instance of {@link Sin}.
 		 */
 		public static Sinh sinh(Object value) {
-			return sinh(value, AngularDimension.RADIANS);
+			return sinh(value, AngularUnit.RADIANS);
 		}
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic sine of a value that is measured in
-		 * the given {@link AngularDimension unit}.
+		 * the given {@link AngularUnit unit}.
 		 *
 		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
 		 *          numeric value
 		 * @param unit the unit of measure used by the value of the given field.
 		 * @return new instance of {@link Sin}.
 		 */
-		public static Sinh sinh(Object value, AngularDimension unit) {
+		public static Sinh sinh(Object value, AngularUnit unit) {
 
-			if (ObjectUtils.nullSafeEquals(AngularDimension.DEGREES, unit)) {
+			if (ObjectUtils.nullSafeEquals(AngularUnit.DEGREES, unit)) {
 				return new Sinh(ConvertOperators.DegreesToRadians.degreesToRadians(value));
 			}
 			return new Sinh(value);
@@ -2258,82 +2274,82 @@ public class ArithmeticOperators {
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the cosine of a value that is measured in
-		 * {@link AngularDimension#RADIANS radians}.
+		 * {@link AngularUnit#RADIANS radians}.
 		 * <p />
 		 * Use {@code cosOf("angle", DEGREES)} as shortcut for
-		 * 
+		 *
 		 * <pre>
 		 * { $cos : { $degreesToRadians : "$angle" } }
 		 * </pre>
-		 * 
+		 *
 		 * .
 		 *
 		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
 		 * @return new instance of {@link Cos}.
 		 */
 		public static Cos cosOf(String fieldReference) {
-			return cosOf(fieldReference, AngularDimension.RADIANS);
+			return cosOf(fieldReference, AngularUnit.RADIANS);
 		}
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the cosine of a value that is measured in the given
-		 * {@link AngularDimension unit}.
+		 * {@link AngularUnit unit}.
 		 *
 		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
 		 * @param unit the unit of measure used by the value of the given field.
 		 * @return new instance of {@link Cos}.
 		 */
-		public static Cos cosOf(String fieldReference, AngularDimension unit) {
+		public static Cos cosOf(String fieldReference, AngularUnit unit) {
 			return cos(Fields.field(fieldReference), unit);
 		}
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the cosine of a value that is measured in
-		 * {@link AngularDimension#RADIANS}.
+		 * {@link AngularUnit#RADIANS}.
 		 *
 		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
 		 * @return new instance of {@link Cos}.
 		 */
 		public static Cos cosOf(AggregationExpression expression) {
-			return cosOf(expression, AngularDimension.RADIANS);
+			return cosOf(expression, AngularUnit.RADIANS);
 		}
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the cosine of a value that is measured in the given
-		 * {@link AngularDimension unit}.
+		 * {@link AngularUnit unit}.
 		 *
 		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
 		 * @param unit the unit of measure used by the value of the given field.
 		 * @return new instance of {@link Cos}.
 		 */
-		public static Cos cosOf(AggregationExpression expression, AngularDimension unit) {
+		public static Cos cosOf(AggregationExpression expression, AngularUnit unit) {
 			return cos(expression, unit);
 		}
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the cosine of a value that is measured in
-		 * {@link AngularDimension#RADIANS}.
+		 * {@link AngularUnit#RADIANS}.
 		 *
 		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
 		 *          numeric value
 		 * @return new instance of {@link Cos}.
 		 */
 		public static Cos cos(Object value) {
-			return cos(value, AngularDimension.RADIANS);
+			return cos(value, AngularUnit.RADIANS);
 		}
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the cosine of a value that is measured in the given
-		 * {@link AngularDimension unit}.
+		 * {@link AngularUnit unit}.
 		 *
 		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
 		 *          numeric value.
 		 * @param unit the unit of measure used by the value of the given field.
 		 * @return new instance of {@link Cos}.
 		 */
-		public static Cos cos(Object value, AngularDimension unit) {
+		public static Cos cos(Object value, AngularUnit unit) {
 
-			if (ObjectUtils.nullSafeEquals(AngularDimension.DEGREES, unit)) {
+			if (ObjectUtils.nullSafeEquals(AngularUnit.DEGREES, unit)) {
 				return new Cos(ConvertOperators.DegreesToRadians.degreesToRadians(value));
 			}
 			return new Cos(value);
@@ -2347,7 +2363,7 @@ public class ArithmeticOperators {
 
 	/**
 	 * An {@link AggregationExpression expression} that calculates the hyperbolic cosine of a value that is measured in
-	 * {@link AngularDimension#RADIANS}.
+	 * {@link AngularUnit#RADIANS}.
 	 *
 	 * @author Christoph Strobl
 	 * @since 3.3
@@ -2360,38 +2376,38 @@ public class ArithmeticOperators {
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic cosine of a value that is measured in
-		 * {@link AngularDimension#RADIANS}.
+		 * {@link AngularUnit#RADIANS}.
 		 *
 		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
 		 * @return new instance of {@link Cosh}.
 		 */
 		public static Cosh coshOf(String fieldReference) {
-			return coshOf(fieldReference, AngularDimension.RADIANS);
+			return coshOf(fieldReference, AngularUnit.RADIANS);
 		}
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic cosine of a value that is measured in
-		 * the given {@link AngularDimension unit}.
+		 * the given {@link AngularUnit unit}.
 		 * <p />
 		 * Use {@code coshOf("angle", DEGREES)} as shortcut for
-		 * 
+		 *
 		 * <pre>
 		 * { $cosh : { $degreesToRadians : "$angle" } }
 		 * </pre>
-		 * 
+		 *
 		 * .
 		 *
 		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
 		 * @param unit the unit of measure used by the value of the given field.
 		 * @return new instance of {@link Cosh}.
 		 */
-		public static Cosh coshOf(String fieldReference, AngularDimension unit) {
+		public static Cosh coshOf(String fieldReference, AngularUnit unit) {
 			return cosh(Fields.field(fieldReference), unit);
 		}
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic cosine of a value that is measured in
-		 * {@link AngularDimension#RADIANS}.
+		 * {@link AngularUnit#RADIANS}.
 		 * <p />
 		 * Use {@code sinhOf("angle", DEGREES)} as shortcut for eg.
 		 * {@code sinhOf(ConvertOperators.valueOf("angle").degreesToRadians())}.
@@ -2400,45 +2416,45 @@ public class ArithmeticOperators {
 		 * @return new instance of {@link Cosh}.
 		 */
 		public static Cosh coshOf(AggregationExpression expression) {
-			return coshOf(expression, AngularDimension.RADIANS);
+			return coshOf(expression, AngularUnit.RADIANS);
 		}
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic cosine of a value that is measured in
-		 * the given {@link AngularDimension unit}.
+		 * the given {@link AngularUnit unit}.
 		 *
 		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
 		 * @param unit the unit of measure used by the value of the given field.
 		 * @return new instance of {@link Cosh}.
 		 */
-		public static Cosh coshOf(AggregationExpression expression, AngularDimension unit) {
+		public static Cosh coshOf(AggregationExpression expression, AngularUnit unit) {
 			return cosh(expression, unit);
 		}
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic cosine of a value that is measured in
-		 * {@link AngularDimension#RADIANS}.
+		 * {@link AngularUnit#RADIANS}.
 		 *
 		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
 		 *          numeric value.
 		 * @return new instance of {@link Cosh}.
 		 */
 		public static Cosh cosh(Object value) {
-			return cosh(value, AngularDimension.RADIANS);
+			return cosh(value, AngularUnit.RADIANS);
 		}
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic cosine of a value that is measured in
-		 * the given {@link AngularDimension unit}.
+		 * the given {@link AngularUnit unit}.
 		 *
 		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
 		 *          numeric value
 		 * @param unit the unit of measure used by the value of the given field.
 		 * @return new instance of {@link Cosh}.
 		 */
-		public static Cosh cosh(Object value, AngularDimension unit) {
+		public static Cosh cosh(Object value, AngularUnit unit) {
 
-			if (ObjectUtils.nullSafeEquals(AngularDimension.DEGREES, unit)) {
+			if (ObjectUtils.nullSafeEquals(AngularUnit.DEGREES, unit)) {
 				return new Cosh(ConvertOperators.DegreesToRadians.degreesToRadians(value));
 			}
 			return new Cosh(value);
@@ -2464,82 +2480,82 @@ public class ArithmeticOperators {
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the tangent of a value that is measured in
-		 * {@link AngularDimension#RADIANS radians}.
+		 * {@link AngularUnit#RADIANS radians}.
 		 * <p />
 		 * Use {@code tanOf("angle", DEGREES)} as shortcut for
-		 * 
+		 *
 		 * <pre>
 		 * { $tan : { $degreesToRadians : "$angle" } }
 		 * </pre>
-		 * 
+		 *
 		 * .
 		 *
 		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
 		 * @return new instance of {@link Tan}.
 		 */
 		public static Tan tanOf(String fieldReference) {
-			return tanOf(fieldReference, AngularDimension.RADIANS);
+			return tanOf(fieldReference, AngularUnit.RADIANS);
 		}
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the tangent of a value that is measured in the given
-		 * {@link AngularDimension unit}.
+		 * {@link AngularUnit unit}.
 		 *
 		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
 		 * @param unit the unit of measure used by the value of the given field.
 		 * @return new instance of {@link Tan}.
 		 */
-		public static Tan tanOf(String fieldReference, AngularDimension unit) {
+		public static Tan tanOf(String fieldReference, AngularUnit unit) {
 			return tan(Fields.field(fieldReference), unit);
 		}
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the tangent of a value that is measured in
-		 * {@link AngularDimension#RADIANS}.
+		 * {@link AngularUnit#RADIANS}.
 		 *
 		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
 		 * @return new instance of {@link Tan}.
 		 */
 		public static Tan tanOf(AggregationExpression expression) {
-			return tanOf(expression, AngularDimension.RADIANS);
+			return tanOf(expression, AngularUnit.RADIANS);
 		}
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the tangent of a value that is measured in the given
-		 * {@link AngularDimension unit}.
+		 * {@link AngularUnit unit}.
 		 *
 		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
 		 * @param unit the unit of measure used by the value of the given field.
 		 * @return new instance of {@link Tan}.
 		 */
-		public static Tan tanOf(AggregationExpression expression, AngularDimension unit) {
+		public static Tan tanOf(AggregationExpression expression, AngularUnit unit) {
 			return tan(expression, unit);
 		}
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the tangent of a value that is measured in
-		 * {@link AngularDimension#RADIANS}.
+		 * {@link AngularUnit#RADIANS}.
 		 *
 		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
 		 *          numeric value
 		 * @return new instance of {@link Tan}.
 		 */
 		public static Tan tan(Object value) {
-			return tan(value, AngularDimension.RADIANS);
+			return tan(value, AngularUnit.RADIANS);
 		}
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the tangent of a value that is measured in the given
-		 * {@link AngularDimension unit}.
+		 * {@link AngularUnit unit}.
 		 *
 		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
 		 *          numeric value.
 		 * @param unit the unit of measure used by the value of the given field.
 		 * @return new instance of {@link Tan}.
 		 */
-		public static Tan tan(Object value, AngularDimension unit) {
+		public static Tan tan(Object value, AngularUnit unit) {
 
-			if (ObjectUtils.nullSafeEquals(AngularDimension.DEGREES, unit)) {
+			if (ObjectUtils.nullSafeEquals(AngularUnit.DEGREES, unit)) {
 				return new Tan(ConvertOperators.DegreesToRadians.degreesToRadians(value));
 			}
 			return new Tan(value);
@@ -2553,7 +2569,7 @@ public class ArithmeticOperators {
 
 	/**
 	 * An {@link AggregationExpression expression} that calculates the hyperbolic tangent of a value that is measured in
-	 * {@link AngularDimension#RADIANS}.
+	 * {@link AngularUnit#RADIANS}.
 	 *
 	 * @author Christoph Strobl
 	 * @since 3.3
@@ -2566,38 +2582,38 @@ public class ArithmeticOperators {
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic tangent of a value that is measured in
-		 * {@link AngularDimension#RADIANS}.
+		 * {@link AngularUnit#RADIANS}.
 		 *
 		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
 		 * @return new instance of {@link Tanh}.
 		 */
 		public static Tanh tanhOf(String fieldReference) {
-			return tanhOf(fieldReference, AngularDimension.RADIANS);
+			return tanhOf(fieldReference, AngularUnit.RADIANS);
 		}
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic tangent of a value that is measured in
-		 * the given {@link AngularDimension unit}.
+		 * the given {@link AngularUnit unit}.
 		 * <p />
 		 * Use {@code tanhOf("angle", DEGREES)} as shortcut for
-		 * 
+		 *
 		 * <pre>
 		 * { $tanh : { $degreesToRadians : "$angle" } }
 		 * </pre>
-		 * 
+		 *
 		 * .
 		 *
 		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
 		 * @param unit the unit of measure used by the value of the given field.
 		 * @return new instance of {@link Tanh}.
 		 */
-		public static Tanh tanhOf(String fieldReference, AngularDimension unit) {
+		public static Tanh tanhOf(String fieldReference, AngularUnit unit) {
 			return tanh(Fields.field(fieldReference), unit);
 		}
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic tangent of a value that is measured in
-		 * {@link AngularDimension#RADIANS}.
+		 * {@link AngularUnit#RADIANS}.
 		 * <p />
 		 * Use {@code sinhOf("angle", DEGREES)} as shortcut for eg.
 		 * {@code sinhOf(ConvertOperators.valueOf("angle").degreesToRadians())}.
@@ -2606,45 +2622,45 @@ public class ArithmeticOperators {
 		 * @return new instance of {@link Tanh}.
 		 */
 		public static Tanh tanhOf(AggregationExpression expression) {
-			return tanhOf(expression, AngularDimension.RADIANS);
+			return tanhOf(expression, AngularUnit.RADIANS);
 		}
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic tangent of a value that is measured in
-		 * the given {@link AngularDimension unit}.
+		 * the given {@link AngularUnit unit}.
 		 *
 		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
 		 * @param unit the unit of measure used by the value of the given field.
 		 * @return new instance of {@link Tanh}.
 		 */
-		public static Tanh tanhOf(AggregationExpression expression, AngularDimension unit) {
+		public static Tanh tanhOf(AggregationExpression expression, AngularUnit unit) {
 			return tanh(expression, unit);
 		}
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic tangent of a value that is measured in
-		 * {@link AngularDimension#RADIANS}.
+		 * {@link AngularUnit#RADIANS}.
 		 *
 		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
 		 *          numeric value.
 		 * @return new instance of {@link Tanh}.
 		 */
 		public static Tanh tanh(Object value) {
-			return tanh(value, AngularDimension.RADIANS);
+			return tanh(value, AngularUnit.RADIANS);
 		}
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic tangent of a value that is measured in
-		 * the given {@link AngularDimension unit}.
+		 * the given {@link AngularUnit unit}.
 		 *
 		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
 		 *          numeric value
 		 * @param unit the unit of measure used by the value of the given field.
 		 * @return new instance of {@link Tanh}.
 		 */
-		public static Tanh tanh(Object value, AngularDimension unit) {
+		public static Tanh tanh(Object value, AngularUnit unit) {
 
-			if (ObjectUtils.nullSafeEquals(AngularDimension.DEGREES, unit)) {
+			if (ObjectUtils.nullSafeEquals(AngularUnit.DEGREES, unit)) {
 				return new Tanh(ConvertOperators.DegreesToRadians.degreesToRadians(value));
 			}
 			return new Tanh(value);

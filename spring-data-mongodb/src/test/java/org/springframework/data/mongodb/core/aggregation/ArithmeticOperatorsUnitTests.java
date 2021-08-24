@@ -86,84 +86,84 @@ class ArithmeticOperatorsUnitTests {
 	void rendersSin() {
 
 		assertThat(valueOf("angle").sin().toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo(Document.parse("{ $sin : \"$angle\" }"));
+				.isEqualTo("{ $sin : \"$angle\" }");
 	}
 
 	@Test // GH-3728
 	void rendersSinWithValueInDegrees() {
 
-		assertThat(valueOf("angle").sin(AngularDimension.DEGREES).toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo(Document.parse("{ $sin : { $degreesToRadians : \"$angle\" } }"));
+		assertThat(valueOf("angle").sin(AngularUnit.DEGREES).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ $sin : { $degreesToRadians : \"$angle\" } }");
 	}
 
 	@Test // GH-3728
 	void rendersSinh() {
 
 		assertThat(valueOf("angle").sinh().toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo(Document.parse("{ $sinh : \"$angle\" }"));
+				.isEqualTo("{ $sinh : \"$angle\" }");
 	}
 
 	@Test // GH-3728
 	void rendersSinhWithValueInDegrees() {
 
-		assertThat(valueOf("angle").sinh(AngularDimension.DEGREES).toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo(Document.parse("{ $sinh : { $degreesToRadians : \"$angle\" } }"));
+		assertThat(valueOf("angle").sinh(AngularUnit.DEGREES).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ $sinh : { $degreesToRadians : \"$angle\" } }");
 	}
 
 	@Test // GH-3710
 	void rendersCos() {
 
 		assertThat(valueOf("angle").cos().toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo(Document.parse("{ $cos : \"$angle\" }"));
+				.isEqualTo("{ $cos : \"$angle\" }");
 	}
 
 	@Test // GH-3710
 	void rendersCosWithValueInDegrees() {
 
-		assertThat(valueOf("angle").cos(AngularDimension.DEGREES).toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo(Document.parse("{ $cos : { $degreesToRadians : \"$angle\" } }"));
+		assertThat(valueOf("angle").cos(AngularUnit.DEGREES).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ $cos : { $degreesToRadians : \"$angle\" } }");
 	}
 
 	@Test // GH-3710
 	void rendersCosh() {
 
 		assertThat(valueOf("angle").cosh().toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo(Document.parse("{ $cosh : \"$angle\" }"));
+				.isEqualTo("{ $cosh : \"$angle\" }");
 	}
 
 	@Test // GH-3710
 	void rendersCoshWithValueInDegrees() {
 
-		assertThat(valueOf("angle").cosh(AngularDimension.DEGREES).toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo(Document.parse("{ $cosh : { $degreesToRadians : \"$angle\" } }"));
+		assertThat(valueOf("angle").cosh(AngularUnit.DEGREES).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ $cosh : { $degreesToRadians : \"$angle\" } }");
 	}
 
 	@Test // GH-3730
 	void rendersTan() {
 
 		assertThat(valueOf("angle").tan().toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo(Document.parse("{ $tan : \"$angle\" }"));
+				.isEqualTo("{ $tan : \"$angle\" }");
 	}
 
 	@Test // GH-3730
 	void rendersTanWithValueInDegrees() {
 
-		assertThat(valueOf("angle").tan(AngularDimension.DEGREES).toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo(Document.parse("{ $tan : { $degreesToRadians : \"$angle\" } }"));
+		assertThat(valueOf("angle").tan(AngularUnit.DEGREES).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ $tan : { $degreesToRadians : \"$angle\" } }");
 	}
 
 	@Test // GH-3730
 	void rendersTanh() {
 
 		assertThat(valueOf("angle").tanh().toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo(Document.parse("{ $tanh : \"$angle\" }"));
+				.isEqualTo("{ $tanh : \"$angle\" }");
 	}
 
 	@Test // GH-3730
 	void rendersTanhWithValueInDegrees() {
 
-		assertThat(valueOf("angle").tanh(AngularDimension.DEGREES).toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo(Document.parse("{ $tanh : { $degreesToRadians : \"$angle\" } }"));
+		assertThat(valueOf("angle").tanh(AngularUnit.DEGREES).toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ $tanh : { $degreesToRadians : \"$angle\" } }");
 	}
 
 }

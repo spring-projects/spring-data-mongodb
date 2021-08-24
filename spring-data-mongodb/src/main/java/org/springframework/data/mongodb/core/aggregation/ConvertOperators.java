@@ -232,7 +232,8 @@ public class ConvertOperators {
 		}
 
 		/**
-		 * {@link AggregationExpression} for {@code $degreesToRadians} that converts an input value measured in degrees to radians.\
+		 * {@link AggregationExpression} for {@code $degreesToRadians} that converts an input value measured in degrees to
+		 * radians.
 		 *
 		 * @return new instance of {@link DegreesToRadians}.
 		 * @since 3.3
