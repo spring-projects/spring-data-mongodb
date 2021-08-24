@@ -156,6 +156,46 @@ public class ArithmeticOperators {
 		}
 
 		/**
+		 * Creates new {@link AggregationExpression} that calculates the mathematical derivative value.
+		 *
+		 * @return new instance of {@link Derivative}.
+		 * @since 3.3
+		 */
+		public Derivative derivative() {
+			return derivative((String) null);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the mathematical derivative value.
+		 *
+		 * @param unit The time unit ({@link WindowUnits#WEEK}, {@link WindowUnits#DAY}, {@link WindowUnits#HOUR},
+		 *          {@link WindowUnits#MINUTE}, {@link WindowUnits#SECOND}, {@link WindowUnits#MILLISECOND}) to apply.
+		 * @return new instance of {@link Derivative}.
+		 * @since 3.3
+		 */
+		public Derivative derivative(WindowUnit unit) {
+
+			Assert.notNull(unit, "Window unit must not be null");
+
+			return derivative(unit.name().toLowerCase(Locale.ROOT));
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the mathematical derivative value.
+		 *
+		 * @param unit The time unit ({@literal week, day, hour, minute, second, millisecond}) to apply can be
+		 *          {@literal null}.
+		 * @return new instance of {@link Derivative}.
+		 * @since 3.3
+		 */
+		public Derivative derivative(@Nullable String unit) {
+
+			Derivative derivative = usesFieldRef() ? Derivative.derivativeOf(fieldReference)
+					: Derivative.derivativeOf(expression);
+			return StringUtils.hasText(unit) ? derivative.unit(unit) : derivative;
+		}
+
+		/**
 		 * Creates new {@link AggregationExpression} that ivides the associated number by number referenced via
 		 * {@literal fieldReference}.
 		 *
@@ -229,11 +269,29 @@ public class ArithmeticOperators {
 		/**
 		 * Creates new {@link AggregationExpression} that calculates the approximation for the mathematical integral value.
 		 *
+		 * @param unit The time unit ({@link WindowUnits#WEEK}, {@link WindowUnits#DAY}, {@link WindowUnits#HOUR},
+		 *          {@link WindowUnits#MINUTE}, {@link WindowUnits#SECOND}, {@link WindowUnits#MILLISECOND}) to apply.
+		 * @return new instance of {@link Derivative}.
+		 * @since 3.3
+		 */
+		public Integral integral(WindowUnit unit) {
+
+			Assert.notNull(unit, "Window unit must not be null");
+
+			return integral(unit.name().toLowerCase(Locale.ROOT));
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the approximation for the mathematical integral value.
+		 *
 		 * @param unit the unit of measure.
 		 * @return new instance of {@link Integral}.
 		 * @since 3.3
 		 */
 		public Integral integral(String unit) {
+
+			Assert.hasText(unit, "Unit must not be empty!");
+
 			return integral().unit(unit);
 		}
 
@@ -616,46 +674,6 @@ public class ArithmeticOperators {
 		 */
 		public Round roundToPlace(int place) {
 			return round().place(place);
-		}
-
-		/**
-		 * Creates new {@link AggregationExpression} that calculates the mathematical derivative value.
-		 *
-		 * @return new instance of {@link Derivative}.
-		 * @since 3.3
-		 */
-		public Derivative derivative() {
-			return derivative((String) null);
-		}
-
-		/**
-		 * Creates new {@link AggregationExpression} that calculates the mathematical derivative value.
-		 *
-		 * @param unit The time unit ({@link WindowUnits#WEEK}, {@link WindowUnits#DAY}, {@link WindowUnits#HOUR},
-		 *          {@link WindowUnits#MINUTE}, {@link WindowUnits#SECOND}, {@link WindowUnits#MILLISECOND}) to apply.
-		 * @return new instance of {@link Derivative}.
-		 * @since 3.3
-		 */
-		public Derivative derivative(WindowUnit unit) {
-
-			Assert.notNull(unit, "Window unit must not be null");
-
-			return derivative(unit.name().toLowerCase(Locale.ROOT));
-		}
-
-		/**
-		 * Creates new {@link AggregationExpression} that calculates the mathematical derivative value.
-		 *
-		 * @param unit The time unit ({@literal week, day, hour, minute, second, millisecond}) to apply can be
-		 *          {@literal null}.
-		 * @return new instance of {@link Derivative}.
-		 * @since 3.3
-		 */
-		public Derivative derivative(@Nullable String unit) {
-
-			Derivative derivative = usesFieldRef() ? Derivative.derivativeOf(fieldReference)
-					: Derivative.derivativeOf(expression);
-			return StringUtils.hasText(unit) ? derivative.unit(unit) : derivative;
 		}
 
 		private boolean usesFieldRef() {
@@ -1792,16 +1810,36 @@ public class ArithmeticOperators {
 		}
 	}
 
+	/**
+	 * Value object to represent an {@link AggregationExpression expression} that calculates the average rate of change
+	 * within the specified window.
+	 *
+	 * @author Christoph Strobl
+	 * @since 3.3
+	 */
 	public static class Derivative extends AbstractAggregationExpression {
 
 		private Derivative(Object value) {
 			super(value);
 		}
 
+		/**
+		 * Create a new instance of {@link Derivative} for the value stored at the given field holding a numeric value.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link Derivative}.
+		 */
 		public static Derivative derivativeOf(String fieldReference) {
 			return new Derivative(Collections.singletonMap("input", Fields.field(fieldReference)));
 		}
 
+		/**
+		 * Create a new instance of {@link Derivative} for the value provided by the given expression that resolves to a
+		 * numeric value.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Derivative}.
+		 */
 		public static Derivative derivativeOf(AggregationExpression expression) {
 			return new Derivative(Collections.singletonMap("input", expression));
 		}

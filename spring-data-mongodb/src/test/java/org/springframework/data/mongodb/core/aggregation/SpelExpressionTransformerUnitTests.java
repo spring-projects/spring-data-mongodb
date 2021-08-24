@@ -23,8 +23,8 @@ import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.data.mongodb.core.Person;
-import org.springframework.lang.Nullable;
 
 /**
  * Unit tests for {@link SpelExpressionTransformer}.
@@ -152,8 +152,8 @@ public class SpelExpressionTransformerUnitTests {
 	@Test // DATAMONGO-774
 	void shouldRenderConsecutiveOperationsInComplexExpression() {
 
-		assertThat(transform("1 + 1 + (1 + 1 + 1) / q")).isEqualTo(
-				Document.parse("{ \"$add\" : [ 1 , 1 , { \"$divide\" : [ { \"$add\" : [ 1 , 1 , 1]} , \"$q\"]}]}"));
+		assertThat(transform("1 + 1 + (1 + 1 + 1) / q"))
+				.isEqualTo(Document.parse("{ \"$add\" : [ 1 , 1 , { \"$divide\" : [ { \"$add\" : [ 1 , 1 , 1]} , \"$q\"]}]}"));
 	}
 
 	@Test // DATAMONGO-774
@@ -189,8 +189,7 @@ public class SpelExpressionTransformerUnitTests {
 
 		Person person = new Person();
 		person.setAge(10);
-		assertThat(transform("[0].age + a.c", person))
-				.isEqualTo(Document.parse("{ \"$add\" : [ 10 , \"$a.c\"] }"));
+		assertThat(transform("[0].age + a.c", person)).isEqualTo(Document.parse("{ \"$add\" : [ 10 , \"$a.c\"] }"));
 	}
 
 	@Test // DATAMONGO-840
@@ -216,8 +215,7 @@ public class SpelExpressionTransformerUnitTests {
 
 	@Test // DATAMONGO-1530
 	void shouldRenderMethodReferenceNodeSetEquals() {
-		assertThat(transform("setEquals(a, b)"))
-				.isEqualTo(Document.parse("{ \"$setEquals\" : [ \"$a\" , \"$b\"]}"));
+		assertThat(transform("setEquals(a, b)")).isEqualTo(Document.parse("{ \"$setEquals\" : [ \"$a\" , \"$b\"]}"));
 	}
 
 	@Test // DATAMONGO-1530
@@ -379,8 +377,7 @@ public class SpelExpressionTransformerUnitTests {
 
 	@Test // DATAMONGO-1530
 	void shouldRenderMethodReferenceNodeConcat() {
-		assertThat(transform("concat(a, b, 'c')"))
-				.isEqualTo(Document.parse("{ \"$concat\" : [ \"$a\" , \"$b\" , \"c\"]}"));
+		assertThat(transform("concat(a, b, 'c')")).isEqualTo(Document.parse("{ \"$concat\" : [ \"$a\" , \"$b\" , \"c\"]}"));
 	}
 
 	@Test // DATAMONGO-1530
@@ -400,8 +397,7 @@ public class SpelExpressionTransformerUnitTests {
 
 	@Test // DATAMONGO-1530
 	void shouldRenderMethodReferenceNodeStrCaseCmp() {
-		assertThat(transform("strcasecmp(a, b)"))
-				.isEqualTo(Document.parse("{ \"$strcasecmp\" : [ \"$a\" , \"$b\"]}"));
+		assertThat(transform("strcasecmp(a, b)")).isEqualTo(Document.parse("{ \"$strcasecmp\" : [ \"$a\" , \"$b\"]}"));
 	}
 
 	@Test // DATAMONGO-1530
@@ -411,8 +407,7 @@ public class SpelExpressionTransformerUnitTests {
 
 	@Test // DATAMONGO-1530
 	void shouldRenderMethodReferenceNodeArrayElemAt() {
-		assertThat(transform("arrayElemAt(a, 10)"))
-				.isEqualTo(Document.parse("{ \"$arrayElemAt\" : [ \"$a\" , 10]}"));
+		assertThat(transform("arrayElemAt(a, 10)")).isEqualTo(Document.parse("{ \"$arrayElemAt\" : [ \"$a\" , 10]}"));
 	}
 
 	@Test // DATAMONGO-1530
@@ -511,15 +506,14 @@ public class SpelExpressionTransformerUnitTests {
 
 	@Test // DATAMONGO-1530
 	void shouldRenderMethodReferenceDateToString() {
-		assertThat(transform("dateToString('%Y-%m-%d', $date)")).isEqualTo(
-				Document.parse("{ \"$dateToString\" : { \"format\" : \"%Y-%m-%d\" , \"date\" : \"$date\"}}"));
+		assertThat(transform("dateToString('%Y-%m-%d', $date)"))
+				.isEqualTo(Document.parse("{ \"$dateToString\" : { \"format\" : \"%Y-%m-%d\" , \"date\" : \"$date\"}}"));
 	}
 
 	@Test // DATAMONGO-1530
 	void shouldRenderMethodReferenceCond() {
 		assertThat(transform("cond(qty > 250, 30, 20)")).isEqualTo(
-				Document
-				.parse("{ \"$cond\" : { \"if\" : { \"$gt\" : [ \"$qty\" , 250]} , \"then\" : 30 , \"else\" : 20}}"));
+				Document.parse("{ \"$cond\" : { \"if\" : { \"$gt\" : [ \"$qty\" , 250]} , \"then\" : 30 , \"else\" : 20}}"));
 	}
 
 	@Test // DATAMONGO-1530
@@ -633,8 +627,7 @@ public class SpelExpressionTransformerUnitTests {
 	@Test // DATAMONGO-1530
 	void shouldRenderComplexOperationNodeAnd() {
 		assertThat(transform("1+2 && concat(a, b) && true")).isEqualTo(
-				Document
-				.parse("{ \"$and\" : [ { \"$add\" : [ 1 , 2]} , { \"$concat\" : [ \"$a\" , \"$b\"]} , true]}"));
+				Document.parse("{ \"$and\" : [ { \"$add\" : [ 1 , 2]} , { \"$concat\" : [ \"$a\" , \"$b\"]} , true]}"));
 	}
 
 	@Test // DATAMONGO-1530
@@ -644,8 +637,7 @@ public class SpelExpressionTransformerUnitTests {
 
 	@Test // DATAMONGO-1530
 	void shouldRenderComplexNotCorrectly() {
-		assertThat(transform("!(foo > 10)"))
-				.isEqualTo(Document.parse("{ \"$not\" : [ { \"$gt\" : [ \"$foo\" , 10]}]}"));
+		assertThat(transform("!(foo > 10)")).isEqualTo(Document.parse("{ \"$not\" : [ { \"$gt\" : [ \"$foo\" , 10]}]}"));
 	}
 
 	@Test // DATAMONGO-1548
@@ -951,12 +943,14 @@ public class SpelExpressionTransformerUnitTests {
 
 	@Test // GH-3712
 	void shouldRenderCovariancePop() {
-		assertThat(transform("covariancePop(field1, field2)")).isEqualTo(Document.parse("{ \"$covariancePop\" : [\"$field1\", \"$field2\"]}"));
+		assertThat(transform("covariancePop(field1, field2)"))
+				.isEqualTo(Document.parse("{ \"$covariancePop\" : [\"$field1\", \"$field2\"]}"));
 	}
 
 	@Test // GH-3712
 	void shouldRenderCovarianceSamp() {
-		assertThat(transform("covarianceSamp(field1, field2)")).isEqualTo(Document.parse("{ \"$covarianceSamp\" : [\"$field1\", \"$field2\"]}"));
+		assertThat(transform("covarianceSamp(field1, field2)"))
+				.isEqualTo(Document.parse("{ \"$covarianceSamp\" : [\"$field1\", \"$field2\"]}"));
 	}
 
 	@Test // GH-3715
@@ -988,20 +982,21 @@ public class SpelExpressionTransformerUnitTests {
 				.isEqualTo(Document.parse("{ $shift: { output: \"$quantity\", by: 1, default: \"Not available\" } }"));
 	}
 
-	@Nullable
 	@Test // GH-3716
 	void shouldRenderDerivative() {
-		assertThat(transform("derivative(miles, 'hour')")).isEqualTo(Document.parse("{ \"$derivative\" : { input : '$miles', unit : 'hour'} }"));
+		assertThat(transform("derivative(miles, 'hour')"))
+				.isEqualTo(Document.parse("{ \"$derivative\" : { input : '$miles', unit : 'hour'} }"));
 	}
 
 	@Test // GH-3721
-	public void shouldRenderIntegral() {
+	void shouldRenderIntegral() {
 		assertThat(transform("integral(field)")).isEqualTo(Document.parse("{ \"$integral\" : { \"input\" : \"$field\" }}"));
 	}
 
 	@Test // GH-3721
-	public void shouldIntegralWithUnit() {
-		assertThat(transform("integral(field, 'hour')")).isEqualTo(Document.parse("{ \"$integral\" : { \"input\" : \"$field\", \"unit\" : \"hour\" }}"));
+	void shouldRenderIntegralWithUnit() {
+		assertThat(transform("integral(field, 'hour')"))
+				.isEqualTo(Document.parse("{ \"$integral\" : { \"input\" : \"$field\", \"unit\" : \"hour\" }}"));
 	}
 
 	private Object transform(String expression, Object... params) {

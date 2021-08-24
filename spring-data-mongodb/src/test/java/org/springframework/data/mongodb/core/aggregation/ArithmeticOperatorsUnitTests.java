@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.mongodb.core.aggregation.ArithmeticOperators.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -66,16 +66,19 @@ class ArithmeticOperatorsUnitTests {
 
 		assertThat(
 				valueOf("miles").derivative(SetWindowFieldsOperation.WindowUnits.HOUR).toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo(Document.parse("{ $derivative: { input: \"$miles\", unit: \"hour\" } }"));
+						.isEqualTo("{ $derivative: { input: \"$miles\", unit: \"hour\" } }");
 	}
 
 	@Test // GH-3721
 	void rendersIntegral() {
-		assertThat(valueOf("kilowatts").integral().toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo(Document.parse("{ $integral : { input : \"$kilowatts\" } }"));
+		assertThat(valueOf("kilowatts").integral().toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ $integral : { input : \"$kilowatts\" } }");
 	}
 
 	@Test // GH-3721
 	void rendersIntegralWithUnit() {
-		assertThat(valueOf("kilowatts").integral("hour").toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo(Document.parse("{ $integral : { input : \"$kilowatts\", unit : \"hour\" } }"));
+		assertThat(valueOf("kilowatts").integral(SetWindowFieldsOperation.WindowUnits.HOUR)
+				.toDocument(Aggregation.DEFAULT_CONTEXT))
+						.isEqualTo("{ $integral : { input : \"$kilowatts\", unit : \"hour\" } }");
 	}
 }
