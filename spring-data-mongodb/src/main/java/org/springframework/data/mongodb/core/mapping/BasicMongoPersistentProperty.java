@@ -16,7 +16,11 @@
 package org.springframework.data.mongodb.core.mapping;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.bson.types.ObjectId;
@@ -29,7 +33,12 @@ import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import org.springframework.data.mongodb.util.encryption.EncryptionUtils;
+import org.springframework.data.util.Lazy;
+import org.springframework.expression.EvaluationContext;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.lang.Nullable;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -299,4 +308,43 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		return isAnnotationPresent(TextScore.class);
 	}
 
+	/**
+	 * Obtain the {@link EvaluationContext} for a specific root object.
+	 * 
+	 * @param rootObject can be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 3.3
+	 */
+	public EvaluationContext getEvaluationContext(@Nullable Object rootObject) {
+
+		if (getOwner() instanceof BasicMongoPersistentEntity) {
+			return ((BasicMongoPersistentEntity) getOwner()).getEvaluationContext(rootObject);
+		}
+		return rootObject != null ? new StandardEvaluationContext(rootObject) : new StandardEvaluationContext();
+	}
+
+	@Override
+	public Collection<Object> getEncryptionKeyIds() {
+
+		Encrypted encrypted = findAnnotation(Encrypted.class);
+		if (encrypted == null) {
+			return null;
+		}
+
+		if (ObjectUtils.isEmpty(encrypted.keyId())) {
+			return Collections.emptySet();
+		}
+
+		Lazy<EvaluationContext> evaluationContext = Lazy.of(() -> {
+			EvaluationContext ctx = getEvaluationContext(null);
+			ctx.setVariable("target", getOwner().getType().getSimpleName() + "." + getName());
+			return ctx;
+		});
+
+		List<Object> target = new ArrayList<>();
+		for (String keyId : encrypted.keyId()) {
+			target.add(EncryptionUtils.resolveKeyId(keyId, evaluationContext));
+		}
+		return target;
+	}
 }

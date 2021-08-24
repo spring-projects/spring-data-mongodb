@@ -16,7 +16,9 @@
 package org.springframework.data.mongodb.core.schema;
 
 import org.bson.Document;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 
 /**
  * Value object representing a MongoDB-specific JSON schema which is the default {@link MongoJsonSchema} implementation.
@@ -29,18 +31,44 @@ class DefaultMongoJsonSchema implements MongoJsonSchema {
 
 	private final JsonSchemaObject root;
 
-	DefaultMongoJsonSchema(JsonSchemaObject root) {
+	@Nullable //
+	private final Document encryptionMetadata;
 
-		Assert.notNull(root, "Root must not be null!");
+	DefaultMongoJsonSchema(JsonSchemaObject root) {
+		this(root, null);
+	}
+
+	/**
+	 * Create new instance of {@link DefaultMongoJsonSchema}.
+	 *
+	 * @param root the schema root element.
+	 * @param encryptionMetadata can be {@literal null}.
+	 * @since 3.3
+	 */
+	DefaultMongoJsonSchema(JsonSchemaObject root, @Nullable Document encryptionMetadata) {
+
+		Assert.notNull(root, "Root schema object must not be null!");
+
 		this.root = root;
+		this.encryptionMetadata = encryptionMetadata;
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.schema.MongoJsonSchema#toDocument()
+	 * @see org.springframework.data.mongodb.core.schema.MongoJsonSchema#schema()
 	 */
 	@Override
-	public Document toDocument() {
-		return new Document("$jsonSchema", root.toDocument());
+	public Document schemaDocument() {
+
+		Document schemaDocument = new Document();
+
+		// we want this to be the first element rendered, so it reads nice when printed to json
+		if (!CollectionUtils.isEmpty(encryptionMetadata)) {
+			schemaDocument.append("encryptMetadata", encryptionMetadata);
+		}
+
+		schemaDocument.putAll(root.toDocument());
+
+		return schemaDocument;
 	}
 }

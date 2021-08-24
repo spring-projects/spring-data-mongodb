@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.mapping;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Collection;
 
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.PersistentEntity;
@@ -266,6 +267,11 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	@Override
 	public boolean isUnwrapped() {
 		return delegate.isUnwrapped();
+	}
+
+	@Override
+	public Collection<Object> getEncryptionKeyIds() {
+		return delegate.getEncryptionKeyIds();
 	}
 
 	@Override
