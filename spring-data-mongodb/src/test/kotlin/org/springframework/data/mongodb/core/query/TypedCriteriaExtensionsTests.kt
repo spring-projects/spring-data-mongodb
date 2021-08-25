@@ -25,8 +25,11 @@ import org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type
 import java.util.regex.Pattern
 
 /**
+ * Unit tests for [Criteria] extensions.
+ *
  * @author Tjeu Kayim
  * @author Mark Paluch
+ * @author Sangyong Choi
  */
 class TypedCriteriaExtensionsTests {
 
@@ -319,8 +322,8 @@ class TypedCriteriaExtensionsTests {
 
 	@Test
 	fun `maxDistance() should equal expected criteria with nearSphere`() {
-		val point = Point(0.0, 0.0)
 
+		val point = Point(0.0, 0.0)
 		val typed = Building::location nearSphere point maxDistance 3.0
 		val expected = Criteria("location")
 			.nearSphere(point)
@@ -331,8 +334,8 @@ class TypedCriteriaExtensionsTests {
 
 	@Test
 	fun `minDistance() should equal expected criteria with nearSphere`() {
-		val point = Point(0.0, 0.0)
 
+		val point = Point(0.0, 0.0)
 		val typed = Building::location nearSphere point minDistance 3.0
 		val expected = Criteria("location")
 			.nearSphere(point)
@@ -343,8 +346,8 @@ class TypedCriteriaExtensionsTests {
 
 	@Test
 	fun `maxDistance() should equal expected criteria with near`() {
-		val point = Point(0.0, 0.0)
 
+		val point = Point(0.0, 0.0)
 		val typed = Building::location near point maxDistance 3.0
 		val expected = Criteria("location")
 			.near(point)
@@ -355,8 +358,8 @@ class TypedCriteriaExtensionsTests {
 
 	@Test
 	fun `minDistance() should equal expected criteria with near`() {
-		val point = Point(0.0, 0.0)
 
+		val point = Point(0.0, 0.0)
 		val typed = Building::location near point minDistance 3.0
 		val expected = Criteria("location")
 			.near(point)
