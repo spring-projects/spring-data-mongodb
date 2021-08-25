@@ -1036,17 +1036,19 @@ public class SpelExpressionTransformerUnitTests {
 
 	@Test // GH-3713
 	void shouldRenderDateAdd() {
-		assertThat(transform("dateAdd(purchaseDate, 'day', 3)")).isEqualTo(Document.parse("{ $dateAdd: { startDate: \"$purchaseDate\", unit: \"day\", amount: 3 } }"));
+		assertThat(transform("dateAdd(purchaseDate, 'day', 3)"))
+				.isEqualTo("{ $dateAdd: { startDate: \"$purchaseDate\", unit: \"day\", amount: 3 } }");
 	}
 
 	@Test // GH-3713
 	void shouldRenderDateDiff() {
-		assertThat(transform("dateDiff(purchaseDate, delivered, 'day')")).isEqualTo(Document.parse("{ $dateDiff: { startDate: \"$purchaseDate\", endDate: \"$delivered\", unit: \"day\" } }"));
+		assertThat(transform("dateDiff(purchaseDate, delivered, 'day')"))
+				.isEqualTo("{ $dateDiff: { startDate: \"$purchaseDate\", endDate: \"$delivered\", unit: \"day\" } }");
 	}
 
 	@Test // GH-3724
 	void shouldRenderRand() {
-		assertThat(transform("rand()")).isEqualTo(Document.parse("{ $rand : {} }"));
+		assertThat(transform("rand()")).isEqualTo("{ $rand : {} }");
 	}
 
 	private Document transform(String expression, Object... params) {

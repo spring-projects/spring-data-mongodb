@@ -40,6 +40,7 @@ import org.springframework.util.StringUtils;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Mushtaq Ahmed
  * @since 1.10
  */
 public class ArithmeticOperators {
@@ -65,7 +66,8 @@ public class ArithmeticOperators {
 	}
 
 	/**
-	 * Creates new {@link AggregationExpression} that returns a random float between 0 and 1 each time it is called.
+	 * Creates new {@link AggregationExpression} that returns a random float between {@code 0} and {@code 1} each time it
+	 * is called.
 	 *
 	 * @return new instance of {@link Rand}.
 	 * @since 3.3

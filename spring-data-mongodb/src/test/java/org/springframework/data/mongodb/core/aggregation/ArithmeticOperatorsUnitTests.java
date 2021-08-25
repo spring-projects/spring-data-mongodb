@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Test;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Mushtaq Ahmed
  */
 class ArithmeticOperatorsUnitTests {
 
@@ -166,9 +167,8 @@ class ArithmeticOperatorsUnitTests {
 				.isEqualTo("{ $tanh : { $degreesToRadians : \"$angle\" } }");
 	}
 
-
 	@Test // GH-3724
-	void rendersRank() {
+	void rendersRand() {
 		assertThat(rand().toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo(new Document("$rand", new Document()));
 	}
 }
