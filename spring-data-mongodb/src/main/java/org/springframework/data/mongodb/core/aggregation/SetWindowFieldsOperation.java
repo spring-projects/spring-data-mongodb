@@ -15,9 +15,11 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
 import org.springframework.data.domain.Sort;
@@ -626,7 +628,68 @@ public class SetWindowFieldsOperation
 	 * The actual time unit to apply to a {@link Window}.
 	 */
 	public interface WindowUnit {
+
 		String name();
+
+		/**
+		 * Converts the given time unit into a {@link WindowUnit}. Supported units are: days, hours, minutes, seconds, and
+		 * milliseconds.
+		 *
+		 * @param timeUnit the time unit to convert, must not be {@literal null}.
+		 * @return
+		 * @throws IllegalArgumentException if the {@link TimeUnit} is {@literal null} or not supported for conversion.
+		 */
+		static WindowUnit from(TimeUnit timeUnit) {
+
+			Assert.notNull(timeUnit, "TimeUnit must not be null");
+
+			switch (timeUnit) {
+				case DAYS:
+					return WindowUnits.DAY;
+				case HOURS:
+					return WindowUnits.HOUR;
+				case MINUTES:
+					return WindowUnits.MINUTE;
+				case SECONDS:
+					return WindowUnits.SECOND;
+				case MILLISECONDS:
+					return WindowUnits.MILLISECOND;
+			}
+
+			throw new IllegalArgumentException(String.format("Cannot create WindowUnit from %s", timeUnit));
+		}
+
+		/**
+		 * Converts the given chrono unit into a {@link WindowUnit}. Supported units are: years, weeks, months, days, hours,
+		 * minutes, seconds, and millis.
+		 *
+		 * @param chronoUnit the chrono unit to convert, must not be {@literal null}.
+		 * @return
+		 * @throws IllegalArgumentException if the {@link TimeUnit} is {@literal null} or not supported for conversion.
+		 */
+		static WindowUnit from(ChronoUnit chronoUnit) {
+
+			switch (chronoUnit) {
+				case YEARS:
+					return WindowUnits.YEAR;
+				case WEEKS:
+					return WindowUnits.WEEK;
+				case MONTHS:
+					return WindowUnits.MONTH;
+				case DAYS:
+					return WindowUnits.DAY;
+				case HOURS:
+					return WindowUnits.HOUR;
+				case MINUTES:
+					return WindowUnits.MINUTE;
+				case SECONDS:
+					return WindowUnits.SECOND;
+				case MILLIS:
+					return WindowUnits.MILLISECOND;
+			}
+
+			throw new IllegalArgumentException(String.format("Cannot create WindowUnit from %s", chronoUnit));
+		}
 	}
 
 	/**

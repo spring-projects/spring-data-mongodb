@@ -15,14 +15,22 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
 
-import org.bson.Document;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
+import java.util.TimeZone;
+
 import org.junit.jupiter.api.Test;
+
 import org.springframework.data.mongodb.core.aggregation.DateOperators.Timezone;
 
 /**
+ * Unit tests for {@link DateOperators}.
+ *
  * @author Christoph Strobl
+ * @author Mark Paluch
  */
 class DateOperatorsUnitTests {
 
@@ -30,15 +38,15 @@ class DateOperatorsUnitTests {
 	void rendersDateAdd() {
 
 		assertThat(DateOperators.dateOf("purchaseDate").add(3, "day").toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo(Document.parse("{ $dateAdd: { startDate: \"$purchaseDate\", unit: \"day\", amount: 3 } }"));
+				.isEqualTo("{ $dateAdd: { startDate: \"$purchaseDate\", unit: \"day\", amount: 3 } }");
 	}
 
 	@Test // GH-3713
 	void rendersDateAddWithTimezone() {
 
 		assertThat(DateOperators.zonedDateOf("purchaseDate", Timezone.valueOf("America/Chicago")).add(3, "day")
-				.toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo(Document.parse(
-						"{ $dateAdd: { startDate: \"$purchaseDate\", unit: \"day\", amount: 3, timezone : \"America/Chicago\" } }"));
+				.toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo(
+						"{ $dateAdd: { startDate: \"$purchaseDate\", unit: \"day\", amount: 3, timezone : \"America/Chicago\" } }");
 	}
 
 	@Test // GH-3713
@@ -46,15 +54,37 @@ class DateOperatorsUnitTests {
 
 		assertThat(
 				DateOperators.dateOf("purchaseDate").diffValueOf("delivered", "day").toDocument(Aggregation.DEFAULT_CONTEXT))
-						.isEqualTo(Document
-								.parse("{ $dateDiff: { startDate: \"$purchaseDate\", endDate: \"$delivered\", unit: \"day\" } }"));
+						.isEqualTo("{ $dateDiff: { startDate: \"$purchaseDate\", endDate: \"$delivered\", unit: \"day\" } }");
 	}
 
 	@Test // GH-3713
 	void rendersDateDiffWithTimezone() {
 
 		assertThat(DateOperators.zonedDateOf("purchaseDate", Timezone.valueOf("America/Chicago"))
-				.diffValueOf("delivered", "day").toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo(Document.parse(
-						"{ $dateDiff: { startDate: \"$purchaseDate\", endDate: \"$delivered\", unit: \"day\", timezone : \"America/Chicago\" } }"));
+				.diffValueOf("delivered", DateOperators.TemporalUnit.from(ChronoUnit.DAYS))
+				.toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo(
+						"{ $dateDiff: { startDate: \"$purchaseDate\", endDate: \"$delivered\", unit: \"day\", timezone : \"America/Chicago\" } }");
+	}
+
+	@Test // GH-3713
+	void rendersTimezoneFromZoneOffset() {
+		assertThat(DateOperators.Timezone.fromOffset(ZoneOffset.ofHoursMinutes(3, 30)).getValue()).isEqualTo("+03:30");
+	}
+
+	@Test // GH-3713
+	void rendersTimezoneFromTimeZoneOffset() {
+		assertThat(DateOperators.Timezone.fromOffset(TimeZone.getTimeZone("America/Chicago")).getValue())
+				.isEqualTo("-06:00");
+	}
+
+	@Test // GH-3713
+	void rendersTimezoneFromTimeZoneId() {
+		assertThat(DateOperators.Timezone.fromZone(TimeZone.getTimeZone("America/Chicago")).getValue())
+				.isEqualTo("America/Chicago");
+	}
+
+	@Test // GH-3713
+	void rendersTimezoneFromZoneId() {
+		assertThat(DateOperators.Timezone.fromZone(ZoneId.of("America/Chicago")).getValue()).isEqualTo("America/Chicago");
 	}
 }

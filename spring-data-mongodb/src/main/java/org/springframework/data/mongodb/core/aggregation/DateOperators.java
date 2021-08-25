@@ -15,10 +15,16 @@
  */
 package org.springframework.data.mongodb.core.aggregation;
 
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -157,6 +163,7 @@ public class DateOperators {
 	 * <strong>NOTE: </strong>Support for timezones in aggregations Requires MongoDB 3.6 or later.
 	 *
 	 * @author Christoph Strobl
+	 * @author Mark Paluch
 	 * @since 2.1
 	 */
 	public static class Timezone {
@@ -193,6 +200,61 @@ public class DateOperators {
 		}
 
 		/**
+		 * Create a {@link Timezone} for the given {@link TimeZone} rendering the offset as UTC offset.
+		 *
+		 * @param timeZone {@link TimeZone} rendering the offset as UTC offset.
+		 * @return new instance of {@link Timezone}.
+		 * @since 3.3
+		 */
+		public static Timezone fromOffset(TimeZone timeZone) {
+
+			Assert.notNull(timeZone, "TimeZone must not be null!");
+
+			return fromOffset(
+					ZoneOffset.ofTotalSeconds(Math.toIntExact(TimeUnit.MILLISECONDS.toSeconds(timeZone.getRawOffset()))));
+		}
+
+		/**
+		 * Create a {@link Timezone} for the given {@link ZoneOffset} rendering the offset as UTC offset.
+		 *
+		 * @param offset {@link ZoneOffset} rendering the offset as UTC offset.
+		 * @return new instance of {@link Timezone}.
+		 * @since 3.3
+		 */
+		public static Timezone fromOffset(ZoneOffset offset) {
+
+			Assert.notNull(offset, "ZoneOffset must not be null!");
+			return new Timezone(offset.toString());
+		}
+
+		/**
+		 * Create a {@link Timezone} for the given {@link TimeZone} rendering the offset as UTC offset.
+		 *
+		 * @param timeZone {@link Timezone} rendering the offset as zone identifier.
+		 * @return new instance of {@link Timezone}.
+		 * @since 3.3
+		 */
+		public static Timezone fromZone(TimeZone timeZone) {
+
+			Assert.notNull(timeZone, "TimeZone must not be null!");
+
+			return valueOf(timeZone.getID());
+		}
+
+		/**
+		 * Create a {@link Timezone} for the given {@link java.time.ZoneId} rendering the offset as UTC offset.
+		 *
+		 * @param zoneId {@link ZoneId} rendering the offset as zone identifier.
+		 * @return new instance of {@link Timezone}.
+		 * @since 3.3
+		 */
+		public static Timezone fromZone(ZoneId zoneId) {
+
+			Assert.notNull(zoneId, "ZoneId must not be null!");
+			return new Timezone(zoneId.toString());
+		}
+
+		/**
 		 * Create a {@link Timezone} for the {@link Field} reference holding the Olson Timezone Identifier or UTC Offset.
 		 *
 		 * @param fieldReference the {@link Field} holding the timezone.
@@ -211,6 +273,11 @@ public class DateOperators {
 		 */
 		public static Timezone ofExpression(AggregationExpression expression) {
 			return valueOf(expression);
+		}
+
+		@Nullable
+		Object getValue() {
+			return value;
 		}
 	}
 
@@ -303,37 +370,85 @@ public class DateOperators {
 
 		/**
 		 * Creates new {@link AggregationExpression} that adds the value of the given {@link AggregationExpression
-		 * expression} (in {@literal units). @param expression must not be {@literal null}.
-		 * 
+		 * expression} (in {@literal units}).
+		 *
+		 * @param expression must not be {@literal null}.
 		 * @param unit the unit of measure. Must not be {@literal null}.
-		 * @return new instance of {@link DateAdd}.
-		 * @since 3.3
+		 * @return new instance of {@link DateAdd}. @since 3.3
 		 */
 		public DateAdd addValueOf(AggregationExpression expression, String unit) {
 			return applyTimezone(DateAdd.addValueOf(expression, unit).toDate(dateReference()), timezone);
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that adds the value stored at the given {@literal field} (in
-		 * {@literal units). @param fieldReference must not be {@literal null}.
-		 * 
+		 * Creates new {@link AggregationExpression} that adds the value of the given {@link AggregationExpression
+		 * expression} (in {@literal units}).
+		 *
+		 * @param expression must not be {@literal null}.
 		 * @param unit the unit of measure. Must not be {@literal null}.
-		 * @return new instance of {@link DateAdd}.
-		 * @since 3.3
+		 * @return new instance of {@link DateAdd}. @since 3.3
+		 */
+		public DateAdd addValueOf(AggregationExpression expression, TemporalUnit unit) {
+
+			Assert.notNull(unit, "TemporalUnit must not be null");
+			return applyTimezone(DateAdd.addValueOf(expression, unit.name().toLowerCase(Locale.ROOT)).toDate(dateReference()),
+					timezone);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that adds the value stored at the given {@literal field} (in
+		 * {@literal units}).
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @param unit the unit of measure. Must not be {@literal null}.
+		 * @return new instance of {@link DateAdd}. @since 3.3
 		 */
 		public DateAdd addValueOf(String fieldReference, String unit) {
 			return applyTimezone(DateAdd.addValueOf(fieldReference, unit).toDate(dateReference()), timezone);
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that adds the given value (in {@literal units). @param value must not
-		 * be {@literal null}. @param unit the unit of measure. Must not be {@literal null}.
-		 * 
+		 * Creates new {@link AggregationExpression} that adds the value stored at the given {@literal field} (in
+		 * {@literal units}).
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @param unit the unit of measure. Must not be {@literal null}.
+		 * @return new instance of {@link DateAdd}. @since 3.3
+		 */
+		public DateAdd addValueOf(String fieldReference, TemporalUnit unit) {
+
+			Assert.notNull(unit, "TemporalUnit must not be null");
+
+			return applyTimezone(
+					DateAdd.addValueOf(fieldReference, unit.name().toLowerCase(Locale.ROOT)).toDate(dateReference()), timezone);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that adds the given value (in {@literal units}).
+		 *
+		 * @param value must not be {@literal null}.
+		 * @param unit the unit of measure. Must not be {@literal null}.
 		 * @return
 		 * @since 3.3 new instance of {@link DateAdd}.
 		 */
 		public DateAdd add(Object value, String unit) {
 			return applyTimezone(DateAdd.addValue(value, unit).toDate(dateReference()), timezone);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that adds the given value (in {@literal units}).
+		 *
+		 * @param value must not be {@literal null}.
+		 * @param unit the unit of measure. Must not be {@literal null}.
+		 * @return
+		 * @since 3.3 new instance of {@link DateAdd}.
+		 */
+		public DateAdd add(Object value, TemporalUnit unit) {
+
+			Assert.notNull(unit, "TemporalUnit must not be null");
+
+			return applyTimezone(DateAdd.addValue(value, unit.name().toLowerCase(Locale.ROOT)).toDate(dateReference()),
+					timezone);
 		}
 
 		/**
@@ -367,39 +482,87 @@ public class DateOperators {
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that calculates the difference (in {@literal units) to the date
-		 * computed by the given {@link AggregationExpression expression}. @param expression must not be {@literal null}.
-		 * 
+		 * Creates new {@link AggregationExpression} that calculates the difference (in {@literal units}) to the date
+		 * computed by the given {@link AggregationExpression expression}.
+		 *
+		 * @param expression must not be {@literal null}.
 		 * @param unit the unit of measure. Must not be {@literal null}.
-		 * @return new instance of {@link DateAdd}.
-		 * @since 3.3
+		 * @return new instance of {@link DateAdd}. @since 3.3
 		 */
 		public DateDiff diffValueOf(AggregationExpression expression, String unit) {
 			return applyTimezone(DateDiff.diffValueOf(expression, unit).toDate(dateReference()), timezone);
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that calculates the difference (in {@literal units) to the date stored
-		 * at the given {@literal field}. @param expression must not be {@literal null}.
-		 * 
+		 * Creates new {@link AggregationExpression} that calculates the difference (in {@literal units}) to the date
+		 * computed by the given {@link AggregationExpression expression}.
+		 *
+		 * @param expression must not be {@literal null}.
 		 * @param unit the unit of measure. Must not be {@literal null}.
-		 * @return new instance of {@link DateAdd}.
-		 * @since 3.3
+		 * @return new instance of {@link DateAdd}. @since 3.3
+		 */
+		public DateDiff diffValueOf(AggregationExpression expression, TemporalUnit unit) {
+
+			Assert.notNull(unit, "TemporalUnit must not be null");
+
+			return applyTimezone(
+					DateDiff.diffValueOf(expression, unit.name().toLowerCase(Locale.ROOT)).toDate(dateReference()), timezone);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the difference (in {@literal units}) to the date stored
+		 * at the given {@literal field}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @param unit the unit of measure. Must not be {@literal null}.
+		 * @return new instance of {@link DateAdd}. @since 3.3
 		 */
 		public DateDiff diffValueOf(String fieldReference, String unit) {
 			return applyTimezone(DateDiff.diffValueOf(fieldReference, unit).toDate(dateReference()), timezone);
 		}
 
 		/**
-		 * Creates new {@link AggregationExpression} that calculates the difference (in {@literal units) to the date given
-		 * {@literal value}. @param value anything the resolves to a valid date. Must not be {@literal null}.
-		 * 
+		 * Creates new {@link AggregationExpression} that calculates the difference (in {@literal units}) to the date stored
+		 * at the given {@literal field}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
 		 * @param unit the unit of measure. Must not be {@literal null}.
-		 * @return new instance of {@link DateAdd}.
-		 * @since 3.3
+		 * @return new instance of {@link DateAdd}. @since 3.3
+		 */
+		public DateDiff diffValueOf(String fieldReference, TemporalUnit unit) {
+
+			Assert.notNull(unit, "TemporalUnit must not be null");
+
+			return applyTimezone(
+					DateDiff.diffValueOf(fieldReference, unit.name().toLowerCase(Locale.ROOT)).toDate(dateReference()), timezone);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the difference (in {@literal units}) to the date given
+		 * {@literal value}.
+		 *
+		 * @param value anything the resolves to a valid date. Must not be {@literal null}.
+		 * @param unit the unit of measure. Must not be {@literal null}.
+		 * @return new instance of {@link DateAdd}. @since 3.3
 		 */
 		public DateDiff diff(Object value, String unit) {
 			return applyTimezone(DateDiff.diffValue(value, unit).toDate(dateReference()), timezone);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the difference (in {@literal units}) to the date given
+		 * {@literal value}.
+		 *
+		 * @param value anything the resolves to a valid date. Must not be {@literal null}.
+		 * @param unit the unit of measure. Must not be {@literal null}.
+		 * @return new instance of {@link DateAdd}. @since 3.3
+		 */
+		public DateDiff diff(Object value, TemporalUnit unit) {
+
+			Assert.notNull(unit, "TemporalUnit must not be null");
+
+			return applyTimezone(DateDiff.diffValue(value, unit.name().toLowerCase(Locale.ROOT)).toDate(dateReference()),
+					timezone);
 		}
 
 		/**
@@ -2718,6 +2881,85 @@ public class DateOperators {
 		protected String getMongoMethod() {
 			return "$dateDiff";
 		}
+	}
+
+	/**
+	 * Interface defining a temporal unit for date operators.
+	 *
+	 * @author Mark Paluch
+	 * @since 3.3
+	 */
+	public interface TemporalUnit {
+
+		String name();
+
+		/**
+		 * Converts the given time unit into a {@link TemporalUnit}. Supported units are: days, hours, minutes, seconds, and
+		 * milliseconds.
+		 *
+		 * @param timeUnit the time unit to convert, must not be {@literal null}.
+		 * @return
+		 * @throws IllegalArgumentException if the {@link TimeUnit} is {@literal null} or not supported for conversion.
+		 */
+		static TemporalUnit from(TimeUnit timeUnit) {
+
+			Assert.notNull(timeUnit, "TimeUnit must not be null");
+
+			switch (timeUnit) {
+				case DAYS:
+					return TemporalUnits.DAY;
+				case HOURS:
+					return TemporalUnits.HOUR;
+				case MINUTES:
+					return TemporalUnits.MINUTE;
+				case SECONDS:
+					return TemporalUnits.SECOND;
+				case MILLISECONDS:
+					return TemporalUnits.MILLISECOND;
+			}
+
+			throw new IllegalArgumentException(String.format("Cannot create TemporalUnit from %s", timeUnit));
+		}
+
+		/**
+		 * Converts the given chrono unit into a {@link TemporalUnit}. Supported units are: years, weeks, months, days,
+		 * hours, minutes, seconds, and millis.
+		 *
+		 * @param chronoUnit the chrono unit to convert, must not be {@literal null}.
+		 * @return
+		 * @throws IllegalArgumentException if the {@link TimeUnit} is {@literal null} or not supported for conversion.
+		 */
+		static TemporalUnit from(ChronoUnit chronoUnit) {
+
+			switch (chronoUnit) {
+				case YEARS:
+					return TemporalUnits.YEAR;
+				case WEEKS:
+					return TemporalUnits.WEEK;
+				case MONTHS:
+					return TemporalUnits.MONTH;
+				case DAYS:
+					return TemporalUnits.DAY;
+				case HOURS:
+					return TemporalUnits.HOUR;
+				case MINUTES:
+					return TemporalUnits.MINUTE;
+				case SECONDS:
+					return TemporalUnits.SECOND;
+				case MILLIS:
+					return TemporalUnits.MILLISECOND;
+			}
+
+			throw new IllegalArgumentException(String.format("Cannot create TemporalUnit from %s", chronoUnit));
+		}
+	}
+
+	/**
+	 * Supported temporal units.
+	 */
+	enum TemporalUnits implements TemporalUnit {
+		YEAR, QUARTER, WEEK, MONTH, DAY, HOUR, MINUTE, SECOND, MILLISECOND
+
 	}
 
 	@SuppressWarnings("unchecked")
