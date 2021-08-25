@@ -39,16 +39,30 @@ public class GeoJsonMultiPoint implements GeoJson<Iterable<Point>> {
 	private final List<Point> points;
 
 	/**
+	 * Creates a new {@link GeoJsonMultiPoint} for the given {@link Point}.
+	 *
+	 * @param point must not be {@literal null}.
+	 * @since 3.2.5
+	 */
+	public GeoJsonMultiPoint(Point point) {
+
+		Assert.notNull(point, "Point must not be null!");
+
+		this.points = new ArrayList<>();
+		this.points.add(point);
+	}
+
+	/**
 	 * Creates a new {@link GeoJsonMultiPoint} for the given {@link Point}s.
 	 *
-	 * @param points points must not be {@literal null} and have at least 1 entry.
+	 * @param points points must not be {@literal null} and not empty
 	 */
 	public GeoJsonMultiPoint(List<Point> points) {
 
-		Assert.notNull(points, "Points must not be null.");
-		Assert.isTrue(points.size() >= 1, "Minimum of 1 Point required.");
+		Assert.notNull(points, "Points must not be null!");
+		Assert.notEmpty(points, "Points must contain at least one point!");
 
-		this.points = new ArrayList<Point>(points);
+		this.points = new ArrayList<>(points);
 	}
 
 	/**
@@ -64,23 +78,10 @@ public class GeoJsonMultiPoint implements GeoJson<Iterable<Point>> {
 		Assert.notNull(second, "Second point must not be null!");
 		Assert.notNull(others, "Additional points must not be null!");
 
-		this.points = new ArrayList<Point>();
+		this.points = new ArrayList<>();
 		this.points.add(first);
 		this.points.add(second);
 		this.points.addAll(Arrays.asList(others));
-	}
-
-	/**
-	 * Creates a new {@link GeoJsonMultiPoint} for the given {@link Point}.
-	 *
-	 * @param point must not be {@literal null}.
-	 */
-	public GeoJsonMultiPoint(Point point) {
-
-		Assert.notNull(point, "First point must not be null!");
-
-		this.points = new ArrayList<Point>();
-		this.points.add(point);
 	}
 
 	/*
