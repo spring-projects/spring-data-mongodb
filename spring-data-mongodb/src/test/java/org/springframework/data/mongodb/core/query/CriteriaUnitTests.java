@@ -156,6 +156,22 @@ public class CriteriaUnitTests {
 		assertThat(co).isEqualTo(Document.parse("{ \"age\" : { \"$not\" : { \"$gt\" : 18}} , \"status\" : \"student\"}"));
 	}
 
+	@Test // GH-3726
+	public void shouldBuildCorrectSampleRateOperation() {
+		Criteria c = new Criteria().sampleRate(0.4);
+		assertThat(c.getCriteriaObject()).isEqualTo(Document.parse("{ \"$sampleRate\" : 0.4 }"));
+	}
+
+	@Test // GH-3726
+	public void shouldThrowExceptionWhenSampleRateIsNegative() {
+		assertThatIllegalArgumentException().isThrownBy(() -> new Criteria().sampleRate(-1));
+	}
+
+	@Test // GH-3726
+	public void shouldThrowExceptionWhenSampleRateIsGreatedThanOne() {
+		assertThatIllegalArgumentException().isThrownBy(() -> new Criteria().sampleRate(1.01));
+	}
+
 	@Test // DATAMONGO-1068
 	public void getCriteriaObjectShouldReturnEmptyDocumentWhenNoCriteriaSpecified() {
 

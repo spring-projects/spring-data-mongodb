@@ -64,6 +64,7 @@ import com.mongodb.BasicDBList;
  * @author Andreas Zink
  * @author Ziemowit Stolarczyk
  * @author Clément Petit
+ * @author James McNee
  */
 public class Criteria implements CriteriaDefinition {
 
@@ -387,6 +388,21 @@ public class Criteria implements CriteriaDefinition {
 	 */
 	public Criteria exists(boolean value) {
 		criteria.put("$exists", value);
+		return this;
+	}
+
+	/**
+	 * Creates a criterion using the {@literal $sampleRate} operator.
+	 *
+	 * @param sampleRate sample rate to determine number of documents to be randomly selected from the input.
+	 * @return this.
+	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/sampleRate/">MongoDB Query operator: $sampleRate</a>
+	 */
+	public Criteria sampleRate(double sampleRate) {
+		Assert.isTrue(sampleRate >= 0, "The sample rate must be greater than zero!");
+		Assert.isTrue(sampleRate <= 1, "The sample rate must not be greater than one!");
+
+		criteria.put("$sampleRate", sampleRate);
 		return this;
 	}
 
