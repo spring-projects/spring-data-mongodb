@@ -55,24 +55,25 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
  * @author Oliver Gierke
  * @author Thomas Darimont
  * @author Christoph Strobl
+ * @author Divya Srivastava
  * @author Mark Paluch
  */
 public class ProjectionOperationUnitTests {
 
-	static final String MOD = "$mod";
-	static final String ADD = "$add";
-	static final String SUBTRACT = "$subtract";
-	static final String MULTIPLY = "$multiply";
-	static final String DIVIDE = "$divide";
-	static final String PROJECT = "$project";
+	private static final String MOD = "$mod";
+	private static final String ADD = "$add";
+	private static final String SUBTRACT = "$subtract";
+	private static final String MULTIPLY = "$multiply";
+	private static final String DIVIDE = "$divide";
+	private static final String PROJECT = "$project";
 
 	@Test // DATAMONGO-586
-	public void rejectsNullFields() {
+	void rejectsNullFields() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new ProjectionOperation((Fields) null));
 	}
 
 	@Test // DATAMONGO-586
-	public void declaresBackReferenceCorrectly() {
+	void declaresBackReferenceCorrectly() {
 
 		ProjectionOperation operation = new ProjectionOperation();
 		operation = operation.and("prop").previousOperation();
@@ -83,7 +84,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-586
-	public void alwaysUsesExplicitReference() {
+	void alwaysUsesExplicitReference() {
 
 		ProjectionOperation operation = new ProjectionOperation(Fields.fields("foo").and("bar", "foobar"));
 
@@ -95,7 +96,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-586
-	public void aliasesSimpleFieldProjection() {
+	void aliasesSimpleFieldProjection() {
 
 		ProjectionOperation operation = new ProjectionOperation();
 
@@ -106,7 +107,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-586
-	public void aliasesArithmeticProjection() {
+	void aliasesArithmeticProjection() {
 
 		ProjectionOperation operation = new ProjectionOperation();
 
@@ -121,7 +122,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-586
-	public void arithmeticProjectionOperationWithoutAlias() {
+	void arithmeticProjectionOperationWithoutAlias() {
 
 		String fieldName = "a";
 		ProjectionOperationBuilder operation = new ProjectionOperation().and(fieldName).plus(1);
@@ -134,7 +135,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-586
-	public void arithmeticProjectionOperationPlus() {
+	void arithmeticProjectionOperationPlus() {
 
 		String fieldName = "a";
 		String fieldAlias = "b";
@@ -148,7 +149,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-586
-	public void arithmeticProjectionOperationMinus() {
+	void arithmeticProjectionOperationMinus() {
 
 		String fieldName = "a";
 		String fieldAlias = "b";
@@ -162,7 +163,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-586
-	public void arithmeticProjectionOperationMultiply() {
+	void arithmeticProjectionOperationMultiply() {
 
 		String fieldName = "a";
 		String fieldAlias = "b";
@@ -176,7 +177,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-586
-	public void arithmeticProjectionOperationDivide() {
+	void arithmeticProjectionOperationDivide() {
 
 		String fieldName = "a";
 		String fieldAlias = "b";
@@ -190,12 +191,12 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-586
-	public void arithmeticProjectionOperationDivideByZeroException() {
+	void arithmeticProjectionOperationDivideByZeroException() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new ProjectionOperation().and("a").divide(0));
 	}
 
 	@Test // DATAMONGO-586
-	public void arithmeticProjectionOperationMod() {
+	void arithmeticProjectionOperationMod() {
 
 		String fieldName = "a";
 		String fieldAlias = "b";
@@ -209,7 +210,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-758, DATAMONGO-1893
-	public void excludeShouldAllowExclusionOfFieldsOtherThanUnderscoreId/* since MongoDB 3.4 */() {
+	void excludeShouldAllowExclusionOfFieldsOtherThanUnderscoreId/* since MongoDB 3.4 */() {
 
 		ProjectionOperation projectionOp = new ProjectionOperation().andExclude("foo");
 		Document document = projectionOp.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -220,7 +221,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1893
-	public void includeShouldNotInheritFields() {
+	void includeShouldNotInheritFields() {
 
 		ProjectionOperation projectionOp = new ProjectionOperation().andInclude("foo");
 
@@ -228,7 +229,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-758
-	public void excludeShouldAllowExclusionOfUnderscoreId() {
+	void excludeShouldAllowExclusionOfUnderscoreId() {
 
 		ProjectionOperation projectionOp = new ProjectionOperation().andExclude(Fields.UNDERSCORE_ID);
 		Document document = projectionOp.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -237,7 +238,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1906
-	public void rendersConditionalProjectionCorrectly() {
+	void rendersConditionalProjectionCorrectly() {
 
 		TypedAggregation aggregation = Aggregation.newAggregation(Book.class,
 				Aggregation.project("title")
@@ -252,7 +253,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-757
-	public void usesImplictAndExplicitFieldAliasAndIncludeExclude() {
+	void usesImplictAndExplicitFieldAliasAndIncludeExclude() {
 
 		ProjectionOperation operation = Aggregation.project("foo").and("foobar").as("bar").andInclude("inc1", "inc2")
 				.andExclude("_id");
@@ -268,12 +269,12 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test
-	public void arithmeticProjectionOperationModByZeroException() {
+	void arithmeticProjectionOperationModByZeroException() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new ProjectionOperation().and("a").mod(0));
 	}
 
 	@Test // DATAMONGO-769
-	public void allowArithmeticOperationsWithFieldReferences() {
+	void allowArithmeticOperationsWithFieldReferences() {
 
 		ProjectionOperation operation = Aggregation.project() //
 				.and("foo").plus("bar").as("fooPlusBar") //
@@ -298,7 +299,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-774
-	public void projectionExpressions() {
+	void projectionExpressions() {
 
 		ProjectionOperation operation = Aggregation.project() //
 				.andExpression("(netPrice + surCharge) * taxrate * [0]", 2).as("grossSalesPrice") //
@@ -310,7 +311,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-975
-	public void shouldRenderDateTimeFragmentExtractionsForSimpleFieldProjectionsCorrectly() {
+	void shouldRenderDateTimeFragmentExtractionsForSimpleFieldProjectionsCorrectly() {
 
 		ProjectionOperation operation = Aggregation.project() //
 				.and("date").extractHour().as("hour") //
@@ -343,7 +344,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-975
-	public void shouldRenderDateTimeFragmentExtractionsForExpressionProjectionsCorrectly() throws Exception {
+	void shouldRenderDateTimeFragmentExtractionsForExpressionProjectionsCorrectly() throws Exception {
 
 		ProjectionOperation operation = Aggregation.project() //
 				.andExpression("date + 86400000") //
@@ -360,7 +361,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-979
-	public void shouldRenderSizeExpressionInProjection() {
+	void shouldRenderSizeExpressionInProjection() {
 
 		ProjectionOperation operation = Aggregation //
 				.project() //
@@ -375,7 +376,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-979
-	public void shouldRenderGenericSizeExpressionInProjection() {
+	void shouldRenderGenericSizeExpressionInProjection() {
 
 		ProjectionOperation operation = Aggregation //
 				.project() //
@@ -389,7 +390,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1457
-	public void shouldRenderSliceCorrectly() throws Exception {
+	void shouldRenderSliceCorrectly() throws Exception {
 
 		ProjectionOperation operation = Aggregation.project().and("field").slice(10).as("renamed");
 
@@ -400,7 +401,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1457
-	public void shouldRenderSliceWithPositionCorrectly() throws Exception {
+	void shouldRenderSliceWithPositionCorrectly() throws Exception {
 
 		ProjectionOperation operation = Aggregation.project().and("field").slice(10, 5).as("renamed");
 
@@ -411,7 +412,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-784
-	public void shouldRenderCmpCorrectly() {
+	void shouldRenderCmpCorrectly() {
 
 		ProjectionOperation operation = Aggregation.project().and("field").cmp(10).as("cmp10");
 
@@ -420,7 +421,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-784
-	public void shouldRenderEqCorrectly() {
+	void shouldRenderEqCorrectly() {
 
 		ProjectionOperation operation = Aggregation.project().and("field").eq(10).as("eq10");
 
@@ -429,7 +430,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-784
-	public void shouldRenderGtCorrectly() {
+	void shouldRenderGtCorrectly() {
 
 		ProjectionOperation operation = Aggregation.project().and("field").gt(10).as("gt10");
 
@@ -438,7 +439,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-784
-	public void shouldRenderGteCorrectly() {
+	void shouldRenderGteCorrectly() {
 
 		ProjectionOperation operation = Aggregation.project().and("field").gte(10).as("gte10");
 
@@ -447,7 +448,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-784
-	public void shouldRenderLtCorrectly() {
+	void shouldRenderLtCorrectly() {
 
 		ProjectionOperation operation = Aggregation.project().and("field").lt(10).as("lt10");
 
@@ -456,7 +457,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-784
-	public void shouldRenderLteCorrectly() {
+	void shouldRenderLteCorrectly() {
 
 		ProjectionOperation operation = Aggregation.project().and("field").lte(10).as("lte10");
 
@@ -465,7 +466,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-784
-	public void shouldRenderNeCorrectly() {
+	void shouldRenderNeCorrectly() {
 
 		ProjectionOperation operation = Aggregation.project().and("field").ne(10).as("ne10");
 
@@ -474,7 +475,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderSetEquals() {
+	void shouldRenderSetEquals() {
 
 		Document agg = project("A", "B").and("A").equalsArrays("B").as("sameElements")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -484,7 +485,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderSetEqualsAggregationExpresssion() {
+	void shouldRenderSetEqualsAggregationExpresssion() {
 
 		Document agg = project("A", "B").and(SetOperators.arrayAsSet("A").isEqualTo("B")).as("sameElements")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -494,7 +495,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderSetIntersection() {
+	void shouldRenderSetIntersection() {
 
 		Document agg = project("A", "B").and("A").intersectsArrays("B").as("commonToBoth")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -504,7 +505,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderSetIntersectionAggregationExpresssion() {
+	void shouldRenderSetIntersectionAggregationExpresssion() {
 
 		Document agg = project("A", "B").and(SetOperators.arrayAsSet("A").intersects("B")).as("commonToBoth")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -514,7 +515,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderSetUnion() {
+	void shouldRenderSetUnion() {
 
 		Document agg = project("A", "B").and("A").unionArrays("B").as("allValues").toDocument(Aggregation.DEFAULT_CONTEXT);
 
@@ -523,7 +524,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderSetUnionAggregationExpresssion() {
+	void shouldRenderSetUnionAggregationExpresssion() {
 
 		Document agg = project("A", "B").and(SetOperators.arrayAsSet("A").union("B")).as("allValues")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -533,7 +534,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderSetDifference() {
+	void shouldRenderSetDifference() {
 
 		Document agg = project("A", "B").and("B").differenceToArray("A").as("inBOnly")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -543,7 +544,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderSetDifferenceAggregationExpresssion() {
+	void shouldRenderSetDifferenceAggregationExpresssion() {
 
 		Document agg = project("A", "B").and(SetOperators.arrayAsSet("B").differenceTo("A")).as("inBOnly")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -553,7 +554,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderSetIsSubset() {
+	void shouldRenderSetIsSubset() {
 
 		Document agg = project("A", "B").and("A").subsetOfArray("B").as("aIsSubsetOfB")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -563,7 +564,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderSetIsSubsetAggregationExpresssion() {
+	void shouldRenderSetIsSubsetAggregationExpresssion() {
 
 		Document agg = project("A", "B").and(SetOperators.arrayAsSet("A").isSubsetOf("B")).as("aIsSubsetOfB")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -573,7 +574,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderAnyElementTrue() {
+	void shouldRenderAnyElementTrue() {
 
 		Document agg = project("responses").and("responses").anyElementInArrayTrue().as("isAnyTrue")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -583,7 +584,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderAnyElementTrueAggregationExpresssion() {
+	void shouldRenderAnyElementTrueAggregationExpresssion() {
 
 		Document agg = project("responses").and(SetOperators.arrayAsSet("responses").anyElementTrue()).as("isAnyTrue")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -593,7 +594,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderAllElementsTrue() {
+	void shouldRenderAllElementsTrue() {
 
 		Document agg = project("responses").and("responses").allElementsInArrayTrue().as("isAllTrue")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -603,7 +604,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderAllElementsTrueAggregationExpresssion() {
+	void shouldRenderAllElementsTrueAggregationExpresssion() {
 
 		Document agg = project("responses").and(SetOperators.arrayAsSet("responses").allElementsTrue()).as("isAllTrue")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -613,7 +614,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderAbs() {
+	void shouldRenderAbs() {
 
 		Document agg = project().and("anyNumber").absoluteValue().as("absoluteValue")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -622,7 +623,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderAbsAggregationExpresssion() {
+	void shouldRenderAbsAggregationExpresssion() {
 
 		Document agg = project()
 				.and(
@@ -634,7 +635,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderAddAggregationExpresssion() {
+	void shouldRenderAddAggregationExpresssion() {
 
 		Document agg = project().and(ArithmeticOperators.valueOf("price").add("fee")).as("total")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -643,7 +644,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderCeil() {
+	void shouldRenderCeil() {
 
 		Document agg = project().and("anyNumber").ceil().as("ceilValue").toDocument(Aggregation.DEFAULT_CONTEXT);
 
@@ -651,7 +652,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderCeilAggregationExpresssion() {
+	void shouldRenderCeilAggregationExpresssion() {
 
 		Document agg = project().and(
 				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).ceil())
@@ -662,7 +663,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderDivide() {
+	void shouldRenderDivide() {
 
 		Document agg = project().and("value")
 				.divide(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).as("result")
@@ -673,7 +674,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderDivideAggregationExpresssion() {
+	void shouldRenderDivideAggregationExpresssion() {
 
 		Document agg = project()
 				.and(ArithmeticOperators.valueOf("anyNumber")
@@ -685,7 +686,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderExp() {
+	void shouldRenderExp() {
 
 		Document agg = project().and("value").exp().as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
@@ -693,7 +694,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderExpAggregationExpresssion() {
+	void shouldRenderExpAggregationExpresssion() {
 
 		Document agg = project()
 				.and(
@@ -705,7 +706,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderFloor() {
+	void shouldRenderFloor() {
 
 		Document agg = project().and("value").floor().as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
@@ -713,7 +714,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderFloorAggregationExpresssion() {
+	void shouldRenderFloorAggregationExpresssion() {
 
 		Document agg = project().and(
 				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).floor())
@@ -724,7 +725,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderLn() {
+	void shouldRenderLn() {
 
 		Document agg = project().and("value").ln().as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
@@ -732,7 +733,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderLnAggregationExpresssion() {
+	void shouldRenderLnAggregationExpresssion() {
 
 		Document agg = project()
 				.and(ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).ln())
@@ -743,7 +744,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderLog() {
+	void shouldRenderLog() {
 
 		Document agg = project().and("value").log(2).as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
@@ -751,7 +752,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderLogAggregationExpresssion() {
+	void shouldRenderLogAggregationExpresssion() {
 
 		Document agg = project().and(
 				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).log(2))
@@ -762,7 +763,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderLog10() {
+	void shouldRenderLog10() {
 
 		Document agg = project().and("value").log10().as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
@@ -770,7 +771,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderLog10AggregationExpresssion() {
+	void shouldRenderLog10AggregationExpresssion() {
 
 		Document agg = project().and(
 				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).log10())
@@ -781,7 +782,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderMod() {
+	void shouldRenderMod() {
 
 		Document agg = project().and("value").mod(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end")))
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -791,7 +792,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderModAggregationExpresssion() {
+	void shouldRenderModAggregationExpresssion() {
 
 		Document agg = project().and(
 				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).mod(2))
@@ -802,7 +803,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderMultiply() {
+	void shouldRenderMultiply() {
 
 		Document agg = project().and("value")
 				.multiply(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).as("result")
@@ -813,7 +814,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderMultiplyAggregationExpresssion() {
+	void shouldRenderMultiplyAggregationExpresssion() {
 
 		Document agg = project()
 				.and(ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end")))
@@ -825,7 +826,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderPow() {
+	void shouldRenderPow() {
 
 		Document agg = project().and("value").pow(2).as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
@@ -833,7 +834,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderPowAggregationExpresssion() {
+	void shouldRenderPowAggregationExpresssion() {
 
 		Document agg = project().and(
 				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).pow(2))
@@ -844,7 +845,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderSqrt() {
+	void shouldRenderSqrt() {
 
 		Document agg = project().and("value").sqrt().as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
@@ -852,7 +853,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderSqrtAggregationExpresssion() {
+	void shouldRenderSqrtAggregationExpresssion() {
 
 		Document agg = project().and(
 				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).sqrt())
@@ -863,7 +864,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderSubtract() {
+	void shouldRenderSubtract() {
 
 		Document agg = project().and("numericField").minus(AggregationFunctionExpressions.SIZE.of(field("someArray")))
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -873,7 +874,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderSubtractAggregationExpresssion() {
+	void shouldRenderSubtractAggregationExpresssion() {
 
 		Document agg = project()
 				.and(ArithmeticOperators.valueOf("numericField")
@@ -885,7 +886,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderTrunc() {
+	void shouldRenderTrunc() {
 
 		Document agg = project().and("value").trunc().as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
 
@@ -893,7 +894,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderTruncAggregationExpresssion() {
+	void shouldRenderTruncAggregationExpresssion() {
 
 		Document agg = project().and(
 				ArithmeticOperators.valueOf(AggregationFunctionExpressions.SUBTRACT.of(field("start"), field("end"))).trunc())
@@ -904,7 +905,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderConcat() {
+	void shouldRenderConcat() {
 
 		Document agg = project().and("item").concat(" - ", field("description")).as("itemDescription")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -915,7 +916,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderConcatAggregationExpression() {
+	void shouldRenderConcatAggregationExpression() {
 
 		Document agg = project().and(StringOperators.valueOf("item").concat(" - ").concatValueOf("description"))
 				.as("itemDescription").toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -926,7 +927,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderSubstr() {
+	void shouldRenderSubstr() {
 
 		Document agg = project().and("quarter").substring(0, 2).as("yearSubstring").toDocument(Aggregation.DEFAULT_CONTEXT);
 
@@ -934,7 +935,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderSubstrAggregationExpression() {
+	void shouldRenderSubstrAggregationExpression() {
 
 		Document agg = project().and(StringOperators.valueOf("quarter").substring(0, 2)).as("yearSubstring")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -943,7 +944,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderToLower() {
+	void shouldRenderToLower() {
 
 		Document agg = project().and("item").toLower().as("item").toDocument(Aggregation.DEFAULT_CONTEXT);
 
@@ -951,7 +952,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderToLowerAggregationExpression() {
+	void shouldRenderToLowerAggregationExpression() {
 
 		Document agg = project().and(StringOperators.valueOf("item").toLower()).as("item")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -960,7 +961,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderToUpper() {
+	void shouldRenderToUpper() {
 
 		Document agg = project().and("item").toUpper().as("item").toDocument(Aggregation.DEFAULT_CONTEXT);
 
@@ -968,7 +969,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderToUpperAggregationExpression() {
+	void shouldRenderToUpperAggregationExpression() {
 
 		Document agg = project().and(StringOperators.valueOf("item").toUpper()).as("item")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -977,7 +978,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderStrCaseCmp() {
+	void shouldRenderStrCaseCmp() {
 
 		Document agg = project().and("quarter").strCaseCmp("13q4").as("comparisonResult")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -987,7 +988,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderStrCaseCmpAggregationExpression() {
+	void shouldRenderStrCaseCmpAggregationExpression() {
 
 		Document agg = project().and(StringOperators.valueOf("quarter").strCaseCmp("13q4")).as("comparisonResult")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -997,7 +998,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderArrayElementAt() {
+	void shouldRenderArrayElementAt() {
 
 		Document agg = project().and("favorites").arrayElementAt(0).as("first").toDocument(Aggregation.DEFAULT_CONTEXT);
 
@@ -1005,7 +1006,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderArrayElementAtAggregationExpression() {
+	void shouldRenderArrayElementAtAggregationExpression() {
 
 		Document agg = project().and(ArrayOperators.arrayOf("favorites").elementAt(0)).as("first")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1014,7 +1015,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderConcatArrays() {
+	void shouldRenderConcatArrays() {
 
 		Document agg = project().and("instock").concatArrays("ordered").as("items").toDocument(Aggregation.DEFAULT_CONTEXT);
 
@@ -1023,7 +1024,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderConcatArraysAggregationExpression() {
+	void shouldRenderConcatArraysAggregationExpression() {
 
 		Document agg = project().and(ArrayOperators.arrayOf("instock").concat("ordered")).as("items")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1033,7 +1034,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderIsArray() {
+	void shouldRenderIsArray() {
 
 		Document agg = project().and("instock").isArray().as("isAnArray").toDocument(Aggregation.DEFAULT_CONTEXT);
 
@@ -1041,7 +1042,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderIsArrayAggregationExpression() {
+	void shouldRenderIsArrayAggregationExpression() {
 
 		Document agg = project().and(ArrayOperators.arrayOf("instock").isArray()).as("isAnArray")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1050,7 +1051,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderSizeAggregationExpression() {
+	void shouldRenderSizeAggregationExpression() {
 
 		Document agg = project().and(ArrayOperators.arrayOf("instock").length()).as("arraySize")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1059,7 +1060,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderSliceAggregationExpression() {
+	void shouldRenderSliceAggregationExpression() {
 
 		Document agg = project().and(ArrayOperators.arrayOf("favorites").slice().itemCount(3)).as("threeFavorites")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1068,7 +1069,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderSliceWithPositionAggregationExpression() {
+	void shouldRenderSliceWithPositionAggregationExpression() {
 
 		Document agg = project().and(ArrayOperators.arrayOf("favorites").slice().offset(2).itemCount(3))
 				.as("threeFavorites").toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1077,7 +1078,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderLiteral() {
+	void shouldRenderLiteral() {
 
 		Document agg = project().and("$1").asLiteral().as("literalOnly").toDocument(Aggregation.DEFAULT_CONTEXT);
 
@@ -1085,7 +1086,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderLiteralAggregationExpression() {
+	void shouldRenderLiteralAggregationExpression() {
 
 		Document agg = project().and(LiteralOperators.valueOf("$1").asLiteral()).as("literalOnly")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1094,7 +1095,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderDayOfYearAggregationExpression() {
+	void shouldRenderDayOfYearAggregationExpression() {
 
 		Document agg = project().and(DateOperators.dateOf("date").dayOfYear()).as("dayOfYear")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1103,7 +1104,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1834
-	public void shouldRenderDayOfYearAggregationExpressionWithTimezone() {
+	void shouldRenderDayOfYearAggregationExpressionWithTimezone() {
 
 		Document agg = project()
 				.and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).dayOfYear()).as("dayOfYear")
@@ -1114,7 +1115,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1834
-	public void shouldRenderTimeZoneFromField() {
+	void shouldRenderTimeZoneFromField() {
 
 		Document agg = project().and(DateOperators.dateOf("date").withTimezone(Timezone.ofField("tz")).dayOfYear())
 				.as("dayOfYear").toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1124,7 +1125,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1834
-	public void shouldRenderTimeZoneFromExpression() {
+	void shouldRenderTimeZoneFromExpression() {
 
 		Document agg = project()
 				.and(DateOperators.dateOf("date")
@@ -1136,7 +1137,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderDayOfMonthAggregationExpression() {
+	void shouldRenderDayOfMonthAggregationExpression() {
 
 		Document agg = project().and(DateOperators.dateOf("date").dayOfMonth()).as("day")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1145,7 +1146,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1834
-	public void shouldRenderDayOfMonthAggregationExpressionWithTimezone() {
+	void shouldRenderDayOfMonthAggregationExpressionWithTimezone() {
 
 		Document agg = project()
 				.and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).dayOfMonth()).as("day")
@@ -1156,7 +1157,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderDayOfWeekAggregationExpression() {
+	void shouldRenderDayOfWeekAggregationExpression() {
 
 		Document agg = project().and(DateOperators.dateOf("date").dayOfWeek()).as("dayOfWeek")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1165,7 +1166,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1834
-	public void shouldRenderDayOfWeekAggregationExpressionWithTimezone() {
+	void shouldRenderDayOfWeekAggregationExpressionWithTimezone() {
 
 		Document agg = project()
 				.and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).dayOfWeek()).as("dayOfWeek")
@@ -1176,7 +1177,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderYearAggregationExpression() {
+	void shouldRenderYearAggregationExpression() {
 
 		Document agg = project().and(DateOperators.dateOf("date").year()).as("year")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1185,7 +1186,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1834
-	public void shouldRenderYearAggregationExpressionWithTimezone() {
+	void shouldRenderYearAggregationExpressionWithTimezone() {
 
 		Document agg = project().and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).year())
 				.as("year").toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1195,7 +1196,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderMonthAggregationExpression() {
+	void shouldRenderMonthAggregationExpression() {
 
 		Document agg = project().and(DateOperators.dateOf("date").month()).as("month")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1204,7 +1205,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1834
-	public void shouldRenderMonthAggregationExpressionWithTimezone() {
+	void shouldRenderMonthAggregationExpressionWithTimezone() {
 
 		Document agg = project().and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).month())
 				.as("month").toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1214,7 +1215,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderWeekAggregationExpression() {
+	void shouldRenderWeekAggregationExpression() {
 
 		Document agg = project().and(DateOperators.dateOf("date").week()).as("week")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1223,7 +1224,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1834
-	public void shouldRenderWeekAggregationExpressionWithTimezone() {
+	void shouldRenderWeekAggregationExpressionWithTimezone() {
 
 		Document agg = project().and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).week())
 				.as("week").toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1233,7 +1234,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderHourAggregationExpression() {
+	void shouldRenderHourAggregationExpression() {
 
 		Document agg = project().and(DateOperators.dateOf("date").hour()).as("hour")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1242,7 +1243,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1834
-	public void shouldRenderHourAggregationExpressionWithTimezone() {
+	void shouldRenderHourAggregationExpressionWithTimezone() {
 
 		Document agg = project().and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).hour())
 				.as("hour").toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1252,7 +1253,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderMinuteAggregationExpression() {
+	void shouldRenderMinuteAggregationExpression() {
 
 		Document agg = project().and(DateOperators.dateOf("date").minute()).as("minute")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1261,7 +1262,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1834
-	public void shouldRenderMinuteAggregationExpressionWithTimezone() {
+	void shouldRenderMinuteAggregationExpressionWithTimezone() {
 
 		Document agg = project()
 				.and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).minute()).as("minute")
@@ -1272,7 +1273,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderSecondAggregationExpression() {
+	void shouldRenderSecondAggregationExpression() {
 
 		Document agg = project().and(DateOperators.dateOf("date").second()).as("second")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1281,7 +1282,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1834
-	public void shouldRenderSecondAggregationExpressionWithTimezone() {
+	void shouldRenderSecondAggregationExpressionWithTimezone() {
 
 		Document agg = project()
 				.and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).second()).as("second")
@@ -1292,7 +1293,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderMillisecondAggregationExpression() {
+	void shouldRenderMillisecondAggregationExpression() {
 
 		Document agg = project().and(DateOperators.dateOf("date").millisecond()).as("msec")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1301,7 +1302,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1834
-	public void shouldRenderMillisecondAggregationExpressionWithTimezone() {
+	void shouldRenderMillisecondAggregationExpressionWithTimezone() {
 
 		Document agg = project()
 				.and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).millisecond()).as("msec")
@@ -1312,7 +1313,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderDateToString() {
+	void shouldRenderDateToString() {
 
 		Document agg = project().and("date").dateAsFormattedString("%H:%M:%S:%L").as("time")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1322,7 +1323,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-2047
-	public void shouldRenderDateToStringWithoutFormatOption() {
+	void shouldRenderDateToStringWithoutFormatOption() {
 
 		Document agg = project().and("date").dateAsFormattedString().as("time").toDocument(Aggregation.DEFAULT_CONTEXT);
 
@@ -1330,7 +1331,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderDateToStringAggregationExpression() {
+	void shouldRenderDateToStringAggregationExpression() {
 
 		Document agg = project().and(DateOperators.dateOf("date").toString("%H:%M:%S:%L")).as("time")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1340,7 +1341,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1834, DATAMONGO-2047
-	public void shouldRenderDateToStringAggregationExpressionWithTimezone() {
+	void shouldRenderDateToStringAggregationExpressionWithTimezone() {
 
 		Document agg = project()
 				.and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).toString("%H:%M:%S:%L"))
@@ -1358,7 +1359,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-2047
-	public void shouldRenderDateToStringWithOnNull() {
+	void shouldRenderDateToStringWithOnNull() {
 
 		Document agg = project()
 				.and(DateOperators.dateOf("date").toStringWithDefaultFormat().onNullReturnValueOf("fallback-field")).as("time")
@@ -1369,7 +1370,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-2047
-	public void shouldRenderDateToStringWithOnNullExpression() {
+	void shouldRenderDateToStringWithOnNullExpression() {
 
 		Document agg = project()
 				.and(DateOperators.dateOf("date").toStringWithDefaultFormat()
@@ -1381,7 +1382,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-2047
-	public void shouldRenderDateToStringWithOnNullAndTimezone() {
+	void shouldRenderDateToStringWithOnNullAndTimezone() {
 
 		Document agg = project().and(DateOperators.dateOf("date").toStringWithDefaultFormat()
 				.onNullReturnValueOf("fallback-field").withTimezone(Timezone.ofField("foo"))).as("time")
@@ -1392,7 +1393,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderSumAggregationExpression() {
+	void shouldRenderSumAggregationExpression() {
 
 		Document agg = project().and(ArithmeticOperators.valueOf("quizzes").sum()).as("quizTotal")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1401,7 +1402,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderSumWithMultipleArgsAggregationExpression() {
+	void shouldRenderSumWithMultipleArgsAggregationExpression() {
 
 		Document agg = project().and(ArithmeticOperators.valueOf("final").sum().and("midterm")).as("examTotal")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1410,7 +1411,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderAvgAggregationExpression() {
+	void shouldRenderAvgAggregationExpression() {
 
 		Document agg = project().and(ArithmeticOperators.valueOf("quizzes").avg()).as("quizAvg")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1419,7 +1420,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderAvgWithMultipleArgsAggregationExpression() {
+	void shouldRenderAvgWithMultipleArgsAggregationExpression() {
 
 		Document agg = project().and(ArithmeticOperators.valueOf("final").avg().and("midterm")).as("examAvg")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1428,7 +1429,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderMaxAggregationExpression() {
+	void shouldRenderMaxAggregationExpression() {
 
 		Document agg = project().and(ArithmeticOperators.valueOf("quizzes").max()).as("quizMax")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1437,7 +1438,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderMaxWithMultipleArgsAggregationExpression() {
+	void shouldRenderMaxWithMultipleArgsAggregationExpression() {
 
 		Document agg = project().and(ArithmeticOperators.valueOf("final").max().and("midterm")).as("examMax")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1446,7 +1447,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderMinAggregationExpression() {
+	void shouldRenderMinAggregationExpression() {
 
 		Document agg = project().and(ArithmeticOperators.valueOf("quizzes").min()).as("quizMin")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1455,7 +1456,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderMinWithMultipleArgsAggregationExpression() {
+	void shouldRenderMinWithMultipleArgsAggregationExpression() {
 
 		Document agg = project().and(ArithmeticOperators.valueOf("final").min().and("midterm")).as("examMin")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1464,7 +1465,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderStdDevPopAggregationExpression() {
+	void shouldRenderStdDevPopAggregationExpression() {
 
 		Document agg = project().and(ArithmeticOperators.valueOf("scores").stdDevPop()).as("stdDev")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1473,7 +1474,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderStdDevSampAggregationExpression() {
+	void shouldRenderStdDevSampAggregationExpression() {
 
 		Document agg = project().and(ArithmeticOperators.valueOf("scores").stdDevSamp()).as("stdDev")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1482,7 +1483,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderCmpAggregationExpression() {
+	void shouldRenderCmpAggregationExpression() {
 
 		Document agg = project().and(ComparisonOperators.valueOf("qty").compareToValue(250)).as("cmp250")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1491,7 +1492,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderEqAggregationExpression() {
+	void shouldRenderEqAggregationExpression() {
 
 		Document agg = project().and(ComparisonOperators.valueOf("qty").equalToValue(250)).as("eq250")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1500,7 +1501,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-2513
-	public void shouldRenderEqAggregationExpressionWithListComparison() {
+	void shouldRenderEqAggregationExpressionWithListComparison() {
 
 		Document agg = project().and(ComparisonOperators.valueOf("qty").equalToValue(Arrays.asList(250))).as("eq250")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1509,7 +1510,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderGtAggregationExpression() {
+	void shouldRenderGtAggregationExpression() {
 
 		Document agg = project().and(ComparisonOperators.valueOf("qty").greaterThanValue(250)).as("gt250")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1518,7 +1519,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderGteAggregationExpression() {
+	void shouldRenderGteAggregationExpression() {
 
 		Document agg = project().and(ComparisonOperators.valueOf("qty").greaterThanEqualToValue(250)).as("gte250")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1527,7 +1528,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderLtAggregationExpression() {
+	void shouldRenderLtAggregationExpression() {
 
 		Document agg = project().and(ComparisonOperators.valueOf("qty").lessThanValue(250)).as("lt250")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1536,7 +1537,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderLteAggregationExpression() {
+	void shouldRenderLteAggregationExpression() {
 
 		Document agg = project().and(ComparisonOperators.valueOf("qty").lessThanEqualToValue(250)).as("lte250")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1545,7 +1546,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderNeAggregationExpression() {
+	void shouldRenderNeAggregationExpression() {
 
 		Document agg = project().and(ComparisonOperators.valueOf("qty").notEqualToValue(250)).as("ne250")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1554,7 +1555,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderLogicAndAggregationExpression() {
+	void shouldRenderLogicAndAggregationExpression() {
 
 		Document agg = project()
 				.and(BooleanOperators.valueOf(ComparisonOperators.valueOf("qty").greaterThanValue(100))
@@ -1566,7 +1567,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderLogicOrAggregationExpression() {
+	void shouldRenderLogicOrAggregationExpression() {
 
 		Document agg = project()
 				.and(BooleanOperators.valueOf(ComparisonOperators.valueOf("qty").greaterThanValue(250))
@@ -1578,7 +1579,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1536
-	public void shouldRenderNotAggregationExpression() {
+	void shouldRenderNotAggregationExpression() {
 
 		Document agg = project().and(BooleanOperators.not(ComparisonOperators.valueOf("qty").greaterThanValue(250)))
 				.as("result").toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1587,7 +1588,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1540
-	public void shouldRenderMapAggregationExpression() {
+	void shouldRenderMapAggregationExpression() {
 
 		Document agg = Aggregation.project()
 				.and(VariableOperators.mapItemsOf("quizzes").as("grade")
@@ -1599,7 +1600,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1540
-	public void shouldRenderMapAggregationExpressionOnExpression() {
+	void shouldRenderMapAggregationExpressionOnExpression() {
 
 		Document agg = Aggregation.project()
 				.and(VariableOperators.mapItemsOf(AggregationFunctionExpressions.SIZE.of("foo")).as("grade")
@@ -1611,7 +1612,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-861, DATAMONGO-1542
-	public void shouldRenderIfNullConditionAggregationExpression() {
+	void shouldRenderIfNullConditionAggregationExpression() {
 
 		Document agg = project().and(
 				ConditionalOperators.ifNull(ArrayOperators.arrayOf("array").elementAt(1)).then("a more sophisticated value"))
@@ -1622,7 +1623,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1542
-	public void shouldRenderIfNullValueAggregationExpression() {
+	void shouldRenderIfNullValueAggregationExpression() {
 
 		Document agg = project()
 				.and(ConditionalOperators.ifNull("field").then(ArrayOperators.arrayOf("array").elementAt(1))).as("result")
@@ -1633,7 +1634,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-861, DATAMONGO-1542
-	public void fieldReplacementIfNullShouldRenderCorrectly() {
+	void fieldReplacementIfNullShouldRenderCorrectly() {
 
 		Document agg = project().and(ConditionalOperators.ifNull("optional").thenValueOf("$never-null")).as("result")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1643,7 +1644,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1538
-	public void shouldRenderLetExpressionCorrectly() {
+	void shouldRenderLetExpressionCorrectly() {
 
 		Document agg = Aggregation.project()
 				.and(VariableOperators
@@ -1665,7 +1666,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1538
-	public void shouldRenderLetExpressionCorrectlyWhenUsingLetOnProjectionBuilder() {
+	void shouldRenderLetExpressionCorrectlyWhenUsingLetOnProjectionBuilder() {
 
 		ExpressionVariable var1 = newVariable("total")
 				.forExpression(AggregationFunctionExpressions.ADD.of(Fields.field("price"), Fields.field("tax")));
@@ -1688,7 +1689,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1548
-	public void shouldRenderIndexOfBytesCorrectly() {
+	void shouldRenderIndexOfBytesCorrectly() {
 
 		Document agg = project().and(StringOperators.valueOf("item").indexOf("foo")).as("byteLocation")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1698,7 +1699,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1548
-	public void shouldRenderIndexOfBytesWithRangeCorrectly() {
+	void shouldRenderIndexOfBytesWithRangeCorrectly() {
 
 		Document agg = project()
 				.and(StringOperators.valueOf("item").indexOf("foo")
@@ -1710,7 +1711,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1548
-	public void shouldRenderIndexOfCPCorrectly() {
+	void shouldRenderIndexOfCPCorrectly() {
 
 		Document agg = project().and(StringOperators.valueOf("item").indexOfCP("foo")).as("cpLocation")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1719,7 +1720,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1548
-	public void shouldRenderIndexOfCPWithRangeCorrectly() {
+	void shouldRenderIndexOfCPWithRangeCorrectly() {
 
 		Document agg = project()
 				.and(StringOperators.valueOf("item").indexOfCP("foo")
@@ -1731,7 +1732,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1548
-	public void shouldRenderSplitCorrectly() {
+	void shouldRenderSplitCorrectly() {
 
 		Document agg = project().and(StringOperators.valueOf("city").split(", ")).as("city_state")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1740,7 +1741,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1548
-	public void shouldRenderStrLenBytesCorrectly() {
+	void shouldRenderStrLenBytesCorrectly() {
 
 		Document agg = project().and(StringOperators.valueOf("name").length()).as("length")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1749,7 +1750,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1548
-	public void shouldRenderStrLenCPCorrectly() {
+	void shouldRenderStrLenCPCorrectly() {
 
 		Document agg = project().and(StringOperators.valueOf("name").lengthCP()).as("length")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1758,7 +1759,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1548
-	public void shouldRenderSubstrCPCorrectly() {
+	void shouldRenderSubstrCPCorrectly() {
 
 		Document agg = project().and(StringOperators.valueOf("quarter").substringCP(0, 2)).as("yearSubstring")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1766,27 +1767,27 @@ public class ProjectionOperationUnitTests {
 		assertThat(agg)
 				.isEqualTo(Document.parse("{ $project : { yearSubstring: { $substrCP: [ \"$quarter\", 0, 2 ] } } }"));
 	}
-	
-	@Test // DATAMONGO - 3725
-	public void shouldRenderRegexFindCorrectly() {
+
+	@Test // GH-3725
+	void shouldRenderRegexFindCorrectly() {
 
 		Document agg = project().and(StringOperators.valueOf("field1").regexFind("e")).as("regex")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg).isEqualTo(Document.parse("{ $project : { regex: { $regexFind: { \"input\" : \"$field1\", \"regex\" : \"e\" } } } }"));
 	}
-	
-	@Test // DATAMONGO - 3725
-	public void shouldRenderRegexFindAllCorrectly() {
+
+	@Test // GH-3725
+	void shouldRenderRegexFindAllCorrectly() {
 
 		Document agg = project().and(StringOperators.valueOf("field1").regexFindAll("e")).as("regex")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
 
 		assertThat(agg).isEqualTo(Document.parse("{ $project : { regex: { $regexFindAll: { \"input\" : \"$field1\", \"regex\" : \"e\" } } } }"));
 	}
-	
-	@Test // DATAMONGO - 3725
-	public void shouldRenderRegexMatchCorrectly() {
+
+	@Test // GH-3725
+	void shouldRenderRegexMatchCorrectly() {
 
 		Document agg = project().and(StringOperators.valueOf("field1").regexMatch("e")).as("regex")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1795,7 +1796,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1548
-	public void shouldRenderIndexOfArrayCorrectly() {
+	void shouldRenderIndexOfArrayCorrectly() {
 
 		Document agg = project().and(ArrayOperators.arrayOf("items").indexOf(2)).as("index")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1804,7 +1805,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1548
-	public void shouldRenderRangeCorrectly() {
+	void shouldRenderRangeCorrectly() {
 
 		Document agg = project().and(ArrayOperators.RangeOperator.rangeStartingAt(0L).to("distance").withStepSize(25L))
 				.as("rest_stops").toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1815,7 +1816,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1548
-	public void shouldRenderReverseArrayCorrectly() {
+	void shouldRenderReverseArrayCorrectly() {
 
 		Document agg = project().and(ArrayOperators.arrayOf("favorites").reverse()).as("reverseFavorites")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1824,7 +1825,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1548
-	public void shouldRenderReduceWithSimpleObjectCorrectly() {
+	void shouldRenderReduceWithSimpleObjectCorrectly() {
 
 		Document agg = project()
 				.and(ArrayOperators.arrayOf("probabilityArr")
@@ -1836,7 +1837,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1548
-	public void shouldRenderReduceWithComplexObjectCorrectly() {
+	void shouldRenderReduceWithComplexObjectCorrectly() {
 
 		PropertyExpression sum = PropertyExpression.property("sum").definedAs(
 				ArithmeticOperators.valueOf(Variable.VALUE.referringTo("sum").getName()).add(Variable.THIS.getName()));
@@ -1853,7 +1854,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1843
-	public void shouldRenderReduceWithInputAndInExpressionsCorrectly() {
+	void shouldRenderReduceWithInputAndInExpressionsCorrectly() {
 
 		Document expected = Document.parse(
 				"{ \"$project\" : { \"results\" : { \"$reduce\" : { \"input\" : { \"$slice\" : [\"$array\", 5] }, \"initialValue\" : \"\", \"in\" : { \"$concat\" : [\"$$value\", \"/\", \"$$this\"] } } } } }");
@@ -1874,7 +1875,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1548
-	public void shouldRenderZipCorrectly() {
+	void shouldRenderZipCorrectly() {
 
 		AggregationExpression elemAt0 = ArrayOperators.arrayOf("matrix").elementAt(0);
 		AggregationExpression elemAt1 = ArrayOperators.arrayOf("matrix").elementAt(1);
@@ -1889,7 +1890,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1548
-	public void shouldRenderInCorrectly() {
+	void shouldRenderInCorrectly() {
 
 		Document agg = project().and(ArrayOperators.arrayOf("in_stock").containsValue("bananas")).as("has_bananas")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1899,7 +1900,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1548
-	public void shouldRenderIsoDayOfWeekCorrectly() {
+	void shouldRenderIsoDayOfWeekCorrectly() {
 
 		Document agg = project().and(DateOperators.dateOf("birthday").isoDayOfWeek()).as("dayOfWeek")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1908,7 +1909,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1834
-	public void shouldRenderIsoDayOfWeekWithTimezoneCorrectly() {
+	void shouldRenderIsoDayOfWeekWithTimezoneCorrectly() {
 
 		Document agg = project()
 				.and(DateOperators.dateOf("birthday").withTimezone(Timezone.valueOf("America/Chicago")).isoDayOfWeek())
@@ -1919,7 +1920,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1548
-	public void shouldRenderIsoWeekCorrectly() {
+	void shouldRenderIsoWeekCorrectly() {
 
 		Document agg = project().and(DateOperators.dateOf("date").isoWeek()).as("weekNumber")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1928,7 +1929,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1834
-	public void shouldRenderIsoWeekWithTimezoneCorrectly() {
+	void shouldRenderIsoWeekWithTimezoneCorrectly() {
 
 		Document agg = project()
 				.and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).isoWeek()).as("weekNumber")
@@ -1939,7 +1940,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1548
-	public void shouldRenderIsoWeekYearCorrectly() {
+	void shouldRenderIsoWeekYearCorrectly() {
 
 		Document agg = project().and(DateOperators.dateOf("date").isoWeekYear()).as("yearNumber")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -1948,7 +1949,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1834
-	public void shouldRenderIsoWeekYearWithTimezoneCorrectly() {
+	void shouldRenderIsoWeekYearWithTimezoneCorrectly() {
 
 		Document agg = project()
 				.and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).isoWeekYear())
@@ -1959,7 +1960,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1548
-	public void shouldRenderSwitchCorrectly() {
+	void shouldRenderSwitchCorrectly() {
 
 		String expected = "$switch:\n" + //
 				"{\n" + //
@@ -2001,7 +2002,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1548
-	public void shouldTypeCorrectly() {
+	void shouldTypeCorrectly() {
 
 		Document agg = project().and(DataTypeOperators.Type.typeOf("a")).as("a").toDocument(Aggregation.DEFAULT_CONTEXT);
 
@@ -2009,7 +2010,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1834
-	public void shouldRenderDateFromPartsWithJustTheYear() {
+	void shouldRenderDateFromPartsWithJustTheYear() {
 
 		Document agg = project().and(DateOperators.dateFromParts().year(2018)).as("newDate")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -2018,7 +2019,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1834, DATAMONGO-2671
-	public void shouldRenderDateFromParts() {
+	void shouldRenderDateFromParts() {
 
 		Document agg = project()
 				.and(DateOperators.dateFromParts().year(2018).month(3).day(23).hour(14).minute(25).second(10).millisecond(2))
@@ -2029,7 +2030,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1834
-	public void shouldRenderDateFromPartsWithTimezone() {
+	void shouldRenderDateFromPartsWithTimezone() {
 
 		Document agg = project()
 				.and(DateOperators.dateFromParts().withTimezone(Timezone.valueOf("America/Chicago")).year(2018)).as("newDate")
@@ -2040,7 +2041,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1834
-	public void shouldRenderIsoDateFromPartsWithJustTheYear() {
+	void shouldRenderIsoDateFromPartsWithJustTheYear() {
 
 		Document agg = project().and(DateOperators.dateFromParts().isoWeekYear(2018)).as("newDate")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -2049,7 +2050,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1834, DATAMONGO-2671
-	public void shouldRenderIsoDateFromParts() {
+	void shouldRenderIsoDateFromParts() {
 
 		Document agg = project().and(DateOperators.dateFromParts().isoWeekYear(2018).isoWeek(12).isoDayOfWeek(5).hour(14)
 				.minute(30).second(42).millisecond(2)).as("newDate").toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -2059,7 +2060,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1834
-	public void shouldRenderIsoDateFromPartsWithTimezone() {
+	void shouldRenderIsoDateFromPartsWithTimezone() {
 
 		Document agg = project()
 				.and(DateOperators.dateFromParts().withTimezone(Timezone.valueOf("America/Chicago")).isoWeekYear(2018))
@@ -2070,7 +2071,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1834
-	public void shouldRenderDateToParts() {
+	void shouldRenderDateToParts() {
 
 		Document agg = project().and(DateOperators.dateOf("date").toParts()).as("newDate")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -2079,7 +2080,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1834
-	public void shouldRenderDateToIsoParts() {
+	void shouldRenderDateToIsoParts() {
 
 		Document agg = project().and(DateOperators.dateOf("date").toParts().iso8601()).as("newDate")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -2089,7 +2090,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1834
-	public void shouldRenderDateToPartsWithTimezone() {
+	void shouldRenderDateToPartsWithTimezone() {
 
 		Document agg = project()
 				.and(DateOperators.dateOf("date").withTimezone(Timezone.valueOf("America/Chicago")).toParts()).as("newDate")
@@ -2100,7 +2101,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1834
-	public void shouldRenderDateFromString() {
+	void shouldRenderDateFromString() {
 
 		Document agg = project().and(DateOperators.dateFromString("2017-02-08T12:10:40.787")).as("newDate")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -2110,7 +2111,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1834
-	public void shouldRenderDateFromStringWithFieldReference() {
+	void shouldRenderDateFromStringWithFieldReference() {
 
 		Document agg = project().and(DateOperators.dateOf("date").fromString()).as("newDate")
 				.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -2120,7 +2121,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1834
-	public void shouldRenderDateFromStringWithTimezone() {
+	void shouldRenderDateFromStringWithTimezone() {
 
 		Document agg = project()
 				.and(DateOperators.dateFromString("2017-02-08T12:10:40.787").withTimezone(Timezone.valueOf("America/Chicago")))
@@ -2131,7 +2132,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-2047
-	public void shouldRenderDateFromStringWithFormat() {
+	void shouldRenderDateFromStringWithFormat() {
 
 		Document agg = project().and(DateOperators.dateFromString("2017-02-08T12:10:40.787").withFormat("dd/mm/yyyy"))
 				.as("newDate").toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -2141,7 +2142,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-2200
-	public void typeProjectionShouldIncludeTopLevelFieldsOfType() {
+	void typeProjectionShouldIncludeTopLevelFieldsOfType() {
 
 		ProjectionOperation operation = Aggregation.project(Book.class);
 
@@ -2155,7 +2156,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-2200
-	public void typeProjectionShouldMapFieldNames() {
+	void typeProjectionShouldMapFieldNames() {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
 		MongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext);
@@ -2171,7 +2172,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-2200
-	public void typeProjectionShouldIncludeInterfaceProjectionValues() {
+	void typeProjectionShouldIncludeInterfaceProjectionValues() {
 
 		ProjectionOperation operation = Aggregation.project(ProjectionInterface.class);
 
@@ -2184,7 +2185,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-2200
-	public void typeProjectionShouldBeEmptyIfNoPropertiesFound() {
+	void typeProjectionShouldBeEmptyIfNoPropertiesFound() {
 
 		ProjectionOperation operation = Aggregation.project(EmptyType.class);
 
@@ -2195,7 +2196,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-2312
-	public void simpleFieldReferenceAsArray() {
+	void simpleFieldReferenceAsArray() {
 
 		org.bson.Document doc = Aggregation.newAggregation(project("x", "y", "someField").asArray("myArray"))
 				.toDocument("coll", Aggregation.DEFAULT_CONTEXT);
@@ -2205,7 +2206,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-2312
-	public void mappedFieldReferenceAsArray() {
+	void mappedFieldReferenceAsArray() {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
 
@@ -2219,7 +2220,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-2312
-	public void arrayWithNullValue() {
+	void arrayWithNullValue() {
 
 		Document doc = project() //
 				.andArrayOf(Fields.field("field-1"), null, "value").as("myArray") //
@@ -2229,7 +2230,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-2312
-	public void nestedArrayField() {
+	void nestedArrayField() {
 
 		Document doc = project("_id", "value") //
 				.andArrayOf(Fields.field("field-1"), "plain - string", ArithmeticOperators.valueOf("field-1").sum().and(10))
@@ -2241,7 +2242,7 @@ public class ProjectionOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-2312
-	public void nestedMappedFieldReferenceInArrayField() {
+	void nestedMappedFieldReferenceInArrayField() {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
 
@@ -2289,7 +2290,7 @@ public class ProjectionOperationUnitTests {
 		String getTitle();
 	}
 
-	static class EmptyType {
+	private static class EmptyType {
 
 	}
 
