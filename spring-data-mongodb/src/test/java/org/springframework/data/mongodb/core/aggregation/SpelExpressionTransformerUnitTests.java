@@ -32,6 +32,7 @@ import org.springframework.data.mongodb.core.Person;
  * @author Thomas Darimont
  * @author Oliver Gierke
  * @author Christoph Strobl
+ * @author Divya Srivastava
  */
 public class SpelExpressionTransformerUnitTests {
 
@@ -800,68 +801,68 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(transform("rtrim(field1, field2)"))
 				.isEqualTo("{ \"$rtrim\" : {\"input\" : \"$field1\", \"chars\" : \"$field2\" }}");
 	}
-	
-	@Test // DATAMONGO-3725
-	public void shouldRenderRegexFindWithoutOptions() {
-		
+
+	@Test // GH-3725
+	void shouldRenderRegexFindWithoutOptions() {
+
 		assertThat(transform("regexFind(field1,'e')"))
-				.isEqualTo(Document.parse("{ \"$regexFind\" : {\"input\" : \"$field1\" , \"regex\" : \"e\"}}"));
-	}
-	
-	@Test // DATAMONGO-3725
-	public void shouldRenderRegexFindWithOptions() {
-		
-		assertThat(transform("regexFind(field1,'e','i')"))
-				.isEqualTo(Document.parse("{ \"$regexFind\" : {\"input\" : \"$field1\" , \"regex\" : \"e\" , \"options\" : \"i\"}}"));
-	}
-	
-	@Test // DATAMONGO-3725
-	public void shouldRenderRegexFindWithOptionsFromFieldReference() {
-		
-		assertThat(transform("regexFind(field1,'e',field2)"))
-				.isEqualTo(Document.parse("{ \"$regexFind\" : {\"input\" : \"$field1\" , \"regex\" : \"e\" , \"options\" : \"$field2\"}}"));
-	}
-	
-	@Test // DATAMONGO-3725
-	public void shouldRenderRegexFindAllWithoutOptions() {
-		
-		assertThat(transform("regexFindAll(field1,'e')"))
-				.isEqualTo(Document.parse("{ \"$regexFindAll\" : {\"input\" : \"$field1\" , \"regex\" : \"e\"}}"));
-	}
-	
-	@Test // DATAMONGO-3725
-	public void shouldRenderRegexFindAllWithOptions() {
-		
-		assertThat(transform("regexFindAll(field1,'e','i')"))
-				.isEqualTo(Document.parse("{ \"$regexFindAll\" : {\"input\" : \"$field1\" , \"regex\" : \"e\" , \"options\" : \"i\"}}"));
-	}
-	
-	@Test // DATAMONGO-3725
-	public void shouldRenderRegexFindAllWithOptionsFromFieldReference() {
-		
-		assertThat(transform("regexFindAll(field1,'e',field2)"))
-				.isEqualTo(Document.parse("{ \"$regexFindAll\" : {\"input\" : \"$field1\" , \"regex\" : \"e\" , \"options\" : \"$field2\"}}"));
+				.isEqualTo("{ \"$regexFind\" : {\"input\" : \"$field1\" , \"regex\" : \"e\"}}");
 	}
 
-	@Test // DATAMONGO-3725
-	public void shouldRenderRegexMatchWithoutOptions() {
-		
+	@Test // GH-3725
+	void shouldRenderRegexFindWithOptions() {
+
+		assertThat(transform("regexFind(field1,'e','i')"))
+				.isEqualTo("{ \"$regexFind\" : {\"input\" : \"$field1\" , \"regex\" : \"e\" , \"options\" : \"i\"}}");
+	}
+
+	@Test // GH-3725
+	void shouldRenderRegexFindWithOptionsFromFieldReference() {
+
+		assertThat(transform("regexFind(field1,'e',field2)"))
+				.isEqualTo("{ \"$regexFind\" : {\"input\" : \"$field1\" , \"regex\" : \"e\" , \"options\" : \"$field2\"}}");
+	}
+
+	@Test // GH-3725
+	void shouldRenderRegexFindAllWithoutOptions() {
+
+		assertThat(transform("regexFindAll(field1,'e')"))
+				.isEqualTo("{ \"$regexFindAll\" : {\"input\" : \"$field1\" , \"regex\" : \"e\"}}");
+	}
+
+	@Test // GH-3725
+	void shouldRenderRegexFindAllWithOptions() {
+
+		assertThat(transform("regexFindAll(field1,'e','i')"))
+				.isEqualTo("{ \"$regexFindAll\" : {\"input\" : \"$field1\" , \"regex\" : \"e\" , \"options\" : \"i\"}}");
+	}
+
+	@Test // GH-3725
+	void shouldRenderRegexFindAllWithOptionsFromFieldReference() {
+
+		assertThat(transform("regexFindAll(field1,'e',field2)"))
+				.isEqualTo("{ \"$regexFindAll\" : {\"input\" : \"$field1\" , \"regex\" : \"e\" , \"options\" : \"$field2\"}}");
+	}
+
+	@Test // GH-3725
+	void shouldRenderRegexMatchWithoutOptions() {
+
 		assertThat(transform("regexMatch(field1,'e')"))
-				.isEqualTo(Document.parse("{ \"$regexMatch\" : {\"input\" : \"$field1\" , \"regex\" : \"e\"}}"));
+				.isEqualTo("{ \"$regexMatch\" : {\"input\" : \"$field1\" , \"regex\" : \"e\"}}");
 	}
-	
-	@Test // DATAMONGO-3725
-	public void shouldRenderRegexMatchWithOptions() {
-		
+
+	@Test // GH-3725
+	void shouldRenderRegexMatchWithOptions() {
+
 		assertThat(transform("regexMatch(field1,'e','i')"))
-				.isEqualTo(Document.parse("{ \"$regexMatch\" : {\"input\" : \"$field1\" , \"regex\" : \"e\" , \"options\" : \"i\"}}"));
+				.isEqualTo("{ \"$regexMatch\" : {\"input\" : \"$field1\" , \"regex\" : \"e\" , \"options\" : \"i\"}}");
 	}
-	
-	@Test // DATAMONGO-3725
-	public void shouldRenderRegexMatchWithOptionsFromFieldReference() {
-		
+
+	@Test // GH-3725
+	void shouldRenderRegexMatchWithOptionsFromFieldReference() {
+
 		assertThat(transform("regexMatch(field1,'e',field2)"))
-				.isEqualTo(Document.parse("{ \"$regexMatch\" : {\"input\" : \"$field1\" , \"regex\" : \"e\" , \"options\" : \"$field2\"}}"));
+				.isEqualTo("{ \"$regexMatch\" : {\"input\" : \"$field1\" , \"regex\" : \"e\" , \"options\" : \"$field2\"}}");
 	}
 
 

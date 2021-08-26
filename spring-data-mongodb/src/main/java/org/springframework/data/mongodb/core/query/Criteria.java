@@ -42,6 +42,7 @@ import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type;
 import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
+import org.springframework.data.mongodb.util.RegexFlags;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.Base64Utils;
@@ -70,20 +71,6 @@ public class Criteria implements CriteriaDefinition {
 	 * Custom "not-null" object as we have to be able to work with {@literal null} values as well.
 	 */
 	private static final Object NOT_SET = new Object();
-
-	private static final int[] FLAG_LOOKUP = new int[Character.MAX_VALUE];
-
-	static {
-		FLAG_LOOKUP['g'] = 256;
-		FLAG_LOOKUP['i'] = Pattern.CASE_INSENSITIVE;
-		FLAG_LOOKUP['m'] = Pattern.MULTILINE;
-		FLAG_LOOKUP['s'] = Pattern.DOTALL;
-		FLAG_LOOKUP['c'] = Pattern.CANON_EQ;
-		FLAG_LOOKUP['x'] = Pattern.COMMENTS;
-		FLAG_LOOKUP['d'] = Pattern.UNIX_LINES;
-		FLAG_LOOKUP['t'] = Pattern.LITERAL;
-		FLAG_LOOKUP['u'] = Pattern.UNICODE_CASE;
-	}
 
 	private @Nullable String key;
 	private List<Criteria> criteriaChain;
@@ -530,7 +517,7 @@ public class Criteria implements CriteriaDefinition {
 
 		Assert.notNull(regex, "Regex string must not be null!");
 
-		return Pattern.compile(regex, regexFlags(options));
+		return Pattern.compile(regex, RegexFlags.toRegexFlags(options));
 	}
 
 	/**
@@ -1097,47 +1084,6 @@ public class Criteria implements CriteriaDefinition {
 	private static boolean requiresGeoJsonFormat(Object value) {
 		return value instanceof GeoJson
 				|| (value instanceof GeoCommand && ((GeoCommand) value).getShape() instanceof GeoJson);
-	}
-
-	/**
-	 * Lookup the MongoDB specific flags for a given regex option string.
-	 *
-	 * @param s the Regex option/flag to look up. Can be {@literal null}.
-	 * @return zero if given {@link String} is {@literal null} or empty.
-	 * @since 2.2
-	 */
-	private static int regexFlags(@Nullable String s) {
-
-		int flags = 0;
-
-		if (s == null) {
-			return flags;
-		}
-
-		for (final char f : s.toLowerCase().toCharArray()) {
-			flags |= regexFlag(f);
-		}
-
-		return flags;
-	}
-
-	/**
-	 * Lookup the MongoDB specific flags for a given character.
-	 *
-	 * @param c the Regex option/flag to look up.
-	 * @return
-	 * @throws IllegalArgumentException for unknown flags
-	 * @since 2.2
-	 */
-	private static int regexFlag(char c) {
-
-		int flag = FLAG_LOOKUP[c];
-
-		if (flag == 0) {
-			throw new IllegalArgumentException(String.format("Unrecognized flag [%c]", c));
-		}
-
-		return flag;
 	}
 
 	/**
