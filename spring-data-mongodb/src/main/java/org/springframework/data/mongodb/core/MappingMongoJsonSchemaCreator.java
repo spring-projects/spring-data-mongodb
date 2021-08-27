@@ -15,20 +15,32 @@
  */
 package org.springframework.data.mongodb.core;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+import org.bson.BsonBinary;
+import org.bson.BsonBinaryReader;
+import org.bson.BsonBinarySubType;
+import org.bson.Document;
+import org.bson.UuidRepresentation;
+import org.bson.internal.UuidHelper;
+import org.bson.io.BsonInput;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.mapping.Encrypted;
 import org.springframework.data.mongodb.core.mapping.EncryptedField;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.EncryptedJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.ObjectJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.JsonSchemaObject;
@@ -37,7 +49,9 @@ import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema.MongoJsonSchemaBuilder;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject;
+import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ObjectJsonSchemaObject;
 import org.springframework.util.Assert;
+import org.springframework.util.Base64Utils;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -75,22 +89,83 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 	 * org.springframework.data.mongodb.core.MongoJsonSchemaCreator#createSchemaFor(java.lang.Class)
 	 */
 	@Override
-	public MongoJsonSchema createSchemaFor(Class<?> type) {
+	public MongoJsonSchema createSchemaFor(Class<?> type, boolean encyptedFieldsOnly) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(type);
 		MongoJsonSchemaBuilder schemaBuilder = MongoJsonSchema.builder();
 
-		List<JsonSchemaProperty> schemaProperties = computePropertiesForEntity(Collections.emptyList(), entity);
+		if (entity.isAnnotationPresent(Encrypted.class)) {
+			Encrypted encrypted = entity.findAnnotation(Encrypted.class);
+			schemaBuilder.encryptionMetadata(new Document("keyId", stringToKeyId(encrypted.keyId())));
+		}
+
+		List<JsonSchemaProperty> schemaProperties = computePropertiesForEntity(Collections.emptyList(), entity, encyptedFieldsOnly);
 		schemaBuilder.properties(schemaProperties.toArray(new JsonSchemaProperty[0]));
 
 		return schemaBuilder.build();
-
 	}
 
 	private List<JsonSchemaProperty> computePropertiesForEntity(List<MongoPersistentProperty> path,
-			MongoPersistentEntity<?> entity) {
+			MongoPersistentEntity<?> entity, boolean encryptedFieldsOnly) {
 
 		List<JsonSchemaProperty> schemaProperties = new ArrayList<>();
+
+//		if (entity.isAnnotationPresent(Encrypted.class)) {
+//
+//			Encrypted encrypted = entity.findAnnotation(Encrypted.class);
+////			ObjectJsonSchemaProperty encryptMetadata = JsonSchemaProperty.object("encryptMetadata");
+//			encryptMetadata.properties(new JsonSchemaProperty() {
+//				@Override
+//				public String getIdentifier() {
+//					return "keyId";
+//				}
+//
+//				@Override
+//				public Set<Type> getTypes() {
+//					return Collections.emptySet();
+//				}
+//
+//				@Override
+//				public Document toDocument() {
+//					return new Document("keyId", stringToKeyId(encrypted.keyId()));
+//				}
+//			});
+//			schemaProperties.add(new EncryptedJsonSchemaProperty(encryptMetadata));
+//			schemaProperties.add(new EncryptedJsonSchemaProperty()
+//
+//					JsonSchemaProperty.encrypted(JsonSchemaObject.object()"encryptMetadata", JsonSchemaObject.object()) {
+//				@Override
+//				public String getIdentifier() {
+//					return "encryptMetadata";
+//				}
+//
+//				@Override
+//				public Set<Type> getTypes() {
+//					return Collections.emptySet();
+//				}
+//
+//				@Override
+//				public Document toDocument() {
+//					return new Document("keyId", stringToKeyId(encrypted.keyId()));
+//				}
+//			}));
+//			schemaProperties.add(new JsonSchemaProperty() {
+//				@Override
+//				public String getIdentifier() {
+//					return "encryptMetadata";
+//				}
+//
+//				@Override
+//				public Set<Type> getTypes() {
+//					return Collections.emptySet();
+//				}
+//
+//				@Override
+//				public Document toDocument() {
+//					return new Document("keyId", stringToKeyId(encrypted.keyId()));
+//				}
+//			});
+//		}
 
 		for (MongoPersistentProperty nested : entity) {
 
@@ -103,13 +178,33 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 			}
 
 			currentPath.add(nested);
-			schemaProperties.add(computeSchemaForProperty(currentPath));
+			schemaProperties.add(computeSchemaForProperty(currentPath, encryptedFieldsOnly));
 		}
 
-		return schemaProperties;
+		if(!encryptedFieldsOnly) {
+			return schemaProperties;
+		}
+		return schemaProperties.stream().filter(this::containsEncrypted).collect(Collectors.toList());
 	}
 
-	private JsonSchemaProperty computeSchemaForProperty(List<MongoPersistentProperty> path) {
+	private boolean containsEncrypted(JsonSchemaProperty property) {
+		if(property instanceof EncryptedJsonSchemaProperty) {
+			return true;
+		}
+
+		if(property instanceof ObjectJsonSchemaProperty) {
+			ObjectJsonSchemaProperty val = (ObjectJsonSchemaProperty) property;
+			for(JsonSchemaProperty p : val.getProperties()) {
+				if(containsEncrypted(p) ) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	private JsonSchemaProperty computeSchemaForProperty(List<MongoPersistentProperty> path, boolean encryptedFieldsOnly) {
 
 		MongoPersistentProperty property = CollectionUtils.lastElement(path);
 
@@ -118,39 +213,43 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 		Class<?> targetType = converter.getTypeMapper().getWriteTargetTypeFor(rawTargetType); // conversion target type
 
 		if (property.isEntity() && ObjectUtils.nullSafeEquals(rawTargetType, targetType)) {
-			return createObjectSchemaPropertyForEntity(path, property, required);
+			return createObjectSchemaPropertyForEntity(path, property, required, encryptedFieldsOnly);
 		}
 
 		String fieldName = computePropertyFieldName(property);
 
+		JsonSchemaProperty schemaProperty = null;
 		if (property.isCollectionLike()) {
-			return createSchemaProperty(fieldName, targetType, required);
+			schemaProperty = createSchemaProperty(fieldName, targetType, required);
 		} else if (property.isMap()) {
-			return createSchemaProperty(fieldName, Type.objectType(), required);
+			schemaProperty = createSchemaProperty(fieldName, Type.objectType(), required);
 		} else if (ClassUtils.isAssignable(Enum.class, targetType)) {
-			return createEnumSchemaProperty(fieldName, targetType, required);
+			schemaProperty = createEnumSchemaProperty(fieldName, targetType, required);
+		} else {
+			schemaProperty = createSchemaProperty(fieldName, targetType, required);
 		}
 
-		JsonSchemaProperty schemaProperty = createSchemaProperty(fieldName, targetType, required);
-
-
-		if(property.findAnnotation(EncryptedField.class) != null) {
+		if (property.findAnnotation(EncryptedField.class) != null) {
 			EncryptedJsonSchemaProperty enc = new EncryptedJsonSchemaProperty(schemaProperty);
 
 			EncryptedField annotation = property.findAnnotation(EncryptedField.class);
 			enc = enc.algorithm(annotation.algorithm());
-			enc = enc.keys(UUID.fromString(annotation.keyId()));
+
+			if (!ObjectUtils.isEmpty(annotation.keyId())) {
+				enc.keys(stringToKeyId(annotation.keyId()));
+			}
 			return enc;
 		}
+
 		return schemaProperty;
 	}
 
 	private JsonSchemaProperty createObjectSchemaPropertyForEntity(List<MongoPersistentProperty> path,
-			MongoPersistentProperty property, boolean required) {
+			MongoPersistentProperty property, boolean required, boolean encryptedFieldsOnly) {
 
 		ObjectJsonSchemaProperty target = JsonSchemaProperty.object(property.getName());
 		List<JsonSchemaProperty> nestedProperties = computePropertiesForEntity(path,
-				mappingContext.getRequiredPersistentEntity(property));
+				mappingContext.getRequiredPersistentEntity(property), encryptedFieldsOnly);
 
 		return createPotentiallyRequiredSchemaProperty(
 				target.properties(nestedProperties.toArray(new JsonSchemaProperty[0])), required);
@@ -220,5 +319,24 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 		}
 
 		return JsonSchemaProperty.required(property);
+	}
+
+	private List<Object> stringToKeyId(String[] values) {
+
+		List<Object> target = new ArrayList<>();
+		for (String key : values) {
+			try {
+				target.add(UUID.fromString(key));
+			} catch (IllegalArgumentException e) {
+
+				target.add(Document.parse("{ val : { $binary : { base64 : '" + key + "', subType : '04'} } }").get("val"));
+//				target.add(UuidHelper.decodeBinaryToUuid(key.getBytes(StandardCharsets.UTF_8), BsonBinarySubType.UUID_STANDARD.getValue(), UuidRepresentation.STANDARD));
+//				BsonBinary
+//				Document d = Document.parse()
+//				target.add(UUID.nameUUIDFromBytes(Base64Utils.decodeFromString(key)));
+//				target.add(new Document().append("$binary", new Document().append("base64", key).append("subType", "04")));
+			}
+		}
+		return target;
 	}
 }

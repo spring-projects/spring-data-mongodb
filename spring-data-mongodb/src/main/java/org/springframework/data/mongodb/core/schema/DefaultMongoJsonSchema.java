@@ -16,7 +16,10 @@
 package org.springframework.data.mongodb.core.schema;
 
 import org.bson.Document;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 
 /**
  * Value object representing a MongoDB-specific JSON schema which is the default {@link MongoJsonSchema} implementation.
@@ -28,11 +31,18 @@ import org.springframework.util.Assert;
 class DefaultMongoJsonSchema implements MongoJsonSchema {
 
 	private final JsonSchemaObject root;
+	private final @Nullable Document encryptionMetadata;
 
 	DefaultMongoJsonSchema(JsonSchemaObject root) {
 
+		this(root, null);
+	}
+
+	DefaultMongoJsonSchema(JsonSchemaObject root, @Nullable Document encryptionMetadata) {
+
 		Assert.notNull(root, "Root must not be null!");
 		this.root = root;
+		this.encryptionMetadata = encryptionMetadata;
 	}
 
 	/*
@@ -41,6 +51,11 @@ class DefaultMongoJsonSchema implements MongoJsonSchema {
 	 */
 	@Override
 	public Document toDocument() {
-		return new Document("$jsonSchema", root.toDocument());
+
+		Document schemaDocument = root.toDocument();
+		if(!CollectionUtils.isEmpty(encryptionMetadata)) {
+			schemaDocument.append("encryptMetadata", encryptionMetadata);
+		}
+		return new Document("$jsonSchema", schemaDocument);
 	}
 }

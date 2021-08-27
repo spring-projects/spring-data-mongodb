@@ -45,7 +45,8 @@ import org.springframework.core.annotation.AliasFor;
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.FIELD, ElementType.METHOD, ElementType.ANNOTATION_TYPE })
+@Target({ ElementType.FIELD, ElementType.ANNOTATION_TYPE })
+@Encrypted
 @Field
 public @interface EncryptedField {
 
@@ -83,7 +84,8 @@ public @interface EncryptedField {
 	@AliasFor(annotation = Field.class, attribute = "targetType")
 	FieldType targetType() default FieldType.IMPLICIT;
 
-	String keyId();
+	@AliasFor(annotation = Encrypted.class, attribute = "keyId")
+	String[] keyId() default {};
 
 	String algorithm();
 }

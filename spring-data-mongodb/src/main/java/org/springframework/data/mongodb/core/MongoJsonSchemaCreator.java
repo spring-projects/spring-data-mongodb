@@ -58,7 +58,11 @@ public interface MongoJsonSchemaCreator {
 	 * @param type must not be {@literal null}.
 	 * @return never {@literal null}.
 	 */
-	MongoJsonSchema createSchemaFor(Class<?> type);
+	default MongoJsonSchema createSchemaFor(Class<?> type) {
+		return createSchemaFor(type, false);
+	}
+
+	MongoJsonSchema createSchemaFor(Class<?> type, boolean encryptedFieldsOnly);
 
 	/**
 	 * Creates a new {@link MongoJsonSchemaCreator} that is aware of conversions applied by the given

@@ -107,6 +107,8 @@ public interface MongoJsonSchema {
 	class MongoJsonSchemaBuilder {
 
 		private ObjectJsonSchemaObject root;
+		private Document encryptionMetadata;
+		private boolean encryptedFieldsOnly;
 
 		MongoJsonSchemaBuilder() {
 			root = new ObjectJsonSchemaObject();
@@ -266,13 +268,17 @@ public interface MongoJsonSchema {
 			return this;
 		}
 
+		public void encryptionMetadata(Document encryptionMetadata) {
+			this.encryptionMetadata = encryptionMetadata;
+		}
+
 		/**
 		 * Obtain the {@link MongoJsonSchema}.
 		 *
 		 * @return new instance of {@link MongoJsonSchema}.
 		 */
 		public MongoJsonSchema build() {
-			return MongoJsonSchema.of(root);
+			return new DefaultMongoJsonSchema(root, encryptionMetadata);
 		}
 	}
 }

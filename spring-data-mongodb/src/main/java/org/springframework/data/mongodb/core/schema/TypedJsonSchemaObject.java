@@ -437,6 +437,10 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 			return newInstance(description, true, restrictions);
 		}
 
+		public List<JsonSchemaProperty> getProperties() {
+			return properties;
+		}
+
 		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.mongodb.core.schema.JsonSchemaObject#toDocument()

@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.bson.Document;
+import org.bson.json.JsonWriterSettings;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -31,6 +32,7 @@ import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
+import org.springframework.data.mongodb.core.mapping.Encrypted;
 import org.springframework.data.mongodb.core.mapping.EncryptedField;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
@@ -110,12 +112,6 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 
 	// --> VARIOUS FIELD TYPES
 
-	static String ENCR = "{ \"encrypt\" : {\n" +
-			"              \"keyId\" : [UUID(\"e114f7ad-ad7a-4a68-81a7-ebcb9ea0953a\")],\n" +
-			"              \"algorithm\" : \"AEAD_AES_256_CBC_HMAC_SHA_512-Random\",\n" +
-			"              \"bsonType\":\"string\"" +
-			"            }}";
-
 	static final String VARIOUS_FIELD_TYPES = "" + //
 			"{" + //
 			"    'type' : 'object'," + //
@@ -134,8 +130,7 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 			"        'collectionProperty' : { 'type' : 'array' }," + //
 			"        'mapProperty' : { 'type' : 'object' }," + //
 			"        'objectProperty' : { 'type' : 'object' }," + //
-			"        'enumProperty' : " + JUST_SOME_ENUM + //,
-			"        'encryptedProperty' : " + ENCR + //
+			"        'enumProperty' : " + JUST_SOME_ENUM +
 			"     }" + //
 			"}";
 
@@ -157,8 +152,6 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 		Map<String, String> mapProperty;
 		Object objectProperty;
 		JustSomeEnum enumProperty;
-		@EncryptedField(algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Random", keyId = "e114f7ad-ad7a-4a68-81a7-ebcb9ea0953a")
-		String encryptedProperty;
 	}
 
 	// --> NESTED DOMAIN TYPE
@@ -261,5 +254,105 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 			return null;
 		}
 	}
+
+
+
+
+    @Encrypted(keyId = "xKVup8B1Q+CkHaVRx+qa+g==")
+	static class Patient {
+		String name;
+
+		@EncryptedField(algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic")
+		Integer ssn;
+
+		@EncryptedField(algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Random")
+		String bloodType;
+
+		String keyAltNameField;
+
+		@EncryptedField(algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Random")
+		List<Map<String, String>> medicalRecords;
+		Insurance insurance;
+	}
+
+	static class Insurance {
+
+		@EncryptedField(algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic")
+		Integer policyNumber;
+		String provider;
+	}
+
+
+	@Test // GH-???
+	public void xxx() {
+
+		MongoJsonSchema schema = schemaCreator.createSchemaFor(Patient.class);
+
+		System.out.println(schema.toDocument().get("$jsonSchema", Document.class).toJson(JsonWriterSettings.builder().indent(true).build()));
+
+		//assertThat(schema.toDocument().get("$jsonSchema", Document.class)).isEqualTo(Document.parse(VARIOUS_FIELD_TYPES));
+	}
+
+	@Test // GH-???
+	public void csfle/*encryptedFieldsOnly*/() {
+
+
+
+		MongoJsonSchema schema = schemaCreator.createSchemaFor(Patient.class, true);
+
+		Document $jsonSchema = schema.toDocument().get("$jsonSchema", Document.class);
+		System.out.println($jsonSchema.toJson(JsonWriterSettings.builder().indent(true).build()));
+
+		assertThat($jsonSchema).isEqualTo(Document.parse(patientSchema));
+
+		//assertThat(schema.toDocument().get("$jsonSchema", Document.class)).isEqualTo(Document.parse(VARIOUS_FIELD_TYPES));
+	}
+
+	String patientSchema = "{\n" +
+			"  \"type\": \"object\",\n" +
+			"  \"encryptMetadata\": {\n" +
+			"    \"keyId\": [\n" +
+			"      {\n" +
+			"        \"$binary\": {\n" +
+			"          \"base64\": \"xKVup8B1Q+CkHaVRx+qa+g==\",\n" +
+			"          \"subType\": \"04\"\n" +
+			"        }\n" +
+			"      }\n" +
+			"    ]\n" +
+			"  },\n" +
+			"  \"properties\": {\n" +
+			"    \"ssn\": {\n" +
+			"      \"encrypt\": {\n" +
+			"        \"bsonType\": \"int\",\n" +
+			"        \"algorithm\": \"AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic\"\n" +
+			"      }\n" +
+			"    },\n" +
+			"    \"bloodType\": {\n" +
+			"      \"encrypt\": {\n" +
+			"        \"bsonType\": \"string\",\n" +
+			"        \"algorithm\": \"AEAD_AES_256_CBC_HMAC_SHA_512-Random\"\n" +
+			"      }\n" +
+			"    },\n" +
+			"    \"medicalRecords\": {\n" +
+			"      \"encrypt\": {\n" +
+			"        \"bsonType\": \"array\",\n" +
+			"        \"algorithm\": \"AEAD_AES_256_CBC_HMAC_SHA_512-Random\"\n" +
+			"      }\n" +
+			"    },\n" +
+			"    \"insurance\": {\n" +
+			"      \"type\": \"object\",\n" +
+			"      \"properties\": {\n" +
+			"        \"policyNumber\": {\n" +
+			"          \"encrypt\": {\n" +
+			"            \"bsonType\": \"int\",\n" +
+			"            \"algorithm\": \"AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic\"\n" +
+			"          }\n" +
+			"        }\n" +
+			"      }\n" +
+			"    }\n" +
+			"  }\n" +
+			"}";
+
+
 
 }
