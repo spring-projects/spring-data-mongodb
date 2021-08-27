@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
+import static org.assertj.core.api.Assertions.*;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -34,6 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.dao.PermissionDeniedDataAccessException;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
@@ -49,6 +52,7 @@ import org.springframework.data.mongodb.repository.QUser;
 import org.springframework.data.mongodb.repository.User;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
+import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -269,12 +273,11 @@ public class ReactiveQuerydslMongoPredicateExecutorTests {
 				.as(StepVerifier::create) //
 				.expectNextCount(1) //
 				.verifyComplete();
-		;
+
 		operations.save(person2) //
 				.as(StepVerifier::create) //
 				.expectNextCount(1) //
 				.verifyComplete();
-		;
 
 		Flux<Person> result = new ReactiveSpringDataMongodbQuery<>(operations, Person.class).where()
 				.join(person.coworker, QUser.user).on(QUser.user.username.eq("does-not-exist")).fetch();
@@ -329,5 +332,113 @@ public class ReactiveQuerydslMongoPredicateExecutorTests {
 				.as(StepVerifier::create) //
 				.expectError(PermissionDeniedDataAccessException.class) //
 				.verify();
+	}
+
+	@Test // GH-3757
+	public void findByShouldReturnFirstResult() {
+
+		repository.findBy(person.firstname.eq(oliver.getFirstname()), FluentQuery.ReactiveFluentQuery::first) //
+				.as(StepVerifier::create) //
+				.expectNext(oliver) //
+				.verifyComplete();
+	}
+
+	@Test // GH-3757
+	public void findByShouldReturnOneResult() {
+
+		repository.findBy(person.firstname.eq(oliver.getFirstname()), FluentQuery.ReactiveFluentQuery::one) //
+				.as(StepVerifier::create) //
+				.expectNext(oliver) //
+				.verifyComplete();
+
+		repository.findBy(person.lastname.eq(oliver.getLastname()), FluentQuery.ReactiveFluentQuery::one) //
+				.as(StepVerifier::create) //
+				.verifyError(IncorrectResultSizeDataAccessException.class);
+	}
+
+	@Test // GH-3757
+	public void findByShouldReturnAll() {
+
+		repository.findBy(person.lastname.eq(oliver.getLastname()), FluentQuery.ReactiveFluentQuery::all) //
+				.as(StepVerifier::create) //
+				.expectNextCount(2) //
+				.verifyComplete();
+	}
+
+	@Test // GH-3757
+	public void findByShouldApplySortAll() {
+
+		repository.findBy(person.lastname.eq(oliver.getLastname()), it -> it.sortBy(Sort.by("firstname")).all()) //
+				.as(StepVerifier::create) //
+				.expectNext(dave, oliver) //
+				.verifyComplete();
+
+		repository
+				.findBy(person.lastname.eq(oliver.getLastname()), it -> it.sortBy(Sort.by(Direction.DESC, "firstname")).all()) //
+				.as(StepVerifier::create) //
+				.expectNext(oliver, dave) //
+				.verifyComplete();
+	}
+
+	@Test // GH-3757
+	public void findByShouldApplyProjection() {
+
+		repository.findBy(person.lastname.eq(oliver.getLastname()), it -> it.project("firstname").first()) //
+				.as(StepVerifier::create) //
+				.assertNext(it -> {
+
+					assertThat(it.getFirstname()).isNotNull();
+					assertThat(it.getLastname()).isNull();
+				}).verifyComplete();
+	}
+
+	@Test // GH-3757
+	public void findByShouldApplyPagination() {
+
+		repository
+				.findBy(person.lastname.eq(oliver.getLastname()), it -> it.page(PageRequest.of(0, 1, Sort.by("firstname")))) //
+				.as(StepVerifier::create) //
+				.assertNext(it -> {
+
+					assertThat(it.getTotalElements()).isEqualTo(2);
+					assertThat(it.getContent()).contains(dave);
+				}).verifyComplete();
+
+		repository
+				.findBy(person.lastname.eq(oliver.getLastname()), it -> it.page(PageRequest.of(1, 1, Sort.by("firstname")))) //
+				.as(StepVerifier::create) //
+				.assertNext(it -> {
+
+					assertThat(it.getTotalElements()).isEqualTo(2);
+					assertThat(it.getContent()).contains(oliver);
+				}).verifyComplete();
+	}
+
+	@Test // GH-3757
+	public void findByShouldCount() {
+
+		repository.findBy(person.lastname.eq(oliver.getLastname()), FluentQuery.ReactiveFluentQuery::count) //
+				.as(StepVerifier::create) //
+				.expectNext(2L) //
+				.verifyComplete();
+
+		repository.findBy(person.lastname.eq("foo"), FluentQuery.ReactiveFluentQuery::count) //
+				.as(StepVerifier::create) //
+				.expectNext(0L) //
+				.verifyComplete();
+	}
+
+	@Test // GH-3757
+	public void findByShouldReportExists() {
+
+		repository.findBy(person.lastname.eq(oliver.getLastname()), FluentQuery.ReactiveFluentQuery::exists) //
+				.as(StepVerifier::create) //
+				.expectNext(true) //
+				.verifyComplete();
+
+		repository.findBy(person.lastname.eq("foo"), FluentQuery.ReactiveFluentQuery::exists) //
+				.as(StepVerifier::create) //
+				.expectNext(false) //
+				.verifyComplete();
 	}
 }

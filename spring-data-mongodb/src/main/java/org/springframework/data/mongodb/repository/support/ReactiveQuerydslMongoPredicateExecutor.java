@@ -18,13 +18,23 @@ package org.springframework.data.mongodb.repository.support;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Function;
+
+import org.bson.Document;
+import org.reactivestreams.Publisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
+import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.querydsl.EntityPathResolver;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor;
 import org.springframework.data.querydsl.SimpleEntityPathResolver;
+import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.util.Assert;
 
 import com.querydsl.core.types.EntityPath;
@@ -159,6 +169,20 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 		return createQueryFor(predicate).fetchCount().map(it -> it != 0);
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor#findBy(com.querydsl.core.types.Predicate, java.util.function.Function)
+	 */
+	@Override
+	public <S extends T, R, P extends Publisher<R>> P findBy(Predicate predicate,
+			Function<FluentQuery.ReactiveFluentQuery<S>, P> queryFunction) {
+
+		Assert.notNull(predicate, "Predicate must not be null!");
+		Assert.notNull(queryFunction, "Query function must not be null!");
+
+		return queryFunction.apply(new ReactiveFluentQuerydsl<S>(predicate, (Class<S>) typeInformation().getJavaType()));
+	}
+
 	/**
 	 * Creates a {@link ReactiveSpringDataMongodbQuery} for the given {@link Predicate}.
 	 *
@@ -177,8 +201,8 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 	private ReactiveSpringDataMongodbQuery<T> createQuery() {
 
 		Class<T> javaType = typeInformation().getJavaType();
-		return new ReactiveSpringDataMongodbQuery<>(mongodbSerializer(), mongoOperations, javaType,
-				mongoOperations.getCollectionName(javaType));
+		return new ReactiveSpringDataMongodbQuery<>(mongoOperations, javaType, javaType,
+				mongoOperations.getCollectionName(javaType), it -> {});
 	}
 
 	/**
@@ -192,6 +216,107 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 
 		toOrderSpecifiers(sort).forEach(query::orderBy);
 		return query;
+	}
+
+	/**
+	 * {@link org.springframework.data.repository.query.FluentQuery.ReactiveFluentQuery} using Querydsl {@link Predicate}.
+	 *
+	 * @since 3.3
+	 * @author Mark Paluch
+	 */
+	class ReactiveFluentQuerydsl<T> extends ReactiveFluentQuerySupport<Predicate, T> {
+
+		ReactiveFluentQuerydsl(Predicate predicate, Class<T> resultType) {
+			this(predicate, Sort.unsorted(), resultType, Collections.emptyList());
+		}
+
+		ReactiveFluentQuerydsl(Predicate predicate, Sort sort, Class<T> resultType, List<String> fieldsToInclude) {
+			super(predicate, sort, resultType, fieldsToInclude);
+		}
+
+		@Override
+		protected <R> ReactiveFluentQuerydsl<R> create(Predicate predicate, Sort sort, Class<R> resultType,
+				List<String> fieldsToInclude) {
+			return new ReactiveFluentQuerydsl<>(predicate, sort, resultType, fieldsToInclude);
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.repository.query.FluentQuery.ReactiveFluentQuery#one()
+		 */
+		@Override
+		public Mono<T> one() {
+			return createQuery().fetchOne();
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.repository.query.FluentQuery.ReactiveFluentQuery#first()
+		 */
+		@Override
+		public Mono<T> first() {
+			return createQuery().fetchFirst();
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.repository.query.FluentQuery.ReactiveFluentQuery#all()
+		 */
+		@Override
+		public Flux<T> all() {
+			return createQuery().fetch();
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.repository.query.FluentQuery.ReactiveFluentQuery#page(org.springframework.data.domain.Pageable)
+		 */
+		@Override
+		public Mono<Page<T>> page(Pageable pageable) {
+
+			Assert.notNull(pageable, "Pageable must not be null!");
+
+			return createQuery().fetchPage(pageable);
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.repository.query.FluentQuery.ReactiveFluentQuery#count()
+		 */
+		@Override
+		public Mono<Long> count() {
+			return createQuery().fetchCount();
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.repository.query.FluentQuery.ReactiveFluentQuery#exists()
+		 */
+		@Override
+		public Mono<Boolean> exists() {
+			return count().map(it -> it > 0).defaultIfEmpty(false);
+		}
+
+		private ReactiveSpringDataMongodbQuery<T> createQuery() {
+
+			return new ReactiveSpringDataMongodbQuery<>(mongoOperations, typeInformation().getJavaType(), getResultType(),
+					mongoOperations.getCollectionName(typeInformation().getJavaType()), this::customize).where(getPredicate());
+		}
+
+		private void customize(BasicQuery query) {
+
+			List<String> fieldsToInclude = getFieldsToInclude();
+
+			if (!fieldsToInclude.isEmpty()) {
+				Document fields = new Document();
+				fieldsToInclude.forEach(field -> fields.put(field, 1));
+				query.setFieldsObject(fields);
+			}
+
+			if (getSort().isSorted()) {
+				query.with(getSort());
+			}
+		}
 	}
 
 }

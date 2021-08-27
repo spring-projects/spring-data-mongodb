@@ -21,11 +21,14 @@ import reactor.core.publisher.Mono;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.bson.Document;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.ReactiveFindOperation.FindWithProjection;
+import org.springframework.data.mongodb.core.ReactiveFindOperation;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
@@ -44,7 +47,6 @@ import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Path;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.mongodb.MongodbOps;
-import com.querydsl.mongodb.document.MongodbDocumentSerializer;
 
 /**
  * MongoDB query with utilizing {@link ReactiveMongoOperations} for command execution.
@@ -59,21 +61,23 @@ import com.querydsl.mongodb.document.MongodbDocumentSerializer;
 class ReactiveSpringDataMongodbQuery<K> extends SpringDataMongodbQuerySupport<ReactiveSpringDataMongodbQuery<K>> {
 
 	private final ReactiveMongoOperations mongoOperations;
-	private final FindWithProjection<K> find;
+	private final Consumer<BasicQuery> queryCustomizer;
+	private final ReactiveFindOperation.FindWithQuery<K> find;
 
 	ReactiveSpringDataMongodbQuery(ReactiveMongoOperations mongoOperations, Class<? extends K> entityClass) {
-		this(new SpringDataMongodbSerializer(mongoOperations.getConverter()), mongoOperations, entityClass, null);
+		this(mongoOperations, entityClass, entityClass, null, it -> {});
 	}
 
 	@SuppressWarnings("unchecked")
-	ReactiveSpringDataMongodbQuery(MongodbDocumentSerializer serializer, ReactiveMongoOperations mongoOperations,
-			Class<? extends K> entityClass, @Nullable String collection) {
+	ReactiveSpringDataMongodbQuery(ReactiveMongoOperations mongoOperations, Class<?> domainType,
+			Class<? extends K> resultType, @Nullable String collection, Consumer<BasicQuery> queryCustomizer) {
 
-		super(serializer);
+		super(new SpringDataMongodbSerializer(mongoOperations.getConverter()));
 
 		this.mongoOperations = mongoOperations;
-		this.find = StringUtils.hasText(collection) ? mongoOperations.query((Class<K>) entityClass).inCollection(collection)
-				: mongoOperations.query((Class<K>) entityClass);
+		this.queryCustomizer = queryCustomizer;
+		this.find = (StringUtils.hasText(collection) ? mongoOperations.query(domainType).inCollection(collection)
+				: mongoOperations.query(domainType)).as((Class<K>) resultType);
 	}
 
 	/**
@@ -86,13 +90,35 @@ class ReactiveSpringDataMongodbQuery<K> extends SpringDataMongodbQuerySupport<Re
 	}
 
 	/**
-	 * Fetch the first matching query result.
+	 * Fetch all matching query results as page.
+	 *
+	 * @return {@link Mono} emitting the requested page.
+	 */
+	Mono<Page<K>> fetchPage(Pageable pageable) {
+
+		Mono<List<K>> content = createQuery().flatMapMany(it -> find.matching(it).all()).collectList();
+
+		return content.flatMap(it -> ReactivePageableExecutionUtils.getPage(it, pageable, fetchCount()));
+	}
+
+	/**
+	 * Fetch the one matching query result.
 	 *
 	 * @return {@link Mono} emitting the first query result or {@link Mono#empty()} if there are none.
 	 * @throws org.springframework.dao.IncorrectResultSizeDataAccessException if more than one match found.
 	 */
 	Mono<K> fetchOne() {
 		return createQuery().flatMap(it -> find.matching(it).one());
+	}
+
+	/**
+	 * Fetch the first matching query result. @return {@link Mono} emitting the first query result or {@link Mono#empty()}
+	 * if there are none.
+	 *
+	 * @since 3.3
+	 */
+	Mono<K> fetchFirst() {
+		return createQuery().flatMap(it -> find.matching(it).first());
 	}
 
 	/**
@@ -143,6 +169,8 @@ class ReactiveSpringDataMongodbQuery<K> extends SpringDataMongodbQuerySupport<Re
 					if (orderBy.size() > 0) {
 						basicQuery.setSortObject(createSort(orderBy));
 					}
+
+					queryCustomizer.accept(basicQuery);
 
 					return basicQuery;
 				});

@@ -22,19 +22,26 @@ import reactor.core.publisher.Mono;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 import org.reactivestreams.Publisher;
-
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.ReactiveFindOperation;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
+import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.data.util.StreamUtils;
 import org.springframework.data.util.Streamable;
 import org.springframework.util.Assert;
@@ -209,7 +216,6 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	public Mono<Long> count() {
 		return mongoOperations.count(new Query(), entityInformation.getCollectionName());
 	}
-
 
 	/*
 	 * (non-Javadoc)
@@ -466,6 +472,20 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		return mongoOperations.exists(query, example.getProbeType(), entityInformation.getCollectionName());
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.ReactiveQueryByExampleExecutor#findBy(org.springframework.data.domain.Example, java.util.function.Function)
+	 */
+	@Override
+	public <S extends T, R, P extends Publisher<R>> P findBy(Example<S> example,
+			Function<FluentQuery.ReactiveFluentQuery<S>, P> queryFunction) {
+
+		Assert.notNull(example, "Sample must not be null!");
+		Assert.notNull(queryFunction, "Query function must not be null!");
+
+		return queryFunction.apply(new ReactiveFluentQueryByExample<>(example, example.getProbeType()));
+	}
+
 	private Query getIdQuery(Object id) {
 		return new Query(getIdCriteria(id));
 	}
@@ -485,5 +505,111 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 
 	private Flux<T> findAll(Query query) {
 		return mongoOperations.find(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
+	}
+
+	/**
+	 * {@link org.springframework.data.repository.query.FluentQuery.ReactiveFluentQuery} using {@link Example}.
+	 *
+	 * @author Mark Paluch
+	 * @since 3.3
+	 */
+	class ReactiveFluentQueryByExample<S, T> extends ReactiveFluentQuerySupport<Example<S>, T> {
+
+		ReactiveFluentQueryByExample(Example<S> example, Class<T> resultType) {
+			this(example, Sort.unsorted(), resultType, Collections.emptyList());
+		}
+
+		ReactiveFluentQueryByExample(Example<S> example, Sort sort, Class<T> resultType, List<String> fieldsToInclude) {
+			super(example, sort, resultType, fieldsToInclude);
+		}
+
+		@Override
+		protected <R> ReactiveFluentQueryByExample<S, R> create(Example<S> predicate, Sort sort, Class<R> resultType,
+				List<String> fieldsToInclude) {
+			return new ReactiveFluentQueryByExample<>(predicate, sort, resultType, fieldsToInclude);
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.repository.query.FluentQuery.ReactiveFluentQuery#one()
+		 */
+		@Override
+		public Mono<T> one() {
+			return createQuery().one();
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.repository.query.FluentQuery.ReactiveFluentQuery#first()
+		 */
+		@Override
+		public Mono<T> first() {
+			return createQuery().first();
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.repository.query.FluentQuery.ReactiveFluentQuery#all()
+		 */
+		@Override
+		public Flux<T> all() {
+			return createQuery().all();
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.repository.query.FluentQuery.ReactiveFluentQuery#page(org.springframework.data.domain.Pageable)
+		 */
+		@Override
+		public Mono<Page<T>> page(Pageable pageable) {
+
+			Assert.notNull(pageable, "Pageable must not be null!");
+
+			Mono<List<T>> items = createQuery(q -> q.with(pageable)).all().collectList();
+
+			return items.flatMap(content -> ReactivePageableExecutionUtils.getPage(content, pageable, this.count()));
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.repository.query.FluentQuery.ReactiveFluentQuery#count()
+		 */
+		@Override
+		public Mono<Long> count() {
+			return createQuery().count();
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.repository.query.FluentQuery.ReactiveFluentQuery#exists()
+		 */
+		@Override
+		public Mono<Boolean> exists() {
+			return createQuery().exists();
+		}
+
+		private ReactiveFindOperation.TerminatingFind<T> createQuery() {
+			return createQuery(UnaryOperator.identity());
+		}
+
+		private ReactiveFindOperation.TerminatingFind<T> createQuery(UnaryOperator<Query> queryCustomizer) {
+
+			Query query = new Query(new Criteria().alike(getPredicate())) //
+					.collation(entityInformation.getCollation());
+
+			if (getSort().isSorted()) {
+				query.with(getSort());
+			}
+
+			if (!getFieldsToInclude().isEmpty()) {
+				query.fields().include(getFieldsToInclude().toArray(new String[0]));
+			}
+
+			query = queryCustomizer.apply(query);
+
+			return mongoOperations.query(getPredicate().getProbeType()).inCollection(entityInformation.getCollectionName())
+					.as(getResultType()).matching(query);
+		}
+
 	}
 }

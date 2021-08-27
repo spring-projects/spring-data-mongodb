@@ -16,14 +16,21 @@
 package org.springframework.data.mongodb.repository.support;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import org.bson.Document;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.ExecutableFindOperation;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.lang.Nullable;
 
 import com.mysema.commons.lang.CloseableIterator;
@@ -35,7 +42,6 @@ import com.querydsl.core.QueryResults;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Predicate;
-import com.querydsl.mongodb.document.MongodbDocumentSerializer;
 
 /**
  * Spring Data specific simple {@link com.querydsl.core.Fetchable} {@link com.querydsl.core.SimpleQuery Query}
@@ -48,10 +54,9 @@ import com.querydsl.mongodb.document.MongodbDocumentSerializer;
 public class SpringDataMongodbQuery<T> extends SpringDataMongodbQuerySupport<SpringDataMongodbQuery<T>>
 		implements Fetchable<T> {
 
-	private final Class<T> entityClass;
-	private final String collection;
 	private final MongoOperations mongoOperations;
-	private final ExecutableFindOperation.FindWithProjection<T> find;
+	private final Consumer<BasicQuery> queryCustomizer;
+	private final ExecutableFindOperation.FindWithQuery<T> find;
 
 	/**
 	 * Creates a new {@link SpringDataMongodbQuery}.
@@ -72,18 +77,26 @@ public class SpringDataMongodbQuery<T> extends SpringDataMongodbQuerySupport<Spr
 	 */
 	public SpringDataMongodbQuery(MongoOperations operations, Class<? extends T> type,
 			String collectionName) {
-		this(new SpringDataMongodbSerializer(operations.getConverter()), operations, type, collectionName);
+		this(operations, type, type, collectionName, it -> {});
 	}
 
-	private SpringDataMongodbQuery(MongodbDocumentSerializer serializer, MongoOperations operations,
-			Class<? extends T> type, String collectionName) {
+	/**
+	 * Creates a new {@link SpringDataMongodbQuery}.
+	 *
+	 * @param operations must not be {@literal null}.
+	 * @param domainType must not be {@literal null}.
+	 * @param resultType must not be {@literal null}.
+	 * @param collectionName must not be {@literal null} or empty.
+	 * @since 3.3
+	 */
+	SpringDataMongodbQuery(MongoOperations operations, Class<?> domainType, Class<? extends T> resultType,
+			String collectionName, Consumer<BasicQuery> queryCustomizer) {
+		super(new SpringDataMongodbSerializer(operations.getConverter()));
 
-		super(serializer);
-
-		this.entityClass = (Class<T>) type;
-		this.collection = collectionName;
+		Class<T> resultType1 = (Class<T>) resultType;
 		this.mongoOperations = operations;
-		this.find = mongoOperations.query(this.entityClass).inCollection(collection);
+		this.queryCustomizer = queryCustomizer;
+		this.find = mongoOperations.query(domainType).inCollection(collectionName).as(resultType1);
 	}
 
 	/*
@@ -94,19 +107,19 @@ public class SpringDataMongodbQuery<T> extends SpringDataMongodbQuerySupport<Spr
 	public CloseableIterator<T> iterate() {
 
 		try {
-			org.springframework.data.util.CloseableIterator<? extends T> stream = mongoOperations.stream(createQuery(),
-					entityClass, collection);
+			Stream<T> stream = stream();
+			Iterator<T> iterator = stream.iterator();
 
 			return new CloseableIterator<T>() {
 
 				@Override
 				public boolean hasNext() {
-					return stream.hasNext();
+					return iterator.hasNext();
 				}
 
 				@Override
 				public T next() {
-					return stream.next();
+					return iterator.next();
 				}
 
 				@Override
@@ -126,6 +139,20 @@ public class SpringDataMongodbQuery<T> extends SpringDataMongodbQuerySupport<Spr
 
 	/*
 	 * (non-Javadoc)
+	 * @see com.querydsl.core.Fetchable#iterable()
+	 */
+	@Override
+	public Stream<T> stream() {
+
+		try {
+			return find.matching(createQuery()).stream();
+		} catch (RuntimeException e) {
+			return handleException(e, Stream.empty());
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see com.querydsl.core.Fetchable#fetch()
 	 */
 	@Override
@@ -134,6 +161,24 @@ public class SpringDataMongodbQuery<T> extends SpringDataMongodbQuerySupport<Spr
 			return find.matching(createQuery()).all();
 		} catch (RuntimeException e) {
 			return handleException(e, Collections.emptyList());
+		}
+	}
+
+	/**
+	 * Fetch a {@link Page}.
+	 *
+	 * @param pageable
+	 * @return
+	 */
+	public Page<T> fetchPage(Pageable pageable) {
+
+		try {
+
+			List<T> content = find.matching(createQuery().with(pageable)).all();
+
+			return PageableExecutionUtils.getPage(content, pageable, this::fetchCount);
+		} catch (RuntimeException e) {
+			return handleException(e, new PageImpl<>(Collections.emptyList(), pageable, 0));
 		}
 	}
 
@@ -214,6 +259,8 @@ public class SpringDataMongodbQuery<T> extends SpringDataMongodbQuerySupport<Spr
 		if (orderBy.size() > 0) {
 			basicQuery.setSortObject(createSort(orderBy));
 		}
+
+		queryCustomizer.accept(basicQuery);
 
 		return basicQuery;
 	}
