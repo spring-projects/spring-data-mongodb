@@ -40,12 +40,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.repository.support.ReactiveMongoRepositoryFactory;
 import org.springframework.data.mongodb.repository.support.SimpleReactiveMongoRepository;
+import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.data.repository.query.ReactiveQueryMethodEvaluationContextProvider;
 import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
@@ -473,6 +475,150 @@ public class SimpleReactiveMongoRepositoryTests implements BeanClassLoaderAware,
 		Example<ReactivePerson> example = Example.of(new ReactivePerson("foo", "bar", -1));
 
 		repository.findOne(example).as(StepVerifier::create).verifyComplete();
+	}
+
+	@Test // GH-3757
+	void findByShouldReturnFirstResult() {
+
+		ReactivePerson probe = new ReactivePerson();
+		probe.setFirstname(oliver.getFirstname());
+
+		repository.findBy(Example.of(probe, matching().withIgnorePaths("age")), FluentQuery.ReactiveFluentQuery::first) //
+				.as(StepVerifier::create) //
+				.expectNext(oliver) //
+				.verifyComplete();
+	}
+
+	@Test // GH-3757
+	void findByShouldReturnOneResult() {
+
+		ReactivePerson probe = new ReactivePerson();
+		probe.setFirstname(oliver.getFirstname());
+
+		repository.findBy(Example.of(probe, matching().withIgnorePaths("age")), FluentQuery.ReactiveFluentQuery::one) //
+				.as(StepVerifier::create) //
+				.expectNext(oliver) //
+				.verifyComplete();
+
+		probe = new ReactivePerson();
+		probe.setLastname(oliver.getLastname());
+
+		repository.findBy(Example.of(probe, matching().withIgnorePaths("age")), FluentQuery.ReactiveFluentQuery::one) //
+				.as(StepVerifier::create) //
+				.verifyError(IncorrectResultSizeDataAccessException.class);
+	}
+
+	@Test // GH-3757
+	void findByShouldReturnAll() {
+
+		ReactivePerson probe = new ReactivePerson();
+		probe.setLastname(oliver.getLastname());
+
+		repository.findBy(Example.of(probe, matching().withIgnorePaths("age")), FluentQuery.ReactiveFluentQuery::all) //
+				.as(StepVerifier::create) //
+				.expectNextCount(2) //
+				.verifyComplete();
+	}
+
+	@Test // GH-3757
+	void findByShouldApplySortAll() {
+
+		ReactivePerson probe = new ReactivePerson();
+		probe.setLastname(oliver.getLastname());
+
+		repository.findBy(Example.of(probe, matching().withIgnorePaths("age")), it -> it.sortBy(Sort.by("firstname")).all()) //
+				.as(StepVerifier::create) //
+				.expectNext(dave, oliver) //
+				.verifyComplete();
+
+		repository
+				.findBy(Example.of(probe, matching().withIgnorePaths("age")),
+						it -> it.sortBy(Sort.by(Direction.DESC, "firstname")).all()) //
+				.as(StepVerifier::create) //
+				.expectNext(oliver, dave) //
+				.verifyComplete();
+	}
+
+	@Test // GH-3757
+	void findByShouldApplyProjection() {
+
+		ReactivePerson probe = new ReactivePerson();
+		probe.setLastname(oliver.getLastname());
+
+		repository.findBy(Example.of(probe, matching().withIgnorePaths("age")), it -> it.project("firstname").first()) //
+				.as(StepVerifier::create) //
+				.assertNext(it -> {
+
+					assertThat(it.getFirstname()).isNotNull();
+					assertThat(it.getLastname()).isNull();
+				}).verifyComplete();
+	}
+
+	@Test // GH-3757
+	void findByShouldApplyPagination() {
+
+		ReactivePerson probe = new ReactivePerson();
+		probe.setLastname(oliver.getLastname());
+
+		repository
+				.findBy(Example.of(probe, matching().withIgnorePaths("age")),
+						it -> it.page(PageRequest.of(0, 1, Sort.by("firstname")))) //
+				.as(StepVerifier::create) //
+				.assertNext(it -> {
+
+					assertThat(it.getTotalElements()).isEqualTo(2);
+					assertThat(it.getContent()).contains(dave);
+				}).verifyComplete();
+
+		repository
+				.findBy(Example.of(probe, matching().withIgnorePaths("age")),
+						it -> it.page(PageRequest.of(1, 1, Sort.by("firstname")))) //
+				.as(StepVerifier::create) //
+				.assertNext(it -> {
+
+					assertThat(it.getTotalElements()).isEqualTo(2);
+					assertThat(it.getContent()).contains(oliver);
+				}).verifyComplete();
+	}
+
+	@Test // GH-3757
+	void findByShouldCount() {
+
+		ReactivePerson probe = new ReactivePerson();
+		probe.setLastname(oliver.getLastname());
+
+		repository.findBy(Example.of(probe, matching().withIgnorePaths("age")), FluentQuery.ReactiveFluentQuery::count) //
+				.as(StepVerifier::create) //
+				.expectNext(2L) //
+				.verifyComplete();
+
+		probe = new ReactivePerson();
+		probe.setLastname("foo");
+
+		repository.findBy(Example.of(probe, matching().withIgnorePaths("age")), FluentQuery.ReactiveFluentQuery::count) //
+				.as(StepVerifier::create) //
+				.expectNext(0L) //
+				.verifyComplete();
+	}
+
+	@Test // GH-3757
+	void findByShouldReportExists() {
+
+		ReactivePerson probe = new ReactivePerson();
+		probe.setLastname(oliver.getLastname());
+
+		repository.findBy(Example.of(probe, matching().withIgnorePaths("age")), FluentQuery.ReactiveFluentQuery::exists) //
+				.as(StepVerifier::create) //
+				.expectNext(true) //
+				.verifyComplete();
+
+		probe = new ReactivePerson();
+		probe.setLastname("foo");
+
+		repository.findBy(Example.of(probe, matching().withIgnorePaths("age")), FluentQuery.ReactiveFluentQuery::exists) //
+				.as(StepVerifier::create) //
+				.expectNext(false) //
+				.verifyComplete();
 	}
 
 	interface ReactivePersonRepository extends ReactiveMongoRepository<ReactivePerson, String> {

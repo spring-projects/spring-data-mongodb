@@ -15,18 +15,24 @@
  */
 package org.springframework.data.mongodb.repository.support;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
+import org.bson.Document;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.querydsl.EntityPathResolver;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.querydsl.SimpleEntityPathResolver;
+import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.util.Assert;
 
@@ -184,6 +190,21 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 		return createQueryFor(predicate).fetchCount() > 0;
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.querydsl.QuerydslPredicateExecutor#findBy(com.querydsl.core.types.Predicate, java.util.function.Function)
+	 */
+	@Override
+	@SuppressWarnings("unchecked")
+	public <S extends T, R> R findBy(Predicate predicate,
+			Function<FluentQuery.FetchableFluentQuery<S>, R> queryFunction) {
+
+		Assert.notNull(predicate, "Predicate must not be null!");
+		Assert.notNull(queryFunction, "Query function must not be null!");
+
+		return queryFunction.apply(new FluentQuerydsl<>(predicate, (Class<S>) typeInformation().getJavaType()));
+	}
+
 	/**
 	 * Creates a {@link SpringDataMongodbQuery} for the given {@link Predicate}.
 	 *
@@ -231,5 +252,114 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 
 		toOrderSpecifiers(sort).forEach(query::orderBy);
 		return query;
+	}
+
+	/**
+	 * {@link org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery} using Querydsl
+	 * {@link Predicate}.
+	 *
+	 * @author Mark Paluch
+	 * @since 3.3
+	 */
+	class FluentQuerydsl<T> extends FetchableFluentQuerySupport<Predicate, T> {
+
+		FluentQuerydsl(Predicate predicate, Class<T> resultType) {
+			this(predicate, Sort.unsorted(), resultType, Collections.emptyList());
+		}
+
+		FluentQuerydsl(Predicate predicate, Sort sort, Class<T> resultType, List<String> fieldsToInclude) {
+			super(predicate, sort, resultType, fieldsToInclude);
+		}
+
+		@Override
+		protected <R> FluentQuerydsl<R> create(Predicate predicate, Sort sort, Class<R> resultType,
+				List<String> fieldsToInclude) {
+			return new FluentQuerydsl<>(predicate, sort, resultType, fieldsToInclude);
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#one()
+		 */
+		@Override
+		public T one() {
+			return createQuery().fetchOne();
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#first()
+		 */
+		@Override
+		public T first() {
+			return createQuery().fetchFirst();
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#all()
+		 */
+		@Override
+		public List<T> all() {
+			return createQuery().fetch();
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#page(org.springframework.data.domain.Pageable)
+		 */
+		@Override
+		public Page<T> page(Pageable pageable) {
+
+			Assert.notNull(pageable, "Pageable must not be null!");
+
+			return createQuery().fetchPage(pageable);
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#stream()
+		 */
+		@Override
+		public Stream<T> stream() {
+			return createQuery().stream();
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#count()
+		 */
+		@Override
+		public long count() {
+			return createQuery().fetchCount();
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#exists()
+		 */
+		@Override
+		public boolean exists() {
+			return count() > 0;
+		}
+
+		private SpringDataMongodbQuery<T> createQuery() {
+			return new SpringDataMongodbQuery<>(mongoOperations, typeInformation().getJavaType(), getResultType(),
+					mongoOperations.getCollectionName(typeInformation().getJavaType()), this::customize).where(getPredicate());
+		}
+
+		private void customize(BasicQuery query) {
+
+			List<String> fieldsToInclude = getFieldsToInclude();
+			if (!fieldsToInclude.isEmpty()) {
+				Document fields = new Document();
+				fieldsToInclude.forEach(field -> fields.put(field, 1));
+				query.setFieldsObject(fields);
+			}
+
+			if (getSort().isSorted()) {
+				query.with(getSort());
+			}
+		}
 	}
 }

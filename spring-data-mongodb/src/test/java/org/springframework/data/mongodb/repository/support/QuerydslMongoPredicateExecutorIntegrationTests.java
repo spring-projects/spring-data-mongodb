@@ -24,9 +24,11 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.dao.PermissionDeniedDataAccessException;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -41,6 +43,7 @@ import org.springframework.data.mongodb.repository.QPerson;
 import org.springframework.data.mongodb.repository.QUser;
 import org.springframework.data.mongodb.repository.User;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
+import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -239,5 +242,104 @@ public class QuerydslMongoPredicateExecutorIntegrationTests {
 		repository = new QuerydslMongoPredicateExecutor<>(entityInformation, ops);
 
 		repository.findOne(person.firstname.contains("batman"));
+	}
+
+	@Test // GH-3757
+	public void findByShouldReturnFirstResult() {
+
+		Person result = repository.findBy(person.firstname.eq(oliver.getFirstname()),
+				FluentQuery.FetchableFluentQuery::first);
+
+		assertThat(result).isEqualTo(oliver);
+	}
+
+	@Test // GH-3757
+	public void findByShouldReturnOneResult() {
+
+		Person result = repository.findBy(person.firstname.eq(oliver.getFirstname()),
+				FluentQuery.FetchableFluentQuery::one);
+
+		assertThat(result).isEqualTo(oliver);
+
+		assertThatExceptionOfType(IncorrectResultSizeDataAccessException.class).isThrownBy(
+				() -> repository.findBy(person.lastname.eq(oliver.getLastname()), FluentQuery.FetchableFluentQuery::one));
+	}
+
+	@Test // GH-3757
+	public void findByShouldReturnAll() {
+
+		List<Person> result = repository.findBy(person.lastname.eq(oliver.getLastname()),
+				FluentQuery.FetchableFluentQuery::all);
+
+		assertThat(result).hasSize(2);
+	}
+
+	@Test // GH-3757
+	public void findByShouldApplySortAll() {
+
+		Person probe = new Person();
+		probe.setLastname(oliver.getLastname());
+
+		List<Person> result = repository.findBy(person.lastname.eq(oliver.getLastname()),
+				it -> it.sortBy(Sort.by("firstname")).all());
+		assertThat(result).containsSequence(dave, oliver);
+
+		result = repository.findBy(person.lastname.eq(oliver.getLastname()),
+				it -> it.sortBy(Sort.by(Sort.Direction.DESC, "firstname")).all());
+		assertThat(result).containsSequence(oliver, dave);
+	}
+
+	@Test // GH-3757
+	public void findByShouldApplyProjection() {
+
+		Person probe = new Person();
+		probe.setLastname(oliver.getLastname());
+
+		Person result = repository.findBy(person.lastname.eq(oliver.getLastname()), it -> it.project("firstname").first());
+
+		assertThat(result.getFirstname()).isNotNull();
+		assertThat(result.getLastname()).isNull();
+	}
+
+	@Test // GH-3757
+	public void findByShouldApplyPagination() {
+
+		Page<Person> first = repository.findBy(person.lastname.eq(oliver.getLastname()),
+				it -> it.page(PageRequest.of(0, 1, Sort.by("firstname"))));
+		assertThat(first.getTotalElements()).isEqualTo(2);
+		assertThat(first.getContent()).contains(dave);
+
+		Page<Person> next = repository.findBy(person.lastname.eq(oliver.getLastname()),
+				it -> it.page(PageRequest.of(1, 1, Sort.by("firstname"))));
+
+		assertThat(next.getTotalElements()).isEqualTo(2);
+		assertThat(next.getContent()).contains(oliver);
+	}
+
+	@Test // GH-3757
+	public void findByShouldCount() {
+
+		long count = repository.findBy(person.lastname.eq(oliver.getLastname()), FluentQuery.FetchableFluentQuery::count);
+		assertThat(count).isEqualTo(2L);
+
+		count = repository.findBy(person.lastname.eq("foo"), FluentQuery.FetchableFluentQuery::count);
+		assertThat(count).isEqualTo(0L);
+	}
+
+	@Test // GH-3757
+	public void findByShouldReportExists() {
+
+		Person probe = new Person();
+		probe.setLastname(oliver.getLastname());
+
+		boolean exists = repository.findBy(person.lastname.eq(oliver.getLastname()),
+				FluentQuery.FetchableFluentQuery::exists);
+		assertThat(exists).isTrue();
+
+		probe = new Person();
+		probe.setLastname("foo");
+
+		exists = repository.findBy(person.lastname.eq("foo"), FluentQuery.FetchableFluentQuery::exists);
+		assertThat(exists).isFalse();
 	}
 }

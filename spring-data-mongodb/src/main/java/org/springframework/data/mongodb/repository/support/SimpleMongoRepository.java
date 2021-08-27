@@ -22,7 +22,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Example;
@@ -30,6 +33,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.ExecutableFindOperation;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -211,8 +215,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		Assert.notNull(ids, "The given Iterable of ids must not be null!");
 
-		mongoOperations.remove(getIdQuery(ids), entityInformation.getJavaType(),
-				entityInformation.getCollectionName());
+		mongoOperations.remove(getIdQuery(ids), entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}
 
 	/*
@@ -362,8 +365,8 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 		List<S> list = mongoOperations.find(query, example.getProbeType(), entityInformation.getCollectionName());
 
-		return PageableExecutionUtils.getPage(list, pageable,
-				() -> mongoOperations.count(Query.of(query).limit(-1).skip(-1), example.getProbeType(), entityInformation.getCollectionName()));
+		return PageableExecutionUtils.getPage(list, pageable, () -> mongoOperations
+				.count(Query.of(query).limit(-1).skip(-1), example.getProbeType(), entityInformation.getCollectionName()));
 	}
 
 	/*
@@ -396,6 +399,20 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		return mongoOperations.exists(query, example.getProbeType(), entityInformation.getCollectionName());
 	}
 
+	/* 
+	 * (non-Javadoc)
+	 * @see org.springframework.data.repository.query.QueryByExampleExecutor#findBy(org.springframework.data.domain.Example, java.util.function.Function)
+	 */
+	@Override
+	public <S extends T, R> R findBy(Example<S> example,
+			Function<org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery<S>, R> queryFunction) {
+
+		Assert.notNull(example, "Sample must not be null!");
+		Assert.notNull(queryFunction, "Query function must not be null!");
+
+		return queryFunction.apply(new FluentQueryByExample<>(example, example.getProbeType()));
+	}
+
 	// -------------------------------------------------------------------------
 	// Utility methods
 	// -------------------------------------------------------------------------
@@ -410,8 +427,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 
 	private Query getIdQuery(Iterable<? extends ID> ids) {
 
-		return new Query(new Criteria(entityInformation.getIdAttribute())
-				.in(toCollection(ids)));
+		return new Query(new Criteria(entityInformation.getIdAttribute()).in(toCollection(ids)));
 	}
 
 	private static <E> Collection<E> toCollection(Iterable<E> ids) {
@@ -426,6 +442,121 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		}
 
 		return mongoOperations.find(query, entityInformation.getJavaType(), entityInformation.getCollectionName());
+	}
+
+	/**
+	 * {@link org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery} using {@link Example}.
+	 *
+	 * @author Mark Paluch
+	 * @since 3.3
+	 */
+	class FluentQueryByExample<S, T> extends FetchableFluentQuerySupport<Example<S>, T> {
+
+		FluentQueryByExample(Example<S> example, Class<T> resultType) {
+			this(example, Sort.unsorted(), resultType, Collections.emptyList());
+		}
+
+		FluentQueryByExample(Example<S> example, Sort sort, Class<T> resultType, List<String> fieldsToInclude) {
+			super(example, sort, resultType, fieldsToInclude);
+		}
+
+		@Override
+		protected <R> FluentQueryByExample<S, R> create(Example<S> predicate, Sort sort, Class<R> resultType,
+				List<String> fieldsToInclude) {
+			return new FluentQueryByExample<>(predicate, sort, resultType, fieldsToInclude);
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#one()
+		 */
+		@Override
+		public T one() {
+			return createQuery().oneValue();
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#first()
+		 */
+		@Override
+		public T first() {
+			return createQuery().firstValue();
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#all()
+		 */
+		@Override
+		public List<T> all() {
+			return createQuery().all();
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#page(org.springframework.data.domain.Pageable)
+		 */
+		@Override
+		public Page<T> page(Pageable pageable) {
+
+			Assert.notNull(pageable, "Pageable must not be null!");
+
+			List<T> list = createQuery(q -> q.with(pageable)).all();
+
+			return PageableExecutionUtils.getPage(list, pageable, this::count);
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#stream()
+		 */
+		@Override
+		public Stream<T> stream() {
+			return createQuery().stream();
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#count()
+		 */
+		@Override
+		public long count() {
+			return createQuery().count();
+		}
+
+		/* 
+		 * (non-Javadoc)
+		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#exists()
+		 */
+		@Override
+		public boolean exists() {
+			return createQuery().exists();
+		}
+
+		private ExecutableFindOperation.TerminatingFind<T> createQuery() {
+			return createQuery(UnaryOperator.identity());
+		}
+
+		private ExecutableFindOperation.TerminatingFind<T> createQuery(UnaryOperator<Query> queryCustomizer) {
+
+			Query query = new Query(new Criteria().alike(getPredicate())) //
+					.collation(entityInformation.getCollation());
+
+			if (getSort().isSorted()) {
+				query.with(getSort());
+			}
+
+			if (!getFieldsToInclude().isEmpty()) {
+				query.fields().include(getFieldsToInclude().toArray(new String[0]));
+			}
+
+			query = queryCustomizer.apply(query);
+
+			return mongoOperations.query(getPredicate().getProbeType()).inCollection(entityInformation.getCollectionName())
+					.as(getResultType()).matching(query);
+		}
+
 	}
 
 }

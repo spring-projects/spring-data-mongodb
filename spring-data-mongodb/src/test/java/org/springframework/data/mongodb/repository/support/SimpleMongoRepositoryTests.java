@@ -31,10 +31,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.MongoTransactionManager;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
@@ -51,6 +54,7 @@ import org.springframework.data.mongodb.test.util.MongoServerCondition;
 import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
+import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -457,6 +461,126 @@ class SimpleMongoRepositoryTests {
 
 		assertThat(repository.findAll()) //
 				.hasSize(all.size() - 2).doesNotContain(dave, carter);
+	}
+
+	@Test // GH-3757
+	void findByShouldReturnFirstResult() {
+
+		Person probe = new Person();
+		probe.setFirstname(oliver.getFirstname());
+
+		Person result = repository.findBy(Example.of(probe, getMatcher()), FluentQuery.FetchableFluentQuery::first);
+
+		assertThat(result).isEqualTo(oliver);
+	}
+
+	@Test // GH-3757
+	void findByShouldReturnOneResult() {
+
+		Person probe = new Person();
+		probe.setFirstname(oliver.getFirstname());
+
+		Person result = repository.findBy(Example.of(probe, getMatcher()), FluentQuery.FetchableFluentQuery::one);
+
+		assertThat(result).isEqualTo(oliver);
+
+		Person probeByLastname = new Person();
+		probeByLastname.setLastname(oliver.getLastname());
+
+		assertThatExceptionOfType(IncorrectResultSizeDataAccessException.class).isThrownBy(
+				() -> repository.findBy(Example.of(probeByLastname, getMatcher()), FluentQuery.FetchableFluentQuery::one));
+	}
+
+	@Test // GH-3757
+	void findByShouldReturnAll() {
+
+		Person probe = new Person();
+		probe.setLastname(oliver.getLastname());
+
+		List<Person> result = repository.findBy(Example.of(probe, getMatcher()), FluentQuery.FetchableFluentQuery::all);
+
+		assertThat(result).hasSize(2);
+	}
+
+	@Test // GH-3757
+	void findByShouldApplySortAll() {
+
+		Person probe = new Person();
+		probe.setLastname(oliver.getLastname());
+
+		List<Person> result = repository.findBy(Example.of(probe, getMatcher()),
+				it -> it.sortBy(Sort.by("firstname")).all());
+		assertThat(result).containsSequence(dave, oliver);
+
+		result = repository.findBy(Example.of(probe, getMatcher()),
+				it -> it.sortBy(Sort.by(Sort.Direction.DESC, "firstname")).all());
+		assertThat(result).containsSequence(oliver, dave);
+	}
+
+	@Test // GH-3757
+	void findByShouldApplyProjection() {
+
+		Person probe = new Person();
+		probe.setLastname(oliver.getLastname());
+
+		Person result = repository.findBy(Example.of(probe, getMatcher()), it -> it.project("firstname").first());
+
+		assertThat(result.getFirstname()).isNotNull();
+		assertThat(result.getLastname()).isNull();
+	}
+
+	@Test // GH-3757
+	void findByShouldApplyPagination() {
+
+		Person probe = new Person();
+		probe.setLastname(oliver.getLastname());
+
+		Page<Person> first = repository.findBy(Example.of(probe, getMatcher()),
+				it -> it.page(PageRequest.of(0, 1, Sort.by("firstname"))));
+		assertThat(first.getTotalElements()).isEqualTo(2);
+		assertThat(first.getContent()).contains(dave);
+
+		Page<Person> next = repository.findBy(Example.of(probe, getMatcher()),
+				it -> it.page(PageRequest.of(1, 1, Sort.by("firstname"))));
+
+		assertThat(next.getTotalElements()).isEqualTo(2);
+		assertThat(next.getContent()).contains(oliver);
+	}
+
+	@Test // GH-3757
+	void findByShouldCount() {
+
+		Person probe = new Person();
+		probe.setLastname(oliver.getLastname());
+
+		long count = repository.findBy(Example.of(probe, getMatcher()), FluentQuery.FetchableFluentQuery::count);
+		assertThat(count).isEqualTo(2L);
+
+		probe = new Person();
+		probe.setLastname("foo");
+
+		count = repository.findBy(Example.of(probe, getMatcher()), FluentQuery.FetchableFluentQuery::count);
+		assertThat(count).isEqualTo(0L);
+	}
+
+	@Test // GH-3757
+	void findByShouldReportExists() {
+
+		Person probe = new Person();
+		probe.setLastname(oliver.getLastname());
+
+		boolean exists = repository.findBy(Example.of(probe, getMatcher()), FluentQuery.FetchableFluentQuery::exists);
+		assertThat(exists).isTrue();
+
+		probe = new Person();
+		probe.setLastname("foo");
+
+		exists = repository.findBy(Example.of(probe, getMatcher()), FluentQuery.FetchableFluentQuery::exists);
+		assertThat(exists).isFalse();
+	}
+
+	private ExampleMatcher getMatcher() {
+		return matching().withIgnorePaths("age", "createdAt", "sex", "email", "id");
 	}
 
 	private void assertThatAllReferencePersonsWereStoredCorrectly(Map<String, Person> references, List<Person> saved) {
