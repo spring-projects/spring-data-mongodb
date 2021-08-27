@@ -40,19 +40,20 @@ import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
  * @author Ziemowit Stolarczyk
  * @author Clément Petit
  * @author Mark Paluch
+ * @author James McNee
  */
 public class CriteriaUnitTests {
 
 	@Test
 	public void testSimpleCriteria() {
 		Criteria c = new Criteria("name").is("Bubba");
-		assertThat(c.getCriteriaObject()).isEqualTo(Document.parse("{ \"name\" : \"Bubba\"}"));
+		assertThat(c.getCriteriaObject()).isEqualTo("{ \"name\" : \"Bubba\"}");
 	}
 
 	@Test
 	public void testNotEqualCriteria() {
 		Criteria c = new Criteria("name").ne("Bubba");
-		assertThat(c.getCriteriaObject()).isEqualTo(Document.parse("{ \"name\" : { \"$ne\" : \"Bubba\"}}"));
+		assertThat(c.getCriteriaObject()).isEqualTo("{ \"name\" : { \"$ne\" : \"Bubba\"}}");
 	}
 
 	@Test
@@ -67,7 +68,7 @@ public class CriteriaUnitTests {
 	@Test
 	public void testChainedCriteria() {
 		Criteria c = new Criteria("name").is("Bubba").and("age").lt(21);
-		assertThat(c.getCriteriaObject()).isEqualTo(Document.parse("{ \"name\" : \"Bubba\" , \"age\" : { \"$lt\" : 21}}"));
+		assertThat(c.getCriteriaObject()).isEqualTo("{ \"name\" : \"Bubba\" , \"age\" : { \"$lt\" : 21}}");
 	}
 
 	@Test(expected = InvalidMongoDbApiUsageException.class)
@@ -153,13 +154,13 @@ public class CriteriaUnitTests {
 		Document co = c.getCriteriaObject();
 
 		assertThat(co).isNotNull();
-		assertThat(co).isEqualTo(Document.parse("{ \"age\" : { \"$not\" : { \"$gt\" : 18}} , \"status\" : \"student\"}"));
+		assertThat(co).isEqualTo("{ \"age\" : { \"$not\" : { \"$gt\" : 18}} , \"status\" : \"student\"}");
 	}
 
 	@Test // GH-3726
 	public void shouldBuildCorrectSampleRateOperation() {
 		Criteria c = new Criteria().sampleRate(0.4);
-		assertThat(c.getCriteriaObject()).isEqualTo(Document.parse("{ \"$sampleRate\" : 0.4 }"));
+		assertThat(c.getCriteriaObject()).isEqualTo("{ \"$sampleRate\" : 0.4 }");
 	}
 
 	@Test // GH-3726
@@ -302,7 +303,7 @@ public class CriteriaUnitTests {
 		Criteria numericBitmaskCriteria = new Criteria("field").bits().allClear(0b101);
 
 		assertThat(numericBitmaskCriteria.getCriteriaObject())
-				.isEqualTo(Document.parse("{ \"field\" : { \"$bitsAllClear\" : 5} }"));
+				.isEqualTo("{ \"field\" : { \"$bitsAllClear\" : 5} }");
 	}
 
 	@Test // DATAMONGO-1808
@@ -311,7 +312,7 @@ public class CriteriaUnitTests {
 		Criteria bitPositionsBitmaskCriteria = new Criteria("field").bits().allClear(Arrays.asList(0, 2));
 
 		assertThat(bitPositionsBitmaskCriteria.getCriteriaObject())
-				.isEqualTo(Document.parse("{ \"field\" : { \"$bitsAllClear\" : [ 0, 2 ]} }"));
+				.isEqualTo("{ \"field\" : { \"$bitsAllClear\" : [ 0, 2 ]} }");
 	}
 
 	@Test // DATAMONGO-1808
@@ -320,7 +321,7 @@ public class CriteriaUnitTests {
 		Criteria numericBitmaskCriteria = new Criteria("field").bits().allSet(0b101);
 
 		assertThat(numericBitmaskCriteria.getCriteriaObject())
-				.isEqualTo(Document.parse("{ \"field\" : { \"$bitsAllSet\" : 5} }"));
+				.isEqualTo("{ \"field\" : { \"$bitsAllSet\" : 5} }");
 	}
 
 	@Test // DATAMONGO-1808
@@ -329,7 +330,7 @@ public class CriteriaUnitTests {
 		Criteria bitPositionsBitmaskCriteria = new Criteria("field").bits().allSet(Arrays.asList(0, 2));
 
 		assertThat(bitPositionsBitmaskCriteria.getCriteriaObject())
-				.isEqualTo(Document.parse("{ \"field\" : { \"$bitsAllSet\" : [ 0, 2 ]} }"));
+				.isEqualTo("{ \"field\" : { \"$bitsAllSet\" : [ 0, 2 ]} }");
 	}
 
 	@Test // DATAMONGO-1808
@@ -338,7 +339,7 @@ public class CriteriaUnitTests {
 		Criteria numericBitmaskCriteria = new Criteria("field").bits().anyClear(0b101);
 
 		assertThat(numericBitmaskCriteria.getCriteriaObject())
-				.isEqualTo(Document.parse("{ \"field\" : { \"$bitsAnyClear\" : 5} }"));
+				.isEqualTo("{ \"field\" : { \"$bitsAnyClear\" : 5} }");
 	}
 
 	@Test // DATAMONGO-1808
@@ -347,7 +348,7 @@ public class CriteriaUnitTests {
 		Criteria bitPositionsBitmaskCriteria = new Criteria("field").bits().anyClear(Arrays.asList(0, 2));
 
 		assertThat(bitPositionsBitmaskCriteria.getCriteriaObject())
-				.isEqualTo(Document.parse("{ \"field\" : { \"$bitsAnyClear\" : [ 0, 2 ]} }"));
+				.isEqualTo("{ \"field\" : { \"$bitsAnyClear\" : [ 0, 2 ]} }");
 	}
 
 	@Test // DATAMONGO-1808
@@ -356,7 +357,7 @@ public class CriteriaUnitTests {
 		Criteria numericBitmaskCriteria = new Criteria("field").bits().anySet(0b101);
 
 		assertThat(numericBitmaskCriteria.getCriteriaObject())
-				.isEqualTo(Document.parse("{ \"field\" : { \"$bitsAnySet\" : 5} }"));
+				.isEqualTo("{ \"field\" : { \"$bitsAnySet\" : 5} }");
 	}
 
 	@Test // DATAMONGO-1808
@@ -365,7 +366,7 @@ public class CriteriaUnitTests {
 		Criteria bitPositionsBitmaskCriteria = new Criteria("field").bits().anySet(Arrays.asList(0, 2));
 
 		assertThat(bitPositionsBitmaskCriteria.getCriteriaObject())
-				.isEqualTo(Document.parse("{ \"field\" : { \"$bitsAnySet\" : [ 0, 2 ]} }"));
+				.isEqualTo("{ \"field\" : { \"$bitsAnySet\" : [ 0, 2 ]} }");
 	}
 
 	@Test // DATAMONGO-2002

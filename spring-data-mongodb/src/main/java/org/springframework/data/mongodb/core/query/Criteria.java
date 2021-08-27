@@ -394,11 +394,15 @@ public class Criteria implements CriteriaDefinition {
 	/**
 	 * Creates a criterion using the {@literal $sampleRate} operator.
 	 *
-	 * @param sampleRate sample rate to determine number of documents to be randomly selected from the input.
+	 * @param sampleRate sample rate to determine number of documents to be randomly selected from the input. Must be
+	 *          between {@code 0} and {@code 1}.
 	 * @return this.
-	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/sampleRate/">MongoDB Query operator: $sampleRate</a>
+	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/sampleRate/">MongoDB Query operator:
+	 *      $sampleRate</a>
+	 * @since 3.3
 	 */
 	public Criteria sampleRate(double sampleRate) {
+
 		Assert.isTrue(sampleRate >= 0, "The sample rate must be greater than zero!");
 		Assert.isTrue(sampleRate <= 1, "The sample rate must not be greater than one!");
 
