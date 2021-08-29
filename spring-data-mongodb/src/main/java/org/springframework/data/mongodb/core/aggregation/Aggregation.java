@@ -498,7 +498,17 @@ public class Aggregation {
 	public static MatchOperation match(CriteriaDefinition criteria) {
 		return new MatchOperation(criteria);
 	}
-
+	
+	/**
+	 * Creates a new {@link MatchOperation}
+	 *
+	 * @return new instance of {@link MatchOperation}.
+	 * @since 1.10
+	 */
+	public static MatchOperation match() {
+		return new MatchOperation();
+	}
+	
 	/**
 	 * Creates a new {@link GeoNearOperation} instance from the given {@link NearQuery} and the {@code distanceField}. The
 	 * {@code distanceField} defines output field that contains the calculated distance.

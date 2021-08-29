@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import org.bson.Document;
+import org.springframework.data.mongodb.core.aggregation.EvaluationOperators.EvaluationOperatorFactory.Expr;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.util.Assert;
 
@@ -36,7 +37,16 @@ import org.springframework.util.Assert;
 public class MatchOperation implements AggregationOperation {
 
 	private final CriteriaDefinition criteriaDefinition;
-
+	private final AggregationExpression expression;
+	
+	/**
+	 * Creates a new {@link MatchOperation}
+	 */
+	public MatchOperation() {
+		this.criteriaDefinition = null;
+		this.expression = null;
+	}
+	
 	/**
 	 * Creates a new {@link MatchOperation} for the given {@link CriteriaDefinition}.
 	 *
@@ -46,14 +56,39 @@ public class MatchOperation implements AggregationOperation {
 
 		Assert.notNull(criteriaDefinition, "Criteria must not be null!");
 		this.criteriaDefinition = criteriaDefinition;
+		this.expression = null;
 	}
-
+	
+	/**
+	 * Creates a new {@link MatchOperation} for the given {@link Expression}.
+	 *
+	 * @param criteriaDefinition must not be {@literal null}.
+	 */
+	private MatchOperation(Expr expression) {
+		Assert.notNull(expression, "Expression must not be null!");
+		this.criteriaDefinition = null;
+		this.expression = expression;
+	}
+	
+	/**
+	 * Creates a new {@link MatchOperation} for the given {@link AggregationExpression}.
+	 *
+	 * @param expression must not be {@literal null}.
+	 */
+	public MatchOperation withValueOf(AggregationExpression expression) {
+		Assert.notNull(expression, "Expression must not be null!");
+		return new MatchOperation(EvaluationOperators.valueOf(expression).expr());
+	}
+	
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
 	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
+		if(expression != null) {
+			return new Document(getOperator(), expression.toDocument());
+		}
 		return new Document(getOperator(), context.getMappedObject(criteriaDefinition.getCriteriaObject()));
 	}
 

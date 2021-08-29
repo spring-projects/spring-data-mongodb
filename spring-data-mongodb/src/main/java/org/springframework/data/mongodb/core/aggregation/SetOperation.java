@@ -193,5 +193,6 @@ public class SetOperation extends DocumentEnhancingOperation {
 			 */
 			SetOperation withValueOfExpression(String operation, Object... values);
 		}
+
 	}
 }

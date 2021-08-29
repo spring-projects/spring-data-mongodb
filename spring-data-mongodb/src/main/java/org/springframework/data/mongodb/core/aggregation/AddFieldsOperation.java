@@ -201,4 +201,5 @@ public class AddFieldsOperation extends DocumentEnhancingOperation {
 			AddFieldsOperationBuilder withValueOfExpression(String operation, Object... values);
 		}
 	}
+
 }
