@@ -1306,6 +1306,24 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		public ProjectionOperationBuilder let(Collection<ExpressionVariable> variables, AggregationExpression in) {
 			return this.operation.and(VariableOperators.Let.define(variables).andApply(in));
 		}
+		
+		/**
+		 * Generates a {@code $stdDevPop} expression that takes the string representation of the previously mentioned field
+		 *
+		 * @return
+		 */
+		public ProjectionOperationBuilder stdDevPop() {
+			return this.operation.and(AccumulatorOperators.StdDevPop.stdDevPopOf(getRequiredName()));			
+		}
+		
+		/**
+		 * Generates a {@code $stdDevPop} expression that takes the string representation of the previously mentioned field
+		 *
+		 * @return
+		 */
+		public ProjectionOperationBuilder stdDevSamp() {
+			return this.operation.and(AccumulatorOperators.StdDevSamp.stdDevSampOf(getRequiredName()));				
+		}
 
 		private String getRequiredName() {
 

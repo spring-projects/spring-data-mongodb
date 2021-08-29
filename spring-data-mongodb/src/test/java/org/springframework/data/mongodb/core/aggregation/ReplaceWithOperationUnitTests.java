@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.ReplaceRootDocumentOperation;
 
 /**
  * Unit tests for {@link ReplaceRootOperation}.
@@ -53,5 +54,21 @@ public class ReplaceWithOperationUnitTests {
 
 		assertThat(dbObject).isEqualTo(Document.parse("{ $replaceWith :  { "
 				+ "$map : { input : \"$array\" , as : \"element\" , in : { $multiply : [ \"$$element\" , 10]} } " + "} }"));
+	}
+	
+	@Test
+	void shouldRendersStdDevPopCorrectly() {
+		ReplaceWithOperation operation = ReplaceWithOperation.stdDevPop("quiz");
+		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		assertThat(dbObject).isEqualTo(Document.parse(
+							"{\"$replaceWith\" : { \"$stdDevPop\" : \"$quiz\" } }"));
+	}
+	
+	@Test
+	void shouldRendersStdDevSampCorrectly() {
+		ReplaceWithOperation operation = ReplaceWithOperation.stdDevSamp("quiz");
+		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		assertThat(dbObject).isEqualTo(Document.parse(
+							"{\"$replaceWith\" : { \"$stdDevSamp\" : \"$quiz\" } }"));
 	}
 }

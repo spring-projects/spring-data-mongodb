@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.mongodb.core.aggregation.AddFieldsOperationUnitTests.ScoresWrapper;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.convert.QueryMapper;
@@ -103,6 +104,22 @@ class SetOperationUnitTests {
 		assertThat(SetOperation.builder().set("totalHomework").toValueOf(ArithmeticOperators.valueOf("homework").sum())
 				.toPipelineStages(contextFor(Scores.class)))
 						.containsExactly(Document.parse("{\"$set\" : {\"totalHomework\": { \"$sum\" : \"$homework\" }}}"));
+	}
+	
+	@Test
+	void rendersStdDevPopCorrectly() {
+		assertThat(SetOperation.builder().set("totalQuiz").stdDevPop("quiz")
+		.toPipelineStages(contextFor(ScoresWrapper.class)))
+					.containsExactly(Document.parse(
+							"{\"$set\" : {\"totalQuiz\": { \"$stdDevPop\" : \"$quiz\" } }}"));
+	}
+	
+	@Test
+	void rendersStdDevSampCorrectly() {
+		assertThat(SetOperation.builder().set("totalQuiz").stdDevSamp("quiz")
+		.toPipelineStages(contextFor(ScoresWrapper.class)))
+					.containsExactly(Document.parse(
+							"{\"$set\" : {\"totalQuiz\": { \"$stdDevSamp\" : \"$quiz\" } }}"));
 	}
 
 	@Test // DATAMONGO-2331

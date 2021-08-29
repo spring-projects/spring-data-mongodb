@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.springframework.data.mongodb.core.aggregation.AddFieldsOperation.AddFieldsOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.SetOperation.FieldAppender.ValueAppender;
 import org.springframework.lang.Nullable;
 
@@ -154,6 +155,22 @@ public class SetOperation extends DocumentEnhancingOperation {
 					valueMap.put(field, new ExpressionProjection(operation, values));
 					return FieldAppender.this.build();
 				}
+				
+				public SetOperation stdDevPop(String fieldRef) {
+					return toValueOf(AccumulatorOperators.valueOf(fieldRef).stdDevPop());
+				}
+				
+				public SetOperation stdDevPop(AggregationExpression expression) {
+					return toValueOf(AccumulatorOperators.valueOf(expression).stdDevPop());
+				}
+				
+				public SetOperation stdDevSamp(String fieldRef) {
+					return toValueOf(AccumulatorOperators.valueOf(fieldRef).stdDevSamp());
+				}
+				
+				public SetOperation stdDevSamp(AggregationExpression expression) {
+					return toValueOf(AccumulatorOperators.valueOf(expression).stdDevSamp());
+				}
 			};
 		}
 
@@ -192,6 +209,16 @@ public class SetOperation extends DocumentEnhancingOperation {
 			 * @return new instance of {@link SetOperation}.
 			 */
 			SetOperation withValueOfExpression(String operation, Object... values);
+			
+			SetOperation stdDevPop(String fieldRef);
+			
+			SetOperation stdDevPop(AggregationExpression expression);
+			
+			SetOperation stdDevSamp(String fieldRef);
+
+			SetOperation stdDevSamp(AggregationExpression expression);
 		}
+		
+		
 	}
 }

@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
-
+import org.springframework.data.mongodb.core.aggregation.AddFieldsOperationUnitTests.ScoresWrapper;
 import org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.ReplaceRootDocumentOperation;
 
 /**
@@ -98,5 +98,21 @@ public class ReplaceRootOperationUnitTests {
 
 		assertThat(operation.getFields().exposesNoFields()).isTrue();
 		assertThat(operation.getFields().exposesSingleFieldOnly()).isFalse();
+	}
+	
+	@Test
+	void shouldRendersStdDevPopCorrectly() {
+		ReplaceRootOperation operation = ReplaceRootDocumentOperation.builder().stdDevPop("quiz");
+		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		assertThat(dbObject).isEqualTo(Document.parse(
+							"{\"$replaceRoot\" : {\"newRoot\": { \"$stdDevPop\" : \"$quiz\" } }}"));
+	}
+	
+	@Test
+	void shouldRendersStdDevSampCorrectly() {
+		ReplaceRootOperation operation = ReplaceRootDocumentOperation.builder().stdDevSamp("quiz");
+		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
+		assertThat(dbObject).isEqualTo(Document.parse(
+							"{\"$replaceRoot\" : {\"newRoot\": { \"$stdDevSamp\" : \"$quiz\" } }}"));
 	}
 }

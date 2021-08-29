@@ -126,6 +126,22 @@ class AddFieldsOperationUnitTests {
 		assertThat(fields.getField("computed")).isNotNull();
 		assertThat(fields.getField("does-not-exist")).isNull();
 	}
+	
+	@Test
+	void rendersStdDevPopCorrectly() {
+		assertThat(AddFieldsOperation.builder().addField("totalQuiz").stdDevPop("quiz").build()
+		.toPipelineStages(contextFor(ScoresWrapper.class)))
+					.containsExactly(Document.parse(
+							"{\"$addFields\" : {\"totalQuiz\": { \"$stdDevPop\" : \"$quiz\" } }}"));
+	}
+	
+	@Test
+	void rendersStdDevSampCorrectly() {
+		assertThat(AddFieldsOperation.builder().addField("totalQuiz").stdDevSamp("quiz").build()
+		.toPipelineStages(contextFor(ScoresWrapper.class)))
+					.containsExactly(Document.parse(
+							"{\"$addFields\" : {\"totalQuiz\": { \"$stdDevSamp\" : \"$quiz\" } }}"));
+	}
 
 	private static AggregationOperationContext contextFor(@Nullable Class<?> type) {
 

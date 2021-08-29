@@ -19,7 +19,13 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.bson.Document;
 import org.springframework.data.mongodb.core.aggregation.AddFieldsOperation.AddFieldsOperationBuilder.ValueAppender;
+import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
+import org.springframework.data.mongodb.core.aggregation.GroupOperation.Keyword;
+import org.springframework.data.mongodb.core.aggregation.GroupOperation.Operation;
+import org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder;
+
 import org.springframework.lang.Nullable;
 
 /**
@@ -123,7 +129,7 @@ public class AddFieldsOperation extends DocumentEnhancingOperation {
 		private AddFieldsOperationBuilder(Map<Object, Object> source) {
 			this.valueMap = new LinkedHashMap<>(source);
 		}
-
+		
 		public AddFieldsOperationBuilder addFieldWithValue(String field, @Nullable Object value) {
 			return addField(field).withValue(value);
 		}
@@ -131,6 +137,8 @@ public class AddFieldsOperation extends DocumentEnhancingOperation {
 		public AddFieldsOperationBuilder addFieldWithValueOf(String field, Object value) {
 			return addField(field).withValueOf(value);
 		}
+		
+		
 
 		/**
 		 * Define the field to add.
@@ -162,13 +170,30 @@ public class AddFieldsOperation extends DocumentEnhancingOperation {
 					valueMap.put(field, new ExpressionProjection(operation, values));
 					return AddFieldsOperationBuilder.this;
 				}
+				
+				public AddFieldsOperationBuilder stdDevPop(String fieldRef) {
+					return withValueOf(AccumulatorOperators.valueOf(fieldRef).stdDevPop());
+				}
+				
+				public AddFieldsOperationBuilder stdDevPop(AggregationExpression expression) {
+					return withValueOf(AccumulatorOperators.valueOf(expression).stdDevPop());
+				}
+				
+				public AddFieldsOperationBuilder stdDevSamp(String fieldRef) {
+					return withValueOf(AccumulatorOperators.valueOf(fieldRef).stdDevSamp());
+				}
+				
+				public AddFieldsOperationBuilder stdDevSamp(AggregationExpression expression) {
+					return withValueOf(AccumulatorOperators.valueOf(expression).stdDevSamp());
+				}
+				
 			};
 		}
 
 		public AddFieldsOperation build() {
 			return new AddFieldsOperation(valueMap);
 		}
-
+		
 		/**
 		 * @author Christoph Strobl
 		 * @since 3.0
@@ -199,6 +224,20 @@ public class AddFieldsOperation extends DocumentEnhancingOperation {
 			 * @return new instance of {@link AddFieldsOperation}.
 			 */
 			AddFieldsOperationBuilder withValueOfExpression(String operation, Object... values);
+			
+			AddFieldsOperationBuilder stdDevPop(String fieldRef);
+			
+			AddFieldsOperationBuilder stdDevPop(AggregationExpression expression);
+			
+			AddFieldsOperationBuilder stdDevSamp(String fieldRef);
+			
+			AddFieldsOperationBuilder stdDevSamp(AggregationExpression expression);
+			
+
 		}
+		
+		
 	}
+	
+	
 }

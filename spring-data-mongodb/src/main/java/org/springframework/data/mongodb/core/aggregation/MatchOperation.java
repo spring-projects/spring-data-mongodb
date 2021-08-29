@@ -36,7 +36,12 @@ import org.springframework.util.Assert;
 public class MatchOperation implements AggregationOperation {
 
 	private final CriteriaDefinition criteriaDefinition;
-
+	private final AggregationExpression expression;
+	
+	public MatchOperation() {
+		this.criteriaDefinition = null;
+		this.expression = null;
+	}
 	/**
 	 * Creates a new {@link MatchOperation} for the given {@link CriteriaDefinition}.
 	 *
@@ -46,7 +51,17 @@ public class MatchOperation implements AggregationOperation {
 
 		Assert.notNull(criteriaDefinition, "Criteria must not be null!");
 		this.criteriaDefinition = criteriaDefinition;
+		this.expression = null;
 	}
+	
+	private MatchOperation(AggregationExpression expression) {
+		
+		Assert.notNull(expression, "Expression must not be null!");
+		this.criteriaDefinition = null;
+		this.expression = expression;
+	}
+	
+	
 
 	/*
 	 * (non-Javadoc)
@@ -54,6 +69,9 @@ public class MatchOperation implements AggregationOperation {
 	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
+		if(expression != null) {
+			return new Document(getOperator(), expression.toDocument());
+		}
 		return new Document(getOperator(), context.getMappedObject(criteriaDefinition.getCriteriaObject()));
 	}
 
@@ -64,5 +82,21 @@ public class MatchOperation implements AggregationOperation {
 	@Override
 	public String getOperator() {
 		return "$match";
+	}
+	
+	public MatchOperation stdDevPop(String fieldReference) {
+		return new MatchOperation(EvaluationOperators.valueOf(AccumulatorOperators.valueOf(fieldReference).stdDevPop()).expr());
+	}
+	
+	public MatchOperation stdDevPop(AggregationExpression expression) {
+		return new MatchOperation(EvaluationOperators.valueOf(AccumulatorOperators.valueOf(expression).stdDevPop()).expr());
+	}
+	
+	public MatchOperation stdDevSamp(String fieldReference) {
+		return new MatchOperation(EvaluationOperators.valueOf(AccumulatorOperators.valueOf(fieldReference).stdDevSamp()).expr());
+	}
+	
+	public MatchOperation stdDevSamp(AggregationExpression expression) {
+		return new MatchOperation(EvaluationOperators.valueOf(AccumulatorOperators.valueOf(expression).stdDevSamp()).expr());
 	}
 }

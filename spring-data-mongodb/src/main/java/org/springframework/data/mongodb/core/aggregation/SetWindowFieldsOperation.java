@@ -755,6 +755,22 @@ public class SetWindowFieldsOperation
 				}
 			};
 		}
+		
+		public WindowChoice stdDevPop(String fieldReference) {
+			return output(AccumulatorOperators.valueOf(fieldReference).stdDevPop());
+		}
+		
+		public WindowChoice stdDevPop(AggregationExpression expression) {
+			return output(AccumulatorOperators.valueOf(expression).stdDevPop());
+		}
+		
+		public WindowChoice stdDevSamp(String fieldReference) {
+			return output(AccumulatorOperators.valueOf(fieldReference).stdDevSamp());
+		}
+		
+		public WindowChoice stdDevSamp(AggregationExpression expression) {
+			return output(AccumulatorOperators.valueOf(expression).stdDevSamp());
+		}
 
 		/**
 		 * Interface to capture field name used to capture the computation result.

@@ -133,6 +133,30 @@ public class AggregationUnitTests {
 				.doesNotContainKey("$unwind.includeArrayIndex") //
 				.containsEntry("$unwind.preserveNullAndEmptyArrays", true);
 	}
+	
+	@Test
+	void addFieldsOperationWithStdDevPopShouldBuildCorrectly() {
+		Document agg = newAggregation( //
+				addFields().addField("totalQuiz").stdDevPop("quiz").build()) //
+						.toDocument("foo",Aggregation.DEFAULT_CONTEXT);
+		@SuppressWarnings("unchecked")
+		Document addField = ((List<Document>) agg.get("pipeline")).get(0);
+		assertThat(addField).
+			isEqualTo(Document.parse("{ \"$addFields\" : { \"totalQuiz\" : { \"$stdDevPop\" : \"$quiz\" }}}"));
+	}
+	
+	@Test
+	void addFieldsOperationWithStdDevSampShouldBuildCorrectly() {
+		Document agg = newAggregation( //
+				addFields().addField("totalQuiz").stdDevSamp("quiz").build()) //
+						.toDocument("foo",Aggregation.DEFAULT_CONTEXT);
+		@SuppressWarnings("unchecked")
+		Document addField = ((List<Document>) agg.get("pipeline")).get(0);
+		assertThat(addField).
+			isEqualTo(Document.parse("{ \"$addFields\" : { \"totalQuiz\" : { \"$stdDevSamp\" : \"$quiz\" }}}"));
+	}
+
+	
 
 	@Test // DATAMONGO-1550
 	void replaceRootOperationShouldBuildCorrectClause() {

@@ -86,6 +86,34 @@ class SetWindowFieldsOperationUnitTests {
 		assertThat(document).isEqualTo(Document.parse(
 				"{ $setWindowFields: { output: { f1 : { $sum: \"$quantity\", window: { documents: [ \"unbounded\", \"current\" ] } }, f2 : { $avg: \"$quantity\", window: { documents: [ -1, 0 ] } } } } }"));
 	}
+	
+	@Test // GH-3711
+	void rendersOutputFieldsWithStdDevPopOperator() {
+
+		SetWindowFieldsOperation setWindowFieldsOperation = SetWindowFieldsOperation.builder() //
+				.stdDevPop("qty") 
+				.within(Windows.documents().fromUnbounded().toCurrent().build()) //
+				.as("f1") //
+				.build(); //
+
+		Document document = setWindowFieldsOperation.toDocument(contextFor(CakeSale.class));
+		assertThat(document).isEqualTo(Document.parse(
+				"{ $setWindowFields: { output: { f1 : { $stdDevPop: \"$quantity\", window: { documents: [ \"unbounded\", \"current\" ] } } } } }"));
+	}
+	
+	@Test // GH-3711
+	void rendersOutputFieldsWithStdDevSampOperator() {
+
+		SetWindowFieldsOperation setWindowFieldsOperation = SetWindowFieldsOperation.builder() //
+				.stdDevSamp("qty") 
+				.within(Windows.documents().fromUnbounded().toCurrent().build()) //
+				.as("f1") //
+				.build(); //
+
+		Document document = setWindowFieldsOperation.toDocument(contextFor(CakeSale.class));
+		assertThat(document).isEqualTo(Document.parse(
+				"{ $setWindowFields: { output: { f1 : { $stdDevSamp: \"$quantity\", window: { documents: [ \"unbounded\", \"current\" ] } } } } }"));
+	}
 
 	private static AggregationOperationContext contextFor(@Nullable Class<?> type) {
 

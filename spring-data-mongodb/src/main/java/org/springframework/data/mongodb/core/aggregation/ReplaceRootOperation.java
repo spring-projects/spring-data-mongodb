@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.bson.Document;
+import org.springframework.data.mongodb.core.aggregation.AddFieldsOperation.AddFieldsOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.ExposedField;
 import org.springframework.expression.spel.ast.Projection;
 import org.springframework.util.Assert;
@@ -112,7 +113,8 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 	protected Replacement getReplacement() {
 		return replacement;
 	}
-
+	
+	
 	/**
 	 * Builder for {@link ReplaceRootOperation}.
 	 *
@@ -165,6 +167,23 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 
 			return new ReplaceRootDocumentOperation().andValuesOf(document);
 		}
+		
+		public ReplaceRootOperation stdDevPop(String fieldRef) {
+			return new ReplaceRootOperation(AccumulatorOperators.valueOf(fieldRef).stdDevPop());
+		}
+		
+		public ReplaceRootOperation stdDevPop(AggregationExpression expression) {
+			return new ReplaceRootOperation(AccumulatorOperators.valueOf(expression).stdDevPop());
+		}
+		
+		public ReplaceRootOperation stdDevSamp(String fieldRef) {
+			return new ReplaceRootOperation(AccumulatorOperators.valueOf(fieldRef).stdDevSamp());
+		}
+		
+		public ReplaceRootOperation stdDevSamp(AggregationExpression expression) {
+			return new ReplaceRootOperation(AccumulatorOperators.valueOf(expression).stdDevSamp());
+		}
+
 	}
 
 	/**

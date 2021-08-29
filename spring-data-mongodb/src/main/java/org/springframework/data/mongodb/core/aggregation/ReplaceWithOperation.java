@@ -92,4 +92,21 @@ public class ReplaceWithOperation extends ReplaceRootOperation {
 	public Document toDocument(AggregationOperationContext context) {
 		return context.getMappedObject(new Document("$replaceWith", getReplacement().toDocumentExpression(context)));
 	}
+	
+	
+	public static ReplaceWithOperation stdDevPop(String fieldRef) {
+		return replaceWithValueOf(AccumulatorOperators.valueOf(fieldRef).stdDevPop());
+	}
+	
+	public static ReplaceWithOperation stdDevPop(AggregationExpression expression) {
+		return replaceWithValueOf(AccumulatorOperators.valueOf(expression).stdDevPop());
+	}
+	
+	public static ReplaceWithOperation stdDevSamp(String fieldRef) {
+		return replaceWithValueOf(AccumulatorOperators.valueOf(fieldRef).stdDevSamp());
+	}
+	
+	public static ReplaceWithOperation stdDevSamp(AggregationExpression expression) {
+		return replaceWithValueOf(AccumulatorOperators.valueOf(expression).stdDevSamp());
+	}
 }
