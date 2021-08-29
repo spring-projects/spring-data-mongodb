@@ -166,6 +166,28 @@ class ArithmeticOperatorsUnitTests {
 		assertThat(valueOf("angle").tanh(AngularUnit.DEGREES).toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo("{ $tanh : { $degreesToRadians : \"$angle\" } }");
 	}
+	
+	@Test // DATAMONGO - 3709
+	void rendersATan() {
+		
+		assertThat(valueOf("field").atan().toDocument(Aggregation.DEFAULT_CONTEXT))
+		.isEqualTo("{ $atan : \"$field\" }");
+	}
+	
+	@Test // DATAMONGO - 3709
+	void rendersATan2() {
+		
+		assertThat(valueOf("field1").atan2("field2").toDocument(Aggregation.DEFAULT_CONTEXT))
+		.isEqualTo("{ $atan2 : [ \"$field1\" , \"$field2\" ] }");
+	}
+	
+	@Test // DATAMONGO - 3709
+	void rendersATanh() {
+		
+		assertThat(valueOf("field").atanh().toDocument(Aggregation.DEFAULT_CONTEXT))
+		.isEqualTo("{ $atanh : \"$field\" }");
+	}
+
 
 	@Test // GH-3724
 	void rendersRand() {

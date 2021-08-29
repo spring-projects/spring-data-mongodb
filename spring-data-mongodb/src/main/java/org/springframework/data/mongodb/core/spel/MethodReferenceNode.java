@@ -100,6 +100,9 @@ public class MethodReferenceNode extends ExpressionNode {
 		map.put("tan", singleArgRef().forOperator("$tan"));
 		map.put("tanh", singleArgRef().forOperator("$tanh"));
 		map.put("rand", emptyRef().forOperator("$rand"));
+		map.put("atan", singleArgRef().forOperator("$atan"));
+		map.put("atan2", arrayArgRef().forOperator("$atan2"));
+		map.put("atanh", singleArgRef().forOperator("$atanh"));
 
 		// STRING OPERATORS
 		map.put("concat", arrayArgRef().forOperator("$concat"));

@@ -790,6 +790,68 @@ public class ArithmeticOperators {
 		public Tan tan() {
 			return tan(AngularUnit.RADIANS);
 		}
+		
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the inverse tangent of a numeric value.
+		 *
+		 * @return new instance of {@link ATan}.
+		 */
+		public ATan atan() {
+			return usesFieldRef() ? ATan.atanOf(fieldReference) : ATan.atanOf(expression);
+		}
+		
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the inverse tangent of the the numeric value 
+		 * divided by the given numeric value in the argument.
+		 *
+		 * @param the numeric value 
+		 * @return new instance of {@link ATan2}.
+		 */
+		public ATan2 atan2(Number value) {
+			
+			Assert.notNull(value, "Value must not be null!");
+			return createATan2().atan2of(value);
+		}
+		
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the inverse tangent of the the numeric value 
+		 * divided by the given field reference in the argument.
+		 *
+		 * @param the numeric value 
+		 * @return new instance of {@link ATan2}.
+		 */
+		public ATan2 atan2(String fieldReference) {
+			
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return createATan2().atan2of(fieldReference);
+		}
+		
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the inverse tangent of the the numeric value 
+		 * divided by the given {@link AggregationExpression} in the argument.
+		 *
+		 * @param the numeric value 
+		 * @return new instance of {@link ATan2}.
+		 */
+		public ATan2 atan2(AggregationExpression expression) {
+			
+			Assert.notNull(expression, "Expression must not be null!");
+			return createATan2().atan2of(expression);
+		}
+		
+		private ATan2 createATan2() {
+			
+			return usesFieldRef() ? ATan2.valueOf(fieldReference) : ATan2.valueOf(expression);
+		}
+		
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the inverse hyperbolic tangent of a numeric value.
+		 *
+		 * @return new instance of {@link ATanh}.
+		 */
+		public ATanh atanh() {
+			return usesFieldRef() ? ATanh.atanhOf(fieldReference) : ATanh.atanhOf(expression);
+		}
 
 		/**
 		 * Creates new {@link AggregationExpression} that calculates the tangent of a numeric value in the given
@@ -2579,6 +2641,148 @@ public class ArithmeticOperators {
 			return "$tan";
 		}
 	}
+	
+	
+	/**
+	 * An {@link AggregationExpression expression} that calculates the inverse tangent of a value.
+	 *
+	 */
+	public static class ATan extends AbstractAggregationExpression {
+
+		private ATan(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse tangent of a value.
+		 *
+		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
+		 * @return new instance of {@link ATan}.
+		 */
+		public static ATan atanOf(String fieldReference) {
+			
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new ATan(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse tangent of a value.
+		 * <p />
+		 *
+		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
+		 * @return new instance of {@link ATan}.
+		 */
+		public static ATan atanOf(AggregationExpression expression) {
+			return new ATan(expression);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse tangent of a value.
+		 *
+		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
+		 *          numeric value.
+		 * @return new instance of {@link ATan}.
+		 */
+		public static ATan atanof(Number value) {
+			return new ATan(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$atan";
+		}
+	}
+	
+	/**
+	 * An {@link AggregationExpression expression} that calculates the inverse
+	 * tangent of y / x, where y and x are the first and second values passed to the
+	 * expression respectively.
+	 *
+	 */
+	public static class ATan2 extends AbstractAggregationExpression {
+	
+		private ATan2(List<?> value) {
+			super(value);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse
+		 * tangent of of y / x, where y and x are the first and second values passed to
+		 * the expression respectively.
+		 * 
+		 * @param fieldReference the name of the {@link Field field} that resolves to a
+		 *                       numeric value.
+		 * @return new instance of {@link ATan2}.
+		 */
+		public static ATan2 valueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new ATan2(asFields(fieldReference));
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse
+		 * tangent of of y / x, where y and x are the first and second values passed to
+		 * the expression respectively.
+		 * 
+		 * @param expression the {@link AggregationExpression expression} that resolves
+		 *                   to a numeric value.
+		 * @return new instance of {@link ATan2}.
+		 */
+		public static ATan2 valueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new ATan2((Collections.singletonList(expression)));
+		}
+
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse
+		 * tangent of of y / x, where y and x are the first and second values passed to
+		 * the expression respectively.
+		 * 
+		 * @param value anything ({@link Field field}, {@link AggregationExpression
+		 *              expression}, ...) that resolves to a numeric value.
+		 * @return new instance of {@link ATan2}.
+		 */
+		public ATan2 atan2of(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new ATan2(append(Fields.field(fieldReference)));
+		}
+		
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic tangent of a value that is measured in
+		 * {@link AngularUnit#RADIANS}.
+		 *
+		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
+		 *          numeric value.
+		 * @return new instance of {@link ATan2}.
+		 */
+		public ATan2 atan2of(AggregationExpression expression) {
+			
+			Assert.notNull(expression, "Expression must not be null!");
+			return new ATan2(append(expression));
+		}
+		
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse
+		 * tangent of of y / x, where y and x are the first and second values passed to
+		 * the expression respectively.
+		 * 
+		 * @param value of type {@link Number}
+		 * @return new instance of {@link ATan2}.
+		 */
+		public ATan2 atan2of(Number value) {
+			
+			return new ATan2(append(value));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$atan2";
+		}
+	}
 
 	/**
 	 * An {@link AggregationExpression expression} that calculates the hyperbolic tangent of a value that is measured in
@@ -2682,6 +2886,60 @@ public class ArithmeticOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$tanh";
+		}
+	}
+	
+	/**
+	 * An {@link AggregationExpression expression} that calculates the inverse
+	 * hyperbolic tangent of a value
+	 *
+	 */
+	public static class ATanh extends AbstractAggregationExpression {
+
+		private ATanh(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse
+		 * hyperbolic tangent of a value.
+		 *
+		 * @param fieldReference the name of the {@link Field field} that resolves to a
+		 *                       numeric value.
+		 * @return new instance of {@link ATanh}.
+		 */
+		public static ATanh atanhOf(String fieldReference) {
+			return new ATanh(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse
+		 * hyperbolic tangent of a value.
+		 * <p />
+		 * 
+		 * @param expression the {@link AggregationExpression expression} that resolves
+		 *                   to a numeric value.
+		 * @return new instance of {@link ATanh}.
+		 */
+		public static ATanh atanhOf(AggregationExpression expression) {
+			return new ATanh(expression);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse
+		 * hyperbolic tangent of a value.
+		 *
+		 * @param value anything ({@link Field field}, {@link AggregationExpression
+		 *              expression}, ...) that resolves to a numeric value.
+		 * @return new instance of {@link ATanh}.
+		 */
+		public static ATanh atanhof(Object value) {
+			return new ATanh(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$atanh";
 		}
 	}
 
