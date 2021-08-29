@@ -83,7 +83,16 @@ class DocumentPointerFactory {
 				.getRequiredPersistentEntity(property.getAssociationTargetType());
 
 		if (usesDefaultLookup(property)) {
-			return () -> persistentEntity.getIdentifierAccessor(value).getIdentifier();
+
+			MongoPersistentProperty idProperty = persistentEntity.getIdProperty();
+			Object idValue = persistentEntity.getIdentifierAccessor(value).getIdentifier();
+
+			if (idProperty.hasExplicitWriteTarget()
+					&& conversionService.canConvert(idValue.getClass(), idProperty.getFieldType())) {
+				return () -> conversionService.convert(idValue, idProperty.getFieldType());
+			}
+
+			return () -> idValue;
 		}
 
 		MongoPersistentEntity<?> valueEntity = mappingContext.getPersistentEntity(value.getClass());
