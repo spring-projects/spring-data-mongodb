@@ -17,6 +17,8 @@ package org.springframework.data.mongodb.util;
 
 import java.util.regex.Pattern;
 
+import org.springframework.lang.Nullable;
+
 /**
  * Utility to translate {@link Pattern#flags() regex flags} to MongoDB regex options and vice versa.
  *
@@ -78,9 +80,13 @@ public abstract class RegexFlags {
 	 * @return zero if given {@link String} is {@literal null} or empty.
 	 * @since 2.2
 	 */
-	public static int toRegexFlags(String s) {
+	public static int toRegexFlags(@Nullable String s) {
 
 		int flags = 0;
+
+		if (s == null) {
+			return flags;
+		}
 
 		for (char f : s.toLowerCase().toCharArray()) {
 			flags |= toRegexFlag(f);
