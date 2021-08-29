@@ -106,7 +106,7 @@ class SetOperationUnitTests {
 						.containsExactly(Document.parse("{\"$set\" : {\"totalHomework\": { \"$sum\" : \"$homework\" }}}"));
 	}
 	
-	@Test
+	@Test // DATAMONGO - 3729
 	void rendersStdDevPopCorrectly() {
 		assertThat(SetOperation.builder().set("totalQuiz").stdDevPop("quiz")
 		.toPipelineStages(contextFor(ScoresWrapper.class)))
@@ -114,7 +114,7 @@ class SetOperationUnitTests {
 							"{\"$set\" : {\"totalQuiz\": { \"$stdDevPop\" : \"$quiz\" } }}"));
 	}
 	
-	@Test
+	@Test // DATAMONGO - 3729
 	void rendersStdDevSampCorrectly() {
 		assertThat(SetOperation.builder().set("totalQuiz").stdDevSamp("quiz")
 		.toPipelineStages(contextFor(ScoresWrapper.class)))

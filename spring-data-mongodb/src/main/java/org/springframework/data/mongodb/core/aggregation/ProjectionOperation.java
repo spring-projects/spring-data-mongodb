@@ -1310,7 +1310,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		/**
 		 * Generates a {@code $stdDevPop} expression that takes the string representation of the previously mentioned field
 		 *
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		public ProjectionOperationBuilder stdDevPop() {
 			return this.operation.and(AccumulatorOperators.StdDevPop.stdDevPopOf(getRequiredName()));			
@@ -1319,7 +1319,7 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		/**
 		 * Generates a {@code $stdDevPop} expression that takes the string representation of the previously mentioned field
 		 *
-		 * @return
+		 * @return never {@literal null}.
 		 */
 		public ProjectionOperationBuilder stdDevSamp() {
 			return this.operation.and(AccumulatorOperators.StdDevSamp.stdDevSampOf(getRequiredName()));				

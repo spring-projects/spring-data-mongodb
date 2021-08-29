@@ -38,6 +38,9 @@ public class MatchOperation implements AggregationOperation {
 	private final CriteriaDefinition criteriaDefinition;
 	private final AggregationExpression expression;
 	
+	/**
+	 * Creates a new {@link MatchOperation}
+	 */
 	public MatchOperation() {
 		this.criteriaDefinition = null;
 		this.expression = null;
@@ -54,6 +57,11 @@ public class MatchOperation implements AggregationOperation {
 		this.expression = null;
 	}
 	
+	/**
+	 * Creates a new {@link MatchOperation} for the given {@link AggregationExpression}.
+	 *
+	 * @param expression must not be {@literal null}.
+	 */
 	private MatchOperation(AggregationExpression expression) {
 		
 		Assert.notNull(expression, "Expression must not be null!");
@@ -84,18 +92,42 @@ public class MatchOperation implements AggregationOperation {
 		return "$match";
 	}
 	
+	/**
+	 * Creates a new {@link MatchOperation} with the {@code stdDevPop} of the given fieldReference.
+	 * 
+	 *  @param fieldReference must not be {@literal null}.
+	 *  @return new instance of {@link MatchOperation}
+	 */
 	public MatchOperation stdDevPop(String fieldReference) {
 		return new MatchOperation(EvaluationOperators.valueOf(AccumulatorOperators.valueOf(fieldReference).stdDevPop()).expr());
 	}
 	
+	/**
+	 * Creates a new {@link MatchOperation} with the {@code stdDevPop} of the given {@link AggregationExpression}.
+	 * 
+	 *  @param expression must not be {@literal null}.
+	 *  @return new instance of {@link MatchOperation}
+	 */
 	public MatchOperation stdDevPop(AggregationExpression expression) {
 		return new MatchOperation(EvaluationOperators.valueOf(AccumulatorOperators.valueOf(expression).stdDevPop()).expr());
 	}
 	
+	/**
+	 * Creates a new {@link MatchOperation} with the {@code stdDevSamp} of the given fieldReference.
+	 * 
+	 *  @param fieldReference must not be {@literal null}.
+	 *  @return new instance of {@link MatchOperation}
+	 */
 	public MatchOperation stdDevSamp(String fieldReference) {
 		return new MatchOperation(EvaluationOperators.valueOf(AccumulatorOperators.valueOf(fieldReference).stdDevSamp()).expr());
 	}
 	
+	/**
+	 * Creates a new {@link MatchOperation} with the {@code stdDevSamp} of the given {@link AggregationExpression}.
+	 * 
+	 *  @param expression must not be {@literal null}.
+	 *  @return new instance of {@link MatchOperation}
+	 */
 	public MatchOperation stdDevSamp(AggregationExpression expression) {
 		return new MatchOperation(EvaluationOperators.valueOf(AccumulatorOperators.valueOf(expression).stdDevSamp()).expr());
 	}

@@ -134,7 +134,7 @@ public class AggregationUnitTests {
 				.containsEntry("$unwind.preserveNullAndEmptyArrays", true);
 	}
 	
-	@Test
+	@Test // DATAMONGO - 3729
 	void addFieldsOperationWithStdDevPopShouldBuildCorrectly() {
 		Document agg = newAggregation( //
 				addFields().addField("totalQuiz").stdDevPop("quiz").build()) //
@@ -145,7 +145,7 @@ public class AggregationUnitTests {
 			isEqualTo(Document.parse("{ \"$addFields\" : { \"totalQuiz\" : { \"$stdDevPop\" : \"$quiz\" }}}"));
 	}
 	
-	@Test
+	@Test // DATAMONGO - 3729
 	void addFieldsOperationWithStdDevSampShouldBuildCorrectly() {
 		Document agg = newAggregation( //
 				addFields().addField("totalQuiz").stdDevSamp("quiz").build()) //
@@ -169,7 +169,31 @@ public class AggregationUnitTests {
 		Document unwind = ((List<Document>) agg.get("pipeline")).get(0);
 		assertThat(unwind).containsEntry("$replaceRoot.newRoot", new Document("field", "value"));
 	}
-
+	
+	@Test // DATAMONGO - 3729
+	void replaceRootOperationWithStdDevPopShouldBuildCorrectly() {
+		Document agg = newAggregation( 
+						replaceRoot().stdDevPop("quiz"))
+						.toDocument("foo", Aggregation.DEFAULT_CONTEXT);
+		
+		@SuppressWarnings("unchecked")
+		Document addField = ((List<Document>) agg.get("pipeline")).get(0);
+		assertThat(addField).
+			isEqualTo(Document.parse("{ \"$replaceRoot\" : { \"newRoot\" : { \"$stdDevPop\" : \"$quiz\" }}}"));
+	}
+	
+	@Test // DATAMONGO - 3729
+	void replaceRootOperationWithStdDevSampShouldBuildCorrectly() {
+		Document agg = newAggregation( 
+				replaceRoot().stdDevSamp("quiz"))
+				.toDocument("foo", Aggregation.DEFAULT_CONTEXT);
+		
+		@SuppressWarnings("unchecked")
+		Document addField = ((List<Document>) agg.get("pipeline")).get(0);
+		assertThat(addField).
+			isEqualTo(Document.parse("{ \"$replaceRoot\" : { \"newRoot\" : { \"$stdDevSamp\" : \"$quiz\" }}}"));
+	}
+	
 	@Test // DATAMONGO-753
 	void matchOperationShouldNotChangeAvailableFields() {
 
@@ -178,6 +202,28 @@ public class AggregationUnitTests {
 				match(where("a").gte(1)), //
 				project("a", "b") // b should still be available
 		).toDocument("foo", Aggregation.DEFAULT_CONTEXT);
+	}
+	
+	@Test // DATAMONGO - 3729
+	void matchOperationWithStdDevPopShouldBuildCorrectly() {
+		Document agg = newAggregation( 
+						match().stdDevPop("quiz")) 
+						.toDocument("foo",Aggregation.DEFAULT_CONTEXT);
+		@SuppressWarnings("unchecked")
+		Document addField = ((List<Document>) agg.get("pipeline")).get(0);
+		assertThat(addField).
+			isEqualTo(Document.parse("{ \"$match\" : { \"$expr\" : { \"$stdDevPop\" : \"$quiz\" }}}"));
+	}
+	
+	@Test // DATAMONGO - 3729
+	void matchOperationWithStdDevSampShouldBuildCorrectly() {
+		Document agg = newAggregation( 
+						match().stdDevSamp("quiz")) 
+						.toDocument("foo",Aggregation.DEFAULT_CONTEXT);
+		@SuppressWarnings("unchecked")
+		Document addField = ((List<Document>) agg.get("pipeline")).get(0);
+		assertThat(addField).
+			isEqualTo(Document.parse("{ \"$match\" : { \"$expr\" : { \"$stdDevSamp\" : \"$quiz\" }}}"));
 	}
 
 	@Test // DATAMONGO-788
@@ -621,7 +667,31 @@ public class AggregationUnitTests {
 
 		assertThat(extractPipelineElement(target, 1, "$project")).isEqualTo(Document.parse(" { \"_id\" : \"$_id\" }"));
 	}
-
+	
+	@Test // DATAMONGO - 3729
+	void projectOperationWithStdDevPopShouldBuildCorrectly() {
+		Document agg = newAggregation( 
+						project().and("quiz").stdDevPop().as("totalQuiz"))
+						.toDocument("foo", Aggregation.DEFAULT_CONTEXT);
+		
+		@SuppressWarnings("unchecked")
+		Document addField = ((List<Document>) agg.get("pipeline")).get(0);
+		assertThat(addField).
+			isEqualTo(Document.parse("{ \"$project\" : { \"totalQuiz\" : { \"$stdDevPop\" : \"$quiz\" }}}"));
+	}
+	
+	@Test // DATAMONGO - 3729
+	void projectOperationWithStdDevSampShouldBuildCorrectly() {
+		Document agg = newAggregation( 
+				project().and("quiz").stdDevSamp().as("totalQuiz"))
+				.toDocument("foo", Aggregation.DEFAULT_CONTEXT);
+		
+		@SuppressWarnings("unchecked")
+		Document addField = ((List<Document>) agg.get("pipeline")).get(0);
+		assertThat(addField).
+			isEqualTo(Document.parse("{ \"$project\" : { \"totalQuiz\" : { \"$stdDevSamp\" : \"$quiz\" }}}"));
+	}
+	
 	private Document extractPipelineElement(Document agg, int index, String operation) {
 
 		List<Document> pipeline = (List<Document>) agg.get("pipeline");

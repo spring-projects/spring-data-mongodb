@@ -171,18 +171,22 @@ public class AddFieldsOperation extends DocumentEnhancingOperation {
 					return AddFieldsOperationBuilder.this;
 				}
 				
+				@Override
 				public AddFieldsOperationBuilder stdDevPop(String fieldRef) {
 					return withValueOf(AccumulatorOperators.valueOf(fieldRef).stdDevPop());
 				}
 				
+				@Override
 				public AddFieldsOperationBuilder stdDevPop(AggregationExpression expression) {
 					return withValueOf(AccumulatorOperators.valueOf(expression).stdDevPop());
 				}
 				
+				@Override
 				public AddFieldsOperationBuilder stdDevSamp(String fieldRef) {
 					return withValueOf(AccumulatorOperators.valueOf(fieldRef).stdDevSamp());
 				}
 				
+				@Override
 				public AddFieldsOperationBuilder stdDevSamp(AggregationExpression expression) {
 					return withValueOf(AccumulatorOperators.valueOf(expression).stdDevSamp());
 				}
@@ -225,18 +229,38 @@ public class AddFieldsOperation extends DocumentEnhancingOperation {
 			 */
 			AddFieldsOperationBuilder withValueOfExpression(String operation, Object... values);
 			
-			AddFieldsOperationBuilder stdDevPop(String fieldRef);
+			/**
+			 * Adds the field with the value of {@code $stdDevPop} of the given field reference.  
+			 *
+			 * @param fieldRef must not be {@literal null}.
+			 * @return new instance of {@link AddFieldsOperationBuilder}.
+			 */
+			AddFieldsOperationBuilder stdDevPop(String AddFieldsOperationBuilder);
 			
+			/**
+			 * Adds the field with the value of {@code $stdDevPop} of the given {@link AggregationExpression}..  
+			 *
+			 * @param fieldRef must not be {@literal null}.
+			 * @return new instance of {@link AddFieldsOperationBuilder}.
+			 */
 			AddFieldsOperationBuilder stdDevPop(AggregationExpression expression);
 			
+			/**
+			 * Adds the field with the value of {@code $stdDevSamp} of the given field reference.  
+			 *
+			 * @param fieldRef must not be {@literal null}.
+			 * @return new instance of {@link AddFieldsOperationBuilder}.
+			 */
 			AddFieldsOperationBuilder stdDevSamp(String fieldRef);
 			
+			/**
+			 * Adds the field with the value of {@code $stdDevSamp} of the given {@link AggregationExpression}..  
+			 *
+			 * @param fieldRef must not be {@literal null}.
+			 * @return new instance of {@link AddFieldsOperationBuilder}.
+			 */
 			AddFieldsOperationBuilder stdDevSamp(AggregationExpression expression);
-			
-
 		}
-		
-		
 	}
 	
 	

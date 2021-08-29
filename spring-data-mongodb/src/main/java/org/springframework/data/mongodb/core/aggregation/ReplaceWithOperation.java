@@ -93,19 +93,42 @@ public class ReplaceWithOperation extends ReplaceRootOperation {
 		return context.getMappedObject(new Document("$replaceWith", getReplacement().toDocumentExpression(context)));
 	}
 	
-	
+	/**
+	 * Generates a new {@link ReplaceWithOperation} with the {@code stdDevPop} of the given field reference.
+	 * 
+	 * @param fieldRef must not be {@literal null}
+	 * @return the final {@link ReplaceWithOperation}.
+	 */
 	public static ReplaceWithOperation stdDevPop(String fieldRef) {
 		return replaceWithValueOf(AccumulatorOperators.valueOf(fieldRef).stdDevPop());
 	}
 	
+	/**
+	 * Generates a new {@link ReplaceWithOperation} with the {@code stdDevPop} of the given {@link AggregationExpression}.
+	 * 
+	 * @param expression must not be {@literal null}
+	 * @return the final {@link ReplaceWithOperation}.
+	 */
 	public static ReplaceWithOperation stdDevPop(AggregationExpression expression) {
 		return replaceWithValueOf(AccumulatorOperators.valueOf(expression).stdDevPop());
 	}
 	
+	/**
+	 * Generates a new {@link ReplaceWithOperation} with the {@code stdDevSamp} of the given field reference.
+	 * 
+	 * @param fieldRef must not be {@literal null}
+	 * @return the final {@link ReplaceWithOperation}.
+	 */
 	public static ReplaceWithOperation stdDevSamp(String fieldRef) {
 		return replaceWithValueOf(AccumulatorOperators.valueOf(fieldRef).stdDevSamp());
 	}
 	
+	/**
+	 * Generates a new {@link ReplaceWithOperation} with the {@code stdDevSamp} of the given {@link AggregationExpression}.
+	 * 
+	 * @param expression must not be {@literal null}
+	 * @return the final {@link ReplaceWithOperation}.
+	 */
 	public static ReplaceWithOperation stdDevSamp(AggregationExpression expression) {
 		return replaceWithValueOf(AccumulatorOperators.valueOf(expression).stdDevSamp());
 	}

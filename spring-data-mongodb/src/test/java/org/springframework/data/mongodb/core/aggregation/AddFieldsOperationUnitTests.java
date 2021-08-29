@@ -127,7 +127,7 @@ class AddFieldsOperationUnitTests {
 		assertThat(fields.getField("does-not-exist")).isNull();
 	}
 	
-	@Test
+	@Test // DATAMONGO - 3729
 	void rendersStdDevPopCorrectly() {
 		assertThat(AddFieldsOperation.builder().addField("totalQuiz").stdDevPop("quiz").build()
 		.toPipelineStages(contextFor(ScoresWrapper.class)))
@@ -135,7 +135,7 @@ class AddFieldsOperationUnitTests {
 							"{\"$addFields\" : {\"totalQuiz\": { \"$stdDevPop\" : \"$quiz\" } }}"));
 	}
 	
-	@Test
+	@Test // DATAMONGO - 3729
 	void rendersStdDevSampCorrectly() {
 		assertThat(AddFieldsOperation.builder().addField("totalQuiz").stdDevSamp("quiz").build()
 		.toPipelineStages(contextFor(ScoresWrapper.class)))

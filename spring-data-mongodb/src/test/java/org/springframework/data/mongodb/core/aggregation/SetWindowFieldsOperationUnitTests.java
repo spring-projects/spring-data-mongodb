@@ -87,7 +87,7 @@ class SetWindowFieldsOperationUnitTests {
 				"{ $setWindowFields: { output: { f1 : { $sum: \"$quantity\", window: { documents: [ \"unbounded\", \"current\" ] } }, f2 : { $avg: \"$quantity\", window: { documents: [ -1, 0 ] } } } } }"));
 	}
 	
-	@Test // GH-3711
+	@Test // DATAMONGO - 3729
 	void rendersOutputFieldsWithStdDevPopOperator() {
 
 		SetWindowFieldsOperation setWindowFieldsOperation = SetWindowFieldsOperation.builder() //
@@ -101,7 +101,7 @@ class SetWindowFieldsOperationUnitTests {
 				"{ $setWindowFields: { output: { f1 : { $stdDevPop: \"$quantity\", window: { documents: [ \"unbounded\", \"current\" ] } } } } }"));
 	}
 	
-	@Test // GH-3711
+	@Test // DATAMONGO - 3729
 	void rendersOutputFieldsWithStdDevSampOperator() {
 
 		SetWindowFieldsOperation setWindowFieldsOperation = SetWindowFieldsOperation.builder() //

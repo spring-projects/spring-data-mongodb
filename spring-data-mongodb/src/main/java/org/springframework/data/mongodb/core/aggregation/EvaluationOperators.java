@@ -10,7 +10,7 @@ public class EvaluationOperators {
 	 * Take the value resulting from the given {@link AggregationExpression}.
 	 *
 	 * @param expression must not be {@literal null}.
-	 * @return new instance of {@link ArithmeticOperatorFactory}.
+	 * @return new instance of {@link EvaluationOperatorFactory}.
 	 */
 	public static EvaluationOperatorFactory valueOf(AggregationExpression expression) {
 		return new EvaluationOperatorFactory(expression);
@@ -47,7 +47,7 @@ public class EvaluationOperators {
 		}
 		
 		/**
-		 * Creates new {@link AggregationExpression} that returns the absolute value of the associated number.
+		 * Creates new {@link AggregationExpression} that is a valid aggregation expression.
 		 *
 		 * @return new instance of {@link Expr}.
 		 */
@@ -80,10 +80,10 @@ public class EvaluationOperators {
 			}
 
 			/**
-			 * Creates new {@link Abs}.
+			 * Creates new {@link Expr}.
 			 *
 			 * @param expression must not be {@literal null}.
-			 * @return new instance of {@link Abs}.
+			 * @return new instance of {@link Expr}.
 			 */
 			public static Expr valueOf(AggregationExpression expression) {
 

@@ -210,12 +210,36 @@ public class SetOperation extends DocumentEnhancingOperation {
 			 */
 			SetOperation withValueOfExpression(String operation, Object... values);
 			
+			/**
+			 * Generates a new {@link SetOperation} with the {@code stdDevPop} of the given field reference.
+			 * 
+			 * @param fieldRef must not be {@literal null}
+			 * @return the final {@link SetOperation}.
+			 */
 			SetOperation stdDevPop(String fieldRef);
 			
+			/**
+			 * Generates a new {@link SetOperation} with the {@code stdDevPop} of the given {@link AggregationExpression}.
+			 * 
+			 * @param expression must not be {@literal null}
+			 * @return the final {@link SetOperation}.
+			 */
 			SetOperation stdDevPop(AggregationExpression expression);
 			
+			/**
+			 * Generates a new {@link SetOperation} with the {@code stdDevSamp} of the given field reference.
+			 * 
+			 * @param fieldRef must not be {@literal null}
+			 * @return the final {@link SetOperation}.
+			 */
 			SetOperation stdDevSamp(String fieldRef);
-
+			
+			/**
+			 * Generates a new {@link SetOperation} with the {@code stdDevSamp} of the given {@link AggregationExpression}.
+			 * 
+			 * @param expression must not be {@literal null}
+			 * @return the final {@link SetOperation}.
+			 */
 			SetOperation stdDevSamp(AggregationExpression expression);
 		}
 		

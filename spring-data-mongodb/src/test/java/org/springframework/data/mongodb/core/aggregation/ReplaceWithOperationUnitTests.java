@@ -56,7 +56,7 @@ public class ReplaceWithOperationUnitTests {
 				+ "$map : { input : \"$array\" , as : \"element\" , in : { $multiply : [ \"$$element\" , 10]} } " + "} }"));
 	}
 	
-	@Test
+	@Test // DATAMONGO - 3729
 	void shouldRendersStdDevPopCorrectly() {
 		ReplaceWithOperation operation = ReplaceWithOperation.stdDevPop("quiz");
 		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -64,7 +64,7 @@ public class ReplaceWithOperationUnitTests {
 							"{\"$replaceWith\" : { \"$stdDevPop\" : \"$quiz\" } }"));
 	}
 	
-	@Test
+	@Test // DATAMONGO - 3729
 	void shouldRendersStdDevSampCorrectly() {
 		ReplaceWithOperation operation = ReplaceWithOperation.stdDevSamp("quiz");
 		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);

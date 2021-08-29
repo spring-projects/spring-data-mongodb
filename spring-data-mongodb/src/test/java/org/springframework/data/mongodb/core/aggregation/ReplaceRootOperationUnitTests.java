@@ -100,17 +100,17 @@ public class ReplaceRootOperationUnitTests {
 		assertThat(operation.getFields().exposesSingleFieldOnly()).isFalse();
 	}
 	
-	@Test
+	@Test // DATAMONGO - 3729
 	void shouldRendersStdDevPopCorrectly() {
-		ReplaceRootOperation operation = ReplaceRootDocumentOperation.builder().stdDevPop("quiz");
+		ReplaceRootOperation operation = ReplaceRootOperation.builder().stdDevPop("quiz");
 		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		assertThat(dbObject).isEqualTo(Document.parse(
 							"{\"$replaceRoot\" : {\"newRoot\": { \"$stdDevPop\" : \"$quiz\" } }}"));
 	}
 	
-	@Test
+	@Test // DATAMONGO - 3729
 	void shouldRendersStdDevSampCorrectly() {
-		ReplaceRootOperation operation = ReplaceRootDocumentOperation.builder().stdDevSamp("quiz");
+		ReplaceRootOperation operation = ReplaceRootOperation.builder().stdDevSamp("quiz");
 		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		assertThat(dbObject).isEqualTo(Document.parse(
 							"{\"$replaceRoot\" : {\"newRoot\": { \"$stdDevSamp\" : \"$quiz\" } }}"));
