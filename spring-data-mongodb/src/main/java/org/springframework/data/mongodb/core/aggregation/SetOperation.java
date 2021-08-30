@@ -155,22 +155,6 @@ public class SetOperation extends DocumentEnhancingOperation {
 					valueMap.put(field, new ExpressionProjection(operation, values));
 					return FieldAppender.this.build();
 				}
-				
-				public SetOperation stdDevPop(String fieldRef) {
-					return toValueOf(AccumulatorOperators.valueOf(fieldRef).stdDevPop());
-				}
-				
-				public SetOperation stdDevPop(AggregationExpression expression) {
-					return toValueOf(AccumulatorOperators.valueOf(expression).stdDevPop());
-				}
-				
-				public SetOperation stdDevSamp(String fieldRef) {
-					return toValueOf(AccumulatorOperators.valueOf(fieldRef).stdDevSamp());
-				}
-				
-				public SetOperation stdDevSamp(AggregationExpression expression) {
-					return toValueOf(AccumulatorOperators.valueOf(expression).stdDevSamp());
-				}
 			};
 		}
 
@@ -209,38 +193,6 @@ public class SetOperation extends DocumentEnhancingOperation {
 			 * @return new instance of {@link SetOperation}.
 			 */
 			SetOperation withValueOfExpression(String operation, Object... values);
-			
-			/**
-			 * Generates a new {@link SetOperation} with the {@code stdDevPop} of the given field reference.
-			 * 
-			 * @param fieldRef must not be {@literal null}
-			 * @return the final {@link SetOperation}.
-			 */
-			SetOperation stdDevPop(String fieldRef);
-			
-			/**
-			 * Generates a new {@link SetOperation} with the {@code stdDevPop} of the given {@link AggregationExpression}.
-			 * 
-			 * @param expression must not be {@literal null}
-			 * @return the final {@link SetOperation}.
-			 */
-			SetOperation stdDevPop(AggregationExpression expression);
-			
-			/**
-			 * Generates a new {@link SetOperation} with the {@code stdDevSamp} of the given field reference.
-			 * 
-			 * @param fieldRef must not be {@literal null}
-			 * @return the final {@link SetOperation}.
-			 */
-			SetOperation stdDevSamp(String fieldRef);
-			
-			/**
-			 * Generates a new {@link SetOperation} with the {@code stdDevSamp} of the given {@link AggregationExpression}.
-			 * 
-			 * @param expression must not be {@literal null}
-			 * @return the final {@link SetOperation}.
-			 */
-			SetOperation stdDevSamp(AggregationExpression expression);
 		}
 		
 		

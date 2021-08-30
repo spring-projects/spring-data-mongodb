@@ -1463,24 +1463,6 @@ public class ProjectionOperationUnitTests {
 		assertThat(agg).isEqualTo(Document.parse("{ $project: {  examMin: { $min: [ \"$final\", \"$midterm\" ] } } }"));
 	}
 
-	@Test // DATAMONGO-
-	public void shouldRenderStdDevPopExpressionCorrectly() {
-		
-		Document agg = new ProjectionOperation().and("scores").stdDevPop().as("stdDev")
-				.toDocument(Aggregation.DEFAULT_CONTEXT);
-
-		assertThat(agg).isEqualTo(Document.parse("{ $project: { stdDev: { $stdDevPop: \"$scores\"} } }"));
-	}
-	
-	@Test // DATAMONGO-
-	public void shouldRenderStdSampExpressionCorrectly() {
-		
-		Document agg = new ProjectionOperation().and("scores").stdDevSamp().as("stdDev")
-				.toDocument(Aggregation.DEFAULT_CONTEXT);
-
-		assertThat(agg).isEqualTo(Document.parse("{ $project: { stdDev: { $stdDevSamp: \"$scores\"} } }"));
-	}
-	
 	@Test // DATAMONGO-1536
 	public void shouldRenderStdDevPopAggregationExpression() {
 

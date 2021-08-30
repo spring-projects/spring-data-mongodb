@@ -91,7 +91,7 @@ class SetWindowFieldsOperationUnitTests {
 	void rendersOutputFieldsWithStdDevPopOperator() {
 
 		SetWindowFieldsOperation setWindowFieldsOperation = SetWindowFieldsOperation.builder() //
-				.stdDevPop("qty") 
+				.output(ArithmeticOperators.valueOf("qty").stdDevPop()) 
 				.within(Windows.documents().fromUnbounded().toCurrent().build()) //
 				.as("f1") //
 				.build(); //
@@ -105,7 +105,7 @@ class SetWindowFieldsOperationUnitTests {
 	void rendersOutputFieldsWithStdDevSampOperator() {
 
 		SetWindowFieldsOperation setWindowFieldsOperation = SetWindowFieldsOperation.builder() //
-				.stdDevSamp("qty") 
+				.output(ArithmeticOperators.valueOf("qty").stdDevSamp()) 
 				.within(Windows.documents().fromUnbounded().toCurrent().build()) //
 				.as("f1") //
 				.build(); //

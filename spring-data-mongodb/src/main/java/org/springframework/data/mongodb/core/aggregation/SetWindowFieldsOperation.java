@@ -755,46 +755,6 @@ public class SetWindowFieldsOperation
 				}
 			};
 		}
-		
-		/**
-		 * Generates a new {@link WindowChoice} with the {@code stdDevPop} of the given field reference.
-		 * 
-		 * @param fieldRef must not be {@literal null}
-		 * @return the final {@link WindowChoice}.
-		 */
-		public WindowChoice stdDevPop(String fieldReference) {
-			return output(AccumulatorOperators.valueOf(fieldReference).stdDevPop());
-		}
-		
-		/**
-		 * Generates a new {@link WindowChoice} with the {@code stdDevPop} of the given {@link AggregationExpression}.
-		 * 
-		 * @param expression must not be {@literal null}
-		 * @return the final {@link WindowChoice}.
-		 */
-		public WindowChoice stdDevPop(AggregationExpression expression) {
-			return output(AccumulatorOperators.valueOf(expression).stdDevPop());
-		}
-		
-		/**
-		 * Generates a new {@link WindowChoice} with the {@code stdDevSamp} of the given field reference.
-		 * 
-		 * @param fieldRef must not be {@literal null}
-		 * @return the final {@link WindowChoice}.
-		 */
-		public WindowChoice stdDevSamp(String fieldReference) {
-			return output(AccumulatorOperators.valueOf(fieldReference).stdDevSamp());
-		}
-		
-		/**
-		 * Generates a new {@link WindowChoice} with the {@code stdDevSamp} of the given {@link AggregationExpression}.
-		 * 
-		 * @param expression must not be {@literal null}
-		 * @return the final {@link WindowChoice}.
-		 */
-		public WindowChoice stdDevSamp(AggregationExpression expression) {
-			return output(AccumulatorOperators.valueOf(expression).stdDevSamp());
-		}
 
 		/**
 		 * Interface to capture field name used to capture the computation result.

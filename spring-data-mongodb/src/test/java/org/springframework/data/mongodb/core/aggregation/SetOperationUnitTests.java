@@ -108,18 +108,17 @@ class SetOperationUnitTests {
 	
 	@Test // DATAMONGO - 3729
 	void rendersStdDevPopCorrectly() {
-		assertThat(SetOperation.builder().set("totalQuiz").stdDevPop("quiz")
-		.toPipelineStages(contextFor(ScoresWrapper.class)))
-					.containsExactly(Document.parse(
-							"{\"$set\" : {\"totalQuiz\": { \"$stdDevPop\" : \"$quiz\" } }}"));
+		assertThat(SetOperation.builder().set("totalQuiz").toValueOf(ArithmeticOperators.valueOf("quiz").stdDevPop())
+				.toPipelineStages(contextFor(ScoresWrapper.class))).containsExactly(
+						Document.parse("{\"$set\" : {\"totalQuiz\": { \"$stdDevPop\" : \"$quiz\" } }}"));
 	}
 	
 	@Test // DATAMONGO - 3729
 	void rendersStdDevSampCorrectly() {
-		assertThat(SetOperation.builder().set("totalQuiz").stdDevSamp("quiz")
-		.toPipelineStages(contextFor(ScoresWrapper.class)))
-					.containsExactly(Document.parse(
-							"{\"$set\" : {\"totalQuiz\": { \"$stdDevSamp\" : \"$quiz\" } }}"));
+		assertThat(
+				SetOperation.builder().set("totalQuiz").toValueOf(ArithmeticOperators.valueOf("quiz").stdDevSamp())
+						.toPipelineStages(contextFor(ScoresWrapper.class))).containsExactly(
+								Document.parse("{\"$set\" : {\"totalQuiz\": { \"$stdDevSamp\" : \"$quiz\" } }}"));
 	}
 
 	@Test // DATAMONGO-2331

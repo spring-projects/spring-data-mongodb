@@ -129,15 +129,16 @@ class AddFieldsOperationUnitTests {
 	
 	@Test // DATAMONGO - 3729
 	void rendersStdDevPopCorrectly() {
-		assertThat(AddFieldsOperation.builder().addField("totalQuiz").stdDevPop("quiz").build()
-		.toPipelineStages(contextFor(ScoresWrapper.class)))
-					.containsExactly(Document.parse(
-							"{\"$addFields\" : {\"totalQuiz\": { \"$stdDevPop\" : \"$quiz\" } }}"));
+		assertThat(AddFieldsOperation.builder().addField("totalQuiz")
+				.withValue(ArithmeticOperators.valueOf("quiz").stdDevPop()).build()
+				.toPipelineStages(contextFor(ScoresWrapper.class))).containsExactly(
+						Document.parse("{\"$addFields\" : {\"totalQuiz\": { \"$stdDevPop\" : \"$quiz\" } }}"));
 	}
 	
 	@Test // DATAMONGO - 3729
 	void rendersStdDevSampCorrectly() {
-		assertThat(AddFieldsOperation.builder().addField("totalQuiz").stdDevSamp("quiz").build()
+		assertThat(AddFieldsOperation.builder().addField("totalQuiz")
+				.withValue(ArithmeticOperators.valueOf("quiz").stdDevSamp()).build()
 		.toPipelineStages(contextFor(ScoresWrapper.class)))
 					.containsExactly(Document.parse(
 							"{\"$addFields\" : {\"totalQuiz\": { \"$stdDevSamp\" : \"$quiz\" } }}"));

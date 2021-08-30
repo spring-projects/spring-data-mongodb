@@ -167,47 +167,6 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 
 			return new ReplaceRootDocumentOperation().andValuesOf(document);
 		}
-		
-		/**
-		 * Generates a new {@link ReplaceRootOperation} with the {@code stdDevPop} of the given field reference.
-		 * 
-		 * @param fieldRef must not be {@literal null}
-		 * @return the final {@link ReplaceRootOperation}.
-		 */
-		public ReplaceRootOperation stdDevPop(String fieldRef) {
-			return new ReplaceRootOperation(AccumulatorOperators.valueOf(fieldRef).stdDevPop());
-		}
-		
-		/**
-		 * Generates a new {@link ReplaceRootOperation} with the {@code stdDevPop} of the given {@link AggregationExpression}
-		 * 
-		 * @param expression must not be {@literal null}
-		 * @return the final {@link ReplaceRootOperation}.
-		 */
-		public ReplaceRootOperation stdDevPop(AggregationExpression expression) {
-			return new ReplaceRootOperation(AccumulatorOperators.valueOf(expression).stdDevPop());
-		}
-		
-		/**
-		 * Generates a new {@link ReplaceRootOperation} with the {@code stdDevSamp} of the given field reference.
-		 * 
-		 * @param fieldRef must not be {@literal null}
-		 * @return the final {@link ReplaceRootOperation}.
-		 */
-		public ReplaceRootOperation stdDevSamp(String fieldRef) {
-			return new ReplaceRootOperation(AccumulatorOperators.valueOf(fieldRef).stdDevSamp());
-		}
-		
-		/**
-		 * Generates a new {@link ReplaceRootOperation} with the {@code stdDevSamp} of the given {@link AggregationExpression}
-		 * 
-		 * @param expression must not be {@literal null}
-		 * @return the final {@link ReplaceRootOperation}.
-		 */
-		public ReplaceRootOperation stdDevSamp(AggregationExpression expression) {
-			return new ReplaceRootOperation(AccumulatorOperators.valueOf(expression).stdDevSamp());
-		}
-
 	}
 
 	/**

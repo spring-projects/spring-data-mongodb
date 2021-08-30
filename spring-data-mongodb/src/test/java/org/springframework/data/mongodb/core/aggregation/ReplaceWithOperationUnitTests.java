@@ -58,15 +58,16 @@ public class ReplaceWithOperationUnitTests {
 	
 	@Test // DATAMONGO - 3729
 	void shouldRendersStdDevPopCorrectly() {
-		ReplaceWithOperation operation = ReplaceWithOperation.stdDevPop("quiz");
+		ReplaceWithOperation operation = ReplaceWithOperation
+				.replaceWithValueOf(ArithmeticOperators.valueOf("quiz").stdDevPop());
 		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		assertThat(dbObject).isEqualTo(Document.parse(
-							"{\"$replaceWith\" : { \"$stdDevPop\" : \"$quiz\" } }"));
+		assertThat(dbObject).isEqualTo(Document.parse("{\"$replaceWith\" : { \"$stdDevPop\" : \"$quiz\" } }"));
 	}
 	
 	@Test // DATAMONGO - 3729
 	void shouldRendersStdDevSampCorrectly() {
-		ReplaceWithOperation operation = ReplaceWithOperation.stdDevSamp("quiz");
+		ReplaceWithOperation operation = ReplaceWithOperation
+				.replaceWithValueOf(ArithmeticOperators.valueOf("quiz").stdDevSamp());
 		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		assertThat(dbObject).isEqualTo(Document.parse(
 							"{\"$replaceWith\" : { \"$stdDevSamp\" : \"$quiz\" } }"));

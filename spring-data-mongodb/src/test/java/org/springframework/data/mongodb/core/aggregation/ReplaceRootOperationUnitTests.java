@@ -102,15 +102,17 @@ public class ReplaceRootOperationUnitTests {
 	
 	@Test // DATAMONGO - 3729
 	void shouldRendersStdDevPopCorrectly() {
-		ReplaceRootOperation operation = ReplaceRootOperation.builder().stdDevPop("quiz");
+		ReplaceRootOperation operation = ReplaceRootOperation.builder()
+				.withValueOf(ArithmeticOperators.valueOf("quiz").stdDevPop());
 		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
-		assertThat(dbObject).isEqualTo(Document.parse(
-							"{\"$replaceRoot\" : {\"newRoot\": { \"$stdDevPop\" : \"$quiz\" } }}"));
+		assertThat(dbObject)
+				.isEqualTo(Document.parse("{\"$replaceRoot\" : {\"newRoot\": { \"$stdDevPop\" : \"$quiz\" } }}"));
 	}
 	
 	@Test // DATAMONGO - 3729
 	void shouldRendersStdDevSampCorrectly() {
-		ReplaceRootOperation operation = ReplaceRootOperation.builder().stdDevSamp("quiz");
+		ReplaceRootOperation operation = ReplaceRootOperation.builder()
+				.withValueOf(ArithmeticOperators.valueOf("quiz").stdDevSamp());
 		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
 		assertThat(dbObject).isEqualTo(Document.parse(
 							"{\"$replaceRoot\" : {\"newRoot\": { \"$stdDevSamp\" : \"$quiz\" } }}"));

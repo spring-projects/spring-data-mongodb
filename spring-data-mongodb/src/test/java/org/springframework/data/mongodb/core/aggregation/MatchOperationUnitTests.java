@@ -9,17 +9,17 @@ class MatchOperationUnitTests {
 	
 	@Test // DATAMONGO - 3729
 	public void shouldRenderStdDevPopCorrectly() {
-		MatchOperation operation = Aggregation.match().stdDevPop("size");
+		MatchOperation operation = Aggregation.match().withValueOf(ArithmeticOperators.valueOf("quiz").stdDevPop());
 		assertThat(operation.toDocument(Aggregation.DEFAULT_CONTEXT)).
-			isEqualTo(Document.parse("{ $match: { \"$expr\" : { \"$stdDevPop\" : \"$size\" } } } "));
+			isEqualTo(Document.parse("{ $match: { \"$expr\" : { \"$stdDevPop\" : \"$quiz\" } } } "));
 		
 	}
 	
 	@Test // DATAMONGO - 3729
 	public void shouldRenderStdDevSampCorrectly() {
-		MatchOperation operation = Aggregation.match().stdDevSamp("size");
+		MatchOperation operation = Aggregation.match().withValueOf(ArithmeticOperators.valueOf("quiz").stdDevSamp());
 		assertThat(operation.toDocument(Aggregation.DEFAULT_CONTEXT)).
-			isEqualTo(Document.parse("{ $match: { \"$expr\" : { \"$stdDevSamp\" : \"$size\" } } } "));
+			isEqualTo(Document.parse("{ $match: { \"$expr\" : { \"$stdDevSamp\" : \"$quiz\" } } } "));
 		
 	}
 

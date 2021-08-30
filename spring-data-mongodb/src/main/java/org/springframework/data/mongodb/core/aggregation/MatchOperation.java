@@ -16,6 +16,7 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import org.bson.Document;
+import org.springframework.data.mongodb.core.aggregation.EvaluationOperators.EvaluationOperatorFactory.Expr;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.util.Assert;
 
@@ -45,6 +46,7 @@ public class MatchOperation implements AggregationOperation {
 		this.criteriaDefinition = null;
 		this.expression = null;
 	}
+	
 	/**
 	 * Creates a new {@link MatchOperation} for the given {@link CriteriaDefinition}.
 	 *
@@ -58,19 +60,26 @@ public class MatchOperation implements AggregationOperation {
 	}
 	
 	/**
-	 * Creates a new {@link MatchOperation} for the given {@link AggregationExpression}.
+	 * Creates a new {@link MatchOperation} for the given {@link Expression}.
 	 *
-	 * @param expression must not be {@literal null}.
+	 * @param criteriaDefinition must not be {@literal null}.
 	 */
-	private MatchOperation(AggregationExpression expression) {
-		
+	private MatchOperation(Expr expression) {
 		Assert.notNull(expression, "Expression must not be null!");
 		this.criteriaDefinition = null;
 		this.expression = expression;
 	}
 	
+	/**
+	 * Creates a new {@link MatchOperation} for the given {@link AggregationExpression}.
+	 *
+	 * @param expression must not be {@literal null}.
+	 */
+	public MatchOperation withValueOf(AggregationExpression expression) {
+		Assert.notNull(expression, "Expression must not be null!");
+		return new MatchOperation(EvaluationOperators.valueOf(expression).expr());
+	}
 	
-
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
@@ -90,45 +99,5 @@ public class MatchOperation implements AggregationOperation {
 	@Override
 	public String getOperator() {
 		return "$match";
-	}
-	
-	/**
-	 * Creates a new {@link MatchOperation} with the {@code stdDevPop} of the given fieldReference.
-	 * 
-	 *  @param fieldReference must not be {@literal null}.
-	 *  @return new instance of {@link MatchOperation}
-	 */
-	public MatchOperation stdDevPop(String fieldReference) {
-		return new MatchOperation(EvaluationOperators.valueOf(AccumulatorOperators.valueOf(fieldReference).stdDevPop()).expr());
-	}
-	
-	/**
-	 * Creates a new {@link MatchOperation} with the {@code stdDevPop} of the given {@link AggregationExpression}.
-	 * 
-	 *  @param expression must not be {@literal null}.
-	 *  @return new instance of {@link MatchOperation}
-	 */
-	public MatchOperation stdDevPop(AggregationExpression expression) {
-		return new MatchOperation(EvaluationOperators.valueOf(AccumulatorOperators.valueOf(expression).stdDevPop()).expr());
-	}
-	
-	/**
-	 * Creates a new {@link MatchOperation} with the {@code stdDevSamp} of the given fieldReference.
-	 * 
-	 *  @param fieldReference must not be {@literal null}.
-	 *  @return new instance of {@link MatchOperation}
-	 */
-	public MatchOperation stdDevSamp(String fieldReference) {
-		return new MatchOperation(EvaluationOperators.valueOf(AccumulatorOperators.valueOf(fieldReference).stdDevSamp()).expr());
-	}
-	
-	/**
-	 * Creates a new {@link MatchOperation} with the {@code stdDevSamp} of the given {@link AggregationExpression}.
-	 * 
-	 *  @param expression must not be {@literal null}.
-	 *  @return new instance of {@link MatchOperation}
-	 */
-	public MatchOperation stdDevSamp(AggregationExpression expression) {
-		return new MatchOperation(EvaluationOperators.valueOf(AccumulatorOperators.valueOf(expression).stdDevSamp()).expr());
 	}
 }

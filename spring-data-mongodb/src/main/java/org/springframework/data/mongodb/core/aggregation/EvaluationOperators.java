@@ -1,10 +1,18 @@
 package org.springframework.data.mongodb.core.aggregation;
 
-import org.springframework.data.mongodb.core.aggregation.ArithmeticOperators.Abs;
-import org.springframework.data.mongodb.core.aggregation.ArithmeticOperators.ArithmeticOperatorFactory;
 import org.springframework.util.Assert;
 
 public class EvaluationOperators {
+	
+	/**
+	 * Take the value resulting from the given fieldReference.
+	 *
+	 * @param fieldReference must not be {@literal null}.
+	 * @return new instance of {@link EvaluationOperatorFactory}.
+	 */
+	public static EvaluationOperatorFactory valueOf(String fieldReference) {
+		return new EvaluationOperatorFactory(fieldReference);
+	}
 	
 	/**
 	 * Take the value resulting from the given {@link AggregationExpression}.
