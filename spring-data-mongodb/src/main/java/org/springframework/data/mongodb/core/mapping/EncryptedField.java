@@ -87,5 +87,6 @@ public @interface EncryptedField {
 	@AliasFor(annotation = Encrypted.class, attribute = "keyId")
 	String[] keyId() default {};
 
-	String algorithm();
+	@AliasFor(annotation = Encrypted.class, attribute = "algorithm")
+	String algorithm() default "";
 }

@@ -55,6 +55,7 @@ import org.springframework.util.Base64Utils;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 /**
  * {@link MongoJsonSchemaCreator} implementation using both {@link MongoConverter} and {@link MappingContext} to obtain
@@ -96,7 +97,11 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 
 		if (entity.isAnnotationPresent(Encrypted.class)) {
 			Encrypted encrypted = entity.findAnnotation(Encrypted.class);
-			schemaBuilder.encryptionMetadata(new Document("keyId", stringToKeyId(encrypted.keyId())));
+			Document encryptionMetadata = new Document("keyId", stringToKeyId(encrypted.keyId()));
+			if(StringUtils.hasText(encrypted.algorithm())) {
+				encryptionMetadata.append("algorithm", encrypted.algorithm());
+			}
+			schemaBuilder.encryptionMetadata(encryptionMetadata);
 		}
 
 		List<JsonSchemaProperty> schemaProperties = computePropertiesForEntity(Collections.emptyList(), entity, encyptedFieldsOnly);
@@ -229,10 +234,10 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 			schemaProperty = createSchemaProperty(fieldName, targetType, required);
 		}
 
-		if (property.findAnnotation(EncryptedField.class) != null) {
+		if (property.findAnnotation(Encrypted.class) != null) {
 			EncryptedJsonSchemaProperty enc = new EncryptedJsonSchemaProperty(schemaProperty);
 
-			EncryptedField annotation = property.findAnnotation(EncryptedField.class);
+			Encrypted annotation = property.findAnnotation(Encrypted.class);
 			enc = enc.algorithm(annotation.algorithm());
 
 			if (!ObjectUtils.isEmpty(annotation.keyId())) {

@@ -31,4 +31,6 @@ import java.lang.annotation.Target;
 public @interface Encrypted {
 
 	String[] keyId() default {};
+
+	String algorithm() default "";
 }
