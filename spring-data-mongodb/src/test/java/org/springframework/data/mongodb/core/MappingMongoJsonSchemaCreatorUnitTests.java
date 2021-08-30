@@ -286,7 +286,7 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 	@Test // GH-???
 	public void xxx() {
 
-		MongoJsonSchema schema = schemaCreator.createSchemaFor(Patient.class);
+		MongoJsonSchema schema = MongoJsonSchemaCreator.create().createSchemaFor(Patient.class);
 
 		System.out.println(schema.toDocument().get("$jsonSchema", Document.class).toJson(JsonWriterSettings.builder().indent(true).build()));
 
@@ -298,7 +298,7 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 
 
 
-		MongoJsonSchema schema = schemaCreator.createSchemaFor(Patient.class, true);
+		MongoJsonSchema schema = MongoJsonSchemaCreator.create()/*.filter()*/.createSchemaFor(Patient.class, true);
 
 		Document $jsonSchema = schema.toDocument().get("$jsonSchema", Document.class);
 		System.out.println($jsonSchema.toJson(JsonWriterSettings.builder().indent(true).build()));

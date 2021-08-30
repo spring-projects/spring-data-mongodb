@@ -15,7 +15,16 @@
  */
 package org.springframework.data.mongodb.core;
 
+import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mongodb.core.convert.DbRefResolver;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.util.Assert;
 
@@ -75,5 +84,35 @@ public interface MongoJsonSchemaCreator {
 
 		Assert.notNull(mongoConverter, "MongoConverter must not be null!");
 		return new MappingMongoJsonSchemaCreator(mongoConverter);
+	}
+
+	/**
+	 * Creates a new {@link MongoJsonSchemaCreator} that is aware of conversions applied by the given
+	 * {@link MongoConverter}.
+	 *
+	 * @param mappingContext must not be {@literal null}.
+	 * @return new instance of {@link MongoJsonSchemaCreator}.
+	 */
+	static MongoJsonSchemaCreator create(MappingContext mappingContext) {
+
+		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext);
+		converter.setCustomConversions(MongoCustomConversions.create(config -> {}));
+
+		converter.afterPropertiesSet();
+
+		return create(converter);
+	}
+
+	static MongoJsonSchemaCreator create() {
+
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		mappingContext.setSimpleTypeHolder(MongoSimpleTypes.HOLDER);
+		mappingContext.afterPropertiesSet();
+
+		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext);
+		converter.setCustomConversions(MongoCustomConversions.create(config -> {}));
+		converter.afterPropertiesSet();
+
+		return create(converter);
 	}
 }
