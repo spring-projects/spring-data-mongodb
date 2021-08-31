@@ -323,4 +323,9 @@ class UnwrappedMongoPersistentEntity<T> implements MongoPersistentEntity<T> {
 	public boolean isUnwrapped() {
 		return context.getProperty().isUnwrapped();
 	}
+
+	@Override
+	public Object[] getEncryptionKeyIds() {
+		return delegate.getEncryptionKeyIds();
+	}
 }

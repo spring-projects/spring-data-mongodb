@@ -16,8 +16,11 @@
 package org.springframework.data.mongodb.core.mapping;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -30,6 +33,11 @@ import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import org.springframework.expression.EvaluationContext;
+import org.springframework.expression.Expression;
+import org.springframework.expression.ParserContext;
+import org.springframework.expression.common.LiteralExpression;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
@@ -300,4 +308,33 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		return isAnnotationPresent(TextScore.class);
 	}
 
+	@Override
+	public Object[] getEncryptionKeyIds() {
+
+		Encrypted encrypted = findAnnotation(Encrypted.class);
+		if(encrypted == null) {
+			return null;
+		}
+		List<Object> target = new ArrayList<>();
+		EvaluationContext evaluationContext = ((BasicMongoPersistentEntity)getOwner()). getEvaluationContext(null);
+		evaluationContext.setVariable("target", getName());
+		for(String keyId : encrypted.keyId()) {
+			Expression expression = detectExpression(keyId);
+			if(expression == null) {
+				try {
+					target.add(UUID.fromString(keyId));
+				} catch (IllegalArgumentException e) {
+					target.add(org.bson.Document.parse("{ val : { $binary : { base64 : '" + keyId + "', subType : '04'} } }").get("val"));
+				}
+			} else {
+				target.add(expression.getValue(evaluationContext));
+			}
+		}
+		return target.toArray();
+	}
+
+	private Expression detectExpression(String keyId) {
+		Expression expression = new SpelExpressionParser().parseExpression(keyId, ParserContext.TEMPLATE_EXPRESSION);
+		return expression instanceof LiteralExpression ? null : expression;
+	}
 }

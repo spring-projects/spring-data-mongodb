@@ -19,13 +19,16 @@ import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import ch.qos.logback.core.net.SyslogOutputStream;
 import org.bson.Document;
 import org.bson.json.JsonWriterSettings;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
@@ -38,6 +41,8 @@ import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
+import org.springframework.data.spel.spi.EvaluationContextExtension;
+import org.springframework.data.spel.spi.Function;
 
 /**
  * Unit tests for {@link MappingMongoJsonSchemaCreator}.
@@ -296,6 +301,116 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 		// assertThat(schema.toDocument().get("$jsonSchema",
 		// Document.class)).isEqualTo(Document.parse(VARIOUS_FIELD_TYPES));
 	}
+
+	@Test
+	public void spelCheck() {
+
+		GenericApplicationContext applicationContext = new GenericApplicationContext();
+		applicationContext.registerBean("encryptionExtension", EncryptionExtension.class, () -> new EncryptionExtension());
+		applicationContext.refresh();
+
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		mappingContext.setApplicationContext(applicationContext);
+		mappingContext.afterPropertiesSet();
+
+		MongoJsonSchema schema = MongoJsonSchemaCreator.create(mappingContext).filter(MongoJsonSchemaCreator.encryptedOnly())
+				.createSchemaFor(SpELPatient.class);
+
+		Document $jsonSchema = schema.toDocument().get("$jsonSchema", Document.class);
+		System.out.println($jsonSchema.toJson(JsonWriterSettings.builder().indent(true).build()));
+	}
+
+	@Test
+	public void spelCheckMethod() {
+
+		GenericApplicationContext applicationContext = new GenericApplicationContext();
+		applicationContext.registerBean("encryptionExtension", EncryptionExtension.class, () -> new EncryptionExtension());
+		applicationContext.refresh();
+
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		mappingContext.setApplicationContext(applicationContext);
+		mappingContext.afterPropertiesSet();
+
+		MongoJsonSchema schema = MongoJsonSchemaCreator.create(mappingContext).filter(MongoJsonSchemaCreator.encryptedOnly())
+				.createSchemaFor(MethodSpELPatient.class);
+
+		Document $jsonSchema = schema.toDocument().get("$jsonSchema", Document.class);
+		System.out.println($jsonSchema.toJson(JsonWriterSettings.builder().indent(true).build()));
+	}
+
+	@Encrypted(keyId = "#{patientKey}")
+	static class SpELPatient {
+
+	}
+
+	@Encrypted(keyId = "#{mongocrypt.computeKeyId(#target)}")
+	static class MethodSpELPatient {
+
+	}
+
+	public static class EncryptionExtension implements EvaluationContextExtension {
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.spel.spi.EvaluationContextExtension#getExtensionId()
+		 */
+		@Override
+		public String getExtensionId() {
+			return "mongocrypt";
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.spel.spi.EvaluationContextExtension#getProperties()
+		 */
+		@Override
+		public Map<String, Object> getProperties() {
+
+			Map<String, Object> properties = new LinkedHashMap<>();
+			properties.put("patientKey", "xKVup8B1Q+CkHaVRx+qa+g==");
+			return properties;
+		}
+
+		@Override
+		public Map<String, Function> getFunctions() {
+			try {
+				return Collections.<String, Function>singletonMap("computeKeyId", new Function(EncryptionExtension.class.getMethod("computeKeyId", String.class), this));
+			} catch (NoSuchMethodException e) {
+				e.printStackTrace();
+			}
+			return Collections.emptyMap();
+		}
+
+		public String computeKeyId(String target) {
+
+			System.out.println("target: " + target);
+			return "xKVup8B1Q+CkHaVRx+qa+g==";
+		}
+		//		@Override
+//		public Map<String, Function> getFunctions() {
+//			return null;
+//		}
+	}
+
+//	@org.springframework.data.mongodb.core.mapping.Document(collation = "#{myCollation}")
+//	class WithCollationFromSpEL {}
+//
+//	@org.springframework.data.mongodb.core.mapping.Document(collection = "#{myProperty}", collation = "#{myCollation}")
+//	class WithCollectionAndCollationFromSpEL {}
+
+	/**
+	 * @Test // DATAMONGO-2565
+	 * 	void usesCorrectExpressionsForCollectionAndCollation() {
+	 *
+	 * 		BasicMongoPersistentEntity<WithCollectionAndCollationFromSpEL> entity = new BasicMongoPersistentEntity<>(
+	 * 				ClassTypeInformation.from(WithCollectionAndCollationFromSpEL.class));
+	 * 		entity.setEvaluationContextProvider(
+	 * 				new ExtensionAwareEvaluationContextProvider(Collections.singletonList(new SampleExtension())));
+	 *
+	 * 		assertThat(entity.getCollection()).isEqualTo("collectionName");
+	 * 		assertThat(entity.getCollation()).isEqualTo(Collation.of("en_US"));
+	 *        }
+	 */
 
 	String patientSchema = "{\n" + "  \"type\": \"object\",\n" + "  \"encryptMetadata\": {\n" + "    \"keyId\": [\n"
 			+ "      {\n" + "        \"$binary\": {\n" + "          \"base64\": \"xKVup8B1Q+CkHaVRx+qa+g==\",\n"

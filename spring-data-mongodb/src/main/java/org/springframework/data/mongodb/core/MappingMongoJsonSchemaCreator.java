@@ -25,11 +25,18 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mapping.model.DefaultSpELExpressionEvaluator;
+import org.springframework.data.mapping.model.SpELContext;
+import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
+import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.Encrypted;
 import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.EncryptedJsonSchemaProperty;
@@ -40,6 +47,13 @@ import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema.MongoJsonSchemaBuilder;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject;
+import org.springframework.expression.Expression;
+import org.springframework.expression.ParserContext;
+import org.springframework.expression.common.LiteralExpression;
+import org.springframework.expression.spel.SpelParserConfiguration;
+import org.springframework.expression.spel.standard.SpelExpression;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
@@ -97,11 +111,14 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 	public MongoJsonSchema createSchemaFor(Class<?> type) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(type);
+		if(entity instanceof BasicMongoPersistentEntity) {
+			((BasicMongoPersistentEntity<?>) entity).getEvaluationContext(null);
+		}
 		MongoJsonSchemaBuilder schemaBuilder = MongoJsonSchema.builder();
 
 		if (entity.isAnnotationPresent(Encrypted.class)) {
 			Encrypted encrypted = entity.findAnnotation(Encrypted.class);
-			Document encryptionMetadata = new Document("keyId", stringToKeyId(encrypted.keyId()));
+			Document encryptionMetadata = new Document("keyId", objectToKeyId(entity.getEncryptionKeyIds()));
 			if (StringUtils.hasText(encrypted.algorithm())) {
 				encryptionMetadata.append("algorithm", encrypted.algorithm());
 			}
@@ -188,7 +205,7 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 			enc = enc.algorithm(annotation.algorithm());
 
 			if (!ObjectUtils.isEmpty(annotation.keyId())) {
-				enc.keys(stringToKeyId(annotation.keyId()));
+				enc.keys(objectToKeyId(property.getEncryptionKeyIds()));
 			}
 			return enc;
 		}
@@ -273,23 +290,69 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 		return JsonSchemaProperty.required(property);
 	}
 
-	private List<Object> stringToKeyId(String[] values) {
+	private List<Object> objectToKeyId(Object[] values) {
+
+
 
 		List<Object> target = new ArrayList<>();
-		for (String key : values) {
-			try {
-				target.add(UUID.fromString(key));
-			} catch (IllegalArgumentException e) {
+		for (Object key : values) {
 
-				target.add(Document.parse("{ val : { $binary : { base64 : '" + key + "', subType : '04'} } }").get("val"));
-				// target.add(UuidHelper.decodeBinaryToUuid(key.getBytes(StandardCharsets.UTF_8),
-				// BsonBinarySubType.UUID_STANDARD.getValue(), UuidRepresentation.STANDARD));
-				// BsonBinary
-				// Document d = Document.parse()
-				// target.add(UUID.nameUUIDFromBytes(Base64Utils.decodeFromString(key)));
-				// target.add(new Document().append("$binary", new Document().append("base64", key).append("subType", "04")));
+			if(key instanceof  UUID) {
+				target.add(key);
+				continue;
 			}
+
+			if(key instanceof String) {
+				try {
+					target.add(UUID.fromString((String)key));
+				} catch (IllegalArgumentException e) {
+
+					target.add(Document.parse("{ val : { $binary : { base64 : '" + key + "', subType : '04'} } }").get("val"));
+					// target.add(UuidHelper.decodeBinaryToUuid(key.getBytes(StandardCharsets.UTF_8),
+					// BsonBinarySubType.UUID_STANDARD.getValue(), UuidRepresentation.STANDARD));
+					// BsonBinary
+					// Document d = Document.parse()
+					// target.add(UUID.nameUUIDFromBytes(Base64Utils.decodeFromString(key)));
+					// target.add(new Document().append("$binary", new Document().append("base64", key).append("subType", "04")));
+				}
+				continue;
+			}
+
+			target.add(key);
+
 		}
 		return target;
 	}
+
+//	boolean isSpelExpression(String value) {
+//
+//		Expression expression = new SpelExpressionParser(new SpelParserConfiguration(null, this.getClass().getClassLoader())).parseExpression(value, ParserContext.TEMPLATE_EXPRESSION);
+//		return expression instanceof LiteralExpression ? false : true;
+//	}
+//
+//	Object evaluateSpelExpression(String path, String value) {
+//
+//		SpelExpression spelExpression = new SpelExpressionParser(new SpelParserConfiguration(null, this.getClass().getClassLoader())).parseRaw(value);
+//
+//		StandardEvaluationContext evaluationContext = new StandardEvaluationContext();
+//
+//		if(mappingContext instanceof MongoMappingContext) {
+//
+//			ApplicationContext applicationContext = ((MongoMappingContext) mappingContext).getApplicationContext();
+//			//evaluationContext.registerFunction();
+//			evaluationContext.setBeanResolver(new BeanFactoryResolver(applicationContext));
+//			// evaluationContext.setMethodResolvers();
+//			evaluationContext.setVariable("target", path);
+//		}
+//
+////		if (factory != null) {
+////			evaluationContext.setBeanResolver(new BeanFactoryResolver(factory));
+////		}
+//
+//		spelExpression.setEvaluationContext(evaluationContext);
+//		return spelExpression.getValue();
+//	}
+
+
+
 }

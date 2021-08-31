@@ -46,6 +46,9 @@ public class MongoMappingContext extends AbstractMappingContext<MongoPersistentE
 	private FieldNamingStrategy fieldNamingStrategy = DEFAULT_NAMING_STRATEGY;
 	private boolean autoIndexCreation = false;
 
+	@Nullable
+	private ApplicationContext applicationContext;
+
 	/**
 	 * Creates a new {@link MongoMappingContext}.
 	 */
@@ -103,6 +106,8 @@ public class MongoMappingContext extends AbstractMappingContext<MongoPersistentE
 	 */
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+
+		this.applicationContext = applicationContext;
 		super.setApplicationContext(applicationContext);
 	}
 
@@ -145,4 +150,10 @@ public class MongoMappingContext extends AbstractMappingContext<MongoPersistentE
 
 		return new UnwrappedMongoPersistentEntity<>(entity, new UnwrapEntityContext(persistentProperty));
 	}
+
+	@Nullable
+	public ApplicationContext getApplicationContext() {
+		return this.applicationContext;
+	}
+
 }

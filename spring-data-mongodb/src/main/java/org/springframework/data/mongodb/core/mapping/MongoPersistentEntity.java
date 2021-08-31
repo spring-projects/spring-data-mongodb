@@ -102,4 +102,5 @@ public interface MongoPersistentEntity<T> extends MutablePersistentEntity<T, Mon
 		return false;
 	}
 
+	Object[] getEncryptionKeyIds();
 }

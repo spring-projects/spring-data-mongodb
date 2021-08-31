@@ -17,9 +17,12 @@ package org.springframework.data.mongodb.core.mapping;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.Association;
@@ -28,6 +31,7 @@ import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.mongodb.MongoCollectionUtils;
+import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
@@ -358,6 +362,31 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 			properties.put(fieldName, property);
 		}
+	}
+
+	@Override
+	public Object[] getEncryptionKeyIds() {
+
+		Encrypted encrypted = findAnnotation(Encrypted.class);
+		if(encrypted == null) {
+			return null;
+		}
+		List<Object> target = new ArrayList<>();
+		EvaluationContext evaluationContext = getEvaluationContext(null);
+		evaluationContext.setVariable("target", getName());
+		for(String keyId : encrypted.keyId()) {
+			Expression expression = detectExpression(keyId);
+			if(expression == null) {
+				try {
+					target.add(UUID.fromString(keyId));
+				} catch (IllegalArgumentException e) {
+					target.add(org.bson.Document.parse("{ val : { $binary : { base64 : '" + keyId + "', subType : '04'} } }").get("val"));
+				}
+			} else {
+				target.add(expression.getValue(evaluationContext));
+			}
+		}
+		return target.toArray();
 	}
 
 	/**

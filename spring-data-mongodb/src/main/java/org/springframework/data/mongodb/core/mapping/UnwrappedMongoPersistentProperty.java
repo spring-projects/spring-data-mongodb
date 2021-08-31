@@ -269,6 +269,11 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 
 	@Override
+	public Object[] getEncryptionKeyIds() {
+		return delegate.getEncryptionKeyIds();
+	}
+
+	@Override
 	@Nullable
 	public Class<?> getComponentType() {
 		return delegate.getComponentType();
