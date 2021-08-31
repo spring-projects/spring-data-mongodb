@@ -15,16 +15,18 @@
  */
 package org.springframework.data.mongodb.core;
 
+import java.util.function.Predicate;
+
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
+import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty;
+import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.ObjectJsonSchemaProperty;
+import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.util.Assert;
 
@@ -67,11 +69,33 @@ public interface MongoJsonSchemaCreator {
 	 * @param type must not be {@literal null}.
 	 * @return never {@literal null}.
 	 */
-	default MongoJsonSchema createSchemaFor(Class<?> type) {
-		return createSchemaFor(type, false);
-	}
+	MongoJsonSchema createSchemaFor(Class<?> type);
 
-	MongoJsonSchema createSchemaFor(Class<?> type, boolean encryptedFieldsOnly);
+	MongoJsonSchemaCreator filter(Predicate<JsonSchemaProperty> filter);
+
+	static Predicate<JsonSchemaProperty> encryptedOnly() {
+
+		return new Predicate<JsonSchemaProperty>() {
+
+			@Override
+			public boolean test(JsonSchemaProperty property) {
+
+				if (property instanceof IdentifiableJsonSchemaProperty.EncryptedJsonSchemaProperty) {
+					return true;
+				}
+
+				if (property instanceof IdentifiableJsonSchemaProperty.ObjectJsonSchemaProperty) {
+					ObjectJsonSchemaProperty val = (ObjectJsonSchemaProperty) property;
+					for (JsonSchemaProperty p : val.getProperties()) {
+						if (test(p)) {
+							return true;
+						}
+					}
+				}
+				return false;
+			}
+		};
+	}
 
 	/**
 	 * Creates a new {@link MongoJsonSchemaCreator} that is aware of conversions applied by the given
