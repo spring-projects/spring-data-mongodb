@@ -736,6 +736,24 @@ public class ArithmeticOperators {
 		}
 
 		/**
+		 * Creates new {@link AggregationExpression} that calculates the inverse sine of a numeric value.
+		 *
+		 * @return new instance of {@link ASin}.
+		 */
+		public ASin asin() {
+			return usesFieldRef() ? ASin.asinOf(fieldReference) : ASin.asinOf(expression);
+		}
+		
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the inverse hyperbolic sine of a numeric value.
+		 *
+		 * @return new instance of {@link ASinh}.
+		 */
+		public ASinh asinh() {
+			return usesFieldRef() ? ASinh.asinhOf(fieldReference) : ASinh.asinhOf(expression);
+		}
+		
+		/**
 		 * Creates new {@link AggregationExpression} that calculates the cosine of a numeric value given in
 		 * {@link AngularUnit#RADIANS radians}.
 		 *
@@ -2272,6 +2290,104 @@ public class ArithmeticOperators {
 			return "$sinh";
 		}
 	}
+	
+	/**
+	 * An {@link AggregationExpression expression} that calculates the inverse sine of a value.
+	 *
+	 */
+	public static class ASin extends AbstractAggregationExpression {
+
+		private ASin(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse sine of a value.
+		 *
+		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
+		 * @return new instance of {@link ASin}.
+		 */
+		public static ASin asinOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new ASin(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse sine of a value.
+		 * <p />
+		 *
+		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
+		 * @return new instance of {@link ASin}.
+		 */
+		public static ASin asinOf(AggregationExpression expression) {
+			return new ASin(expression);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse sine of a value.
+		 *
+		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
+		 *          numeric value.
+		 * @return new instance of {@link ASin}.
+		 */
+		public static ASin asinOf(Number value) {
+			return new ASin(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$asin";
+		}
+	}
+	
+	/**
+	 * An {@link AggregationExpression expression} that calculates the inverse hyperbolic sine of a value
+	 */
+	public static class ASinh extends AbstractAggregationExpression {
+
+		private ASinh(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse hyperbolic sine of a value.
+		 *
+		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
+		 * @return new instance of {@link ASinh}.
+		 */
+		public static ASinh asinhOf(String fieldReference) {
+			return new ASinh(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse hyperbolic sine of a value.
+		 * <p />
+		 * 
+		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
+		 * @return new instance of {@link ASinh}.
+		 */
+		public static ASinh asinhOf(AggregationExpression expression) {
+			return new ASinh(expression);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse hyperbolic sine of a value.
+		 *
+		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
+		 *          numeric value.
+		 * @return new instance of {@link ASinh}.
+		 */
+		public static ASinh asinhOf(Object value) {
+			return new ASinh(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$asinh";
+		}
+	}
+
 
 	/**
 	 * An {@link AggregationExpression expression} that calculates the cosine of a value that is measured in radians.

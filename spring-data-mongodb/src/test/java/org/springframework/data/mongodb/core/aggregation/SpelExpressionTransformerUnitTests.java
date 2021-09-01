@@ -1078,6 +1078,16 @@ public class SpelExpressionTransformerUnitTests {
 	void shouldRenderSinh() {
 		assertThat(transform("sinh(angle)")).isEqualTo("{ \"$sinh\" : \"$angle\"}");
 	}
+	
+	@Test // DATAMONGO-3708
+	void shouldRenderASin() {
+		assertThat(transform("asin(number)")).isEqualTo("{ \"$asin\" : \"$number\"}");
+	}
+
+	@Test // DATAMONGO-3708
+	void shouldRenderASinh() {
+		assertThat(transform("asinh(number)")).isEqualTo("{ \"$asinh\" : \"$number\"}");
+	}
 
 	@Test // GH-3710
 	void shouldRenderCos() {
