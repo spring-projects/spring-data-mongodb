@@ -696,7 +696,8 @@ public class QueryMapper {
 	@Nullable
 	private Object applyFieldTargetTypeHintToValue(Field documentField, @Nullable Object value) {
 
-		if (value == null || documentField.getProperty() == null || !documentField.getProperty().hasExplicitWriteTarget()) {
+		if (value == null || documentField.getProperty() == null || !documentField.getProperty().hasExplicitWriteTarget()
+				|| value instanceof Document || value instanceof DBObject) {
 			return value;
 		}
 
