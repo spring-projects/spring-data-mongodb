@@ -87,11 +87,26 @@ public interface MongoJsonSchemaCreator {
 	 *
 	 * @param rootElementName can be {@literal null}.
 	 * @return new instance of {@link MongoJsonSchemaCreator}.
+	 * @since 3.3
 	 */
 	MongoJsonSchemaCreator wrapperName(@Nullable String rootElementName);
 
 	/**
+	 *
+	 * @return
+	 * @since 3.3
+	 */
+	default MongoJsonSchemaCreator dontWrap() {
+		return wrapperName(null);
+	}
+
+	/**
+	 * A filter {@link Predicate} that matches
+	 * {@link org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.EncryptedJsonSchemaProperty
+	 * encrypted properties} and those having nested ones.
+	 * 
 	 * @return new instance of {@link Predicate}.
+	 * @since 3.3
 	 */
 	static Predicate<JsonSchemaProperty> encryptedOnly() {
 
@@ -131,22 +146,29 @@ public interface MongoJsonSchemaCreator {
 	}
 
 	/**
-	 * Creates a new {@link MongoJsonSchemaCreator} that is aware of conversions applied by the given
-	 * {@link MongoConverter}.
+	 * Creates a new {@link MongoJsonSchemaCreator} that is aware of type mappings and potential
+	 * {@link org.springframework.data.spel.spi.EvaluationContextExtension extensions}.
 	 *
 	 * @param mappingContext must not be {@literal null}.
 	 * @return new instance of {@link MongoJsonSchemaCreator}.
+	 * @since 3.3
 	 */
 	static MongoJsonSchemaCreator create(MappingContext mappingContext) {
 
 		MappingMongoConverter converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext);
 		converter.setCustomConversions(MongoCustomConversions.create(config -> {}));
-
 		converter.afterPropertiesSet();
 
 		return create(converter);
 	}
 
+	/**
+	 * Creates a new {@link MongoJsonSchemaCreator} that does not consider potential extensions - suitable for testing. We
+	 * recommend to use {@link #create(MappingContext)}.
+	 *
+	 * @return new instance of {@link MongoJsonSchemaCreator}.
+	 * @since 3.3
+	 */
 	static MongoJsonSchemaCreator create() {
 
 		MongoMappingContext mappingContext = new MongoMappingContext();
