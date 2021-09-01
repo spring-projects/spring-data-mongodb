@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
+import java.util.Collection;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.PersistentEntity;
@@ -160,7 +162,12 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 		return isEntity() && isAnnotationPresent(Unwrapped.class);
 	}
 
-	Object[] getEncryptionKeyIds();
+	/**
+	 * @return the resolved encryption keyIds if applicable. An empty {@link Collection} if no keyIds specified.
+	 *         {@literal null} no {@link Encrypted} annotation found.
+	 * @since 3.3
+	 */
+	Collection<Object> getEncryptionKeyIds();
 
 	/**
 	 * Simple {@link Converter} implementation to transform a {@link MongoPersistentProperty} into its field name.

@@ -20,6 +20,7 @@ import java.util.Set;
 
 import org.bson.Document;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ObjectJsonSchemaObject;
+import org.springframework.lang.Nullable;
 
 /**
  * Interface defining MongoDB-specific JSON schema object. New objects can be built with {@link #builder()}, for
@@ -106,9 +107,13 @@ public interface MongoJsonSchema {
 	 */
 	class MongoJsonSchemaBuilder {
 
+		@Nullable
+		private String wrapperName = "$jsonSchema";
+
 		private ObjectJsonSchemaObject root;
+
+		@Nullable //
 		private Document encryptionMetadata;
-		private boolean encryptedFieldsOnly;
 
 		MongoJsonSchemaBuilder() {
 			root = new ObjectJsonSchemaObject();
@@ -268,8 +273,22 @@ public interface MongoJsonSchema {
 			return this;
 		}
 
-		public void encryptionMetadata(Document encryptionMetadata) {
+		/**
+		 * Define the {@literal encryptMetadata} element of the schema.
+		 *
+		 * @param encryptionMetadata can be {@literal null}.
+		 * @since 3.3
+		 */
+		public void encryptionMetadata(@Nullable Document encryptionMetadata) {
 			this.encryptionMetadata = encryptionMetadata;
+		}
+
+		/**
+		 *
+		 * @param name can be {@literal null}.
+		 */
+		public void wrapperObject(@Nullable String name) {
+			this.wrapperName = name;
 		}
 
 		/**
@@ -278,7 +297,7 @@ public interface MongoJsonSchema {
 		 * @return new instance of {@link MongoJsonSchema}.
 		 */
 		public MongoJsonSchema build() {
-			return new DefaultMongoJsonSchema(root, encryptionMetadata);
+			return new DefaultMongoJsonSchema(wrapperName, root, encryptionMetadata);
 		}
 	}
 }

@@ -291,9 +291,9 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 	public void csfle/*encryptedFieldsOnly*/() {
 
 		MongoJsonSchema schema = MongoJsonSchemaCreator.create().filter(MongoJsonSchemaCreator.encryptedOnly())
-				.createSchemaFor(Patient.class);
+				.wrapperName("db.patient").createSchemaFor(Patient.class);
 
-		Document $jsonSchema = schema.toDocument().get("$jsonSchema", Document.class);
+		Document $jsonSchema = schema.toDocument().get("db.patient", Document.class);
 		System.out.println($jsonSchema.toJson(JsonWriterSettings.builder().indent(true).build()));
 
 		assertThat($jsonSchema).isEqualTo(Document.parse(patientSchema));
@@ -346,6 +346,10 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 	@Encrypted(keyId = "#{mongocrypt.computeKeyId(#target)}")
 	static class MethodSpELPatient {
 
+		@EncryptedField(keyId = "#{mongocrypt.computeKeyId(#target)}", algorithm = EncryptionAlgorithms.AEAD_AES_256_CBC_HMAC_SHA_512_Deterministic)
+		Integer policyNumber;
+
+		String provider;
 	}
 
 	public static class EncryptionExtension implements EvaluationContextExtension {
@@ -374,7 +378,7 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 		@Override
 		public Map<String, Function> getFunctions() {
 			try {
-				return Collections.<String, Function>singletonMap("computeKeyId", new Function(EncryptionExtension.class.getMethod("computeKeyId", String.class), this));
+				return Collections.singletonMap("computeKeyId", new Function(EncryptionExtension.class.getMethod("computeKeyId", String.class), this));
 			} catch (NoSuchMethodException e) {
 				e.printStackTrace();
 			}

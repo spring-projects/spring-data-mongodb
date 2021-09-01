@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.mapping;
 
+import java.util.Collection;
+
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.model.MutablePersistentEntity;
 import org.springframework.lang.Nullable;
@@ -102,5 +104,11 @@ public interface MongoPersistentEntity<T> extends MutablePersistentEntity<T, Mon
 		return false;
 	}
 
-	Object[] getEncryptionKeyIds();
+	/**
+	 * @return the resolved encryption keyIds if applicable. An empty {@link Collection} if no keyIds specified.
+	 *         {@literal null} no {@link Encrypted} annotation found.
+	 * @since 3.3
+	 */
+	@Nullable
+	Collection<Object> getEncryptionKeyIds();
 }

@@ -17,10 +17,11 @@ package org.springframework.data.mongodb.core.mapping;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -33,12 +34,14 @@ import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import org.springframework.data.mongodb.util.encryption.EncryptionUtils;
+import org.springframework.data.spel.EvaluationContextProvider;
+import org.springframework.data.spel.ExpressionDependencies;
+import org.springframework.data.util.Lazy;
 import org.springframework.expression.EvaluationContext;
-import org.springframework.expression.Expression;
-import org.springframework.expression.ParserContext;
-import org.springframework.expression.common.LiteralExpression;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.lang.Nullable;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -52,7 +55,7 @@ import org.springframework.util.StringUtils;
  * @author Divya Srivastava
  */
 public class BasicMongoPersistentProperty extends AnnotationBasedPersistentProperty<MongoPersistentProperty>
-		implements MongoPersistentProperty {
+		implements MongoPersistentProperty, EvaluationContextProvider {
 
 	private static final Logger LOG = LoggerFactory.getLogger(BasicMongoPersistentProperty.class);
 
@@ -309,32 +312,45 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	}
 
 	@Override
-	public Object[] getEncryptionKeyIds() {
+	public EvaluationContext getEvaluationContext(Object rootObject, ExpressionDependencies dependencies) {
 
-		Encrypted encrypted = findAnnotation(Encrypted.class);
-		if(encrypted == null) {
-			return null;
+		if (getOwner() instanceof EvaluationContextProvider) {
+			return ((EvaluationContextProvider) getOwner()).getEvaluationContext(rootObject, dependencies);
 		}
-		List<Object> target = new ArrayList<>();
-		EvaluationContext evaluationContext = ((BasicMongoPersistentEntity)getOwner()). getEvaluationContext(null);
-		evaluationContext.setVariable("target", getName());
-		for(String keyId : encrypted.keyId()) {
-			Expression expression = detectExpression(keyId);
-			if(expression == null) {
-				try {
-					target.add(UUID.fromString(keyId));
-				} catch (IllegalArgumentException e) {
-					target.add(org.bson.Document.parse("{ val : { $binary : { base64 : '" + keyId + "', subType : '04'} } }").get("val"));
-				}
-			} else {
-				target.add(expression.getValue(evaluationContext));
-			}
-		}
-		return target.toArray();
+		return new StandardEvaluationContext();
 	}
 
-	private Expression detectExpression(String keyId) {
-		Expression expression = new SpelExpressionParser().parseExpression(keyId, ParserContext.TEMPLATE_EXPRESSION);
-		return expression instanceof LiteralExpression ? null : expression;
+	@Override
+	public EvaluationContext getEvaluationContext(Object rootObject) {
+
+		if (getOwner() instanceof EvaluationContextProvider) {
+			return ((EvaluationContextProvider) getOwner()).getEvaluationContext(rootObject);
+		}
+		return new StandardEvaluationContext();
+	}
+
+	@Override
+	public Collection<Object> getEncryptionKeyIds() {
+
+		Encrypted encrypted = findAnnotation(Encrypted.class);
+		if (encrypted == null) {
+			return null;
+		}
+
+		if (ObjectUtils.isEmpty(encrypted.keyId())) {
+			return Collections.emptySet();
+		}
+
+		Lazy<EvaluationContext> evaluationContext = Lazy.of(() -> {
+			EvaluationContext ctx = getEvaluationContext(null);
+			ctx.setVariable("target", getOwner().getType().getSimpleName() + "." + getName());
+			return ctx;
+		});
+
+		List<Object> target = new ArrayList<>();
+		for (String keyId : encrypted.keyId()) {
+			target.add(EncryptionUtils.resolveKeyId(keyId, evaluationContext));
+		}
+		return target;
 	}
 }

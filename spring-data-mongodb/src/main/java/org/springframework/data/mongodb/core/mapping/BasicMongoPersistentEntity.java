@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core.mapping;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -31,7 +33,10 @@ import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.mongodb.MongoCollectionUtils;
+import org.springframework.data.mongodb.util.encryption.EncryptionUtils;
+import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.spel.ExpressionDependencies;
+import org.springframework.data.util.Lazy;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
@@ -55,7 +60,7 @@ import org.springframework.util.StringUtils;
  * @author Mark Paluch
  */
 public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, MongoPersistentProperty>
-		implements MongoPersistentEntity<T> {
+		implements MongoPersistentEntity<T>, EvaluationContextProvider {
 
 	private static final String AMBIGUOUS_FIELD_MAPPING = "Ambiguous field mapping detected! Both %s and %s map to the same field name %s! Disambiguate using @Field annotation!";
 	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
@@ -216,6 +221,11 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		return super.getEvaluationContext(rootObject);
 	}
 
+	@Override
+	public EvaluationContext getEvaluationContext(Object rootObject, ExpressionDependencies dependencies) {
+		return super.getEvaluationContext(rootObject, dependencies);
+	}
+
 	private void verifyFieldUniqueness() {
 
 		AssertFieldNameUniquenessHandler handler = new AssertFieldNameUniquenessHandler();
@@ -365,28 +375,29 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	}
 
 	@Override
-	public Object[] getEncryptionKeyIds() {
+	public Collection<Object> getEncryptionKeyIds() {
 
 		Encrypted encrypted = findAnnotation(Encrypted.class);
-		if(encrypted == null) {
+		if (encrypted == null) {
 			return null;
 		}
-		List<Object> target = new ArrayList<>();
-		EvaluationContext evaluationContext = getEvaluationContext(null);
-		evaluationContext.setVariable("target", getName());
-		for(String keyId : encrypted.keyId()) {
-			Expression expression = detectExpression(keyId);
-			if(expression == null) {
-				try {
-					target.add(UUID.fromString(keyId));
-				} catch (IllegalArgumentException e) {
-					target.add(org.bson.Document.parse("{ val : { $binary : { base64 : '" + keyId + "', subType : '04'} } }").get("val"));
-				}
-			} else {
-				target.add(expression.getValue(evaluationContext));
-			}
+
+		if(ObjectUtils.isEmpty(encrypted.keyId())) {
+			return Collections.emptySet();
 		}
-		return target.toArray();
+
+		Lazy<EvaluationContext> evaluationContext = Lazy.of(() -> {
+
+			EvaluationContext ctx = getEvaluationContext(null);
+			ctx.setVariable("target", getType().getSimpleName());
+			return ctx;
+		});
+
+		List<Object> target = new ArrayList<>();
+		for (String keyId : encrypted.keyId()) {
+			target.add(EncryptionUtils.resolveKeyId(keyId, evaluationContext));
+		}
+		return target;
 	}
 
 	/**

@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core.mapping;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Spliterator;
@@ -325,7 +326,7 @@ class UnwrappedMongoPersistentEntity<T> implements MongoPersistentEntity<T> {
 	}
 
 	@Override
-	public Object[] getEncryptionKeyIds() {
+	public Collection<Object> getEncryptionKeyIds() {
 		return delegate.getEncryptionKeyIds();
 	}
 }

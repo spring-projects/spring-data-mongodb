@@ -28,6 +28,7 @@ import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProper
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.ObjectJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -71,8 +72,27 @@ public interface MongoJsonSchemaCreator {
 	 */
 	MongoJsonSchema createSchemaFor(Class<?> type);
 
+	/**
+	 * Filter matching {@link JsonSchemaProperty properties}.
+	 *
+	 * @param filter the {@link Predicate} to evaluate for inclusion. Must not be {@literal null}.
+	 * @return new instance of {@link MongoJsonSchemaCreator}.
+	 * @since 3.3
+	 */
 	MongoJsonSchemaCreator filter(Predicate<JsonSchemaProperty> filter);
 
+	/**
+	 * Change the default wrapper element name from {@literal $jsonSchema} to the given on. Use {@literal null} to omit
+	 * the wrapper.
+	 *
+	 * @param rootElementName can be {@literal null}.
+	 * @return new instance of {@link MongoJsonSchemaCreator}.
+	 */
+	MongoJsonSchemaCreator wrapperName(@Nullable String rootElementName);
+
+	/**
+	 * @return new instance of {@link Predicate}.
+	 */
 	static Predicate<JsonSchemaProperty> encryptedOnly() {
 
 		return new Predicate<JsonSchemaProperty>() {

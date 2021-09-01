@@ -20,23 +20,16 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.expression.BeanFactoryResolver;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mapping.model.DefaultSpELExpressionEvaluator;
-import org.springframework.data.mapping.model.SpELContext;
-import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.Encrypted;
 import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.EncryptedJsonSchemaProperty;
@@ -47,13 +40,7 @@ import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema.MongoJsonSchemaBuilder;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject;
-import org.springframework.expression.Expression;
-import org.springframework.expression.ParserContext;
-import org.springframework.expression.common.LiteralExpression;
-import org.springframework.expression.spel.SpelParserConfiguration;
-import org.springframework.expression.spel.standard.SpelExpression;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
@@ -75,6 +62,9 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 	private final MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private final Predicate<JsonSchemaProperty> filter;
 
+	@Nullable
+	private final String wrapperElementName;
+
 	/**
 	 * Create a new instance of {@link MappingMongoJsonSchemaCreator}.
 	 *
@@ -83,16 +73,17 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 	@SuppressWarnings("unchecked")
 	MappingMongoJsonSchemaCreator(MongoConverter converter) {
 
-		this(converter, (MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty>) converter.getMappingContext(),
+		this("$jsonSchema", converter, (MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty>) converter.getMappingContext(),
 				(property) -> true);
 	}
 
 	@SuppressWarnings("unchecked")
-	MappingMongoJsonSchemaCreator(MongoConverter converter,
+	MappingMongoJsonSchemaCreator(String wrapperElementName, MongoConverter converter,
 			MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
 			Predicate<JsonSchemaProperty> filter) {
 
 		Assert.notNull(converter, "Converter must not be null!");
+		this.wrapperElementName = wrapperElementName;
 		this.converter = converter;
 		this.mappingContext = mappingContext;
 		this.filter = filter;
@@ -100,7 +91,12 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 
 	@Override
 	public MongoJsonSchemaCreator filter(Predicate<JsonSchemaProperty> filter) {
-		return new MappingMongoJsonSchemaCreator(converter, mappingContext, filter);
+		return new MappingMongoJsonSchemaCreator(wrapperElementName, converter, mappingContext, filter);
+	}
+
+	@Override
+	public MongoJsonSchemaCreator wrapperName(@Nullable String wrapperElementName) {
+		return new MappingMongoJsonSchemaCreator(wrapperElementName, converter, mappingContext, filter);
 	}
 
 	/*
@@ -111,18 +107,30 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 	public MongoJsonSchema createSchemaFor(Class<?> type) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getRequiredPersistentEntity(type);
-		if(entity instanceof BasicMongoPersistentEntity) {
+		if (entity instanceof BasicMongoPersistentEntity) {
 			((BasicMongoPersistentEntity<?>) entity).getEvaluationContext(null);
 		}
-		MongoJsonSchemaBuilder schemaBuilder = MongoJsonSchema.builder();
 
-		if (entity.isAnnotationPresent(Encrypted.class)) {
+		MongoJsonSchemaBuilder schemaBuilder = MongoJsonSchema.builder();
+		schemaBuilder.wrapperObject(wrapperElementName);
+
+		{
 			Encrypted encrypted = entity.findAnnotation(Encrypted.class);
-			Document encryptionMetadata = new Document("keyId", objectToKeyId(entity.getEncryptionKeyIds()));
-			if (StringUtils.hasText(encrypted.algorithm())) {
-				encryptionMetadata.append("algorithm", encrypted.algorithm());
+			if (encrypted != null) {
+
+				Document encryptionMetadata = new Document();
+
+				Collection<Object> encryptionKeyIds = entity.getEncryptionKeyIds();
+				if (!CollectionUtils.isEmpty(encryptionKeyIds)) {
+					encryptionMetadata.append("keyId", encryptionKeyIds);
+				}
+
+				if (StringUtils.hasText(encrypted.algorithm())) {
+					encryptionMetadata.append("algorithm", encrypted.algorithm());
+				}
+
+				schemaBuilder.encryptionMetadata(encryptionMetadata);
 			}
-			schemaBuilder.encryptionMetadata(encryptionMetadata);
 		}
 
 		List<JsonSchemaProperty> schemaProperties = computePropertiesForEntity(Collections.emptyList(), entity);
@@ -150,28 +158,8 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 			schemaProperties.add(computeSchemaForProperty(currentPath));
 		}
 
-		// if(!encryptedFieldsOnly) {
-		// return schemaProperties;
-		// }
 		return schemaProperties.stream().filter(filter).collect(Collectors.toList());
 	}
-
-	// private boolean containsEncrypted(JsonSchemaProperty property) {
-	// if(property instanceof EncryptedJsonSchemaProperty) {
-	// return true;
-	// }
-	//
-	// if(property instanceof ObjectJsonSchemaProperty) {
-	// ObjectJsonSchemaProperty val = (ObjectJsonSchemaProperty) property;
-	// for(JsonSchemaProperty p : val.getProperties()) {
-	// if(containsEncrypted(p) ) {
-	// return true;
-	// }
-	// }
-	// }
-	//
-	// return false;
-	// }
 
 	private JsonSchemaProperty computeSchemaForProperty(List<MongoPersistentProperty> path) {
 
@@ -187,7 +175,7 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 
 		String fieldName = computePropertyFieldName(property);
 
-		JsonSchemaProperty schemaProperty = null;
+		JsonSchemaProperty schemaProperty;
 		if (property.isCollectionLike()) {
 			schemaProperty = createSchemaProperty(fieldName, targetType, required);
 		} else if (property.isMap()) {
@@ -198,19 +186,27 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 			schemaProperty = createSchemaProperty(fieldName, targetType, required);
 		}
 
-		if (property.findAnnotation(Encrypted.class) != null) {
-			EncryptedJsonSchemaProperty enc = new EncryptedJsonSchemaProperty(schemaProperty);
+		return applyEncryptionDataIfNecessary(property, schemaProperty);
+	}
 
-			Encrypted annotation = property.findAnnotation(Encrypted.class);
-			enc = enc.algorithm(annotation.algorithm());
+	@Nullable
+	private JsonSchemaProperty applyEncryptionDataIfNecessary(MongoPersistentProperty property,
+			JsonSchemaProperty schemaProperty) {
 
-			if (!ObjectUtils.isEmpty(annotation.keyId())) {
-				enc.keys(objectToKeyId(property.getEncryptionKeyIds()));
-			}
-			return enc;
+		Encrypted encrypted = property.findAnnotation(Encrypted.class);
+		if (encrypted == null) {
+			return schemaProperty;
 		}
 
-		return schemaProperty;
+		EncryptedJsonSchemaProperty enc = new EncryptedJsonSchemaProperty(schemaProperty);
+		if (StringUtils.hasText(encrypted.algorithm())) {
+			enc = enc.algorithm(encrypted.algorithm());
+		}
+		if (!ObjectUtils.isEmpty(encrypted.keyId())) {
+			enc = enc.keys(property.getEncryptionKeyIds());
+		}
+		return enc;
+
 	}
 
 	private JsonSchemaProperty createObjectSchemaPropertyForEntity(List<MongoPersistentProperty> path,
@@ -289,70 +285,4 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 
 		return JsonSchemaProperty.required(property);
 	}
-
-	private List<Object> objectToKeyId(Object[] values) {
-
-
-
-		List<Object> target = new ArrayList<>();
-		for (Object key : values) {
-
-			if(key instanceof  UUID) {
-				target.add(key);
-				continue;
-			}
-
-			if(key instanceof String) {
-				try {
-					target.add(UUID.fromString((String)key));
-				} catch (IllegalArgumentException e) {
-
-					target.add(Document.parse("{ val : { $binary : { base64 : '" + key + "', subType : '04'} } }").get("val"));
-					// target.add(UuidHelper.decodeBinaryToUuid(key.getBytes(StandardCharsets.UTF_8),
-					// BsonBinarySubType.UUID_STANDARD.getValue(), UuidRepresentation.STANDARD));
-					// BsonBinary
-					// Document d = Document.parse()
-					// target.add(UUID.nameUUIDFromBytes(Base64Utils.decodeFromString(key)));
-					// target.add(new Document().append("$binary", new Document().append("base64", key).append("subType", "04")));
-				}
-				continue;
-			}
-
-			target.add(key);
-
-		}
-		return target;
-	}
-
-//	boolean isSpelExpression(String value) {
-//
-//		Expression expression = new SpelExpressionParser(new SpelParserConfiguration(null, this.getClass().getClassLoader())).parseExpression(value, ParserContext.TEMPLATE_EXPRESSION);
-//		return expression instanceof LiteralExpression ? false : true;
-//	}
-//
-//	Object evaluateSpelExpression(String path, String value) {
-//
-//		SpelExpression spelExpression = new SpelExpressionParser(new SpelParserConfiguration(null, this.getClass().getClassLoader())).parseRaw(value);
-//
-//		StandardEvaluationContext evaluationContext = new StandardEvaluationContext();
-//
-//		if(mappingContext instanceof MongoMappingContext) {
-//
-//			ApplicationContext applicationContext = ((MongoMappingContext) mappingContext).getApplicationContext();
-//			//evaluationContext.registerFunction();
-//			evaluationContext.setBeanResolver(new BeanFactoryResolver(applicationContext));
-//			// evaluationContext.setMethodResolvers();
-//			evaluationContext.setVariable("target", path);
-//		}
-//
-////		if (factory != null) {
-////			evaluationContext.setBeanResolver(new BeanFactoryResolver(factory));
-////		}
-//
-//		spelExpression.setEvaluationContext(evaluationContext);
-//		return spelExpression.getValue();
-//	}
-
-
-
 }
