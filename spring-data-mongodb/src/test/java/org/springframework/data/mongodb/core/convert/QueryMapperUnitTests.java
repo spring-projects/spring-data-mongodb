@@ -33,11 +33,6 @@ import org.bson.types.Code;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
@@ -79,22 +74,21 @@ import com.mongodb.client.model.Filters;
  * @author Mark Paluch
  * @author David Julia
  */
-@ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
 public class QueryMapperUnitTests {
 
 	private QueryMapper mapper;
 	private MongoMappingContext context;
 	private MappingMongoConverter converter;
 
-	@Mock MongoDatabaseFactory factory;
-
 	@BeforeEach
 	void beforeEach() {
 
+		MongoCustomConversions conversions = new MongoCustomConversions();
 		this.context = new MongoMappingContext();
+		this.context.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
 
-		this.converter = new MappingMongoConverter(new DefaultDbRefResolver(factory), context);
+		this.converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, context);
+		this.converter.setCustomConversions(conversions);
 		this.converter.afterPropertiesSet();
 
 		this.mapper = new QueryMapper(converter);
@@ -1333,6 +1327,25 @@ public class QueryMapperUnitTests {
 		assertThat(mappedFields).containsEntry("_id", 1);
 	}
 
+	@Test // GH-3783
+	void retainsId$InWithStringArray() {
+
+		org.bson.Document mappedQuery = mapper.getMappedObject(
+				org.bson.Document.parse("{ _id : { $in: [\"5b8bedceb1e0bfc07b008828\"]}}"),
+				context.getPersistentEntity(WithExplicitStringId.class));
+		assertThat(mappedQuery.get("_id")).isEqualTo(org.bson.Document.parse("{ $in: [\"5b8bedceb1e0bfc07b008828\"]}"));
+	}
+
+	@Test // GH-3783
+	void mapsId$InInToObjectIds() {
+
+		org.bson.Document mappedQuery = mapper.getMappedObject(
+				org.bson.Document.parse("{ _id : { $in: [\"5b8bedceb1e0bfc07b008828\"]}}"),
+				context.getPersistentEntity(ClassWithDefaultId.class));
+		assertThat(mappedQuery.get("_id"))
+				.isEqualTo(org.bson.Document.parse("{ $in: [ {$oid: \"5b8bedceb1e0bfc07b008828\" } ]}"));
+	}
+
 	class WithDeepArrayNesting {
 
 		List<WithNestedArray> level0;
@@ -1399,6 +1412,12 @@ public class QueryMapperUnitTests {
 	class WithStringId {
 
 		@MongoId String id;
+		String name;
+	}
+
+	class WithExplicitStringId {
+
+		@MongoId(FieldType.STRING) String id;
 		String name;
 	}
 
