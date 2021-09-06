@@ -31,7 +31,6 @@ import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -83,24 +82,6 @@ public interface MongoJsonSchemaCreator {
 	 * @since 3.3
 	 */
 	MongoJsonSchemaCreator filter(Predicate<JsonSchemaPropertyContext> filter);
-
-	/**
-	 * Change the default wrapper element name from {@literal $jsonSchema} to the given on. Use {@literal null} to omit
-	 * the wrapper.
-	 *
-	 * @param rootElementName can be {@literal null}.
-	 * @return new instance of {@link MongoJsonSchemaCreator}.
-	 * @since 3.3
-	 */
-	MongoJsonSchemaCreator wrapperName(@Nullable String rootElementName);
-
-	/**
-	 * @return
-	 * @since 3.3
-	 */
-	default MongoJsonSchemaCreator dontWrap() {
-		return wrapperName(null);
-	}
 
 	interface JsonSchemaPropertyContext {
 

@@ -104,10 +104,9 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 
 		MongoJsonSchema schema = MongoJsonSchemaCreator.create() //
 				.filter(MongoJsonSchemaCreator.encryptedOnly()) // filter non encrypted fields
-				.wrapperName("db.patient") // outer namespace
 				.createSchemaFor(Patient.class);
 
-		Document targetSchema = schema.toDocument().get("db.patient", Document.class);
+		Document targetSchema = schema.schemaDocument();
 		assertThat(targetSchema).isEqualTo(Document.parse(PATIENT));
 	}
 
@@ -118,7 +117,7 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 				.filter(MongoJsonSchemaCreator.encryptedOnly()) // filter non encrypted fields
 				.createSchemaFor(Cyclic.class);
 
-		Document targetSchema = schema.toDocument().get("$jsonSchema", Document.class);
+		Document targetSchema = schema.schemaDocument();
 		assertThat(targetSchema).isNotNull();
 	}
 
@@ -135,10 +134,9 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 
 		MongoJsonSchema schema = MongoJsonSchemaCreator.create(mappingContext) //
 				.filter(MongoJsonSchemaCreator.encryptedOnly()) //
-				.dontWrap() //
 				.createSchemaFor(EncryptionMetadataFromProperty.class);
 
-		assertThat(schema.toDocument()).isEqualTo(Document.parse(ENC_FROM_PROPERTY_SCHEMA));
+		assertThat(schema.schemaDocument()).isEqualTo(Document.parse(ENC_FROM_PROPERTY_SCHEMA));
 	}
 
 	@Test // GH-???
@@ -154,10 +152,9 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 
 		MongoJsonSchema schema = MongoJsonSchemaCreator.create(mappingContext) //
 				.filter(MongoJsonSchemaCreator.encryptedOnly()) //
-				.dontWrap() //
 				.createSchemaFor(EncryptionMetadataFromMethod.class);
 
-		assertThat(schema.toDocument()).isEqualTo(Document.parse(ENC_FROM_METHOD_SCHEMA));
+		assertThat(schema.schemaDocument()).isEqualTo(Document.parse(ENC_FROM_METHOD_SCHEMA));
 	}
 
 	// --> TYPES AND JSON

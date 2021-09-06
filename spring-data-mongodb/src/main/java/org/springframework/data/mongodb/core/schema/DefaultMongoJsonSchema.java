@@ -19,7 +19,6 @@ import org.bson.Document;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
 /**
  * Value object representing a MongoDB-specific JSON schema which is the default {@link MongoJsonSchema} implementation.
@@ -30,18 +29,13 @@ import org.springframework.util.StringUtils;
  */
 class DefaultMongoJsonSchema implements MongoJsonSchema {
 
-	@Nullable
-	private final String wrapperName;
-
 	private final JsonSchemaObject root;
 
 	@Nullable //
 	private final Document encryptionMetadata;
 
-
-
 	DefaultMongoJsonSchema(JsonSchemaObject root) {
-		this("$jsonSchema", root, null);
+		this(root, null);
 	}
 
 	/**
@@ -51,21 +45,20 @@ class DefaultMongoJsonSchema implements MongoJsonSchema {
 	 * @param encryptionMetadata can be {@literal null}.
 	 * @since 3.3
 	 */
-	DefaultMongoJsonSchema(@Nullable String wrapperName, JsonSchemaObject root, @Nullable Document encryptionMetadata) {
+	DefaultMongoJsonSchema(JsonSchemaObject root, @Nullable Document encryptionMetadata) {
 
 		Assert.notNull(root, "Root schema object must not be null!");
 
-		this.wrapperName = wrapperName;
 		this.root = root;
 		this.encryptionMetadata = encryptionMetadata;
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.schema.MongoJsonSchema#toDocument()
+	 * @see org.springframework.data.mongodb.core.schema.MongoJsonSchema#schema()
 	 */
 	@Override
-	public Document toDocument() {
+	public Document schemaDocument() {
 
 		Document schemaDocument = new Document();
 
@@ -75,9 +68,7 @@ class DefaultMongoJsonSchema implements MongoJsonSchema {
 		}
 
 		schemaDocument.putAll(root.toDocument());
-		if(!StringUtils.hasText(wrapperName)) {
-			return schemaDocument;
-		}
-		return new Document(wrapperName, schemaDocument);
+
+		return schemaDocument;
 	}
 }

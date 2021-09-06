@@ -62,8 +62,6 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 	private final MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private final Predicate<JsonSchemaPropertyContext> filter;
 
-	@Nullable private final String wrapperElementName;
-
 	/**
 	 * Create a new instance of {@link MappingMongoJsonSchemaCreator}.
 	 *
@@ -72,18 +70,16 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 	@SuppressWarnings("unchecked")
 	MappingMongoJsonSchemaCreator(MongoConverter converter) {
 
-		this("$jsonSchema", converter,
-				(MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty>) converter.getMappingContext(),
+		this(converter, (MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty>) converter.getMappingContext(),
 				(property) -> true);
 	}
 
 	@SuppressWarnings("unchecked")
-	MappingMongoJsonSchemaCreator(String wrapperElementName, MongoConverter converter,
+	MappingMongoJsonSchemaCreator(MongoConverter converter,
 			MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
 			Predicate<JsonSchemaPropertyContext> filter) {
 
 		Assert.notNull(converter, "Converter must not be null!");
-		this.wrapperElementName = wrapperElementName;
 		this.converter = converter;
 		this.mappingContext = mappingContext;
 		this.filter = filter;
@@ -91,12 +87,7 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 
 	@Override
 	public MongoJsonSchemaCreator filter(Predicate<JsonSchemaPropertyContext> filter) {
-		return new MappingMongoJsonSchemaCreator(wrapperElementName, converter, mappingContext, filter);
-	}
-
-	@Override
-	public MongoJsonSchemaCreator wrapperName(@Nullable String wrapperElementName) {
-		return new MappingMongoJsonSchemaCreator(wrapperElementName, converter, mappingContext, filter);
+		return new MappingMongoJsonSchemaCreator(converter, mappingContext, filter);
 	}
 
 	/*
@@ -112,7 +103,6 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 		}
 
 		MongoJsonSchemaBuilder schemaBuilder = MongoJsonSchema.builder();
-		schemaBuilder.wrapperObject(wrapperElementName);
 
 		{
 			Encrypted encrypted = entity.findAnnotation(Encrypted.class);

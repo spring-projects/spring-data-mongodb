@@ -63,13 +63,24 @@ import org.springframework.lang.Nullable;
 public interface MongoJsonSchema {
 
 	/**
-	 * Create the {@link Document} containing the specified {@code $jsonSchema}. <br />
+	 * Create the {@code $jsonSchema} {@link Document} containing the specified {@link #schemaDocument()}. <br />
 	 * Property and field names need to be mapped to the domain type ones by running the {@link Document} through a
 	 * {@link org.springframework.data.mongodb.core.convert.JsonSchemaMapper} to apply field name customization.
 	 *
 	 * @return never {@literal null}.
 	 */
-	Document toDocument();
+	default Document toDocument() {
+		return new Document("$jsonSchema", schemaDocument());
+	}
+
+	/**
+	 * Create the {@link Document} defining the schema. <br />
+	 * Property and field names need to be mapped to the domain type ones by running the {@link Document} through a
+	 * {@link org.springframework.data.mongodb.core.convert.JsonSchemaMapper} to apply field name customization.
+	 *
+	 * @return never {@literal null}.
+	 */
+	Document schemaDocument();
 
 	/**
 	 * Create a new {@link MongoJsonSchema} for a given root object.
@@ -106,9 +117,6 @@ public interface MongoJsonSchema {
 	 * @author Christoph Strobl
 	 */
 	class MongoJsonSchemaBuilder {
-
-		@Nullable
-		private String wrapperName = "$jsonSchema";
 
 		private ObjectJsonSchemaObject root;
 
@@ -284,20 +292,12 @@ public interface MongoJsonSchema {
 		}
 
 		/**
-		 *
-		 * @param name can be {@literal null}.
-		 */
-		public void wrapperObject(@Nullable String name) {
-			this.wrapperName = name;
-		}
-
-		/**
 		 * Obtain the {@link MongoJsonSchema}.
 		 *
 		 * @return new instance of {@link MongoJsonSchema}.
 		 */
 		public MongoJsonSchema build() {
-			return new DefaultMongoJsonSchema(wrapperName, root, encryptionMetadata);
+			return new DefaultMongoJsonSchema(root, encryptionMetadata);
 		}
 	}
 }

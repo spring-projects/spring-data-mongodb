@@ -36,10 +36,10 @@ class DocumentJsonSchema implements MongoJsonSchema {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.schema.MongoJsonSchema#toDocument()
+	 * @see org.springframework.data.mongodb.core.schema.MongoJsonSchema#schema()
 	 */
 	@Override
-	public Document toDocument() {
-		return new Document("$jsonSchema", new Document(document));
+	public Document schemaDocument() {
+		return new Document(document);
 	}
 }
