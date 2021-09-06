@@ -43,6 +43,9 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.Person;
+import org.springframework.data.mongodb.core.aggregation.ConditionalOperators;
+import org.springframework.data.mongodb.core.aggregation.EvaluationOperators;
+import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.data.mongodb.core.mapping.DBRef;
@@ -1328,6 +1331,21 @@ public class QueryMapperUnitTests {
 		this.mapper = new QueryMapper(converter);
 
 		assertThat(mapper.getMappedSort(query.getQueryObject(), context.getPersistentEntity(Customer.class))).isEqualTo(new org.bson.Document("address.street", "1007 Mountain Drive"));
+	}
+
+	@Test // GH-3790
+	void shouldAcceptExprAsCriteriaDefinition() {
+
+		EvaluationOperators.EvaluationOperatorFactory.Expr expr = EvaluationOperators
+				.valueOf(ConditionalOperators.ifNull("customizedField").then(true)).expr();
+
+		Query query = query(
+				expr.toCriteriaDefinition(new TypeBasedAggregationOperationContext(EmbeddedClass.class, context, mapper)));
+
+		org.bson.Document mappedQuery = mapper.getMappedObject(query.getQueryObject(),
+				context.getRequiredPersistentEntity(EmbeddedClass.class));
+
+		assertThat(mappedQuery).isEqualTo("{ $expr : { $ifNull : [\"$fancy_custom_name\", true] } }");
 	}
 
 	@Test // GH-3668

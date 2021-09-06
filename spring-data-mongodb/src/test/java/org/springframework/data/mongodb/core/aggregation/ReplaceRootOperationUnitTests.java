@@ -27,20 +27,20 @@ import org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.Re
  *
  * @author Mark Paluch
  */
-public class ReplaceRootOperationUnitTests {
+class ReplaceRootOperationUnitTests {
 
 	@Test // DATAMONGO-1550
-	public void rejectsNullField() {
+	void rejectsNullField() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new ReplaceRootOperation((Field) null));
 	}
 
 	@Test // DATAMONGO-1550
-	public void rejectsNullExpression() {
+	void rejectsNullExpression() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new ReplaceRootOperation((AggregationExpression) null));
 	}
 
 	@Test // DATAMONGO-1550
-	public void shouldRenderCorrectly() {
+	void shouldRenderCorrectly() {
 
 		ReplaceRootOperation operation = ReplaceRootDocumentOperation.builder()
 				.withDocument(new Document("hello", "world"));
@@ -50,7 +50,7 @@ public class ReplaceRootOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1550
-	public void shouldRenderExpressionCorrectly() {
+	void shouldRenderExpressionCorrectly() {
 
 		ReplaceRootOperation operation = new ReplaceRootOperation(VariableOperators //
 				.mapItemsOf("array") //
@@ -64,7 +64,7 @@ public class ReplaceRootOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1550
-	public void shouldComposeDocument() {
+	void shouldComposeDocument() {
 
 		ReplaceRootOperation operation = ReplaceRootDocumentOperation.builder().withDocument() //
 				.andValue("value").as("key") //
@@ -77,7 +77,7 @@ public class ReplaceRootOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1550
-	public void shouldComposeSubDocument() {
+	void shouldComposeSubDocument() {
 
 		Document partialReplacement = new Document("key", "override").append("key2", "value2");
 
@@ -92,7 +92,7 @@ public class ReplaceRootOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-1550
-	public void shouldNotExposeFields() {
+	void shouldNotExposeFields() {
 
 		ReplaceRootOperation operation = new ReplaceRootOperation(Fields.field("field"));
 

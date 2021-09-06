@@ -1,26 +1,23 @@
 package org.springframework.data.mongodb.core.aggregation;
 
-import static org.assertj.core.api.Assertions.*;
 
-import org.bson.Document;
+import static org.springframework.data.mongodb.test.util.Assertions.*;
+
 import org.junit.jupiter.api.Test;
 
+/**
+ * Unit tests for {@link MatchOperation}.
+ *
+ * @author Divya Srivastava
+ */
 class MatchOperationUnitTests {
-	
-	@Test // DATAMONGO - 3729
-	public void shouldRenderStdDevPopCorrectly() {
-		MatchOperation operation = Aggregation.match().withValueOf(ArithmeticOperators.valueOf("quiz").stdDevPop());
+
+	@Test // GH-3790
+	void matchShouldRenderCorrectly() {
+
+		MatchOperation operation = Aggregation.match(ArithmeticOperators.valueOf("quiz").stdDevPop());
 		assertThat(operation.toDocument(Aggregation.DEFAULT_CONTEXT)).
-			isEqualTo(Document.parse("{ $match: { \"$expr\" : { \"$stdDevPop\" : \"$quiz\" } } } "));
-		
-	}
-	
-	@Test // DATAMONGO - 3729
-	public void shouldRenderStdDevSampCorrectly() {
-		MatchOperation operation = Aggregation.match().withValueOf(ArithmeticOperators.valueOf("quiz").stdDevSamp());
-		assertThat(operation.toDocument(Aggregation.DEFAULT_CONTEXT)).
-			isEqualTo(Document.parse("{ $match: { \"$expr\" : { \"$stdDevSamp\" : \"$quiz\" } } } "));
-		
+				isEqualTo("{ $match: { \"$stdDevPop\" : \"$quiz\" } } ");
 	}
 
 }

@@ -1,9 +1,33 @@
+/*
+ * Copyright 2021 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.springframework.data.mongodb.core.aggregation;
 
+import org.bson.Document;
+
+import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.util.Assert;
 
+/**
+ * Gateway to {@literal evaluation operators} such as {@literal $expr}.
+ *
+ * @author Divya Srivastava
+ * @since 3.3
+ */
 public class EvaluationOperators {
-	
+
 	/**
 	 * Take the value resulting from the given fieldReference.
 	 *
@@ -13,7 +37,7 @@ public class EvaluationOperators {
 	public static EvaluationOperatorFactory valueOf(String fieldReference) {
 		return new EvaluationOperatorFactory(fieldReference);
 	}
-	
+
 	/**
 	 * Take the value resulting from the given {@link AggregationExpression}.
 	 *
@@ -23,12 +47,12 @@ public class EvaluationOperators {
 	public static EvaluationOperatorFactory valueOf(AggregationExpression expression) {
 		return new EvaluationOperatorFactory(expression);
 	}
-	
+
 	public static class EvaluationOperatorFactory {
-		
+
 		private final String fieldReference;
 		private final AggregationExpression expression;
-		
+
 		/**
 		 * Creates new {@link EvaluationOperatorFactory} for given {@literal fieldReference}.
 		 *
@@ -41,7 +65,6 @@ public class EvaluationOperators {
 			this.expression = null;
 		}
 
-		
 		/**
 		 * Creates new {@link EvaluationOperatorFactory} for given {@link AggregationExpression}.
 		 *
@@ -53,7 +76,7 @@ public class EvaluationOperators {
 			this.fieldReference = null;
 			this.expression = expression;
 		}
-		
+
 		/**
 		 * Creates new {@link AggregationExpression} that is a valid aggregation expression.
 		 *
@@ -62,8 +85,10 @@ public class EvaluationOperators {
 		public Expr expr() {
 			return usesFieldRef() ? Expr.valueOf(fieldReference) : Expr.valueOf(expression);
 		}
-		
-		
+
+		/**
+		 * Allows the use of aggregation expressions within the query language.
+		 */
 		public static class Expr extends AbstractAggregationExpression {
 
 			private Expr(Object value) {
@@ -99,8 +124,29 @@ public class EvaluationOperators {
 				return new Expr(expression);
 			}
 
+			/**
+			 * Creates {@code $expr} as {@link CriteriaDefinition}.
+			 *
+			 * @return the {@link CriteriaDefinition} from this expression.
+			 */
+			public CriteriaDefinition toCriteriaDefinition(AggregationOperationContext context) {
+
+				Document criteriaObject = toDocument(context);
+
+				return new CriteriaDefinition() {
+					@Override
+					public Document getCriteriaObject() {
+						return criteriaObject;
+					}
+
+					@Override
+					public String getKey() {
+						return getMongoMethod();
+					}
+				};
+			}
 		}
-		
+
 		private boolean usesFieldRef() {
 			return fieldReference != null;
 		}
