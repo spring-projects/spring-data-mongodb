@@ -30,6 +30,7 @@ import org.junit.jupiter.api.Test;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Mushtaq Ahmed
+ * @author Divya Srivastava
  */
 class ArithmeticOperatorsUnitTests {
 
@@ -86,8 +87,7 @@ class ArithmeticOperatorsUnitTests {
 	@Test // GH-3728
 	void rendersSin() {
 
-		assertThat(valueOf("angle").sin().toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo("{ $sin : \"$angle\" }");
+		assertThat(valueOf("angle").sin().toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo("{ $sin : \"$angle\" }");
 	}
 
 	@Test // GH-3728
@@ -100,8 +100,7 @@ class ArithmeticOperatorsUnitTests {
 	@Test // GH-3728
 	void rendersSinh() {
 
-		assertThat(valueOf("angle").sinh().toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo("{ $sinh : \"$angle\" }");
+		assertThat(valueOf("angle").sinh().toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo("{ $sinh : \"$angle\" }");
 	}
 
 	@Test // GH-3728
@@ -114,8 +113,7 @@ class ArithmeticOperatorsUnitTests {
 	@Test // GH-3710
 	void rendersCos() {
 
-		assertThat(valueOf("angle").cos().toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo("{ $cos : \"$angle\" }");
+		assertThat(valueOf("angle").cos().toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo("{ $cos : \"$angle\" }");
 	}
 
 	@Test // GH-3710
@@ -128,8 +126,7 @@ class ArithmeticOperatorsUnitTests {
 	@Test // GH-3710
 	void rendersCosh() {
 
-		assertThat(valueOf("angle").cosh().toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo("{ $cosh : \"$angle\" }");
+		assertThat(valueOf("angle").cosh().toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo("{ $cosh : \"$angle\" }");
 	}
 
 	@Test // GH-3710
@@ -142,8 +139,7 @@ class ArithmeticOperatorsUnitTests {
 	@Test // GH-3730
 	void rendersTan() {
 
-		assertThat(valueOf("angle").tan().toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo("{ $tan : \"$angle\" }");
+		assertThat(valueOf("angle").tan().toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo("{ $tan : \"$angle\" }");
 	}
 
 	@Test // GH-3730
@@ -156,8 +152,7 @@ class ArithmeticOperatorsUnitTests {
 	@Test // GH-3730
 	void rendersTanh() {
 
-		assertThat(valueOf("angle").tanh().toDocument(Aggregation.DEFAULT_CONTEXT))
-				.isEqualTo("{ $tanh : \"$angle\" }");
+		assertThat(valueOf("angle").tanh().toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo("{ $tanh : \"$angle\" }");
 	}
 
 	@Test // GH-3730
@@ -166,28 +161,25 @@ class ArithmeticOperatorsUnitTests {
 		assertThat(valueOf("angle").tanh(AngularUnit.DEGREES).toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo("{ $tanh : { $degreesToRadians : \"$angle\" } }");
 	}
-	
-	@Test // DATAMONGO - 3709
+
+	@Test // GH-3709
 	void rendersATan() {
-		
-		assertThat(valueOf("field").atan().toDocument(Aggregation.DEFAULT_CONTEXT))
-		.isEqualTo("{ $atan : \"$field\" }");
-	}
-	
-	@Test // DATAMONGO - 3709
-	void rendersATan2() {
-		
-		assertThat(valueOf("field1").atan2("field2").toDocument(Aggregation.DEFAULT_CONTEXT))
-		.isEqualTo("{ $atan2 : [ \"$field1\" , \"$field2\" ] }");
-	}
-	
-	@Test // DATAMONGO - 3709
-	void rendersATanh() {
-		
-		assertThat(valueOf("field").atanh().toDocument(Aggregation.DEFAULT_CONTEXT))
-		.isEqualTo("{ $atanh : \"$field\" }");
+
+		assertThat(valueOf("field").atan().toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo("{ $atan : \"$field\" }");
 	}
 
+	@Test // GH-3709
+	void rendersATan2() {
+
+		assertThat(valueOf("field1").atan2("field2").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ $atan2 : [ \"$field1\" , \"$field2\" ] }");
+	}
+
+	@Test // GH-3709
+	void rendersATanh() {
+
+		assertThat(valueOf("field").atanh().toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo("{ $atanh : \"$field\" }");
+	}
 
 	@Test // GH-3724
 	void rendersRand() {
