@@ -399,7 +399,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		return mongoOperations.exists(query, example.getProbeType(), entityInformation.getCollectionName());
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.QueryByExampleExecutor#findBy(org.springframework.data.domain.Example, java.util.function.Function)
 	 */
@@ -466,25 +466,25 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 			return new FluentQueryByExample<>(predicate, sort, resultType, fieldsToInclude);
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#one()
+		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#oneValue()
 		 */
 		@Override
-		public T one() {
+		public T oneValue() {
 			return createQuery().oneValue();
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#first()
 		 */
 		@Override
-		public T first() {
+		public T firstValue() {
 			return createQuery().firstValue();
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#all()
 		 */
@@ -493,7 +493,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 			return createQuery().all();
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#page(org.springframework.data.domain.Pageable)
 		 */
@@ -507,7 +507,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 			return PageableExecutionUtils.getPage(list, pageable, this::count);
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#stream()
 		 */
@@ -516,7 +516,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 			return createQuery().stream();
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#count()
 		 */
@@ -525,7 +525,7 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 			return createQuery().count();
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#exists()
 		 */

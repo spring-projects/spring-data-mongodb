@@ -1385,7 +1385,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return source.isVersionedEntity() //
 				? doSaveVersioned(source, collectionName) //
 				: (T) doSave(collectionName, objectToSave, this.mongoConverter);
-
 	}
 
 	@SuppressWarnings("unchecked")

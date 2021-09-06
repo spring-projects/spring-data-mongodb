@@ -469,7 +469,7 @@ class SimpleMongoRepositoryTests {
 		Person probe = new Person();
 		probe.setFirstname(oliver.getFirstname());
 
-		Person result = repository.findBy(Example.of(probe, getMatcher()), FluentQuery.FetchableFluentQuery::first);
+		Person result = repository.findBy(Example.of(probe, getMatcher()), FluentQuery.FetchableFluentQuery::firstValue);
 
 		assertThat(result).isEqualTo(oliver);
 	}
@@ -480,7 +480,7 @@ class SimpleMongoRepositoryTests {
 		Person probe = new Person();
 		probe.setFirstname(oliver.getFirstname());
 
-		Person result = repository.findBy(Example.of(probe, getMatcher()), FluentQuery.FetchableFluentQuery::one);
+		Person result = repository.findBy(Example.of(probe, getMatcher()), FluentQuery.FetchableFluentQuery::oneValue);
 
 		assertThat(result).isEqualTo(oliver);
 
@@ -523,7 +523,7 @@ class SimpleMongoRepositoryTests {
 		Person probe = new Person();
 		probe.setLastname(oliver.getLastname());
 
-		Person result = repository.findBy(Example.of(probe, getMatcher()), it -> it.project("firstname").first());
+		Person result = repository.findBy(Example.of(probe, getMatcher()), it -> it.project("firstname").firstValue());
 
 		assertThat(result.getFirstname()).isNotNull();
 		assertThat(result.getLastname()).isNull();

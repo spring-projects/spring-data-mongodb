@@ -248,7 +248,7 @@ public class QuerydslMongoPredicateExecutorIntegrationTests {
 	public void findByShouldReturnFirstResult() {
 
 		Person result = repository.findBy(person.firstname.eq(oliver.getFirstname()),
-				FluentQuery.FetchableFluentQuery::first);
+				FluentQuery.FetchableFluentQuery::oneValue);
 
 		assertThat(result).isEqualTo(oliver);
 	}
@@ -257,7 +257,7 @@ public class QuerydslMongoPredicateExecutorIntegrationTests {
 	public void findByShouldReturnOneResult() {
 
 		Person result = repository.findBy(person.firstname.eq(oliver.getFirstname()),
-				FluentQuery.FetchableFluentQuery::one);
+				FluentQuery.FetchableFluentQuery::oneValue);
 
 		assertThat(result).isEqualTo(oliver);
 
@@ -295,7 +295,8 @@ public class QuerydslMongoPredicateExecutorIntegrationTests {
 		Person probe = new Person();
 		probe.setLastname(oliver.getLastname());
 
-		Person result = repository.findBy(person.lastname.eq(oliver.getLastname()), it -> it.project("firstname").first());
+		Person result = repository.findBy(person.lastname.eq(oliver.getLastname()),
+				it -> it.project("firstname").firstValue());
 
 		assertThat(result.getFirstname()).isNotNull();
 		assertThat(result.getLastname()).isNull();

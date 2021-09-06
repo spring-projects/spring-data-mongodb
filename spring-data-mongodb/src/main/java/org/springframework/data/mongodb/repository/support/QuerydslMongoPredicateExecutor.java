@@ -190,7 +190,7 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 		return createQueryFor(predicate).fetchCount() > 0;
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.querydsl.QuerydslPredicateExecutor#findBy(com.querydsl.core.types.Predicate, java.util.function.Function)
 	 */
@@ -277,25 +277,25 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 			return new FluentQuerydsl<>(predicate, sort, resultType, fieldsToInclude);
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#one()
+		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#oneValue()
 		 */
 		@Override
-		public T one() {
+		public T oneValue() {
 			return createQuery().fetchOne();
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#first()
+		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#firstValue()
 		 */
 		@Override
-		public T first() {
+		public T firstValue() {
 			return createQuery().fetchFirst();
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#all()
 		 */
@@ -304,7 +304,7 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 			return createQuery().fetch();
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#page(org.springframework.data.domain.Pageable)
 		 */
@@ -316,7 +316,7 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 			return createQuery().fetchPage(pageable);
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#stream()
 		 */
@@ -325,7 +325,7 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 			return createQuery().stream();
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#count()
 		 */
@@ -334,7 +334,7 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 			return createQuery().fetchCount();
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
 		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#exists()
 		 */
