@@ -60,10 +60,9 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 
 	private final MongoConverter converter;
 	private final MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
-	private final Predicate<JsonSchemaProperty> filter;
+	private final Predicate<JsonSchemaPropertyContext> filter;
 
-	@Nullable
-	private final String wrapperElementName;
+	@Nullable private final String wrapperElementName;
 
 	/**
 	 * Create a new instance of {@link MappingMongoJsonSchemaCreator}.
@@ -73,14 +72,15 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 	@SuppressWarnings("unchecked")
 	MappingMongoJsonSchemaCreator(MongoConverter converter) {
 
-		this("$jsonSchema", converter, (MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty>) converter.getMappingContext(),
+		this("$jsonSchema", converter,
+				(MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty>) converter.getMappingContext(),
 				(property) -> true);
 	}
 
 	@SuppressWarnings("unchecked")
 	MappingMongoJsonSchemaCreator(String wrapperElementName, MongoConverter converter,
 			MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
-			Predicate<JsonSchemaProperty> filter) {
+			Predicate<JsonSchemaPropertyContext> filter) {
 
 		Assert.notNull(converter, "Converter must not be null!");
 		this.wrapperElementName = wrapperElementName;
@@ -90,7 +90,7 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 	}
 
 	@Override
-	public MongoJsonSchemaCreator filter(Predicate<JsonSchemaProperty> filter) {
+	public MongoJsonSchemaCreator filter(Predicate<JsonSchemaPropertyContext> filter) {
 		return new MappingMongoJsonSchemaCreator(wrapperElementName, converter, mappingContext, filter);
 	}
 
@@ -148,6 +148,11 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 
 			List<MongoPersistentProperty> currentPath = new ArrayList<>(path);
 
+			if (!filter.test(new PropertyContext(
+					currentPath.stream().map(PersistentProperty::getName).collect(Collectors.joining(".")), nested))) {
+				continue;
+			}
+
 			if (path.contains(nested)) { // cycle guard
 				schemaProperties.add(createSchemaProperty(computePropertyFieldName(CollectionUtils.lastElement(currentPath)),
 						Object.class, false));
@@ -158,7 +163,7 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 			schemaProperties.add(computeSchemaForProperty(currentPath));
 		}
 
-		return schemaProperties.stream().filter(filter).collect(Collectors.toList());
+		return schemaProperties;
 	}
 
 	private JsonSchemaProperty computeSchemaForProperty(List<MongoPersistentProperty> path) {
@@ -284,5 +289,31 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 		}
 
 		return JsonSchemaProperty.required(property);
+	}
+
+	class PropertyContext implements JsonSchemaPropertyContext {
+
+		private String path;
+		private MongoPersistentProperty property;
+
+		public PropertyContext(String path, MongoPersistentProperty property) {
+			this.path = path;
+			this.property = property;
+		}
+
+		@Override
+		public String getPath() {
+			return path;
+		}
+
+		@Override
+		public MongoPersistentProperty getProperty() {
+			return property;
+		}
+
+		@Override
+		public <T> MongoPersistentEntity<T> resolveEntity(MongoPersistentProperty property) {
+			return (MongoPersistentEntity<T>) mappingContext.getPersistentEntity(property);
+		}
 	}
 }

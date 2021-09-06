@@ -112,6 +112,17 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 	}
 
 	@Test // GH-???
+	public void csfleCyclic/*encryptedFieldsOnly*/() {
+
+		MongoJsonSchema schema = MongoJsonSchemaCreator.create() //
+				.filter(MongoJsonSchemaCreator.encryptedOnly()) // filter non encrypted fields
+				.createSchemaFor(Cyclic.class);
+
+		Document targetSchema = schema.toDocument().get("$jsonSchema", Document.class);
+		assertThat(targetSchema).isNotNull();
+	}
+
+	@Test // GH-???
 	public void csfleWithKeyFromProperties() {
 
 		GenericApplicationContext applicationContext = new GenericApplicationContext();
