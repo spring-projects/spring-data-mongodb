@@ -24,7 +24,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.Association;
@@ -34,7 +33,6 @@ import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.mongodb.MongoCollectionUtils;
 import org.springframework.data.mongodb.util.encryption.EncryptionUtils;
-import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.data.util.Lazy;
 import org.springframework.data.util.TypeInformation;
@@ -60,7 +58,7 @@ import org.springframework.util.StringUtils;
  * @author Mark Paluch
  */
 public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, MongoPersistentProperty>
-		implements MongoPersistentEntity<T>, EvaluationContextProvider {
+		implements MongoPersistentEntity<T> {
 
 	private static final String AMBIGUOUS_FIELD_MAPPING = "Ambiguous field mapping detected! Both %s and %s map to the same field name %s! Disambiguate using @Field annotation!";
 	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
@@ -382,7 +380,7 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 			return null;
 		}
 
-		if(ObjectUtils.isEmpty(encrypted.keyId())) {
+		if (ObjectUtils.isEmpty(encrypted.keyId())) {
 			return Collections.emptySet();
 		}
 

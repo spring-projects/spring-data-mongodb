@@ -35,8 +35,6 @@ import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.mongodb.util.encryption.EncryptionUtils;
-import org.springframework.data.spel.EvaluationContextProvider;
-import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.data.util.Lazy;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
@@ -55,7 +53,7 @@ import org.springframework.util.StringUtils;
  * @author Divya Srivastava
  */
 public class BasicMongoPersistentProperty extends AnnotationBasedPersistentProperty<MongoPersistentProperty>
-		implements MongoPersistentProperty, EvaluationContextProvider {
+		implements MongoPersistentProperty {
 
 	private static final Logger LOG = LoggerFactory.getLogger(BasicMongoPersistentProperty.class);
 
@@ -311,22 +309,19 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		return isAnnotationPresent(TextScore.class);
 	}
 
-	@Override
-	public EvaluationContext getEvaluationContext(Object rootObject, ExpressionDependencies dependencies) {
+	/**
+	 * Obtain the {@link EvaluationContext} for a specific root object.
+	 * 
+	 * @param rootObject can be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 3.3
+	 */
+	public EvaluationContext getEvaluationContext(@Nullable Object rootObject) {
 
-		if (getOwner() instanceof EvaluationContextProvider) {
-			return ((EvaluationContextProvider) getOwner()).getEvaluationContext(rootObject, dependencies);
+		if (getOwner() instanceof BasicMongoPersistentEntity) {
+			return ((BasicMongoPersistentEntity) getOwner()).getEvaluationContext(rootObject);
 		}
-		return new StandardEvaluationContext();
-	}
-
-	@Override
-	public EvaluationContext getEvaluationContext(Object rootObject) {
-
-		if (getOwner() instanceof EvaluationContextProvider) {
-			return ((EvaluationContextProvider) getOwner()).getEvaluationContext(rootObject);
-		}
-		return new StandardEvaluationContext();
+		return rootObject != null ? new StandardEvaluationContext(rootObject) : new StandardEvaluationContext();
 	}
 
 	@Override
