@@ -27,6 +27,7 @@ import java.lang.annotation.Target;
  * {@literal encryptMetadata}.
  *
  * <pre class="code">
+ * &#64;Document
  * &#64;Encrypted(keyId = "4fPYFM9qSgyRAjgQ2u+IMQ==")
  * public class Patient {
  * 	 private ObjectId id;
@@ -85,12 +86,27 @@ import java.lang.annotation.Target;
 public @interface Encrypted {
 
 	/**
-	 * @return the key id to use. May contain a parsable {@link org.springframework.expression.Expression expression}.
+	 * Get the {@code keyId} to use. The value must resolve to either the UUID representation of the key or a base64
+	 * encoded value representing the UUID value.
+	 * <p />
+	 * On {@link ElementType#TYPE} level the {@link #keyId()} can be left empty if explicitly set for fields. <br />
+	 * On {@link ElementType#FIELD} level the {@link #keyId()} can be left empty if inherited from
+	 * {@literal encryptMetadata}.
+	 *
+	 * @return the key id to use. May contain a parsable {@link org.springframework.expression.Expression expression}. In
+	 *         this case the {@code #target} variable will hold the target element name.
 	 */
 	String[] keyId() default {};
 
 	/**
-	 * @return the algorithm.
+	 * Set the algorithm to use.
+	 * <p />
+	 * On {@link ElementType#TYPE} level the {@link #algorithm()} can be left empty if explicitly set for fields. <br />
+	 * On {@link ElementType#FIELD} level the {@link #algorithm()} can be left empty if inherited from
+	 * {@literal encryptMetadata}.
+	 *
+	 * @return the encryption algorithm.
+	 * @see org.springframework.data.mongodb.core.EncryptionAlgorithms
 	 */
 	String algorithm() default "";
 }

@@ -19,6 +19,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Predicate;
 
+import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -29,6 +30,7 @@ import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
+import org.springframework.data.mongodb.core.mapping.Unwrapped.Nullable;
 import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
 import org.springframework.util.Assert;
@@ -60,6 +62,7 @@ import org.springframework.util.Assert;
  * {@link org.bson.types.ObjectId} like {@link String} will be mapped to {@code type : 'object'} unless there is more
  * specific information available via the {@link org.springframework.data.mongodb.core.mapping.MongoId} annotation.
  * </p>
+ * {@link Encrypted} properties will contain {@literal encrypt} information.
  *
  * @author Christoph Strobl
  * @since 2.2
@@ -83,21 +86,43 @@ public interface MongoJsonSchemaCreator {
 	 */
 	MongoJsonSchemaCreator filter(Predicate<JsonSchemaPropertyContext> filter);
 
+	/**
+	 * The context in which a specific {@link #getProperty()} is encountered during schema creation.
+	 * 
+	 * @since 3.3
+	 */
 	interface JsonSchemaPropertyContext {
 
+		/**
+		 * The path to a given field/property in dot notation.
+		 * 
+		 * @return never {@literal null}.
+		 */
 		String getPath();
 
+		/**
+		 * The current property.
+		 * 
+		 * @return never {@literal null}.
+		 */
 		MongoPersistentProperty getProperty();
 
+		/**
+		 * Obtain the {@link MongoPersistentEntity} for a given property.
+		 * 
+		 * @param property must not be {@literal null}.
+		 * @param <T>
+		 * @return {@literal null} if the property is not an entity. It is nevertheless recommend to check
+		 *         {@link PersistentProperty#isEntity()} first.
+		 */
+		@Nullable
 		<T> MongoPersistentEntity<T> resolveEntity(MongoPersistentProperty property);
 
 	}
 
 	/**
-	 * A filter {@link Predicate} that matches
-	 * {@link org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.EncryptedJsonSchemaProperty
-	 * encrypted properties} and those having nested ones.
-	 * 
+	 * A filter {@link Predicate} that matches {@link Encrypted encrypted properties} and those having nested ones.
+	 *
 	 * @return new instance of {@link Predicate}.
 	 * @since 3.3
 	 */
@@ -105,7 +130,8 @@ public interface MongoJsonSchemaCreator {
 
 		return new Predicate<JsonSchemaPropertyContext>() {
 
-			Set<MongoPersistentProperty> seen = new HashSet<>();
+			// cycle guard
+			private final Set<MongoPersistentProperty> seen = new HashSet<>();
 
 			@Override
 			public boolean test(JsonSchemaPropertyContext context) {

@@ -225,6 +225,110 @@ MongoJsonSchema schema = MongoJsonSchema.builder()
 ----
 ====
 
+Instead of defining encrypted fields manually it is possible leverage the `@Encrypted` annotation as shown in the snippet below.
+
+.Client-Side Field Level Encryption via Json Schema
+====
+[source,java]
+----
+@Document
+@Encrypted(keyId = "xKVup8B1Q+CkHaVRx+qa+g==", algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Random") <1>
+static class Patient {
+
+    @Id String id;
+	String name;
+
+	@Encrypted <2>
+	String bloodType;
+
+	@Encrypted(algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic") <3>
+	Integer ssn;
+
+}
+----
+<1> Default encryption settings that will be set for `encryptMetadata`.
+<2> Encrypted field using default encryption settings.
+<3> Encrypted field overriding the default encryption algorithm.
+====
+
+[TIP]
+====
+The `@EncryptedAnnoation` supports resolving keyIds via SpEL Expressions.
+To do so additional environment metadata (via the `MappingContext`) is required and must be provided.
+
+[source,java]
+----
+@Document
+@Encrypted(keyId = "#{mongocrypt.keyId(#target)}")
+static class Patient {
+
+    @Id String id;
+	String name;
+
+	@Encrypted(algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Random")
+	String bloodType;
+
+	@Encrypted(algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic")
+	Integer ssn;
+}
+
+MongoJsonSchemaCreator schemaCreator = MongoJsonSchemaCreator.create(mappingContext);
+MongoJsonSchema personSchema = schemaCreator
+    .filter(MongoJsonSchemaCreator.encryptedOnly())
+    .createSchemaFor(Patient.class);
+----
+
+The `mongocrypt.keyId` function is defined via an `EvaluationContextExtension` as shown in the snippet below.
+Providing a custom extension provides the most flexible way of computing keyIds.
+
+[source,java]
+----
+public class EncryptionExtension implements EvaluationContextExtension {
+
+	@Override
+	public String getExtensionId() {
+		return "mongocrypt";
+	}
+
+	@Override
+	public Map<String, Function> getFunctions() {
+		return Collections.singletonMap("keyId", new Function(getMethod("computeKeyId", String.class), this));
+	}
+
+	public String computeKeyId(String target) {
+		// ... lookup via target element name
+	}
+}
+----
+
+To combine derived encryption settings with `AutoEncryptionSettings` in a Spring Boot application use the `MongoClientSettingsBuilderCustomizer`.
+
+[source,java]
+----
+@Bean
+MongoClientSettingsBuilderCustomizer customizer(MappingContext mappingContext) {
+	return (builder) -> {
+
+		// ... keyVaultCollection, kmsProvider, ...
+
+		MongoJsonSchemaCreator schemaCreator = MongoJsonSchemaCreator.create(mappingContext);
+		MongoJsonSchema patientSchema = schemaCreator
+            .filter(MongoJsonSchemaCreator.encryptedOnly())
+            .createSchemaFor(Patient.class);
+
+		AutoEncryptionSettings autoEncryptionSettings = AutoEncryptionSettings.builder()
+            .keyVaultNamespace(keyVaultCollection)
+			.kmsProviders(kmsProviders)
+			.extraOptions(extraOpts)
+			.schemaMap(Collections.singletonMap("db.patient", patientSchema.schemaDocument().toBsonDocument()))
+			.build();
+
+		builder.autoEncryptionSettings(autoEncryptionSettings);
+	};
+}
+----
+====
+
 NOTE: Make sure to set the drivers `com.mongodb.AutoEncryptionSettings` to use client-side encryption. MongoDB does not support encryption for all field types. Specific data types require deterministic encryption to preserve equality comparison functionality.
 
 [[mongo.jsonSchema.types]]

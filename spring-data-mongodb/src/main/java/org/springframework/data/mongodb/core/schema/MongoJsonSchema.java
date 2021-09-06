@@ -79,6 +79,7 @@ public interface MongoJsonSchema {
 	 * {@link org.springframework.data.mongodb.core.convert.JsonSchemaMapper} to apply field name customization.
 	 *
 	 * @return never {@literal null}.
+	 * @since 3.3
 	 */
 	Document schemaDocument();
 
