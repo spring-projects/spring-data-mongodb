@@ -22,10 +22,15 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
+import org.springframework.context.expression.EnvironmentAccessor;
+import org.springframework.context.support.AbstractApplicationContext;
+import org.springframework.core.env.AbstractEnvironment;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.AssociationHandler;
@@ -36,17 +41,23 @@ import org.springframework.data.mongodb.MongoCollectionUtils;
 import org.springframework.data.mongodb.util.encryption.EncryptionUtils;
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.data.spel.ExpressionDependencies;
+import org.springframework.data.spel.ExtensionAwareEvaluationContextProvider;
 import org.springframework.data.util.Lazy;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.expression.AccessException;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ParserContext;
+import org.springframework.expression.PropertyAccessor;
+import org.springframework.expression.TypedValue;
 import org.springframework.expression.common.LiteralExpression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -382,14 +393,78 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 			return null;
 		}
 
-		if(ObjectUtils.isEmpty(encrypted.keyId())) {
+		if (ObjectUtils.isEmpty(encrypted.keyId())) {
 			return Collections.emptySet();
 		}
 
 		Lazy<EvaluationContext> evaluationContext = Lazy.of(() -> {
 
-			EvaluationContext ctx = getEvaluationContext(null);
+			// FIXME: ugly hack to get hold of the environment
+
+			Field evaluationContextProviderField = ReflectionUtils.findField(BasicPersistentEntity.class,
+					"evaluationContextProvider");
+			evaluationContextProviderField.setAccessible(true);
+
+			ExtensionAwareEvaluationContextProvider contextProvider = (ExtensionAwareEvaluationContextProvider) ReflectionUtils
+					.getField(evaluationContextProviderField, this);
+			Field beanFactoryField = ReflectionUtils.findField(ExtensionAwareEvaluationContextProvider.class, "beanFactory");
+			beanFactoryField.setAccessible(true);
+
+			AbstractApplicationContext beanFactory = (AbstractApplicationContext) ReflectionUtils.getField(beanFactoryField,
+					contextProvider);
+
+			EvaluationContext ctx = getEvaluationContext(beanFactory.getEnvironment());
 			ctx.setVariable("target", getType().getSimpleName());
+
+			if (ctx instanceof StandardEvaluationContext) {
+
+				StandardEvaluationContext standardEvaluationContext = (StandardEvaluationContext) ctx;
+				standardEvaluationContext.addPropertyAccessor(new EnvironmentAccessor());
+				standardEvaluationContext.addPropertyAccessor(new PropertyAccessor() {
+
+					@Override
+					public Class<?>[] getSpecificTargetClasses() {
+
+						if (ClassUtils.isPresent("org.springframework.boot.ApplicationEnvironment",
+								this.getClass().getClassLoader())) {
+							try {
+								return new Class[] { Environment.class, StandardEnvironment.class, ClassUtils
+										.forName("org.springframework.boot.ApplicationEnvironment", this.getClass().getClassLoader()) };
+							} catch (ClassNotFoundException e) {
+								e.printStackTrace();
+							}
+						}
+						return new Class[] { Environment.class, StandardEnvironment.class };
+					}
+
+					@Override
+					public boolean canRead(EvaluationContext context, Object target, String name) throws AccessException {
+						return (target instanceof Environment || target == null) && name.equals("systemProperties");
+					}
+
+					@Override
+					public TypedValue read(EvaluationContext context, Object target, String name) throws AccessException {
+
+						Map targetMap = new LinkedHashMap();
+						targetMap.putAll(((AbstractEnvironment) target).getSystemEnvironment());
+						targetMap.putAll(((AbstractEnvironment) target).getSystemProperties());
+
+						return new TypedValue(target);
+					}
+
+					@Override
+					public boolean canWrite(EvaluationContext context, Object target, String name) throws AccessException {
+						return false;
+					}
+
+					@Override
+					public void write(EvaluationContext context, Object target, String name, Object newValue)
+							throws AccessException {
+
+					}
+				});
+			}
+
 			return ctx;
 		});
 
