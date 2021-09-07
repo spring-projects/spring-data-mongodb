@@ -109,19 +109,15 @@ class ArithmeticOperatorsUnitTests {
 		assertThat(valueOf("angle").sinh(AngularUnit.DEGREES).toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo("{ $sinh : { $degreesToRadians : \"$angle\" } }");
 	}
-	
-	@Test // DATAMONGO - 3708
+
+	@Test // GH-3708
 	void rendersASin() {
-
-		assertThat(valueOf("field").asin().toDocument(Aggregation.DEFAULT_CONTEXT))
-		.isEqualTo("{ $asin : \"$field\" }");
+		assertThat(valueOf("field").asin().toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo("{ $asin : \"$field\" }");
 	}
-	
-	@Test // DATAMONGO - 3708
-	void rendersASinh() {
 
-		assertThat(valueOf("field").asinh().toDocument(Aggregation.DEFAULT_CONTEXT))
-		.isEqualTo("{ $asinh : \"$field\" }");
+	@Test // GH-3708
+	void rendersASinh() {
+		assertThat(valueOf("field").asinh().toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo("{ $asinh : \"$field\" }");
 	}
 
 	@Test // GH-3710

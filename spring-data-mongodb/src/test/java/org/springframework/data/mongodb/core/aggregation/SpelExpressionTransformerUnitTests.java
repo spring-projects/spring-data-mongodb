@@ -1078,13 +1078,13 @@ public class SpelExpressionTransformerUnitTests {
 	void shouldRenderSinh() {
 		assertThat(transform("sinh(angle)")).isEqualTo("{ \"$sinh\" : \"$angle\"}");
 	}
-	
-	@Test // DATAMONGO-3708
+
+	@Test // GH-3708
 	void shouldRenderASin() {
 		assertThat(transform("asin(number)")).isEqualTo("{ \"$asin\" : \"$number\"}");
 	}
 
-	@Test // DATAMONGO-3708
+	@Test // GH-3708
 	void shouldRenderASinh() {
 		assertThat(transform("asinh(number)")).isEqualTo("{ \"$asinh\" : \"$number\"}");
 	}
@@ -1108,17 +1108,17 @@ public class SpelExpressionTransformerUnitTests {
 	void shouldRenderTanh() {
 		assertThat(transform("tanh(angle)")).isEqualTo("{ \"$tanh\" : \"$angle\"}");
 	}
-	
+
 	@Test // DATAMONGO - 3709
 	void shouldRenderATan() {
 		assertThat(transform("atan(number)")).isEqualTo("{ \"$atan\" : \"$number\"}");
 	}
-	
+
 	@Test // DATAMONGO - 3709
 	void shouldRenderATan2() {
 		assertThat(transform("atan2(number1,number2)")).isEqualTo("{ \"$atan2\" : [ \"$number1\" , \"$number2\" ] }");
 	}
-	
+
 	@Test // DATAMONGO - 3709
 	void shouldRenderATanh() {
 		assertThat(transform("atanh(number)")).isEqualTo("{ \"$atanh\" : \"$number\"}");

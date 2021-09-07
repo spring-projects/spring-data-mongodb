@@ -739,20 +739,22 @@ public class ArithmeticOperators {
 		 * Creates new {@link AggregationExpression} that calculates the inverse sine of a numeric value.
 		 *
 		 * @return new instance of {@link ASin}.
+		 * @since 3.3
 		 */
 		public ASin asin() {
 			return usesFieldRef() ? ASin.asinOf(fieldReference) : ASin.asinOf(expression);
 		}
-		
+
 		/**
 		 * Creates new {@link AggregationExpression} that calculates the inverse hyperbolic sine of a numeric value.
 		 *
 		 * @return new instance of {@link ASinh}.
+		 * @since 3.3
 		 */
 		public ASinh asinh() {
 			return usesFieldRef() ? ASinh.asinhOf(fieldReference) : ASinh.asinhOf(expression);
 		}
-		
+
 		/**
 		 * Creates new {@link AggregationExpression} that calculates the cosine of a numeric value given in
 		 * {@link AngularUnit#RADIANS radians}.
@@ -2357,10 +2359,12 @@ public class ArithmeticOperators {
 			return "$sinh";
 		}
 	}
-	
+
 	/**
 	 * An {@link AggregationExpression expression} that calculates the inverse sine of a value.
 	 *
+	 * @author Divya Srivastava
+	 * @since 3.3
 	 */
 	public static class ASin extends AbstractAggregationExpression {
 
@@ -2407,9 +2411,12 @@ public class ArithmeticOperators {
 			return "$asin";
 		}
 	}
-	
+
 	/**
 	 * An {@link AggregationExpression expression} that calculates the inverse hyperbolic sine of a value
+	 *
+	 * @author Divya Srivastava
+	 * @since 3.3
 	 */
 	public static class ASinh extends AbstractAggregationExpression {
 
@@ -2430,7 +2437,7 @@ public class ArithmeticOperators {
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the inverse hyperbolic sine of a value.
 		 * <p />
-		 * 
+		 *
 		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
 		 * @return new instance of {@link ASinh}.
 		 */
@@ -2884,7 +2891,6 @@ public class ArithmeticOperators {
 		 * @return new instance of {@link ATan2}.
 		 */
 		public ATan2 atan2of(Number value) {
-
 			return new ATan2(append(value));
 		}
 
