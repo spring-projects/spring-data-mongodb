@@ -28,9 +28,9 @@ import java.util.Locale;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.jmolecules.ddd.annotation.Identity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.MappingException;
@@ -241,6 +241,15 @@ public class BasicMongoPersistentPropertyUnitTests {
 		assertThat(property.getFieldType()).isEqualTo(Document.class);
 	}
 
+	@Test
+	void considersJMoleculesIdentityExplicitlyAnnotatedIdentifier() {
+
+		MongoPersistentProperty property = getPropertyFor(WithJMoleculesIdentity.class, "identifier");
+
+		assertThat(property.isIdProperty()).isTrue();
+		assertThat(property.isExplicitIdProperty()).isTrue();
+	}
+
 	private MongoPersistentProperty getPropertyFor(Field field) {
 		return getPropertyFor(entity, field);
 	}
@@ -368,5 +377,9 @@ public class BasicMongoPersistentPropertyUnitTests {
 	static class WithComplexId {
 
 		@Id @org.springframework.data.mongodb.core.mapping.Field ComplexId id;
+	}
+
+	static class WithJMoleculesIdentity {
+		@Identity ObjectId identifier;
 	}
 }

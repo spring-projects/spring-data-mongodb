@@ -22,7 +22,6 @@ import java.util.Set;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
@@ -115,7 +114,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 */
 	@Override
 	public boolean isExplicitIdProperty() {
-		return isAnnotationPresent(Id.class);
+		return super.isIdProperty();
 	}
 
 	/**
