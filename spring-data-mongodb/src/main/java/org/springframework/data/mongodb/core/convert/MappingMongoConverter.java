@@ -38,7 +38,6 @@ import org.bson.json.JsonReader;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -524,10 +523,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		MongoPersistentProperty property = association.getInverse();
 		Object value = documentAccessor.get(property);
 
-		if (value == null) {
-			return;
-		}
-
 		if (property.isDocumentReference()
 				|| (!property.isDbReference() && property.findAnnotation(Reference.class) != null)) {
 
@@ -535,14 +530,23 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 			if (conversionService.canConvert(DocumentPointer.class, property.getActualType())) {
 
+				if(value == null) {
+					return;
+				}
+
 				DocumentPointer<?> pointer = () -> value;
 
 				// collection like special treatment
 				accessor.setProperty(property, conversionService.convert(pointer, property.getActualType()));
 			} else {
+
 				accessor.setProperty(property,
-						dbRefResolver.resolveReference(property, value, referenceLookupDelegate, context::convert));
+						dbRefResolver.resolveReference(property, new DocumentReferenceSource(documentAccessor.getDocument(), documentAccessor.get(property)), referenceLookupDelegate, context::convert));
 			}
+			return;
+		}
+
+		if (value == null) {
 			return;
 		}
 

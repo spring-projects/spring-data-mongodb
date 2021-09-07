@@ -87,17 +87,20 @@ public final class ReferenceLookupDelegate {
 	 * Read the reference expressed by the given property.
 	 *
 	 * @param property the reference defining property. Must not be {@literal null}. THe
-	 * @param value the source value identifying to the referenced entity. Must not be {@literal null}.
+	 * @param source the source value identifying to the referenced entity. Must not be {@literal null}.
 	 * @param lookupFunction to execute a lookup query. Must not be {@literal null}.
 	 * @param entityReader the callback to convert raw source values into actual domain types. Must not be
 	 *          {@literal null}.
 	 * @return can be {@literal null}.
 	 */
 	@Nullable
-	public Object readReference(MongoPersistentProperty property, Object value, LookupFunction lookupFunction,
+	public Object readReference(MongoPersistentProperty property, Object source, LookupFunction lookupFunction,
 			MongoEntityReader entityReader) {
 
-		DocumentReferenceQuery filter = computeFilter(property, value, spELContext);
+		Object value = source instanceof DocumentReferenceSource ? ((DocumentReferenceSource) source).getTargetSource()
+				: source;
+
+		DocumentReferenceQuery filter = computeFilter(property, source, spELContext);
 		ReferenceCollection referenceCollection = computeReferenceContext(property, value, spELContext);
 
 		Iterable<Document> result = lookupFunction.apply(filter, referenceCollection);
@@ -196,8 +199,16 @@ public final class ReferenceLookupDelegate {
 
 	ParameterBindingContext bindingContext(MongoPersistentProperty property, Object source, SpELContext spELContext) {
 
-		return new ParameterBindingContext(valueProviderFor(source), spELContext.getParser(),
+		ValueProvider valueProvider;
+		if (source instanceof DocumentReferenceSource) {
+			valueProvider = valueProviderFor(((DocumentReferenceSource) source).getTargetSource());
+		} else {
+			valueProvider = valueProviderFor(source);
+		}
+
+		return new ParameterBindingContext(valueProvider, spELContext.getParser(),
 				() -> evaluationContextFor(property, source, spELContext));
+
 	}
 
 	ValueProvider valueProviderFor(Object source) {
@@ -212,9 +223,18 @@ public final class ReferenceLookupDelegate {
 
 	EvaluationContext evaluationContextFor(MongoPersistentProperty property, Object source, SpELContext spELContext) {
 
-		EvaluationContext ctx = spELContext.getEvaluationContext(source);
-		ctx.setVariable("target", source);
-		ctx.setVariable(property.getName(), source);
+		Object target = source instanceof DocumentReferenceSource ? ((DocumentReferenceSource) source).getTargetSource()
+				: source;
+
+		if (target == null) {
+			target = new Document();
+		}
+
+		EvaluationContext ctx = spELContext.getEvaluationContext(target);
+		ctx.setVariable("target", target);
+		ctx.setVariable("self",
+				source instanceof DocumentReferenceSource ? ((DocumentReferenceSource) source).getSelf() : source);
+		ctx.setVariable(property.getName(), target);
 
 		return ctx;
 	}
@@ -223,22 +243,30 @@ public final class ReferenceLookupDelegate {
 	 * Compute the query to retrieve linked documents.
 	 *
 	 * @param property must not be {@literal null}.
-	 * @param value must not be {@literal null}.
+	 * @param source must not be {@literal null}.
 	 * @param spELContext must not be {@literal null}.
 	 * @return never {@literal null}.
 	 */
 	@SuppressWarnings("unchecked")
-	DocumentReferenceQuery computeFilter(MongoPersistentProperty property, Object value, SpELContext spELContext) {
+	DocumentReferenceQuery computeFilter(MongoPersistentProperty property, Object source, SpELContext spELContext) {
 
 		DocumentReference documentReference = property.isDocumentReference() ? property.getDocumentReference()
 				: ReferenceEmulatingDocumentReference.INSTANCE;
 
 		String lookup = documentReference.lookup();
 
-		Document sort = parseValueOrGet(documentReference.sort(), bindingContext(property, value, spELContext),
+		Object value = source instanceof DocumentReferenceSource ? ((DocumentReferenceSource) source).getTargetSource()
+				: source;
+
+		Document sort = parseValueOrGet(documentReference.sort(), bindingContext(property, source, spELContext),
 				() -> new Document());
 
-		if (property.isCollectionLike() && value instanceof Collection) {
+		if (property.isCollectionLike() && (value instanceof Collection || value == null)) {
+
+			if (value == null) {
+				return new ListDocumentReferenceQuery(codec.decode(lookup, bindingContext(property, source, spELContext)),
+						sort);
+			}
 
 			List<Document> ors = new ArrayList<>();
 			for (Object entry : (Collection<Object>) value) {
@@ -263,7 +291,7 @@ public final class ReferenceLookupDelegate {
 			return new MapDocumentReferenceQuery(new Document("$or", filterMap.values()), sort, filterMap);
 		}
 
-		return new SingleDocumentReferenceQuery(codec.decode(lookup, bindingContext(property, value, spELContext)), sort);
+		return new SingleDocumentReferenceQuery(codec.decode(lookup, bindingContext(property, source, spELContext)), sort);
 	}
 
 	enum ReferenceEmulatingDocumentReference implements DocumentReference {

@@ -262,6 +262,62 @@ class Publisher {
 <2> The field value placeholders of the lookup query (like `acc`) is used to form the reference document.
 ====
 
+It is also possible to model relational style _One-To-Many_ references using a combination of `@ReadonlyProperty` and `@DocumentReference`.
+This approach allows to link types without explicitly storing the linking values within the document itself as shown in the snipped below.
+
+====
+[source,java]
+----
+@Document
+class Book {
+
+  @Id
+  ObjectId id;
+  String title;
+  List<String> author;
+
+  ObjectId publisherId;                                        <1>
+}
+
+@Document
+class Publisher {
+
+  @Id
+  ObjectId id;
+  String acronym;
+  String name;
+
+  @ReadOnlyProperty                                            <2>
+  @DocumentReference(lookup="{'publisherId':?#{#self._id} }")  <3>
+  List<Book> books;
+}
+----
+
+.`Book` document
+[source,json]
+----
+{
+  "_id" : 9a48e32,
+  "title" : "The Warded Man",
+  "author" : ["Peter V. Brett"],
+  "publisherId" : 8cfb002
+}
+----
+
+.`Publisher` document
+[source,json]
+----
+{
+  "_id" : 8cfb002,
+  "acronym" : "DR",
+  "name" : "Del Rey"
+}
+----
+<1> Set up the link from `Book` to `Publisher` by storing the `Publisher.id` within the `Book` document.
+<2> Mark the property holding the references to be read only. This prevents storing references to individual ``Book``s with the `Publisher` document.
+<3> Use the `#self` variable to access values within the `Publisher` document and in this retrieve `Books` with matching `publisherId`.
+====
+
 With all the above in place it is possible to model all kind of associations between entities.
 Have a look at the non-exhaustive list of samples below to get feeling for what is possible.
 

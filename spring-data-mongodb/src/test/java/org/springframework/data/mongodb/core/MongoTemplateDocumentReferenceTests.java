@@ -39,6 +39,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.ReadOnlyProperty;
 import org.springframework.data.annotation.Reference;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.core.convert.LazyLoadingTestUtils;
@@ -1049,7 +1050,34 @@ public class MongoTemplateDocumentReferenceTests {
 		});
 
 		assertThat(target).containsEntry("publisher", "p-1");
+	}
 
+	@Test // GH-3798
+	void allowsOneToMayStyleLookupsUsingSelfVariable() {
+
+		OneToManyStyleBook book1 = new OneToManyStyleBook();
+		book1.id = "id-1";
+		book1.publisherId = "p-100";
+
+		OneToManyStyleBook book2 = new OneToManyStyleBook();
+		book2.id = "id-2";
+		book2.publisherId = "p-200";
+
+		OneToManyStyleBook book3 = new OneToManyStyleBook();
+		book3.id = "id-3";
+		book3.publisherId = "p-100";
+
+		template.save(book1);
+		template.save(book2);
+		template.save(book3);
+
+		OneToManyStylePublisher publisher = new OneToManyStylePublisher();
+		publisher.id = "p-100";
+
+		template.save(publisher);
+
+		OneToManyStylePublisher target = template.findOne(query(where("id").is(publisher.id)), OneToManyStylePublisher.class);
+		assertThat(target.books).containsExactlyInAnyOrder(book1, book3);
 	}
 
 	@Data
@@ -1292,5 +1320,25 @@ public class MongoTemplateDocumentReferenceTests {
 
 		@Reference //
 		Publisher publisher;
+	}
+
+	@Data
+	static class OneToManyStyleBook {
+
+		@Id
+		String id;
+
+		private String publisherId;
+	}
+
+	@Data
+	static class OneToManyStylePublisher {
+
+		@Id
+		String id;
+
+		@ReadOnlyProperty
+		@DocumentReference(lookup="{'publisherId':?#{#self._id} }")
+		List<OneToManyStyleBook> books;
 	}
 }
