@@ -356,8 +356,7 @@ public class BasicMongoPersistentPropertyUnitTests {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target(ElementType.FIELD)
 	@Id
-	static @interface ComposedIdAnnotation {
-	}
+	static @interface ComposedIdAnnotation {}
 
 	static class WithStringMongoId {
 
