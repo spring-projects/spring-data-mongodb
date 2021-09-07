@@ -108,6 +108,6 @@ public class DefaultReferenceResolver implements ReferenceResolver {
 			ReferenceLookupDelegate referenceLookupDelegate, LookupFunction lookupFunction, MongoEntityReader entityReader) {
 		return proxyFactory.createLazyLoadingProxy(property, it -> {
 			return referenceLookupDelegate.readReference(it, source, lookupFunction, entityReader);
-		}, source);
+		}, source instanceof DocumentReferenceSource ? ((DocumentReferenceSource)source).getTargetSource() : source);
 	}
 }
