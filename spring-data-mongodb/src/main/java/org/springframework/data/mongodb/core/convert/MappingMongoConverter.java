@@ -530,7 +530,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 			if (conversionService.canConvert(DocumentPointer.class, property.getActualType())) {
 
-				if(value == null) {
+				if (value == null) {
 					return;
 				}
 
@@ -541,7 +541,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			} else {
 
 				accessor.setProperty(property,
-						dbRefResolver.resolveReference(property, new DocumentReferenceSource(documentAccessor.getDocument(), documentAccessor.get(property)), referenceLookupDelegate, context::convert));
+						dbRefResolver.resolveReference(property,
+								new DocumentReferenceSource(documentAccessor.getDocument(), documentAccessor.get(property)),
+								referenceLookupDelegate, context::convert));
 			}
 			return;
 		}
@@ -875,10 +877,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			if (property.isAssociation()) {
 
 				List<Object> targetCollection = collection.stream().map(it -> {
-						return documentPointerFactory.computePointer(mappingContext, property, it, property.getActualType()).getPointer();
+					return documentPointerFactory.computePointer(mappingContext, property, it, property.getActualType())
+							.getPointer();
 				}).collect(Collectors.toList());
 
-				return writeCollectionInternal(targetCollection, ClassTypeInformation.from(DocumentPointer.class), new ArrayList<>());
+				return writeCollectionInternal(targetCollection, ClassTypeInformation.from(DocumentPointer.class),
+						new ArrayList<>());
 			}
 
 			if (property.hasExplicitWriteTarget()) {
@@ -931,7 +935,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				if (property.isDbReference()) {
 					document.put(simpleKey, value != null ? createDBRef(value, property) : null);
 				} else {
-					document.put(simpleKey, documentPointerFactory.computePointer(mappingContext, property, value, property.getActualType()).getPointer());
+					document.put(simpleKey, documentPointerFactory
+							.computePointer(mappingContext, property, value, property.getActualType()).getPointer());
 				}
 
 			} else {
@@ -1814,6 +1819,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				return (T) dbRefResolver.resolveDbRef(property, dbref, callback, dbRefProxyHandler);
 			}
 
+			if (property.isDocumentReference()) {
+				return (T) dbRefResolver.resolveReference(property, accessor.get(property), referenceLookupDelegate,
+						context::convert);
+			}
+
 			return super.getPropertyValue(property);
 		}
 	}
@@ -2036,7 +2046,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 			if (typeHint.isMap()) {
 
-				if(ClassUtils.isAssignable(Document.class, typeHint.getType())) {
+				if (ClassUtils.isAssignable(Document.class, typeHint.getType())) {
 					return (S) documentConverter.convert(this, BsonUtils.asBson(source), typeHint);
 				}
 
@@ -2044,7 +2054,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 					return (S) mapConverter.convert(this, BsonUtils.asBson(source), typeHint);
 				}
 
-				throw new IllegalArgumentException(String.format("Expected map like structure but found %s", source.getClass()));
+				throw new IllegalArgumentException(
+						String.format("Expected map like structure but found %s", source.getClass()));
 			}
 
 			if (source instanceof DBRef) {

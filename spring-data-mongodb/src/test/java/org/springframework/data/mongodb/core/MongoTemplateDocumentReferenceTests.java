@@ -733,6 +733,52 @@ public class MongoTemplateDocumentReferenceTests {
 		assertThat(result.simplePreinitializedValueRef).isEmpty();
 	}
 
+	@Test // GH-3806
+	void resolveReferenceWhenUsedAsCtorArgument() {
+
+		Publisher publisher = new Publisher();
+		publisher.id = "p-111";
+		publisher.name = "ppp";
+
+		template.save(publisher);
+
+		WithRequiredArgsCtor source = new WithRequiredArgsCtor("id-1", publisher);
+
+		template.save(source);
+
+		WithRequiredArgsCtor target = template.findOne(query(where("id").is(source.id)), WithRequiredArgsCtor.class);
+		assertThat(target.publisher).isNotNull();
+	}
+
+	@Test // GH-3806
+	void resolveLazyReferenceWhenUsedAsCtorArgument() {
+
+		Publisher publisher = new Publisher();
+		publisher.id = "p-111";
+		publisher.name = "ppp";
+
+		template.save(publisher);
+
+		WithLazyRequiredArgsCtor source = new WithLazyRequiredArgsCtor("id-1", publisher);
+
+		template.save(source);
+
+		WithLazyRequiredArgsCtor target = template.findOne(query(where("id").is(source.id)), WithLazyRequiredArgsCtor.class);
+
+		// proxy not yet resolved
+		LazyLoadingTestUtils.assertProxy(target.publisher, (proxy) -> {
+
+			assertThat(proxy.isResolved()).isFalse();
+			assertThat(proxy.currentValue()).isNull();
+		});
+
+		// resolve the proxy by invoking a method on it
+		assertThat(target.getPublisher().getName()).isEqualTo("ppp");
+		LazyLoadingTestUtils.assertProxy(target.publisher, (proxy) -> {
+			assertThat(proxy.isResolved()).isTrue();
+		});
+	}
+
 	@Test // GH-3602
 	void queryForReference() {
 
@@ -1371,6 +1417,30 @@ public class MongoTemplateDocumentReferenceTests {
 		String id;
 		String acronym;
 		String name;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getAcronym() {
+			return acronym;
+		}
+
+		public void setAcronym(String acronym) {
+			this.acronym = acronym;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
 	}
 
 	@Data
@@ -1400,5 +1470,41 @@ public class MongoTemplateDocumentReferenceTests {
 		@ReadOnlyProperty
 		@DocumentReference(lookup="{'publisherId':?#{#self._id} }")
 		List<OneToManyStyleBook> books;
+	}
+
+	static class WithRequiredArgsCtor {
+
+		final String id;
+
+		@DocumentReference
+		final Publisher publisher;
+
+		public WithRequiredArgsCtor(String id, Publisher publisher) {
+
+			this.id = id;
+			this.publisher = publisher;
+		}
+	}
+
+	static class WithLazyRequiredArgsCtor {
+
+		final String id;
+
+		@DocumentReference(lazy = true)
+		final Publisher publisher;
+
+		public WithLazyRequiredArgsCtor(String id, Publisher publisher) {
+
+			this.id = id;
+			this.publisher = publisher;
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public Publisher getPublisher() {
+			return publisher;
+		}
 	}
 }
