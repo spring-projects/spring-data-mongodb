@@ -3768,6 +3768,23 @@ public class MongoTemplateTests {
 		assertThat(loaded).isNotNull();
 	}
 
+	@Test // GH-3811
+	public void sliceShouldLimitCollectionValues() {
+
+		DocumentWithCollectionOfSimpleType source = new DocumentWithCollectionOfSimpleType();
+		source.id = "id-1";
+		source.values = Arrays.asList("spring", "data", "mongodb");
+
+		template.save(source);
+
+		Criteria criteria = Criteria.where("id").is(source.id);
+		Query query = Query.query(criteria);
+		query.fields().slice("values", 0, 1);
+		DocumentWithCollectionOfSimpleType target = template.findOne(query, DocumentWithCollectionOfSimpleType.class);
+
+		assertThat(target.values).containsExactly("spring");
+	}
+
 	private AtomicReference<ImmutableVersioned> createAfterSaveReference() {
 
 		AtomicReference<ImmutableVersioned> saved = new AtomicReference<>();
