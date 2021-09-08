@@ -138,6 +138,10 @@ public class ReactiveMongoDatabaseUtils {
 
 		Assert.notNull(factory, "DatabaseFactory must not be null!");
 
+		if (sessionSynchronization == SessionSynchronization.NEVER) {
+			return getMongoDatabaseOrDefault(dbName, factory);
+		}
+
 		return TransactionSynchronizationManager.forCurrentTransaction()
 				.filter(TransactionSynchronizationManager::isSynchronizationActive) //
 				.flatMap(synchronizationManager -> {

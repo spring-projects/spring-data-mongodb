@@ -88,6 +88,20 @@ class ReactiveMongoDatabaseUtilsUnitTests {
 		}).as(StepVerifier::create).expectNext(true).verifyComplete();
 	}
 
+	@Test // GH-3760
+	void shouldJustReturnDatabaseIfSessionSynchronizationDisabled() {
+
+		when(databaseFactory.getMongoDatabase()).thenReturn(Mono.just(db));
+
+		ReactiveMongoDatabaseUtils.getDatabase(databaseFactory, SessionSynchronization.NEVER) //
+				.as(StepVerifier::create) //
+				.expectNextCount(1) //
+				.verifyComplete();
+
+		verify(databaseFactory, never()).getSession(any());
+		verify(databaseFactory, never()).withSession(any(ClientSession.class));
+	}
+
 	@Test // DATAMONGO-2265
 	void shouldNotStartSessionWhenNoTransactionOngoing() {
 
