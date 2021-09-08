@@ -62,6 +62,8 @@ import com.mongodb.client.MongoCollection;
  */
 public final class ReferenceLookupDelegate {
 
+	private static final Document NO_RESULTS_PREDICATE = new Document("_id", new Document("$exists", false));
+
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private final SpELContext spELContext;
 	private final ParameterBindingDocumentCodec codec;
@@ -262,15 +264,17 @@ public final class ReferenceLookupDelegate {
 						sort);
 			}
 
-			List<Document> ors = new ArrayList<>();
-			for (Object entry : (Collection<Object>) value) {
+			Collection<Object> objects = (Collection<Object>) value;
+
+			if (objects.isEmpty()) {
+				return new ListDocumentReferenceQuery(NO_RESULTS_PREDICATE, sort);
+			}
+
+			List<Document> ors = new ArrayList<>(objects.size());
+			for (Object entry : objects) {
 
 				Document decoded = codec.decode(lookup, bindingContext(property, entry, spELContext));
 				ors.add(decoded);
-			}
-
-			if(ors.isEmpty()) {
-				return new ListDocumentReferenceQuery(new Document("_id", new Document("$exists", false)), sort);
 			}
 
 			return new ListDocumentReferenceQuery(new Document("$or", ors), sort);
@@ -278,9 +282,14 @@ public final class ReferenceLookupDelegate {
 
 		if (property.isMap() && value instanceof Map) {
 
-			Map<Object, Document> filterMap = new LinkedHashMap<>();
+			Set<Entry<Object, Object>> entries = ((Map<Object, Object>) value).entrySet();
+			if (entries.isEmpty()) {
+				return new MapDocumentReferenceQuery(NO_RESULTS_PREDICATE, sort, Collections.emptyMap());
+			}
 
-			for (Entry<Object, Object> entry : ((Map<Object, Object>) value).entrySet()) {
+			Map<Object, Document> filterMap = new LinkedHashMap<>(entries.size());
+
+			for (Entry<Object, Object> entry : entries) {
 
 				Document decoded = codec.decode(lookup, bindingContext(property, entry.getValue(), spELContext));
 				filterMap.put(entry.getKey(), decoded);

@@ -699,6 +699,24 @@ public class MongoTemplateDocumentReferenceTests {
 	}
 
 	@Test // GH-3805
+	void loadEmptyMapReference() {
+
+		String rootCollectionName = template.getCollectionName(CollectionRefRoot.class);
+
+		// an empty reference array.
+		Document source = new Document("_id", "id-1").append("value", "v1").append("simplePreinitializedMapRef",
+				new Document());
+
+		template.execute(db -> {
+			db.getCollection(rootCollectionName).insertOne(source);
+			return null;
+		});
+
+		CollectionRefRoot result = template.findOne(query(where("id").is("id-1")), CollectionRefRoot.class);
+		assertThat(result.simplePreinitializedMapRef).isEmpty();
+	}
+
+	@Test // GH-3805
 	void loadNoExistingCollectionReference() {
 
 		String rootCollectionName = template.getCollectionName(CollectionRefRoot.class);
@@ -1166,6 +1184,9 @@ public class MongoTemplateDocumentReferenceTests {
 
 		@DocumentReference(lookup = "{ '_id' : '?#{#target}' }") //
 		Map<String, SimpleObjectRef> mapValueRef;
+
+		@DocumentReference //
+		Map<String, SimpleObjectRef> simplePreinitializedMapRef = new LinkedHashMap<>();
 
 		@Field("simple-value-ref-annotated-field-name") //
 		@DocumentReference(lookup = "{ '_id' : '?#{#target}' }") //
