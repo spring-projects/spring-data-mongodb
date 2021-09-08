@@ -31,11 +31,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.ExecutableFind;
 import org.springframework.data.mongodb.core.MongoOperations;
-import org.springframework.data.mongodb.core.convert.DbRefResolver;
-import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
@@ -128,7 +125,7 @@ class PartTreeMongoQueryUnitTests {
 
 	@Test // DATAMONGO-1345, DATAMONGO-1735
 	void doesNotDeriveFieldSpecForNormalDomainType() {
-		assertThat(deriveQueryFromMethod("findPersonBy", new Object[0]).getFieldsObject()).isEqualTo(new Document());
+		assertThat(deriveQueryFromMethod("findPersonBy", new Object[0]).getFieldsObject()).isEmpty();
 	}
 
 	@Test // DATAMONGO-1345
@@ -173,7 +170,7 @@ class PartTreeMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findAllBy");
 
-		assertThat(query.getFieldsObject()).isEqualTo(new Document());
+		assertThat(query.getFieldsObject()).isEmpty();
 	}
 
 	@Test // DATAMONGO-1865

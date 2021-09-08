@@ -613,7 +613,7 @@ class QueryOperations {
 
 		UpdateContext(MappedDocument update, boolean upsert) {
 
-			super(new BasicQuery(new Document(BsonUtils.asMap(update.getIdFilter()))));
+			super(new BasicQuery(BsonUtils.asDocument(update.getIdFilter())));
 			this.multi = false;
 			this.upsert = upsert;
 			this.mappedDocument = update;

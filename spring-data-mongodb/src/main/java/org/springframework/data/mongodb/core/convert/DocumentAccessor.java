@@ -135,7 +135,7 @@ class DocumentAccessor {
 	 */
 	@Nullable
 	public Object getRawId(MongoPersistentEntity<?> entity) {
-		return entity.hasIdProperty() ? get(entity.getRequiredIdProperty()) : BsonUtils.asMap(document).get("_id");
+		return entity.hasIdProperty() ? get(entity.getRequiredIdProperty()) : BsonUtils.get(document, "_id");
 	}
 
 	/**

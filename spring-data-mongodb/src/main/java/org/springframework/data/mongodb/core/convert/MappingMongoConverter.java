@@ -25,7 +25,6 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -1316,21 +1315,22 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return map;
 		}
 
-		for (Entry<String, Object> entry : sourceMap.entrySet()) {
+		sourceMap.forEach((k, v) -> {
 
-			if (typeMapper.isTypeKey(entry.getKey())) {
-				continue;
+			if (typeMapper.isTypeKey(k)) {
+				return;
 			}
 
-			Object key = potentiallyUnescapeMapKey(entry.getKey());
+			Object key = potentiallyUnescapeMapKey(k);
 
 			if (!rawKeyType.isAssignableFrom(key.getClass())) {
 				key = doConvert(key, rawKeyType);
 			}
 
-			Object value = entry.getValue();
+			Object value = v;
 			map.put(key, value == null ? value : context.convert(value, valueType));
-		}
+
+		});
 
 		return map;
 	}
