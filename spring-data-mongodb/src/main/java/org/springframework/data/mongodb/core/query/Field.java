@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core.query;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -192,7 +193,7 @@ public class Field {
 	 */
 	public Field slice(String field, int offset, int size) {
 
-		slices.put(field, new Integer[] { offset, size });
+		slices.put(field, Arrays.asList(offset, size));
 		return this;
 	}
 
