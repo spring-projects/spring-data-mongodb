@@ -127,8 +127,8 @@ public class PartTreeMongoQueryUnitTests {
 	}
 
 	@Test // DATAMONGO-1345, DATAMONGO-1735
-	public void doesNotDeriveFieldSpecForNormalDomainType() {
-		assertThat(deriveQueryFromMethod("findPersonBy", new Object[0]).getFieldsObject()).isEqualTo(new Document());
+	void doesNotDeriveFieldSpecForNormalDomainType() {
+		assertThat(deriveQueryFromMethod("findPersonBy", new Object[0]).getFieldsObject()).isEmpty();
 	}
 
 	@Test // DATAMONGO-1345
@@ -173,7 +173,7 @@ public class PartTreeMongoQueryUnitTests {
 
 		org.springframework.data.mongodb.core.query.Query query = deriveQueryFromMethod("findAllBy");
 
-		assertThat(query.getFieldsObject()).isEqualTo(new Document());
+		assertThat(query.getFieldsObject()).isEmpty();
 	}
 
 	@Test // DATAMONGO-1865

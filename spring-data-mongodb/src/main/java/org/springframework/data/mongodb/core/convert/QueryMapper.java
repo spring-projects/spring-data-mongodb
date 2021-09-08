@@ -192,12 +192,11 @@ public class QueryMapper {
 		Assert.notNull(sortObject, "SortObject must not be null!");
 
 		if (sortObject.isEmpty()) {
-			return new Document();
+			return BsonUtils.EMPTY_DOCUMENT;
 		}
 
 		Document mappedSort = mapFieldsToPropertyNames(sortObject, entity);
-		mapMetaAttributes(mappedSort, entity, MetaMapping.WHEN_PRESENT);
-		return mappedSort;
+		return mapMetaAttributes(mappedSort, entity, MetaMapping.WHEN_PRESENT);
 	}
 
 	/**
@@ -214,42 +213,51 @@ public class QueryMapper {
 		Assert.notNull(fieldsObject, "FieldsObject must not be null!");
 
 		Document mappedFields = mapFieldsToPropertyNames(fieldsObject, entity);
-		mapMetaAttributes(mappedFields, entity, MetaMapping.FORCE);
-		return mappedFields;
+		return mapMetaAttributes(mappedFields, entity, MetaMapping.FORCE);
 	}
 
 	private Document mapFieldsToPropertyNames(Document fields, @Nullable MongoPersistentEntity<?> entity) {
 
 		if (fields.isEmpty()) {
-			return new Document();
+			return BsonUtils.EMPTY_DOCUMENT;
 
 		}
 		Document target = new Document();
-		for (Map.Entry<String, Object> entry : BsonUtils.asMap(filterUnwrappedObjects(fields, entity)).entrySet()) {
 
-			Field field = createPropertyField(entity, entry.getKey(), mappingContext);
+		BsonUtils.asMap(filterUnwrappedObjects(fields, entity)).forEach((k, v) -> {
+
+			Field field = createPropertyField(entity, k, mappingContext);
 			if (field.getProperty() != null && field.getProperty().isUnwrapped()) {
-				continue;
+				return;
 			}
 
-			target.put(field.getMappedKey(), entry.getValue());
-		}
+			target.put(field.getMappedKey(), v);
+		});
+
 		return target;
 	}
 
-	private void mapMetaAttributes(Document source, @Nullable MongoPersistentEntity<?> entity, MetaMapping metaMapping) {
+	private Document mapMetaAttributes(Document source, @Nullable MongoPersistentEntity<?> entity,
+			MetaMapping metaMapping) {
 
 		if (entity == null) {
-			return;
+			return source;
 		}
 
 		if (entity.hasTextScoreProperty() && !MetaMapping.IGNORE.equals(metaMapping)) {
+
+			if (source == BsonUtils.EMPTY_DOCUMENT) {
+				source = new Document();
+			}
+
 			MongoPersistentProperty textScoreProperty = entity.getTextScoreProperty();
 			if (MetaMapping.FORCE.equals(metaMapping)
 					|| (MetaMapping.WHEN_PRESENT.equals(metaMapping) && source.containsKey(textScoreProperty.getFieldName()))) {
 				source.putAll(getMappedTextScoreField(textScoreProperty));
 			}
 		}
+
+		return source;
 	}
 
 	private Document filterUnwrappedObjects(Document fieldsObject, @Nullable MongoPersistentEntity<?> entity) {
@@ -678,7 +686,7 @@ public class QueryMapper {
 	private Entry<String, Object> createMapEntry(String key, @Nullable Object value) {
 
 		Assert.hasText(key, "Key must not be null or empty!");
-		return Collections.singletonMap(key, value).entrySet().iterator().next();
+		return new AbstractMap.SimpleEntry<>(key, value);
 	}
 
 	private DBRef createDbRefFor(Object source, MongoPersistentProperty property) {
@@ -727,13 +735,13 @@ public class QueryMapper {
 			return false;
 		}
 
-		Set<String> keys = BsonUtils.asMap((Bson) candidate).keySet();
+		Map<String, Object> map = BsonUtils.asMap((Bson) candidate);
 
-		if (keys.size() != 1) {
+		if (map.size() != 1) {
 			return false;
 		}
 
-		return isKeyword(keys.iterator().next());
+		return isKeyword(map.entrySet().iterator().next().getKey());
 	}
 
 	/**
@@ -817,11 +825,14 @@ public class QueryMapper {
 
 		public Keyword(Bson bson) {
 
-			Set<String> keys = BsonUtils.asMap(bson).keySet();
-			Assert.isTrue(keys.size() == 1, "Can only use a single value Document!");
+			Map<String, Object> map = BsonUtils.asMap(bson);
+			Assert.isTrue(map.size() == 1, "Can only use a single value Document!");
 
-			this.key = keys.iterator().next();
-			this.value = BsonUtils.get(bson, key);
+			Set<Entry<String, Object>> entries = map.entrySet();
+			Entry<String, Object> entry = entries.iterator().next();
+
+			this.key = entry.getKey();
+			this.value = entry.getValue();
 		}
 
 		/**

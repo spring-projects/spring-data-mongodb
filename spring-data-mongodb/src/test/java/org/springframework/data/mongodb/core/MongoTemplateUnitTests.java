@@ -95,6 +95,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.CollectionUtils;
@@ -1050,7 +1051,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonSpELProjection.class,
 				CursorPreparer.NO_OP_PREPARER);
 
-		verify(findIterable).projection(eq(new Document()));
+		verify(findIterable).projection(eq(BsonUtils.EMPTY_DOCUMENT));
 	}
 
 	@Test // DATAMONGO-1733, DATAMONGO-2041
@@ -1077,7 +1078,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.doFind("star-wars", new Document(), new Document(), Person.class, Person.class,
 				CursorPreparer.NO_OP_PREPARER);
 
-		verify(findIterable).projection(eq(new Document()));
+		verify(findIterable).projection(eq(BsonUtils.EMPTY_DOCUMENT));
 	}
 
 	@Test // DATAMONGO-1733
@@ -1086,7 +1087,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonExtended.class,
 				CursorPreparer.NO_OP_PREPARER);
 
-		verify(findIterable).projection(eq(new Document()));
+		verify(findIterable).projection(eq(BsonUtils.EMPTY_DOCUMENT));
 	}
 
 	@Test // DATAMONGO-1348, DATAMONGO-2264

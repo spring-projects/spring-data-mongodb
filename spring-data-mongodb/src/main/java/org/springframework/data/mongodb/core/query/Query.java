@@ -21,6 +21,7 @@ import static org.springframework.util.ObjectUtils.*;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -30,6 +31,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import org.bson.Document;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
@@ -52,7 +54,7 @@ public class Query {
 
 	private static final String RESTRICTED_TYPES_KEY = "_$RESTRICTED_TYPES";
 
-	private final Set<Class<?>> restrictedTypes = new HashSet<>();
+	private Set<Class<?>> restrictedTypes = Collections.emptySet();
 	private final Map<String, CriteriaDefinition> criteria = new LinkedHashMap<>();
 	private @Nullable Field fieldSpec = null;
 	private Sort sort = Sort.unsorted();
@@ -235,8 +237,15 @@ public class Query {
 		Assert.notNull(type, "Type must not be null!");
 		Assert.notNull(additionalTypes, "AdditionalTypes must not be null");
 
+		if (restrictedTypes == Collections.EMPTY_SET) {
+			restrictedTypes = new HashSet<>(1 + additionalTypes.length);
+		}
+
 		restrictedTypes.add(type);
-		restrictedTypes.addAll(Arrays.asList(additionalTypes));
+
+		if (additionalTypes.length > 0) {
+			restrictedTypes.addAll(Arrays.asList(additionalTypes));
+		}
 
 		return this;
 	}
@@ -245,6 +254,17 @@ public class Query {
 	 * @return the query {@link Document}.
 	 */
 	public Document getQueryObject() {
+
+		if (criteria.isEmpty() && restrictedTypes.isEmpty()) {
+			return BsonUtils.EMPTY_DOCUMENT;
+		}
+
+		if (criteria.size() == 1 && restrictedTypes.isEmpty()) {
+
+			for (CriteriaDefinition definition : criteria.values()) {
+				return definition.getCriteriaObject();
+			}
+		}
 
 		Document document = new Document();
 
@@ -263,7 +283,7 @@ public class Query {
 	 * @return the field {@link Document}.
 	 */
 	public Document getFieldsObject() {
-		return this.fieldSpec == null ? new Document() : fieldSpec.getFieldsObject();
+		return this.fieldSpec == null ? BsonUtils.EMPTY_DOCUMENT : fieldSpec.getFieldsObject();
 	}
 
 	/**
@@ -272,13 +292,12 @@ public class Query {
 	public Document getSortObject() {
 
 		if (this.sort.isUnsorted()) {
-			return new Document();
+			return BsonUtils.EMPTY_DOCUMENT;
 		}
 
 		Document document = new Document();
 
-		this.sort.stream()//
-				.forEach(order -> document.put(order.getProperty(), order.isAscending() ? 1 : -1));
+		this.sort.forEach(order -> document.put(order.getProperty(), order.isAscending() ? 1 : -1));
 
 		return document;
 	}
@@ -557,7 +576,7 @@ public class Query {
 		target.limit = source.getLimit();
 		target.hint = source.getHint();
 		target.collation = source.getCollation();
-		target.restrictedTypes.addAll(source.getRestrictedTypes());
+		target.restrictedTypes = new HashSet<>(source.getRestrictedTypes());
 
 		if (source.getMeta().hasValues()) {
 			target.setMeta(new Meta(source.getMeta()));
