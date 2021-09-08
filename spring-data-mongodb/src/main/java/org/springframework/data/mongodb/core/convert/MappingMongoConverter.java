@@ -1810,6 +1810,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				return (T) dbRefResolver.resolveDbRef(property, dbref, callback, dbRefProxyHandler);
 			}
 
+			if(property.isDocumentReference()) {
+				return (T) dbRefResolver.resolveReference(property, accessor.get(property), referenceLookupDelegate, context::convert);
+			}
+
 			return super.getPropertyValue(property);
 		}
 	}
