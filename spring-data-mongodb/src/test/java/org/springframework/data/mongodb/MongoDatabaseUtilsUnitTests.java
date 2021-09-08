@@ -109,6 +109,30 @@ class MongoDatabaseUtilsUnitTests {
 		verify(dbFactory, never()).withSession(any(ClientSession.class));
 	}
 
+	@Test // GH-3760
+	void shouldJustReturnDatabaseIfSessionSynchronizationDisabled() throws Exception {
+
+		when(dbFactory.getMongoDatabase()).thenReturn(db);
+
+		JtaTransactionManager txManager = new JtaTransactionManager(userTransaction);
+		TransactionTemplate txTemplate = new TransactionTemplate(txManager);
+
+		txTemplate.execute(new TransactionCallbackWithoutResult() {
+
+			@Override
+			protected void doInTransactionWithoutResult(TransactionStatus transactionStatus) {
+
+				MongoDatabaseUtils.getDatabase(dbFactory, SessionSynchronization.NEVER);
+
+				assertThat(TransactionSynchronizationManager.hasResource(dbFactory)).isFalse();
+			}
+		});
+
+		verify(userTransaction).getStatus();
+		verifyNoMoreInteractions(userTransaction);
+		verifyNoInteractions(session);
+	}
+
 	@Test // DATAMONGO-1920
 	void shouldParticipateInOngoingJtaTransactionWithCommitWhenSessionSychronizationIsAny() throws Exception {
 
