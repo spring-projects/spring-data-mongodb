@@ -15,13 +15,20 @@
  */
 package org.springframework.data.mongodb;
 
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+
 /**
- * {@link SessionSynchronization} is used along with {@link org.springframework.data.mongodb.core.MongoTemplate} to
- * define in which type of transactions to participate if any.
+ * {@link SessionSynchronization} is used along with {@code MongoTemplate} to define in which type of transactions to
+ * participate if any.
  *
  * @author Christoph Strobl
  * @author Mark Paluch
  * @since 2.1
+ * @see MongoTemplate#setSessionSynchronization(SessionSynchronization)
+ * @see MongoDatabaseUtils#getDatabase(MongoDatabaseFactory, SessionSynchronization)
+ * @see ReactiveMongoTemplate#setSessionSynchronization(SessionSynchronization)
+ * @see ReactiveMongoDatabaseUtils#getDatabase(ReactiveMongoDatabaseFactory, SessionSynchronization)
  */
 public enum SessionSynchronization {
 
@@ -34,5 +41,12 @@ public enum SessionSynchronization {
 	/**
 	 * Synchronize with native MongoDB transactions initiated via {@link MongoTransactionManager}.
 	 */
-	ON_ACTUAL_TRANSACTION;
+	ON_ACTUAL_TRANSACTION,
+
+	/**
+	 * Do not participate in ongoing transactions.
+	 *
+	 * @since 3.2.5
+	 */
+	NEVER;
 }
