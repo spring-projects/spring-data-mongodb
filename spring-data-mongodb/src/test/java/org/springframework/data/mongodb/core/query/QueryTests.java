@@ -237,11 +237,8 @@ class QueryTests {
 		source.addCriteria(where("From one make ten").is("and two let be."));
 		Query target = Query.of(source);
 
-		compareQueries(target, source);
-		source.addCriteria(where("Make even three").is("then rich you'll be."));
-
-		assertThat(target.getQueryObject()).isEqualTo(new Document("From one make ten", "and two let be."))
-				.isNotEqualTo(source.getQueryObject());
+		assertThat(target.getQueryObject()).containsAllEntriesOf(new Document("From one make ten", "and two let be."))
+				.isNotSameAs(source.getQueryObject());
 	}
 
 	@Test // DATAMONGO-1783
@@ -353,9 +350,12 @@ class QueryTests {
 	private void compareQueries(Query actual, Query expected) {
 
 		assertThat(actual.getCollation()).isEqualTo(expected.getCollation());
-		assertThat(actual.getSortObject()).isEqualTo(expected.getSortObject());
-		assertThat(actual.getFieldsObject()).isEqualTo(expected.getFieldsObject());
-		assertThat(actual.getQueryObject()).isEqualTo(expected.getQueryObject());
+		assertThat(actual.getSortObject()).hasSameSizeAs(expected.getSortObject())
+				.containsAllEntriesOf(expected.getSortObject());
+		assertThat(actual.getFieldsObject()).hasSameSizeAs(expected.getFieldsObject())
+				.containsAllEntriesOf(expected.getFieldsObject());
+		assertThat(actual.getQueryObject()).hasSameSizeAs(expected.getQueryObject())
+				.containsAllEntriesOf(expected.getQueryObject());
 		assertThat(actual.getHint()).isEqualTo(expected.getHint());
 		assertThat(actual.getLimit()).isEqualTo(expected.getLimit());
 		assertThat(actual.getSkip()).isEqualTo(expected.getSkip());

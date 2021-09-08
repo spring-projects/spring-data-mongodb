@@ -156,5 +156,14 @@ public class MappedDocument {
 		public List<ArrayFilter> getArrayFilters() {
 			return delegate.getArrayFilters();
 		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#hasArrayFilters()
+		 */
+		@Override
+		public boolean hasArrayFilters() {
+			return delegate.hasArrayFilters();
+		}
 	}
 }

@@ -18,6 +18,8 @@ package org.springframework.data.mongodb.core.query;
 import java.util.Locale;
 
 import org.bson.Document;
+
+import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
 
 /**
@@ -157,7 +159,7 @@ public class TextQuery extends Query {
 			return super.getFieldsObject();
 		}
 
-		Document fields = super.getFieldsObject();
+		Document fields = BsonUtils.asMutableDocument(super.getFieldsObject());
 
 		fields.put(getScoreFieldName(), META_TEXT_SCORE);
 		return fields;
@@ -170,15 +172,14 @@ public class TextQuery extends Query {
 	@Override
 	public Document getSortObject() {
 
-		Document sort = new Document();
-
 		if (this.sortByScore) {
+			Document sort = new Document();
 			sort.put(getScoreFieldName(), META_TEXT_SCORE);
+			sort.putAll(super.getSortObject());
+			return sort;
 		}
 
-		sort.putAll(super.getSortObject());
-
-		return sort;
+		return super.getSortObject();
 	}
 
 	/*

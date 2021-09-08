@@ -140,6 +140,9 @@ public interface MongoConverter
 				if (ObjectId.isValid(id.toString())) {
 					return new ObjectId(id.toString());
 				}
+
+				// avoid ConversionException as convertToMongoType will return String anyways.
+				return id;
 			}
 		}
 

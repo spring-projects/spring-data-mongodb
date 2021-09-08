@@ -56,10 +56,10 @@ public class Update implements UpdateDefinition {
 	}
 
 	private boolean isolated = false;
-	private Set<String> keysToUpdate = new HashSet<>();
-	private Map<String, Object> modifierOps = new LinkedHashMap<>();
-	private Map<String, PushOperatorBuilder> pushCommandBuilders = new LinkedHashMap<>(1);
-	private List<ArrayFilter> arrayFilters = new ArrayList<>();
+	private final Set<String> keysToUpdate = new HashSet<>();
+	private final Map<String, Object> modifierOps = new LinkedHashMap<>();
+	private Map<String, PushOperatorBuilder> pushCommandBuilders = Collections.emptyMap();
+	private List<ArrayFilter> arrayFilters = Collections.emptyList();
 
 	/**
 	 * Static factory method to create an Update using the provided key
@@ -193,6 +193,11 @@ public class Update implements UpdateDefinition {
 	public PushOperatorBuilder push(String key) {
 
 		if (!pushCommandBuilders.containsKey(key)) {
+
+			if (pushCommandBuilders == Collections.EMPTY_MAP) {
+				pushCommandBuilders = new LinkedHashMap<>(1);
+			}
+
 			pushCommandBuilders.put(key, new PushOperatorBuilder(key));
 		}
 		return pushCommandBuilders.get(key);
@@ -412,6 +417,10 @@ public class Update implements UpdateDefinition {
 	 */
 	public Update filterArray(CriteriaDefinition criteria) {
 
+		if (arrayFilters == Collections.EMPTY_LIST) {
+			this.arrayFilters = new ArrayList<>();
+		}
+
 		this.arrayFilters.add(criteria::getCriteriaObject);
 		return this;
 	}
@@ -426,6 +435,10 @@ public class Update implements UpdateDefinition {
 	 * @since 2.2
 	 */
 	public Update filterArray(String identifier, Object expression) {
+
+		if (arrayFilters == Collections.EMPTY_LIST) {
+			this.arrayFilters = new ArrayList<>();
+		}
 
 		this.arrayFilters.add(() -> new Document(identifier, expression));
 		return this;
@@ -453,6 +466,15 @@ public class Update implements UpdateDefinition {
 	 */
 	public List<ArrayFilter> getArrayFilters() {
 		return Collections.unmodifiableList(this.arrayFilters);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#hasArrayFilters()
+	 */
+	@Override
+	public boolean hasArrayFilters() {
+		return !this.arrayFilters.isEmpty();
 	}
 
 	/**
