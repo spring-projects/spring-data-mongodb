@@ -263,7 +263,7 @@ class Publisher {
 ====
 
 It is also possible to model relational style _One-To-Many_ references using a combination of `@ReadonlyProperty` and `@DocumentReference`.
-This approach allows to link types without explicitly storing the linking values within the document itself as shown in the snipped below.
+This approach allows link types without storing the linking values within the owning document but rather on the referencing document as shown in the example below.
 
 ====
 [source,java]
@@ -313,8 +313,9 @@ class Publisher {
   "name" : "Del Rey"
 }
 ----
-<1> Set up the link from `Book` to `Publisher` by storing the `Publisher.id` within the `Book` document.
-<2> Mark the property holding the references to be read only. This prevents storing references to individual ``Book``s with the `Publisher` document.
+<1> Set up the link from `Book` (reference) to `Publisher` (owner) by storing the `Publisher.id` within the `Book` document.
+<2> Mark the property holding the references to be readonly.
+This prevents storing references to individual ``Book``s with the `Publisher` document.
 <3> Use the `#self` variable to access values within the `Publisher` document and in this retrieve `Books` with matching `publisherId`.
 ====
 

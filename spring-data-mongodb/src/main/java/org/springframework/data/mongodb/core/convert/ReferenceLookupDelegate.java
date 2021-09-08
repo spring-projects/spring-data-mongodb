@@ -174,7 +174,6 @@ public final class ReferenceLookupDelegate {
 	 * @param <T>
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
 	@SuppressWarnings("unchecked")
 	private <T> T parseValueOrGet(String value, ParameterBindingContext bindingContext, Supplier<T> defaultValue) {
 
@@ -199,16 +198,10 @@ public final class ReferenceLookupDelegate {
 
 	ParameterBindingContext bindingContext(MongoPersistentProperty property, Object source, SpELContext spELContext) {
 
-		ValueProvider valueProvider;
-		if (source instanceof DocumentReferenceSource) {
-			valueProvider = valueProviderFor(((DocumentReferenceSource) source).getTargetSource());
-		} else {
-			valueProvider = valueProviderFor(source);
-		}
+		ValueProvider valueProvider = valueProviderFor(DocumentReferenceSource.getTargetSource(source));
 
 		return new ParameterBindingContext(valueProvider, spELContext.getParser(),
 				() -> evaluationContextFor(property, source, spELContext));
-
 	}
 
 	ValueProvider valueProviderFor(Object source) {
@@ -232,8 +225,7 @@ public final class ReferenceLookupDelegate {
 
 		EvaluationContext ctx = spELContext.getEvaluationContext(target);
 		ctx.setVariable("target", target);
-		ctx.setVariable("self",
-				source instanceof DocumentReferenceSource ? ((DocumentReferenceSource) source).getSelf() : source);
+		ctx.setVariable("self", DocumentReferenceSource.getSelf(source));
 		ctx.setVariable(property.getName(), target);
 
 		return ctx;
@@ -255,11 +247,10 @@ public final class ReferenceLookupDelegate {
 
 		String lookup = documentReference.lookup();
 
-		Object value = source instanceof DocumentReferenceSource ? ((DocumentReferenceSource) source).getTargetSource()
-				: source;
+		Object value = DocumentReferenceSource.getTargetSource(source);
 
 		Document sort = parseValueOrGet(documentReference.sort(), bindingContext(property, source, spELContext),
-				() -> new Document());
+				Document::new);
 
 		if (property.isCollectionLike() && (value instanceof Collection || value == null)) {
 

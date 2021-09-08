@@ -28,11 +28,11 @@ public class DocumentReferenceSource {
 
 	private final Object self;
 
-	@Nullable private final Object targetSource;
+	private final @Nullable Object targetSource;
 
 	/**
 	 * Create a new instance of {@link DocumentReferenceSource}.
-	 * 
+	 *
 	 * @param self the entire wrapper object holding references. Must not be {@literal null}.
 	 * @param targetSource the reference value source.
 	 */
@@ -59,5 +59,26 @@ public class DocumentReferenceSource {
 	@Nullable
 	public Object getTargetSource() {
 		return targetSource;
+	}
+
+	/**
+	 * Dereference a {@code targetSource} if it is a {@link DocumentReferenceSource} or return {@code source} otherwise.
+	 *
+	 * @param source
+	 * @return
+	 */
+	@Nullable
+	static Object getTargetSource(Object source) {
+		return source instanceof DocumentReferenceSource ? ((DocumentReferenceSource) source).getTargetSource() : source;
+	}
+
+	/**
+	 * Dereference a {@code self} object if it is a {@link DocumentReferenceSource} or return {@code self} otherwise.
+	 *
+	 * @param self
+	 * @return
+	 */
+	static Object getSelf(Object self) {
+		return self instanceof DocumentReferenceSource ? ((DocumentReferenceSource) self).getSelf() : self;
 	}
 }
