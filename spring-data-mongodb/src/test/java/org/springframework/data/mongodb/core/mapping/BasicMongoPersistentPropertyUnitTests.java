@@ -241,7 +241,7 @@ public class BasicMongoPersistentPropertyUnitTests {
 		assertThat(property.getFieldType()).isEqualTo(Document.class);
 	}
 
-	@Test
+	@Test // GH-3803
 	void considersJMoleculesIdentityExplicitlyAnnotatedIdentifier() {
 
 		MongoPersistentProperty property = getPropertyFor(WithJMoleculesIdentity.class, "identifier");
