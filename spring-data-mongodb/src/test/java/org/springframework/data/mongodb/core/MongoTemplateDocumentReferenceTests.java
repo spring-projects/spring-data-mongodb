@@ -25,6 +25,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -679,6 +680,41 @@ public class MongoTemplateDocumentReferenceTests {
 		assertThat(result.getSimpleValueRef()).containsExactly(new SimpleObjectRef("ref-2", "me-the-2-referenced-object"));
 	}
 
+	@Test // GH-3805
+	void loadEmptyCollectionReference() {
+
+		String rootCollectionName = template.getCollectionName(CollectionRefRoot.class);
+
+		// an empty reference array.
+		Document source = new Document("_id", "id-1").append("value", "v1").append("simplePreinitializedValueRef",
+				Collections.emptyList());
+
+		template.execute(db -> {
+			db.getCollection(rootCollectionName).insertOne(source);
+			return null;
+		});
+
+		CollectionRefRoot result = template.findOne(query(where("id").is("id-1")), CollectionRefRoot.class);
+		assertThat(result.simplePreinitializedValueRef).isEmpty();
+	}
+
+	@Test // GH-3805
+	void loadNoExistingCollectionReference() {
+
+		String rootCollectionName = template.getCollectionName(CollectionRefRoot.class);
+
+		// no reference array at all
+		Document source = new Document("_id", "id-1").append("value", "v1");
+
+		template.execute(db -> {
+			db.getCollection(rootCollectionName).insertOne(source);
+			return null;
+		});
+
+		CollectionRefRoot result = template.findOne(query(where("id").is("id-1")), CollectionRefRoot.class);
+		assertThat(result.simplePreinitializedValueRef).isEmpty();
+	}
+
 	@Test // GH-3602
 	void queryForReference() {
 
@@ -1121,6 +1157,9 @@ public class MongoTemplateDocumentReferenceTests {
 
 		@DocumentReference(lookup = "{ '_id' : '?#{#target}' }") //
 		List<SimpleObjectRef> simpleValueRef;
+
+		@DocumentReference
+		List<SimpleObjectRef> simplePreinitializedValueRef = new ArrayList<>();
 
 		@DocumentReference(lookup = "{ '_id' : '?#{#target}' }", sort = "{ '_id' : -1 } ") //
 		List<SimpleObjectRef> simpleSortedValueRef;

@@ -19,6 +19,7 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -122,7 +123,9 @@ public final class ReferenceLookupDelegate {
 
 		// Use the first value as a reference for others in case of collection like
 		if (value instanceof Iterable) {
-			value = ((Iterable<?>) value).iterator().next();
+
+			Iterator iterator = ((Iterable) value).iterator();
+			value = iterator.hasNext() ? iterator.next() : new Document();
 		}
 
 		// handle DBRef value
@@ -264,6 +267,10 @@ public final class ReferenceLookupDelegate {
 
 				Document decoded = codec.decode(lookup, bindingContext(property, entry, spELContext));
 				ors.add(decoded);
+			}
+
+			if(ors.isEmpty()) {
+				return new ListDocumentReferenceQuery(new Document("_id", new Document("$exists", false)), sort);
 			}
 
 			return new ListDocumentReferenceQuery(new Document("$or", ors), sort);
