@@ -158,7 +158,7 @@ public class AbstractReactiveMongoConfigurationUnitTests {
 
 		@Override
 		public MongoClient reactiveMongoClient() {
-			return MongoTestUtils.reactiveClient();
+			return Mockito.mock(MongoClient.class);
 		}
 
 		@Override

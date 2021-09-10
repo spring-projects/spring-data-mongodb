@@ -34,6 +34,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -72,7 +73,7 @@ public class ApplicationContextEventTests {
 
 	static @Client MongoClient mongoClient;
 
-	private ApplicationContext applicationContext;
+	private ConfigurableApplicationContext applicationContext;
 	private MongoTemplate template;
 	private SimpleMappingEventListener listener;
 
@@ -89,7 +90,9 @@ public class ApplicationContextEventTests {
 
 	@AfterEach
 	public void cleanUp() {
+
 		cleanDb();
+		applicationContext.close();
 	}
 
 	private void cleanDb() {

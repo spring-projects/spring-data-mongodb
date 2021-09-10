@@ -29,6 +29,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.mongodb.core.CollectionCallback;
 import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.test.util.MongoClientClosingTestConfiguration;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -45,7 +46,7 @@ import com.mongodb.client.MongoCollection;
 public abstract class AbstractIntegrationTests {
 
 	@Configuration
-	static class TestConfig extends AbstractMongoClientConfiguration {
+	static class TestConfig extends MongoClientClosingTestConfiguration {
 
 		@Override
 		protected String getDatabaseName() {
