@@ -59,6 +59,7 @@ import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.TextQuery;
+import org.springframework.data.mongodb.core.query.Update;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClientSettings;
@@ -1326,6 +1327,25 @@ public class QueryMapperUnitTests {
 		org.bson.Document mappedFields = mapper.getMappedFields(new org.bson.Document("id", 1), context.getPersistentEntity(WithStringId.class));
 		assertThat(mappedFields).containsEntry("_id", 1);
 	}
+	
+	@Test
+	void mapNestedStringFieldCorrectly() {
+		Update update = new Update();
+		update.set("levelOne.a.b.d", "e");
+		org.bson.Document document = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(EntityWithNestedMap.class));
+		assertThat(document).isEqualTo(new org.bson.Document("$set",new org.bson.Document("levelOne.a.b.d","e")));
+	}
+	
+	@Test
+	void mapNestedIntegerFieldCorrectly() {
+		Update update = new Update();
+		update.set("levelOne.0.1.3", "4");
+		org.bson.Document document = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(EntityWithNestedMap.class));
+		assertThat(document).isEqualTo(new org.bson.Document("$set",new org.bson.Document("levelOne.0.1.3","4")));
+	}
+
 
 	@Test // GH-3783
 	void retainsId$InWithStringArray() {
@@ -1514,6 +1534,11 @@ public class QueryMapperUnitTests {
 	static class EntityWithComplexValueTypeList {
 		List<SimpleEntityWithoutId> list;
 	}
+	
+	static class EntityWithNestedMap {
+		Map<String, Map<String, Map<String, Object>>> levelOne;
+	}
+	
 
 	static class WithExplicitTargetTypes {
 
