@@ -37,13 +37,13 @@ import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
-import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.TestEntities;
 import org.springframework.data.mongodb.core.Venue;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.test.util.MongoClientClosingTestConfiguration;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -60,7 +60,7 @@ import com.mongodb.client.MongoClient;
 public abstract class AbstractGeoSpatialTests {
 
 	@Configuration
-	static class TestConfig extends AbstractMongoClientConfiguration {
+	static class TestConfig extends MongoClientClosingTestConfiguration {
 
 		@Override
 		protected String getDatabaseName() {
@@ -111,10 +111,7 @@ public abstract class AbstractGeoSpatialTests {
 	}
 
 	protected void addVenues() {
-
-
 		template.bulkOps(BulkMode.UNORDERED, Venue.class).insert(TestEntities.geolocation().newYork()).execute();
-//		template.insertAll(TestEntities.geolocation().newYork());
 	}
 
 	@Test

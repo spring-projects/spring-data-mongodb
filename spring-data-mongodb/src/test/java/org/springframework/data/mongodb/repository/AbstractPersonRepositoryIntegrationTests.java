@@ -59,6 +59,7 @@ import org.springframework.data.geo.Metric;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
+import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
@@ -929,7 +930,7 @@ public abstract class AbstractPersonRepositoryIntegrationTests {
 			persons.add(new Person(String.format("%03d", i), "ln" + 1, 100));
 		}
 
-		repository.saveAll(persons);
+		operations.bulkOps(BulkMode.UNORDERED, Person.class).insert(persons).execute();
 
 		Slice<Person> slice = repository.findByAgeGreaterThan(50, PageRequest.of(0, 20, Direction.ASC, "firstname"));
 		assertThat(slice).containsExactlyElementsOf(persons.subList(0, 20));

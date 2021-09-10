@@ -18,7 +18,7 @@ package org.springframework.data.mongodb.repository.config;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -26,9 +26,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.repository.ReactivePersonRepository;
-import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
+
+import com.mongodb.reactivestreams.client.MongoClient;
 
 /**
  * Integration tests for {@link ReactiveMongoRepositoriesRegistrar}.
@@ -46,7 +47,7 @@ public class ReactiveMongoRepositoriesRegistrarIntegrationTests {
 		@Bean
 		public ReactiveMongoTemplate reactiveMongoTemplate() throws Exception {
 			return new ReactiveMongoTemplate(
-					new SimpleReactiveMongoDatabaseFactory(MongoTestUtils.reactiveClient(), "database"));
+					new SimpleReactiveMongoDatabaseFactory(Mockito.mock(MongoClient.class), "database"));
 		}
 	}
 

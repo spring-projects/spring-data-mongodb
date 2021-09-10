@@ -28,9 +28,9 @@ import java.util.stream.Collectors;
 
 import org.bson.Document;
 import org.bson.types.ObjectId;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.core.Constants;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
@@ -41,7 +41,6 @@ import org.springframework.data.mongodb.core.convert.DbRefResolver;
 import org.springframework.data.mongodb.core.convert.DbRefResolverCallback;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.convert.ReferenceLoader;
 import org.springframework.data.mongodb.core.convert.ReferenceLookupDelegate;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
@@ -134,6 +133,11 @@ public class ReactivePerformanceTests {
 
 		ReactiveMongoRepositoryFactory factory = new ReactiveMongoRepositoryFactory(operations);
 		repository = factory.getRepository(ReactivePersonRepository.class);
+	}
+
+	@AfterEach
+	void afterEach() {
+		mongo.close();
 	}
 
 	@Test // DATAMONGO-1444

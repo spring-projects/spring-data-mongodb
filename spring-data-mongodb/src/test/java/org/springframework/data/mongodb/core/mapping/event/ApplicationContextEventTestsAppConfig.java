@@ -17,13 +17,13 @@ package org.springframework.data.mongodb.core.mapping.event;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
+import org.springframework.data.mongodb.test.util.MongoClientClosingTestConfiguration;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
 import com.mongodb.client.MongoClient;
 
 @Configuration
-public class ApplicationContextEventTestsAppConfig extends AbstractMongoClientConfiguration {
+public class ApplicationContextEventTestsAppConfig extends MongoClientClosingTestConfiguration {
 
 	@Override
 	public String getDatabaseName() {

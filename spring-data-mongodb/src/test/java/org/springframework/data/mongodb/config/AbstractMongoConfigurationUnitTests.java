@@ -27,6 +27,7 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
+import org.mockito.Mockito;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -158,7 +159,7 @@ public class AbstractMongoConfigurationUnitTests {
 
 		@Override
 		public MongoClient mongoClient() {
-			return MongoClients.create();
+			return Mockito.mock(MongoClient.class);
 		}
 
 		@Override
@@ -186,7 +187,7 @@ public class AbstractMongoConfigurationUnitTests {
 
 		@Override
 		public MongoClient mongoClient() {
-			return MongoClients.create();
+			return Mockito.mock(MongoClient.class);
 		}
 
 		@Override

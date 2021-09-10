@@ -26,16 +26,15 @@ import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.OptimisticLockingFailureException;
-import org.springframework.data.mongodb.config.AbstractReactiveMongoConfiguration;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.repository.VersionedPerson;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
+import org.springframework.data.mongodb.test.util.ReactiveMongoClientClosingTestConfiguration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -49,7 +48,7 @@ import com.mongodb.reactivestreams.client.MongoClient;
 public class SimpleReactiveMongoRepositoryVersionedEntityTests {
 
 	@Configuration
-	static class Config extends AbstractReactiveMongoConfiguration {
+	static class Config extends ReactiveMongoClientClosingTestConfiguration {
 
 		@Override
 		public MongoClient reactiveMongoClient() {

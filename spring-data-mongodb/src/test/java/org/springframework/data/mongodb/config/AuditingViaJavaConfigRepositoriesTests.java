@@ -49,6 +49,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
+import org.springframework.data.mongodb.test.util.MongoClientClosingTestConfiguration;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.stereotype.Repository;
 import org.springframework.test.context.ContextConfiguration;
@@ -233,7 +234,7 @@ class AuditingViaJavaConfigRepositoriesTests {
 
 	@Configuration
 	@EnableMongoAuditing
-	static class SimpleConfig extends AbstractMongoClientConfiguration {
+	static class SimpleConfig extends MongoClientClosingTestConfiguration {
 
 		@Override
 		public MongoClient mongoClient() {
