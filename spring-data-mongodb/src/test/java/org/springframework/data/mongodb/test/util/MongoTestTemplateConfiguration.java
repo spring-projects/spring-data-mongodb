@@ -65,7 +65,11 @@ public class MongoTestTemplateConfiguration {
 
 		if (converter == null) {
 
-			converter = new MappingMongoConverter(new DefaultDbRefResolver(databaseFactory()), mappingContext());
+			if(dbFactoryConfig.syncClient != null || syncClient != null) {
+				converter = new MappingMongoConverter(new DefaultDbRefResolver(databaseFactory()), mappingContext());
+			} else {
+				converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext());
+			}
 
 			if (mongoConverterConfigurer.customConversions != null) {
 				converter.setCustomConversions(mongoConverterConfigurer.customConversions);
