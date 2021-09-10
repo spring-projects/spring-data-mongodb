@@ -34,6 +34,7 @@ import org.springframework.data.mongodb.core.convert.DefaultDbRefResolver;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.event.AuditingEventListener;
 import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
@@ -64,7 +65,11 @@ public class MongoTestTemplateConfiguration {
 
 		if (converter == null) {
 
-			converter = new MappingMongoConverter(new DefaultDbRefResolver(databaseFactory()), mappingContext());
+			if(dbFactoryConfig.syncClient != null || syncClient != null) {
+				converter = new MappingMongoConverter(new DefaultDbRefResolver(databaseFactory()), mappingContext());
+			} else {
+				converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext());
+			}
 
 			if (mongoConverterConfigurer.customConversions != null) {
 				converter.setCustomConversions(mongoConverterConfigurer.customConversions);
