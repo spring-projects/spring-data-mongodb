@@ -31,7 +31,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
@@ -40,7 +39,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
-import org.springframework.data.mongodb.config.AbstractReactiveMongoConfiguration;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.query.BasicQuery;
@@ -53,6 +51,7 @@ import org.springframework.data.mongodb.repository.User;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 import org.springframework.data.repository.query.FluentQuery;
+import org.springframework.data.mongodb.test.util.ReactiveMongoClientClosingTestConfiguration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -80,7 +79,7 @@ public class ReactiveQuerydslMongoPredicateExecutorTests {
 	QPerson person;
 
 	@Configuration
-	static class Config extends AbstractReactiveMongoConfiguration {
+	static class Config extends ReactiveMongoClientClosingTestConfiguration {
 
 		@Override
 		public MongoClient reactiveMongoClient() {
@@ -101,10 +100,10 @@ public class ReactiveQuerydslMongoPredicateExecutorTests {
 	@BeforeClass
 	public static void cleanDb() {
 
-		MongoClient client = MongoTestUtils.reactiveClient();
-
-		MongoTestUtils.createOrReplaceCollectionNow("reactive", "person", client);
-		MongoTestUtils.createOrReplaceCollectionNow("reactive", "user", client);
+		try (MongoClient client = MongoTestUtils.reactiveClient()) {
+			MongoTestUtils.createOrReplaceCollectionNow("reactive", "person", client);
+			MongoTestUtils.createOrReplaceCollectionNow("reactive", "user", client);
+		}
 	}
 
 	@Before

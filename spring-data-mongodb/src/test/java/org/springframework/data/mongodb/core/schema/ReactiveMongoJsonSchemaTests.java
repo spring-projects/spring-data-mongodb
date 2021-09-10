@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.core.schema;
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
 import lombok.Data;
+import org.springframework.data.mongodb.test.util.ReactiveMongoClientClosingTestConfiguration;
 import reactor.test.StepVerifier;
 
 import java.time.Duration;
@@ -32,7 +33,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataRetrievalFailureException;
-import org.springframework.data.mongodb.config.AbstractReactiveMongoConfiguration;
 import org.springframework.data.mongodb.core.CollectionOptions;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.data.mongodb.core.convert.MongoJsonSchemaMapper;
@@ -56,7 +56,7 @@ public class ReactiveMongoJsonSchemaTests {
 	static @Client MongoClient mongoClient;
 
 	@Configuration
-	static class Config extends AbstractReactiveMongoConfiguration {
+	static class Config extends ReactiveMongoClientClosingTestConfiguration {
 
 		@Override
 		public MongoClient reactiveMongoClient() {

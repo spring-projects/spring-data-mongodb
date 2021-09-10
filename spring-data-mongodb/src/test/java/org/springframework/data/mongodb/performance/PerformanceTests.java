@@ -93,7 +93,10 @@ public class PerformanceTests {
 		factory.afterPropertiesSet();
 
 		this.repository = factory.getObject();
+	}
 
+	void afterEach() {
+		mongo.close();
 	}
 
 	@Test

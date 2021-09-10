@@ -21,6 +21,7 @@ import org.springframework.core.ResolvableType;
 import org.springframework.data.mapping.callback.EntityCallback;
 import org.springframework.data.mongodb.core.mapping.event.AuditingEntityCallback;
 import org.springframework.data.mongodb.core.mapping.event.ReactiveAuditingEntityCallback;
+import org.springframework.data.mongodb.test.util.ReactiveMongoClientClosingTestConfiguration;
 import org.springframework.test.util.ReflectionTestUtils;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -75,7 +76,7 @@ class ReactiveAuditingTests {
 	@EnableReactiveMongoAuditing
 	@EnableReactiveMongoRepositories(basePackageClasses = ReactiveAuditingTests.class, considerNestedRepositories = true,
 			includeFilters = @Filter(type = FilterType.ASSIGNABLE_TYPE, classes = ReactiveAuditablePersonRepository.class))
-	static class Config extends AbstractReactiveMongoConfiguration {
+	static class Config extends ReactiveMongoClientClosingTestConfiguration {
 
 		@Override
 		protected String getDatabaseName() {

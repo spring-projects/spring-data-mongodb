@@ -20,13 +20,13 @@ import java.util.Collections;
 import java.util.Set;
 
 import org.springframework.context.annotation.Bean;
-import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.mapping.event.LoggingEventListener;
+import org.springframework.data.mongodb.test.util.MongoClientClosingTestConfiguration;
 import org.springframework.data.mongodb.test.util.MongoTestUtils;
 
 import com.mongodb.client.MongoClient;
 
-public class GeoIndexedAppConfig extends AbstractMongoClientConfiguration {
+public class GeoIndexedAppConfig extends MongoClientClosingTestConfiguration {
 
 	public static String GEO_DB = "database";
 	public static String GEO_COLLECTION = "geolocation";

@@ -67,6 +67,7 @@ import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
+import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.convert.LazyLoadingProxy;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.index.Index;
@@ -3558,7 +3559,7 @@ public class MongoTemplateTests {
 				.mapToObj(i -> new Sample("id-" + i, i % 2 == 0 ? "stark" : "lannister")) //
 				.collect(Collectors.toList());
 
-		template.insertAll(samples);
+		template.bulkOps(BulkMode.UNORDERED, Sample.class).insert(samples).execute();
 
 		DeleteResult wr = template.remove(query(where("field").is("lannister")).limit(25), Sample.class);
 
@@ -3573,7 +3574,7 @@ public class MongoTemplateTests {
 				.mapToObj(i -> new Sample("id-" + i, i % 2 == 0 ? "stark" : "lannister")) //
 				.collect(Collectors.toList());
 
-		template.insertAll(samples);
+		template.bulkOps(BulkMode.UNORDERED, Sample.class).insert(samples).execute();
 
 		DeleteResult wr = template.remove(new Query().skip(25).with(Sort.by("field")), Sample.class);
 

@@ -19,7 +19,6 @@ import static org.assertj.core.api.Assertions.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.ConstructorArgumentValues;
 import org.springframework.beans.factory.config.ConstructorArgumentValues.ValueHolder;
@@ -74,6 +73,7 @@ public class MongoDbFactoryParserIntegrationTests {
 
 		ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("namespace/db-factory-bean.xml");
 		assertWriteConcern(ctx, WriteConcern.ACKNOWLEDGED);
+		ctx.close();
 	}
 
 	@Test // DATAMONGO-2199
@@ -82,6 +82,7 @@ public class MongoDbFactoryParserIntegrationTests {
 		ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext(
 				"namespace/db-factory-bean-custom-write-concern.xml");
 		assertWriteConcern(ctx, new WriteConcern("rack1"));
+		ctx.close();
 	}
 
 	@Test // DATAMONGO-331
@@ -90,10 +91,10 @@ public class MongoDbFactoryParserIntegrationTests {
 		AbstractApplicationContext ctx = new ClassPathXmlApplicationContext(
 				"namespace/db-factory-bean-custom-write-concern.xml");
 		MongoDatabaseFactory factory = ctx.getBean("second", MongoDatabaseFactory.class);
-		MongoDatabase db = factory.getMongoDatabase();
-
-		assertThat(db.getWriteConcern()).isEqualTo(WriteConcern.W2);
 		ctx.close();
+
+		MongoDatabase db = factory.getMongoDatabase();
+		assertThat(db.getWriteConcern()).isEqualTo(WriteConcern.W2);
 	}
 
 	// This test will fail since equals in WriteConcern uses == for _w and not .equals
@@ -127,6 +128,8 @@ public class MongoDbFactoryParserIntegrationTests {
 		MongoDatabaseFactory dbFactory = factory.getBean("mongoDbFactory", MongoDatabaseFactory.class);
 		MongoDatabase db = dbFactory.getMongoDatabase();
 		assertThat(db.getName()).isEqualTo("database");
+
+		factory.destroyBean(dbFactory);
 	}
 
 	@Test // DATAMONGO-1218
@@ -171,6 +174,8 @@ public class MongoDbFactoryParserIntegrationTests {
 		ClassPathXmlApplicationContext ctx = new ClassPathXmlApplicationContext("namespace/db-factory-bean.xml");
 
 		MongoDatabaseFactory dbFactory = ctx.getBean("with-connection-string", MongoDatabaseFactory.class);
+		ctx.close();
+
 		assertThat(dbFactory).isInstanceOf(SimpleMongoClientDatabaseFactory.class);
 		assertThat(ReflectionTestUtils.getField(dbFactory, "mongoClient"))
 				.isInstanceOf(com.mongodb.client.MongoClient.class);

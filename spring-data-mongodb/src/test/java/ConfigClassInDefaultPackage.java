@@ -19,10 +19,10 @@ import java.util.Collections;
 import java.util.Set;
 
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
+import org.springframework.data.mongodb.test.util.MongoClientClosingTestConfiguration;
 
 /**
  * Sample configuration class in default package.
@@ -30,7 +30,7 @@ import com.mongodb.client.MongoClients;
  * @author Oliver Gierke
  */
 @Configuration
-public class ConfigClassInDefaultPackage extends AbstractMongoClientConfiguration {
+public class ConfigClassInDefaultPackage extends MongoClientClosingTestConfiguration {
 
 	@Override
 	protected String getDatabaseName() {
