@@ -317,6 +317,15 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!-- jMolecules -->
+
+		<dependency>
+			<groupId>org.jmolecules</groupId>
+			<artifactId>jmolecules-ddd</artifactId>
+			<version>${jmolecules}</version>
+			<scope>test</scope>
+		</dependency>
+
 	</dependencies>
 
 	<build>

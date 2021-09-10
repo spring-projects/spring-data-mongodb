@@ -33,8 +33,7 @@ import org.bson.types.Code;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
@@ -44,6 +43,9 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.Person;
+import org.springframework.data.mongodb.core.aggregation.ConditionalOperators;
+import org.springframework.data.mongodb.core.aggregation.EvaluationOperators;
+import org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.data.mongodb.core.mapping.DBRef;
@@ -83,9 +85,12 @@ public class QueryMapperUnitTests {
 	@BeforeEach
 	void beforeEach() {
 
+		MongoCustomConversions conversions = new MongoCustomConversions();
 		this.context = new MongoMappingContext();
+		this.context.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
 
 		this.converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, context);
+		this.converter.setCustomConversions(conversions);
 		this.converter.afterPropertiesSet();
 
 		this.mapper = new QueryMapper(converter);
@@ -1328,11 +1333,45 @@ public class QueryMapperUnitTests {
 		assertThat(mapper.getMappedSort(query.getQueryObject(), context.getPersistentEntity(Customer.class))).isEqualTo(new org.bson.Document("address.street", "1007 Mountain Drive"));
 	}
 
+	@Test // GH-3790
+	void shouldAcceptExprAsCriteriaDefinition() {
+
+		EvaluationOperators.EvaluationOperatorFactory.Expr expr = EvaluationOperators
+				.valueOf(ConditionalOperators.ifNull("customizedField").then(true)).expr();
+
+		Query query = query(
+				expr.toCriteriaDefinition(new TypeBasedAggregationOperationContext(EmbeddedClass.class, context, mapper)));
+
+		org.bson.Document mappedQuery = mapper.getMappedObject(query.getQueryObject(),
+				context.getRequiredPersistentEntity(EmbeddedClass.class));
+
+		assertThat(mappedQuery).isEqualTo("{ $expr : { $ifNull : [\"$fancy_custom_name\", true] } }");
+	}
+
 	@Test // GH-3668
 	void mapStringIdFieldProjection() {
 
 		org.bson.Document mappedFields = mapper.getMappedFields(new org.bson.Document("id", 1), context.getPersistentEntity(WithStringId.class));
 		assertThat(mappedFields).containsEntry("_id", 1);
+	}
+
+	@Test // GH-3783
+	void retainsId$InWithStringArray() {
+
+		org.bson.Document mappedQuery = mapper.getMappedObject(
+				org.bson.Document.parse("{ _id : { $in: [\"5b8bedceb1e0bfc07b008828\"]}}"),
+				context.getPersistentEntity(WithExplicitStringId.class));
+		assertThat(mappedQuery.get("_id")).isEqualTo(org.bson.Document.parse("{ $in: [\"5b8bedceb1e0bfc07b008828\"]}"));
+	}
+
+	@Test // GH-3783
+	void mapsId$InInToObjectIds() {
+
+		org.bson.Document mappedQuery = mapper.getMappedObject(
+				org.bson.Document.parse("{ _id : { $in: [\"5b8bedceb1e0bfc07b008828\"]}}"),
+				context.getPersistentEntity(ClassWithDefaultId.class));
+		assertThat(mappedQuery.get("_id"))
+				.isEqualTo(org.bson.Document.parse("{ $in: [ {$oid: \"5b8bedceb1e0bfc07b008828\" } ]}"));
 	}
 
 	class WithDeepArrayNesting {
@@ -1401,6 +1440,12 @@ public class QueryMapperUnitTests {
 	class WithStringId {
 
 		@MongoId String id;
+		String name;
+	}
+
+	class WithExplicitStringId {
+
+		@MongoId(FieldType.STRING) String id;
 		String name;
 	}
 

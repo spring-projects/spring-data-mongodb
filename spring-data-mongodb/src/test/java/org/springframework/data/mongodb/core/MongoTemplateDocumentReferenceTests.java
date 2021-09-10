@@ -25,6 +25,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -39,6 +40,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.ReadOnlyProperty;
 import org.springframework.data.annotation.Reference;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mongodb.core.convert.LazyLoadingTestUtils;
@@ -678,6 +680,105 @@ public class MongoTemplateDocumentReferenceTests {
 		assertThat(result.getSimpleValueRef()).containsExactly(new SimpleObjectRef("ref-2", "me-the-2-referenced-object"));
 	}
 
+	@Test // GH-3805
+	void loadEmptyCollectionReference() {
+
+		String rootCollectionName = template.getCollectionName(CollectionRefRoot.class);
+
+		// an empty reference array.
+		Document source = new Document("_id", "id-1").append("value", "v1").append("simplePreinitializedValueRef",
+				Collections.emptyList());
+
+		template.execute(db -> {
+			db.getCollection(rootCollectionName).insertOne(source);
+			return null;
+		});
+
+		CollectionRefRoot result = template.findOne(query(where("id").is("id-1")), CollectionRefRoot.class);
+		assertThat(result.simplePreinitializedValueRef).isEmpty();
+	}
+
+	@Test // GH-3805
+	void loadEmptyMapReference() {
+
+		String rootCollectionName = template.getCollectionName(CollectionRefRoot.class);
+
+		// an empty reference array.
+		Document source = new Document("_id", "id-1").append("value", "v1").append("simplePreinitializedMapRef",
+				new Document());
+
+		template.execute(db -> {
+			db.getCollection(rootCollectionName).insertOne(source);
+			return null;
+		});
+
+		CollectionRefRoot result = template.findOne(query(where("id").is("id-1")), CollectionRefRoot.class);
+		assertThat(result.simplePreinitializedMapRef).isEmpty();
+	}
+
+	@Test // GH-3805
+	void loadNoExistingCollectionReference() {
+
+		String rootCollectionName = template.getCollectionName(CollectionRefRoot.class);
+
+		// no reference array at all
+		Document source = new Document("_id", "id-1").append("value", "v1");
+
+		template.execute(db -> {
+			db.getCollection(rootCollectionName).insertOne(source);
+			return null;
+		});
+
+		CollectionRefRoot result = template.findOne(query(where("id").is("id-1")), CollectionRefRoot.class);
+		assertThat(result.simplePreinitializedValueRef).isEmpty();
+	}
+
+	@Test // GH-3806
+	void resolveReferenceWhenUsedAsCtorArgument() {
+
+		Publisher publisher = new Publisher();
+		publisher.id = "p-111";
+		publisher.name = "ppp";
+
+		template.save(publisher);
+
+		WithRequiredArgsCtor source = new WithRequiredArgsCtor("id-1", publisher);
+
+		template.save(source);
+
+		WithRequiredArgsCtor target = template.findOne(query(where("id").is(source.id)), WithRequiredArgsCtor.class);
+		assertThat(target.publisher).isNotNull();
+	}
+
+	@Test // GH-3806
+	void resolveLazyReferenceWhenUsedAsCtorArgument() {
+
+		Publisher publisher = new Publisher();
+		publisher.id = "p-111";
+		publisher.name = "ppp";
+
+		template.save(publisher);
+
+		WithLazyRequiredArgsCtor source = new WithLazyRequiredArgsCtor("id-1", publisher);
+
+		template.save(source);
+
+		WithLazyRequiredArgsCtor target = template.findOne(query(where("id").is(source.id)), WithLazyRequiredArgsCtor.class);
+
+		// proxy not yet resolved
+		LazyLoadingTestUtils.assertProxy(target.publisher, (proxy) -> {
+
+			assertThat(proxy.isResolved()).isFalse();
+			assertThat(proxy.currentValue()).isNull();
+		});
+
+		// resolve the proxy by invoking a method on it
+		assertThat(target.getPublisher().getName()).isEqualTo("ppp");
+		LazyLoadingTestUtils.assertProxy(target.publisher, (proxy) -> {
+			assertThat(proxy.isResolved()).isTrue();
+		});
+	}
+
 	@Test // GH-3602
 	void queryForReference() {
 
@@ -1049,7 +1150,34 @@ public class MongoTemplateDocumentReferenceTests {
 		});
 
 		assertThat(target).containsEntry("publisher", "p-1");
+	}
 
+	@Test // GH-3798
+	void allowsOneToMayStyleLookupsUsingSelfVariable() {
+
+		OneToManyStyleBook book1 = new OneToManyStyleBook();
+		book1.id = "id-1";
+		book1.publisherId = "p-100";
+
+		OneToManyStyleBook book2 = new OneToManyStyleBook();
+		book2.id = "id-2";
+		book2.publisherId = "p-200";
+
+		OneToManyStyleBook book3 = new OneToManyStyleBook();
+		book3.id = "id-3";
+		book3.publisherId = "p-100";
+
+		template.save(book1);
+		template.save(book2);
+		template.save(book3);
+
+		OneToManyStylePublisher publisher = new OneToManyStylePublisher();
+		publisher.id = "p-100";
+
+		template.save(publisher);
+
+		OneToManyStylePublisher target = template.findOne(query(where("id").is(publisher.id)), OneToManyStylePublisher.class);
+		assertThat(target.books).containsExactlyInAnyOrder(book1, book3);
 	}
 
 	@Data
@@ -1094,11 +1222,17 @@ public class MongoTemplateDocumentReferenceTests {
 		@DocumentReference(lookup = "{ '_id' : '?#{#target}' }") //
 		List<SimpleObjectRef> simpleValueRef;
 
+		@DocumentReference
+		List<SimpleObjectRef> simplePreinitializedValueRef = new ArrayList<>();
+
 		@DocumentReference(lookup = "{ '_id' : '?#{#target}' }", sort = "{ '_id' : -1 } ") //
 		List<SimpleObjectRef> simpleSortedValueRef;
 
 		@DocumentReference(lookup = "{ '_id' : '?#{#target}' }") //
 		Map<String, SimpleObjectRef> mapValueRef;
+
+		@DocumentReference //
+		Map<String, SimpleObjectRef> simplePreinitializedMapRef = new LinkedHashMap<>();
 
 		@Field("simple-value-ref-annotated-field-name") //
 		@DocumentReference(lookup = "{ '_id' : '?#{#target}' }") //
@@ -1283,6 +1417,30 @@ public class MongoTemplateDocumentReferenceTests {
 		String id;
 		String acronym;
 		String name;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getAcronym() {
+			return acronym;
+		}
+
+		public void setAcronym(String acronym) {
+			this.acronym = acronym;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
 	}
 
 	@Data
@@ -1292,5 +1450,61 @@ public class MongoTemplateDocumentReferenceTests {
 
 		@Reference //
 		Publisher publisher;
+	}
+
+	@Data
+	static class OneToManyStyleBook {
+
+		@Id
+		String id;
+
+		private String publisherId;
+	}
+
+	@Data
+	static class OneToManyStylePublisher {
+
+		@Id
+		String id;
+
+		@ReadOnlyProperty
+		@DocumentReference(lookup="{'publisherId':?#{#self._id} }")
+		List<OneToManyStyleBook> books;
+	}
+
+	static class WithRequiredArgsCtor {
+
+		final String id;
+
+		@DocumentReference
+		final Publisher publisher;
+
+		public WithRequiredArgsCtor(String id, Publisher publisher) {
+
+			this.id = id;
+			this.publisher = publisher;
+		}
+	}
+
+	static class WithLazyRequiredArgsCtor {
+
+		final String id;
+
+		@DocumentReference(lazy = true)
+		final Publisher publisher;
+
+		public WithLazyRequiredArgsCtor(String id, Publisher publisher) {
+
+			this.id = id;
+			this.publisher = publisher;
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public Publisher getPublisher() {
+			return publisher;
+		}
 	}
 }

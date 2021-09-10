@@ -19,6 +19,7 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -61,6 +62,8 @@ import com.mongodb.client.MongoCollection;
  */
 public final class ReferenceLookupDelegate {
 
+	private static final Document NO_RESULTS_PREDICATE = new Document("_id", new Document("$exists", false));
+
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private final SpELContext spELContext;
 	private final ParameterBindingDocumentCodec codec;
@@ -87,17 +90,20 @@ public final class ReferenceLookupDelegate {
 	 * Read the reference expressed by the given property.
 	 *
 	 * @param property the reference defining property. Must not be {@literal null}. THe
-	 * @param value the source value identifying to the referenced entity. Must not be {@literal null}.
+	 * @param source the source value identifying to the referenced entity. Must not be {@literal null}.
 	 * @param lookupFunction to execute a lookup query. Must not be {@literal null}.
 	 * @param entityReader the callback to convert raw source values into actual domain types. Must not be
 	 *          {@literal null}.
 	 * @return can be {@literal null}.
 	 */
 	@Nullable
-	public Object readReference(MongoPersistentProperty property, Object value, LookupFunction lookupFunction,
+	public Object readReference(MongoPersistentProperty property, Object source, LookupFunction lookupFunction,
 			MongoEntityReader entityReader) {
 
-		DocumentReferenceQuery filter = computeFilter(property, value, spELContext);
+		Object value = source instanceof DocumentReferenceSource ? ((DocumentReferenceSource) source).getTargetSource()
+				: source;
+
+		DocumentReferenceQuery filter = computeFilter(property, source, spELContext);
 		ReferenceCollection referenceCollection = computeReferenceContext(property, value, spELContext);
 
 		Iterable<Document> result = lookupFunction.apply(filter, referenceCollection);
@@ -119,7 +125,9 @@ public final class ReferenceLookupDelegate {
 
 		// Use the first value as a reference for others in case of collection like
 		if (value instanceof Iterable) {
-			value = ((Iterable<?>) value).iterator().next();
+
+			Iterator iterator = ((Iterable) value).iterator();
+			value = iterator.hasNext() ? iterator.next() : new Document();
 		}
 
 		// handle DBRef value
@@ -171,7 +179,6 @@ public final class ReferenceLookupDelegate {
 	 * @param <T>
 	 * @return can be {@literal null}.
 	 */
-	@Nullable
 	@SuppressWarnings("unchecked")
 	private <T> T parseValueOrGet(String value, ParameterBindingContext bindingContext, Supplier<T> defaultValue) {
 
@@ -196,7 +203,9 @@ public final class ReferenceLookupDelegate {
 
 	ParameterBindingContext bindingContext(MongoPersistentProperty property, Object source, SpELContext spELContext) {
 
-		return new ParameterBindingContext(valueProviderFor(source), spELContext.getParser(),
+		ValueProvider valueProvider = valueProviderFor(DocumentReferenceSource.getTargetSource(source));
+
+		return new ParameterBindingContext(valueProvider, spELContext.getParser(),
 				() -> evaluationContextFor(property, source, spELContext));
 	}
 
@@ -212,9 +221,17 @@ public final class ReferenceLookupDelegate {
 
 	EvaluationContext evaluationContextFor(MongoPersistentProperty property, Object source, SpELContext spELContext) {
 
-		EvaluationContext ctx = spELContext.getEvaluationContext(source);
-		ctx.setVariable("target", source);
-		ctx.setVariable(property.getName(), source);
+		Object target = source instanceof DocumentReferenceSource ? ((DocumentReferenceSource) source).getTargetSource()
+				: source;
+
+		if (target == null) {
+			target = new Document();
+		}
+
+		EvaluationContext ctx = spELContext.getEvaluationContext(target);
+		ctx.setVariable("target", target);
+		ctx.setVariable("self", DocumentReferenceSource.getSelf(source));
+		ctx.setVariable(property.getName(), target);
 
 		return ctx;
 	}
@@ -223,25 +240,38 @@ public final class ReferenceLookupDelegate {
 	 * Compute the query to retrieve linked documents.
 	 *
 	 * @param property must not be {@literal null}.
-	 * @param value must not be {@literal null}.
+	 * @param source must not be {@literal null}.
 	 * @param spELContext must not be {@literal null}.
 	 * @return never {@literal null}.
 	 */
 	@SuppressWarnings("unchecked")
-	DocumentReferenceQuery computeFilter(MongoPersistentProperty property, Object value, SpELContext spELContext) {
+	DocumentReferenceQuery computeFilter(MongoPersistentProperty property, Object source, SpELContext spELContext) {
 
 		DocumentReference documentReference = property.isDocumentReference() ? property.getDocumentReference()
 				: ReferenceEmulatingDocumentReference.INSTANCE;
 
 		String lookup = documentReference.lookup();
 
-		Document sort = parseValueOrGet(documentReference.sort(), bindingContext(property, value, spELContext),
-				() -> new Document());
+		Object value = DocumentReferenceSource.getTargetSource(source);
 
-		if (property.isCollectionLike() && value instanceof Collection) {
+		Document sort = parseValueOrGet(documentReference.sort(), bindingContext(property, source, spELContext),
+				Document::new);
 
-			List<Document> ors = new ArrayList<>();
-			for (Object entry : (Collection<Object>) value) {
+		if (property.isCollectionLike() && (value instanceof Collection || value == null)) {
+
+			if (value == null) {
+				return new ListDocumentReferenceQuery(codec.decode(lookup, bindingContext(property, source, spELContext)),
+						sort);
+			}
+
+			Collection<Object> objects = (Collection<Object>) value;
+
+			if (objects.isEmpty()) {
+				return new ListDocumentReferenceQuery(NO_RESULTS_PREDICATE, sort);
+			}
+
+			List<Document> ors = new ArrayList<>(objects.size());
+			for (Object entry : objects) {
 
 				Document decoded = codec.decode(lookup, bindingContext(property, entry, spELContext));
 				ors.add(decoded);
@@ -252,9 +282,14 @@ public final class ReferenceLookupDelegate {
 
 		if (property.isMap() && value instanceof Map) {
 
-			Map<Object, Document> filterMap = new LinkedHashMap<>();
+			Set<Entry<Object, Object>> entries = ((Map<Object, Object>) value).entrySet();
+			if (entries.isEmpty()) {
+				return new MapDocumentReferenceQuery(NO_RESULTS_PREDICATE, sort, Collections.emptyMap());
+			}
 
-			for (Entry<Object, Object> entry : ((Map<Object, Object>) value).entrySet()) {
+			Map<Object, Document> filterMap = new LinkedHashMap<>(entries.size());
+
+			for (Entry<Object, Object> entry : entries) {
 
 				Document decoded = codec.decode(lookup, bindingContext(property, entry.getValue(), spELContext));
 				filterMap.put(entry.getKey(), decoded);
@@ -263,7 +298,7 @@ public final class ReferenceLookupDelegate {
 			return new MapDocumentReferenceQuery(new Document("$or", filterMap.values()), sort, filterMap);
 		}
 
-		return new SingleDocumentReferenceQuery(codec.decode(lookup, bindingContext(property, value, spELContext)), sort);
+		return new SingleDocumentReferenceQuery(codec.decode(lookup, bindingContext(property, source, spELContext)), sort);
 	}
 
 	enum ReferenceEmulatingDocumentReference implements DocumentReference {

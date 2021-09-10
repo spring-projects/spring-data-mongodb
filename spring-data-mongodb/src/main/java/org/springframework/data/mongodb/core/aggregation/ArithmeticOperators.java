@@ -717,7 +717,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link AggregationExpression} that calculates the sine of a numeric value given in
 		 * {@link AngularUnit#RADIANS radians}.
 		 *
-		 * @return new instance of {@link Sin}.
+		 * @return new instance of {@link Sinh}.
 		 * @since 3.3
 		 */
 		public Sinh sinh() {
@@ -728,7 +728,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link AggregationExpression} that calculates the sine of a numeric value.
 		 *
 		 * @param unit the unit of measure.
-		 * @return new instance of {@link Sin}.
+		 * @return new instance of {@link Sinh}.
 		 * @since 3.3
 		 */
 		public Sinh sinh(AngularUnit unit) {
@@ -736,10 +736,30 @@ public class ArithmeticOperators {
 		}
 
 		/**
+		 * Creates new {@link AggregationExpression} that calculates the inverse sine of a numeric value.
+		 *
+		 * @return new instance of {@link ASin}.
+		 * @since 3.3
+		 */
+		public ASin asin() {
+			return usesFieldRef() ? ASin.asinOf(fieldReference) : ASin.asinOf(expression);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the inverse hyperbolic sine of a numeric value.
+		 *
+		 * @return new instance of {@link ASinh}.
+		 * @since 3.3
+		 */
+		public ASinh asinh() {
+			return usesFieldRef() ? ASinh.asinhOf(fieldReference) : ASinh.asinhOf(expression);
+		}
+
+		/**
 		 * Creates new {@link AggregationExpression} that calculates the cosine of a numeric value given in
 		 * {@link AngularUnit#RADIANS radians}.
 		 *
-		 * @return new instance of {@link Sin}.
+		 * @return new instance of {@link Cos}.
 		 * @since 3.3
 		 */
 		public Cos cos() {
@@ -751,7 +771,7 @@ public class ArithmeticOperators {
 		 * {@link AngularUnit unit}.
 		 *
 		 * @param unit the unit of measure.
-		 * @return new instance of {@link Sin}.
+		 * @return new instance of {@link Cos}.
 		 * @since 3.3
 		 */
 		public Cos cos(AngularUnit unit) {
@@ -762,7 +782,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link AggregationExpression} that calculates the hyperbolic cosine of a numeric value given in
 		 * {@link AngularUnit#RADIANS radians}.
 		 *
-		 * @return new instance of {@link Sin}.
+		 * @return new instance of {@link Cosh}.
 		 * @since 3.3
 		 */
 		public Cosh cosh() {
@@ -773,7 +793,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link AggregationExpression} that calculates the hyperbolic cosine of a numeric value.
 		 *
 		 * @param unit the unit of measure.
-		 * @return new instance of {@link Sin}.
+		 * @return new instance of {@link Cosh}.
 		 * @since 3.3
 		 */
 		public Cosh cosh(AngularUnit unit) {
@@ -784,7 +804,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link AggregationExpression} that calculates the tangent of a numeric value given in
 		 * {@link AngularUnit#RADIANS radians}.
 		 *
-		 * @return new instance of {@link Sin}.
+		 * @return new instance of {@link Tan}.
 		 * @since 3.3
 		 */
 		public Tan tan() {
@@ -792,11 +812,78 @@ public class ArithmeticOperators {
 		}
 
 		/**
+		 * Creates new {@link AggregationExpression} that calculates the inverse tangent of a numeric value.
+		 *
+		 * @return new instance of {@link ATan}.
+		 * @since 3.3
+		 */
+		public ATan atan() {
+			return usesFieldRef() ? ATan.atanOf(fieldReference) : ATan.atanOf(expression);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the inverse tangent of the the numeric value divided by
+		 * the given numeric value in the argument.
+		 *
+		 * @param the numeric value
+		 * @return new instance of {@link ATan2}.
+		 * @since 3.3
+		 */
+		public ATan2 atan2(Number value) {
+
+			Assert.notNull(value, "Value must not be null!");
+			return createATan2().atan2of(value);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the inverse tangent of the the numeric value divided by
+		 * the given field reference in the argument.
+		 *
+		 * @param the numeric value
+		 * @return new instance of {@link ATan2}.
+		 * @since 3.3
+		 */
+		public ATan2 atan2(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return createATan2().atan2of(fieldReference);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the inverse tangent of the the numeric value divided by
+		 * the given {@link AggregationExpression} in the argument.
+		 *
+		 * @param the numeric value
+		 * @return new instance of {@link ATan2}.
+		 * @since 3.3
+		 */
+		public ATan2 atan2(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return createATan2().atan2of(expression);
+		}
+
+		private ATan2 createATan2() {
+
+			return usesFieldRef() ? ATan2.valueOf(fieldReference) : ATan2.valueOf(expression);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the inverse hyperbolic tangent of a numeric value.
+		 *
+		 * @return new instance of {@link ATanh}.
+		 * @since 3.3
+		 */
+		public ATanh atanh() {
+			return usesFieldRef() ? ATanh.atanhOf(fieldReference) : ATanh.atanhOf(expression);
+		}
+
+		/**
 		 * Creates new {@link AggregationExpression} that calculates the tangent of a numeric value in the given
 		 * {@link AngularUnit unit}.
 		 *
 		 * @param unit the unit of measure.
-		 * @return new instance of {@link Sin}.
+		 * @return new instance of {@link Tan}.
 		 * @since 3.3
 		 */
 		public Tan tan(AngularUnit unit) {
@@ -807,7 +894,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link AggregationExpression} that calculates the hyperbolic tangent of a numeric value given in
 		 * {@link AngularUnit#RADIANS radians}.
 		 *
-		 * @return new instance of {@link Sin}.
+		 * @return new instance of {@link Tan}.
 		 * @since 3.3
 		 */
 		public Tanh tanh() {
@@ -818,7 +905,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link AggregationExpression} that calculates the hyperbolic tangent of a numeric value.
 		 *
 		 * @param unit the unit of measure.
-		 * @return new instance of {@link Sin}.
+		 * @return new instance of {@link Tanh}.
 		 * @since 3.3
 		 */
 		public Tanh tanh(AngularUnit unit) {
@@ -2274,6 +2361,109 @@ public class ArithmeticOperators {
 	}
 
 	/**
+	 * An {@link AggregationExpression expression} that calculates the inverse sine of a value.
+	 *
+	 * @author Divya Srivastava
+	 * @since 3.3
+	 */
+	public static class ASin extends AbstractAggregationExpression {
+
+		private ASin(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse sine of a value.
+		 *
+		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
+		 * @return new instance of {@link ASin}.
+		 */
+		public static ASin asinOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new ASin(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse sine of a value.
+		 * <p />
+		 *
+		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
+		 * @return new instance of {@link ASin}.
+		 */
+		public static ASin asinOf(AggregationExpression expression) {
+			return new ASin(expression);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse sine of a value.
+		 *
+		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
+		 *          numeric value.
+		 * @return new instance of {@link ASin}.
+		 */
+		public static ASin asinOf(Number value) {
+			return new ASin(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$asin";
+		}
+	}
+
+	/**
+	 * An {@link AggregationExpression expression} that calculates the inverse hyperbolic sine of a value
+	 *
+	 * @author Divya Srivastava
+	 * @since 3.3
+	 */
+	public static class ASinh extends AbstractAggregationExpression {
+
+		private ASinh(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse hyperbolic sine of a value.
+		 *
+		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
+		 * @return new instance of {@link ASinh}.
+		 */
+		public static ASinh asinhOf(String fieldReference) {
+			return new ASinh(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse hyperbolic sine of a value.
+		 * <p />
+		 *
+		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
+		 * @return new instance of {@link ASinh}.
+		 */
+		public static ASinh asinhOf(AggregationExpression expression) {
+			return new ASinh(expression);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse hyperbolic sine of a value.
+		 *
+		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
+		 *          numeric value.
+		 * @return new instance of {@link ASinh}.
+		 */
+		public static ASinh asinhOf(Object value) {
+			return new ASinh(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$asinh";
+		}
+	}
+
+
+	/**
 	 * An {@link AggregationExpression expression} that calculates the cosine of a value that is measured in radians.
 	 *
 	 * @author Christoph Strobl
@@ -2294,8 +2484,6 @@ public class ArithmeticOperators {
 		 * <pre>
 		 * { $cos : { $degreesToRadians : "$angle" } }
 		 * </pre>
-		 *
-		 * .
 		 *
 		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
 		 * @return new instance of {@link Cos}.
@@ -2408,8 +2596,6 @@ public class ArithmeticOperators {
 		 * { $cosh : { $degreesToRadians : "$angle" } }
 		 * </pre>
 		 *
-		 * .
-		 *
 		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
 		 * @param unit the unit of measure used by the value of the given field.
 		 * @return new instance of {@link Cosh}.
@@ -2501,8 +2687,6 @@ public class ArithmeticOperators {
 		 * { $tan : { $degreesToRadians : "$angle" } }
 		 * </pre>
 		 *
-		 * .
-		 *
 		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
 		 * @return new instance of {@link Tan}.
 		 */
@@ -2581,6 +2765,142 @@ public class ArithmeticOperators {
 	}
 
 	/**
+	 * An {@link AggregationExpression expression} that calculates the inverse tangent of a value.
+	 *
+	 * @author Divya Srivastava
+	 * @since 3.3
+	 */
+	public static class ATan extends AbstractAggregationExpression {
+
+		private ATan(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse tangent of a value.
+		 *
+		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
+		 * @return new instance of {@link ATan}.
+		 */
+		public static ATan atanOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new ATan(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse tangent of a value.
+		 *
+		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
+		 * @return new instance of {@link ATan}.
+		 */
+		public static ATan atanOf(AggregationExpression expression) {
+			return new ATan(expression);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse tangent of a value.
+		 *
+		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
+		 *          numeric value.
+		 * @return new instance of {@link ATan}.
+		 */
+		public static ATan atanOf(Number value) {
+			return new ATan(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$atan";
+		}
+	}
+
+	/**
+	 * An {@link AggregationExpression expression} that calculates the inverse tangent of y / x, where y and x are the
+	 * first and second values passed to the expression respectively.
+	 *
+	 * @author Divya Srivastava
+	 * @since 3.3
+	 */
+	public static class ATan2 extends AbstractAggregationExpression {
+
+		private ATan2(List<?> value) {
+			super(value);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse tangent of of y / x, where y and x are
+		 * the first and second values passed to the expression respectively.
+		 *
+		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
+		 * @return new instance of {@link ATan2}.
+		 */
+		public static ATan2 valueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new ATan2(asFields(fieldReference));
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse tangent of of y / x, where y and x are
+		 * the first and second values passed to the expression respectively.
+		 *
+		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
+		 * @return new instance of {@link ATan2}.
+		 */
+		public static ATan2 valueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new ATan2((Collections.singletonList(expression)));
+		}
+
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse tangent of of y / x, where y and x are
+		 * the first and second values passed to the expression respectively.
+		 *
+		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
+		 *          numeric value.
+		 * @return new instance of {@link ATan2}.
+		 */
+		public ATan2 atan2of(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new ATan2(append(Fields.field(fieldReference)));
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic tangent of a value that is measured in
+		 * {@link AngularUnit#RADIANS}.
+		 *
+		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
+		 *          numeric value.
+		 * @return new instance of {@link ATan2}.
+		 */
+		public ATan2 atan2of(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+			return new ATan2(append(expression));
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse tangent of of y / x, where y and x are
+		 * the first and second values passed to the expression respectively.
+		 *
+		 * @param value of type {@link Number}
+		 * @return new instance of {@link ATan2}.
+		 */
+		public ATan2 atan2of(Number value) {
+			return new ATan2(append(value));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$atan2";
+		}
+	}
+
+	/**
 	 * An {@link AggregationExpression expression} that calculates the hyperbolic tangent of a value that is measured in
 	 * {@link AngularUnit#RADIANS}.
 	 *
@@ -2613,8 +2933,6 @@ public class ArithmeticOperators {
 		 * <pre>
 		 * { $tanh : { $degreesToRadians : "$angle" } }
 		 * </pre>
-		 *
-		 * .
 		 *
 		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
 		 * @param unit the unit of measure used by the value of the given field.
@@ -2682,6 +3000,59 @@ public class ArithmeticOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$tanh";
+		}
+	}
+
+	/**
+	 * An {@link AggregationExpression expression} that calculates the inverse hyperbolic tangent of a value
+	 *
+	 * @author Divya Srivastava
+	 * @since 3.3
+	 */
+	public static class ATanh extends AbstractAggregationExpression {
+
+		private ATanh(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse
+		 * hyperbolic tangent of a value.
+		 *
+		 * @param fieldReference the name of the {@link Field field} that resolves to a
+		 *                       numeric value.
+		 * @return new instance of {@link ATanh}.
+		 */
+		public static ATanh atanhOf(String fieldReference) {
+			return new ATanh(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse hyperbolic tangent of a value.
+		 * <p />
+		 *
+		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
+		 * @return new instance of {@link ATanh}.
+		 */
+		public static ATanh atanhOf(AggregationExpression expression) {
+			return new ATanh(expression);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse
+		 * hyperbolic tangent of a value.
+		 *
+		 * @param value anything ({@link Field field}, {@link AggregationExpression
+		 *              expression}, ...) that resolves to a numeric value.
+		 * @return new instance of {@link ATanh}.
+		 */
+		public static ATanh atanhOf(Object value) {
+			return new ATanh(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$atanh";
 		}
 	}
 

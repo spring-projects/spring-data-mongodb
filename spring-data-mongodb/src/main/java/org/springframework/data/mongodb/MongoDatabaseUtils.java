@@ -104,7 +104,8 @@ public class MongoDatabaseUtils {
 
 		Assert.notNull(factory, "Factory must not be null!");
 
-		if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+		if (sessionSynchronization == SessionSynchronization.NEVER
+				|| !TransactionSynchronizationManager.isSynchronizationActive()) {
 			return StringUtils.hasText(dbName) ? factory.getMongoDatabase(dbName) : factory.getMongoDatabase();
 		}
 

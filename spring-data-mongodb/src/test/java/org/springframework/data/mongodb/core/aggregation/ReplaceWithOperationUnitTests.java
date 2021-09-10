@@ -25,15 +25,15 @@ import org.junit.jupiter.api.Test;
  *
  * @author Christoph Strobl
  */
-public class ReplaceWithOperationUnitTests {
+class ReplaceWithOperationUnitTests {
 
 	@Test // DATAMONGO-2331
-	public void rejectsNullField() {
+	void rejectsNullField() {
 		assertThatIllegalArgumentException().isThrownBy(() -> new ReplaceWithOperation(null));
 	}
 
 	@Test // DATAMONGO-2331
-	public void shouldRenderValueCorrectly() {
+	void shouldRenderValueCorrectly() {
 
 		ReplaceWithOperation operation = ReplaceWithOperation.replaceWithValue(new Document("hello", "world"));
 		Document dbObject = operation.toDocument(Aggregation.DEFAULT_CONTEXT);
@@ -42,7 +42,7 @@ public class ReplaceWithOperationUnitTests {
 	}
 
 	@Test // DATAMONGO-2331
-	public void shouldRenderExpressionCorrectly() {
+	void shouldRenderExpressionCorrectly() {
 
 		ReplaceWithOperation operation = ReplaceWithOperation.replaceWithValueOf(VariableOperators //
 				.mapItemsOf("array") //

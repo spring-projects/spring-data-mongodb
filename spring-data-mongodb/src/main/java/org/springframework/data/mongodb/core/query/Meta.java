@@ -49,8 +49,8 @@ public class Meta {
 		}
 	}
 
-	private final Map<String, Object> values = new LinkedHashMap<>(2);
-	private final Set<CursorOption> flags = new LinkedHashSet<>();
+	private Map<String, Object> values = Collections.emptyMap();
+	private Set<CursorOption> flags = Collections.emptySet();
 	private Integer cursorBatchSize;
 	private Boolean allowDiskUse;
 
@@ -63,8 +63,9 @@ public class Meta {
 	 * @param source
 	 */
 	Meta(Meta source) {
-		this.values.putAll(source.values);
-		this.flags.addAll(source.flags);
+
+		this.values = new LinkedHashMap<>(source.values);
+		this.flags = new LinkedHashSet<>(source.flags);
 		this.cursorBatchSize = source.cursorBatchSize;
 		this.allowDiskUse = source.allowDiskUse;
 	}
@@ -158,6 +159,11 @@ public class Meta {
 	public boolean addFlag(CursorOption option) {
 
 		Assert.notNull(option, "CursorOption must not be null!");
+
+		if (this.flags == Collections.EMPTY_SET) {
+			this.flags = new LinkedHashSet<>(2);
+		}
+
 		return this.flags.add(option);
 	}
 
@@ -219,6 +225,10 @@ public class Meta {
 	void setValue(String key, @Nullable Object value) {
 
 		Assert.hasText(key, "Meta key must not be 'null' or blank.");
+
+		if (values == Collections.EMPTY_MAP) {
+			values = new LinkedHashMap<>(2);
+		}
 
 		if (value == null || (value instanceof String && !StringUtils.hasText((String) value))) {
 			this.values.remove(key);

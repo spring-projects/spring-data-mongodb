@@ -60,12 +60,26 @@ import com.mongodb.MongoClientSettings;
  */
 public class BsonUtils {
 
+	/**
+	 * The empty document (immutable). This document is serializable.
+	 *
+	 * @since 3.2.5
+	 */
+	public static final Document EMPTY_DOCUMENT = new EmptyDocument();
+
 	@SuppressWarnings("unchecked")
 	@Nullable
 	public static <T> T get(Bson bson, String key) {
 		return (T) asMap(bson).get(key);
 	}
 
+	/**
+	 * Return the {@link Bson} object as {@link Map}. Depending on the input type, the return value can be either a casted
+	 * version of {@code bson} or a converted (detached from the original value).
+	 *
+	 * @param bson
+	 * @return
+	 */
 	public static Map<String, Object> asMap(Bson bson) {
 
 		if (bson instanceof Document) {
@@ -79,6 +93,55 @@ public class BsonUtils {
 		}
 
 		return (Map) bson.toBsonDocument(Document.class, MongoClientSettings.getDefaultCodecRegistry());
+	}
+
+	/**
+	 * Return the {@link Bson} object as {@link Document}. Depending on the input type, the return value can be either a
+	 * casted version of {@code bson} or a converted (detached from the original value).
+	 *
+	 * @param bson
+	 * @return
+	 * @since 3.2.5
+	 */
+	public static Document asDocument(Bson bson) {
+
+		if (bson instanceof Document) {
+			return (Document) bson;
+		}
+
+		Map<String, Object> map = asMap(bson);
+
+		if (map instanceof Document) {
+			return (Document) map;
+		}
+
+		return new Document(map);
+	}
+
+	/**
+	 * Return the {@link Bson} object as mutable {@link Document} containing all entries from {@link Bson}.
+	 *
+	 * @param bson
+	 * @return a mutable {@link Document} containing all entries from {@link Bson}.
+	 * @since 3.2.5
+	 */
+	public static Document asMutableDocument(Bson bson) {
+
+		if (bson instanceof EmptyDocument) {
+			bson = new Document(asDocument(bson));
+		}
+
+		if (bson instanceof Document) {
+			return (Document) bson;
+		}
+
+		Map<String, Object> map = asMap(bson);
+
+		if (map instanceof Document) {
+			return (Document) map;
+		}
+
+		return new Document(map);
 	}
 
 	public static void addToMap(Bson bson, String key, @Nullable Object value) {

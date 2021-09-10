@@ -500,6 +500,17 @@ public class Aggregation {
 	}
 
 	/**
+	 * Creates a new {@link MatchOperation} using the given {@link AggregationExpression}.
+	 *
+	 * @param expression must not be {@literal null}.
+	 * @return new instance of {@link MatchOperation}.
+	 * @since 3.3
+	 */
+	public static MatchOperation match(AggregationExpression expression) {
+		return new MatchOperation(expression);
+	}
+
+	/**
 	 * Creates a new {@link GeoNearOperation} instance from the given {@link NearQuery} and the {@code distanceField}. The
 	 * {@code distanceField} defines output field that contains the calculated distance.
 	 *
