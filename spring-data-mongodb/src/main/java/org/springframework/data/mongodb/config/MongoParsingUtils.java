@@ -22,9 +22,12 @@ import java.util.Map;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.CustomEditorConfigurer;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.springframework.beans.factory.support.BeanDefinitionValidationException;
 import org.springframework.beans.factory.support.ManagedMap;
 import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.data.mongodb.core.MongoClientSettingsFactoryBean;
+import org.springframework.data.mongodb.core.MongoServerApiFactoryBean;
+import org.springframework.util.StringUtils;
 import org.springframework.util.xml.DomUtils;
 import org.w3c.dom.Element;
 
@@ -111,6 +114,20 @@ abstract class MongoParsingUtils {
 
 		// Field level encryption
 		setPropertyReference(clientOptionsDefBuilder, settingsElement, "encryption-settings-ref", "autoEncryptionSettings");
+
+		// ServerAPI
+		if (StringUtils.hasText(settingsElement.getAttribute("server-api-version"))) {
+
+			MongoServerApiFactoryBean serverApiFactoryBean = new MongoServerApiFactoryBean();
+			serverApiFactoryBean.setVersion(settingsElement.getAttribute("server-api-version"));
+			try {
+				clientOptionsDefBuilder.addPropertyValue("serverApi", serverApiFactoryBean.getObject());
+			} catch (Exception exception) {
+				throw new BeanDefinitionValidationException("Non parsable server-api.", exception);
+			}
+		} else {
+			setPropertyReference(clientOptionsDefBuilder, settingsElement, "server-api-ref", "serverApi");
+		}
 
 		// and the rest
 

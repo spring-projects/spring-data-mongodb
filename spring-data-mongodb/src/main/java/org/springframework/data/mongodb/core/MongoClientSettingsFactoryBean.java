@@ -36,6 +36,7 @@ import com.mongodb.MongoClientSettings.Builder;
 import com.mongodb.ReadConcern;
 import com.mongodb.ReadPreference;
 import com.mongodb.ServerAddress;
+import com.mongodb.ServerApi;
 import com.mongodb.WriteConcern;
 import com.mongodb.connection.ClusterConnectionMode;
 import com.mongodb.connection.ClusterType;
@@ -113,6 +114,7 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 	// encryption and retry
 
 	private @Nullable AutoEncryptionSettings autoEncryptionSettings;
+	private @Nullable ServerApi serverApi;
 
 	/**
 	 * @param socketConnectTimeoutMS in msec
@@ -395,6 +397,15 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 		this.autoEncryptionSettings = autoEncryptionSettings;
 	}
 
+	/**
+	 * @param serverApi can be {@literal null}.
+	 * @see MongoClientSettings.Builder#serverApi(ServerApi)
+	 * @since 3.3
+	 */
+	public void setServerApi(@Nullable ServerApi serverApi) {
+		this.serverApi = serverApi;
+	}
+
 	@Override
 	public Class<?> getObjectType() {
 		return MongoClientSettings.class;
@@ -476,9 +487,11 @@ public class MongoClientSettingsFactoryBean extends AbstractFactoryBean<MongoCli
 		if (retryWrites != null) {
 			builder = builder.retryWrites(retryWrites);
 		}
-
 		if (uUidRepresentation != null) {
-			builder.uuidRepresentation(uUidRepresentation);
+			builder = builder.uuidRepresentation(uUidRepresentation);
+		}
+		if (serverApi != null) {
+			builder = builder.serverApi(serverApi);
 		}
 
 		return builder.build();
