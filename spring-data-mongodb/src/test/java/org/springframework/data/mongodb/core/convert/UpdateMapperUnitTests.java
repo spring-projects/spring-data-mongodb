@@ -67,6 +67,7 @@ import com.mongodb.DBRef;
  * @author Mark Paluch
  * @author Pavel Vodrazka
  * @author David Julia
+ * @author Divya Srivastava
  */
 @ExtendWith(MockitoExtension.class)
 class UpdateMapperUnitTests {
@@ -1200,6 +1201,56 @@ class UpdateMapperUnitTests {
 		assertThat(mappedUpdate).isEqualTo("{\"$set\": {\"map.class\": \"value\"}}");
 	}
 
+	@Test // GH-3775
+	void mapNestedStringFieldCorrectly() {
+
+		Update update = new Update().set("levelOne.a.b.d", "e");
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(EntityWithNestedMap.class));
+
+		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set",new org.bson.Document("levelOne.a.b.d","e")));
+	}
+
+	@Test // GH-3775
+	void mapNestedIntegerFieldCorrectly() {
+
+		Update update = new Update().set("levelOne.0.1.3", "4");
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(EntityWithNestedMap.class));
+
+		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set",new org.bson.Document("levelOne.0.1.3","4")));
+	}
+
+	@Test // GH-3775
+	void mapNestedMixedStringIntegerFieldCorrectly() {
+
+		Update update = new Update().set("levelOne.0.1.c", "4");
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(EntityWithNestedMap.class));
+
+		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set",new org.bson.Document("levelOne.0.1.c","4")));
+	}
+
+	@Test // GH-3775
+	void mapNestedMixedStringIntegerWithStartNumberFieldCorrectly() {
+
+		Update update = new Update().set("levelOne.0a.1b.3c", "4");
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(EntityWithNestedMap.class));
+
+		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set",new org.bson.Document("levelOne.0a.1b.3c","4")));
+	}
+
+	@Test // GH-3688
+	void multipleKeysStartingWithANumberInNestedPath() {
+
+		Update update = new Update().set("intKeyedMap.1a.map.0b", "testing");
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(EntityWithIntKeyedMap.class));
+
+		assertThat(mappedUpdate).isEqualTo("{\"$set\": {\"intKeyedMap.1a.map.0b\": \"testing\"}}");
+	}
+
 	static class DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes {
 		ListModelWrapper concreteTypeWithListAttributeOfInterfaceType;
 	}
@@ -1564,6 +1615,10 @@ class UpdateMapperUnitTests {
 
 		@Transient //
 		String transientValue;
+	}
+
+	static class EntityWithNestedMap {
+		Map<String, Map<String, Map<String, Object>>> levelOne;
 	}
 
 }
