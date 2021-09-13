@@ -41,4 +41,9 @@
 	<mongo:mongo-client id="client-with-uuid-settings" replica-set="rs0">
 		<mongo:client-settings uuid-representation="STANDARD" />
 	</mongo:mongo-client>
+
+	<mongo:mongo-client id="client-with-server-api-settings" replica-set="rs0">
+		<mongo:client-settings uuid-representation="STANDARD" server-api-version="V1" />
+	</mongo:mongo-client>
+
 </beans>

@@ -21,6 +21,7 @@ import static org.springframework.test.util.ReflectionTestUtils.*;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
+import com.mongodb.ServerApiVersion;
 import org.bson.UuidRepresentation;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -146,5 +147,17 @@ public class MongoClientNamespaceTests {
 
 		MongoClientSettings settings = (MongoClientSettings) getField(factoryBean, "mongoClientSettings");
 		assertThat(settings.getUuidRepresentation()).isEqualTo(UuidRepresentation.STANDARD);
+	}
+
+	@Test // DATAMONGO-2427
+	public void clientWithServerVersion() {
+
+		assertThat(ctx.containsBean("client-with-server-api-settings")).isTrue();
+		MongoClientFactoryBean factoryBean = ctx.getBean("&client-with-server-api-settings", MongoClientFactoryBean.class);
+
+		MongoClientSettings settings = (MongoClientSettings) getField(factoryBean, "mongoClientSettings");
+		assertThat(settings.getServerApi()).isNotNull().satisfies(it -> {
+			assertThat(it.getVersion()).isEqualTo(ServerApiVersion.V1);
+		});
 	}
 }
