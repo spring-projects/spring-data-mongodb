@@ -17,24 +17,24 @@ package org.springframework.data.mongodb.core;
 
 import static org.assertj.core.api.Assertions.*;
 
-import com.mongodb.ServerApi;
-import com.mongodb.ServerApiVersion;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.mongodb.AutoEncryptionSettings;
+import com.mongodb.ServerApi;
+import com.mongodb.ServerApiVersion;
 
 /**
  * Integration tests for {@link MongoServerApiFactoryBean}.
  *
  * @author Christoph Strobl
  */
-public class MongoServerApiFactoryBeanTests {
+class MongoServerApiFactoryBeanTests {
 
-	@Test // DATAMONGO-2306
-	public void createsServerApiForVersionString() {
+	@Test // GH-3820
+	void createsServerApiForVersionString() {
 
 		RootBeanDefinition definition = new RootBeanDefinition(MongoServerApiFactoryBean.class);
 		definition.getPropertyValues().addPropertyValue("version", "V1");
@@ -52,8 +52,8 @@ public class MongoServerApiFactoryBeanTests {
 		assertThat(target.getStrict()).isNotPresent();
 	}
 
-	@Test // DATAMONGO-2306
-	public void createsServerApiForVersionNumber() {
+	@Test // GH-3820
+	void createsServerApiForVersionNumber() {
 
 		RootBeanDefinition definition = new RootBeanDefinition(MongoServerApiFactoryBean.class);
 		definition.getPropertyValues().addPropertyValue("version", "1");

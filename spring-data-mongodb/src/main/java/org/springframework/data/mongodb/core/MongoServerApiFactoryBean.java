@@ -35,7 +35,7 @@ public class MongoServerApiFactoryBean implements FactoryBean<ServerApi> {
 	private @Nullable Boolean deprecationErrors;
 	private @Nullable Boolean strict;
 
-		/**
+	/**
 	 * @param version the version string either as the enum name or the server version value.
 	 * @see ServerApiVersion
 	 */

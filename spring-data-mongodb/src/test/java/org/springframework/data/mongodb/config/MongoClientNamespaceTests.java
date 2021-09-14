@@ -21,10 +21,10 @@ import static org.springframework.test.util.ReflectionTestUtils.*;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
-import com.mongodb.ServerApiVersion;
 import org.bson.UuidRepresentation;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.mongodb.core.MongoClientFactoryBean;
@@ -35,6 +35,7 @@ import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
+import com.mongodb.ServerApiVersion;
 import com.mongodb.connection.ClusterType;
 
 /**
@@ -149,7 +150,7 @@ public class MongoClientNamespaceTests {
 		assertThat(settings.getUuidRepresentation()).isEqualTo(UuidRepresentation.STANDARD);
 	}
 
-	@Test // DATAMONGO-2427
+	@Test // GH-3820
 	public void clientWithServerVersion() {
 
 		assertThat(ctx.containsBean("client-with-server-api-settings")).isTrue();
