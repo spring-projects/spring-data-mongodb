@@ -509,7 +509,7 @@ public class Aggregation {
 	public static MatchOperation match(AggregationExpression expression) {
 		return new MatchOperation(expression);
 	}
-
+	
 	/**
 	 * Creates a new {@link GeoNearOperation} instance from the given {@link NearQuery} and the {@code distanceField}. The
 	 * {@code distanceField} defines output field that contains the calculated distance.
