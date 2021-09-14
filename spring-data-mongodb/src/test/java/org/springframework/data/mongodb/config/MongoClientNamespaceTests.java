@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 import org.bson.UuidRepresentation;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.mongodb.core.MongoClientFactoryBean;
@@ -34,6 +35,7 @@ import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
+import com.mongodb.ServerApiVersion;
 import com.mongodb.connection.ClusterType;
 
 /**
@@ -146,5 +148,17 @@ public class MongoClientNamespaceTests {
 
 		MongoClientSettings settings = (MongoClientSettings) getField(factoryBean, "mongoClientSettings");
 		assertThat(settings.getUuidRepresentation()).isEqualTo(UuidRepresentation.STANDARD);
+	}
+
+	@Test // GH-3820
+	public void clientWithServerVersion() {
+
+		assertThat(ctx.containsBean("client-with-server-api-settings")).isTrue();
+		MongoClientFactoryBean factoryBean = ctx.getBean("&client-with-server-api-settings", MongoClientFactoryBean.class);
+
+		MongoClientSettings settings = (MongoClientSettings) getField(factoryBean, "mongoClientSettings");
+		assertThat(settings.getServerApi()).isNotNull().satisfies(it -> {
+			assertThat(it.getVersion()).isEqualTo(ServerApiVersion.V1);
+		});
 	}
 }

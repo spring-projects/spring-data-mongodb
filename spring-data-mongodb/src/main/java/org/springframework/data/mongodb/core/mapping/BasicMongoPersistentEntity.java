@@ -17,8 +17,12 @@ package org.springframework.data.mongodb.core.mapping;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.data.annotation.Id;
@@ -28,6 +32,9 @@ import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.mongodb.MongoCollectionUtils;
+import org.springframework.data.mongodb.util.encryption.EncryptionUtils;
+import org.springframework.data.spel.ExpressionDependencies;
+import org.springframework.data.util.Lazy;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
@@ -212,6 +219,11 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		return super.getEvaluationContext(rootObject);
 	}
 
+	@Override
+	public EvaluationContext getEvaluationContext(Object rootObject, ExpressionDependencies dependencies) {
+		return super.getEvaluationContext(rootObject, dependencies);
+	}
+
 	private void verifyFieldUniqueness() {
 
 		AssertFieldNameUniquenessHandler handler = new AssertFieldNameUniquenessHandler();
@@ -358,6 +370,32 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 			properties.put(fieldName, property);
 		}
+	}
+
+	@Override
+	public Collection<Object> getEncryptionKeyIds() {
+
+		Encrypted encrypted = findAnnotation(Encrypted.class);
+		if (encrypted == null) {
+			return null;
+		}
+
+		if (ObjectUtils.isEmpty(encrypted.keyId())) {
+			return Collections.emptySet();
+		}
+
+		Lazy<EvaluationContext> evaluationContext = Lazy.of(() -> {
+
+			EvaluationContext ctx = getEvaluationContext(null);
+			ctx.setVariable("target", getType().getSimpleName());
+			return ctx;
+		});
+
+		List<Object> target = new ArrayList<>();
+		for (String keyId : encrypted.keyId()) {
+			target.add(EncryptionUtils.resolveKeyId(keyId, evaluationContext));
+		}
+		return target;
 	}
 
 	/**

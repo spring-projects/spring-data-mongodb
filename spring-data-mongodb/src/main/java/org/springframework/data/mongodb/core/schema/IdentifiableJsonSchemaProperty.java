@@ -523,6 +523,10 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		public ObjectJsonSchemaProperty generatedDescription() {
 			return new ObjectJsonSchemaProperty(identifier, jsonSchemaObjectDelegate.generatedDescription());
 		}
+
+		public List<JsonSchemaProperty> getProperties() {
+			return jsonSchemaObjectDelegate.getProperties();
+		}
 	}
 
 	/**
@@ -1060,7 +1064,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		private final JsonSchemaProperty targetProperty;
 		private final @Nullable String algorithm;
 		private final @Nullable String keyId;
-		private final @Nullable List<UUID> keyIds;
+		private final @Nullable List<?> keyIds;
 
 		/**
 		 * Create new instance of {@link EncryptedJsonSchemaProperty} wrapping the given {@link JsonSchemaProperty target}.
@@ -1072,7 +1076,7 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		}
 
 		private EncryptedJsonSchemaProperty(JsonSchemaProperty target, @Nullable String algorithm, @Nullable String keyId,
-				@Nullable List<UUID> keyIds) {
+				@Nullable List<?> keyIds) {
 
 			Assert.notNull(target, "Target must not be null!");
 			this.targetProperty = target;
@@ -1131,6 +1135,14 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
 		 */
 		public EncryptedJsonSchemaProperty keys(UUID... keyId) {
+			return new EncryptedJsonSchemaProperty(targetProperty, algorithm, null, Arrays.asList(keyId));
+		}
+
+		/**
+		 * @param keyId must not be {@literal null}.
+		 * @return new instance of {@link EncryptedJsonSchemaProperty}.
+		 */
+		public EncryptedJsonSchemaProperty keys(Object... keyId) {
 			return new EncryptedJsonSchemaProperty(targetProperty, algorithm, null, Arrays.asList(keyId));
 		}
 
