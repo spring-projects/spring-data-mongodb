@@ -16,7 +16,7 @@
 package org.springframework.data.mongodb.core.aggregation;
 
 import org.bson.Document;
-
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.util.Assert;
 
@@ -133,7 +133,7 @@ public class EvaluationOperators {
 
 				Document criteriaObject = toDocument(context);
 
-				return new CriteriaDefinition() {
+				return new Criteria() {
 					@Override
 					public Document getCriteriaObject() {
 						return criteriaObject;

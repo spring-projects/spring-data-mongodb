@@ -26,6 +26,8 @@ import org.junit.Test;
 
 import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpression;
+import org.springframework.data.mongodb.core.aggregation.ComparisonOperators;
 import org.springframework.data.mongodb.core.geo.GeoJsonLineString;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
@@ -43,6 +45,10 @@ import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
  * @author James McNee
  */
 public class CriteriaUnitTests {
+	
+	private static final String EXPRESSION_STRING = "{ $gt: [ \"$spent\" , \"$budget\" ] }";
+	private static final Document EXPRESSION_DOC = Document.parse(EXPRESSION_STRING);
+	private static final AggregationExpression EXPRESSION = context -> EXPRESSION_DOC;
 
 	@Test
 	public void testSimpleCriteria() {
@@ -124,6 +130,26 @@ public class CriteriaUnitTests {
 
 		assertThat(criteria.getCriteriaObject())
 				.isEqualTo("{\"$nor\":[{\"x\":true}, {\"y\":42}, {\"z\":\"value\"}], \"foo\":\"bar\"}");
+	}
+	
+	@Test // DATAMONGO - 3587
+	public void shouldBuildCorrectExprOperator() {
+
+		CriteriaDefinition criteria = Criteria.expr(EXPRESSION);
+		assertThat(criteria.getCriteriaObject())
+				.isEqualTo("{ $expr : { $gt: [ \"$spent\" , \"$budget\" ] } }");
+	}
+	
+	@Test // DATAMONGO - 3587
+	public void shouldBuildCorrectChainedExprOperator() {
+
+		Collection<Criteria> operatorCriteria = Arrays.asList(Criteria.where("x").is(true),Criteria.expr(EXPRESSION),
+				Criteria.where("z").is("value"));
+
+		Criteria criteria = Criteria.where("foo").is("bar").andOperator(operatorCriteria);
+
+		assertThat(criteria.getCriteriaObject()).isEqualTo(
+				"{\"$and\":[{\"x\":true},{ $expr : { $gt: [ \"$spent\" , \"$budget\" ] } } , {\"z\":\"value\"}], \"foo\":\"bar\"}");
 	}
 
 	@Test // DATAMONGO-507
@@ -367,6 +393,14 @@ public class CriteriaUnitTests {
 
 		assertThat(bitPositionsBitmaskCriteria.getCriteriaObject())
 				.isEqualTo("{ \"field\" : { \"$bitsAnySet\" : [ 0, 2 ]} }");
+	}
+	
+	@Test // DATAMONGO-1808
+	public void shouldRenderExpr() {
+		AggregationExpression expression = context -> Document.parse("{ \"$gte\" : \"$foo\" }");
+		CriteriaDefinition criteria = Criteria.expr(expression);
+		assertThat(criteria.getCriteriaObject())
+				.isEqualTo("{ \"$expr\" : { \"$gte\" : \"$foo\" } }");
 	}
 
 	@Test // DATAMONGO-2002
