@@ -70,6 +70,7 @@ import com.mongodb.DBRef;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author David Julia
+ * @author Divya Srivastava
  */
 public class QueryMapper {
 
@@ -1032,8 +1033,8 @@ public class QueryMapper {
 	 */
 	protected static class MetadataBackedField extends Field {
 
-		private static final Pattern POSITIONAL_PARAMETER_PATTERN = Pattern.compile("\\.\\$(\\[.*?\\])?|\\.\\d+");
-		private static final Pattern DOT_POSITIONAL_PATTERN = Pattern.compile("\\.\\d+");
+		private static final Pattern POSITIONAL_PARAMETER_PATTERN = Pattern.compile("\\.\\$(\\[.*?\\])?");
+		private static final Pattern DOT_POSITIONAL_PATTERN = Pattern.compile("\\.\\d+(?!$)");
 		private static final String INVALID_ASSOCIATION_REFERENCE = "Invalid path reference %s! Associations can only be pointed to directly or via their id property!";
 
 		private final MongoPersistentEntity<?> entity;
