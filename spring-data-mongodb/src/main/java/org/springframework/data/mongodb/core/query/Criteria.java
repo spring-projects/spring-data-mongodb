@@ -37,6 +37,10 @@ import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Shape;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
+import org.springframework.data.mongodb.MongoExpression;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpression;
+import org.springframework.data.mongodb.core.aggregation.EvaluationOperators;
 import org.springframework.data.mongodb.core.geo.GeoJson;
 import org.springframework.data.mongodb.core.geo.Sphere;
 import org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type;
@@ -104,6 +108,19 @@ public class Criteria implements CriteriaDefinition {
 		return new Criteria(key);
 	}
 
+	/**
+	 * Static factory method to create a Criteria using the provided aggregation expression
+	 *
+	 * @param expression to be used as the criteria
+	 * @return new instance of {@link CriteriaDefinition}.
+	 */
+	public static Criteria expr(AggregationExpression expression) {
+		Assert.notNull(expression, "Expression must not be null!");
+		CriteriaDefinition criteriaDefinition = EvaluationOperators.valueOf(expression).expr().toCriteriaDefinition(Aggregation.DEFAULT_CONTEXT);
+		if( criteriaDefinition instanceof Criteria)
+			return (Criteria) criteriaDefinition;
+		return null;
+	}
 	/**
 	 * Static factory method to create a {@link Criteria} matching an example object.
 	 *
@@ -831,7 +848,7 @@ public class Criteria implements CriteriaDefinition {
 		BasicDBList bsonList = createCriteriaList(criteria);
 		return registerCriteriaChainElement(new Criteria("$and").is(bsonList));
 	}
-
+	
 	private Criteria registerCriteriaChainElement(Criteria criteria) {
 
 		if (lastOperatorWasNot()) {

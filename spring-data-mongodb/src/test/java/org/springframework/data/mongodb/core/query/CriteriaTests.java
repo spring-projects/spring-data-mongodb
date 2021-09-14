@@ -25,11 +25,13 @@ import lombok.EqualsAndHashCode;
 
 import java.util.Arrays;
 
+import org.bson.Document;
 import org.bson.types.Binary;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.aggregation.AggregationExpression;
 import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.Template;
@@ -43,8 +45,12 @@ import org.springframework.util.Base64Utils;
  */
 @ExtendWith(MongoTemplateExtension.class)
 class CriteriaTests {
+	
+	private static final String EXPRESSION_STRING = "{ $gt: [ \"$spent\" , \"$budget\" ] }";
+	private static final Document EXPRESSION_DOC = Document.parse(EXPRESSION_STRING);
+	private static final AggregationExpression EXPRESSION = context -> EXPRESSION_DOC;
 
-	@Template(initialEntitySet = { DocumentWithBitmask.class }) //
+	@Template(initialEntitySet = { DocumentWithBitmask.class , MonthlyBudget.class }) //
 	static MongoTestTemplate ops;
 
 	static final DocumentWithBitmask FIFTY_FOUR/*00110110*/ = new DocumentWithBitmask("1", Integer.valueOf(54),
@@ -55,6 +61,10 @@ class CriteriaTests {
 			Integer.toBinaryString(20));
 	static final DocumentWithBitmask ONE_HUNDRED_TWO/*01100110*/ = new DocumentWithBitmask("4",
 			new Binary(Base64Utils.decodeFromString("Zg==")), "01100110");
+	
+	static final MonthlyBudget FOOD = new MonthlyBudget("food",500,300);
+	static final MonthlyBudget DRINKS = new MonthlyBudget("drinks",100,150);
+	
 
 	@BeforeEach
 	void beforeEach() {
@@ -65,6 +75,9 @@ class CriteriaTests {
 		ops.insert(TWENTY_INT);
 		ops.insert(TWENTY_FLOAT);
 		ops.insert(ONE_HUNDRED_TWO);
+		
+		ops.insert(FOOD);
+		ops.insert(DRINKS);
 	}
 
 	@Test // DATAMONGO-1808
@@ -150,6 +163,13 @@ class CriteriaTests {
 		assertThat(ops.find(query(where("value").bits().anySet("MC==")), DocumentWithBitmask.class))
 				.containsExactlyInAnyOrder(FIFTY_FOUR, TWENTY_INT, TWENTY_FLOAT, ONE_HUNDRED_TWO);
 	}
+	
+	@Test // DATAMONGO-3587
+	public void queryWithAggregationExpressionInCriteria() {
+
+		assertThat(ops.find(query(expr(EXPRESSION)), MonthlyBudget.class))
+				.containsExactlyInAnyOrder(DRINKS);
+	}
 
 	@Data
 	@EqualsAndHashCode(exclude = "value")
@@ -159,5 +179,13 @@ class CriteriaTests {
 		@Id String id;
 		Object value;
 		String binaryValue;
+	}
+	
+	@Data
+	@AllArgsConstructor
+	static class MonthlyBudget{
+		String category;
+		int budget;
+		int spent;
 	}
 }
