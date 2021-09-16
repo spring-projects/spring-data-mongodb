@@ -14,24 +14,12 @@ import org.springframework.data.mongodb.core.query.Criteria;
  */
 class MatchOperationUnitTests {
 	
-	private static final String EXPRESSION_STRING = "{ $gt: [ \"$spent\" , \"$budget\" ] }";
-	private static final Document EXPRESSION_DOC = Document.parse(EXPRESSION_STRING);
-	private static final AggregationExpression EXPRESSION = context -> EXPRESSION_DOC;
-
 	@Test // GH-3790
-	void matchShouldRenderExpressionCorrectly() {
+	void matchShouldRenderCorrectly() {
 
-		MatchOperation operation = Aggregation.match(Criteria.expr(EXPRESSION));
+		MatchOperation operation = Aggregation.match(ArithmeticOperators.valueOf("quiz").stdDevPop());
 		assertThat(operation.toDocument(Aggregation.DEFAULT_CONTEXT)).
-				isEqualTo("{ $match:  { $expr : { $gt: [ \"$spent\" , \"$budget\" ] } } }");
-	}
-	
-	@Test // GH-3790
-	void matchShouldRenderCriteriaCorrectly() {
-
-		MatchOperation operation = Aggregation.match(Criteria.where("spent").gt("$budget"));
-		assertThat(operation.toDocument(Aggregation.DEFAULT_CONTEXT)).
-				isEqualTo("{ $match:  { \"spent\" : { $gt : \"$budget\" } } }");
+		isEqualTo("{ $match: { \"$stdDevPop\" : \"$quiz\" } } ");
 	}
 
 }
