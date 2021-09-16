@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 class MatchOperationUnitTests {
 	
 	@Test // GH-3790
-	void matchShouldRenderExpressionCorrectly() {
+	void matchShouldRenderCorrectly() {
 
 		MatchOperation operation = Aggregation.match(ArithmeticOperators.valueOf("quiz").stdDevPop());
 		assertThat(operation.toDocument(Aggregation.DEFAULT_CONTEXT)).
