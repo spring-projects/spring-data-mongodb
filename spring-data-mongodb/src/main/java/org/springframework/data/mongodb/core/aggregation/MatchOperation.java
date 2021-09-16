@@ -38,6 +38,7 @@ import org.springframework.util.Assert;
 public class MatchOperation implements AggregationOperation {
 
 	private final CriteriaDefinition criteriaDefinition;
+	private final AggregationExpression expression;
 
 	/**
 	 * Creates a new {@link MatchOperation} for the given {@link CriteriaDefinition}.
@@ -49,6 +50,21 @@ public class MatchOperation implements AggregationOperation {
 		Assert.notNull(criteriaDefinition, "Criteria must not be null!");
 
 		this.criteriaDefinition = criteriaDefinition;
+		this.expression = null;
+	}
+	
+	/**
+	 * Creates a new {@link MatchOperation} for the given {@link AggregationExpression}.
+	 *
+	 * @param expression must not be {@literal null}.
+	 * @since 3.3
+	 */
+	public MatchOperation(AggregationExpression expression) {
+
+		Assert.notNull(expression, "Expression must not be null!");
+
+		this.criteriaDefinition = null;
+		this.expression = expression;
 	}
 
 	/*
@@ -59,7 +75,7 @@ public class MatchOperation implements AggregationOperation {
 	public Document toDocument(AggregationOperationContext context) {
 
 		return new Document(getOperator(),
-				context.getMappedObject(criteriaDefinition.getCriteriaObject()));
+				context.getMappedObject(expression != null ? expression.toDocument() : criteriaDefinition.getCriteriaObject()));
 	}
 
 	/*
