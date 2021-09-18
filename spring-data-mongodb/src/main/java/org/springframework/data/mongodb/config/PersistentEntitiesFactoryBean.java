@@ -28,7 +28,7 @@ import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
  * @author Christoph Strobl
  * @since 3.1
  */
-class PersistentEntitiesFactoryBean implements FactoryBean<PersistentEntities> {
+public class PersistentEntitiesFactoryBean implements FactoryBean<PersistentEntities> {
 
 	private final MappingMongoConverter converter;
 
