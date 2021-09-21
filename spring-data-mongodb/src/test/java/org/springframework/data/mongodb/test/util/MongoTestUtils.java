@@ -167,6 +167,23 @@ public class MongoTestUtils {
 	}
 
 	/**
+	 * Create a {@link com.mongodb.client.MongoCollection} if it does not exist, or drop and recreate it if it does and
+	 * verify operation result.
+	 *
+	 * @param dbName must not be {@literal null}.
+	 * @param collectionName must not be {@literal null}.
+	 * @param client must not be {@literal null}.
+	 */
+	public static void dropCollectionNow(String dbName, String collectionName,
+			com.mongodb.client.MongoClient client) {
+
+		com.mongodb.client.MongoDatabase database = client.getDatabase(dbName)
+				.withWriteConcern(WriteConcern.MAJORITY).withReadPreference(ReadPreference.primary());
+
+		database.getCollection(collectionName).drop();
+	}
+
+	/**
 	 * Remove all documents from the {@link MongoCollection} with given name in the according {@link MongoDatabase
 	 * database}.
 	 *
