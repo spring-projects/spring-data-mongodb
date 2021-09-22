@@ -8,10 +8,12 @@ The Spring Data MongoDB project aims to provide a familiar and consistent Spring
 The Spring Data MongoDB project provides integration with the MongoDB document database.
 Key functional areas of Spring Data MongoDB are a POJO centric model for interacting with a MongoDB `+Document+` and easily writing a repository style data access layer.
 
+[[code-of-conduct]]
 == Code of Conduct
 
 This project is governed by the https://github.com/spring-projects/.github/blob/e3cc2ff230d8f1dca06535aa6b5a4a23815861d4/CODE_OF_CONDUCT.md[Spring Code of Conduct]. By participating, you are expected to uphold this code of conduct. Please report unacceptable behavior to spring-code-of-conduct@pivotal.io.
 
+[[getting-started]]
 == Getting Started
 
 Here is a quick teaser of an application using Spring Data Repositories in Java:
@@ -59,6 +61,7 @@ class ApplicationConfig extends AbstractMongoClientConfiguration {
 }
 ----
 
+[[maven-configuration]]
 === Maven configuration
 
 Add the Maven dependency:
@@ -68,24 +71,25 @@ Add the Maven dependency:
 <dependency>
   <groupId>org.springframework.data</groupId>
   <artifactId>spring-data-mongodb</artifactId>
-  <version>${version}.RELEASE</version>
+  <version>${version}</version>
 </dependency>
 ----
 
-If you'd rather like the latest snapshots of the upcoming major version, use our Maven snapshot repository and declare the appropriate dependency version.
+If you'd rather like the latest snapshots of the upcoming major version, use our Maven snapshot repository
+and declare the appropriate dependency version.
 
 [source,xml]
 ----
 <dependency>
   <groupId>org.springframework.data</groupId>
   <artifactId>spring-data-mongodb</artifactId>
-  <version>${version}.BUILD-SNAPSHOT</version>
+  <version>${version}-SNAPSHOT</version>
 </dependency>
 
 <repository>
-  <id>spring-libs-snapshot</id>
+  <id>spring-snapshot</id>
   <name>Spring Snapshot Repository</name>
-  <url>https://repo.spring.io/libs-snapshot</url>
+  <url>https://repo.spring.io/snapshot</url>
 </repository>
 ----
 
@@ -98,7 +102,7 @@ Some of the changes affect the initial setup configuration as well as compile/ru
 
 .Changed XML Namespace Elements and Attributes:
 |===
-Element / Attribute | 2.x | 3.x
+| Element / Attribute | 2.x | 3.x
 
 | `<mongo:mongo-client />`
 | Used to create a `com.mongodb.MongoClient`
@@ -116,7 +120,7 @@ Use `<mongo:client-settings cluster-hosts="..." />` instead
 
 .Removed XML Namespace Elements and Attributes:
 |===
-Element / Attribute | Replacement in 3.x | Comment
+| Element / Attribute | Replacement in 3.x | Comment
 
 | `<mongo:db-factory mongo-ref="..." />`
 | `<mongo:db-factory mongo-client-ref="..." />`
@@ -133,7 +137,7 @@ Element / Attribute | Replacement in 3.x | Comment
 
 .New XML Namespace Elements and Attributes:
 |===
-Element | Comment
+| Element | Comment
 
 | `<mongo:db-factory mongo-client-ref="..." />`
 | Replacement for `<mongo:db-factory mongo-ref="..." />`
@@ -153,7 +157,7 @@ Element | Comment
 
 .Java API changes
 |===
-Type | Comment
+| Type | Comment
 
 | `MongoClientFactoryBean`
 | Creates `com.mongodb.client.MongoClient` instead of `com.mongodb.MongoClient` +
@@ -174,7 +178,7 @@ Uses `MongoClientSettings` instead of `MongoClientOptions`.
 
 .Removed Java API:
 |===
-2.x | Replacement in 3.x | Comment
+| 2.x | Replacement in 3.x | Comment
 
 | `MongoClientOptionsFactoryBean`
 | `MongoClientSettingsFactoryBean`
@@ -226,6 +230,7 @@ static class Config extends AbstractMongoClientConfiguration {
 ----
 ====
 
+[[getting-help]]
 == Getting Help
 
 Having trouble with Spring Data? We’d love to help!
@@ -239,6 +244,7 @@ If you are just starting out with Spring, try one of the https://spring.io/guide
 You can also chat with the community on https://gitter.im/spring-projects/spring-data[Gitter].
 * Report bugs with Spring Data MongoDB at https://github.com/spring-projects/spring-data-mongodb/issues[github.com/spring-projects/spring-data-mongodb/issues].
 
+[[reporting-issues]]
 == Reporting Issues
 
 Spring Data uses Github as issue tracking system to record bugs and feature requests.
@@ -249,10 +255,135 @@ If you want to raise an issue, please follow the recommendations below:
 * Please provide as much information as possible with the issue report, we like to know the version of Spring Data that you are using, the JVM version, Stacktrace, etc.
 * If you need to paste code, or include a stack trace use https://guides.github.com/features/mastering-markdown/[Markdown] code fences +++```+++.
 
+[[building-from-source]]
 == Building from Source
 
-You don’t need to build from source to use Spring Data (binaries in https://repo.spring.io[repo.spring.io]), but if you want to try out the latest and greatest, Spring Data can be easily built with the https://github.com/takari/maven-wrapper[maven wrapper].
-You also need JDK 1.8.
+You do not need to build from source to use Spring Data. Binaries are available in https://repo.spring.io[repo.spring.io].
+and accessible from Maven using the Maven configuration noted <<maven-configuration,above>>.
+
+NOTE: Configuration for Gradle is similar to Maven.
+
+The best way to get started is by creating a Spring Boot project using MongoDB on https://start.spring.io[start.spring.io].
+Follow this https://start.spring.io/#type=maven-project&language=java&platformVersion=2.5.4&packaging=jar&jvmVersion=1.8&groupId=com.example&artifactId=demo&name=demo&description=Demo%20project%20for%20Spring%20Boot&packageName=com.example.demo&dependencies=data-mongodb[link]
+to build an imperative application and this https://start.spring.io/#type=maven-project&language=java&platformVersion=2.5.4&packaging=jar&jvmVersion=1.8&groupId=com.example&artifactId=demo&name=demo&description=Demo%20project%20for%20Spring%20Boot&packageName=com.example.demo&dependencies=data-mongodb-reactive[link]
+to build a reactive one.
+
+However, if you want to try out the latest and greatest, Spring Data can be easily built with the https://github.com/takari/maven-wrapper[maven wrapper]
+and minimally JDK 8 (https://www.oracle.com/java/technologies/downloads/[JDK downloads]).
+
+In order to build Spring Data MongoDB, first you will need to https://www.mongodb.com/try/download/community[download]
+and install a MongoDB distribution. Select "_On-premises (MongoDB locally)_", then "_MongoDB Community Server_"
+and in the page form, select the platform matching your system along with the version of MongoDB on which Spring Data
+MongoDB is based (https://github.com/spring-projects/spring-data-mongodb/blob/3.2.5/pom.xml#L30[for example]).
+
+Once you have installed MongoDB, you need to start a MongoDB server. It is convenient to set an environment variable to
+your MongoDB installation (e.g. `MONGODB_HOME`).
+
+To run the MongoDB server enter the following command from a command-line:
+
+[source,bash]
+----
+$ $MONGODB_HOME/bin/mongod --dbpath $MONGODB_HOME/runtime/data --ipv6 --port 27017 --replSet rs0
+...
+{"t":{"$date":"2021-09-22T11:22:05.490-07:00"},"s":"I",  "c":"NETWORK",  "id":20113,   "ctx":"LogicalSessionCacheReap",
+"msg":"Successfully connected to host","attr":{"connString":"127.0.0.1:27017","numOpenConns":1,"socketTimeoutSecs":0.0}}
+----
+
+Once the MongoDB server starts up, you should see the message (`msg`), "_Successfully connected to host_".
+
+Notice the `--dbpath` option to the `mongod` command. You can set this to anything you like, but in this case, we set
+the absolute path to a sub-directory (`runtime/data/`) under the MongoDB installation directory (in `$MONGODB_HOME`).
+You might have other sub-directories as well, such as `runtime/logs/` for instance, if you wish to write your logs to
+a file rather than standard out, using the `--logpath` option to the `mongod` command. In this way, all your "runtime"
+files for the MongoDB server are conveniently located in one place.
+
+Next, you need to initialize the MongoDB replica set the first time the MongoDB server is started. Replicas are used by
+the Spring Data MongoDB transactional tests. This only needs to be done once after the initial start. If you restart
+your MongoDB server, you will need to initialize the replica set again. However, you can continue to use the same
+MongoDB server for multiple builds of Spring Data MongoDB.
+
+To initialize the replica set, you must start a mongo client:
+
+[source,bash]
+----
+$ $MONGODB_HOME/bin/mongo
+MongoDB server version: 4.4.8
+---
+The server generated these startup warnings when booting:
+        2021-09-22T11:26:50.752-07:00: Access control is not enabled for the database. Read and write access to data and configuration is unrestricted
+        2021-09-22T11:26:50.752-07:00: This server is bound to localhost. Remote systems will be unable to connect to this server. Start the server with --bind_ip <address> to specify which IP addresses it should serve responses from, or with --bind_ip_all to bind to all interfaces. If this behavior is desired, start the server with --bind_ip 127.0.0.1 to disable this warning
+        2021-09-22T11:26:50.752-07:00: Soft rlimits too low
+        2021-09-22T11:26:50.752-07:00:         currentValue: 256
+        2021-09-22T11:26:50.752-07:00:         recommendedMinimum: 64000
+---
+---
+        Enable MongoDB's free cloud-based monitoring service, which will then receive and display
+        metrics about your deployment (disk utilization, CPU, operation statistics, etc).
+
+        The monitoring data will be available on a MongoDB website with a unique URL accessible to you
+        and anyone you share the URL with. MongoDB may use this information to make product
+        improvements and to suggest MongoDB products and deployment options to you.
+
+        To enable free monitoring, run the following command: db.enableFreeMonitoring()
+        To permanently disable this reminder, run the following command: db.disableFreeMonitoring()
+---
+rs0:PRIMARY>
+----
+
+Then enter the following command:
+
+[source,bash]
+----
+rs0:PRIMARY> rs.initiate({ _id: 'rs0', members: [ { _id: 0, host: '127.0.0.1:27017' } ] })
+{
+	"operationTime" : Timestamp(1632335237, 1),
+	"ok" : 0,
+	"errmsg" : "already initialized",
+	"code" : 23,
+	"codeName" : "AlreadyInitialized",
+	"$clusterTime" : {
+		"clusterTime" : Timestamp(1632335237, 1),
+		"signature" : {
+			"hash" : BinData(0,"AAAAAAAAAAAAAAAAAAAAAAAAAAA="),
+			"keyId" : NumberLong(0)
+		}
+	}
+}
+rs0:PRIMARY>
+----
+
+Finally, you may need to adjust the `ulimit` on your UNIX-based system (for example, Linux or Mac OS X). Currently,
+the MongoDB client/server combination uses many Socket connections (which equate to file descriptors on a UNIX-based
+system) throughout the Spring Data MongoDB test suite lifecycle. You can inspect your current `ulimit` with
+the following command:
+
+[source,bash]
+----
+$ ulimit -a
+core file size          (blocks, -c) 0
+data seg size           (kbytes, -d) unlimited
+file size               (blocks, -f) unlimited
+max locked memory       (kbytes, -l) unlimited
+max memory size         (kbytes, -m) unlimited
+open files                      (-n) 256
+pipe size            (512 bytes, -p) 1
+stack size              (kbytes, -s) 8192
+cpu time               (seconds, -t) unlimited
+max user processes              (-u) 5568
+virtual memory          (kbytes, -v) unlimited
+----
+
+In this case, we are interested in the `ulimit` setting for "_open files_". As you can see above, this is set to 256.
+You will need to adjust this with the following command (we recommend 32768):
+
+[source,bash]
+----
+$ ulimit -n 32768
+----
+
+You can use `ulimit -a` again to verify the `ulimit` on "_open files_" was set appropriately.
+
+Now you are ready to build Spring Data MongoDB. Simply enter the following `mvnw` (Maven Wrapper) command:
 
 [source,bash]
 ----
@@ -261,7 +392,8 @@ You also need JDK 1.8.
 
 If you want to build with the regular `mvn` command, you will need https://maven.apache.org/run-maven/index.html[Maven v3.5.0 or above].
 
-_Also see link:CONTRIBUTING.adoc[CONTRIBUTING.adoc] if you wish to submit pull requests, and in particular please sign the https://cla.pivotal.io/sign/spring[Contributor’s Agreement] before your first non-trivial change._
+_Also see link:CONTRIBUTING.adoc[CONTRIBUTING.adoc] if you wish to submit pull requests, and in particular, please sign
+the https://cla.pivotal.io/sign/spring[Contributor’s Agreement] before your first non-trivial change._
 
 === Building reference documentation
 
