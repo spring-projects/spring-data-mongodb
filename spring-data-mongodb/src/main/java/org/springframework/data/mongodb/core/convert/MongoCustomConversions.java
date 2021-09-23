@@ -36,7 +36,6 @@ import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.core.convert.converter.GenericConverter;
-import org.springframework.data.convert.JodaTimeConverters;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
@@ -65,7 +64,6 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 
 		converters.add(CustomToStringConverter.INSTANCE);
 		converters.addAll(MongoConverters.getConvertersToRegister());
-		converters.addAll(JodaTimeConverters.getConvertersToRegister());
 		converters.addAll(GeoConverters.getConvertersToRegister());
 
 		STORE_CONVERTERS = Collections.unmodifiableList(converters);

@@ -96,15 +96,6 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.ParameterAccessor#getDynamicProjection()
-	 */
-	@Override
-	public Optional<Class<?>> getDynamicProjection() {
-		return delegate.getDynamicProjection();
-	}
-
-	/*
-	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.ParameterAccessor#findDynamicProjection()
 	 */
 	@Override

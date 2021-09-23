@@ -20,6 +20,7 @@ import static org.hamcrest.MatcherAssert.*;
 
 import de.schauderhaft.degraph.configuration.NamedPattern;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -28,6 +29,7 @@ import org.junit.jupiter.api.Test;
  * @author Jens Schauder
  * @author Oliver Gierke
  */
+@Disabled("Needs to be tansitioned to ArchUnit")
 class DependencyTests {
 
 	@Test

@@ -17,7 +17,8 @@ package org.springframework.data.mongodb.config;
 
 import static org.assertj.core.api.Assertions.*;
 
-import org.joda.time.DateTime;
+import java.util.Date;
+
 import org.junit.jupiter.api.Test;
 
 import org.springframework.context.support.AbstractApplicationContext;
@@ -66,11 +67,11 @@ public class AuditingIntegrationTests {
 	class Entity {
 
 		@Id Long id;
-		@CreatedDate DateTime created;
-		DateTime modified;
+		@CreatedDate Date created;
+		Date modified;
 
 		@LastModifiedDate
-		public DateTime getModified() {
+		public Date getModified() {
 			return modified;
 		}
 	}

@@ -1,4 +1,4 @@
-FROM adoptopenjdk/openjdk16:latest
+FROM openjdk:17-bullseye
 
 ENV TZ=Etc/UTC
 ENV DEBIAN_FRONTEND=noninteractive

@@ -16,8 +16,8 @@
 package org.springframework.data.mongodb.core;
 
 import java.util.Arrays;
+import java.util.Date;
 
-import org.joda.time.LocalDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -28,7 +28,7 @@ public class Venue {
 	@Id private String id;
 	private String name;
 	private double[] location;
-	private LocalDate openingDate;
+	private Date openingDate;
 
 	@PersistenceConstructor
 	Venue(String name, double[] location) {
@@ -51,11 +51,11 @@ public class Venue {
 		return location;
 	}
 
-	public LocalDate getOpeningDate() {
+	public Date getOpeningDate() {
 		return openingDate;
 	}
 
-	public void setOpeningDate(LocalDate openingDate) {
+	public void setOpeningDate(Date openingDate) {
 		this.openingDate = openingDate;
 	}
 

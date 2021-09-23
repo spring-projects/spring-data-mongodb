@@ -22,7 +22,6 @@ import java.util.Date;
 import java.util.Map;
 
 import org.bson.Document;
-import org.joda.time.DateTime;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.query.Update.Position;
@@ -348,7 +347,7 @@ public class UpdateTests {
 	@Test // DATAMONGO-1002
 	public void toStringWorksForUpdateWithComplexObject() {
 
-		Update update = new Update().addToSet("key", new DateTime());
+		Update update = new Update().addToSet("key", new Date());
 		assertThat(update.toString()).isNotNull();
 	}
 

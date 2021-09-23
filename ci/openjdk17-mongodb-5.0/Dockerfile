@@ -1,4 +1,4 @@
-FROM adoptopenjdk/openjdk8:latest
+FROM openjdk:17-bullseye
 
 ENV TZ=Etc/UTC
 ENV DEBIAN_FRONTEND=noninteractive
@@ -18,3 +18,4 @@ RUN apt-get update; \
 	apt-get install -y mongodb-org=5.0.3 mongodb-org-server=5.0.3 mongodb-org-shell=5.0.3 mongodb-org-mongos=5.0.3 mongodb-org-tools=5.0.3; \
 	apt-get clean; \
 	rm -rf /var/lib/apt/lists/*;
+

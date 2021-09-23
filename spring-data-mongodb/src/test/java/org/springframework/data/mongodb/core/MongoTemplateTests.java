@@ -33,6 +33,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -40,7 +42,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.bson.types.ObjectId;
-import org.joda.time.DateTime;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -62,6 +63,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mapping.MappingException;
+import org.springframework.data.mapping.context.PersistentEntities;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.convert.LazyLoadingProxy;
@@ -148,7 +150,9 @@ public class MongoTemplateTests {
 		});
 
 		cfg.configureAuditing(it -> {
-			it.auditingHandler(IsNewAwareAuditingHandler::new);
+			it.auditingHandler(ctx -> {
+				return new IsNewAwareAuditingHandler(PersistentEntities.of(ctx));
+			});
 		});
 	});
 
@@ -1341,11 +1345,11 @@ public class MongoTemplateTests {
 	@Test
 	public void returnsEntityWhenQueryingForDateTime() {
 
-		DateTime dateTime = new DateTime(2011, 3, 3, 12, 0, 0, 0);
+		LocalDateTime dateTime = LocalDateTime.of(2011, 3, 3, 12, 0, 0, 0);
 		TestClass testClass = new TestClass(dateTime);
 		mappingTemplate.save(testClass);
 
-		List<TestClass> testClassList = mappingTemplate.find(new Query(Criteria.where("myDate").is(dateTime.toDate())),
+		List<TestClass> testClassList = mappingTemplate.find(new Query(Criteria.where("myDate").is(dateTime)),
 				TestClass.class);
 		assertThat(testClassList.size()).isEqualTo(1);
 		assertThat(testClassList.get(0).myDate).isEqualTo(testClass.myDate);
@@ -4007,10 +4011,10 @@ public class MongoTemplateTests {
 
 	static class TestClass {
 
-		DateTime myDate;
+		LocalDateTime myDate;
 
 		@PersistenceConstructor
-		TestClass(DateTime myDate) {
+		TestClass(LocalDateTime myDate) {
 			this.myDate = myDate;
 		}
 	}
@@ -4021,21 +4025,24 @@ public class MongoTemplateTests {
 		String name;
 	}
 
-	static enum DateTimeToDateConverter implements Converter<DateTime, Date> {
+	static enum DateTimeToDateConverter implements Converter<LocalDateTime, Date> {
 
 		INSTANCE;
 
-		public Date convert(DateTime source) {
-			return source == null ? null : source.toDate();
+		public Date convert(LocalDateTime source) {
+			return source == null ? null : java.util.Date
+					.from(source.atZone(ZoneId.systemDefault())
+							.toInstant());
 		}
 	}
 
-	static enum DateToDateTimeConverter implements Converter<Date, DateTime> {
+	static enum DateToDateTimeConverter implements Converter<Date, LocalDateTime> {
 
 		INSTANCE;
 
-		public DateTime convert(Date source) {
-			return source == null ? null : new DateTime(source.getTime());
+		public LocalDateTime convert(Date source) {
+			return source == null ? null : LocalDateTime.ofInstant(
+					source.toInstant(), ZoneId.systemDefault());
 		}
 	}
 

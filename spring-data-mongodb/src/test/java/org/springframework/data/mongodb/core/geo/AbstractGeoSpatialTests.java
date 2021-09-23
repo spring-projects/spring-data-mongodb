@@ -20,10 +20,10 @@ import static org.springframework.data.mongodb.core.query.Criteria.*;
 import static org.springframework.data.mongodb.core.query.Query.*;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import org.joda.time.LocalDate;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -191,7 +191,7 @@ public abstract class AbstractGeoSpatialTests {
 	@Test // DATAMONGO-1360
 	public void mapsQueryContainedInNearQuery() {
 
-		Query query = query(where("openingDate").lt(LocalDate.now()));
+		Query query = query(where("openingDate").lt(new Date()));
 		template.geoNear(NearQuery.near(1.5, 1.7).spherical(true).query(query), Venue.class);
 	}
 }

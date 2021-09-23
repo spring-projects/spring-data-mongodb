@@ -26,6 +26,14 @@ import lombok.Builder;
 import java.io.BufferedInputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -37,9 +45,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.assertj.core.data.Offset;
 import org.bson.Document;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.LocalDateTime;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -58,6 +63,7 @@ import org.springframework.data.mongodb.core.TestEntities;
 import org.springframework.data.mongodb.core.Venue;
 import org.springframework.data.mongodb.core.aggregation.AggregationTests.CarDescriptor.Entry;
 import org.springframework.data.mongodb.core.aggregation.BucketAutoOperation.Granularities;
+import org.springframework.data.mongodb.core.aggregation.DateOperators.TemporalUnits;
 import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
@@ -1146,11 +1152,11 @@ public class AggregationTests {
 
 		mongoTemplate.dropCollection(User.class);
 
-		LocalDateTime now = new LocalDateTime();
+		Instant now = Instant.now();
 
-		User user1 = new User("u1", new PushMessage("1", "aaa", now.toDate()));
-		User user2 = new User("u2", new PushMessage("2", "bbb", now.minusDays(2).toDate()));
-		User user3 = new User("u3", new PushMessage("3", "ccc", now.minusDays(1).toDate()));
+		User user1 = new User("u1", new PushMessage("1", "aaa", now));
+		User user2 = new User("u2", new PushMessage("2", "bbb", now.minus(2, ChronoUnit.DAYS)));
+		User user3 = new User("u3", new PushMessage("3", "ccc", now.minus(1, ChronoUnit.DAYS)));
 
 		mongoTemplate.save(user1);
 		mongoTemplate.save(user2);
@@ -1159,7 +1165,7 @@ public class AggregationTests {
 		Aggregation agg = newAggregation( //
 				project("id", "msgs"), //
 				unwind("msgs"), //
-				match(where("msgs.createDate").gt(now.minusDays(1).toDate())), //
+				match(where("msgs.createDate").gt(Date.from(now.minus(1, ChronoUnit.DAYS)))), //
 				group("id").push("msgs").as("msgs") //
 		);
 
@@ -1375,14 +1381,9 @@ public class AggregationTests {
 
 		mongoTemplate.dropCollection(ObjectWithDate.class);
 
-		DateTime dateTime = new DateTime() //
-				.withZone(DateTimeZone.UTC) //
-				.withYear(2014) //
-				.withMonthOfYear(2) //
-				.withDayOfMonth(7) //
-				.withTime(3, 4, 5, 6).toDateTimeISO();
+		ZonedDateTime dateTime = ZonedDateTime.of(LocalDateTime.of(LocalDate.of(2014, 2, 7), LocalTime.of(3, 4, 5, 6)), ZoneId.of("UTC"));
 
-		ObjectWithDate owd = new ObjectWithDate(dateTime.toDate());
+		ObjectWithDate owd = new ObjectWithDate(Date.from(dateTime.toInstant()));
 		mongoTemplate.insert(owd);
 
 		ProjectionOperation dateProjection = Aggregation.project() //
@@ -1406,12 +1407,12 @@ public class AggregationTests {
 		assertThat(result.getMappedResults()).hasSize(1);
 		Document document = result.getMappedResults().get(0);
 
-		assertThat(document.get("hour")).isEqualTo((Object) dateTime.getHourOfDay());
-		assertThat(document.get("min")).isEqualTo((Object) dateTime.getMinuteOfHour());
-		assertThat(document.get("second")).isEqualTo((Object) dateTime.getSecondOfMinute());
-		assertThat(document.get("millis")).isEqualTo((Object) dateTime.getMillisOfSecond());
+		assertThat(document.get("hour")).isEqualTo((Object) dateTime.getHour());
+		assertThat(document.get("min")).isEqualTo((Object) dateTime.getMinute());
+		assertThat(document.get("second")).isEqualTo((Object) dateTime.getSecond());
+		assertThat(document.get("millis")).isEqualTo((Object) dateTime.get(ChronoField.MILLI_OF_SECOND));
 		assertThat(document.get("year")).isEqualTo((Object) dateTime.getYear());
-		assertThat(document.get("month")).isEqualTo((Object) dateTime.getMonthOfYear());
+		assertThat(document.get("month")).isEqualTo((Object) dateTime.getMonthValue());
 		// dateTime.getWeekOfWeekyear()) returns 6 since for MongoDB the week starts on sunday and not on monday.
 		assertThat(document.get("week")).isEqualTo((Object) 5);
 		assertThat(document.get("dayOfYear")).isEqualTo((Object) dateTime.getDayOfYear());
@@ -2082,6 +2083,10 @@ public class AggregationTests {
 		Date createDate;
 
 		public PushMessage() {}
+
+		PushMessage(String id, String content, Instant createDate) {
+			this(id, content, Date.from(createDate));
+		}
 
 		PushMessage(String id, String content, Date createDate) {
 			this.id = id;
