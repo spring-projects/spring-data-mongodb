@@ -11,7 +11,7 @@
 	<parent>
 		<groupId>org.springframework.data</groupId>
 		<artifactId>spring-data-mongodb-parent</artifactId>
-		<version>3.4.0-SNAPSHOT</version>
+		<version>4.0.0-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 
@@ -156,7 +156,7 @@
 			<groupId>org.apache.geronimo.specs</groupId>
 			<artifactId>geronimo-jcdi_2.0_spec</artifactId>
 			<version>1.0.1</version>
-			<scope>test</scope>
+			<scope>optional</scope>
 		</dependency>
 
 		<dependency>
@@ -215,20 +215,6 @@
 			<artifactId>javax.el</artifactId>
 			<version>3.0.1-b11</version>
 			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>joda-time</groupId>
-			<artifactId>joda-time</artifactId>
-			<version>${jodatime}</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.threeten</groupId>
-			<artifactId>threetenbp</artifactId>
-			<version>${threetenbp}</version>
-			<optional>true</optional>
 		</dependency>
 
 		<dependency>

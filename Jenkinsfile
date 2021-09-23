@@ -20,48 +20,10 @@ pipeline {
 	stages {
 		stage("Docker images") {
 			parallel {
-				stage('Publish JDK (main) + MongoDB 4.0') {
-					when {
-					    anyOf {
-                            changeset "ci/openjdk8-mongodb-4.0/**"
-                            changeset "ci/pipeline.properties"
-                        }
-					}
-					agent { label 'data' }
-					options { timeout(time: 30, unit: 'MINUTES') }
-
-					steps {
-						script {
-							def image = docker.build("springci/spring-data-with-mongodb-4.0:${p['java.main.tag']}", "--build-arg BASE=${p['docker.java.main.image']} --build-arg MONGODB=${p['docker.mongodb.4.0.version']} ci/openjdk8-mongodb-4.0/")
-							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
-								image.push()
-							}
-						}
-					}
-				}
-				stage('Publish JDK (main) + MongoDB 4.4') {
-					when {
-					    anyOf {
-                            changeset "ci/openjdk8-mongodb-4.4/**"
-                            changeset "ci/pipeline.properties"
-                        }
-					}
-					agent { label 'data' }
-					options { timeout(time: 30, unit: 'MINUTES') }
-
-					steps {
-						script {
-							def image = docker.build("springci/spring-data-with-mongodb-4.4:${p['java.main.tag']}", "--build-arg BASE=${p['docker.java.main.image']} --build-arg MONGODB=${p['docker.mongodb.4.4.version']} ci/openjdk8-mongodb-4.4/")
-							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
-								image.push()
-							}
-						}
-					}
-				}
 			    stage('Publish JDK (main) + MongoDB 5.0') {
 					when {
 					    anyOf {
-                            changeset "ci/openjdk8-mongodb-5.0/**"
+                            changeset "ci/openjdk17-mongodb-5.0/**"
                             changeset "ci/pipeline.properties"
                         }
 					}
@@ -77,7 +39,7 @@ pipeline {
                         }
                     }
                 }
-				stage('Publish JDK (LTS) + MongoDB 4.4') {
+				stage('Publish JDK (main) + MongoDB 4.4') {
 					when {
 					    anyOf {
                             changeset "ci/openjdk17-mongodb-4.4/**"

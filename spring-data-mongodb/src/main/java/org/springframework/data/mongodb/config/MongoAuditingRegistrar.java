@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.config;
 import java.lang.annotation.Annotation;
 
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.config.RuntimeBeanReference;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
@@ -27,6 +28,8 @@ import org.springframework.data.auditing.IsNewAwareAuditingHandler;
 import org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarSupport;
 import org.springframework.data.auditing.config.AuditingConfiguration;
 import org.springframework.data.config.ParsingUtils;
+import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.event.AuditingEntityCallback;
 import org.springframework.util.Assert;
 
@@ -81,8 +84,8 @@ class MongoAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
 
 		BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(IsNewAwareAuditingHandler.class);
 
-		BeanDefinitionBuilder definition = BeanDefinitionBuilder.genericBeanDefinition(PersistentEntitiesFactoryBean.class);
-		definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_CONSTRUCTOR);
+		BeanDefinitionBuilder definition = BeanDefinitionBuilder.genericBeanDefinition(org.springframework.data.repository.config.PersistentEntitiesFactoryBean.class);
+		definition.addConstructorArgValue(new RuntimeBeanReference(MappingContext.class));
 
 		builder.addConstructorArgValue(definition.getBeanDefinition());
 		return configureDefaultAuditHandlerAttributes(configuration, builder);
