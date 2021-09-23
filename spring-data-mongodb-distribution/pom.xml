@@ -1,46 +1,124 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-	<modelVersion>4.0.0</modelVersion>
+  <modelVersion>4.0.0</modelVersion>
 
-	<artifactId>spring-data-mongodb-distribution</artifactId>
+  <artifactId>spring-data-mongodb-distribution</artifactId>
 
-	<packaging>pom</packaging>
+  <packaging>pom</packaging>
 
-	<name>Spring Data MongoDB - Distribution</name>
-	<description>Distribution build for Spring Data MongoDB</description>
+  <name>Spring Data MongoDB - Distribution</name>
+  <description>Distribution build for Spring Data MongoDB</description>
 
-	<parent>
-		<groupId>org.springframework.data</groupId>
-		<artifactId>spring-data-mongodb-parent</artifactId>
-		<version>4.0.0-SNAPSHOT</version>
-		<relativePath>../pom.xml</relativePath>
-	</parent>
+  <parent>
+    <groupId>org.springframework.data</groupId>
+    <artifactId>spring-data-mongodb-parent</artifactId>
+    <version>4.0.0-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
 
-	<properties>
-		<project.root>${basedir}/..</project.root>
-		<dist.key>SDMONGO</dist.key>
-	</properties>
+  <properties>
+    <project.root>${basedir}/..</project.root>
+    <dist.key>SDMONGO</dist.key>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-assembly-plugin</artifactId>
-			</plugin>
-			<plugin>
-				<groupId>org.asciidoctor</groupId>
-				<artifactId>asciidoctor-maven-plugin</artifactId>
-				<configuration>
-					<attributes>
-						<mongo-reactivestreams>${mongo.reactivestreams}</mongo-reactivestreams>
-						<reactor>${reactor}</reactor>
-					</attributes>
-				</configuration>
-			</plugin>
-		</plugins>
+    <!-- Observability -->
+    <micrometer-docs-generator.version>1.0.0-SNAPSHOT</micrometer-docs-generator.version>
+    <micrometer-docs-generator.inputPath>${maven.multiModuleProjectDirectory}/spring-data-mongodb/
+    </micrometer-docs-generator.inputPath>
+    <micrometer-docs-generator.inclusionPattern>.*</micrometer-docs-generator.inclusionPattern>
+    <micrometer-docs-generator.outputPath>${maven.multiModuleProjectDirectory}/target/
+    </micrometer-docs-generator.outputPath>
+  </properties>
 
-	</build>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>generate-metrics-metadata</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>io.micrometer.docs.metrics.DocsFromSources</mainClass>
+            </configuration>
+          </execution>
+          <execution>
+            <id>generate-tracing-metadata</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>java</goal>
+            </goals>
+            <configuration>
+              <mainClass>io.micrometer.docs.spans.DocsFromSources</mainClass>
+            </configuration>
+          </execution>
+        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-docs-generator-spans</artifactId>
+            <version>${micrometer-docs-generator.version}</version>
+            <type>jar</type>
+          </dependency>
+          <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-docs-generator-metrics</artifactId>
+            <version>${micrometer-docs-generator.version}</version>
+            <type>jar</type>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <includePluginDependencies>true</includePluginDependencies>
+          <arguments>
+            <argument>${micrometer-docs-generator.inputPath}</argument>
+            <argument>${micrometer-docs-generator.inclusionPattern}</argument>
+            <argument>${micrometer-docs-generator.outputPath}</argument>
+          </arguments>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.asciidoctor</groupId>
+        <artifactId>asciidoctor-maven-plugin</artifactId>
+        <configuration>
+          <attributes>
+            <mongo-reactivestreams>${mongo.reactivestreams}</mongo-reactivestreams>
+            <reactor>${reactor}</reactor>
+          </attributes>
+        </configuration>
+      </plugin>
+    </plugins>
+
+  </build>
+
+  <repositories>
+    <repository>
+      <id>spring-snapshots</id>
+      <name>Spring Snapshots</name>
+      <url>https://repo.spring.io/snapshot</url> <!-- For Snapshots -->
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+    </repository>
+    <repository>
+      <id>spring-milestones</id>
+      <name>Spring Milestones</name>
+      <url>https://repo.spring.io/milestone</url>  <!-- For Milestones -->
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
 
 </project>
