@@ -29,8 +29,7 @@ import org.springframework.data.mongodb.core.timeseries.Granularity;
  *
  * @author Christoph Strobl
  * @since 3.3
- * @see <a href=
- *      "https://docs.mongodb.com/manual/core/timeseries-collections">https://docs.mongodb.com/manual/core/timeseries-collections</a>
+ * @see <a href="https://docs.mongodb.com/manual/core/timeseries-collections">https://docs.mongodb.com/manual/core/timeseries-collections</a>
  */
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)

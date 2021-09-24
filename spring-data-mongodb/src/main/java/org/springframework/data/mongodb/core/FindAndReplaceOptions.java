@@ -17,7 +17,7 @@ package org.springframework.data.mongodb.core;
 
 /**
  * Options for
- * <a href="https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndReplace/">findOneAndReplace<a/>.
+ * <a href="https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndReplace/">findOneAndReplace</a>.
  * <br />
  * Defaults to
  * <dl>

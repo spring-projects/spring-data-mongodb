@@ -27,7 +27,7 @@ import org.springframework.core.annotation.AliasFor;
 
 /**
  * The annotation to configure a value object as flattened out in the target document.
- * <p />
+ * <br />
  * Depending on the {@link OnEmpty value} of {@link #onEmpty()} the property is set to {@literal null} or an empty
  * instance in the case all unwrapped values are {@literal null} when reading from the result set.
  *
@@ -41,7 +41,7 @@ public @interface Unwrapped {
 
 	/**
 	 * Set the load strategy for the unwrapped object if all contained fields yield {@literal null} values.
-	 * <p />
+	 * <br />
 	 * {@link Nullable @Unwrapped.Nullable} and {@link Empty @Unwrapped.Empty} offer shortcuts for this.
 	 *
 	 * @return never {@link} null.

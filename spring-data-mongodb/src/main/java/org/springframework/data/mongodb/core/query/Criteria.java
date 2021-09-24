@@ -180,7 +180,7 @@ public class Criteria implements CriteriaDefinition {
 	/**
 	 * Creates a criterion using {@literal null} equality comparison which matches documents that either contain the item
 	 * field whose value is {@literal null} or that do not contain the item field.
-	 * <p />
+	 * <br />
 	 * Use {@link #isNullValue()} to only query for documents that contain the field whose value is equal to
 	 * {@link org.bson.BsonType#NULL}. <br />
 	 * Use {@link #exists(boolean)} to query for documents that do (not) contain the field.
@@ -197,7 +197,7 @@ public class Criteria implements CriteriaDefinition {
 	/**
 	 * Creates a criterion using a {@link org.bson.BsonType} comparison which matches only documents that contain the item
 	 * field whose value is equal to {@link org.bson.BsonType#NULL}.
-	 * <p />
+	 * <br />
 	 * Use {@link #isNull()} to query for documents that contain the field with a {@literal null} value or do not contain the
 	 * field at all. <br />
 	 * Use {@link #exists(boolean)} to query for documents that do (not) contain the field.

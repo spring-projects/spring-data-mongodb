@@ -24,15 +24,15 @@ import org.springframework.util.Assert;
  * expression</a>. <br />
  * <br />
  * <strong>Samples:</strong> <br />
- * <code>
  * <pre>
+ * <code>
  * // { $and: [ { $gt: [ "$qty", 100 ] }, { $lt: [ "$qty", 250 ] } ] }
  * expressionOf("qty > 100 && qty < 250);
  *
  * // { $cond : { if : { $gte : [ "$a", 42 ]}, then : "answer", else : "no-answer" } }
  * expressionOf("cond(a >= 42, 'answer', 'no-answer')");
- * </pre>
  * </code>
+ * </pre>
  *
  * @author Christoph Strobl
  * @author Mark Paluch

@@ -18,7 +18,7 @@ package org.springframework.data.mongodb;
 /**
  * Wrapper object for MongoDB expressions like {@code $toUpper : $name} that manifest as {@link org.bson.Document} when
  * passed on to the driver.
- * <p />
+ * <br />
  * A set of predefined {@link MongoExpression expressions}, including a
  * {@link org.springframework.data.mongodb.core.aggregation.AggregationSpELExpression SpEL based variant} for method
  * like expressions (eg. {@code toUpper(name)}) are available via the

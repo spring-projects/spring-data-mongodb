@@ -35,7 +35,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 
 /**
  * A Jackson {@link Module} to register custom {@link JsonDeserializer}s for GeoJSON types.
- * <p />
+ * <br />
  * Use {@link #geoJsonModule()} to obtain a {@link Module} containing both {@link JsonSerializer serializers} and
  * {@link JsonDeserializer deserializers}.
  *

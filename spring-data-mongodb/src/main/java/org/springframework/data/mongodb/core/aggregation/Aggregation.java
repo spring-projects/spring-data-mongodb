@@ -227,7 +227,7 @@ public class Aggregation {
 
 	/**
 	 * Obtain an {@link AddFieldsOperationBuilder builder} instance to create a new {@link AddFieldsOperation}.
-	 * <p/>
+	 * <br />
 	 * Starting in version 4.2, MongoDB adds a new aggregation pipeline stage {@link AggregationUpdate#set $set} that is
 	 * an alias for {@code $addFields}.
 	 *
@@ -726,7 +726,7 @@ public class Aggregation {
 
 	/**
 	 * Converts this {@link Aggregation} specification to a {@link Document}.
-	 * <p/>
+	 * <br />
 	 * MongoDB requires as of 3.6 cursor-based aggregation. Use {@link #toPipeline(AggregationOperationContext)} to render
 	 * an aggregation pipeline.
 	 *

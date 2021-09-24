@@ -36,7 +36,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  * Helper class for managing reactive {@link MongoDatabase} instances via {@link ReactiveMongoDatabaseFactory}. Used for
  * obtaining {@link ClientSession session bound} resources, such as {@link MongoDatabase} and {@link MongoCollection}
  * suitable for transactional usage.
- * <p />
+ * <br />
  * <strong>Note:</strong> Intended for internal usage only.
  *
  * @author Mark Paluch
@@ -75,7 +75,7 @@ public class ReactiveMongoDatabaseUtils {
 	/**
 	 * Obtain the default {@link MongoDatabase database} form the given {@link ReactiveMongoDatabaseFactory factory} using
 	 * {@link SessionSynchronization#ON_ACTUAL_TRANSACTION native session synchronization}.
-	 * <p />
+	 * <br />
 	 * Registers a {@link MongoSessionSynchronization MongoDB specific transaction synchronization} within the subscriber
 	 * {@link Context} if {@link TransactionSynchronizationManager#isSynchronizationActive() synchronization is active}.
 	 *
@@ -88,7 +88,7 @@ public class ReactiveMongoDatabaseUtils {
 
 	/**
 	 * Obtain the default {@link MongoDatabase database} form the given {@link ReactiveMongoDatabaseFactory factory}.
-	 * <p />
+	 * <br />
 	 * Registers a {@link MongoSessionSynchronization MongoDB specific transaction synchronization} within the subscriber
 	 * {@link Context} if {@link TransactionSynchronizationManager#isSynchronizationActive() synchronization is active}.
 	 *
@@ -104,7 +104,7 @@ public class ReactiveMongoDatabaseUtils {
 	/**
 	 * Obtain the {@link MongoDatabase database} with given name form the given {@link ReactiveMongoDatabaseFactory
 	 * factory} using {@link SessionSynchronization#ON_ACTUAL_TRANSACTION native session synchronization}.
-	 * <p />
+	 * <br />
 	 * Registers a {@link MongoSessionSynchronization MongoDB specific transaction synchronization} within the subscriber
 	 * {@link Context} if {@link TransactionSynchronizationManager#isSynchronizationActive() synchronization is active}.
 	 *
@@ -119,7 +119,7 @@ public class ReactiveMongoDatabaseUtils {
 	/**
 	 * Obtain the {@link MongoDatabase database} with given name form the given {@link ReactiveMongoDatabaseFactory
 	 * factory}.
-	 * <p />
+	 * <br />
 	 * Registers a {@link MongoSessionSynchronization MongoDB specific transaction synchronization} within the subscriber
 	 * {@link Context} if {@link TransactionSynchronizationManager#isSynchronizationActive() synchronization is active}.
 	 *

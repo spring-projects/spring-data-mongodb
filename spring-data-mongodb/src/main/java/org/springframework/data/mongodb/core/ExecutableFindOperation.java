@@ -125,7 +125,7 @@ public interface ExecutableFindOperation {
 
 		/**
 		 * Get the number of matching elements.
-		 * <p />
+		 * <br />
 		 * This method uses an {@link com.mongodb.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions) aggregation
 		 * execution} even for empty {@link Query queries} which may have an impact on performance, but guarantees shard,
 		 * session and transaction compliance. In case an inaccurate count satisfies the applications needs use

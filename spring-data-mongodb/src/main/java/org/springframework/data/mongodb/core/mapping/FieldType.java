@@ -28,7 +28,7 @@ import org.bson.types.ObjectId;
  * Enumeration of field value types that can be used to represent a {@link org.bson.Document} field value. This
  * enumeration contains a subset of {@link org.bson.BsonType} that is supported by the mapping and conversion
  * components.
- * <p/>
+ * <br />
  * Bson types are identified by a {@code byte} {@link #getBsonType() value}. This enumeration typically returns the
  * according bson type value except for {@link #IMPLICIT} which is a marker to derive the field type from a property.
  *

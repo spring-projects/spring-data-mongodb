@@ -24,7 +24,7 @@ import com.mongodb.reactivestreams.client.ClientSession;
 /**
  * MongoDB specific resource holder, wrapping a {@link ClientSession}. {@link ReactiveMongoTransactionManager} binds
  * instances of this class to the subscriber context.
- * <p />
+ * <br />
  * <strong>Note:</strong> Intended for internal usage only.
  *
  * @author Mark Paluch

@@ -46,7 +46,7 @@ import org.springframework.util.ObjectUtils;
 /**
  * Interface that can be implemented by objects that know how to serialize themselves to JSON schema using
  * {@link #toDocument()}.
- * <p/>
+ * <br />
  * This class also declares factory methods for type-specific {@link JsonSchemaObject schema objects} such as
  * {@link #string()} or {@link #object()}. For example:
  *

@@ -23,7 +23,7 @@ import com.mongodb.client.ClientSession;
 
 /**
  * Gateway interface to execute {@link ClientSession} bound operations against MongoDB via a {@link SessionCallback}.
- * <p />
+ * <br />
  * The very same bound {@link ClientSession} is used for all invocations of {@code execute} on the instance.
  *
  * @author Christoph Strobl
@@ -34,7 +34,7 @@ public interface SessionScoped {
 
 	/**
 	 * Executes the given {@link SessionCallback} within the {@link com.mongodb.session.ClientSession}.
-	 * <p/>
+	 * <br />
 	 * It is up to the caller to make sure the {@link com.mongodb.session.ClientSession} is {@link ClientSession#close()
 	 * closed} when done.
 	 *
@@ -49,7 +49,7 @@ public interface SessionScoped {
 
 	/**
 	 * Executes the given {@link SessionCallback} within the {@link com.mongodb.session.ClientSession}.
-	 * <p/>
+	 * <br />
 	 * It is up to the caller to make sure the {@link com.mongodb.session.ClientSession} is {@link ClientSession#close()
 	 * closed} when done.
 	 *
