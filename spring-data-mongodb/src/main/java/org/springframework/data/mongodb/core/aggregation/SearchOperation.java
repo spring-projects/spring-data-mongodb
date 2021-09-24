@@ -34,8 +34,84 @@ public class SearchOperation implements AggregationOperation {
 			this.operator = new SearchOperator(Operators.AUTOCOMPLETE, null);
 			return this;
 		}
+		
+		public SearchOperationBuilder compound() {
+			this.operator = new SearchOperator(Operators.COMPOUND, null);
+			return this;
+		}
+		
+		public SearchOperationBuilder equals() {
+			this.operator = new SearchOperator(Operators.EQUALS, null);
+			return this;
+		}
+		
+		public SearchOperationBuilder exists() {
+			this.operator = new SearchOperator(Operators.EXISTS, null);
+			return this;
+		}
+		
+		public SearchOperationBuilder geoShape() {
+			this.operator = new SearchOperator(Operators.GEOSHAPE, null);
+			return this;
+		}
+		
+		public SearchOperationBuilder geoWithin() {
+			this.operator = new SearchOperator(Operators.GEOWITHIN, null);
+			return this;
+		}
+		
+		public SearchOperationBuilder near() {
+			this.operator = new SearchOperator(Operators.NEAR, null);
+			return this;
+		}
+		
+		public SearchOperationBuilder phrase() {
+			this.operator = new SearchOperator(Operators.PHRASE, null);
+			return this;
+		}
+		
+		public SearchOperationBuilder queryString() {
+			this.operator = new SearchOperator(Operators.QUERYSTRING, null);
+			return this;
+		}
+		
+		public SearchOperationBuilder range() {
+			this.operator = new SearchOperator(Operators.RANGE, null);
+			return this;
+		}
+		
+		public SearchOperationBuilder regex() {
+			this.operator = new SearchOperator(Operators.REGEX, null);
+			return this;
+		}
+		
+		public SearchOperationBuilder search() {
+			this.operator = new SearchOperator(Operators.SEARCH, null);
+			return this;
+		}
+		
+		public SearchOperationBuilder span() {
+			this.operator = new SearchOperator(Operators.SPAN, null);
+			return this;
+		}
+		
+		public SearchOperationBuilder term() {
+			this.operator = new SearchOperator(Operators.TERM, null);
+			return this;
+		}
+		
+		public SearchOperationBuilder text() {
+			this.operator = new SearchOperator(Operators.TEXT, null);
+			return this;
+		}
+		
+		public SearchOperationBuilder wildcard() {
+			this.operator = new SearchOperator(Operators.WILDCARD, null);
+			return this;
+		}
 
-		public SearchOperationBuilder withOptions(Map<String, Object> options) {
+
+		public SearchOperationBuilder withOptions(Document options) {
 			Assert.notEmpty(options, "Options By must not be null");
 			this.operator.options = options;
 			return this;
@@ -68,6 +144,7 @@ public class SearchOperation implements AggregationOperation {
 		public SearchOperation build() {
 			return new SearchOperation(indexName, operator, highlights);
 		}
+
 	}
 
 	@Override
@@ -108,9 +185,9 @@ public class SearchOperation implements AggregationOperation {
 	public static class SearchOperator {
 
 		private Operators operator;
-		private Map<String, Object> options;
+		private Document options;
 
-		public SearchOperator(Operators operator, Map<String, Object> options) {
+		public SearchOperator(Operators operator, Document options) {
 			this.operator = operator;
 			this.options = options;
 		}
