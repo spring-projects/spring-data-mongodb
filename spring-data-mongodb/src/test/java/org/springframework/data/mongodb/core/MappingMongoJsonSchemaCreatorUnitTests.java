@@ -185,6 +185,9 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 			"        'arrayProperty' : { 'type' : 'array' }," + //
 			"        'binaryDataProperty' : { 'bsonType' : 'binData' }," + //
 			"        'collectionProperty' : { 'type' : 'array' }," + //
+			"        'simpleTypeCollectionProperty' : { 'type' : 'array', 'items' : { 'type' : 'string' } }," + //
+			"        'complexTypeCollectionProperty' : { 'type' : 'array', 'items' : { 'type' : 'object', 'properties' : { 'field' : { 'type' : 'string'} } } }" + //
+			"        'enumTypeCollectionProperty' : { 'type' : 'array', 'items' : " + JUST_SOME_ENUM + " }" + //
 			"        'mapProperty' : { 'type' : 'object' }," + //
 			"        'objectProperty' : { 'type' : 'object' }," + //
 			"        'enumProperty' : " + JUST_SOME_ENUM + "     }" + //
@@ -203,10 +206,17 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 		Date dateProperty;
 		Object[] arrayProperty;
 		byte[] binaryDataProperty;
-		List<String> collectionProperty;
+		List<Object> collectionProperty;
+		List<String> simpleTypeCollectionProperty;
+		List<SomeDomainType> complexTypeCollectionProperty;
+		List<JustSomeEnum> enumTypeCollectionProperty;
 		Map<String, String> mapProperty;
 		Object objectProperty;
 		JustSomeEnum enumProperty;
+	}
+
+	static class SomeDomainType {
+		String field;
 	}
 
 	// --> NESTED DOMAIN TYPE
