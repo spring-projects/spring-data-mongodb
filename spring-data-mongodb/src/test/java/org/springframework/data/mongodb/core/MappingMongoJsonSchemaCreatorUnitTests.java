@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.bson.Document;
+import org.bson.json.JsonWriterSettings;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.support.GenericApplicationContext;
@@ -185,6 +186,8 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 			"        'arrayProperty' : { 'type' : 'array' }," + //
 			"        'binaryDataProperty' : { 'bsonType' : 'binData' }," + //
 			"        'collectionProperty' : { 'type' : 'array' }," + //
+			"        'simpleTypeCollectionProperty' : { 'type' : 'array', 'items' : { 'type' : 'string' } }," + //
+			"        'complexTypeCollectionProperty' : { 'type' : 'array', 'items' : { 'type' : 'object', 'properties' : { 'field' : { 'type' : 'string'} } } }" + //
 			"        'mapProperty' : { 'type' : 'object' }," + //
 			"        'objectProperty' : { 'type' : 'object' }," + //
 			"        'enumProperty' : " + JUST_SOME_ENUM + "     }" + //
@@ -203,10 +206,16 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 		Date dateProperty;
 		Object[] arrayProperty;
 		byte[] binaryDataProperty;
-		List<String> collectionProperty;
+		List<Object> collectionProperty;
+		List<String> simpleTypeCollectionProperty;
+		List<SomeDomainType> complexTypeCollectionProperty;
 		Map<String, String> mapProperty;
 		Object objectProperty;
 		JustSomeEnum enumProperty;
+	}
+
+	static class SomeDomainType {
+		String field;
 	}
 
 	// --> NESTED DOMAIN TYPE

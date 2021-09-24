@@ -27,11 +27,11 @@ import org.bson.Document;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
-import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.Encrypted;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.ArrayJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.EncryptedJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.ObjectJsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.JsonSchemaObject;
@@ -160,15 +160,15 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 		Class<?> rawTargetType = computeTargetType(property); // target type before conversion
 		Class<?> targetType = converter.getTypeMapper().getWriteTargetTypeFor(rawTargetType); // conversion target type
 
-		if (property.isEntity() && ObjectUtils.nullSafeEquals(rawTargetType, targetType)) {
+		if (!isCollection(property) && property.isEntity() && ObjectUtils.nullSafeEquals(rawTargetType, targetType)) {
 			return createObjectSchemaPropertyForEntity(path, property, required);
 		}
 
 		String fieldName = computePropertyFieldName(property);
 
 		JsonSchemaProperty schemaProperty;
-		if (property.isCollectionLike()) {
-			schemaProperty = createSchemaProperty(fieldName, targetType, required);
+		if (isCollection(property)) {
+			schemaProperty = createSchemaPropertyForCollection(fieldName, property, required);
 		} else if (property.isMap()) {
 			schemaProperty = createSchemaProperty(fieldName, Type.objectType(), required);
 		} else if (ClassUtils.isAssignable(Enum.class, targetType)) {
@@ -178,6 +178,33 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 		}
 
 		return applyEncryptionDataIfNecessary(property, schemaProperty);
+	}
+
+	private JsonSchemaProperty createSchemaPropertyForCollection(String fieldName, MongoPersistentProperty property,
+			boolean required) {
+
+		ArrayJsonSchemaProperty schemaProperty = JsonSchemaProperty.array(fieldName);
+
+		if (property.getActualType() != Object.class) {
+
+			MongoPersistentEntity<?> persistentEntity = mappingContext
+					.getPersistentEntity(property.getTypeInformation().getComponentType());
+
+			if (persistentEntity == null) {
+				schemaProperty = schemaProperty.items(Collections.singleton(JsonSchemaObject.of(property.getActualType())));
+			} else {
+
+				List<JsonSchemaProperty> nestedProperties = computePropertiesForEntity(Collections.emptyList(),
+						persistentEntity);
+
+				if (!nestedProperties.isEmpty()) {
+					schemaProperty = schemaProperty.items(Collections
+							.singleton(JsonSchemaObject.object().properties(nestedProperties.toArray(new JsonSchemaProperty[0]))));
+				}
+			}
+		}
+
+		return createPotentiallyRequiredSchemaProperty(schemaProperty, required);
 	}
 
 	@Nullable
@@ -197,7 +224,6 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 			enc = enc.keys(property.getEncryptionKeyIds());
 		}
 		return enc;
-
 	}
 
 	private JsonSchemaProperty createObjectSchemaPropertyForEntity(List<MongoPersistentProperty> path,
@@ -266,6 +292,11 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 		}
 
 		return mongoProperty.getFieldType() != mongoProperty.getActualType() ? Object.class : mongoProperty.getFieldType();
+	}
+
+
+	private static boolean isCollection(MongoPersistentProperty property) {
+		return property.isCollectionLike() && !property.getType().equals(byte[].class);
 	}
 
 	static JsonSchemaProperty createPotentiallyRequiredSchemaProperty(JsonSchemaProperty property, boolean required) {
