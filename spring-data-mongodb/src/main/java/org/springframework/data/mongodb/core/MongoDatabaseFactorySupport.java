@@ -33,7 +33,7 @@ import com.mongodb.client.MongoDatabase;
 /**
  * Common base class for usage with both {@link com.mongodb.client.MongoClients} defining common properties such as
  * database name and exception translator.
- * <p/>
+ * <br />
  * Not intended to be used directly.
  *
  * @author Christoph Strobl

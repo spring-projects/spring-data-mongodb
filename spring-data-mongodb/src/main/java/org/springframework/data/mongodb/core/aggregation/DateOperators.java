@@ -92,7 +92,7 @@ public class DateOperators {
 
 	/**
 	 * Take the given value as date.
-	 * <p/>
+	 * <br />
 	 * This can be one of:
 	 * <ul>
 	 * <li>{@link java.util.Date}</li>
@@ -142,7 +142,7 @@ public class DateOperators {
 	 * Timezone represents a MongoDB timezone abstraction which can be represented with a timezone ID or offset as a
 	 * {@link String}. Also accepts a {@link AggregationExpression} or {@link Field} that resolves to a {@link String} of
 	 * either Olson Timezone Identifier or a UTC Offset.<br />
-	 * <table valign="top">
+	 * <table>
 	 * <tr>
 	 * <th>Format</th>
 	 * <th>Example</th>
@@ -334,7 +334,7 @@ public class DateOperators {
 
 		/**
 		 * Creates new {@link DateOperatorFactory} for given {@code value} that resolves to a Date.
-		 * <p/>
+		 * <br />
 		 * <ul>
 		 * <li>{@link java.util.Date}</li>
 		 * <li>{@link java.util.Calendar}</li>

@@ -31,11 +31,11 @@ import org.springframework.util.StringUtils;
  * {@link org.springframework.data.mongodb.core.mapping.Document} annotation). On those it is possible to use
  * {@link #wildcardProjectionInclude(String...)} and {@link #wildcardProjectionExclude(String...)} to define specific
  * paths for in-/exclusion.
- * <p />
+ * <br />
  * It can also be used to define an index on a specific field path and its subfields, e.g.
  * {@code "path.to.field.$**" : 1}. <br />
  * Note that {@literal wildcardProjections} are not allowed in this case.
- * <p />
+ * <br />
  * <strong>LIMITATIONS</strong><br />
  * <ul>
  * <li>{@link #unique() Unique} and {@link #expire(long) ttl} options are not supported.</li>

@@ -20,7 +20,7 @@ import org.springframework.lang.Nullable;
 
 /**
  * Event being thrown after a single or a set of documents has/have been deleted. The {@link Document} held in the event
- * will be the query document <em>after</am> it has been mapped onto the domain type handled.
+ * will be the query document <em>after</em> it has been mapped onto the domain type handled.
  *
  * @author Martin Baumgartner
  * @author Christoph Strobl

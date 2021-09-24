@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
  * <a href="https://docs.mongodb.com/manual/core/index-hashed/">Hashed Index</a>. If used on a simple property, the
  * index uses a hashing function to compute the hash of the value of the index field. Added to a property of complex
  * type the embedded document is collapsed and the hash computed for the entire object.
- * <p />
+ * <br />
  *
  * <pre class="code">
  * &#64;Document

@@ -33,7 +33,7 @@ public interface ReactiveSessionScoped {
 
 	/**
 	 * Executes the given {@link ReactiveSessionCallback} within the {@link com.mongodb.session.ClientSession}.
-	 * <p/>
+	 * <br />
 	 * It is up to the caller to make sure the {@link com.mongodb.session.ClientSession} is {@link ClientSession#close()
 	 * closed} when done.
 	 *
@@ -47,7 +47,7 @@ public interface ReactiveSessionScoped {
 
 	/**
 	 * Executes the given {@link ReactiveSessionCallback} within the {@link com.mongodb.session.ClientSession}.
-	 * <p/>
+	 * <br />
 	 * It is up to the caller to make sure the {@link com.mongodb.session.ClientSession} is {@link ClientSession#close()
 	 * closed} when done.
 	 *

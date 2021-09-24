@@ -20,7 +20,7 @@ import org.springframework.util.Assert;
 
 /**
  * An {@link ExecutableMongoScript} assigned to a name that allows calling the function by its {@literal name} once it
- * has been saved to the {@link com.mongodb.DB} instance.
+ * has been saved to the {@link com.mongodb.client.MongoDatabase} instance.
  *
  * @author Christoph Strobl
  * @author Oliver Gierke
@@ -34,7 +34,7 @@ public class NamedMongoScript {
 	private final ExecutableMongoScript script;
 
 	/**
-	 * Creates new {@link NamedMongoScript} that can be saved to the {@link com.mongodb.DB} instance.
+	 * Creates new {@link NamedMongoScript} that can be saved to the {@link com.mongodb.client.MongoDatabase} instance.
 	 *
 	 * @param name must not be {@literal null} or empty.
 	 * @param rawScript the {@link String} representation of the {@literal JavaScript} function. Must not be

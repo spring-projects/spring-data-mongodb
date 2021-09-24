@@ -30,7 +30,7 @@ import com.mongodb.client.MongoDatabase;
  * Helper class for managing a {@link MongoDatabase} instances via {@link MongoDatabaseFactory}. Used for obtaining
  * {@link ClientSession session bound} resources, such as {@link MongoDatabase} and
  * {@link com.mongodb.client.MongoCollection} suitable for transactional usage.
- * <p />
+ * <br />
  * <strong>Note:</strong> Intended for internal usage only.
  *
  * @author Christoph Strobl
@@ -43,7 +43,7 @@ public class MongoDatabaseUtils {
 	/**
 	 * Obtain the default {@link MongoDatabase database} form the given {@link MongoDatabaseFactory factory} using
 	 * {@link SessionSynchronization#ON_ACTUAL_TRANSACTION native session synchronization}.
-	 * <p />
+	 * <br />
 	 * Registers a {@link MongoSessionSynchronization MongoDB specific transaction synchronization} within the current
 	 * {@link Thread} if {@link TransactionSynchronizationManager#isSynchronizationActive() synchronization is active}.
 	 *
@@ -56,7 +56,7 @@ public class MongoDatabaseUtils {
 
 	/**
 	 * Obtain the default {@link MongoDatabase database} form the given {@link MongoDatabaseFactory factory}.
-	 * <p />
+	 * <br />
 	 * Registers a {@link MongoSessionSynchronization MongoDB specific transaction synchronization} within the current
 	 * {@link Thread} if {@link TransactionSynchronizationManager#isSynchronizationActive() synchronization is active}.
 	 *
@@ -71,7 +71,7 @@ public class MongoDatabaseUtils {
 	/**
 	 * Obtain the {@link MongoDatabase database} with given name form the given {@link MongoDatabaseFactory factory} using
 	 * {@link SessionSynchronization#ON_ACTUAL_TRANSACTION native session synchronization}.
-	 * <p />
+	 * <br />
 	 * Registers a {@link MongoSessionSynchronization MongoDB specific transaction synchronization} within the current
 	 * {@link Thread} if {@link TransactionSynchronizationManager#isSynchronizationActive() synchronization is active}.
 	 *
@@ -85,7 +85,7 @@ public class MongoDatabaseUtils {
 
 	/**
 	 * Obtain the {@link MongoDatabase database} with given name form the given {@link MongoDatabaseFactory factory}.
-	 * <p />
+	 * <br />
 	 * Registers a {@link MongoSessionSynchronization MongoDB specific transaction synchronization} within the current
 	 * {@link Thread} if {@link TransactionSynchronizationManager#isSynchronizationActive() synchronization is active}.
 	 *

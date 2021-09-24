@@ -50,8 +50,8 @@ public interface MessageListenerContainer extends SmartLifecycle {
 	 * <code>
 	 *     MessageListenerContainer container = ...
 	 *
-	 *     MessageListener<ChangeStreamDocument<Document>, Object> messageListener = (message) -> message....
-	 *     ChangeStreamRequest<Object> request = new ChangeStreamRequest<>(messageListener, () -> "collection-name");
+	 *     MessageListener&lt;ChangeStreamDocument&lt;Document&gt;, Object&gt; messageListener = (message) -&gt; message....
+	 *     ChangeStreamRequest&lt;Object&gt; request = new ChangeStreamRequest&lt;&gt;(messageListener, () -&gt; "collection-name");
 	 *
 	 *     Subscription subscription = container.register(request);
 	 * </code>
@@ -75,8 +75,8 @@ public interface MessageListenerContainer extends SmartLifecycle {
 	 * <code>
 	 *     MessageListenerContainer container = ...
 	 *
-	 *     MessageListener<ChangeStreamDocument<Document>, Document> messageListener = (message) -> message.getBody().toJson();
-	 *     ChangeStreamRequest<Document> request = new ChangeStreamRequest<>(messageListener, () -> "collection-name");
+	 *     MessageListener&lt;ChangeStreamDocument&lt;Document&gt;, Document&gt; messageListener = (message) -&gt; message.getBody().toJson();
+	 *     ChangeStreamRequest&lt;Document&gt; request = new ChangeStreamRequest&lt;&gt;(messageListener, () -&gt; "collection-name");
 	 *
 	 *     Subscription subscription = container.register(request, Document.class);
 	 * </code>
@@ -84,13 +84,13 @@ public interface MessageListenerContainer extends SmartLifecycle {
 	 *
 	 * On {@link MessageListenerContainer#stop()} all {@link Subscription subscriptions} are cancelled prior to shutting
 	 * down the container itself.
-	 * <p />
+	 * <br />
 	 * Registering the very same {@link SubscriptionRequest} more than once simply returns the already existing
 	 * {@link Subscription}.
-	 * <p />
+	 * <br />
 	 * Unless a {@link Subscription} is {@link #remove(Subscription) removed} form the container, the {@link Subscription}
 	 * is restarted once the container itself is restarted.
-	 * <p />
+	 * <br />
 	 * Errors during {@link Message} retrieval lead to {@link Subscription#cancel() cannelation} of the underlying task.
 	 *
 	 * @param request must not be {@literal null}.
@@ -108,8 +108,8 @@ public interface MessageListenerContainer extends SmartLifecycle {
 	 * <code>
 	 *     MessageListenerContainer container = ...
 	 *
-	 *     MessageListener<ChangeStreamDocument<Document>, Document> messageListener = (message) -> message.getBody().toJson();
-	 *     ChangeStreamRequest<Document> request = new ChangeStreamRequest<>(messageListener, () -> "collection-name");
+	 *     MessageListener&lt;ChangeStreamDocument&lt;Document&gt;, Document&gt; messageListener = (message) -&gt; message.getBody().toJson();
+	 *     ChangeStreamRequest&lt;Document&gt; request = new ChangeStreamRequest&lt;&gt;(messageListener, () -&gt; "collection-name");
 	 *
 	 *     Subscription subscription = container.register(request, Document.class);
 	 * </code>
@@ -117,13 +117,13 @@ public interface MessageListenerContainer extends SmartLifecycle {
 	 *
 	 * On {@link MessageListenerContainer#stop()} all {@link Subscription subscriptions} are cancelled prior to shutting
 	 * down the container itself.
-	 * <p />
+	 * <br />
 	 * Registering the very same {@link SubscriptionRequest} more than once simply returns the already existing
 	 * {@link Subscription}.
-	 * <p />
+	 * <br />
 	 * Unless a {@link Subscription} is {@link #remove(Subscription) removed} form the container, the {@link Subscription}
 	 * is restarted once the container itself is restarted.
-	 * <p />
+	 * <br />
 	 * Errors during {@link Message} retrieval are delegated to the given {@link ErrorHandler}.
 	 *
 	 * @param request must not be {@literal null}.

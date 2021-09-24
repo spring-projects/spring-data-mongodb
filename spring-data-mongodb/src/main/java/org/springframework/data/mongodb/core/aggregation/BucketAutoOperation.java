@@ -28,8 +28,7 @@ import org.springframework.util.Assert;
  * We recommend to use the static factory method {@link Aggregation#bucketAuto(String, int)} instead of creating
  * instances of this class directly.
  *
- * @see <a href=
- *      "https://docs.mongodb.org/manual/reference/aggregation/bucketAuto/">https://docs.mongodb.org/manual/reference/aggregation/bucketAuto/</a>
+ * @see <a href="https://docs.mongodb.org/manual/reference/aggregation/bucketAuto/">https://docs.mongodb.org/manual/reference/aggregation/bucketAuto/</a>
  * @see BucketOperationSupport
  * @author Mark Paluch
  * @author Christoph Strobl
@@ -248,8 +247,7 @@ public class BucketAutoOperation extends BucketOperationSupport<BucketAutoOperat
 	/**
 	 * Supported MongoDB granularities.
 	 *
-	 * @see <a
-	 *      href="https://docs.mongodb.com/manual/reference/operator/aggregation/bucketAuto/#granularity>https://docs.mongodb.com/manual/reference/operator/aggregation/bucketAuto/#granularity</a>
+	 * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/bucketAuto/#granularity">https://docs.mongodb.com/manual/reference/operator/aggregation/bucketAuto/#granularity</a>
 	 * @author Mark Paluch
 	 */
 	public enum Granularities implements Granularity {

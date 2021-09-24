@@ -23,7 +23,7 @@ import org.springframework.lang.Nullable;
 
 
 /**
- * Script operations on {@link com.mongodb.DB} level. Allows interaction with server side JavaScript functions.
+ * Script operations on {@link com.mongodb.client.MongoDatabase} level. Allows interaction with server side JavaScript functions.
  *
  * @author Christoph Strobl
  * @author Oliver Gierke
@@ -72,10 +72,10 @@ public interface ScriptOperations {
 	Object call(String scriptName, Object... args);
 
 	/**
-	 * Checks {@link DB} for existence of {@link ServerSideJavaScript} with given name.
+	 * Checks {@link com.mongodb.client.MongoDatabase} for existence of {@literal ServerSideJavaScript} with given name.
 	 *
 	 * @param scriptName must not be {@literal null} or empty.
-	 * @return false if no {@link ServerSideJavaScript} with given name exists.
+	 * @return false if no {@literal ServerSideJavaScript} with given name exists.
 	 */
 	boolean exists(String scriptName);
 

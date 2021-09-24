@@ -29,14 +29,14 @@ import org.springframework.data.annotation.Persistent;
  * {@link #shardKey()} is used to distribute documents across shards. <br />
  * Please see the <a href="https://docs.mongodb.com/manual/sharding/">MongoDB Documentation</a> for more information
  * about requirements and limitations of sharding.
- * <p/>
+ * <br />
  * Spring Data adds the shard key to filter queries used for
  * {@link com.mongodb.client.MongoCollection#replaceOne(org.bson.conversions.Bson, Object)} operations triggered by
  * {@code save} operations on {@link org.springframework.data.mongodb.core.MongoOperations} and
  * {@link org.springframework.data.mongodb.core.ReactiveMongoOperations} as well as {@code update/upsert} operations
  * replacing/upserting a single existing document as long as the given
  * {@link org.springframework.data.mongodb.core.query.UpdateDefinition} holds a full copy of the entity.
- * <p/>
+ * <br />
  * All other operations that require the presence of the {@literal shard key} in the filter query need to provide the
  * information via the {@link org.springframework.data.mongodb.core.query.Query} parameter when invoking the method.
  *
@@ -62,7 +62,7 @@ public @interface Sharded {
 	/**
 	 * The shard key determines the distribution of the collection's documents among the cluster's shards. The shard key
 	 * is either a single or multiple indexed properties that exist in every document in the collection.
-	 * <p/>
+	 * <br />
 	 * By default the {@literal id} property is used for sharding. <br />
 	 * <strong>NOTE</strong> Required indexes are not created automatically. Create these either externally, via
 	 * {@link org.springframework.data.mongodb.core.index.IndexOperations#ensureIndex(org.springframework.data.mongodb.core.index.IndexDefinition)}
