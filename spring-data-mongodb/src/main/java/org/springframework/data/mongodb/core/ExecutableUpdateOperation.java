@@ -89,7 +89,7 @@ public interface ExecutableUpdateOperation {
 
 	/**
 	 * Trigger
-	 * <a href="https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndReplace/">findOneAndReplace<a/>
+	 * <a href="https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndReplace/">findOneAndReplace</a>
 	 * execution by calling one of the terminating methods.
 	 *
 	 * @author Mark Paluch

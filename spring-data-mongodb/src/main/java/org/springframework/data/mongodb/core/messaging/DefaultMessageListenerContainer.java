@@ -36,7 +36,7 @@ import org.springframework.util.ObjectUtils;
  * Simple {@link Executor} based {@link MessageListenerContainer} implementation for running {@link Task tasks} like
  * listening to MongoDB <a href="https://docs.mongodb.com/manual/changeStreams/">Change Streams</a> and tailable
  * cursors.
- * <p />
+ * <br />
  * This message container creates long-running tasks that are executed on {@link Executor}.
  *
  * @author Christoph Strobl

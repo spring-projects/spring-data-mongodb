@@ -139,7 +139,7 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 	 * Generates an {@link GroupOperationBuilder} for a {@code $sum}-expression.
 	 * <p>
 	 * Count expressions are emulated via {@code $sum: 1}.
-	 * <p>
+	 * </p>
 	 *
 	 * @return
 	 */

@@ -35,7 +35,7 @@ import com.mongodb.session.ClientSession;
 /**
  * {@link MethodInterceptor} implementation looking up and invoking an alternative target method having
  * {@link ClientSession} as its first argument. This allows seamless integration with the existing code base.
- * <p />
+ * <br />
  * The {@link MethodInterceptor} is aware of methods on {@code MongoCollection} that my return new instances of itself
  * like (eg. {@link com.mongodb.reactivestreams.client.MongoCollection#withWriteConcern(WriteConcern)} and decorate them
  * if not already proxied.

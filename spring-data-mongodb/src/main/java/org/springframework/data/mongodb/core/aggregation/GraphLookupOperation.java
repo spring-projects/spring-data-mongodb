@@ -36,8 +36,7 @@ import org.springframework.util.ClassUtils;
  * We recommend to use the static factory method {@link Aggregation#graphLookup(String)} instead of creating instances
  * of this class directly.
  *
- * @see <a href=
- *      "https://docs.mongodb.org/manual/reference/aggregation/graphLookup/">https://docs.mongodb.org/manual/reference/aggregation/graphLookup/</a>
+ * @see <a href="https://docs.mongodb.org/manual/reference/aggregation/graphLookup/">https://docs.mongodb.org/manual/reference/aggregation/graphLookup/</a>
  * @author Mark Paluch
  * @author Christoph Strobl
  * @since 1.10

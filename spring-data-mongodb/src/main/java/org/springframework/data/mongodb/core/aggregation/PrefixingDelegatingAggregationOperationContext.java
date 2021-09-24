@@ -30,7 +30,7 @@ import org.springframework.lang.Nullable;
 /**
  * {@link AggregationOperationContext} implementation prefixing non-command keys on root level with the given prefix.
  * Useful when mapping fields to domain specific types while having to prefix keys for query purpose.
- * <p />
+ * <br />
  * Fields to be excluded from prefixing my be added to a {@literal denylist}.
  *
  * @author Christoph Strobl

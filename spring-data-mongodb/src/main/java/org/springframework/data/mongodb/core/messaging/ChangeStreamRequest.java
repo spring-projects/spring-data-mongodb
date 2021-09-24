@@ -35,13 +35,13 @@ import com.mongodb.client.model.changestream.FullDocument;
  * {@link SubscriptionRequest} implementation to be used for listening to
  * <a href="https://docs.mongodb.com/manual/changeStreams/">Change Streams</a> via a {@link MessageListenerContainer}
  * using the synchronous MongoDB Java driver.
- * <p/>
+ * <br />
  * The most trivial use case is subscribing to all events of a specific {@link com.mongodb.client.MongoCollection
  * collection}
  *
  * <pre>
  * <code>
- *     ChangeStreamRequest<Document> request = new ChangeStreamRequest<>(System.out::println, () -> "collection-name");
+ *     ChangeStreamRequest&lt;Document&gt; request = new ChangeStreamRequest&lt;&gt;(System.out::println, () -> "collection-name");
  * </code>
  * </pre>
  *
@@ -50,7 +50,7 @@ import com.mongodb.client.model.changestream.FullDocument;
  *
  * <pre>
  * <code>
- *     ChangeStreamRequest<Document> request = new ChangeStreamRequest<>(System.out::println, RequestOptions.justDatabase("test"));
+ *     ChangeStreamRequest&lt;Document&gt; request = new ChangeStreamRequest&lt;&gt;(System.out::println, RequestOptions.justDatabase("test"));
  * </code>
  * </pre>
  *
@@ -63,7 +63,7 @@ import com.mongodb.client.model.changestream.FullDocument;
  *         .returnFullDocumentOnUpdate()
  *         .build();
  *
- *     ChangeStreamRequest<Document> request = new ChangeStreamRequest<>(System.out::println, new ChangeStreamRequestOptions("collection-name", options));
+ *     ChangeStreamRequest&lt;Document&gt; request = new ChangeStreamRequest&lt;&gt;(System.out::println, new ChangeStreamRequestOptions("collection-name", options));
  * </code>
  * </pre>
  *
@@ -72,7 +72,7 @@ import com.mongodb.client.model.changestream.FullDocument;
  *
  * <pre>
  * <code>
- *     ChangeStreamRequest<Document> request = ChangeStreamRequest.builder()
+ *     ChangeStreamRequest&lt;Document&gt; request = ChangeStreamRequest.builder()
  *         .collection("collection-name")
  *         .publishTo(System.out::println)
  *         .filter(newAggregation(match(where("age").is(7))))
@@ -310,13 +310,13 @@ public class ChangeStreamRequest<T>
 
 		/**
 		 * Set the filter to apply.
-		 * <p/>
+		 * <br />
 		 * Fields on aggregation expression root level are prefixed to map to fields contained in
 		 * {@link ChangeStreamDocument#getFullDocument() fullDocument}. However {@literal operationType}, {@literal ns},
 		 * {@literal documentKey} and {@literal fullDocument} are reserved words that will be omitted, and therefore taken
 		 * as given, during the mapping procedure. You may want to have a look at the
 		 * <a href="https://docs.mongodb.com/manual/reference/change-events/">structure of Change Events</a>.
-		 * <p/>
+		 * <br />
 		 * Use {@link org.springframework.data.mongodb.core.aggregation.TypedAggregation} to ensure filter expressions are
 		 * mapped to domain type fields.
 		 *

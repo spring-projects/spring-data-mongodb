@@ -30,7 +30,7 @@ import org.springframework.util.CollectionUtils;
 
 /**
  * Gateway to {@literal $function} and {@literal $accumulator} aggregation operations.
- * <p />
+ * <br />
  * Using {@link ScriptOperators} as part of the {@link Aggregation} requires MongoDB server to have
  * <a href="https://docs.mongodb.com/master/core/server-side-javascript/">server-side JavaScript</a> execution
  * <a href="https://docs.mongodb.com/master/reference/configuration-options/#security.javascriptEnabled">enabled</a>.
@@ -43,7 +43,7 @@ public class ScriptOperators {
 
 	/**
 	 * Create a custom aggregation
-	 * <a href="https://docs.mongodb.com/master/reference/operator/aggregation/function/">$function<a /> in JavaScript.
+	 * <a href="https://docs.mongodb.com/master/reference/operator/aggregation/function/">$function</a> in JavaScript.
 	 *
 	 * @param body The function definition. Must not be {@literal null}.
 	 * @return new instance of {@link Function}.
@@ -53,8 +53,8 @@ public class ScriptOperators {
 	}
 
 	/**
-	 * Create a custom <a href="https://docs.mongodb.com/master/reference/operator/aggregation/accumulator/">$accumulator
-	 * operator</a> in Javascript.
+	 * Create a custom <a href="https://docs.mongodb.com/master/reference/operator/aggregation/accumulator/">$accumulator operator</a>
+	 * in Javascript.
 	 *
 	 * @return new instance of {@link AccumulatorInitBuilder}.
 	 */
@@ -65,7 +65,7 @@ public class ScriptOperators {
 	/**
 	 * {@link Function} defines a custom aggregation
 	 * <a href="https://docs.mongodb.com/master/reference/operator/aggregation/function/">$function</a> in JavaScript.
-	 * <p />
+	 * <br />
 	 * <code class="java">
 	 * {
 	 *   $function: {
@@ -75,7 +75,7 @@ public class ScriptOperators {
 	 *   }
 	 * }
 	 * </code>
-	 * <p />
+	 * <br />
 	 * {@link Function} cannot be used as part of {@link org.springframework.data.mongodb.core.schema.MongoJsonSchema
 	 * schema} validation query expression. <br />
 	 * <b>NOTE:</b> <a href="https://docs.mongodb.com/master/core/server-side-javascript/">Server-Side JavaScript</a>
@@ -179,7 +179,7 @@ public class ScriptOperators {
 	 * <a href="https://docs.mongodb.com/master/reference/operator/aggregation/accumulator/">$accumulator operator</a>,
 	 * one that maintains its state (e.g. totals, maximums, minimums, and related data) as documents progress through the
 	 * pipeline, in JavaScript.
-	 * <p />
+	 * <br />
 	 * <code class="java">
 	 * {
 	 *   $accumulator: {
@@ -193,7 +193,7 @@ public class ScriptOperators {
 	 *   }
 	 * }
 	 * </code>
-	 * <p />
+	 * <br />
 	 * {@link Accumulator} can be used as part of {@link GroupOperation $group}, {@link BucketOperation $bucket} and
 	 * {@link BucketAutoOperation $bucketAuto} pipeline stages. <br />
 	 * <b>NOTE:</b> <a href="https://docs.mongodb.com/master/core/server-side-javascript/">Server-Side JavaScript</a>
@@ -241,7 +241,7 @@ public class ScriptOperators {
 			/**
 			 * Define the {@code init} {@link Function} for the {@link Accumulator accumulators} initial state. The function
 			 * receives its arguments from the {@link Function#args(Object...) initArgs} array expression.
-			 * <p />
+			 * <br />
 			 * <code class="java">
 			 * function(initArg1, initArg2, ...) {
 			 *   ...
@@ -259,7 +259,7 @@ public class ScriptOperators {
 			/**
 			 * Define the {@code init} function for the {@link Accumulator accumulators} initial state. The function receives
 			 * its arguments from the {@link AccumulatorInitArgsBuilder#initArgs(Object...)} array expression.
-			 * <p />
+			 * <br />
 			 * <code class="java">
 			 * function(initArg1, initArg2, ...) {
 			 *   ...
@@ -308,7 +308,7 @@ public class ScriptOperators {
 			 * Set the {@code accumulate} {@link Function} that updates the state for each document. The functions first
 			 * argument is the current {@code state}, additional arguments can be defined via {@link Function#args(Object...)
 			 * accumulateArgs}.
-			 * <p />
+			 * <br />
 			 * <code class="java">
 			 * function(state, accumArg1, accumArg2, ...) {
 			 *   ...
@@ -327,7 +327,7 @@ public class ScriptOperators {
 			 * Set the {@code accumulate} function that updates the state for each document. The functions first argument is
 			 * the current {@code state}, additional arguments can be defined via
 			 * {@link AccumulatorAccumulateArgsBuilder#accumulateArgs(Object...)}.
-			 * <p />
+			 * <br />
 			 * <code class="java">
 			 * function(state, accumArg1, accumArg2, ...) {
 			 *   ...
@@ -370,7 +370,7 @@ public class ScriptOperators {
 			 * Set the {@code merge} function used to merge two internal states. <br />
 			 * This might be required because the operation is run on a sharded cluster or when the operator exceeds its
 			 * memory limit.
-			 * <p />
+			 * <br />
 			 * <code class="java">
 			 * function(state1, state2) {
 			 *   ...
@@ -389,7 +389,7 @@ public class ScriptOperators {
 			/**
 			 * Set the {@code finalize} function used to update the result of the accumulation when all documents have been
 			 * processed.
-			 * <p />
+			 * <br />
 			 * <code class="java">
 			 * function(state) {
 			 *   ...
@@ -425,7 +425,7 @@ public class ScriptOperators {
 			/**
 			 * Define the {@code init} function for the {@link Accumulator accumulators} initial state. The function receives
 			 * its arguments from the {@link #initArgs(Object...)} array expression.
-			 * <p />
+			 * <br />
 			 * <code class="java">
 			 * function(initArg1, initArg2, ...) {
 			 *   ...
@@ -461,7 +461,7 @@ public class ScriptOperators {
 			/**
 			 * Set the {@code accumulate} function that updates the state for each document. The functions first argument is
 			 * the current {@code state}, additional arguments can be defined via {@link #accumulateArgs(Object...)}.
-			 * <p />
+			 * <br />
 			 * <code class="java">
 			 * function(state, accumArg1, accumArg2, ...) {
 			 *   ...
@@ -500,7 +500,7 @@ public class ScriptOperators {
 			 * Set the {@code merge} function used to merge two internal states. <br />
 			 * This might be required because the operation is run on a sharded cluster or when the operator exceeds its
 			 * memory limit.
-			 * <p />
+			 * <br />
 			 * <code class="java">
 			 * function(state1, state2) {
 			 *   ...
@@ -537,7 +537,7 @@ public class ScriptOperators {
 			/**
 			 * Set the {@code finalize} function used to update the result of the accumulation when all documents have been
 			 * processed.
-			 * <p />
+			 * <br />
 			 * <code class="java">
 			 * function(state) {
 			 *   ...

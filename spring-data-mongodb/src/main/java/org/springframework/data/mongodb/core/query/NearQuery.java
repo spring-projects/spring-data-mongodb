@@ -40,7 +40,7 @@ import org.springframework.util.ObjectUtils;
  * actual type within the document is of no concern at this point.<br />
  * To avoid a serious headache make sure to set the {@link Metric} to the desired unit of measure which ensures the
  * distance to be calculated correctly.<br />
- * <p />
+ * <br />
  * In other words: <br />
  * Assume you've got 5 Documents like the ones below <br />
  * 

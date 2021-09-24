@@ -251,7 +251,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	/**
 	 * Set the {@link EntityCallbacks} instance to use when invoking
 	 * {@link org.springframework.data.mapping.callback.EntityCallback callbacks} like the {@link AfterConvertCallback}.
-	 * <p />
+	 * <br />
 	 * Overrides potentially existing {@link EntityCallbacks}.
 	 *
 	 * @param entityCallbacks must not be {@literal null}.

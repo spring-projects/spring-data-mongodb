@@ -91,10 +91,10 @@ public interface ReactiveFindOperation {
 		 * Get all matching elements using a {@link com.mongodb.CursorType#TailableAwait tailable cursor}. The stream will
 		 * not be completed unless the {@link org.reactivestreams.Subscription} is
 		 * {@link org.reactivestreams.Subscription#cancel() canceled}.
-		 * <p />
+		 * <br />
 		 * However, the stream may become dead, or invalid, if either the query returns no match or the cursor returns the
 		 * document at the "end" of the collection and then the application deletes that document.
-		 * <p />
+		 * <br />
 		 * A stream that is no longer in use must be {@link reactor.core.Disposable#dispose()} disposed} otherwise the
 		 * streams will linger and exhaust resources. <br/>
 		 * <strong>NOTE:</strong> Requires a capped collection.
@@ -106,7 +106,7 @@ public interface ReactiveFindOperation {
 
 		/**
 		 * Get the number of matching elements.
-		 * <p />
+		 * <br />
 		 * This method uses an
 		 * {@link com.mongodb.reactivestreams.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
 		 * aggregation execution} even for empty {@link Query queries} which may have an impact on performance, but

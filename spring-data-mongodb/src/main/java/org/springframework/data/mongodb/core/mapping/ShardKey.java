@@ -27,7 +27,7 @@ import org.springframework.util.ObjectUtils;
 /**
  * Value object representing an entities <a href="https://docs.mongodb.com/manual/core/sharding-shard-key/">Shard
  * Key</a> used to distribute documents across a sharded MongoDB cluster.
- * <p />
+ * <br />
  * {@link ShardKey#isImmutable() Immutable} shard keys indicates a fixed value that is not updated (see
  * <a href="https://docs.mongodb.com/manual/core/sharding-shard-key/#change-a-document-s-shard-key-value">MongoDB
  * Reference: Change a Document's Shard Key Value</a>), which allows to skip server round trips in cases where a

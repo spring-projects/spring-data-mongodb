@@ -87,7 +87,7 @@ public @interface Query {
 	 * <code>
 	 *
 	 * 		&#64;Query(sort = "{ age : -1 }") // order by age descending
-	 * 		List<Person> findByFirstname(String firstname);
+	 * 		List&lt;Person&gt; findByFirstname(String firstname);
 	 * </code>
 	 * </pre>
 	 *
@@ -102,23 +102,23 @@ public @interface Query {
 	 * <pre class="code">
 	 * // Fixed value
 	 * &#64;Query(collation = "en_US")
-	 * List<Entry> findAllByFixedCollation();
+	 * List&lt;Entry&gt; findAllByFixedCollation();
 	 *
 	 * // Fixed value as Document
 	 * &#64;Query(collation = "{ 'locale' :  'en_US' }")
-	 * List<Entry> findAllByFixedJsonCollation();
+	 * List&lt;Entry&gt; findAllByFixedJsonCollation();
 	 *
 	 * // Dynamic value as String
 	 * &#64;Query(collation = "?0")
-	 * List<Entry> findAllByDynamicCollation(String collation);
+	 * List&lt;Entry&gt; findAllByDynamicCollation(String collation);
 	 *
 	 * // Dynamic value as Document
 	 * &#64;Query(collation = "{ 'locale' :  ?0 }")
-	 * List<Entry> findAllByDynamicJsonCollation(String collation);
+	 * List&lt;Entry&gt; findAllByDynamicJsonCollation(String collation);
 	 *
 	 * // SpEL expression
 	 * &#64;Query(collation = "?#{[0]}")
-	 * List<Entry> findAllByDynamicSpElCollation(String collation);
+	 * List&lt;Entry&gt; findAllByDynamicSpElCollation(String collation);
 	 * </pre>
 	 *
 	 * @return an empty {@link String} by default.

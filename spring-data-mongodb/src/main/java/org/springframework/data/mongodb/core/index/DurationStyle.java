@@ -27,7 +27,7 @@ import org.springframework.util.StringUtils;
 
 /**
  * Duration format styles.
- * <p/>
+ * <br />
  * Fork of {@code org.springframework.boot.convert.DurationStyle}.
  *
  * @author Phillip Webb

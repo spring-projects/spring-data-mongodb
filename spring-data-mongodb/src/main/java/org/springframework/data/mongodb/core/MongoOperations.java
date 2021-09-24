@@ -58,7 +58,7 @@ import com.mongodb.client.result.UpdateResult;
  * Interface that specifies a basic set of MongoDB operations. Implemented by {@link MongoTemplate}. Not often used but
  * a useful option for extensibility and testability (as it can be easily mocked, stubbed, or be the target of a JDK
  * proxy).
- * <p/>
+ * <br />
  * <strong>NOTE:</strong> Some operations cannot be executed within a MongoDB transaction. Please refer to the MongoDB
  * specific documentation to learn more about <a href="https://docs.mongodb.com/manual/core/transactions/">Multi
  * Document Transactions</a>.
@@ -125,7 +125,7 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Executes a {@link DbCallback} translating any exceptions as necessary.
-	 * <p/>
+	 * <br />
 	 * Allows for returning a result object, that is a domain object or a collection of domain objects.
 	 *
 	 * @param action callback object that specifies the MongoDB actions to perform on the passed in DB instance. Must not
@@ -138,7 +138,7 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Executes the given {@link CollectionCallback} on the entity collection of the specified class.
-	 * <p/>
+	 * <br />
 	 * Allows for returning a result object, that is a domain object or a collection of domain objects.
 	 *
 	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
@@ -151,7 +151,7 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Executes the given {@link CollectionCallback} on the collection of the given name.
-	 * <p/>
+	 * <br />
 	 * Allows for returning a result object, that is a domain object or a collection of domain objects.
 	 *
 	 * @param collectionName the name of the collection that specifies which {@link MongoCollection} instance will be
@@ -176,7 +176,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	/**
 	 * Obtain a {@link ClientSession session} bound instance of {@link SessionScoped} binding the {@link ClientSession}
 	 * provided by the given {@link Supplier} to each and every command issued against MongoDB.
-	 * <p/>
+	 * <br />
 	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle. Use the
 	 * {@link SessionScoped#execute(SessionCallback, Consumer)} hook to potentially close the {@link ClientSession}.
 	 *
@@ -212,7 +212,7 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Obtain a {@link ClientSession} bound instance of {@link MongoOperations}.
-	 * <p/>
+	 * <br />
 	 * <strong>Note:</strong> It is up to the caller to manage the {@link ClientSession} lifecycle.
 	 *
 	 * @param session must not be {@literal null}.
@@ -300,7 +300,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * is created on first interaction with the server. Collections can be explicitly created via
 	 * {@link #createCollection(Class)}. Please make sure to check if the collection {@link #collectionExists(Class)
 	 * exists} first.
-	 * <p/>
+	 * <br />
 	 * Translate any exceptions as necessary.
 	 *
 	 * @param collectionName name of the collection. Must not be {@literal null}.
@@ -310,7 +310,7 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Check to see if a collection with a name indicated by the entity class exists.
-	 * <p/>
+	 * <br />
 	 * Translate any exceptions as necessary.
 	 *
 	 * @param entityClass class that determines the name of the collection. Must not be {@literal null}.
@@ -320,7 +320,7 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Check to see if a collection with a given name exists.
-	 * <p/>
+	 * <br />
 	 * Translate any exceptions as necessary.
 	 *
 	 * @param collectionName name of the collection. Must not be {@literal null}.
@@ -330,7 +330,7 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Drop the collection with the name indicated by the entity class.
-	 * <p/>
+	 * <br />
 	 * Translate any exceptions as necessary.
 	 *
 	 * @param entityClass class that determines the collection to drop/delete. Must not be {@literal null}.
@@ -339,7 +339,7 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Drop the collection with the given name.
-	 * <p/>
+	 * <br />
 	 * Translate any exceptions as necessary.
 	 *
 	 * @param collectionName name of the collection to drop/delete.
@@ -403,10 +403,10 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Query for a list of objects of type T from the collection used by the entity class.
-	 * <p/>
+	 * <br />
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
 	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <p/>
+	 * <br />
 	 * If your collection does not contain a homogeneous collection of types, this operation will not be an efficient way
 	 * to map objects since the test for class type is done in the client and not on the server.
 	 *
@@ -417,10 +417,10 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Query for a list of objects of type T from the specified collection.
-	 * <p/>
+	 * <br />
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
 	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <p/>
+	 * <br />
 	 * If your collection does not contain a homogeneous collection of types, this operation will not be an efficient way
 	 * to map objects since the test for class type is done in the client and not on the server.
 	 *
@@ -539,11 +539,11 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Execute an aggregation operation backed by a Mongo DB {@link com.mongodb.client.AggregateIterable}.
-	 * <p/>
+	 * <br />
 	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.client.AggregateIterable} that
 	 * needs to be closed. The raw results will be mapped to the given entity class and are returned as stream. The name
 	 * of the inputCollection is derived from the inputType of the aggregation.
-	 * <p/>
+	 * <br />
 	 * Aggregation streaming can't be used with {@link AggregationOptions#isExplain() aggregation explain}. Enabling
 	 * explanation mode will throw an {@link IllegalArgumentException}.
 	 *
@@ -557,10 +557,10 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Execute an aggregation operation backed by a Mongo DB {@link com.mongodb.client.AggregateIterable}.
-	 * <p/>
+	 * <br />
 	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.client.AggregateIterable} that
 	 * needs to be closed. The raw results will be mapped to the given entity class.
-	 * <p/>
+	 * <br />
 	 * Aggregation streaming can't be used with {@link AggregationOptions#isExplain() aggregation explain}. Enabling
 	 * explanation mode will throw an {@link IllegalArgumentException}.
 	 *
@@ -576,10 +576,10 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Execute an aggregation operation backed by a Mongo DB {@link com.mongodb.client.AggregateIterable}.
-	 * <p/>
+	 * <br />
 	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.client.AggregateIterable} that
 	 * needs to be closed. The raw results will be mapped to the given entity class.
-	 * <p/>
+	 * <br />
 	 * Aggregation streaming can't be used with {@link AggregationOptions#isExplain() aggregation explain}. Enabling
 	 * explanation mode will throw an {@link IllegalArgumentException}.
 	 *
@@ -702,10 +702,10 @@ public interface MongoOperations extends FluentMongoOperations {
 	/**
 	 * Map the results of an ad-hoc query on the collection for the entity class to a single instance of an object of the
 	 * specified type.
-	 * <p/>
+	 * <br />
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
 	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <p/>
+	 * <br />
 	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
 	 *
@@ -720,10 +720,10 @@ public interface MongoOperations extends FluentMongoOperations {
 	/**
 	 * Map the results of an ad-hoc query on the specified collection to a single instance of an object of the specified
 	 * type.
-	 * <p/>
+	 * <br />
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
 	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <p/>
+	 * <br />
 	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
 	 *
@@ -768,10 +768,10 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Map the results of an ad-hoc query on the collection for the entity class to a List of the specified type.
-	 * <p/>
+	 * <br />
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
 	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <p/>
+	 * <br />
 	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
 	 *
@@ -784,10 +784,10 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Map the results of an ad-hoc query on the specified collection to a List of the specified type.
-	 * <p/>
+	 * <br />
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
 	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <p/>
+	 * <br />
 	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
 	 *
@@ -881,7 +881,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	}
 
 	/**
-	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify <a/>
+	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify </a>
 	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
@@ -897,7 +897,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> T findAndModify(Query query, UpdateDefinition update, Class<T> entityClass);
 
 	/**
-	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify <a/>
+	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify </a>
 	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query}.
 	 *
 	 * @param query the {@link Query} class that specifies the {@link Criteria} used to find a record and also an optional
@@ -914,7 +914,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> T findAndModify(Query query, UpdateDefinition update, Class<T> entityClass, String collectionName);
 
 	/**
-	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify <a/>
+	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify </a>
 	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
 	 * {@link FindAndModifyOptions} into account.
 	 *
@@ -934,7 +934,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	<T> T findAndModify(Query query, UpdateDefinition update, FindAndModifyOptions options, Class<T> entityClass);
 
 	/**
-	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify <a/>
+	 * Triggers <a href="https://docs.mongodb.org/manual/reference/method/db.collection.findAndModify/">findAndModify </a>
 	 * to apply provided {@link Update} on documents matching {@link Criteria} of given {@link Query} taking
 	 * {@link FindAndModifyOptions} into account.
 	 *
@@ -957,7 +957,7 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Triggers
-	 * <a href="https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndReplace/">findOneAndReplace<a/>
+	 * <a href="https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndReplace/">findOneAndReplace</a>
 	 * to replace a single document matching {@link Criteria} of given {@link Query} with the {@code replacement}
 	 * document. <br />
 	 * The collection name is derived from the {@literal replacement} type. <br />
@@ -977,7 +977,7 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Triggers
-	 * <a href="https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndReplace/">findOneAndReplace<a/>
+	 * <a href="https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndReplace/">findOneAndReplace</a>
 	 * to replace a single document matching {@link Criteria} of given {@link Query} with the {@code replacement}
 	 * document.<br />
 	 * Options are defaulted to {@link FindAndReplaceOptions#empty()}. <br />
@@ -997,7 +997,7 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Triggers
-	 * <a href="https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndReplace/">findOneAndReplace<a/>
+	 * <a href="https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndReplace/">findOneAndReplace</a>
 	 * to replace a single document matching {@link Criteria} of given {@link Query} with the {@code replacement} document
 	 * taking {@link FindAndReplaceOptions} into account.<br />
 	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
@@ -1018,7 +1018,7 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Triggers
-	 * <a href="https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndReplace/">findOneAndReplace<a/>
+	 * <a href="https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndReplace/">findOneAndReplace</a>
 	 * to replace a single document matching {@link Criteria} of given {@link Query} with the {@code replacement} document
 	 * taking {@link FindAndReplaceOptions} into account.<br />
 	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
@@ -1041,7 +1041,7 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Triggers
-	 * <a href="https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndReplace/">findOneAndReplace<a/>
+	 * <a href="https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndReplace/">findOneAndReplace</a>
 	 * to replace a single document matching {@link Criteria} of given {@link Query} with the {@code replacement} document
 	 * taking {@link FindAndReplaceOptions} into account.<br />
 	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
@@ -1066,7 +1066,7 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Triggers
-	 * <a href="https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndReplace/">findOneAndReplace<a/>
+	 * <a href="https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndReplace/">findOneAndReplace</a>
 	 * to replace a single document matching {@link Criteria} of given {@link Query} with the {@code replacement} document
 	 * taking {@link FindAndReplaceOptions} into account.<br />
 	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
@@ -1094,7 +1094,7 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Triggers
-	 * <a href="https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndReplace/">findOneAndReplace<a/>
+	 * <a href="https://docs.mongodb.com/manual/reference/method/db.collection.findOneAndReplace/">findOneAndReplace</a>
 	 * to replace a single document matching {@link Criteria} of given {@link Query} with the {@code replacement} document
 	 * taking {@link FindAndReplaceOptions} into account.<br />
 	 * <strong>NOTE:</strong> The replacement entity must not hold an {@literal id}.
@@ -1120,9 +1120,9 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * Map the results of an ad-hoc query on the collection for the entity type to a single instance of an object of the
 	 * specified type. The first document that matches the query is returned and also removed from the collection in the
 	 * database.
-	 * <p/>
+	 * <br />
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}.
-	 * <p/>
+	 * <br />
 	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
 	 *
@@ -1137,10 +1137,10 @@ public interface MongoOperations extends FluentMongoOperations {
 	/**
 	 * Map the results of an ad-hoc query on the specified collection to a single instance of an object of the specified
 	 * type. The first document that matches the query is returned and also removed from the collection in the database.
-	 * <p/>
+	 * <br />
 	 * The object is converted from the MongoDB native representation using an instance of {@see MongoConverter}. Unless
 	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <p/>
+	 * <br />
 	 * The query is specified as a {@link Query} which can be created either using the {@link BasicQuery} or the more
 	 * feature rich {@link Query}.
 	 *
@@ -1160,7 +1160,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
 	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
 	 * count all matches.
-	 * <p />
+	 * <br />
 	 * This method uses an
 	 * {@link com.mongodb.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
 	 * aggregation execution} even for empty {@link Query queries} which may have an impact on performance, but guarantees
@@ -1182,7 +1182,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
 	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
 	 * count all matches.
-	 * <p />
+	 * <br />
 	 * This method uses an
 	 * {@link com.mongodb.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
 	 * aggregation execution} even for empty {@link Query queries} which may have an impact on performance, but guarantees
@@ -1199,7 +1199,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	/**
 	 * Estimate the number of documents, in the collection {@link #getCollectionName(Class) identified by the given type},
 	 * based on collection statistics.
-	 * <p />
+	 * <br />
 	 * Please make sure to read the MongoDB reference documentation about limitations on eg. sharded cluster or inside
 	 * transactions.
 	 *
@@ -1215,7 +1215,7 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Estimate the number of documents in the given collection based on collection statistics.
-	 * <p />
+	 * <br />
 	 * Please make sure to read the MongoDB reference documentation about limitations on eg. sharded cluster or inside
 	 * transactions.
 	 *
@@ -1232,7 +1232,7 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
 	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
 	 * count all matches.
-	 * <p />
+	 * <br />
 	 * This method uses an
 	 * {@link com.mongodb.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
 	 * aggregation execution} even for empty {@link Query queries} which may have an impact on performance, but guarantees
@@ -1249,17 +1249,17 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Insert the object into the collection for the entity type of the object to save.
-	 * <p/>
+	 * <br />
 	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}.
-	 * <p/>
+	 * <br />
 	 * If your object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
 	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's
 	 * Type Conversion"</a> for more details.
-	 * <p/>
+	 * <br />
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
-	 * <p/>
+	 * <br />
 	 * The {@code objectToSave} must not be collection-like.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
@@ -1270,12 +1270,12 @@ public interface MongoOperations extends FluentMongoOperations {
 
 	/**
 	 * Insert the object into the specified collection.
-	 * <p/>
+	 * <br />
 	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}. Unless
 	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <p/>
+	 * <br />
 	 * Insert is used to initially store the object into the database. To update an existing object use the save method.
-	 * <p/>
+	 * <br />
 	 * The {@code objectToSave} must not be collection-like.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
@@ -1315,16 +1315,16 @@ public interface MongoOperations extends FluentMongoOperations {
 	/**
 	 * Save the object to the collection for the entity type of the object to save. This will perform an insert if the
 	 * object is not already present, that is an 'upsert'.
-	 * <p/>
+	 * <br />
 	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}. Unless
 	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <p/>
+	 * <br />
 	 * If your object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
 	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See
 	 * <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation" > Spring's
 	 * Type Conversion"</a> for more details.
-	 * <p />
+	 * <br />
 	 * The {@code objectToSave} must not be collection-like.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.
@@ -1336,16 +1336,15 @@ public interface MongoOperations extends FluentMongoOperations {
 	/**
 	 * Save the object to the specified collection. This will perform an insert if the object is not already present, that
 	 * is an 'upsert'.
-	 * <p/>
+	 * <br />
 	 * The object is converted to the MongoDB native representation using an instance of {@see MongoConverter}. Unless
 	 * configured otherwise, an instance of {@link MappingMongoConverter} will be used.
-	 * <p/>
+	 * <br />
 	 * If your object has an "Id' property, it will be set with the generated Id from MongoDB. If your Id property is a
 	 * String then MongoDB ObjectId will be used to populate that string. Otherwise, the conversion from ObjectId to your
-	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API. See <a
-	 * https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation">Spring's Type
-	 * Conversion"</a> for more details.
-	 * <p />
+	 * property type will be handled by Spring's BeanWrapper class that leverages Type Conversion API.
+	 * See <a href="https://docs.spring.io/spring/docs/current/spring-framework-reference/core.html#validation">Spring's Type Conversion</a> for more details.
+	 * <br />
 	 * The {@code objectToSave} must not be collection-like.
 	 *
 	 * @param objectToSave the object to store in the collection. Must not be {@literal null}.

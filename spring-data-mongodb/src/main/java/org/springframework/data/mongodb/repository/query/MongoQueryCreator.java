@@ -438,7 +438,7 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 	/**
 	 * Compute a {@link Type#BETWEEN} typed {@link Part} using {@link Criteria#gt(Object) $gt},
 	 * {@link Criteria#gte(Object) $gte}, {@link Criteria#lt(Object) $lt} and {@link Criteria#lte(Object) $lte}.
-	 * <p/>
+	 * <br />
 	 * In case the first {@literal value} is actually a {@link Range} the lower and upper bounds of the {@link Range} are
 	 * used according to their {@link Bound#isInclusive() inclusion} definition. Otherwise the {@literal value} is used
 	 * for {@literal $gt} and {@link Iterator#next() parameters.next()} as {@literal $lt}.

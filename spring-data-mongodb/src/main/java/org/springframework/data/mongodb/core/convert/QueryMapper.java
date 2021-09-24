@@ -759,7 +759,7 @@ public class QueryMapper {
 
 	/**
 	 * Returns whether the given {@link String} is a MongoDB keyword. The default implementation will check against the
-	 * set of registered keywords returned by {@link #getKeywords()}.
+	 * set of registered keywords.
 	 *
 	 * @param candidate
 	 * @return

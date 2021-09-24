@@ -24,6 +24,7 @@ import org.springframework.util.Assert;
  * following mapping rules.
  * <p>
  * <strong>Required Properties</strong>
+ * </p>
  * <ul>
  * <li>Properties of primitive type</li>
  * </ul>
@@ -45,7 +46,6 @@ import org.springframework.util.Assert;
  * {@link org.springframework.data.annotation.Id _id} properties using types that can be converted into
  * {@link org.bson.types.ObjectId} like {@link String} will be mapped to {@code type : 'object'} unless there is more
  * specific information available via the {@link org.springframework.data.mongodb.core.mapping.MongoId} annotation.
- * </p>
  *
  * @author Christoph Strobl
  * @since 2.2

@@ -28,7 +28,7 @@ import org.springframework.util.Assert;
  * containing duplicates, into a single result set that is handed over to the next stage. <br />
  * In order to remove duplicates it is possible to append a {@link GroupOperation} right after
  * {@link UnionWithOperation}.
- * <p />
+ * <br />
  * If the {@link UnionWithOperation} uses a
  * <a href="https://docs.mongodb.com/master/reference/operator/aggregation/unionWith/#unionwith-pipeline">pipeline</a>
  * to process documents, field names within the pipeline will be treated as is. In order to map domain type property

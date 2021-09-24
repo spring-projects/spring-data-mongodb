@@ -32,7 +32,7 @@ public interface ReactiveSessionCallback<T> {
 	/**
 	 * Execute operations against a MongoDB instance via session bound {@link ReactiveMongoOperations}. The session is
 	 * inferred directly into the operation so that no further interaction is necessary.
-	 * <p />
+	 * <br />
 	 * Please note that only Spring Data-specific abstractions like {@link ReactiveMongoOperations#find(Query, Class)} and
 	 * others are enhanced with the {@link com.mongodb.session.ClientSession}. When obtaining plain MongoDB gateway
 	 * objects like {@link com.mongodb.reactivestreams.client.MongoCollection} or

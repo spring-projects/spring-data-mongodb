@@ -31,7 +31,7 @@ public interface SessionCallback<T> {
 	/**
 	 * Execute operations against a MongoDB instance via session bound {@link MongoOperations}. The session is inferred
 	 * directly into the operation so that no further interaction is necessary.
-	 * <p />
+	 * <br />
 	 * Please note that only Spring Data-specific abstractions like {@link MongoOperations#find(Query, Class)} and others
 	 * are enhanced with the {@link com.mongodb.session.ClientSession}. When obtaining plain MongoDB gateway objects like
 	 * {@link com.mongodb.client.MongoCollection} or {@link com.mongodb.client.MongoDatabase} via eg.

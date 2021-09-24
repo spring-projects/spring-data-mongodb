@@ -71,7 +71,7 @@ public interface ReactiveChangeStreamOperation {
 		/**
 		 * Start listening to changes. The stream will not be completed unless the {@link org.reactivestreams.Subscription}
 		 * is {@link org.reactivestreams.Subscription#cancel() canceled}.
-		 * <p />
+		 * <br />
 		 * However, the stream may become dead, or invalid, if all watched collections, databases are dropped.
 		 */
 		Flux<ChangeStreamEvent<T>> listen();

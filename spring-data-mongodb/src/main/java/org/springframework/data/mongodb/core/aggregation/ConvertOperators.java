@@ -317,9 +317,9 @@ public class ConvertOperators {
 		 * <dt>1</dt>
 		 * <dd>double</dd>
 		 * <dt>2</dt>
-		 * <dd>string</li>
+		 * <dd>string</dd>
 		 * <dt>7</dt>
-		 * <dd>objectId</li>
+		 * <dd>objectId</dd>
 		 * <dt>8</dt>
 		 * <dd>bool</dd>
 		 * <dt>9</dt>

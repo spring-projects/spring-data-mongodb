@@ -33,8 +33,7 @@ import org.springframework.util.Assert;
  * </pre>
  *
  * @author Christoph Strobl
- * @see <a href=
- *      "https://docs.mongodb.com/manual/reference/operator/aggregation/redact/">https://docs.mongodb.com/manual/reference/operator/aggregation/redact/</a>
+ * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/redact/">https://docs.mongodb.com/manual/reference/operator/aggregation/redact/</a>
  * @since 3.0
  */
 public class RedactOperation implements AggregationOperation {

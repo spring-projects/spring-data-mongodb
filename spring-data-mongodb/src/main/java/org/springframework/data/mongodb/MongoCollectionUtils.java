@@ -20,8 +20,8 @@ import org.springframework.util.StringUtils;
 
 /**
  * Helper class featuring helper methods for working with MongoDb collections.
- * <p/>
- * <p/>
+ * <br />
+ * <br />
  * Mainly intended for internal use within the framework.
  *
  * @author Thomas Risberg

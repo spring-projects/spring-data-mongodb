@@ -38,21 +38,21 @@ import com.mongodb.reactivestreams.client.ClientSession;
  * A {@link org.springframework.transaction.ReactiveTransactionManager} implementation that manages
  * {@link com.mongodb.reactivestreams.client.ClientSession} based transactions for a single
  * {@link org.springframework.data.mongodb.ReactiveMongoDatabaseFactory}.
- * <p />
+ * <br />
  * Binds a {@link ClientSession} from the specified
  * {@link org.springframework.data.mongodb.ReactiveMongoDatabaseFactory} to the subscriber
  * {@link reactor.util.context.Context}.
- * <p />
+ * <br />
  * {@link org.springframework.transaction.TransactionDefinition#isReadOnly() Readonly} transactions operate on a
  * {@link ClientSession} and enable causal consistency, and also {@link ClientSession#startTransaction() start},
  * {@link com.mongodb.reactivestreams.client.ClientSession#commitTransaction() commit} or
  * {@link ClientSession#abortTransaction() abort} a transaction.
- * <p />
+ * <br />
  * Application code is required to retrieve the {@link com.mongodb.reactivestreams.client.MongoDatabase} via
  * {@link org.springframework.data.mongodb.ReactiveMongoDatabaseUtils#getDatabase(ReactiveMongoDatabaseFactory)} instead
  * of a standard {@link org.springframework.data.mongodb.ReactiveMongoDatabaseFactory#getMongoDatabase()} call. Spring
  * classes such as {@link org.springframework.data.mongodb.core.ReactiveMongoTemplate} use this strategy implicitly.
- * <p />
+ * <br />
  * By default failure of a {@literal commit} operation raises a {@link TransactionSystemException}. You can override
  * {@link #doCommit(TransactionSynchronizationManager, ReactiveMongoTransactionObject)} to implement the
  * <a href="https://docs.mongodb.com/manual/core/transactions/#retry-commit-operation">Retry Commit Operation</a>
@@ -71,11 +71,11 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 
 	/**
 	 * Create a new {@link ReactiveMongoTransactionManager} for bean-style usage.
-	 * <p />
+	 * <br />
 	 * <strong>Note:</strong>The {@link org.springframework.data.mongodb.ReactiveMongoDatabaseFactory db factory} has to
 	 * be {@link #setDatabaseFactory(ReactiveMongoDatabaseFactory)} set} before using the instance. Use this constructor
 	 * to prepare a {@link ReactiveMongoTransactionManager} via a {@link org.springframework.beans.factory.BeanFactory}.
-	 * <p />
+	 * <br />
 	 * Optionally it is possible to set default {@link TransactionOptions transaction options} defining
 	 * {@link com.mongodb.ReadConcern} and {@link com.mongodb.WriteConcern}.
 	 *
