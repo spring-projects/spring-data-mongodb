@@ -191,7 +191,22 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 					.getPersistentEntity(property.getTypeInformation().getComponentType());
 
 			if (persistentEntity == null) {
-				schemaProperty = schemaProperty.items(Collections.singleton(JsonSchemaObject.of(property.getActualType())));
+
+				if (ClassUtils.isAssignable(Enum.class, property.getActualType())) {
+
+					List<Object> possibleValues = new ArrayList<>();
+
+					for (Object enumValue : EnumSet.allOf((Class) property.getActualType())) {
+						possibleValues.add(converter.convertToMongoType(enumValue));
+					}
+
+					Class targetType = possibleValues.isEmpty() ? property.getActualType()
+							: possibleValues.iterator().next().getClass();
+					schemaProperty = schemaProperty
+							.items(Collections.singleton(JsonSchemaObject.of(targetType).possibleValues(possibleValues)));
+				} else {
+					schemaProperty = schemaProperty.items(Collections.singleton(JsonSchemaObject.of(property.getActualType())));
+				}
 			} else {
 
 				List<JsonSchemaProperty> nestedProperties = computePropertiesForEntity(Collections.emptyList(),
@@ -293,7 +308,6 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 
 		return mongoProperty.getFieldType() != mongoProperty.getActualType() ? Object.class : mongoProperty.getFieldType();
 	}
-
 
 	private static boolean isCollection(MongoPersistentProperty property) {
 		return property.isCollectionLike() && !property.getType().equals(byte[].class);
