@@ -30,6 +30,7 @@ import org.springframework.data.mongodb.core.aggregation.GraphLookupOperation.St
 import org.springframework.data.mongodb.core.aggregation.MergeOperation.MergeOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.ReplaceRootDocumentOperationBuilder;
 import org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.ReplaceRootOperationBuilder;
+import org.springframework.data.mongodb.core.aggregation.SearchOperation.SearchOperationBuilder;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.CriteriaDefinition;
 import org.springframework.data.mongodb.core.query.NearQuery;
@@ -314,6 +315,17 @@ public class Aggregation {
 	 */
 	public static ReplaceRootOperationBuilder replaceRoot() {
 		return ReplaceRootOperation.builder();
+	}
+	
+	/**
+	 * Factory method to create a new {@link SearchOperationBuilder} to configure a
+	 * {@link SearchOperation}.
+	 *
+	 * @return the {@literal SearchOperationBuilder}.
+	 * @since 1.10
+	 */
+	public static SearchOperationBuilder search() {
+		return SearchOperation.builder();
 	}
 
 	/**

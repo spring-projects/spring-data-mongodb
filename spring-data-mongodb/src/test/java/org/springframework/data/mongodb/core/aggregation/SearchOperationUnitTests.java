@@ -7,6 +7,10 @@ import java.util.ArrayList;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
 
+/**
+ * Unit tests for {@link SearchOperation}.
+ *
+ */
 public class SearchOperationUnitTests {
 
 	@Test
