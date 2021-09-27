@@ -16,12 +16,12 @@
 package org.springframework.data.mongodb.repository.custom;
 
 import org.springframework.data.mongodb.repository.User;
-import org.springframework.data.repository.reactive.RxJava2CrudRepository;
+import org.springframework.data.repository.reactive.RxJava3CrudRepository;
 
 /**
  * @author Mark Paluch
  */
 public interface CustomReactiveMongoRepository
-		extends RxJava2CrudRepository<User, String>, CustomReactiveMongoRepositoryCustom {
+		extends RxJava3CrudRepository<User, String>, CustomReactiveMongoRepositoryCustom {
 
 }
