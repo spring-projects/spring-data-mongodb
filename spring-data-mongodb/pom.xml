@@ -152,12 +152,6 @@
 
 		<!-- CDI -->
 		<!-- Dependency order required to build against CDI 1.0 and test with CDI 2.0 -->
-		<dependency>
-			<groupId>org.apache.geronimo.specs</groupId>
-			<artifactId>geronimo-jcdi_2.0_spec</artifactId>
-			<version>1.0.1</version>
-			<scope>optional</scope>
-		</dependency>
 
 		<dependency>
 			<groupId>javax.interceptor</groupId>
@@ -167,31 +161,48 @@
 		</dependency>
 
 		<dependency>
-			<groupId>javax.enterprise</groupId>
-			<artifactId>cdi-api</artifactId>
+			<groupId>jakarta.enterprise</groupId>
+			<artifactId>jakarta.enterprise.cdi-api</artifactId>
 			<version>${cdi}</version>
 			<scope>provided</scope>
 			<optional>true</optional>
 		</dependency>
 
 		<dependency>
-			<groupId>javax.annotation</groupId>
-			<artifactId>javax.annotation-api</artifactId>
-			<version>${javax-annotation-api}</version>
+			<groupId>jakarta.annotation</groupId>
+			<artifactId>jakarta.annotation-api</artifactId>
+			<version>${jakarta-annotation-api}</version>
 			<scope>test</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.apache.openwebbeans</groupId>
 			<artifactId>openwebbeans-se</artifactId>
+			<classifier>jakarta</classifier>
+			<version>${webbeans}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.openwebbeans</groupId>
+			<artifactId>openwebbeans-spi</artifactId>
+			<classifier>jakarta</classifier>
+			<version>${webbeans}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.openwebbeans</groupId>
+			<artifactId>openwebbeans-impl</artifactId>
+			<classifier>jakarta</classifier>
 			<version>${webbeans}</version>
 			<scope>test</scope>
 		</dependency>
 
 		<!-- JSR 303 Validation -->
 		<dependency>
-			<groupId>javax.validation</groupId>
-			<artifactId>validation-api</artifactId>
+			<groupId>jakarta.validation</groupId>
+			<artifactId>jakarta.validation-api</artifactId>
 			<version>${validation}</version>
 			<optional>true</optional>
 		</dependency>
@@ -206,15 +217,31 @@
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-validator</artifactId>
-			<version>5.4.3.Final</version>
+			<version>7.0.1.Final</version>
 			<scope>test</scope>
 		</dependency>
 
 		<dependency>
+			<groupId>jakarta.el</groupId>
+			<artifactId>jakarta.el-api</artifactId>
+			<version>4.0.0</version>
+			<scope>provided</scope>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
 			<groupId>org.glassfish</groupId>
-			<artifactId>javax.el</artifactId>
-			<version>3.0.1-b11</version>
-			<scope>test</scope>
+			<artifactId>jakarta.el</artifactId>
+			<version>4.0.2</version>
+			<scope>provided</scope>
+			<optional>true</optional>
+		</dependency>
+
+
+		<dependency>
+			<groupId>jakarta.enterprise</groupId>
+			<artifactId>jakarta.enterprise.cdi-api</artifactId>
+			<scope>provided</scope>
+			<optional>true</optional>
 		</dependency>
 
 		<dependency>
@@ -258,9 +285,9 @@
 		</dependency>
 
 		<dependency>
-			<groupId>javax.transaction</groupId>
-			<artifactId>jta</artifactId>
-			<version>1.1</version>
+			<groupId>jakarta.transaction</groupId>
+			<artifactId>jakarta.transaction-api</artifactId>
+			<version>2.0.0</version>
 			<scope>test</scope>
 		</dependency>
 

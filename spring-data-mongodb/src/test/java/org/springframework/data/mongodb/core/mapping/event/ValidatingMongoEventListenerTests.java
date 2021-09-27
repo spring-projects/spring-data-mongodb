@@ -17,7 +17,7 @@ package org.springframework.data.mongodb.core.mapping.event;
 
 import static org.assertj.core.api.Assertions.*;
 
-import javax.validation.ConstraintViolationException;
+import jakarta.validation.ConstraintViolationException;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

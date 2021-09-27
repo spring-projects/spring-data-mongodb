@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
-import javax.validation.constraints.Min;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 
 /**
  * Class used to test JSR-303 validation

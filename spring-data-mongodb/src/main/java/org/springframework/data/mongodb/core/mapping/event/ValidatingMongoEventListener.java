@@ -17,8 +17,8 @@ package org.springframework.data.mongodb.core.mapping.event;
 
 import java.util.Set;
 
-import javax.validation.ConstraintViolationException;
-import javax.validation.Validator;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Validator;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

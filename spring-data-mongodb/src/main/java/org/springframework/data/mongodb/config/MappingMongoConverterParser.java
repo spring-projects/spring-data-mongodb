@@ -80,7 +80,7 @@ import org.w3c.dom.Element;
 public class MappingMongoConverterParser implements BeanDefinitionParser {
 
 	private static final String BASE_PACKAGE = "base-package";
-	private static final boolean JSR_303_PRESENT = ClassUtils.isPresent("javax.validation.Validator",
+	private static final boolean JSR_303_PRESENT = ClassUtils.isPresent("jakarta.validation.Validator",
 			MappingMongoConverterParser.class.getClassLoader());
 
 	/* (non-Javadoc)
