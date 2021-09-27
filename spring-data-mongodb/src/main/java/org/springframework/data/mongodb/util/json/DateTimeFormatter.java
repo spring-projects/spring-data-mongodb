@@ -98,9 +98,9 @@ class DateTimeFormatter {
 
 		static {
 			try {
-				DATATYPE_CONVERTER_PARSE_DATE_TIME_METHOD = Class.forName("javax.xml.bind.DatatypeConverter")
+				DATATYPE_CONVERTER_PARSE_DATE_TIME_METHOD = Class.forName("jakarta.xml.bind.DatatypeConverter")
 						.getDeclaredMethod("parseDateTime", String.class);
-				DATATYPE_CONVERTER_PRINT_DATE_TIME_METHOD = Class.forName("javax.xml.bind.DatatypeConverter")
+				DATATYPE_CONVERTER_PRINT_DATE_TIME_METHOD = Class.forName("jakarta.xml.bind.DatatypeConverter")
 						.getDeclaredMethod("printDateTime", Calendar.class);
 			} catch (NoSuchMethodException e) {
 				throw new ExceptionInInitializerError(e);

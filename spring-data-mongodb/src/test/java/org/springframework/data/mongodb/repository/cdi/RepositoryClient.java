@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.repository.cdi;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 /**
  * @author Oliver Gierke
