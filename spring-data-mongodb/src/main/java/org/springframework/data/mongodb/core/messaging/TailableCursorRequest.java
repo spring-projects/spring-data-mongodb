@@ -28,13 +28,13 @@ import org.springframework.util.Assert;
  * {@link SubscriptionRequest} implementation to be used to listen to query results in a
  * <a href="https://docs.mongodb.com/manual/core/capped-collections/">Capped Collection</a> using a
  * <a href="https://docs.mongodb.com/manual/core/tailable-cursors/">Tailable Cursor</a>.
- * <p />
+ * <br />
  * The most trivial use case is subscribing to all events of a specific {@link com.mongodb.client.MongoCollection
  * collection}.
  *
  * <pre>
  * <code>
- *     TailableCursorRequest<Document> request = new TailableCursorRequest<>(System.out::println, () -> "collection-name");
+ *     TailableCursorRequest&lt;Document&gt; request = new TailableCursorRequest&lt;&gt;(System.out::println, () -> "collection-name");
  * </code>
  * </pre>
  *
@@ -43,7 +43,7 @@ import org.springframework.util.Assert;
  *
  * <pre>
  *   <code>
- *       TailableCursorRequest<Document> request = TailableCursorRequest.builder()
+ *       TailableCursorRequest&lt;Document&gt; request = TailableCursorRequest.builder()
  *           .collection("collection-name")
  *           .publishTo(System.out::println)
  *           .build();

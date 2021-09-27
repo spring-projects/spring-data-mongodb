@@ -31,8 +31,7 @@ import org.springframework.util.Assert;
  *
  * @author Christoph Strobl
  * @since 3.3
- * @see <a href=
- *      "https://docs.mongodb.com/manual/reference/operator/aggregation/setWindowFields/">https://docs.mongodb.com/manual/reference/operator/aggregation/setWindowFields/</a>
+ * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/setWindowFields/">https://docs.mongodb.com/manual/reference/operator/aggregation/setWindowFields/</a>
  */
 public class SetWindowFieldsOperation
 		implements AggregationOperation, FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation {

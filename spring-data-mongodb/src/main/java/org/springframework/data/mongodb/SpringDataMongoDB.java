@@ -48,7 +48,7 @@ public class SpringDataMongoDB {
 
 	/**
 	 * Fetches the "Implementation-Version" manifest attribute from the jar file.
-	 * <p />
+	 * <br />
 	 * Note that some ClassLoaders do not expose the package metadata, hence this class might not be able to determine the
 	 * version in all environments. In this case the current Major version is returned as a fallback.
 	 *

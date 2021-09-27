@@ -19,10 +19,10 @@ import java.time.Duration;
 
 /**
  * The {@link Subscription} is the link between the {@link SubscriptionRequest} and the actual running {@link Task}.
- * <p />
+ * <br />
  * Due to the asynchronous nature of the {@link Task} execution a {@link Subscription} might not immediately become
  * active. {@link #isActive()} provides an answer if the underlying {@link Task} is already running.
- * <p />
+ * <br />
  *
  * @author Christoph Strobl
  * @author Mark Paluch

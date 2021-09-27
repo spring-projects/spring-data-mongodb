@@ -24,8 +24,7 @@ import org.springframework.util.Assert;
  * We recommend to use the static factory method {@link Aggregation#count()} instead of creating instances of this class
  * directly.
  *
- * @see <a href=
- *      "https://docs.mongodb.com/manual/reference/operator/aggregation/count/#pipe._S_count">https://docs.mongodb.com/manual/reference/operator/aggregation/count/</a>
+ * @see <a href="https://docs.mongodb.com/manual/reference/operator/aggregation/count/#pipe._S_count">https://docs.mongodb.com/manual/reference/operator/aggregation/count/</a>
  * @author Mark Paluch
  * @since 1.10
  */

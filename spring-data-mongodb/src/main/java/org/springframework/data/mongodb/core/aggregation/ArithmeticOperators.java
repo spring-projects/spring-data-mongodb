@@ -825,7 +825,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link AggregationExpression} that calculates the inverse tangent of the the numeric value divided by
 		 * the given numeric value in the argument.
 		 *
-		 * @param the numeric value
+		 * @param value the numeric value
 		 * @return new instance of {@link ATan2}.
 		 * @since 3.3
 		 */
@@ -839,7 +839,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link AggregationExpression} that calculates the inverse tangent of the the numeric value divided by
 		 * the given field reference in the argument.
 		 *
-		 * @param the numeric value
+		 * @param fieldReference the numeric value
 		 * @return new instance of {@link ATan2}.
 		 * @since 3.3
 		 */
@@ -853,7 +853,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link AggregationExpression} that calculates the inverse tangent of the the numeric value divided by
 		 * the given {@link AggregationExpression} in the argument.
 		 *
-		 * @param the numeric value
+		 * @param expression the expression evaluating to a numeric value
 		 * @return new instance of {@link ATan2}.
 		 * @since 3.3
 		 */
@@ -2169,7 +2169,7 @@ public class ArithmeticOperators {
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the sine of a value that is measured in
 		 * {@link AngularUnit#RADIANS radians}.
-		 * <p />
+		 * <br />
 		 * Use {@code sinhOf("angle", DEGREES)} as shortcut for
 		 *
 		 * <pre>
@@ -2282,7 +2282,7 @@ public class ArithmeticOperators {
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic sine of a value that is measured in
 		 * the given {@link AngularUnit unit}.
-		 * <p />
+		 * <br />
 		 * Use {@code sinhOf("angle", DEGREES)} as shortcut for
 		 *
 		 * <pre>
@@ -2302,7 +2302,7 @@ public class ArithmeticOperators {
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic sine of a value that is measured in
 		 * {@link AngularUnit#RADIANS}.
-		 * <p />
+		 * <br />
 		 * Use {@code sinhOf("angle", DEGREES)} as shortcut for eg.
 		 * {@code sinhOf(ConvertOperators.valueOf("angle").degreesToRadians())}.
 		 *
@@ -2386,7 +2386,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the inverse sine of a value.
-		 * <p />
+		 * <br />
 		 *
 		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
 		 * @return new instance of {@link ASin}.
@@ -2436,7 +2436,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the inverse hyperbolic sine of a value.
-		 * <p />
+		 * <br />
 		 *
 		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
 		 * @return new instance of {@link ASinh}.
@@ -2478,7 +2478,7 @@ public class ArithmeticOperators {
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the cosine of a value that is measured in
 		 * {@link AngularUnit#RADIANS radians}.
-		 * <p />
+		 * <br />
 		 * Use {@code cosOf("angle", DEGREES)} as shortcut for
 		 *
 		 * <pre>
@@ -2589,7 +2589,7 @@ public class ArithmeticOperators {
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic cosine of a value that is measured in
 		 * the given {@link AngularUnit unit}.
-		 * <p />
+		 * <br />
 		 * Use {@code coshOf("angle", DEGREES)} as shortcut for
 		 *
 		 * <pre>
@@ -2607,7 +2607,7 @@ public class ArithmeticOperators {
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic cosine of a value that is measured in
 		 * {@link AngularUnit#RADIANS}.
-		 * <p />
+		 * <br />
 		 * Use {@code sinhOf("angle", DEGREES)} as shortcut for eg.
 		 * {@code sinhOf(ConvertOperators.valueOf("angle").degreesToRadians())}.
 		 *
@@ -2680,7 +2680,7 @@ public class ArithmeticOperators {
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the tangent of a value that is measured in
 		 * {@link AngularUnit#RADIANS radians}.
-		 * <p />
+		 * <br />
 		 * Use {@code tanOf("angle", DEGREES)} as shortcut for
 		 *
 		 * <pre>
@@ -2859,7 +2859,7 @@ public class ArithmeticOperators {
 		 * Creates a new {@link AggregationExpression} that calculates the inverse tangent of of y / x, where y and x are
 		 * the first and second values passed to the expression respectively.
 		 *
-		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
+		 * @param fieldReference anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
 		 *          numeric value.
 		 * @return new instance of {@link ATan2}.
 		 */
@@ -2873,7 +2873,7 @@ public class ArithmeticOperators {
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic tangent of a value that is measured in
 		 * {@link AngularUnit#RADIANS}.
 		 *
-		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
+		 * @param expression anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
 		 *          numeric value.
 		 * @return new instance of {@link ATan2}.
 		 */
@@ -2927,7 +2927,7 @@ public class ArithmeticOperators {
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic tangent of a value that is measured in
 		 * the given {@link AngularUnit unit}.
-		 * <p />
+		 * <br />
 		 * Use {@code tanhOf("angle", DEGREES)} as shortcut for
 		 *
 		 * <pre>
@@ -2945,7 +2945,7 @@ public class ArithmeticOperators {
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the hyperbolic tangent of a value that is measured in
 		 * {@link AngularUnit#RADIANS}.
-		 * <p />
+		 * <br />
 		 * Use {@code sinhOf("angle", DEGREES)} as shortcut for eg.
 		 * {@code sinhOf(ConvertOperators.valueOf("angle").degreesToRadians())}.
 		 *
@@ -3029,7 +3029,7 @@ public class ArithmeticOperators {
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the inverse hyperbolic tangent of a value.
-		 * <p />
+		 * <br />
 		 *
 		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
 		 * @return new instance of {@link ATanh}.

@@ -428,7 +428,7 @@ public class CollectionOptions {
 		/**
 		 * Get the {@code validationAction} to perform.
 		 *
-		 * @return @return {@link Optional#empty()} if not set.
+		 * @return {@link Optional#empty()} if not set.
 		 */
 		public Optional<ValidationAction> getValidationAction() {
 			return Optional.ofNullable(validationAction);

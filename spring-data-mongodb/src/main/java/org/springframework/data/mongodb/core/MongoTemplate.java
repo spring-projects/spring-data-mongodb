@@ -338,7 +338,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	/**
 	 * Set the {@link EntityCallbacks} instance to use when invoking
 	 * {@link org.springframework.data.mapping.callback.EntityCallback callbacks} like the {@link BeforeSaveCallback}.
-	 * <p />
+	 * <br />
 	 * Overrides potentially existing {@link EntityCallbacks}.
 	 *
 	 * @param entityCallbacks must not be {@literal null}.
@@ -2664,7 +2664,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	/**
 	 * Map the results of an ad-hoc query on the default MongoDB collection to an object using the template's converter.
 	 * The first document that matches the query is returned and also removed from the collection in the database.
-	 * <p/>
+	 * <br />
 	 * The query document is specified as a standard Document and so is the fields specification.
 	 *
 	 * @param collectionName name of the collection to retrieve the objects from
@@ -3493,7 +3493,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	/**
 	 * {@link MongoTemplate} extension bound to a specific {@link ClientSession} that is applied when interacting with the
 	 * server through the driver API.
-	 * <p />
+	 * <br />
 	 * The prepare steps for {@link MongoDatabase} and {@link MongoCollection} proxy the target and invoke the desired
 	 * target method matching the actual arguments plus a {@link ClientSession}.
 	 *

@@ -172,8 +172,7 @@ public abstract class MongoConfigurationSupport {
 
 	/**
 	 * Configures whether to abbreviate field names for domain objects by configuring a
-	 * {@link CamelCaseAbbreviatingFieldNamingStrategy} on the {@link MongoMappingContext} instance created. For advanced
-	 * customization needs, consider overriding {@link #mappingMongoConverter()}.
+	 * {@link CamelCaseAbbreviatingFieldNamingStrategy} on the {@link MongoMappingContext} instance created.
 	 *
 	 * @return
 	 */

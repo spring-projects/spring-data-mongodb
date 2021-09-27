@@ -37,18 +37,18 @@ import com.mongodb.client.ClientSession;
 /**
  * A {@link org.springframework.transaction.PlatformTransactionManager} implementation that manages
  * {@link ClientSession} based transactions for a single {@link MongoDatabaseFactory}.
- * <p />
+ * <br />
  * Binds a {@link ClientSession} from the specified {@link MongoDatabaseFactory} to the thread.
- * <p />
+ * <br />
  * {@link TransactionDefinition#isReadOnly() Readonly} transactions operate on a {@link ClientSession} and enable causal
  * consistency, and also {@link ClientSession#startTransaction() start}, {@link ClientSession#commitTransaction()
  * commit} or {@link ClientSession#abortTransaction() abort} a transaction.
- * <p />
+ * <br />
  * Application code is required to retrieve the {@link com.mongodb.client.MongoDatabase} via
  * {@link MongoDatabaseUtils#getDatabase(MongoDatabaseFactory)} instead of a standard
  * {@link MongoDatabaseFactory#getMongoDatabase()} call. Spring classes such as
  * {@link org.springframework.data.mongodb.core.MongoTemplate} use this strategy implicitly.
- * <p />
+ * <br />
  * By default failure of a {@literal commit} operation raises a {@link TransactionSystemException}. One may override
  * {@link #doCommit(MongoTransactionObject)} to implement the
  * <a href="https://docs.mongodb.com/manual/core/transactions/#retry-commit-operation">Retry Commit Operation</a>
@@ -69,11 +69,11 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 
 	/**
 	 * Create a new {@link MongoTransactionManager} for bean-style usage.
-	 * <p />
+	 * <br />
 	 * <strong>Note:</strong>The {@link MongoDatabaseFactory db factory} has to be
 	 * {@link #setDbFactory(MongoDatabaseFactory) set} before using the instance. Use this constructor to prepare a
 	 * {@link MongoTransactionManager} via a {@link org.springframework.beans.factory.BeanFactory}.
-	 * <p />
+	 * <br />
 	 * Optionally it is possible to set default {@link TransactionOptions transaction options} defining
 	 * {@link com.mongodb.ReadConcern} and {@link com.mongodb.WriteConcern}.
 	 *
@@ -212,8 +212,8 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 	 * By default those labels are ignored, nevertheless one might check for
 	 * {@link MongoException#UNKNOWN_TRANSACTION_COMMIT_RESULT_LABEL transient commit errors labels} and retry the the
 	 * commit. <br />
+	 * <pre>
 	 * <code>
-	 *     <pre>
 	 * int retries = 3;
 	 * do {
 	 *     try {
@@ -226,8 +226,8 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 	 *     }
 	 *     Thread.sleep(500);
 	 * } while (--retries > 0);
-	 *     </pre>
 	 * </code>
+	 * </pre>
 	 *
 	 * @param transactionObject never {@literal null}.
 	 * @throws Exception in case of transaction errors.

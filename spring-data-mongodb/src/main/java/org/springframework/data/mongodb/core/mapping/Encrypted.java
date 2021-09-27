@@ -88,7 +88,7 @@ public @interface Encrypted {
 	/**
 	 * Get the {@code keyId} to use. The value must resolve to either the UUID representation of the key or a base64
 	 * encoded value representing the UUID value.
-	 * <p />
+	 * <br />
 	 * On {@link ElementType#TYPE} level the {@link #keyId()} can be left empty if explicitly set for fields. <br />
 	 * On {@link ElementType#FIELD} level the {@link #keyId()} can be left empty if inherited from
 	 * {@literal encryptMetadata}.
@@ -100,7 +100,7 @@ public @interface Encrypted {
 
 	/**
 	 * Set the algorithm to use.
-	 * <p />
+	 * <br />
 	 * On {@link ElementType#TYPE} level the {@link #algorithm()} can be left empty if explicitly set for fields. <br />
 	 * On {@link ElementType#FIELD} level the {@link #algorithm()} can be left empty if inherited from
 	 * {@literal encryptMetadata}.

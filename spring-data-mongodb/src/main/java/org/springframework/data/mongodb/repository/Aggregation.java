@@ -27,11 +27,11 @@ import org.springframework.data.annotation.QueryAnnotation;
 /**
  * The {@link Aggregation} annotation can be used to annotate a {@link org.springframework.data.repository.Repository}
  * query method so that it runs the {@link Aggregation#pipeline()} on invocation.
- * <p />
+ * <br />
  * Pipeline stages are mapped against the {@link org.springframework.data.repository.Repository} domain type to consider
  * {@link org.springframework.data.mongodb.core.mapping.Field field} mappings and may contain simple placeholders
  * {@code ?0} as well as {@link org.springframework.expression.spel.standard.SpelExpression SpelExpressions}.
- * <p />
+ * <br />
  * Query method {@link org.springframework.data.domain.Sort} and {@link org.springframework.data.domain.Pageable}
  * arguments are applied at the end of the pipeline or can be defined manually as part of it.
  *
@@ -60,23 +60,23 @@ public @interface Aggregation {
 	 *
 	 * // aggregation resulting in collection with single value
 	 * &#64;Aggregation("{ '$project': { '_id' : '$lastname' } }")
-	 * List<String> findAllLastnames();
+	 * List&lt;String&gt; findAllLastnames();
 	 *
 	 * // aggregation with parameter replacement
 	 * &#64;Aggregation("{ '$group': { '_id' : '$lastname', names : { $addToSet : '$?0' } } }")
-	 * List<PersonAggregate> groupByLastnameAnd(String property);
+	 * List&lt;PersonAggregate&gt; groupByLastnameAnd(String property);
 	 *
 	 * // aggregation with sort in pipeline
 	 * &#64;Aggregation(pipeline = {"{ '$group': { '_id' : '$lastname', names : { $addToSet : '$?0' } } }", "{ '$sort' : { 'lastname' : -1 } }"})
-	 * List<PersonAggregate> groupByLastnameAnd(String property);
+	 * List&lt;PersonAggregate&gt; groupByLastnameAnd(String property);
 	 *
 	 * // Sort parameter is used for sorting results
 	 * &#64;Aggregation("{ '$group': { '_id' : '$lastname', names : { $addToSet : '$?0' } } }")
-	 * List<PersonAggregate> groupByLastnameAnd(String property, Sort sort);
+	 * List&lt;PersonAggregate&gt; groupByLastnameAnd(String property, Sort sort);
 	 *
 	 * // Pageable parameter used for sort, skip and limit
 	 * &#64;Aggregation("{ '$group': { '_id' : '$lastname', names : { $addToSet : '$?0' } } }")
-	 * List<PersonAggregate> groupByLastnameAnd(String property, Pageable page);
+	 * List&lt;PersonAggregate&gt; groupByLastnameAnd(String property, Pageable page);
 	 *
 	 * // Single value result aggregation.
 	 * &#64;Aggregation("{ '$group' : { '_id' : null, 'total' : { $sum: '$age' } } }")
@@ -88,7 +88,7 @@ public @interface Aggregation {
 	 *
 	 * // Raw aggregation result
 	 * &#64;Aggregation("{ '$group' : { '_id' : null, 'total' : { $sum: '$age' } } })
-	 * AggregationResults&lt;org.bson.Document>&gt; sumAgeAndReturnAggregationResultWrapper();
+	 * AggregationResults&lt;org.bson.Document&gt;&gt; sumAgeAndReturnAggregationResultWrapper();
 	 * </pre>
 	 *
 	 * @return an empty array by default.
@@ -102,23 +102,23 @@ public @interface Aggregation {
 	 * <pre class="code">
 	 * // Fixed value
 	 * &#64;Aggregation(pipeline = "...", collation = "en_US")
-	 * List<Entry> findAllByFixedCollation();
+	 * List&lt;Entry&gt; findAllByFixedCollation();
 	 *
 	 * // Fixed value as Document
 	 * &#64;Aggregation(pipeline = "...", collation = "{ 'locale' :  'en_US' }")
-	 * List<Entry> findAllByFixedJsonCollation();
+	 * List&lt;Entry&gt; findAllByFixedJsonCollation();
 	 *
 	 * // Dynamic value as String
 	 * &#64;Aggregation(pipeline = "...", collation = "?0")
-	 * List<Entry> findAllByDynamicCollation(String collation);
+	 * List&lt;Entry&gt; findAllByDynamicCollation(String collation);
 	 *
 	 * // Dynamic value as Document
 	 * &#64;Aggregation(pipeline = "...", collation = "{ 'locale' :  ?0 }")
-	 * List<Entry> findAllByDynamicJsonCollation(String collation);
+	 * List&lt;Entry&gt; findAllByDynamicJsonCollation(String collation);
 	 *
 	 * // SpEL expression
 	 * &#64;Aggregation(pipeline = "...", collation = "?#{[0]}")
-	 * List<Entry> findAllByDynamicSpElCollation(String collation);
+	 * List&lt;Entry&gt; findAllByDynamicSpElCollation(String collation);
 	 * </pre>
 	 *
 	 * @return an empty {@link String} by default.

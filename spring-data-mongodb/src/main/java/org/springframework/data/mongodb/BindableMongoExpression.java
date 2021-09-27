@@ -31,7 +31,7 @@ import org.springframework.util.StringUtils;
  * expression. The expression will be wrapped within <code>{ ... }</code> if necessary. The actual parsing and parameter
  * binding of placeholders like {@code ?0} is delayed upon first call on the the target {@link Document} via
  * {@link #toDocument()}.
- * <p />
+ * <br />
  *
  * <pre class="code">
  * $toUpper : $name                -> { '$toUpper' : '$name' }

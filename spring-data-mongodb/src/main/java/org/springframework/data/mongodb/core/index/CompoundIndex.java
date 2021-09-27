@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
 
 /**
  * Mark a class to use compound indexes.
- * <p />
+ * <br />
  * <p>
  * <b>NOTE: This annotation is repeatable according to Java 8 conventions using {@link CompoundIndexes#value()} as
  * container.</b>

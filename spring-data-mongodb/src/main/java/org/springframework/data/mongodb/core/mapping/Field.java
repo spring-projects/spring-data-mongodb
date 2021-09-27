@@ -71,7 +71,7 @@ public @interface Field {
 	 * Write rules when to include a property value upon conversion. If set to {@link Write#NON_NULL} (default)
 	 * {@literal null} values are not written to the target {@code Document}. Setting the value to {@link Write#ALWAYS}
 	 * explicitly adds an entry for the given field holding {@literal null} as a value {@code 'fieldName' : null }.
-	 * <p />
+	 * <br />
 	 * <strong>NOTE</strong>Setting the value to {@link Write#ALWAYS} may lead to increased document size.
 	 *
 	 * @return {@link Write#NON_NULL} by default.
