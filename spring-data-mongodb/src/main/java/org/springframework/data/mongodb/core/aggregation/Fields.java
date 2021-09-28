@@ -233,9 +233,14 @@ public final class Fields implements Iterable<Field> {
 			String targetToSet = target != null ? cleanUp(target) : null;
 
 			Assert.hasText(nameToSet, "AggregationField name must not be null or empty!");
-			
-			this.name = nameToSet;
-			this.target = target == null ? nameToSet : targetToSet; 
+
+			if (target == null && name.contains(".")) {
+				this.name = nameToSet.substring(nameToSet.indexOf('.') + 1);
+				this.target = nameToSet;
+			} else {
+				this.name = nameToSet;
+				this.target = targetToSet;
+			}
 		}
 
 		private static String cleanUp(String source) {

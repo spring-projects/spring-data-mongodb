@@ -2255,34 +2255,6 @@ public class ProjectionOperationUnitTests {
 		assertThat(doc).isEqualTo(Document.parse(
 				"{ $project: { \"author\" : 1,  \"myArray\" : [ \"$ti_t_le\", \"plain - string\", { \"$sum\" : [\"$ti_t_le\", 10] } ] } } ] }"));
 	}
-	
-	@Test
-	void withNestedFieldsIncludeProjection(){
-
-		Document doc = new ProjectionOperation()
-				.andInclude("foo")
-				.andInclude("foo.bar")
-				.andInclude("foo.bar.baz")
-				.toDocument(Aggregation.DEFAULT_CONTEXT);
-
-		assertThat(doc).isEqualTo(Document.parse(
-				"{\"$project\" : {\"foo\" : 1, \"foo.bar\" : 1, \"foo.bar.baz\" : 1}}"));
-		
-	}
-	
-	@Test
-	void withNestedFieldsExcludeProjection(){
-
-		Document doc = new ProjectionOperation()
-				.andExclude("foo")
-				.andExclude("foo.bar")
-				.andExclude("foo.bar.baz")
-				.toDocument(Aggregation.DEFAULT_CONTEXT);
-
-		assertThat(doc).isEqualTo(Document.parse(
-				"{\"$project\" : {\"foo\" : 0, \"foo.bar\" : 0, \"foo.bar.baz\" : 0}}"));
-		
-	}
 
 	private static Document extractOperation(String field, Document fromProjectClause) {
 		return (Document) fromProjectClause.get(field);
