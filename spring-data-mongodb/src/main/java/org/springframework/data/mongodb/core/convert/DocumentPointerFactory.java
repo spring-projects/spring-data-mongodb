@@ -23,6 +23,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Reference;
@@ -90,6 +91,8 @@ class DocumentPointerFactory {
 			if (idProperty.hasExplicitWriteTarget()
 					&& conversionService.canConvert(idValue.getClass(), idProperty.getFieldType())) {
 				return () -> conversionService.convert(idValue, idProperty.getFieldType());
+			} else if (idValue instanceof String && ObjectId.isValid((String)idValue)) {
+				return () -> new ObjectId((String)idValue);
 			}
 
 			return () -> idValue;

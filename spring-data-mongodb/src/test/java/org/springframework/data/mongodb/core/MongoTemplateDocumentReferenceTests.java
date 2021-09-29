@@ -1180,6 +1180,73 @@ public class MongoTemplateDocumentReferenceTests {
 		assertThat(target.books).containsExactlyInAnyOrder(book1, book3);
 	}
 
+	@Test // GH-3847
+	void writeReferenceWithIdStringThatIsAnObjectId() {
+
+		String rootCollectionName = template.getCollectionName(SingleRefRoot.class);
+
+		ObjectId id = new ObjectId();
+
+		SingleRefRoot source = new SingleRefRoot();
+		source.id = "root-1";
+		source.simpleValueRef = new SimpleObjectRef(id.toHexString(), "me-the-referenced-object");
+
+		template.save(source);
+
+		Document target = template.execute(db -> {
+			return db.getCollection(rootCollectionName).find(Filters.eq("_id", "root-1")).first();
+		});
+
+		assertThat(target.get("simpleValueRef")).isEqualTo(id);
+	}
+
+	@Test // GH-3847
+	void readWithIdStringThatIsAnObjectId() {
+
+		ObjectId id = new ObjectId();
+
+		String rootCollectionName = template.getCollectionName(SingleRefRoot.class);
+		String refCollectionName = template.getCollectionName(SimpleObjectRef.class);
+		Document refSource = new Document("_id", id).append("value", "me-the-referenced-object");
+		Document source = new Document("_id", "id-1").append("value", "v1").append("simpleValueRef", id);
+
+		template.execute(db -> {
+
+			db.getCollection(refCollectionName).insertOne(refSource);
+			db.getCollection(rootCollectionName).insertOne(source);
+			return null;
+		});
+
+		SingleRefRoot result = template.findOne(query(where("id").is("id-1")), SingleRefRoot.class);
+		assertThat(result.getSimpleValueRef()).isEqualTo(new SimpleObjectRef(id.toHexString(), "me-the-referenced-object"));
+	}
+
+	@Test // GH-3847
+	void readWriteTypeReferenceHavingFixedStringIdTargetType() {
+
+		ObjectId id = new ObjectId();
+		String rootCollectionName = template.getCollectionName(SingleRefRoot.class);
+
+		ObjectRefHavingStringIdTargetType customStringIdTargetRef = new ObjectRefHavingStringIdTargetType(id.toHexString(),
+				"me-the-referenced-object");
+		template.save(customStringIdTargetRef);
+
+		SingleRefRoot source = new SingleRefRoot();
+		source.id = "root-1";
+		source.customStringIdTargetRef = customStringIdTargetRef;
+		template.save(source);
+
+		Document target = template.execute(db -> {
+			return db.getCollection(rootCollectionName).find(Filters.eq("_id", "root-1")).first();
+		});
+
+		assertThat(target.get("customStringIdTargetRef")).isEqualTo(id.toHexString());
+
+		SingleRefRoot result = template.findOne(query(where("id").is("root-1")), SingleRefRoot.class);
+		assertThat(result.getCustomStringIdTargetRef())
+				.isEqualTo(new ObjectRefHavingStringIdTargetType(id.toHexString(), "me-the-referenced-object"));
+	}
+
 	@Data
 	static class SingleRefRoot {
 
@@ -1188,7 +1255,7 @@ public class MongoTemplateDocumentReferenceTests {
 
 		@DocumentReference SimpleObjectRefWithReadingConverter withReadingConverter;
 
-		@DocumentReference(lookup = "{ '_id' : '?#{#target}' }") //
+		@DocumentReference(lookup = "{ '_id' : ?#{#target} }") //
 		SimpleObjectRef simpleValueRef;
 
 		@DocumentReference(lookup = "{ '_id' : '?#{#target}' }", lazy = true) //
@@ -1211,6 +1278,8 @@ public class MongoTemplateDocumentReferenceTests {
 		ObjectRefOnNonIdField lazyObjectValueRefOnNonIdFields;
 
 		@DocumentReference ObjectRefHavingCustomizedIdTargetType customIdTargetRef;
+
+		@DocumentReference ObjectRefHavingStringIdTargetType customStringIdTargetRef;
 	}
 
 	@Data
@@ -1322,6 +1391,14 @@ public class MongoTemplateDocumentReferenceTests {
 	static class ObjectRefHavingCustomizedIdTargetType {
 
 		@MongoId(targetType = FieldType.OBJECT_ID) String id;
+		String name;
+	}
+
+	@Data
+	@AllArgsConstructor
+	static class ObjectRefHavingStringIdTargetType {
+
+		@MongoId(targetType = FieldType.STRING) String id;
 		String name;
 	}
 
