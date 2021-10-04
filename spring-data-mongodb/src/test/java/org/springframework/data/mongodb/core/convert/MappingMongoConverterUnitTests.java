@@ -2614,7 +2614,26 @@ class MappingMongoConverterUnitTests {
 		ClassWithMapProperty target = converter.read(ClassWithMapProperty.class, source);
 
 		assertThat(target.mapOfObjects).containsEntry("simple",1);
+	}
 
+	@Test // GH-3851
+	void associationMappingShouldFallBackToDefaultIfNoAtReferenceAnnotationPresent/* as done via jmolecules */() {
+
+		UUID id = UUID.randomUUID();
+		Person sourceValue = new Person();
+		sourceValue.id = id.toString();
+
+		DocumentAccessor accessor = new DocumentAccessor(new org.bson.Document());
+		MongoPersistentProperty persistentProperty = mock(MongoPersistentProperty.class);
+		when(persistentProperty.isAssociation()).thenReturn(true);
+		when(persistentProperty.getFieldName()).thenReturn("pName");
+		doReturn(ClassTypeInformation.from(Person.class)).when(persistentProperty).getTypeInformation();
+		doReturn(Person.class).when(persistentProperty).getType();
+		doReturn(Person.class).when(persistentProperty).getRawType();
+
+		converter.writePropertyInternal(sourceValue, accessor, persistentProperty);
+
+		assertThat(accessor.getDocument()).isEqualTo(new org.bson.Document("pName", new org.bson.Document("_id", id.toString())));
 	}
 
 	static class GenericType<T> {
