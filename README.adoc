@@ -255,6 +255,19 @@ If you want to raise an issue, please follow the recommendations below:
 * Please provide as much information as possible with the issue report, we like to know the version of Spring Data that you are using, the JVM version, Stacktrace, etc.
 * If you need to paste code, or include a stack trace use https://guides.github.com/features/mastering-markdown/[Markdown] code fences +++```+++.
 
+[[guides]]
+== Guides
+
+The https://spring.io/[spring.io] site contains several guides that show how to use Spring Data step-by-step:
+
+* https://spring.io/guides/gs/accessing-data-mongodb/[Accessing Data with MongoDB] is a very basic guide that shows you how to create a simple application and how to access data using repositories.
+* https://spring.io/guides/gs/accessing-mongodb-data-rest/[Accessing MongoDB Data with REST] is a guide to creating a REST web service exposing data stored in MongoDB through repositories.
+
+[[examples]]
+== Examples
+
+* https://github.com/spring-projects/spring-data-examples/[Spring Data Examples] contains example projects that explain specific features in more detail.
+
 [[building-from-source]]
 == Building from Source
 
@@ -272,12 +285,12 @@ However, if you want to try out the latest and greatest, Spring Data can be easi
 and minimally JDK 8 (https://www.oracle.com/java/technologies/downloads/[JDK downloads]).
 
 In order to build Spring Data MongoDB, first you will need to https://www.mongodb.com/try/download/community[download]
-and install a MongoDB distribution. Select "_On-premises (MongoDB locally)_", then "_MongoDB Community Server_"
-and in the page form, select the platform matching your system along with the version of MongoDB on which Spring Data
-MongoDB is based (https://github.com/spring-projects/spring-data-mongodb/blob/3.2.5/pom.xml#L30[for example]).
+and https://docs.mongodb.com/manual/installation/[install a MongoDB distribution].
 
 Once you have installed MongoDB, you need to start a MongoDB server. It is convenient to set an environment variable to
 your MongoDB installation (e.g. `MONGODB_HOME`).
+
+To run the full test suite a https://docs.mongodb.com/manual/tutorial/deploy-replica-set/[MongoDB Replica Set] is required.
 
 To run the MongoDB server enter the following command from a command-line:
 
@@ -285,96 +298,33 @@ To run the MongoDB server enter the following command from a command-line:
 ----
 $ $MONGODB_HOME/bin/mongod --dbpath $MONGODB_HOME/runtime/data --ipv6 --port 27017 --replSet rs0
 ...
-{"t":{"$date":"2021-09-22T11:22:05.490-07:00"},"s":"I",  "c":"NETWORK",  "id":20113,   "ctx":"LogicalSessionCacheReap",
-"msg":"Successfully connected to host","attr":{"connString":"127.0.0.1:27017","numOpenConns":1,"socketTimeoutSecs":0.0}}
+"msg":"Successfully connected to host"
 ----
 
 Once the MongoDB server starts up, you should see the message (`msg`), "_Successfully connected to host_".
 
 Notice the `--dbpath` option to the `mongod` command. You can set this to anything you like, but in this case, we set
 the absolute path to a sub-directory (`runtime/data/`) under the MongoDB installation directory (in `$MONGODB_HOME`).
-You might have other sub-directories as well, such as `runtime/logs/` for instance, if you wish to write your logs to
-a file rather than standard out, using the `--logpath` option to the `mongod` command. In this way, all your "runtime"
-files for the MongoDB server are conveniently located in one place.
 
-Next, you need to initialize the MongoDB replica set the first time the MongoDB server is started. Replicas are used by
-the Spring Data MongoDB transactional tests. This only needs to be done once after the initial start. If you restart
-your MongoDB server, you will need to initialize the replica set again. However, you can continue to use the same
-MongoDB server for multiple builds of Spring Data MongoDB.
-
-To initialize the replica set, you must start a mongo client:
+You need to initialize the MongoDB replica set only once on the first time the MongoDB server is started.
+To initialize the replica set, start a mongo client:
 
 [source,bash]
 ----
 $ $MONGODB_HOME/bin/mongo
-MongoDB server version: 4.4.8
----
-The server generated these startup warnings when booting:
-        2021-09-22T11:26:50.752-07:00: Access control is not enabled for the database. Read and write access to data and configuration is unrestricted
-        2021-09-22T11:26:50.752-07:00: This server is bound to localhost. Remote systems will be unable to connect to this server. Start the server with --bind_ip <address> to specify which IP addresses it should serve responses from, or with --bind_ip_all to bind to all interfaces. If this behavior is desired, start the server with --bind_ip 127.0.0.1 to disable this warning
-        2021-09-22T11:26:50.752-07:00: Soft rlimits too low
-        2021-09-22T11:26:50.752-07:00:         currentValue: 256
-        2021-09-22T11:26:50.752-07:00:         recommendedMinimum: 64000
----
----
-        Enable MongoDB's free cloud-based monitoring service, which will then receive and display
-        metrics about your deployment (disk utilization, CPU, operation statistics, etc).
-
-        The monitoring data will be available on a MongoDB website with a unique URL accessible to you
-        and anyone you share the URL with. MongoDB may use this information to make product
-        improvements and to suggest MongoDB products and deployment options to you.
-
-        To enable free monitoring, run the following command: db.enableFreeMonitoring()
-        To permanently disable this reminder, run the following command: db.disableFreeMonitoring()
----
-rs0:PRIMARY>
+MongoDB server version: 5.0.0
+...
 ----
 
 Then enter the following command:
 
 [source,bash]
 ----
-rs0:PRIMARY> rs.initiate({ _id: 'rs0', members: [ { _id: 0, host: '127.0.0.1:27017' } ] })
-{
-	"operationTime" : Timestamp(1632335237, 1),
-	"ok" : 0,
-	"errmsg" : "already initialized",
-	"code" : 23,
-	"codeName" : "AlreadyInitialized",
-	"$clusterTime" : {
-		"clusterTime" : Timestamp(1632335237, 1),
-		"signature" : {
-			"hash" : BinData(0,"AAAAAAAAAAAAAAAAAAAAAAAAAAA="),
-			"keyId" : NumberLong(0)
-		}
-	}
-}
-rs0:PRIMARY>
+mongo> rs.initiate({ _id: 'rs0', members: [ { _id: 0, host: '127.0.0.1:27017' } ] })
 ----
 
-Finally, you may need to adjust the `ulimit` on your UNIX-based system (for example, Linux or Mac OS X). Currently,
-the MongoDB client/server combination uses many Socket connections (which equate to file descriptors on a UNIX-based
-system) throughout the Spring Data MongoDB test suite lifecycle. You can inspect your current `ulimit` with
-the following command:
-
-[source,bash]
-----
-$ ulimit -a
-core file size          (blocks, -c) 0
-data seg size           (kbytes, -d) unlimited
-file size               (blocks, -f) unlimited
-max locked memory       (kbytes, -l) unlimited
-max memory size         (kbytes, -m) unlimited
-open files                      (-n) 256
-pipe size            (512 bytes, -p) 1
-stack size              (kbytes, -s) 8192
-cpu time               (seconds, -t) unlimited
-max user processes              (-u) 5568
-virtual memory          (kbytes, -v) unlimited
-----
-
-In this case, we are interested in the `ulimit` setting for "_open files_". As you can see above, this is set to 256.
-You will need to adjust this with the following command (we recommend 32768):
+Finally, on UNIX-based system (for example, Linux or Mac OS X) you may need to adjust the `ulimit`.
+In case you need to, you can adjust the `ulimit` with the following command (32768 is just a recommendation):
 
 [source,bash]
 ----
@@ -406,17 +356,7 @@ Building the documentation builds also the project without running tests.
 
 The generated documentation is available from `target/site/reference/html/index.html`.
 
-== Guides
-
-The https://spring.io/[spring.io] site contains several guides that show how to use Spring Data step-by-step:
-
-* https://spring.io/guides/gs/accessing-data-mongodb/[Accessing Data with MongoDB] is a very basic guide that shows you how to create a simple application and how to access data using repositories.
-* https://spring.io/guides/gs/accessing-mongodb-data-rest/[Accessing MongoDB Data with REST] is a guide to creating a REST web service exposing data stored in MongoDB through repositories.
-
-== Examples
-
-* https://github.com/spring-projects/spring-data-examples/[Spring Data Examples] contains example projects that explain specific features in more detail.
-
+[[license]]
 == License
 
 Spring Data MongoDB is Open Source software released under the https://www.apache.org/licenses/LICENSE-2.0.html[Apache 2.0 license].
