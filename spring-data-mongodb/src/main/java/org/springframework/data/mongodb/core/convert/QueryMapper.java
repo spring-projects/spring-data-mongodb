@@ -517,6 +517,10 @@ public class QueryMapper {
 			return true;
 		}
 
+		if(property.isDocumentReference()) {
+			return true;
+		}
+
 		MongoPersistentEntity<?> entity = documentField.getPropertyEntity();
 		return entity.hasIdProperty()
 				&& (type.equals(DBRef.class) || entity.getRequiredIdProperty().getActualType().isAssignableFrom(type));
