@@ -127,7 +127,7 @@ public final class ReferenceLookupDelegate {
 		// Use the first value as a reference for others in case of collection like
 		if (value instanceof Iterable) {
 
-			Iterator iterator = ((Iterable) value).iterator();
+			Iterator<?> iterator = ((Iterable<?>) value).iterator();
 			value = iterator.hasNext() ? iterator.next() : new Document();
 		}
 
@@ -198,7 +198,7 @@ public final class ReferenceLookupDelegate {
 			return (T) codec.decode(value, bindingContext);
 		}
 
-		if(!value.startsWith("#") && ExpressionUtils.detectExpression(value) == null) {
+		if (!value.startsWith("#") && ExpressionUtils.detectExpression(value) == null) {
 			return (T) value;
 		}
 

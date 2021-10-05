@@ -18,22 +18,17 @@ package org.springframework.data.mongodb.core.convert;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import java.util.Arrays;
 import java.util.Collections;
 
-import org.assertj.core.api.Assertions;
-import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.SpELContext;
-import org.springframework.data.mongodb.core.convert.ReferenceLoader.DocumentReferenceQuery;
-import org.springframework.data.mongodb.core.convert.ReferenceLookupDelegate.LookupFunction;
 import org.springframework.data.mongodb.core.convert.ReferenceResolver.MongoEntityReader;
-import org.springframework.data.mongodb.core.convert.ReferenceResolver.ReferenceCollection;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -41,6 +36,8 @@ import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 /**
+ * Unit tests for {@link ReferenceLookupDelegate}.
+ *
  * @author Christoph Strobl
  */
 @ExtendWith(MockitoExtension.class)
@@ -73,13 +70,10 @@ class ReferenceLookupDelegateUnitTests {
 		when(property.getDocumentReference()).thenReturn(documentReference);
 		when(documentReference.collection()).thenReturn("collection1");
 
-		lookupDelegate.readReference(property, Arrays.asList("one"), new LookupFunction() {
-			@Override
-			public Iterable<Document> apply(DocumentReferenceQuery referenceQuery, ReferenceCollection referenceCollection) {
+		lookupDelegate.readReference(property, Collections.singletonList("one"), (referenceQuery, referenceCollection) -> {
 
-				assertThat(referenceCollection.getCollection()).isEqualTo("collection1");
-				return Collections.emptyList();
-			}
+			assertThat(referenceCollection.getCollection()).isEqualTo("collection1");
+			return Collections.emptyList();
 		}, entityReader);
 	}
 }
