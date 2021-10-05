@@ -91,8 +91,10 @@ class DocumentPointerFactory {
 			if (idProperty.hasExplicitWriteTarget()
 					&& conversionService.canConvert(idValue.getClass(), idProperty.getFieldType())) {
 				return () -> conversionService.convert(idValue, idProperty.getFieldType());
-			} else if (idValue instanceof String && ObjectId.isValid((String)idValue)) {
-				return () -> new ObjectId((String)idValue);
+			}
+
+			if (idValue instanceof String && ObjectId.isValid((String) idValue)) {
+				return () -> new ObjectId((String) idValue);
 			}
 
 			return () -> idValue;
@@ -127,15 +129,15 @@ class DocumentPointerFactory {
 	/**
 	 * Value object that computes a document pointer from a given lookup query by identifying SpEL expressions and
 	 * inverting it.
-	 * 
+	 *
 	 * <pre class="code">
 	 * // source
 	 * { 'firstname' : ?#{fn}, 'lastname' : '?#{ln} }
-	 * 
+	 *
 	 * // target
 	 * { 'fn' : ..., 'ln' : ... }
 	 * </pre>
-	 * 
+	 *
 	 * The actual pointer is the computed via
 	 * {@link #getDocumentPointer(MappingContext, MongoPersistentEntity, PersistentPropertyAccessor)} applying values from
 	 * the provided {@link PersistentPropertyAccessor} to the target document by looking at the keys of the expressions
