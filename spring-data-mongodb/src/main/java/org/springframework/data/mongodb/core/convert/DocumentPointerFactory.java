@@ -23,6 +23,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.annotation.Reference;
@@ -92,6 +93,10 @@ class DocumentPointerFactory {
 				return () -> conversionService.convert(idValue, idProperty.getFieldType());
 			}
 
+			if (idValue instanceof String && ObjectId.isValid((String) idValue)) {
+				return () -> new ObjectId((String) idValue);
+			}
+
 			return () -> idValue;
 		}
 
@@ -124,15 +129,15 @@ class DocumentPointerFactory {
 	/**
 	 * Value object that computes a document pointer from a given lookup query by identifying SpEL expressions and
 	 * inverting it.
-	 * 
+	 *
 	 * <pre class="code">
 	 * // source
 	 * { 'firstname' : ?#{fn}, 'lastname' : '?#{ln} }
-	 * 
+	 *
 	 * // target
 	 * { 'fn' : ..., 'ln' : ... }
 	 * </pre>
-	 * 
+	 *
 	 * The actual pointer is the computed via
 	 * {@link #getDocumentPointer(MappingContext, MongoPersistentEntity, PersistentPropertyAccessor)} applying values from
 	 * the provided {@link PersistentPropertyAccessor} to the target document by looking at the keys of the expressions

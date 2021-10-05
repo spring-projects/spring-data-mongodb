@@ -828,7 +828,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			return;
 		}
 
-		if (prop.isAssociation()) {
+		if (prop.isAssociation() && prop.isAnnotationPresent(Reference.class)) {
 
 			accessor.put(prop, new DocumentPointerFactory(conversionService, mappingContext)
 					.computePointer(mappingContext, prop, obj, valueType.getType()).getPointer());

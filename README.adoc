@@ -8,10 +8,12 @@ The Spring Data MongoDB project aims to provide a familiar and consistent Spring
 The Spring Data MongoDB project provides integration with the MongoDB document database.
 Key functional areas of Spring Data MongoDB are a POJO centric model for interacting with a MongoDB `+Document+` and easily writing a repository style data access layer.
 
+[[code-of-conduct]]
 == Code of Conduct
 
 This project is governed by the https://github.com/spring-projects/.github/blob/e3cc2ff230d8f1dca06535aa6b5a4a23815861d4/CODE_OF_CONDUCT.md[Spring Code of Conduct]. By participating, you are expected to uphold this code of conduct. Please report unacceptable behavior to spring-code-of-conduct@pivotal.io.
 
+[[getting-started]]
 == Getting Started
 
 Here is a quick teaser of an application using Spring Data Repositories in Java:
@@ -59,6 +61,7 @@ class ApplicationConfig extends AbstractMongoClientConfiguration {
 }
 ----
 
+[[maven-configuration]]
 === Maven configuration
 
 Add the Maven dependency:
@@ -68,24 +71,25 @@ Add the Maven dependency:
 <dependency>
   <groupId>org.springframework.data</groupId>
   <artifactId>spring-data-mongodb</artifactId>
-  <version>${version}.RELEASE</version>
+  <version>${version}</version>
 </dependency>
 ----
 
-If you'd rather like the latest snapshots of the upcoming major version, use our Maven snapshot repository and declare the appropriate dependency version.
+If you'd rather like the latest snapshots of the upcoming major version, use our Maven snapshot repository
+and declare the appropriate dependency version.
 
 [source,xml]
 ----
 <dependency>
   <groupId>org.springframework.data</groupId>
   <artifactId>spring-data-mongodb</artifactId>
-  <version>${version}.BUILD-SNAPSHOT</version>
+  <version>${version}-SNAPSHOT</version>
 </dependency>
 
 <repository>
-  <id>spring-libs-snapshot</id>
+  <id>spring-snapshot</id>
   <name>Spring Snapshot Repository</name>
-  <url>https://repo.spring.io/libs-snapshot</url>
+  <url>https://repo.spring.io/snapshot</url>
 </repository>
 ----
 
@@ -98,7 +102,7 @@ Some of the changes affect the initial setup configuration as well as compile/ru
 
 .Changed XML Namespace Elements and Attributes:
 |===
-Element / Attribute | 2.x | 3.x
+| Element / Attribute | 2.x | 3.x
 
 | `<mongo:mongo-client />`
 | Used to create a `com.mongodb.MongoClient`
@@ -116,7 +120,7 @@ Use `<mongo:client-settings cluster-hosts="..." />` instead
 
 .Removed XML Namespace Elements and Attributes:
 |===
-Element / Attribute | Replacement in 3.x | Comment
+| Element / Attribute | Replacement in 3.x | Comment
 
 | `<mongo:db-factory mongo-ref="..." />`
 | `<mongo:db-factory mongo-client-ref="..." />`
@@ -133,7 +137,7 @@ Element / Attribute | Replacement in 3.x | Comment
 
 .New XML Namespace Elements and Attributes:
 |===
-Element | Comment
+| Element | Comment
 
 | `<mongo:db-factory mongo-client-ref="..." />`
 | Replacement for `<mongo:db-factory mongo-ref="..." />`
@@ -153,7 +157,7 @@ Element | Comment
 
 .Java API changes
 |===
-Type | Comment
+| Type | Comment
 
 | `MongoClientFactoryBean`
 | Creates `com.mongodb.client.MongoClient` instead of `com.mongodb.MongoClient` +
@@ -174,7 +178,7 @@ Uses `MongoClientSettings` instead of `MongoClientOptions`.
 
 .Removed Java API:
 |===
-2.x | Replacement in 3.x | Comment
+| 2.x | Replacement in 3.x | Comment
 
 | `MongoClientOptionsFactoryBean`
 | `MongoClientSettingsFactoryBean`
@@ -226,6 +230,7 @@ static class Config extends AbstractMongoClientConfiguration {
 ----
 ====
 
+[[getting-help]]
 == Getting Help
 
 Having trouble with Spring Data? We’d love to help!
@@ -239,6 +244,7 @@ If you are just starting out with Spring, try one of the https://spring.io/guide
 You can also chat with the community on https://gitter.im/spring-projects/spring-data[Gitter].
 * Report bugs with Spring Data MongoDB at https://github.com/spring-projects/spring-data-mongodb/issues[github.com/spring-projects/spring-data-mongodb/issues].
 
+[[reporting-issues]]
 == Reporting Issues
 
 Spring Data uses Github as issue tracking system to record bugs and feature requests.
@@ -249,10 +255,85 @@ If you want to raise an issue, please follow the recommendations below:
 * Please provide as much information as possible with the issue report, we like to know the version of Spring Data that you are using, the JVM version, Stacktrace, etc.
 * If you need to paste code, or include a stack trace use https://guides.github.com/features/mastering-markdown/[Markdown] code fences +++```+++.
 
+[[guides]]
+== Guides
+
+The https://spring.io/[spring.io] site contains several guides that show how to use Spring Data step-by-step:
+
+* https://spring.io/guides/gs/accessing-data-mongodb/[Accessing Data with MongoDB] is a very basic guide that shows you how to create a simple application and how to access data using repositories.
+* https://spring.io/guides/gs/accessing-mongodb-data-rest/[Accessing MongoDB Data with REST] is a guide to creating a REST web service exposing data stored in MongoDB through repositories.
+
+[[examples]]
+== Examples
+
+* https://github.com/spring-projects/spring-data-examples/[Spring Data Examples] contains example projects that explain specific features in more detail.
+
+[[building-from-source]]
 == Building from Source
 
-You don’t need to build from source to use Spring Data (binaries in https://repo.spring.io[repo.spring.io]), but if you want to try out the latest and greatest, Spring Data can be easily built with the https://github.com/takari/maven-wrapper[maven wrapper].
-You also need JDK 1.8.
+You do not need to build from source to use Spring Data. Binaries are available in https://repo.spring.io[repo.spring.io].
+and accessible from Maven using the Maven configuration noted <<maven-configuration,above>>.
+
+NOTE: Configuration for Gradle is similar to Maven.
+
+The best way to get started is by creating a Spring Boot project using MongoDB on https://start.spring.io[start.spring.io].
+Follow this https://start.spring.io/#type=maven-project&language=java&platformVersion=2.5.4&packaging=jar&jvmVersion=1.8&groupId=com.example&artifactId=demo&name=demo&description=Demo%20project%20for%20Spring%20Boot&packageName=com.example.demo&dependencies=data-mongodb[link]
+to build an imperative application and this https://start.spring.io/#type=maven-project&language=java&platformVersion=2.5.4&packaging=jar&jvmVersion=1.8&groupId=com.example&artifactId=demo&name=demo&description=Demo%20project%20for%20Spring%20Boot&packageName=com.example.demo&dependencies=data-mongodb-reactive[link]
+to build a reactive one.
+
+However, if you want to try out the latest and greatest, Spring Data can be easily built with the https://github.com/takari/maven-wrapper[maven wrapper]
+and minimally JDK 8 (https://www.oracle.com/java/technologies/downloads/[JDK downloads]).
+
+In order to build Spring Data MongoDB, first you will need to https://www.mongodb.com/try/download/community[download]
+and https://docs.mongodb.com/manual/installation/[install a MongoDB distribution].
+
+Once you have installed MongoDB, you need to start a MongoDB server. It is convenient to set an environment variable to
+your MongoDB installation (e.g. `MONGODB_HOME`).
+
+To run the full test suite a https://docs.mongodb.com/manual/tutorial/deploy-replica-set/[MongoDB Replica Set] is required.
+
+To run the MongoDB server enter the following command from a command-line:
+
+[source,bash]
+----
+$ $MONGODB_HOME/bin/mongod --dbpath $MONGODB_HOME/runtime/data --ipv6 --port 27017 --replSet rs0
+...
+"msg":"Successfully connected to host"
+----
+
+Once the MongoDB server starts up, you should see the message (`msg`), "_Successfully connected to host_".
+
+Notice the `--dbpath` option to the `mongod` command. You can set this to anything you like, but in this case, we set
+the absolute path to a sub-directory (`runtime/data/`) under the MongoDB installation directory (in `$MONGODB_HOME`).
+
+You need to initialize the MongoDB replica set only once on the first time the MongoDB server is started.
+To initialize the replica set, start a mongo client:
+
+[source,bash]
+----
+$ $MONGODB_HOME/bin/mongo
+MongoDB server version: 5.0.0
+...
+----
+
+Then enter the following command:
+
+[source,bash]
+----
+mongo> rs.initiate({ _id: 'rs0', members: [ { _id: 0, host: '127.0.0.1:27017' } ] })
+----
+
+Finally, on UNIX-based system (for example, Linux or Mac OS X) you may need to adjust the `ulimit`.
+In case you need to, you can adjust the `ulimit` with the following command (32768 is just a recommendation):
+
+[source,bash]
+----
+$ ulimit -n 32768
+----
+
+You can use `ulimit -a` again to verify the `ulimit` on "_open files_" was set appropriately.
+
+Now you are ready to build Spring Data MongoDB. Simply enter the following `mvnw` (Maven Wrapper) command:
 
 [source,bash]
 ----
@@ -261,7 +342,8 @@ You also need JDK 1.8.
 
 If you want to build with the regular `mvn` command, you will need https://maven.apache.org/run-maven/index.html[Maven v3.5.0 or above].
 
-_Also see link:CONTRIBUTING.adoc[CONTRIBUTING.adoc] if you wish to submit pull requests, and in particular please sign the https://cla.pivotal.io/sign/spring[Contributor’s Agreement] before your first non-trivial change._
+_Also see link:CONTRIBUTING.adoc[CONTRIBUTING.adoc] if you wish to submit pull requests, and in particular, please sign
+the https://cla.pivotal.io/sign/spring[Contributor’s Agreement] before your first non-trivial change._
 
 === Building reference documentation
 
@@ -274,17 +356,7 @@ Building the documentation builds also the project without running tests.
 
 The generated documentation is available from `target/site/reference/html/index.html`.
 
-== Guides
-
-The https://spring.io/[spring.io] site contains several guides that show how to use Spring Data step-by-step:
-
-* https://spring.io/guides/gs/accessing-data-mongodb/[Accessing Data with MongoDB] is a very basic guide that shows you how to create a simple application and how to access data using repositories.
-* https://spring.io/guides/gs/accessing-mongodb-data-rest/[Accessing MongoDB Data with REST] is a guide to creating a REST web service exposing data stored in MongoDB through repositories.
-
-== Examples
-
-* https://github.com/spring-projects/spring-data-examples/[Spring Data Examples] contains example projects that explain specific features in more detail.
-
+[[license]]
 == License
 
 Spring Data MongoDB is Open Source software released under the https://www.apache.org/licenses/LICENSE-2.0.html[Apache 2.0 license].

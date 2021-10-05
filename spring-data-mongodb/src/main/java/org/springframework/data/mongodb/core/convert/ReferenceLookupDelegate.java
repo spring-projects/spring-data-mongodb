@@ -43,6 +43,7 @@ import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.mongodb.util.json.ParameterBindingContext;
 import org.springframework.data.mongodb.util.json.ParameterBindingDocumentCodec;
 import org.springframework.data.mongodb.util.json.ValueProvider;
+import org.springframework.data.mongodb.util.spel.ExpressionUtils;
 import org.springframework.data.util.Streamable;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.lang.Nullable;
@@ -126,7 +127,7 @@ public final class ReferenceLookupDelegate {
 		// Use the first value as a reference for others in case of collection like
 		if (value instanceof Iterable) {
 
-			Iterator iterator = ((Iterable) value).iterator();
+			Iterator<?> iterator = ((Iterable<?>) value).iterator();
 			value = iterator.hasNext() ? iterator.next() : new Document();
 		}
 
@@ -195,6 +196,10 @@ public final class ReferenceLookupDelegate {
 
 		if (BsonUtils.isJsonDocument(value)) {
 			return (T) codec.decode(value, bindingContext);
+		}
+
+		if (!value.startsWith("#") && ExpressionUtils.detectExpression(value) == null) {
+			return (T) value;
 		}
 
 		T evaluated = (T) bindingContext.evaluateExpression(value);
