@@ -50,6 +50,7 @@ import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.geo.GeoJsonPolygon;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoId;
@@ -422,6 +423,60 @@ public class QueryMapperUnitTests {
 		List<Object> inClause = getAsDBList(getAsDocument(getAsDocument(andClause, 0), "reference"), "$in");
 		assertThat(inClause).hasSize(1);
 		assertThat(inClause.get(0)).isInstanceOf(com.mongodb.DBRef.class);
+	}
+
+	@Test // GH-3853
+	void convertsDocumentReferenceOnIdPropertyCorrectly() {
+
+		Sample reference = new Sample();
+		reference.foo = "s1";
+
+		Query query = query(where("sample").is(reference));
+		org.bson.Document mappedQuery = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(WithDocumentReference.class));
+
+		assertThat(mappedQuery).containsEntry("sample", "s1");
+	}
+
+	@Test // GH-3853
+	void convertsListDocumentReferenceOnIdPropertyCorrectly() {
+
+		Sample reference = new Sample();
+		reference.foo = "s1";
+
+		Query query = query(where("samples").is(Arrays.asList(reference)));
+		org.bson.Document mappedQuery = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(WithDocumentReference.class));
+
+		assertThat(mappedQuery).containsEntry("samples", Arrays.asList("s1"));
+	}
+
+	@Test // GH-3853
+	void convertsDocumentReferenceOnNonIdPropertyCorrectly() {
+
+		Customer reference = new Customer();
+		reference.id = new ObjectId();
+		reference.name = "c1";
+
+		Query query = query(where("customer").is(reference));
+		org.bson.Document mappedQuery = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(WithDocumentReference.class));
+
+		assertThat(mappedQuery).containsEntry("customer", "c1");
+	}
+
+	@Test // GH-3853
+	void convertsListDocumentReferenceOnNonIdPropertyCorrectly() {
+
+		Customer reference = new Customer();
+		reference.id = new ObjectId();
+		reference.name = "c1";
+
+		Query query = query(where("customers").is(Arrays.asList(reference)));
+		org.bson.Document mappedQuery = mapper.getMappedObject(query.getQueryObject(),
+				context.getPersistentEntity(WithDocumentReference.class));
+
+		assertThat(mappedQuery).containsEntry("customers", Arrays.asList("c1"));
 	}
 
 	@Test // DATAMONGO-752
@@ -1494,6 +1549,25 @@ public class QueryMapperUnitTests {
 	class WithMapDBRef {
 
 		@DBRef Map<String, Sample> mapWithDBRef;
+	}
+
+	static class WithDocumentReference {
+
+		private ObjectId id;
+
+		private String name;
+
+		@DocumentReference(lookup = "{ 'name' : ?#{#target} }") // remove `lookup` for the other test case.
+		private Customer customer;
+
+		@DocumentReference(lookup = "{ 'name' : ?#{#target} }") // remove `lookup` for the other test case.
+		private List<Customer> customers;
+
+		@DocumentReference
+		private Sample sample;
+
+		@DocumentReference
+		private List<Sample> samples;
 	}
 
 	class WithTextScoreProperty {
