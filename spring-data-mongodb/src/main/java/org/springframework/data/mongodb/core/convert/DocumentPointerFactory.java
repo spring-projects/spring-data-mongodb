@@ -178,7 +178,8 @@ class DocumentPointerFactory {
 			}
 
 			this.documentPointer = org.bson.Document.parse(targetLookup);
-			this.isSimpleTargetPointer = placeholderMap.size() == 1 && placeholderMap.containsValue("target") && lookup.contains("#target");
+			this.isSimpleTargetPointer = placeholderMap.size() == 1 && placeholderMap.containsValue("target")
+					&& lookup.contains("#target");
 		}
 
 		private String placeholder(int index) {
@@ -248,7 +249,7 @@ class DocumentPointerFactory {
 				target.put(entry.getKey(), entry.getValue());
 			}
 
-			if(target.size()==1 && isSimpleTargetPointer) {
+			if (target.size() == 1 && isSimpleTargetPointer) {
 				return target.values().iterator().next();
 			}
 

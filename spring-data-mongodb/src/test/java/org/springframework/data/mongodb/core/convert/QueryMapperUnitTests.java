@@ -62,7 +62,6 @@ import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.TextQuery;
-import org.springframework.data.mongodb.core.query.Update;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClientSettings;
@@ -1557,10 +1556,10 @@ public class QueryMapperUnitTests {
 
 		private String name;
 
-		@DocumentReference(lookup = "{ 'name' : ?#{#target} }") // remove `lookup` for the other test case.
+		@DocumentReference(lookup = "{ 'name' : ?#{#target} }")
 		private Customer customer;
 
-		@DocumentReference(lookup = "{ 'name' : ?#{#target} }") // remove `lookup` for the other test case.
+		@DocumentReference(lookup = "{ 'name' : ?#{#target} }")
 		private List<Customer> customers;
 
 		@DocumentReference

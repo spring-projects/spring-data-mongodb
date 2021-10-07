@@ -35,9 +35,9 @@ import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
@@ -47,9 +47,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mapping.MappingException;
-import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
-import org.springframework.data.mongodb.core.MongoExceptionTranslator;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
@@ -1699,10 +1697,10 @@ class UpdateMapperUnitTests {
 
 		private String name;
 
-		@DocumentReference(lookup = "{ 'name' : ?#{#target} }") // remove `lookup` for the other test case.
+		@DocumentReference(lookup = "{ 'name' : ?#{#target} }")
 		private Customer customer;
 
-		@DocumentReference(lookup = "{ 'name' : ?#{#target} }") // remove `lookup` for the other test case.
+		@DocumentReference(lookup = "{ 'name' : ?#{#target} }")
 		private List<Customer> customers;
 
 		@DocumentReference
