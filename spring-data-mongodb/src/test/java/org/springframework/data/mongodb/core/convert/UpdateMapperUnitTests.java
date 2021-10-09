@@ -31,12 +31,13 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.bson.Document;
+import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
@@ -46,9 +47,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mapping.MappingException;
-import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
-import org.springframework.data.mongodb.core.MongoExceptionTranslator;
+import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.core.mapping.Unwrapped;
@@ -1251,6 +1251,64 @@ class UpdateMapperUnitTests {
 		assertThat(mappedUpdate).isEqualTo("{\"$set\": {\"intKeyedMap.1a.map.0b\": \"testing\"}}");
 	}
 
+	@Test // GH-3853
+	void updateWithDocuRefOnId() {
+
+		Sample sample = new Sample();
+		sample.foo = "s1";
+
+		Update update = new Update().set("sample", sample);
+
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(WithDocumentReference.class));
+
+		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set",new org.bson.Document("sample","s1")));
+	}
+
+	@Test // GH-3853
+	void updateListWithDocuRefOnId() {
+
+		Sample sample = new Sample();
+		sample.foo = "s1";
+
+		Update update = new Update().set("samples", Arrays.asList(sample));
+
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(WithDocumentReference.class));
+
+		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set",new org.bson.Document("samples",Arrays.asList("s1"))));
+	}
+
+	@Test // GH-3853
+	void updateWithDocuRefOnProperty() {
+
+		Customer customer = new Customer();
+		customer.id = new ObjectId();
+		customer.name = "c-name";
+
+		Update update = new Update().set("customer", customer);
+
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(WithDocumentReference.class));
+
+		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set",new org.bson.Document("customer","c-name")));
+	}
+
+	@Test // GH-3853
+	void updateListWithDocuRefOnProperty() {
+
+		Customer customer = new Customer();
+		customer.id = new ObjectId();
+		customer.name = "c-name";
+
+		Update update = new Update().set("customers", Arrays.asList(customer));
+
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(WithDocumentReference.class));
+
+		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set",new org.bson.Document("customers", Arrays.asList("c-name"))));
+	}
+
 	static class DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes {
 		ListModelWrapper concreteTypeWithListAttributeOfInterfaceType;
 	}
@@ -1619,6 +1677,37 @@ class UpdateMapperUnitTests {
 
 	static class EntityWithNestedMap {
 		Map<String, Map<String, Map<String, Object>>> levelOne;
+	}
+
+	static class Customer {
+
+		@Id
+		private ObjectId id;
+		private String name;
+	}
+
+	static class Sample {
+
+		@Id private String foo;
+	}
+
+	static class WithDocumentReference {
+
+		private ObjectId id;
+
+		private String name;
+
+		@DocumentReference(lookup = "{ 'name' : ?#{#target} }")
+		private Customer customer;
+
+		@DocumentReference(lookup = "{ 'name' : ?#{#target} }")
+		private List<Customer> customers;
+
+		@DocumentReference
+		private Sample sample;
+
+		@DocumentReference
+		private List<Sample> samples;
 	}
 
 }

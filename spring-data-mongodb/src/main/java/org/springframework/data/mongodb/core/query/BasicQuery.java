@@ -164,9 +164,9 @@ public class BasicQuery extends Query {
 	 * @throws IllegalArgumentException when {@code fieldsObject} is {@literal null}.
 	 * @since 1.6
 	 */
-	protected void setFieldsObject(Document fieldsObject) {
+	public void setFieldsObject(Document fieldsObject) {
 
-		Assert.notNull(sortObject, "Field document must not be null");
+		Assert.notNull(fieldsObject, "Field document must not be null");
 
 		this.fieldsObject = fieldsObject;
 	}

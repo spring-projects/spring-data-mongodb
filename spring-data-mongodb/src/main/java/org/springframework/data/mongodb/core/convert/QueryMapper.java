@@ -517,6 +517,10 @@ public class QueryMapper {
 			return true;
 		}
 
+		if (property.isDocumentReference()) {
+			return true;
+		}
+
 		MongoPersistentEntity<?> entity = documentField.getPropertyEntity();
 		return entity.hasIdProperty()
 				&& (type.equals(DBRef.class) || entity.getRequiredIdProperty().getActualType().isAssignableFrom(type));
@@ -1411,8 +1415,8 @@ public class QueryMapper {
 					String partial = iterator.next();
 					currentIndex++;
 
-					boolean isPositional = isPositionalParameter(partial) && property.isCollectionLike() ;
-					if(property.isMap() && currentPropertyRoot.equals(partial) && iterator.hasNext()){
+					boolean isPositional = isPositionalParameter(partial) && property.isCollectionLike();
+					if (property.isMap() && currentPropertyRoot.equals(partial) && iterator.hasNext()) {
 						partial = iterator.next();
 						currentIndex++;
 					}
@@ -1424,7 +1428,7 @@ public class QueryMapper {
 					inspect = isPositional && iterator.hasNext();
 				}
 
-				if(currentIndex + 1 < pathParts.size()) {
+				if (currentIndex + 1 < pathParts.size()) {
 					currentIndex++;
 					currentPropertyRoot = pathParts.get(currentIndex);
 				}
