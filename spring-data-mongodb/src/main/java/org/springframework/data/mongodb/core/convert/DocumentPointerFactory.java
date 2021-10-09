@@ -151,6 +151,7 @@ class DocumentPointerFactory {
 		private final String lookup;
 		private final org.bson.Document documentPointer;
 		private final Map<String, String> placeholderMap;
+		private final boolean isSimpleTargetPointer;
 
 		static LinkageDocument from(String lookup) {
 			return new LinkageDocument(lookup);
@@ -177,6 +178,8 @@ class DocumentPointerFactory {
 			}
 
 			this.documentPointer = org.bson.Document.parse(targetLookup);
+			this.isSimpleTargetPointer = placeholderMap.size() == 1 && placeholderMap.containsValue("target")
+					&& lookup.contains("#target");
 		}
 
 		private String placeholder(int index) {
@@ -194,7 +197,7 @@ class DocumentPointerFactory {
 					propertyAccessor);
 		}
 
-		Document updatePlaceholders(org.bson.Document source, org.bson.Document target,
+		Object updatePlaceholders(org.bson.Document source, org.bson.Document target,
 				MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
 				MongoPersistentEntity<?> persistentEntity, PersistentPropertyAccessor<?> propertyAccessor) {
 
@@ -245,6 +248,11 @@ class DocumentPointerFactory {
 
 				target.put(entry.getKey(), entry.getValue());
 			}
+
+			if (target.size() == 1 && isSimpleTargetPointer) {
+				return target.values().iterator().next();
+			}
+
 			return target;
 		}
 	}
