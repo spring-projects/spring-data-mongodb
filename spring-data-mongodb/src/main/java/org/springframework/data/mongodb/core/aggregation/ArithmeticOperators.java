@@ -799,6 +799,26 @@ public class ArithmeticOperators {
 		public Cosh cosh(AngularUnit unit) {
 			return usesFieldRef() ? Cosh.coshOf(fieldReference, unit) : Cosh.coshOf(expression, unit);
 		}
+		
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the inverse cosine of a numeric value.
+		 *
+		 * @return new instance of {@link ACos}.
+		 * @since 3.3
+		 */
+		public ACos acos() {
+			return usesFieldRef() ? ACos.acosOf(fieldReference) : ACos.acosOf(expression);
+		}
+
+		/**
+		 * Creates new {@link AggregationExpression} that calculates the inverse hyperbolic cosine of a numeric value.
+		 *
+		 * @return new instance of {@link ACosh}.
+		 * @since 3.3
+		 */
+		public ACosh acosh() {
+			return usesFieldRef() ? ACosh.acoshOf(fieldReference) : ACosh.acoshOf(expression);
+		}
 
 		/**
 		 * Creates new {@link AggregationExpression} that calculates the tangent of a numeric value given in
@@ -2662,6 +2682,104 @@ public class ArithmeticOperators {
 		@Override
 		protected String getMongoMethod() {
 			return "$cosh";
+		}
+	}
+	
+	/**
+	 * An {@link AggregationExpression expression} that calculates the inverse cosine of a value.
+	 *
+	 */
+	public static class ACos extends AbstractAggregationExpression {
+
+		private ACos(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse cosine of a value.
+		 *
+		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
+		 * @return new instance of {@link ACos}.
+		 */
+		public static ACos acosOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+			return new ACos(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse cosine of a value.
+		 * <br />
+		 *
+		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
+		 * @return new instance of {@link ACos}.
+		 */
+		public static ACos acosOf(AggregationExpression expression) {
+			return new ACos(expression);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse cosine of a value.
+		 *
+		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
+		 *          numeric value.
+		 * @return new instance of {@link ACos}.
+		 */
+		public static ACos acosOf(Number value) {
+			return new ACos(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$acos";
+		}
+	}
+
+	/**
+	 * An {@link AggregationExpression expression} that calculates the inverse hyperbolic cosine of a value
+	 *
+	 */
+	public static class ACosh extends AbstractAggregationExpression {
+
+		private ACosh(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse hyperbolic cosine of a value.
+		 *
+		 * @param fieldReference the name of the {@link Field field} that resolves to a numeric value.
+		 * @return new instance of {@link ACosh}.
+		 */
+		public static ACosh acoshOf(String fieldReference) {
+			return new ACosh(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse hyperbolic cosine of a value.
+		 * <br />
+		 *
+		 * @param expression the {@link AggregationExpression expression} that resolves to a numeric value.
+		 * @return new instance of {@link ACosh}.
+		 */
+		public static ACosh acoshOf(AggregationExpression expression) {
+			return new ACosh(expression);
+		}
+
+		/**
+		 * Creates a new {@link AggregationExpression} that calculates the inverse hyperbolic cosine of a value.
+		 *
+		 * @param value anything ({@link Field field}, {@link AggregationExpression expression}, ...) that resolves to a
+		 *          numeric value.
+		 * @return new instance of {@link ACosh}.
+		 */
+		public static ACosh acoshOf(Object value) {
+			return new ACosh(value);
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$acosh";
 		}
 	}
 

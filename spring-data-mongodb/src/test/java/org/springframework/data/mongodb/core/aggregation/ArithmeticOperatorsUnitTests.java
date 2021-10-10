@@ -138,6 +138,16 @@ class ArithmeticOperatorsUnitTests {
 
 		assertThat(valueOf("angle").cosh().toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo("{ $cosh : \"$angle\" }");
 	}
+	
+	@Test 
+	void rendersACos() {
+		assertThat(valueOf("field").acos().toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo("{ $acos : \"$field\" }");
+	}
+
+	@Test 
+	void rendersACosh() {
+		assertThat(valueOf("field").acosh().toDocument(Aggregation.DEFAULT_CONTEXT)).isEqualTo("{ $acosh : \"$field\" }");
+	}
 
 	@Test // GH-3710
 	void rendersCoshWithValueInDegrees() {
