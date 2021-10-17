@@ -5,7 +5,7 @@
 
 	<bean id="mongoClient" class="org.springframework.data.mongodb.core.ReactiveMongoClientFactoryBean">
 		<property name="host" value="127.0.0.1"/>
-		<property name="port" value="27017"/>
+		<property name="port" value="27018"/>
 	</bean>
 
 	<bean id="reactiveMongoDbFactory" class="org.springframework.data.mongodb.core.SimpleReactiveMongoDatabaseFactory">

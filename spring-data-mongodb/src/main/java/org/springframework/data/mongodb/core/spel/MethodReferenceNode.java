@@ -124,6 +124,8 @@ public class MethodReferenceNode extends ExpressionNode {
 		map.put("regexFind", mapArgRef().forOperator("$regexFind").mappingParametersTo("input", "regex" , "options"));
 		map.put("regexFindAll", mapArgRef().forOperator("$regexFindAll").mappingParametersTo("input", "regex" , "options"));
 		map.put("regexMatch", mapArgRef().forOperator("$regexMatch").mappingParametersTo("input", "regex" , "options"));
+		map.put("replaceOne", mapArgRef().forOperator("$replaceOne").mappingParametersTo("input", "find" , "replacement"));
+		map.put("replaceAll", mapArgRef().forOperator("$replaceAll").mappingParametersTo("input", "find" , "replacement"));
 
 		// TEXT SEARCH OPERATORS
 		map.put("meta", singleArgRef().forOperator("$meta"));

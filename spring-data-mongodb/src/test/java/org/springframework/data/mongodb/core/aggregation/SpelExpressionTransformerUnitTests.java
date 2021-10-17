@@ -864,6 +864,20 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(transform("regexMatch(field1,'e',field2)"))
 				.isEqualTo("{ \"$regexMatch\" : {\"input\" : \"$field1\" , \"regex\" : \"e\" , \"options\" : \"$field2\"}}");
 	}
+	
+	@Test 
+	void shouldRenderReplaceOne() {
+
+		assertThat(transform("replaceOne(field,'bar','baz')"))
+				.isEqualTo("{ \"$replaceOne\" : {\"input\" : \"$field\" , \"find\" : \"bar\" , \"replacement\" : \"baz\"}}");
+	}
+
+	@Test 
+	void shouldRenderReplaceAll() {
+
+		assertThat(transform("replaceAll(field,'bar','baz')"))
+				.isEqualTo("{ \"$replaceAll\" : {\"input\" : \"$field\" , \"find\" : \"bar\" , \"replacement\" : \"baz\"}}");
+	}
 
 
 	@Test // DATAMONGO-2077
