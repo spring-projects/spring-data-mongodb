@@ -281,4 +281,35 @@ class StringOperatorsUnitTests {
 				.isEqualTo("{ $regexFind: { \"input\" : \"$shrewd\", \"regex\" : \"e\" , \"options\" : " + EXPRESSION_STRING
 						+ " } } ");
 	}
+	
+	@Test 
+	void shouldRenderReplaceOne() {
+
+		assertThat(StringOperators.valueOf("bar").replaceOne("foobar","baz").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ $replaceOne : {\"find\" : \"foobar\", \"input\" : \"$bar\", \"replacement\" : \"baz\"}}");
+	}
+
+	@Test
+	void shouldRenderReplaceOneForExpression() {
+
+		assertThat(StringOperators.valueOf(EXPRESSION).replaceOne("a","s").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ $replaceOne : {\"find\" : \"a\", \"input\" : " + EXPRESSION_STRING + ", \"replacement\" : \"s\"}}");
+	}
+	
+	@Test 
+	void shouldRenderReplaceAll() {
+
+		assertThat(StringOperators.valueOf("bar").replaceAll("foobar","baz").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ $replaceAll : {\"find\" : \"foobar\", \"input\" : \"$bar\", \"replacement\" : \"baz\"}}");
+	}
+
+	@Test
+	void shouldRenderReplaceAllForExpression() {
+
+		assertThat(StringOperators.valueOf(EXPRESSION).replaceAll("a","s").toDocument(Aggregation.DEFAULT_CONTEXT))
+				.isEqualTo("{ $replaceAll : {\"find\" : \"a\", \"input\" : " + EXPRESSION_STRING + ", \"replacement\" : \"s\"}}");
+	}
+
+
+
 }

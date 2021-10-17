@@ -686,10 +686,28 @@ public class StringOperators {
 		private RegexMatch createRegexMatch() {
 			return usesFieldRef() ? RegexMatch.valueOf(fieldReference) : RegexMatch.valueOf(expression);
 		}
+		
+		public ReplaceOne replaceOne(String find,String replacement) {
+			return createReplaceOne().find(find).replacement(replacement);
+		}
+		
+		private ReplaceOne createReplaceOne() {
+			return usesFieldRef() ? ReplaceOne.valueOf(fieldReference) : ReplaceOne.valueOf(expression);
+		}
+		
+		public ReplaceAll replaceAll(String find,String replacement) {
+			return createReplaceAll().find(find).replacement(replacement);
+		}
+		
+		private ReplaceAll createReplaceAll() {
+			return usesFieldRef() ? ReplaceAll.valueOf(fieldReference) : ReplaceAll.valueOf(expression);
+		}
 
 		private boolean usesFieldRef() {
 			return fieldReference != null;
 		}
+		
+		
 	}
 
 	/**
@@ -2078,4 +2096,260 @@ public class StringOperators {
 			return "$regexMatch";
 		}
 	}
+	
+	/**
+	 * {@link AggregationExpression} for {@code $replaceOne} which replaces the first instance of a search string in an
+	 * input string with a replacement string. <br />
+	 * <strong>NOTE:</strong> Requires MongoDB 4.4 or later.
+	 */
+	public static class ReplaceOne extends AbstractAggregationExpression {
+
+		protected ReplaceOne(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates new {@link ReplaceOne} using the value of the provided {@link Field fieldReference} as {@literal input}
+		 * value.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link ReplaceOne}.
+		 */
+		public static ReplaceOne valueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+
+			return new ReplaceOne(Collections.singletonMap("input", Fields.field(fieldReference)));
+		}
+
+		/**
+		 * Creates new {@link ReplaceOne} using the result of the provided {@link AggregationExpression} as {@literal input}
+		 * value.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link ReplaceOne}.
+		 */
+		public static ReplaceOne valueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+
+			return new ReplaceOne(Collections.singletonMap("input", expression));
+		}
+
+		/**
+		 * The string to use to replace the first matched instance of {@code find} in input.
+		 *
+		 * @param replacement must not be {@literal null}.
+		 * @return new instance of {@link ReplaceOne}.
+		 */
+		public ReplaceOne replacement(String replacement) {
+
+			Assert.notNull(replacement, "Replacement must not be null!");
+
+			return new ReplaceOne(append("replacement", replacement));
+		}
+
+		/**
+		 * Specifies the reference to the {@link Field field} holding the string to use to replace the first matched
+		 * instance of {@code find} in input.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link ReplaceOne}.
+		 */
+		public ReplaceOne replacementOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+
+			return new ReplaceOne(append("replacement", Fields.field(fieldReference)));
+		}
+
+		/**
+		 * Specifies the {@link AggregationExpression} evaluating to the string to use to replace the first matched instance
+		 * of {@code find} in {@code input}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link ReplaceOne}.
+		 */
+		public ReplaceOne replacementOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+
+			return new ReplaceOne(append("replacement", expression));
+		}
+
+		/**
+		 * The string to search for within the given input field.
+		 *
+		 * @param find must not be {@literal null}.
+		 * @return new instance of {@link ReplaceOne}.
+		 */
+		public ReplaceOne find(String searchStr) {
+
+			Assert.notNull(searchStr, "Search string must not be null!");
+
+			Map<String, Object> search = append("find", searchStr);
+
+			return new ReplaceOne(search);
+		}
+
+		/**
+		 * Specify the reference to the {@link Field field} holding the string to search for within the given input field.
+		 *
+		 * @param find must not be {@literal null}.
+		 * @return new instance of {@link ReplaceOne}.
+		 */
+		public ReplaceOne findOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "fieldReference must not be null!");
+
+			return new ReplaceOne(append("find", fieldReference));
+		}
+
+		/**
+		 * Specify the {@link AggregationExpression} evaluating to the the string to search for within the given input
+		 * field.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link ReplaceOne}.
+		 */
+		public ReplaceOne findOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+
+			return new ReplaceOne(append("find", expression));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$replaceOne";
+		}
+	}
+	
+	/**
+	 * {@link AggregationExpression} for {@code $replaceAll} which replaces all instances of a search string in an input
+	 * string with a replacement string. <br />
+	 * <strong>NOTE:</strong> Requires MongoDB 4.4 or later.
+	 */
+	public static class ReplaceAll extends AbstractAggregationExpression {
+
+		protected ReplaceAll(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Creates new {@link ReplaceAll} using the value of the provided {@link Field fieldReference} as {@literal input}
+		 * value.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link ReplaceAll}.
+		 */
+		public static ReplaceAll valueOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+
+			return new ReplaceAll(Collections.singletonMap("input", Fields.field(fieldReference)));
+		}
+
+		/**
+		 * Creates new {@link ReplaceAll} using the result of the provided {@link AggregationExpression} as {@literal input}
+		 * value.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link ReplaceAll}.
+		 */
+		public static ReplaceAll valueOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+
+			return new ReplaceAll(Collections.singletonMap("input", expression));
+		}
+
+		/**
+		 * The string to use to replace the first matched instance of {@code find} in input.
+		 *
+		 * @param replacement must not be {@literal null}.
+		 * @return new instance of {@link ReplaceAll}.
+		 */
+		public ReplaceAll replacement(String replacement) {
+
+			Assert.notNull(replacement, "Replacement must not be null!");
+
+			return new ReplaceAll(append("replacement", replacement));
+		}
+
+		/**
+		 * Specifies the reference to the {@link Field field} holding the string to use to replace the first matched
+		 * instance of {@code find} in input.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link ReplaceAll}.
+		 */
+		public ReplaceAll replacementOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "FieldReference must not be null!");
+
+			return new ReplaceAll(append("replacement", Fields.field(fieldReference)));
+		}
+
+		/**
+		 * Specifies the {@link AggregationExpression} evaluating to the string to use to replace the first matched instance
+		 * of {@code find} in input.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link ReplaceAll}.
+		 */
+		public ReplaceAll replacementOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+
+			return new ReplaceAll(append("replacement", expression));
+		}
+
+		/**
+		 * The string to search for within the given input field.
+		 *
+		 * @param find must not be {@literal null}.
+		 * @return new instance of {@link ReplaceAll}.
+		 */
+		public ReplaceAll find(String searchStr) {
+
+			Assert.notNull(searchStr, "Search string must not be null!");
+
+			Map<String, Object> search = append("find", searchStr);
+
+			return new ReplaceAll(search);
+		}
+
+		/**
+		 * Specify the reference to the {@link Field field} holding the string to search for within the given input field.
+		 *
+		 * @param find must not be {@literal null}.
+		 * @return new instance of {@link ReplaceAll}.
+		 */
+		public ReplaceAll findOf(String fieldReference) {
+
+			Assert.notNull(fieldReference, "fieldReference must not be null!");
+
+			return new ReplaceAll(append("find", fieldReference));
+		}
+
+		/**
+		 * Specify the {@link AggregationExpression} evaluating to the string to search for within the given input field.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link ReplaceAll}.
+		 */
+		public ReplaceAll findOf(AggregationExpression expression) {
+
+			Assert.notNull(expression, "Expression must not be null!");
+
+			return new ReplaceAll(append("find", expression));
+		}
+
+		@Override
+		protected String getMongoMethod() {
+			return "$replaceAll";
+		}
+	}
+
 }
