@@ -129,4 +129,47 @@ public class ArrayOperatorsUnitTests {
 		assertThat(ArrayOperators.arrayOf(VALUE_LIST).containsValue("$userName").toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo("{ \"$in\" : [\"$userName\", " + VALUE_LIST_STRING + "] }");
 	}
+	
+	@Test
+	public void firstWithValueList() {
+		
+		assertThat(ArrayOperators.arrayOf(VALUE_LIST).first().toDocument(Aggregation.DEFAULT_CONTEXT))
+		.isEqualTo("{ \"$first\" : " + VALUE_LIST_STRING + "}");
+	}
+	
+	@Test
+	public void firstWithExpression() {
+		
+		assertThat(ArrayOperators.arrayOf(EXPRESSION).first().toDocument(Aggregation.DEFAULT_CONTEXT))
+		.isEqualTo("{ \"$first\" : " + EXPRESSION_STRING + "}");
+	}
+	
+	@Test
+	public void firstWithFieldReference() {
+		
+		assertThat(ArrayOperators.arrayOf("field").first().toDocument(Aggregation.DEFAULT_CONTEXT))
+		.isEqualTo("{ $first : \"$field\" }");
+	}
+	
+	@Test
+	public void lastWithValueList() {
+		
+		assertThat(ArrayOperators.arrayOf(VALUE_LIST).last().toDocument(Aggregation.DEFAULT_CONTEXT))
+		.isEqualTo("{ \"$last\" : " + VALUE_LIST_STRING + "}");
+	}
+	
+	@Test
+	public void lastWithExpression() {
+		
+		assertThat(ArrayOperators.arrayOf(EXPRESSION).last().toDocument(Aggregation.DEFAULT_CONTEXT))
+		.isEqualTo("{ \"$last\" : " + EXPRESSION_STRING + "}");
+	}
+	
+	@Test
+	public void lastWithFieldReference() {
+		
+		assertThat(ArrayOperators.arrayOf("field").last().toDocument(Aggregation.DEFAULT_CONTEXT))
+		.isEqualTo("{ $last : \"$field\" }");
+	}
+
 }
