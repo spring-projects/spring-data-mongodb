@@ -362,6 +362,36 @@ public class ArrayOperators {
 
 			return usesExpression() ? ArrayToObject.arrayValueOfToObject(expression) : ArrayToObject.arrayToObject(values);
 		}
+		
+		/**
+		 * Creates new {@link AggregationExpression} that return the first element in the given array.
+		 * <strong>NOTE:</strong> Requires MongoDB 4.4 or later.
+		 *
+		 * @return new instance of {@link First}.
+		 */
+		public First first() {
+
+			if (usesFieldRef()) {
+				return First.firstOf(fieldReference);
+			}
+
+			return usesExpression() ? First.firstOf(expression) : First.first(values);
+		}
+		
+		/**
+		 * Creates new {@link AggregationExpression} that return the last element in the given array.
+		 * <strong>NOTE:</strong> Requires MongoDB 4.4 or later.
+		 *
+		 * @return new instance of {@link First}.
+		 */
+		public Last last() {
+
+			if (usesFieldRef()) {
+				return Last.lastOf(fieldReference);
+			}
+
+			return usesExpression() ? Last.lastOf(expression) : Last.last(values);
+		}
 
 		/**
 		 * @author Christoph Strobl
@@ -1812,4 +1842,107 @@ public class ArrayOperators {
 			return "$arrayToObject";
 		}
 	}
+	
+	/**
+	 * {@link AggregationExpression} for {@code $first} that returns the first element in an array. <br />
+	 * <strong>NOTE:</strong> Requires MongoDB 4.4 or later.
+	 *
+	 */
+	public static class First extends AbstractAggregationExpression {
+
+		private First(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Returns the first element in the given array.
+		 *
+		 * @param array must not be {@literal null}.
+		 * @return new instance of {@link First}.
+		 */
+		public static First first(Object array) {
+			return new First(array);
+		}
+
+		/**
+		 * Returns the first element in the array pointed to by the given {@link Field field reference}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link First}.
+		 */
+		public static First firstOf(String fieldReference) {
+			return new First(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Returns the first element of the array of the given {@link AggregationExpression expression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link First}.
+		 */
+		public static First firstOf(AggregationExpression expression) {
+			return new First(expression);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.AbstractAggregationExpression#getMongoMethod()
+		 */
+		@Override
+		protected String getMongoMethod() {
+			return "$first";
+		}
+	}
+	
+	/**
+	 * {@link AggregationExpression} for {@code $last} that returns the last element in an array. <br />
+	 * <strong>NOTE:</strong> Requires MongoDB 4.4 or later.
+	 *
+	 */
+	public static class Last extends AbstractAggregationExpression {
+
+		private Last(Object value) {
+			super(value);
+		}
+
+		/**
+		 * Returns the first element in the given array.
+		 *
+		 * @param array must not be {@literal null}.
+		 * @return new instance of {@link Last}.
+		 */
+		public static Last last(Object array) {
+			return new Last(array);
+		}
+
+		/**
+		 * Returns the last element in the array pointed to by the given {@link Field field reference}.
+		 *
+		 * @param fieldReference must not be {@literal null}.
+		 * @return new instance of {@link Last}.
+		 */
+		public static Last lastOf(String fieldReference) {
+			return new Last(Fields.field(fieldReference));
+		}
+
+		/**
+		 * Returns the last element of the array of the given {@link AggregationExpression expression}.
+		 *
+		 * @param expression must not be {@literal null}.
+		 * @return new instance of {@link Last}.
+		 */
+		public static Last lastOf(AggregationExpression expression) {
+			return new Last(expression);
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * @see org.springframework.data.mongodb.core.aggregation.AbstractAggregationExpression#getMongoMethod()
+		 */
+		@Override
+		protected String getMongoMethod() {
+			return "$last";
+		}
+	}
+
 }
