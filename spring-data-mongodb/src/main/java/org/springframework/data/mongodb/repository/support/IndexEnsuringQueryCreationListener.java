@@ -23,10 +23,10 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
-import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.index.IndexOperationsProvider;
@@ -117,7 +117,7 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 		MongoEntityMetadata<?> metadata = query.getQueryMethod().getEntityInformation();
 		try {
 			indexOperationsProvider.indexOps(metadata.getCollectionName(), metadata.getJavaType()).ensureIndex(index);
-		} catch (UncategorizedMongoDbException e) {
+		} catch (DataIntegrityViolationException e) {
 
 			if (e.getCause() instanceof MongoException) {
 

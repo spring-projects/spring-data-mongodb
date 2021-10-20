@@ -19,6 +19,8 @@ import java.util.HashMap;
 
 import org.springframework.lang.Nullable;
 
+import com.mongodb.MongoException;
+
 /**
  * {@link MongoDbErrorCodes} holds MongoDB specific error codes outlined in {@literal mongo/base/error_codes.err}.
  *
@@ -34,7 +36,6 @@ public final class MongoDbErrorCodes {
 	static HashMap<Integer, String> invalidDataAccessApiUsageExeption;
 	static HashMap<Integer, String> permissionDeniedCodes;
 	static HashMap<Integer, String> clientSessionCodes;
-	static HashMap<Integer, String> transactionCodes;
 
 	static HashMap<Integer, String> errorCodes;
 
@@ -96,6 +97,7 @@ public final class MongoDbErrorCodes {
 		invalidDataAccessApiUsageExeption.put(72, "InvalidOptions");
 		invalidDataAccessApiUsageExeption.put(115, "CommandNotSupported");
 		invalidDataAccessApiUsageExeption.put(116, "DocTooLargeForCapped");
+		invalidDataAccessApiUsageExeption.put(10003, "CannotGrowDocumentInCappedNamespace");
 		invalidDataAccessApiUsageExeption.put(130, "SymbolNotFound");
 		invalidDataAccessApiUsageExeption.put(17280, "KeyTooLong");
 		invalidDataAccessApiUsageExeption.put(13334, "ShardKeyTooBig");
@@ -113,18 +115,18 @@ public final class MongoDbErrorCodes {
 		clientSessionCodes = new HashMap<>(4, 1f);
 		clientSessionCodes.put(206, "NoSuchSession");
 		clientSessionCodes.put(213, "DuplicateSession");
+		clientSessionCodes.put(217, "IncompleteTransactionHistory");
+		clientSessionCodes.put(225, "TransactionTooOld");
 		clientSessionCodes.put(228, "SessionTransferIncomplete");
+		clientSessionCodes.put(244, "TransactionAborted");
+		clientSessionCodes.put(251, "NoSuchTransaction");
+		clientSessionCodes.put(256, "TransactionCommitted");
+		clientSessionCodes.put(257, "TransactionToLarge");
+		clientSessionCodes.put(261, "TooManyLogicalSessions");
+		clientSessionCodes.put(263, "OperationNotSupportedInTransaction");
 		clientSessionCodes.put(264, "TooManyLogicalSessions");
-
-		transactionCodes = new HashMap<>(8, 1f);
-		transactionCodes.put(217, "IncompleteTransactionHistory");
-		transactionCodes.put(225, "TransactionTooOld");
-		transactionCodes.put(244, "TransactionAborted");
-		transactionCodes.put(251, "NoSuchTransaction");
-		transactionCodes.put(256, "TransactionCommitted");
-		transactionCodes.put(257, "TransactionToLarge");
-		transactionCodes.put(263, "OperationNotSupportedInTransaction");
-		transactionCodes.put(267, "PreparedTransactionInProgress");
+		clientSessionCodes.put(267, "PreparedTransactionInProgress");
+		clientSessionCodes.put(290, "TransactionExceededLifetimeLimitSeconds");
 
 		errorCodes = new HashMap<>();
 		errorCodes.putAll(dataAccessResourceFailureCodes);
@@ -139,20 +141,98 @@ public final class MongoDbErrorCodes {
 		return errorCode == null ? false : dataIntegrityViolationCodes.containsKey(errorCode);
 	}
 
+	/**
+	 * @param exception can be {@literal null}.
+	 * @return
+	 * @since 3.3
+	 */
+	public static boolean isDataIntegrityViolationError(@Nullable Exception exception) {
+
+		if(exception instanceof MongoException) {
+			return isDataIntegrityViolationCode(((MongoException) exception).getCode());
+		}
+		return false;
+	}
+
 	public static boolean isDataAccessResourceFailureCode(@Nullable Integer errorCode) {
 		return errorCode == null ? false : dataAccessResourceFailureCodes.containsKey(errorCode);
+	}
+
+	/**
+	 * @param exception can be {@literal null}.
+	 * @return
+	 * @since 3.3
+	 */
+	public static boolean isDataAccessResourceError(@Nullable Exception exception) {
+
+		if(exception instanceof MongoException) {
+			return isDataAccessResourceFailureCode(((MongoException) exception).getCode());
+		}
+		return false;
 	}
 
 	public static boolean isDuplicateKeyCode(@Nullable Integer errorCode) {
 		return errorCode == null ? false : duplicateKeyCodes.containsKey(errorCode);
 	}
 
+	/**
+	 * @param exception can be {@literal null}.
+	 * @return
+	 * @since 3.3
+	 */
+	public static boolean isDuplicateKeyError(@Nullable Exception exception) {
+
+		if(exception instanceof MongoException) {
+			return isDuplicateKeyCode(((MongoException) exception).getCode());
+		}
+		return false;
+	}
+
+	/**
+	 * @param exception can be {@literal null}.
+	 * @return
+	 * @since 3.3
+	 */
+	public static boolean isDataDuplicateKeyError(@Nullable Exception exception) {
+
+		if(exception instanceof MongoException) {
+			return isDuplicateKeyCode(((MongoException) exception).getCode());
+		}
+		return false;
+	}
+
 	public static boolean isPermissionDeniedCode(@Nullable Integer errorCode) {
 		return errorCode == null ? false : permissionDeniedCodes.containsKey(errorCode);
 	}
 
+	/**
+	 * @param exception can be {@literal null}.
+	 * @return
+	 * @since 3.3
+	 */
+	public static boolean isPermissionDeniedError(@Nullable Exception exception) {
+
+		if(exception instanceof MongoException) {
+			return isPermissionDeniedCode(((MongoException) exception).getCode());
+		}
+		return false;
+	}
+
 	public static boolean isInvalidDataAccessApiUsageCode(@Nullable Integer errorCode) {
 		return errorCode == null ? false : invalidDataAccessApiUsageExeption.containsKey(errorCode);
+	}
+
+	/**
+	 * @param exception can be {@literal null}.
+	 * @return
+	 * @since 3.3
+	 */
+	public static boolean isInvalidDataAccessApiUsageError(@Nullable Exception exception) {
+
+		if(exception instanceof MongoException) {
+			return isInvalidDataAccessApiUsageCode(((MongoException) exception).getCode());
+		}
+		return false;
 	}
 
 	public static String getErrorDescription(@Nullable Integer errorCode) {
@@ -171,13 +251,15 @@ public final class MongoDbErrorCodes {
 	}
 
 	/**
-	 * Check if the given error code matches a know transaction related error.
-	 *
-	 * @param errorCode the error code to check.
-	 * @return {@literal true} if error matches.
-	 * @since 2.1
+	 * @param exception can be {@literal null}.
+	 * @return
+	 * @since 3.3
 	 */
-	public static boolean isTransactionFailureCode(@Nullable Integer errorCode) {
-		return errorCode == null ? false : transactionCodes.containsKey(errorCode);
+	public static boolean isClientSessionFailure(@Nullable Exception exception) {
+
+		if(exception instanceof MongoException) {
+			return isClientSessionFailureCode(((MongoException) exception).getCode());
+		}
+		return false;
 	}
 }
