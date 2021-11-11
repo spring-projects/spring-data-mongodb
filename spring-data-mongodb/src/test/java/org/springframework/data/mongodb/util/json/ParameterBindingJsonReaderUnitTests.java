@@ -358,6 +358,15 @@ class ParameterBindingJsonReaderUnitTests {
 						new Document("user.supervisor", "wonderwoman"))));
 	}
 
+	@Test // GH-3871
+	public void capturingExpressionDependenciesShouldNotThrowParseErrorForSpelOnlyJson() {
+
+		Object[] args = new Object[] { "1", "2" };
+		String json = "?#{ true ? { 'name': #name } : { 'name' : #name + 'trouble' } }";
+
+		new ParameterBindingDocumentCodec().captureExpressionDependencies(json, (index) -> args[index], new SpelExpressionParser());
+	}
+
 	@Test // DATAMONGO-2571
 	void shouldParseRegexCorrectly() {
 

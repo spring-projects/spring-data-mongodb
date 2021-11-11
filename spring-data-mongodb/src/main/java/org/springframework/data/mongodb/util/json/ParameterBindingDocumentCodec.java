@@ -18,6 +18,7 @@ package org.springframework.data.mongodb.util.json;
 import static java.util.Arrays.*;
 import static org.bson.assertions.Assertions.*;
 import static org.bson.codecs.configuration.CodecRegistries.*;
+import static org.springframework.data.mongodb.util.json.ParameterBindingJsonReader.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -217,6 +218,9 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 			if (bindingReader.currentValue instanceof org.bson.Document) {
 				return (Document) bindingReader.currentValue;
 			}
+			if(ObjectUtils.nullSafeEquals(bindingReader.currentValue, PLACEHOLDER)) {
+				return new Document();
+			}
 		}
 
 		Document document = new Document();
@@ -376,8 +380,6 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 	 * @since 3.1
 	 */
 	static class DependencyCapturingExpressionEvaluator implements SpELExpressionEvaluator {
-
-		private static final Object PLACEHOLDER = new Object();
 
 		private final ExpressionParser expressionParser;
 		private final List<ExpressionDependencies> dependencies = new ArrayList<>();

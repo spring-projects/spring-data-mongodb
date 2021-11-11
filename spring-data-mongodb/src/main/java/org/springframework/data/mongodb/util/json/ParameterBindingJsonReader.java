@@ -61,7 +61,10 @@ import org.springframework.util.ObjectUtils;
  */
 public class ParameterBindingJsonReader extends AbstractBsonReader {
 
+	static final Object PLACEHOLDER = new Object();
+
 	private static final Pattern PARAMETER_ONLY_BINDING_PATTERN = Pattern.compile("^\\?(\\d+)$");
+	private static final Pattern EXPRESSION_ONLY_BINDING_PATTERN = Pattern.compile("^\\?#\\{.*\\}$");
 	private static final Pattern PARAMETER_BINDING_PATTERN = Pattern.compile("\\?(\\d+)");
 	private static final Pattern EXPRESSION_BINDING_PATTERN = Pattern.compile("[\\?:]#\\{.*\\}");
 
@@ -110,11 +113,7 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		setContext(new Context(null, BsonContextType.TOP_LEVEL));
 
 		this.bindingContext = new ParameterBindingContext(accessor, spelExpressionParser, evaluationContext);
-
-		Matcher matcher = PARAMETER_ONLY_BINDING_PATTERN.matcher(json);
-		if (matcher.find()) {
-			currentValue = bindableValueFor(new JsonToken(JsonTokenType.UNQUOTED_STRING, json)).getValue();
-		}
+		setInitialValueIfFullDocumentExpression(json);
 	}
 
 	public ParameterBindingJsonReader(String json, ParameterBindingContext bindingContext) {
@@ -123,9 +122,13 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		setContext(new Context(null, BsonContextType.TOP_LEVEL));
 
 		this.bindingContext = bindingContext;
+		setInitialValueIfFullDocumentExpression(json);
+	}
 
-		Matcher matcher = PARAMETER_ONLY_BINDING_PATTERN.matcher(json);
-		if (matcher.find()) {
+	public void setInitialValueIfFullDocumentExpression(String json) {
+		if (PARAMETER_ONLY_BINDING_PATTERN.matcher(json).find()) {
+			currentValue = bindableValueFor(new JsonToken(JsonTokenType.UNQUOTED_STRING, json)).getValue();
+		} else if (EXPRESSION_ONLY_BINDING_PATTERN.matcher(json).find()) {
 			currentValue = bindableValueFor(new JsonToken(JsonTokenType.UNQUOTED_STRING, json)).getValue();
 		}
 	}
