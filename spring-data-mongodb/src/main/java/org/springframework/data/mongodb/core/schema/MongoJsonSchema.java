@@ -15,7 +15,11 @@
  */
 package org.springframework.data.mongodb.core.schema;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.bson.Document;
@@ -104,12 +108,159 @@ public interface MongoJsonSchema {
 	}
 
 	/**
+	 * Create a new {@link MongoJsonSchema} combining properties from the given sources.
+	 *
+	 * @param sources must not be {@literal null}.
+	 * @return new instance of {@link MongoJsonSchema}.
+	 * @since 3.4
+	 */
+	static MongoJsonSchema combined(MongoJsonSchema... sources) {
+		return combined((path, a, b) -> {
+			throw new IllegalStateException(
+					String.format("Failure combining schema for path %s holding values a) %s and b) %s.", path.dotPath(), a, b));
+		}, sources);
+	}
+
+	/**
+	 * Create a new {@link MongoJsonSchema} combining properties from the given sources.
+	 *
+	 * @param sources must not be {@literal null}.
+	 * @return new instance of {@link MongoJsonSchema}.
+	 * @since 3.4
+	 */
+	static MongoJsonSchema combined(ConflictResolutionFunction mergeFunction, MongoJsonSchema... sources) {
+		return new CombinedJsonSchema(Arrays.asList(sources), mergeFunction);
+	}
+
+	/**
+	 * Create a new {@link MongoJsonSchema} combining properties from the given sources.
+	 *
+	 * @param sources must not be {@literal null}.
+	 * @return new instance of {@link MongoJsonSchema}.
+	 * @since 3.4
+	 */
+	default MongoJsonSchema combineWith(MongoJsonSchema... sources) {
+		return combineWith(Arrays.asList(sources));
+	}
+
+	/**
+	 * Create a new {@link MongoJsonSchema} combining properties from the given sources.
+	 *
+	 * @param sources must not be {@literal null}.
+	 * @return new instance of {@link MongoJsonSchema}.
+	 * @since 3.4
+	 */
+	default MongoJsonSchema combineWith(Collection<MongoJsonSchema> sources) {
+		return combineWith(sources, (path, a, b) -> {
+			throw new IllegalStateException(
+					String.format("Failure combining schema for path %s holding values a) %s and b) %s.", path.dotPath(), a, b));
+		});
+	}
+
+	/**
+	 * Create a new {@link MongoJsonSchema} combining properties from the given sources.
+	 *
+	 * @param sources must not be {@literal null}.
+	 * @return new instance of {@link MongoJsonSchema}.
+	 * @since 3.4
+	 */
+	default MongoJsonSchema combineWith(Collection<MongoJsonSchema> sources,
+			ConflictResolutionFunction conflictResolutionFunction) {
+
+		List<MongoJsonSchema> schemaList = new ArrayList<>(sources.size() + 1);
+		schemaList.add(this);
+		schemaList.addAll(new ArrayList<>(sources));
+		return new CombinedJsonSchema(schemaList, conflictResolutionFunction);
+	}
+
+	/**
 	 * Obtain a new {@link MongoJsonSchemaBuilder} to fluently define the schema.
 	 *
 	 * @return new instance of {@link MongoJsonSchemaBuilder}.
 	 */
 	static MongoJsonSchemaBuilder builder() {
 		return new MongoJsonSchemaBuilder();
+	}
+
+	/**
+	 * A resolution function that may be called on conflicting paths. Eg. when trying to merge properties with different
+	 * values into one.
+	 *
+	 * @author Christoph Strobl
+	 * @since 3.4
+	 */
+	@FunctionalInterface
+	interface ConflictResolutionFunction {
+
+		/**
+		 * @param path the {@link Path} leading to the conflict.
+		 * @param a can be {@literal null}.
+		 * @param b can be {@literal null}.
+		 * @return never {@literal null}.
+		 */
+		Resolution resolveConflict(Path path, @Nullable Object a, @Nullable Object b);
+
+		/**
+		 * @author Christoph Strobl
+		 * @since 3.4
+		 */
+		interface Path {
+
+			/**
+			 * @return the name of the currently processed element
+			 */
+			String currentElement();
+
+			/**
+			 * @return the path leading to the currently processed element in dot {@literal '.'} notation.
+			 */
+			String dotPath();
+		}
+
+		/**
+		 * The result after processing a conflict when combining schemas. May indicate to {@link #SKIP skip} the entry
+		 * entirely.
+		 *
+		 * @author Christoph Strobl
+		 * @since 3.4
+		 */
+		interface Resolution extends Map.Entry<String, Object> {
+
+			@Override
+			default Object setValue(Object value) {
+				throw new IllegalStateException("Cannot set value result. Maybe you missed to override the method.");
+			}
+
+			/**
+			 * Resolution
+			 */
+			Resolution SKIP = new Resolution() {
+
+				@Override
+				public String getKey() {
+					throw new IllegalStateException("No key for skipped result.");
+				}
+
+				@Override
+				public Object getValue() {
+					throw new IllegalStateException("No value for skipped result.");
+				}
+
+				@Override
+				public Object setValue(Object value) {
+					throw new IllegalStateException("Cannot set value on skipped result.");
+				}
+			};
+
+			/**
+			 * Obtain a {@link Resolution} that will skip the entry and proceed computation.
+			 *
+			 * @return never {@literal null}.
+			 */
+			static Resolution skip() {
+				return SKIP;
+			}
+		}
 	}
 
 	/**

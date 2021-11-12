@@ -190,6 +190,103 @@ unless there is more specific information available via the `@MongoId` annotatio
 
 |===
 
+The above example demonstrated how to derive the schema from a very precise typed source.
+Using polymorphic elements within the domain model can lead to inaccurate schema representation for `Object` and generic `<T>` types, which are likely to represented as `{ type : 'object' }` without further specification.
+`MongoJsonSchemaCreator.specify(...)` allows to define additional types that should be considered when rendering the schema.
+
+.Specify additional types for properties
+====
+[source,java]
+----
+public class Root {
+	Object value;
+}
+
+public class A {
+	String aValue;
+}
+
+public class B {
+	String bValue;
+}
+MongoJsonSchemaCreator.create()
+    .specify("value").types(A.class, B.class) <1>
+----
+
+[source,json]
+----
+{
+    'type' : 'object',
+    'properties' : {
+        'value' : {
+            'type' : 'object',
+            'properties' : { <1>
+                'aValue' : { 'type' : 'string' },
+                'bValue' : { 'type' : 'string' }
+            }
+        }
+    }
+}
+----
+<1> Properties of the given types are combined into one element.
+====
+
+MongoDBs schema free approach allows to store documents of different structure in one collection.
+Those may be modeled having a common base class.
+Regardless of the chosen approach `MongoJsonSchemaCreator.combine(...)` is can help circumvent the need of combining multiple schema into one.
+
+.Combining multiple Schemas
+====
+[source,java]
+----
+public abstract class Root {
+	String rootValue;
+}
+
+public class A extends Root {
+	String aValue;
+}
+
+public class B extends Root {
+	String bValue;
+}
+
+MongoJsonSchemaCreator.combined(A.class, B.class) <1>
+----
+
+[source,json]
+----
+{
+    'type' : 'object',
+       'properties' : { <1>
+           'rootValue' : { 'type' : 'string' },
+           'aValue' : { 'type' : 'string' },
+           'bValue' : { 'type' : 'string' }
+       }
+    }
+}
+----
+<1> Properties (and their inherited ones) of the given types are combined into one schema.
+====
+
+[NOTE]
+====
+Equally named properties need to refer to the same json schema in order to be combined.
+The following example shows a definition that cannot be combined automatically because of a data type mismatch.
+In this case a `ConflictResolutionFunction` has to be provided to `MongoJsonSchemaCreator`.
+
+[source,java]
+----
+public class A extends Root {
+	String value;
+}
+
+public class B extends Root {
+	Integer value;
+}
+----
+====
+
 [[mongo.jsonSchema.query]]
 ==== Query a collection for matching JSON Schema
 
