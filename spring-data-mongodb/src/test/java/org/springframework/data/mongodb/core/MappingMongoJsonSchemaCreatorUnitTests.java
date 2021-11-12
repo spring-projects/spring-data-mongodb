@@ -38,7 +38,11 @@ import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoId;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type;
+import org.springframework.data.mongodb.core.schema.JsonSchemaProperty;
 import org.springframework.data.mongodb.core.schema.MongoJsonSchema;
+import org.springframework.data.mongodb.core.schema.MongoJsonSchema.ConflictResolutionFunction;
+import org.springframework.data.mongodb.core.schema.MongoJsonSchema.ConflictResolutionFunction.Resolution;
 import org.springframework.data.spel.spi.EvaluationContextExtension;
 import org.springframework.data.spel.spi.Function;
 
@@ -156,6 +160,132 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 				.createSchemaFor(EncryptionMetadataFromMethod.class);
 
 		assertThat(schema.schemaDocument().toBsonDocument()).isEqualTo(BsonDocument.parse(ENC_FROM_METHOD_SCHEMA));
+	}
+
+	// --> Combining Schemas and Properties
+
+	@Test // GH-3870
+	void shouldAllowToSpecifyPolymorphicTypesForProperty() {
+
+		MongoJsonSchema schema = MongoJsonSchemaCreator.create() //
+				.specify("objectValue").types(A.class, B.class)
+				.createSchemaFor(SomeTestObject.class);
+
+		Document targetSchema = schema.schemaDocument();
+		assertThat(targetSchema) //
+				.containsEntry("properties.objectValue.properties.aNonEncrypted", new Document("type", "string")) //
+				.containsEntry("properties.objectValue.properties.aEncrypted", ENCRYPTED_BSON_STRING) //
+				.containsEntry("properties.objectValue.properties.bEncrypted", ENCRYPTED_BSON_STRING);
+	}
+
+	@Test // GH-3870
+	void shouldAllowToSpecifyNestedPolymorphicTypesForProperty() {
+
+		MongoJsonSchema schema = MongoJsonSchemaCreator.create() //
+				.specify("value.objectValue").types(A.class, B.class) //
+				.createSchemaFor(WrapperAroundA.class);
+
+		Document targetSchema = schema.schemaDocument();
+
+		assertThat(schema.schemaDocument()) //
+				.containsEntry("properties.value.properties.objectValue.properties.aNonEncrypted", new Document("type", "string")) //
+				.containsEntry("properties.value.properties.objectValue.properties.aEncrypted", ENCRYPTED_BSON_STRING) //
+				.containsEntry("properties.value.properties.objectValue.properties.bEncrypted", ENCRYPTED_BSON_STRING);
+
+	}
+
+	@Test // GH-3870
+	void shouldAllowToSpecifyGenericTypesForProperty() {
+
+		MongoJsonSchema schema = MongoJsonSchemaCreator.create() //
+				.specify("genericValue").types(A.class, B.class)
+				.createSchemaFor(SomeTestObject.class);
+
+		assertThat(schema.schemaDocument()) //
+				.containsEntry("properties.genericValue.properties.aNonEncrypted", new Document("type", "string")) //
+				.containsEntry("properties.genericValue.properties.aEncrypted", ENCRYPTED_BSON_STRING) //
+				.containsEntry("properties.genericValue.properties.bEncrypted", ENCRYPTED_BSON_STRING);
+	}
+
+	@Test // GH-3870
+	void encryptionFilterShouldCaptureSpecifiedPolymorphicTypesForProperty() {
+
+		MongoJsonSchema schema = MongoJsonSchemaCreator.create() //
+				.specify("objectValue").types(A.class, B.class) //
+				.filter(MongoJsonSchemaCreator.encryptedOnly()) //
+				.createSchemaFor(SomeTestObject.class);
+
+		assertThat(schema.schemaDocument()) //
+				.doesNotContainKey("properties.objectValue.properties.aNonEncrypted") //
+				.containsEntry("properties.objectValue.properties.aEncrypted", ENCRYPTED_BSON_STRING) //
+				.containsEntry("properties.objectValue.properties.bEncrypted", ENCRYPTED_BSON_STRING);
+	}
+
+	@Test // GH-3870
+	void allowsToCreateCombinedSchemaWhenPropertiesDoNotOverlap() {
+
+		MongoJsonSchema schema = MongoJsonSchemaCreator.create()
+				.combineSchemaFor(A.class, B.class, C.class);
+
+		assertThat(schema.schemaDocument()) //
+				.containsEntry("properties.aNonEncrypted", new Document("type", "string")) //
+				.containsEntry("properties.aEncrypted", ENCRYPTED_BSON_STRING) //
+				.containsEntry("properties.bEncrypted", ENCRYPTED_BSON_STRING) //
+				.containsEntry("properties.cEncrypted", ENCRYPTED_BSON_STRING);
+	}
+
+	@Test // GH-3870
+	void combinedSchemaFailsOnPropertyClash() {
+
+		MongoJsonSchema schemaA = MongoJsonSchemaCreator.create() //
+				.createSchemaFor(A.class);
+		MongoJsonSchema schemaAButDifferent = MongoJsonSchemaCreator.create() //
+				.createSchemaFor(PropertyClashWithA.class);
+
+		MongoJsonSchema targetSchema = schemaA.combineWith(schemaAButDifferent);
+
+		assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> targetSchema.schemaDocument());
+	}
+
+	@Test // GH-3870
+	void combinedSchemaAllowsToCompensateErrors() {
+
+		MongoJsonSchema schemaA = MongoJsonSchemaCreator.create() //
+				.createSchemaFor(A.class);
+		MongoJsonSchema schemaAButDifferent = MongoJsonSchemaCreator.create() //
+				.createSchemaFor(PropertyClashWithA.class);
+
+		MongoJsonSchema schema = schemaA.combineWith(Collections.singleton(schemaAButDifferent), (path, a, b) -> new Resolution() {
+
+			@Override
+			public String getKey() {
+				return path.currentElement();
+			}
+
+			@Override
+			public Object getValue() {
+				return "object";
+			}
+		});
+
+		assertThat(schema.schemaDocument()) //
+				.containsEntry("properties.aNonEncrypted", new Document("type", "object"));
+	}
+
+	@Test // GH-3870
+	void bsonTypeVsJustTypeValueResolutionIsDoneByDefault() {
+
+		MongoJsonSchema schemaUsingType = MongoJsonSchema.builder()
+				.property(JsonSchemaProperty.named("value").ofType(Type.jsonTypeOf("string")))
+				.build();
+		MongoJsonSchema schemaUsingBsonType = MongoJsonSchema.builder()
+				.property(JsonSchemaProperty.named("value").ofType(Type.bsonTypeOf("string")))
+				.build();
+
+		MongoJsonSchema targetSchema = MongoJsonSchema.combined(schemaUsingType, schemaUsingBsonType);
+
+		assertThat(targetSchema.schemaDocument()) //
+				.containsEntry("properties.value", new Document("type", "string"));
 	}
 
 	// --> TYPES AND JSON
@@ -525,5 +655,52 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 
 			return "xKVup8B1Q+CkHaVRx+qa+g==";
 		}
+	}
+
+	static final Document ENCRYPTED_BSON_STRING = Document.parse("{'encrypt': { 'bsonType': 'string','algorithm': 'AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic'} }");
+
+	static class SomeTestObject<T> {
+		T genericValue;
+		Object objectValue;
+	}
+
+	static class RootWithGenerics<S,T> {
+		S sValue;
+		T tValue;
+	}
+
+	static class SubWithFixedGeneric<T> extends RootWithGenerics<A, T> {
+
+	}
+
+	static class Concrete extends SubWithFixedGeneric<B> {
+
+	}
+
+	static class WrapperAroundA {
+
+		SomeTestObject value;
+	}
+
+	static class A {
+
+		String aNonEncrypted;
+
+		@Encrypted(algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic")
+		String aEncrypted;
+	}
+
+	static class B {
+		@Encrypted(algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic")
+		String bEncrypted;
+	}
+
+	static class C extends A {
+		@Encrypted(algorithm = "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic")
+		String cEncrypted;
+	}
+
+	static class PropertyClashWithA {
+		Integer aNonEncrypted;
 	}
 }
