@@ -15,6 +15,7 @@
  */
 package org.springframework.data.mongodb.core;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -62,7 +63,6 @@ import org.springframework.util.Assert;
  * {@link org.springframework.data.annotation.Id _id} properties using types that can be converted into
  * {@link org.bson.types.ObjectId} like {@link String} will be mapped to {@code type : 'object'} unless there is more
  * specific information available via the {@link org.springframework.data.mongodb.core.mapping.MongoId} annotation.
-
  * {@link Encrypted} properties will contain {@literal encrypt} information.
  *
  * @author Christoph Strobl
@@ -79,6 +79,20 @@ public interface MongoJsonSchemaCreator {
 	MongoJsonSchema createSchemaFor(Class<?> type);
 
 	/**
+	 * Create a combined {@link MongoJsonSchema} out of the individual schemas of the given types by combining their
+	 * properties into one large {@link MongoJsonSchema schema}.
+	 * 
+	 * @param types must not be {@literal null} nor contain {@literal null}.
+	 * @return new instance of {@link MongoJsonSchema}.
+	 * @since 3.4
+	 */
+	default MongoJsonSchema combineSchemaFor(Class<?>... types) {
+
+		MongoJsonSchema[] schemas = Arrays.stream(types).map(this::createSchemaFor).toArray(MongoJsonSchema[]::new);
+		return MongoJsonSchema.combined(schemas);
+	}
+
+	/**
 	 * Filter matching {@link JsonSchemaProperty properties}.
 	 *
 	 * @param filter the {@link Predicate} to evaluate for inclusion. Must not be {@literal null}.
@@ -86,6 +100,15 @@ public interface MongoJsonSchemaCreator {
 	 * @since 3.3
 	 */
 	MongoJsonSchemaCreator filter(Predicate<JsonSchemaPropertyContext> filter);
+
+	/**
+	 * Entry point to specify additional behavior for a given path.
+	 *
+	 * @param path the path using {@literal dot '.'} notation.
+	 * @return new instance of {@link PropertySpecifier}.
+	 * @since 3.4
+	 */
+	PropertySpecifier specify(String path);
 
 	/**
 	 * The context in which a specific {@link #getProperty()} is encountered during schema creation.
@@ -208,5 +231,21 @@ public interface MongoJsonSchemaCreator {
 		converter.afterPropertiesSet();
 
 		return create(converter);
+	}
+
+	/**
+	 * @since 3.4
+	 * @author Christoph Strobl
+	 * @since 3.4
+	 */
+	interface PropertySpecifier {
+
+		/**
+		 * Set additional type parameters for polymorphic ones.
+		 *
+		 * @param types must not be {@literal null}.
+		 * @return the source
+		 */
+		MongoJsonSchemaCreator types(Class<?>... types);
 	}
 }

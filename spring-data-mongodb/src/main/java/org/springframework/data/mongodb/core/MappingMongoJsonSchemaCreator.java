@@ -24,7 +24,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.bson.Document;
-
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -45,6 +44,7 @@ import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
@@ -62,6 +62,7 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 	private final MongoConverter converter;
 	private final MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	private final Predicate<JsonSchemaPropertyContext> filter;
+	private final LinkedMultiValueMap<String, Class<?>> mergeProperties;
 
 	/**
 	 * Create a new instance of {@link MappingMongoJsonSchemaCreator}.
@@ -72,23 +73,51 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 	MappingMongoJsonSchemaCreator(MongoConverter converter) {
 
 		this(converter, (MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty>) converter.getMappingContext(),
-				(property) -> true);
+				(property) -> true, new LinkedMultiValueMap<>());
 	}
 
 	@SuppressWarnings("unchecked")
 	MappingMongoJsonSchemaCreator(MongoConverter converter,
 			MappingContext<MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext,
-			Predicate<JsonSchemaPropertyContext> filter) {
+			Predicate<JsonSchemaPropertyContext> filter, LinkedMultiValueMap<String, Class<?>> mergeProperties) {
 
 		Assert.notNull(converter, "Converter must not be null!");
 		this.converter = converter;
 		this.mappingContext = mappingContext;
 		this.filter = filter;
+		this.mergeProperties = mergeProperties;
 	}
 
 	@Override
 	public MongoJsonSchemaCreator filter(Predicate<JsonSchemaPropertyContext> filter) {
-		return new MappingMongoJsonSchemaCreator(converter, mappingContext, filter);
+		return new MappingMongoJsonSchemaCreator(converter, mappingContext, filter, mergeProperties);
+	}
+
+	@Override
+	public PropertySpecifier specify(String path) {
+		return new PropertySpecifier() {
+			@Override
+			public MongoJsonSchemaCreator types(Class<?>... types) {
+				return specifyTypesFor(path, types);
+			}
+		};
+	}
+
+	/**
+	 * Specify additional types to be considered wehen rendering the schema for the given path.
+	 *
+	 * @param path path the path using {@literal dot '.'} notation.
+	 * @param types must not be {@literal null}.
+	 * @return new instance of {@link MongoJsonSchemaCreator}.
+	 * @since 3.4
+	 */
+	public MongoJsonSchemaCreator specifyTypesFor(String path, Class<?>... types) {
+
+		LinkedMultiValueMap<String, Class<?>> clone = mergeProperties.clone();
+		for (Class<?> type : types) {
+			clone.add(path, type);
+		}
+		return new MappingMongoJsonSchemaCreator(converter, mappingContext, filter, clone);
 	}
 
 	@Override
@@ -131,9 +160,12 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 
 			List<MongoPersistentProperty> currentPath = new ArrayList<>(path);
 
-			if (!filter.test(new PropertyContext(
-					currentPath.stream().map(PersistentProperty::getName).collect(Collectors.joining(".")), nested))) {
-				continue;
+			String stringPath = currentPath.stream().map(PersistentProperty::getName).collect(Collectors.joining("."));
+			stringPath = StringUtils.hasText(stringPath) ? (stringPath + "." + nested.getName()) : nested.getName();
+			if (!filter.test(new PropertyContext(stringPath, nested))) {
+				if (!mergeProperties.containsKey(stringPath)) {
+					continue;
+				}
 			}
 
 			if (path.contains(nested)) { // cycle guard
@@ -151,14 +183,34 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 
 	private JsonSchemaProperty computeSchemaForProperty(List<MongoPersistentProperty> path) {
 
+		String stringPath = path.stream().map(MongoPersistentProperty::getName).collect(Collectors.joining("."));
 		MongoPersistentProperty property = CollectionUtils.lastElement(path);
 
 		boolean required = isRequiredProperty(property);
 		Class<?> rawTargetType = computeTargetType(property); // target type before conversion
 		Class<?> targetType = converter.getTypeMapper().getWriteTargetTypeFor(rawTargetType); // conversion target type
 
-		if (!isCollection(property) && property.isEntity() && ObjectUtils.nullSafeEquals(rawTargetType, targetType)) {
-			return createObjectSchemaPropertyForEntity(path, property, required);
+		if (!isCollection(property) && ObjectUtils.nullSafeEquals(rawTargetType, targetType)) {
+			if (property.isEntity() || mergeProperties.containsKey(stringPath)) {
+				List<JsonSchemaProperty> targetProperties = new ArrayList<>();
+
+				if (property.isEntity()) {
+					targetProperties.add(createObjectSchemaPropertyForEntity(path, property, required));
+				}
+				if (mergeProperties.containsKey(stringPath)) {
+					for (Class<?> theType : mergeProperties.get(stringPath)) {
+
+						ObjectJsonSchemaProperty target = JsonSchemaProperty.object(property.getName());
+						List<JsonSchemaProperty> nestedProperties = computePropertiesForEntity(path,
+								mappingContext.getRequiredPersistentEntity(theType));
+
+						targetProperties.add(createPotentiallyRequiredSchemaProperty(
+								target.properties(nestedProperties.toArray(new JsonSchemaProperty[0])), required));
+					}
+				}
+				return targetProperties.size() == 1 ? targetProperties.iterator().next()
+						: JsonSchemaProperty.combined(targetProperties);
+			}
 		}
 
 		String fieldName = computePropertyFieldName(property);

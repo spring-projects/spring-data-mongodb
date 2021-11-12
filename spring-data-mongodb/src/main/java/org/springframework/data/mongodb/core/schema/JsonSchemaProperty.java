@@ -15,6 +15,8 @@
  */
 package org.springframework.data.mongodb.core.schema;
 
+import java.util.Collection;
+
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.NumericJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject.ObjectJsonSchemaObject;
 import org.springframework.data.mongodb.core.schema.IdentifiableJsonSchemaProperty.*;
@@ -231,6 +233,17 @@ public interface JsonSchemaProperty extends JsonSchemaObject {
 	 */
 	static JsonSchemaProperty required(JsonSchemaProperty property) {
 		return new RequiredJsonSchemaProperty(property, true);
+	}
+
+	/**
+	 * Combines multiple {@link JsonSchemaProperty} with potentially different attributes into one.
+	 *
+	 * @param properties must not be {@literal null}.
+	 * @return new instance of {@link JsonSchemaProperty}.
+	 * @since 3.4
+	 */
+	static JsonSchemaProperty combined(Collection<JsonSchemaProperty> properties) {
+		return new CombinedJsonSchemaProperty(properties);
 	}
 
 	/**
