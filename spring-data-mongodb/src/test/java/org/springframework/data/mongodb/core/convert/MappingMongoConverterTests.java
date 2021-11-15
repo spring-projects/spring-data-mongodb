@@ -147,6 +147,22 @@ public class MappingMongoConverterTests {
 				.isEqualTo(source);
 	}
 
+	@Test
+	void convertsNestedTypesInRawDocumentIfNeeded() {
+		org.bson.Document document = new org.bson.Document();
+		org.bson.Document inner = new org.bson.Document();
+		LocalDate date = LocalDate.of(2001, 1, 1);
+		document.put("fieldA", date);
+		inner.put("fieldB", date);
+		document.put("inner", inner);
+
+		Document target = new Document();
+		converter.write(document, target);
+
+		assertThat(target.get("inner", org.bson.Document.class).get("fieldB")).isEqualTo(target.get("fieldA"));
+
+	}
+
 	void configureConverterWithNativeJavaTimeCodec() {
 
 		converter = new MappingMongoConverter(dbRefResolver, mappingContext);

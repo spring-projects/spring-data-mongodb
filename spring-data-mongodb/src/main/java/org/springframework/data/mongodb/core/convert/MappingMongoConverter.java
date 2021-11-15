@@ -1002,6 +1002,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			if (conversions.isSimpleType(key.getClass())) {
 
 				String simpleKey = prepareMapKey(key);
+				if(val instanceof Document) {
+					Document document = new Document();
+					writeMapInternal((Map<Object, Object>) val, document, ClassTypeInformation.MAP);
+					BsonUtils.addToMap(bson, simpleKey, document);
+					continue;
+				}
 				if (val == null || conversions.isSimpleType(val.getClass())) {
 					writeSimpleInternal(val, bson, simpleKey);
 				} else if (val instanceof Collection || val.getClass().isArray()) {
