@@ -21,8 +21,8 @@ import java.net.UnknownHostException;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -43,8 +43,8 @@ public class ServerAddressPropertyEditor extends PropertyEditorSupport {
 	 * A port is a number without a leading 0 at the end of the address that is proceeded by just a single :.
 	 */
 	private static final String HOST_PORT_SPLIT_PATTERN = "(?<!:):(?=[123456789]\\d*$)";
-	private static final String COULD_NOT_PARSE_ADDRESS_MESSAGE = "Could not parse address {} '{}'. Check your replica set configuration!";
-	private static final Logger LOG = LoggerFactory.getLogger(ServerAddressPropertyEditor.class);
+	private static final String COULD_NOT_PARSE_ADDRESS_MESSAGE = "Could not parse address %s '%s'. Check your replica set configuration!";
+	private static final Log LOG = LogFactory.getLog(ServerAddressPropertyEditor.class);
 
 	/*
 	 * (non-Javadoc)
@@ -88,14 +88,14 @@ public class ServerAddressPropertyEditor extends PropertyEditorSupport {
 	private ServerAddress parseServerAddress(String source) {
 
 		if (!StringUtils.hasText(source)) {
-			LOG.warn(COULD_NOT_PARSE_ADDRESS_MESSAGE, "source", source);
+			LOG.warn(String.format(COULD_NOT_PARSE_ADDRESS_MESSAGE, "source", source));
 			return null;
 		}
 
 		String[] hostAndPort = extractHostAddressAndPort(source.trim());
 
 		if (hostAndPort.length > 2) {
-			LOG.warn(COULD_NOT_PARSE_ADDRESS_MESSAGE, "source", source);
+			LOG.warn(String.format(COULD_NOT_PARSE_ADDRESS_MESSAGE, "source", source));
 			return null;
 		}
 
@@ -105,9 +105,9 @@ public class ServerAddressPropertyEditor extends PropertyEditorSupport {
 
 			return port == null ? new ServerAddress(hostAddress) : new ServerAddress(hostAddress, port);
 		} catch (UnknownHostException e) {
-			LOG.warn(COULD_NOT_PARSE_ADDRESS_MESSAGE, "host", hostAndPort[0]);
+			LOG.warn(String.format(COULD_NOT_PARSE_ADDRESS_MESSAGE, "host", hostAndPort[0]));
 		} catch (NumberFormatException e) {
-			LOG.warn(COULD_NOT_PARSE_ADDRESS_MESSAGE, "port", hostAndPort[1]);
+			LOG.warn(String.format(COULD_NOT_PARSE_ADDRESS_MESSAGE, "port", hostAndPort[1]));
 		}
 
 		return null;

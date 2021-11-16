@@ -15,8 +15,9 @@
  */
 package org.springframework.data.mongodb.core.mapping.event;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.GenericTypeResolver;
 
@@ -30,7 +31,7 @@ import org.springframework.core.GenericTypeResolver;
  */
 public abstract class AbstractMongoEventListener<E> implements ApplicationListener<MongoMappingEvent<?>> {
 
-	private static final Logger LOG = LoggerFactory.getLogger(AbstractMongoEventListener.class);
+	private static final Log LOG = LogFactory.getLog(AbstractMongoEventListener.class);
 	private final Class<?> domainClass;
 
 	/**
@@ -103,7 +104,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	public void onBeforeConvert(BeforeConvertEvent<E> event) {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("onBeforeConvert({})", event.getSource());
+			LOG.debug(String.format("onBeforeConvert(%s)", event.getSource()));
 		}
 	}
 
@@ -116,7 +117,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	public void onBeforeSave(BeforeSaveEvent<E> event) {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("onBeforeSave({}, {})", event.getSource(), event.getDocument());
+			LOG.debug(String.format("onBeforeSave(%s, %s)", event.getSource(), event.getDocument()));
 		}
 	}
 
@@ -129,7 +130,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	public void onAfterSave(AfterSaveEvent<E> event) {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("onAfterSave({}, {})", event.getSource(), event.getDocument());
+			LOG.debug(String.format("onAfterSave(%s, %s)", event.getSource(), event.getDocument()));
 		}
 	}
 
@@ -142,7 +143,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	public void onAfterLoad(AfterLoadEvent<E> event) {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("onAfterLoad({})", event.getDocument());
+			LOG.debug(String.format("onAfterLoad(%s)", event.getDocument()));
 		}
 	}
 
@@ -155,7 +156,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	public void onAfterConvert(AfterConvertEvent<E> event) {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("onAfterConvert({}, {})", event.getDocument(), event.getSource());
+			LOG.debug(String.format("onAfterConvert(%s, %s)", event.getDocument(), event.getSource()));
 		}
 	}
 
@@ -168,7 +169,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	public void onAfterDelete(AfterDeleteEvent<E> event) {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("onAfterDelete({})", event.getDocument());
+			LOG.debug(String.format("onAfterDelete(%s)", event.getDocument()));
 		}
 	}
 
@@ -181,7 +182,7 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 	public void onBeforeDelete(BeforeDeleteEvent<E> event) {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("onBeforeDelete({})", event.getDocument());
+			LOG.debug(String.format("onBeforeDelete(%s)", event.getDocument()));
 		}
 	}
 }

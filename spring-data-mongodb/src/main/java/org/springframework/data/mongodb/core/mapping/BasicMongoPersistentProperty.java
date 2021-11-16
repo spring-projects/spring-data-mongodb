@@ -23,9 +23,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.bson.types.ObjectId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
@@ -54,7 +55,7 @@ import org.springframework.util.StringUtils;
 public class BasicMongoPersistentProperty extends AnnotationBasedPersistentProperty<MongoPersistentProperty>
 		implements MongoPersistentProperty {
 
-	private static final Logger LOG = LoggerFactory.getLogger(BasicMongoPersistentProperty.class);
+	private static final Log LOG = LogFactory.getLog(BasicMongoPersistentProperty.class);
 
 	public static final String ID_FIELD_NAME = "_id";
 	private static final String LANGUAGE_FIELD_NAME = "language";
@@ -92,9 +93,9 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 			String annotatedName = getAnnotatedFieldName();
 			if (!ID_FIELD_NAME.equals(annotatedName)) {
-				LOG.warn(
-						"Customizing field name for id property '{}.{}' is not allowed! Custom name ('{}') will not be considered!",
-						owner.getName(), getName(), annotatedName);
+				LOG.warn(String.format(
+						"Customizing field name for id property '%s.%s' is not allowed! Custom name ('%s') will not be considered!",
+						owner.getName(), getName(), annotatedName));
 			}
 		}
 	}
@@ -310,7 +311,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 	/**
 	 * Obtain the {@link EvaluationContext} for a specific root object.
-	 * 
+	 *
 	 * @param rootObject can be {@literal null}.
 	 * @return never {@literal null}.
 	 * @since 3.3

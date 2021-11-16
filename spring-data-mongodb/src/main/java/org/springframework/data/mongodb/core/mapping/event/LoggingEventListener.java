@@ -17,8 +17,9 @@ package org.springframework.data.mongodb.core.mapping.event;
 
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.context.ApplicationListener;
 
 /**
@@ -31,7 +32,7 @@ import org.springframework.context.ApplicationListener;
  */
 public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(LoggingEventListener.class);
+	private static final Log LOGGER = LogFactory.getLog(LoggingEventListener.class);
 
 	/*
 	 * (non-Javadoc)
@@ -39,7 +40,7 @@ public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 	 */
 	@Override
 	public void onBeforeConvert(BeforeConvertEvent<Object> event) {
-		LOGGER.info("onBeforeConvert: {}", event.getSource());
+		LOGGER.info(String.format("onBeforeConvert: %s", event.getSource()));
 	}
 
 	/*
@@ -48,7 +49,7 @@ public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 	 */
 	@Override
 	public void onBeforeSave(BeforeSaveEvent<Object> event) {
-		LOGGER.info("onBeforeSave: {}, {}", event.getSource(), serializeToJsonSafely(event.getDocument()));
+		LOGGER.info(String.format("onBeforeSave: %s, %s", event.getSource(), serializeToJsonSafely(event.getDocument())));
 	}
 
 	/*
@@ -57,7 +58,7 @@ public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 	 */
 	@Override
 	public void onAfterSave(AfterSaveEvent<Object> event) {
-		LOGGER.info("onAfterSave: {}, {}", event.getSource(), serializeToJsonSafely(event.getDocument()));
+		LOGGER.info(String.format("onAfterSave: %s, %s", event.getSource(), serializeToJsonSafely(event.getDocument())));
 	}
 
 	/*
@@ -66,7 +67,7 @@ public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 	 */
 	@Override
 	public void onAfterLoad(AfterLoadEvent<Object> event) {
-		LOGGER.info("onAfterLoad: {}", serializeToJsonSafely(event.getDocument()));
+		LOGGER.info(String.format("onAfterLoad: %s", serializeToJsonSafely(event.getDocument())));
 	}
 
 	/*
@@ -75,7 +76,7 @@ public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 	 */
 	@Override
 	public void onAfterConvert(AfterConvertEvent<Object> event) {
-		LOGGER.info("onAfterConvert: {}, {}", serializeToJsonSafely(event.getDocument()), event.getSource());
+		LOGGER.info(String.format("onAfterConvert: %s, %s", serializeToJsonSafely(event.getDocument()), event.getSource()));
 	}
 
 	/*
@@ -84,7 +85,7 @@ public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 	 */
 	@Override
 	public void onAfterDelete(AfterDeleteEvent<Object> event) {
-		LOGGER.info("onAfterDelete: {}", serializeToJsonSafely(event.getDocument()));
+		LOGGER.info(String.format("onAfterDelete: %s", serializeToJsonSafely(event.getDocument())));
 	}
 
 	/*
@@ -93,6 +94,6 @@ public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 	 */
 	@Override
 	public void onBeforeDelete(BeforeDeleteEvent<Object> event) {
-		LOGGER.info("onBeforeDelete: {}", serializeToJsonSafely(event.getDocument()));
+		LOGGER.info(String.format("onBeforeDelete: %s", serializeToJsonSafely(event.getDocument())));
 	}
 }

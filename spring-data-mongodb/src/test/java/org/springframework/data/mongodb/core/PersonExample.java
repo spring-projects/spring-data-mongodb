@@ -17,8 +17,9 @@ package org.springframework.data.mongodb.core;
 
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.support.AbstractApplicationContext;
@@ -29,7 +30,7 @@ import org.springframework.context.support.AbstractApplicationContext;
  */
 public class PersonExample {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(PersonExample.class);
+	private static final Log LOGGER = LogFactory.getLog(PersonExample.class);
 
 	@Autowired private MongoOperations mongoOps;
 

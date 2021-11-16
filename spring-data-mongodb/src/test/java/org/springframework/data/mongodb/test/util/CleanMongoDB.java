@@ -23,12 +23,13 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -48,7 +49,7 @@ import com.mongodb.client.MongoDatabase;
  */
 public class CleanMongoDB implements TestRule {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(CleanMongoDB.class);
+	private static final Log LOGGER = LogFactory.getLog(CleanMongoDB.class);
 
 	/**
 	 * Defines contents of MongoDB.
@@ -288,7 +289,7 @@ public class CleanMongoDB implements TestRule {
 		}
 
 		client.getDatabase(dbName).drop();
-		LOGGER.debug("Dropping DB '{}'. ", dbName);
+		LOGGER.debug(String.format("Dropping DB '%s'. ", dbName));
 		return true;
 	}
 
@@ -305,10 +306,11 @@ public class CleanMongoDB implements TestRule {
 
 					if (types.contains(Struct.COLLECTION)) {
 						collection.drop();
-						LOGGER.debug("Dropping collection '{}' for DB '{}'. ", collectionName, db.getName());
+						LOGGER.debug(String.format("Dropping collection '%s' for DB '%s'. ", collectionName, db.getName()));
 					} else if (types.contains(Struct.INDEX)) {
 						collection.dropIndexes();
-						LOGGER.debug("Dropping indexes in collection '{}' for DB '{}'. ", collectionName, db.getName());
+						LOGGER.debug(
+								String.format("Dropping indexes in collection '%s' for DB '%s'. ", collectionName, db.getName()));
 					}
 				}
 			}
