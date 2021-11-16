@@ -99,7 +99,7 @@ public class CleanMongoDB implements TestRule {
 	}
 
 	/**
-	 * Removes everything by dropping every single {@link DB}.
+	 * Removes everything by dropping every single {@link MongoDatabase}.
 	 *
 	 * @return
 	 */
@@ -111,7 +111,7 @@ public class CleanMongoDB implements TestRule {
 	}
 
 	/**
-	 * Removes everything from the databases with given name by dropping the according {@link DB}.
+	 * Removes everything from the databases with given name by dropping the according {@link MongoDatabase}.
 	 *
 	 * @param dbNames
 	 * @return
@@ -125,7 +125,7 @@ public class CleanMongoDB implements TestRule {
 	}
 
 	/**
-	 * Drops the {@link DBCollection} with given names from every single {@link DB} containing them.
+	 * Drops the {@link MongoCollection} with given names from every single {@link MongoDatabase} containing them.
 	 *
 	 * @param collectionNames
 	 * @return
@@ -135,7 +135,7 @@ public class CleanMongoDB implements TestRule {
 	}
 
 	/**
-	 * Drops the {@link DBCollection} with given names from the named {@link DB}.
+	 * Drops the {@link MongoCollection} with given names from the named {@link MongoDatabase}.
 	 *
 	 * @param dbName
 	 * @param collectionNames
@@ -150,7 +150,7 @@ public class CleanMongoDB implements TestRule {
 	}
 
 	/**
-	 * Drops all index structures from every single {@link DBCollection}.
+	 * Drops all index structures from every single {@link MongoCollection}.
 	 *
 	 * @return
 	 */
@@ -159,7 +159,7 @@ public class CleanMongoDB implements TestRule {
 	}
 
 	/**
-	 * Drops all index structures from every single {@link DBCollection}.
+	 * Drops all index structures from every single {@link MongoCollection}.
 	 *
 	 * @param collectionNames
 	 * @return
@@ -185,7 +185,7 @@ public class CleanMongoDB implements TestRule {
 	}
 
 	/**
-	 * Defines the {@link DB}s to be used. <br />
+	 * Defines the {@link MongoDatabase}s to be used. <br />
 	 * Impact along with {@link CleanMongoDB#clean(Struct...)}:
 	 * <ul>
 	 * <li>{@link Struct#DATABASE}: Forces drop of named databases.</li>
@@ -203,7 +203,7 @@ public class CleanMongoDB implements TestRule {
 	}
 
 	/**
-	 * Excludes the given {@link DB}s from being processed.
+	 * Excludes the given {@link MongoDatabase}s from being processed.
 	 *
 	 * @param dbNames
 	 * @return
@@ -214,7 +214,7 @@ public class CleanMongoDB implements TestRule {
 	}
 
 	/**
-	 * Defines the {@link DBCollection}s to be used. <br />
+	 * Defines the {@link MongoCollection}s to be used. <br />
 	 * Impact along with {@link CleanMongoDB#clean(Struct...)}:
 	 * <ul>
 	 * <li>{@link Struct#COLLECTION}: Forces drop of named collections.</li>
@@ -233,7 +233,7 @@ public class CleanMongoDB implements TestRule {
 	}
 
 	/**
-	 * Defines the {@link DBCollection}s and {@link DB} to be used. <br />
+	 * Defines the {@link MongoCollection}s and {@link MongoDatabase} to be used. <br />
 	 * Impact along with {@link CleanMongoDB#clean(Struct...)}:
 	 * <ul>
 	 * <li>{@link Struct#COLLECTION}: Forces drop of named collections in given db.</li>
