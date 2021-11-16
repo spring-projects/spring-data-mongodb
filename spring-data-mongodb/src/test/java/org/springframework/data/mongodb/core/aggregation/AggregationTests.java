@@ -33,6 +33,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.assertj.core.data.Offset;
 import org.bson.Document;
 import org.joda.time.DateTime;
@@ -42,8 +44,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.annotation.Id;
@@ -94,7 +94,7 @@ import com.mongodb.client.model.WriteModel;
 public class AggregationTests {
 
 	private static final String INPUT_COLLECTION = "aggregation_test_collection";
-	private static final Logger LOGGER = LoggerFactory.getLogger(AggregationTests.class);
+	private static final Log LOGGER = LogFactory.getLog(AggregationTests.class);
 
 	private static boolean initialized = false;
 

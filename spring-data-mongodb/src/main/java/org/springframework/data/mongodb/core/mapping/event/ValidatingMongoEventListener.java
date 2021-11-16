@@ -20,8 +20,9 @@ import java.util.Set;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Validator;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.util.Assert;
 
 /**
@@ -34,7 +35,7 @@ import org.springframework.util.Assert;
  */
 public class ValidatingMongoEventListener extends AbstractMongoEventListener<Object> {
 
-	private static final Logger LOG = LoggerFactory.getLogger(ValidatingMongoEventListener.class);
+	private static final Log LOG = LogFactory.getLog(ValidatingMongoEventListener.class);
 
 	private final Validator validator;
 
@@ -57,12 +58,16 @@ public class ValidatingMongoEventListener extends AbstractMongoEventListener<Obj
 	@Override
 	public void onBeforeSave(BeforeSaveEvent<Object> event) {
 
-		LOG.debug("Validating object: {}", event.getSource());
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(String.format("Validating object: {}", event.getSource()));
+		}
 		Set violations = validator.validate(event.getSource());
 
 		if (!violations.isEmpty()) {
 
-			LOG.info("During object: {} validation violations found: {}", event.getSource(), violations);
+			if (LOG.isDebugEnabled()) {
+				LOG.info(String.format("During object: {} validation violations found: {}", event.getSource(), violations));
+			}
 			throw new ConstraintViolationException(violations);
 		}
 	}

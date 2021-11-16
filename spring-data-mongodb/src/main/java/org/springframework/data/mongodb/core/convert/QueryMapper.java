@@ -21,12 +21,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Reference;
@@ -74,7 +75,7 @@ import com.mongodb.DBRef;
  */
 public class QueryMapper {
 
-	protected static final Logger LOGGER = LoggerFactory.getLogger(QueryMapper.class);
+	protected static final Log LOGGER = LogFactory.getLog(QueryMapper.class);
 
 	private static final List<String> DEFAULT_ID_NAMES = Arrays.asList("id", "_id");
 	private static final Document META_TEXT_SCORE = new Document("$meta", "textScore");
@@ -1224,9 +1225,9 @@ public class QueryMapper {
 
 					String types = StringUtils.collectionToDelimitedString(
 							path.stream().map(it -> it.getType().getSimpleName()).collect(Collectors.toList()), " -> ");
-					QueryMapper.LOGGER.info(
-							"Could not map '{}'. Maybe a fragment in '{}' is considered a simple type. Mapper continues with {}.",
-							path, types, pathExpression);
+					QueryMapper.LOGGER.info(String.format(
+							"Could not map '%s'. Maybe a fragment in '%s' is considered a simple type. Mapper continues with %s.",
+							path, types, pathExpression));
 				}
 				return null;
 			}

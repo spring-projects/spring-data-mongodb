@@ -15,9 +15,10 @@
  */
 package org.springframework.data.mongodb.repository.query;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.BasicQuery;
@@ -41,7 +42,7 @@ import org.springframework.util.Assert;
 public class StringBasedMongoQuery extends AbstractMongoQuery {
 
 	private static final String COUNT_EXISTS_AND_DELETE = "Manually defined query for %s cannot be a count and exists or delete query at the same time!";
-	private static final Logger LOG = LoggerFactory.getLogger(StringBasedMongoQuery.class);
+	private static final Log LOG = LogFactory.getLog(StringBasedMongoQuery.class);
 
 	private final String query;
 	private final String fieldSpec;

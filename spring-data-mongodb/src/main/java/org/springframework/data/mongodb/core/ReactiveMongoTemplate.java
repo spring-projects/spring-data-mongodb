@@ -36,14 +36,14 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -165,7 +165,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 	public static final DbRefResolver NO_OP_REF_RESOLVER = NoOpDbRefResolver.INSTANCE;
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ReactiveMongoTemplate.class);
+	private static final Log LOGGER = LogFactory.getLog(ReactiveMongoTemplate.class);
 	private static final WriteResultChecking DEFAULT_WRITE_RESULT_CHECKING = WriteResultChecking.NONE;
 
 	private final MongoConverter mongoConverter;
@@ -829,7 +829,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 					.projection(new Document("_id", 1));
 
 			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug("exists: {} in collection: {}", serializeToJsonSafely(filter), collectionName);
+				LOGGER.debug(String.format("exists: %s in collection: %s", serializeToJsonSafely(filter), collectionName));
 			}
 
 			queryContext.applyCollation(entityClass, findPublisher::collation);
@@ -911,8 +911,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Flux<?> result = execute(collectionName, collection -> {
 
 			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug("Executing findDistinct using query {} for field: {} in collection: {}",
-						serializeToJsonSafely(mappedQuery), field, collectionName);
+				LOGGER.debug(String.format("Executing findDistinct using query %s for field: %s in collection: %s",
+						serializeToJsonSafely(mappedQuery), field, collectionName));
 			}
 
 			FindPublisherPreparer preparer = new QueryFindPublisherPreparer(query, entityClass);
@@ -988,8 +988,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		AggregationDefinition ctx = queryOperations.createAggregation(aggregation, inputType);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Streaming aggregation: {} in collection {}", serializeToJsonSafely(ctx.getAggregationPipeline()),
-					collectionName);
+			LOGGER.debug(String.format("Streaming aggregation: %s in collection %s",
+					serializeToJsonSafely(ctx.getAggregationPipeline()), collectionName));
 		}
 
 		ReadDocumentCallback<O> readCallback = new ReadDocumentCallback<>(mongoConverter, outputType, collectionName);
@@ -1226,7 +1226,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			Document filter = countContext.getMappedQuery(entityClass, mappingContext::getPersistentEntity);
 
 			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug("Executing count: {} in collection: {}", serializeToJsonSafely(filter), collectionName);
+				LOGGER.debug(
+						String.format("Executing count: %s in collection: %s", serializeToJsonSafely(filter), collectionName));
 			}
 
 			return doCount(collectionName, filter, options);
@@ -1556,7 +1557,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	protected Mono<Object> insertDocument(String collectionName, Document dbDoc, Class<?> entityClass) {
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Inserting Document containing fields: " + dbDoc.keySet() + " in collection: " + collectionName);
+			LOGGER.debug(String
+					.format("Inserting Document containing fields: " + dbDoc.keySet() + " in collection: " + collectionName));
 		}
 
 		Document document = new Document(dbDoc);
@@ -1582,7 +1584,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		}
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Inserting list of Documents containing " + dbDocList.size() + " items");
+			LOGGER.debug(String.format("Inserting list of Documents containing %d items", dbDocList.size()));
 		}
 
 		List<Document> documents = new ArrayList<>();
@@ -1620,7 +1622,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	protected Mono<Object> saveDocument(String collectionName, Document document, Class<?> entityClass) {
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Saving Document containing fields: " + document.keySet());
+			LOGGER.debug(String.format("Saving Document containing fields: %s", document.keySet()));
 		}
 
 		return createMono(collectionName, collection -> {
@@ -1747,8 +1749,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		if (query.isSorted() && LOGGER.isWarnEnabled()) {
 
-			LOGGER.warn("{} does not support sort ('{}'). Please use findAndModify() instead.",
-					upsert ? "Upsert" : "UpdateFirst", serializeToJsonSafely(query.getSortObject()));
+			LOGGER.warn(String.format("%s does not support sort ('%s'). Please use findAndModify() instead.",
+					upsert ? "Upsert" : "UpdateFirst", serializeToJsonSafely(query.getSortObject())));
 		}
 
 		MongoPersistentEntity<?> entity = entityClass == null ? null : getPersistentEntity(entityClass);
@@ -1959,8 +1961,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			MongoCollection<Document> collectionToUse = prepareCollection(collection, writeConcernToUse);
 
 			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug("Remove using query: {} in collection: {}.",
-						new Object[] { serializeToJsonSafely(removeQuery), collectionName });
+				LOGGER.debug(String.format("Remove using query: %s in collection: %s.", serializeToJsonSafely(removeQuery),
+						collectionName));
 			}
 
 			if (query.getLimit() > 0 || query.getSkip() > 0) {
@@ -2328,7 +2330,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			// TODO: Emit a collection created event
 			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug("Created collection [{}]", collectionName);
+				LOGGER.debug(String.format("Created collection [%s]", collectionName));
 			}
 
 		}).then(getCollection(collectionName));
@@ -2451,8 +2453,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		Document mappedQuery = queryContext.getMappedQuery(entity);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("find using query: {} fields: {} for class: {} in collection: {}",
-					serializeToJsonSafely(mappedQuery), mappedFields, sourceClass, collectionName);
+			LOGGER.debug(String.format("find using query: %s fields: %s for class: %s in collection: %s",
+					serializeToJsonSafely(mappedQuery), mappedFields, sourceClass, collectionName));
 		}
 
 		return executeFindMultiInternal(new FindCallback(mappedQuery, mappedFields), preparer,
@@ -2611,11 +2613,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		return Mono.defer(() -> {
 
 			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug(
-						"findAndReplace using query: {} fields: {} sort: {} for class: {} and replacement: {} "
-								+ "in collection: {}",
+				LOGGER.debug(String.format(
+						"findAndReplace using query: %s fields: %s sort: %s for class: %s and replacement: %s "
+								+ "in collection: %s",
 						serializeToJsonSafely(mappedQuery), mappedFields, mappedSort, entityType,
-						serializeToJsonSafely(replacement), collectionName);
+						serializeToJsonSafely(replacement), collectionName));
 			}
 
 			return executeFindOneInternal(
@@ -2898,8 +2900,9 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 			if (LOGGER.isDebugEnabled()) {
 
-				LOGGER.debug("findOne using query: {} fields: {} in db.collection: {}", serializeToJsonSafely(query),
-						serializeToJsonSafely(fields.orElseGet(Document::new)), collection.getNamespace().getFullName());
+				LOGGER.debug(
+						String.format("findOne using query: %s fields: %s in db.collection: %s", serializeToJsonSafely(query),
+								serializeToJsonSafely(fields.orElseGet(Document::new)), collection.getNamespace().getFullName()));
 			}
 
 			FindPublisher<Document> publisher = preparer.initiateFind(collection, col -> col.find(query, Document.class));

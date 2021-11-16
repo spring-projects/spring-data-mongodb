@@ -27,8 +27,9 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mapping.Association;
@@ -77,7 +78,7 @@ import org.springframework.util.StringUtils;
  */
 public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(MongoPersistentEntityIndexResolver.class);
+	private static final Log LOGGER = LogFactory.getLog(MongoPersistentEntityIndexResolver.class);
 	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
 
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;

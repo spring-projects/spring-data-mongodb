@@ -21,6 +21,8 @@ import static org.junit.platform.commons.util.ReflectionUtils.*;
 import java.lang.reflect.Field;
 import java.util.function.Predicate;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.Extension;
@@ -33,8 +35,7 @@ import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 import org.junit.platform.commons.util.ExceptionUtils;
 import org.junit.platform.commons.util.ReflectionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import org.springframework.util.ClassUtils;
 
 import com.mongodb.client.MongoClient;
@@ -48,7 +49,7 @@ import com.mongodb.client.MongoClient;
  */
 public class MongoClientExtension implements Extension, BeforeAllCallback, AfterAllCallback, ParameterResolver {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(MongoClientExtension.class);
+	private static final Log LOGGER = LogFactory.getLog(MongoClientExtension.class);
 
 	private static final Namespace NAMESPACE = MongoExtensions.Client.NAMESPACE;
 
@@ -111,13 +112,13 @@ public class MongoClientExtension implements Extension, BeforeAllCallback, After
 
 	private ReactiveClientHolder reactiveClient(boolean replSet) {
 
-		LOGGER.debug("Creating new reactive {}client.", replSet ? "replica set " : "");
+		LOGGER.debug(String.format("Creating new reactive %sclient.", replSet ? "replica set " : ""));
 		return new ReactiveClientHolder(replSet ? MongoTestUtils.reactiveReplSetClient() : MongoTestUtils.reactiveClient());
 	}
 
 	private SyncClientHolder syncClient(boolean replSet) {
 
-		LOGGER.debug("Creating new sync {}client.", replSet ? "replica set " : "");
+		LOGGER.debug(String.format("Creating new sync %sclient.", replSet ? "replica set " : ""));
 		return new SyncClientHolder(replSet ? MongoTestUtils.replSetClient() : MongoTestUtils.client());
 	}
 
@@ -135,9 +136,9 @@ public class MongoClientExtension implements Extension, BeforeAllCallback, After
 	private void assertSupportedType(String target, Class<?> type) {
 
 		if (type != com.mongodb.client.MongoClient.class && type != com.mongodb.reactivestreams.client.MongoClient.class) {
-			throw new ExtensionConfigurationException("Can only resolve @MongoClient " + target + " of type "
-					+ com.mongodb.client.MongoClient.class.getName() + " or "
-					+ com.mongodb.reactivestreams.client.MongoClient.class.getName() + " but was: " + type.getName());
+			throw new ExtensionConfigurationException(String.format(
+					"Can only resolve @MongoClient %s of type %s or %s but was: %s", target, MongoClient.class.getName(),
+					com.mongodb.reactivestreams.client.MongoClient.class.getName(), type.getName()));
 		}
 	}
 
