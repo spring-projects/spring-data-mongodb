@@ -59,14 +59,14 @@ public class ValidatingMongoEventListener extends AbstractMongoEventListener<Obj
 	public void onBeforeSave(BeforeSaveEvent<Object> event) {
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug(String.format("Validating object: {}", event.getSource()));
+			LOG.debug(String.format("Validating object: %s", event.getSource()));
 		}
 		Set violations = validator.validate(event.getSource());
 
 		if (!violations.isEmpty()) {
 
 			if (LOG.isDebugEnabled()) {
-				LOG.info(String.format("During object: {} validation violations found: {}", event.getSource(), violations));
+				LOG.info(String.format("During object: %s validation violations found: %s", event.getSource(), violations));
 			}
 			throw new ConstraintViolationException(violations);
 		}

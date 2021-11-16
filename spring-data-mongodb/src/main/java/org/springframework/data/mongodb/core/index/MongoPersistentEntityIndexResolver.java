@@ -170,7 +170,9 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 				indexes.addAll(indexDefinitions);
 			}
 		} catch (CyclicPropertyReferenceException e) {
-			LOGGER.info(e.getMessage());
+			if(LOGGER.isInfoEnabled()) {
+				LOGGER.info(e.getMessage());
+			}
 		}
 	}
 

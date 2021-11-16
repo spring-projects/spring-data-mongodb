@@ -208,8 +208,10 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 					orElse(null);
 
 		} catch (Exception e) {
-			LOGGER.debug(
-					String.format("Failed to load index information for collection '%s'.", indexDefinition.getCollection()), e);
+			if(LOGGER.isDebugEnabled()) {
+				LOGGER.debug(
+						String.format("Failed to load index information for collection '%s'.", indexDefinition.getCollection()), e);
+			}
 		}
 
 		return null;

@@ -136,7 +136,10 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 				}
 			}
 		}
-		LOG.debug(String.format("Created %s!", index));
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(String.format("Created %s!", index));
+		}
 	}
 
 	public boolean isIndexOnUnwrappedType(Part part) {

@@ -93,9 +93,11 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 
 			String annotatedName = getAnnotatedFieldName();
 			if (!ID_FIELD_NAME.equals(annotatedName)) {
-				LOG.warn(String.format(
-						"Customizing field name for id property '%s.%s' is not allowed! Custom name ('%s') will not be considered!",
-						owner.getName(), getName(), annotatedName));
+				if(LOG.isWarnEnabled()) {
+					LOG.warn(String.format(
+							"Customizing field name for id property '%s.%s' is not allowed! Custom name ('%s') will not be considered!",
+							owner.getName(), getName(), annotatedName));
+				}
 			}
 		}
 	}

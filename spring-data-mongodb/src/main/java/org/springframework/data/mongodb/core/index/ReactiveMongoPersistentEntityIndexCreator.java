@@ -175,9 +175,11 @@ public class ReactiveMongoPersistentEntityIndexCreator {
 				.filter(indexInfo -> ObjectUtils.nullSafeEquals(indexNameToLookUp, indexInfo.getName())) //
 				.next() //
 				.doOnError(e -> {
-					LOGGER.debug(
-							String.format("Failed to load index information for collection '%s'.", indexDefinition.getCollection()),
-							e);
+					if(LOGGER.isDebugEnabled()) {
+						LOGGER.debug(
+								String.format("Failed to load index information for collection '%s'.", indexDefinition.getCollection()),
+								e);
+					}
 				});
 	}
 

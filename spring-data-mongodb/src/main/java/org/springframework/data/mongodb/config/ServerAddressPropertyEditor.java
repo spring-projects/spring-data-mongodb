@@ -88,14 +88,18 @@ public class ServerAddressPropertyEditor extends PropertyEditorSupport {
 	private ServerAddress parseServerAddress(String source) {
 
 		if (!StringUtils.hasText(source)) {
-			LOG.warn(String.format(COULD_NOT_PARSE_ADDRESS_MESSAGE, "source", source));
+			if(LOG.isWarnEnabled()) {
+				LOG.warn(String.format(COULD_NOT_PARSE_ADDRESS_MESSAGE, "source", source));
+			}
 			return null;
 		}
 
 		String[] hostAndPort = extractHostAddressAndPort(source.trim());
 
 		if (hostAndPort.length > 2) {
-			LOG.warn(String.format(COULD_NOT_PARSE_ADDRESS_MESSAGE, "source", source));
+			if(LOG.isWarnEnabled()) {
+				LOG.warn(String.format(COULD_NOT_PARSE_ADDRESS_MESSAGE, "source", source));
+			}
 			return null;
 		}
 
@@ -105,9 +109,13 @@ public class ServerAddressPropertyEditor extends PropertyEditorSupport {
 
 			return port == null ? new ServerAddress(hostAddress) : new ServerAddress(hostAddress, port);
 		} catch (UnknownHostException e) {
-			LOG.warn(String.format(COULD_NOT_PARSE_ADDRESS_MESSAGE, "host", hostAndPort[0]));
+			if(LOG.isWarnEnabled()) {
+				LOG.warn(String.format(COULD_NOT_PARSE_ADDRESS_MESSAGE, "host", hostAndPort[0]));
+			}
 		} catch (NumberFormatException e) {
-			LOG.warn(String.format(COULD_NOT_PARSE_ADDRESS_MESSAGE, "port", hostAndPort[1]));
+			if(LOG.isWarnEnabled()) {
+				LOG.warn(String.format(COULD_NOT_PARSE_ADDRESS_MESSAGE, "port", hostAndPort[1]));
+			}
 		}
 
 		return null;
