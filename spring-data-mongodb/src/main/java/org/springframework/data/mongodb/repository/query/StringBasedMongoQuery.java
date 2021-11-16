@@ -48,7 +48,6 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 	private final String fieldSpec;
 
 	private final ExpressionParser expressionParser;
-	private final QueryMethodEvaluationContextProvider evaluationContextProvider;
 
 	private final boolean isCountQuery;
 	private final boolean isExistsQuery;
@@ -87,7 +86,6 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 
 		this.query = query;
 		this.expressionParser = expressionParser;
-		this.evaluationContextProvider = evaluationContextProvider;
 		this.fieldSpec = method.getFieldSpecification();
 
 		if (method.hasAnnotatedQuery()) {

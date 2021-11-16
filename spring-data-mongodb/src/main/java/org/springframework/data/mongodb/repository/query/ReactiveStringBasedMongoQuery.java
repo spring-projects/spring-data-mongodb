@@ -50,7 +50,6 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 	private final String fieldSpec;
 
 	private final ExpressionParser expressionParser;
-	private final ReactiveQueryMethodEvaluationContextProvider evaluationContextProvider;
 
 	private final boolean isCountQuery;
 	private final boolean isExistsQuery;
@@ -91,7 +90,6 @@ public class ReactiveStringBasedMongoQuery extends AbstractReactiveMongoQuery {
 
 		this.query = query;
 		this.expressionParser = expressionParser;
-		this.evaluationContextProvider = evaluationContextProvider;
 		this.fieldSpec = method.getFieldSpecification();
 
 		if (method.hasAnnotatedQuery()) {
