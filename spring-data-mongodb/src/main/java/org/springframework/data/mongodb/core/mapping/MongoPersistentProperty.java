@@ -42,6 +42,13 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	String getFieldName();
 
 	/**
+	 * Returns whether the property uses an annotated field name through {@link Field}.
+	 *
+	 * @return
+	 */
+	boolean hasExplicitFieldName();
+
+	/**
 	 * Returns the {@link Class Java FieldType} of the field a property is persisted to.
 	 *
 	 * @return

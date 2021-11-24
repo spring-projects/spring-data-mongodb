@@ -223,8 +223,8 @@ public class QueryMapper {
 
 		if (fields.isEmpty()) {
 			return BsonUtils.EMPTY_DOCUMENT;
-
 		}
+
 		Document target = new Document();
 
 		BsonUtils.asMap(filterUnwrappedObjects(fields, entity)).forEach((k, v) -> {

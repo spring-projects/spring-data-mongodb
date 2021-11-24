@@ -27,6 +27,7 @@ import org.bson.BsonString;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Query;
@@ -278,7 +279,6 @@ class ExecutableUpdateOperationSupportTests {
 
 	@Data
 	static class Jedi {
-
 		@Field("firstname") String name;
 	}
 }

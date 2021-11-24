@@ -23,13 +23,17 @@ import java.util.Optional;
 import org.bson.Document;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.mapping.IdentifierAccessor;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
+import org.springframework.data.mapping.context.EntityProjection;
+import org.springframework.data.mapping.context.EntityProjectionIntrospector;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mongodb.core.CollectionOptions.TimeSeriesOptions;
+import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoWriter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -39,6 +43,7 @@ import org.springframework.data.mongodb.core.query.Collation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.timeseries.Granularity;
+import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -63,8 +68,19 @@ class EntityOperations {
 
 	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context;
 
-	EntityOperations(MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context) {
+	private final EntityProjectionIntrospector introspector;
+
+	EntityOperations(MongoConverter converter) {
+		this(converter.getMappingContext(), converter.getCustomConversions(), converter.getProjectionFactory());
+	}
+
+	EntityOperations(MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> context,
+			CustomConversions conversions, ProjectionFactory projectionFactory) {
 		this.context = context;
+		this.introspector = EntityProjectionIntrospector.create(projectionFactory,
+				EntityProjectionIntrospector.ProjectionPredicate.typeHierarchy()
+						.and(((target, underlyingType) -> !conversions.isSimpleType(target))),
+				context);
 	}
 
 	/**
@@ -227,6 +243,11 @@ class EntityOperations {
 
 		}
 		return UntypedOperations.instance();
+	}
+
+	public <M, D> EntityProjection<M, D> introspectProjection(Class<M> resultType,
+			Class<D> entityType) {
+		return introspector.introspect(resultType, entityType);
 	}
 
 	/**

@@ -21,6 +21,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
 
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
@@ -66,6 +67,8 @@ import org.springframework.data.geo.Polygon;
 import org.springframework.data.geo.Shape;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.callback.EntityCallbacks;
+import org.springframework.data.mapping.context.EntityProjection;
+import org.springframework.data.mapping.context.EntityProjectionIntrospector;
 import org.springframework.data.mapping.model.MappingInstantiationException;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
 import org.springframework.data.mongodb.core.convert.DocumentAccessorUnitTests.NestedType;
@@ -138,7 +141,7 @@ class MappingMongoConverterUnitTests {
 		converter.write(address, document);
 
 		assertThat(document.get("city").toString()).isEqualTo("New York");
-		assertThat(document.get("street").toString()).isEqualTo("Broadway");
+		assertThat(document.get("s").toString()).isEqualTo("Broadway");
 	}
 
 	@Test
@@ -2191,7 +2194,8 @@ class MappingMongoConverterUnitTests {
 	@Test // GH-3546
 	void readFlattensNestedDocumentToStringIfNecessary() {
 
-		org.bson.Document source = new org.bson.Document("street", new org.bson.Document("json", "string").append("_id", UUID.randomUUID()));
+		org.bson.Document source = new org.bson.Document("s",
+				new org.bson.Document("json", "string").append("_id", UUID.randomUUID()));
 
 		Address target = converter.read(Address.class, source);
 		assertThat(target.street).isNotNull();
@@ -2355,7 +2359,7 @@ class MappingMongoConverterUnitTests {
 	void readUnwrappedTypeWithComplexValue() {
 
 		org.bson.Document source = new org.bson.Document("_id", "id-1").append("address",
-				new org.bson.Document("street", "1007 Mountain Drive").append("city", "Gotham"));
+				new org.bson.Document("s", "1007 Mountain Drive").append("city", "Gotham"));
 
 		WithNullableUnwrapped target = converter.read(WithNullableUnwrapped.class, source);
 
@@ -2381,9 +2385,9 @@ class MappingMongoConverterUnitTests {
 		converter.write(source, target);
 
 		assertThat(target) //
-				.containsEntry("address", new org.bson.Document("street", "1007 Mountain Drive").append("city", "Gotham")) //
+				.containsEntry("address", new org.bson.Document("s", "1007 Mountain Drive").append("city", "Gotham")) //
 				.doesNotContainKey("street") //
-				.doesNotContainKey("address.street") //
+				.doesNotContainKey("address.s") //
 				.doesNotContainKey("city") //
 				.doesNotContainKey("address.city");
 	}
@@ -2636,6 +2640,80 @@ class MappingMongoConverterUnitTests {
 		assertThat(accessor.getDocument()).isEqualTo(new org.bson.Document("pName", new org.bson.Document("_id", id.toString())));
 	}
 
+	@Test // GH-2860
+	void projectShouldReadSimpleInterfaceProjection() {
+
+		org.bson.Document source = new org.bson.Document("birthDate", new LocalDate(1999, 12, 1).toDate()).append("foo",
+				"Walter");
+
+		EntityProjectionIntrospector discoverer = EntityProjectionIntrospector.create(converter.getProjectionFactory(),
+				EntityProjectionIntrospector.ProjectionPredicate.typeHierarchy()
+						.and((target, underlyingType) -> !converter.conversions.isSimpleType(target)),
+				mappingContext);
+
+		EntityProjection<PersonProjection, Person> projection = discoverer
+				.introspect(PersonProjection.class, Person.class);
+		PersonProjection person = converter.project(projection, source);
+
+		assertThat(person.getBirthDate()).isEqualTo(new LocalDate(1999, 12, 1));
+		assertThat(person.getFirstname()).isEqualTo("Walter");
+	}
+
+	@Test // GH-2860
+	void projectShouldReadSimpleDtoProjection() {
+
+		org.bson.Document source = new org.bson.Document("birthDate", new LocalDate(1999, 12, 1).toDate()).append("foo",
+				"Walter");
+
+		EntityProjectionIntrospector introspector = EntityProjectionIntrospector.create(converter.getProjectionFactory(),
+				EntityProjectionIntrospector.ProjectionPredicate.typeHierarchy()
+						.and((target, underlyingType) -> !converter.conversions.isSimpleType(target)),
+				mappingContext);
+
+		EntityProjection<PersonDto, Person> projection = introspector
+				.introspect(PersonDto.class, Person.class);
+		PersonDto person = converter.project(projection, source);
+
+		assertThat(person.getBirthDate()).isEqualTo(new LocalDate(1999, 12, 1));
+		assertThat(person.getFirstname()).isEqualTo("Walter");
+	}
+
+	@Test // GH-2860
+	void projectShouldReadNestedProjection() {
+
+		org.bson.Document source = new org.bson.Document("addresses",
+				Collections.singletonList(new org.bson.Document("s", "hwy")));
+
+		EntityProjectionIntrospector introspector = EntityProjectionIntrospector.create(converter.getProjectionFactory(),
+				EntityProjectionIntrospector.ProjectionPredicate.typeHierarchy()
+						.and((target, underlyingType) -> !converter.conversions.isSimpleType(target)),
+				mappingContext);
+
+		EntityProjection<WithNestedProjection, Person> projection = introspector
+				.introspect(WithNestedProjection.class, Person.class);
+		WithNestedProjection person = converter.project(projection, source);
+
+		assertThat(person.getAddresses()).extracting(AddressProjection::getStreet).hasSize(1).containsOnly("hwy");
+	}
+
+	@Test // GH-2860
+	void projectShouldReadProjectionWithNestedEntity() {
+
+		org.bson.Document source = new org.bson.Document("addresses",
+				Collections.singletonList(new org.bson.Document("s", "hwy")));
+
+		EntityProjectionIntrospector introspector = EntityProjectionIntrospector.create(converter.getProjectionFactory(),
+				EntityProjectionIntrospector.ProjectionPredicate.typeHierarchy()
+						.and((target, underlyingType) -> !converter.conversions.isSimpleType(target)),
+				mappingContext);
+
+		EntityProjection<ProjectionWithNestedEntity, Person> projection = introspector
+				.introspect(ProjectionWithNestedEntity.class, Person.class);
+		ProjectionWithNestedEntity person = converter.project(projection, source);
+
+		assertThat(person.getAddresses()).extracting(Address::getStreet).hasSize(1).containsOnly("hwy");
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -2666,7 +2744,9 @@ class MappingMongoConverterUnitTests {
 	}
 
 	@EqualsAndHashCode
+	@Getter
 	static class Address implements InterfaceType {
+		@Field("s")
 		String street;
 		String city;
 	}
@@ -2693,6 +2773,54 @@ class MappingMongoConverterUnitTests {
 		@PersistenceConstructor
 		public Person(Set<Address> addresses) {
 			this.addresses = addresses;
+		}
+	}
+
+	interface PersonProjection {
+
+		LocalDate getBirthDate();
+
+		String getFirstname();
+	}
+
+	interface WithNestedProjection {
+
+		Set<AddressProjection> getAddresses();
+	}
+
+	interface ProjectionWithNestedEntity {
+
+		Set<Address> getAddresses();
+	}
+
+	interface AddressProjection {
+
+		String getStreet();
+	}
+
+	static class PersonDto {
+
+		LocalDate birthDate;
+
+		@Field("foo") String firstname;
+		String lastname;
+
+		public PersonDto(LocalDate birthDate, String firstname, String lastname) {
+			this.birthDate = birthDate;
+			this.firstname = firstname;
+			this.lastname = lastname;
+		}
+
+		public LocalDate getBirthDate() {
+			return birthDate;
+		}
+
+		public String getFirstname() {
+			return firstname;
+		}
+
+		public String getLastname() {
+			return lastname;
 		}
 	}
 

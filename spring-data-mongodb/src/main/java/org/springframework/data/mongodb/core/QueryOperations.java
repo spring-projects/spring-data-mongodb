@@ -28,8 +28,10 @@ import java.util.stream.Collectors;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.codecs.Codec;
+
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.PropertyReferenceException;
+import org.springframework.data.mapping.context.EntityProjection;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.data.mongodb.MongoExpression;
@@ -54,11 +56,9 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.mongodb.util.BsonUtils;
-import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.util.Lazy;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
-import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.client.model.CountOptions;
@@ -288,45 +288,58 @@ class QueryOperations {
 			return queryMapper.getMappedObject(getQueryObject(), entity);
 		}
 
-		Document getMappedFields(@Nullable MongoPersistentEntity<?> entity, Class<?> targetType,
-				ProjectionFactory projectionFactory) {
+		Document getMappedFields(@Nullable MongoPersistentEntity<?> entity,
+				EntityProjection<?, ?> projection) {
 
-			Document fields = new Document();
+			Document fields = evaluateFields(entity);
 
-			for (Entry<String, Object> entry : query.getFieldsObject().entrySet()) {
+			if (entity == null) {
+				return fields;
+			}
+
+			Document mappedFields;
+			if (!fields.isEmpty()) {
+				mappedFields = queryMapper.getMappedFields(fields, entity);
+			} else {
+				mappedFields = propertyOperations.computeMappedFieldsForProjection(projection, fields);
+			}
+
+			if (entity.hasTextScoreProperty() && mappedFields.containsKey(entity.getTextScoreProperty().getFieldName())
+					&& !query.getQueryObject().containsKey("$text")) {
+				mappedFields.remove(entity.getTextScoreProperty().getFieldName());
+			}
+
+			if (mappedFields.isEmpty()) {
+				return BsonUtils.EMPTY_DOCUMENT;
+			}
+
+			return mappedFields;
+		}
+
+		private Document evaluateFields(@Nullable MongoPersistentEntity<?> entity) {
+
+			Document fields = query.getFieldsObject();
+
+			if (fields.isEmpty()) {
+				return BsonUtils.EMPTY_DOCUMENT;
+			}
+
+			Document evaluated = new Document();
+
+			for (Entry<String, Object> entry : fields.entrySet()) {
 
 				if (entry.getValue() instanceof MongoExpression) {
 
 					AggregationOperationContext ctx = entity == null ? Aggregation.DEFAULT_CONTEXT
 							: new RelaxedTypeBasedAggregationOperationContext(entity.getType(), mappingContext, queryMapper);
 
-					fields.put(entry.getKey(), AggregationExpression.from((MongoExpression) entry.getValue()).toDocument(ctx));
+					evaluated.put(entry.getKey(), AggregationExpression.from((MongoExpression) entry.getValue()).toDocument(ctx));
 				} else {
-					fields.put(entry.getKey(), entry.getValue());
+					evaluated.put(entry.getKey(), entry.getValue());
 				}
 			}
 
-			Document mappedFields = fields;
-
-			if (entity == null) {
-				return mappedFields;
-			}
-
-			Document projectedFields = propertyOperations.computeFieldsForProjection(projectionFactory, fields,
-					entity.getType(), targetType);
-
-			if (ObjectUtils.nullSafeEquals(fields, projectedFields)) {
-				mappedFields = queryMapper.getMappedFields(projectedFields, entity);
-			} else {
-				mappedFields = queryMapper.getMappedFields(projectedFields,
-						mappingContext.getRequiredPersistentEntity(targetType));
-			}
-
-			if (entity.hasTextScoreProperty() && !query.getQueryObject().containsKey("$text")) {
-				mappedFields.remove(entity.getTextScoreProperty().getFieldName());
-			}
-
-			return mappedFields;
+			return evaluated;
 		}
 
 		/**
@@ -388,8 +401,8 @@ class QueryOperations {
 		}
 
 		@Override
-		Document getMappedFields(@Nullable MongoPersistentEntity<?> entity, Class<?> targetType,
-				ProjectionFactory projectionFactory) {
+		Document getMappedFields(@Nullable MongoPersistentEntity<?> entity,
+				EntityProjection<?, ?> projection) {
 			return getMappedFields(entity);
 		}
 

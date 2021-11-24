@@ -27,9 +27,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mapping.MappingException;
+import org.springframework.data.mapping.context.EntityProjection;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.AbstractMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -37,6 +40,7 @@ import org.springframework.data.mongodb.core.convert.MongoTypeMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.query.NearQuery;
+import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.util.TypeInformation;
 
 import com.mongodb.DBRef;
@@ -90,6 +94,21 @@ public abstract class MongoOperationsUnitTests {
 
 			@Override
 			public MongoTypeMapper getTypeMapper() {
+				return null;
+			}
+
+			@Override
+			public ProjectionFactory getProjectionFactory() {
+				return null;
+			}
+
+			@Override
+			public CustomConversions getCustomConversions() {
+				return null;
+			}
+
+			@Override
+			public <R> R project(EntityProjection<R, ?> descriptor, Bson bson) {
 				return null;
 			}
 		};

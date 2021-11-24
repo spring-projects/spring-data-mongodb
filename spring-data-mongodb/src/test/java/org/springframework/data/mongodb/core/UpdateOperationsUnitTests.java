@@ -48,8 +48,8 @@ class UpdateOperationsUnitTests {
 	MongoConverter mongoConverter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext);
 	QueryMapper queryMapper = new QueryMapper(mongoConverter);
 	UpdateMapper updateMapper = new UpdateMapper(mongoConverter);
-	EntityOperations entityOperations = new EntityOperations(mappingContext);
-	PropertyOperations propertyOperations = new PropertyOperations(mappingContext);
+	EntityOperations entityOperations = new EntityOperations(mongoConverter);
+	PropertyOperations propertyOperations = new PropertyOperations(mongoConverter.getMappingContext());
 
 	ExtendedQueryOperations queryOperations = new ExtendedQueryOperations(queryMapper, updateMapper, entityOperations, propertyOperations,
 			MongoClientSettings::getDefaultCodecRegistry);
