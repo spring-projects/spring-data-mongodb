@@ -90,6 +90,7 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.timeseries.Granularity;
+import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.lang.Nullable;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.CollectionUtils;
@@ -408,7 +409,7 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-1719, DATAMONGO-2041
 	void appliesFieldsToDtoProjection() {
 
-		template.doFind("star-wars", new Document(), new Document(), Person.class, Jedi.class,
+		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonDtoProjection.class,
 				FindPublisherPreparer.NO_OP_PREPARER).subscribe();
 
 		verify(findPublisher).projection(eq(new Document("firstname", 1)));
@@ -1151,6 +1152,7 @@ public class ReactiveMongoTemplateUnitTests {
 
 		MappingMongoConverter converter = mock(MappingMongoConverter.class);
 		when(converter.getMappingContext()).thenReturn((MappingContext) mappingContext);
+		when(converter.getProjectionFactory()).thenReturn(new SpelAwareProxyProjectionFactory());
 		template = new ReactiveMongoTemplate(factory, converter);
 
 		when(collection.find(Document.class)).thenReturn(findPublisher);
@@ -1500,6 +1502,12 @@ public class ReactiveMongoTemplateUnitTests {
 	static class Jedi {
 
 		@Field("firstname") String name;
+	}
+
+	@Data
+	static class PersonDtoProjection {
+
+		String firstname;
 	}
 
 	@org.springframework.data.mongodb.core.mapping.Document(collation = "de_AT")

@@ -16,63 +16,37 @@
 package org.springframework.data.mongodb.core;
 
 import org.bson.Document;
-import org.springframework.data.mapping.SimplePropertyHandler;
-import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.data.projection.ProjectionFactory;
-import org.springframework.data.projection.ProjectionInformation;
-import org.springframework.util.ClassUtils;
+
+import org.springframework.data.mapping.context.EntityProjectionIntrospector;
 
 /**
  * Common operations performed on properties of an entity like extracting fields information for projection creation.
  *
  * @author Christoph Strobl
+ * @author Mark Paluch
  * @since 2.1
  */
 class PropertyOperations {
 
-	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
-
-	PropertyOperations(MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
-		this.mappingContext = mappingContext;
-	}
-
 	/**
 	 * For cases where {@code fields} is {@link Document#isEmpty() empty} include only fields that are required for
-	 * creating the projection (target) type if the {@code targetType} is a {@literal DTO projection} or a
+	 * creating the projection (target) type if the {@code EntityProjection} is a {@literal DTO projection} or a
 	 * {@literal closed interface projection}.
 	 *
-	 * @param projectionFactory must not be {@literal null}.
+	 * @param projection must not be {@literal null}.
 	 * @param fields must not be {@literal null}.
-	 * @param domainType must not be {@literal null}.
-	 * @param targetType must not be {@literal null}.
 	 * @return {@link Document} with fields to be included.
 	 */
-	Document computeFieldsForProjection(ProjectionFactory projectionFactory, Document fields, Class<?> domainType,
-			Class<?> targetType) {
+	Document computeFieldsForProjection(EntityProjectionIntrospector.EntityProjection<?, ?> projection, Document fields) {
 
-		if (!fields.isEmpty() || ClassUtils.isAssignable(domainType, targetType)) {
+		if (!fields.isEmpty() || !projection.isProjection() || !projection.isClosedProjection()) {
 			return fields;
 		}
 
 		Document projectedFields = new Document();
-
-		if (targetType.isInterface()) {
-
-			ProjectionInformation projectionInformation = projectionFactory.getProjectionInformation(targetType);
-
-			if (projectionInformation.isClosed()) {
-				projectionInformation.getInputProperties().forEach(it -> projectedFields.append(it.getName(), 1));
-			}
-		} else {
-
-			MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(targetType);
-			if (entity != null) {
-				entity.doWithProperties(
-						(SimplePropertyHandler) persistentProperty -> projectedFields.append(persistentProperty.getName(), 1));
-			}
-		}
+		projection.forEach(propertyPath -> {
+			projectedFields.put(propertyPath.getSegment(), 1);
+		});
 
 		return projectedFields;
 	}

@@ -102,6 +102,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.timeseries.Granularity;
 import org.springframework.data.mongodb.util.BsonUtils;
+import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.lang.Nullable;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.CollectionUtils;
@@ -410,6 +411,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		when(cursor.next()).thenReturn(new org.bson.Document("_id", Integer.valueOf(0)));
 		MappingMongoConverter converter = mock(MappingMongoConverter.class);
 		when(converter.getMappingContext()).thenReturn((MappingContext) mappingContext);
+		when(converter.getProjectionFactory()).thenReturn(new SpelAwareProxyProjectionFactory());
 		template = new MongoTemplate(factory, converter);
 
 		assertThatExceptionOfType(MappingException.class).isThrownBy(() -> template.findAll(Person.class))
@@ -1078,7 +1080,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1733, DATAMONGO-2041
 	void appliesFieldsToDtoProjection() {
 
-		template.doFind("star-wars", new Document(), new Document(), Person.class, Jedi.class,
+		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonDtoProjection.class,
 				CursorPreparer.NO_OP_PREPARER);
 
 		verify(findIterable).projection(eq(new Document("firstname", 1)));
@@ -2357,6 +2359,12 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	static class Jedi {
 
 		@Field("firstname") String name;
+	}
+
+	@Data
+	static class PersonDtoProjection {
+
+		String firstname;
 	}
 
 	class Wrapper {

@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
@@ -47,10 +48,14 @@ import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.annotation.Reference;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.TypeMapper;
+import org.springframework.data.mapping.AccessOptions;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
+import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
+import org.springframework.data.mapping.PersistentPropertyPath;
+import org.springframework.data.mapping.PersistentPropertyPathAccessor;
 import org.springframework.data.mapping.PreferredConstructor;
 import org.springframework.data.mapping.PreferredConstructor.Parameter;
 import org.springframework.data.mapping.callback.EntityCallbacks;
@@ -79,7 +84,6 @@ import org.springframework.data.mongodb.core.mapping.event.AfterLoadEvent;
 import org.springframework.data.mongodb.core.mapping.event.MongoMappingEvent;
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.projection.ProjectionFactory;
-import org.springframework.data.projection.ProjectionInformation;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
@@ -120,7 +124,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	protected static final Log LOGGER = LogFactory.getLog(MappingMongoConverter.class);
 
 	protected final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
-	private final ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
 	protected final QueryMapper idMapper;
 	protected final DbRefResolver dbRefResolver;
 	protected final DefaultDbRefProxyHandler dbRefProxyHandler;
@@ -134,6 +137,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	private SpELContext spELContext;
 	private @Nullable EntityCallbacks entityCallbacks;
 	private final DocumentPointerFactory documentPointerFactory;
+	private final ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
 
 	/**
 	 * Creates a new {@link MappingMongoConverter} given the new {@link DbRefResolver} and {@link MappingContext}.
@@ -219,8 +223,14 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return this.typeMapper;
 	}
 
-	public ProjectionFactory getFactory() {
+	@Override
+	public ProjectionFactory getProjectionFactory() {
 		return factory;
+	}
+
+	@Override
+	public CustomConversions getCustomConversions() {
+		return conversions;
 	}
 
 	/**
@@ -287,17 +297,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		this.entityCallbacks = entityCallbacks;
 	}
 
+	@Override
 	public <R> R project(EntityProjectionIntrospector.EntityProjection<R, ?> descriptor, Bson bson) {
 
 		if (!descriptor.isProjection()) { // backed by real object
 			return read(descriptor.getMappedType(), bson);
-		}
-
-		ProjectionInformation projectionInformation = factory
-				.getProjectionInformation(descriptor.getMappedType().getType());
-
-		if (!projectionInformation.isClosed()) { // backed by real object
-			return factory.createProjection(descriptor.getMappedType().getType(), read(descriptor.getMappedType(), bson));
 		}
 
 		ProjectingConversionContext context = new ProjectingConversionContext(conversions, ObjectPath.ROOT,
@@ -336,11 +340,21 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		if (isInterfaceProjection || entity.requiresPropertyPopulation()) {
 
-			PersistentPropertyAccessor<?> convertingAccessor = new ConvertingPropertyAccessor<>(accessor, conversionService);
+			MongoPersistentEntity<?> mappedEntity = getMappingContext().getPersistentEntity(mappedType);
+			PersistentPropertyAccessor<?> convertingAccessor = PropertyTranslatingPropertyAccessor
+					.create(new ConvertingPropertyAccessor<>(accessor, conversionService), mappedEntity);
 			MongoDbPropertyValueProvider valueProvider = new MongoDbPropertyValueProvider(context, documentAccessor,
 					evaluator);
-			readProperties(context, entity, convertingAccessor, documentAccessor, valueProvider, evaluator, false,
-					!isInterfaceProjection);
+
+			Predicate<MongoPersistentProperty> propertyFilter;
+
+			if (isInterfaceProjection) {
+				propertyFilter = it -> true;
+			} else {
+				propertyFilter = it -> mappedEntity != null && mappedEntity.getPersistentProperty(it.getName()) != null;
+			}
+
+			readProperties(context, entity, convertingAccessor, documentAccessor, valueProvider, evaluator, propertyFilter);
 		}
 
 		if (isInterfaceProjection) {
@@ -556,7 +570,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		MongoDbPropertyValueProvider valueProvider = new MongoDbPropertyValueProvider(contextToUse, documentAccessor,
 				evaluator);
 
-		readProperties(contextToUse, entity, accessor, documentAccessor, valueProvider, evaluator, true, true);
+		Predicate<MongoPersistentProperty> propertyFilter = isIdentifier(entity).or(isConstructorArgument(entity)).negate();
+		readProperties(contextToUse, entity, accessor, documentAccessor, valueProvider, evaluator, propertyFilter);
 
 		return accessor.getBean();
 	}
@@ -598,12 +613,16 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	private void readProperties(ConversionContext context, MongoPersistentEntity<?> entity,
 			PersistentPropertyAccessor<?> accessor, DocumentAccessor documentAccessor,
-			MongoDbPropertyValueProvider valueProvider, SpELExpressionEvaluator evaluator, boolean skipIdentifier,
-			boolean skipConstructorProperties) {
+			MongoDbPropertyValueProvider valueProvider, SpELExpressionEvaluator evaluator,
+			Predicate<MongoPersistentProperty> propertyFilter) {
 
 		DbRefResolverCallback callback = null;
 
 		for (MongoPersistentProperty prop : entity) {
+
+			if (!propertyFilter.test(prop)) {
+				continue;
+			}
 
 			ConversionContext propertyContext = context.forProperty(prop.getName());
 			MongoDbPropertyValueProvider valueProviderToUse = valueProvider.withContext(propertyContext);
@@ -627,13 +646,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				continue;
 			}
 
-			// We skip the id property since it was already set
-
-			if (skipIdentifier && entity.isIdProperty(prop)) {
-				continue;
-			}
-
-			if (skipConstructorProperties && (entity.isConstructorArgument(prop) || !documentAccessor.hasValue(prop))) {
+			if (!documentAccessor.hasValue(prop)) {
 				continue;
 			}
 
@@ -1854,6 +1867,14 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return true;
 	}
 
+	static Predicate<MongoPersistentProperty> isIdentifier(PersistentEntity<?, ?> entity) {
+		return entity::isIdProperty;
+	}
+
+	static Predicate<MongoPersistentProperty> isConstructorArgument(PersistentEntity<?, ?> entity) {
+		return entity::isConstructorArgument;
+	}
+
 	/**
 	 * {@link PropertyValueProvider} to evaluate a SpEL expression if present on the property or simply accesses the field
 	 * of the configured source {@link Document}.
@@ -2273,5 +2294,60 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		}
 
+	}
+
+	private static class PropertyTranslatingPropertyAccessor<T> implements PersistentPropertyPathAccessor<T> {
+
+		private final PersistentPropertyAccessor<T> delegate;
+		private final MongoPersistentEntity<?> mappedEntity;
+
+		private PropertyTranslatingPropertyAccessor(PersistentPropertyAccessor<T> delegate,
+				MongoPersistentEntity<?> mappedEntity) {
+			this.delegate = delegate;
+			this.mappedEntity = mappedEntity;
+		}
+
+		static <T> PersistentPropertyAccessor<T> create(PersistentPropertyAccessor<T> delegate,
+				@Nullable MongoPersistentEntity<?> mappedEntity) {
+			return mappedEntity == null ? delegate : new PropertyTranslatingPropertyAccessor<>(delegate, mappedEntity);
+		}
+
+		@Override
+		public void setProperty(PersistentProperty property, @Nullable Object value) {
+			delegate.setProperty(translate(property), value);
+		}
+
+		@Override
+		public Object getProperty(PersistentProperty<?> property) {
+			return delegate.getProperty(translate(property));
+		}
+
+		@Override
+		public T getBean() {
+			return delegate.getBean();
+		}
+
+		@Override
+		public void setProperty(PersistentPropertyPath<? extends PersistentProperty<?>> path, Object value,
+				AccessOptions.SetOptions options) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Object getProperty(PersistentPropertyPath<? extends PersistentProperty<?>> path,
+				AccessOptions.GetOptions context) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void setProperty(PersistentPropertyPath<? extends PersistentProperty<?>> path, Object value) {
+			throw new UnsupportedOperationException();
+		}
+
+		private PersistentProperty translate(PersistentProperty property) {
+
+			MongoPersistentProperty translated = mappedEntity.getPersistentProperty(property.getName());
+			return translated != null ? translated : property;
+		}
 	}
 }

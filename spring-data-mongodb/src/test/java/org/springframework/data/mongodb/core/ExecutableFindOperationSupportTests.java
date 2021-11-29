@@ -21,7 +21,9 @@ import static org.springframework.data.mongodb.core.query.Query.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.Date;
 import java.util.stream.Stream;
@@ -32,6 +34,7 @@ import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -569,6 +572,8 @@ class ExecutableFindOperationSupportTests {
 		String getName();
 	}
 
+	@Getter
+	@Setter // TODO: Without getters/setters, not identified as projection/properties
 	static class PersonDtoProjection {
 
 		@Field("firstname") String name;

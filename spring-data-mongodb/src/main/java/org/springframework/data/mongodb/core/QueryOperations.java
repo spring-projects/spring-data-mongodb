@@ -28,8 +28,10 @@ import java.util.stream.Collectors;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.codecs.Codec;
+
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.PropertyReferenceException;
+import org.springframework.data.mapping.context.EntityProjectionIntrospector;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.data.mongodb.MongoExpression;
@@ -54,11 +56,9 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
 import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.mongodb.util.BsonUtils;
-import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.util.Lazy;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
-import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 import com.mongodb.client.model.CountOptions;
@@ -288,8 +288,8 @@ class QueryOperations {
 			return queryMapper.getMappedObject(getQueryObject(), entity);
 		}
 
-		Document getMappedFields(@Nullable MongoPersistentEntity<?> entity, Class<?> targetType,
-				ProjectionFactory projectionFactory) {
+		Document getMappedFields(@Nullable MongoPersistentEntity<?> entity,
+				EntityProjectionIntrospector.EntityProjection<?, ?> projection) {
 
 			Document fields = new Document();
 
@@ -306,21 +306,12 @@ class QueryOperations {
 				}
 			}
 
-			Document mappedFields = fields;
-
 			if (entity == null) {
-				return mappedFields;
+				return fields;
 			}
 
-			Document projectedFields = propertyOperations.computeFieldsForProjection(projectionFactory, fields,
-					entity.getType(), targetType);
-
-			if (ObjectUtils.nullSafeEquals(fields, projectedFields)) {
-				mappedFields = queryMapper.getMappedFields(projectedFields, entity);
-			} else {
-				mappedFields = queryMapper.getMappedFields(projectedFields,
-						mappingContext.getRequiredPersistentEntity(targetType));
-			}
+			Document projectedFields = propertyOperations.computeFieldsForProjection(projection, fields);
+			Document mappedFields = queryMapper.getMappedFields(projectedFields, entity);
 
 			if (entity.hasTextScoreProperty() && !query.getQueryObject().containsKey("$text")) {
 				mappedFields.remove(entity.getTextScoreProperty().getFieldName());
@@ -388,8 +379,8 @@ class QueryOperations {
 		}
 
 		@Override
-		Document getMappedFields(@Nullable MongoPersistentEntity<?> entity, Class<?> targetType,
-				ProjectionFactory projectionFactory) {
+		Document getMappedFields(@Nullable MongoPersistentEntity<?> entity,
+				EntityProjectionIntrospector.EntityProjection<?, ?> projection) {
 			return getMappedFields(entity);
 		}
 

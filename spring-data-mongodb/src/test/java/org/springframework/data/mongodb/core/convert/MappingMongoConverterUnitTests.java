@@ -2645,7 +2645,7 @@ class MappingMongoConverterUnitTests {
 		org.bson.Document source = new org.bson.Document("birthDate", new LocalDate(1999, 12, 1).toDate()).append("foo",
 				"Walter");
 
-		EntityProjectionIntrospector discoverer = EntityProjectionIntrospector.create(converter.getFactory(),
+		EntityProjectionIntrospector discoverer = EntityProjectionIntrospector.create(converter.getProjectionFactory(),
 				EntityProjectionIntrospector.ProjectionPredicate.typeHierarchy()
 						.and((target, underlyingType) -> !converter.conversions.isSimpleType(target)),
 				mappingContext);
@@ -2664,7 +2664,7 @@ class MappingMongoConverterUnitTests {
 		org.bson.Document source = new org.bson.Document("birthDate", new LocalDate(1999, 12, 1).toDate()).append("foo",
 				"Walter");
 
-		EntityProjectionIntrospector introspector = EntityProjectionIntrospector.create(converter.getFactory(),
+		EntityProjectionIntrospector introspector = EntityProjectionIntrospector.create(converter.getProjectionFactory(),
 				EntityProjectionIntrospector.ProjectionPredicate.typeHierarchy()
 						.and((target, underlyingType) -> !converter.conversions.isSimpleType(target)),
 				mappingContext);
@@ -2683,7 +2683,7 @@ class MappingMongoConverterUnitTests {
 		org.bson.Document source = new org.bson.Document("addresses",
 				Collections.singletonList(new org.bson.Document("s", "hwy")));
 
-		EntityProjectionIntrospector introspector = EntityProjectionIntrospector.create(converter.getFactory(),
+		EntityProjectionIntrospector introspector = EntityProjectionIntrospector.create(converter.getProjectionFactory(),
 				EntityProjectionIntrospector.ProjectionPredicate.typeHierarchy()
 						.and((target, underlyingType) -> !converter.conversions.isSimpleType(target)),
 				mappingContext);
@@ -2701,7 +2701,7 @@ class MappingMongoConverterUnitTests {
 		org.bson.Document source = new org.bson.Document("addresses",
 				Collections.singletonList(new org.bson.Document("s", "hwy")));
 
-		EntityProjectionIntrospector introspector = EntityProjectionIntrospector.create(converter.getFactory(),
+		EntityProjectionIntrospector introspector = EntityProjectionIntrospector.create(converter.getProjectionFactory(),
 				EntityProjectionIntrospector.ProjectionPredicate.typeHierarchy()
 						.and((target, underlyingType) -> !converter.conversions.isSimpleType(target)),
 				mappingContext);

@@ -24,6 +24,8 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.EntityOperations.AdaptibleEntity;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 /**
@@ -37,7 +39,7 @@ public class EntityOperationUnitTests {
 
 	@BeforeEach
 	public void setUp() {
-		ops = new EntityOperations(mappingContext);
+		ops = new EntityOperations(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext));
 	}
 
 	@Test // DATAMONGO-2293
