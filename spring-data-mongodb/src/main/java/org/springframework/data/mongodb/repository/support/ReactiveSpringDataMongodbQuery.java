@@ -96,7 +96,8 @@ class ReactiveSpringDataMongodbQuery<K> extends SpringDataMongodbQuerySupport<Re
 	 */
 	Mono<Page<K>> fetchPage(Pageable pageable) {
 
-		Mono<List<K>> content = createQuery().flatMapMany(it -> find.matching(it).all()).collectList();
+		Mono<List<K>> content = createQuery().map(it -> it.with(pageable))
+						     .flatMapMany(it -> find.matching(it).all()).collectList();
 
 		return content.flatMap(it -> ReactivePageableExecutionUtils.getPage(it, pageable, fetchCount()));
 	}

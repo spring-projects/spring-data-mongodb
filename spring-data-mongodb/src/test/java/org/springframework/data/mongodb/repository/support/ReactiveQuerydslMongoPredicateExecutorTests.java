@@ -400,6 +400,7 @@ public class ReactiveQuerydslMongoPredicateExecutorTests {
 				.as(StepVerifier::create) //
 				.assertNext(it -> {
 
+					assertThat(it.getContent().size()).isEqualTo(1);
 					assertThat(it.getTotalElements()).isEqualTo(2);
 					assertThat(it.getContent()).contains(dave);
 				}).verifyComplete();
@@ -409,6 +410,7 @@ public class ReactiveQuerydslMongoPredicateExecutorTests {
 				.as(StepVerifier::create) //
 				.assertNext(it -> {
 
+					assertThat(it.getContent().size()).isEqualTo(1);
 					assertThat(it.getTotalElements()).isEqualTo(2);
 					assertThat(it.getContent()).contains(oliver);
 				}).verifyComplete();
