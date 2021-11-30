@@ -31,7 +31,7 @@ import org.bson.codecs.Codec;
 
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.mapping.PropertyReferenceException;
-import org.springframework.data.mapping.context.EntityProjectionIntrospector;
+import org.springframework.data.mapping.context.EntityProjection;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.CodecRegistryProvider;
 import org.springframework.data.mongodb.MongoExpression;
@@ -289,7 +289,7 @@ class QueryOperations {
 		}
 
 		Document getMappedFields(@Nullable MongoPersistentEntity<?> entity,
-				EntityProjectionIntrospector.EntityProjection<?, ?> projection) {
+				EntityProjection<?, ?> projection) {
 
 			Document fields = evaluateFields(entity);
 
@@ -402,7 +402,7 @@ class QueryOperations {
 
 		@Override
 		Document getMappedFields(@Nullable MongoPersistentEntity<?> entity,
-				EntityProjectionIntrospector.EntityProjection<?, ?> projection) {
+				EntityProjection<?, ?> projection) {
 			return getMappedFields(entity);
 		}
 

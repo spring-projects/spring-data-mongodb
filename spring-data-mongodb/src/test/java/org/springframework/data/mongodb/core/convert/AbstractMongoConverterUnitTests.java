@@ -19,10 +19,11 @@ import static org.mockito.Mockito.*;
 
 import org.bson.conversions.Bson;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.convert.CustomConversions;
-import org.springframework.data.mapping.context.EntityProjectionIntrospector;
+import org.springframework.data.mapping.context.EntityProjection;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.MongoConverters.ObjectIdToStringConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverters.StringToObjectIdConverter;
@@ -73,7 +74,7 @@ public class AbstractMongoConverterUnitTests {
 		}
 
 		@Override
-		public <R> R project(EntityProjectionIntrospector.EntityProjection<R, ?> descriptor, Bson bson) {
+		public <R> R project(EntityProjection<R, ?> descriptor, Bson bson) {
 			return null;
 		}
 

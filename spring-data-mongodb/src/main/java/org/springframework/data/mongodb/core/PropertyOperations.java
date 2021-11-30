@@ -17,7 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import org.bson.Document;
 
-import org.springframework.data.mapping.context.EntityProjectionIntrospector;
+import org.springframework.data.mapping.context.EntityProjection;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
@@ -48,7 +48,7 @@ class PropertyOperations {
 	 * @param fields must not be {@literal null}.
 	 * @return {@link Document} with fields to be included.
 	 */
-	Document computeMappedFieldsForProjection(EntityProjectionIntrospector.EntityProjection<?, ?> projection,
+	Document computeMappedFieldsForProjection(EntityProjection<?, ?> projection,
 			Document fields) {
 
 		if (!projection.isProjection() || !projection.isClosedProjection()) {

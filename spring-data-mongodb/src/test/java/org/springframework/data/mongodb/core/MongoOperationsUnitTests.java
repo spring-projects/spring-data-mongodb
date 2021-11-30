@@ -27,11 +27,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.geo.Point;
 import org.springframework.data.mapping.MappingException;
-import org.springframework.data.mapping.context.EntityProjectionIntrospector;
+import org.springframework.data.mapping.context.EntityProjection;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.convert.AbstractMongoConverter;
 import org.springframework.data.mongodb.core.convert.MongoConverter;
@@ -107,7 +108,7 @@ public abstract class MongoOperationsUnitTests {
 			}
 
 			@Override
-			public <R> R project(EntityProjectionIntrospector.EntityProjection<R, ?> descriptor, Bson bson) {
+			public <R> R project(EntityProjection<R, ?> descriptor, Bson bson) {
 				return null;
 			}
 		};

@@ -59,7 +59,7 @@ import org.springframework.data.mapping.PersistentPropertyPathAccessor;
 import org.springframework.data.mapping.PreferredConstructor;
 import org.springframework.data.mapping.PreferredConstructor.Parameter;
 import org.springframework.data.mapping.callback.EntityCallbacks;
-import org.springframework.data.mapping.context.EntityProjectionIntrospector;
+import org.springframework.data.mapping.context.EntityProjection;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
 import org.springframework.data.mapping.model.DefaultSpELExpressionEvaluator;
@@ -300,7 +300,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	@Override
-	public <R> R project(EntityProjectionIntrospector.EntityProjection<R, ?> projection, Bson bson) {
+	public <R> R project(EntityProjection<R, ?> projection, Bson bson) {
 
 		if (!projection.isProjection()) { // backed by real object
 			return read(projection.getMappedType(), bson);
@@ -315,7 +315,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	@SuppressWarnings("unchecked")
 	private <R> R doReadProjection(ConversionContext context, Bson bson,
-			EntityProjectionIntrospector.EntityProjection<R, ?> projection) {
+			EntityProjection<R, ?> projection) {
 
 		MongoPersistentEntity<?> entity = getMappingContext().getRequiredPersistentEntity(projection.getActualDomainType());
 		TypeInformation<?> mappedType = projection.getActualMappedType();
@@ -377,7 +377,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	private Object doReadOrProject(ConversionContext context, Bson source, TypeInformation<?> typeHint,
-			EntityProjectionIntrospector.EntityProjection<?, ?> typeDescriptor) {
+			EntityProjection<?, ?> typeDescriptor) {
 
 		if (typeDescriptor.isProjection()) {
 			return doReadProjection(context, BsonUtils.asDocument(source), typeDescriptor);
@@ -388,12 +388,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	class ProjectingConversionContext extends ConversionContext {
 
-		private final EntityProjectionIntrospector.EntityProjection<?, ?> returnedTypeDescriptor;
+		private final EntityProjection<?, ?> returnedTypeDescriptor;
 
 		ProjectingConversionContext(CustomConversions customConversions, ObjectPath path,
 				ContainerValueConverter<Collection<?>> collectionConverter, ContainerValueConverter<Bson> mapConverter,
 				ContainerValueConverter<DBRef> dbRefConverter, ValueConverter<Object> elementConverter,
-				EntityProjectionIntrospector.EntityProjection<?, ?> projection) {
+				EntityProjection<?, ?> projection) {
 			super(customConversions, path,
 					(context, source, typeHint) -> doReadOrProject(context, source, typeHint, projection),
 
@@ -404,7 +404,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		@Override
 		public ConversionContext forProperty(String name) {
 
-			EntityProjectionIntrospector.EntityProjection<?, ?> property = returnedTypeDescriptor.findProperty(name);
+			EntityProjection<?, ?> property = returnedTypeDescriptor.findProperty(name);
 			if (property == null) {
 				return super.forProperty(name);
 			}

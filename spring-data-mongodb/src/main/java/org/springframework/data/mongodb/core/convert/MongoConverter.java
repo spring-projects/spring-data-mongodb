@@ -19,12 +19,13 @@ import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
+
 import org.springframework.core.convert.ConversionException;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.EntityConverter;
 import org.springframework.data.convert.EntityReader;
 import org.springframework.data.convert.TypeMapper;
-import org.springframework.data.mapping.context.EntityProjectionIntrospector;
+import org.springframework.data.mapping.context.EntityProjection;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.util.BsonUtils;
@@ -75,8 +76,8 @@ public interface MongoConverter
 
 	/**
 	 * Apply a projection to {@link Bson} and return the projection return type {@code R}.
-	 * {@link EntityProjectionIntrospector.EntityProjection#isProjection() Non-projecting} descriptors fall back to
-	 * {@link #read(Class, Object) regular object materialization}.
+	 * {@link EntityProjection#isProjection() Non-projecting} descriptors fall back to {@link #read(Class, Object) regular
+	 * object materialization}.
 	 *
 	 * @param descriptor the projection descriptor, must not be {@literal null}.
 	 * @param bson must not be {@literal null}.
@@ -84,7 +85,7 @@ public interface MongoConverter
 	 * @return a new instance of the projection return type {@code R}.
 	 * @since 2.7
 	 */
-	<R> R project(EntityProjectionIntrospector.EntityProjection<R, ?> descriptor, Bson bson);
+	<R> R project(EntityProjection<R, ?> descriptor, Bson bson);
 
 	/**
 	 * Mapping function capable of converting values into a desired target type by eg. extracting the actual java type

@@ -49,7 +49,7 @@ import org.springframework.data.geo.GeoResults;
 import org.springframework.data.geo.Metric;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.callback.EntityCallbacks;
-import org.springframework.data.mapping.context.EntityProjectionIntrospector;
+import org.springframework.data.mapping.context.EntityProjection;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoDatabaseUtils;
@@ -410,7 +410,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(entityType);
 
 			QueryContext queryContext = queryOperations.createQueryContext(query);
-			EntityProjectionIntrospector.EntityProjection<T, ?> projection = operations.introspectProjection(returnType,
+			EntityProjection<T, ?> projection = operations.introspectProjection(returnType,
 					entityType);
 
 			Document mappedQuery = queryContext.getMappedQuery(persistentEntity);
@@ -960,7 +960,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				.withOptions(AggregationOptions.builder().collation(near.getCollation()).build());
 
 		AggregationResults<Document> results = aggregate($geoNear, collection, Document.class);
-		EntityProjectionIntrospector.EntityProjection<T, ?> projection = operations.introspectProjection(returnType,
+		EntityProjection<T, ?> projection = operations.introspectProjection(returnType,
 				domainType);
 
 		DocumentCallback<GeoResult<T>> callback = new GeoNearResultDocumentCallback<>(distanceField,
@@ -1048,7 +1048,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityType);
 		QueryContext queryContext = queryOperations.createQueryContext(query);
 
-		EntityProjectionIntrospector.EntityProjection<T, S> projection = operations.introspectProjection(resultType,
+		EntityProjection<T, S> projection = operations.introspectProjection(resultType,
 				entityType);
 		Document mappedQuery = queryContext.getMappedQuery(entity);
 		Document mappedFields = queryContext.getMappedFields(entity, projection);
@@ -2501,7 +2501,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		QueryContext queryContext = queryOperations.createQueryContext(new BasicQuery(query, fields));
 		Document mappedFields = queryContext.getMappedFields(entity,
-				EntityProjectionIntrospector.EntityProjection.nonProjecting(entityClass));
+				EntityProjection.nonProjecting(entityClass));
 		Document mappedQuery = queryContext.getMappedQuery(entity);
 
 		if (LOGGER.isDebugEnabled()) {
@@ -2554,7 +2554,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		QueryContext queryContext = queryOperations.createQueryContext(new BasicQuery(query, fields));
 		Document mappedFields = queryContext.getMappedFields(entity,
-				EntityProjectionIntrospector.EntityProjection.nonProjecting(entityClass));
+				EntityProjection.nonProjecting(entityClass));
 		Document mappedQuery = queryContext.getMappedQuery(entity);
 
 		if (LOGGER.isDebugEnabled()) {
@@ -2576,7 +2576,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			Class<T> targetClass, CursorPreparer preparer) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(sourceClass);
-		EntityProjectionIntrospector.EntityProjection<T, S> projection = operations.introspectProjection(targetClass,
+		EntityProjection<T, S> projection = operations.introspectProjection(targetClass,
 				sourceClass);
 
 		QueryContext queryContext = queryOperations.createQueryContext(new BasicQuery(query, fields));
@@ -2751,7 +2751,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			Document mappedSort, @Nullable com.mongodb.client.model.Collation collation, Class<?> entityType,
 			Document replacement, FindAndReplaceOptions options, Class<T> resultType) {
 
-		EntityProjectionIntrospector.EntityProjection<T, ?> projection = operations.introspectProjection(resultType,
+		EntityProjection<T, ?> projection = operations.introspectProjection(resultType,
 				entityType);
 
 		return doFindAndReplace(collectionName, mappedQuery, mappedFields, mappedSort, collation, entityType, replacement,
@@ -2778,7 +2778,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	private <T> T doFindAndReplace(String collectionName, Document mappedQuery, Document mappedFields,
 			Document mappedSort, @Nullable com.mongodb.client.model.Collation collation, Class<?> entityType,
 			Document replacement, FindAndReplaceOptions options,
-			EntityProjectionIntrospector.EntityProjection<T, ?> projection) {
+			EntityProjection<T, ?> projection) {
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format(
@@ -3241,10 +3241,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	private class ProjectingReadCallback<S, T> implements DocumentCallback<T> {
 
 		private final MongoConverter reader;
-		private final EntityProjectionIntrospector.EntityProjection<T, S> projection;
+		private final EntityProjection<T, S> projection;
 		private final String collectionName;
 
-		ProjectingReadCallback(MongoConverter reader, EntityProjectionIntrospector.EntityProjection<T, S> projection,
+		ProjectingReadCallback(MongoConverter reader, EntityProjection<T, S> projection,
 				String collectionName) {
 
 			this.reader = reader;

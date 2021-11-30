@@ -67,6 +67,7 @@ import org.springframework.data.geo.Polygon;
 import org.springframework.data.geo.Shape;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.callback.EntityCallbacks;
+import org.springframework.data.mapping.context.EntityProjection;
 import org.springframework.data.mapping.context.EntityProjectionIntrospector;
 import org.springframework.data.mapping.model.MappingInstantiationException;
 import org.springframework.data.mongodb.core.DocumentTestUtils;
@@ -2650,7 +2651,7 @@ class MappingMongoConverterUnitTests {
 						.and((target, underlyingType) -> !converter.conversions.isSimpleType(target)),
 				mappingContext);
 
-		EntityProjectionIntrospector.EntityProjection<PersonProjection, Person> projection = discoverer
+		EntityProjection<PersonProjection, Person> projection = discoverer
 				.introspect(PersonProjection.class, Person.class);
 		PersonProjection person = converter.project(projection, source);
 
@@ -2669,7 +2670,7 @@ class MappingMongoConverterUnitTests {
 						.and((target, underlyingType) -> !converter.conversions.isSimpleType(target)),
 				mappingContext);
 
-		EntityProjectionIntrospector.EntityProjection<PersonDto, Person> projection = introspector
+		EntityProjection<PersonDto, Person> projection = introspector
 				.introspect(PersonDto.class, Person.class);
 		PersonDto person = converter.project(projection, source);
 
@@ -2688,7 +2689,7 @@ class MappingMongoConverterUnitTests {
 						.and((target, underlyingType) -> !converter.conversions.isSimpleType(target)),
 				mappingContext);
 
-		EntityProjectionIntrospector.EntityProjection<WithNestedProjection, Person> projection = introspector
+		EntityProjection<WithNestedProjection, Person> projection = introspector
 				.introspect(WithNestedProjection.class, Person.class);
 		WithNestedProjection person = converter.project(projection, source);
 
@@ -2706,7 +2707,7 @@ class MappingMongoConverterUnitTests {
 						.and((target, underlyingType) -> !converter.conversions.isSimpleType(target)),
 				mappingContext);
 
-		EntityProjectionIntrospector.EntityProjection<ProjectionWithNestedEntity, Person> projection = introspector
+		EntityProjection<ProjectionWithNestedEntity, Person> projection = introspector
 				.introspect(ProjectionWithNestedEntity.class, Person.class);
 		ProjectionWithNestedEntity person = converter.project(projection, source);
 

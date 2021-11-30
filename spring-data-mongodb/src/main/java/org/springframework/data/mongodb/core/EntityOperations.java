@@ -28,6 +28,7 @@ import org.springframework.data.mapping.IdentifierAccessor;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
+import org.springframework.data.mapping.context.EntityProjection;
 import org.springframework.data.mapping.context.EntityProjectionIntrospector;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
@@ -244,7 +245,7 @@ class EntityOperations {
 		return UntypedOperations.instance();
 	}
 
-	public <M, D> EntityProjectionIntrospector.EntityProjection<M, D> introspectProjection(Class<M> resultType,
+	public <M, D> EntityProjection<M, D> introspectProjection(Class<M> resultType,
 			Class<D> entityType) {
 		return introspector.introspect(resultType, entityType);
 	}
