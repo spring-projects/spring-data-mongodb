@@ -18,6 +18,11 @@ package org.springframework.data.mongodb.core;
 import org.bson.Document;
 
 import org.springframework.data.mapping.context.EntityProjectionIntrospector;
+import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.mapping.PersistentPropertyTranslator;
+import org.springframework.data.util.Predicates;
 
 /**
  * Common operations performed on properties of an entity like extracting fields information for projection creation.
@@ -28,6 +33,12 @@ import org.springframework.data.mapping.context.EntityProjectionIntrospector;
  */
 class PropertyOperations {
 
+	private final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
+
+	PropertyOperations(MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
+		this.mappingContext = mappingContext;
+	}
+
 	/**
 	 * For cases where {@code fields} is {@link Document#isEmpty() empty} include only fields that are required for
 	 * creating the projection (target) type if the {@code EntityProjection} is a {@literal DTO projection} or a
@@ -37,16 +48,31 @@ class PropertyOperations {
 	 * @param fields must not be {@literal null}.
 	 * @return {@link Document} with fields to be included.
 	 */
-	Document computeFieldsForProjection(EntityProjectionIntrospector.EntityProjection<?, ?> projection, Document fields) {
+	Document computeMappedFieldsForProjection(EntityProjectionIntrospector.EntityProjection<?, ?> projection,
+			Document fields) {
 
-		if (!fields.isEmpty() || !projection.isProjection() || !projection.isClosedProjection()) {
+		if (!projection.isProjection() || !projection.isClosedProjection()) {
 			return fields;
 		}
 
 		Document projectedFields = new Document();
-		projection.forEach(propertyPath -> {
-			projectedFields.put(propertyPath.getSegment(), 1);
-		});
+
+		if (projection.getMappedType().getType().isInterface()) {
+
+			projection.forEach(propertyPath -> projectedFields.put(propertyPath.getSegment(), 1));
+		} else {
+
+			// DTO projections use merged metadata between domain type and result type
+			PersistentPropertyTranslator translator = PersistentPropertyTranslator.create(
+					mappingContext.getRequiredPersistentEntity(projection.getDomainType()),
+					Predicates.negate(MongoPersistentProperty::hasExplicitFieldName));
+
+			MongoPersistentEntity<?> persistentEntity = mappingContext
+					.getRequiredPersistentEntity(projection.getMappedType());
+			for (MongoPersistentProperty property : persistentEntity) {
+				projectedFields.put(translator.translate(property).getFieldName(), 1);
+			}
+		}
 
 		return projectedFields;
 	}

@@ -91,7 +91,7 @@ class DocumentAccessor {
 	public void put(MongoPersistentProperty prop, @Nullable Object value) {
 
 		Assert.notNull(prop, "MongoPersistentProperty must not be null!");
-		String fieldName = prop.getFieldName();
+		String fieldName = getFieldName(prop);
 
 		if (!fieldName.contains(".")) {
 			BsonUtils.addToMap(document, fieldName, value);
@@ -123,7 +123,7 @@ class DocumentAccessor {
 	 */
 	@Nullable
 	public Object get(MongoPersistentProperty property) {
-		return BsonUtils.resolveValue(document, property.getFieldName());
+		return BsonUtils.resolveValue(document, getFieldName(property));
 	}
 
 	/**
@@ -150,7 +150,11 @@ class DocumentAccessor {
 
 		Assert.notNull(property, "Property must not be null!");
 
-		return BsonUtils.hasValue(document, property.getFieldName());
+		return BsonUtils.hasValue(document, getFieldName(property));
+	}
+
+	String getFieldName(MongoPersistentProperty prop) {
+		return prop.getFieldName();
 	}
 
 	/**

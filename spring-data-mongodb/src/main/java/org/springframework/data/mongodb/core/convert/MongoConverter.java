@@ -60,24 +60,29 @@ public interface MongoConverter
 	/**
 	 * Returns the {@link ProjectionFactory} for this converter.
 	 *
-	 * @return
+	 * @return will never be {@literal null}.
+	 * @since 2.7
 	 */
 	ProjectionFactory getProjectionFactory();
 
 	/**
 	 * Returns the {@link CustomConversions} for this converter.
 	 *
-	 * @return
+	 * @return will never be {@literal null}.
+	 * @since 2.7
 	 */
 	CustomConversions getCustomConversions();
 
 	/**
-	 * Apply a projection to {@link Bson} and return the projection return type {@code  R}.
+	 * Apply a projection to {@link Bson} and return the projection return type {@code R}.
+	 * {@link EntityProjectionIntrospector.EntityProjection#isProjection() Non-projecting} descriptors fall back to
+	 * {@link #read(Class, Object) regular object materialization}.
 	 *
-	 * @param descriptor
-	 * @param bson
+	 * @param descriptor the projection descriptor, must not be {@literal null}.
+	 * @param bson must not be {@literal null}.
 	 * @param <R>
-	 * @return
+	 * @return a new instance of the projection return type {@code R}.
+	 * @since 2.7
 	 */
 	<R> R project(EntityProjectionIntrospector.EntityProjection<R, ?> descriptor, Bson bson);
 

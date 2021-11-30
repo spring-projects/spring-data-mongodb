@@ -291,33 +291,55 @@ class QueryOperations {
 		Document getMappedFields(@Nullable MongoPersistentEntity<?> entity,
 				EntityProjectionIntrospector.EntityProjection<?, ?> projection) {
 
-			Document fields = new Document();
+			Document fields = evaluateFields(entity);
 
-			for (Entry<String, Object> entry : query.getFieldsObject().entrySet()) {
+			if (entity == null) {
+				return fields;
+			}
+
+			Document mappedFields;
+			if (!fields.isEmpty()) {
+				mappedFields = queryMapper.getMappedFields(fields, entity);
+			} else {
+				mappedFields = propertyOperations.computeMappedFieldsForProjection(projection, fields);
+			}
+
+			if (entity.hasTextScoreProperty() && mappedFields.containsKey(entity.getTextScoreProperty().getFieldName())
+					&& !query.getQueryObject().containsKey("$text")) {
+				mappedFields.remove(entity.getTextScoreProperty().getFieldName());
+			}
+
+			if (mappedFields.isEmpty()) {
+				return BsonUtils.EMPTY_DOCUMENT;
+			}
+
+			return mappedFields;
+		}
+
+		private Document evaluateFields(@Nullable MongoPersistentEntity<?> entity) {
+
+			Document fields = query.getFieldsObject();
+
+			if (fields.isEmpty()) {
+				return BsonUtils.EMPTY_DOCUMENT;
+			}
+
+			Document evaluated = new Document();
+
+			for (Entry<String, Object> entry : fields.entrySet()) {
 
 				if (entry.getValue() instanceof MongoExpression) {
 
 					AggregationOperationContext ctx = entity == null ? Aggregation.DEFAULT_CONTEXT
 							: new RelaxedTypeBasedAggregationOperationContext(entity.getType(), mappingContext, queryMapper);
 
-					fields.put(entry.getKey(), AggregationExpression.from((MongoExpression) entry.getValue()).toDocument(ctx));
+					evaluated.put(entry.getKey(), AggregationExpression.from((MongoExpression) entry.getValue()).toDocument(ctx));
 				} else {
-					fields.put(entry.getKey(), entry.getValue());
+					evaluated.put(entry.getKey(), entry.getValue());
 				}
 			}
 
-			if (entity == null) {
-				return fields;
-			}
-
-			Document projectedFields = propertyOperations.computeFieldsForProjection(projection, fields);
-			Document mappedFields = queryMapper.getMappedFields(projectedFields, entity);
-
-			if (entity.hasTextScoreProperty() && !query.getQueryObject().containsKey("$text")) {
-				mappedFields.remove(entity.getTextScoreProperty().getFieldName());
-			}
-
-			return mappedFields;
+			return evaluated;
 		}
 
 		/**

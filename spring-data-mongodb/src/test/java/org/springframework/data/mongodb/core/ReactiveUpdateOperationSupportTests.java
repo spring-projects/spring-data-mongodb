@@ -24,10 +24,8 @@ import reactor.test.StepVerifier;
 
 import org.bson.BsonString;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Query;
@@ -166,12 +164,11 @@ class ReactiveUpdateOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1719
-	@Disabled("TODO")
 	void findAndModifyWithDifferentDomainTypeAndCollection() {
 
 		template.update(Jedi.class).inCollection(STAR_WARS).matching(query(where("_id").is(han.getId())))
 				.apply(new Update().set("name", "Han")).findAndModify().as(StepVerifier::create)
-				.consumeNextWith(actual -> assertThat(actual.getFirstname()).isEqualTo("han")).verifyComplete();
+				.consumeNextWith(actual -> assertThat(actual.getName()).isEqualTo("han")).verifyComplete();
 
 		assertThat(blocking.findOne(queryHan(), Person.class)).isNotEqualTo(han).hasFieldOrPropertyWithValue("firstname",
 				"Han");
@@ -223,7 +220,7 @@ class ReactiveUpdateOperationSupportTests {
 
 		template.update(Person.class).matching(queryHan()).replaceWith(luke).as(Jedi.class).findAndReplace() //
 				.as(StepVerifier::create).consumeNextWith(it -> {
-					assertThat(it.getFirstname()).isEqualTo(han.firstname);
+					assertThat(it.getName()).isEqualTo(han.firstname);
 				}).verifyComplete();
 	}
 
@@ -265,7 +262,6 @@ class ReactiveUpdateOperationSupportTests {
 	@org.springframework.data.mongodb.core.mapping.Document(collection = STAR_WARS)
 	static class Person {
 		@Id String id;
-		@Field("name")
 		String firstname;
 	}
 
@@ -277,6 +273,6 @@ class ReactiveUpdateOperationSupportTests {
 	@Data
 	static class Jedi {
 
-		String firstname;
+		@Field("firstname") String name;
 	}
 }

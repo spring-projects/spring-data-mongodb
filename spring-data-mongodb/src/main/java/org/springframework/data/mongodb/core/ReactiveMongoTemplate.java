@@ -246,7 +246,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		// We always have a mapping context in the converter, whether it's a simple one or not
 		this.mappingContext = this.mongoConverter.getMappingContext();
 		this.operations = new EntityOperations(this.mongoConverter);
-		this.propertyOperations = new PropertyOperations();
+		this.propertyOperations = new PropertyOperations(this.mongoConverter.getMappingContext());
 		this.queryOperations = new QueryOperations(queryMapper, updateMapper, operations, propertyOperations,
 				mongoDatabaseFactory);
 
@@ -1159,7 +1159,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			}).flatMap(it -> {
 
 				Mono<T> afterFindAndReplace = doFindAndReplace(it.getCollection(), mappedQuery, mappedFields, mappedSort,
-						queryContext.getCollation(entityType).orElse(null), entityType, it.getTarget(), options, resultType,
+						queryContext.getCollation(entityType).orElse(null), entityType, it.getTarget(), options,
 						projection);
 				return afterFindAndReplace.flatMap(saved -> {
 					maybeEmitEvent(new AfterSaveEvent<>(saved, it.getTarget(), it.getCollection()));
@@ -2596,24 +2596,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			Document mappedSort, com.mongodb.client.model.Collation collation, Class<?> entityType, Document replacement,
 			FindAndReplaceOptions options, Class<T> resultType) {
 
-		return Mono.defer(() -> {
-
-			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug(String.format(
-						"findAndReplace using query: %s fields: %s sort: %s for class: %s and replacement: %s "
-								+ "in collection: %s",
-						serializeToJsonSafely(mappedQuery), mappedFields, mappedSort, entityType,
-						serializeToJsonSafely(replacement), collectionName));
-			}
-
-			EntityProjectionIntrospector.EntityProjection<T, ?> projection = operations.introspectProjection(resultType,
+		EntityProjectionIntrospector.EntityProjection<T, ?> projection = operations.introspectProjection(resultType,
 					entityType);
 
-			return executeFindOneInternal(
-					new FindAndReplaceCallback(mappedQuery, mappedFields, mappedSort, replacement, collation, options),
-					new ProjectingReadCallback<>(this.mongoConverter, projection, collectionName), collectionName);
-
-		});
+		return doFindAndReplace(collectionName, mappedQuery, mappedFields, mappedSort, collation, entityType, replacement,
+				options, projection);
 	}
 
 	/**
@@ -2627,14 +2614,14 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @param entityType the source domain type.
 	 * @param replacement the replacement {@link Document}.
 	 * @param options applicable options.
-	 * @param resultType the target domain type.
+	 * @param projection the projection descriptor.
 	 * @return {@link Mono#empty()} if object does not exist, {@link FindAndReplaceOptions#isReturnNew() return new} is
 	 *         {@literal false} and {@link FindAndReplaceOptions#isUpsert() upsert} is {@literal false}.
-	 * @since 2.1
+	 * @since 2.7
 	 */
 	private <T> Mono<T> doFindAndReplace(String collectionName, Document mappedQuery, Document mappedFields,
 			Document mappedSort, com.mongodb.client.model.Collation collation, Class<?> entityType, Document replacement,
-			FindAndReplaceOptions options, Class<T> resultType,
+			FindAndReplaceOptions options,
 			EntityProjectionIntrospector.EntityProjection<T, ?> projection) {
 
 		return Mono.defer(() -> {

@@ -409,7 +409,7 @@ public class ReactiveMongoTemplateUnitTests {
 	@Test // DATAMONGO-1719, DATAMONGO-2041
 	void appliesFieldsToDtoProjection() {
 
-		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonDtoProjection.class,
+		template.doFind("star-wars", new Document(), new Document(), Person.class, Jedi.class,
 				FindPublisherPreparer.NO_OP_PREPARER).subscribe();
 
 		verify(findPublisher).projection(eq(new Document("firstname", 1)));
@@ -1482,7 +1482,6 @@ public class ReactiveMongoTemplateUnitTests {
 
 		AutogenerateableId foo;
 	}
-
 	static class PersonExtended extends Person {
 
 		String lastname;
@@ -1502,12 +1501,6 @@ public class ReactiveMongoTemplateUnitTests {
 	static class Jedi {
 
 		@Field("firstname") String name;
-	}
-
-	@Data
-	static class PersonDtoProjection {
-
-		String firstname;
 	}
 
 	@org.springframework.data.mongodb.core.mapping.Document(collation = "de_AT")

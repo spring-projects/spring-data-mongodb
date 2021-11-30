@@ -25,9 +25,9 @@ import java.util.Optional;
 
 import org.bson.BsonString;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.Query;
@@ -133,11 +133,10 @@ class ExecutableUpdateOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1563
-	@Disabled("TODO")
 	void updateWithDifferentDomainClassAndCollection() {
 
 		UpdateResult result = template.update(Jedi.class).inCollection(STAR_WARS)
-				.matching(query(where("_id").is(han.getId()))).apply(new Update().set("firstname", "Han")).all();
+				.matching(query(where("_id").is(han.getId()))).apply(new Update().set("name", "Han")).all();
 
 		assertThat(result.getModifiedCount()).isEqualTo(1L);
 		assertThat(result.getUpsertedId()).isNull();
@@ -168,13 +167,12 @@ class ExecutableUpdateOperationSupportTests {
 	}
 
 	@Test // DATAMONGO-1563
-	@Disabled("TODO")
 	void findAndModifyWithDifferentDomainTypeAndCollection() {
 
 		Optional<Jedi> result = template.update(Jedi.class).inCollection(STAR_WARS)
-				.matching(query(where("_id").is(han.getId()))).apply(new Update().set("firstname", "Han")).findAndModify();
+				.matching(query(where("_id").is(han.getId()))).apply(new Update().set("name", "Han")).findAndModify();
 
-		assertThat(result.get()).hasFieldOrPropertyWithValue("firstname", "han");
+		assertThat(result.get()).hasFieldOrPropertyWithValue("name", "han");
 		assertThat(template.findOne(queryHan(), Person.class)).isNotEqualTo(han).hasFieldOrPropertyWithValue("firstname",
 				"Han");
 	}
@@ -260,7 +258,7 @@ class ExecutableUpdateOperationSupportTests {
 		Jedi result = template.update(Person.class).matching(queryHan()).replaceWith(luke).as(Jedi.class)
 				.findAndReplaceValue();
 
-		assertThat(result.getFirstname()).isEqualTo(han.firstname);
+		assertThat(result.getName()).isEqualTo(han.firstname);
 	}
 
 	private Query queryHan() {
@@ -271,7 +269,6 @@ class ExecutableUpdateOperationSupportTests {
 	@org.springframework.data.mongodb.core.mapping.Document(collection = STAR_WARS)
 	static class Person {
 		@Id String id;
-		@Field("name")
 		String firstname;
 	}
 
@@ -282,6 +279,6 @@ class ExecutableUpdateOperationSupportTests {
 
 	@Data
 	static class Jedi {
-		String firstname;
+		@Field("firstname") String name;
 	}
 }

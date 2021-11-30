@@ -76,6 +76,7 @@ import org.springframework.data.mongodb.core.mapping.BasicMongoPersistentPropert
 import org.springframework.data.mongodb.core.mapping.DocumentPointer;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
+import org.springframework.data.mongodb.core.mapping.PersistentPropertyTranslator;
 import org.springframework.data.mongodb.core.mapping.Unwrapped;
 import org.springframework.data.mongodb.core.mapping.Unwrapped.OnEmpty;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertCallback;
@@ -86,6 +87,7 @@ import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.Predicates;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -298,70 +300,80 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	}
 
 	@Override
-	public <R> R project(EntityProjectionIntrospector.EntityProjection<R, ?> descriptor, Bson bson) {
+	public <R> R project(EntityProjectionIntrospector.EntityProjection<R, ?> projection, Bson bson) {
 
-		if (!descriptor.isProjection()) { // backed by real object
-			return read(descriptor.getMappedType(), bson);
+		if (!projection.isProjection()) { // backed by real object
+			return read(projection.getMappedType(), bson);
 		}
 
 		ProjectingConversionContext context = new ProjectingConversionContext(conversions, ObjectPath.ROOT,
 				this::readCollectionOrArray, this::readMap, this::readDBRef, this::getPotentiallyConvertedSimpleRead,
-				descriptor);
+				projection);
 
-		return doReadProjection(context, bson, descriptor);
+		return doReadProjection(context, bson, projection);
 	}
 
+	@SuppressWarnings("unchecked")
 	private <R> R doReadProjection(ConversionContext context, Bson bson,
-			EntityProjectionIntrospector.EntityProjection<R, ?> descriptor) {
+			EntityProjectionIntrospector.EntityProjection<R, ?> projection) {
 
-		MongoPersistentEntity<?> entity = getMappingContext().getRequiredPersistentEntity(descriptor.getActualDomainType());
+		MongoPersistentEntity<?> entity = getMappingContext().getRequiredPersistentEntity(projection.getActualDomainType());
+		TypeInformation<?> mappedType = projection.getActualMappedType();
+		MongoPersistentEntity<R> mappedEntity = (MongoPersistentEntity<R>) getMappingContext()
+				.getPersistentEntity(mappedType);
 		SpELExpressionEvaluator evaluator = new DefaultSpELExpressionEvaluator(bson, spELContext);
-		DocumentAccessor documentAccessor = new DocumentAccessor(bson);
-		PersistentPropertyAccessor<?> accessor;
 
-		TypeInformation<?> mappedType = descriptor.getActualMappedType();
 		boolean isInterfaceProjection = mappedType.getType().isInterface();
 		if (isInterfaceProjection) {
-			accessor = new MapPersistentPropertyAccessor();
-		} else {
 
-			// create target instance, use metadata from underlying domain type
-			MongoPersistentEntity<?> entityToCreate = getMappingContext().getRequiredPersistentEntity(mappedType);
-			PreferredConstructor<?, MongoPersistentProperty> persistenceConstructor = entity.getPersistenceConstructor();
-			ParameterValueProvider<MongoPersistentProperty> provider = persistenceConstructor != null
-					&& persistenceConstructor.hasParameters() ? getParameterProvider(context, entity, documentAccessor, evaluator)
-							: NoOpParameterValueProvider.INSTANCE;
+			PersistentPropertyTranslator propertyTranslator = PersistentPropertyTranslator.create(mappedEntity);
+			DocumentAccessor documentAccessor = new DocumentAccessor(bson);
+			PersistentPropertyAccessor<?> accessor = new MapPersistentPropertyAccessor();
 
-			EntityInstantiator instantiator = instantiators.getInstantiatorFor(entityToCreate);
-			Object instance = instantiator.createInstance(entityToCreate, provider);
-
-			accessor = entityToCreate.getPropertyAccessor(instance);
-		}
-
-		if (isInterfaceProjection || entity.requiresPropertyPopulation()) {
-
-			MongoPersistentEntity<?> mappedEntity = getMappingContext().getPersistentEntity(mappedType);
 			PersistentPropertyAccessor<?> convertingAccessor = PropertyTranslatingPropertyAccessor
-					.create(new ConvertingPropertyAccessor<>(accessor, conversionService), mappedEntity);
+					.create(new ConvertingPropertyAccessor<>(accessor, conversionService), propertyTranslator);
 			MongoDbPropertyValueProvider valueProvider = new MongoDbPropertyValueProvider(context, documentAccessor,
 					evaluator);
 
-			Predicate<MongoPersistentProperty> propertyFilter;
-
-			if (isInterfaceProjection) {
-				propertyFilter = it -> true;
-			} else {
-				propertyFilter = it -> mappedEntity != null && mappedEntity.getPersistentProperty(it.getName()) != null;
-			}
-
-			readProperties(context, entity, convertingAccessor, documentAccessor, valueProvider, evaluator, propertyFilter);
-		}
-
-		if (isInterfaceProjection) {
+			readProperties(context, entity, convertingAccessor, documentAccessor, valueProvider, evaluator,
+					Predicates.isTrue());
 			return (R) factory.createProjection(mappedType.getType(), accessor.getBean());
 		}
 
-		return (R) accessor.getBean();
+		// DTO projection
+		if (mappedEntity == null) {
+			throw new MappingException(String.format("No mapping metadata found for %s", mappedType.getType().getName()));
+		}
+
+		// create target instance, merge metadata from underlying DTO type
+		PersistentPropertyTranslator propertyTranslator = PersistentPropertyTranslator.create(entity,
+				Predicates.negate(MongoPersistentProperty::hasExplicitFieldName));
+		DocumentAccessor documentAccessor = new DocumentAccessor(bson) {
+			@Override
+			String getFieldName(MongoPersistentProperty prop) {
+				return propertyTranslator.translate(prop).getFieldName();
+			}
+		};
+
+		PreferredConstructor<?, MongoPersistentProperty> persistenceConstructor = mappedEntity.getPersistenceConstructor();
+		ParameterValueProvider<MongoPersistentProperty> provider = persistenceConstructor != null
+				&& persistenceConstructor.hasParameters()
+						? getParameterProvider(context, mappedEntity, documentAccessor, evaluator)
+						: NoOpParameterValueProvider.INSTANCE;
+
+		EntityInstantiator instantiator = instantiators.getInstantiatorFor(mappedEntity);
+		R instance = instantiator.createInstance(mappedEntity, provider);
+		PersistentPropertyAccessor<R> accessor = mappedEntity.getPropertyAccessor(instance);
+
+		populateProperties(context, mappedEntity, documentAccessor, evaluator, instance);
+
+		PersistentPropertyAccessor<?> convertingAccessor = new ConvertingPropertyAccessor<>(accessor, conversionService);
+		MongoDbPropertyValueProvider valueProvider = new MongoDbPropertyValueProvider(context, documentAccessor, evaluator);
+
+		readProperties(context, mappedEntity, convertingAccessor, documentAccessor, valueProvider, evaluator,
+				Predicates.isTrue());
+
+		return accessor.getBean();
 	}
 
 	private Object doReadOrProject(ConversionContext context, Bson source, TypeInformation<?> typeHint,
@@ -381,12 +393,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		ProjectingConversionContext(CustomConversions customConversions, ObjectPath path,
 				ContainerValueConverter<Collection<?>> collectionConverter, ContainerValueConverter<Bson> mapConverter,
 				ContainerValueConverter<DBRef> dbRefConverter, ValueConverter<Object> elementConverter,
-				EntityProjectionIntrospector.EntityProjection returnedTypeDescriptor) {
+				EntityProjectionIntrospector.EntityProjection<?, ?> projection) {
 			super(customConversions, path,
-					(context, source, typeHint) -> doReadOrProject(context, source, typeHint, returnedTypeDescriptor),
+					(context, source, typeHint) -> doReadOrProject(context, source, typeHint, projection),
 
 					collectionConverter, mapConverter, dbRefConverter, elementConverter);
-			this.returnedTypeDescriptor = returnedTypeDescriptor;
+			this.returnedTypeDescriptor = projection;
 		}
 
 		@Override
@@ -2299,17 +2311,17 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	private static class PropertyTranslatingPropertyAccessor<T> implements PersistentPropertyPathAccessor<T> {
 
 		private final PersistentPropertyAccessor<T> delegate;
-		private final MongoPersistentEntity<?> mappedEntity;
+		private final PersistentPropertyTranslator propertyTranslator;
 
 		private PropertyTranslatingPropertyAccessor(PersistentPropertyAccessor<T> delegate,
-				MongoPersistentEntity<?> mappedEntity) {
+				PersistentPropertyTranslator propertyTranslator) {
 			this.delegate = delegate;
-			this.mappedEntity = mappedEntity;
+			this.propertyTranslator = propertyTranslator;
 		}
 
 		static <T> PersistentPropertyAccessor<T> create(PersistentPropertyAccessor<T> delegate,
-				@Nullable MongoPersistentEntity<?> mappedEntity) {
-			return mappedEntity == null ? delegate : new PropertyTranslatingPropertyAccessor<>(delegate, mappedEntity);
+				PersistentPropertyTranslator propertyTranslator) {
+			return new PropertyTranslatingPropertyAccessor<>(delegate, propertyTranslator);
 		}
 
 		@Override
@@ -2344,10 +2356,9 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			throw new UnsupportedOperationException();
 		}
 
-		private PersistentProperty translate(PersistentProperty property) {
-
-			MongoPersistentProperty translated = mappedEntity.getPersistentProperty(property.getName());
-			return translated != null ? translated : property;
+		private MongoPersistentProperty translate(PersistentProperty<?> property) {
+			return propertyTranslator.translate((MongoPersistentProperty) property);
 		}
 	}
+
 }

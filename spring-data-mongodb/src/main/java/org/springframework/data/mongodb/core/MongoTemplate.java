@@ -225,7 +225,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		this.updateMapper = new UpdateMapper(this.mongoConverter);
 		this.schemaMapper = new MongoJsonSchemaMapper(this.mongoConverter);
 		this.operations = new EntityOperations(this.mongoConverter);
-		this.propertyOperations = new PropertyOperations();
+		this.propertyOperations = new PropertyOperations(this.mongoConverter.getMappingContext());
 		this.queryOperations = new QueryOperations(queryMapper, updateMapper, operations, propertyOperations,
 				mongoDbFactory);
 
@@ -1061,7 +1061,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		maybeCallBeforeSave(replacement, mappedReplacement, collectionName);
 
 		T saved = doFindAndReplace(collectionName, mappedQuery, mappedFields, mappedSort,
-				queryContext.getCollation(entityType).orElse(null), entityType, mappedReplacement, options, resultType,
+				queryContext.getCollation(entityType).orElse(null), entityType, mappedReplacement, options,
 				projection);
 
 		if (saved != null) {
@@ -2751,20 +2751,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			Document mappedSort, @Nullable com.mongodb.client.model.Collation collation, Class<?> entityType,
 			Document replacement, FindAndReplaceOptions options, Class<T> resultType) {
 
-		if (LOGGER.isDebugEnabled()) {
-			LOGGER
-					.debug(String.format(
-							"findAndReplace using query: %s fields: %s sort: %s for class: %s and replacement: %s "
-									+ "in collection: %s",
-							serializeToJsonSafely(mappedQuery), serializeToJsonSafely(mappedFields),
-							serializeToJsonSafely(mappedSort), entityType, serializeToJsonSafely(replacement), collectionName));
-		}
 		EntityProjectionIntrospector.EntityProjection<T, ?> projection = operations.introspectProjection(resultType,
 				entityType);
 
-		return executeFindOneInternal(
-				new FindAndReplaceCallback(mappedQuery, mappedFields, mappedSort, replacement, collation, options),
-				new ProjectingReadCallback<>(mongoConverter, projection, collectionName), collectionName);
+		return doFindAndReplace(collectionName, mappedQuery, mappedFields, mappedSort, collation, entityType, replacement,
+				options, projection);
 	}
 
 	/**
@@ -2778,14 +2769,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param entityType the source domain type.
 	 * @param replacement the replacement {@link Document}.
 	 * @param options applicable options.
-	 * @param resultType the target domain type.
+	 * @param projection the projection descriptor.
 	 * @return {@literal null} if object does not exist, {@link FindAndReplaceOptions#isReturnNew() return new} is
 	 *         {@literal false} and {@link FindAndReplaceOptions#isUpsert() upsert} is {@literal false}.
+	 * @since 2.7
 	 */
 	@Nullable
 	private <T> T doFindAndReplace(String collectionName, Document mappedQuery, Document mappedFields,
 			Document mappedSort, @Nullable com.mongodb.client.model.Collation collation, Class<?> entityType,
-			Document replacement, FindAndReplaceOptions options, Class<T> resultType,
+			Document replacement, FindAndReplaceOptions options,
 			EntityProjectionIntrospector.EntityProjection<T, ?> projection) {
 
 		if (LOGGER.isDebugEnabled()) {

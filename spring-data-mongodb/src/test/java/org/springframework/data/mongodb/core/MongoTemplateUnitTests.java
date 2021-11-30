@@ -1080,7 +1080,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1733, DATAMONGO-2041
 	void appliesFieldsToDtoProjection() {
 
-		template.doFind("star-wars", new Document(), new Document(), Person.class, PersonDtoProjection.class,
+		template.doFind("star-wars", new Document(), new Document(), Person.class, Jedi.class,
 				CursorPreparer.NO_OP_PREPARER);
 
 		verify(findIterable).projection(eq(new Document("firstname", 1)));
@@ -2359,12 +2359,6 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	static class Jedi {
 
 		@Field("firstname") String name;
-	}
-
-	@Data
-	static class PersonDtoProjection {
-
-		String firstname;
 	}
 
 	class Wrapper {
