@@ -2617,7 +2617,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 * @param projection the projection descriptor.
 	 * @return {@link Mono#empty()} if object does not exist, {@link FindAndReplaceOptions#isReturnNew() return new} is
 	 *         {@literal false} and {@link FindAndReplaceOptions#isUpsert() upsert} is {@literal false}.
-	 * @since 2.7
+	 * @since 3.4
 	 */
 	private <T> Mono<T> doFindAndReplace(String collectionName, Document mappedQuery, Document mappedFields,
 			Document mappedSort, com.mongodb.client.model.Collation collation, Class<?> entityType, Document replacement,

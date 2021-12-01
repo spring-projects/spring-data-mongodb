@@ -62,7 +62,7 @@ public interface MongoConverter
 	 * Returns the {@link ProjectionFactory} for this converter.
 	 *
 	 * @return will never be {@literal null}.
-	 * @since 2.7
+	 * @since 3.4
 	 */
 	ProjectionFactory getProjectionFactory();
 
@@ -70,7 +70,7 @@ public interface MongoConverter
 	 * Returns the {@link CustomConversions} for this converter.
 	 *
 	 * @return will never be {@literal null}.
-	 * @since 2.7
+	 * @since 3.4
 	 */
 	CustomConversions getCustomConversions();
 
@@ -83,7 +83,7 @@ public interface MongoConverter
 	 * @param bson must not be {@literal null}.
 	 * @param <R>
 	 * @return a new instance of the projection return type {@code R}.
-	 * @since 2.7
+	 * @since 3.4
 	 */
 	<R> R project(EntityProjection<R, ?> descriptor, Bson bson);
 

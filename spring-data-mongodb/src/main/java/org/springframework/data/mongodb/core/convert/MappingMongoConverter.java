@@ -139,7 +139,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	private SpELContext spELContext;
 	private @Nullable EntityCallbacks entityCallbacks;
 	private final DocumentPointerFactory documentPointerFactory;
-	private final ProjectionFactory factory = new SpelAwareProxyProjectionFactory();
+	private final SpelAwareProxyProjectionFactory projectionFactory = new SpelAwareProxyProjectionFactory();
 
 	/**
 	 * Creates a new {@link MappingMongoConverter} given the new {@link DbRefResolver} and {@link MappingContext}.
@@ -227,7 +227,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	@Override
 	public ProjectionFactory getProjectionFactory() {
-		return factory;
+		return projectionFactory;
 	}
 
 	@Override
@@ -277,6 +277,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		this.applicationContext = applicationContext;
 		this.spELContext = new SpELContext(this.spELContext, applicationContext);
+		this.projectionFactory.setBeanFactory(applicationContext);
+		this.projectionFactory.setBeanClassLoader(applicationContext.getClassLoader());
 
 		if (entityCallbacks == null) {
 			setEntityCallbacks(EntityCallbacks.create(applicationContext));
@@ -303,7 +305,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	public <R> R project(EntityProjection<R, ?> projection, Bson bson) {
 
 		if (!projection.isProjection()) { // backed by real object
-			return read(projection.getMappedType(), bson);
+
+			TypeInformation<?> typeToRead = projection.getMappedType().getType().isInterface() ? projection.getDomainType()
+					: projection.getMappedType();
+			return (R) read(typeToRead, bson);
 		}
 
 		ProjectingConversionContext context = new ProjectingConversionContext(conversions, ObjectPath.ROOT,
@@ -337,7 +342,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 			readProperties(context, entity, convertingAccessor, documentAccessor, valueProvider, evaluator,
 					Predicates.isTrue());
-			return (R) factory.createProjection(mappedType.getType(), accessor.getBean());
+			return (R) projectionFactory.createProjection(mappedType.getType(), accessor.getBean());
 		}
 
 		// DTO projection

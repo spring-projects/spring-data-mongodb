@@ -2772,7 +2772,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 * @param projection the projection descriptor.
 	 * @return {@literal null} if object does not exist, {@link FindAndReplaceOptions#isReturnNew() return new} is
 	 *         {@literal false} and {@link FindAndReplaceOptions#isUpsert() upsert} is {@literal false}.
-	 * @since 2.7
+	 * @since 3.4
 	 */
 	@Nullable
 	private <T> T doFindAndReplace(String collectionName, Document mappedQuery, Document mappedFields,

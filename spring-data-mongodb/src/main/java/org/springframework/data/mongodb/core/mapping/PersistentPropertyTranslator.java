@@ -27,7 +27,7 @@ import org.springframework.lang.Nullable;
  * Mainly used within the framework.
  *
  * @author Mark Paluch
- * @since 2.7
+ * @since 3.4
  */
 public class PersistentPropertyTranslator {
 
