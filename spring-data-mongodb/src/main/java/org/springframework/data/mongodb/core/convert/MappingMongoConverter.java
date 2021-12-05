@@ -29,14 +29,15 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
 import org.bson.codecs.Codec;
 import org.bson.codecs.DecoderContext;
 import org.bson.conversions.Bson;
 import org.bson.json.JsonReader;
 import org.bson.types.ObjectId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -110,7 +111,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	public static final ClassTypeInformation<Bson> BSON = ClassTypeInformation.from(Bson.class);
 
-	protected static final Logger LOGGER = LoggerFactory.getLogger(MappingMongoConverter.class);
+	protected static final Log LOGGER = LogFactory.getLog(MappingMongoConverter.class);
 
 	protected final MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext;
 	protected final QueryMapper idMapper;

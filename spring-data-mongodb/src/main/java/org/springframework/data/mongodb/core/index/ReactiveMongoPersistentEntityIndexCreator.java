@@ -23,8 +23,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
@@ -47,7 +48,7 @@ import com.mongodb.MongoException;
  */
 public class ReactiveMongoPersistentEntityIndexCreator {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ReactiveMongoPersistentEntityIndexCreator.class);
+	private static final Log LOGGER = LogFactory.getLog(ReactiveMongoPersistentEntityIndexCreator.class);
 
 	private final Map<Class<?>, Boolean> classesSeen = new ConcurrentHashMap<Class<?>, Boolean>();
 	private final MongoMappingContext mappingContext;
@@ -174,9 +175,11 @@ public class ReactiveMongoPersistentEntityIndexCreator {
 				.filter(indexInfo -> ObjectUtils.nullSafeEquals(indexNameToLookUp, indexInfo.getName())) //
 				.next() //
 				.doOnError(e -> {
-					LOGGER.debug(
-							String.format("Failed to load index information for collection '%s'.", indexDefinition.getCollection()),
-							e);
+					if(LOGGER.isDebugEnabled()) {
+						LOGGER.debug(
+								String.format("Failed to load index information for collection '%s'.", indexDefinition.getCollection()),
+								e);
+					}
 				});
 	}
 

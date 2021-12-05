@@ -25,8 +25,8 @@ import java.lang.reflect.Method;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.cglib.proxy.Callback;
@@ -52,7 +52,7 @@ import com.mongodb.DBRef;
  */
 class LazyLoadingProxyFactory {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(LazyLoadingProxyFactory.class);
+	private static final Log LOGGER = LogFactory.getLog(LazyLoadingProxyFactory.class);
 
 	private final ObjenesisStd objenesis;
 
@@ -272,16 +272,16 @@ class LazyLoadingProxyFactory {
 			if (resolved) {
 
 				if (LOGGER.isTraceEnabled()) {
-					LOGGER.trace("Accessing already resolved lazy loading property {}.{}",
-							property.getOwner() != null ? property.getOwner().getName() : "unknown", property.getName());
+					LOGGER.trace(String.format("Accessing already resolved lazy loading property %s.%s",
+							property.getOwner() != null ? property.getOwner().getName() : "unknown", property.getName()));
 				}
 				return result;
 			}
 
 			try {
 				if (LOGGER.isTraceEnabled()) {
-					LOGGER.trace("Resolving lazy loading property {}.{}",
-							property.getOwner() != null ? property.getOwner().getName() : "unknown", property.getName());
+					LOGGER.trace(String.format("Resolving lazy loading property %s.%s",
+							property.getOwner() != null ? property.getOwner().getName() : "unknown", property.getName()));
 				}
 
 				return callback.resolve(property);

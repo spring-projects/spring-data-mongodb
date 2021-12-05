@@ -15,8 +15,8 @@
  */
 package org.springframework.data.mongodb;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.data.util.Version;
 import org.springframework.util.StringUtils;
 
@@ -31,7 +31,7 @@ import com.mongodb.MongoDriverInformation;
  */
 public class SpringDataMongoDB {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(SpringDataMongoDB.class);
+	private static final Log LOGGER = LogFactory.getLog(SpringDataMongoDB.class);
 
 	private static final Version FALLBACK_VERSION = new Version(3);
 	private static final MongoDriverInformation DRIVER_INFORMATION = MongoDriverInformation
@@ -68,7 +68,7 @@ public class SpringDataMongoDB {
 		try {
 			return Version.parse(versionString);
 		} catch (Exception e) {
-			LOGGER.debug("Cannot read Spring Data MongoDB version '{}'.", versionString);
+			LOGGER.debug(String.format("Cannot read Spring Data MongoDB version '%s'.", versionString));
 		}
 
 		return FALLBACK_VERSION;

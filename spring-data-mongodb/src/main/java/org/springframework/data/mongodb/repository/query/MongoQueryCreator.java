@@ -23,8 +23,9 @@ import java.util.Iterator;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.data.domain.Range;
 import org.springframework.data.domain.Range.Bound;
 import org.springframework.data.domain.Sort;
@@ -65,7 +66,7 @@ import org.springframework.util.ObjectUtils;
  */
 class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 
-	private static final Logger LOG = LoggerFactory.getLogger(MongoQueryCreator.class);
+	private static final Log LOG = LogFactory.getLog(MongoQueryCreator.class);
 
 	private final MongoParameterAccessor accessor;
 	private final MappingContext<?, MongoPersistentProperty> context;

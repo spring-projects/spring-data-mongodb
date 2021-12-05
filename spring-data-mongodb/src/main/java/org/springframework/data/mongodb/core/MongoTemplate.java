@@ -24,10 +24,10 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
 import org.bson.conversions.Bson;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -163,7 +163,7 @@ import com.mongodb.client.result.UpdateResult;
  */
 public class MongoTemplate implements MongoOperations, ApplicationContextAware, IndexOperationsProvider {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(MongoTemplate.class);
+	private static final Log LOGGER = LogFactory.getLog(MongoTemplate.class);
 	private static final WriteResultChecking DEFAULT_WRITE_RESULT_CHECKING = WriteResultChecking.NONE;
 
 	private final MongoConverter mongoConverter;
@@ -507,8 +507,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Document fieldsObject = query.getFieldsObject();
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Executing query: {} sort: {} fields: {} in collection: {}", serializeToJsonSafely(queryObject),
-					sortObject, fieldsObject, collectionName);
+			LOGGER.debug(String.format("Executing query: %s sort: %s fields: %s in collection: %s",
+					serializeToJsonSafely(queryObject), sortObject, fieldsObject, collectionName));
 		}
 
 		this.executeQueryInternal(new FindCallback(queryObject, fieldsObject, null),
@@ -700,8 +700,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		execute(collectionName, (CollectionCallback<Void>) collection -> {
 			collection.drop();
 			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug("Dropped collection [{}]",
-						collection.getNamespace() != null ? collection.getNamespace().getCollectionName() : collectionName);
+				LOGGER.debug(String.format("Dropped collection [%s]",
+						collection.getNamespace() != null ? collection.getNamespace().getCollectionName() : collectionName));
 			}
 			return null;
 		});
@@ -903,8 +903,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		MongoIterable<?> result = execute(collectionName, (collection) -> {
 
 			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug("Executing findDistinct using query {} for field: {} in collection: {}",
-						serializeToJsonSafely(mappedQuery), field, collectionName);
+				LOGGER.debug(String.format("Executing findDistinct using query %s for field: %s in collection: %s",
+						serializeToJsonSafely(mappedQuery), field, collectionName));
 			}
 
 			QueryCursorPreparer preparer = new QueryCursorPreparer(query, entityClass);
@@ -1126,7 +1126,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	protected long doCount(String collectionName, Document filter, CountOptions options) {
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Executing count: {} in collection: {}", serializeToJsonSafely(filter), collectionName);
+			LOGGER
+					.debug(String.format("Executing count: %s in collection: %s", serializeToJsonSafely(filter), collectionName));
 		}
 
 		return execute(collectionName,
@@ -1453,7 +1454,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	protected Object insertDocument(String collectionName, Document document, Class<?> entityClass) {
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Inserting Document containing fields: {} in collection: {}", document.keySet(), collectionName);
+			LOGGER.debug(String.format("Inserting Document containing fields: %s in collection: %s", document.keySet(),
+					collectionName));
 		}
 
 		return execute(collectionName, collection -> {
@@ -1478,7 +1480,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Inserting list of Documents containing {} items", documents.size());
+			LOGGER.debug(String.format("Inserting list of Documents containing %s items", documents.size()));
 		}
 
 		execute(collectionName, collection -> {
@@ -1502,7 +1504,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	protected Object saveDocument(String collectionName, Document dbDoc, Class<?> entityClass) {
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Saving Document containing fields: {}", dbDoc.keySet());
+			LOGGER.debug(String.format("Saving Document containing fields: %s", dbDoc.keySet()));
 		}
 
 		return execute(collectionName, collection -> {
@@ -1607,8 +1609,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		if (query.isSorted() && LOGGER.isWarnEnabled()) {
 
-			LOGGER.warn("{} does not support sort ('{}'). Please use findAndModify() instead.",
-					upsert ? "Upsert" : "UpdateFirst", serializeToJsonSafely(query.getSortObject()));
+			LOGGER.warn(String.format("%s does not support sort ('%s'). Please use findAndModify() instead.",
+					upsert ? "Upsert" : "UpdateFirst", serializeToJsonSafely(query.getSortObject())));
 		}
 
 		MongoPersistentEntity<?> entity = entityClass == null ? null : getPersistentEntity(entityClass);
@@ -1630,8 +1632,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			return execute(collectionName, collection -> {
 
 				if (LOGGER.isDebugEnabled()) {
-					LOGGER.debug("Calling update using query: {} and update: {} in collection: {}",
-							serializeToJsonSafely(queryObj), serializeToJsonSafely(pipeline), collectionName);
+					LOGGER.debug(String.format("Calling update using query: %s and update: %s in collection: %s",
+							serializeToJsonSafely(queryObj), serializeToJsonSafely(pipeline), collectionName));
 				}
 
 				collection = writeConcernToUse != null ? collection.withWriteConcern(writeConcernToUse) : collection;
@@ -1648,8 +1650,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return execute(collectionName, collection -> {
 
 			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug("Calling update using query: {} and update: {} in collection: {}", serializeToJsonSafely(queryObj),
-						serializeToJsonSafely(updateObj), collectionName);
+				LOGGER.debug(String.format("Calling update using query: %s and update: %s in collection: %s",
+						serializeToJsonSafely(queryObj), serializeToJsonSafely(updateObj), collectionName));
 			}
 
 			collection = writeConcernToUse != null ? collection.withWriteConcern(writeConcernToUse) : collection;
@@ -1739,8 +1741,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			Document removeQuery = queryObject;
 
 			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug("Remove using query: {} in collection: {}.",
-						new Object[] { serializeToJsonSafely(removeQuery), collectionName });
+				LOGGER.debug(String.format("Remove using query: %s in collection: %s.", serializeToJsonSafely(removeQuery),
+						collectionName));
 			}
 
 			if (query.getLimit() > 0 || query.getSkip() > 0) {
@@ -1954,13 +1956,13 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Document commandObject = new Document("group", document);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Executing Group with Document [{}]", serializeToJsonSafely(commandObject));
+			LOGGER.debug(String.format("Executing Group with Document [%s]", serializeToJsonSafely(commandObject)));
 		}
 
 		Document commandResult = executeCommand(commandObject, this.readPreference);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Group command result = [{}]", commandResult);
+			LOGGER.debug(String.format("Group command result = [%s]", commandResult));
 		}
 
 		@SuppressWarnings("unchecked")
@@ -2132,7 +2134,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			Document command = aggregationUtil.createCommand(collectionName, aggregation, context);
 
 			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug("Executing aggregation: {}", serializeToJsonSafely(command));
+				LOGGER.debug(String.format("Executing aggregation: %s", serializeToJsonSafely(command)));
 			}
 
 			Document commandResult = executeCommand(command);
@@ -2143,7 +2145,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		List<Document> pipeline = aggregationUtil.createPipeline(aggregation, context);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Executing aggregation: {} in collection {}", serializeToJsonSafely(pipeline), collectionName);
+			LOGGER.debug(
+					String.format("Executing aggregation: %s in collection %s", serializeToJsonSafely(pipeline), collectionName));
 		}
 
 		return execute(collectionName, collection -> {
@@ -2209,7 +2212,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		List<Document> pipeline = aggregationDefinition.getAggregationPipeline();
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("Streaming aggregation: {} in collection {}", serializeToJsonSafely(pipeline), collectionName);
+			LOGGER.debug(
+					String.format("Streaming aggregation: %s in collection %s", serializeToJsonSafely(pipeline), collectionName));
 		}
 
 		ReadDocumentCallback<O> readCallback = new ReadDocumentCallback<>(mongoConverter, outputType, collectionName);
@@ -2455,8 +2459,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			// TODO: Emit a collection created event
 			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug("Created collection [{}]",
-						coll.getNamespace() != null ? coll.getNamespace().getCollectionName() : collectionName);
+				LOGGER.debug(String.format("Created collection [%s]",
+						coll.getNamespace() != null ? coll.getNamespace().getCollectionName() : collectionName));
 			}
 			return coll;
 		});
@@ -2499,8 +2503,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Document mappedQuery = queryContext.getMappedQuery(entity);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("findOne using query: {} fields: {} for class: {} in collection: {}", serializeToJsonSafely(query),
-					mappedFields, entityClass, collectionName);
+			LOGGER.debug(String.format("findOne using query: %s fields: %s for class: %s in collection: %s",
+					serializeToJsonSafely(query), mappedFields, entityClass, collectionName));
 		}
 
 		return executeFindOneInternal(new FindOneCallback(mappedQuery, mappedFields, preparer),
@@ -2551,8 +2555,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Document mappedQuery = queryContext.getMappedQuery(entity);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("find using query: {} fields: {} for class: {} in collection: {}",
-					serializeToJsonSafely(mappedQuery), mappedFields, entityClass, collectionName);
+			LOGGER.debug(String.format("find using query: %s fields: %s for class: %s in collection: %s",
+					serializeToJsonSafely(mappedQuery), mappedFields, entityClass, collectionName));
 		}
 
 		return executeFindMultiInternal(new FindCallback(mappedQuery, mappedFields, null),
@@ -2575,8 +2579,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Document mappedQuery = queryContext.getMappedQuery(entity);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("find using query: {} fields: {} for class: {} in collection: {}",
-					serializeToJsonSafely(mappedQuery), mappedFields, sourceClass, collectionName);
+			LOGGER.debug(String.format("find using query: %s fields: %s for class: %s in collection: %s",
+					serializeToJsonSafely(mappedQuery), mappedFields, sourceClass, collectionName));
 		}
 
 		return executeFindMultiInternal(new FindCallback(mappedQuery, mappedFields, null), preparer,
@@ -2678,8 +2682,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		EntityReader<? super T, Bson> readerToUse = this.mongoConverter;
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("findAndRemove using query: {} fields: {} sort: {} for class: {} in collection: {}",
-					serializeToJsonSafely(query), fields, sort, entityClass, collectionName);
+			LOGGER.debug(String.format("findAndRemove using query: %s fields: %s sort: %s for class: %s in collection: %s",
+					serializeToJsonSafely(query), fields, sort, entityClass, collectionName));
 		}
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
@@ -2709,10 +2713,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				: updateContext.getMappedUpdate(entity);
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(
-					"findAndModify using query: {} fields: {} sort: {} for class: {} and update: {} " + "in collection: {}",
+			LOGGER.debug(String.format(
+					"findAndModify using query: %s fields: %s sort: %s for class: %s and update: %s in collection: %s",
 					serializeToJsonSafely(mappedQuery), fields, sort, entityClass, serializeToJsonSafely(mappedUpdate),
-					collectionName);
+					collectionName));
 		}
 
 		return executeFindOneInternal(
@@ -2742,10 +2746,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			Document replacement, FindAndReplaceOptions options, Class<T> resultType) {
 
 		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug(
-					"findAndReplace using query: {} fields: {} sort: {} for class: {} and replacement: {} " + "in collection: {}",
+			LOGGER.debug(String.format(
+					"findAndReplace using query: %s fields: %s sort: %s for class: %s and replacement: %s " + "in collection: %s",
 					serializeToJsonSafely(mappedQuery), serializeToJsonSafely(mappedFields), serializeToJsonSafely(mappedSort),
-					entityType, serializeToJsonSafely(replacement), collectionName);
+					entityType, serializeToJsonSafely(replacement), collectionName));
 		}
 
 		return executeFindOneInternal(
@@ -2937,9 +2941,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			if (LOGGER.isDebugEnabled()) {
 
-				LOGGER.debug("findOne using query: {} fields: {} in db.collection: {}", serializeToJsonSafely(query),
+				LOGGER.debug(String.format("findOne using query: %s fields: %s in db.collection: %s",
+						serializeToJsonSafely(query),
 						serializeToJsonSafely(fields.orElseGet(Document::new)),
-						collection.getNamespace() != null ? collection.getNamespace().getFullName() : "n/a");
+						collection.getNamespace() != null ? collection.getNamespace().getFullName() : "n/a"));
 			}
 
 			if (fields.isPresent()) {

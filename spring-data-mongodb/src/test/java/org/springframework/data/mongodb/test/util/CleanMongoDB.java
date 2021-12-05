@@ -23,12 +23,13 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -48,7 +49,7 @@ import com.mongodb.client.MongoDatabase;
  */
 public class CleanMongoDB implements TestRule {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(CleanMongoDB.class);
+	private static final Log LOGGER = LogFactory.getLog(CleanMongoDB.class);
 
 	/**
 	 * Defines contents of MongoDB.
@@ -98,7 +99,7 @@ public class CleanMongoDB implements TestRule {
 	}
 
 	/**
-	 * Removes everything by dropping every single {@link DB}.
+	 * Removes everything by dropping every single {@link MongoDatabase}.
 	 *
 	 * @return
 	 */
@@ -110,7 +111,7 @@ public class CleanMongoDB implements TestRule {
 	}
 
 	/**
-	 * Removes everything from the databases with given name by dropping the according {@link DB}.
+	 * Removes everything from the databases with given name by dropping the according {@link MongoDatabase}.
 	 *
 	 * @param dbNames
 	 * @return
@@ -124,7 +125,7 @@ public class CleanMongoDB implements TestRule {
 	}
 
 	/**
-	 * Drops the {@link DBCollection} with given names from every single {@link DB} containing them.
+	 * Drops the {@link MongoCollection} with given names from every single {@link MongoDatabase} containing them.
 	 *
 	 * @param collectionNames
 	 * @return
@@ -134,7 +135,7 @@ public class CleanMongoDB implements TestRule {
 	}
 
 	/**
-	 * Drops the {@link DBCollection} with given names from the named {@link DB}.
+	 * Drops the {@link MongoCollection} with given names from the named {@link MongoDatabase}.
 	 *
 	 * @param dbName
 	 * @param collectionNames
@@ -149,7 +150,7 @@ public class CleanMongoDB implements TestRule {
 	}
 
 	/**
-	 * Drops all index structures from every single {@link DBCollection}.
+	 * Drops all index structures from every single {@link MongoCollection}.
 	 *
 	 * @return
 	 */
@@ -158,7 +159,7 @@ public class CleanMongoDB implements TestRule {
 	}
 
 	/**
-	 * Drops all index structures from every single {@link DBCollection}.
+	 * Drops all index structures from every single {@link MongoCollection}.
 	 *
 	 * @param collectionNames
 	 * @return
@@ -184,7 +185,7 @@ public class CleanMongoDB implements TestRule {
 	}
 
 	/**
-	 * Defines the {@link DB}s to be used. <br />
+	 * Defines the {@link MongoDatabase}s to be used. <br />
 	 * Impact along with {@link CleanMongoDB#clean(Struct...)}:
 	 * <ul>
 	 * <li>{@link Struct#DATABASE}: Forces drop of named databases.</li>
@@ -202,7 +203,7 @@ public class CleanMongoDB implements TestRule {
 	}
 
 	/**
-	 * Excludes the given {@link DB}s from being processed.
+	 * Excludes the given {@link MongoDatabase}s from being processed.
 	 *
 	 * @param dbNames
 	 * @return
@@ -213,7 +214,7 @@ public class CleanMongoDB implements TestRule {
 	}
 
 	/**
-	 * Defines the {@link DBCollection}s to be used. <br />
+	 * Defines the {@link MongoCollection}s to be used. <br />
 	 * Impact along with {@link CleanMongoDB#clean(Struct...)}:
 	 * <ul>
 	 * <li>{@link Struct#COLLECTION}: Forces drop of named collections.</li>
@@ -232,7 +233,7 @@ public class CleanMongoDB implements TestRule {
 	}
 
 	/**
-	 * Defines the {@link DBCollection}s and {@link DB} to be used. <br />
+	 * Defines the {@link MongoCollection}s and {@link MongoDatabase} to be used. <br />
 	 * Impact along with {@link CleanMongoDB#clean(Struct...)}:
 	 * <ul>
 	 * <li>{@link Struct#COLLECTION}: Forces drop of named collections in given db.</li>
@@ -288,7 +289,9 @@ public class CleanMongoDB implements TestRule {
 		}
 
 		client.getDatabase(dbName).drop();
-		LOGGER.debug("Dropping DB '{}'. ", dbName);
+		if(LOGGER.isDebugEnabled()) {
+			LOGGER.debug(String.format("Dropping DB '%s'. ", dbName));
+		}
 		return true;
 	}
 
@@ -305,10 +308,15 @@ public class CleanMongoDB implements TestRule {
 
 					if (types.contains(Struct.COLLECTION)) {
 						collection.drop();
-						LOGGER.debug("Dropping collection '{}' for DB '{}'. ", collectionName, db.getName());
+						if(LOGGER.isDebugEnabled()) {
+							LOGGER.debug(String.format("Dropping collection '%s' for DB '%s'. ", collectionName, db.getName()));
+						}
 					} else if (types.contains(Struct.INDEX)) {
 						collection.dropIndexes();
-						LOGGER.debug("Dropping indexes in collection '{}' for DB '{}'. ", collectionName, db.getName());
+						if(LOGGER.isDebugEnabled()) {
+							LOGGER.debug(
+									String.format("Dropping indexes in collection '%s' for DB '%s'. ", collectionName, db.getName()));
+						}
 					}
 				}
 			}

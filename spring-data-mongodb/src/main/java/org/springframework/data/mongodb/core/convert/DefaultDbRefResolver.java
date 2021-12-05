@@ -22,9 +22,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
@@ -52,7 +52,7 @@ import com.mongodb.client.model.Filters;
  */
 public class DefaultDbRefResolver extends DefaultReferenceResolver implements DbRefResolver, ReferenceResolver {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultDbRefResolver.class);
+	private static final Log LOGGER = LogFactory.getLog(DefaultDbRefResolver.class);
 
 	private final MongoDatabaseFactory mongoDbFactory;
 
@@ -130,10 +130,10 @@ public class DefaultDbRefResolver extends DefaultReferenceResolver implements Db
 		MongoCollection<Document> mongoCollection = getCollection(databaseSource);
 
 		if (LOGGER.isTraceEnabled()) {
-			LOGGER.trace("Bulk fetching DBRefs {} from {}.{}.", ids,
+			LOGGER.trace(String.format("Bulk fetching DBRefs %s from %s.%s.", ids,
 					StringUtils.hasText(databaseSource.getDatabaseName()) ? databaseSource.getDatabaseName()
 							: mongoCollection.getNamespace().getDatabaseName(),
-					databaseSource.getCollectionName());
+					databaseSource.getCollectionName()));
 		}
 
 		List<Document> result = mongoCollection //

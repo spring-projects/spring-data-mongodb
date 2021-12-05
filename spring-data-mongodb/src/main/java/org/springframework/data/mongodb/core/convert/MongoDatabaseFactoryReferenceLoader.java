@@ -15,9 +15,10 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.bson.Document;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.MongoDatabaseUtils;
 import org.springframework.data.mongodb.core.convert.ReferenceResolver.ReferenceCollection;
@@ -35,7 +36,7 @@ import com.mongodb.client.MongoCollection;
  */
 public class MongoDatabaseFactoryReferenceLoader implements ReferenceLoader {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(MongoDatabaseFactoryReferenceLoader.class);
+	private static final Log LOGGER = LogFactory.getLog(MongoDatabaseFactoryReferenceLoader.class);
 
 	private final MongoDatabaseFactory mongoDbFactory;
 
@@ -55,10 +56,10 @@ public class MongoDatabaseFactoryReferenceLoader implements ReferenceLoader {
 		MongoCollection<Document> collection = getCollection(context);
 
 		if (LOGGER.isTraceEnabled()) {
-			LOGGER.trace("Bulk fetching {} from {}.{}.", referenceQuery,
+			LOGGER.trace(String.format("Bulk fetching %s from %s.%s.", referenceQuery,
 					StringUtils.hasText(context.getDatabase()) ? context.getDatabase()
 							: collection.getNamespace().getDatabaseName(),
-					context.getCollection());
+					context.getCollection()));
 		}
 
 		return referenceQuery.apply(collection);

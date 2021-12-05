@@ -2559,6 +2559,11 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		}
 
 		@Override
+		public int available() {
+			return 1;
+		}
+
+		@Override
 		public T tryNext() {
 			if (iterator.hasNext()) {
 				return iterator.next();

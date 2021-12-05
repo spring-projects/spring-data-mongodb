@@ -31,8 +31,9 @@ import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.ProcessBean;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.repository.cdi.CdiRepositoryBean;
 import org.springframework.data.repository.cdi.CdiRepositoryExtensionSupport;
@@ -45,7 +46,7 @@ import org.springframework.data.repository.cdi.CdiRepositoryExtensionSupport;
  */
 public class MongoRepositoryExtension extends CdiRepositoryExtensionSupport {
 
-	private static final Logger LOG = LoggerFactory.getLogger(MongoRepositoryExtension.class);
+	private static final Log LOG = LogFactory.getLog(MongoRepositoryExtension.class);
 
 	private final Map<Set<Annotation>, Bean<MongoOperations>> mongoOperations = new HashMap<Set<Annotation>, Bean<MongoOperations>>();
 

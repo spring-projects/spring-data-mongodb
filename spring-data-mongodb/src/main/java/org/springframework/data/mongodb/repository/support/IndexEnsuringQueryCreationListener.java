@@ -20,8 +20,9 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
@@ -54,7 +55,7 @@ import com.mongodb.MongoException;
 class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTreeMongoQuery> {
 
 	private static final Set<Type> GEOSPATIAL_TYPES = new HashSet<Type>(Arrays.asList(Type.NEAR, Type.WITHIN));
-	private static final Logger LOG = LoggerFactory.getLogger(IndexEnsuringQueryCreationListener.class);
+	private static final Log LOG = LogFactory.getLog(IndexEnsuringQueryCreationListener.class);
 
 	private final IndexOperationsProvider indexOperationsProvider;
 
@@ -135,7 +136,10 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 				}
 			}
 		}
-		LOG.debug(String.format("Created %s!", index));
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(String.format("Created %s!", index));
+		}
 	}
 
 	public boolean isIndexOnUnwrappedType(Part part) {
