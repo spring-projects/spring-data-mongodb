@@ -15,12 +15,11 @@
  */
 package org.springframework.data.mongodb.util.json;
 
-import static java.util.Arrays.*;
-import static org.bson.assertions.Assertions.*;
-import static org.bson.codecs.configuration.CodecRegistries.*;
+import static java.util.Arrays.asList;
+import static org.bson.assertions.Assertions.notNull;
+import static org.bson.codecs.configuration.CodecRegistries.fromProviders;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -38,7 +37,17 @@ import org.bson.BsonValue;
 import org.bson.BsonWriter;
 import org.bson.Document;
 import org.bson.Transformer;
-import org.bson.codecs.*;
+import org.bson.codecs.BsonTypeClassMap;
+import org.bson.codecs.BsonTypeCodecMap;
+import org.bson.codecs.BsonValueCodecProvider;
+import org.bson.codecs.Codec;
+import org.bson.codecs.CollectibleCodec;
+import org.bson.codecs.DecoderContext;
+import org.bson.codecs.DocumentCodecProvider;
+import org.bson.codecs.EncoderContext;
+import org.bson.codecs.IdGenerator;
+import org.bson.codecs.ObjectIdGenerator;
+import org.bson.codecs.ValueCodecProvider;
 import org.bson.codecs.configuration.CodecRegistry;
 import org.bson.json.JsonParseException;
 import org.springframework.data.mapping.model.SpELExpressionEvaluator;
@@ -174,7 +183,7 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 
 	public Document decode(@Nullable String json, ParameterBindingContext bindingContext) {
 
-		if (StringUtils.isEmpty(json)) {
+		if (!StringUtils.hasText(json)) {
 			return new Document();
 		}
 
@@ -195,7 +204,7 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 	public ExpressionDependencies captureExpressionDependencies(@Nullable String json, ValueProvider valueProvider,
 			ExpressionParser expressionParser) {
 
-		if (StringUtils.isEmpty(json)) {
+		if (!StringUtils.hasText(json)) {
 			return ExpressionDependencies.none();
 		}
 

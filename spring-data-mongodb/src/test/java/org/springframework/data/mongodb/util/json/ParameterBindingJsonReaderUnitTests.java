@@ -193,7 +193,6 @@ class ParameterBindingJsonReaderUnitTests {
 	@Test // DATAMONGO-2315
 	void bindStringAsDate() {
 
-		Date date = new Date();
 		Document target = parse("{ 'end_date' : { $gte : { $date : ?0 } } }", "2019-07-04T12:19:23.000Z");
 
 		assertThat(target).isEqualTo(Document.parse("{ 'end_date' : { $gte : { $date : '2019-07-04T12:19:23.000Z' } } } "));

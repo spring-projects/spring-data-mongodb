@@ -15,7 +15,7 @@
  */
 package org.springframework.data.mongodb.util.json;
 
-import static java.lang.String.*;
+import static java.lang.String.format;
 
 import java.text.DateFormat;
 import java.text.ParsePosition;
@@ -29,14 +29,24 @@ import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.bson.*;
+import org.bson.AbstractBsonReader;
+import org.bson.BsonBinary;
+import org.bson.BsonBinarySubType;
+import org.bson.BsonContextType;
+import org.bson.BsonDbPointer;
+import org.bson.BsonInvalidOperationException;
+import org.bson.BsonReaderMark;
+import org.bson.BsonRegularExpression;
+import org.bson.BsonTimestamp;
+import org.bson.BsonType;
+import org.bson.BsonUndefined;
+import org.bson.Document;
 import org.bson.internal.Base64;
 import org.bson.json.JsonParseException;
 import org.bson.types.Decimal128;
 import org.bson.types.MaxKey;
 import org.bson.types.MinKey;
 import org.bson.types.ObjectId;
-
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -71,7 +81,6 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 	private final JsonScanner scanner;
 	private JsonToken pushedToken;
 	Object currentValue;
-	private Mark mark;
 
 	/**
 	 * Constructs a new instance with the given JSON string.
