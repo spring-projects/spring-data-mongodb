@@ -31,6 +31,7 @@ import org.bson.AbstractBsonReader.State;
 import org.bson.BsonBinarySubType;
 import org.bson.BsonDocument;
 import org.bson.BsonDocumentWriter;
+import org.bson.BsonInvalidOperationException;
 import org.bson.BsonReader;
 import org.bson.BsonType;
 import org.bson.BsonValue;
@@ -61,6 +62,7 @@ import org.springframework.util.StringUtils;
  * @author Ross Lawley
  * @author Ralph Schaer
  * @author Christoph Strobl
+ * @author Rocco Lagrotteria
  * @since 2.2
  */
 public class ParameterBindingDocumentCodec implements CollectibleCodec<Document> {
@@ -217,19 +219,24 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 			if (bindingReader.currentValue instanceof org.bson.Document) {
 				return (Document) bindingReader.currentValue;
 			}
+
 		}
 
 		Document document = new Document();
-		reader.readStartDocument();
 
 		try {
+
+			reader.readStartDocument();
 
 			while (reader.readBsonType() != BsonType.END_OF_DOCUMENT) {
 				String fieldName = reader.readName();
 				Object value = readValue(reader, decoderContext);
 				document.put(fieldName, value);
 			}
-		} catch (JsonParseException e) {
+
+			reader.readEndDocument();
+
+		} catch (JsonParseException | BsonInvalidOperationException e) {
 			try {
 
 				Object value = readValue(reader, decoderContext);
@@ -243,8 +250,6 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 				throw e;
 			}
 		}
-
-		reader.readEndDocument();
 
 		return document;
 	}
