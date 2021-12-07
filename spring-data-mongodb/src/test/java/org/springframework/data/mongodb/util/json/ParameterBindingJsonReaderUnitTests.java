@@ -41,6 +41,7 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Rocco Lagrotteria
  */
 class ParameterBindingJsonReaderUnitTests {
 
@@ -192,7 +193,6 @@ class ParameterBindingJsonReaderUnitTests {
 	@Test // DATAMONGO-2315
 	void bindStringAsDate() {
 
-		Date date = new Date();
 		Document target = parse("{ 'end_date' : { $gte : { $date : ?0 } } }", "2019-07-04T12:19:23.000Z");
 
 		assertThat(target).isEqualTo(Document.parse("{ 'end_date' : { $gte : { $date : '2019-07-04T12:19:23.000Z' } } } "));
@@ -347,7 +347,7 @@ class ParameterBindingJsonReaderUnitTests {
 		evaluationContext.setRootObject(new DummySecurityObject(new DummyWithId("wonderwoman")));
 
 		String json = "?#{  T(" + this.getClass().getName()
-				+ ").isBatman() ? {'_class': { '$eq' : 'region' }} : { '$and' : { {'_class': { '$eq' : 'region' } }, {'user.supervisor':  principal.id } } } }";
+				+ ").isBatman() ? \"{'_class': { '$eq' : 'region' }}\" : \"{ '$and' : [ {'_class': { '$eq' : 'region' } }, {'user.supervisor': '\"+ principal.id +\"' } ] }\" }";
 
 		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json,
 				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), evaluationContext));
@@ -356,6 +356,43 @@ class ParameterBindingJsonReaderUnitTests {
 		assertThat(target)
 				.isEqualTo(new Document("$and", Arrays.asList(new Document("_class", new Document("$eq", "region")),
 						new Document("user.supervisor", "wonderwoman"))));
+	}
+	
+	@Test
+	void bindEntireQueryUsingSpelExpression() {
+
+		Object[] args = new Object[] {"region"};
+		StandardEvaluationContext evaluationContext = (StandardEvaluationContext) EvaluationContextProvider.DEFAULT
+				.getEvaluationContext(args);
+		evaluationContext.setRootObject(new DummySecurityObject(new DummyWithId("wonderwoman")));
+
+		String json = "?#{  T(" + this.getClass().getName() + ").applyFilterByUser('?0' ,principal.id) }";
+
+		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json,
+				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), evaluationContext));
+		Document target = new ParameterBindingDocumentCodec().decode(reader, DecoderContext.builder().build());
+
+		assertThat(target)
+				.isEqualTo(new Document("$and", Arrays.asList(new Document("_class", new Document("$eq", "region")),
+						new Document("user.supervisor", "wonderwoman"))));
+	}
+
+	@Test
+	void bindEntireQueryUsingParameter() {
+
+		Object[] args = new Object[] {"{ 'itWorks' : true }"};
+		StandardEvaluationContext evaluationContext = (StandardEvaluationContext) EvaluationContextProvider.DEFAULT
+				.getEvaluationContext(args);
+
+		String json = "?0";
+
+		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json,
+				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), evaluationContext));
+		Document target = new ParameterBindingDocumentCodec().decode(reader, DecoderContext.builder().build());
+
+		assertThat(target)
+				.isEqualTo(new Document("itWorks", true));
+		
 	}
 
 	@Test // DATAMONGO-2571
@@ -399,6 +436,19 @@ class ParameterBindingJsonReaderUnitTests {
 	// DATAMONGO-2545
 	public static boolean isBatman() {
 		return false;
+	}
+	
+	public static String applyFilterByUser(String _class, String username) {
+		switch (username) {
+			case "batman":
+				return "{'_class': { '$eq' : '"
+						+ _class
+						+ "' }}";
+			default:
+				return "{ '$and' : [ {'_class': { '$eq' : '"
+						+ _class
+						+ "' } }, {'user.supervisor':  '" + username + "' } ] }";
+		}
 	}
 
 	@Data

@@ -57,11 +57,12 @@ import org.springframework.util.ObjectUtils;
  * @author Florian Buecklers
  * @author Brendon Puntin
  * @author Christoph Strobl
+ * @author Rocco Lagrotteria
  * @since 2.2
  */
 public class ParameterBindingJsonReader extends AbstractBsonReader {
 
-	private static final Pattern PARAMETER_ONLY_BINDING_PATTERN = Pattern.compile("^\\?(\\d+)$");
+	private static final Pattern ENTIRE_QUERY_BINDING_PATTERN = Pattern.compile("^\\?(\\d+)$|^[\\?:]#\\{.*\\}$");
 	private static final Pattern PARAMETER_BINDING_PATTERN = Pattern.compile("\\?(\\d+)");
 	private static final Pattern EXPRESSION_BINDING_PATTERN = Pattern.compile("[\\?:]#\\{.*\\}");
 
@@ -70,7 +71,6 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 	private final JsonScanner scanner;
 	private JsonToken pushedToken;
 	Object currentValue;
-	private Mark mark;
 
 	/**
 	 * Constructs a new instance with the given JSON string.
@@ -106,15 +106,8 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 	public ParameterBindingJsonReader(String json, ValueProvider accessor, SpelExpressionParser spelExpressionParser,
 			Supplier<EvaluationContext> evaluationContext) {
 
-		this.scanner = new JsonScanner(json);
-		setContext(new Context(null, BsonContextType.TOP_LEVEL));
+		this(json, new ParameterBindingContext(accessor, spelExpressionParser, evaluationContext));
 
-		this.bindingContext = new ParameterBindingContext(accessor, spelExpressionParser, evaluationContext);
-
-		Matcher matcher = PARAMETER_ONLY_BINDING_PATTERN.matcher(json);
-		if (matcher.find()) {
-			currentValue = bindableValueFor(new JsonToken(JsonTokenType.UNQUOTED_STRING, json)).getValue();
-		}
 	}
 
 	public ParameterBindingJsonReader(String json, ParameterBindingContext bindingContext) {
@@ -124,10 +117,23 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 
 		this.bindingContext = bindingContext;
 
-		Matcher matcher = PARAMETER_ONLY_BINDING_PATTERN.matcher(json);
+		Matcher matcher = ENTIRE_QUERY_BINDING_PATTERN.matcher(json);
 		if (matcher.find()) {
-			currentValue = bindableValueFor(new JsonToken(JsonTokenType.UNQUOTED_STRING, json)).getValue();
+			BindableValue bindingResult = bindableValueFor(new JsonToken(JsonTokenType.UNQUOTED_STRING, json));
+			try {
+
+				if (bindingResult.getValue() instanceof String) {
+					currentValue = Document.parse((String)bindingResult.getValue());
+				} else {
+					currentValue = bindingResult.getValue();
+				}
+
+			} catch (JsonParseException jsonParseException) {
+				throw new IllegalArgumentException(
+						String.format("Resulting value of expression '%s' is not a valid json query", json), jsonParseException);
+			}
 		}
+
 	}
 
 	// Spring Data Customization END
