@@ -122,13 +122,13 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 			return AggregationOperationContext.super.getFields(type);
 		}
 
-		List<String> fields = new ArrayList<>();
+		List<Field> fields = new ArrayList<>();
 
 		for (MongoPersistentProperty property : entity) {
-			fields.add(property.getName());
+			fields.add(Fields.field(property.getName(), property.getFieldName()));
 		}
 
-		return Fields.fields(fields.toArray(new String[0]));
+		return Fields.from(fields.toArray(new Field[0]));
 	}
 
 	/*
