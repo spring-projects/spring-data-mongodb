@@ -58,7 +58,9 @@ class PropertyOperations {
 		Document projectedFields = new Document();
 
 		if (projection.getMappedType().getType().isInterface()) {
-			projection.forEach(propertyPath -> projectedFields.put(propertyPath.getSegment(), 1));
+			projection.forEach(it -> {
+				projectedFields.put(it.getPropertyPath().getSegment(), 1);
+			});
 		} else {
 
 			// DTO projections use merged metadata between domain type and result type
