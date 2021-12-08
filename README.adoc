@@ -271,7 +271,7 @@ The https://spring.io/[spring.io] site contains several guides that show how to 
 [[building-from-source]]
 == Building from Source
 
-You do not need to build from source to use Spring Data. Binaries are available in https://repo.spring.io[repo.spring.io].
+You do not need to build from source to use Spring Data. Binaries are available in https://repo.spring.io[repo.spring.io]
 and accessible from Maven using the Maven configuration noted <<maven-configuration,above>>.
 
 NOTE: Configuration for Gradle is similar to Maven.
@@ -281,16 +281,17 @@ Follow this https://start.spring.io/#type=maven-project&language=java&platformVe
 to build an imperative application and this https://start.spring.io/#type=maven-project&language=java&platformVersion=2.5.4&packaging=jar&jvmVersion=1.8&groupId=com.example&artifactId=demo&name=demo&description=Demo%20project%20for%20Spring%20Boot&packageName=com.example.demo&dependencies=data-mongodb-reactive[link]
 to build a reactive one.
 
-However, if you want to try out the latest and greatest, Spring Data can be easily built with the https://github.com/takari/maven-wrapper[maven wrapper]
-and minimally JDK 8 (https://www.oracle.com/java/technologies/downloads/[JDK downloads]).
+However, if you want to try out the latest and greatest, Spring Data MongoDB can be easily built with the https://github.com/takari/maven-wrapper[Maven wrapper]
+and minimally, JDK 8 (https://www.oracle.com/java/technologies/downloads/[JDK downloads]).
 
-In order to build Spring Data MongoDB, first you will need to https://www.mongodb.com/try/download/community[download]
+In order to build Spring Data MongoDB, you will need to https://www.mongodb.com/try/download/community[download]
 and https://docs.mongodb.com/manual/installation/[install a MongoDB distribution].
 
 Once you have installed MongoDB, you need to start a MongoDB server. It is convenient to set an environment variable to
-your MongoDB installation (e.g. `MONGODB_HOME`).
+your MongoDB installation directory (e.g. `MONGODB_HOME`).
 
-To run the full test suite a https://docs.mongodb.com/manual/tutorial/deploy-replica-set/[MongoDB Replica Set] is required.
+To run the full test suite, a https://docs.mongodb.com/manual/tutorial/deploy-replica-set/[MongoDB Replica Set]
+is required.
 
 To run the MongoDB server enter the following command from a command-line:
 
@@ -331,7 +332,7 @@ In case you need to, you can adjust the `ulimit` with the following command (327
 $ ulimit -n 32768
 ----
 
-You can use `ulimit -a` again to verify the `ulimit` on "_open files_" was set appropriately.
+You can use `ulimit -a` again to verify the `ulimit` for "_open files_" was set appropriately.
 
 Now you are ready to build Spring Data MongoDB. Simply enter the following `mvnw` (Maven Wrapper) command:
 
