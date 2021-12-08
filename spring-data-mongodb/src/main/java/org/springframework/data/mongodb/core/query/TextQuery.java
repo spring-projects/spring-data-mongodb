@@ -175,32 +175,44 @@ public class TextQuery extends Query {
 	public Document getSortObject() {
 
 		if (this.sortByScore) {
-			if (sortByScoreIndex == 0) {
-				Document sort = new Document();
-				sort.put(getScoreFieldName(), META_TEXT_SCORE);
-				sort.putAll(super.getSortObject());
-				return sort;
-			}
-			return fitInSortByScoreAtPosition(super.getSortObject());
+
+			int sortByScoreIndex = this.sortByScoreIndex;
+
+			return sortByScoreIndex != 0
+				? sortByScoreAtPosition(super.getSortObject(), sortByScoreIndex)
+				: sortByScoreAtPositionZero();
 		}
 
 		return super.getSortObject();
 	}
 
-	private Document fitInSortByScoreAtPosition(Document source) {
+	private Document sortByScoreAtPositionZero() {
+
+		Document sort = new Document();
+
+		sort.put(getScoreFieldName(), META_TEXT_SCORE);
+		sort.putAll(super.getSortObject());
+
+		return sort;
+	}
+
+	private Document sortByScoreAtPosition(Document source, int sortByScoreIndex) {
 
 		Document target = new Document();
-		int i = 0;
+		int index = 0;
+
 		for (Entry<String, Object> entry : source.entrySet()) {
-			if (i == sortByScoreIndex) {
+			if (index == sortByScoreIndex) {
 				target.put(getScoreFieldName(), META_TEXT_SCORE);
 			}
 			target.put(entry.getKey(), entry.getValue());
-			i++;
+			index++;
 		}
-		if (i == sortByScoreIndex) {
+
+		if (index == sortByScoreIndex) {
 			target.put(getScoreFieldName(), META_TEXT_SCORE);
 		}
+
 		return target;
 	}
 

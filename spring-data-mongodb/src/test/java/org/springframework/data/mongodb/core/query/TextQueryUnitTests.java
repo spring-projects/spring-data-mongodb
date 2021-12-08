@@ -15,9 +15,7 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import static org.springframework.data.mongodb.test.util.Assertions.*;
-
-import java.util.Map.Entry;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Sort;
@@ -103,20 +101,20 @@ public class TextQueryUnitTests {
 		query.sortByScore();
 		query.with(Sort.by(Direction.DESC, "two"));
 
-		assertThat(query.getSortObject().entrySet().stream().map(Entry::getKey)).containsExactly("one", "score", "two");
+		assertThat(query.getSortObject().keySet().stream()).containsExactly("one", "score", "two");
 
 		query = new TextQuery(QUERY);
 		query.with(Sort.by(Direction.DESC, "one"));
 		query.sortByScore();
 
-		assertThat(query.getSortObject().entrySet().stream().map(Entry::getKey)).containsExactly("one", "score");
+		assertThat(query.getSortObject().keySet().stream()).containsExactly("one", "score");
 
 		query = new TextQuery(QUERY);
 		query.sortByScore();
 		query.with(Sort.by(Direction.DESC, "one"));
 		query.with(Sort.by(Direction.DESC, "two"));
 
-		assertThat(query.getSortObject().entrySet().stream().map(Entry::getKey)).containsExactly("score", "one", "two");
+		assertThat(query.getSortObject().keySet().stream()).containsExactly("score", "one", "two");
 	}
 
 }
