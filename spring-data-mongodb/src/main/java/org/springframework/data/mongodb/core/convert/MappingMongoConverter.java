@@ -38,6 +38,7 @@ import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.CollectionFactory;
@@ -123,6 +124,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	protected @Nullable String mapKeyDotReplacement = null;
 	protected @Nullable CodecRegistryProvider codecRegistryProvider;
 
+	private MongoTypeMapper defaultTypeMapper;
 	private SpELContext spELContext;
 	private @Nullable EntityCallbacks entityCallbacks;
 	private final DocumentPointerFactory documentPointerFactory;
@@ -144,7 +146,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		this.dbRefResolver = dbRefResolver;
 
 		this.mappingContext = mappingContext;
-		this.typeMapper = new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, mappingContext,
+		this.defaultTypeMapper = new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, mappingContext,
 				this::getWriteTarget);
 		this.idMapper = new QueryMapper(this);
 
@@ -197,9 +199,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @param typeMapper the typeMapper to set. Can be {@literal null}.
 	 */
 	public void setTypeMapper(@Nullable MongoTypeMapper typeMapper) {
-		this.typeMapper = typeMapper == null
-				? new DefaultMongoTypeMapper(DefaultMongoTypeMapper.DEFAULT_TYPE_KEY, mappingContext)
-				: typeMapper;
+		this.typeMapper = typeMapper;
 	}
 
 	/*
@@ -208,7 +208,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	@Override
 	public MongoTypeMapper getTypeMapper() {
-		return this.typeMapper;
+		return this.typeMapper == null ? this.defaultTypeMapper : this.typeMapper;
 	}
 
 	/**
@@ -257,6 +257,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		if (entityCallbacks == null) {
 			setEntityCallbacks(EntityCallbacks.create(applicationContext));
 		}
+
+		ClassLoader classLoader = applicationContext.getClassLoader();
+		if (this.defaultTypeMapper instanceof BeanClassLoaderAware && classLoader != null) {
+			((BeanClassLoaderAware) this.defaultTypeMapper).setBeanClassLoader(classLoader);
+		}
 	}
 
 	/**
@@ -301,7 +306,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			TypeInformation<? extends S> typeHint) {
 
 		Document document = bson instanceof BasicDBObject ? new Document((BasicDBObject) bson) : (Document) bson;
-		TypeInformation<? extends S> typeToRead = typeMapper.readType(document, typeHint);
+		TypeInformation<? extends S> typeToRead = getTypeMapper().readType(document, typeHint);
 		Class<? extends S> rawType = typeToRead.getType();
 
 		if (conversions.hasCustomReadTarget(bson.getClass(), rawType)) {
@@ -657,7 +662,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		BsonUtils.removeNullId(bson);
 
 		if (requiresTypeHint(entityType)) {
-			typeMapper.writeType(type, bson);
+			getTypeMapper().writeType(type, bson);
 		}
 	}
 
@@ -1099,7 +1104,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		boolean notTheSameClass = !valueType.equals(reference);
 		if (notTheSameClass) {
-			typeMapper.writeType(valueType, bson);
+			getTypeMapper().writeType(valueType, bson);
 		}
 	}
 
@@ -1307,7 +1312,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		Assert.notNull(bson, "Document must not be null!");
 		Assert.notNull(targetType, "TypeInformation must not be null!");
 
-		Class<?> mapType = typeMapper.readType(bson, targetType).getType();
+		Class<?> mapType = getTypeMapper().readType(bson, targetType).getType();
 
 		TypeInformation<?> keyType = targetType.getComponentType();
 		TypeInformation<?> valueType = targetType.getMapValueType() == null ? ClassTypeInformation.OBJECT
@@ -1326,7 +1331,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		sourceMap.forEach((k, v) -> {
 
-			if (typeMapper.isTypeKey(k)) {
+			if (getTypeMapper().isTypeKey(k)) {
 				return;
 			}
 
@@ -1489,7 +1494,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				}
 			}
 
-			if (typeMapper.isTypeKey(key)) {
+			if (getTypeMapper().isTypeKey(key)) {
 
 				keyToRemove = key;
 
@@ -1660,6 +1665,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		target.conversions = conversions;
 		target.spELContext = spELContext;
 		target.setInstantiators(instantiators);
+		target.defaultTypeMapper = defaultTypeMapper;
 		target.typeMapper = typeMapper;
 		target.setCodecRegistryProvider(dbFactory);
 		target.afterPropertiesSet();
