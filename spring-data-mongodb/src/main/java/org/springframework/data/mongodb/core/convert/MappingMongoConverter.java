@@ -2032,10 +2032,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			Assert.notNull(source, "Source must not be null");
 			Assert.notNull(typeHint, "TypeInformation must not be null");
 
-			if (conversions.hasCustomReadTarget(source.getClass(), typeHint.getType())) {
-				return (S) elementConverter.convert(source, typeHint);
-			}
-
 			if (source instanceof Collection) {
 
 				Class<?> rawType = typeHint.getType();
@@ -2063,6 +2059,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 				throw new IllegalArgumentException(
 						String.format("Expected map like structure but found %s", source.getClass()));
+			}
+
+			if (conversions.hasCustomReadTarget(source.getClass(), typeHint.getType())) {
+				return (S) elementConverter.convert(source, typeHint);
 			}
 
 			if (source instanceof DBRef) {
