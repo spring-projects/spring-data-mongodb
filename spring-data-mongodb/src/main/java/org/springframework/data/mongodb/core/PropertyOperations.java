@@ -51,7 +51,7 @@ class PropertyOperations {
 	Document computeMappedFieldsForProjection(EntityProjection<?, ?> projection,
 			Document fields) {
 
-		if (!projection.isProjection() || !projection.isClosedProjection()) {
+		if (!projection.isClosedProjection()) {
 			return fields;
 		}
 

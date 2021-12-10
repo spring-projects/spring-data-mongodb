@@ -245,8 +245,17 @@ class EntityOperations {
 		return UntypedOperations.instance();
 	}
 
-	public <M, D> EntityProjection<M, D> introspectProjection(Class<M> resultType,
-			Class<D> entityType) {
+	/**
+	 * Introspect the given {@link Class result type} in the context of the {@link Class entity type} whether the returned
+	 * type is a projection and what property paths are participating in the projection.
+	 *
+	 * @param resultType the type to project on. Must not be {@literal null}.
+	 * @param entityType the source domain type. Must not be {@literal null}.
+	 * @return the introspection result.
+	 * @since 3.4
+	 * @see EntityProjectionIntrospector#introspect(Class, Class)
+	 */
+	public <M, D> EntityProjection<M, D> introspectProjection(Class<M> resultType, Class<D> entityType) {
 		return introspector.introspect(resultType, entityType);
 	}
 

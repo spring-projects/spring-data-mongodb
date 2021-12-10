@@ -2777,8 +2777,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	@Nullable
 	private <T> T doFindAndReplace(String collectionName, Document mappedQuery, Document mappedFields,
 			Document mappedSort, @Nullable com.mongodb.client.model.Collation collation, Class<?> entityType,
-			Document replacement, FindAndReplaceOptions options,
-			EntityProjection<T, ?> projection) {
+			Document replacement, FindAndReplaceOptions options, EntityProjection<T, ?> projection) {
 
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format(
@@ -3240,14 +3239,14 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	private class ProjectingReadCallback<S, T> implements DocumentCallback<T> {
 
-		private final MongoConverter reader;
+		private final MongoConverter mongoConverter;
 		private final EntityProjection<T, S> projection;
 		private final String collectionName;
 
-		ProjectingReadCallback(MongoConverter reader, EntityProjection<T, S> projection,
+		ProjectingReadCallback(MongoConverter mongoConverter, EntityProjection<T, S> projection,
 				String collectionName) {
 
-			this.reader = reader;
+			this.mongoConverter = mongoConverter;
 			this.projection = projection;
 			this.collectionName = collectionName;
 		}
@@ -3265,10 +3264,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 			maybeEmitEvent(new AfterLoadEvent<>(document, projection.getMappedType().getType(), collectionName));
 
-			Object entity = reader.project(projection, document);
+			Object entity = mongoConverter.project(projection, document);
 
 			if (entity == null) {
-				throw new MappingException(String.format("EntityReader %s returned null", reader));
+				throw new MappingException(String.format("EntityReader %s returned null", mongoConverter));
 			}
 
 			maybeEmitEvent(new AfterConvertEvent<>(document, entity, collectionName));

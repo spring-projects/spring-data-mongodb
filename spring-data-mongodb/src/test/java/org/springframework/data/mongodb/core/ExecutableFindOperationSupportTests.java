@@ -32,6 +32,7 @@ import org.bson.BsonString;
 import org.bson.BsonValue;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -44,6 +45,8 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFind;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
 import org.springframework.data.mongodb.core.index.GeospatialIndex;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.mapping.DocumentReference;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.NearQuery;
@@ -549,6 +552,71 @@ class ExecutableFindOperationSupportTests {
 		).containsExactlyInAnyOrder("luke");
 	}
 
+	@Test // GH-2860
+	void projectionOnDbRef() {
+
+		WithRefs source = new WithRefs();
+		source.id = "id-1";
+		source.noRef = "value";
+		source.planetDbRef = alderan;
+
+		template.save(source);
+
+		WithDbRefProjection target = template.query(WithRefs.class).as(WithDbRefProjection.class)
+				.matching(where("id").is(source.id)).oneValue();
+
+		assertThat(target.getPlanetDbRef()).isEqualTo(alderan);
+	}
+
+	@Test // GH-2860
+	@Disabled("GH-3913")
+	void propertyProjectionOnDbRef() {
+
+		WithRefs source = new WithRefs();
+		source.id = "id-1";
+		source.noRef = "value";
+		source.planetDbRef = alderan;
+
+		template.save(source);
+
+		WithDbRefPropertyProjection target = template.query(WithRefs.class).as(WithDbRefPropertyProjection.class)
+				.matching(where("id").is(source.id)).oneValue();
+
+		assertThat(target.getPlanetDbRef().getName()).isEqualTo(alderan.getName());
+	}
+
+	@Test // GH-2860
+	void projectionOnDocRef() {
+
+		WithRefs source = new WithRefs();
+		source.id = "id-1";
+		source.noRef = "value";
+		source.planetDocRef = alderan;
+
+		template.save(source);
+
+		WithDocumentRefProjection target = template.query(WithRefs.class).as(WithDocumentRefProjection.class)
+				.matching(where("id").is(source.id)).oneValue();
+
+		assertThat(target.getPlanetDocRef()).isEqualTo(alderan);
+	}
+
+	@Test // GH-2860
+	void propertyProjectionOnDocRef() {
+
+		WithRefs source = new WithRefs();
+		source.id = "id-1";
+		source.noRef = "value";
+		source.planetDocRef = alderan;
+
+		template.save(source);
+
+		WithDocRefPropertyProjection target = template.query(WithRefs.class).as(WithDocRefPropertyProjection.class)
+				.matching(where("id").is(source.id)).oneValue();
+
+		assertThat(target.getPlanetDocRef().getName()).isEqualTo(alderan.getName());
+	}
+
 	interface Contact {}
 
 	@Data
@@ -616,6 +684,34 @@ class ExecutableFindOperationSupportTests {
 
 		@Value("#{target.name}")
 		String getId();
+	}
+
+	@Data
+	static class WithRefs {
+
+		@Id String id;
+
+		String noRef;
+
+		@DBRef Planet planetDbRef;
+
+		@DocumentReference Planet planetDocRef;
+	}
+
+	interface WithDbRefProjection {
+		Planet getPlanetDbRef();
+	}
+
+	interface WithDocumentRefProjection {
+		Planet getPlanetDocRef();
+	}
+
+	interface WithDbRefPropertyProjection {
+		PlanetProjection getPlanetDbRef();
+	}
+
+	interface WithDocRefPropertyProjection {
+		PlanetProjection getPlanetDocRef();
 	}
 
 	private void initPersons() {

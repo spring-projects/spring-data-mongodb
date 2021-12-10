@@ -2621,8 +2621,7 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	private <T> Mono<T> doFindAndReplace(String collectionName, Document mappedQuery, Document mappedFields,
 			Document mappedSort, com.mongodb.client.model.Collation collation, Class<?> entityType, Document replacement,
-			FindAndReplaceOptions options,
-			EntityProjection<T, ?> projection) {
+			FindAndReplaceOptions options, EntityProjection<T, ?> projection) {
 
 		return Mono.defer(() -> {
 
