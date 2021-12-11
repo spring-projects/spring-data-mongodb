@@ -3,7 +3,9 @@ package org.springframework.data.mongodb.core.aggregation;
 
 import static org.springframework.data.mongodb.test.util.Assertions.*;
 
+import org.bson.Document;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 /**
  * Unit tests for {@link MatchOperation}.
