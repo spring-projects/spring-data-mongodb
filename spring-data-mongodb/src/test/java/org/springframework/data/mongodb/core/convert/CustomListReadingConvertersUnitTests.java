@@ -28,13 +28,16 @@ import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 
 /**
- * Test case to verify correct usage of custom {@link Converter} implementations for Lists to be used.
+ * Test case to verify correct usage of custom {@link Converter} implementations for different List implementations to be used.
  *
  * @author Jürgen Diez
  */
@@ -43,18 +46,19 @@ class CustomListReadingConvertersUnitTests {
 
 	private MappingMongoConverter converter;
 
-	@Mock ListReadingConverter listReadingConverter;
-	@Captor ArgumentCaptor<ArrayList<TestEnum>> enumListCaptor;
+	@Mock JavaListReadingConverter javaListReadingConverter;
+	@Mock OtherListReadingConverter otherListReadingConverter;
+	@Captor ArgumentCaptor<List<TestEnum>> enumListCaptor;
 
 	private MongoMappingContext context;
 
 	@BeforeEach
 	void setUp() {
 		CustomConversions conversions = new MongoCustomConversions(
-				Collections.singletonList(listReadingConverter));
+				Arrays.asList(javaListReadingConverter, otherListReadingConverter));
 
 		context = new MongoMappingContext();
-		context.setInitialEntitySet(new HashSet<>(Collections.singletonList(TestList.class)));
+		context.setInitialEntitySet(new HashSet<>(Collections.singletonList(TestJavaList.class)));
 		context.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
 		context.initialize();
 
@@ -64,27 +68,47 @@ class CustomListReadingConvertersUnitTests {
 	}
 
 	@Test
-	void invokeCustomListConverterForEnumsAfterResolvingTheListTypes() {
+	void invokeCustomListConverterForEnumsInJavaListAfterResolvingTheListTypes() {
 		Document document = new Document();
 		document.append("list", Arrays.asList("ENUM_VALUE1", "ENUM_VALUE2"));
 
-		converter.read(TestList.class, document);
+		converter.read(TestJavaList.class, document);
 
-		verify(listReadingConverter).convert(enumListCaptor.capture());
+		verify(javaListReadingConverter).convert(enumListCaptor.capture());
+		assertThat(enumListCaptor.getValue()).containsExactly(TestEnum.ENUM_VALUE1, TestEnum.ENUM_VALUE2);
+	}
+
+	@Test
+	void invokeCustomListConverterForEnumsInIterableListAfterResolvingTheListTypes() {
+		Document document = new Document();
+		document.append("list", Arrays.asList("ENUM_VALUE1", "ENUM_VALUE2"));
+
+		converter.read(TestIterableList.class, document);
+
+		verify(otherListReadingConverter).convert(enumListCaptor.capture());
 		assertThat(enumListCaptor.getValue()).containsExactly(TestEnum.ENUM_VALUE1, TestEnum.ENUM_VALUE2);
 	}
 
 
 	@ReadingConverter
-	private interface ListReadingConverter extends Converter<ArrayList<?>, List<?>> {}
+	private interface JavaListReadingConverter extends Converter<List<?>, List<?>> {}
 
-	private static class TestList {
-		@SuppressWarnings("unused")
-		List<TestEnum> list;
-	}
+	@ReadingConverter
+	private interface OtherListReadingConverter extends Converter<List<?>, Iterable<?>> {}
 
 	private enum TestEnum {
 		ENUM_VALUE1,
 		ENUM_VALUE2
 	}
+
+	private static class TestJavaList {
+		@SuppressWarnings("unused")
+		List<TestEnum> list;
+	}
+
+	private static class TestIterableList {
+		@SuppressWarnings("unused")
+		Iterable<TestEnum> list;
+	}
+
 }
