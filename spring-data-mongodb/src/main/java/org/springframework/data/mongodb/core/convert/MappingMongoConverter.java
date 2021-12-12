@@ -2047,6 +2047,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				}
 			}
 
+			if (conversions.hasCustomReadTarget(source.getClass(), typeHint.getType())) {
+				return (S) elementConverter.convert(source, typeHint);
+			}
+
 			if (typeHint.isMap()) {
 
 				if (ClassUtils.isAssignable(Document.class, typeHint.getType())) {
@@ -2059,10 +2063,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 				throw new IllegalArgumentException(
 						String.format("Expected map like structure but found %s", source.getClass()));
-			}
-
-			if (conversions.hasCustomReadTarget(source.getClass(), typeHint.getType())) {
-				return (S) elementConverter.convert(source, typeHint);
 			}
 
 			if (source instanceof DBRef) {
