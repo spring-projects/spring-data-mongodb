@@ -37,8 +37,14 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.data.convert.JodaTimeConverters;
+import org.springframework.data.convert.PropertyValueConversions;
+import org.springframework.data.convert.PropertyValueConverter;
+import org.springframework.data.convert.PropertyValueConverterFactory;
+import org.springframework.data.convert.PropertyValueConverterRegistrar;
+import org.springframework.data.convert.SimplePropertyValueConversions;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -159,6 +165,8 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		private boolean useNativeDriverJavaTimeCodecs = false;
 		private final List<Object> customConverters = new ArrayList<>();
 
+		private PropertyValueConversions propertyValueConversions = new SimplePropertyValueConversions();
+
 		/**
 		 * Create a {@link MongoConverterConfigurationAdapter} using the provided {@code converters} and our own codecs for
 		 * JSR-310 types.
@@ -231,6 +239,27 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		}
 
 		/**
+		 * Gateway to register property specific converters.
+		 *
+		 * @param configurationAdapter must not be {@literal null}.
+		 * @return this.
+		 * @since 3.4
+		 */
+		public MongoConverterConfigurationAdapter configurePropertyConversions(
+				Consumer<PropertyValueConverterRegistrar<MongoPersistentProperty>> configurationAdapter) {
+
+			Assert.state(valueConversions() instanceof SimplePropertyValueConversions,
+					"Configured PropertyValueConversions does not allow setting custom ConverterRegistry.");
+
+			PropertyValueConverterRegistrar propertyValueConverterRegistrar = new PropertyValueConverterRegistrar();
+			configurationAdapter.accept(propertyValueConverterRegistrar);
+
+			((SimplePropertyValueConversions) valueConversions())
+					.setValueConverterRegistry(propertyValueConverterRegistrar.buildRegistry());
+			return this;
+		}
+
+		/**
 		 * Add a custom {@link ConverterFactory} implementation.
 		 *
 		 * @param converterFactory must not be {@literal null}.
@@ -258,10 +287,54 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 			return this;
 		}
 
+		/**
+		 * Add a custom/default {@link PropertyValueConverterFactory} implementation used to serve
+		 * {@link PropertyValueConverter}.
+		 *
+		 * @param converterFactory must not be {@literal null}.
+		 * @return this.
+		 * @since 3.4
+		 */
+		public MongoConverterConfigurationAdapter registerPropertyValueConverterFactory(
+				PropertyValueConverterFactory converterFactory) {
+
+			Assert.state(valueConversions() instanceof SimplePropertyValueConversions,
+					"Configured PropertyValueConversions does not allow setting custom ConverterRegistry.");
+
+			((SimplePropertyValueConversions) valueConversions()).setConverterFactory(converterFactory);
+			return this;
+		}
+
+		/**
+		 * Optionally set the {@link PropertyValueConversions} to be applied during mapping.
+		 * <p>
+		 * Use this method if {@link #configurePropertyConversions(Consumer)} and
+		 * {@link #registerPropertyValueConverterFactory(PropertyValueConverterFactory)} are not sufficient.
+		 *
+		 * @param valueConversions must not be {@literal null}.
+		 * @return this.
+		 * @since 3.4
+		 */
+		public MongoConverterConfigurationAdapter setPropertyValueConversions(PropertyValueConversions valueConversions) {
+
+			this.propertyValueConversions = valueConversions;
+			return this;
+		}
+
+		PropertyValueConversions valueConversions() {
+
+			if (this.propertyValueConversions == null) {
+				this.propertyValueConversions = new SimplePropertyValueConversions();
+			}
+
+			return this.propertyValueConversions;
+		}
+
 		ConverterConfiguration createConverterConfiguration() {
 
 			if (!useNativeDriverJavaTimeCodecs) {
-				return new ConverterConfiguration(STORE_CONVERSIONS, this.customConverters);
+				return new ConverterConfiguration(STORE_CONVERSIONS, this.customConverters, convertiblePair -> true,
+						this.propertyValueConversions);
 			}
 
 			/*
@@ -286,7 +359,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 				}
 
 				return true;
-			});
+			}, this.propertyValueConversions);
 		}
 
 		private enum DateToUtcLocalDateTimeConverter implements Converter<Date, LocalDateTime> {

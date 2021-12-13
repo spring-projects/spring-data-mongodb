@@ -44,10 +44,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.ConversionNotSupportedException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.core.convert.ConverterNotFoundException;
@@ -57,7 +59,10 @@ import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.convert.CustomConversions;
+import org.springframework.data.convert.PropertyValueConverter;
+import org.springframework.data.convert.PropertyValueConverterFactory;
 import org.springframework.data.convert.ReadingConverter;
+import org.springframework.data.convert.ValueConverter;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
@@ -2729,6 +2734,104 @@ class MappingMongoConverterUnitTests {
 		assertThat(projection.getName()).isEqualTo("my-book by Walter White");
 	}
 
+	@Test // GH-3596
+	void simpleConverter() {
+
+		WithValueConverters wvc = new WithValueConverters();
+		wvc.converterWithDefaultCtor = "spring";
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(wvc, target);
+
+		assertThat(target).containsEntry("converterWithDefaultCtor", new org.bson.Document("foo", "spring"));
+
+		WithValueConverters read = converter.read(WithValueConverters.class, target);
+		assertThat(read.converterWithDefaultCtor).startsWith("spring");
+	}
+
+	@Test // GH-3596
+	void enumConverter() {
+
+		WithValueConverters wvc = new WithValueConverters();
+		wvc.converterEnum = "spring";
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(wvc, target);
+
+		assertThat(target).containsEntry("converterEnum", new org.bson.Document("bar", "spring"));
+
+		WithValueConverters read = converter.read(WithValueConverters.class, target);
+		assertThat(read.converterEnum).isEqualTo("spring");
+	}
+
+	@Test // GH-3596
+	void beanConverter() {
+
+		DefaultListableBeanFactory defaultListableBeanFactory = new DefaultListableBeanFactory();
+		defaultListableBeanFactory.registerBeanDefinition("someDependency",
+				BeanDefinitionBuilder.rootBeanDefinition(SomeDependency.class).getBeanDefinition());
+
+		converter = new MappingMongoConverter(resolver, mappingContext);
+
+		converter.setCustomConversions(MongoCustomConversions.create(it -> {
+			it.registerPropertyValueConverterFactory(
+					PropertyValueConverterFactory.beanFactoryAware(defaultListableBeanFactory));
+		}));
+		converter.afterPropertiesSet();
+
+		WithValueConverters wvc = new WithValueConverters();
+		wvc.converterBean = "spring";
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(wvc, target);
+
+		assertThat(target.get("converterBean", org.bson.Document.class)).satisfies(it -> {
+			assertThat(it).containsKey("ooo");
+			assertThat((String) it.get("ooo")).startsWith("spring - ");
+		});
+
+		WithValueConverters read = converter.read(WithValueConverters.class, target);
+		assertThat(read.converterBean).startsWith("spring -");
+	}
+
+	@Test // GH-3596
+	void pathConfiguredConverter/*no annotation required*/() {
+
+		converter = new MappingMongoConverter(resolver, mappingContext);
+
+		converter.setCustomConversions(MongoCustomConversions.create(it -> {
+
+			it.configurePropertyConversions(registrar -> {
+				registrar.registerConverter(WithValueConverters.class, "viaRegisteredConverter",
+						new PropertyValueConverter<String, org.bson.Document, MongoConversionContext>() {
+
+							@Nullable
+							@Override
+							public String read(@Nullable org.bson.Document nativeValue, MongoConversionContext context) {
+								return nativeValue.getString("bar");
+							}
+
+							@Nullable
+							@Override
+							public org.bson.Document write(@Nullable String domainValue, MongoConversionContext context) {
+								return new org.bson.Document("bar", domainValue);
+							}
+						});
+			});
+		}));
+
+		WithValueConverters wvc = new WithValueConverters();
+		wvc.viaRegisteredConverter = "spring";
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(wvc, target);
+
+		assertThat(target).containsEntry("viaRegisteredConverter", new org.bson.Document("bar", "spring"));
+
+		WithValueConverters read = converter.read(WithValueConverters.class, target);
+		assertThat(read.viaRegisteredConverter).isEqualTo("spring");
+	}
+
 	static class GenericType<T> {
 		T content;
 	}
@@ -3460,6 +3563,72 @@ class MappingMongoConverterUnitTests {
 		@org.springframework.data.mongodb.core.mapping.Field(
 				write = org.springframework.data.mongodb.core.mapping.Field.Write.ALWAYS) Person writeAlwaysPerson;
 
+	}
+
+	static class WithValueConverters {
+
+		@ValueConverter(Converter1.class) String converterWithDefaultCtor;
+
+		@ValueConverter(Converter2.class) String converterEnum;
+
+		@ValueConverter(Converter3.class) String converterBean;
+
+		String viaRegisteredConverter;
+	}
+
+	static class Converter3 implements MongoValueConverter<Object, org.bson.Document> {
+
+		private final SomeDependency someDependency;
+
+		public Converter3(@Autowired SomeDependency someDependency) {
+			this.someDependency = someDependency;
+		}
+
+		@Override
+		public Object read(org.bson.Document value, MongoConversionContext context) {
+			return value.get("ooo");
+		}
+
+		@Override
+		public org.bson.Document write(Object value, MongoConversionContext context) {
+			return new org.bson.Document("ooo", value + " - " + someDependency.toString());
+		}
+	}
+
+	static class SomeDependency {
+
+	}
+
+	enum Converter2 implements MongoValueConverter<String, org.bson.Document> {
+
+		INSTANCE;
+
+		@Nullable
+		@Override
+		public String read(@Nullable org.bson.Document value, MongoConversionContext context) {
+			return value.getString("bar");
+		}
+
+		@Nullable
+		@Override
+		public org.bson.Document write(@Nullable String value, MongoConversionContext context) {
+			return new org.bson.Document("bar", value);
+		}
+	}
+
+	static class Converter1 implements MongoValueConverter<String, org.bson.Document> {
+
+		@Nullable
+		@Override
+		public String read(@Nullable org.bson.Document value, MongoConversionContext context) {
+			return value.getString("foo");
+		}
+
+		@Nullable
+		@Override
+		public org.bson.Document write(@Nullable String value, MongoConversionContext context) {
+			return new org.bson.Document("foo", value);
+		}
 	}
 
 	interface BookProjection {
