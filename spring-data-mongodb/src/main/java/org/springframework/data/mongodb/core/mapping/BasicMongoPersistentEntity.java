@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.AssociationHandler;
@@ -72,6 +73,8 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	private final @Nullable Expression collationExpression;
 
 	private final ShardKey shardKey;
+
+	BeanFactory beanFactory;
 
 	/**
 	 * Creates a new {@link BasicMongoPersistentEntity} with the given {@link TypeInformation}. Will default the

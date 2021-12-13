@@ -31,8 +31,16 @@ import org.bson.types.ObjectId;
 import org.jmolecules.ddd.annotation.Identity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.BeanCreationException;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.convert.PropertyConverter;
+import org.springframework.data.convert.PropertyValueConverter;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
@@ -250,6 +258,48 @@ public class BasicMongoPersistentPropertyUnitTests {
 		assertThat(property.isExplicitIdProperty()).isTrue();
 	}
 
+	@Test
+	void xxx () {
+
+		MongoPersistentProperty property = getPropertyFor(WithPropertyConverter.class, "value");
+		PropertyValueConverter<?, ?> valueConverter = property.getValueConverter();
+
+		assertThat(valueConverter).isInstanceOf(MyPropertyConverter.class);
+	}
+
+	@Test
+	void xxx2 () {
+
+		MongoPersistentProperty property = getPropertyFor(WithPropertyConverter.class, "value");
+		((BasicMongoPersistentEntity)property.getOwner()).beanFactory = new DefaultListableBeanFactory();
+		PropertyValueConverter<?, ?> valueConverter = property.getValueConverter();
+
+		assertThat(valueConverter).isInstanceOf(MyPropertyConverter.class);
+	}
+
+	@Test
+	void xxx3 () {
+
+		MongoPersistentProperty property = getPropertyFor(WithPropertyConverter.class, "value2");
+		((BasicMongoPersistentEntity)property.getOwner()).beanFactory = new DefaultListableBeanFactory();
+		assertThatExceptionOfType(BeanCreationException.class).isThrownBy(()->  property.getValueConverter());
+	}
+
+	@Test
+	void xxx4 () {
+
+		DefaultListableBeanFactory defaultListableBeanFactory = new DefaultListableBeanFactory();
+		defaultListableBeanFactory.registerBeanDefinition("someDependency", BeanDefinitionBuilder
+				.rootBeanDefinition(SomeDependency.class)
+				.getBeanDefinition());
+
+		MongoPersistentProperty property = getPropertyFor(WithPropertyConverter.class, "value2");
+		((BasicMongoPersistentEntity)property.getOwner()).beanFactory = defaultListableBeanFactory ;
+		PropertyValueConverter<?, ?> valueConverter = property.getValueConverter();
+
+		assertThat(valueConverter).isInstanceOf(MyPropertyConverterThatRequiresComponents.class);
+	}
+
 	private MongoPersistentProperty getPropertyFor(Field field) {
 		return getPropertyFor(entity, field);
 	}
@@ -380,5 +430,50 @@ public class BasicMongoPersistentPropertyUnitTests {
 
 	static class WithJMoleculesIdentity {
 		@Identity ObjectId identifier;
+	}
+
+	static class WithPropertyConverter {
+
+		@PropertyConverter(MyPropertyConverter.class)
+		String value;
+
+		@PropertyConverter(MyPropertyConverterThatRequiresComponents.class)
+		String value2;
+	}
+
+	static class MyPropertyConverter implements PropertyValueConverter<Object,Object> {
+
+		@Override
+		public Object read(Object value) {
+			return null;
+		}
+
+		@Override
+		public Object write(Object value) {
+			return null;
+		}
+	}
+
+	static class MyPropertyConverterThatRequiresComponents implements PropertyValueConverter<Object,Object> {
+
+		private final SomeDependency someDependency;
+
+		public MyPropertyConverterThatRequiresComponents(@Autowired SomeDependency someDependency) {
+			this.someDependency = someDependency;
+		}
+
+		@Override
+		public Object read(Object value) {
+			return null;
+		}
+
+		@Override
+		public Object write(Object value) {
+			return null;
+		}
+	}
+
+	static class SomeDependency {
+
 	}
 }

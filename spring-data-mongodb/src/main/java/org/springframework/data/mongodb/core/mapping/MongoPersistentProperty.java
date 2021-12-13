@@ -19,6 +19,8 @@ import java.util.Collection;
 
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.convert.PropertyConverter;
+import org.springframework.data.convert.PropertyValueConverter;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.lang.Nullable;
@@ -175,6 +177,8 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	 * @since 3.3
 	 */
 	Collection<Object> getEncryptionKeyIds();
+
+	PropertyValueConverter<?,?> getValueConverter();
 
 	/**
 	 * Simple {@link Converter} implementation to transform a {@link MongoPersistentProperty} into its field name.

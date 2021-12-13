@@ -27,6 +27,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.bson.types.ObjectId;
 
+import org.springframework.data.convert.PropertyValueConverter;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
@@ -100,6 +101,8 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 				}
 			}
 		}
+
+
 	}
 
 	/**
@@ -324,6 +327,15 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 			return ((BasicMongoPersistentEntity) getOwner()).getEvaluationContext(rootObject);
 		}
 		return rootObject != null ? new StandardEvaluationContext(rootObject) : new StandardEvaluationContext();
+	}
+
+	@Override
+	public PropertyValueConverter<?, ?> getValueConverter() {
+
+		if (getOwner() instanceof BasicMongoPersistentEntity) {
+			return resolveConverter(((BasicMongoPersistentEntity) getOwner()).beanFactory);
+		}
+		return resolveConverter(null);
 	}
 
 	@Override

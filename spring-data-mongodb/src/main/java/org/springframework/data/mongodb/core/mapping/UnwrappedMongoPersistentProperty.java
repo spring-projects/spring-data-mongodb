@@ -20,6 +20,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collection;
 
+import org.springframework.data.convert.PropertyValueConverter;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
@@ -278,6 +279,11 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	@Override
 	public Collection<Object> getEncryptionKeyIds() {
 		return delegate.getEncryptionKeyIds();
+	}
+
+	@Override
+	public PropertyValueConverter<?, ?> getValueConverter() {
+		return delegate.getValueConverter();
 	}
 
 	@Override
