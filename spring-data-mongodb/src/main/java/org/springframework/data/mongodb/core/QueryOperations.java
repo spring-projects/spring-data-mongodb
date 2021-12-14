@@ -302,6 +302,7 @@ class QueryOperations {
 				mappedFields = queryMapper.getMappedFields(fields, entity);
 			} else {
 				mappedFields = propertyOperations.computeMappedFieldsForProjection(projection, fields);
+				mappedFields = queryMapper.addMetaAttributes(mappedFields, entity);
 			}
 
 			if (entity.hasTextScoreProperty() && mappedFields.containsKey(entity.getTextScoreProperty().getFieldName())

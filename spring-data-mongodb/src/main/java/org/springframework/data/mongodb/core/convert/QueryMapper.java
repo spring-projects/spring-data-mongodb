@@ -240,6 +240,18 @@ public class QueryMapper {
 		return target;
 	}
 
+	/**
+	 * Adds missing {@code $meta} representation if required.
+	 *
+	 * @param source must not be {@literal null}.
+	 * @param entity can be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 3.4
+	 */
+	public Document addMetaAttributes(Document source, @Nullable MongoPersistentEntity<?> entity) {
+		return mapMetaAttributes(source, entity, MetaMapping.FORCE);
+	}
+
 	private Document mapMetaAttributes(Document source, @Nullable MongoPersistentEntity<?> entity,
 			MetaMapping metaMapping) {
 
