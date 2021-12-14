@@ -228,7 +228,9 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 			if (bindingReader.currentValue instanceof org.bson.Document) {
 				return (Document) bindingReader.currentValue;
 			}
-
+			if(ObjectUtils.nullSafeEquals(bindingReader.currentValue, ParameterBindingJsonReader.PLACEHOLDER)) {
+				return new Document();
+			}
 		}
 
 		Document document = new Document();
@@ -391,8 +393,6 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 	 */
 	static class DependencyCapturingExpressionEvaluator implements SpELExpressionEvaluator {
 
-		private static final Object PLACEHOLDER = new Object();
-
 		private final ExpressionParser expressionParser;
 		private final List<ExpressionDependencies> dependencies = new ArrayList<>();
 
@@ -401,11 +401,11 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 		}
 
 		@Nullable
-		@Override
+		@Override @SuppressWarnings("unchecked")
 		public <T> T evaluate(String expression) {
 
 			dependencies.add(ExpressionDependencies.discover(expressionParser.parseExpression(expression)));
-			return (T) PLACEHOLDER;
+			return (T) ParameterBindingJsonReader.PLACEHOLDER;
 		}
 
 		ExpressionDependencies getCapturedDependencies() {

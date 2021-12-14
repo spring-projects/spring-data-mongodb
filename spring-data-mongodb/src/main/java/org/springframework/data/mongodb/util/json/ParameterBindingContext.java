@@ -60,7 +60,7 @@ public class ParameterBindingContext {
 			Supplier<EvaluationContext> evaluationContext) {
 
 		this(valueProvider, new SpELExpressionEvaluator() {
-			@Override
+			@Override @SuppressWarnings("unchecked")
 			public <T> T evaluate(String expressionString) {
 				return (T) expressionParser.parseExpression(expressionString).getValue(evaluationContext.get(), Object.class);
 			}
@@ -91,7 +91,7 @@ public class ParameterBindingContext {
 			ExpressionParser expressionParser, Function<ExpressionDependencies, EvaluationContext> contextFunction) {
 
 		return new ParameterBindingContext(valueProvider, new SpELExpressionEvaluator() {
-			@Override
+			@Override @SuppressWarnings("unchecked")
 			public <T> T evaluate(String expressionString) {
 
 				Expression expression = expressionParser.parseExpression(expressionString);
