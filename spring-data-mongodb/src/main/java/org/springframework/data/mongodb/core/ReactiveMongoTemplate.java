@@ -17,6 +17,7 @@ package org.springframework.data.mongodb.core;
 
 import static org.springframework.data.mongodb.core.query.SerializationUtils.*;
 
+import org.springframework.data.projection.EntityProjection;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -63,7 +64,6 @@ import org.springframework.data.geo.Metric;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
-import org.springframework.data.mapping.context.EntityProjection;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.context.MappingContextEvent;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
