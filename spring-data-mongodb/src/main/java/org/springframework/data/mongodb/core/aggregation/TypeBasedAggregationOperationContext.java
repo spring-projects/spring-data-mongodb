@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bson.Document;
-import org.springframework.data.mapping.PersistentEntity;
+
 import org.springframework.data.mapping.PersistentPropertyPath;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.aggregation.ExposedFields.DirectFieldReference;
@@ -142,12 +142,13 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 
 	/**
 	 * This toggle allows the {@link AggregationOperationContext context} to use any given field name without checking for
-	 * its existence. Typically the {@link AggregationOperationContext} fails when referencing unknown fields, those that
+	 * its existence. Typically, the {@link AggregationOperationContext} fails when referencing unknown fields, those that
 	 * are not present in one of the previous stages or the input source, throughout the pipeline.
 	 *
 	 * @param type The domain type to map fields to.
 	 * @return a more relaxed {@link AggregationOperationContext}.
 	 * @since 3.1
+	 * @see RelaxedTypeBasedAggregationOperationContext
 	 */
 	public AggregationOperationContext continueOnMissingFieldReference(Class<?> type) {
 		return new RelaxedTypeBasedAggregationOperationContext(type, mappingContext, mapper);
