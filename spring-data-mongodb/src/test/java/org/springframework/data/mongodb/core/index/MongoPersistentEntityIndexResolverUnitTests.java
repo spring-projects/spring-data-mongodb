@@ -1393,6 +1393,15 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			});
 		}
 
+		@Test // GH-3914
+		public void shouldSkipMapStructuresUnlessAnnotatedWithWildcardIndex() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					WithMapStructures.class);
+
+			assertThat(indexDefinitions).hasSize(1);
+		}
+
 		@Document
 		class MixedIndexRoot {
 
@@ -1624,6 +1633,17 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 		class GenericEntityWrapper<T> {
 			T entity;
+		}
+
+		@Document
+		class WithMapStructures {
+			Map<String, ValueObject> rootMap;
+			NestedInMapWithStructures nested;
+			ValueObject plainValue;
+		}
+
+		class NestedInMapWithStructures {
+			Map<String, ValueObject> nestedMap;
 		}
 
 		@Document

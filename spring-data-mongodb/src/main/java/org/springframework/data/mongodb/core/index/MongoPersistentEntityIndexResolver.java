@@ -158,6 +158,10 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			List<IndexDefinitionHolder> indexes, CycleGuard guard) {
 
 		try {
+			if (isMapWithoutWildcardIndex(persistentProperty)) {
+				return;
+			}
+
 			if (persistentProperty.isEntity()) {
 				indexes.addAll(resolveIndexForEntity(mappingContext.getPersistentEntity(persistentProperty),
 						persistentProperty.isUnwrapped() ? "" : persistentProperty.getFieldName(), Path.of(persistentProperty),
@@ -219,6 +223,10 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 		Path propertyPath = path.append(persistentProperty);
 		guard.protect(persistentProperty, propertyPath);
+
+		if (isMapWithoutWildcardIndex(persistentProperty)) {
+			return;
+		}
 
 		if (persistentProperty.isEntity()) {
 			try {
@@ -347,6 +355,10 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 
 				if (persistentProperty.isExplicitLanguageProperty() && dotPath.isEmpty()) {
 					indexDefinitionBuilder.withLanguageOverride(persistentProperty.getFieldName());
+				}
+
+				if(persistentProperty.isMap()) {
+					return;
 				}
 
 				TextIndexed indexed = persistentProperty.findAnnotation(TextIndexed.class);
@@ -799,6 +811,10 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		}
 
 		return expression.getValue(evaluationContext, Object.class);
+	}
+
+	private static boolean isMapWithoutWildcardIndex(MongoPersistentProperty property) {
+		return property.isMap() && !property.isAnnotationPresent(WildcardIndexed.class);
 	}
 
 	/**
