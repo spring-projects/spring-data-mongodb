@@ -15,21 +15,12 @@
  */
 package org.springframework.data.mongodb.core.convert;
 
-import static java.time.ZoneId.*;
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
-import static org.springframework.data.mongodb.core.DocumentTestUtils.*;
-
+import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+import com.mongodb.DBRef;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
-
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.net.URL;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.*;
-
 import org.bson.types.Binary;
 import org.bson.types.Code;
 import org.bson.types.Decimal128;
@@ -42,12 +33,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.ConversionNotSupportedException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.StaticApplicationContext;
+import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.ConverterNotFoundException;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
@@ -57,13 +48,7 @@ import org.springframework.data.annotation.TypeAlias;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
-import org.springframework.data.geo.Box;
-import org.springframework.data.geo.Circle;
-import org.springframework.data.geo.Distance;
-import org.springframework.data.geo.Metrics;
-import org.springframework.data.geo.Point;
-import org.springframework.data.geo.Polygon;
-import org.springframework.data.geo.Shape;
+import org.springframework.data.geo.*;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mapping.model.MappingInstantiationException;
@@ -72,24 +57,23 @@ import org.springframework.data.mongodb.core.convert.DocumentAccessorUnitTests.N
 import org.springframework.data.mongodb.core.convert.DocumentAccessorUnitTests.ProjectingType;
 import org.springframework.data.mongodb.core.convert.MappingMongoConverterUnitTests.ClassWithMapUsingEnumAsKey.FooBarEnum;
 import org.springframework.data.mongodb.core.geo.Sphere;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
-import org.springframework.data.mongodb.core.mapping.FieldType;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
-import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
-import org.springframework.data.mongodb.core.mapping.PersonPojoStringId;
-import org.springframework.data.mongodb.core.mapping.TextScore;
-import org.springframework.data.mongodb.core.mapping.Unwrapped;
+import org.springframework.data.mongodb.core.mapping.*;
 import org.springframework.data.mongodb.core.mapping.event.AfterConvertCallback;
 import org.springframework.data.util.ClassTypeInformation;
-import org.springframework.lang.NonNull;
-import org.springframework.lang.Nullable;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import com.mongodb.BasicDBList;
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import com.mongodb.DBRef;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.net.URL;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+
+import static java.time.ZoneId.systemDefault;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
+import static org.springframework.data.mongodb.core.DocumentTestUtils.assertTypeHint;
+import static org.springframework.data.mongodb.core.DocumentTestUtils.getAsDocument;
 
 /**
  * Unit tests for {@link MappingMongoConverter}.
@@ -1614,7 +1598,7 @@ class MappingMongoConverterUnitTests {
 
 		org.bson.Document source = new org.bson.Document("attributes", outer);
 
-		assertThatExceptionOfType(MappingException.class).isThrownBy(() -> converter.read(Item.class, source));
+		assertThatExceptionOfType(ConversionFailedException.class).isThrownBy(() -> converter.read(Item.class, source));
 	}
 
 	@Test // DATAMONGO-1058
@@ -2170,6 +2154,7 @@ class MappingMongoConverterUnitTests {
 		verify(afterConvertCallback).onAfterConvert(eq(result.personMap.get("foo")), eq(new org.bson.Document()), any());
 	}
 
+	@SuppressWarnings("unchecked")
 	@Test // DATAMONGO-2300
 	void readAndConvertDBRefNestedByMapCorrectly() {
 
@@ -2182,7 +2167,7 @@ class MappingMongoConverterUnitTests {
 		MappingMongoConverter spyConverter = spy(converter);
 		Mockito.doReturn(cluster).when(spyConverter).readRef(dbRef);
 
-		Map<Object, Object> result = spyConverter.readMap(spyConverter.getConversionContext(ObjectPath.ROOT), data,
+		Map<Object, Object> result = (Map<Object, Object>) spyConverter.readMap(spyConverter.getConversionContext(ObjectPath.ROOT), data,
 				ClassTypeInformation.MAP);
 
 		assertThat(((Map) result.get("cluster")).get("_id")).isEqualTo(100L);
@@ -2433,95 +2418,6 @@ class MappingMongoConverterUnitTests {
 		verify(subTypeOfGenericTypeConverter).convert(eq(source));
 	}
 
-
-	@Test // GH-3660
-	void usesCustomConverterForMapTypesOnWrite() {
-
-		converter = new MappingMongoConverter(resolver, mappingContext);
-		converter.setCustomConversions(MongoCustomConversions.create(it -> {
-			it.registerConverter(new TypeImplementingMapToDocumentConverter());
-		}));
-		converter.afterPropertiesSet();
-
-		TypeImplementingMap source = new TypeImplementingMap("one", 2);
-		org.bson.Document target = new org.bson.Document();
-
-		converter.write(source, target);
-
-		assertThat(target).containsEntry("1st", "one").containsEntry("2nd", 2);
-	}
-
-	@Test // GH-3660
-	void usesCustomConverterForTypesImplementingMapOnWrite() {
-
-		converter = new MappingMongoConverter(resolver, mappingContext);
-		converter.setCustomConversions(MongoCustomConversions.create(it -> {
-			it.registerConverter(new TypeImplementingMapToDocumentConverter());
-		}));
-		converter.afterPropertiesSet();
-
-		TypeImplementingMap source = new TypeImplementingMap("one", 2);
-		org.bson.Document target = new org.bson.Document();
-
-		converter.write(source, target);
-
-		assertThat(target).containsEntry("1st", "one").containsEntry("2nd", 2);
-	}
-
-	@Test // GH-3660
-	void usesCustomConverterForTypesImplementingMapOnRead() {
-
-		converter = new MappingMongoConverter(resolver, mappingContext);
-		converter.setCustomConversions(MongoCustomConversions.create(it -> {
-			it.registerConverter(new DocumentToTypeImplementingMapConverter());
-		}));
-		converter.afterPropertiesSet();
-
-		org.bson.Document source = new org.bson.Document("1st", "one")
-				.append("2nd", 2)
-				.append("_class", TypeImplementingMap.class.getName());
-
-		TypeImplementingMap target = converter.read(TypeImplementingMap.class, source);
-
-		assertThat(target).isEqualTo(new TypeImplementingMap("one", 2));
-	}
-
-	@Test // GH-3660
-	void usesCustomConverterForPropertiesUsingTypesThatImplementMapOnWrite() {
-
-		converter = new MappingMongoConverter(resolver, mappingContext);
-		converter.setCustomConversions(MongoCustomConversions.create(it -> {
-			it.registerConverter(new TypeImplementingMapToDocumentConverter());
-		}));
-		converter.afterPropertiesSet();
-
-		TypeWrappingTypeImplementingMap source = new TypeWrappingTypeImplementingMap();
-		source.typeImplementingMap = new TypeImplementingMap("one", 2);
-		org.bson.Document target = new org.bson.Document();
-
-		converter.write(source, target);
-
-		assertThat(target).containsEntry("typeImplementingMap", new org.bson.Document("1st", "one").append("2nd", 2));
-	}
-
-	@Test // GH-3660
-	void usesCustomConverterForPropertiesUsingTypesImplementingMapOnRead() {
-
-		converter = new MappingMongoConverter(resolver, mappingContext);
-		converter.setCustomConversions(MongoCustomConversions.create(it -> {
-			it.registerConverter(new DocumentToTypeImplementingMapConverter());
-		}));
-		converter.afterPropertiesSet();
-
-		org.bson.Document source = new org.bson.Document("typeImplementingMap",
-		new org.bson.Document("1st", "one")
-				.append("2nd", 2))
-				.append("_class", TypeWrappingTypeImplementingMap.class.getName());
-
-		TypeWrappingTypeImplementingMap target = converter.read(TypeWrappingTypeImplementingMap.class, source);
-
-		assertThat(target.typeImplementingMap).isEqualTo(new TypeImplementingMap("one", 2));
-	}
 
 	@Test // GH-3407
 	void shouldWriteNullPropertyCorrectly() {
@@ -3184,114 +3080,12 @@ class MappingMongoConverterUnitTests {
 		}
 	}
 
-	@WritingConverter
-	static class TypeImplementingMapToDocumentConverter implements Converter<TypeImplementingMap, org.bson.Document> {
-
-		@Nullable
-		@Override
-		public org.bson.Document convert(TypeImplementingMap source) {
-			return new org.bson.Document("1st", source.val1).append("2nd", source.val2);
-		}
-	}
-
-	@ReadingConverter
-	static class DocumentToTypeImplementingMapConverter implements Converter<org.bson.Document, TypeImplementingMap> {
-
-		@Nullable
-		@Override
-		public TypeImplementingMap convert(org.bson.Document source) {
-			return new TypeImplementingMap(source.getString("1st"), source.getInteger("2nd"));
-		}
-	}
-
 	@ReadingConverter
 	public static class MongoSimpleTypeConverter implements Converter<Binary, Object> {
 
 		@Override
 		public byte[] convert(Binary source) {
 			return source.getData();
-		}
-	}
-
-	static class TypeWrappingTypeImplementingMap {
-
-		String id;
-		TypeImplementingMap typeImplementingMap;
-	}
-
-	@EqualsAndHashCode
-	static class TypeImplementingMap implements Map<String,String> {
-
-		String val1;
-		int val2;
-
-		TypeImplementingMap(String val1, int val2) {
-			this.val1 = val1;
-			this.val2 = val2;
-		}
-
-		@Override
-		public int size() {
-			return 0;
-		}
-
-		@Override
-		public boolean isEmpty() {
-			return false;
-		}
-
-		@Override
-		public boolean containsKey(Object key) {
-			return false;
-		}
-
-		@Override
-		public boolean containsValue(Object value) {
-			return false;
-		}
-
-		@Override
-		public String get(Object key) {
-			return null;
-		}
-
-		@Nullable
-		@Override
-		public String put(String key, String value) {
-			return null;
-		}
-
-		@Override
-		public String remove(Object key) {
-			return null;
-		}
-
-		@Override
-		public void putAll(@NonNull Map<? extends String, ? extends String> m) {
-
-		}
-
-		@Override
-		public void clear() {
-
-		}
-
-		@NonNull
-		@Override
-		public Set<String> keySet() {
-			return null;
-		}
-
-		@NonNull
-		@Override
-		public Collection<String> values() {
-			return null;
-		}
-
-		@NonNull
-		@Override
-		public Set<Entry<String, String>> entrySet() {
-			return null;
 		}
 	}
 

@@ -1295,7 +1295,8 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 */
 	@Deprecated
 	protected Map<Object, Object> readMap(TypeInformation<?> type, Bson bson, ObjectPath path) {
-		return readMap(getConversionContext(path), bson, type);
+		//noinspection unchecked
+		return (Map<Object, Object>) readMap(getConversionContext(path), bson, type);
 	}
 
 	/**
@@ -1308,15 +1309,19 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	 * @return the converted {@link Map}, will never be {@literal null}.
 	 * @since 3.2
 	 */
-	protected Map<Object, Object> readMap(ConversionContext context, Bson bson, TypeInformation<?> targetType) {
+	protected Object readMap(ConversionContext context, Bson bson, TypeInformation<?> targetType) {
 
 		Assert.notNull(bson, "Document must not be null!");
 		Assert.notNull(targetType, "TypeInformation must not be null!");
 
-		Class<?> mapType = getTypeMapper().readType(bson, targetType).getType();
+		TypeInformation<?> typeInformation = getTypeMapper().readType(bson, targetType);
+		Class<?> mapType = typeInformation.isSubTypeOf(Map.class)
+				? targetType.getType()
+				: Map.class;
 
 		TypeInformation<?> keyType = targetType.getComponentType();
-		TypeInformation<?> valueType = targetType.getMapValueType() == null ? ClassTypeInformation.OBJECT
+		TypeInformation<?> valueType = targetType.getMapValueType() == null
+				? ClassTypeInformation.OBJECT
 				: targetType.getRequiredMapValueType();
 
 		Class<?> rawKeyType = keyType != null ? keyType.getType() : Object.class;
@@ -1347,7 +1352,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 		});
 
-		return map;
+		return getPotentiallyConvertedSimpleRead(map, targetType.getType());
 	}
 
 	/*
@@ -2032,27 +2037,7 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			Assert.notNull(source, "Source must not be null");
 			Assert.notNull(typeHint, "TypeInformation must not be null");
 
-			if (source instanceof Collection) {
-
-				Class<?> rawType = typeHint.getType();
-				if (!Object.class.equals(rawType)) {
-					if (!rawType.isArray() && !ClassUtils.isAssignable(Iterable.class, rawType)) {
-						throw new MappingException(
-								String.format(INCOMPATIBLE_TYPES, source, source.getClass(), rawType, getPath()));
-					}
-				}
-
-				if (typeHint.isCollectionLike() || typeHint.getType().isAssignableFrom(Collection.class)) {
-					return (S) collectionConverter.convert(this, (Collection<?>) source, typeHint);
-				}
-			}
-
-			if (conversions.hasCustomReadTarget(source.getClass(), typeHint.getType())) {
-				return (S) elementConverter.convert(source, typeHint);
-			}
-
 			if (typeHint.isMap()) {
-
 				if (ClassUtils.isAssignable(Document.class, typeHint.getType())) {
 					return (S) documentConverter.convert(this, BsonUtils.asBson(source), typeHint);
 				}
@@ -2063,6 +2048,14 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 				throw new IllegalArgumentException(
 						String.format("Expected map like structure but found %s", source.getClass()));
+			}
+
+			if (source instanceof Collection) {
+				return (S) collectionConverter.convert(this, (Collection<?>) source, typeHint);
+			}
+
+			if (conversions.hasCustomReadTarget(source.getClass(), typeHint.getType())) {
+				return (S) elementConverter.convert(source, typeHint);
 			}
 
 			if (source instanceof DBRef) {

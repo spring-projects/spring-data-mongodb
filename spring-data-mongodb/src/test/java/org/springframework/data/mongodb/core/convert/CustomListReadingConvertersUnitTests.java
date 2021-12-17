@@ -23,17 +23,17 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.convert.ConversionFailedException;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 
 /**
@@ -47,30 +47,31 @@ class CustomListReadingConvertersUnitTests {
 	private MappingMongoConverter converter;
 
 	@Mock JavaListReadingConverter javaListReadingConverter;
-	@Mock OtherListReadingConverter otherListReadingConverter;
+	@Mock IterableListReadingConverter iterableListReadingConverter;
+	@Mock CustomListReadingConverter customListReadingConverter;
 	@Captor ArgumentCaptor<List<TestEnum>> enumListCaptor;
 
-	private MongoMappingContext context;
+	private Document document;
 
 	@BeforeEach
 	void setUp() {
 		CustomConversions conversions = new MongoCustomConversions(
-				Arrays.asList(javaListReadingConverter, otherListReadingConverter));
+				Arrays.asList(javaListReadingConverter, iterableListReadingConverter, customListReadingConverter));
 
-		context = new MongoMappingContext();
-		context.setInitialEntitySet(new HashSet<>(Collections.singletonList(TestJavaList.class)));
+		MongoMappingContext context = new MongoMappingContext();
 		context.setSimpleTypeHolder(conversions.getSimpleTypeHolder());
 		context.initialize();
 
 		converter = new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, context);
 		converter.setCustomConversions(conversions);
 		converter.afterPropertiesSet();
+
+		document = new Document();
+		document.append("list", Arrays.asList("ENUM_VALUE1", "ENUM_VALUE2"));
 	}
 
 	@Test
-	void invokeCustomListConverterForEnumsInJavaListAfterResolvingTheListTypes() {
-		Document document = new Document();
-		document.append("list", Arrays.asList("ENUM_VALUE1", "ENUM_VALUE2"));
+	void invokeJavaListConverterForEnumsAfterResolvingTheListTypes() {
 
 		converter.read(TestJavaList.class, document);
 
@@ -79,14 +80,27 @@ class CustomListReadingConvertersUnitTests {
 	}
 
 	@Test
-	void invokeCustomListConverterForEnumsInIterableListAfterResolvingTheListTypes() {
-		Document document = new Document();
-		document.append("list", Arrays.asList("ENUM_VALUE1", "ENUM_VALUE2"));
+	void invokeExtendedIterableListConverterForEnumsAfterResolvingTheListTypes() {
 
 		converter.read(TestIterableList.class, document);
 
-		verify(otherListReadingConverter).convert(enumListCaptor.capture());
+		verify(iterableListReadingConverter).convert(enumListCaptor.capture());
 		assertThat(enumListCaptor.getValue()).containsExactly(TestEnum.ENUM_VALUE1, TestEnum.ENUM_VALUE2);
+	}
+
+	@Test
+	void invokeOtherListConverterForEnumsAfterResolvingTheListTypes() {
+
+		converter.read(TestOtherList.class, document);
+
+		verify(customListReadingConverter).convert(enumListCaptor.capture());
+		assertThat(enumListCaptor.getValue()).containsExactly(TestEnum.ENUM_VALUE1, TestEnum.ENUM_VALUE2);
+	}
+
+	@Test
+	void throwExceptionIfNoConverterIsGivenForACustomListImplementation() {
+
+		assertThrows(ConversionFailedException.class, () -> converter.read(TestNoConverterList.class, document));
 	}
 
 
@@ -94,7 +108,10 @@ class CustomListReadingConvertersUnitTests {
 	private interface JavaListReadingConverter extends Converter<List<?>, List<?>> {}
 
 	@ReadingConverter
-	private interface OtherListReadingConverter extends Converter<List<?>, Iterable<?>> {}
+	private interface IterableListReadingConverter extends Converter<List<?>, Iterable<?>> {}
+
+	@ReadingConverter
+	private interface CustomListReadingConverter extends Converter<List<?>, OtherList<?>> {}
 
 	private enum TestEnum {
 		ENUM_VALUE1,
@@ -109,6 +126,22 @@ class CustomListReadingConvertersUnitTests {
 	private static class TestIterableList {
 		@SuppressWarnings("unused")
 		Iterable<TestEnum> list;
+	}
+
+	private static class TestOtherList {
+		@SuppressWarnings("unused")
+		OtherList<TestEnum> list;
+	}
+
+	private interface OtherList<T> {
+	}
+
+	private static class TestNoConverterList {
+		@SuppressWarnings("unused")
+		NoConverterList<TestEnum> list;
+	}
+
+	private interface NoConverterList<T> {
 	}
 
 }
