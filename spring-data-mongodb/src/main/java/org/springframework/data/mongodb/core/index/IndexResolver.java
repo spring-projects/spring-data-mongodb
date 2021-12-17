@@ -25,6 +25,15 @@ import org.springframework.util.Assert;
 
 /**
  * {@link IndexResolver} finds those {@link IndexDefinition}s to be created for a given class.
+ * <p>
+ * The {@link IndexResolver} considers index annotations like {@link Indexed}, {@link GeoSpatialIndexed},
+ * {@link HashIndexed}, {@link TextIndexed} and {@link WildcardIndexed} on properties as well as {@link CompoundIndex}
+ * and {@link WildcardIndexed} on types.
+ * <p>
+ * Unless specified otherwise the index name will be created out of the keys/path involved in the index. <br />
+ * {@link TextIndexed} properties are collected into a single index that covers the detected fields. <br />
+ * {@link java.util.Map} like structures, unless annotated with {@link WildcardIndexed}, are skipped because the
+ * {@link java.util.Map.Entry#getKey() map key}, which cannot be resolved from static metadata, needs to be part of the index.
  *
  * @author Christoph Strobl
  * @author Thomas Darimont
