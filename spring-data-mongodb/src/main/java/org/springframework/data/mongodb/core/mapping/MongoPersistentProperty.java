@@ -178,8 +178,6 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 	 */
 	Collection<Object> getEncryptionKeyIds();
 
-	PropertyValueConverter<?,?> getValueConverter();
-
 	/**
 	 * Simple {@link Converter} implementation to transform a {@link MongoPersistentProperty} into its field name.
 	 *

@@ -958,6 +958,11 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		TypeInformation<?> valueType = ClassTypeInformation.from(obj.getClass());
 		TypeInformation<?> type = prop.getTypeInformation();
 
+		if(prop.hasValueConverter()) {
+			accessor.put(prop, conversions.getPropertyValueConverterFactory().getConverter(prop).domainToNative(obj));
+			return;
+		}
+
 		if (prop.isUnwrapped()) {
 
 			Document target = new Document();
@@ -1287,6 +1292,12 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 	private void writeSimpleInternal(@Nullable Object value, Bson bson, MongoPersistentProperty property) {
 		DocumentAccessor accessor = new DocumentAccessor(bson);
+
+		if(property.hasValueConverter()) {
+			accessor.put(property, conversions.getPropertyValueConverterFactory().getConverter(property).domainToNative(value));
+			return;
+		}
+
 		accessor.put(property, getPotentiallyConvertedSimpleWrite(value,
 				property.hasExplicitWriteTarget() ? property.getFieldType() : Object.class));
 	}
@@ -1948,6 +1959,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 
 			if (value == null) {
 				return null;
+			}
+
+			if(property.hasValueConverter()) {
+				return (T) context.conversions.getPropertyValueConverterFactory().getConverter(property).nativeToDomain(value);
 			}
 
 			return (T) context.convert(value, property.getTypeInformation());

@@ -37,6 +37,7 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.data.convert.JodaTimeConverters;
+import org.springframework.data.convert.PropertyValueConverterFactory;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
@@ -159,6 +160,8 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		private boolean useNativeDriverJavaTimeCodecs = false;
 		private final List<Object> customConverters = new ArrayList<>();
 
+		private @Nullable PropertyValueConverterFactory propertyValueConverterFactory;
+
 		/**
 		 * Create a {@link MongoConverterConfigurationAdapter} using the provided {@code converters} and our own codecs for
 		 * JSR-310 types.
@@ -258,10 +261,16 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 			return this;
 		}
 
+		public MongoConverterConfigurationAdapter registerPropertyValueConverterFactory(PropertyValueConverterFactory converterFactory) {
+
+			this.propertyValueConverterFactory = converterFactory;
+			return this;
+		}
+
 		ConverterConfiguration createConverterConfiguration() {
 
 			if (!useNativeDriverJavaTimeCodecs) {
-				return new ConverterConfiguration(STORE_CONVERSIONS, this.customConverters);
+				return new ConverterConfiguration(STORE_CONVERSIONS, this.customConverters, convertiblePair -> true, propertyValueConverterFactory);
 			}
 
 			/*
@@ -286,7 +295,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 				}
 
 				return true;
-			});
+			}, propertyValueConverterFactory);
 		}
 
 		private enum DateToUtcLocalDateTimeConverter implements Converter<Date, LocalDateTime> {

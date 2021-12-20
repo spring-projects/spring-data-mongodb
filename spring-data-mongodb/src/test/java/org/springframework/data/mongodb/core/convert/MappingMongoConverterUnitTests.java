@@ -43,10 +43,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.ConversionNotSupportedException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.StaticApplicationContext;
 import org.springframework.core.convert.ConverterNotFoundException;
@@ -55,7 +57,11 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.convert.BeanFactoryAwarePropertyValueConverterFactory;
 import org.springframework.data.convert.CustomConversions;
+import org.springframework.data.convert.PropertyConverter;
+import org.springframework.data.convert.PropertyValueConverter;
+import org.springframework.data.convert.PropertyValueConverterFactory;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.geo.Box;
@@ -2437,7 +2443,6 @@ class MappingMongoConverterUnitTests {
 		verify(subTypeOfGenericTypeConverter).convert(eq(source));
 	}
 
-
 	@Test // GH-3660
 	void usesCustomConverterForMapTypesOnWrite() {
 
@@ -2481,9 +2486,8 @@ class MappingMongoConverterUnitTests {
 		}));
 		converter.afterPropertiesSet();
 
-		org.bson.Document source = new org.bson.Document("1st", "one")
-				.append("2nd", 2)
-				.append("_class", TypeImplementingMap.class.getName());
+		org.bson.Document source = new org.bson.Document("1st", "one").append("2nd", 2).append("_class",
+				TypeImplementingMap.class.getName());
 
 		TypeImplementingMap target = converter.read(TypeImplementingMap.class, source);
 
@@ -2518,9 +2522,8 @@ class MappingMongoConverterUnitTests {
 		converter.afterPropertiesSet();
 
 		org.bson.Document source = new org.bson.Document("typeImplementingMap",
-		new org.bson.Document("1st", "one")
-				.append("2nd", 2))
-				.append("_class", TypeWrappingTypeImplementingMap.class.getName());
+				new org.bson.Document("1st", "one").append("2nd", 2)).append("_class",
+						TypeWrappingTypeImplementingMap.class.getName());
 
 		TypeWrappingTypeImplementingMap target = converter.read(TypeWrappingTypeImplementingMap.class, source);
 
@@ -2542,13 +2545,12 @@ class MappingMongoConverterUnitTests {
 	@Test // GH-3686
 	void readsCollectionContainingNullValue() {
 
-		org.bson.Document source = new org.bson.Document("items", Arrays.asList(new org.bson.Document("itemKey", "i1"), null, new org.bson.Document("itemKey", "i3")));
+		org.bson.Document source = new org.bson.Document("items",
+				Arrays.asList(new org.bson.Document("itemKey", "i1"), null, new org.bson.Document("itemKey", "i3")));
 
 		Order target = converter.read(Order.class, source);
 
-		assertThat(target.items)
-				.map(it -> it != null ? it.itemKey : null)
-				.containsExactly("i1", null, "i3");
+		assertThat(target.items).map(it -> it != null ? it.itemKey : null).containsExactly("i1", null, "i3");
 	}
 
 	@Test // GH-3686
@@ -2564,14 +2566,13 @@ class MappingMongoConverterUnitTests {
 	@Test // GH-3686
 	void readsMapContainingNullValue() {
 
-		org.bson.Document source = new org.bson.Document("mapOfObjects", new org.bson.Document("item1", "i1").append("item2", null).append("item3", "i3"));
+		org.bson.Document source = new org.bson.Document("mapOfObjects",
+				new org.bson.Document("item1", "i1").append("item2", null).append("item3", "i3"));
 
 		ClassWithMapProperty target = converter.read(ClassWithMapProperty.class, source);
 
-		assertThat(target.mapOfObjects)
-				.containsEntry("item1", "i1")
-				.containsEntry("item2", null)
-				.containsEntry("item3", "i3");
+		assertThat(target.mapOfObjects).containsEntry("item1", "i1").containsEntry("item2", null).containsEntry("item3",
+				"i3");
 	}
 
 	@Test // GH-3670
@@ -2583,7 +2584,7 @@ class MappingMongoConverterUnitTests {
 		}));
 		converter.afterPropertiesSet();
 
-		org.bson.Document source = new org.bson.Document("content", new Binary(new byte[] {0x00, 0x42}));
+		org.bson.Document source = new org.bson.Document("content", new Binary(new byte[] { 0x00, 0x42 }));
 
 		GenericType<Object> target = converter.read(GenericType.class, source);
 		assertThat(target.content).isInstanceOf(byte[].class);
@@ -2592,17 +2593,20 @@ class MappingMongoConverterUnitTests {
 	@Test // GH-3702
 	void readsRawDocument() {
 
-		org.bson.Document source = new org.bson.Document("_id", "id-1").append("raw", new org.bson.Document("simple", 1).append("document", new org.bson.Document("inner-doc", 1)));
+		org.bson.Document source = new org.bson.Document("_id", "id-1").append("raw",
+				new org.bson.Document("simple", 1).append("document", new org.bson.Document("inner-doc", 1)));
 
 		WithRawDocumentProperties target = converter.read(WithRawDocumentProperties.class, source);
 
-		assertThat(target.raw).isInstanceOf(org.bson.Document.class).isEqualTo( new org.bson.Document("simple", 1).append("document", new org.bson.Document("inner-doc", 1)));
+		assertThat(target.raw).isInstanceOf(org.bson.Document.class)
+				.isEqualTo(new org.bson.Document("simple", 1).append("document", new org.bson.Document("inner-doc", 1)));
 	}
 
 	@Test // GH-3702
 	void readsListOfRawDocument() {
 
-		org.bson.Document source = new org.bson.Document("_id", "id-1").append("listOfRaw", Arrays.asList(new org.bson.Document("simple", 1).append("document", new org.bson.Document("inner-doc", 1))));
+		org.bson.Document source = new org.bson.Document("_id", "id-1").append("listOfRaw",
+				Arrays.asList(new org.bson.Document("simple", 1).append("document", new org.bson.Document("inner-doc", 1))));
 
 		WithRawDocumentProperties target = converter.read(WithRawDocumentProperties.class, source);
 
@@ -2613,11 +2617,12 @@ class MappingMongoConverterUnitTests {
 	@Test // GH-3692
 	void readsMapThatDoesNotComeAsDocument() {
 
-		org.bson.Document source = new org.bson.Document("_id", "id-1").append("mapOfObjects", Collections.singletonMap("simple", 1));
+		org.bson.Document source = new org.bson.Document("_id", "id-1").append("mapOfObjects",
+				Collections.singletonMap("simple", 1));
 
 		ClassWithMapProperty target = converter.read(ClassWithMapProperty.class, source);
 
-		assertThat(target.mapOfObjects).containsEntry("simple",1);
+		assertThat(target.mapOfObjects).containsEntry("simple", 1);
 	}
 
 	@Test // GH-3851
@@ -2637,7 +2642,8 @@ class MappingMongoConverterUnitTests {
 
 		converter.writePropertyInternal(sourceValue, accessor, persistentProperty);
 
-		assertThat(accessor.getDocument()).isEqualTo(new org.bson.Document("pName", new org.bson.Document("_id", id.toString())));
+		assertThat(accessor.getDocument())
+				.isEqualTo(new org.bson.Document("pName", new org.bson.Document("_id", id.toString())));
 	}
 
 	@Test // GH-2860
@@ -2651,8 +2657,7 @@ class MappingMongoConverterUnitTests {
 						.and((target, underlyingType) -> !converter.conversions.isSimpleType(target)),
 				mappingContext);
 
-		EntityProjection<PersonProjection, Person> projection = discoverer
-				.introspect(PersonProjection.class, Person.class);
+		EntityProjection<PersonProjection, Person> projection = discoverer.introspect(PersonProjection.class, Person.class);
 		PersonProjection person = converter.project(projection, source);
 
 		assertThat(person.getBirthDate()).isEqualTo(new LocalDate(1999, 12, 1));
@@ -2670,8 +2675,7 @@ class MappingMongoConverterUnitTests {
 						.and((target, underlyingType) -> !converter.conversions.isSimpleType(target)),
 				mappingContext);
 
-		EntityProjection<PersonDto, Person> projection = introspector
-				.introspect(PersonDto.class, Person.class);
+		EntityProjection<PersonDto, Person> projection = introspector.introspect(PersonDto.class, Person.class);
 		PersonDto person = converter.project(projection, source);
 
 		assertThat(person.getBirthDate()).isEqualTo(new LocalDate(1999, 12, 1));
@@ -2689,8 +2693,8 @@ class MappingMongoConverterUnitTests {
 						.and((target, underlyingType) -> !converter.conversions.isSimpleType(target)),
 				mappingContext);
 
-		EntityProjection<WithNestedProjection, Person> projection = introspector
-				.introspect(WithNestedProjection.class, Person.class);
+		EntityProjection<WithNestedProjection, Person> projection = introspector.introspect(WithNestedProjection.class,
+				Person.class);
 		WithNestedProjection person = converter.project(projection, source);
 
 		assertThat(person.getAddresses()).extracting(AddressProjection::getStreet).hasSize(1).containsOnly("hwy");
@@ -2746,8 +2750,7 @@ class MappingMongoConverterUnitTests {
 	@EqualsAndHashCode
 	@Getter
 	static class Address implements InterfaceType {
-		@Field("s")
-		String street;
+		@Field("s") String street;
 		String city;
 	}
 
@@ -3348,7 +3351,7 @@ class MappingMongoConverterUnitTests {
 	}
 
 	@EqualsAndHashCode
-	static class TypeImplementingMap implements Map<String,String> {
+	static class TypeImplementingMap implements Map<String, String> {
 
 		String val1;
 		int val2;
@@ -3444,5 +3447,131 @@ class MappingMongoConverterUnitTests {
 		@org.springframework.data.mongodb.core.mapping.DBRef @org.springframework.data.mongodb.core.mapping.Field(
 				write = org.springframework.data.mongodb.core.mapping.Field.Write.ALWAYS) Person writeAlwaysPerson;
 
+	}
+
+	@Test // GH-3596
+	void simpleConverter() {
+
+		WithValueConverters wvc = new WithValueConverters();
+		wvc.converterWithDefaultCtor = "spring";
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(wvc, target);
+
+		assertThat(target).containsEntry("converterWithDefaultCtor", new org.bson.Document("foo", "spring"));
+
+		WithValueConverters read = converter.read(WithValueConverters.class, target);
+		assertThat(read.converterWithDefaultCtor).startsWith("spring");
+	}
+
+	@Test // GH-3596
+	void enumConverter() {
+
+		WithValueConverters wvc = new WithValueConverters();
+		wvc.converterEnum = "spring";
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(wvc, target);
+
+		assertThat(target).containsEntry("converterEnum", new org.bson.Document("bar", "spring"));
+
+		WithValueConverters read = converter.read(WithValueConverters.class, target);
+		assertThat(read.converterEnum).isEqualTo("spring");
+	}
+
+	@Test // GH-3596
+	void beanConverter() {
+
+		DefaultListableBeanFactory defaultListableBeanFactory = new DefaultListableBeanFactory();
+		defaultListableBeanFactory.registerBeanDefinition("someDependency",
+				BeanDefinitionBuilder.rootBeanDefinition(SomeDependency.class).getBeanDefinition());
+
+		BeanFactoryAwarePropertyValueConverterFactory beanFactoryAwareConverterFactory = new BeanFactoryAwarePropertyValueConverterFactory();
+		beanFactoryAwareConverterFactory.setBeanFactory(defaultListableBeanFactory);
+
+		converter = new MappingMongoConverter(resolver, mappingContext);
+
+		converter.setCustomConversions(MongoCustomConversions.create(it -> {
+			it.registerPropertyValueConverterFactory(PropertyValueConverterFactory.caching(beanFactoryAwareConverterFactory));
+		}));
+		converter.afterPropertiesSet();
+
+		WithValueConverters wvc = new WithValueConverters();
+		wvc.converterBean = "spring";
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(wvc, target);
+
+		assertThat(target.get("converterBean", org.bson.Document.class)).satisfies(it -> {
+			assertThat(it).containsKey("ooo");
+			assertThat((String) it.get("ooo")).startsWith("spring - ");
+		});
+
+		WithValueConverters read = converter.read(WithValueConverters.class, target);
+		assertThat(read.converterBean).startsWith("spring -");
+	}
+
+	static class WithValueConverters {
+
+		@PropertyConverter(Converter1.class) String converterWithDefaultCtor;
+
+		@PropertyConverter(Converter2.class) String converterEnum;
+
+		@PropertyConverter(Converter3.class) String converterBean;
+	}
+
+	static class Converter3 implements PropertyValueConverter<Object, org.bson.Document> {
+
+		private final SomeDependency someDependency;
+
+		public Converter3(@Autowired SomeDependency someDependency) {
+			this.someDependency = someDependency;
+		}
+
+		@Override
+		public Object nativeToDomain(org.bson.Document value) {
+			return value.get("ooo");
+		}
+
+		@Override
+		public org.bson.Document domainToNative(Object value) {
+			return new org.bson.Document("ooo", value + " - " + someDependency.toString());
+		}
+	}
+
+	static class SomeDependency {
+
+	}
+
+	enum Converter2 implements PropertyValueConverter<String, org.bson.Document> {
+
+		INSTANCE;
+
+		@Nullable
+		@Override
+		public String nativeToDomain(@Nullable org.bson.Document value) {
+			return value.getString("bar");
+		}
+
+		@Nullable
+		@Override
+		public org.bson.Document domainToNative(@Nullable String value) {
+			return new org.bson.Document("bar", value);
+		}
+	}
+
+	static class Converter1 implements PropertyValueConverter<String, org.bson.Document> {
+
+		@Nullable
+		@Override
+		public String nativeToDomain(@Nullable org.bson.Document value) {
+			return value.getString("foo");
+		}
+
+		@Nullable
+		@Override
+		public org.bson.Document domainToNative(@Nullable String value) {
+			return new org.bson.Document("foo", value);
+		}
 	}
 }

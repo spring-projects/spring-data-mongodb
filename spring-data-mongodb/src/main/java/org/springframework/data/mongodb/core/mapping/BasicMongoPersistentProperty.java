@@ -330,15 +330,6 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	}
 
 	@Override
-	public PropertyValueConverter<?, ?> getValueConverter() {
-
-		if (getOwner() instanceof BasicMongoPersistentEntity) {
-			return resolveConverter(((BasicMongoPersistentEntity) getOwner()).beanFactory);
-		}
-		return resolveConverter(null);
-	}
-
-	@Override
 	public Collection<Object> getEncryptionKeyIds() {
 
 		Encrypted encrypted = findAnnotation(Encrypted.class);

@@ -282,11 +282,6 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 
 	@Override
-	public PropertyValueConverter<?, ?> getValueConverter() {
-		return delegate.getValueConverter();
-	}
-
-	@Override
 	@Nullable
 	public Class<?> getComponentType() {
 		return delegate.getComponentType();
