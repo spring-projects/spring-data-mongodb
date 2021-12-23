@@ -19,6 +19,7 @@ import static org.springframework.data.mongodb.core.convert.ReferenceLookupDeleg
 
 import java.util.Collections;
 
+import org.bson.Document;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.DocumentReference;
@@ -41,8 +42,8 @@ public class DefaultReferenceResolver implements ReferenceResolver {
 
 	private final LookupFunction collectionLookupFunction = (filter, ctx) -> getReferenceLoader().fetchMany(filter, ctx);
 	private final LookupFunction singleValueLookupFunction = (filter, ctx) -> {
-		Object target = getReferenceLoader().fetchOne(filter, ctx);
-		return target == null ? Collections.emptyList() : Collections.singleton(getReferenceLoader().fetchOne(filter, ctx));
+		Document target = getReferenceLoader().fetchOne(filter, ctx);
+		return target == null ? Collections.emptyList() : Collections.singleton(target);
 	};
 
 	/**
