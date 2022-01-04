@@ -90,7 +90,7 @@ public class ReactiveMongoPersistentEntityIndexCreatorUnitTests {
 
 		Mono<Void> publisher = checkForIndexes(mappingContext);
 
-		verifyZeroInteractions(collection);
+		verifyNoInteractions(collection);
 
 		publisher.as(StepVerifier::create).verifyComplete();
 
