@@ -27,11 +27,12 @@ import lombok.RequiredArgsConstructor;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.net.URL;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-import org.assertj.core.api.DateAssert;
 import org.bson.types.Binary;
 import org.bson.types.Code;
 import org.bson.types.Decimal128;
@@ -2615,7 +2616,8 @@ class MappingMongoConverterUnitTests {
 	@Test // GH-2860
 	void projectShouldReadSimpleInterfaceProjection() {
 
-		org.bson.Document source = new org.bson.Document("birthDate", new LocalDate(1999, 12, 1).toDate()).append("foo",
+		org.bson.Document source = new org.bson.Document("birthDate",
+				Date.from(LocalDate.of(1999, 12, 1).atStartOfDay().toInstant(ZoneOffset.UTC))).append("foo",
 				"Walter");
 
 		EntityProjectionIntrospector discoverer = EntityProjectionIntrospector.create(converter.getProjectionFactory(),
@@ -2627,14 +2629,15 @@ class MappingMongoConverterUnitTests {
 				.introspect(PersonProjection.class, Person.class);
 		PersonProjection person = converter.project(projection, source);
 
-		assertThat(person.getBirthDate()).isEqualTo(new LocalDate(1999, 12, 1));
+		assertThat(person.getBirthDate()).isEqualTo(LocalDate.of(1999, 12, 1));
 		assertThat(person.getFirstname()).isEqualTo("Walter");
 	}
 
 	@Test // GH-2860
 	void projectShouldReadSimpleDtoProjection() {
 
-		org.bson.Document source = new org.bson.Document("birthDate", new LocalDate(1999, 12, 1).toDate()).append("foo",
+		org.bson.Document source = new org.bson.Document("birthDate",
+				Date.from(LocalDate.of(1999, 12, 1).atStartOfDay().toInstant(ZoneOffset.UTC))).append("foo",
 				"Walter");
 
 		EntityProjectionIntrospector introspector = EntityProjectionIntrospector.create(converter.getProjectionFactory(),
@@ -2646,7 +2649,7 @@ class MappingMongoConverterUnitTests {
 				.introspect(PersonDto.class, Person.class);
 		PersonDto person = converter.project(projection, source);
 
-		assertThat(person.getBirthDate()).isEqualTo(new LocalDate(1999, 12, 1));
+		assertThat(person.getBirthDate()).isEqualTo(LocalDate.of(1999, 12, 1));
 		assertThat(person.getFirstname()).isEqualTo("Walter");
 	}
 
