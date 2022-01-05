@@ -195,19 +195,11 @@ public class TextCriteria implements CriteriaDefinition {
 		return this;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.query.CriteriaDefinition#getKey()
-	 */
 	@Override
 	public String getKey() {
 		return "$text";
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.query.CriteriaDefinition#getCriteriaObject()
-	 */
 	@Override
 	public Document getCriteriaObject() {
 
@@ -232,10 +224,6 @@ public class TextCriteria implements CriteriaDefinition {
 		return new Document("$text", document);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
 	@Override
 	public boolean equals(Object o) {
 
@@ -253,10 +241,6 @@ public class TextCriteria implements CriteriaDefinition {
 				&& ObjectUtils.nullSafeEquals(diacriticSensitive, that.diacriticSensitive);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
 	@Override
 	public int hashCode() {
 

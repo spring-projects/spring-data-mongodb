@@ -32,10 +32,6 @@ import com.mongodb.ReadConcernLevel;
  */
 public class ReadConcernPropertyEditor extends PropertyEditorSupport {
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.beans.factory.xml.BeanDefinitionParser#parse(org.w3c.dom.Element, org.springframework.beans.factory.xml.ParserContext)
-	 */
 	@Override
 	public void setAsText(@Nullable String readConcernString) {
 

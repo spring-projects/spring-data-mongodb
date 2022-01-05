@@ -34,10 +34,6 @@ class UnwrapEntityContext {
 		return property;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
 	@Override
 	public boolean equals(Object obj) {
 
@@ -53,10 +49,6 @@ class UnwrapEntityContext {
 		return ObjectUtils.nullSafeEquals(property, that.property);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
 	@Override
 	public int hashCode() {
 		return ObjectUtils.nullSafeHashCode(property);

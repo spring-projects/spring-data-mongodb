@@ -88,10 +88,6 @@ public class TextIndexDefinition implements IndexDefinition {
 		return !fieldSpecs.isEmpty();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.index.IndexDefinition#getIndexKeys()
-	 */
 	@Override
 	public Document getIndexKeys() {
 
@@ -103,10 +99,6 @@ public class TextIndexDefinition implements IndexDefinition {
 		return keys;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.index.IndexDefinition#getIndexOptions()
-	 */
 	@Override
 	public Document getIndexOptions() {
 

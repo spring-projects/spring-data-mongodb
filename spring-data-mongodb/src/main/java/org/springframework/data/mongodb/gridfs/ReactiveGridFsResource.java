@@ -114,10 +114,6 @@ public class ReactiveGridFsResource implements GridFsObject<Object, Publisher<Da
 		return new ReactiveGridFsResource(filename, null);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.GridFsObject#getFileId()
-	 */
 	@Override
 	public Object getFileId() {
 		return id instanceof BsonValue ? BsonUtils.toJavaType((BsonValue) id) : id;
@@ -175,19 +171,11 @@ public class ReactiveGridFsResource implements GridFsObject<Object, Publisher<Da
 		return createDownloadStream(downloadPublisher);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.GridFsObject#getContent()
-	 */
 	@Override
 	public Flux<DataBuffer> getContent() {
 		return getDownloadStream();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.GridFsObject#getOptions()
-	 */
 	@Override
 	public Options getOptions() {
 		return options;

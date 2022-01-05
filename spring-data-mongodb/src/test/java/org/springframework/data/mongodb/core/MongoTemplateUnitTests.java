@@ -2433,10 +2433,6 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		return template;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.core.MongoOperationsUnitTests#getOperations()
-	 */
 	@Override
 	protected MongoOperations getOperationsForExceptionHandling() {
 		MongoTemplate template = spy(this.template);
@@ -2444,10 +2440,6 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 		return template;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.core.MongoOperationsUnitTests#getOperations()
-	 */
 	@Override
 	protected MongoOperations getOperations() {
 		return this.template;

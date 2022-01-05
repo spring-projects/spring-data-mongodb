@@ -69,10 +69,6 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 		return Range.of(Bound.unbounded(), maxDistance);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.MongoParameterAccessor#getGeoNearLocation()
-	 */
 	public Point getGeoNearLocation() {
 
 		int nearIndex = method.getParameters().getNearIndex();
@@ -99,10 +95,6 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 		return (Point) value;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getFullText()
-	 */
 	@Nullable
 	@Override
 	public TextCriteria getFullText() {
@@ -131,10 +123,6 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 						ClassUtils.getShortName(fullText.getClass())));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getCollation()
-	 */
 	@Override
 	public Collation getCollation() {
 
@@ -145,10 +133,6 @@ public class MongoParametersParameterAccessor extends ParametersParameterAccesso
 		return getValue(method.getParameters().getCollationParameterIndex());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getValues()
-	 */
 	@Override
 	public Object[] getValues() {
 		return super.getValues();

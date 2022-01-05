@@ -112,10 +112,6 @@ public class DefaultIndexOperations implements IndexOperations {
 		this.type = type;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.index.IndexOperations#ensureIndex(org.springframework.data.mongodb.core.index.IndexDefinition)
-	 */
 	public String ensureIndex(final IndexDefinition indexDefinition) {
 
 		return execute(collection -> {
@@ -150,10 +146,6 @@ public class DefaultIndexOperations implements IndexOperations {
 		return null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.index.IndexOperations#dropIndex(java.lang.String)
-	 */
 	public void dropIndex(final String name) {
 
 		execute(collection -> {
@@ -163,18 +155,10 @@ public class DefaultIndexOperations implements IndexOperations {
 
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.index.IndexOperations#dropAllIndexes()
-	 */
 	public void dropAllIndexes() {
 		dropIndex("*");
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.index.IndexOperations#getIndexInfo()
-	 */
 	public List<IndexInfo> getIndexInfo() {
 
 		return execute(new CollectionCallback<List<IndexInfo>>() {

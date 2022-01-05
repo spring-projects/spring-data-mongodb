@@ -46,10 +46,6 @@ abstract class DocumentEnhancingOperation implements InheritsFieldsAggregationOp
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
 
@@ -71,10 +67,6 @@ abstract class DocumentEnhancingOperation implements InheritsFieldsAggregationOp
 	 */
 	protected abstract String mongoOperator();
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
-	 */
 	@Override
 	public String getOperator() {
 		return mongoOperator();
@@ -87,10 +79,6 @@ abstract class DocumentEnhancingOperation implements InheritsFieldsAggregationOp
 		return this.valueMap;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation#getFields()
-	 */
 	@Override
 	public ExposedFields getFields() {
 		return exposedFields;

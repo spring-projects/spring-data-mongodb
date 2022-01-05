@@ -67,10 +67,6 @@ public class DocumentAssert extends AbstractMapAssert<DocumentAssert, Map<String
 		this.actual = actual;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.assertj.core.api.AbstractMapAssert#containsEntry(java.lang.Object, java.lang.Object)
-	 */
 	@Override
 	public DocumentAssert containsEntry(String key, Object value) {
 
@@ -107,10 +103,6 @@ public class DocumentAssert extends AbstractMapAssert<DocumentAssert, Map<String
 		return myself;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.assertj.core.api.AbstractMapAssert#doesNotContainEntry(java.lang.Object, java.lang.Object)
-	 */
 	@Override
 	public DocumentAssert doesNotContainEntry(String key, Object value) {
 
@@ -125,19 +117,11 @@ public class DocumentAssert extends AbstractMapAssert<DocumentAssert, Map<String
 		return myself;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.assertj.core.api.AbstractMapAssert#containsKey(java.lang.Object)
-	 */
 	@Override
 	public DocumentAssert containsKey(String key) {
 		return containsKeys(key);
 	}
 
-	/* 
-	 * (non-Javadoc)
-	 * @see org.assertj.core.api.AbstractMapAssert#containsKeysForProxy(java.lang.Object[])
-	 */
 	@Override
 	protected DocumentAssert containsKeysForProxy(String[] keys) {
 
@@ -157,19 +141,11 @@ public class DocumentAssert extends AbstractMapAssert<DocumentAssert, Map<String
 		return myself;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.assertj.core.api.AbstractMapAssert#doesNotContainKey(java.lang.Object)
-	 */
 	@Override
 	public DocumentAssert doesNotContainKey(String key) {
 		return doesNotContainKeys(key);
 	}
 
-	/* 
-	 * (non-Javadoc)
-	 * @see org.assertj.core.api.AbstractMapAssert#doesNotContainKeysForProxy(java.lang.Object[])
-	 */
 	@Override
 	protected DocumentAssert doesNotContainKeysForProxy(String[] keys) {
 
@@ -325,10 +301,6 @@ public class DocumentAssert extends AbstractMapAssert<DocumentAssert, Map<String
 		return Lookup.notFound();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.assertj.core.api.AbstractMapAssert#hasEntrySatisfying(java.lang.Object, org.assertj.core.api.Condition)
-	 */
 	@Override
 	public DocumentAssert hasEntrySatisfying(String key, Condition<? super Object> valueCondition) {
 
@@ -341,10 +313,6 @@ public class DocumentAssert extends AbstractMapAssert<DocumentAssert, Map<String
 		return myself;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.assertj.core.api.AbstractMapAssert#hasEntrySatisfying(java.lang.Object, java.util.function.Consumer)
-	 */
 	@Override
 	public DocumentAssert hasEntrySatisfying(String key, Consumer<? super Object> valueRequirements) {
 

@@ -89,10 +89,6 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 		return new TypedJsonSchemaObject(new LinkedHashSet<>(Arrays.asList(types)), null, false, Restrictions.empty());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.schema.JsonSchemaObject#getTypes()
-	 */
 	@Override
 	public Set<Type> getTypes() {
 		return types;
@@ -374,64 +370,36 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 			return properties(property);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.UntypedJsonSchemaObject#possibleValues(java.util.Collection)
-		 */
 		@Override
 		public ObjectJsonSchemaObject possibleValues(Collection<? extends Object> possibleValues) {
 			return newInstance(description, generateDescription, restrictions.possibleValues(possibleValues));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.UntypedJsonSchemaObject#allOf(java.util.Collection)
-		 */
 		@Override
 		public ObjectJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
 			return newInstance(description, generateDescription, restrictions.allOf(allOf));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.UntypedJsonSchemaObject#anyOf(java.util.Collection)
-		 */
 		@Override
 		public ObjectJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
 			return newInstance(description, generateDescription, restrictions.anyOf(anyOf));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.UntypedJsonSchemaObject#oneOf(java.util.Collection)
-		 */
 		@Override
 		public ObjectJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
 			return newInstance(description, generateDescription, restrictions.oneOf(oneOf));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.UntypedJsonSchemaObject#notMatch(org.springframework.data.mongodb.core.schema.JsonSchemaObject)
-		 */
 		@Override
 		public ObjectJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
 			return newInstance(description, generateDescription, restrictions.notMatch(notMatch));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.UntypedJsonSchemaObject#description(java.lang.String)
-		 */
 		@Override
 		public ObjectJsonSchemaObject description(String description) {
 			return newInstance(description, generateDescription, restrictions);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.UntypedJsonSchemaObject#generatedDescription()
-		 */
 		@Override
 		public ObjectJsonSchemaObject generatedDescription() {
 			return newInstance(description, true, restrictions);
@@ -441,10 +409,6 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 			return properties;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.JsonSchemaObject#toDocument()
-		 */
 		@Override
 		public Document toDocument() {
 
@@ -506,10 +470,6 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 					.collect(Document::new, Document::putAll, (target, propertyDocument) -> {});
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#generateDescription()
-		 */
 		@Override
 		protected String generateDescription() {
 
@@ -673,73 +633,41 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 			return within(Range.of(lower, createBound(max, true)));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#possibleValues(java.util.Collection)
-		 */
 		@Override
 		public NumericJsonSchemaObject possibleValues(Collection<? extends Object> possibleValues) {
 			return newInstance(description, generateDescription, restrictions.possibleValues(possibleValues));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#allOf(java.util.Collection)
-		 */
 		@Override
 		public NumericJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
 			return newInstance(description, generateDescription, restrictions.allOf(allOf));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#anyOf(java.util.Collection)
-		 */
 		@Override
 		public NumericJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
 			return newInstance(description, generateDescription, restrictions.anyOf(anyOf));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#oneOf(java.util.Collection)
-		 */
 		@Override
 		public NumericJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
 			return newInstance(description, generateDescription, restrictions.oneOf(oneOf));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#notMatch(org.springframework.data.mongodb.core.schema.JsonSchemaObject)
-		 */
 		@Override
 		public NumericJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
 			return newInstance(description, generateDescription, restrictions.notMatch(notMatch));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#description(java.lang.String)
-		 */
 		@Override
 		public NumericJsonSchemaObject description(String description) {
 			return newInstance(description, generateDescription, restrictions);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#generatedDescription()
-		 */
 		@Override
 		public NumericJsonSchemaObject generatedDescription() {
 			return newInstance(description, true, restrictions);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.JsonSchemaObject#toDocument()
-		 */
 		@Override
 		public Document toDocument() {
 
@@ -815,10 +743,6 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 			return types;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#generateDescription()
-		 */
 		@Override
 		protected String generateDescription() {
 
@@ -913,73 +837,41 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 			return newInstance;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#possibleValues(java.util.Collection)
-		 */
 		@Override
 		public StringJsonSchemaObject possibleValues(Collection<? extends Object> possibleValues) {
 			return newInstance(description, generateDescription, restrictions.possibleValues(possibleValues));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#allOf(java.util.Collection)
-		 */
 		@Override
 		public StringJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
 			return newInstance(description, generateDescription, restrictions.allOf(allOf));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#anyOf(java.util.Collection)
-		 */
 		@Override
 		public StringJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
 			return newInstance(description, generateDescription, restrictions.anyOf(anyOf));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#oneOf(java.util.Collection)
-		 */
 		@Override
 		public StringJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
 			return newInstance(description, generateDescription, restrictions.oneOf(oneOf));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#notMatch(org.springframework.data.mongodb.core.schema.JsonSchemaObject)
-		 */
 		@Override
 		public StringJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
 			return newInstance(description, generateDescription, restrictions.notMatch(notMatch));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#description(java.lang.String)
-		 */
 		@Override
 		public StringJsonSchemaObject description(String description) {
 			return newInstance(description, generateDescription, restrictions);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#generatedDescription()
-		 */
 		@Override
 		public StringJsonSchemaObject generatedDescription() {
 			return newInstance(description, true, restrictions);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.JsonSchemaObject#toDocument()
-		 */
 		@Override
 		public Document toDocument() {
 
@@ -1009,10 +901,6 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 			return newInstance;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#generateDescription()
-		 */
 		@Override
 		protected String generateDescription() {
 
@@ -1135,73 +1023,41 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 			return newInstance;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#possibleValues(java.util.Collection)
-		 */
 		@Override
 		public ArrayJsonSchemaObject possibleValues(Collection<? extends Object> possibleValues) {
 			return newInstance(description, generateDescription, restrictions.possibleValues(possibleValues));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#allOf(java.util.Collection)
-		 */
 		@Override
 		public ArrayJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
 			return newInstance(description, generateDescription, restrictions.allOf(allOf));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#anyOf(java.util.Collection)
-		 */
 		@Override
 		public ArrayJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
 			return newInstance(description, generateDescription, restrictions.anyOf(anyOf));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#oneOf(java.util.Collection)
-		 */
 		@Override
 		public ArrayJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
 			return newInstance(description, generateDescription, restrictions.oneOf(oneOf));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#notMatch(org.springframework.data.mongodb.core.schema.JsonSchemaObject)
-		 */
 		@Override
 		public ArrayJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
 			return newInstance(description, generateDescription, restrictions.notMatch(notMatch));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#description(java.lang.String)
-		 */
 		@Override
 		public ArrayJsonSchemaObject description(String description) {
 			return newInstance(description, generateDescription, restrictions);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#generatedDescription()
-		 */
 		@Override
 		public ArrayJsonSchemaObject generatedDescription() {
 			return newInstance(description, true, restrictions);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#toDocument()
-		 */
 		@Override
 		public Document toDocument() {
 
@@ -1242,10 +1098,6 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 			return newInstance;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#generateDescription()
-		 */
 		@Override
 		protected String generateDescription() {
 
@@ -1296,73 +1148,41 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 			super(Type.booleanType(), description, generateDescription, restrictions);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#possibleValues(java.util.Collection)
-		 */
 		@Override
 		public BooleanJsonSchemaObject possibleValues(Collection<? extends Object> possibleValues) {
 			return new BooleanJsonSchemaObject(description, generateDescription, restrictions.possibleValues(possibleValues));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#allOf(java.util.Collection)
-		 */
 		@Override
 		public BooleanJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
 			return new BooleanJsonSchemaObject(description, generateDescription, restrictions.allOf(allOf));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#anyOf(java.util.Collection)
-		 */
 		@Override
 		public BooleanJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
 			return new BooleanJsonSchemaObject(description, generateDescription, restrictions.anyOf(anyOf));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#oneOf(java.util.Collection)
-		 */
 		@Override
 		public BooleanJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
 			return new BooleanJsonSchemaObject(description, generateDescription, restrictions.oneOf(oneOf));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#notMatch(org.springframework.data.mongodb.core.schema.JsonSchemaObject)
-		 */
 		@Override
 		public BooleanJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
 			return new BooleanJsonSchemaObject(description, generateDescription, restrictions.notMatch(notMatch));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#description(java.lang.String)
-		 */
 		@Override
 		public BooleanJsonSchemaObject description(String description) {
 			return new BooleanJsonSchemaObject(description, generateDescription, restrictions);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#generatedDescription()
-		 */
 		@Override
 		public BooleanJsonSchemaObject generatedDescription() {
 			return new BooleanJsonSchemaObject(description, true, restrictions);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#generateDescription()
-		 */
 		@Override
 		protected String generateDescription() {
 			return "Must be a boolean.";
@@ -1389,73 +1209,41 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 			super(Type.nullType(), description, generateDescription, restrictions);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#possibleValues(java.util.Collection)
-		 */
 		@Override
 		public NullJsonSchemaObject possibleValues(Collection<? extends Object> possibleValues) {
 			return new NullJsonSchemaObject(description, generateDescription, restrictions.possibleValues(possibleValues));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#allOf(java.util.Collection)
-		 */
 		@Override
 		public NullJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
 			return new NullJsonSchemaObject(description, generateDescription, restrictions.allOf(allOf));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#anyOf(java.util.Collection)
-		 */
 		@Override
 		public NullJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
 			return new NullJsonSchemaObject(description, generateDescription, restrictions.anyOf(anyOf));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#oneOf(java.util.Collection)
-		 */
 		@Override
 		public NullJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
 			return new NullJsonSchemaObject(description, generateDescription, restrictions.oneOf(oneOf));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#notMatch(org.springframework.data.mongodb.core.schema.JsonSchemaObject)
-		 */
 		@Override
 		public NullJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
 			return new NullJsonSchemaObject(description, generateDescription, restrictions.notMatch(notMatch));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#description(java.lang.String)
-		 */
 		@Override
 		public NullJsonSchemaObject description(String description) {
 			return new NullJsonSchemaObject(description, generateDescription, restrictions);
 		}
 
-		/*
-		* (non-Javadoc)
-		* @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#generatedDescription()
-		*/
 		@Override
 		public NullJsonSchemaObject generatedDescription() {
 			return new NullJsonSchemaObject(description, true, restrictions);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#generateDescription()
-		 */
 		@Override
 		protected String generateDescription() {
 			return "Must be null.";
@@ -1481,73 +1269,41 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 			super(Type.dateType(), description, generateDescription, restrictions);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#possibleValues(java.util.Collection)
-		 */
 		@Override
 		public DateJsonSchemaObject possibleValues(Collection<? extends Object> possibleValues) {
 			return new DateJsonSchemaObject(description, generateDescription, restrictions.possibleValues(possibleValues));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#allOf(java.util.Collection)
-		 */
 		@Override
 		public DateJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
 			return new DateJsonSchemaObject(description, generateDescription, restrictions.allOf(allOf));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#anyOf(java.util.Collection)
-		 */
 		@Override
 		public DateJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
 			return new DateJsonSchemaObject(description, generateDescription, restrictions.anyOf(anyOf));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#oneOf(java.util.Collection)
-		 */
 		@Override
 		public DateJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
 			return new DateJsonSchemaObject(description, generateDescription, restrictions.oneOf(oneOf));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#notMatch(org.springframework.data.mongodb.core.schema.JsonSchemaObject)
-		 */
 		@Override
 		public DateJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
 			return new DateJsonSchemaObject(description, generateDescription, restrictions.notMatch(notMatch));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#description(java.lang.String)
-		 */
 		@Override
 		public DateJsonSchemaObject description(String description) {
 			return new DateJsonSchemaObject(description, generateDescription, restrictions);
 		}
 
-		/*
-		* (non-Javadoc)
-		* @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#generatedDescription()
-		*/
 		@Override
 		public DateJsonSchemaObject generatedDescription() {
 			return new DateJsonSchemaObject(description, true, restrictions);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#generateDescription()
-		 */
 		@Override
 		protected String generateDescription() {
 			return "Must be a date.";
@@ -1573,74 +1329,42 @@ public class TypedJsonSchemaObject extends UntypedJsonSchemaObject {
 			super(Type.timestampType(), description, generateDescription, restrictions);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#possibleValues(java.util.Collection)
-		 */
 		@Override
 		public TimestampJsonSchemaObject possibleValues(Collection<? extends Object> possibleValues) {
 			return new TimestampJsonSchemaObject(description, generateDescription,
 					restrictions.possibleValues(possibleValues));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#allOf(java.util.Collection)
-		 */
 		@Override
 		public TimestampJsonSchemaObject allOf(Collection<JsonSchemaObject> allOf) {
 			return new TimestampJsonSchemaObject(description, generateDescription, restrictions.allOf(allOf));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#anyOf(java.util.Collection)
-		 */
 		@Override
 		public TimestampJsonSchemaObject anyOf(Collection<JsonSchemaObject> anyOf) {
 			return new TimestampJsonSchemaObject(description, generateDescription, restrictions.anyOf(anyOf));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#oneOf(java.util.Collection)
-		 */
 		@Override
 		public TimestampJsonSchemaObject oneOf(Collection<JsonSchemaObject> oneOf) {
 			return new TimestampJsonSchemaObject(description, generateDescription, restrictions.oneOf(oneOf));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#notMatch(org.springframework.data.mongodb.core.schema.JsonSchemaObject)
-		 */
 		@Override
 		public TimestampJsonSchemaObject notMatch(JsonSchemaObject notMatch) {
 			return new TimestampJsonSchemaObject(description, generateDescription, restrictions.notMatch(notMatch));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#description(java.lang.String)
-		 */
 		@Override
 		public TimestampJsonSchemaObject description(String description) {
 			return new TimestampJsonSchemaObject(description, generateDescription, restrictions);
 		}
 
-		/*
-		* (non-Javadoc)
-		* @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#generatedDescription()
-		*/
 		@Override
 		public TimestampJsonSchemaObject generatedDescription() {
 			return new TimestampJsonSchemaObject(description, true, restrictions);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.TypedJsonSchemaObject#generateDescription()
-		 */
 		@Override
 		protected String generateDescription() {
 			return "Must be a timestamp.";

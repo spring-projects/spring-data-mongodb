@@ -84,10 +84,6 @@ public class GeoNearOperation implements AggregationOperation {
 		return new GeoNearOperation(nearQuery, distanceField, key);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
 
@@ -107,19 +103,11 @@ public class GeoNearOperation implements AggregationOperation {
 		return new Document(getOperator(), command);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
-	 */
 	@Override
 	public String getOperator() {
 		return "$geoNear";
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toPipelineStages(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-	 */
 	@Override
 	public List<Document> toPipelineStages(AggregationOperationContext context) {
 

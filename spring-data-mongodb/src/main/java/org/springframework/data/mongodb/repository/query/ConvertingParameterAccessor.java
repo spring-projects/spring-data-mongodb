@@ -67,79 +67,40 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 		this.delegate = delegate;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see java.lang.Iterable#iterator()
-	 */
 	public PotentiallyConvertingIterator iterator() {
 		return new ConvertingIterator(delegate.iterator());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.springframework.data.repository.query.ParameterAccessor#getPageable()
-	 */
 	public Pageable getPageable() {
 		return delegate.getPageable();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see org.springframework.data.repository.query.ParameterAccessor#getSort()
-	 */
 	public Sort getSort() {
 		return delegate.getSort();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.ParameterAccessor#findDynamicProjection()
-	 */
 	@Override
 	public Class<?> findDynamicProjection() {
 		return delegate.findDynamicProjection();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.ParameterAccessor#getBindableValue(int)
-	 */
 	public Object getBindableValue(int index) {
 		return getConvertedValue(delegate.getBindableValue(index), null);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getDistanceRange()
-	 */
 	@Override
 	public Range<Distance> getDistanceRange() {
 		return delegate.getDistanceRange();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.MongoParameterAccessor#getGeoNearLocation()
-	 */
 	public Point getGeoNearLocation() {
 		return delegate.getGeoNearLocation();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getFullText()
-	 */
 	public TextCriteria getFullText() {
 		return delegate.getFullText();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getCollation()
-	 */
 	@Override
 	public Collation getCollation() {
 		return delegate.getCollation();
@@ -157,10 +118,6 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 		return writer.convertToMongoType(value, typeInformation == null ? null : typeInformation.getActualType());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.ParameterAccessor#hasBindableNullValue()
-	 */
 	public boolean hasBindableNullValue() {
 		return delegate.hasBindableNullValue();
 	}
@@ -183,26 +140,14 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 			this.delegate = delegate;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Iterator#hasNext()
-		 */
 		public boolean hasNext() {
 			return delegate.hasNext();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Iterator#next()
-		 */
 		public Object next() {
 			return delegate.next();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.repository.ConvertingParameterAccessor.PotentiallConvertingIterator#nextConverted()
-		 */
 		public Object nextConverted(MongoPersistentProperty property) {
 
 			Object next = next();
@@ -228,10 +173,6 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 			return getConvertedValue(next, property.getTypeInformation());
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Iterator#remove()
-		 */
 		public void remove() {
 			delegate.remove();
 		}
@@ -264,10 +205,6 @@ public class ConvertingParameterAccessor implements MongoParameterAccessor {
 		return source.getClass().isArray() ? CollectionUtils.arrayToList(source) : Collections.singleton(source);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getValues()
-	 */
 	@Override
 	public Object[] getValues() {
 		return delegate.getValues();

@@ -206,10 +206,6 @@ public class ObjectOperators {
 			return new MergeObjects(append(Arrays.asList(values)));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AbstractAggregationExpression#toDocument(java.lang.Object, org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-		 */
 		@Override
 		public Document toDocument(Object value, AggregationOperationContext context) {
 			return super.toDocument(potentiallyExtractSingleValue(value), context);
@@ -228,10 +224,6 @@ public class ObjectOperators {
 			return value;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AbstractAggregationExpression#getMongoMethod()
-		 */
 		@Override
 		protected String getMongoMethod() {
 			return "$mergeObjects";
@@ -286,10 +278,6 @@ public class ObjectOperators {
 			return new ObjectToArray(value);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AbstractAggregationExpression#getMongoMethod()
-		 */
 		@Override
 		protected String getMongoMethod() {
 			return "$objectToArray";

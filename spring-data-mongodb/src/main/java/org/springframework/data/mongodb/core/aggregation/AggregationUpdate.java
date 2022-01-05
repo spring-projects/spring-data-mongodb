@@ -242,48 +242,26 @@ public class AggregationUpdate extends Aggregation implements UpdateDefinition {
 		return this;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#isIsolated()
-	 */
 	@Override
 	public Boolean isIsolated() {
 		return isolated;
 	}
 
-	/*
-	 * Returns a update document containing the update pipeline.
-	 * The resulting document needs to be unwrapped to be used with update operations.
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#getUpdateObject()
-	 */
 	@Override
 	public Document getUpdateObject() {
 		return new Document("", toPipeline(Aggregation.DEFAULT_CONTEXT));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#modifies(java.lang.String)
-	 */
 	@Override
 	public boolean modifies(String key) {
 		return keysTouched.contains(key);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#inc(java.lang.String)
-	 */
 	@Override
 	public void inc(String key) {
 		set(new SetOperation(key, ArithmeticOperators.valueOf(key).add(1)));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#getArrayFilters()
-	 */
 	@Override
 	public List<ArrayFilter> getArrayFilters() {
 		return Collections.emptyList();

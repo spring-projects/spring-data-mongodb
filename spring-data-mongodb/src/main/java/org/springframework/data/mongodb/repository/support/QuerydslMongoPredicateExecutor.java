@@ -85,10 +85,6 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 		this.mongoOperations = mongoOperations;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.QuerydslPredicateExecutor#findById(com.querydsl.core.types.Predicate)
-	 */
 	@Override
 	public Optional<T> findOne(Predicate predicate) {
 
@@ -101,10 +97,6 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.QuerydslPredicateExecutor#findAll(com.querydsl.core.types.Predicate)
-	 */
 	@Override
 	public List<T> findAll(Predicate predicate) {
 
@@ -113,10 +105,6 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 		return createQueryFor(predicate).fetch();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.QuerydslPredicateExecutor#findAll(com.querydsl.core.types.Predicate, com.querydsl.core.types.OrderSpecifier<?>[])
-	 */
 	@Override
 	public List<T> findAll(Predicate predicate, OrderSpecifier<?>... orders) {
 
@@ -126,10 +114,6 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 		return createQueryFor(predicate).orderBy(orders).fetch();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.QuerydslPredicateExecutor#findAll(com.querydsl.core.types.Predicate, org.springframework.data.domain.Sort)
-	 */
 	@Override
 	public List<T> findAll(Predicate predicate, Sort sort) {
 
@@ -139,10 +123,6 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 		return applySorting(createQueryFor(predicate), sort).fetch();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.QuerydslPredicateExecutor#findAll(com.querydsl.core.types.OrderSpecifier[])
-	 */
 	@Override
 	public Iterable<T> findAll(OrderSpecifier<?>... orders) {
 
@@ -151,10 +131,6 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 		return createQuery().orderBy(orders).fetch();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.QuerydslPredicateExecutor#findAll(com.querydsl.core.types.Predicate, org.springframework.data.domain.Pageable)
-	 */
 	@Override
 	public Page<T> findAll(Predicate predicate, Pageable pageable) {
 
@@ -166,10 +142,6 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 		return PageableExecutionUtils.getPage(applyPagination(query, pageable).fetch(), pageable, query::fetchCount);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.QuerydslPredicateExecutor#count(com.querydsl.core.types.Predicate)
-	 */
 	@Override
 	public long count(Predicate predicate) {
 
@@ -178,10 +150,6 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 		return createQueryFor(predicate).fetchCount();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.QuerydslPredicateExecutor#exists(com.querydsl.core.types.Predicate)
-	 */
 	@Override
 	public boolean exists(Predicate predicate) {
 
@@ -190,10 +158,6 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 		return createQueryFor(predicate).fetchCount() > 0;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.QuerydslPredicateExecutor#findBy(com.querydsl.core.types.Predicate, java.util.function.Function)
-	 */
 	@Override
 	@SuppressWarnings("unchecked")
 	public <S extends T, R> R findBy(Predicate predicate,
@@ -277,37 +241,21 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 			return new FluentQuerydsl<>(predicate, sort, resultType, fieldsToInclude);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#oneValue()
-		 */
 		@Override
 		public T oneValue() {
 			return createQuery().fetchOne();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#firstValue()
-		 */
 		@Override
 		public T firstValue() {
 			return createQuery().fetchFirst();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#all()
-		 */
 		@Override
 		public List<T> all() {
 			return createQuery().fetch();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#page(org.springframework.data.domain.Pageable)
-		 */
 		@Override
 		public Page<T> page(Pageable pageable) {
 
@@ -316,28 +264,16 @@ public class QuerydslMongoPredicateExecutor<T> extends QuerydslPredicateExecutor
 			return createQuery().fetchPage(pageable);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#stream()
-		 */
 		@Override
 		public Stream<T> stream() {
 			return createQuery().stream();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#count()
-		 */
 		@Override
 		public long count() {
 			return createQuery().fetchCount();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#exists()
-		 */
 		@Override
 		public boolean exists() {
 			return count() > 0;

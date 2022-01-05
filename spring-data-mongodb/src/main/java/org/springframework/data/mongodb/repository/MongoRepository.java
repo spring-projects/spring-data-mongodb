@@ -35,24 +35,12 @@ import org.springframework.data.repository.query.QueryByExampleExecutor;
 @NoRepositoryBean
 public interface MongoRepository<T, ID> extends PagingAndSortingRepository<T, ID>, QueryByExampleExecutor<T> {
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.CrudRepository#saveAll(java.lang.Iterable)
-	 */
 	@Override
 	<S extends T> List<S> saveAll(Iterable<S> entities);
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.CrudRepository#findAll()
-	 */
 	@Override
 	List<T> findAll();
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.PagingAndSortingRepository#findAll(org.springframework.data.domain.Sort)
-	 */
 	@Override
 	List<T> findAll(Sort sort);
 

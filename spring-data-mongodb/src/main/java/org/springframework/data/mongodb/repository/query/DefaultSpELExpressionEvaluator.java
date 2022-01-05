@@ -45,10 +45,6 @@ class DefaultSpELExpressionEvaluator implements SpELExpressionEvaluator {
 		return NoOpExpressionEvaluator.INSTANCE;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mapping.model.SpELExpressionEvaluator#evaluate(java.lang.String)
-	 */
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T evaluate(String expression) {

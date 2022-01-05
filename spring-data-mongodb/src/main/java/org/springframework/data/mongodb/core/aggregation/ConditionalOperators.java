@@ -275,10 +275,6 @@ public class ConditionalOperators {
 			return new IfNullOperatorBuilder().ifNull(expression);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpression#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-		 */
 		@Override
 		public Document toDocument(AggregationOperationContext context) {
 
@@ -408,9 +404,6 @@ public class ConditionalOperators {
 				return new IfNullOperatorBuilder();
 			}
 
-			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.IfNull.IfNullBuilder#ifNull(java.lang.String)
-			 */
 			public ThenBuilder ifNull(String fieldReference) {
 
 				Assert.hasText(fieldReference, "FieldReference name must not be null or empty!");
@@ -418,9 +411,6 @@ public class ConditionalOperators {
 				return this;
 			}
 
-			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.IfNull.IfNullBuilder#ifNull(org.springframework.data.mongodb.core.aggregation.AggregationExpression)
-			 */
 			@Override
 			public ThenBuilder ifNull(AggregationExpression expression) {
 
@@ -439,25 +429,16 @@ public class ConditionalOperators {
 				return ifNull(expression);
 			}
 
-			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.IfNull.ThenBuilder#then(java.lang.Object)
-			 */
 			public IfNull then(Object value) {
 				return new IfNull(conditions, value);
 			}
 
-			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.IfNull.ThenBuilder#thenValueOf(java.lang.String)
-			 */
 			public IfNull thenValueOf(String fieldReference) {
 
 				Assert.notNull(fieldReference, "FieldReference must not be null!");
 				return new IfNull(conditions, Fields.field(fieldReference));
 			}
 
-			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.IfNull.ThenBuilder#thenValueOf(org.springframework.data.mongodb.core.aggregation.AggregationExpression)
-			 */
 			public IfNull thenValueOf(AggregationExpression expression) {
 
 				Assert.notNull(expression, "Expression must not be null!");
@@ -543,9 +524,6 @@ public class ConditionalOperators {
 				};
 			}
 
-			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpression#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-			 */
 			@Override
 			public Document toDocument(AggregationOperationContext context) {
 
@@ -633,10 +611,6 @@ public class ConditionalOperators {
 			this.otherwiseValue = otherwiseValue;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpression#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-		 */
 		@Override
 		public Document toDocument(AggregationOperationContext context) {
 
@@ -915,9 +889,6 @@ public class ConditionalOperators {
 				return new ConditionalExpressionBuilder();
 			}
 
-			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.WhenBuilder#when(org.bson.Document)
-			 */
 			@Override
 			public ConditionalExpressionBuilder when(Document booleanExpression) {
 
@@ -927,9 +898,6 @@ public class ConditionalOperators {
 				return this;
 			}
 
-			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.WhenBuilder#when(org.springframework.data.mongodb.core.query.CriteriaDefinition)
-			 */
 			@Override
 			public ThenBuilder when(CriteriaDefinition criteria) {
 
@@ -938,9 +906,6 @@ public class ConditionalOperators {
 				return this;
 			}
 
-			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.WhenBuilder#when(org.springframework.data.mongodb.core.aggregation.AggregationExpression)
-			 */
 			@Override
 			public ThenBuilder when(AggregationExpression expression) {
 
@@ -949,9 +914,6 @@ public class ConditionalOperators {
 				return this;
 			}
 
-			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.WhenBuilder#when(java.lang.String)
-			 */
 			@Override
 			public ThenBuilder when(String booleanField) {
 
@@ -960,9 +922,6 @@ public class ConditionalOperators {
 				return this;
 			}
 
-			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.ThenBuilder#then(java.lang.Object)
-			 */
 			@Override
 			public OtherwiseBuilder then(Object thenValue) {
 
@@ -971,9 +930,6 @@ public class ConditionalOperators {
 				return this;
 			}
 
-			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.ThenBuilder#thenValueOf(java.lang.String)
-			 */
 			@Override
 			public OtherwiseBuilder thenValueOf(String fieldReference) {
 
@@ -982,9 +938,6 @@ public class ConditionalOperators {
 				return this;
 			}
 
-			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.ThenBuilder#thenValueOf(org.springframework.data.mongodb.core.aggregation.AggregationExpression)
-			 */
 			@Override
 			public OtherwiseBuilder thenValueOf(AggregationExpression expression) {
 
@@ -993,9 +946,6 @@ public class ConditionalOperators {
 				return this;
 			}
 
-			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.OtherwiseBuilder#otherwise(java.lang.Object)
-			 */
 			@Override
 			public Cond otherwise(Object otherwiseValue) {
 
@@ -1003,9 +953,6 @@ public class ConditionalOperators {
 				return new Cond(condition, thenValue, otherwiseValue);
 			}
 
-			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.OtherwiseBuilder#otherwiseValueOf(java.lang.String)
-			 */
 			@Override
 			public Cond otherwiseValueOf(String fieldReference) {
 
@@ -1013,9 +960,6 @@ public class ConditionalOperators {
 				return new Cond(condition, thenValue, Fields.field(fieldReference));
 			}
 
-			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond.OtherwiseBuilder#otherwiseValueOf(org.springframework.data.mongodb.core.aggregation.AggregationExpression)
-			 */
 			@Override
 			public Cond otherwiseValueOf(AggregationExpression expression) {
 

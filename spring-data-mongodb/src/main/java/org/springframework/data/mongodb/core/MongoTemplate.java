@@ -308,10 +308,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		this.readPreference = readPreference;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.ApplicationContext)
-	 */
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 
 		prepareIndexCreator(applicationContext);
@@ -378,19 +374,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return this.mongoConverter;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#executeAsStream(org.springframework.data.mongodb.core.query.Query, java.lang.Class)
-	 */
 	@Override
 	public <T> CloseableIterator<T> stream(Query query, Class<T> entityType) {
 		return stream(query, entityType, getCollectionName(entityType));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#stream(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
-	 */
 	@Override
 	public <T> CloseableIterator<T> stream(Query query, Class<T> entityType, String collectionName) {
 		return doStream(query, entityType, collectionName, entityType);
@@ -429,10 +417,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return this.operations.determineCollectionName(entityClass);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#executeCommand(java.lang.String)
-	 */
 	@Override
 	@SuppressWarnings("ConstantConditions")
 	public Document executeCommand(String jsonCommand) {
@@ -442,10 +426,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return execute(db -> db.runCommand(Document.parse(jsonCommand), Document.class));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#executeCommand(org.bson.Document)
-	 */
 	@Override
 	@SuppressWarnings("ConstantConditions")
 	public Document executeCommand(Document command) {
@@ -454,11 +434,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		return execute(db -> db.runCommand(command, Document.class));
 	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#executeCommand(org.bson.Document, com.mongodb.ReadPreference)
-	 */
 
 	@Override
 	@SuppressWarnings("ConstantConditions")
@@ -471,10 +446,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				: db.runCommand(command, Document.class));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#executeQuery(org.springframework.data.mongodb.core.query.Query, java.lang.String, org.springframework.data.mongodb.core.DocumentCallbackHandler)
-	 */
 	@Override
 	public void executeQuery(Query query, String collectionName, DocumentCallbackHandler dch) {
 		executeQuery(query, collectionName, dch, new QueryCursorPreparer(query, null));
@@ -511,10 +482,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				preparer != null ? preparer : CursorPreparer.NO_OP_PREPARER, documentCallbackHandler, collectionName);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#execute(org.springframework.data.mongodb.core.DbCallback)
-	 */
 	public <T> T execute(DbCallback<T> action) {
 
 		Assert.notNull(action, "DbCallback must not be null!");
@@ -527,20 +494,12 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#execute(java.lang.Class, org.springframework.data.mongodb.core.DbCallback)
-	 */
 	public <T> T execute(Class<?> entityClass, CollectionCallback<T> callback) {
 
 		Assert.notNull(entityClass, "EntityClass must not be null!");
 		return execute(getCollectionName(entityClass), callback);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#execute(java.lang.String, org.springframework.data.mongodb.core.DbCallback)
-	 */
 	public <T> T execute(String collectionName, CollectionCallback<T> callback) {
 
 		Assert.notNull(collectionName, "CollectionName must not be null!");
@@ -554,10 +513,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#withSession(com.mongodb.ClientSessionOptions)
-	 */
 	@Override
 	public SessionScoped withSession(ClientSessionOptions options) {
 
@@ -566,10 +521,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return withSession(() -> mongoDbFactory.getSession(options));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#withSession(com.mongodb.session.ClientSession)
-	 */
 	@Override
 	public MongoTemplate withSession(ClientSession session) {
 
@@ -589,18 +540,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		this.sessionSynchronization = sessionSynchronization;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#createCollection(java.lang.Class)
-	 */
 	public <T> MongoCollection<Document> createCollection(Class<T> entityClass) {
 		return createCollection(entityClass, operations.forType(entityClass).getCollectionOptions());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#createCollection(java.lang.Class, org.springframework.data.mongodb.core.CollectionOptions)
-	 */
 	public <T> MongoCollection<Document> createCollection(Class<T> entityClass,
 			@Nullable CollectionOptions collectionOptions) {
 
@@ -615,10 +558,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return doCreateCollection(getCollectionName(entityClass), convertToDocument(options, entityClass));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#createCollection(java.lang.String)
-	 */
 	public MongoCollection<Document> createCollection(String collectionName) {
 
 		Assert.notNull(collectionName, "CollectionName must not be null!");
@@ -626,10 +565,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return doCreateCollection(collectionName, new Document());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#createCollection(java.lang.String, org.springframework.data.mongodb.core.CollectionOptions)
-	 */
 	public MongoCollection<Document> createCollection(String collectionName,
 			@Nullable CollectionOptions collectionOptions) {
 
@@ -637,10 +572,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return doCreateCollection(collectionName, convertToDocument(collectionOptions));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#getCollection(java.lang.String)
-	 */
 	@SuppressWarnings("ConstantConditions")
 	public MongoCollection<Document> getCollection(String collectionName) {
 
@@ -649,18 +580,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return execute(db -> db.getCollection(collectionName, Document.class));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ExecutableInsertOperation#getCollection(java.lang.Class)
-	 */
 	public <T> boolean collectionExists(Class<T> entityClass) {
 		return collectionExists(getCollectionName(entityClass));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ExecutableInsertOperation#getCollection(java.lang.String)
-	 */
 	@SuppressWarnings("ConstantConditions")
 	public boolean collectionExists(String collectionName) {
 
@@ -677,18 +600,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		});
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ExecutableInsertOperation#dropCollection(java.lang.Class)
-	 */
 	public <T> void dropCollection(Class<T> entityClass) {
 		dropCollection(getCollectionName(entityClass));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ExecutableInsertOperation#dropCollection(java.lang.String)
-	 */
 	public void dropCollection(String collectionName) {
 
 		Assert.notNull(collectionName, "CollectionName must not be null!");
@@ -708,42 +623,22 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return indexOps(collectionName, null);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ExecutableInsertOperation#indexOps(java.lang.String)
-	 */
 	public IndexOperations indexOps(String collectionName, @Nullable Class<?> type) {
 		return new DefaultIndexOperations(this, collectionName, type);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ExecutableInsertOperation#indexOps(java.lang.Class)
-	 */
 	public IndexOperations indexOps(Class<?> entityClass) {
 		return indexOps(getCollectionName(entityClass), entityClass);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ExecutableInsertOperation#bulkOps(org.springframework.data.mongodb.core.BulkMode, java.lang.String)
-	 */
 	public BulkOperations bulkOps(BulkMode bulkMode, String collectionName) {
 		return bulkOps(bulkMode, null, collectionName);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ExecutableInsertOperation#bulkOps(org.springframework.data.mongodb.core.BulkMode, java.lang.Class)
-	 */
 	public BulkOperations bulkOps(BulkMode bulkMode, Class<?> entityClass) {
 		return bulkOps(bulkMode, entityClass, getCollectionName(entityClass));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ExecutableInsertOperation#bulkOps(org.springframework.data.mongodb.core.BulkMode, java.lang.Class, java.lang.String)
-	 */
 	public BulkOperations bulkOps(BulkMode mode, @Nullable Class<?> entityType, String collectionName) {
 
 		Assert.notNull(mode, "BulkMode must not be null!");
@@ -758,10 +653,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return operations;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#scriptOps()
-	 */
 	@Override
 	public ScriptOperations scriptOps() {
 		return new DefaultScriptOperations(this);
@@ -822,19 +713,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	// Find methods that take a Query to express the query and that return a List of objects.
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#findOne(org.springframework.data.mongodb.core.query.Query, java.lang.Class)
-	 */
 	@Override
 	public <T> List<T> find(Query query, Class<T> entityClass) {
 		return find(query, entityClass, getCollectionName(entityClass));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#findOne(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
-	 */
 	@Override
 	public <T> List<T> find(Query query, Class<T> entityClass, String collectionName) {
 
@@ -865,19 +748,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return doFindOne(collectionName, new Document(idKey, id), new Document(), entityClass);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#findDistinct(org.springframework.data.mongodb.core.query.Query, java.lang.String, java.lang.Class, java.lang.Class)
-	 */
 	@Override
 	public <T> List<T> findDistinct(Query query, String field, Class<?> entityClass, Class<T> resultClass) {
 		return findDistinct(query, field, getCollectionName(entityClass), entityClass, resultClass);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#findDistinct(org.springframework.data.mongodb.core.query.Query, java.lang.String, java.lang.String, java.lang.Class, java.lang.Class)
-	 */
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> List<T> findDistinct(Query query, String field, String collectionName, Class<?> entityClass,
@@ -1027,10 +902,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				getMappedSortObject(query, entityClass), entityClass, update, optionsToUse);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#findAndReplace(org.springframework.data.mongodb.core.query.Query, java.lang.Object, org.springframework.data.mongodb.core.FindAndReplaceOptions, java.lang.Class, java.lang.String, java.lang.Class)
-	 */
 	@Override
 	public <S, T> T findAndReplace(Query query, S replacement, FindAndReplaceOptions options, Class<S> entityType,
 			String collectionName, Class<T> resultType) {
@@ -1106,10 +977,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return count(query, null, collectionName);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#count(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
-	 */
 	public long count(Query query, @Nullable Class<?> entityClass, String collectionName) {
 
 		Assert.notNull(query, "Query must not be null!");
@@ -1135,10 +1002,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				collection -> collection.countDocuments(CountQuery.of(filter).toQueryDocument(), options));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#estimatedCount(java.lang.String)
-	 */
 	@Override
 	public long estimatedCount(String collectionName) {
 		return doEstimatedCount(collectionName, new EstimatedDocumentCountOptions());
@@ -1148,10 +1011,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return execute(collectionName, collection -> collection.estimatedDocumentCount(options));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#insert(java.lang.Object)
-	 */
 	@Override
 	public <T> T insert(T objectToSave) {
 
@@ -1161,10 +1020,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return insert(objectToSave, getCollectionName(ClassUtils.getUserClass(objectToSave)));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#insert(java.lang.Object, java.lang.String)
-	 */
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T insert(T objectToSave, String collectionName) {
@@ -1978,17 +1833,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return new GroupByResults<>(mappedResults, commandResult);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#aggregate(org.springframework.data.mongodb.core.aggregation.TypedAggregation, java.lang.Class)
-	 */
 	@Override
 	public <O> AggregationResults<O> aggregate(TypedAggregation<?> aggregation, Class<O> outputType) {
 		return aggregate(aggregation, getCollectionName(aggregation.getInputType()), outputType);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#aggregate(org.springframework.data.mongodb.core.aggregation.TypedAggregation, java.lang.String, java.lang.Class)
-	 */
 	@Override
 	public <O> AggregationResults<O> aggregate(TypedAggregation<?> aggregation, String inputCollectionName,
 			Class<O> outputType) {
@@ -1998,9 +1847,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return aggregate(aggregation, inputCollectionName, outputType, null);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#aggregate(org.springframework.data.mongodb.core.aggregation.Aggregation, java.lang.Class, java.lang.Class)
-	 */
 	@Override
 	public <O> AggregationResults<O> aggregate(Aggregation aggregation, Class<?> inputType, Class<O> outputType) {
 
@@ -2008,17 +1854,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				queryOperations.createAggregation(aggregation, inputType).getAggregationOperationContext());
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#aggregate(org.springframework.data.mongodb.core.aggregation.Aggregation, java.lang.String, java.lang.Class)
-	 */
 	@Override
 	public <O> AggregationResults<O> aggregate(Aggregation aggregation, String collectionName, Class<O> outputType) {
 		return aggregate(aggregation, collectionName, outputType, null);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#aggregateStream(org.springframework.data.mongodb.core.aggregation.TypedAggregation, java.lang.String, java.lang.Class)
-	 */
 	@Override
 	public <O> CloseableIterator<O> aggregateStream(TypedAggregation<?> aggregation, String inputCollectionName,
 			Class<O> outputType) {
@@ -2030,17 +1870,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return aggregateStream(aggregation, inputCollectionName, outputType, context);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#aggregateStream(org.springframework.data.mongodb.core.aggregation.TypedAggregation, java.lang.Class)
-	 */
 	@Override
 	public <O> CloseableIterator<O> aggregateStream(TypedAggregation<?> aggregation, Class<O> outputType) {
 		return aggregateStream(aggregation, getCollectionName(aggregation.getInputType()), outputType);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#aggregateStream(org.springframework.data.mongodb.core.aggregation.Aggregation, java.lang.Class, java.lang.Class)
-	 */
 	@Override
 	public <O> CloseableIterator<O> aggregateStream(Aggregation aggregation, Class<?> inputType, Class<O> outputType) {
 
@@ -2048,34 +1882,22 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				new TypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper));
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#aggregateStream(org.springframework.data.mongodb.core.aggregation.Aggregation, java.lang.String, java.lang.Class)
-	 */
 	@Override
 	public <O> CloseableIterator<O> aggregateStream(Aggregation aggregation, String collectionName, Class<O> outputType) {
 		return aggregateStream(aggregation, collectionName, outputType, null);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#findAllAndRemove(org.springframework.data.mongodb.core.query.Query, java.lang.String)
-	 */
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> List<T> findAllAndRemove(Query query, String collectionName) {
 		return (List<T>) findAllAndRemove(query, Object.class, collectionName);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#findAllAndRemove(org.springframework.data.mongodb.core.query.Query, java.lang.Class)
-	 */
 	@Override
 	public <T> List<T> findAllAndRemove(Query query, Class<T> entityClass) {
 		return findAllAndRemove(query, entityClass, getCollectionName(entityClass));
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoOperations#findAllAndRemove(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
-	 */
 	@Override
 	public <T> List<T> findAllAndRemove(Query query, Class<T> entityClass, String collectionName) {
 		return doFindAndDelete(collectionName, query, entityClass);
@@ -2243,55 +2065,31 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		});
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ExecutableFindOperation#query(java.lang.Class)
-	 */
 	@Override
 	public <T> ExecutableFind<T> query(Class<T> domainType) {
 		return new ExecutableFindOperationSupport(this).query(domainType);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ExecutableUpdateOperation#update(java.lang.Class)
-	 */
 	@Override
 	public <T> ExecutableUpdate<T> update(Class<T> domainType) {
 		return new ExecutableUpdateOperationSupport(this).update(domainType);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ExecutableRemoveOperation#remove(java.lang.Class)
-	 */
 	@Override
 	public <T> ExecutableRemove<T> remove(Class<T> domainType) {
 		return new ExecutableRemoveOperationSupport(this).remove(domainType);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ExecutableAggregationOperation#aggregateAndReturn(java.lang.Class)
-	 */
 	@Override
 	public <T> ExecutableAggregation<T> aggregateAndReturn(Class<T> domainType) {
 		return new ExecutableAggregationOperationSupport(this).aggregateAndReturn(domainType);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ExecutableAggregationOperation#aggregateAndReturn(java.lang.Class)
-	 */
 	@Override
 	public <T> ExecutableMapReduce<T> mapReduce(Class<T> domainType) {
 		return new ExecutableMapReduceOperationSupport(this).mapReduce(domainType);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ExecutableInsertOperation#insert(java.lang.Class)
-	 */
 	@Override
 	public <T> ExecutableInsert<T> insert(Class<T> domainType) {
 		return new ExecutableInsertOperationSupport(this).insert(domainType);
@@ -2326,10 +2124,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return func;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ExecutableInsertOperation#getCollectionNames()
-	 */
 	@SuppressWarnings("ConstantConditions")
 	public Set<String> getCollectionNames() {
 		return execute(db -> {
@@ -3156,10 +2950,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			this.collation = collation;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.CollectionCallback#doInCollection(com.mongodb.client.MongoCollection)
-		 */
 		@Override
 		public Document doInCollection(MongoCollection<Document> collection) throws MongoException, DataAccessException {
 
@@ -3251,10 +3041,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			this.collectionName = collectionName;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.MongoTemplate.DocumentCallback#doWith(org.bson.Document)
-		 */
 		@SuppressWarnings("unchecked")
 		public T doWith(Document document) {
 
@@ -3286,10 +3072,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			this.type = type;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.CursorPreparer#prepare(com.mongodb.DBCursor)
-		 */
 		public FindIterable<Document> prepare(FindIterable<Document> iterable) {
 
 			FindIterable<Document> cursorToUse = iterable;
@@ -3548,10 +3330,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			this.session = session;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.MongoTemplate#getCollection(java.lang.String)
-		 */
 		@Override
 		public MongoCollection<Document> getCollection(String collectionName) {
 
@@ -3559,10 +3337,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			return delegate.getCollection(collectionName);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.MongoTemplate#getDb()
-		 */
 		@Override
 		public MongoDatabase getDb() {
 

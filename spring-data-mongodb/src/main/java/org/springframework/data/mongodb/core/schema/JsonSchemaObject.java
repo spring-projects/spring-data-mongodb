@@ -506,19 +506,11 @@ public interface JsonSchemaObject {
 				this.name = name;
 			}
 
-			/*
-			 * (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type#representation()
-			 */
 			@Override
 			public String representation() {
 				return "type";
 			}
 
-			/*
-			 * (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type#value()
-			 */
 			@Override
 			public String value() {
 				return name;
@@ -554,19 +546,11 @@ public interface JsonSchemaObject {
 				this.name = name;
 			}
 
-			/*
-			 * (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type#representation()
-			 */
 			@Override
 			public String representation() {
 				return "bsonType";
 			}
 
-			/*
-			 * (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.schema.JsonSchemaObject.Type#value()
-			 */
 			@Override
 			public String value() {
 				return name;

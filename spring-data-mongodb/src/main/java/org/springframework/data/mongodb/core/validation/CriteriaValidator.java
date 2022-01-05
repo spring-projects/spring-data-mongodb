@@ -54,19 +54,11 @@ class CriteriaValidator implements Validator {
 		return new CriteriaValidator(criteria);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.validation.Validator#toDocument()
-	 */
 	@Override
 	public Document toDocument() {
 		return criteria.getCriteriaObject();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
 	@Override
 	public String toString() {
 		return SerializationUtils.serializeToJsonSafely(toDocument());

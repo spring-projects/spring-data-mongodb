@@ -66,10 +66,6 @@ public class MongoMappingEventPublisher implements ApplicationEventPublisher {
 		this.indexCreator = indexCreator;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.context.ApplicationEventPublisher#publishEvent(org.springframework.context.ApplicationEvent)
-	 */
 	@SuppressWarnings("unchecked")
 	public void publishEvent(ApplicationEvent event) {
 		if (event instanceof MappingContextEvent) {
@@ -77,9 +73,5 @@ public class MongoMappingEventPublisher implements ApplicationEventPublisher {
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.context.ApplicationEventPublisher#publishEvent(java.lang.Object)
-	 */
 	public void publishEvent(Object event) {}
 }

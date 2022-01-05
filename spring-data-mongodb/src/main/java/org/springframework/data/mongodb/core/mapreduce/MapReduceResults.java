@@ -57,10 +57,6 @@ public class MapReduceResults<T> implements Iterable<T> {
 		this.outputCollection = parseOutputCollection(rawResults);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Iterable#iterator()
-	 */
 	public Iterator<T> iterator() {
 		return mappedResults.iterator();
 	}

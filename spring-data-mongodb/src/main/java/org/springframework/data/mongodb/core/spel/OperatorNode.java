@@ -89,19 +89,11 @@ public class OperatorNode extends ExpressionNode {
 		this.operator = node;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.spel.ExpressionNode#isMathematicalOperation()
-	 */
 	@Override
 	public boolean isMathematicalOperation() {
 		return SUPPORTED_MATH_OPERATORS.contains(operator.getClass());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.spel.ExpressionNode#isConjunctionOperator()
-	 */
 	@Override
 	public boolean isLogicalOperator() {
 		return operator instanceof OpOr || operator instanceof OpAnd;

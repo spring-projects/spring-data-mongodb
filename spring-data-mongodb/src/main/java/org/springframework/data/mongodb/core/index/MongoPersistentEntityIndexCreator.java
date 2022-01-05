@@ -97,10 +97,6 @@ public class MongoPersistentEntityIndexCreator implements ApplicationListener<Ma
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.context.ApplicationListener#onApplicationEvent(org.springframework.context.ApplicationEvent)
-	 */
 	public void onApplicationEvent(MappingContextEvent<?, ?> event) {
 
 		if (!event.wasEmittedBy(mappingContext)) {

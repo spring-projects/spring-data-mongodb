@@ -45,19 +45,11 @@ public class AuditingEntityCallback implements BeforeConvertCallback<Object>, Or
 		this.auditingHandlerFactory = auditingHandlerFactory;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.event.BeforeConvertCallback#onBeforeConvert(java.lang.Object, java.lang.String)
-	 */
 	@Override
 	public Object onBeforeConvert(Object entity, String collection) {
 		return auditingHandlerFactory.getObject().markAudited(entity);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.core.Ordered#getOrder()
-	 */
 	@Override
 	public int getOrder() {
 		return 100;

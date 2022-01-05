@@ -27,10 +27,6 @@ import org.springframework.data.repository.config.RepositoryConfigurationExtensi
  */
 public class MongoRepositoryConfigNamespaceHandler extends MongoNamespaceHandler {
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.config.MongoNamespaceHandler#init()
-	 */
 	@Override
 	public void init() {
 

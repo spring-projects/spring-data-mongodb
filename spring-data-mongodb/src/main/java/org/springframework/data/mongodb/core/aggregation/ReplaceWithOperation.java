@@ -84,10 +84,6 @@ public class ReplaceWithOperation extends ReplaceRootOperation {
 		return value;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
 		return context.getMappedObject(new Document("$replaceWith", getReplacement().toDocumentExpression(context)));

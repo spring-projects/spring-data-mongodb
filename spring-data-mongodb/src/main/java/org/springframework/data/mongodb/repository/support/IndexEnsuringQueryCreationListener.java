@@ -70,10 +70,6 @@ class IndexEnsuringQueryCreationListener implements QueryCreationListener<PartTr
 		this.indexOperationsProvider = indexOperationsProvider;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.core.support.QueryCreationListener#onCreation(org.springframework.data.repository.query.RepositoryQuery)
-	 */
 	public void onCreation(PartTreeMongoQuery query) {
 
 		PartTree tree = query.getTree();

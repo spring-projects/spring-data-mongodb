@@ -50,10 +50,6 @@ public class GeoJsonLineString extends GeoJsonMultiPoint {
 		super(first, second, others);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.geo.GeoJsonMultiPoint#getType()
-	 */
 	@Override
 	public String getType() {
 		return TYPE;

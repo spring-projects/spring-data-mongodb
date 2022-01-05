@@ -85,10 +85,6 @@ public class BasicQuery extends Query {
 		this.sortObject = new Document();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.query.Query#addCriteria(org.springframework.data.mongodb.core.query.CriteriaDefinition)
-	 */
 	@Override
 	public Query addCriteria(CriteriaDefinition criteria) {
 
@@ -97,19 +93,11 @@ public class BasicQuery extends Query {
 		return this;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.query.Query#getQueryObject()
-	 */
 	@Override
 	public Document getQueryObject() {
 		return this.queryObject;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.query.Query#getFieldsObject()
-	 */
 	@Override
 	public Document getFieldsObject() {
 
@@ -119,10 +107,6 @@ public class BasicQuery extends Query {
 		return combinedFieldsObject;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.query.Query#getSortObject()
-	 */
 	@Override
 	public Document getSortObject() {
 
@@ -148,10 +132,6 @@ public class BasicQuery extends Query {
 		this.sortObject = sortObject;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.query.Query#isSorted()
-	 */
 	@Override
 	public boolean isSorted() {
 		return super.isSorted() || !sortObject.isEmpty();
@@ -171,10 +151,6 @@ public class BasicQuery extends Query {
 		this.fieldsObject = fieldsObject;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.query.Query#equals(java.lang.Object)
-	 */
 	@Override
 	public boolean equals(Object o) {
 
@@ -194,10 +170,6 @@ public class BasicQuery extends Query {
 				nullSafeEquals(sortObject, that.sortObject);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.query.Query#hashCode()
-	 */
 	@Override
 	public int hashCode() {
 

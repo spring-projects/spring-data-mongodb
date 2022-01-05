@@ -84,10 +84,6 @@ public class MongoQueryMethod extends QueryMethod {
 		this.annotationCache = new ConcurrentReferenceHashMap<>();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.QueryMethod#getParameters(java.lang.reflect.Method)
-	 */
 	@Override
 	protected MongoParameters createParameters(Method method) {
 		return new MongoParameters(method, isGeoNearQuery(method));
@@ -134,10 +130,6 @@ public class MongoQueryMethod extends QueryMethod {
 				.orElse(null);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.QueryMethod#getEntityInformation()
-	 */
 	@Override
 	@SuppressWarnings("unchecked")
 	public MongoEntityMetadata<?> getEntityInformation() {
@@ -168,18 +160,10 @@ public class MongoQueryMethod extends QueryMethod {
 		return this.metadata;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.QueryMethod#getDomainClass()
-	 */
 	protected Class<?> getDomainClass() {
 		return super.getDomainClass();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.QueryMethod#getParameters()
-	 */
 	@Override
 	public MongoParameters getParameters() {
 		return (MongoParameters) super.getParameters();

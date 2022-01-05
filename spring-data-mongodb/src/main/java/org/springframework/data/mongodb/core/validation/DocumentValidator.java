@@ -50,19 +50,11 @@ class DocumentValidator implements Validator {
 		return new DocumentValidator(new Document(validatorObject));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.validation.Validator#toDocument()
-	 */
 	@Override
 	public Document toDocument() {
 		return new Document(validatorObject);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
 	@Override
 	public String toString() {
 		return SerializationUtils.serializeToJsonSafely(validatorObject);

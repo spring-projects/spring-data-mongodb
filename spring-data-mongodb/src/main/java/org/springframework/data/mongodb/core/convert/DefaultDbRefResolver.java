@@ -70,10 +70,6 @@ public class DefaultDbRefResolver extends DefaultReferenceResolver implements Db
 		this.mongoDbFactory = mongoDbFactory;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#resolveDbRef(org.springframework.data.mongodb.core.mapping.MongoPersistentProperty, org.springframework.data.mongodb.core.convert.DbRefResolverCallback)
-	 */
 	@Override
 	public Object resolveDbRef(MongoPersistentProperty property, @Nullable DBRef dbref, DbRefResolverCallback callback,
 			DbRefProxyHandler handler) {
@@ -89,20 +85,12 @@ public class DefaultDbRefResolver extends DefaultReferenceResolver implements Db
 		return callback.resolve(property);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#fetch(com.mongodb.DBRef)
-	 */
 	@Override
 	public Document fetch(DBRef dbRef) {
 		return getReferenceLoader().fetchOne(DocumentReferenceQuery.forSingleDocument(Filters.eq("_id", dbRef.getId())),
 				ReferenceCollection.fromDBRef(dbRef));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#bulkFetch(java.util.List)
-	 */
 	@Override
 	public List<Document> bulkFetch(List<DBRef> refs) {
 

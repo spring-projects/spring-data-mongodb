@@ -81,10 +81,6 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 		this.mapper = new QueryMapper(converter);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.querydsl.mongodb.MongodbSerializer#visit(com.querydsl.core.types.Constant, java.lang.Void)
-	 */
 	@Override
 	public Object visit(Constant<?> expr, Void context) {
 
@@ -95,10 +91,6 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 		return converter.convertToMongoType(expr.getConstant());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.querydsl.mongodb.MongodbSerializer#getKeyForPath(com.querydsl.core.types.Path, com.querydsl.core.types.PathMetadata)
-	 */
 	@Override
 	protected String getKeyForPath(Path<?> expr, PathMetadata metadata) {
 
@@ -113,10 +105,6 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 		return property == null ? super.getKeyForPath(expr, metadata) : property.getFieldName();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see  org.springframework.data.mongodb.repository.support.MongodbSerializer#asDocument(java.lang.String, java.lang.Object)
-	 */
 	@Override
 	protected Document asDocument(@Nullable String key, @Nullable Object value) {
 
@@ -125,10 +113,6 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 		return super.asDocument(key, value instanceof Pattern ? value : converter.convertToMongoType(value));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.querydsl.mongodb.MongodbSerializer#isReference(com.querydsl.core.types.Path)
-	 */
 	@Override
 	protected boolean isReference(@Nullable Path<?> path) {
 
@@ -136,10 +120,6 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 		return property == null ? false : property.isAssociation();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.querydsl.mongodb.MongodbSerializer#asReference(java.lang.Object)
-	 */
 	@Override
 	protected DBRef asReference(@Nullable Object constant) {
 		return asReference(constant, null);
@@ -149,10 +129,6 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 		return converter.toDBRef(constant, getPropertyForPotentialDbRef(path));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.querydsl.mongodb.MongodbSerializer#asDBKey(com.querydsl.core.types.Operation, int)
-	 */
 	@Override
 	protected String asDBKey(@Nullable Operation<?> expr, int index) {
 
@@ -174,10 +150,6 @@ class SpringDataMongodbSerializer extends MongodbDocumentSerializer {
 		return property.isIdProperty() ? key.replaceAll("." + ID_KEY + "$", "") : key;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.querydsl.mongodb.MongodbSerializer#convert(com.querydsl.core.types.Path, com.querydsl.core.types.Constant)
-	 */
 	protected Object convert(@Nullable Path<?> path, @Nullable Constant<?> constant) {
 
 		if (!isReference(path)) {

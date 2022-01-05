@@ -84,37 +84,21 @@ public class GeoJsonMultiPoint implements GeoJson<Iterable<Point>> {
 		this.points.addAll(Arrays.asList(others));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.geo.GeoJson#getType()
-	 */
 	@Override
 	public String getType() {
 		return TYPE;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.geo.GeoJson#getCoordinates()
-	 */
 	@Override
 	public List<Point> getCoordinates() {
 		return Collections.unmodifiableList(this.points);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
 	@Override
 	public int hashCode() {
 		return ObjectUtils.nullSafeHashCode(this.points);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
 	@Override
 	public boolean equals(Object obj) {
 

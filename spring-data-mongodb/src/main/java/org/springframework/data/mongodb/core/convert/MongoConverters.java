@@ -336,10 +336,6 @@ abstract class MongoConverters {
 
 		INSTANCE;
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
 		@Override
 		public String convert(Currency source) {
 			return source.getCurrencyCode();
@@ -357,10 +353,6 @@ abstract class MongoConverters {
 
 		INSTANCE;
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
 		@Override
 		public Currency convert(String source) {
 			return StringUtils.hasText(source) ? Currency.getInstance(source) : null;
@@ -380,19 +372,11 @@ abstract class MongoConverters {
 
 		INSTANCE;
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.ConverterFactory#getConverter(java.lang.Class)
-		 */
 		@Override
 		public <T extends Number> Converter<Number, T> getConverter(Class<T> targetType) {
 			return new NumberToNumberConverter<T>(targetType);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.ConditionalConverter#matches(org.springframework.core.convert.TypeDescriptor, org.springframework.core.convert.TypeDescriptor)
-		 */
 		@Override
 		public boolean matches(TypeDescriptor sourceType, TypeDescriptor targetType) {
 			return !sourceType.equals(targetType);
@@ -414,10 +398,6 @@ abstract class MongoConverters {
 				this.targetType = targetType;
 			}
 
-			/*
-			 * (non-Javadoc)
-			 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-			 */
 			@Override
 			public T convert(Number source) {
 

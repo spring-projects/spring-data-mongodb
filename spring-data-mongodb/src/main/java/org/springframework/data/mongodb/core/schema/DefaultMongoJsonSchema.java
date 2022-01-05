@@ -53,10 +53,6 @@ class DefaultMongoJsonSchema implements MongoJsonSchema {
 		this.encryptionMetadata = encryptionMetadata;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.schema.MongoJsonSchema#schema()
-	 */
 	@Override
 	public Document schemaDocument() {
 

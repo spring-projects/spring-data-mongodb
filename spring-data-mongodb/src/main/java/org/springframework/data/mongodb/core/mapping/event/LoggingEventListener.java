@@ -34,10 +34,6 @@ public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 
 	private static final Log LOGGER = LogFactory.getLog(LoggingEventListener.class);
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener#onBeforeConvert(org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent)
-	 */
 	@Override
 	public void onBeforeConvert(BeforeConvertEvent<Object> event) {
 		if(LOGGER.isInfoEnabled()) {
@@ -45,10 +41,6 @@ public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener#onBeforeSave(org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent)
-	 */
 	@Override
 	public void onBeforeSave(BeforeSaveEvent<Object> event) {
 		if(LOGGER.isInfoEnabled()) {
@@ -56,10 +48,6 @@ public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener#onAfterSave(org.springframework.data.mongodb.core.mapping.event.AfterSaveEvent)
-	 */
 	@Override
 	public void onAfterSave(AfterSaveEvent<Object> event) {
 		if(LOGGER.isInfoEnabled()) {
@@ -67,10 +55,6 @@ public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener#onAfterLoad(org.springframework.data.mongodb.core.mapping.event.AfterLoadEvent)
-	 */
 	@Override
 	public void onAfterLoad(AfterLoadEvent<Object> event) {
 		if(LOGGER.isInfoEnabled()) {
@@ -78,10 +62,6 @@ public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener#onAfterConvert(org.springframework.data.mongodb.core.mapping.event.AfterConvertEvent)
-	 */
 	@Override
 	public void onAfterConvert(AfterConvertEvent<Object> event) {
 		if(LOGGER.isInfoEnabled()) {
@@ -89,10 +69,6 @@ public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener#onAfterDelete(org.springframework.data.mongodb.core.mapping.event.AfterDeleteEvent)
-	 */
 	@Override
 	public void onAfterDelete(AfterDeleteEvent<Object> event) {
 		if(LOGGER.isInfoEnabled()) {
@@ -100,10 +76,6 @@ public class LoggingEventListener extends AbstractMongoEventListener<Object> {
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener#onBeforeDelete(org.springframework.data.mongodb.core.mapping.event.BeforeDeleteEvent)
-	 */
 	@Override
 	public void onBeforeDelete(BeforeDeleteEvent<Object> event) {
 		if(LOGGER.isInfoEnabled()) {

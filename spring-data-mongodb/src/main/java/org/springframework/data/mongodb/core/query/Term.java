@@ -93,10 +93,6 @@ public class Term {
 		return negated ? negateRaw(formatted) : formatted;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
 	@Override
 	public boolean equals(Object o) {
 
@@ -114,10 +110,6 @@ public class Term {
 				&& ObjectUtils.nullSafeEquals(raw, term.raw);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
 	@Override
 	public int hashCode() {
 
@@ -130,10 +122,6 @@ public class Term {
 		return result;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
 	@Override
 	public String toString() {
 		return getFormatted();

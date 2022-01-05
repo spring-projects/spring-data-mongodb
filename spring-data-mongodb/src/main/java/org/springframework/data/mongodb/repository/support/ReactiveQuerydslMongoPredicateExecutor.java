@@ -83,10 +83,6 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 		this.mongoOperations = mongoOperations;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor#findOne(com.querydsl.core.types.Predicate)
-	 */
 	@Override
 	public Mono<T> findOne(Predicate predicate) {
 
@@ -95,10 +91,6 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 		return createQueryFor(predicate).fetchOne();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor#findAll(com.querydsl.core.types.Predicate)
-	 */
 	@Override
 	public Flux<T> findAll(Predicate predicate) {
 
@@ -107,10 +99,6 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 		return createQueryFor(predicate).fetch();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor#findAll(com.querydsl.core.types.Predicate, com.querydsl.core.types.OrderSpecifier[])
-	 */
 	@Override
 	public Flux<T> findAll(Predicate predicate, OrderSpecifier<?>... orders) {
 
@@ -120,10 +108,6 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 		return createQueryFor(predicate).orderBy(orders).fetch();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor#findAll(com.querydsl.core.types.Predicate, org.springframework.data.domain.Sort)
-	 */
 	@Override
 	public Flux<T> findAll(Predicate predicate, Sort sort) {
 
@@ -133,10 +117,6 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 		return applySorting(createQueryFor(predicate), sort).fetch();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor#findAll(com.querydsl.core.types.OrderSpecifier[])
-	 */
 	@Override
 	public Flux<T> findAll(OrderSpecifier<?>... orders) {
 
@@ -145,10 +125,6 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 		return createQuery().orderBy(orders).fetch();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor#count(com.querydsl.core.types.Predicate)
-	 */
 	@Override
 	public Mono<Long> count(Predicate predicate) {
 
@@ -157,10 +133,6 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 		return createQueryFor(predicate).fetchCount();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor#exists(com.querydsl.core.types.Predicate)
-	 */
 	@Override
 	public Mono<Boolean> exists(Predicate predicate) {
 
@@ -169,10 +141,6 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 		return createQueryFor(predicate).fetchCount().map(it -> it != 0);
 	}
 
-	/* 
-	 * (non-Javadoc)
-	 * @see org.springframework.data.querydsl.ReactiveQuerydslPredicateExecutor#findBy(com.querydsl.core.types.Predicate, java.util.function.Function)
-	 */
 	@Override
 	public <S extends T, R, P extends Publisher<R>> P findBy(Predicate predicate,
 			Function<FluentQuery.ReactiveFluentQuery<S>, P> queryFunction) {
@@ -240,37 +208,21 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 			return new ReactiveFluentQuerydsl<>(predicate, sort, resultType, fieldsToInclude);
 		}
 
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.FluentQuery.ReactiveFluentQuery#one()
-		 */
 		@Override
 		public Mono<T> one() {
 			return createQuery().fetchOne();
 		}
 
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.FluentQuery.ReactiveFluentQuery#first()
-		 */
 		@Override
 		public Mono<T> first() {
 			return createQuery().fetchFirst();
 		}
 
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.FluentQuery.ReactiveFluentQuery#all()
-		 */
 		@Override
 		public Flux<T> all() {
 			return createQuery().fetch();
 		}
 
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.FluentQuery.ReactiveFluentQuery#page(org.springframework.data.domain.Pageable)
-		 */
 		@Override
 		public Mono<Page<T>> page(Pageable pageable) {
 
@@ -279,19 +231,11 @@ public class ReactiveQuerydslMongoPredicateExecutor<T> extends QuerydslPredicate
 			return createQuery().fetchPage(pageable);
 		}
 
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.FluentQuery.ReactiveFluentQuery#count()
-		 */
 		@Override
 		public Mono<Long> count() {
 			return createQuery().fetchCount();
 		}
 
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.FluentQuery.ReactiveFluentQuery#exists()
-		 */
 		@Override
 		public Mono<Boolean> exists() {
 			return count().map(it -> it > 0).defaultIfEmpty(false);

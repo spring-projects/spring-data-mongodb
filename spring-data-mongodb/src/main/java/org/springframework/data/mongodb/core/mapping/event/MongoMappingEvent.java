@@ -65,10 +65,6 @@ public class MongoMappingEvent<T> extends ApplicationEvent {
 		return collectionName;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.util.EventObject#getSource()
-	 */
 	@SuppressWarnings({ "unchecked" })
 	@Override
 	public T getSource() {

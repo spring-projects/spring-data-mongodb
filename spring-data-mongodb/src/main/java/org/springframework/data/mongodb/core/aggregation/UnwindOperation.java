@@ -85,10 +85,6 @@ public class UnwindOperation
 		this.preserveNullAndEmptyArrays = preserveNullAndEmptyArrays;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
 
@@ -108,19 +104,11 @@ public class UnwindOperation
 		return new Document(getOperator(), unwindArgs);
 	}
 
-	/* 
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
-	 */
 	@Override
 	public String getOperator() {
 		return "$unwind";
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation#getFields()
-	 */
 	@Override
 	public ExposedFields getFields() {
 		return arrayIndex != null ? ExposedFields.from(arrayIndex) : ExposedFields.from();
@@ -210,10 +198,6 @@ public class UnwindOperation
 			return new UnwindOperationBuilder();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.UnwindOperation.EmptyArraysBuilder#preserveNullAndEmptyArrays()
-		 */
 		@Override
 		public UnwindOperation preserveNullAndEmptyArrays() {
 
@@ -224,10 +208,6 @@ public class UnwindOperation
 			return new UnwindOperation(field, true);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.UnwindOperation.EmptyArraysBuilder#skipNullAndEmptyArrays()
-		 */
 		@Override
 		public UnwindOperation skipNullAndEmptyArrays() {
 
@@ -238,10 +218,6 @@ public class UnwindOperation
 			return new UnwindOperation(field, false);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.UnwindOperation.IndexBuilder#arrayIndex(java.lang.String)
-		 */
 		@Override
 		public EmptyArraysBuilder arrayIndex(String field) {
 
@@ -250,10 +226,6 @@ public class UnwindOperation
 			return this;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.UnwindOperation.IndexBuilder#noArrayIndex()
-		 */
 		@Override
 		public EmptyArraysBuilder noArrayIndex() {
 
@@ -261,10 +233,6 @@ public class UnwindOperation
 			return this;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.UnwindOperation.PathBuilder#path(java.lang.String)
-		 */
 		@Override
 		public UnwindOperationBuilder path(String path) {
 

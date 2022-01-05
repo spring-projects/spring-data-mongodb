@@ -391,10 +391,6 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 		return new GroupOperationBuilder(this, new Operation(keyword, null, reference, value));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getFields()
-	 */
 	@Override
 	public ExposedFields getFields() {
 
@@ -407,10 +403,6 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 		return fields;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
 
@@ -444,10 +436,6 @@ public class GroupOperation implements FieldsExposingAggregationOperation {
 		return new Document(getOperator(), operationObject);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
-	 */
 	@Override
 	public String getOperator() {
 		return "$group";

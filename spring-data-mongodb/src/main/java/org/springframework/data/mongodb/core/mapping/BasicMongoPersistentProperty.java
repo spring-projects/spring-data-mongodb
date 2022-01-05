@@ -120,10 +120,6 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		return SUPPORTED_ID_PROPERTY_NAMES.contains(getName()) && !hasExplicitFieldName();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#isExplicitIdProperty()
-	 */
 	@Override
 	public boolean isExplicitIdProperty() {
 		return super.isIdProperty();
@@ -161,10 +157,6 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		return fieldName;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#getFieldType()
-	 */
 	@Override
 	public Class<?> getFieldType() {
 
@@ -214,10 +206,6 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		return annotation != null ? annotation.value() : null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#getFieldOrder()
-	 */
 	public int getFieldOrder() {
 
 		org.springframework.data.mongodb.core.mapping.Field annotation = findAnnotation(
@@ -226,10 +214,6 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		return annotation != null ? annotation.order() : Integer.MAX_VALUE;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#skipNullValues()
-	 */
 	@Override
 	public boolean writeNullValues() {
 
@@ -239,73 +223,41 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 		return annotation != null && annotation.write() == Field.Write.ALWAYS;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mapping.model.AbstractPersistentProperty#createAssociation()
-	 */
 	@Override
 	protected Association<MongoPersistentProperty> createAssociation() {
 		return new Association<MongoPersistentProperty>(this, null);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#isDbReference()
-	 */
 	public boolean isDbReference() {
 		return isAnnotationPresent(DBRef.class);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#isDocumentReference()
-	 */
 	@Override
 	public boolean isDocumentReference() {
 		return isAnnotationPresent(DocumentReference.class);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#getDBRef()
-	 */
 	@Nullable
 	public DBRef getDBRef() {
 		return findAnnotation(DBRef.class);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#getDocumentReference()
-	 */
 	@Nullable
 	@Override
 	public DocumentReference getDocumentReference() {
 		return findAnnotation(DocumentReference.class);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#isLanguageProperty()
-	 */
 	@Override
 	public boolean isLanguageProperty() {
 		return getFieldName().equals(LANGUAGE_FIELD_NAME) || isExplicitLanguageProperty();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#isExplicitLanguageProperty()
-	 */
 	@Override
 	public boolean isExplicitLanguageProperty() {
 		return isAnnotationPresent(Language.class);
 	};
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentProperty#isTextScoreProperty()
-	 */
 	@Override
 	public boolean isTextScoreProperty() {
 		return isAnnotationPresent(TextScore.class);

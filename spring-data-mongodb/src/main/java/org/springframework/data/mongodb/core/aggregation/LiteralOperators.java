@@ -76,10 +76,6 @@ public class LiteralOperators {
 			super(value);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AbstractAggregationExpression#getMongoMethod()
-		 */
 		@Override
 		protected String getMongoMethod() {
 			return "$literal";

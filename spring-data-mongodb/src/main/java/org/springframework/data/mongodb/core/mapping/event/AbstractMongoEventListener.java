@@ -42,10 +42,6 @@ public abstract class AbstractMongoEventListener<E> implements ApplicationListen
 		this.domainClass = typeArgument == null ? Object.class : typeArgument;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.context.ApplicationListener#onApplicationEvent(org.springframework.context.ApplicationEvent)
-	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public void onApplicationEvent(MongoMappingEvent<?> event) {

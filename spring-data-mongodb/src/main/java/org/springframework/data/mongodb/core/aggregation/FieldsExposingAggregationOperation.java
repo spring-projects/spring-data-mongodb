@@ -46,10 +46,6 @@ public interface FieldsExposingAggregationOperation extends AggregationOperation
 	 */
 	interface InheritsFieldsAggregationOperation extends FieldsExposingAggregationOperation {
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation#inheritsFields()
-		 */
 		@Override
 		default boolean inheritsFields() {
 			return true;

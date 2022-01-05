@@ -44,9 +44,6 @@ abstract class AbstractAggregationExpression implements AggregationExpression {
 		this.value = value;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpression#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
 		return toDocument(this.value, context);

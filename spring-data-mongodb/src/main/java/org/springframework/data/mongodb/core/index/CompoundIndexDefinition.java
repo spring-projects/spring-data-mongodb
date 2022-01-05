@@ -39,10 +39,6 @@ public class CompoundIndexDefinition extends Index {
 		this.keys = keys;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.index.Index#getIndexKeys()
-	 */
 	@Override
 	public Document getIndexKeys() {
 

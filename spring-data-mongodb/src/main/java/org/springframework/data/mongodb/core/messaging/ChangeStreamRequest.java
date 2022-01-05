@@ -117,19 +117,11 @@ public class ChangeStreamRequest<T>
 		this.messageListener = messageListener;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.monitor.SubscriptionRequest#getMessageListener()
-	 */
 	@Override
 	public MessageListener<ChangeStreamDocument<Document>, ? super T> getMessageListener() {
 		return messageListener;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.monitor.SubscriptionRequest#getRequestOptions()
-	 */
 	@Override
 	public ChangeStreamRequestOptions getRequestOptions() {
 		return options;
@@ -220,28 +212,16 @@ public class ChangeStreamRequest<T>
 			return options;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.monitor.SubscriptionRequest.RequestOptions#getCollectionName()
-		 */
 		@Override
 		public String getCollectionName() {
 			return collectionName;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.monitor.SubscriptionRequest.RequestOptions#getDatabaseName()
-		 */
 		@Override
 		public String getDatabaseName() {
 			return databaseName;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.monitor.SubscriptionRequest.RequestOptions#maxAwaitTime()
-		 */
 		@Override
 		public Duration maxAwaitTime() {
 			return maxAwaitTime != null ? maxAwaitTime : RequestOptions.super.maxAwaitTime();

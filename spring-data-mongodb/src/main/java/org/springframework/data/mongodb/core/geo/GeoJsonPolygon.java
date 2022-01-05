@@ -112,19 +112,11 @@ public class GeoJsonPolygon extends Polygon implements GeoJson<List<GeoJsonLineS
 		return polygon;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.geo.GeoJson#getType()
-	 */
 	@Override
 	public String getType() {
 		return TYPE;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.geo.GeoJson#getCoordinates()
-	 */
 	@Override
 	public List<GeoJsonLineString> getCoordinates() {
 		return Collections.unmodifiableList(this.coordinates);

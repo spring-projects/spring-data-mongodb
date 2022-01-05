@@ -106,10 +106,6 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 		this.options = options;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * org.springframework.transaction.support.AbstractPlatformTransactionManager#doGetTransaction()
-	 */
 	@Override
 	protected Object doGetTransaction() throws TransactionException {
 
@@ -118,19 +114,11 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 		return new MongoTransactionObject(resourceHolder);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * org.springframework.transaction.support.AbstractPlatformTransactionManager#isExistingTransaction(java.lang.Object)
-	 */
 	@Override
 	protected boolean isExistingTransaction(Object transaction) throws TransactionException {
 		return extractMongoTransaction(transaction).hasResourceHolder();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * org.springframework.transaction.support.AbstractPlatformTransactionManager#doBegin(java.lang.Object, org.springframework.transaction.TransactionDefinition)
-	 */
 	@Override
 	protected void doBegin(Object transaction, TransactionDefinition definition) throws TransactionException {
 
@@ -160,10 +148,6 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 		TransactionSynchronizationManager.bindResource(getRequiredDbFactory(), resourceHolder);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * org.springframework.transaction.support.AbstractPlatformTransactionManager#doSuspend(java.lang.Object)
-	 */
 	@Override
 	protected Object doSuspend(Object transaction) throws TransactionException {
 
@@ -173,19 +157,11 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 		return TransactionSynchronizationManager.unbindResource(getRequiredDbFactory());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * org.springframework.transaction.support.AbstractPlatformTransactionManager#doResume(java.lang.Object, java.lang.Object)
-	 */
 	@Override
 	protected void doResume(@Nullable Object transaction, Object suspendedResources) {
 		TransactionSynchronizationManager.bindResource(getRequiredDbFactory(), suspendedResources);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * org.springframework.transaction.support.AbstractPlatformTransactionManager#doCommit(org.springframework.transaction.support.DefaultTransactionStatus)
-	 */
 	@Override
 	protected final void doCommit(DefaultTransactionStatus status) throws TransactionException {
 
@@ -236,10 +212,6 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 		transactionObject.commitTransaction();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * org.springframework.transaction.support.AbstractPlatformTransactionManager#doRollback(org.springframework.transaction.support.DefaultTransactionStatus)
-	 */
 	@Override
 	protected void doRollback(DefaultTransactionStatus status) throws TransactionException {
 
@@ -259,10 +231,6 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * org.springframework.transaction.support.AbstractPlatformTransactionManager#doSetRollbackOnly(org.springframework.transaction.support.DefaultTransactionStatus)
-	 */
 	@Override
 	protected void doSetRollbackOnly(DefaultTransactionStatus status) throws TransactionException {
 
@@ -270,10 +238,6 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 		transactionObject.getRequiredResourceHolder().setRollbackOnly();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * org.springframework.transaction.support.AbstractPlatformTransactionManager#doCleanupAfterCompletion(java.lang.Object)
-	 */
 	@Override
 	protected void doCleanupAfterCompletion(Object transaction) {
 
@@ -325,19 +289,11 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 		return dbFactory;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.transaction.support.ResourceTransactionManager#getResourceFactory()
-	 */
 	@Override
 	public MongoDatabaseFactory getResourceFactory() {
 		return getRequiredDbFactory();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-	 */
 	@Override
 	public void afterPropertiesSet() {
 		getRequiredDbFactory();
@@ -505,19 +461,11 @@ public class MongoTransactionManager extends AbstractPlatformTransactionManager
 			return session;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see  org.springframework.transaction.support.SmartTransactionObject#isRollbackOnly()
-		 */
 		@Override
 		public boolean isRollbackOnly() {
 			return this.resourceHolder != null && this.resourceHolder.isRollbackOnly();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see  org.springframework.transaction.support.SmartTransactionObject#flush()
-		 */
 		@Override
 		public void flush() {
 			TransactionSynchronizationUtils.triggerFlush();

@@ -82,10 +82,6 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	// Methods from CrudRepository
 	// -------------------------------------------------------------------------
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.CrudRepository#save(java.lang.Object)
-	 */
 	@Override
 	public <S extends T> S save(S entity) {
 
@@ -98,10 +94,6 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		return mongoOperations.save(entity, entityInformation.getCollectionName());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.MongoRepository#saveAll(java.lang.Iterable)
-	 */
 	@Override
 	public <S extends T> List<S> saveAll(Iterable<S> entities) {
 
@@ -119,10 +111,6 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		return source.stream().map(this::save).collect(Collectors.toList());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.CrudRepository#findById(java.io.Serializable)
-	 */
 	@Override
 	public Optional<T> findById(ID id) {
 
@@ -132,10 +120,6 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 				mongoOperations.findById(id, entityInformation.getJavaType(), entityInformation.getCollectionName()));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.CrudRepository#existsById(java.lang.Object)
-	 */
 	@Override
 	public boolean existsById(ID id) {
 
@@ -145,19 +129,11 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 				entityInformation.getCollectionName());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.CrudRepository#findAll()
-	 */
 	@Override
 	public List<T> findAll() {
 		return findAll(new Query());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.CrudRepository#findAllById(java.lang.Iterable)
-	 */
 	@Override
 	public Iterable<T> findAllById(Iterable<ID> ids) {
 
@@ -166,19 +142,11 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		return findAll(getIdQuery(ids));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.CrudRepository#count()
-	 */
 	@Override
 	public long count() {
 		return mongoOperations.count(new Query(), entityInformation.getCollectionName());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.CrudRepository#deleteById(java.lang.Object)
-	 */
 	@Override
 	public void deleteById(ID id) {
 
@@ -187,10 +155,6 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		mongoOperations.remove(getIdQuery(id), entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.CrudRepository#delete(java.lang.Object)
-	 */
 	@Override
 	public void delete(T entity) {
 
@@ -206,10 +170,6 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.CrudRepository#deleteAllById(java.lang.Iterable)
-	 */
 	@Override
 	public void deleteAllById(Iterable<? extends ID> ids) {
 
@@ -218,10 +178,6 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		mongoOperations.remove(getIdQuery(ids), entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.CrudRepository#delete(java.lang.Iterable)
-	 */
 	@Override
 	public void deleteAll(Iterable<? extends T> entities) {
 
@@ -230,10 +186,6 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		entities.forEach(this::delete);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.CrudRepository#deleteAll()
-	 */
 	@Override
 	public void deleteAll() {
 		mongoOperations.remove(new Query(), entityInformation.getCollectionName());
@@ -243,10 +195,6 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	// Methods from PagingAndSortingRepository
 	// -------------------------------------------------------------------------
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.PagingAndSortingRepository#findAll(org.springframework.data.domain.Pageable)
-	 */
 	@Override
 	public Page<T> findAll(Pageable pageable) {
 
@@ -258,10 +206,6 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		return new PageImpl<>(list, pageable, count);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.PagingAndSortingRepository#findAll(org.springframework.data.domain.Sort)
-	 */
 	@Override
 	public List<T> findAll(Sort sort) {
 
@@ -274,10 +218,6 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	// Methods from MongoRepository
 	// -------------------------------------------------------------------------
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.MongoRepository#insert(java.lang.Object)
-	 */
 	@Override
 	public <S extends T> S insert(S entity) {
 
@@ -286,10 +226,6 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		return mongoOperations.insert(entity, entityInformation.getCollectionName());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.MongoRepository#insert(java.lang.Iterable)
-	 */
 	@Override
 	public <S extends T> List<S> insert(Iterable<S> entities) {
 
@@ -308,10 +244,6 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 	// Methods from QueryByExampleExecutor
 	// -------------------------------------------------------------------------
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.QueryByExampleExecutor#findOne(org.springframework.data.domain.Example)
-	 */
 	@Override
 	public <S extends T> Optional<S> findOne(Example<S> example) {
 
@@ -324,19 +256,11 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 				.ofNullable(mongoOperations.findOne(query, example.getProbeType(), entityInformation.getCollectionName()));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.MongoRepository#findAllByExample(org.springframework.data.domain.Example)
-	 */
 	@Override
 	public <S extends T> List<S> findAll(Example<S> example) {
 		return findAll(example, Sort.unsorted());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.MongoRepository#findAllByExample(org.springframework.data.domain.Example, org.springframework.data.domain.Sort)
-	 */
 	@Override
 	public <S extends T> List<S> findAll(Example<S> example, Sort sort) {
 
@@ -350,10 +274,6 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		return mongoOperations.find(query, example.getProbeType(), entityInformation.getCollectionName());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.MongoRepository#findAllByExample(org.springframework.data.domain.Example, org.springframework.data.domain.Pageable)
-	 */
 	@Override
 	public <S extends T> Page<S> findAll(Example<S> example, Pageable pageable) {
 
@@ -369,10 +289,6 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 				.count(Query.of(query).limit(-1).skip(-1), example.getProbeType(), entityInformation.getCollectionName()));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.QueryByExampleExecutor#count(org.springframework.data.domain.Example)
-	 */
 	@Override
 	public <S extends T> long count(Example<S> example) {
 
@@ -384,10 +300,6 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		return mongoOperations.count(query, example.getProbeType(), entityInformation.getCollectionName());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.QueryByExampleExecutor#exists(org.springframework.data.domain.Example)
-	 */
 	@Override
 	public <S extends T> boolean exists(Example<S> example) {
 
@@ -399,10 +311,6 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 		return mongoOperations.exists(query, example.getProbeType(), entityInformation.getCollectionName());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.QueryByExampleExecutor#findBy(org.springframework.data.domain.Example, java.util.function.Function)
-	 */
 	@Override
 	public <S extends T, R> R findBy(Example<S> example,
 			Function<org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery<S>, R> queryFunction) {
@@ -466,37 +374,21 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 			return new FluentQueryByExample<>(predicate, sort, resultType, fieldsToInclude);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#oneValue()
-		 */
 		@Override
 		public T oneValue() {
 			return createQuery().oneValue();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#first()
-		 */
 		@Override
 		public T firstValue() {
 			return createQuery().firstValue();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#all()
-		 */
 		@Override
 		public List<T> all() {
 			return createQuery().all();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#page(org.springframework.data.domain.Pageable)
-		 */
 		@Override
 		public Page<T> page(Pageable pageable) {
 
@@ -507,28 +399,16 @@ public class SimpleMongoRepository<T, ID> implements MongoRepository<T, ID> {
 			return PageableExecutionUtils.getPage(list, pageable, this::count);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#stream()
-		 */
 		@Override
 		public Stream<T> stream() {
 			return createQuery().stream();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#count()
-		 */
 		@Override
 		public long count() {
 			return createQuery().count();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.FluentQuery.FetchableFluentQuery#exists()
-		 */
 		@Override
 		public boolean exists() {
 			return createQuery().exists();

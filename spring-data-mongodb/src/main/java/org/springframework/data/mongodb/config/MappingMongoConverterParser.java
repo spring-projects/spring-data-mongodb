@@ -376,10 +376,6 @@ public class MappingMongoConverterParser implements BeanDefinitionParser {
 			this.delegates = new HashSet<>(Arrays.asList(filters));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.type.filter.TypeFilter#match(org.springframework.core.type.classreading.MetadataReader, org.springframework.core.type.classreading.MetadataReaderFactory)
-		 */
 		public boolean match(MetadataReader metadataReader, MetadataReaderFactory metadataReaderFactory)
 				throws IOException {
 

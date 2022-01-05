@@ -66,10 +66,6 @@ public class SortByCountOperation implements AggregationOperation {
 		this.groupByField = null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
 
@@ -77,10 +73,6 @@ public class SortByCountOperation implements AggregationOperation {
 				: groupByExpression.toDocument(context));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
-	 */
 	@Override
 	public String getOperator() {
 		return "$sortByCount";

@@ -41,10 +41,6 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 		this.tempate = tempate;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ExecutableRemoveOperation#remove(java.lang.Class)
-	 */
 	@Override
 	public <T> ExecutableRemove<T> remove(Class<T> domainType) {
 
@@ -71,10 +67,6 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 			this.collection = collection;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableRemoveOperation.RemoveWithCollection#inCollection(java.lang.String)
-		 */
 		@Override
 		public RemoveWithQuery<T> inCollection(String collection) {
 
@@ -83,10 +75,6 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 			return new ExecutableRemoveSupport<>(template, domainType, query, collection);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableRemoveOperation.RemoveWithQuery#matching(org.springframework.data.mongodb.core.query.Query)
-		 */
 		@Override
 		public TerminatingRemove<T> matching(Query query) {
 
@@ -95,28 +83,16 @@ class ExecutableRemoveOperationSupport implements ExecutableRemoveOperation {
 			return new ExecutableRemoveSupport<>(template, domainType, query, collection);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableRemoveOperation.TerminatingRemove#all()
-		 */
 		@Override
 		public DeleteResult all() {
 			return template.doRemove(getCollectionName(), query, domainType, true);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableRemoveOperation.TerminatingRemove#one()
-		 */
 		@Override
 		public DeleteResult one() {
 			return template.doRemove(getCollectionName(), query, domainType, false);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableRemoveOperation.TerminatingRemove#findAndRemove()
-		 */
 		@Override
 		public List<T> findAndRemove() {
 

@@ -62,10 +62,6 @@ class DtoInstantiatingConverter implements Converter<Object, Object> {
 		this.instantiator = entityInstantiators.getInstantiatorFor(context.getRequiredPersistentEntity(dtoType));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-	 */
 	@Override
 	public Object convert(Object source) {
 

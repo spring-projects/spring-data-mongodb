@@ -856,10 +856,6 @@ public class ReactivePerformanceTests {
 					String.format(" %s%%", DEVIATION_FORMAT.format(getMediaDeviationFrom(referenceMedian)))) + '\n';
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#toString()
-		 */
 		@Override
 		public String toString() {
 			return times.isEmpty() ? ""
@@ -915,10 +911,6 @@ public class ReactivePerformanceTests {
 			return builder.toString();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#toString()
-		 */
 		@Override
 		public String toString() {
 

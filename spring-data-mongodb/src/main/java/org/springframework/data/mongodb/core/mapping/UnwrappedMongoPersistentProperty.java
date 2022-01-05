@@ -340,10 +340,6 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 		return delegate.getAccessorForOwner(owner);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
 	@Override
 	public boolean equals(Object obj) {
 
@@ -362,10 +358,6 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 		return ObjectUtils.nullSafeEquals(context, that.context);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
 	@Override
 	public int hashCode() {
 

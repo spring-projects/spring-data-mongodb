@@ -34,28 +34,16 @@ class DocumentPropertyAccessor extends MapAccessor {
 
 	static final MapAccessor INSTANCE = new DocumentPropertyAccessor();
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.context.expression.MapAccessor#getSpecificTargetClasses()
-	 */
 	@Override
 	public Class<?>[] getSpecificTargetClasses() {
 		return new Class[] { Document.class };
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.context.expression.MapAccessor#canRead(org.springframework.expression.EvaluationContext, java.lang.Object, java.lang.String)
-	 */
 	@Override
 	public boolean canRead(EvaluationContext context, @Nullable Object target, String name) {
 		return true;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.context.expression.MapAccessor#read(org.springframework.expression.EvaluationContext, java.lang.Object, java.lang.String)
-	 */
 	@Override
 	@SuppressWarnings("unchecked")
 	public TypedValue read(EvaluationContext context, @Nullable Object target, String name) {

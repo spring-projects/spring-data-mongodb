@@ -403,37 +403,21 @@ class EntityOperations {
 			this.map = map;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.EntityOperations.PersistableSource#getIdPropertyName()
-		 */
 		@Override
 		public String getIdFieldName() {
 			return ID_FIELD;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.EntityOperations.PersistableSource#getId()
-		 */
 		@Override
 		public Object getId() {
 			return map.get(ID_FIELD);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.EntityOperations.PersistableSource#getByIdQuery()
-		 */
 		@Override
 		public Query getByIdQuery() {
 			return Query.query(Criteria.where(ID_FIELD).is(map.get(ID_FIELD)));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.EntityOperations.MutablePersistableSource#populateIdIfNecessary(java.lang.Object)
-		 */
 		@Nullable
 		@Override
 		public T populateIdIfNecessary(@Nullable Object id) {
@@ -443,19 +427,11 @@ class EntityOperations {
 			return map;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.EntityOperations.PersistableSource#getQueryForVersion()
-		 */
 		@Override
 		public Query getQueryForVersion() {
 			throw new MappingException("Cannot query for version on plain Documents!");
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.EntityOperations.PersistableSource#toMappedDocument(org.springframework.data.mongodb.core.convert.MongoWriter)
-		 */
 		@Override
 		public MappedDocument toMappedDocument(MongoWriter<? super T> writer) {
 			return MappedDocument.of(map instanceof Document //
@@ -463,47 +439,27 @@ class EntityOperations {
 					: new Document(map));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.EntityOperations.MutablePersistableSource#initializeVersionProperty()
-		 */
 		@Override
 		public T initializeVersionProperty() {
 			return map;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.EntityOperations.MutablePersistableSource#getVersion()
-		 */
 		@Override
 		@Nullable
 		public Number getVersion() {
 			return null;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.EntityOperations.MutablePersistableSource#incrementVersion()
-		 */
 		@Override
 		public T incrementVersion() {
 			return map;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.EntityOperations.PersistableSource#getBean()
-		 */
 		@Override
 		public T getBean() {
 			return map;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.EntityOperations.Entity#isNew()
-		 */
 		@Override
 		public boolean isNew() {
 			return map.get(ID_FIELD) != null;
@@ -516,10 +472,6 @@ class EntityOperations {
 			super(map);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.EntityOperations.PersistableSource#toMappedDocument(org.springframework.data.mongodb.core.convert.MongoWriter)
-		 */
 		@Override
 		@SuppressWarnings("unchecked")
 		public MappedDocument toMappedDocument(MongoWriter<? super T> writer) {
@@ -559,28 +511,16 @@ class EntityOperations {
 			return new MappedEntity<>(entity, identifierAccessor, propertyAccessor);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.EntityOperations.PersistableSource#getIdPropertyName()
-		 */
 		@Override
 		public String getIdFieldName() {
 			return entity.getRequiredIdProperty().getFieldName();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.EntityOperations.PersistableSource#getId()
-		 */
 		@Override
 		public Object getId() {
 			return idAccessor.getRequiredIdentifier();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.EntityOperations.PersistableSource#getByIdQuery()
-		 */
 		@Override
 		public Query getByIdQuery() {
 
@@ -593,10 +533,6 @@ class EntityOperations {
 			return Query.query(Criteria.where(idProperty.getName()).is(getId()));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.EntityOperations.PersistableSource#getQueryForVersion(java.lang.Object)
-		 */
 		@Override
 		public Query getQueryForVersion() {
 
@@ -607,10 +543,6 @@ class EntityOperations {
 					.and(versionProperty.getName()).is(getVersion()));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.EntityOperations.PersistableSource#toMappedDocument(org.springframework.data.mongodb.core.convert.MongoWriter)
-		 */
 		@Override
 		public MappedDocument toMappedDocument(MongoWriter<? super T> writer) {
 
@@ -626,10 +558,6 @@ class EntityOperations {
 			return MappedDocument.of(document);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.EntityOperations.Entity#assertUpdateableIdIfNotSet()
-		 */
 		public void assertUpdateableIdIfNotSet() {
 
 			if (!entity.hasIdProperty()) {
@@ -650,38 +578,22 @@ class EntityOperations {
 			}
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.EntityOperations.PersistableSource#isVersionedEntity()
-		 */
 		@Override
 		public boolean isVersionedEntity() {
 			return entity.hasVersionProperty();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.EntityOperations.PersistableSource#getVersion()
-		 */
 		@Override
 		@Nullable
 		public Object getVersion() {
 			return propertyAccessor.getProperty(entity.getRequiredVersionProperty());
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.EntityOperations.PersistableSource#getBean()
-		 */
 		@Override
 		public T getBean() {
 			return propertyAccessor.getBean();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.EntityOperations.Entity#isNew()
-		 */
 		@Override
 		public boolean isNew() {
 			return entity.isNew(propertyAccessor.getBean());
@@ -716,10 +628,6 @@ class EntityOperations {
 					new ConvertingPropertyAccessor<>(propertyAccessor, conversionService));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.EntityOperations.AdaptibleEntity#populateIdIfNecessary(java.lang.Object)
-		 */
 		@Nullable
 		@Override
 		public T populateIdIfNecessary(@Nullable Object id) {
@@ -741,10 +649,6 @@ class EntityOperations {
 			return propertyAccessor.getBean();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.EntityOperations.MappedEntity#getVersion()
-		 */
 		@Override
 		@Nullable
 		public Number getVersion() {
@@ -754,10 +658,6 @@ class EntityOperations {
 			return propertyAccessor.getProperty(versionProperty, Number.class);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.EntityOperations.AdaptibleEntity#initializeVersionProperty()
-		 */
 		@Override
 		public T initializeVersionProperty() {
 
@@ -772,10 +672,6 @@ class EntityOperations {
 			return propertyAccessor.getBean();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.EntityOperations.AdaptibleEntity#incrementVersion()
-		 */
 		@Override
 		public T incrementVersion() {
 
@@ -847,19 +743,11 @@ class EntityOperations {
 			return (TypedOperations) INSTANCE;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.EntityOperations.TypedOperations#getCollation()
-		 */
 		@Override
 		public Optional<Collation> getCollation() {
 			return Optional.empty();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.EntityOperations.TypedOperations#getCollation(org.springframework.data.mongodb.core.query.Query)
-		 */
 		@Override
 		public Optional<Collation> getCollation(Query query) {
 
@@ -894,19 +782,11 @@ class EntityOperations {
 			this.entity = entity;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.EntityOperations.TypedOperations#getCollation()
-		 */
 		@Override
 		public Optional<Collation> getCollation() {
 			return Optional.ofNullable(entity.getCollation());
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.EntityOperations.TypedOperations#getCollation(org.springframework.data.mongodb.core.query.Query)
-		 */
 		@Override
 		public Optional<Collation> getCollation(Query query) {
 

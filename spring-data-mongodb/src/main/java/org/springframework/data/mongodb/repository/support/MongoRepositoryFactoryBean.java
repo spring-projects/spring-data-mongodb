@@ -65,10 +65,6 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 		this.createIndexesForQueryMethods = createIndexesForQueryMethods;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport#setMappingContext(org.springframework.data.mapping.context.MappingContext)
-	 */
 	@Override
 	public void setMappingContext(MappingContext<?, ?> mappingContext) {
 
@@ -76,13 +72,6 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 		this.mappingContextConfigured = true;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.springframework.data.repository.support.RepositoryFactoryBeanSupport
-	 * #createRepositoryFactory()
-	 */
 	@Override
 	protected RepositoryFactorySupport createRepositoryFactory() {
 
@@ -106,13 +95,6 @@ public class MongoRepositoryFactoryBean<T extends Repository<S, ID>, S, ID exten
 		return new MongoRepositoryFactory(operations);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * org.springframework.data.repository.support.RepositoryFactoryBeanSupport
-	 * #afterPropertiesSet()
-	 */
 	@Override
 	public void afterPropertiesSet() {
 

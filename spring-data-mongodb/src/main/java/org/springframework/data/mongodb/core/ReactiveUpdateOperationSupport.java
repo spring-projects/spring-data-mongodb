@@ -42,10 +42,6 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 		this.template = template;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation#update(java.lang.Class)
-	 */
 	@Override
 	public <T> ReactiveUpdate<T> update(Class<T> domainType) {
 
@@ -83,10 +79,6 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 			this.targetType = targetType;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.UpdateWithUpdate#apply(org.springframework.data.mongodb.core.query.UpdateDefinition)
-		 */
 		@Override
 		public TerminatingUpdate<T> apply(org.springframework.data.mongodb.core.query.UpdateDefinition update) {
 
@@ -96,10 +88,6 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 					findAndReplaceOptions, replacement, targetType);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.UpdateWithCollection#inCollection(java.lang.String)
-		 */
 		@Override
 		public UpdateWithQuery<T> inCollection(String collection) {
 
@@ -109,28 +97,16 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 					findAndReplaceOptions, replacement, targetType);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.TerminatingUpdate#first()
-		 */
 		@Override
 		public Mono<UpdateResult> first() {
 			return doUpdate(false, false);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.TerminatingUpdate#upsert()
-		 */
 		@Override
 		public Mono<UpdateResult> upsert() {
 			return doUpdate(true, true);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.TerminatingFindAndModify#findAndModify()
-		 */
 		@Override
 		public Mono<T> findAndModify() {
 
@@ -141,10 +117,6 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 					collectionName);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.TerminatingFindAndReplace#findAndReplace()
-		 */
 		@Override
 		public Mono<T> findAndReplace() {
 			return template.findAndReplace(query, replacement,
@@ -152,10 +124,6 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 					getCollectionName(), targetType);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.UpdateWithQuery#matching(org.springframework.data.mongodb.core.Query)
-		 */
 		@Override
 		public UpdateWithUpdate<T> matching(Query query) {
 
@@ -165,19 +133,11 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 					findAndReplaceOptions, replacement, targetType);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.TerminatingUpdate#all()
-		 */
 		@Override
 		public Mono<UpdateResult> all() {
 			return doUpdate(true, false);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.FindAndModifyWithOptions#withOptions(org.springframework.data.mongodb.core.FindAndModifyOptions)
-		 */
 		@Override
 		public TerminatingFindAndModify<T> withOptions(FindAndModifyOptions options) {
 
@@ -187,10 +147,6 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 					findAndReplaceOptions, replacement, targetType);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.UpdateWithUpdate#replaceWith(java.lang.Object)
-		 */
 		@Override
 		public FindAndReplaceWithProjection<T> replaceWith(T replacement) {
 
@@ -200,10 +156,6 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 					findAndReplaceOptions, replacement, targetType);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.FindAndReplaceWithOptions#withOptions(org.springframework.data.mongodb.core.FindAndReplaceOptions)
-		 */
 		@Override
 		public FindAndReplaceWithProjection<T> withOptions(FindAndReplaceOptions options) {
 
@@ -213,10 +165,6 @@ class ReactiveUpdateOperationSupport implements ReactiveUpdateOperation {
 					replacement, targetType);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.FindAndReplaceWithProjection#as(java.lang.Class)
-		 */
 		@Override
 		public <R> FindAndReplaceWithOptions<R> as(Class<R> resultType) {
 

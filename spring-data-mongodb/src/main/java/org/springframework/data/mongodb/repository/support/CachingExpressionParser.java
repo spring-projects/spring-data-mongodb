@@ -39,19 +39,11 @@ class CachingExpressionParser implements ExpressionParser {
 		this.delegate = delegate;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.expression.ExpressionParser#parseExpression(java.lang.String)
-	 */
 	@Override
 	public Expression parseExpression(String expressionString) throws ParseException {
 		return cache.computeIfAbsent(expressionString, delegate::parseExpression);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.expression.ExpressionParser#parseExpression(java.lang.String, org.springframework.expression.ParserContext)
-	 */
 	@Override
 	public Expression parseExpression(String expressionString, ParserContext context) throws ParseException {
 		throw new UnsupportedOperationException("Parsing using ParserContext is not supported");

@@ -91,10 +91,6 @@ class MappingMongoJsonSchemaCreator implements MongoJsonSchemaCreator {
 		return new MappingMongoJsonSchemaCreator(converter, mappingContext, filter);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * org.springframework.data.mongodb.core.MongoJsonSchemaCreator#createSchemaFor(java.lang.Class)
-	 */
 	@Override
 	public MongoJsonSchema createSchemaFor(Class<?> type) {
 

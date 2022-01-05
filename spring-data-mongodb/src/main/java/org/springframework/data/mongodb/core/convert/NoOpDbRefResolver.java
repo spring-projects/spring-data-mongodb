@@ -36,10 +36,6 @@ public enum NoOpDbRefResolver implements DbRefResolver {
 
 	INSTANCE;
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#resolveDbRef(org.springframework.data.mongodb.core.mapping.MongoPersistentProperty, org.springframework.data.mongodb.core.convert.DbRefResolverCallback, org.springframework.data.mongodb.core.convert.DbRefProxyHandler)
-	 */
 	@Override
 	@Nullable
 	public Object resolveDbRef(MongoPersistentProperty property, @Nullable DBRef dbref, DbRefResolverCallback callback,
@@ -48,20 +44,12 @@ public enum NoOpDbRefResolver implements DbRefResolver {
 		return handle();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#fetch(com.mongodb.DBRef)
-	 */
 	@Override
 	@Nullable
 	public Document fetch(DBRef dbRef) {
 		return handle();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.convert.DbRefResolver#bulkFetch(java.util.List)
-	 */
 	@Override
 	public List<Document> bulkFetch(List<DBRef> dbRefs) {
 		return handle();

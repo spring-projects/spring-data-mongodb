@@ -47,19 +47,11 @@ public class AuditingEventListener implements ApplicationListener<BeforeConvertE
 		this.auditingHandlerFactory = auditingHandlerFactory;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.context.ApplicationListener#onApplicationEvent(org.springframework.context.ApplicationEvent)
-	 */
 	@Override
 	public void onApplicationEvent(BeforeConvertEvent<Object> event) {
 		event.mapSource(it -> auditingHandlerFactory.getObject().markAudited(it));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.core.Ordered#getOrder()
-	 */
 	@Override
 	public int getOrder() {
 		return 100;

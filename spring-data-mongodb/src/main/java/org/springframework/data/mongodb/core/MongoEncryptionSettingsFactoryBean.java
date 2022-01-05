@@ -88,10 +88,6 @@ public class MongoEncryptionSettingsFactoryBean implements FactoryBean<AutoEncry
 		this.schemaMap = schemaMap;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see  org.springframework.beans.factory.FactoryBean#getObject()
-	 */
 	@Override
 	public AutoEncryptionSettings getObject() {
 
@@ -109,10 +105,6 @@ public class MongoEncryptionSettingsFactoryBean implements FactoryBean<AutoEncry
 		return source != null ? source : Collections.emptyMap();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see  org.springframework.beans.factory.FactoryBean#getObjectType()
-	 */
 	@Override
 	public Class<?> getObjectType() {
 		return AutoEncryptionSettings.class;

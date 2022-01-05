@@ -376,19 +376,11 @@ public class BasicMongoPersistentEntityUnitTests {
 
 	static class SampleExtension implements EvaluationContextExtension {
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.spel.spi.EvaluationContextExtension#getExtensionId()
-		 */
 		@Override
 		public String getExtensionId() {
 			return "sampleExtension";
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.spel.spi.EvaluationContextExtension#getProperties()
-		 */
 		@Override
 		public Map<String, Object> getProperties() {
 

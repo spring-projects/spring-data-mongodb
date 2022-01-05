@@ -80,28 +80,16 @@ class AggregationOperationRenderer {
 	 */
 	private static class NoOpAggregationOperationContext implements AggregationOperationContext {
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(org.bson.Document, java.lang.Class)
-		 */
 		@Override
 		public Document getMappedObject(Document document, @Nullable Class<?> type) {
 			return document;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getReference(org.springframework.data.mongodb.core.aggregation.ExposedFields.AvailableField)
-		 */
 		@Override
 		public FieldReference getReference(Field field) {
 			return new DirectFieldReference(new ExposedField(field, true));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getReference(java.lang.String)
-		 */
 		@Override
 		public FieldReference getReference(String name) {
 			return new DirectFieldReference(new ExposedField(new AggregationField(name), true));

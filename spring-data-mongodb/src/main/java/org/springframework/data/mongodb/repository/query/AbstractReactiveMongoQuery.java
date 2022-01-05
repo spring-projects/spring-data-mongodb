@@ -91,18 +91,10 @@ public abstract class AbstractReactiveMongoQuery implements RepositoryQuery {
 		this.findOperationWithProjection = operations.query(type);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.RepositoryQuery#getQueryMethod()
-	 */
 	public MongoQueryMethod getQueryMethod() {
 		return method;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.RepositoryQuery#execute(java.lang.Object[])
-	 */
 	public Publisher<Object> execute(Object[] parameters) {
 
 		return method.hasReactiveWrapperParameter() ? executeDeferred(parameters)

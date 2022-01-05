@@ -34,10 +34,6 @@ import org.w3c.dom.Element;
  */
 class GridFsTemplateParser extends AbstractBeanDefinitionParser {
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.beans.factory.xml.AbstractBeanDefinitionParser#resolveId(org.w3c.dom.Element, org.springframework.beans.factory.support.AbstractBeanDefinition, org.springframework.beans.factory.xml.ParserContext)
-	 */
 	@Override
 	protected String resolveId(Element element, AbstractBeanDefinition definition, ParserContext parserContext)
 			throws BeanDefinitionStoreException {
@@ -46,10 +42,6 @@ class GridFsTemplateParser extends AbstractBeanDefinitionParser {
 		return StringUtils.hasText(id) ? id : BeanNames.GRID_FS_TEMPLATE_BEAN_NAME;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.beans.factory.xml.AbstractBeanDefinitionParser#parseInternal(org.w3c.dom.Element, org.springframework.beans.factory.xml.ParserContext)
-	 */
 	@Override
 	protected AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
 

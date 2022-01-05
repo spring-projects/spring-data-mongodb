@@ -50,10 +50,6 @@ public class ValidatingMongoEventListener extends AbstractMongoEventListener<Obj
 		this.validator = validator;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener#onBeforeSave(org.springframework.data.mongodb.core.mapping.event.BeforeSaveEvent)
-	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	public void onBeforeSave(BeforeSaveEvent<Object> event) {

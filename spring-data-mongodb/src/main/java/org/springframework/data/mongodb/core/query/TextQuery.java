@@ -150,10 +150,6 @@ public class TextQuery extends Query {
 		return scoreFieldName;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.query.Query#getFieldsObject()
-	 */
 	@Override
 	public Document getFieldsObject() {
 
@@ -167,10 +163,6 @@ public class TextQuery extends Query {
 		return fields;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.query.Query#getSortObject()
-	 */
 	@Override
 	public Document getSortObject() {
 
@@ -216,10 +208,6 @@ public class TextQuery extends Query {
 		return target;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.query.Query#isSorted()
-	 */
 	@Override
 	public boolean isSorted() {
 		return super.isSorted() || sortByScore;

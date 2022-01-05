@@ -99,10 +99,6 @@ public class SetOperation extends DocumentEnhancingOperation {
 		return new FieldAppender(getValueMap());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.DocumentEnhancingOperation#mongoOperator()
-	 */
 	@Override
 	protected String mongoOperator() {
 		return "$set";

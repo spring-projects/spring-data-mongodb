@@ -58,10 +58,6 @@ public class UntypedJsonSchemaObject implements JsonSchemaObject {
 		return new UntypedJsonSchemaObject(null, null, false);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.schema.JsonSchemaObject#getTypes()
-	 */
 	@Override
 	public Set<Type> getTypes() {
 		return Collections.emptySet();

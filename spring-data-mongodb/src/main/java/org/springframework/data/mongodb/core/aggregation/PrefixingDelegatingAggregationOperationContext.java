@@ -55,46 +55,26 @@ public class PrefixingDelegatingAggregationOperationContext implements Aggregati
 		this.denylist = new HashSet<>(denylist);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(org.bson.Document)
-	 */
 	@Override
 	public Document getMappedObject(Document document) {
 		return doPrefix(delegate.getMappedObject(document));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(org.bson.Document, java.lang.Class)
-	 */
 	@Override
 	public Document getMappedObject(Document document, @Nullable Class<?> type) {
 		return doPrefix(delegate.getMappedObject(document, type));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getReference(org.springframework.data.mongodb.core.aggregation.Field)
-	 */
 	@Override
 	public FieldReference getReference(Field field) {
 		return delegate.getReference(field);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getReference(java.lang.String)
-	 */
 	@Override
 	public FieldReference getReference(String name) {
 		return delegate.getReference(name);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getFields(java.lang.Class)
-	 */
 	@Override
 	public Fields getFields(Class<?> type) {
 		return delegate.getFields(type);

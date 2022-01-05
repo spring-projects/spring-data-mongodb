@@ -37,10 +37,6 @@ class ExecutableAggregationOperationSupport implements ExecutableAggregationOper
 		this.template = template;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ExecutableAggregationOperation#aggregateAndReturn(java.lang.Class)
-	 */
 	@Override
 	public <T> ExecutableAggregation<T> aggregateAndReturn(Class<T> domainType) {
 
@@ -69,10 +65,6 @@ class ExecutableAggregationOperationSupport implements ExecutableAggregationOper
 			this.collection = collection;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableAggregationOperation.AggregationWithCollection#inCollection(java.lang.String)
-		 */
 		@Override
 		public AggregationWithAggregation<T> inCollection(String collection) {
 
@@ -81,10 +73,6 @@ class ExecutableAggregationOperationSupport implements ExecutableAggregationOper
 			return new ExecutableAggregationSupport<>(template, domainType, aggregation, collection);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableAggregationOperation.AggregationWithAggregation#by(org.springframework.data.mongodb.core.aggregation.Aggregation)
-		 */
 		@Override
 		public TerminatingAggregation<T> by(Aggregation aggregation) {
 
@@ -93,19 +81,11 @@ class ExecutableAggregationOperationSupport implements ExecutableAggregationOper
 			return new ExecutableAggregationSupport<>(template, domainType, aggregation, collection);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableAggregationOperation.TerminatingAggregation#all()
-		 */
 		@Override
 		public AggregationResults<T> all() {
 			return template.aggregate(aggregation, getCollectionName(aggregation), domainType);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableAggregationOperation.TerminatingAggregation#stream()
-		 */
 		@Override
 		public CloseableIterator<T> stream() {
 			return template.aggregateStream(aggregation, getCollectionName(aggregation), domainType);

@@ -124,18 +124,10 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 		this.accessor = accessor;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.convert.MongoTypeMapper#isTypeKey(java.lang.String)
-	 */
 	public boolean isTypeKey(String key) {
 		return typeKey == null ? false : typeKey.equals(key);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.convert.MongoTypeMapper#writeTypeRestrictions(java.util.Set)
-	 */
 	@Override
 	public void writeTypeRestrictions(Document result, @Nullable Set<Class<?>> restrictedTypes) {
 
@@ -157,19 +149,11 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 		accessor.writeTypeTo(result, new Document("$in", restrictedMappedTypes));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.convert.MongoTypeMapper#getWriteTargetTypeFor(java.lang.Class)
-	 */
 	@Override
 	public Class<?> getWriteTargetTypeFor(Class<?> source) {
 		return writeTarget.apply(source);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.convert.DefaultTypeMapper#getFallbackTypeFor(java.lang.Object)
-	 */
 	@Override
 	protected TypeInformation<?> getFallbackTypeFor(Bson source) {
 		return source instanceof BasicDBList ? LIST_TYPE_INFO : MAP_TYPE_INFO;
@@ -188,10 +172,6 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 			this.typeKey = typeKey;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.convert.TypeAliasAccessor#readAliasFrom(java.lang.Object)
-		 */
 		public Alias readAliasFrom(Bson source) {
 
 			if (source instanceof List) {
@@ -207,10 +187,6 @@ public class DefaultMongoTypeMapper extends DefaultTypeMapper<Bson> implements M
 			throw new IllegalArgumentException("Cannot read alias from " + source.getClass());
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.convert.TypeAliasAccessor#writeTypeTo(java.lang.Object, java.lang.Object)
-		 */
 		public void writeTypeTo(Bson sink, Object alias) {
 
 			if (typeKey != null) {

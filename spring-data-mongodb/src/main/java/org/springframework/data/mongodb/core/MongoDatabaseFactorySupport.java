@@ -84,18 +84,10 @@ public abstract class MongoDatabaseFactorySupport<C> implements MongoDatabaseFac
 		this.writeConcern = writeConcern;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.MongoDbFactory#getMongoDatabase()
-	 */
 	public MongoDatabase getMongoDatabase() throws DataAccessException {
 		return getMongoDatabase(getDefaultDatabaseName());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.MongoDbFactory#getMongoDatabase(java.lang.String)
-	 */
 	@Override
 	public MongoDatabase getMongoDatabase(String dbName) throws DataAccessException {
 
@@ -118,28 +110,16 @@ public abstract class MongoDatabaseFactorySupport<C> implements MongoDatabaseFac
 	 */
 	protected abstract MongoDatabase doGetMongoDatabase(String dbName);
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.beans.factory.DisposableBean#destroy()
-	 */
 	public void destroy() throws Exception {
 		if (mongoInstanceCreated) {
 			closeClient();
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.MongoDbFactory#getExceptionTranslator()
-	 */
 	public PersistenceExceptionTranslator getExceptionTranslator() {
 		return this.exceptionTranslator;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.MongoDbFactory#withSession(com.mongodb.session.Session)
-	 */
 	public MongoDatabaseFactory withSession(ClientSession session) {
 		return new MongoDatabaseFactorySupport.ClientSessionBoundMongoDbFactory(session, this);
 	}
@@ -180,55 +160,31 @@ public abstract class MongoDatabaseFactorySupport<C> implements MongoDatabaseFac
 			this.delegate = delegate;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.MongoDbFactory#getMongoDatabase()
-		 */
 		@Override
 		public MongoDatabase getMongoDatabase() throws DataAccessException {
 			return proxyMongoDatabase(delegate.getMongoDatabase());
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.MongoDbFactory#getMongoDatabase(java.lang.String)
-		 */
 		@Override
 		public MongoDatabase getMongoDatabase(String dbName) throws DataAccessException {
 			return proxyMongoDatabase(delegate.getMongoDatabase(dbName));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.MongoDbFactory#getExceptionTranslator()
-		 */
 		@Override
 		public PersistenceExceptionTranslator getExceptionTranslator() {
 			return delegate.getExceptionTranslator();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.MongoDbFactory#getSession(com.mongodb.ClientSessionOptions)
-		 */
 		@Override
 		public ClientSession getSession(ClientSessionOptions options) {
 			return delegate.getSession(options);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.MongoDbFactory#withSession(com.mongodb.session.ClientSession)
-		 */
 		@Override
 		public MongoDatabaseFactory withSession(ClientSession session) {
 			return delegate.withSession(session);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.MongoDbFactory#isTransactionActive()
-		 */
 		@Override
 		public boolean isTransactionActive() {
 			return session != null && session.hasActiveTransaction();

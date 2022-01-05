@@ -108,10 +108,6 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#createQuery(org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor)
-	 */
 	@Override
 	protected Query createQuery(ConvertingParameterAccessor accessor) {
 
@@ -139,37 +135,21 @@ public class StringBasedMongoQuery extends AbstractMongoQuery {
 		return new ParameterBindingContext(accessor::getBindableValue, evaluator);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#isCountQuery()
-	 */
 	@Override
 	protected boolean isCountQuery() {
 		return isCountQuery;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#isExistsQuery()
-	 */
 	@Override
 	protected boolean isExistsQuery() {
 		return isExistsQuery;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#isDeleteQuery()
-	 */
 	@Override
 	protected boolean isDeleteQuery() {
 		return this.isDeleteQuery;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#isLimiting()
-	 */
 	@Override
 	protected boolean isLimiting() {
 		return false;

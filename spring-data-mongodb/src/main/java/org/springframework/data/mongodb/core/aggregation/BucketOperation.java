@@ -84,9 +84,6 @@ public class BucketOperation extends BucketOperationSupport<BucketOperation, Buc
 		this.defaultBucket = defaultBucket;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.BucketOperationSupport#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
 
@@ -103,10 +100,6 @@ public class BucketOperation extends BucketOperationSupport<BucketOperation, Buc
 		return new Document(getOperator(), options);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
-	 */
 	@Override
 	public String getOperator() {
 		return "$bucket";
@@ -143,33 +136,21 @@ public class BucketOperation extends BucketOperationSupport<BucketOperation, Buc
 		return new BucketOperation(this, newBoundaries, defaultBucket);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.BucketOperationSupport#newBucketOperation(org.springframework.data.mongodb.core.aggregation.BucketOperationSupport.Outputs)
-	 */
 	@Override
 	protected BucketOperation newBucketOperation(Outputs outputs) {
 		return new BucketOperation(this, outputs);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.BucketOperationSupport#andOutputExpression(java.lang.String, java.lang.Object[])
-	 */
 	@Override
 	public ExpressionBucketOperationBuilder andOutputExpression(String expression, Object... params) {
 		return new ExpressionBucketOperationBuilder(expression, this, params);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.BucketOperationSupport#andOutput(org.springframework.data.mongodb.core.aggregation.AggregationExpression)
-	 */
 	@Override
 	public BucketOperationOutputBuilder andOutput(AggregationExpression expression) {
 		return new BucketOperationOutputBuilder(expression, this);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.BucketOperationSupport#andOutput(java.lang.String)
-	 */
 	@Override
 	public BucketOperationOutputBuilder andOutput(String fieldName) {
 		return new BucketOperationOutputBuilder(Fields.field(fieldName), this);
@@ -191,9 +172,6 @@ public class BucketOperation extends BucketOperationSupport<BucketOperation, Buc
 			super(value, operation);
 		}
 
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.BucketOperationSupport.OutputBuilder#apply(org.springframework.data.mongodb.core.aggregation.BucketOperationSupport.OperationOutput)
-		 */
 		@Override
 		protected BucketOperationOutputBuilder apply(OperationOutput operationOutput) {
 			return new BucketOperationOutputBuilder(operationOutput, this.operation);
@@ -221,9 +199,6 @@ public class BucketOperation extends BucketOperationSupport<BucketOperation, Buc
 			super(expression, operation, parameters);
 		}
 
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.BucketOperationSupport.OutputBuilder#apply(org.springframework.data.mongodb.core.aggregation.BucketOperationSupport.OperationOutput)
-		 */
 		@Override
 		protected BucketOperationOutputBuilder apply(OperationOutput operationOutput) {
 			return new BucketOperationOutputBuilder(operationOutput, this.operation);

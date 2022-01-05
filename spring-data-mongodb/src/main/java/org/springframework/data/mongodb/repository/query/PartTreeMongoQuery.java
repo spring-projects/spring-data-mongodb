@@ -78,10 +78,6 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 		return tree;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#createQuery(org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor, boolean)
-	 */
 	@Override
 	protected Query createQuery(ConvertingParameterAccessor accessor) {
 
@@ -128,46 +124,26 @@ public class PartTreeMongoQuery extends AbstractMongoQuery {
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#createCountQuery(org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor)
-	 */
 	@Override
 	protected Query createCountQuery(ConvertingParameterAccessor accessor) {
 		return new MongoQueryCreator(tree, accessor, context, false).createQuery();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#isCountQuery()
-	 */
 	@Override
 	protected boolean isCountQuery() {
 		return tree.isCountProjection();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#isExistsQuery()
-	 */
 	@Override
 	protected boolean isExistsQuery() {
 		return tree.isExistsProjection();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#isDeleteQuery()
-	 */
 	@Override
 	protected boolean isDeleteQuery() {
 		return tree.isDelete();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#isLimiting()
-	 */
 	@Override
 	protected boolean isLimiting() {
 		return tree.isLimiting();

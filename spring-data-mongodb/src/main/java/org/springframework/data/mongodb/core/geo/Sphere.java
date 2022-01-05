@@ -92,18 +92,11 @@ public class Sphere implements Shape {
 		return radius;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
 	@Override
 	public String toString() {
 		return String.format("Sphere [center=%s, radius=%s]", center, radius);
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
 	@Override
 	public boolean equals(Object obj) {
 
@@ -120,10 +113,6 @@ public class Sphere implements Shape {
 		return this.center.equals(that.center) && this.radius.equals(that.radius);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
 	@Override
 	public int hashCode() {
 		int result = 17;

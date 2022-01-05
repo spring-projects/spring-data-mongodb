@@ -98,10 +98,6 @@ class AntPath {
 		return Pattern.quote(s.substring(start, end));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
 	@Override
 	public String toString() {
 		return path;

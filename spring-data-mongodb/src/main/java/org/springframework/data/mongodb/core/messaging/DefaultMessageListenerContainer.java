@@ -94,19 +94,11 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 		this.errorHandler = Optional.ofNullable(errorHandler);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.context.SmartLifecycle#isAutoStartup()
-	 */
 	@Override
 	public boolean isAutoStartup() {
 		return false;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.context.SmartLifecycle#stop(java.lang.Runnable)
-	 */
 	@Override
 	public void stop(Runnable callback) {
 
@@ -114,10 +106,6 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 		callback.run();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.context.Lifecycle#start()
-	 */
 	@Override
 	public void start() {
 
@@ -138,10 +126,6 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.context.Lifecycle#stop()
-	 */
 	@Override
 	public void stop() {
 
@@ -156,10 +140,6 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.context.Lifecycle#isRunning()
-	 */
 	@Override
 	public boolean isRunning() {
 
@@ -168,19 +148,11 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.context.Phased#getPhase()
-	 */
 	@Override
 	public int getPhase() {
 		return Integer.MAX_VALUE;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.monitor.MessageListenerContainer#register(org.springframework.data.mongodb.monitor.SubscriptionRequest, java.lang.Class)
-	 */
 	@Override
 	public <S, T> Subscription register(SubscriptionRequest<S, ? super T, ? extends RequestOptions> request,
 			Class<T> bodyType) {
@@ -189,10 +161,6 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 				() -> new DecoratingLoggingErrorHandler((exception) -> lookup(request).ifPresent(Subscription::cancel))));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.monitor.MessageListenerContainer#register(org.springframework.data.mongodb.monitor.SubscriptionRequest, java.lang.Class, org.springframework.util.ErrorHandler)
-	 */
 	@Override
 	public <S, T> Subscription register(SubscriptionRequest<S, ? super T, ? extends RequestOptions> request,
 			Class<T> bodyType, ErrorHandler errorHandler) {
@@ -200,10 +168,6 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 		return register(request, taskFactory.forRequest(request, bodyType, errorHandler));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.monitor.MessageListenerContainer#lookup(org.springframework.data.mongodb.monitor.SubscriptionRequest)
-	 */
 	@Override
 	public Optional<Subscription> lookup(SubscriptionRequest<?, ?, ?> request) {
 
@@ -232,10 +196,6 @@ public class DefaultMessageListenerContainer implements MessageListenerContainer
 		return subscription;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.monitor.MessageListenerContainer#remove(org.springframework.data.mongodb.monitor.Subscription)
-	 */
 	@Override
 	public void remove(Subscription subscription) {
 

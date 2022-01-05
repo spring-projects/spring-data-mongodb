@@ -105,10 +105,6 @@ public class SetWindowFieldsOperation
 		return new Document(getOperator(), $setWindowFields);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
-	 */
 	@Override
 	public String getOperator() {
 		return "$setWindowFields";

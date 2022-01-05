@@ -193,19 +193,11 @@ public class MongoDatabaseUtils {
 			this.resourceHolder = resourceHolder;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.transaction.support.ResourceHolderSynchronization#shouldReleaseBeforeCompletion()
-		 */
 		@Override
 		protected boolean shouldReleaseBeforeCompletion() {
 			return false;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.transaction.support.ResourceHolderSynchronization#processResourceAfterCommit(java.lang.Object)
-		 */
 		@Override
 		protected void processResourceAfterCommit(MongoResourceHolder resourceHolder) {
 
@@ -214,10 +206,6 @@ public class MongoDatabaseUtils {
 			}
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.transaction.support.ResourceHolderSynchronization#afterCompletion(int)
-		 */
 		@Override
 		public void afterCompletion(int status) {
 
@@ -228,10 +216,6 @@ public class MongoDatabaseUtils {
 			super.afterCompletion(status);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.transaction.support.ResourceHolderSynchronization#releaseResource(java.lang.Object, java.lang.Object)
-		 */
 		@Override
 		protected void releaseResource(MongoResourceHolder resourceHolder, Object resourceKey) {
 

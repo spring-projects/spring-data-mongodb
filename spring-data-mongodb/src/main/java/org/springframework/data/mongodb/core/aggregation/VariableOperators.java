@@ -163,9 +163,6 @@ public class VariableOperators {
 			};
 		}
 
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpression#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-		 */
 		@Override
 		public Document toDocument(final AggregationOperationContext context) {
 			return toMap(ExposedFields.synthetic(Fields.fields(itemVariableName)), context);
@@ -288,9 +285,6 @@ public class VariableOperators {
 			Let andApply(AggregationExpression expression);
 		}
 
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpression#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-		 */
 		@Override
 		public Document toDocument(final AggregationOperationContext context) {
 			return toLet(ExposedFields.synthetic(Fields.fields(getVariableNames())), context);

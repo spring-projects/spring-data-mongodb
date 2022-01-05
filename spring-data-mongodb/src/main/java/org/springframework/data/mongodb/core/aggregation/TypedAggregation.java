@@ -74,10 +74,6 @@ public class TypedAggregation<I> extends Aggregation {
 		return inputType;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.Aggregation#withOptions(org.springframework.data.mongodb.core.aggregation.AggregationOptions)
-	 */
 	public TypedAggregation<I> withOptions(AggregationOptions options) {
 
 		Assert.notNull(options, "AggregationOptions must not be null.");

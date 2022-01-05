@@ -96,9 +96,6 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 		this.mappingContext = mappingContext;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.index.IndexResolver#resolveIndexForClass(org.springframework.data.util.TypeInformation)
-	 */
 	@Override
 	public Iterable<? extends IndexDefinitionHolder> resolveIndexFor(TypeInformation<?> typeInformation) {
 		return resolveIndexForEntity(mappingContext.getRequiredPersistentEntity(typeInformation));
@@ -931,10 +928,6 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 				return cycle;
 			}
 
-			/*
-			 * (non-Javadoc)
-			 * @see java.lang.Object#toString()
-			 */
 			@Override
 			public String toString() {
 				return this.elements.isEmpty() ? "(empty)" : toPath(this.elements.iterator());
@@ -1033,10 +1026,6 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			this.dotPath = dotPath;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Throwable#getMessage()
-		 */
 		@Override
 		public String getMessage() {
 			return String.format("Found cycle for field '%s' in type '%s' for path '%s'", propertyName,
@@ -1091,19 +1080,11 @@ public class MongoPersistentEntityIndexResolver implements IndexResolver {
 			return indexDefinition;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.index.IndexDefinition#getIndexKeys()
-		 */
 		@Override
 		public org.bson.Document getIndexKeys() {
 			return indexDefinition.getIndexKeys();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.index.IndexDefinition#getIndexOptions()
-		 */
 		@Override
 		public org.bson.Document getIndexOptions() {
 			return indexDefinition.getIndexOptions();

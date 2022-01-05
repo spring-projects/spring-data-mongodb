@@ -109,10 +109,6 @@ class DefaultBulkOperations implements BulkOperations {
 		this.defaultWriteConcern = defaultWriteConcern;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.BulkOperations#insert(java.lang.Object)
-	 */
 	@Override
 	public BulkOperations insert(Object document) {
 
@@ -125,10 +121,6 @@ class DefaultBulkOperations implements BulkOperations {
 		return this;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.BulkOperations#insert(java.util.List)
-	 */
 	@Override
 	public BulkOperations insert(List<? extends Object> documents) {
 
@@ -139,10 +131,6 @@ class DefaultBulkOperations implements BulkOperations {
 		return this;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.BulkOperations#updateOne(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.Update)
-	 */
 	@Override
 	@SuppressWarnings("unchecked")
 	public BulkOperations updateOne(Query query, Update update) {
@@ -153,10 +141,6 @@ class DefaultBulkOperations implements BulkOperations {
 		return updateOne(Collections.singletonList(Pair.of(query, update)));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.BulkOperations#updateOne(java.util.List)
-	 */
 	@Override
 	public BulkOperations updateOne(List<Pair<Query, Update>> updates) {
 
@@ -169,10 +153,6 @@ class DefaultBulkOperations implements BulkOperations {
 		return this;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.BulkOperations#updateMulti(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.Update)
-	 */
 	@Override
 	@SuppressWarnings("unchecked")
 	public BulkOperations updateMulti(Query query, Update update) {
@@ -183,10 +163,6 @@ class DefaultBulkOperations implements BulkOperations {
 		return updateMulti(Collections.singletonList(Pair.of(query, update)));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.BulkOperations#updateMulti(java.util.List)
-	 */
 	@Override
 	public BulkOperations updateMulti(List<Pair<Query, Update>> updates) {
 
@@ -199,19 +175,11 @@ class DefaultBulkOperations implements BulkOperations {
 		return this;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.BulkOperations#upsert(org.springframework.data.mongodb.core.query.Query, org.springframework.data.mongodb.core.query.Update)
-	 */
 	@Override
 	public BulkOperations upsert(Query query, Update update) {
 		return update(query, update, true, true);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.BulkOperations#upsert(java.util.List)
-	 */
 	@Override
 	public BulkOperations upsert(List<Pair<Query, Update>> updates) {
 
@@ -222,10 +190,6 @@ class DefaultBulkOperations implements BulkOperations {
 		return this;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.BulkOperations#remove(org.springframework.data.mongodb.core.query.Query)
-	 */
 	@Override
 	public BulkOperations remove(Query query) {
 
@@ -239,10 +203,6 @@ class DefaultBulkOperations implements BulkOperations {
 		return this;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.BulkOperations#remove(java.util.List)
-	 */
 	@Override
 	public BulkOperations remove(List<Query> removes) {
 
@@ -255,10 +215,6 @@ class DefaultBulkOperations implements BulkOperations {
 		return this;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.BulkOperations#replaceOne(org.springframework.data.mongodb.core.query.Query, java.lang.Object, org.springframework.data.mongodb.core.FindAndReplaceOptions)
-	 */
 	@Override
 	public BulkOperations replaceOne(Query query, Object replacement, FindAndReplaceOptions options) {
 
@@ -278,10 +234,6 @@ class DefaultBulkOperations implements BulkOperations {
 		return this;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.BulkOperations#executeBulk()
-	 */
 	@Override
 	public com.mongodb.bulk.BulkWriteResult execute() {
 

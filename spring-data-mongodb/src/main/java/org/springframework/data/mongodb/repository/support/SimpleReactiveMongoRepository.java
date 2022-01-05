@@ -78,10 +78,6 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	// Methods from ReactiveCrudRepository
 	// -------------------------------------------------------------------------
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#save(java.lang.Object)
-	 */
 	@Override
 	public <S extends T> Mono<S> save(S entity) {
 
@@ -94,10 +90,6 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		return mongoOperations.save(entity, entityInformation.getCollectionName());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#saveAll(java.lang.Iterable)
-	 */
 	@Override
 	public <S extends T> Flux<S> saveAll(Iterable<S> entities) {
 
@@ -110,10 +102,6 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 				Flux.fromIterable(entities).flatMap(this::save);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#saveAll(org.reactivestreams.Publisher)
-	 */
 	@Override
 	public <S extends T> Flux<S> saveAll(Publisher<S> entityStream) {
 
@@ -124,10 +112,6 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 				mongoOperations.save(entity, entityInformation.getCollectionName()));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#findById(java.lang.Object)
-	 */
 	@Override
 	public Mono<T> findById(ID id) {
 
@@ -136,10 +120,6 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		return mongoOperations.findById(id, entityInformation.getJavaType(), entityInformation.getCollectionName());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#findById(org.reactivestreams.Publisher)
-	 */
 	@Override
 	public Mono<T> findById(Publisher<ID> publisher) {
 
@@ -149,10 +129,6 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 				id -> mongoOperations.findById(id, entityInformation.getJavaType(), entityInformation.getCollectionName()));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#existsById(java.lang.Object)
-	 */
 	@Override
 	public Mono<Boolean> existsById(ID id) {
 
@@ -162,10 +138,6 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 				entityInformation.getCollectionName());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#existsById(org.reactivestreams.Publisher)
-	 */
 	@Override
 	public Mono<Boolean> existsById(Publisher<ID> publisher) {
 
@@ -175,19 +147,11 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 				entityInformation.getCollectionName()));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.reactive.ReactiveSortingRepository#findAll()
-	 */
 	@Override
 	public Flux<T> findAll() {
 		return findAll(new Query());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#findAllById(java.lang.Iterable)
-	 */
 	@Override
 	public Flux<T> findAllById(Iterable<ID> ids) {
 
@@ -196,10 +160,6 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		return findAll(getIdQuery(ids));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#findAllById(org.reactivestreams.Publisher)
-	 */
 	@Override
 	public Flux<T> findAllById(Publisher<ID> ids) {
 
@@ -208,19 +168,11 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		return Flux.from(ids).buffer().flatMap(this::findAllById);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#count()
-	 */
 	@Override
 	public Mono<Long> count() {
 		return mongoOperations.count(new Query(), entityInformation.getCollectionName());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#deleteById(java.lang.Object)
-	 */
 	@Override
 	public Mono<Void> deleteById(ID id) {
 
@@ -230,10 +182,6 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 				.remove(getIdQuery(id), entityInformation.getJavaType(), entityInformation.getCollectionName()).then();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#deleteById(org.reactivestreams.Publisher)
-	 */
 	@Override
 	public Mono<Void> deleteById(Publisher<ID> publisher) {
 
@@ -243,10 +191,6 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 				entityInformation.getCollectionName())).then();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#delete(java.lang.Object)
-	 */
 	@Override
 	public Mono<Void> delete(T entity) {
 
@@ -272,10 +216,6 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		return remove.then();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#deleteAllById(java.lang.Iterable)
-	 */
 	@Override
 	public Mono<Void> deleteAllById(Iterable<? extends ID> ids) {
 
@@ -285,10 +225,6 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 				.remove(getIdQuery(ids), entityInformation.getJavaType(), entityInformation.getCollectionName()).then();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#deleteAll(java.lang.Iterable)
-	 */
 	@Override
 	public Mono<Void> deleteAll(Iterable<? extends T> entities) {
 
@@ -304,10 +240,6 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 				.then();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#deleteAll(org.reactivestreams.Publisher)
-	 */
 	@Override
 	public Mono<Void> deleteAll(Publisher<? extends T> entityStream) {
 
@@ -319,10 +251,6 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 				.then();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.reactive.ReactiveCrudRepository#deleteAll()
-	 */
 	@Override
 	public Mono<Void> deleteAll() {
 		return mongoOperations.remove(new Query(), entityInformation.getCollectionName()).then(Mono.empty());
@@ -332,10 +260,6 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	// Methods from ReactiveSortingRepository
 	// -------------------------------------------------------------------------
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.reactive.ReactiveSortingRepository#findAll(org.springframework.data.domain.Sort)
-	 */
 	@Override
 	public Flux<T> findAll(Sort sort) {
 
@@ -348,10 +272,6 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	// Methods from ReactiveMongoRepository
 	// -------------------------------------------------------------------------
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.ReactiveMongoRepository#insert(java.lang.Object)
-	 */
 	@Override
 	public <S extends T> Mono<S> insert(S entity) {
 
@@ -360,10 +280,6 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		return mongoOperations.insert(entity, entityInformation.getCollectionName());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.ReactiveMongoRepository#insert(java.lang.Iterable)
-	 */
 	@Override
 	public <S extends T> Flux<S> insert(Iterable<S> entities) {
 
@@ -374,10 +290,6 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		return source.isEmpty() ? Flux.empty() : mongoOperations.insertAll(source);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.ReactiveMongoRepository#insert(org.reactivestreams.Publisher)
-	 */
 	@Override
 	public <S extends T> Flux<S> insert(Publisher<S> entities) {
 
@@ -390,10 +302,6 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 	// Methods from ReactiveMongoRepository
 	// -------------------------------------------------------------------------
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.ReactiveQueryByExampleExecutor#findOne(org.springframework.data.domain.Example)
-	 */
 	@Override
 	public <S extends T> Mono<S> findOne(Example<S> example) {
 
@@ -413,10 +321,6 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 				}).next();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.ReactiveMongoRepository#findAll(org.springframework.data.domain.Example)
-	 */
 	@Override
 	public <S extends T> Flux<S> findAll(Example<S> example) {
 
@@ -425,10 +329,6 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		return findAll(example, Sort.unsorted());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.ReactiveMongoRepository#findAll(org.springframework.data.domain.Example, org.springframework.data.domain.Sort)
-	 */
 	@Override
 	public <S extends T> Flux<S> findAll(Example<S> example, Sort sort) {
 
@@ -442,10 +342,6 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		return mongoOperations.find(query, example.getProbeType(), entityInformation.getCollectionName());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.ReactiveQueryByExampleExecutor#count(org.springframework.data.domain.Example)
-	 */
 	@Override
 	public <S extends T> Mono<Long> count(Example<S> example) {
 
@@ -457,10 +353,6 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		return mongoOperations.count(query, example.getProbeType(), entityInformation.getCollectionName());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.ReactiveQueryByExampleExecutor#exists(org.springframework.data.domain.Example)
-	 */
 	@Override
 	public <S extends T> Mono<Boolean> exists(Example<S> example) {
 
@@ -472,10 +364,6 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 		return mongoOperations.exists(query, example.getProbeType(), entityInformation.getCollectionName());
 	}
 
-	/* 
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.ReactiveQueryByExampleExecutor#findBy(org.springframework.data.domain.Example, java.util.function.Function)
-	 */
 	@Override
 	public <S extends T, R, P extends Publisher<R>> P findBy(Example<S> example,
 			Function<FluentQuery.ReactiveFluentQuery<S>, P> queryFunction) {
@@ -529,37 +417,21 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 			return new ReactiveFluentQueryByExample<>(predicate, sort, resultType, fieldsToInclude);
 		}
 
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.FluentQuery.ReactiveFluentQuery#one()
-		 */
 		@Override
 		public Mono<T> one() {
 			return createQuery().one();
 		}
 
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.FluentQuery.ReactiveFluentQuery#first()
-		 */
 		@Override
 		public Mono<T> first() {
 			return createQuery().first();
 		}
 
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.FluentQuery.ReactiveFluentQuery#all()
-		 */
 		@Override
 		public Flux<T> all() {
 			return createQuery().all();
 		}
 
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.FluentQuery.ReactiveFluentQuery#page(org.springframework.data.domain.Pageable)
-		 */
 		@Override
 		public Mono<Page<T>> page(Pageable pageable) {
 
@@ -570,19 +442,11 @@ public class SimpleReactiveMongoRepository<T, ID extends Serializable> implement
 			return items.flatMap(content -> ReactivePageableExecutionUtils.getPage(content, pageable, this.count()));
 		}
 
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.FluentQuery.ReactiveFluentQuery#count()
-		 */
 		@Override
 		public Mono<Long> count() {
 			return createQuery().count();
 		}
 
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.FluentQuery.ReactiveFluentQuery#exists()
-		 */
 		@Override
 		public Mono<Boolean> exists() {
 			return createQuery().exists();

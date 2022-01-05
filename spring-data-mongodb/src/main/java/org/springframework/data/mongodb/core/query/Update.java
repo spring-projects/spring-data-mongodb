@@ -158,10 +158,6 @@ public class Update implements UpdateDefinition {
 		return this;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#inc()
-	 */
 	@Override
 	public void inc(String key) {
 		inc(key, 1L);
@@ -444,34 +440,18 @@ public class Update implements UpdateDefinition {
 		return this;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#isIsolated()
-	 */
 	public Boolean isIsolated() {
 		return isolated;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#getUpdateObject()
-	 */
 	public Document getUpdateObject() {
 		return new Document(modifierOps);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#getArrayFilters()
-	 */
 	public List<ArrayFilter> getArrayFilters() {
 		return Collections.unmodifiableList(this.arrayFilters);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#hasArrayFilters()
-	 */
 	@Override
 	public boolean hasArrayFilters() {
 		return !this.arrayFilters.isEmpty();
@@ -536,19 +516,11 @@ public class Update implements UpdateDefinition {
 		return StringUtils.startsWithIgnoreCase(key, "$");
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
 	@Override
 	public int hashCode() {
 		return Objects.hash(getUpdateObject(), isolated);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
 	@Override
 	public boolean equals(Object obj) {
 
@@ -568,10 +540,6 @@ public class Update implements UpdateDefinition {
 		return Objects.equals(this.getUpdateObject(), that.getUpdateObject());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
 	@Override
 	public String toString() {
 
@@ -614,19 +582,11 @@ public class Update implements UpdateDefinition {
 			return modifiers.isEmpty();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#hashCode()
-		 */
 		@Override
 		public int hashCode() {
 			return Objects.hashCode(modifiers);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#equals(java.lang.Object)
-		 */
 		@Override
 		public boolean equals(Object obj) {
 
@@ -683,19 +643,11 @@ public class Update implements UpdateDefinition {
 	 */
 	private static abstract class AbstractModifier implements Modifier {
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#hashCode()
-		 */
 		@Override
 		public int hashCode() {
 			return ObjectUtils.nullSafeHashCode(getKey()) + ObjectUtils.nullSafeHashCode(getValue());
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#equals(java.lang.Object)
-		 */
 		@Override
 		public boolean equals(Object that) {
 
@@ -714,10 +666,6 @@ public class Update implements UpdateDefinition {
 			return Objects.deepEquals(getValue(), ((Modifier) that).getValue());
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#toString()
-		 */
 		@Override
 		public String toString() {
 			return toJsonString();
@@ -751,19 +699,11 @@ public class Update implements UpdateDefinition {
 			return Arrays.copyOf(values, values.length);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.query.Update.Modifier#getKey()
-		 */
 		@Override
 		public String getKey() {
 			return "$each";
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.query.Update.Modifier#getValue()
-		 */
 		@Override
 		public Object getValue() {
 			return this.values;
@@ -809,19 +749,11 @@ public class Update implements UpdateDefinition {
 			this.count = count;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.query.Update.Modifier#getKey()
-		 */
 		@Override
 		public String getKey() {
 			return "$slice";
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.query.Update.Modifier#getValue()
-		 */
 		@Override
 		public Object getValue() {
 			return this.count;
@@ -870,19 +802,11 @@ public class Update implements UpdateDefinition {
 			this.sort = sort;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.query.Update.Modifier#getKey()
-		 */
 		@Override
 		public String getKey() {
 			return "$sort";
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.query.Update.Modifier#getValue()
-		 */
 		@Override
 		public Object getValue() {
 			return this.sort;
@@ -1013,19 +937,11 @@ public class Update implements UpdateDefinition {
 			return Update.this.push(key, this.modifiers);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#hashCode()
-		 */
 		@Override
 		public int hashCode() {
 			return Objects.hash(getOuterType(), key, modifiers);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#equals(java.lang.Object)
-		 */
 		@Override
 		public boolean equals(Object obj) {
 

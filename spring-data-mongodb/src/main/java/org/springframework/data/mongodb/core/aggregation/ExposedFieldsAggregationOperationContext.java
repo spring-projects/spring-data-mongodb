@@ -54,19 +54,11 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 		this.rootContext = rootContext;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(org.bson.Document, java.lang.Class)
-	 */
 	@Override
 	public Document getMappedObject(Document document, @Nullable Class<?> type) {
 		return rootContext.getMappedObject(document, type);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getReference(org.springframework.data.mongodb.core.aggregation.ExposedFields.AvailableField)
-	 */
 	@Override
 	public FieldReference getReference(Field field) {
 
@@ -77,19 +69,11 @@ class ExposedFieldsAggregationOperationContext implements AggregationOperationCo
 		return getReference(field, field.getTarget());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getReference(java.lang.String)
-	 */
 	@Override
 	public FieldReference getReference(String name) {
 		return getReference(null, name);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getFields(java.lang.Class)
-	 */
 	@Override
 	public Fields getFields(Class<?> type) {
 		return rootContext.getFields(type);
