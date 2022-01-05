@@ -105,10 +105,6 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 		return transform(new AggregationExpressionTransformationContext<>(node, null, null, context));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.spel.ExpressionTransformer#transform(org.springframework.data.mongodb.core.spel.ExpressionTransformationContextSupport)
-	 */
 	public Object transform(AggregationExpressionTransformationContext<ExpressionNode> context) {
 		return lookupConversionFor(context.getCurrentNode()).convert(context);
 	}
@@ -206,10 +202,6 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 					context.getAggregationContext()));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.NodeConversion#transform(org.springframework.data.mongodb.core.aggregation.AggregationExpressionTransformer.AggregationExpressionTransformationContext)
-		 */
 		@Override
 		public Object transform(AggregationExpressionTransformationContext<ExpressionNode> context) {
 			return transformer.transform(context);
@@ -235,10 +227,6 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			super(transformer);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.SpelNodeWrapper#convertSpelNodeToMongoObjectExpression(org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.ExpressionConversionContext)
-		 */
 		@Override
 		protected Object convert(AggregationExpressionTransformationContext<OperatorNode> context) {
 
@@ -303,10 +291,6 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			return result;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.SpelNodeWrapper#supports(java.lang.Class)
-		 */
 		@Override
 		protected boolean supports(ExpressionNode node) {
 			return node.isMathematicalOperation() || node.isLogicalOperator();
@@ -325,19 +309,11 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			super(transformer);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.SpelNodeWrapper#convertSpelNodeToMongoObjectExpression(org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.ExpressionConversionContext)
-		 */
 		@Override
 		protected Object convert(AggregationExpressionTransformationContext<ExpressionNode> context) {
 			return context.addToPreviousOrReturn(context.getCurrentNode().getValue());
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.NodeConversion#supports(org.springframework.data.mongodb.core.spel.ExpressionNode)
-		 */
 		@Override
 		protected boolean supports(ExpressionNode node) {
 			return node.isOfType(Indexer.class);
@@ -355,10 +331,6 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			super(transformer);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.SpelNodeWrapper#convertSpelNodeToMongoObjectExpression(org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.ExpressionConversionContext)
-		 */
 		@Nullable
 		@Override
 		protected Object convert(AggregationExpressionTransformationContext<ExpressionNode> context) {
@@ -373,10 +345,6 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			return transform(currentNode.getChild(0), currentNode, null, context);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.NodeConversion#supports(org.springframework.data.mongodb.core.spel.ExpressionNode)
-		 */
 		@Override
 		protected boolean supports(ExpressionNode node) {
 			return node.isOfType(InlineList.class);
@@ -395,10 +363,6 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			super(transformer);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.NodeConversion#convert(org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.ExpressionTransformationContext)
-		 */
 		@Override
 		protected Object convert(AggregationExpressionTransformationContext<ExpressionNode> context) {
 
@@ -406,10 +370,6 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			return context.addToPreviousOrReturn(fieldReference);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.NodeConversion#supports(org.springframework.data.mongodb.core.spel.ExpressionNode)
-		 */
 		@Override
 		protected boolean supports(ExpressionNode node) {
 			return node.isOfType(PropertyOrFieldReference.class);
@@ -428,10 +388,6 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			super(transformer);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.SpelNodeWrapper#convertSpelNodeToMongoObjectExpression(org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.ExpressionConversionContext)
-		 */
 		@Override
 		@SuppressWarnings("unchecked")
 		protected Object convert(AggregationExpressionTransformationContext<LiteralNode> context) {
@@ -453,10 +409,6 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			return value;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.SpelNodeWrapper#supports(org.springframework.expression.spel.SpelNode)
-		 */
 		@Override
 		protected boolean supports(ExpressionNode node) {
 			return node.isLiteral();
@@ -475,10 +427,6 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			super(transformer);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.SpelNodeWrapper#convertSpelNodeToMongoObjectExpression(org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.ExpressionConversionContext)
-		 */
 		@Override
 		protected Object convert(AggregationExpressionTransformationContext<MethodReferenceNode> context) {
 
@@ -530,10 +478,6 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			super(transformer);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.SpelNodeWrapper#convertSpelNodeToMongoObjectExpression(org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.ExpressionConversionContext)
-		 */
 		@Override
 		protected Object convert(AggregationExpressionTransformationContext<ExpressionNode> context) {
 
@@ -547,10 +491,6 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			return context.addToPreviousOrReturn(currentNode.getValue());
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.NodeConversion#supports(org.springframework.data.mongodb.core.spel.ExpressionNode)
-		 */
 		@Override
 		protected boolean supports(ExpressionNode node) {
 			return node.isOfType(CompoundExpression.class);
@@ -572,10 +512,6 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			super(transformer);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.SpelNodeWrapper#convertSpelNodeToMongoObjectExpression(org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.ExpressionConversionContext)
-		 */
 		@Override
 		protected Object convert(AggregationExpressionTransformationContext<NotOperatorNode> context) {
 
@@ -589,10 +525,6 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			return context.addToPreviousOrReturn(new Document(node.getMongoOperator(), args));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.NodeConversion#supports(org.springframework.data.mongodb.core.spel.ExpressionNode)
-		 */
 		@Override
 		protected boolean supports(ExpressionNode node) {
 			return node.isOfType(OperatorNot.class);
@@ -614,10 +546,6 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			super(transformer);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.SpelNodeWrapper#convertSpelNodeToMongoObjectExpression(org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.ExpressionConversionContext)
-		 */
 		@Override
 		protected Object convert(AggregationExpressionTransformationContext<ExpressionNode> context) {
 
@@ -625,10 +553,6 @@ class SpelExpressionTransformer implements AggregationExpressionTransformer {
 			return ObjectUtils.isArray(value) ? Arrays.asList(ObjectUtils.toObjectArray(value)) : value;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.SpelExpressionTransformer.NodeConversion#supports(org.springframework.data.mongodb.core.spel.ExpressionNode)
-		 */
 		@Override
 		protected boolean supports(ExpressionNode node) {
 			return node.isOfType(InlineMap.class) || node.isOfType(InlineList.class)

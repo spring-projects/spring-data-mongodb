@@ -52,10 +52,6 @@ class DefaultDbRefProxyHandler implements DbRefProxyHandler {
 		this.resolver = resolver;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.convert.DbRefProxyHandler#populateId(com.mongodb.DBRef, java.lang.Object)
-	 */
 	@Override
 	public Object populateId(MongoPersistentProperty property, @Nullable DBRef source, Object proxy) {
 

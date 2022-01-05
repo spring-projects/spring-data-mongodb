@@ -112,55 +112,31 @@ public class MappedDocument {
 			this.delegate = delegate;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#getUpdateObject()
-		 */
 		@Override
 		public Document getUpdateObject() {
 			return delegate.getUpdateObject();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#modifies(java.lang.String)
-		 */
 		@Override
 		public boolean modifies(String key) {
 			return delegate.modifies(key);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#inc(java.lang.String)
-		 */
 		@Override
 		public void inc(String version) {
 			delegate.inc(version);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#isIsolated()
-		 */
 		@Override
 		public Boolean isIsolated() {
 			return delegate.isIsolated();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#getArrayFilters()
-		 */
 		@Override
 		public List<ArrayFilter> getArrayFilters() {
 			return delegate.getArrayFilters();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.query.UpdateDefinition#hasArrayFilters()
-		 */
 		@Override
 		public boolean hasArrayFilters() {
 			return delegate.hasArrayFilters();

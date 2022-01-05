@@ -174,10 +174,6 @@ public final class IndexField {
 		return Type.WILDCARD.equals(type);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
 	@Override
 	public boolean equals(Object obj) {
 
@@ -195,10 +191,6 @@ public final class IndexField {
 				&& this.type == that.type;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
 	@Override
 	public int hashCode() {
 
@@ -210,10 +202,6 @@ public final class IndexField {
 		return result;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
 	@Override
 	public String toString() {
 		return String.format("IndexField [ key: %s, direction: %s, type: %s, weight: %s]", key, direction, type, weight);

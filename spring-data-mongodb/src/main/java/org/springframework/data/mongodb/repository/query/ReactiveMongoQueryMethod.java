@@ -98,28 +98,16 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 				&& ReactiveWrappers.isMultiValueType(metadata.getReturnType(method).getType()) || super.isCollectionQuery()));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.MongoQueryMethod#createParameters(java.lang.reflect.Method)
-	 */
 	@Override
 	protected MongoParameters createParameters(Method method) {
 		return new MongoParameters(method, isGeoNearQuery(method));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.QueryMethod#isCollectionQuery()
-	 */
 	@Override
 	public boolean isCollectionQuery() {
 		return isCollectionQuery.get();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.MongoQueryMethod#isGeoNearQuery()
-	 */
 	@Override
 	public boolean isGeoNearQuery() {
 		return isGeoNearQuery(method);
@@ -135,29 +123,16 @@ public class ReactiveMongoQueryMethod extends MongoQueryMethod {
 		return false;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.QueryMethod#isModifyingQuery()
-	 */
 	@Override
 	public boolean isModifyingQuery() {
 		return super.isModifyingQuery();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.QueryMethod#isQueryForEntity()
-	 */
 	@Override
 	public boolean isQueryForEntity() {
 		return super.isQueryForEntity();
 	}
 
-	/*
-	 * All reactive query methods are streaming queries.
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.QueryMethod#isStreamQuery()
-	 */
 	@Override
 	public boolean isStreamQuery() {
 		return true;

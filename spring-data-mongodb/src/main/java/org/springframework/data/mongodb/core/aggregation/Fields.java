@@ -179,10 +179,6 @@ public final class Fields implements Iterable<Field> {
 		return null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Iterable#iterator()
-	 */
 	@Override
 	public Iterator<Field> iterator() {
 		return fields.iterator();
@@ -253,18 +249,10 @@ public final class Fields implements Iterable<Field> {
 			return dollarIndex == -1 ? source : source.substring(dollarIndex + 1);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.Field#getKey()
-		 */
 		public String getName() {
 			return name;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.Field#getAlias()
-		 */
 		public String getTarget() {
 
 			if (isLocalVar()) {
@@ -274,10 +262,6 @@ public final class Fields implements Iterable<Field> {
 			return StringUtils.hasText(this.target) ? this.target : this.name;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.Field#isAliased()
-		 */
 		@Override
 		public boolean isAliased() {
 			return !getName().equals(getTarget());
@@ -304,19 +288,11 @@ public final class Fields implements Iterable<Field> {
 			return raw;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#toString()
-		 */
 		@Override
 		public String toString() {
 			return String.format("AggregationField - name: %s, target: %s", name, target);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#equals(java.lang.Object)
-		 */
 		@Override
 		public boolean equals(Object obj) {
 
@@ -333,10 +309,6 @@ public final class Fields implements Iterable<Field> {
 			return this.name.equals(that.name) && ObjectUtils.nullSafeEquals(this.target, that.target);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#hashCode()
-		 */
 		@Override
 		public int hashCode() {
 

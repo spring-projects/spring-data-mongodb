@@ -57,10 +57,6 @@ public class PartialIndexFilter implements IndexFilter {
 		return new PartialIndexFilter(where);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.index.IndexFilter#getFilterObject()
-	 */
 	public Document getFilterObject() {
 
 		if (filterExpression instanceof Document) {

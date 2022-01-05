@@ -68,10 +68,6 @@ public class MongoExceptionTranslator implements PersistenceExceptionTranslator 
 	private static final Set<String> DATA_INTEGRITY_EXCEPTIONS = new HashSet<>(
 			Arrays.asList("WriteConcernException", "MongoWriteException", "MongoBulkWriteException"));
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.dao.support.PersistenceExceptionTranslator#translateExceptionIfPossible(java.lang.RuntimeException)
-	 */
 	@Nullable
 	public DataAccessException translateExceptionIfPossible(RuntimeException ex) {
 

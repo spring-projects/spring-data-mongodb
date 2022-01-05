@@ -46,10 +46,6 @@ class ReactiveAggregationOperationSupport implements ReactiveAggregationOperatio
 		this.template = template;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveAggregationOperation#aggregateAndReturn(java.lang.Class)
-	 */
 	@Override
 	public <T> ReactiveAggregation<T> aggregateAndReturn(Class<T> domainType) {
 
@@ -75,10 +71,6 @@ class ReactiveAggregationOperationSupport implements ReactiveAggregationOperatio
 			this.collection = collection;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveAggregationOperation.AggregationOperationWithCollection#inCollection(java.lang.String)
-		 */
 		@Override
 		public AggregationOperationWithAggregation<T> inCollection(String collection) {
 
@@ -87,10 +79,6 @@ class ReactiveAggregationOperationSupport implements ReactiveAggregationOperatio
 			return new ReactiveAggregationSupport<>(template, domainType, aggregation, collection);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveAggregationOperation.AggregationOperationWithAggregation#by(org.springframework.data.mongodb.core.Aggregation)
-		 */
 		@Override
 		public TerminatingAggregationOperation<T> by(Aggregation aggregation) {
 
@@ -99,10 +87,6 @@ class ReactiveAggregationOperationSupport implements ReactiveAggregationOperatio
 			return new ReactiveAggregationSupport<>(template, domainType, aggregation, collection);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveAggregationOperation.TerminatingAggregationOperation#all()
-		 */
 		@Override
 		public Flux<T> all() {
 			return template.aggregate(aggregation, getCollectionName(aggregation), domainType);

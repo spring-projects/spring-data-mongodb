@@ -155,10 +155,6 @@ public class GeospatialIndex implements IndexDefinition {
 		return this;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.index.IndexDefinition#getIndexKeys()
-	 */
 	@Override
 	public Document getIndexKeys() {
 
@@ -189,10 +185,6 @@ public class GeospatialIndex implements IndexDefinition {
 		return document;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.index.IndexDefinition#getIndexOptions()
-	 */
 	@Override
 	public Document getIndexOptions() {
 
@@ -232,10 +224,6 @@ public class GeospatialIndex implements IndexDefinition {
 		return document;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
 	@Override
 	public String toString() {
 		return String.format("Geo index: %s - Options: %s", getIndexKeys(), getIndexOptions());

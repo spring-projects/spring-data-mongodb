@@ -95,10 +95,6 @@ public class SessionAwareMethodInterceptor<D, C> implements MethodInterceptor {
 		this.sessionType = sessionType;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.aopalliance.intercept.MethodInterceptor(org.aopalliance.intercept.MethodInvocation)
-	 */
 	@Nullable
 	@Override
 	public Object invoke(MethodInvocation methodInvocation) throws Throwable {

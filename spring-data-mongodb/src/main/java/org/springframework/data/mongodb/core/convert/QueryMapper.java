@@ -1098,19 +1098,11 @@ public class QueryMapper {
 			this.association = findAssociation();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.Field#with(java.lang.String)
-		 */
 		@Override
 		public MetadataBackedField with(String name) {
 			return new MetadataBackedField(name, entity, mappingContext, property);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.Field#isIdField()
-		 */
 		@Override
 		public boolean isIdField() {
 
@@ -1127,19 +1119,11 @@ public class QueryMapper {
 			return DEFAULT_ID_NAMES.contains(name);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.Field#getProperty()
-		 */
 		@Override
 		public MongoPersistentProperty getProperty() {
 			return association == null ? property : association.getInverse();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.Field#getEntity()
-		 */
 		@Override
 		public MongoPersistentEntity<?> getPropertyEntity() {
 			MongoPersistentProperty property = getProperty();
@@ -1152,19 +1136,11 @@ public class QueryMapper {
 			return entity;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.Field#isAssociation()
-		 */
 		@Override
 		public boolean isAssociation() {
 			return association != null;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.Field#getAssociation()
-		 */
 		@Override
 		public Association<MongoPersistentProperty> getAssociation() {
 			return association;
@@ -1192,10 +1168,6 @@ public class QueryMapper {
 			return null;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.Field#getTargetKey()
-		 */
 		@Override
 		public String getMappedKey() {
 			return path == null ? name : path.toDotPath(isAssociation() ? getAssociationConverter() : getPropertyConverter());
@@ -1360,20 +1332,12 @@ public class QueryMapper {
 				this.keyMapper = new KeyMapper(rawKey, ctx);
 			}
 
-			/*
-			 * (non-Javadoc)
-			 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-			 */
 			@Override
 			public String convert(MongoPersistentProperty source) {
 				return keyMapper.mapPropertyName(source);
 			}
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.Field#getTypeHint()
-		 */
 		@Override
 		public TypeInformation<?> getTypeHint() {
 
@@ -1495,10 +1459,6 @@ public class QueryMapper {
 			this.name = name;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
 		@Override
 		public String convert(MongoPersistentProperty source) {
 

@@ -63,28 +63,16 @@ public class ReactiveGridFsUpload<ID> implements GridFsObject<ID, Publisher<Data
 		return id;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.GridFsObject#getFielname()
-	 */
 	@Override
 	public String getFilename() {
 		return filename;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.GridFsObject#getContent()
-	 */
 	@Override
 	public Publisher<DataBuffer> getContent() {
 		return dataStream;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.GridFsObject#getOptions()
-	 */
 	@Override
 	public Options getOptions() {
 		return options;

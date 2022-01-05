@@ -125,10 +125,6 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		return sharded.immutableKey() ? ShardKey.immutable(shardKey) : shardKey;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentEntity#getCollection()
-	 */
 	public String getCollection() {
 
 		return expression == null //
@@ -136,38 +132,22 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 				: expression.getValue(getEvaluationContext(null), String.class);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentEntity#getLanguage()
-	 */
 	@Override
 	public String getLanguage() {
 		return this.language;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentEntity#getTextScoreProperty()
-	 */
 	@Nullable
 	@Override
 	public MongoPersistentProperty getTextScoreProperty() {
 		return getPersistentProperty(TextScore.class);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentEntity#hasTextScoreProperty()
-	 */
 	@Override
 	public boolean hasTextScoreProperty() {
 		return getTextScoreProperty() != null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.MongoPersistentEntity#getCollation()
-	 */
 	@Override
 	public org.springframework.data.mongodb.core.query.Collation getCollation() {
 
@@ -197,10 +177,6 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		return shardKey;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mapping.model.BasicPersistentEntity#verify()
-	 */
 	@Override
 	public void verify() {
 
@@ -210,10 +186,6 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 		verifyFieldTypes();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mapping.model.BasicPersistentEntity#getEvaluationContext(java.lang.Object)
-	 */
 	@Override
 	public EvaluationContext getEvaluationContext(Object rootObject) {
 		return super.getEvaluationContext(rootObject);
@@ -245,10 +217,6 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 
 		INSTANCE;
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
-		 */
 		public int compare(@Nullable MongoPersistentProperty o1, @Nullable MongoPersistentProperty o2) {
 
 			if (o1 != null && o1.getFieldOrder() == Integer.MAX_VALUE) {
@@ -404,10 +372,6 @@ public class BasicMongoPersistentEntity<T> extends BasicPersistentEntity<T, Mong
 	 */
 	private static class PropertyTypeAssertionHandler implements PropertyHandler<MongoPersistentProperty> {
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mapping.PropertyHandler#doWithPersistentProperty(org.springframework.data.mapping.PersistentProperty)
-		 */
 		@Override
 		public void doWithPersistentProperty(MongoPersistentProperty persistentProperty) {
 

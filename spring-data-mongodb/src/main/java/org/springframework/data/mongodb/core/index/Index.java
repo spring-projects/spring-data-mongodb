@@ -177,10 +177,6 @@ public class Index implements IndexDefinition {
 		return this;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.index.IndexDefinition#getIndexKeys()
-	 */
 	public Document getIndexKeys() {
 
 		Document document = new Document();
@@ -192,10 +188,6 @@ public class Index implements IndexDefinition {
 		return document;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.index.IndexDefinition#getIndexOptions()
-	 */
 	public Document getIndexOptions() {
 
 		Document document = new Document();

@@ -741,10 +741,6 @@ public class Aggregation {
 		return options.applyAndReturnPotentiallyChangedCommand(command);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
 	@Override
 	public String toString() {
 		return SerializationUtils.serializeToJsonSafely(toDocument("__collection__", DEFAULT_CONTEXT));
@@ -788,10 +784,6 @@ public class Aggregation {
 			return false;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Enum#toString()
-		 */
 		@Override
 		public String toString() {
 			return PREFIX.concat(name());

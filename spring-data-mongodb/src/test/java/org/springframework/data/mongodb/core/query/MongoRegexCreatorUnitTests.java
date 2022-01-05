@@ -80,10 +80,6 @@ public class MongoRegexCreatorUnitTests {
 					.isEqualTo(expectedResult);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#toString()
-		 */
 		@Override
 		public String toString() {
 			return String.format("Mode: %s, %s", mode, comment);

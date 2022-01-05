@@ -214,19 +214,11 @@ public class ReactiveMongoDatabaseUtils {
 			this.resourceHolder = resourceHolder;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.transaction.reactive.ReactiveResourceSynchronization#shouldReleaseBeforeCompletion()
-		 */
 		@Override
 		protected boolean shouldReleaseBeforeCompletion() {
 			return false;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.transaction.reactive.ReactiveResourceSynchronization#processResourceAfterCommit(java.lang.Object)
-		 */
 		@Override
 		protected Mono<Void> processResourceAfterCommit(ReactiveMongoResourceHolder resourceHolder) {
 
@@ -237,10 +229,6 @@ public class ReactiveMongoDatabaseUtils {
 			return Mono.empty();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.transaction.reactive.ReactiveResourceSynchronization#afterCompletion(int)
-		 */
 		@Override
 		public Mono<Void> afterCompletion(int status) {
 
@@ -256,10 +244,6 @@ public class ReactiveMongoDatabaseUtils {
 			});
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.transaction.reactive.ReactiveResourceSynchronization#releaseResource(java.lang.Object, java.lang.Object)
-		 */
 		@Override
 		protected Mono<Void> releaseResource(ReactiveMongoResourceHolder resourceHolder, Object resourceKey) {
 

@@ -58,10 +58,6 @@ public class MongoRepositoryBean<T> extends CdiRepositoryBean<T> {
 		this.operations = operations;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.cdi.CdiRepositoryBean#create(javax.enterprise.context.spi.CreationalContext, java.lang.Class)
-	 */
 	@Override
 	protected T create(CreationalContext<T> creationalContext, Class<T> repositoryType) {
 

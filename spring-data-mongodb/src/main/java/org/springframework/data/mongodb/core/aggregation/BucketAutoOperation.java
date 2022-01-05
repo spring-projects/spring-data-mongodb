@@ -88,9 +88,6 @@ public class BucketAutoOperation extends BucketOperationSupport<BucketAutoOperat
 		this.granularity = granularity;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.BucketOperationSupport#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
 
@@ -107,10 +104,6 @@ public class BucketAutoOperation extends BucketOperationSupport<BucketAutoOperat
 		return new Document(getOperator(), options);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
-	 */
 	@Override
 	public String getOperator() {
 		return "$bucketAuto";
@@ -144,33 +137,21 @@ public class BucketAutoOperation extends BucketOperationSupport<BucketAutoOperat
 		return new BucketAutoOperation(this, buckets, granularity.getMongoRepresentation());
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.BucketOperationSupport#newBucketOperation(org.springframework.data.mongodb.core.aggregation.BucketOperationSupport.Outputs)
-	 */
 	@Override
 	protected BucketAutoOperation newBucketOperation(Outputs outputs) {
 		return new BucketAutoOperation(this, outputs);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.BucketOperationSupport#andOutputExpression(java.lang.String, java.lang.Object[])
-	 */
 	@Override
 	public ExpressionBucketAutoOperationBuilder andOutputExpression(String expression, Object... params) {
 		return new ExpressionBucketAutoOperationBuilder(expression, this, params);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.BucketOperationSupport#andOutput(org.springframework.data.mongodb.core.aggregation.AggregationExpression)
-	 */
 	@Override
 	public BucketAutoOperationOutputBuilder andOutput(AggregationExpression expression) {
 		return new BucketAutoOperationOutputBuilder(expression, this);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.BucketOperationSupport#andOutput(java.lang.String)
-	 */
 	@Override
 	public BucketAutoOperationOutputBuilder andOutput(String fieldName) {
 		return new BucketAutoOperationOutputBuilder(Fields.field(fieldName), this);
@@ -192,9 +173,6 @@ public class BucketAutoOperation extends BucketOperationSupport<BucketAutoOperat
 			super(value, operation);
 		}
 
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.BucketOperationSupport.OutputBuilder#apply(org.springframework.data.mongodb.core.aggregation.BucketOperationSupport.OperationOutput)
-		 */
 		@Override
 		protected BucketAutoOperationOutputBuilder apply(OperationOutput operationOutput) {
 			return new BucketAutoOperationOutputBuilder(operationOutput, this.operation);
@@ -223,9 +201,6 @@ public class BucketAutoOperation extends BucketOperationSupport<BucketAutoOperat
 			super(expression, operation, parameters);
 		}
 
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.BucketOperationSupport.OutputBuilder#apply(org.springframework.data.mongodb.core.aggregation.BucketOperationSupport.OperationOutput)
-		 */
 		@Override
 		protected BucketAutoOperationOutputBuilder apply(OperationOutput operationOutput) {
 			return new BucketAutoOperationOutputBuilder(operationOutput, this.operation);
@@ -270,9 +245,6 @@ public class BucketAutoOperation extends BucketOperationSupport<BucketAutoOperat
 			this.granularity = granularity;
 		}
 
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.GranularitytoMongoGranularity()
-		 */
 		@Override
 		public String getMongoRepresentation() {
 			return granularity;

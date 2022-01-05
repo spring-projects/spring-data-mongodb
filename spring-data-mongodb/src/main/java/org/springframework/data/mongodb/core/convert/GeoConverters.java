@@ -131,10 +131,6 @@ abstract class GeoConverters {
 
 		INSTANCE;
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
 		@Override
 		public Point convert(Document source) {
 
@@ -162,10 +158,6 @@ abstract class GeoConverters {
 
 		INSTANCE;
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
 		@Override
 		public Document convert(Point source) {
 			return source == null ? null : new Document("x", source.getX()).append("y", source.getY());
@@ -183,10 +175,6 @@ abstract class GeoConverters {
 
 		INSTANCE;
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
 		@Override
 		public Document convert(Box source) {
 
@@ -212,10 +200,6 @@ abstract class GeoConverters {
 
 		INSTANCE;
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
 		@Override
 		public Box convert(Document source) {
 
@@ -240,10 +224,6 @@ abstract class GeoConverters {
 
 		INSTANCE;
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
 		@Override
 		public Document convert(Circle source) {
 
@@ -270,10 +250,6 @@ abstract class GeoConverters {
 
 		INSTANCE;
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
 		@Override
 		public Circle convert(Document source) {
 
@@ -311,10 +287,6 @@ abstract class GeoConverters {
 
 		INSTANCE;
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
 		@Override
 		public Document convert(Sphere source) {
 
@@ -341,10 +313,6 @@ abstract class GeoConverters {
 
 		INSTANCE;
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
 		@Override
 		public Sphere convert(Document source) {
 
@@ -382,10 +350,6 @@ abstract class GeoConverters {
 
 		INSTANCE;
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
 		@Override
 		public Document convert(Polygon source) {
 
@@ -417,10 +381,6 @@ abstract class GeoConverters {
 
 		INSTANCE;
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
 		@Override
 		@SuppressWarnings({ "unchecked" })
 		public Polygon convert(Document source) {
@@ -452,10 +412,6 @@ abstract class GeoConverters {
 
 		INSTANCE;
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
 		@Override
 		@SuppressWarnings("rawtypes")
 		public Document convert(GeoCommand source) {
@@ -512,10 +468,6 @@ abstract class GeoConverters {
 
 		INSTANCE;
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
 		@Override
 		public Document convert(GeoJson source) {
 
@@ -575,10 +527,6 @@ abstract class GeoConverters {
 
 		INSTANCE;
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
 		@Override
 		public Document convert(GeoJsonPoint source) {
 			return GeoJsonToDocumentConverter.INSTANCE.convert(source);
@@ -593,10 +541,6 @@ abstract class GeoConverters {
 
 		INSTANCE;
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
 		@Override
 		public Document convert(GeoJsonPolygon source) {
 			return GeoJsonToDocumentConverter.INSTANCE.convert(source);
@@ -611,10 +555,6 @@ abstract class GeoConverters {
 
 		INSTANCE;
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
 		@Override
 		@SuppressWarnings("unchecked")
 		public GeoJsonPoint convert(Document source) {
@@ -639,10 +579,6 @@ abstract class GeoConverters {
 
 		INSTANCE;
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
 		@Override
 		public GeoJsonPolygon convert(Document source) {
 
@@ -665,10 +601,6 @@ abstract class GeoConverters {
 
 		INSTANCE;
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
 		@Override
 		public GeoJsonMultiPolygon convert(Document source) {
 
@@ -698,10 +630,6 @@ abstract class GeoConverters {
 
 		INSTANCE;
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
 		@Override
 		public GeoJsonLineString convert(Document source) {
 
@@ -726,10 +654,6 @@ abstract class GeoConverters {
 
 		INSTANCE;
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
 		@Override
 		public GeoJsonMultiPoint convert(Document source) {
 
@@ -754,10 +678,6 @@ abstract class GeoConverters {
 
 		INSTANCE;
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
 		@Override
 		public GeoJsonMultiLineString convert(Document source) {
 
@@ -786,10 +706,6 @@ abstract class GeoConverters {
 
 		INSTANCE;
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
 		@SuppressWarnings("rawtypes")
 		@Override
 		public GeoJsonGeometryCollection convert(Document source) {
@@ -861,10 +777,6 @@ abstract class GeoConverters {
 		INSTANCE;
 
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
 		@Nullable
 		@Override
 		public GeoJson convert(Document source) {

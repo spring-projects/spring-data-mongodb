@@ -97,18 +97,10 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 		this.writeConcern = writeConcern;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.ReactiveMongoDbFactory#getMongoDatabase()
-	 */
 	public Mono<MongoDatabase> getMongoDatabase() throws DataAccessException {
 		return getMongoDatabase(databaseName);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.ReactiveMongoDbFactory#getMongoDatabase(java.lang.String)
-	 */
 	public Mono<MongoDatabase> getMongoDatabase(String dbName) throws DataAccessException {
 
 		Assert.hasText(dbName, "Database name must not be empty.");
@@ -133,36 +125,20 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.ReactiveMongoDbFactory#getExceptionTranslator()
-	 */
 	public PersistenceExceptionTranslator getExceptionTranslator() {
 		return this.exceptionTranslator;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.ReactiveMongoDatabaseFactory#getCodecRegistry()
-	 */
 	@Override
 	public CodecRegistry getCodecRegistry() {
 		return this.mongo.getDatabase(databaseName).getCodecRegistry();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.ReactiveMongoDbFactory#getSession(com.mongodb.ClientSessionOptions)
-	 */
 	@Override
 	public Mono<ClientSession> getSession(ClientSessionOptions options) {
 		return Mono.from(mongo.startSession(options));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.ReactiveMongoDbFactory#withSession(com.mongodb.session.ClientSession)
-	 */
 	@Override
 	public ReactiveMongoDatabaseFactory withSession(ClientSession session) {
 		return new ClientSessionBoundMongoDbFactory(session, this);
@@ -186,64 +162,36 @@ public class SimpleReactiveMongoDatabaseFactory implements DisposableBean, React
 			this.delegate = delegate;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.ReactiveMongoDatabaseFactory#getMongoDatabase()
-		 */
 		@Override
 		public Mono<MongoDatabase> getMongoDatabase() throws DataAccessException {
 			return delegate.getMongoDatabase().map(this::decorateDatabase);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.ReactiveMongoDatabaseFactory#getMongoDatabase(java.lang.String)
-		 */
 		@Override
 		public Mono<MongoDatabase> getMongoDatabase(String dbName) throws DataAccessException {
 			return delegate.getMongoDatabase(dbName).map(this::decorateDatabase);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.ReactiveMongoDatabaseFactory#getExceptionTranslator()
-		 */
 		@Override
 		public PersistenceExceptionTranslator getExceptionTranslator() {
 			return delegate.getExceptionTranslator();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.ReactiveMongoDatabaseFactory#getCodecRegistry()
-		 */
 		@Override
 		public CodecRegistry getCodecRegistry() {
 			return delegate.getCodecRegistry();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.ReactiveMongoDatabaseFactory#getSession(com.mongodb.ClientSessionOptions)
-		 */
 		@Override
 		public Mono<ClientSession> getSession(ClientSessionOptions options) {
 			return delegate.getSession(options);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.ReactiveMongoDatabaseFactory#withSession(com.mongodb.session.ClientSession)
-		 */
 		@Override
 		public ReactiveMongoDatabaseFactory withSession(ClientSession session) {
 			return delegate.withSession(session);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.ReactiveMongoDatabaseFactory#isTransactionActive()
-		 */
 		@Override
 		public boolean isTransactionActive() {
 			return session != null && session.hasActiveTransaction();

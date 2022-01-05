@@ -77,9 +77,6 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		return new GraphLookupOperationFromBuilder();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
 
@@ -126,10 +123,6 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		return "$graphLookup";
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation#getFields()
-	 */
 	@Override
 	public ExposedFields getFields() {
 
@@ -229,9 +222,6 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 		private @Nullable List<? extends Object> startWith;
 		private @Nullable String connectFrom;
 
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.GraphLookupOperation.FromBuilder#from(java.lang.String)
-		 */
 		@Override
 		public StartWithBuilder from(String collectionName) {
 
@@ -241,9 +231,6 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 			return this;
 		}
 
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.GraphLookupOperation.StartWithBuilder#startWith(java.lang.String[])
-		 */
 		@Override
 		public ConnectFromBuilder startWith(String... fieldReferences) {
 
@@ -260,9 +247,6 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 			return this;
 		}
 
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.GraphLookupOperation.StartWithBuilder#startWith(org.springframework.data.mongodb.core.aggregation.AggregationExpression[])
-		 */
 		@Override
 		public ConnectFromBuilder startWith(AggregationExpression... expressions) {
 
@@ -314,9 +298,6 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 					String.format("Expression must be any of %s but was %s", ALLOWED_START_TYPES, expression.getClass()));
 		}
 
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.GraphLookupOperation.ConnectFromBuilder#connectFrom(java.lang.String)
-		 */
 		@Override
 		public ConnectToBuilder connectFrom(String fieldName) {
 
@@ -326,9 +307,6 @@ public class GraphLookupOperation implements InheritsFieldsAggregationOperation 
 			return this;
 		}
 
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.GraphLookupOperation.ConnectToBuilder#connectTo(java.lang.String)
-		 */
 		@Override
 		public GraphLookupOperationBuilder connectTo(String fieldName) {
 

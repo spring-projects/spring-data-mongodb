@@ -77,19 +77,11 @@ public class ReactivePartTreeMongoQuery extends AbstractReactiveMongoQuery {
 		return tree;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery#createQuery(org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor, boolean)
-	 */
 	@Override
 	protected Mono<Query> createQuery(ConvertingParameterAccessor accessor) {
 		return Mono.fromSupplier(() -> createQueryInternal(accessor, false));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#createCountQuery(org.springframework.data.mongodb.repository.query.ConvertingParameterAccessor)
-	 */
 	@Override
 	protected Mono<Query> createCountQuery(ConvertingParameterAccessor accessor) {
 		return Mono.fromSupplier(() -> createQueryInternal(accessor, true));
@@ -138,37 +130,21 @@ public class ReactivePartTreeMongoQuery extends AbstractReactiveMongoQuery {
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#isCountQuery()
-	 */
 	@Override
 	protected boolean isCountQuery() {
 		return tree.isCountProjection();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#isExistsQuery()
-	 */
 	@Override
 	protected boolean isExistsQuery() {
 		return tree.isExistsProjection();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#isDeleteQuery()
-	 */
 	@Override
 	protected boolean isDeleteQuery() {
 		return tree.isDelete();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.AbstractReactiveMongoQuery#isLimiting()
-	 */
 	@Override
 	protected boolean isLimiting() {
 		return tree.isLimiting();

@@ -43,19 +43,11 @@ public class LimitOperation implements AggregationOperation {
 		this.maxElements = maxElements;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
 		return new Document(getOperator(), Long.valueOf(maxElements));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
-	 */
 	@Override
 	public String getOperator() {
 		return "$limit";

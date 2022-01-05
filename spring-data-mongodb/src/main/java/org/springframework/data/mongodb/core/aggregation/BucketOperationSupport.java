@@ -141,9 +141,6 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		});
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
 
@@ -159,9 +156,6 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 		return document;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation#getFields()
-	 */
 	@Override
 	public ExposedFields getFields() {
 		return outputs.asExposedFields();
@@ -454,9 +448,6 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 			return outputs.isEmpty();
 		}
 
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpression#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-		 */
 		@Override
 		public Document toDocument(AggregationOperationContext context) {
 
@@ -540,10 +531,6 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 			this.values = operationOutput.values;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-		 */
 		@Override
 		public Document toDocument(AggregationOperationContext context) {
 
@@ -636,9 +623,6 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 			this.params = parameters.clone();
 		}
 
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.BucketOperationSupport.Output#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-		 */
 		@Override
 		public Document toDocument(AggregationOperationContext context) {
 			return (Document) TRANSFORMER.transform(expression, context, params);
@@ -665,9 +649,6 @@ public abstract class BucketOperationSupport<T extends BucketOperationSupport<T,
 			this.expression = expression;
 		}
 
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.BucketOperationSupport.Output#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-		 */
 		@Override
 		public Document toDocument(AggregationOperationContext context) {
 			return expression.toDocument(context);

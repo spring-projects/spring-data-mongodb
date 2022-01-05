@@ -46,25 +46,16 @@ public class MongoAdmin implements MongoAdminOperations {
 		this.mongoClient = client;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.core.MongoAdminOperations#dropDatabase(java.lang.String)
-	 */
 	@ManagedOperation
 	public void dropDatabase(String databaseName) {
 		getDB(databaseName).drop();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.core.MongoAdminOperations#createDatabase(java.lang.String)
-	 */
 	@ManagedOperation
 	public void createDatabase(String databaseName) {
 		getDB(databaseName);
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.core.MongoAdminOperations#getDatabaseStats(java.lang.String)
-	 */
 	@ManagedOperation
 	public String getDatabaseStats(String databaseName) {
 		return getDB(databaseName).runCommand(new Document("dbStats", 1).append("scale", 1024)).toJson();

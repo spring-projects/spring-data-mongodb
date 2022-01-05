@@ -52,19 +52,11 @@ public class GeoJsonPoint extends Point implements GeoJson<List<Double>> {
 		super(point);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.geo.GeoJson#getType()
-	 */
 	@Override
 	public String getType() {
 		return TYPE;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.geo.GeoJson#getCoordinates()
-	 */
 	@Override
 	public List<Double> getCoordinates() {
 		return Arrays.asList(Double.valueOf(getX()), Double.valueOf(getY()));

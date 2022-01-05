@@ -198,10 +198,6 @@ public class ExpressionNode implements Iterable<ExpressionNode> {
 		return from(node, state);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Iterable#iterator()
-	 */
 	@Override
 	public Iterator<ExpressionNode> iterator() {
 

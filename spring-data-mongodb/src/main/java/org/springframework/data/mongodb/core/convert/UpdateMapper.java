@@ -58,10 +58,6 @@ public class UpdateMapper extends QueryMapper {
 		this.converter = converter;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.convert.QueryMapper#getMappedObject(Bson, MongoPersistentEntity)
-	 */
 	@Override
 	public Document getMappedObject(Bson query, @Nullable MongoPersistentEntity<?> entity) {
 
@@ -141,10 +137,6 @@ public class UpdateMapper extends QueryMapper {
 				entity == null ? ClassTypeInformation.OBJECT : getTypeHintForEntity(source, entity));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.convert.QueryMapper#getMappedObjectForField(org.springframework.data.mongodb.core.convert.QueryMapper.Field, java.lang.Object)
-	 */
 	@Override
 	protected Entry<String, Object> getMappedObjectForField(Field field, Object rawValue) {
 
@@ -189,10 +181,6 @@ public class UpdateMapper extends QueryMapper {
 		return createMapEntry(field, value);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.convert.QueryMapper#isAssociationConversionNecessary(org.springframework.data.mongodb.core.convert.QueryMapper.Field, java.lang.Object)
-	 */
 	@Override
 	protected boolean isAssociationConversionNecessary(Field documentField, @Nullable Object value) {
 		return super.isAssociationConversionNecessary(documentField, value) || documentField.containsAssociation();
@@ -246,10 +234,6 @@ public class UpdateMapper extends QueryMapper {
 		return NESTED_DOCUMENT;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.convert.QueryMapper#createPropertyField(org.springframework.data.mongodb.core.mapping.MongoPersistentEntity, java.lang.String, org.springframework.data.mapping.context.MappingContext)
-	 */
 	@Override
 	protected Field createPropertyField(MongoPersistentEntity<?> entity, String key,
 			MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext) {
@@ -299,28 +283,16 @@ public class UpdateMapper extends QueryMapper {
 			this.key = key;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.MetadataBackedField#getMappedKey()
-		 */
 		@Override
 		public String getMappedKey() {
 			return this.getPath() == null ? key : super.getMappedKey();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.MetadataBackedField#getPropertyConverter()
-		 */
 		@Override
 		protected Converter<MongoPersistentProperty, String> getPropertyConverter() {
 			return new PositionParameterRetainingPropertyKeyConverter(key, getMappingContext());
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.convert.QueryMapper.MetadataBackedField#getAssociationConverter()
-		 */
 		@Override
 		protected Converter<MongoPersistentProperty, String> getAssociationConverter() {
 			return new UpdateAssociationConverter(getMappingContext(), getAssociation(), key);
@@ -348,10 +320,6 @@ public class UpdateMapper extends QueryMapper {
 				this.mapper = new KeyMapper(key, mappingContext);
 			}
 
-			/*
-			 * (non-Javadoc)
-			 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-			 */
 			@Override
 			public String convert(MongoPersistentProperty source) {
 				return super.convert(source) == null ? null : mapper.mapPropertyName(source);

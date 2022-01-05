@@ -79,26 +79,16 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 		return new ReplaceRootOperationBuilder();
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
 		return new Document("$replaceRoot", new Document("newRoot", getReplacement().toDocumentExpression(context)));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
-	 */
 	@Override
 	public String getOperator() {
 		return "$replaceRoot";
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation#getFields()
-	 */
 	@Override
 	public ExposedFields getFields() {
 		return ExposedFields.from();
@@ -301,9 +291,6 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 			this.aggregationExpression = aggregationExpression;
 		}
 
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.Replacement#toObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-		 */
 		@Override
 		public Document toDocumentExpression(AggregationOperationContext context) {
 			return aggregationExpression.toDocument(context);
@@ -328,9 +315,6 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 			this.field = field;
 		}
 
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.Replacement#toObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-		 */
 		@Override
 		public Object toDocumentExpression(AggregationOperationContext context) {
 			return context.getReference(field).toString();
@@ -398,9 +382,6 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 			return new ReplacementDocument(new ValueFieldContributor(Fields.field(field), value));
 		}
 
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.Replacement#toObject(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-		 */
 		@Override
 		public Document toDocumentExpression(AggregationOperationContext context) {
 
@@ -475,9 +456,6 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 			this.value = value;
 		}
 
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.ReplacementContributor#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-		 */
 		@Override
 		public Document toDocument(AggregationOperationContext context) {
 
@@ -541,9 +519,6 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 			this.value = value;
 		}
 
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.ReplacementContributor#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-		 */
 		@Override
 		public Document toDocument(AggregationOperationContext context) {
 
@@ -577,9 +552,6 @@ public class ReplaceRootOperation implements FieldsExposingAggregationOperation 
 			this.aggregationExpression = aggregationExpression;
 		}
 
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.ReplaceRootOperation.ReplacementContributor#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-		 */
 		@Override
 		public Document toDocument(AggregationOperationContext context) {
 			return new Document(getField().getTarget(), aggregationExpression.toDocument(context));

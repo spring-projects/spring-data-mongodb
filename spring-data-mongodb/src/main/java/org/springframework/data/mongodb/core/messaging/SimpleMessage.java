@@ -45,28 +45,16 @@ class SimpleMessage<S, T> implements Message<S, T> {
 		this.properties = properties;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.messaging.Message#getRaw()
-	 */
 	@Override
 	public S getRaw() {
 		return raw;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.messaging.Message#getBody()
-	 */
 	@Override
 	public T getBody() {
 		return body;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.messaging.Message#getProperties()
-	 */
 	@Override
 	public MessageProperties getProperties() {
 		return properties;

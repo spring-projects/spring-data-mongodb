@@ -75,28 +75,16 @@ public class SimpleMongoClientDatabaseFactory extends MongoDatabaseFactorySuppor
 		super(mongoClient, databaseName, mongoInstanceCreated, new MongoExceptionTranslator());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.MongoDbFactory#getSession(com.mongodb.ClientSessionOptions)
-	 */
 	@Override
 	public ClientSession getSession(ClientSessionOptions options) {
 		return getMongoClient().startSession(options);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoDbFactoryBase#closeClient()
-	 */
 	@Override
 	protected void closeClient() {
 		getMongoClient().close();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.MongoDbFactoryBase#doGetMongoDatabase(java.lang.String)
-	 */
 	@Override
 	protected MongoDatabase doGetMongoDatabase(String dbName) {
 		return getMongoClient().getDatabase(dbName);

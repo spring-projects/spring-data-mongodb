@@ -51,10 +51,6 @@ public class MongoCredentialPropertyEditor extends PropertyEditorSupport {
 	private static final String OPTIONS_DELIMITER = "?";
 	private static final String OPTION_VALUE_DELIMITER = "&";
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.beans.PropertyEditorSupport#setAsText(java.lang.String)
-	 */
 	@Override
 	public void setAsText(@Nullable String text) throws IllegalArgumentException {
 

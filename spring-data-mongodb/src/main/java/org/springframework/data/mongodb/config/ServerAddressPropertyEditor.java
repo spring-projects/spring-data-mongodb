@@ -46,10 +46,6 @@ public class ServerAddressPropertyEditor extends PropertyEditorSupport {
 	private static final String COULD_NOT_PARSE_ADDRESS_MESSAGE = "Could not parse address %s '%s'. Check your replica set configuration!";
 	private static final Log LOG = LogFactory.getLog(ServerAddressPropertyEditor.class);
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.beans.PropertyEditorSupport#setAsText(java.lang.String)
-	 */
 	@Override
 	public void setAsText(@Nullable String replicaSetString) {
 

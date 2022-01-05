@@ -47,10 +47,6 @@ public class RelaxedTypeBasedAggregationOperationContext extends TypeBasedAggreg
 		super(type, mappingContext, mapper);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.TypeBasedAggregationOperationContext#getReferenceFor(rg.springframework.data.mongodb.core.aggregation.Field)
-	 */
 	@Override
 	protected FieldReference getReferenceFor(Field field) {
 

@@ -42,10 +42,6 @@ class DefaultIndexOperationsProvider implements IndexOperationsProvider {
 		this.mapper = mapper;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.index.IndexOperationsProvider#reactiveIndexOps(java.lang.String)
-	 */
 	@Override
 	public IndexOperations indexOps(String collectionName, Class<?> type) {
 		return new DefaultIndexOperations(mongoDbFactory, collectionName, mapper, type);

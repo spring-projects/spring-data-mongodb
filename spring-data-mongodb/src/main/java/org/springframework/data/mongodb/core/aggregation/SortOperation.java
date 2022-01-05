@@ -59,10 +59,6 @@ public class SortOperation implements AggregationOperation {
 		return new SortOperation(this.sort.and(sort));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
 
@@ -78,10 +74,6 @@ public class SortOperation implements AggregationOperation {
 		return new Document(getOperator(), object);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
-	 */
 	@Override
 	public String getOperator() {
 		return "$sort";

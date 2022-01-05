@@ -41,10 +41,6 @@ class ReactiveRemoveOperationSupport implements ReactiveRemoveOperation {
 		this.tempate = tempate;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveRemoveOperation#remove(java.lang.Class)
-	 */
 	@Override
 	public <T> ReactiveRemove<T> remove(Class<T> domainType) {
 
@@ -68,10 +64,6 @@ class ReactiveRemoveOperationSupport implements ReactiveRemoveOperation {
 			this.collection = collection;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveRemoveOperation.RemoveWithCollection#inCollection(String)
-		 */
 		@Override
 		public RemoveWithQuery<T> inCollection(String collection) {
 
@@ -80,10 +72,6 @@ class ReactiveRemoveOperationSupport implements ReactiveRemoveOperation {
 			return new ReactiveRemoveSupport<>(template, domainType, query, collection);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveRemoveOperation.RemoveWithQuery#matching(org.springframework.data.mongodb.core.Query)
-		 */
 		@Override
 		public TerminatingRemove<T> matching(Query query) {
 
@@ -92,10 +80,6 @@ class ReactiveRemoveOperationSupport implements ReactiveRemoveOperation {
 			return new ReactiveRemoveSupport<>(template, domainType, query, collection);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveRemoveOperation.TerminatingRemove#all()
-		 */
 		@Override
 		public Mono<DeleteResult> all() {
 
@@ -104,10 +88,6 @@ class ReactiveRemoveOperationSupport implements ReactiveRemoveOperation {
 			return template.doRemove(collectionName, query, domainType);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveRemoveOperation.TerminatingRemove#findAndRemove()
-		 */
 		@Override
 		public Flux<T> findAndRemove() {
 

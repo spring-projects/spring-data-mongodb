@@ -52,10 +52,6 @@ class DefaultDbRefResolverCallback implements DbRefResolverCallback {
 		this.evaluator = evaluator;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.convert.DbRefResolverCallback#resolve(org.springframework.data.mongodb.core.mapping.MongoPersistentProperty)
-	 */
 	@Override
 	public Object resolve(MongoPersistentProperty property) {
 		return resolver.getValueInternal(property, surroundingObject, evaluator, path);

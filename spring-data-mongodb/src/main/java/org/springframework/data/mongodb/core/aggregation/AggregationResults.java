@@ -77,10 +77,6 @@ public class AggregationResults<T> implements Iterable<T> {
 		return mappedResults.size() == 1 ? mappedResults.get(0) : null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Iterable#iterator()
-	 */
 	public Iterator<T> iterator() {
 		return mappedResults.iterator();
 	}

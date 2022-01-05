@@ -216,10 +216,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		this.typeMapper = typeMapper;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.convert.MongoConverter#getTypeMapper()
-	 */
 	@Override
 	public MongoTypeMapper getTypeMapper() {
 		return this.typeMapper == null ? this.defaultTypeMapper : this.typeMapper;
@@ -261,18 +257,10 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		this.codecRegistryProvider = codecRegistryProvider;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.convert.EntityConverter#getMappingContext()
-	 */
 	public MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> getMappingContext() {
 		return mappingContext;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.context.ApplicationContextAware#setApplicationContext(org.springframework.context.ApplicationContext)
-	 */
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 
 		this.applicationContext = applicationContext;
@@ -450,10 +438,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.core.MongoReader#read(java.lang.Class, com.mongodb.Document)
-	 */
 	public <S extends Object> S read(Class<S> clazz, Bson bson) {
 		return read(ClassTypeInformation.from(clazz), bson);
 	}
@@ -752,10 +736,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.convert.MongoWriter#toDBRef(java.lang.Object, org.springframework.data.mongodb.core.mapping.MongoPersistentProperty)
-	 */
 	public DBRef toDBRef(Object object, @Nullable MongoPersistentProperty referringProperty) {
 
 		org.springframework.data.mongodb.core.mapping.DBRef annotation;
@@ -1524,10 +1504,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		return map;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.convert.MongoWriter#convertToMongoType(java.lang.Object, org.springframework.data.util.TypeInformation)
-	 */
 	@Nullable
 	@SuppressWarnings("unchecked")
 	@Override
@@ -1944,10 +1920,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			this.evaluator = evaluator;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.convert.PropertyValueProvider#getPropertyValue(org.springframework.data.mapping.PersistentProperty)
-		 */
 		@Nullable
 		@SuppressWarnings("unchecked")
 		public <T> T getPropertyValue(MongoPersistentProperty property) {
@@ -1994,10 +1966,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			super(context, source, evaluator);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.convert.PropertyValueProvider#getPropertyValue(org.springframework.data.mapping.PersistentProperty)
-		 */
 		@Nullable
 		@SuppressWarnings("unchecked")
 		public <T> T getPropertyValue(MongoPersistentProperty property) {
@@ -2056,10 +2024,6 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 			this.context = context;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mapping.model.SpELExpressionParameterValueProvider#potentiallyConvertSpelValue(java.lang.Object, org.springframework.data.mapping.PreferredConstructor.Parameter)
-		 */
 		@Override
 		protected <T> T potentiallyConvertSpelValue(Object object, Parameter<T, MongoPersistentProperty> parameter) {
 			return context.convert(object, parameter.getType());

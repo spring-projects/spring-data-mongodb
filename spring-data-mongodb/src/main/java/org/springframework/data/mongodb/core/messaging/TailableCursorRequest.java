@@ -76,19 +76,11 @@ public class TailableCursorRequest<T> implements SubscriptionRequest<Document, T
 				: TailableCursorRequestOptions.of(options);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.monitor.SubscriptionRequest#getMessageListener()
-	 */
 	@Override
 	public MessageListener<Document, ? super T> getMessageListener() {
 		return messageListener;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.monitor.SubscriptionRequest#getRequestOptions()
-	 */
 	@Override
 	public TailableCursorRequestOptions getRequestOptions() {
 		return options;

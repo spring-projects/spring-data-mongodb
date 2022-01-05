@@ -76,10 +76,6 @@ public enum AggregationFunctionExpressions {
 			this.values = Arrays.asList(values);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.Expression#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-		 */
 		@Override
 		public Document toDocument(AggregationOperationContext context) {
 

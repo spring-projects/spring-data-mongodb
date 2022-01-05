@@ -44,18 +44,10 @@ class SimpleMongoEntityMetadata<T> implements MongoEntityMetadata<T> {
 		this.collectionEntity = collectionEntity;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.core.EntityMetadata#getJavaType()
-	 */
 	public Class<T> getJavaType() {
 		return type;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.MongoEntityMetadata#getCollectionName()
-	 */
 	public String getCollectionName() {
 		return collectionEntity.getCollection();
 	}

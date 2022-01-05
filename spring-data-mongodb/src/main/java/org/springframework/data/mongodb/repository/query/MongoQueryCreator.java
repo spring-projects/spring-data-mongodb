@@ -106,10 +106,6 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 		this.context = context;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.parser.AbstractQueryCreator#create(org.springframework.data.repository.query.parser.Part, java.util.Iterator)
-	 */
 	@Override
 	protected Criteria create(Part part, Iterator<Object> iterator) {
 
@@ -123,10 +119,6 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 		return from(part, property, where(path.toDotPath()), iterator);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.parser.AbstractQueryCreator#and(org.springframework.data.repository.query.parser.Part, java.lang.Object, java.util.Iterator)
-	 */
 	@Override
 	protected Criteria and(Part part, Criteria base, Iterator<Object> iterator) {
 
@@ -140,10 +132,6 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 		return from(part, property, base.and(path.toDotPath()), iterator);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.parser.AbstractQueryCreator#or(java.lang.Object, java.lang.Object)
-	 */
 	@Override
 	protected Criteria or(Criteria base, Criteria criteria) {
 
@@ -151,10 +139,6 @@ class MongoQueryCreator extends AbstractQueryCreator<Query, Criteria> {
 		return result.orOperator(base, criteria);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.parser.AbstractQueryCreator#complete(java.lang.Object, org.springframework.data.domain.Sort)
-	 */
 	@Override
 	protected Query complete(Criteria criteria, Sort sort) {
 

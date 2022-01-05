@@ -35,10 +35,6 @@ import org.w3c.dom.Element;
  */
 public class MongoClientParser implements BeanDefinitionParser {
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.beans.factory.xml.BeanDefinitionParser#parse(org.w3c.dom.Element, org.springframework.beans.factory.xml.ParserContext)
-	 */
 	public BeanDefinition parse(Element element, ParserContext parserContext) {
 
 		Object source = parserContext.extractSource(element);

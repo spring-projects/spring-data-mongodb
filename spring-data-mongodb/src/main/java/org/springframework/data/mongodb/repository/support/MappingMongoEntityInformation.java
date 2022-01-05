@@ -89,26 +89,14 @@ public class MappingMongoEntityInformation<T, ID> extends PersistentEntityInform
 		this.fallbackIdType = idType != null ? idType : (Class<ID>) ObjectId.class;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.MongoEntityInformation#getCollectionName()
-	 */
 	public String getCollectionName() {
 		return customCollectionName == null ? entityMetadata.getCollection() : customCollectionName;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.MongoEntityInformation#getIdAttribute()
-	 */
 	public String getIdAttribute() {
 		return entityMetadata.getRequiredIdProperty().getName();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.core.support.PersistentEntityInformation#getIdType()
-	 */
 	@Override
 	public Class<ID> getIdType() {
 
@@ -119,19 +107,11 @@ public class MappingMongoEntityInformation<T, ID> extends PersistentEntityInform
 		return fallbackIdType;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.MongoEntityInformation#isVersioned()
-	 */
 	@Override
 	public boolean isVersioned() {
 		return this.entityMetadata.hasVersionProperty();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.MongoEntityInformation#getVersion(Object)
-	 */
 	@Override
 	public Object getVersion(T entity) {
 
@@ -144,10 +124,6 @@ public class MappingMongoEntityInformation<T, ID> extends PersistentEntityInform
 		return accessor.getProperty(this.entityMetadata.getRequiredVersionProperty());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.MongoEntityInformation#getCollation()
-	 */
 	@Nullable
 	public Collation getCollation() {
 		return this.entityMetadata.getCollation();

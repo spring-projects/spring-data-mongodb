@@ -40,10 +40,6 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 		this.template = template;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.coreExecutableInsertOperation#insert(java.lan.Class)
-	 */
 	@Override
 	public <T> ExecutableInsert<T> insert(Class<T> domainType) {
 
@@ -71,10 +67,6 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 			this.bulkMode = bulkMode;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableInsertOperation.TerminatingInsert#insert(java.lang.Class)
-		 */
 		@Override
 		public T one(T object) {
 
@@ -83,10 +75,6 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 			return template.insert(object, getCollectionName());
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableInsertOperation.TerminatingInsert#all(java.util.Collection)
-		 */
 		@Override
 		public Collection<T> all(Collection<? extends T> objects) {
 
@@ -95,10 +83,6 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 			return template.insert(objects, getCollectionName());
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableInsertOperation.TerminatingBulkInsert#bulk(java.util.Collection)
-		 */
 		@Override
 		public BulkWriteResult bulk(Collection<? extends T> objects) {
 
@@ -108,10 +92,6 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 					.insert(new ArrayList<>(objects)).execute();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableInsertOperation.InsertWithCollection#inCollection(java.lang.String)
-		 */
 		@Override
 		public InsertWithBulkMode<T> inCollection(String collection) {
 
@@ -120,10 +100,6 @@ class ExecutableInsertOperationSupport implements ExecutableInsertOperation {
 			return new ExecutableInsertSupport<>(template, domainType, collection, bulkMode);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableInsertOperation.InsertWithBulkMode#withBulkMode(org.springframework.data.mongodb.core.BulkMode)
-		 */
 		@Override
 		public TerminatingBulkInsert<T> withBulkMode(BulkMode bulkMode) {
 

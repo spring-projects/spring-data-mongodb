@@ -42,54 +42,30 @@ public class MongoRepositoryConfigurationExtension extends RepositoryConfigurati
 	private static final String MONGO_TEMPLATE_REF = "mongo-template-ref";
 	private static final String CREATE_QUERY_INDEXES = "create-query-indexes";
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#getModuleName()
-	 */
 	@Override
 	public String getModuleName() {
 		return "MongoDB";
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#getModulePrefix()
-	 */
 	@Override
 	protected String getModulePrefix() {
 		return "mongo";
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtension#getRepositoryFactoryBeanClassName()
-	 */
 	public String getRepositoryFactoryBeanClassName() {
 		return MongoRepositoryFactoryBean.class.getName();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#getIdentifyingAnnotations()
-	 */
 	@Override
 	protected Collection<Class<? extends Annotation>> getIdentifyingAnnotations() {
 		return Collections.singleton(Document.class);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#getIdentifyingTypes()
-	 */
 	@Override
 	protected Collection<Class<?>> getIdentifyingTypes() {
 		return Collections.singleton(MongoRepository.class);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#postProcess(org.springframework.beans.factory.support.BeanDefinitionBuilder, org.springframework.data.repository.config.XmlRepositoryConfigurationSource)
-	 */
 	@Override
 	public void postProcess(BeanDefinitionBuilder builder, XmlRepositoryConfigurationSource config) {
 
@@ -99,10 +75,6 @@ public class MongoRepositoryConfigurationExtension extends RepositoryConfigurati
 		ParsingUtils.setPropertyValue(builder, element, CREATE_QUERY_INDEXES, "createIndexesForQueryMethods");
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#postProcess(org.springframework.beans.factory.support.BeanDefinitionBuilder, org.springframework.data.repository.config.AnnotationRepositoryConfigurationSource)
-	 */
 	@Override
 	public void postProcess(BeanDefinitionBuilder builder, AnnotationRepositoryConfigurationSource config) {
 
@@ -112,10 +84,6 @@ public class MongoRepositoryConfigurationExtension extends RepositoryConfigurati
 		builder.addPropertyValue("createIndexesForQueryMethods", attributes.getBoolean("createIndexesForQueryMethods"));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#useRepositoryConfiguration(org.springframework.data.repository.core.RepositoryMetadata)
-	 */
 	@Override
 	protected boolean useRepositoryConfiguration(RepositoryMetadata metadata) {
 		return !metadata.isReactiveRepository();

@@ -119,27 +119,15 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 		this.exceptionTranslator = exceptionTranslator == null ? DEFAULT_EXCEPTION_TRANSLATOR : exceptionTranslator;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.beans.factory.FactoryBean#getObjectType()
-	 */
 	public Class<? extends MongoClient> getObjectType() {
 		return MongoClient.class;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.dao.support.PersistenceExceptionTranslator#translateExceptionIfPossible(java.lang.RuntimeException)
-	 */
 	@Nullable
 	public DataAccessException translateExceptionIfPossible(RuntimeException ex) {
 		return exceptionTranslator.translateExceptionIfPossible(ex);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.beans.factory.config.AbstractFactoryBean#createInstance()
-	 */
 	@Override
 	protected MongoClient createInstance() throws Exception {
 		return createMongoClient(computeClientSetting());
@@ -336,10 +324,6 @@ public class MongoClientFactoryBean extends AbstractFactoryBean<MongoClient> imp
 		return !fromConnectionStringIsDefault ? fromConnectionString : defaultValue;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.beans.factory.config.AbstractFactoryBean#destroyInstance(java.lang.Object)
-	 */
 	@Override
 	protected void destroyInstance(@Nullable MongoClient instance) throws Exception {
 

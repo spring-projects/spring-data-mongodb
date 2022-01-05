@@ -44,10 +44,6 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 		this.template = template;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ReactiveFindOperation#query(java.lang.Class)
-	 */
 	@Override
 	public <T> ReactiveFind<T> query(Class<T> domainType) {
 
@@ -81,10 +77,6 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 			this.query = query;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveFindOperation.FindWithCollection#inCollection(java.lang.String)
-		 */
 		@Override
 		public FindWithProjection<T> inCollection(String collection) {
 
@@ -93,10 +85,6 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 			return new ReactiveFindSupport<>(template, domainType, returnType, collection, query);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveFindOperation.FindWithProjection#as(java.lang.Class)
-		 */
 		@Override
 		public <T1> FindWithQuery<T1> as(Class<T1> returnType) {
 
@@ -105,10 +93,6 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 			return new ReactiveFindSupport<>(template, domainType, returnType, collection, query);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveFindOperation.FindWithQuery#matching(org.springframework.data.mongodb.core.query.Query)
-		 */
 		@Override
 		public TerminatingFind<T> matching(Query query) {
 
@@ -117,10 +101,6 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 			return new ReactiveFindSupport<>(template, domainType, returnType, collection, query);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveFindOperation.TerminatingFind#first()
-		 */
 		@Override
 		public Mono<T> first() {
 
@@ -130,10 +110,6 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 			return result.next();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveFindOperation.TerminatingFind#one()
-		 */
 		@Override
 		public Mono<T> one() {
 
@@ -155,55 +131,31 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 			});
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveFindOperation.TerminatingFind#all()
-		 */
 		@Override
 		public Flux<T> all() {
 			return doFind(null);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveFindOperation.TerminatingFind#tail()
-		 */
 		@Override
 		public Flux<T> tail() {
 			return doFind(template.new TailingQueryFindPublisherPreparer(query, domainType));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveFindOperation.FindWithQuery#near(org.springframework.data.mongodb.core.query.NearQuery)
-		 */
 		@Override
 		public TerminatingFindNear<T> near(NearQuery nearQuery) {
 			return () -> template.geoNear(nearQuery, domainType, getCollectionName(), returnType);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveFindOperation.TerminatingFind#count()
-		 */
 		@Override
 		public Mono<Long> count() {
 			return template.count(query, domainType, getCollectionName());
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveFindOperation.TerminatingFind#exists()
-		 */
 		@Override
 		public Mono<Boolean> exists() {
 			return template.exists(query, domainType, getCollectionName());
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveFindOperation.FindDistinct#distinct(java.lang.String)
-		 */
 		@Override
 		public TerminatingDistinct<Object> distinct(String field) {
 
@@ -255,10 +207,6 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 				this.field = field;
 			}
 
-			/*
-			 * (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.ReactiveFindOperation.DistinctWithProjection#as(java.lang.Class)
-			 */
 			@Override
 			public <R> TerminatingDistinct<R> as(Class<R> resultType) {
 
@@ -267,10 +215,6 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 				return new DistinctOperationSupport<>((ReactiveFindSupport) delegate.as(resultType), field);
 			}
 
-			/*
-			 * (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.ReactiveFindOperation.DistinctWithQuery#matching(org.springframework.data.mongodb.core.query.Query)
-			 */
 			@Override
 			@SuppressWarnings("unchecked")
 			public TerminatingDistinct<T> matching(Query query) {
@@ -280,10 +224,6 @@ class ReactiveFindOperationSupport implements ReactiveFindOperation {
 				return new DistinctOperationSupport<>((ReactiveFindSupport<T>) delegate.matching(query), field);
 			}
 
-			/*
-			 * (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core..ReactiveFindOperation.TerminatingDistinct#all()
-			 */
 			@Override
 			public Flux<T> all() {
 				return delegate.doFindDistinct(field);

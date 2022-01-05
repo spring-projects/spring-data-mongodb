@@ -92,10 +92,6 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 		return new MergeOperationBuilder();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.Aggregation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
 
@@ -125,19 +121,11 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 		return new Document(getOperator(), $merge);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
-	 */
 	@Override
 	public String getOperator() {
 		return "$merge";
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation#getFields()
-	 */
 	@Override
 	public ExposedFields getFields() {
 
@@ -148,10 +136,6 @@ public class MergeOperation implements FieldsExposingAggregationOperation, Inher
 		return ExposedFields.synthetic(Fields.fields(let.getVariableNames()));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation.InheritsFieldsAggregationOperation#inheritsFields()
-	 */
 	@Override
 	public boolean inheritsFields() {
 		return true;

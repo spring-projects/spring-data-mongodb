@@ -45,10 +45,6 @@ class TailableCursorTask extends CursorReadingTask<Document, Object> {
 		queryMapper = new QueryMapper(template.getConverter());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.messaging.CursorReadingTask#initCursor(org.springframework.data.mongodb.core.MongoTemplate, org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions, java.lang.Class)
-	 */
 	@Override
 	protected MongoCursor<Document> initCursor(MongoTemplate template, RequestOptions options, Class<?> targetType) {
 

@@ -64,28 +64,16 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 		this.jsonSchemaObjectDelegate = jsonSchemaObject;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.schema.JsonSchemaProperty#getIdentifier()
-	 */
 	@Override
 	public String getIdentifier() {
 		return identifier;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.schema.JsonSchemaObject#toDocument()
-	 */
 	@Override
 	public Document toDocument() {
 		return new Document(identifier, jsonSchemaObjectDelegate.toDocument());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.schema.JsonSchemaObject#getTypes()
-	 */
 	@Override
 	public Set<Type> getTypes() {
 		return jsonSchemaObjectDelegate.getTypes();
@@ -1016,37 +1004,21 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 			this.required = required;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.JsonSchemaProperty#getIdentifier()
-		 */
 		@Override
 		public String getIdentifier() {
 			return delegate.getIdentifier();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.JsonSchemaObject#getTypes()
-		 */
 		@Override
 		public Set<Type> getTypes() {
 			return delegate.getTypes();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.JsonSchemaObject#toDocument()
-		 */
 		@Override
 		public Document toDocument() {
 			return delegate.toDocument();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.JsonSchemaProperty#isRequired()
-		 */
 		@Override
 		public boolean isRequired() {
 			return required;
@@ -1146,10 +1118,6 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 			return new EncryptedJsonSchemaProperty(targetProperty, algorithm, null, Arrays.asList(keyId));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.JsonSchemaObject#toDocument()
-		 */
 		@Override
 		public Document toDocument() {
 
@@ -1178,19 +1146,11 @@ public class IdentifiableJsonSchemaProperty<T extends JsonSchemaObject> implemen
 			return doc;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.JsonSchemaProperty#getIdentifier()
-		 */
 		@Override
 		public String getIdentifier() {
 			return targetProperty.getIdentifier();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.schema.JsonSchemaObject#getTypes()
-		 */
 		@Override
 		public Set<Type> getTypes() {
 			return targetProperty.getTypes();

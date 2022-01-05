@@ -50,28 +50,16 @@ class NestedDelegatingExpressionAggregationOperationContext implements Aggregati
 		this.inners = inners;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(org.bson.Document)
-	 */
 	@Override
 	public Document getMappedObject(Document document) {
 		return delegate.getMappedObject(document);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(org.bson.Document, java.lang.Class)
-	 */
 	@Override
 	public Document getMappedObject(Document document, Class<?> type) {
 		return delegate.getMappedObject(document, type);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getReference(org.springframework.data.mongodb.core.aggregation.Field)
-	 */
 	@Override
 	public FieldReference getReference(Field field) {
 
@@ -95,19 +83,11 @@ class NestedDelegatingExpressionAggregationOperationContext implements Aggregati
 		return false;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getReference(java.lang.String)
-	 */
 	@Override
 	public FieldReference getReference(String name) {
 		return new ExpressionFieldReference(delegate.getReference(name));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getFields(java.lang.Class)
-	 */
 	@Override
 	public Fields getFields(Class<?> type) {
 		return delegate.getFields(type);

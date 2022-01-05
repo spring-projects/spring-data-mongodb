@@ -209,10 +209,6 @@ public final class ExposedFields implements Iterable<ExposedField> {
 		return originalFields.size() + syntheticFields.size();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Iterable#iterator()
-	 */
 	@Override
 	public Iterator<ExposedField> iterator() {
 
@@ -260,28 +256,16 @@ public final class ExposedFields implements Iterable<ExposedField> {
 			this.synthetic = synthetic;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.Field#getKey()
-		 */
 		@Override
 		public String getName() {
 			return field.getName();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.Field#getTarget()
-		 */
 		@Override
 		public String getTarget() {
 			return field.getTarget();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.Field#isAliased()
-		 */
 		@Override
 		public boolean isAliased() {
 			return field.isAliased();
@@ -304,19 +288,11 @@ public final class ExposedFields implements Iterable<ExposedField> {
 			return getName().equals(name) || getTarget().equals(name);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#toString()
-		 */
 		@Override
 		public String toString() {
 			return String.format("AggregationField: %s, synthetic: %s", field, synthetic);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#equals(java.lang.Object)
-		 */
 		@Override
 		public boolean equals(Object obj) {
 
@@ -333,10 +309,6 @@ public final class ExposedFields implements Iterable<ExposedField> {
 			return this.field.equals(that.field) && this.synthetic == that.synthetic;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#hashCode()
-		 */
 		@Override
 		public int hashCode() {
 
@@ -394,28 +366,16 @@ public final class ExposedFields implements Iterable<ExposedField> {
 			this.field = field;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference#getRaw()
-		 */
 		public String getRaw() {
 
 			String target = field.getTarget();
 			return field.synthetic ? target : String.format("%s.%s", Fields.UNDERSCORE_ID, target);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference#getReferenceValue()
-		 */
 		public Object getReferenceValue() {
 			return field.synthetic && !field.isAliased() ? 1 : toString();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#toString()
-		 */
 		@Override
 		public String toString() {
 
@@ -426,10 +386,6 @@ public final class ExposedFields implements Iterable<ExposedField> {
 			return String.format("$%s", getRaw());
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#equals(java.lang.Object)
-		 */
 		@Override
 		public boolean equals(Object obj) {
 
@@ -446,10 +402,6 @@ public final class ExposedFields implements Iterable<ExposedField> {
 			return this.field.equals(that.field);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see java.lang.Object#hashCode()
-		 */
 		@Override
 		public int hashCode() {
 			return field.hashCode();
@@ -475,19 +427,11 @@ public final class ExposedFields implements Iterable<ExposedField> {
 			delegate = field;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference#getRaw()
-		 */
 		@Override
 		public String getRaw() {
 			return delegate.getRaw();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.ExposedFields.FieldReference#getReferenceValue()
-		 */
 		@Override
 		public Object getReferenceValue() {
 			return delegate.getReferenceValue();

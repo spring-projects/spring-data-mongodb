@@ -852,10 +852,6 @@ public class Criteria implements CriteriaDefinition {
 		return this.key;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.query.CriteriaDefinition#getCriteriaObject()
-	 */
 	public Document getCriteriaObject() {
 
 		if (this.criteriaChain.size() == 1) {
@@ -967,10 +963,6 @@ public class Criteria implements CriteriaDefinition {
 		return false;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#equals(java.lang.Object)
-	 */
 	@Override
 	public boolean equals(Object obj) {
 
@@ -1085,10 +1077,6 @@ public class Criteria implements CriteriaDefinition {
 		return ObjectUtils.nullSafeEquals(left, right);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#hashCode()
-	 */
 	@Override
 	public int hashCode() {
 
@@ -1294,109 +1282,61 @@ public class Criteria implements CriteriaDefinition {
 			this.target = target;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.query.BitwiseCriteriaOperators#allClear(int)
-		 */
 		@Override
 		public Criteria allClear(int numericBitmask) {
 			return numericBitmask("$bitsAllClear", numericBitmask);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.query.BitwiseCriteriaOperators#allClear(java.lang.String)
-		 */
 		@Override
 		public Criteria allClear(String bitmask) {
 			return stringBitmask("$bitsAllClear", bitmask);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.query.BitwiseCriteriaOperators#allClear(java.util.List)
-		 */
 		@Override
 		public Criteria allClear(List<Integer> positions) {
 			return positions("$bitsAllClear", positions);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.query.BitwiseCriteriaOperators#allSet(int)
-		 */
 		@Override
 		public Criteria allSet(int numericBitmask) {
 			return numericBitmask("$bitsAllSet", numericBitmask);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.query.BitwiseCriteriaOperators#allSet(java.lang.String)
-		 */
 		@Override
 		public Criteria allSet(String bitmask) {
 			return stringBitmask("$bitsAllSet", bitmask);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.query.BitwiseCriteriaOperators#allSet(java.util.List)
-		 */
 		@Override
 		public Criteria allSet(List<Integer> positions) {
 			return positions("$bitsAllSet", positions);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.query.BitwiseCriteriaOperators#anyClear(int)
-		 */
 		@Override
 		public Criteria anyClear(int numericBitmask) {
 			return numericBitmask("$bitsAnyClear", numericBitmask);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.query.BitwiseCriteriaOperators#anyClear(java.lang.String)
-		 */
 		@Override
 		public Criteria anyClear(String bitmask) {
 			return stringBitmask("$bitsAnyClear", bitmask);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.query.BitwiseCriteriaOperators#anyClear(java.util.List)
-		 */
 		@Override
 		public Criteria anyClear(List<Integer> positions) {
 			return positions("$bitsAnyClear", positions);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.query.BitwiseCriteriaOperators#anySet(int)
-		 */
 		@Override
 		public Criteria anySet(int numericBitmask) {
 			return numericBitmask("$bitsAnySet", numericBitmask);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.query.BitwiseCriteriaOperators#anySet(java.lang.String)
-		 */
 		@Override
 		public Criteria anySet(String bitmask) {
 			return stringBitmask("$bitsAnySet", bitmask);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.query.BitwiseCriteriaOperators#anySet(java.util.Collection)
-		 */
 		@Override
 		public Criteria anySet(List<Integer> positions) {
 			return positions("$bitsAnySet", positions);

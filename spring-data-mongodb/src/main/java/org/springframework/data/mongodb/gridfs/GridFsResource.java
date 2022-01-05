@@ -97,10 +97,6 @@ public class GridFsResource extends InputStreamResource implements GridFsObject<
 		return new GridFsResource(filename);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.core.io.InputStreamResource#getInputStream()
-	 */
 	@Override
 	public InputStream getInputStream() throws IOException, IllegalStateException {
 
@@ -108,10 +104,6 @@ public class GridFsResource extends InputStreamResource implements GridFsObject<
 		return super.getInputStream();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.core.io.AbstractResource#contentLength()
-	 */
 	@Override
 	public long contentLength() throws IOException {
 
@@ -119,28 +111,16 @@ public class GridFsResource extends InputStreamResource implements GridFsObject<
 		return getGridFSFile().getLength();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.core.io.AbstractResource#getFilename()
-	 */
 	@Override
 	public String getFilename() throws IllegalStateException {
 		return this.filename;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.core.io.AbstractResource#exists()
-	 */
 	@Override
 	public boolean exists() {
 		return this.file != null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.core.io.AbstractResource#lastModified()
-	 */
 	@Override
 	public long lastModified() throws IOException {
 
@@ -148,10 +128,6 @@ public class GridFsResource extends InputStreamResource implements GridFsObject<
 		return getGridFSFile().getUploadDate().getTime();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.core.io.AbstractResource#getDescription()
-	 */
 	@Override
 	public String getDescription() {
 		return String.format("GridFs resource [%s]", this.getFilename());
@@ -170,10 +146,6 @@ public class GridFsResource extends InputStreamResource implements GridFsObject<
 		return getGridFSFile().getId();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.GridFsObject#getFileId()
-	 */
 	@Override
 	public Object getFileId() {
 
@@ -207,10 +179,6 @@ public class GridFsResource extends InputStreamResource implements GridFsObject<
 				.orElseThrow(() -> new MongoGridFSException("No contentType data for this GridFS file"));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.GridFsObject#getContent()
-	 */
 	@Override
 	public InputStream getContent() {
 
@@ -221,10 +189,6 @@ public class GridFsResource extends InputStreamResource implements GridFsObject<
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.GridFsObject#getOptions()
-	 */
 	@Override
 	public Options getOptions() {
 		return Options.from(getGridFSFile());

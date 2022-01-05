@@ -72,76 +72,40 @@ class StubParameterAccessor implements MongoParameterAccessor {
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.ParameterAccessor#getPageable()
-	 */
 	public Pageable getPageable() {
 		return null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.ParameterAccessor#getBindableValue(int)
-	 */
 	public Object getBindableValue(int index) {
 		return values[index];
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.ParameterAccessor#hasBindableNullValue()
-	 */
 	public boolean hasBindableNullValue() {
 		return false;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.ParameterAccessor#getSort()
-	 */
 	public Sort getSort() {
 		return Sort.unsorted();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getDistanceRange()
-	 */
 	@Override
 	public Range<Distance> getDistanceRange() {
 		return range;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.ParameterAccessor#iterator()
-	 */
 	public Iterator<Object> iterator() {
 		return Arrays.asList(values).iterator();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.MongoParameterAccessor#getGeoNearLocation()
-	 */
 	public Point getGeoNearLocation() {
 		return null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getFullText()
-	 */
 	@Override
 	public TextCriteria getFullText() {
 		return null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.query.MongoParameterAccessor#getCollation()
-	 */
 	@Override
 	public Collation getCollation() {
 		return this.colllation;
@@ -155,10 +119,6 @@ class StubParameterAccessor implements MongoParameterAccessor {
 		return this.values;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.ParameterAccessor#findDynamicProjection()
-	 */
 	@Override
 	public Class<?> findDynamicProjection() {
 		return null;

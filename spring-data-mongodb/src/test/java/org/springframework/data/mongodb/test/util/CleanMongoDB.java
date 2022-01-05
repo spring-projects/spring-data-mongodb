@@ -259,10 +259,6 @@ public class CleanMongoDB implements TestRule {
 		return apply(null, null);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.junit.rules.TestRule#apply(org.junit.runners.model.Statement, org.junit.runner.Description)
-	 */
 	public Statement apply(Statement base, Description description) {
 		return new MongoCleanStatement(base);
 	}

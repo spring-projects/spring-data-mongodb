@@ -124,10 +124,6 @@ public class UnionWithOperation implements AggregationOperation {
 		return new UnionWithOperation(collection, pipeline, domainType);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
 
@@ -153,10 +149,6 @@ public class UnionWithOperation implements AggregationOperation {
 		return source;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
-	 */
 	@Override
 	public String getOperator() {
 		return "$unionWith";

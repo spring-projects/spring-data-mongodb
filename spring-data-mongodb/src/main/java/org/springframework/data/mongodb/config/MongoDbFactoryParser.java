@@ -62,10 +62,6 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 		MONGO_URI_ALLOWED_ADDITIONAL_ATTRIBUTES = Collections.unmodifiableSet(mongoUriAllowedAdditionalAttributes);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.beans.factory.xml.AbstractBeanDefinitionParser#resolveId(org.w3c.dom.Element, org.springframework.beans.factory.support.AbstractBeanDefinition, org.springframework.beans.factory.xml.ParserContext)
-	 */
 	@Override
 	protected String resolveId(Element element, AbstractBeanDefinition definition, ParserContext parserContext)
 			throws BeanDefinitionStoreException {
@@ -74,10 +70,6 @@ public class MongoDbFactoryParser extends AbstractBeanDefinitionParser {
 		return StringUtils.hasText(id) ? id : BeanNames.DB_FACTORY_BEAN_NAME;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.beans.factory.xml.AbstractBeanDefinitionParser#parseInternal(org.w3c.dom.Element, org.springframework.beans.factory.xml.ParserContext)
-	 */
 	@Override
 	protected AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
 

@@ -127,10 +127,6 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		return index;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.Parameters#createParameter(org.springframework.core.MethodParameter)
-	 */
 	@Override
 	protected MongoParameter createParameter(MethodParameter parameter) {
 		return new MongoParameter(parameter);
@@ -195,10 +191,6 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 		return collationIndex != null ? collationIndex.intValue() : -1;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.Parameters#createFrom(java.util.List)
-	 */
 	@Override
 	protected MongoParameters createFrom(List<MongoParameter> parameters) {
 		return new MongoParameters(parameters, this.maxDistanceIndex, this.nearIndex, this.fullTextIndex, this.rangeIndex,
@@ -247,10 +239,6 @@ public class MongoParameters extends Parameters<MongoParameters, MongoParameter>
 			}
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.repository.query.Parameter#isSpecialParameter()
-		 */
 		@Override
 		public boolean isSpecialParameter() {
 			return super.isSpecialParameter() || Distance.class.isAssignableFrom(getType()) || isNearParameter()

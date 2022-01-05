@@ -46,19 +46,11 @@ public class HashedIndex implements IndexDefinition {
 		return new HashedIndex(field);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.index.IndexDefinition#getIndexKeys()
-	 */
 	@Override
 	public Document getIndexKeys() {
 		return new Document(field, "hashed");
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.index.IndexDefinition#getIndexOptions()
-	 */
 	@Override
 	public Document getIndexOptions() {
 		return new Document();

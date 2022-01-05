@@ -189,10 +189,6 @@ public class ChangeStreamEvent<T> {
 				String.format("No converter found capable of converting %s to %s", fullDocument.getClass(), targetType));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
 	@Override
 	public String toString() {
 		return "ChangeStreamEvent {" + "raw=" + raw + ", targetType=" + targetType + '}';

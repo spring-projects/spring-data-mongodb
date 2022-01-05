@@ -219,10 +219,6 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		return builder;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation#getFields()
-	 */
 	@Override
 	public ExposedFields getFields() {
 
@@ -236,10 +232,6 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		return fields != null ? fields : ExposedFields.empty();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation#inheritsFields()
-	 */
 	@Override
 	public boolean inheritsFields() {
 
@@ -248,10 +240,6 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 				.anyMatch(FieldProjection::isExcluded);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
 
@@ -264,10 +252,6 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 		return new Document(getOperator(), fieldObject);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
-	 */
 	@Override
 	public String getOperator() {
 		return "$project";
@@ -298,10 +282,6 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			this.operation = operation;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-		 */
 		@Override
 		public Document toDocument(AggregationOperationContext context) {
 			return this.operation.toDocument(context);
@@ -359,9 +339,6 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			this.params = parameters.clone();
 		}
 
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder#project(java.lang.String, java.lang.Object[])
-		 */
 		@Override
 		public ProjectionOperationBuilder project(String operation, final Object... values) {
 
@@ -382,10 +359,6 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			return new ProjectionOperationBuilder(value, this.operation.and(operationProjection), operationProjection);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.AbstractProjectionOperationBuilder#as(java.lang.String)
-		 */
 		@Override
 		public ProjectionOperation as(String alias) {
 
@@ -424,10 +397,6 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 				this.params = parameters.clone();
 			}
 
-			/*
-			 * (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-			 */
 			@Override
 			public Document toDocument(AggregationOperationContext context) {
 				return new Document(getExposedField().getName(), toMongoExpression(context, expression, params));
@@ -530,10 +499,6 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			return this.operation.and(new FieldProjection(Fields.field(alias, getRequiredName()), null));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.AbstractProjectionOperationBuilder#transform(org.springframework.data.mongodb.core.aggregation.ConditionalOperator)
-		 */
 		@Override
 		public ProjectionOperation applyCondition(Cond cond) {
 
@@ -541,10 +506,6 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			return this.operation.and(new ExpressionProjection(Fields.field(getRequiredName()), cond));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.AbstractProjectionOperationBuilder#transform(org.springframework.data.mongodb.core.aggregation.IfNullOperator)
-		 */
 		@Override
 		public ProjectionOperation applyCondition(IfNull ifNull) {
 
@@ -1314,10 +1275,6 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			return name;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-		 */
 		@Override
 		public Document toDocument(AggregationOperationContext context) {
 			return this.operation.toDocument(context);
@@ -1355,10 +1312,6 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 				this.name = name;
 			}
 
-			/*
-			 * (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-			 */
 			@Override
 			public Document toDocument(AggregationOperationContext context) {
 				return new Document(name, Fields.UNDERSCORE_ID_REF);
@@ -1432,10 +1385,6 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 				return Boolean.FALSE.equals(value);
 			}
 
-			/*
-			 * (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-			 */
 			@Override
 			public Document toDocument(AggregationOperationContext context) {
 				return new Document(field.getName(), renderFieldValue(context));
@@ -1496,10 +1445,6 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 				this.values = Arrays.asList(values);
 			}
 
-			/*
-			 * (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-			 */
 			@Override
 			public Document toDocument(AggregationOperationContext context) {
 
@@ -1540,10 +1485,6 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 				return field;
 			}
 
-			/*
-			 * (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#getExposedField()
-			 */
 			@Override
 			public ExposedField getExposedField() {
 
@@ -1565,10 +1506,6 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 				final Field aliasedField = Fields.field(alias, this.field.getName());
 				return new OperationProjection(aliasedField, operation, values.toArray()) {
 
-					/*
-					 * (non-Javadoc)
-					 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.ProjectionOperationBuilder.OperationProjection#getField()
-					 */
 					@Override
 					protected Field getField() {
 						return aliasedField;
@@ -1598,10 +1535,6 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 				this.fields = fields;
 			}
 
-			/*
-			 * (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-			 */
 			@Override
 			public Document toDocument(AggregationOperationContext context) {
 
@@ -1766,10 +1699,6 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			this.expression = expression;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-		 */
 		@Override
 		public Document toDocument(AggregationOperationContext context) {
 			return new Document(field.getName(), expression.toDocument(context));
@@ -1793,10 +1722,6 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			this.type = type;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-		 */
 		@Override
 		public Document toDocument(AggregationOperationContext context) {
 
@@ -1895,10 +1820,6 @@ public class ProjectionOperation implements FieldsExposingAggregationOperation {
 			this.projections = projections;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.ProjectionOperation.Projection#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-		 */
 		@Override
 		public Document toDocument(AggregationOperationContext context) {
 

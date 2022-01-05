@@ -77,10 +77,6 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 		mongoConverter = template.getConverter();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.messaging.CursorReadingTask#initCursor(org.springframework.data.mongodb.core.MongoTemplate, org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions, java.lang.Class)
-	 */
 	@Override
 	protected MongoCursor<ChangeStreamDocument<Document>> initCursor(MongoTemplate template, RequestOptions options,
 			Class<?> targetType) {
@@ -187,10 +183,6 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 				"ChangeStreamRequestOptions.filter mut be either an Aggregation or a plain list of Documents");
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.messaging.CursorReadingTask#createMessage(java.lang.Object, java.lang.Class, org.springframework.data.mongodb.core.messaging.SubscriptionRequest.RequestOptions)
-	 */
 	@Override
 	protected Message<ChangeStreamDocument<Document>, Object> createMessage(ChangeStreamDocument<Document> source,
 			Class<Object> targetType, RequestOptions options) {
@@ -226,30 +218,18 @@ class ChangeStreamTask extends CursorReadingTask<ChangeStreamDocument<Document>,
 			this.messageProperties = messageProperties;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.messaging.Message#getRaw()
-		 */
 		@Nullable
 		@Override
 		public ChangeStreamDocument<Document> getRaw() {
 			return delegate.getRaw();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.messaging.Message#getBody()
-		 */
 		@Nullable
 		@Override
 		public T getBody() {
 			return delegate.getBody();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.messaging.Message#getProperties()
-		 */
 		@Override
 		public MessageProperties getProperties() {
 			return this.messageProperties;

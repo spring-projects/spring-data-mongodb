@@ -480,19 +480,11 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 
 	public static class EncryptionExtension implements EvaluationContextExtension {
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.spel.spi.EvaluationContextExtension#getExtensionId()
-		 */
 		@Override
 		public String getExtensionId() {
 			return "mongocrypt";
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.spel.spi.EvaluationContextExtension#getProperties()
-		 */
 		@Override
 		public Map<String, Object> getProperties() {
 

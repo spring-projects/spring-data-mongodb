@@ -87,10 +87,6 @@ public class UnsetOperation implements InheritsFieldsAggregationOperation {
 		return new UnsetOperation(target);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *  @see org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation#getFields()
-	 */
 	@Override
 	public ExposedFields getFields() {
 		return ExposedFields.from();
@@ -109,10 +105,6 @@ public class UnsetOperation implements InheritsFieldsAggregationOperation {
 		return fieldNames;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 *  @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
 
@@ -124,10 +116,6 @@ public class UnsetOperation implements InheritsFieldsAggregationOperation {
 				fields.stream().map(it -> computeFieldName(it, context)).collect(Collectors.toList()));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
-	 */
 	@Override
 	public String getOperator() {
 		return "$unset";

@@ -117,10 +117,6 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 
 		INSTANCE;
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.GenericConverter#getConvertibleTypes()
-		 */
 		public Set<ConvertiblePair> getConvertibleTypes() {
 
 			ConvertiblePair localeToString = new ConvertiblePair(Locale.class, String.class);
@@ -129,10 +125,6 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 			return new HashSet<>(Arrays.asList(localeToString, booleanToString));
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.GenericConverter#convert(java.lang.Object, org.springframework.core.convert.TypeDescriptor, org.springframework.core.convert.TypeDescriptor)
-		 */
 		public Object convert(@Nullable Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
 			return source != null ? source.toString() : null;
 		}

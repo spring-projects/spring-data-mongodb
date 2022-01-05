@@ -50,19 +50,11 @@ class JsonSchemaValidator implements Validator {
 		return new JsonSchemaValidator(schema);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.validation.Validator#toDocument()
-	 */
 	@Override
 	public Document toDocument() {
 		return schema.toDocument();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
 	@Override
 	public String toString() {
 		return SerializationUtils.serializeToJsonSafely(toDocument());

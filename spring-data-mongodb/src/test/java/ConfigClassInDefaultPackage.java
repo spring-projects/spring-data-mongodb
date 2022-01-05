@@ -32,19 +32,11 @@ import com.mongodb.client.MongoClients;
 @Configuration
 public class ConfigClassInDefaultPackage extends AbstractMongoClientConfiguration {
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.config.AbstractMongoClientConfiguration#getDatabaseName()
-	 */
 	@Override
 	protected String getDatabaseName() {
 		return "default";
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.config.AbstractMongoClientConfiguration#mongoClient()
-	 */
 	@Override
 	public MongoClient mongoClient() {
 		return MongoClients.create();

@@ -51,10 +51,6 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		this.template = template;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ExecutableFindOperation#query(java.lang.Class)
-	 */
 	@Override
 	public <T> ExecutableFind<T> query(Class<T> domainType) {
 
@@ -86,10 +82,6 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 			this.query = query;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithCollection#inCollection(java.lang.String)
-		 */
 		@Override
 		public FindWithProjection<T> inCollection(String collection) {
 
@@ -98,10 +90,6 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 			return new ExecutableFindSupport<>(template, domainType, returnType, collection, query);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithProjection#as(Class)
-		 */
 		@Override
 		public <T1> FindWithQuery<T1> as(Class<T1> returnType) {
 
@@ -110,10 +98,6 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 			return new ExecutableFindSupport<>(template, domainType, returnType, collection, query);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery#matching(org.springframework.data.mongodb.core.query.Query)
-		 */
 		@Override
 		public TerminatingFind<T> matching(Query query) {
 
@@ -122,10 +106,6 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 			return new ExecutableFindSupport<>(template, domainType, returnType, collection, query);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFind#oneValue()
-		 */
 		@Override
 		public T oneValue() {
 
@@ -142,10 +122,6 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 			return result.iterator().next();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFind#firstValue()
-		 */
 		@Override
 		public T firstValue() {
 
@@ -154,55 +130,31 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 			return ObjectUtils.isEmpty(result) ? null : result.iterator().next();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFind#all()
-		 */
 		@Override
 		public List<T> all() {
 			return doFind(null);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFind#stream()
-		 */
 		@Override
 		public Stream<T> stream() {
 			return StreamUtils.createStreamFromIterator(doStream());
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableFindOperation.FindWithQuery#near(org.springframework.data.mongodb.core.query.NearQuery)
-		 */
 		@Override
 		public TerminatingFindNear<T> near(NearQuery nearQuery) {
 			return () -> template.geoNear(nearQuery, domainType, getCollectionName(), returnType);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFind#count()
-		 */
 		@Override
 		public long count() {
 			return template.count(query, domainType, getCollectionName());
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingFind#exists()
-		 */
 		@Override
 		public boolean exists() {
 			return template.exists(query, domainType, getCollectionName());
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableFindOperation.FindDistinct#distinct(java.lang.String)
-		 */
 		@SuppressWarnings("unchecked")
 		@Override
 		public TerminatingDistinct<Object> distinct(String field) {
@@ -257,10 +209,6 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 			this.delegate = delegate;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.CursorPreparer#prepare(com.mongodb.clientFindIterable)
-		 */
 		@Override
 		public FindIterable<Document> prepare(FindIterable<Document> iterable) {
 
@@ -295,10 +243,6 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 			this.field = field;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableFindOperation.DistinctWithProjection#as(java.lang.Class)
-		 */
 		@Override
 		@SuppressWarnings("unchecked")
 		public <R> TerminatingDistinct<R> as(Class<R> resultType) {
@@ -308,10 +252,6 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 			return new DistinctOperationSupport<>((ExecutableFindSupport) delegate.as(resultType), field);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableFindOperation.DistinctWithQuery#matching(org.springframework.data.mongodb.core.query.Query)
-		 */
 		@Override
 		public TerminatingDistinct<T> matching(Query query) {
 
@@ -320,10 +260,6 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 			return new DistinctOperationSupport<>((ExecutableFindSupport<T>) delegate.matching(query), field);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableFindOperation.TerminatingDistinct#all()
-		 */
 		@Override
 		public List<T> all() {
 			return delegate.doFindDistinct(field);

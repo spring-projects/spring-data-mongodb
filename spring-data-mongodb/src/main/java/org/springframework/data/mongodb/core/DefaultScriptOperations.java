@@ -70,19 +70,11 @@ class DefaultScriptOperations implements ScriptOperations {
 		this.mongoOperations = mongoOperations;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ScriptOperations#register(org.springframework.data.mongodb.core.script.ExecutableMongoScript)
-	 */
 	@Override
 	public NamedMongoScript register(ExecutableMongoScript script) {
 		return register(new NamedMongoScript(generateScriptName(), script));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ScriptOperations#register(org.springframework.data.mongodb.core.script.NamedMongoScript)
-	 */
 	@Override
 	public NamedMongoScript register(NamedMongoScript script) {
 
@@ -92,10 +84,6 @@ class DefaultScriptOperations implements ScriptOperations {
 		return script;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ScriptOperations#execute(org.springframework.data.mongodb.core.script.ExecutableMongoScript, java.lang.Object[])
-	 */
 	@Override
 	public Object execute(final ExecutableMongoScript script, final Object... args) {
 
@@ -115,10 +103,6 @@ class DefaultScriptOperations implements ScriptOperations {
 		});
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ScriptOperations#call(java.lang.String, java.lang.Object[])
-	 */
 	@Override
 	public Object call(final String scriptName, final Object... args) {
 
@@ -135,10 +119,6 @@ class DefaultScriptOperations implements ScriptOperations {
 		});
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ScriptOperations#exists(java.lang.String)
-	 */
 	@Override
 	public boolean exists(String scriptName) {
 
@@ -147,10 +127,6 @@ class DefaultScriptOperations implements ScriptOperations {
 		return mongoOperations.exists(query(where("_id").is(scriptName)), NamedMongoScript.class, SCRIPT_COLLECTION_NAME);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ScriptOperations#getScriptNames()
-	 */
 	@Override
 	public Set<String> getScriptNames() {
 

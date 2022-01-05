@@ -60,10 +60,6 @@ public class MongoJsonSchemaMapper implements JsonSchemaMapper {
 		this.mappingContext = converter.getMappingContext();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.convert.JsonSchemaMapper#mapSchema(org.springframework.data.mongodb.core.schema.MongoJsonSchema, java.lang.Class)
-	 */
 	public Document mapSchema(Document jsonSchema, Class<?> type) {
 
 		Assert.notNull(jsonSchema, "Schema must not be null!");

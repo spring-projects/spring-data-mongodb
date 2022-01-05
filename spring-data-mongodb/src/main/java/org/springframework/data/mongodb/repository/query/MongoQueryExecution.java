@@ -75,10 +75,6 @@ interface MongoQueryExecution {
 			this.pageable = pageable;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.repository.query.MongoQueryExecution#execute(org.springframework.data.mongodb.core.query.Query)
-		 */
 		@Override
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		public Object execute(Query query) {
@@ -116,10 +112,6 @@ interface MongoQueryExecution {
 			this.pageable = pageable;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.repository.query.MongoQueryExecution#execute(org.springframework.data.mongodb.core.query.Query)
-		 */
 		@Override
 		public Object execute(Query query) {
 
@@ -166,10 +158,6 @@ interface MongoQueryExecution {
 			this.accessor = accessor;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.repository.query.MongoQueryExecution#execute(org.springframework.data.mongodb.core.query.Query)
-		 */
 		@Override
 		public Object execute(Query query) {
 
@@ -230,10 +218,6 @@ interface MongoQueryExecution {
 			this.mongoQuery = query;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.repository.query.MongoQueryExecution.GeoNearExecution#execute(org.springframework.data.mongodb.core.query.Query)
-		 */
 		@Override
 		public Object execute(Query query) {
 
@@ -276,10 +260,6 @@ interface MongoQueryExecution {
 			this.method = method;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.repository.query.MongoQueryExecution#execute(org.springframework.data.mongodb.core.query.Query)
-		 */
 		@Override
 		public Object execute(Query query) {
 

@@ -51,10 +51,6 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 		super(property, owner, simpleTypeHolder, fieldNamingStrategy);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.BasicMongoPersistentProperty#isIdProperty()
-	 */
 	@Override
 	public boolean isIdProperty() {
 
@@ -65,10 +61,6 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 		return this.isIdProperty;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.BasicMongoPersistentProperty#isAssociation()
-	 */
 	@Override
 	public boolean isAssociation() {
 		if (this.isAssociation == null) {
@@ -77,10 +69,6 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 		return this.isAssociation;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.BasicMongoPersistentProperty#getFieldName()
-	 */
 	@Override
 	public String getFieldName() {
 
@@ -91,10 +79,6 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 		return this.fieldName;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.BasicMongoPersistentProperty#skipNullValues()
-	 */
 	@Override
 	public boolean writeNullValues() {
 
@@ -105,10 +89,6 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 		return this.writeNullValues;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.BasicMongoPersistentProperty#getFieldType()
-	 */
 	@Override
 	public Class<?> getFieldType() {
 
@@ -119,10 +99,6 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 		return this.fieldType;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mapping.model.AnnotationBasedPersistentProperty#usePropertyAccess()
-	 */
 	@Override
 	public boolean usePropertyAccess() {
 
@@ -133,10 +109,6 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 		return this.usePropertyAccess;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mapping.model.AnnotationBasedPersistentProperty#isTransient()
-	 */
 	@Override
 	public boolean isTransient() {
 
@@ -147,19 +119,11 @@ public class CachingMongoPersistentProperty extends BasicMongoPersistentProperty
 		return this.isTransient;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.BasicMongoPersistentProperty#isDbReference()
-	 */
 	@Override
 	public boolean isDbReference() {
 		return getDBRef() != null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.mapping.BasicMongoPersistentProperty#getDBRef()
-	 */
 	@Override
 	public DBRef getDBRef() {
 

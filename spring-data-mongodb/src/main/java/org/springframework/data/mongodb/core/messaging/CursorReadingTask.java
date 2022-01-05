@@ -66,10 +66,6 @@ abstract class CursorReadingTask<T, R> implements Task {
 		this.errorHandler = errorHandler;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Runnable
-	 */
 	@Override
 	public void run() {
 
@@ -164,10 +160,6 @@ abstract class CursorReadingTask<T, R> implements Task {
 
 	protected abstract MongoCursor<T> initCursor(MongoTemplate template, RequestOptions options, Class<?> targetType);
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.messaging.Cancelable#cancel()
-	 */
 	@Override
 	public void cancel() throws DataAccessResourceFailureException {
 
@@ -182,19 +174,11 @@ abstract class CursorReadingTask<T, R> implements Task {
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.scheduling.SchedulingAwareRunnable#isLongLived()
-	 */
 	@Override
 	public boolean isLongLived() {
 		return true;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.messaging.Task#getState()
-	 */
 	@Override
 	public State getState() {
 
@@ -203,10 +187,6 @@ abstract class CursorReadingTask<T, R> implements Task {
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.messaging.Task#awaitStart(java.time.Duration)
-	 */
 	@Override
 	public boolean awaitStart(Duration timeout) throws InterruptedException {
 

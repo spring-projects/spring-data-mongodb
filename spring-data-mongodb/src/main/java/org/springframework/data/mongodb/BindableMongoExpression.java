@@ -103,19 +103,11 @@ public class BindableMongoExpression implements MongoExpression {
 		return new BindableMongoExpression(expressionString, codecRegistryProvider, args);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.MongoExpression#toDocument()
-	 */
 	@Override
 	public Document toDocument() {
 		return target.get();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
 	@Override
 	public String toString() {
 		return "BindableMongoExpression{" + "expressionString='" + expressionString + '\'' + ", args="

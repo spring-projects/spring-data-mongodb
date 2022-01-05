@@ -57,10 +57,6 @@ class GeoJsonSerializersModule extends SimpleModule {
 	 */
 	private static abstract class GeoJsonSerializer<T extends GeoJson<? extends Iterable>> extends JsonSerializer<T> {
 
-		/*
-		 * (non-Javadoc)
-		 * @see com.fasterxml.jackson.databind.JsonSerializer#serialize(java.lang.Object, com.fasterxml.jackson.core.JsonGenerator, com.fasterxml.jackson.databind.SerializerProvider)
-		 */
 		@Override
 		public void serialize(T shape, JsonGenerator jsonGenerator, SerializerProvider serializers) throws IOException {
 

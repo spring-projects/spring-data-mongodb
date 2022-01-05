@@ -339,9 +339,6 @@ public class AggregationOptions {
 		return !maxTime.isZero() && !maxTime.isNegative();
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
 	@Override
 	public String toString() {
 		return toDocument().toJson();

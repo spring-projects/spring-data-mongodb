@@ -612,10 +612,6 @@ public class ArrayOperators {
 			return new FilterExpressionBuilder().filter(values);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpression#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-		 */
 		@Override
 		public Document toDocument(final AggregationOperationContext context) {
 			return toFilter(ExposedFields.from(as), context);
@@ -736,10 +732,6 @@ public class ArrayOperators {
 				return new FilterExpressionBuilder();
 			}
 
-			/*
-			 * (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.ArrayOperators.Filter.InputBuilder#filter(java.util.List)
-			 */
 			@Override
 			public AsBuilder filter(List<?> array) {
 
@@ -748,10 +740,6 @@ public class ArrayOperators {
 				return this;
 			}
 
-			/*
-			 * (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.ArrayOperators.Filter.InputBuilder#filter(org.springframework.data.mongodb.core.aggregation.Field)
-			 */
 			@Override
 			public AsBuilder filter(Field field) {
 
@@ -760,10 +748,6 @@ public class ArrayOperators {
 				return this;
 			}
 
-			/*
-			 * (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.ArrayOperators.Filter.AsBuilder#as(java.lang.String)
-			 */
 			@Override
 			public ConditionBuilder as(String variableName) {
 
@@ -772,10 +756,6 @@ public class ArrayOperators {
 				return this;
 			}
 
-			/*
-			 * (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.ArrayOperators.Filter.ConditionBuilder#by(org.springframework.data.mongodb.core.aggregation.AggregationExpression)
-			 */
 			@Override
 			public Filter by(AggregationExpression condition) {
 
@@ -784,10 +764,6 @@ public class ArrayOperators {
 				return filter;
 			}
 
-			/*
-			 * (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.ArrayOperators.Filter.ConditionBuilder#by(java.lang.String)
-			 */
 			@Override
 			public Filter by(String expression) {
 
@@ -796,10 +772,6 @@ public class ArrayOperators {
 				return filter;
 			}
 
-			/*
-			 * (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.ArrayOperators.Filter.ConditionBuilder#by(org.bson.Document)
-			 */
 			@Override
 			public Filter by(Document expression) {
 
@@ -1244,9 +1216,6 @@ public class ArrayOperators {
 			this.reduceExpressions = reduceExpressions;
 		}
 
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpression#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-		 */
 		@Override
 		public Document toDocument(AggregationOperationContext context) {
 
@@ -1433,9 +1402,6 @@ public class ArrayOperators {
 				};
 			}
 
-			/* (non-Javadoc)
-			 * @see org.springframework.data.mongodb.core.aggregation.AggregationExpression#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-			 */
 			@Override
 			public Document toDocument(AggregationOperationContext context) {
 				return new Document(propertyName, aggregationExpression.toDocument(context));
@@ -1803,10 +1769,6 @@ public class ArrayOperators {
 			return new ArrayToObject(expression);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AbstractAggregationExpression#getMongoMethod()
-		 */
 		@Override
 		protected String getMongoMethod() {
 			return "$arrayToObject";

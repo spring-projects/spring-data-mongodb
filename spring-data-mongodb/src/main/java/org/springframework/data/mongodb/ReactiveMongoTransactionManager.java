@@ -110,10 +110,6 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 		this.options = options;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.transaction.reactive.AbstractReactiveTransactionManager#doGetTransaction(org.springframework.transaction.reactive.TransactionSynchronizationManager)
-	 */
 	@Override
 	protected Object doGetTransaction(TransactionSynchronizationManager synchronizationManager)
 			throws TransactionException {
@@ -123,19 +119,11 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 		return new ReactiveMongoTransactionObject(resourceHolder);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.transaction.reactive.AbstractReactiveTransactionManager#isExistingTransaction(java.lang.Object)
-	 */
 	@Override
 	protected boolean isExistingTransaction(Object transaction) throws TransactionException {
 		return extractMongoTransaction(transaction).hasResourceHolder();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.transaction.reactive.AbstractReactiveTransactionManager#doBegin(org.springframework.transaction.reactive.TransactionSynchronizationManager, java.lang.Object, org.springframework.transaction.TransactionDefinition)
-	 */
 	@Override
 	protected Mono<Void> doBegin(TransactionSynchronizationManager synchronizationManager, Object transaction,
 			TransactionDefinition definition) throws TransactionException {
@@ -175,10 +163,6 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 		});
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.transaction.reactive.AbstractReactiveTransactionManager#doSuspend(org.springframework.transaction.reactive.TransactionSynchronizationManager, java.lang.Object)
-	 */
 	@Override
 	protected Mono<Object> doSuspend(TransactionSynchronizationManager synchronizationManager, Object transaction)
 			throws TransactionException {
@@ -192,10 +176,6 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 		});
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.transaction.reactive.AbstractReactiveTransactionManager#doResume(org.springframework.transaction.reactive.TransactionSynchronizationManager, java.lang.Object, java.lang.Object)
-	 */
 	@Override
 	protected Mono<Void> doResume(TransactionSynchronizationManager synchronizationManager, @Nullable Object transaction,
 			Object suspendedResources) {
@@ -203,10 +183,6 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 				.fromRunnable(() -> synchronizationManager.bindResource(getRequiredDatabaseFactory(), suspendedResources));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.transaction.reactive.AbstractReactiveTransactionManager#doCommit(org.springframework.transaction.reactive.TransactionSynchronizationManager, org.springframework.transaction.reactive.GenericReactiveTransaction)
-	 */
 	@Override
 	protected final Mono<Void> doCommit(TransactionSynchronizationManager synchronizationManager,
 			GenericReactiveTransaction status) throws TransactionException {
@@ -243,10 +219,6 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 		return transactionObject.commitTransaction();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.transaction.reactive.AbstractReactiveTransactionManager#doRollback(org.springframework.transaction.reactive.TransactionSynchronizationManager, org.springframework.transaction.reactive.GenericReactiveTransaction)
-	 */
 	@Override
 	protected Mono<Void> doRollback(TransactionSynchronizationManager synchronizationManager,
 			GenericReactiveTransaction status) {
@@ -268,10 +240,6 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 		});
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.transaction.reactive.AbstractReactiveTransactionManager#doSetRollbackOnly(org.springframework.transaction.reactive.TransactionSynchronizationManager, org.springframework.transaction.reactive.GenericReactiveTransaction)
-	 */
 	@Override
 	protected Mono<Void> doSetRollbackOnly(TransactionSynchronizationManager synchronizationManager,
 			GenericReactiveTransaction status) throws TransactionException {
@@ -282,10 +250,6 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 		});
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.transaction.reactive.AbstractReactiveTransactionManager#doCleanupAfterCompletion(org.springframework.transaction.reactive.TransactionSynchronizationManager, java.lang.Object)
-	 */
 	@Override
 	protected Mono<Void> doCleanupAfterCompletion(TransactionSynchronizationManager synchronizationManager,
 			Object transaction) {
@@ -340,10 +304,6 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 		return databaseFactory;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-	 */
 	@Override
 	public void afterPropertiesSet() {
 		getRequiredDatabaseFactory();
@@ -509,19 +469,11 @@ public class ReactiveMongoTransactionManager extends AbstractReactiveTransaction
 			return session;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.transaction.support.SmartTransactionObject#isRollbackOnly()
-		 */
 		@Override
 		public boolean isRollbackOnly() {
 			return this.resourceHolder != null && this.resourceHolder.isRollbackOnly();
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.transaction.support.SmartTransactionObject#flush()
-		 */
 		@Override
 		public void flush() {
 			throw new UnsupportedOperationException("flush() not supported");

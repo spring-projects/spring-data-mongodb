@@ -83,18 +83,10 @@ public abstract class AbstractMongoQuery implements RepositoryQuery {
 		this.evaluationContextProvider = evaluationContextProvider;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.RepositoryQuery#getQueryMethod()
-	 */
 	public MongoQueryMethod getQueryMethod() {
 		return method;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.RepositoryQuery#execute(java.lang.Object[])
-	 */
 	@Override
 	public Object execute(Object[] parameters) {
 

@@ -185,10 +185,6 @@ public interface MongoPersistentProperty extends PersistentProperty<MongoPersist
 
 		INSTANCE;
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
 		public String convert(MongoPersistentProperty source) {
 			if (!source.isUnwrapped()) {
 				return source.getFieldName();

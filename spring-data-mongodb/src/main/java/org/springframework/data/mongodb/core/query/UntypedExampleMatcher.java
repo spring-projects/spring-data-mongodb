@@ -37,187 +37,95 @@ public class UntypedExampleMatcher implements ExampleMatcher {
 		this.delegate = delegate;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.domain.ExampleMatcher#matching()
-	 */
 	public static UntypedExampleMatcher matching() {
 		return new UntypedExampleMatcher(ExampleMatcher.matching());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.domain.ExampleMatcher#matchingAny()
-	 */
 	public static UntypedExampleMatcher matchingAny() {
 		return new UntypedExampleMatcher(ExampleMatcher.matchingAny());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.domain.ExampleMatcher#matchingAll()
-	 */
 	public static UntypedExampleMatcher matchingAll() {
 		return new UntypedExampleMatcher(ExampleMatcher.matchingAll());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.domain.ExampleMatcher#withIgnorePaths(java.lang.String...)
-	 */
 	public UntypedExampleMatcher withIgnorePaths(String... ignoredPaths) {
 		return new UntypedExampleMatcher(delegate.withIgnorePaths(ignoredPaths));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.domain.ExampleMatcher#withStringMatcher(java.lang.String)
-	 */
 	public UntypedExampleMatcher withStringMatcher(StringMatcher defaultStringMatcher) {
 		return new UntypedExampleMatcher(delegate.withStringMatcher(defaultStringMatcher));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.domain.ExampleMatcher#withIgnoreCase()
-	 */
 	public UntypedExampleMatcher withIgnoreCase() {
 		return new UntypedExampleMatcher(delegate.withIgnoreCase());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.domain.ExampleMatcher#withIgnoreCase(boolean)
-	 */
 	public UntypedExampleMatcher withIgnoreCase(boolean defaultIgnoreCase) {
 		return new UntypedExampleMatcher(delegate.withIgnoreCase(defaultIgnoreCase));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.domain.ExampleMatcher#withMatcher(java.lang.String, org.springframework.data.domain.ExampleMatcher.MatcherConfigurer)
-	 */
 	public UntypedExampleMatcher withMatcher(String propertyPath,
 			MatcherConfigurer<GenericPropertyMatcher> matcherConfigurer) {
 		return new UntypedExampleMatcher(delegate.withMatcher(propertyPath, matcherConfigurer));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.domain.ExampleMatcher#withMatcher(java.lang.String, org.springframework.data.domain.ExampleMatcher.GenericPropertyMatcher)
-	 */
 	public UntypedExampleMatcher withMatcher(String propertyPath, GenericPropertyMatcher genericPropertyMatcher) {
 		return new UntypedExampleMatcher(delegate.withMatcher(propertyPath, genericPropertyMatcher));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.domain.ExampleMatcher#withTransformer(java.lang.String, org.springframework.data.domain.ExampleMatcher.PropertyValueTransformer)
-	 */
 	public UntypedExampleMatcher withTransformer(String propertyPath, PropertyValueTransformer propertyValueTransformer) {
 		return new UntypedExampleMatcher(delegate.withTransformer(propertyPath, propertyValueTransformer));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.domain.ExampleMatcher#withIgnoreCase(java.lang.String...)
-	 */
 	public UntypedExampleMatcher withIgnoreCase(String... propertyPaths) {
 		return new UntypedExampleMatcher(delegate.withIgnoreCase(propertyPaths));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.domain.ExampleMatcher#withIncludeNullValues()
-	 */
 	public UntypedExampleMatcher withIncludeNullValues() {
 		return new UntypedExampleMatcher(delegate.withIncludeNullValues());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.domain.ExampleMatcher#withIgnoreNullValues()
-	 */
 	public UntypedExampleMatcher withIgnoreNullValues() {
 		return new UntypedExampleMatcher(delegate.withIgnoreNullValues());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.domain.ExampleMatcher#withNullHandler(org.springframework.data.domain.ExampleMatcher.NullHandler)
-	 */
 	public UntypedExampleMatcher withNullHandler(NullHandler nullHandler) {
 		return new UntypedExampleMatcher(delegate.withNullHandler(nullHandler));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.domain.ExampleMatcher#getNullHandler()
-	 */
 	public NullHandler getNullHandler() {
 		return delegate.getNullHandler();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.domain.ExampleMatcher#getDefaultStringMatcher()
-	 */
 	public StringMatcher getDefaultStringMatcher() {
 		return delegate.getDefaultStringMatcher();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.domain.ExampleMatcher#isIgnoreCaseEnabled()
-	 */
 	public boolean isIgnoreCaseEnabled() {
 		return delegate.isIgnoreCaseEnabled();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.domain.ExampleMatcher#isIgnoredPath()
-	 */
 	public boolean isIgnoredPath(String path) {
 		return delegate.isIgnoredPath(path);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.domain.ExampleMatcher#getIgnoredPaths()
-	 */
 	public Set<String> getIgnoredPaths() {
 		return delegate.getIgnoredPaths();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.domain.ExampleMatcher#getPropertySpecifiers()
-	 */
 	public PropertySpecifiers getPropertySpecifiers() {
 		return delegate.getPropertySpecifiers();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.domain.ExampleMatcher#isAllMatching()
-	 */
 	public boolean isAllMatching() {
 		return delegate.isAllMatching();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.domain.ExampleMatcher#isAnyMatching()
-	 */
 	public boolean isAnyMatching() {
 		return delegate.isAnyMatching();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.domain.ExampleMatcher#getMatchMode()
-	 */
 	public MatchMode getMatchMode() {
 		return delegate.getMatchMode();
 	}

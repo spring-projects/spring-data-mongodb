@@ -40,10 +40,6 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 		this.template = template;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.ExecutableUpdateOperation#update(java.lang.Class)
-	 */
 	@Override
 	public <T> ExecutableUpdate<T> update(Class<T> domainType) {
 
@@ -85,10 +81,6 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 			this.targetType = targetType;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableUpdateOperation.UpdateWithUpdate#apply(org.springframework.data.mongodb.core.query.UpdateDefinition)
-		 */
 		@Override
 		public TerminatingUpdate<T> apply(UpdateDefinition update) {
 
@@ -98,10 +90,6 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 					findAndReplaceOptions, replacement, targetType);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableUpdateOperation.UpdateWithCollection#inCollection(java.lang.String)
-		 */
 		@Override
 		public UpdateWithQuery<T> inCollection(String collection) {
 
@@ -111,10 +99,6 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 					findAndReplaceOptions, replacement, targetType);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableUpdateOperation.FindAndModifyWithOptions#withOptions(org.springframework.data.mongodb.core.FindAndModifyOptions)
-		 */
 		@Override
 		public TerminatingFindAndModify<T> withOptions(FindAndModifyOptions options) {
 
@@ -124,10 +108,6 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 					findAndReplaceOptions, replacement, targetType);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableUpdateOperation.UpdateWithUpdate#replaceWith(Object)
-		 */
 		@Override
 		public FindAndReplaceWithProjection<T> replaceWith(T replacement) {
 
@@ -137,10 +117,6 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 					findAndReplaceOptions, replacement, targetType);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableUpdateOperation.FindAndReplaceWithOptions#withOptions(org.springframework.data.mongodb.core.FindAndReplaceOptions)
-		 */
 		@Override
 		public FindAndReplaceWithProjection<T> withOptions(FindAndReplaceOptions options) {
 
@@ -150,10 +126,6 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 					options, replacement, targetType);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.UpdateWithQuery#matching(org.springframework.data.mongodb.core.query.Query)
-		 */
 		@Override
 		public UpdateWithUpdate<T> matching(Query query) {
 
@@ -163,10 +135,6 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 					findAndReplaceOptions, replacement, targetType);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ReactiveUpdateOperation.FindAndReplaceWithProjection#as(java.lang.Class)
-		 */
 		@Override
 		public <R> FindAndReplaceWithOptions<R> as(Class<R> resultType) {
 
@@ -176,37 +144,21 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 					findAndReplaceOptions, replacement, resultType);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableUpdateOperation.TerminatingUpdate#all()
-		 */
 		@Override
 		public UpdateResult all() {
 			return doUpdate(true, false);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableUpdateOperation.TerminatingUpdate#first()
-		 */
 		@Override
 		public UpdateResult first() {
 			return doUpdate(false, false);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableUpdateOperation.TerminatingUpdate#upsert()
-		 */
 		@Override
 		public UpdateResult upsert() {
 			return doUpdate(true, true);
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableUpdateOperation.TerminatingFindAndModify#findAndModifyValue()
-		 */
 		@Override
 		public @Nullable T findAndModifyValue() {
 
@@ -215,10 +167,6 @@ class ExecutableUpdateOperationSupport implements ExecutableUpdateOperation {
 					getCollectionName());
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.ExecutableUpdateOperation.TerminatingFindAndReplace#findAndReplaceValue()
-		 */
 		@Override
 		public @Nullable T findAndReplaceValue() {
 

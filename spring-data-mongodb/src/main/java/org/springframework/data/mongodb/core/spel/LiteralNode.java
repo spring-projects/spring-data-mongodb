@@ -83,10 +83,6 @@ public class LiteralNode extends ExpressionNode {
 		return operator.isUnaryMinus();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.spel.ExpressionNode#isLiteral()
-	 */
 	@Override
 	public boolean isLiteral() {
 		return SUPPORTED_LITERAL_TYPES.contains(literal.getClass());

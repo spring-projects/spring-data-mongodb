@@ -99,10 +99,6 @@ public class SpringDataMongodbQuery<T> extends SpringDataMongodbQuerySupport<Spr
 		this.find = mongoOperations.query(domainType).inCollection(collectionName).as(resultType1);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.querydsl.core.Fetchable#iterable()
-	 */
 	@Override
 	public CloseableIterator<T> iterate() {
 
@@ -137,10 +133,6 @@ public class SpringDataMongodbQuery<T> extends SpringDataMongodbQuerySupport<Spr
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.querydsl.core.Fetchable#iterable()
-	 */
 	@Override
 	public Stream<T> stream() {
 
@@ -151,10 +143,6 @@ public class SpringDataMongodbQuery<T> extends SpringDataMongodbQuerySupport<Spr
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.querydsl.core.Fetchable#fetch()
-	 */
 	@Override
 	public List<T> fetch() {
 		try {
@@ -182,10 +170,6 @@ public class SpringDataMongodbQuery<T> extends SpringDataMongodbQuerySupport<Spr
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.querydsl.core.Fetchable#fetchFirst()
-	 */
 	@Override
 	public T fetchFirst() {
 		try {
@@ -195,10 +179,6 @@ public class SpringDataMongodbQuery<T> extends SpringDataMongodbQuerySupport<Spr
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.querydsl.core.Fetchable#fetchOne()
-	 */
 	@Override
 	public T fetchOne() {
 		try {
@@ -208,10 +188,6 @@ public class SpringDataMongodbQuery<T> extends SpringDataMongodbQuerySupport<Spr
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.querydsl.core.Fetchable#fetchResults()
-	 */
 	@Override
 	public QueryResults<T> fetchResults() {
 
@@ -220,10 +196,6 @@ public class SpringDataMongodbQuery<T> extends SpringDataMongodbQuerySupport<Spr
 				: QueryResults.emptyResults();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.querydsl.core.Fetchable#fetchCount()
-	 */
 	@Override
 	public long fetchCount() {
 		try {

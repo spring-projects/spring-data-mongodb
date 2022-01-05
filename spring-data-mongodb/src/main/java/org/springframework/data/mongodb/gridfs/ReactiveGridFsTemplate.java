@@ -111,20 +111,12 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 		this.bucket = bucket;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.ReactiveGridFsOperations#store(org.reactivestreams.Publisher, java.lang.String, java.lang.String, java.lang.Object)
-	 */
 	@Override
 	public Mono<ObjectId> store(Publisher<DataBuffer> content, @Nullable String filename, @Nullable String contentType,
 			@Nullable Object metadata) {
 		return store(content, filename, contentType, toDocument(metadata));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.ReactiveGridFsOperations#save(org.springframework.data.mongodb.gridfs.GridFsObject)
-	 */
 	public <T> Mono<T> store(GridFsObject<T, Publisher<DataBuffer>> upload) {
 
 		GridFSUploadOptions uploadOptions = computeUploadOptionsFor(upload.getOptions().getContentType(),
@@ -146,10 +138,6 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 		return createMono(callback).thenReturn(fileId);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.ReactiveGridFsOperations#find(org.springframework.data.mongodb.core.query.Query)
-	 */
 	@Override
 	public Flux<GridFSFile> find(Query query) {
 
@@ -159,10 +147,6 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 		return createFlux(new FindCallback(query, queryObject, sortObject));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.ReactiveGridFsOperations#findOne(org.springframework.data.mongodb.core.query.Query)
-	 */
 	@Override
 	public Mono<GridFSFile> findOne(Query query) {
 
@@ -185,10 +169,6 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 				});
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.ReactiveGridFsOperations#findFirst(org.springframework.data.mongodb.core.query.Query)
-	 */
 	@Override
 	public Mono<GridFSFile> findFirst(Query query) {
 
@@ -198,19 +178,11 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 		return createFlux(new FindLimitCallback(query, queryObject, sortObject, 1)).next();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.ReactiveGridFsOperations#delete(org.springframework.data.mongodb.core.query.Query)
-	 */
 	@Override
 	public Mono<Void> delete(Query query) {
 		return find(query).flatMap(it -> createMono(new DeleteCallback(it.getId()))).then();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.ReactiveGridFsOperations#getResource(java.lang.String)
-	 */
 	@Override
 	public Mono<ReactiveGridFsResource> getResource(String location) {
 
@@ -220,10 +192,6 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 				.defaultIfEmpty(ReactiveGridFsResource.absent(location));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.ReactiveGridFsOperations#getResource(com.mongodb.client.gridfs.model.GridFSFile)
-	 */
 	@Override
 	public Mono<ReactiveGridFsResource> getResource(GridFSFile file) {
 
@@ -233,10 +201,6 @@ public class ReactiveGridFsTemplate extends GridFsOperationsSupport implements R
 				.map(it -> new ReactiveGridFsResource(file, it.downloadToPublisher(file.getId()), dataBufferFactory));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.ReactiveGridFsOperations#getResources(java.lang.String)
-	 */
 	@Override
 	public Flux<ReactiveGridFsResource> getResources(String locationPattern) {
 

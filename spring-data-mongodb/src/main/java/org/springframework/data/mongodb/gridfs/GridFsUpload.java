@@ -67,28 +67,16 @@ public class GridFsUpload<ID> implements GridFsObject<ID, InputStream> {
 		return id;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.GridFsObject#getFielname()
-	 */
 	@Override
 	public String getFilename() {
 		return filename;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.GridFsObject#getContent()
-	 */
 	@Override
 	public InputStream getContent() {
 		return dataStream.orElse(StreamUtils.emptyInput());
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.GridFsObject#getOptions()
-	 */
 	@Override
 	public Options getOptions() {
 		return options;

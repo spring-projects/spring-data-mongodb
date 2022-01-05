@@ -67,10 +67,6 @@ public class MatchOperation implements AggregationOperation {
 		this.expression = expression;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
 
@@ -78,10 +74,6 @@ public class MatchOperation implements AggregationOperation {
 				context.getMappedObject(expression != null ? expression.toDocument() : criteriaDefinition.getCriteriaObject()));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#getOperator()
-	 */
 	@Override
 	public String getOperator() {
 		return "$match";

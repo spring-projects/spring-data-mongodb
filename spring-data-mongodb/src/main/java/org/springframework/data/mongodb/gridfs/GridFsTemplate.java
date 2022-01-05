@@ -87,19 +87,11 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 		this.bucket = bucket;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#store(java.io.InputStream, java.lang.String, java.lang.String, java.lang.Object)
-	 */
 	public ObjectId store(InputStream content, @Nullable String filename, @Nullable String contentType,
 			@Nullable Object metadata) {
 		return store(content, filename, contentType, toDocument(metadata));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#save(org.springframework.data.mongodb.gridfs.GridFsObject)
-	 */
 	public <T> T store(GridFsObject<T, InputStream> upload) {
 
 		GridFSUploadOptions uploadOptions = computeUploadOptionsFor(upload.getOptions().getContentType(),
@@ -118,10 +110,6 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 		return upload.getFileId();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#find(com.mongodb.Document)
-	 */
 	public GridFSFindIterable find(Query query) {
 
 		Assert.notNull(query, "Query must not be null!");
@@ -142,18 +130,10 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 		return iterable;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#findOne(com.mongodb.Document)
-	 */
 	public GridFSFile findOne(Query query) {
 		return find(query).first();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#delete(org.springframework.data.mongodb.core.query.Query)
-	 */
 	public void delete(Query query) {
 
 		for (GridFSFile gridFSFile : find(query)) {
@@ -161,18 +141,10 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.core.io.ResourceLoader#getClassLoader()
-	 */
 	public ClassLoader getClassLoader() {
 		return dbFactory.getClass().getClassLoader();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.core.io.ResourceLoader#getResource(java.lang.String)
-	 */
 	public GridFsResource getResource(String location) {
 
 		return Optional.ofNullable(findOne(query(whereFilename().is(location)))) //
@@ -180,10 +152,6 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 				.orElseGet(() -> GridFsResource.absent(location));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.gridfs.GridFsOperations#getResource(com.mongodb.client.gridfs.model.GridFSFile)
-	 */
 	public GridFsResource getResource(GridFSFile file) {
 
 		Assert.notNull(file, "GridFSFile must not be null!");
@@ -191,10 +159,6 @@ public class GridFsTemplate extends GridFsOperationsSupport implements GridFsOpe
 		return new GridFsResource(file, getGridFs().openDownloadStream(file.getId()));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.core.io.support.ResourcePatternResolver#getResources(java.lang.String)
-	 */
 	public GridFsResource[] getResources(String locationPattern) {
 
 		if (!StringUtils.hasText(locationPattern)) {

@@ -43,9 +43,6 @@ public class CountOperation implements FieldsExposingAggregationOperation {
 		this.fieldName = fieldName;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperation#toDocument(org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-	 */
 	@Override
 	public Document toDocument(AggregationOperationContext context) {
 		return new Document(getOperator(), fieldName);
@@ -56,9 +53,6 @@ public class CountOperation implements FieldsExposingAggregationOperation {
 		return "$count";
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.FieldsExposingAggregationOperation#getFields()
-	 */
 	@Override
 	public ExposedFields getFields() {
 		return ExposedFields.from(new ExposedField(fieldName, true));

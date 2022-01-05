@@ -25,10 +25,6 @@ import org.springframework.data.mongodb.repository.User;
  */
 public class CustomMongoRepositoryImpl implements CustomMongoRepository {
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.repository.custom.CustomMongoRepository#findByFullName()
-	 */
 	@Override
 	public List<User> findByUsernameCustom(String username) {
 

@@ -139,10 +139,6 @@ public class GeoJsonModule extends SimpleModule {
 	 */
 	private static abstract class GeoJsonDeserializer<T extends GeoJson<?>> extends JsonDeserializer<T> {
 
-		/*
-		 * (non-Javadoc)
-		 * @see com.fasterxml.jackson.databind.JsonDeserializer#deserialize(com.fasterxml.jackson.core.JsonParser, com.fasterxml.jackson.databind.DeserializationContext)
-		 */
 		@Nullable
 		@Override
 		public T deserialize(@Nullable JsonParser jp, @Nullable DeserializationContext ctxt) throws IOException {
@@ -240,10 +236,6 @@ public class GeoJsonModule extends SimpleModule {
 	 */
 	private static class GeoJsonPointDeserializer extends GeoJsonDeserializer<GeoJsonPoint> {
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.geo.GeoJsonModule.GeoJsonDeserializer#doDeserialize(com.fasterxml.jackson.databind.node.ArrayNode)
-		 */
 		@Nullable
 		@Override
 		protected GeoJsonPoint doDeserialize(ArrayNode coordinates) {
@@ -270,10 +262,6 @@ public class GeoJsonModule extends SimpleModule {
 	 */
 	private static class GeoJsonLineStringDeserializer extends GeoJsonDeserializer<GeoJsonLineString> {
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.geo.GeoJsonModule.GeoJsonDeserializer#doDeserialize(com.fasterxml.jackson.databind.node.ArrayNode)
-		 */
 		@Override
 		protected GeoJsonLineString doDeserialize(ArrayNode coordinates) {
 			return new GeoJsonLineString(toPoints(coordinates));
@@ -299,10 +287,6 @@ public class GeoJsonModule extends SimpleModule {
 	 */
 	private static class GeoJsonMultiPointDeserializer extends GeoJsonDeserializer<GeoJsonMultiPoint> {
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.geo.GeoJsonModule.GeoJsonDeserializer#doDeserialize(com.fasterxml.jackson.databind.node.ArrayNode)
-		 */
 		@Override
 		protected GeoJsonMultiPoint doDeserialize(ArrayNode coordinates) {
 			return new GeoJsonMultiPoint(toPoints(coordinates));
@@ -329,10 +313,6 @@ public class GeoJsonModule extends SimpleModule {
 	 */
 	private static class GeoJsonMultiLineStringDeserializer extends GeoJsonDeserializer<GeoJsonMultiLineString> {
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.geo.GeoJsonModule.GeoJsonDeserializer#doDeserialize(com.fasterxml.jackson.databind.node.ArrayNode)
-		 */
 		@Override
 		protected GeoJsonMultiLineString doDeserialize(ArrayNode coordinates) {
 
@@ -367,10 +347,6 @@ public class GeoJsonModule extends SimpleModule {
 	 */
 	private static class GeoJsonPolygonDeserializer extends GeoJsonDeserializer<GeoJsonPolygon> {
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.geo.GeoJsonModule.GeoJsonDeserializer#doDeserialize(com.fasterxml.jackson.databind.node.ArrayNode)
-		 */
 		@Nullable
 		@Override
 		protected GeoJsonPolygon doDeserialize(ArrayNode coordinates) {
@@ -406,10 +382,6 @@ public class GeoJsonModule extends SimpleModule {
 	 */
 	private static class GeoJsonMultiPolygonDeserializer extends GeoJsonDeserializer<GeoJsonMultiPolygon> {
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.geo.GeoJsonModule.GeoJsonDeserializer#doDeserialize(com.fasterxml.jackson.databind.node.ArrayNode)
-		 */
 		@Override
 		protected GeoJsonMultiPolygon doDeserialize(ArrayNode coordinates) {
 

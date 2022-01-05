@@ -116,18 +116,11 @@ public abstract class AbstractMongoConverter implements MongoConverter, Initiali
 		conversions.registerConvertersIn(conversionService);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.core.convert.MongoConverter#getConversionService()
-	 */
 	@Override
 	public ConversionService getConversionService() {
 		return conversionService;
 	}
 
-	/* (non-Javadoc)
-	 * @see org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-	 */
 	public void afterPropertiesSet() {
 		initializeConverters();
 	}

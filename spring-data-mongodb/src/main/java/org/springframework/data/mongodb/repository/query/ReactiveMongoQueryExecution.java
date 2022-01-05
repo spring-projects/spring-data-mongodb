@@ -70,10 +70,6 @@ interface ReactiveMongoQueryExecution {
 			this.returnType = returnType;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
-		 */
 		@Override
 		public Publisher<? extends Object> execute(Query query, Class<?> type, String collection) {
 
@@ -128,10 +124,6 @@ interface ReactiveMongoQueryExecution {
 			this.method = method;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.mongodb.repository.query.AbstractMongoQuery.Execution#execute(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
-		 */
 		@Override
 		public Publisher<? extends Object> execute(Query query, Class<?> type, String collection) {
 
@@ -195,10 +187,6 @@ interface ReactiveMongoQueryExecution {
 			this.instantiators = instantiators;
 		}
 
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
 		@Override
 		public Object convert(Object source) {
 

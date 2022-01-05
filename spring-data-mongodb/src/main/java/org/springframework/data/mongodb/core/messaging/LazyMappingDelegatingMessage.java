@@ -37,19 +37,11 @@ class LazyMappingDelegatingMessage<S, T> implements Message<S, T> {
 		this.converter = converter;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.messaging.Message#getRaw()
-	 */
 	@Override
 	public S getRaw() {
 		return delegate.getRaw();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.messaging.Message#getBody()
-	 */
 	@Override
 	public T getBody() {
 
@@ -71,10 +63,6 @@ class LazyMappingDelegatingMessage<S, T> implements Message<S, T> {
 				String.format("No converter found capable of converting %s to %s", messageBody.getClass(), targetType));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.messaging.Message#getProperties()
-	 */
 	@Override
 	public MessageProperties getProperties() {
 		return delegate.getProperties();

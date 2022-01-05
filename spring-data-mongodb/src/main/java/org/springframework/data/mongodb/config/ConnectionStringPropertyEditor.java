@@ -30,10 +30,6 @@ import com.mongodb.ConnectionString;
  */
 public class ConnectionStringPropertyEditor extends PropertyEditorSupport {
 
-	/*
-	 * (non-Javadoc)
-	 * @see java.beans.PropertyEditorSupport#setAsText(java.lang.String)
-	 */
 	@Override
 	public void setAsText(@Nullable String connectionString) {
 

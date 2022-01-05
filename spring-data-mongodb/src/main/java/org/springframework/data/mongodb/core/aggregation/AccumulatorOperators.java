@@ -334,9 +334,6 @@ public class AccumulatorOperators {
 			return new Sum(append(value));
 		}
 
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.AbstractAggregationExpression#toDocument(java.lang.Object, org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-		 */
 		@Override
 		@SuppressWarnings("unchecked")
 		public Document toDocument(Object value, AggregationOperationContext context) {
@@ -417,9 +414,6 @@ public class AccumulatorOperators {
 			return new Avg(append(expression));
 		}
 
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.AbstractAggregationExpression#toDocument(java.lang.Object, org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-		 */
 		@Override
 		@SuppressWarnings("unchecked")
 		public Document toDocument(Object value, AggregationOperationContext context) {
@@ -500,9 +494,6 @@ public class AccumulatorOperators {
 			return new Max(append(expression));
 		}
 
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.AbstractAggregationExpression#toDocument(java.lang.Object, org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-		 */
 		@Override
 		@SuppressWarnings("unchecked")
 		public Document toDocument(Object value, AggregationOperationContext context) {
@@ -583,9 +574,6 @@ public class AccumulatorOperators {
 			return new Min(append(expression));
 		}
 
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.AbstractAggregationExpression#toDocument(java.lang.Object, org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-		 */
 		@Override
 		@SuppressWarnings("unchecked")
 		public Document toDocument(Object value, AggregationOperationContext context) {
@@ -666,9 +654,6 @@ public class AccumulatorOperators {
 			return new StdDevPop(append(expression));
 		}
 
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.AbstractAggregationExpression#toDocument(java.lang.Object, org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-		 */
 		@Override
 		@SuppressWarnings("unchecked")
 		public Document toDocument(Object value, AggregationOperationContext context) {
@@ -749,9 +734,6 @@ public class AccumulatorOperators {
 			return new StdDevSamp(append(expression));
 		}
 
-		/* (non-Javadoc)
-		 * @see org.springframework.data.mongodb.core.aggregation.AccumulatorOperators.AbstractAggregationExpression#toDocument(java.lang.Object, org.springframework.data.mongodb.core.aggregation.AggregationOperationContext)
-		 */
 		@Override
 		@SuppressWarnings("unchecked")
 		public Document toDocument(Object value, AggregationOperationContext context) {

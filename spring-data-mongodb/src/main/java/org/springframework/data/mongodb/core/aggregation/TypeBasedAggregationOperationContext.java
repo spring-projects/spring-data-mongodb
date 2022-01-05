@@ -71,46 +71,26 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 		this.entity = Lazy.of(() -> mappingContext.getPersistentEntity(type));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(org.bson.Document)
-	 */
 	@Override
 	public Document getMappedObject(Document document) {
 		return getMappedObject(document, type);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getMappedObject(org.bson.Document, java.lang.Class)
-	 */
 	@Override
 	public Document getMappedObject(Document document, @Nullable Class<?> type) {
 		return mapper.getMappedObject(document, type != null ? mappingContext.getPersistentEntity(type) : null);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getReference(org.springframework.data.mongodb.core.aggregation.Field)
-	 */
 	@Override
 	public FieldReference getReference(Field field) {
 		return getReferenceFor(field);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getReference(java.lang.String)
-	 */
 	@Override
 	public FieldReference getReference(String name) {
 		return getReferenceFor(field(name));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#getFields(java.lang.Class)
-	 */
 	@Override
 	public Fields getFields(Class<?> type) {
 
@@ -131,10 +111,6 @@ public class TypeBasedAggregationOperationContext implements AggregationOperatio
 		return Fields.from(fields.toArray(new Field[0]));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.AggregationOperationContext#continueOnMissingFieldReference()
-	 */
 	@Override
 	public AggregationOperationContext continueOnMissingFieldReference() {
 		return continueOnMissingFieldReference(type);

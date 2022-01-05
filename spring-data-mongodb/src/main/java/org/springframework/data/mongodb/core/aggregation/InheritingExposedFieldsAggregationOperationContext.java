@@ -43,10 +43,6 @@ class InheritingExposedFieldsAggregationOperationContext extends ExposedFieldsAg
 		this.previousContext = previousContext;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.aggregation.ExposedFieldsAggregationOperationContext#resolveExposedField(org.springframework.data.mongodb.core.aggregation.Field, java.lang.String)
-	 */
 	@Override
 	protected FieldReference resolveExposedField(Field field, String name) {
 
