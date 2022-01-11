@@ -1388,6 +1388,14 @@ public class QueryMapper {
 				this.currentIndex = 0;
 			}
 
+			String nextToken() {
+				return pathParts.get(currentIndex+1);
+			}
+
+			boolean hasNexToken() {
+				return pathParts.size() > currentIndex+1;
+			}
+
 			/**
 			 * Maps the property name while retaining potential positional operator {@literal $}.
 			 *
@@ -1397,31 +1405,25 @@ public class QueryMapper {
 			protected String mapPropertyName(MongoPersistentProperty property) {
 
 				StringBuilder mappedName = new StringBuilder(PropertyToFieldNameConverter.INSTANCE.convert(property));
-
-				boolean inspect = iterator.hasNext();
-
-				while (inspect) {
-
-					String partial = iterator.next();
-					currentIndex++;
-
-					boolean isPositional = isPositionalParameter(partial) && property.isCollectionLike() ;
-					if(property.isMap() && currentPropertyRoot.equals(partial) && iterator.hasNext()){
-						partial = iterator.next();
-						currentIndex++;
-					}
-
-					if (isPositional || property.isMap() && !currentPropertyRoot.equals(partial)) {
-						mappedName.append(".").append(partial);
-					}
-
-					inspect = isPositional && iterator.hasNext();
+				if(!hasNexToken()) {
+					return mappedName.toString();
 				}
 
-				if(currentIndex + 1 < pathParts.size()) {
-					currentIndex++;
-					currentPropertyRoot = pathParts.get(currentIndex);
+				String nextToken = nextToken();
+				if(isPositionalParameter(nextToken)) {
+
+					mappedName.append(".").append(nextToken);
+					currentIndex+=2;
+					return mappedName.toString();
 				}
+
+				if(property.isMap()) {
+
+					mappedName.append(".").append(nextToken);
+					currentIndex+=2;
+					return mappedName.toString();
+				}
+				currentIndex++;
 				return mappedName.toString();
 			}
 

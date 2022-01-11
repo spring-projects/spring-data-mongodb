@@ -1251,6 +1251,36 @@ class UpdateMapperUnitTests {
 		assertThat(mappedUpdate).isEqualTo("{\"$set\": {\"intKeyedMap.1a.map.0b\": \"testing\"}}");
 	}
 
+	@Test // GH-3921
+	void mapNumericKeyInPathHavingComplexMapValyeTypes() {
+
+		Update update = new Update().set("testInnerData.testMap.1.intValue", "4");
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(TestData.class));
+
+		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set",new org.bson.Document("testInnerData.testMap.1.intValue","4")));
+	}
+
+	@Test // GH-3921
+	void mapNumericKeyInPathNotMatchingExistingProperties() {
+
+		Update update = new Update().set("testInnerData.imaginaryMap.1.nonExistingProperty", "4");
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(TestData.class));
+
+		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set",new org.bson.Document("testInnerData.imaginaryMap.1.noExistingProperty","4")));
+	}
+
+	@Test // GH-3921
+	void mapNumericKeyInPathPartiallyMatchingExistingProperties() {
+
+		Update update = new Update().set("testInnerData.testMap.1.nonExistingProperty.2.someValue", "4");
+		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
+				context.getPersistentEntity(TestData.class));
+
+		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set",new org.bson.Document("testInnerData.testMap.1.nonExistingProperty.2.someValue","4")));
+	}
+
 	static class DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes {
 		ListModelWrapper concreteTypeWithListAttributeOfInterfaceType;
 	}
@@ -1621,4 +1651,20 @@ class UpdateMapperUnitTests {
 		Map<String, Map<String, Map<String, Object>>> levelOne;
 	}
 
+	@Data
+	private static class TestData {
+		@Id
+		private String id;
+		private TestInnerData testInnerData;
+	}
+
+	@Data
+	private static class TestInnerData {
+		private Map<Integer, TestValue> testMap;
+	}
+
+	@Data
+	private static class TestValue {
+		private int intValue;
+	}
 }
