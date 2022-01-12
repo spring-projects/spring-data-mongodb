@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2021 the original author or authors.
+ * Copyright 2014-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,7 +33,8 @@ import org.springframework.util.Assert;
  * Unless specified otherwise the index name will be created out of the keys/path involved in the index. <br />
  * {@link TextIndexed} properties are collected into a single index that covers the detected fields. <br />
  * {@link java.util.Map} like structures, unless annotated with {@link WildcardIndexed}, are skipped because the
- * {@link java.util.Map.Entry#getKey() map key}, which cannot be resolved from static metadata, needs to be part of the index.
+ * {@link java.util.Map.Entry#getKey() map key}, which cannot be resolved from static metadata, needs to be part of the
+ * index.
  *
  * @author Christoph Strobl
  * @author Thomas Darimont

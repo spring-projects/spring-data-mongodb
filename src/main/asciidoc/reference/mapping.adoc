@@ -409,9 +409,9 @@ This event guarantees that the context is fully initialized.
 Note that at this time other components, especially bean factories might have access to the MongoDB database.
 
 [WARNING]
-===
-`Map` like structures, unless annotated with `@WildcardIndexed`, are skipped by the `IndexResolver` because the _map key_, which cannot be resolved from static metadata, needs to be part of the index definition.
-===
+====
+``Map``-like properties are skipped by the `IndexResolver` unless annotated with `@WildcardIndexed` because the _map key_ must be part of the index definition. Since the purpose of maps is the usage of dynamic keys and values, the keys cannot be resolved from static mapping metadata.
+====
 
 .Programmatic Index Creation for a single Domain Type
 ====
