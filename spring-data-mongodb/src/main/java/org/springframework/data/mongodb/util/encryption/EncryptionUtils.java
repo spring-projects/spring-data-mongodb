@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the original author or authors.
+ * Copyright 2021-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,15 @@ package org.springframework.data.mongodb.util.encryption;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import org.bson.BsonBinary;
+import org.bson.BsonBinarySubType;
+import org.bson.types.Binary;
 import org.springframework.data.mongodb.util.spel.ExpressionUtils;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.Base64Utils;
 
 /**
  * Internal utility class for dealing with encryption related matters.
@@ -35,8 +39,8 @@ public final class EncryptionUtils {
 	/**
 	 * Resolve a given plain {@link String} value into the store native {@literal keyId} format, considering potential
 	 * {@link Expression expressions}. <br />
-	 * The potential keyId is probed against an {@link UUID#fromString(String) UUID value} and the {@literal base64}
-	 * encoded {@code $binary} representation.
+	 * The potential keyId is probed against an {@link UUID#fromString(String) UUID value} or decoded from the
+	 * {@literal base64} representation prior to conversion into its {@link Binary} format.
 	 *
 	 * @param value the source value to resolve the keyId for. Must not be {@literal null}.
 	 * @param evaluationContext a {@link Supplier} used to provide the {@link EvaluationContext} in case an
@@ -57,11 +61,13 @@ public final class EncryptionUtils {
 				return potentialKeyId;
 			}
 		}
+
 		try {
-			return UUID.fromString(potentialKeyId.toString());
+			return new Binary(BsonBinarySubType.UUID_STANDARD,
+					new BsonBinary(UUID.fromString(potentialKeyId.toString())).getData());
 		} catch (IllegalArgumentException e) {
-			return org.bson.Document.parse("{ val : { $binary : { base64 : '" + potentialKeyId + "', subType : '04'} } }")
-					.get("val");
+
+			return new Binary(BsonBinarySubType.UUID_STANDARD, Base64Utils.decodeFromString(potentialKeyId.toString()));
 		}
 	}
 }
