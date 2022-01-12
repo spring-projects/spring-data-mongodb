@@ -35,8 +35,7 @@ public final class EncryptionUtils {
 	/**
 	 * Resolve a given plain {@link String} value into the store native {@literal keyId} format, considering potential
 	 * {@link Expression expressions}. <br />
-	 * The potential keyId is probed against an {@link UUID#fromString(String) UUID value} and the {@literal base64}
-	 * encoded {@code $binary} representation.
+	 * The potential keyId is converted to the  {@literal base64} encoded {@code $binary} representation.
 	 *
 	 * @param value the source value to resolve the keyId for. Must not be {@literal null}.
 	 * @param evaluationContext a {@link Supplier} used to provide the {@link EvaluationContext} in case an
@@ -57,11 +56,8 @@ public final class EncryptionUtils {
 				return potentialKeyId;
 			}
 		}
-		try {
-			return UUID.fromString(potentialKeyId.toString());
-		} catch (IllegalArgumentException e) {
-			return org.bson.Document.parse("{ val : { $binary : { base64 : '" + potentialKeyId + "', subType : '04'} } }")
+
+		return org.bson.Document.parse("{ val : { $binary : { base64 : '" + potentialKeyId + "', subType : '04'} } }")
 					.get("val");
-		}
 	}
 }
