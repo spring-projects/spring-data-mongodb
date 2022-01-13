@@ -18,6 +18,9 @@ package org.springframework.data.mongodb.util.encryption;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import org.bson.BsonBinary;
+import org.bson.BsonBinarySubType;
+import org.bson.types.Binary;
 import org.springframework.data.mongodb.util.spel.ExpressionUtils;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
@@ -35,7 +38,8 @@ public final class EncryptionUtils {
 	/**
 	 * Resolve a given plain {@link String} value into the store native {@literal keyId} format, considering potential
 	 * {@link Expression expressions}. <br />
-	 * The potential keyId is converted to the  {@literal base64} encoded {@code $binary} representation.
+	 * The potential keyId is probed against an {@link UUID#fromString(String) UUID value} or decoded from the
+	 * {@literal base64} representation prior to conversion into its {@link Binary} format.
 	 *
 	 * @param value the source value to resolve the keyId for. Must not be {@literal null}.
 	 * @param evaluationContext a {@link Supplier} used to provide the {@link EvaluationContext} in case an
@@ -57,7 +61,11 @@ public final class EncryptionUtils {
 			}
 		}
 
-		return org.bson.Document.parse("{ val : { $binary : { base64 : '" + potentialKeyId + "', subType : '04'} } }")
-					.get("val");
+		try {
+			return new Binary(BsonBinarySubType.UUID_STANDARD,
+					new BsonBinary(UUID.fromString(potentialKeyId.toString())).getData());
+		} catch (IllegalArgumentException e) {
+			return new Binary(BsonBinarySubType.UUID_STANDARD, org.bson.internal.Base64.decode(potentialKeyId.toString()));
+		}
 	}
 }

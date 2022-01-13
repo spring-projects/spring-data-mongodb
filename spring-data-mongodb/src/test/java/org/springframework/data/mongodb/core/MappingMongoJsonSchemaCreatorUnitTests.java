@@ -23,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.bson.BsonDocument;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -107,7 +108,7 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 				.createSchemaFor(Patient.class);
 
 		Document targetSchema = schema.schemaDocument();
-		assertThat(targetSchema).isEqualTo(Document.parse(PATIENT));
+		assertThat(targetSchema.toBsonDocument()).isEqualTo(BsonDocument.parse(PATIENT));
 	}
 
 	@Test // GH-3800
@@ -136,7 +137,7 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 				.filter(MongoJsonSchemaCreator.encryptedOnly()) //
 				.createSchemaFor(EncryptionMetadataFromProperty.class);
 
-		assertThat(schema.schemaDocument()).isEqualTo(Document.parse(ENC_FROM_PROPERTY_SCHEMA));
+		assertThat(schema.schemaDocument().toBsonDocument()).isEqualTo(BsonDocument.parse(ENC_FROM_PROPERTY_SCHEMA));
 	}
 
 	@Test // GH-3800
@@ -154,7 +155,7 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 				.filter(MongoJsonSchemaCreator.encryptedOnly()) //
 				.createSchemaFor(EncryptionMetadataFromMethod.class);
 
-		assertThat(schema.schemaDocument()).isEqualTo(Document.parse(ENC_FROM_METHOD_SCHEMA));
+		assertThat(schema.schemaDocument().toBsonDocument()).isEqualTo(BsonDocument.parse(ENC_FROM_METHOD_SCHEMA));
 	}
 
 	// --> TYPES AND JSON
