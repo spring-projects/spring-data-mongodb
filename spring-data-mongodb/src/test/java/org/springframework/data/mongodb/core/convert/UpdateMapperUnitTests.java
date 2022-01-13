@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 the original author or authors.
+ * Copyright 2013-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1208,7 +1208,7 @@ class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(EntityWithNestedMap.class));
 
-		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set",new org.bson.Document("levelOne.a.b.d","e")));
+		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set", new org.bson.Document("levelOne.a.b.d", "e")));
 	}
 
 	@Test // GH-3775
@@ -1218,7 +1218,7 @@ class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(EntityWithNestedMap.class));
 
-		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set",new org.bson.Document("levelOne.0.1.3","4")));
+		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set", new org.bson.Document("levelOne.0.1.3", "4")));
 	}
 
 	@Test // GH-3775
@@ -1228,7 +1228,7 @@ class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(EntityWithNestedMap.class));
 
-		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set",new org.bson.Document("levelOne.0.1.c","4")));
+		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set", new org.bson.Document("levelOne.0.1.c", "4")));
 	}
 
 	@Test // GH-3775
@@ -1238,7 +1238,7 @@ class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(EntityWithNestedMap.class));
 
-		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set",new org.bson.Document("levelOne.0a.1b.3c","4")));
+		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set", new org.bson.Document("levelOne.0a.1b.3c", "4")));
 	}
 
 	@Test // GH-3688
@@ -1262,7 +1262,7 @@ class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(WithDocumentReference.class));
 
-		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set",new org.bson.Document("sample","s1")));
+		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set", new org.bson.Document("sample", "s1")));
 	}
 
 	@Test // GH-3853
@@ -1276,7 +1276,8 @@ class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(WithDocumentReference.class));
 
-		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set",new org.bson.Document("samples",Arrays.asList("s1"))));
+		assertThat(mappedUpdate)
+				.isEqualTo(new org.bson.Document("$set", new org.bson.Document("samples", Arrays.asList("s1"))));
 	}
 
 	@Test // GH-3853
@@ -1291,7 +1292,7 @@ class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(WithDocumentReference.class));
 
-		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set",new org.bson.Document("customer","c-name")));
+		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set", new org.bson.Document("customer", "c-name")));
 	}
 
 	@Test // GH-3853
@@ -1306,7 +1307,8 @@ class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(WithDocumentReference.class));
 
-		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set",new org.bson.Document("customers", Arrays.asList("c-name"))));
+		assertThat(mappedUpdate)
+				.isEqualTo(new org.bson.Document("$set", new org.bson.Document("customers", Arrays.asList("c-name"))));
 	}
 
 	@Test // GH-3921
@@ -1316,7 +1318,7 @@ class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(TestData.class));
 
-		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set",new org.bson.Document("testInnerData.testMap.1.intValue","4")));
+		assertThat(mappedUpdate).isEqualTo("{ $set: { 'testInnerData.testMap.1.intValue': '4' }}");
 	}
 
 	@Test // GH-3921
@@ -1326,7 +1328,7 @@ class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(TestData.class));
 
-		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set",new org.bson.Document("testInnerData.imaginaryMap.1.noExistingProperty","4")));
+		assertThat(mappedUpdate).isEqualTo("{ $set: { 'testInnerData.imaginaryMap.1.nonExistingProperty': '4' }}");
 	}
 
 	@Test // GH-3921
@@ -1336,7 +1338,7 @@ class UpdateMapperUnitTests {
 		Document mappedUpdate = mapper.getMappedObject(update.getUpdateObject(),
 				context.getPersistentEntity(TestData.class));
 
-		assertThat(mappedUpdate).isEqualTo(new org.bson.Document("$set",new org.bson.Document("testInnerData.testMap.1.nonExistingProperty.2.someValue","4")));
+		assertThat(mappedUpdate).isEqualTo("{ $set: { 'testInnerData.testMap.1.nonExistingProperty.2.someValue': '4' }}");
 	}
 
 	static class DomainTypeWrappingConcreteyTypeHavingListOfInterfaceTypeAttributes {
@@ -1575,7 +1577,7 @@ class UpdateMapperUnitTests {
 		Map<Object, NestedDocument> concreteMap;
 	}
 
-	static class EntityWithIntKeyedMap{
+	static class EntityWithIntKeyedMap {
 		Map<Integer, EntityWithObjectMap> intKeyedMap;
 	}
 
@@ -1711,8 +1713,7 @@ class UpdateMapperUnitTests {
 
 	static class Customer {
 
-		@Id
-		private ObjectId id;
+		@Id private ObjectId id;
 		private String name;
 	}
 
@@ -1727,23 +1728,18 @@ class UpdateMapperUnitTests {
 
 		private String name;
 
-		@DocumentReference(lookup = "{ 'name' : ?#{#target} }")
-		private Customer customer;
+		@DocumentReference(lookup = "{ 'name' : ?#{#target} }") private Customer customer;
 
-		@DocumentReference(lookup = "{ 'name' : ?#{#target} }")
-		private List<Customer> customers;
+		@DocumentReference(lookup = "{ 'name' : ?#{#target} }") private List<Customer> customers;
 
-		@DocumentReference
-		private Sample sample;
+		@DocumentReference private Sample sample;
 
-		@DocumentReference
-		private List<Sample> samples;
+		@DocumentReference private List<Sample> samples;
 	}
 
 	@Data
 	private static class TestData {
-		@Id
-		private String id;
+		@Id private String id;
 		private TestInnerData testInnerData;
 	}
 
