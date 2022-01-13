@@ -26,6 +26,7 @@ import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.Base64Utils;
 
 /**
  * Internal utility class for dealing with encryption related matters.
@@ -65,7 +66,8 @@ public final class EncryptionUtils {
 			return new Binary(BsonBinarySubType.UUID_STANDARD,
 					new BsonBinary(UUID.fromString(potentialKeyId.toString())).getData());
 		} catch (IllegalArgumentException e) {
-			return new Binary(BsonBinarySubType.UUID_STANDARD, org.bson.internal.Base64.decode(potentialKeyId.toString()));
+
+			return new Binary(BsonBinarySubType.UUID_STANDARD, Base64Utils.decodeFromString(potentialKeyId.toString()));
 		}
 	}
 }

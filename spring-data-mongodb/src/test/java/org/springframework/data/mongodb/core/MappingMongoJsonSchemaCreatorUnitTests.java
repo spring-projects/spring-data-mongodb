@@ -393,7 +393,7 @@ public class MappingMongoJsonSchemaCreatorUnitTests {
 	}
 
 	static final String ENC_FROM_PROPERTY_ENTITY_KEY = "C5a5aMB7Ttq4wSJTFeRn8g==";
-	static final String ENC_FROM_PROPERTY_PROPOERTY_KEY = "Mw6mdTVPQfm4quqSCLVB3g=";
+	static final String ENC_FROM_PROPERTY_PROPOERTY_KEY = "Mw6mdTVPQfm4quqSCLVB3g==";
 	static final String ENC_FROM_PROPERTY_SCHEMA = "{" + //
 			"  'encryptMetadata': {" + //
 			"    'keyId': [" + //
