@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2021 the original author or authors.
+ * Copyright 2011-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1399,11 +1399,11 @@ public class QueryMapper {
 			}
 
 			String nextToken() {
-				return pathParts.get(currentIndex+1);
+				return pathParts.get(currentIndex + 1);
 			}
 
 			boolean hasNexToken() {
-				return pathParts.size() > currentIndex+1;
+				return pathParts.size() > currentIndex + 1;
 			}
 
 			/**
@@ -1415,24 +1415,25 @@ public class QueryMapper {
 			protected String mapPropertyName(MongoPersistentProperty property) {
 
 				StringBuilder mappedName = new StringBuilder(PropertyToFieldNameConverter.INSTANCE.convert(property));
-				if(!hasNexToken()) {
+				if (!hasNexToken()) {
 					return mappedName.toString();
 				}
 
 				String nextToken = nextToken();
-				if(isPositionalParameter(nextToken)) {
+				if (isPositionalParameter(nextToken)) {
 
 					mappedName.append(".").append(nextToken);
-					currentIndex+=2;
+					currentIndex += 2;
 					return mappedName.toString();
 				}
 
-				if(property.isMap()) {
+				if (property.isMap()) {
 
 					mappedName.append(".").append(nextToken);
-					currentIndex+=2;
+					currentIndex += 2;
 					return mappedName.toString();
 				}
+
 				currentIndex++;
 				return mappedName.toString();
 			}
