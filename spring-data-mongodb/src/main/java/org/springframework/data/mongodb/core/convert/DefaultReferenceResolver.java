@@ -42,11 +42,10 @@ public class DefaultReferenceResolver implements ReferenceResolver {
 	private final LazyLoadingProxyFactory proxyFactory;
 
 	private final LookupFunction collectionLookupFunction = (filter, ctx) -> getReferenceLoader().fetchMany(filter, ctx);
-	private final LookupFunction singleValueLookupFunction = (filter, ctx) -> {
-		Document target = getReferenceLoader().fetchOne(filter, ctx);
-		return target == null ? Collections.emptyList() : Collections.singleton(target);
+	private final ReferenceLookupDelegate.LookupFunction singleValueLookupFunction = (filter, ctx) -> {
+        	Document target = getReferenceLoader().fetchOne(filter, ctx);
+	        return target == null ? Collections.emptyList() : Collections.singleton(target);
 	};
-
 	/**
 	 * Create a new instance of {@link DefaultReferenceResolver}.
 	 *
