@@ -1,4 +1,4 @@
-Spring Data MongoDB 3.4 M2 (2021.2.0)
+Spring Data MongoDB 4.0 M1 (2022.0.0)
 Copyright (c) [2010-2019] Pivotal Software, Inc.
 
 This product is licensed to you under the Apache License, Version 2.0 (the "License").
