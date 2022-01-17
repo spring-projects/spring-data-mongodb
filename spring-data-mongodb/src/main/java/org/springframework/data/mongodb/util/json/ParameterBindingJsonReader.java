@@ -134,8 +134,11 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		if (matcher.find()) {
 			BindableValue bindingResult = bindableValueFor(new JsonToken(JsonTokenType.UNQUOTED_STRING, json));
 			try {
-				if (bindingResult.getType().equals(BsonType.DOCUMENT)) {
-					currentValue = Document.parse(bindingResult.getValue().toString());
+
+				if (bindingResult.getValue() instanceof String) {
+					currentValue = Document.parse((String)bindingResult.getValue());
+				} else {
+					currentValue = bindingResult.getValue();
 				}
 
 			} catch (JsonParseException jsonParseException) {
