@@ -234,7 +234,7 @@ class DefaultBulkOperationsUnitTests {
 
 		ArgumentCaptor<Person> personArgumentCaptor = ArgumentCaptor.forClass(Person.class);
 		verify(beforeConvertCallback).onBeforeConvert(personArgumentCaptor.capture(), eq("collection-1"));
-		verifyZeroInteractions(beforeSaveCallback);
+		verifyNoInteractions(beforeSaveCallback);
 
 		ops.execute();
 

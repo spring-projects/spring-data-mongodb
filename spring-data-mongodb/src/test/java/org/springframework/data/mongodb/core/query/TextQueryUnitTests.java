@@ -15,10 +15,9 @@
  */
 package org.springframework.data.mongodb.core.query;
 
-import static org.springframework.data.mongodb.test.util.Assertions.*;
+import static org.springframework.data.mongodb.test.util.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
-
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 
@@ -92,6 +91,30 @@ public class TextQueryUnitTests {
 		assertThat(query.getQueryObject()).containsEntry("$text.$search", QUERY);
 		assertThat(query.getFieldsObject()).containsKeys("customFieldForScore");
 		assertThat(query.getSortObject()).containsKey("customFieldForScore");
+	}
+
+	@Test // GH-3896
+	public void retainsSortOrderWhenUsingScore() {
+
+		TextQuery query = new TextQuery(QUERY);
+		query.with(Sort.by(Direction.DESC, "one"));
+		query.sortByScore();
+		query.with(Sort.by(Direction.DESC, "two"));
+
+		assertThat(query.getSortObject().keySet().stream()).containsExactly("one", "score", "two");
+
+		query = new TextQuery(QUERY);
+		query.with(Sort.by(Direction.DESC, "one"));
+		query.sortByScore();
+
+		assertThat(query.getSortObject().keySet().stream()).containsExactly("one", "score");
+
+		query = new TextQuery(QUERY);
+		query.sortByScore();
+		query.with(Sort.by(Direction.DESC, "one"));
+		query.with(Sort.by(Direction.DESC, "two"));
+
+		assertThat(query.getSortObject().keySet().stream()).containsExactly("score", "one", "two");
 	}
 
 }

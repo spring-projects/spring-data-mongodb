@@ -102,7 +102,7 @@ import org.springframework.data.mongodb.core.query.UpdateDefinition.ArrayFilter;
 import org.springframework.data.mongodb.core.timeseries.Granularity;
 import org.springframework.data.mongodb.core.validation.Validator;
 import org.springframework.data.mongodb.util.BsonUtils;
-import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
+import org.springframework.data.projection.EntityProjection;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.data.util.Optionals;
 import org.springframework.lang.Nullable;
@@ -173,7 +173,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	private final QueryMapper queryMapper;
 	private final UpdateMapper updateMapper;
 	private final JsonSchemaMapper schemaMapper;
-	private final SpelAwareProxyProjectionFactory projectionFactory;
 	private final EntityOperations operations;
 	private final PropertyOperations propertyOperations;
 	private final QueryOperations queryOperations;
@@ -225,8 +224,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		this.queryMapper = new QueryMapper(this.mongoConverter);
 		this.updateMapper = new UpdateMapper(this.mongoConverter);
 		this.schemaMapper = new MongoJsonSchemaMapper(this.mongoConverter);
-		this.projectionFactory = new SpelAwareProxyProjectionFactory();
-		this.operations = new EntityOperations(this.mongoConverter.getMappingContext());
+		this.operations = new EntityOperations(this.mongoConverter);
 		this.propertyOperations = new PropertyOperations(this.mongoConverter.getMappingContext());
 		this.queryOperations = new QueryOperations(queryMapper, updateMapper, operations, propertyOperations,
 				mongoDbFactory);
@@ -264,7 +262,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		this.queryMapper = that.queryMapper;
 		this.updateMapper = that.updateMapper;
 		this.schemaMapper = that.schemaMapper;
-		this.projectionFactory = that.projectionFactory;
 		this.mappingContext = that.mappingContext;
 		this.operations = that.operations;
 		this.propertyOperations = that.propertyOperations;
@@ -330,9 +327,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		resourceLoader = applicationContext;
-
-		projectionFactory.setBeanFactory(applicationContext);
-		projectionFactory.setBeanClassLoader(applicationContext.getClassLoader());
 	}
 
 	/**
@@ -416,15 +410,17 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(entityType);
 
 			QueryContext queryContext = queryOperations.createQueryContext(query);
+			EntityProjection<T, ?> projection = operations.introspectProjection(returnType,
+					entityType);
 
 			Document mappedQuery = queryContext.getMappedQuery(persistentEntity);
-			Document mappedFields = queryContext.getMappedFields(persistentEntity, returnType, projectionFactory);
+			Document mappedFields = queryContext.getMappedFields(persistentEntity, projection);
 
 			FindIterable<Document> cursor = new QueryCursorPreparer(query, entityType).initiateFind(collection,
 					col -> col.find(mappedQuery, Document.class).projection(mappedFields));
 
 			return new CloseableIterableCursorAdapter<>(cursor, exceptionTranslator,
-					new ProjectingReadCallback<>(mongoConverter, entityType, returnType, collectionName));
+					new ProjectingReadCallback<>(mongoConverter, projection, collectionName));
 		});
 	}
 
@@ -964,9 +960,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				.withOptions(AggregationOptions.builder().collation(near.getCollation()).build());
 
 		AggregationResults<Document> results = aggregate($geoNear, collection, Document.class);
+		EntityProjection<T, ?> projection = operations.introspectProjection(returnType,
+				domainType);
 
 		DocumentCallback<GeoResult<T>> callback = new GeoNearResultDocumentCallback<>(distanceField,
-				new ProjectingReadCallback<>(mongoConverter, domainType, returnType, collection), near.getMetric());
+				new ProjectingReadCallback<>(mongoConverter, projection, collection), near.getMetric());
 
 		List<GeoResult<T>> result = new ArrayList<>();
 
@@ -1050,8 +1048,10 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityType);
 		QueryContext queryContext = queryOperations.createQueryContext(query);
 
+		EntityProjection<T, S> projection = operations.introspectProjection(resultType,
+				entityType);
 		Document mappedQuery = queryContext.getMappedQuery(entity);
-		Document mappedFields = queryContext.getMappedFields(entity, resultType, projectionFactory);
+		Document mappedFields = queryContext.getMappedFields(entity, projection);
 		Document mappedSort = queryContext.getMappedSort(entity);
 
 		replacement = maybeCallBeforeConvert(replacement, collectionName);
@@ -1061,7 +1061,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		maybeCallBeforeSave(replacement, mappedReplacement, collectionName);
 
 		T saved = doFindAndReplace(collectionName, mappedQuery, mappedFields, mappedSort,
-				queryContext.getCollation(entityType).orElse(null), entityType, mappedReplacement, options, resultType);
+				queryContext.getCollation(entityType).orElse(null), entityType, mappedReplacement, options,
+				projection);
 
 		if (saved != null) {
 			maybeEmitEvent(new AfterSaveEvent<>(saved, mappedReplacement, collectionName));
@@ -2499,7 +2500,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
 		QueryContext queryContext = queryOperations.createQueryContext(new BasicQuery(query, fields));
-		Document mappedFields = queryContext.getMappedFields(entity, entityClass, projectionFactory);
+		Document mappedFields = queryContext.getMappedFields(entity,
+				EntityProjection.nonProjecting(entityClass));
 		Document mappedQuery = queryContext.getMappedQuery(entity);
 
 		if (LOGGER.isDebugEnabled()) {
@@ -2551,7 +2553,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(entityClass);
 
 		QueryContext queryContext = queryOperations.createQueryContext(new BasicQuery(query, fields));
-		Document mappedFields = queryContext.getMappedFields(entity, entityClass, projectionFactory);
+		Document mappedFields = queryContext.getMappedFields(entity,
+				EntityProjection.nonProjecting(entityClass));
 		Document mappedQuery = queryContext.getMappedQuery(entity);
 
 		if (LOGGER.isDebugEnabled()) {
@@ -2573,9 +2576,11 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			Class<T> targetClass, CursorPreparer preparer) {
 
 		MongoPersistentEntity<?> entity = mappingContext.getPersistentEntity(sourceClass);
+		EntityProjection<T, S> projection = operations.introspectProjection(targetClass,
+				sourceClass);
 
 		QueryContext queryContext = queryOperations.createQueryContext(new BasicQuery(query, fields));
-		Document mappedFields = queryContext.getMappedFields(entity, targetClass, projectionFactory);
+		Document mappedFields = queryContext.getMappedFields(entity, projection);
 		Document mappedQuery = queryContext.getMappedQuery(entity);
 
 		if (LOGGER.isDebugEnabled()) {
@@ -2584,8 +2589,9 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		}
 
 		return executeFindMultiInternal(new FindCallback(mappedQuery, mappedFields, null), preparer,
-				new ProjectingReadCallback<>(mongoConverter, sourceClass, targetClass, collectionName), collectionName);
+				new ProjectingReadCallback<>(mongoConverter, projection, collectionName), collectionName);
 	}
+
 
 	/**
 	 * Convert given {@link CollectionOptions} to a document and take the domain type information into account when
@@ -2745,6 +2751,34 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			Document mappedSort, @Nullable com.mongodb.client.model.Collation collation, Class<?> entityType,
 			Document replacement, FindAndReplaceOptions options, Class<T> resultType) {
 
+		EntityProjection<T, ?> projection = operations.introspectProjection(resultType,
+				entityType);
+
+		return doFindAndReplace(collectionName, mappedQuery, mappedFields, mappedSort, collation, entityType, replacement,
+				options, projection);
+	}
+
+	/**
+	 * Customize this part for findAndReplace.
+	 *
+	 * @param collectionName The name of the collection to perform the operation in.
+	 * @param mappedQuery the query to look up documents.
+	 * @param mappedFields the fields to project the result to.
+	 * @param mappedSort the sort to be applied when executing the query.
+	 * @param collation collation settings for the query. Can be {@literal null}.
+	 * @param entityType the source domain type.
+	 * @param replacement the replacement {@link Document}.
+	 * @param options applicable options.
+	 * @param projection the projection descriptor.
+	 * @return {@literal null} if object does not exist, {@link FindAndReplaceOptions#isReturnNew() return new} is
+	 *         {@literal false} and {@link FindAndReplaceOptions#isUpsert() upsert} is {@literal false}.
+	 * @since 3.4
+	 */
+	@Nullable
+	private <T> T doFindAndReplace(String collectionName, Document mappedQuery, Document mappedFields,
+			Document mappedSort, @Nullable com.mongodb.client.model.Collation collation, Class<?> entityType,
+			Document replacement, FindAndReplaceOptions options, EntityProjection<T, ?> projection) {
+
 		if (LOGGER.isDebugEnabled()) {
 			LOGGER.debug(String.format(
 					"findAndReplace using query: %s fields: %s sort: %s for class: %s and replacement: %s " + "in collection: %s",
@@ -2754,7 +2788,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		return executeFindOneInternal(
 				new FindAndReplaceCallback(mappedQuery, mappedFields, mappedSort, replacement, collation, options),
-				new ProjectingReadCallback<>(mongoConverter, entityType, resultType, collectionName), collectionName);
+				new ProjectingReadCallback<>(mongoConverter, projection, collectionName), collectionName);
 	}
 
 	/**
@@ -3205,17 +3239,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	 */
 	private class ProjectingReadCallback<S, T> implements DocumentCallback<T> {
 
-		private final EntityReader<Object, Bson> reader;
-		private final Class<S> entityType;
-		private final Class<T> targetType;
+		private final MongoConverter mongoConverter;
+		private final EntityProjection<T, S> projection;
 		private final String collectionName;
 
-		ProjectingReadCallback(EntityReader<Object, Bson> reader, Class<S> entityType, Class<T> targetType,
+		ProjectingReadCallback(MongoConverter mongoConverter, EntityProjection<T, S> projection,
 				String collectionName) {
 
-			this.reader = reader;
-			this.entityType = entityType;
-			this.targetType = targetType;
+			this.mongoConverter = mongoConverter;
+			this.projection = projection;
 			this.collectionName = collectionName;
 		}
 
@@ -3230,21 +3262,16 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				return null;
 			}
 
-			Class<?> typeToRead = targetType.isInterface() || targetType.isAssignableFrom(entityType) ? entityType
-					: targetType;
+			maybeEmitEvent(new AfterLoadEvent<>(document, projection.getMappedType().getType(), collectionName));
 
-			maybeEmitEvent(new AfterLoadEvent<>(document, targetType, collectionName));
-
-			Object entity = reader.read(typeToRead, document);
+			Object entity = mongoConverter.project(projection, document);
 
 			if (entity == null) {
-				throw new MappingException(String.format("EntityReader %s returned null", reader));
+				throw new MappingException(String.format("EntityReader %s returned null", mongoConverter));
 			}
 
-			Object result = targetType.isInterface() ? projectionFactory.createProjection(targetType, entity) : entity;
-
-			maybeEmitEvent(new AfterConvertEvent<>(document, result, collectionName));
-			return (T) maybeCallAfterConvert(result, document, collectionName);
+			maybeEmitEvent(new AfterConvertEvent<>(document, entity, collectionName));
+			return (T) maybeCallAfterConvert(entity, document, collectionName);
 		}
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the original author or authors.
+ * Copyright 2019-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,13 +49,14 @@ import com.querydsl.core.types.Predicate;
 import com.querydsl.mongodb.MongodbOps;
 
 /**
- * MongoDB query with utilizing {@link ReactiveMongoOperations} for command execution.
+ * MongoDB query utilizing {@link ReactiveMongoOperations} for command execution.
  *
  * @implNote This class uses {@link MongoOperations} to directly convert documents into the target entity type. Also, we
- *           want entites to participate in lifecycle events and entity callbacks.
+ *           want entities to participate in lifecycle events and entity callbacks.
  * @param <K> result type
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Rocco Lagrotteria
  * @since 2.2
  */
 class ReactiveSpringDataMongodbQuery<K> extends SpringDataMongodbQuerySupport<ReactiveSpringDataMongodbQuery<K>> {
@@ -96,7 +97,8 @@ class ReactiveSpringDataMongodbQuery<K> extends SpringDataMongodbQuerySupport<Re
 	 */
 	Mono<Page<K>> fetchPage(Pageable pageable) {
 
-		Mono<List<K>> content = createQuery().flatMapMany(it -> find.matching(it).all()).collectList();
+		Mono<List<K>> content = createQuery().map(it -> it.with(pageable))
+						     .flatMapMany(it -> find.matching(it).all()).collectList();
 
 		return content.flatMap(it -> ReactivePageableExecutionUtils.getPage(it, pageable, fetchCount()));
 	}

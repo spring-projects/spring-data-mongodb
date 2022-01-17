@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the original author or authors.
+ * Copyright 2019-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,6 +65,7 @@ import com.mongodb.reactivestreams.client.MongoDatabase;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Rocco Lagrotteria
  */
 @RunWith(SpringRunner.class)
 @ContextConfiguration
@@ -401,7 +402,7 @@ public class ReactiveQuerydslMongoPredicateExecutorTests {
 				.assertNext(it -> {
 
 					assertThat(it.getTotalElements()).isEqualTo(2);
-					assertThat(it.getContent()).contains(dave);
+					assertThat(it.getContent()).containsOnly(dave);
 				}).verifyComplete();
 
 		repository
@@ -410,7 +411,7 @@ public class ReactiveQuerydslMongoPredicateExecutorTests {
 				.assertNext(it -> {
 
 					assertThat(it.getTotalElements()).isEqualTo(2);
-					assertThat(it.getContent()).contains(oliver);
+					assertThat(it.getContent()).containsOnly(oliver);
 				}).verifyComplete();
 	}
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2021 the original author or authors.
+ * Copyright 2014-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -319,7 +319,8 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 		class IndexOnLevelZeroWithExplicityNamedField {
 
-			@Indexed @Field("customFieldName") String namedProperty;
+			@Indexed
+			@Field("customFieldName") String namedProperty;
 		}
 
 		@Document
@@ -427,7 +428,8 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 
 	@Document
 	class IndexOnMetaAnnotatedField {
-		@Field("_name") @IndexedFieldAnnotation String lastname;
+		@Field("_name")
+		@IndexedFieldAnnotation String lastname;
 	}
 
 	/**
@@ -1366,10 +1368,9 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			});
 			assertThat(indices.get(2)).satisfies(it -> {
 				assertThat(it.getIndexKeys()).containsEntry("withOptions.$**", 1);
-				assertThat(it.getIndexOptions()).containsEntry("name",
-						"withOptions.idx")
-				.containsEntry("collation", new org.bson.Document("locale", "en_US"))
-				.containsEntry("partialFilterExpression", new org.bson.Document("$eq", 1));
+				assertThat(it.getIndexOptions()).containsEntry("name", "withOptions.idx")
+						.containsEntry("collation", new org.bson.Document("locale", "en_US"))
+						.containsEntry("partialFilterExpression", new org.bson.Document("$eq", 1));
 			});
 		}
 
@@ -1391,6 +1392,15 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 			assertThatExceptionOfType(MappingException.class).isThrownBy(() -> {
 				prepareMappingContextAndResolveIndexForType(WildcardIndexedProjectionOnNestedPath.class);
 			});
+		}
+
+		@Test // GH-3914
+		public void shouldSkipMapStructuresUnlessAnnotatedWithWildcardIndex() {
+
+			List<IndexDefinitionHolder> indexDefinitions = prepareMappingContextAndResolveIndexForType(
+					WithMapStructures.class);
+
+			assertThat(indexDefinitions).hasSize(1);
 		}
 
 		@Document
@@ -1482,7 +1492,8 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		@Document
 		class SimilarityHolingBean {
 
-			@Indexed @Field("norm") String normalProperty;
+			@Indexed
+			@Field("norm") String normalProperty;
 			@Field("similarityL") private List<SimilaritySibling> listOfSimilarilyNamedEntities = null;
 		}
 
@@ -1627,6 +1638,17 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		}
 
 		@Document
+		class WithMapStructures {
+			Map<String, ValueObject> rootMap;
+			NestedInMapWithStructures nested;
+			ValueObject plainValue;
+		}
+
+		class NestedInMapWithStructures {
+			Map<String, ValueObject> nestedMap;
+		}
+
+		@Document
 		class EntityWithGenericTypeWrapperAsElement {
 			List<GenericEntityWrapper<DocumentWithNamedIndex>> listWithGeneircTypeElement;
 		}
@@ -1634,7 +1656,8 @@ public class MongoPersistentEntityIndexResolverUnitTests {
 		@Document
 		class WithHashedIndexOnId {
 
-			@HashIndexed @Id String id;
+			@HashIndexed
+			@Id String id;
 		}
 
 		@Document

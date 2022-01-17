@@ -25,6 +25,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -32,6 +34,7 @@ import org.springframework.data.mongodb.core.convert.MongoConverter;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.repository.Person;
 import org.springframework.data.mongodb.repository.query.MongoEntityInformation;
+import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 
 /**
@@ -40,6 +43,7 @@ import org.springframework.data.repository.Repository;
  * @author Oliver Gierke
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class MongoRepositoryFactoryUnitTests {
 
 	@Mock MongoTemplate template;
@@ -55,6 +59,7 @@ public class MongoRepositoryFactoryUnitTests {
 	public void setUp() {
 		when(template.getConverter()).thenReturn(converter);
 		when(converter.getMappingContext()).thenReturn(mappingContext);
+		when(converter.getProjectionFactory()).thenReturn(new SpelAwareProxyProjectionFactory());
 	}
 
 	@Test

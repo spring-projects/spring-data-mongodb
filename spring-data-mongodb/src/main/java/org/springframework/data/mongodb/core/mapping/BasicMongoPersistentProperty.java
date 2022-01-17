@@ -201,7 +201,7 @@ public class BasicMongoPersistentProperty extends AnnotationBasedPersistentPrope
 	 *         {@link org.springframework.data.mongodb.core.mapping.Field#value()} present.
 	 * @since 1.7
 	 */
-	protected boolean hasExplicitFieldName() {
+	public boolean hasExplicitFieldName() {
 		return StringUtils.hasText(getAnnotatedFieldName());
 	}
 

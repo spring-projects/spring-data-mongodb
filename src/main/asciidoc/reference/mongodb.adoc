@@ -2050,6 +2050,8 @@ NOTE: Using projections allows `MongoTemplate` to optimize result mapping by lim
 by the projection target type. This applies as long as the `Query` itself does not contain any field restriction and the
 target type is a closed interface or DTO projection.
 
+WARNING: Projections must not be applied to <<mapping-usage-references,DBRefs>>.
+
 You can switch between retrieving a single entity and retrieving multiple entities as a `List` or a `Stream` through the terminating methods: `first()`, `one()`, `all()`, or `stream()`.
 
 When writing a geo-spatial query with `near(NearQuery)`, the number of terminating methods is altered to include only the methods that are valid for running a `geoNear` command in MongoDB (fetching entities as a `GeoResult` within `GeoResults`), as the following example shows:

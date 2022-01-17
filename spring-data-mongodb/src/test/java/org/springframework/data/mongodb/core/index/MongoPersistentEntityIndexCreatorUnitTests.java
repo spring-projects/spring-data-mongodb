@@ -115,7 +115,7 @@ public class MongoPersistentEntityIndexCreatorUnitTests {
 
 		creator.onApplicationEvent(event);
 
-		verifyZeroInteractions(collection);
+		verifyNoInteractions(collection);
 	}
 
 	@Test // DATAMONGO-530

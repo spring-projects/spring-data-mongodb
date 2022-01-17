@@ -27,6 +27,7 @@ import java.util.List;
 
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.core.aggregation.ConditionalOperators.Cond;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperationUnitTests.BookWithFieldAnnotation;
@@ -598,9 +599,31 @@ public class AggregationUnitTests {
 		assertThat(extractPipelineElement(target, 1, "$project")).isEqualTo(Document.parse(" { \"_id\" : \"$_id\" }"));
 	}
 
+
+	@Test // GH-3898
+	void shouldNotConvertIncludeExcludeValuesForProjectOperation() {
+
+		MongoMappingContext mappingContext = new MongoMappingContext();
+		RelaxedTypeBasedAggregationOperationContext context = new RelaxedTypeBasedAggregationOperationContext(WithRetypedIdField.class, mappingContext,
+				new QueryMapper(new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, mappingContext)));
+		Document document = project(WithRetypedIdField.class).toDocument(context);
+		assertThat(document).isEqualTo(new Document("$project", new Document("_id", 1).append("renamed-field", 1)));
+	}
+
 	private Document extractPipelineElement(Document agg, int index, String operation) {
 
 		List<Document> pipeline = (List<Document>) agg.get("pipeline");
 		return (Document) pipeline.get(index).get(operation);
+	}
+
+	public class WithRetypedIdField {
+
+		@Id
+		@org.springframework.data.mongodb.core.mapping.Field
+		private String id;
+
+		@org.springframework.data.mongodb.core.mapping.Field("renamed-field")
+		private String foo;
+
 	}
 }

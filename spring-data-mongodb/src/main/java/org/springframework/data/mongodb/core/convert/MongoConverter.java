@@ -19,13 +19,17 @@ import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
+
 import org.springframework.core.convert.ConversionException;
+import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.EntityConverter;
 import org.springframework.data.convert.EntityReader;
 import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentEntity;
 import org.springframework.data.mongodb.core.mapping.MongoPersistentProperty;
 import org.springframework.data.mongodb.util.BsonUtils;
+import org.springframework.data.projection.EntityProjection;
+import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -53,6 +57,35 @@ public interface MongoConverter
 	 * @return will never be {@literal null}.
 	 */
 	MongoTypeMapper getTypeMapper();
+
+	/**
+	 * Returns the {@link ProjectionFactory} for this converter.
+	 *
+	 * @return will never be {@literal null}.
+	 * @since 3.4
+	 */
+	ProjectionFactory getProjectionFactory();
+
+	/**
+	 * Returns the {@link CustomConversions} for this converter.
+	 *
+	 * @return will never be {@literal null}.
+	 * @since 3.4
+	 */
+	CustomConversions getCustomConversions();
+
+	/**
+	 * Apply a projection to {@link Bson} and return the projection return type {@code R}.
+	 * {@link EntityProjection#isProjection() Non-projecting} descriptors fall back to {@link #read(Class, Object) regular
+	 * object materialization}.
+	 *
+	 * @param descriptor the projection descriptor, must not be {@literal null}.
+	 * @param bson must not be {@literal null}.
+	 * @param <R>
+	 * @return a new instance of the projection return type {@code R}.
+	 * @since 3.4
+	 */
+	<R> R project(EntityProjection<R, ?> descriptor, Bson bson);
 
 	/**
 	 * Mapping function capable of converting values into a desired target type by eg. extracting the actual java type
@@ -154,4 +187,5 @@ public interface MongoConverter
 			return convertToMongoType(id,(TypeInformation<?>)  null);
 		}
 	}
+
 }

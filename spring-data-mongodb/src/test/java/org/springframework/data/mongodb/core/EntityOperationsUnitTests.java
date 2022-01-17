@@ -22,7 +22,8 @@ import java.time.Instant;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.data.mapping.MappingException;
-import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.NoOpDbRefResolver;
 import org.springframework.data.mongodb.core.mapping.TimeSeries;
 import org.springframework.data.mongodb.test.util.MongoTestMappingContext;
 
@@ -33,7 +34,8 @@ import org.springframework.data.mongodb.test.util.MongoTestMappingContext;
  */
 class EntityOperationsUnitTests {
 
-	EntityOperations operations = new EntityOperations(MongoTestMappingContext.newTestContext());
+	EntityOperations operations = new EntityOperations(
+			new MappingMongoConverter(NoOpDbRefResolver.INSTANCE, MongoTestMappingContext.newTestContext()));
 
 	@Test // GH-3731
 	void shouldReportInvalidTimeField() {

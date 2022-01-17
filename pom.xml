@@ -26,8 +26,8 @@
 	<properties>
 		<project.type>multi</project.type>
 		<dist.id>spring-data-mongodb</dist.id>
-		<springdata.commons>2.6.0-SNAPSHOT</springdata.commons>
-		<mongo>4.4.0-beta1</mongo>
+		<springdata.commons>2.7.0-SNAPSHOT</springdata.commons>
+		<mongo>4.4.1</mongo>
 		<mongo.reactivestreams>${mongo}</mongo.reactivestreams>
 		<jmh.version>1.19</jmh.version>
 	</properties>

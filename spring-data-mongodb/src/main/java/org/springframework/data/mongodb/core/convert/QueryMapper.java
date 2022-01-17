@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2021 the original author or authors.
+ * Copyright 2011-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -223,8 +223,8 @@ public class QueryMapper {
 
 		if (fields.isEmpty()) {
 			return BsonUtils.EMPTY_DOCUMENT;
-
 		}
+
 		Document target = new Document();
 
 		BsonUtils.asMap(filterUnwrappedObjects(fields, entity)).forEach((k, v) -> {
@@ -238,6 +238,18 @@ public class QueryMapper {
 		});
 
 		return target;
+	}
+
+	/**
+	 * Adds missing {@code $meta} representation if required.
+	 *
+	 * @param source must not be {@literal null}.
+	 * @param entity can be {@literal null}.
+	 * @return never {@literal null}.
+	 * @since 3.4
+	 */
+	public Document addMetaAttributes(Document source, @Nullable MongoPersistentEntity<?> entity) {
+		return mapMetaAttributes(source, entity, MetaMapping.FORCE);
 	}
 
 	private Document mapMetaAttributes(Document source, @Nullable MongoPersistentEntity<?> entity,
@@ -1399,6 +1411,14 @@ public class QueryMapper {
 				this.currentIndex = 0;
 			}
 
+			String nextToken() {
+				return pathParts.get(currentIndex + 1);
+			}
+
+			boolean hasNexToken() {
+				return pathParts.size() > currentIndex + 1;
+			}
+
 			/**
 			 * Maps the property name while retaining potential positional operator {@literal $}.
 			 *
@@ -1408,31 +1428,26 @@ public class QueryMapper {
 			protected String mapPropertyName(MongoPersistentProperty property) {
 
 				StringBuilder mappedName = new StringBuilder(PropertyToFieldNameConverter.INSTANCE.convert(property));
-
-				boolean inspect = iterator.hasNext();
-
-				while (inspect) {
-
-					String partial = iterator.next();
-					currentIndex++;
-
-					boolean isPositional = isPositionalParameter(partial) && property.isCollectionLike();
-					if (property.isMap() && currentPropertyRoot.equals(partial) && iterator.hasNext()) {
-						partial = iterator.next();
-						currentIndex++;
-					}
-
-					if (isPositional || property.isMap() && !currentPropertyRoot.equals(partial)) {
-						mappedName.append(".").append(partial);
-					}
-
-					inspect = isPositional && iterator.hasNext();
+				if (!hasNexToken()) {
+					return mappedName.toString();
 				}
 
-				if (currentIndex + 1 < pathParts.size()) {
-					currentIndex++;
-					currentPropertyRoot = pathParts.get(currentIndex);
+				String nextToken = nextToken();
+				if (isPositionalParameter(nextToken)) {
+
+					mappedName.append(".").append(nextToken);
+					currentIndex += 2;
+					return mappedName.toString();
 				}
+
+				if (property.isMap()) {
+
+					mappedName.append(".").append(nextToken);
+					currentIndex += 2;
+					return mappedName.toString();
+				}
+
+				currentIndex++;
 				return mappedName.toString();
 			}
 

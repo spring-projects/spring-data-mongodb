@@ -16,9 +16,9 @@
 package org.springframework.data.mongodb.core.query;
 
 import java.util.Locale;
+import java.util.Map.Entry;
 
 import org.bson.Document;
-
 import org.springframework.data.mongodb.util.BsonUtils;
 import org.springframework.lang.Nullable;
 
@@ -37,6 +37,7 @@ public class TextQuery extends Query {
 	private String scoreFieldName = DEFAULT_SCORE_FIELD_FIELDNAME;
 	private boolean includeScore = false;
 	private boolean sortByScore = false;
+	private int sortByScoreIndex = 0;
 
 	/**
 	 * Creates new {@link TextQuery} using the the given {@code wordsAndPhrases} with {@link TextCriteria}
@@ -101,6 +102,7 @@ public class TextQuery extends Query {
 	 */
 	public TextQuery sortByScore() {
 
+		this.sortByScoreIndex = getSortObject().size();
 		this.includeScore();
 		this.sortByScore = true;
 		return this;
@@ -173,13 +175,45 @@ public class TextQuery extends Query {
 	public Document getSortObject() {
 
 		if (this.sortByScore) {
-			Document sort = new Document();
-			sort.put(getScoreFieldName(), META_TEXT_SCORE);
-			sort.putAll(super.getSortObject());
-			return sort;
+
+			int sortByScoreIndex = this.sortByScoreIndex;
+
+			return sortByScoreIndex != 0
+				? sortByScoreAtPosition(super.getSortObject(), sortByScoreIndex)
+				: sortByScoreAtPositionZero();
 		}
 
 		return super.getSortObject();
+	}
+
+	private Document sortByScoreAtPositionZero() {
+
+		Document sort = new Document();
+
+		sort.put(getScoreFieldName(), META_TEXT_SCORE);
+		sort.putAll(super.getSortObject());
+
+		return sort;
+	}
+
+	private Document sortByScoreAtPosition(Document source, int sortByScoreIndex) {
+
+		Document target = new Document();
+		int index = 0;
+
+		for (Entry<String, Object> entry : source.entrySet()) {
+			if (index == sortByScoreIndex) {
+				target.put(getScoreFieldName(), META_TEXT_SCORE);
+			}
+			target.put(entry.getKey(), entry.getValue());
+			index++;
+		}
+
+		if (index == sortByScoreIndex) {
+			target.put(getScoreFieldName(), META_TEXT_SCORE);
+		}
+
+		return target;
 	}
 
 	/*

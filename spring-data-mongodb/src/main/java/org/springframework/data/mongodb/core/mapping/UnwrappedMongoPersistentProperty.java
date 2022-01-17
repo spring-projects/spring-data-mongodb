@@ -57,6 +57,12 @@ class UnwrappedMongoPersistentProperty implements MongoPersistentProperty {
 	}
 
 	@Override
+	public boolean hasExplicitFieldName() {
+		return delegate.hasExplicitFieldName()
+				|| !ObjectUtils.isEmpty(context.getProperty().findAnnotation(Unwrapped.class).prefix());
+	}
+
+	@Override
 	public Class<?> getFieldType() {
 		return delegate.getFieldType();
 	}

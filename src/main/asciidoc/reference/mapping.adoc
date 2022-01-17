@@ -402,11 +402,16 @@ Indexes are automatically created for the initial entity set on application star
 
 We generally recommend explicit index creation for application-based control of indexes as Spring Data cannot automatically create indexes for collections that were recreated while the application was running.
 
-`IndexResolver` provides an abstraction for programmatic index definition creation if you want to make use of `@Indexed` annotations such as `@GeoSpatialIndexed`, `@TextIndexed`, `@CompoundIndex`.
+`IndexResolver` provides an abstraction for programmatic index definition creation if you want to make use of `@Indexed` annotations such as `@GeoSpatialIndexed`, `@TextIndexed`, `@CompoundIndex` and `@WildcardIndexed`.
 You can use index definitions with `IndexOperations` to create indexes.
 A good point in time for index creation is on application startup, specifically after the application context was refreshed, triggered by observing `ContextRefreshedEvent`.
 This event guarantees that the context is fully initialized.
 Note that at this time other components, especially bean factories might have access to the MongoDB database.
+
+[WARNING]
+====
+``Map``-like properties are skipped by the `IndexResolver` unless annotated with `@WildcardIndexed` because the _map key_ must be part of the index definition. Since the purpose of maps is the usage of dynamic keys and values, the keys cannot be resolved from static mapping metadata.
+====
 
 .Programmatic Index Creation for a single Domain Type
 ====
