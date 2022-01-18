@@ -37,7 +37,11 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.converter.ConverterFactory;
 import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.data.convert.JodaTimeConverters;
+import org.springframework.data.convert.PropertyValueConverter;
+import org.springframework.data.convert.PropertyValueConverter.ValueConversionContext;
 import org.springframework.data.convert.PropertyValueConverterFactory;
+import org.springframework.data.convert.PropertyValueConverterRegistrar;
+import org.springframework.data.convert.SimplePropertyValueConversions;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.mongodb.core.mapping.MongoSimpleTypes;
@@ -161,6 +165,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 		private final List<Object> customConverters = new ArrayList<>();
 
 		private @Nullable PropertyValueConverterFactory propertyValueConverterFactory;
+		private PropertyValueConverterRegistrar propertyValueConverterRegistrar;
 
 		/**
 		 * Create a {@link MongoConverterConfigurationAdapter} using the provided {@code converters} and our own codecs for
@@ -233,6 +238,17 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 			return this;
 		}
 
+		public MongoConverterConfigurationAdapter registerConverter(Class<?> type, String path, PropertyValueConverter<?,?, ValueConversionContext> converter) {
+
+			if(propertyValueConverterRegistrar == null) {
+				propertyValueConverterRegistrar = new PropertyValueConverterRegistrar();
+			}
+
+			propertyValueConverterRegistrar.register(type, path, converter);
+			//TODO: create a property path for it
+			return this;
+		}
+
 		/**
 		 * Add a custom {@link ConverterFactory} implementation.
 		 *
@@ -269,8 +285,13 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 
 		ConverterConfiguration createConverterConfiguration() {
 
+			SimplePropertyValueConversions pvc = new SimplePropertyValueConversions();
+			pvc.setConverterFactory(propertyValueConverterFactory);
+			pvc.setConverterRegistrar(propertyValueConverterRegistrar);
+			pvc.init();
+
 			if (!useNativeDriverJavaTimeCodecs) {
-				return new ConverterConfiguration(STORE_CONVERSIONS, this.customConverters, convertiblePair -> true, propertyValueConverterFactory);
+				return new ConverterConfiguration(STORE_CONVERSIONS, this.customConverters, convertiblePair -> true, pvc);
 			}
 
 			/*
@@ -295,7 +316,7 @@ public class MongoCustomConversions extends org.springframework.data.convert.Cus
 				}
 
 				return true;
-			}, propertyValueConverterFactory);
+			}, pvc);
 		}
 
 		private enum DateToUtcLocalDateTimeConverter implements Converter<Date, LocalDateTime> {

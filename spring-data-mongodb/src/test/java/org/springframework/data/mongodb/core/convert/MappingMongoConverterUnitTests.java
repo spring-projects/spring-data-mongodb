@@ -57,10 +57,10 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.TypeAlias;
-import org.springframework.data.convert.BeanFactoryAwarePropertyValueConverterFactory;
 import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.convert.PropertyConverter;
 import org.springframework.data.convert.PropertyValueConverter;
+import org.springframework.data.convert.PropertyValueConverter.ValueConversionContext;
 import org.springframework.data.convert.PropertyValueConverterFactory;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
@@ -3485,14 +3485,12 @@ class MappingMongoConverterUnitTests {
 		DefaultListableBeanFactory defaultListableBeanFactory = new DefaultListableBeanFactory();
 		defaultListableBeanFactory.registerBeanDefinition("someDependency",
 				BeanDefinitionBuilder.rootBeanDefinition(SomeDependency.class).getBeanDefinition());
-
-		BeanFactoryAwarePropertyValueConverterFactory beanFactoryAwareConverterFactory = new BeanFactoryAwarePropertyValueConverterFactory();
-		beanFactoryAwareConverterFactory.setBeanFactory(defaultListableBeanFactory);
-
+		;
 		converter = new MappingMongoConverter(resolver, mappingContext);
 
 		converter.setCustomConversions(MongoCustomConversions.create(it -> {
-			it.registerPropertyValueConverterFactory(PropertyValueConverterFactory.caching(beanFactoryAwareConverterFactory));
+			it.registerPropertyValueConverterFactory(
+					PropertyValueConverterFactory.beanFactoryAware(defaultListableBeanFactory));
 		}));
 		converter.afterPropertiesSet();
 
@@ -3511,6 +3509,41 @@ class MappingMongoConverterUnitTests {
 		assertThat(read.converterBean).startsWith("spring -");
 	}
 
+	@Test // GH-3596
+	void pathConfiguredConverter/*no annotation required*/() {
+
+		converter = new MappingMongoConverter(resolver, mappingContext);
+
+		converter.setCustomConversions(MongoCustomConversions.create(it -> {
+
+			it.registerConverter(WithValueConverters.class, "viaRegisteredConverter",
+					new PropertyValueConverter<String, org.bson.Document, ValueConversionContext>() {
+						@Nullable
+						@Override
+						public String nativeToDomain(@Nullable org.bson.Document nativeValue, ValueConversionContext context) {
+							return nativeValue.getString("bar");
+						}
+
+						@Nullable
+						@Override
+						public org.bson.Document domainToNative(@Nullable String domainValue, ValueConversionContext context) {
+							return new org.bson.Document("bar", domainValue);
+						}
+					});
+		}));
+
+		WithValueConverters wvc = new WithValueConverters();
+		wvc.viaRegisteredConverter = "spring";
+
+		org.bson.Document target = new org.bson.Document();
+		converter.write(wvc, target);
+
+		assertThat(target).containsEntry("viaRegisteredConverter", new org.bson.Document("bar", "spring"));
+
+		WithValueConverters read = converter.read(WithValueConverters.class, target);
+		assertThat(read.viaRegisteredConverter).isEqualTo("spring");
+	}
+
 	static class WithValueConverters {
 
 		@PropertyConverter(Converter1.class) String converterWithDefaultCtor;
@@ -3518,9 +3551,11 @@ class MappingMongoConverterUnitTests {
 		@PropertyConverter(Converter2.class) String converterEnum;
 
 		@PropertyConverter(Converter3.class) String converterBean;
+
+		String viaRegisteredConverter;
 	}
 
-	static class Converter3 implements PropertyValueConverter<Object, org.bson.Document> {
+	static class Converter3 implements MongoValueConverter<Object, org.bson.Document> {
 
 		private final SomeDependency someDependency;
 
@@ -3529,12 +3564,12 @@ class MappingMongoConverterUnitTests {
 		}
 
 		@Override
-		public Object nativeToDomain(org.bson.Document value) {
+		public Object nativeToDomain(org.bson.Document value, MongoConversionContext context) {
 			return value.get("ooo");
 		}
 
 		@Override
-		public org.bson.Document domainToNative(Object value) {
+		public org.bson.Document domainToNative(Object value, MongoConversionContext context) {
 			return new org.bson.Document("ooo", value + " - " + someDependency.toString());
 		}
 	}
@@ -3543,34 +3578,34 @@ class MappingMongoConverterUnitTests {
 
 	}
 
-	enum Converter2 implements PropertyValueConverter<String, org.bson.Document> {
+	enum Converter2 implements MongoValueConverter<String, org.bson.Document> {
 
 		INSTANCE;
 
 		@Nullable
 		@Override
-		public String nativeToDomain(@Nullable org.bson.Document value) {
+		public String nativeToDomain(@Nullable org.bson.Document value, MongoConversionContext context) {
 			return value.getString("bar");
 		}
 
 		@Nullable
 		@Override
-		public org.bson.Document domainToNative(@Nullable String value) {
+		public org.bson.Document domainToNative(@Nullable String value, MongoConversionContext context) {
 			return new org.bson.Document("bar", value);
 		}
 	}
 
-	static class Converter1 implements PropertyValueConverter<String, org.bson.Document> {
+	static class Converter1 implements MongoValueConverter<String, org.bson.Document> {
 
 		@Nullable
 		@Override
-		public String nativeToDomain(@Nullable org.bson.Document value) {
+		public String nativeToDomain(@Nullable org.bson.Document value, MongoConversionContext context) {
 			return value.getString("foo");
 		}
 
 		@Nullable
 		@Override
-		public org.bson.Document domainToNative(@Nullable String value) {
+		public org.bson.Document domainToNative(@Nullable String value, MongoConversionContext context) {
 			return new org.bson.Document("foo", value);
 		}
 	}

@@ -24,6 +24,10 @@ import java.util.Date;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.convert.PropertyValueConverter;
+import org.springframework.data.convert.PropertyValueConverter.ValueConversionContext;
+import org.springframework.data.mongodb.core.convert.QueryMapperUnitTests.Foo;
+import org.springframework.lang.Nullable;
 
 /**
  * Unit tests for {@link MongoCustomConversions}.
@@ -48,5 +52,48 @@ class MongoCustomConversionsUnitTests {
 		public ZonedDateTime convert(Date source) {
 			return ZonedDateTime.now();
 		}
+	}
+
+	@Test
+	void howToConfigure() {
+
+
+		MongoCustomConversions.create(config -> {
+
+			config.registerConverter(Foo.class, "name", new PropertyValueConverter<Object, Object, ValueConversionContext>() {
+
+				@Nullable
+				@Override
+				public Object nativeToDomain(@Nullable Object nativeValue, ValueConversionContext context) {
+					return null;
+				}
+
+				@Nullable
+				@Override
+				public Object domainToNative(@Nullable Object domainValue, ValueConversionContext context) {
+					return null;
+				}
+			});
+
+
+			// lambda variant - generics
+
+			// SD-Rest - LookupInformation/Lookup - Invocation Recorder -> BiFunction mit target type
+
+//			config.registerConverter(Foo.class, Foo::getName, (in, ctx) -> {}, (out, ctx) -> {}); .as() {
+
+//				@Nullable
+//				@Override
+//				public Object nativeToDomain(@Nullable Object nativeValue, ValueConversionContext context) {
+//					return null;
+//				}
+//
+//				@Nullable
+//				@Override
+//				public Object domainToNative(@Nullable Object domainValue, ValueConversionContext context) {
+//					return null;
+//				}
+//			});
+		});
 	}
 }

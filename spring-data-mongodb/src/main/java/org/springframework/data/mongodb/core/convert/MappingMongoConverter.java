@@ -38,7 +38,6 @@ import org.bson.codecs.DecoderContext;
 import org.bson.conversions.Bson;
 import org.bson.json.JsonReader;
 import org.bson.types.ObjectId;
-
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.context.ApplicationContext;
@@ -958,8 +957,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 		TypeInformation<?> valueType = ClassTypeInformation.from(obj.getClass());
 		TypeInformation<?> type = prop.getTypeInformation();
 
-		if(prop.hasValueConverter()) {
-			accessor.put(prop, conversions.getPropertyValueConverterFactory().getConverter(prop).domainToNative(obj));
+		if(conversions.hasPropertyValueConverter(prop)) {
+			accessor.put(prop, conversions.getPropertyValueConverter(prop).domainToNative(obj, new MongoConversionContext() {
+				@Override
+				public MongoPersistentProperty getProperty() {
+					return prop;
+				}
+			}));
 			return;
 		}
 
@@ -1293,8 +1297,13 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 	private void writeSimpleInternal(@Nullable Object value, Bson bson, MongoPersistentProperty property) {
 		DocumentAccessor accessor = new DocumentAccessor(bson);
 
-		if(property.hasValueConverter()) {
-			accessor.put(property, conversions.getPropertyValueConverterFactory().getConverter(property).domainToNative(value));
+		if(conversions.hasPropertyValueConverter(property)) {
+			accessor.put(property, conversions.getPropertyValueConverter(property).domainToNative(value, new MongoConversionContext() {
+				@Override
+				public MongoPersistentProperty getProperty() {
+					return property;
+				}
+			}));
 			return;
 		}
 
@@ -1961,8 +1970,14 @@ public class MappingMongoConverter extends AbstractMongoConverter implements App
 				return null;
 			}
 
-			if(property.hasValueConverter()) {
-				return (T) context.conversions.getPropertyValueConverterFactory().getConverter(property).nativeToDomain(value);
+			if(context.conversions.hasPropertyValueConverter(property)) {
+
+				return (T) context.conversions.getPropertyValueConverter(property).nativeToDomain(value, new MongoConversionContext() {
+					@Override
+					public MongoPersistentProperty getProperty() {
+						return property;
+					}
+				});
 			}
 
 			return (T) context.convert(value, property.getTypeInformation());
