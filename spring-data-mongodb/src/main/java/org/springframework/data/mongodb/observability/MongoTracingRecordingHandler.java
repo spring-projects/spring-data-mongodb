@@ -79,9 +79,13 @@ public class MongoTracingRecordingHandler implements TracingRecordingHandler<Mon
 	@Override public void onStop(Timer.Sample sample, MongoHandlerContext context, Timer timer, Duration duration) {
 		TracingContext tracingContext = getTracingContext(context);
 		Span span = tracingContext.getSpan();
-		span.name(timer.getId().getName());
+		span.name(context.getSimpleName());
 		tagSpan(context, timer.getId(), span);
 		span.end();
+	}
+
+	@Override public boolean supportsContext(Timer.HandlerContext context) {
+		return context instanceof MongoHandlerContext;
 	}
 
 	public boolean isSetRemoteIpAndPortEnabled() {

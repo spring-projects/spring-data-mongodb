@@ -21,7 +21,7 @@ import com.mongodb.event.CommandStartedEvent;
 import com.mongodb.event.CommandSucceededEvent;
 import io.micrometer.core.instrument.Timer;
 
-public class MongoHandlerContext extends Timer.HandlerContext {
+public abstract class MongoHandlerContext extends Timer.HandlerContext {
 
 	private final CommandStartedEvent commandStartedEvent;
 
@@ -34,11 +34,11 @@ public class MongoHandlerContext extends Timer.HandlerContext {
 	}
 
 	public CommandStartedEvent getCommandStartedEvent() {
-		return commandStartedEvent;
+		return this.commandStartedEvent;
 	}
 
 	public CommandSucceededEvent getCommandSucceededEvent() {
-		return commandSucceededEvent;
+		return this.commandSucceededEvent;
 	}
 
 	public void setCommandSucceededEvent(CommandSucceededEvent commandSucceededEvent) {
@@ -46,10 +46,12 @@ public class MongoHandlerContext extends Timer.HandlerContext {
 	}
 
 	public CommandFailedEvent getCommandFailedEvent() {
-		return commandFailedEvent;
+		return this.commandFailedEvent;
 	}
 
 	public void setCommandFailedEvent(CommandFailedEvent commandFailedEvent) {
 		this.commandFailedEvent = commandFailedEvent;
 	}
+
+	public abstract String getSimpleName();
 }

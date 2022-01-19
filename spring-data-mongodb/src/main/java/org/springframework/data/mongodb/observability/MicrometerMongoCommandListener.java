@@ -58,7 +58,7 @@ public final class MicrometerMongoCommandListener implements CommandListener {
 
 	private final MeterRegistry registry;
 
-	MicrometerMongoCommandListener(MeterRegistry registry) {
+	public MicrometerMongoCommandListener(MeterRegistry registry) {
 		this.registry = registry;
 	}
 
@@ -89,9 +89,12 @@ public final class MicrometerMongoCommandListener implements CommandListener {
 		String commandName = event.getCommandName();
 		BsonDocument command = event.getCommand();
 		String collectionName = getCollectionName(command, commandName);
-		String metricName = getMetricName(commandName, collectionName);
-		Timer.Builder timerBuilder = Timer.builder(metricName);
+		Timer.Builder timerBuilder = Timer.builder("mongodb.command");
 		MongoHandlerContext mongoHandlerContext = new MongoHandlerContext(event) {
+			@Override public String getSimpleName() {
+				return getMetricName(commandName, collectionName);
+			}
+
 			@Override public Tags getLowCardinalityTags() {
 				Tags tags = Tags.empty();
 				if (collectionName != null) {
@@ -109,7 +112,8 @@ public final class MicrometerMongoCommandListener implements CommandListener {
 			}
 		};
 		Timer.Sample child = Timer.start(this.registry, mongoHandlerContext);
-		requestContext.put(mongoHandlerContext, MongoHandlerContext.class);
+		requestContext.put(Timer.Sample.class, child);
+		requestContext.put(MongoHandlerContext.class, mongoHandlerContext);
 		requestContext.put(Timer.Builder.class, timerBuilder);
 		if (log.isDebugEnabled()) {
 			log.debug("Created a child sample  [" + child
