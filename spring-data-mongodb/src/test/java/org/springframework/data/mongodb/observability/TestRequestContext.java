@@ -16,18 +16,16 @@
 
 package org.springframework.data.mongodb.observability;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
 import com.mongodb.RequestContext;
+import io.micrometer.core.instrument.Timer;
 
-class MicrometerRequestContext implements RequestContext {
+class TestRequestContext implements RequestContext {
 
-	private final Map<Object, Object> map;
-
-	MicrometerRequestContext(Map<Object, Object> map) {
-		this.map = map;
-	}
+	private final Map<Object, Object> map = new HashMap<>();
 
 	@Override
 	public <T> T get(Object key) {
@@ -64,4 +62,9 @@ class MicrometerRequestContext implements RequestContext {
 		return map.entrySet().stream();
 	}
 
+	static TestRequestContext withSample(Timer.Sample value) {
+		TestRequestContext testRequestContext = new TestRequestContext();
+		testRequestContext.put(Timer.Sample.class, value);
+		return testRequestContext;
+	}
 }

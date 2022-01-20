@@ -53,5 +53,5 @@ public abstract class MongoHandlerContext extends Timer.HandlerContext {
 		this.commandFailedEvent = commandFailedEvent;
 	}
 
-	public abstract String getSimpleName();
+	public abstract String getContextualName();
 }

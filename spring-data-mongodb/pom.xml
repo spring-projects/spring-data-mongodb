@@ -195,11 +195,6 @@
 
 		<dependency>
 			<groupId>io.micrometer</groupId>
-			<artifactId>micrometer-core</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>io.micrometer</groupId>
 			<artifactId>micrometer-tracing</artifactId>
 			<optional>true</optional>
 		</dependency>
@@ -310,6 +305,17 @@
 			<groupId>io.mockk</groupId>
 			<artifactId>mockk</artifactId>
 			<version>${mockk}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-tracing-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 

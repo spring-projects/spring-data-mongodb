@@ -69,7 +69,7 @@ public final class MicrometerMongoCommandListener implements CommandListener {
 		}
 		String databaseName = event.getDatabaseName();
 		if ("admin".equals(databaseName)) {
-			return; // don't trace commands like "endSessions"
+			return; // don't instrument commands like "endSessions"
 		}
 		RequestContext requestContext = event.getRequestContext();
 		if (requestContext == null) {
@@ -91,7 +91,7 @@ public final class MicrometerMongoCommandListener implements CommandListener {
 		String collectionName = getCollectionName(command, commandName);
 		Timer.Builder timerBuilder = Timer.builder("mongodb.command");
 		MongoHandlerContext mongoHandlerContext = new MongoHandlerContext(event) {
-			@Override public String getSimpleName() {
+			@Override public String getContextualName() {
 				return getMetricName(commandName, collectionName);
 			}
 
@@ -190,7 +190,7 @@ public final class MicrometerMongoCommandListener implements CommandListener {
 	}
 
 	@Nullable
-	String getCollectionName(BsonDocument command, String commandName) {
+	private String getCollectionName(BsonDocument command, String commandName) {
 		if (COMMANDS_WITH_COLLECTION_NAME.contains(commandName)) {
 			String collectionName = getNonEmptyBsonString(command.get(commandName));
 			if (collectionName != null) {
