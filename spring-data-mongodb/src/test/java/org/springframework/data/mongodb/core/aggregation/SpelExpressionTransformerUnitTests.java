@@ -1099,6 +1099,16 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(transform("cosh(angle)")).isEqualTo("{ \"$cosh\" : \"$angle\"}");
 	}
 
+	@Test // GH-3707
+	void shouldRenderACos() {
+		assertThat(transform("acos(angle)")).isEqualTo("{ \"$acos\" : \"$angle\"}");
+	}
+
+	@Test // GH-3707
+	void shouldRenderACosh() {
+		assertThat(transform("acosh(angle)")).isEqualTo("{ \"$acosh\" : \"$angle\"}");
+	}
+
 	@Test // GH-3730
 	void shouldRenderTan() {
 		assertThat(transform("tan(angle)")).isEqualTo("{ \"$tan\" : \"$angle\"}");
