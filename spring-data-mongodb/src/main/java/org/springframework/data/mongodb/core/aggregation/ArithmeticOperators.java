@@ -799,12 +799,12 @@ public class ArithmeticOperators {
 		public Cosh cosh(AngularUnit unit) {
 			return usesFieldRef() ? Cosh.coshOf(fieldReference, unit) : Cosh.coshOf(expression, unit);
 		}
-		
+
 		/**
 		 * Creates new {@link AggregationExpression} that calculates the inverse cosine of a numeric value.
 		 *
 		 * @return new instance of {@link ACos}.
-		 * @since 3.3
+		 * @since 3.4
 		 */
 		public ACos acos() {
 			return usesFieldRef() ? ACos.acosOf(fieldReference) : ACos.acosOf(expression);
@@ -814,7 +814,7 @@ public class ArithmeticOperators {
 		 * Creates new {@link AggregationExpression} that calculates the inverse hyperbolic cosine of a numeric value.
 		 *
 		 * @return new instance of {@link ACosh}.
-		 * @since 3.3
+		 * @since 3.4
 		 */
 		public ACosh acosh() {
 			return usesFieldRef() ? ACosh.acoshOf(fieldReference) : ACosh.acoshOf(expression);
@@ -2482,7 +2482,6 @@ public class ArithmeticOperators {
 		}
 	}
 
-
 	/**
 	 * An {@link AggregationExpression expression} that calculates the cosine of a value that is measured in radians.
 	 *
@@ -2684,10 +2683,12 @@ public class ArithmeticOperators {
 			return "$cosh";
 		}
 	}
-	
+
 	/**
 	 * An {@link AggregationExpression expression} that calculates the inverse cosine of a value.
 	 *
+	 * @author Divya Srivastava
+	 * @since 3.4
 	 */
 	public static class ACos extends AbstractAggregationExpression {
 
@@ -2736,8 +2737,10 @@ public class ArithmeticOperators {
 	}
 
 	/**
-	 * An {@link AggregationExpression expression} that calculates the inverse hyperbolic cosine of a value
+	 * An {@link AggregationExpression expression} that calculates the inverse hyperbolic cosine of a value.
 	 *
+	 * @author Divya Srivastava
+	 * @since 3.4
 	 */
 	public static class ACosh extends AbstractAggregationExpression {
 
@@ -2971,7 +2974,6 @@ public class ArithmeticOperators {
 			Assert.notNull(expression, "Expression must not be null!");
 			return new ATan2((Collections.singletonList(expression)));
 		}
-
 
 		/**
 		 * Creates a new {@link AggregationExpression} that calculates the inverse tangent of of y / x, where y and x are
