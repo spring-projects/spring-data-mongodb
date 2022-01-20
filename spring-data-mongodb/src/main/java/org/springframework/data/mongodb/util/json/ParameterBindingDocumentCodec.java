@@ -217,8 +217,15 @@ public class ParameterBindingDocumentCodec implements CollectibleCodec<Document>
 			// binds just placeholder queries like: `@Query(?0)`
 			if (bindingReader.currentValue instanceof org.bson.Document) {
 				return (Document) bindingReader.currentValue;
+			} else if (bindingReader.currentValue instanceof String) {
+				try {
+					return decode((String) bindingReader.currentValue, new Object[0]);
+				} catch (JsonParseException jsonParseException) {
+					throw new IllegalArgumentException("Expression result is not a valid json document!", jsonParseException);
+				}
+			} else if (bindingReader.currentValue instanceof Map) {
+				return new Document((Map) bindingReader.currentValue);
 			}
-
 		}
 
 		Document document = new Document();

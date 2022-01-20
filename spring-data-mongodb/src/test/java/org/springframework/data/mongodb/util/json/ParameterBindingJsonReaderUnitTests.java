@@ -26,6 +26,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import org.bson.BsonBinary;
 import org.bson.Document;
 import org.bson.codecs.DecoderContext;
 import org.junit.jupiter.api.Test;
@@ -347,7 +348,7 @@ class ParameterBindingJsonReaderUnitTests {
 		evaluationContext.setRootObject(new DummySecurityObject(new DummyWithId("wonderwoman")));
 
 		String json = "?#{  T(" + this.getClass().getName()
-				+ ").isBatman() ? \"{'_class': { '$eq' : 'region' }}\" : \"{ '$and' : [ {'_class': { '$eq' : 'region' } }, {'user.supervisor': '\"+ principal.id +\"' } ] }\" }";
+				+ ").isBatman() ? {'_class': { '$eq' : 'region' }} : { '$and' : { {'_class': { '$eq' : 'region' } }, {'user.supervisor':  principal.id } } } }";
 
 		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json,
 				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), evaluationContext));
@@ -357,11 +358,66 @@ class ParameterBindingJsonReaderUnitTests {
 				.isEqualTo(new Document("$and", Arrays.asList(new Document("_class", new Document("$eq", "region")),
 						new Document("user.supervisor", "wonderwoman"))));
 	}
-	
-	@Test
+
+	@Test // GH-3871
+	public void capturingExpressionDependenciesShouldNotThrowParseErrorForSpelOnlyJson() {
+
+		Object[] args = new Object[] { "1", "2" };
+		String json = "?#{ true ? { 'name': #name } : { 'name' : #name + 'trouble' } }";
+
+		new ParameterBindingDocumentCodec().captureExpressionDependencies(json, (index) -> args[index],
+				new SpelExpressionParser());
+	}
+
+	@Test // GH-3871
+	public void bindEntireQueryUsingSpelExpressionWhenEvaluationResultIsJsonString() {
+
+		Object[] args = new Object[] { "expected", "unexpected" };
+		String json = "?#{ true ? \"{ 'name': ?0 }\" : \"{ 'name' : ?1 }\" }";
+		StandardEvaluationContext evaluationContext = (StandardEvaluationContext) EvaluationContextProvider.DEFAULT
+				.getEvaluationContext(args);
+
+		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json,
+				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), evaluationContext));
+
+		Document target = new ParameterBindingDocumentCodec().decode(reader, DecoderContext.builder().build());
+		assertThat(target).isEqualTo(new Document("name", "expected"));
+	}
+
+	@Test // GH-3871
+	public void throwsExceptionWhenbindEntireQueryUsingSpelExpressionResultsInInvalidJsonString() {
+
+		Object[] args = new Object[] { "expected", "unexpected" };
+		String json = "?#{ true ? \"{ 'name': ?0 { }\" : \"{ 'name' : ?1 }\" }";
+		StandardEvaluationContext evaluationContext = (StandardEvaluationContext) EvaluationContextProvider.DEFAULT
+				.getEvaluationContext(args);
+
+		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json,
+				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), evaluationContext));
+
+		assertThatExceptionOfType(IllegalArgumentException.class).isThrownBy(() -> new ParameterBindingDocumentCodec().decode(reader, DecoderContext.builder().build()));
+	}
+
+	@Test // GH-3871
+	public void bindEntireQueryUsingSpelExpressionWhenEvaluationResultIsJsonStringContainingUUID() {
+
+		Object[] args = new Object[] { "UUID('cfbca728-4e39-4613-96bc-f920b5c37e16')", "unexpected" };
+		String json = "?#{ true ? \"{ 'name': ?0 }\" : \"{ 'name' : ?1 }\" }";
+		StandardEvaluationContext evaluationContext = (StandardEvaluationContext) EvaluationContextProvider.DEFAULT
+				.getEvaluationContext(args);
+
+		ParameterBindingJsonReader reader = new ParameterBindingJsonReader(json,
+				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), evaluationContext));
+
+		Document target = new ParameterBindingDocumentCodec().decode(reader, DecoderContext.builder().build());
+
+		assertThat(target.get("name")).isInstanceOf(BsonBinary.class);
+	}
+
+	@Test // GH-3871
 	void bindEntireQueryUsingSpelExpression() {
 
-		Object[] args = new Object[] {"region"};
+		Object[] args = new Object[] { "region" };
 		StandardEvaluationContext evaluationContext = (StandardEvaluationContext) EvaluationContextProvider.DEFAULT
 				.getEvaluationContext(args);
 		evaluationContext.setRootObject(new DummySecurityObject(new DummyWithId("wonderwoman")));
@@ -377,10 +433,10 @@ class ParameterBindingJsonReaderUnitTests {
 						new Document("user.supervisor", "wonderwoman"))));
 	}
 
-	@Test
+	@Test // GH-3871
 	void bindEntireQueryUsingParameter() {
 
-		Object[] args = new Object[] {"{ 'itWorks' : true }"};
+		Object[] args = new Object[] { "{ 'itWorks' : true }" };
 		StandardEvaluationContext evaluationContext = (StandardEvaluationContext) EvaluationContextProvider.DEFAULT
 				.getEvaluationContext(args);
 
@@ -390,9 +446,7 @@ class ParameterBindingJsonReaderUnitTests {
 				new ParameterBindingContext((index) -> args[index], new SpelExpressionParser(), evaluationContext));
 		Document target = new ParameterBindingDocumentCodec().decode(reader, DecoderContext.builder().build());
 
-		assertThat(target)
-				.isEqualTo(new Document("itWorks", true));
-		
+		assertThat(target).isEqualTo(new Document("itWorks", true));
 	}
 
 	@Test // DATAMONGO-2571
@@ -437,17 +491,13 @@ class ParameterBindingJsonReaderUnitTests {
 	public static boolean isBatman() {
 		return false;
 	}
-	
+
 	public static String applyFilterByUser(String _class, String username) {
 		switch (username) {
 			case "batman":
-				return "{'_class': { '$eq' : '"
-						+ _class
-						+ "' }}";
+				return "{'_class': { '$eq' : '" + _class + "' }}";
 			default:
-				return "{ '$and' : [ {'_class': { '$eq' : '"
-						+ _class
-						+ "' } }, {'user.supervisor':  '" + username + "' } ] }";
+				return "{ '$and' : [ {'_class': { '$eq' : '" + _class + "' } }, {'user.supervisor':  '" + username + "' } ] }";
 		}
 	}
 

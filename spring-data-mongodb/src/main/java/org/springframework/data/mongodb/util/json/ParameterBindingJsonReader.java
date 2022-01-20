@@ -36,7 +36,6 @@ import org.bson.types.Decimal128;
 import org.bson.types.MaxKey;
 import org.bson.types.MinKey;
 import org.bson.types.ObjectId;
-
 import org.springframework.data.spel.EvaluationContextProvider;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -120,20 +119,8 @@ public class ParameterBindingJsonReader extends AbstractBsonReader {
 		Matcher matcher = ENTIRE_QUERY_BINDING_PATTERN.matcher(json);
 		if (matcher.find()) {
 			BindableValue bindingResult = bindableValueFor(new JsonToken(JsonTokenType.UNQUOTED_STRING, json));
-			try {
-
-				if (bindingResult.getValue() instanceof String) {
-					currentValue = Document.parse((String)bindingResult.getValue());
-				} else {
-					currentValue = bindingResult.getValue();
-				}
-
-			} catch (JsonParseException jsonParseException) {
-				throw new IllegalArgumentException(
-						String.format("Resulting value of expression '%s' is not a valid json query", json), jsonParseException);
-			}
+			currentValue = bindingResult.getValue();
 		}
-
 	}
 
 	// Spring Data Customization END
