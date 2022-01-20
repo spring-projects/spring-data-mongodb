@@ -31,9 +31,16 @@ import org.apache.commons.logging.LogFactory;
 
 import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 
+/**
+ * A {@link TracingRecordingHandler} that handles {@link MongoHandlerContext}.
+ * It configures a span specific for Mongo communication.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public class MongoTracingRecordingHandler implements TracingRecordingHandler<MongoHandlerContext> {
 
-	private static final Log LOGGER = LogFactory.getLog(MappingMongoConverter.class);
+	private static final Log LOGGER = LogFactory.getLog(MongoTracingRecordingHandler.class);
 
 	private final Tracer tracer;
 
@@ -88,6 +95,11 @@ public class MongoTracingRecordingHandler implements TracingRecordingHandler<Mon
 		return context instanceof MongoHandlerContext;
 	}
 
+	/**
+	 * Should remote ip and port be set on the span.
+	 *
+	 * @return {@code true} when the remote ip and port should be set
+	 */
 	public boolean isSetRemoteIpAndPortEnabled() {
 		return this.setRemoteIpAndPortEnabled;
 	}

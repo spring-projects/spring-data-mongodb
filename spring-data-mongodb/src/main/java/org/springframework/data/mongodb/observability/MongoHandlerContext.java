@@ -21,6 +21,12 @@ import com.mongodb.event.CommandStartedEvent;
 import com.mongodb.event.CommandSucceededEvent;
 import io.micrometer.core.instrument.Timer;
 
+/**
+ * A {@link Timer.HandlerContext} that contains Mongo events.
+ *
+ * @author Marcin Grzejszczak
+ * @since 3.0.0
+ */
 public abstract class MongoHandlerContext extends Timer.HandlerContext {
 
 	private final CommandStartedEvent commandStartedEvent;
@@ -53,5 +59,12 @@ public abstract class MongoHandlerContext extends Timer.HandlerContext {
 		this.commandFailedEvent = commandFailedEvent;
 	}
 
+	/**
+	 * The contextual name is a name that describes an implementation of this class
+	 * that is more precise within this context. This can be used e.g. as a
+	 * more human-readable span name.
+	 *
+	 * @return contextual name
+	 */
 	public abstract String getContextualName();
 }
