@@ -27,6 +27,8 @@ import io.micrometer.api.instrument.simple.SimpleMeterRegistry;
 import io.micrometer.tracing.Span;
 import io.micrometer.tracing.test.simple.SimpleSpan;
 import io.micrometer.tracing.test.simple.SimpleTracer;
+import io.micrometer.tracing.test.simple.SpanAssert;
+import io.micrometer.tracing.test.simple.TracerAssert;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.jetbrains.annotations.NotNull;
@@ -55,10 +57,9 @@ class MicrometerMongoCommandListenerForTracingTests {
 
 		commandStartedAndSucceeded(testRequestContext);
 
-		// TODO: Convert to SpanAssert
-		SimpleSpan span = assertThatMongoSpanIsClientWithTags();
-		assertThat(span.getIp()).isNull();
-		assertThat(span.getPort()).isZero();
+		assertThatMongoSpanIsClientWithTags()
+				.hasIpThatIsBlank()
+				.hasPortThatIsNotSet();
 	}
 
 	@Test void successfullyCompletedCommandShouldCreateSpanWithAddressInfoWhenParentSampleInRequestContextAndHandlerAddressInfoEnabled() {
@@ -67,10 +68,9 @@ class MicrometerMongoCommandListenerForTracingTests {
 
 		commandStartedAndSucceeded(testRequestContext);
 
-		// TODO: Convert to SpanAssert
-		SimpleSpan span = assertThatMongoSpanIsClientWithTags();
-		assertThat(span.getIp()).isNotBlank();
-		assertThat(span.getPort()).isPositive();
+		assertThatMongoSpanIsClientWithTags()
+				.hasIpThatIsNotBlank()
+				.hasPortThatIsSet();
 	}
 
 	@Test void commandWithErrorShouldCreateTimerWhenParentSampleInRequestContext() {
@@ -79,15 +79,13 @@ class MicrometerMongoCommandListenerForTracingTests {
 		listener.commandStarted(new CommandStartedEvent(testRequestContext, 0, new ConnectionDescription(new ServerId(new ClusterId("description"), new ServerAddress("localhost", 1234))), "database", "insert", new BsonDocument("collection", new BsonString("user"))));
 		listener.commandFailed(new CommandFailedEvent(testRequestContext, 0, null, "insert", 0, new IllegalAccessException()));
 
-		SimpleSpan simpleSpan = assertThatMongoSpanIsClientWithTags();
-		// TODO: Convert to SpanAssert
-		assertThat(simpleSpan.getThrowable()).isInstanceOf(IllegalAccessException.class);
+		assertThatMongoSpanIsClientWithTags()
+				.assertThatThrowable().isInstanceOf(IllegalAccessException.class);
 	}
 
 	@NotNull private TestRequestContext testRequestContextWithParentSample() {
 		Timer.Sample parent = Timer.start(registry);
-		TestRequestContext testRequestContext = TestRequestContext.withSample(parent);
-		return testRequestContext;
+		return TestRequestContext.withSample(parent);
 	}
 
 	private void commandStartedAndSucceeded(TestRequestContext testRequestContext) {
@@ -96,18 +94,15 @@ class MicrometerMongoCommandListenerForTracingTests {
 		listener.commandSucceeded(new CommandSucceededEvent(testRequestContext, 0, null, "insert", null, 0));
 	}
 
-	// TODO: Convert to SpanAssert
-	private SimpleSpan assertThatMongoSpanIsClientWithTags() {
-		SimpleSpan simpleSpan = simpleTracer.onlySpan();
-		assertThat(simpleSpan).isNotNull();
-		assertThat(simpleSpan.getName()).isEqualTo("insert user");
-		assertThat(simpleSpan.getSpanKind()).isEqualTo(Span.Kind.CLIENT);
-		assertThat(simpleSpan.getRemoteServiceName()).isEqualTo("mongodb-database");
-		assertThat(simpleSpan.getTags())
-				.containsEntry("mongodb.command", "insert")
-				.containsEntry("mongodb.collection", "user")
-				.containsKey("mongodb.cluster_id");
-		return simpleSpan;
+	private SpanAssert assertThatMongoSpanIsClientWithTags() {
+		return TracerAssert.assertThat(simpleTracer)
+				.onlySpan()
+				.hasNameEqualTo("insert user")
+				.hasSpanWithKindEqualTo(Span.Kind.CLIENT)
+				.hasRemoteServiceNameEqualTo("mongodb-database")
+				.hasTag("mongodb.command", "insert")
+				.hasTag("mongodb.collection", "user")
+				.hasTagWithKey("mongodb.cluster_id");
 	}
 
 }
