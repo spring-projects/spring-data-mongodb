@@ -44,7 +44,7 @@ import org.springframework.lang.Nullable;
  *
  * @author OpenZipkin Brave Authors
  * @author Marcin Grzejszczak
- * @since 3.0.0
+ * @since 4.0.0
  */
 public final class MicrometerMongoCommandListener implements CommandListener {
 

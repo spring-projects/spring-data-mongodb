@@ -25,7 +25,7 @@ import io.micrometer.api.instrument.Timer;
  * A {@link Timer.HandlerContext} that contains Mongo events.
  *
  * @author Marcin Grzejszczak
- * @since 3.0.0
+ * @since 4.0.0
  */
 public class MongoHandlerContext extends Timer.HandlerContext {
 

@@ -34,7 +34,7 @@ import org.apache.commons.logging.LogFactory;
  * It configures a span specific for Mongo communication.
  *
  * @author Marcin Grzejszczak
- * @since 3.0.0
+ * @since 4.0.0
  */
 public class MongoTracingRecordingHandler implements TracingRecordingHandler<MongoHandlerContext> {
 
