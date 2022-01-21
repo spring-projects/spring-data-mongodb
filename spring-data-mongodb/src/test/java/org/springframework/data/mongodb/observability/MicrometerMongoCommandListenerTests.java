@@ -22,17 +22,15 @@ import com.mongodb.connection.ServerId;
 import com.mongodb.event.CommandFailedEvent;
 import com.mongodb.event.CommandStartedEvent;
 import com.mongodb.event.CommandSucceededEvent;
-import io.micrometer.core.instrument.Tag;
-import io.micrometer.core.instrument.Tags;
-import io.micrometer.core.instrument.Timer;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import io.micrometer.core.tck.MeterRegistryAssert;
+import io.micrometer.api.instrument.Tag;
+import io.micrometer.api.instrument.Tags;
+import io.micrometer.api.instrument.Timer;
+import io.micrometer.api.instrument.simple.SimpleMeterRegistry;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.junit.jupiter.api.Test;
 
 import static io.micrometer.core.tck.MeterRegistryAssert.assertThat;
-import static org.assertj.core.api.Assertions.assertThat;
 
 class MicrometerMongoCommandListenerTests {
 
@@ -43,22 +41,19 @@ class MicrometerMongoCommandListenerTests {
 	@Test void commandStartedShouldNotInstrumentWhenAdminDatabase() {
 		listener.commandStarted(new CommandStartedEvent(null, 0, null, "admin", "", null));
 
-		// TODO: Move this to MeterAssert#doesNotHaveMeterWithName or MeterAssert#isEmpty
-		assertThat(registry.getMeters()).isEmpty();
+		assertThat(registry).hasNoMetrics();
 	}
 
 	@Test void commandStartedShouldNotInstrumentWhenNoRequestContext() {
 		listener.commandStarted(new CommandStartedEvent(null, 0, null, "some name", "", null));
 
-		// TODO: Move this to MeterAssert#doesNotHaveMeterWithName or MeterAssert#isEmpty
-		assertThat(registry.getMeters()).isEmpty();
+		assertThat(registry).hasNoMetrics();
 	}
 
 	@Test void commandStartedShouldNotInstrumentWhenNoParentSampleInRequestContext() {
 		listener.commandStarted(new CommandStartedEvent(new TestRequestContext(), 0, null, "some name", "", null));
 
-		// TODO: Move this to MeterAssert#doesNotHaveMeterWithName or MeterAssert#isEmpty
-		assertThat(registry.getMeters()).isEmpty();
+		assertThat(registry).hasNoMetrics();
 	}
 
 	@Test void successfullyCompletedCommandShouldCreateTimerWhenParentSampleInRequestContext() {

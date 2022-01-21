@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import com.mongodb.RequestContext;
-import io.micrometer.core.instrument.Timer;
+import io.micrometer.api.instrument.Timer;
 
 class TestRequestContext implements RequestContext {
 

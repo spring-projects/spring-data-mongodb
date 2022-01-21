@@ -22,14 +22,12 @@ import java.time.Duration;
 import com.mongodb.MongoSocketException;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.event.CommandStartedEvent;
-import io.micrometer.core.instrument.Timer;
+import io.micrometer.api.instrument.Timer;
 import io.micrometer.tracing.Span;
 import io.micrometer.tracing.Tracer;
 import io.micrometer.tracing.handler.TracingRecordingHandler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
 
 /**
  * A {@link TracingRecordingHandler} that handles {@link MongoHandlerContext}.
