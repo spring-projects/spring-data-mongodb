@@ -60,17 +60,22 @@ class MicrometerMongoCommandListenerTests {
 		Timer.Sample parent = Timer.start(registry);
 		TestRequestContext testRequestContext = TestRequestContext.withSample(parent);
 
-		listener.commandStarted(new CommandStartedEvent(testRequestContext, 0, new ConnectionDescription(new ServerId(new ClusterId("description"), new ServerAddress("localhost", 1234))), "database", "insert", new BsonDocument("collection", new BsonString("user"))));
+		listener.commandStarted(new CommandStartedEvent(testRequestContext, 0,
+				new ConnectionDescription(new ServerId(new ClusterId("description"), new ServerAddress("localhost", 1234))),
+				"database", "insert", new BsonDocument("collection", new BsonString("user"))));
 		listener.commandSucceeded(new CommandSucceededEvent(testRequestContext, 0, null, "insert", null, 0));
 
 		assertThatTimerRegisteredWithTags();
 	}
 
-	@Test void successfullyCompletedCommandWithCollectionHavingCommandNameShouldCreateTimerWhenParentSampleInRequestContext() {
+	@Test
+	void successfullyCompletedCommandWithCollectionHavingCommandNameShouldCreateTimerWhenParentSampleInRequestContext() {
 		Timer.Sample parent = Timer.start(registry);
 		TestRequestContext testRequestContext = TestRequestContext.withSample(parent);
 
-		listener.commandStarted(new CommandStartedEvent(testRequestContext, 0, new ConnectionDescription(new ServerId(new ClusterId("description"), new ServerAddress("localhost", 1234))), "database", "aggregate", new BsonDocument("aggregate", new BsonString("user"))));
+		listener.commandStarted(new CommandStartedEvent(testRequestContext, 0,
+				new ConnectionDescription(new ServerId(new ClusterId("description"), new ServerAddress("localhost", 1234))),
+				"database", "aggregate", new BsonDocument("aggregate", new BsonString("user"))));
 		listener.commandSucceeded(new CommandSucceededEvent(testRequestContext, 0, null, "aggregate", null, 0));
 
 		assertThatTimerRegisteredWithTags();
@@ -80,26 +85,27 @@ class MicrometerMongoCommandListenerTests {
 		Timer.Sample parent = Timer.start(registry);
 		TestRequestContext testRequestContext = TestRequestContext.withSample(parent);
 
-		listener.commandStarted(new CommandStartedEvent(testRequestContext, 0, null, "database", "insert", new BsonDocument("collection", new BsonString("user"))));
+		listener.commandStarted(new CommandStartedEvent(testRequestContext, 0, null, "database", "insert",
+				new BsonDocument("collection", new BsonString("user"))));
 		listener.commandSucceeded(new CommandSucceededEvent(testRequestContext, 0, null, "insert", null, 0));
 
-		assertThat(registry)
-				.hasTimerWithNameAndTags("mongodb.command", Tags.of(Tag.of("mongodb.collection", "user")));
+		assertThat(registry).hasTimerWithNameAndTags("mongodb.command", Tags.of(Tag.of("mongodb.collection", "user")));
 	}
 
 	@Test void commandWithErrorShouldCreateTimerWhenParentSampleInRequestContext() {
 		Timer.Sample parent = Timer.start(registry);
 		TestRequestContext testRequestContext = TestRequestContext.withSample(parent);
 
-		listener.commandStarted(new CommandStartedEvent(testRequestContext, 0, new ConnectionDescription(new ServerId(new ClusterId("description"), new ServerAddress("localhost", 1234))), "database", "insert", new BsonDocument("collection", new BsonString("user"))));
-		listener.commandFailed(new CommandFailedEvent(testRequestContext, 0, null, "insert", 0, new IllegalAccessException()));
+		listener.commandStarted(new CommandStartedEvent(testRequestContext, 0,
+				new ConnectionDescription(new ServerId(new ClusterId("description"), new ServerAddress("localhost", 1234))),
+				"database", "insert", new BsonDocument("collection", new BsonString("user")))); listener.commandFailed(
+				new CommandFailedEvent(testRequestContext, 0, null, "insert", 0, new IllegalAccessException()));
 
 		assertThatTimerRegisteredWithTags();
 	}
 
 	private void assertThatTimerRegisteredWithTags() {
-		assertThat(registry)
-				.hasTimerWithNameAndTags("mongodb.command", Tags.of(Tag.of("mongodb.collection", "user")))
+		assertThat(registry).hasTimerWithNameAndTags("mongodb.command", Tags.of(Tag.of("mongodb.collection", "user")))
 				.hasTimerWithNameAndTagKeys("mongodb.command", "mongodb.cluster_id");
 	}
 

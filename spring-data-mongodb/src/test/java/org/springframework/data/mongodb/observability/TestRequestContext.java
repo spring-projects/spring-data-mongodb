@@ -27,44 +27,36 @@ class TestRequestContext implements RequestContext {
 
 	private final Map<Object, Object> map = new HashMap<>();
 
-	@Override
-	public <T> T get(Object key) {
+	@Override public <T> T get(Object key) {
 		return (T) map.get(key);
 	}
 
-	@Override
-	public boolean hasKey(Object key) {
+	@Override public boolean hasKey(Object key) {
 		return map.containsKey(key);
 	}
 
-	@Override
-	public boolean isEmpty() {
+	@Override public boolean isEmpty() {
 		return map.isEmpty();
 	}
 
-	@Override
-	public void put(Object key, Object value) {
+	@Override public void put(Object key, Object value) {
 		map.put(key, value);
 	}
 
-	@Override
-	public void delete(Object key) {
+	@Override public void delete(Object key) {
 		map.remove(key);
 	}
 
-	@Override
-	public int size() {
+	@Override public int size() {
 		return map.size();
 	}
 
-	@Override
-	public Stream<Map.Entry<Object, Object>> stream() {
+	@Override public Stream<Map.Entry<Object, Object>> stream() {
 		return map.entrySet().stream();
 	}
 
 	static TestRequestContext withSample(Timer.Sample value) {
-		TestRequestContext testRequestContext = new TestRequestContext();
-		testRequestContext.put(Timer.Sample.class, value);
+		TestRequestContext testRequestContext = new TestRequestContext(); testRequestContext.put(Timer.Sample.class, value);
 		return testRequestContext;
 	}
 }

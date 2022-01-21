@@ -25,7 +25,6 @@ import com.mongodb.event.CommandSucceededEvent;
 import io.micrometer.api.instrument.Timer;
 import io.micrometer.api.instrument.simple.SimpleMeterRegistry;
 import io.micrometer.tracing.Span;
-import io.micrometer.tracing.test.simple.SimpleSpan;
 import io.micrometer.tracing.test.simple.SimpleTracer;
 import io.micrometer.tracing.test.simple.SpanAssert;
 import io.micrometer.tracing.test.simple.TracerAssert;
@@ -34,8 +33,6 @@ import org.bson.BsonString;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 class MicrometerMongoCommandListenerForTracingTests {
 
@@ -47,8 +44,7 @@ class MicrometerMongoCommandListenerForTracingTests {
 
 	MongoTracingRecordingHandler handler = new MongoTracingRecordingHandler(simpleTracer);
 
-	@BeforeEach
-	void setup() {
+	@BeforeEach void setup() {
 		registry.config().timerRecordingHandler(handler);
 	}
 
@@ -57,52 +53,45 @@ class MicrometerMongoCommandListenerForTracingTests {
 
 		commandStartedAndSucceeded(testRequestContext);
 
-		assertThatMongoSpanIsClientWithTags()
-				.hasIpThatIsBlank()
-				.hasPortThatIsNotSet();
+		assertThatMongoSpanIsClientWithTags().hasIpThatIsBlank().hasPortThatIsNotSet();
 	}
 
-	@Test void successfullyCompletedCommandShouldCreateSpanWithAddressInfoWhenParentSampleInRequestContextAndHandlerAddressInfoEnabled() {
+	@Test
+	void successfullyCompletedCommandShouldCreateSpanWithAddressInfoWhenParentSampleInRequestContextAndHandlerAddressInfoEnabled() {
 		handler.setSetRemoteIpAndPortEnabled(true);
 		TestRequestContext testRequestContext = testRequestContextWithParentSample();
 
 		commandStartedAndSucceeded(testRequestContext);
 
-		assertThatMongoSpanIsClientWithTags()
-				.hasIpThatIsNotBlank()
-				.hasPortThatIsSet();
+		assertThatMongoSpanIsClientWithTags().hasIpThatIsNotBlank().hasPortThatIsSet();
 	}
 
 	@Test void commandWithErrorShouldCreateTimerWhenParentSampleInRequestContext() {
 		TestRequestContext testRequestContext = testRequestContextWithParentSample();
 
-		listener.commandStarted(new CommandStartedEvent(testRequestContext, 0, new ConnectionDescription(new ServerId(new ClusterId("description"), new ServerAddress("localhost", 1234))), "database", "insert", new BsonDocument("collection", new BsonString("user"))));
-		listener.commandFailed(new CommandFailedEvent(testRequestContext, 0, null, "insert", 0, new IllegalAccessException()));
+		listener.commandStarted(new CommandStartedEvent(testRequestContext, 0,
+				new ConnectionDescription(new ServerId(new ClusterId("description"), new ServerAddress("localhost", 1234))),
+				"database", "insert", new BsonDocument("collection", new BsonString("user")))); listener.commandFailed(
+				new CommandFailedEvent(testRequestContext, 0, null, "insert", 0, new IllegalAccessException()));
 
-		assertThatMongoSpanIsClientWithTags()
-				.assertThatThrowable().isInstanceOf(IllegalAccessException.class);
+		assertThatMongoSpanIsClientWithTags().assertThatThrowable().isInstanceOf(IllegalAccessException.class);
 	}
 
 	@NotNull private TestRequestContext testRequestContextWithParentSample() {
-		Timer.Sample parent = Timer.start(registry);
-		return TestRequestContext.withSample(parent);
+		Timer.Sample parent = Timer.start(registry); return TestRequestContext.withSample(parent);
 	}
 
 	private void commandStartedAndSucceeded(TestRequestContext testRequestContext) {
-		listener.commandStarted(new CommandStartedEvent(
-				testRequestContext, 0, new ConnectionDescription(new ServerId(new ClusterId("description"), new ServerAddress("localhost", 1234))), "database", "insert", new BsonDocument("collection", new BsonString("user"))));
+		listener.commandStarted(new CommandStartedEvent(testRequestContext, 0,
+				new ConnectionDescription(new ServerId(new ClusterId("description"), new ServerAddress("localhost", 1234))),
+				"database", "insert", new BsonDocument("collection", new BsonString("user"))));
 		listener.commandSucceeded(new CommandSucceededEvent(testRequestContext, 0, null, "insert", null, 0));
 	}
 
 	private SpanAssert assertThatMongoSpanIsClientWithTags() {
-		return TracerAssert.assertThat(simpleTracer)
-				.onlySpan()
-				.hasNameEqualTo("insert user")
-				.hasSpanWithKindEqualTo(Span.Kind.CLIENT)
-				.hasRemoteServiceNameEqualTo("mongodb-database")
-				.hasTag("mongodb.command", "insert")
-				.hasTag("mongodb.collection", "user")
-				.hasTagWithKey("mongodb.cluster_id");
+		return TracerAssert.assertThat(simpleTracer).onlySpan().hasNameEqualTo("insert user")
+				.hasSpanWithKindEqualTo(Span.Kind.CLIENT).hasRemoteServiceNameEqualTo("mongodb-database")
+				.hasTag("mongodb.command", "insert").hasTag("mongodb.collection", "user").hasTagWithKey("mongodb.cluster_id");
 	}
 
 }

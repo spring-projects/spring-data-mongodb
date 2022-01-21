@@ -48,22 +48,52 @@ import org.springframework.lang.Nullable;
  */
 public final class MicrometerMongoCommandListener implements CommandListener {
 
-	private static final Log log = LogFactory.getLog(MicrometerMongoCommandListener.class);
-
 	// See https://docs.mongodb.com/manual/reference/command for the command reference
 	static final Set<String> COMMANDS_WITH_COLLECTION_NAME = new LinkedHashSet<>(
 			Arrays.asList("aggregate", "count", "distinct", "mapReduce", "geoSearch", "delete", "find", "findAndModify",
-					"insert", "update", "collMod", "compact", "convertToCapped", "create", "createIndexes", "drop",
-					"dropIndexes", "killCursors", "listIndexes", "reIndex"));
-
+					"insert", "update", "collMod", "compact", "convertToCapped", "create", "createIndexes", "drop", "dropIndexes",
+					"killCursors", "listIndexes", "reIndex"));
+	private static final Log log = LogFactory.getLog(MicrometerMongoCommandListener.class);
 	private final MeterRegistry registry;
 
 	public MicrometerMongoCommandListener(MeterRegistry registry) {
 		this.registry = registry;
 	}
 
-	@Override
-	public void commandStarted(CommandStartedEvent event) {
+	private static Timer.Sample sampleFromContext(RequestContext context) {
+		Timer.Sample sample = context.getOrDefault(Timer.Sample.class, null);
+		if (sample != null) {
+			if (log.isDebugEnabled()) {
+				log.debug("Found a sample in mongo context [" + sample + "]");
+			}
+			return sample;
+		}
+		if (log.isDebugEnabled()) {
+			log.debug("No sample was found - will not create any child spans");
+		}
+		return null;
+	}
+
+	/**
+	 * @return trimmed string from {@code bsonValue} or null if the trimmed string was
+	 * empty or the value wasn't a string
+	 */
+	@Nullable static String getNonEmptyBsonString(BsonValue bsonValue) {
+		if (bsonValue == null || !bsonValue.isString()) {
+			return null;
+		}
+		String stringValue = bsonValue.asString().getValue().trim();
+		return stringValue.isEmpty() ? null : stringValue;
+	}
+
+	static String getMetricName(String commandName, @Nullable String collectionName) {
+		if (collectionName == null) {
+			return commandName;
+		}
+		return commandName + " " + collectionName;
+	}
+
+	@Override public void commandStarted(CommandStartedEvent event) {
 		if (log.isDebugEnabled()) {
 			log.debug("Instrumenting the command started event");
 		}
@@ -116,8 +146,7 @@ public final class MicrometerMongoCommandListener implements CommandListener {
 		requestContext.put(MongoHandlerContext.class, mongoHandlerContext);
 		requestContext.put(Timer.Builder.class, timerBuilder);
 		if (log.isDebugEnabled()) {
-			log.debug("Created a child sample  [" + child
-					+ "] for mongo instrumentation and put it in mongo context");
+			log.debug("Created a child sample  [" + child + "] for mongo instrumentation and put it in mongo context");
 		}
 	}
 
@@ -132,22 +161,7 @@ public final class MicrometerMongoCommandListener implements CommandListener {
 		return null;
 	}
 
-	private static Timer.Sample sampleFromContext(RequestContext context) {
-		Timer.Sample sample = context.getOrDefault(Timer.Sample.class, null);
-		if (sample != null) {
-			if (log.isDebugEnabled()) {
-				log.debug("Found a sample in mongo context [" + sample + "]");
-			}
-			return sample;
-		}
-		if (log.isDebugEnabled()) {
-			log.debug("No sample was found - will not create any child spans");
-		}
-		return null;
-	}
-
-	@Override
-	public void commandSucceeded(CommandSucceededEvent event) {
+	@Override public void commandSucceeded(CommandSucceededEvent event) {
 		RequestContext requestContext = event.getRequestContext();
 		if (requestContext == null) {
 			return;
@@ -167,8 +181,7 @@ public final class MicrometerMongoCommandListener implements CommandListener {
 		requestContext.delete(MongoHandlerContext.class);
 	}
 
-	@Override
-	public void commandFailed(CommandFailedEvent event) {
+	@Override public void commandFailed(CommandFailedEvent event) {
 		RequestContext requestContext = event.getRequestContext();
 		if (requestContext == null) {
 			return;
@@ -189,8 +202,7 @@ public final class MicrometerMongoCommandListener implements CommandListener {
 		requestContext.delete(MongoHandlerContext.class);
 	}
 
-	@Nullable
-	private String getCollectionName(BsonDocument command, String commandName) {
+	@Nullable private String getCollectionName(BsonDocument command, String commandName) {
 		if (COMMANDS_WITH_COLLECTION_NAME.contains(commandName)) {
 			String collectionName = getNonEmptyBsonString(command.get(commandName));
 			if (collectionName != null) {
@@ -200,26 +212,6 @@ public final class MicrometerMongoCommandListener implements CommandListener {
 		// Some other commands, like getMore, have a field like {"collection":
 		// collectionName}.
 		return getNonEmptyBsonString(command.get("collection"));
-	}
-
-	/**
-	 * @return trimmed string from {@code bsonValue} or null if the trimmed string was
-	 * empty or the value wasn't a string
-	 */
-	@Nullable
-	static String getNonEmptyBsonString(BsonValue bsonValue) {
-		if (bsonValue == null || !bsonValue.isString()) {
-			return null;
-		}
-		String stringValue = bsonValue.asString().getValue().trim();
-		return stringValue.isEmpty() ? null : stringValue;
-	}
-
-	static String getMetricName(String commandName, @Nullable String collectionName) {
-		if (collectionName == null) {
-			return commandName;
-		}
-		return commandName + " " + collectionName;
 	}
 
 }
