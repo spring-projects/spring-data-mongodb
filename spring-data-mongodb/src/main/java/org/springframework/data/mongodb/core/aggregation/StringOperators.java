@@ -686,19 +686,63 @@ public class StringOperators {
 		private RegexMatch createRegexMatch() {
 			return usesFieldRef() ? RegexMatch.valueOf(fieldReference) : RegexMatch.valueOf(expression);
 		}
-		
-		public ReplaceOne replaceOne(String find,String replacement) {
-			return createReplaceOne().find(find).replacement(replacement);
+
+		/**
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and replaces the first
+		 * occurrence of the search string with the given replacement.
+		 * 
+		 * @param search
+		 * @param replacement
+		 * @return new instance of {@link ReplaceOne}.
+		 * @since 3.4
+		 */
+		public ReplaceOne replaceOne(String search, String replacement) {
+			return createReplaceOne().find(search).replacement(replacement);
 		}
-		
+
+		/**
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and replaces the first
+		 * occurrence of the search string computed by the given {@link AggregationExpression} with the given replacement.
+		 *
+		 * @param search
+		 * @param replacement
+		 * @return new instance of {@link ReplaceOne}.
+		 * @since 3.4
+		 */
+		public ReplaceOne replaceOne(AggregationExpression search, String replacement) {
+			return createReplaceOne().findValueOf(search).replacement(replacement);
+		}
+
 		private ReplaceOne createReplaceOne() {
 			return usesFieldRef() ? ReplaceOne.valueOf(fieldReference) : ReplaceOne.valueOf(expression);
 		}
-		
-		public ReplaceAll replaceAll(String find,String replacement) {
-			return createReplaceAll().find(find).replacement(replacement);
+
+		/**
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and replaces all
+		 * occurrences of the search string with the given replacement.
+		 *
+		 * @param search
+		 * @param replacement
+		 * @return new instance of {@link ReplaceOne}.
+		 * @since 3.4
+		 */
+		public ReplaceAll replaceAll(String search, String replacement) {
+			return createReplaceAll().find(search).replacement(replacement);
 		}
-		
+
+		/**
+		 * Creates new {@link AggregationExpression} that takes the associated string representation and replaces all
+		 * occurrences of the search string computed by the given {@link AggregationExpression} with the given replacement.
+		 *
+		 * @param search
+		 * @param replacement
+		 * @return new instance of {@link ReplaceOne}.
+		 * @since 3.4
+		 */
+		public ReplaceAll replaceAll(AggregationExpression search, String replacement) {
+			return createReplaceAll().findValueOf(search).replacement(replacement);
+		}
+
 		private ReplaceAll createReplaceAll() {
 			return usesFieldRef() ? ReplaceAll.valueOf(fieldReference) : ReplaceAll.valueOf(expression);
 		}
@@ -706,8 +750,6 @@ public class StringOperators {
 		private boolean usesFieldRef() {
 			return fieldReference != null;
 		}
-		
-		
 	}
 
 	/**
@@ -2096,16 +2138,33 @@ public class StringOperators {
 			return "$regexMatch";
 		}
 	}
-	
+
 	/**
 	 * {@link AggregationExpression} for {@code $replaceOne} which replaces the first instance of a search string in an
 	 * input string with a replacement string. <br />
 	 * <strong>NOTE:</strong> Requires MongoDB 4.4 or later.
+	 *
+	 * @author Divya Srivastava
+	 * @author Christoph Strobl
+	 * @since 3.4
 	 */
 	public static class ReplaceOne extends AbstractAggregationExpression {
 
 		protected ReplaceOne(Object value) {
 			super(value);
+		}
+
+		/**
+		 * Creates new {@link ReplaceOne} using the given as {@literal input}.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return new instance of {@link ReplaceOne}.
+		 */
+		public static ReplaceOne value(String value) {
+
+			Assert.notNull(value, "Value must not be null!");
+
+			return new ReplaceOne(Collections.singletonMap("input", value));
 		}
 
 		/**
@@ -2180,25 +2239,23 @@ public class StringOperators {
 		/**
 		 * The string to search for within the given input field.
 		 *
-		 * @param find must not be {@literal null}.
+		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link ReplaceOne}.
 		 */
-		public ReplaceOne find(String searchStr) {
+		public ReplaceOne find(String value) {
 
-			Assert.notNull(searchStr, "Search string must not be null!");
+			Assert.notNull(value, "Search string must not be null!");
 
-			Map<String, Object> search = append("find", searchStr);
-
-			return new ReplaceOne(search);
+			return new ReplaceOne(append("find", value));
 		}
 
 		/**
 		 * Specify the reference to the {@link Field field} holding the string to search for within the given input field.
 		 *
-		 * @param find must not be {@literal null}.
+		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link ReplaceOne}.
 		 */
-		public ReplaceOne findOf(String fieldReference) {
+		public ReplaceOne findValueOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "fieldReference must not be null!");
 
@@ -2212,7 +2269,7 @@ public class StringOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link ReplaceOne}.
 		 */
-		public ReplaceOne findOf(AggregationExpression expression) {
+		public ReplaceOne findValueOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 
@@ -2224,16 +2281,33 @@ public class StringOperators {
 			return "$replaceOne";
 		}
 	}
-	
+
 	/**
 	 * {@link AggregationExpression} for {@code $replaceAll} which replaces all instances of a search string in an input
 	 * string with a replacement string. <br />
 	 * <strong>NOTE:</strong> Requires MongoDB 4.4 or later.
+	 *
+	 * @author Divya Srivastava
+	 * @author Christoph Strobl
+	 * @since 3.4
 	 */
 	public static class ReplaceAll extends AbstractAggregationExpression {
 
 		protected ReplaceAll(Object value) {
 			super(value);
+		}
+
+		/**
+		 * Creates new {@link ReplaceAll} using the given as {@literal input}.
+		 *
+		 * @param value must not be {@literal null}.
+		 * @return new instance of {@link ReplaceOne}.
+		 */
+		public static ReplaceAll value(String value) {
+
+			Assert.notNull(value, "Value must not be null!");
+
+			return new ReplaceAll(Collections.singletonMap("input", value));
 		}
 
 		/**
@@ -2284,7 +2358,7 @@ public class StringOperators {
 		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link ReplaceAll}.
 		 */
-		public ReplaceAll replacementOf(String fieldReference) {
+		public ReplaceAll replacementValueOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "FieldReference must not be null!");
 
@@ -2298,7 +2372,7 @@ public class StringOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link ReplaceAll}.
 		 */
-		public ReplaceAll replacementOf(AggregationExpression expression) {
+		public ReplaceAll replacementValueOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 
@@ -2308,25 +2382,23 @@ public class StringOperators {
 		/**
 		 * The string to search for within the given input field.
 		 *
-		 * @param find must not be {@literal null}.
+		 * @param value must not be {@literal null}.
 		 * @return new instance of {@link ReplaceAll}.
 		 */
-		public ReplaceAll find(String searchStr) {
+		public ReplaceAll find(String value) {
 
-			Assert.notNull(searchStr, "Search string must not be null!");
+			Assert.notNull(value, "Search string must not be null!");
 
-			Map<String, Object> search = append("find", searchStr);
-
-			return new ReplaceAll(search);
+			return new ReplaceAll(append("find", value));
 		}
 
 		/**
 		 * Specify the reference to the {@link Field field} holding the string to search for within the given input field.
 		 *
-		 * @param find must not be {@literal null}.
+		 * @param fieldReference must not be {@literal null}.
 		 * @return new instance of {@link ReplaceAll}.
 		 */
-		public ReplaceAll findOf(String fieldReference) {
+		public ReplaceAll findValueOf(String fieldReference) {
 
 			Assert.notNull(fieldReference, "fieldReference must not be null!");
 
@@ -2339,7 +2411,7 @@ public class StringOperators {
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link ReplaceAll}.
 		 */
-		public ReplaceAll findOf(AggregationExpression expression) {
+		public ReplaceAll findValueOf(AggregationExpression expression) {
 
 			Assert.notNull(expression, "Expression must not be null!");
 

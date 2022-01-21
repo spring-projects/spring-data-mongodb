@@ -282,34 +282,31 @@ class StringOperatorsUnitTests {
 						+ " } } ");
 	}
 	
-	@Test 
+	@Test // GH-3695
 	void shouldRenderReplaceOne() {
 
 		assertThat(StringOperators.valueOf("bar").replaceOne("foobar","baz").toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo("{ $replaceOne : {\"find\" : \"foobar\", \"input\" : \"$bar\", \"replacement\" : \"baz\"}}");
 	}
 
-	@Test
+	@Test // GH-3695
 	void shouldRenderReplaceOneForExpression() {
 
 		assertThat(StringOperators.valueOf(EXPRESSION).replaceOne("a","s").toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo("{ $replaceOne : {\"find\" : \"a\", \"input\" : " + EXPRESSION_STRING + ", \"replacement\" : \"s\"}}");
 	}
 	
-	@Test 
+	@Test // GH-3695
 	void shouldRenderReplaceAll() {
 
 		assertThat(StringOperators.valueOf("bar").replaceAll("foobar","baz").toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo("{ $replaceAll : {\"find\" : \"foobar\", \"input\" : \"$bar\", \"replacement\" : \"baz\"}}");
 	}
 
-	@Test
+	@Test // GH-3695
 	void shouldRenderReplaceAllForExpression() {
 
 		assertThat(StringOperators.valueOf(EXPRESSION).replaceAll("a","s").toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo("{ $replaceAll : {\"find\" : \"a\", \"input\" : " + EXPRESSION_STRING + ", \"replacement\" : \"s\"}}");
 	}
-
-
-
 }

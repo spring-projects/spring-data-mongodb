@@ -865,17 +865,17 @@ public class SpelExpressionTransformerUnitTests {
 				.isEqualTo("{ \"$regexMatch\" : {\"input\" : \"$field1\" , \"regex\" : \"e\" , \"options\" : \"$field2\"}}");
 	}
 	
-	@Test 
+	@Test // GH-3695
 	void shouldRenderReplaceOne() {
 
-		assertThat(transform("replaceOne(field,'bar','baz')"))
+		assertThat(transform("replaceOne(field, 'bar', 'baz')"))
 				.isEqualTo("{ \"$replaceOne\" : {\"input\" : \"$field\" , \"find\" : \"bar\" , \"replacement\" : \"baz\"}}");
 	}
 
-	@Test 
+	@Test // GH-3695
 	void shouldRenderReplaceAll() {
 
-		assertThat(transform("replaceAll(field,'bar','baz')"))
+		assertThat(transform("replaceAll(field, 'bar', 'baz')"))
 				.isEqualTo("{ \"$replaceAll\" : {\"input\" : \"$field\" , \"find\" : \"bar\" , \"replacement\" : \"baz\"}}");
 	}
 
