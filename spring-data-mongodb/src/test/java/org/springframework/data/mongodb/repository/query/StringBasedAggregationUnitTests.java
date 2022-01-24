@@ -42,7 +42,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
-import org.springframework.data.domain.SliceImpl;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.mongodb.InvalidMongoDbApiUsageException;
@@ -66,7 +65,6 @@ import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
-import org.springframework.data.util.CloseableIterator;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
@@ -238,22 +236,7 @@ public class StringBasedAggregationUnitTests {
 	@Test // GH-3543
 	void aggregationWithStreamReturnType() {
 
-		when(operations.aggregateStream(any(TypedAggregation.class), any())).thenReturn(new CloseableIterator<Object>() {
-			@Override
-			public void close() {
-
-			}
-
-			@Override
-			public boolean hasNext() {
-				return false;
-			}
-
-			@Override
-			public Object next() {
-				return null;
-			}
-		});
+		when(operations.aggregateStream(any(TypedAggregation.class), any())).thenReturn(Stream.empty());
 
 		StringBasedAggregation sba = createAggregationForMethod("aggregationWithStreamReturnType", Pageable.class);
 

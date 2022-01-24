@@ -15,9 +15,10 @@
  */
 package org.springframework.data.mongodb.core;
 
+import java.util.stream.Stream;
+
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
-import org.springframework.data.util.CloseableIterator;
 
 /**
  * {@link ExecutableAggregationOperation} allows creation and execution of MongoDB aggregation operations in a fluent
@@ -88,12 +89,12 @@ public interface ExecutableAggregationOperation {
 
 		/**
 		 * Apply pipeline operations as specified and stream all matching elements. <br />
-		 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.client.FindIterable}
+		 * Returns a {@link Stream} that wraps the Mongo DB {@link com.mongodb.client.FindIterable}
 		 *
-		 * @return a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.client.FindIterable} that needs to be closed.
-		 *         Never {@literal null}.
+		 * @return the result {@link Stream}, containing mapped objects, needing to be closed once fully processed (e.g.
+		 *         through a try-with-resources clause).
 		 */
-		CloseableIterator<T> stream();
+		Stream<T> stream();
 	}
 
 	/**

@@ -20,12 +20,11 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.bson.Document;
+
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.SerializationUtils;
-import org.springframework.data.util.CloseableIterator;
-import org.springframework.data.util.StreamUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
@@ -70,11 +69,11 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 		private final MongoTemplate template;
 		private final Class<?> domainType;
 		private final Class<T> returnType;
-		@Nullable private final String collection;
+		private final @Nullable String collection;
 		private final Query query;
 
 		ExecutableFindSupport(MongoTemplate template, Class<?> domainType, Class<T> returnType,
-				String collection, Query query) {
+				@Nullable String collection, Query query) {
 			this.template = template;
 			this.domainType = domainType;
 			this.returnType = returnType;
@@ -137,7 +136,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 
 		@Override
 		public Stream<T> stream() {
-			return StreamUtils.createStreamFromIterator(doStream());
+			return doStream();
 		}
 
 		@Override
@@ -179,7 +178,7 @@ class ExecutableFindOperationSupport implements ExecutableFindOperation {
 					returnType == domainType ? (Class<T>) Object.class : returnType);
 		}
 
-		private CloseableIterator<T> doStream() {
+		private Stream<T> doStream() {
 			return template.doStream(query, domainType, getCollectionName(), returnType);
 		}
 

@@ -118,8 +118,8 @@ public interface ExecutableFindOperation {
 		/**
 		 * Stream all matching elements.
 		 *
-		 * @return a {@link Stream} that wraps the a Mongo DB {@link com.mongodb.client.FindIterable} that needs to be closed. Never
-		 *         {@literal null}.
+		 * @return the result {@link Stream}, containing mapped objects, needing to be closed once fully processed (e.g.
+		 *         through a try-with-resources clause).
 		 */
 		Stream<T> stream();
 

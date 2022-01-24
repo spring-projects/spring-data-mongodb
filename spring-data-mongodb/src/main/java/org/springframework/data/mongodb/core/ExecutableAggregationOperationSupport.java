@@ -15,10 +15,11 @@
  */
 package org.springframework.data.mongodb.core;
 
+import java.util.stream.Stream;
+
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.TypedAggregation;
-import org.springframework.data.util.CloseableIterator;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -87,7 +88,7 @@ class ExecutableAggregationOperationSupport implements ExecutableAggregationOper
 		}
 
 		@Override
-		public CloseableIterator<T> stream() {
+		public Stream<T> stream() {
 			return template.aggregateStream(aggregation, getCollectionName(aggregation), domainType);
 		}
 
