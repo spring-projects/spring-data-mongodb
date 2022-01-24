@@ -411,6 +411,16 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(transform("arrayElemAt(a, 10)")).isEqualTo("{ \"$arrayElemAt\" : [ \"$a\" , 10]}");
 	}
 
+	@Test // GH-3694
+	void shouldRenderMethodReferenceNodeFirst() {
+		assertThat(transform("first(a)")).isEqualTo("{ \"$first\" : \"$a\" }");
+	}
+
+	@Test // GH-3694
+	void shouldRenderMethodReferenceNodeLast() {
+		assertThat(transform("last(a)")).isEqualTo("{ \"$last\" : \"$a\" }");
+	}
+
 	@Test // DATAMONGO-1530
 	void shouldRenderMethodReferenceNodeConcatArrays() {
 		assertThat(transform("concatArrays(a, b, c)"))
@@ -878,7 +888,6 @@ public class SpelExpressionTransformerUnitTests {
 		assertThat(transform("replaceAll(field, 'bar', 'baz')"))
 				.isEqualTo("{ \"$replaceAll\" : {\"input\" : \"$field\" , \"find\" : \"bar\" , \"replacement\" : \"baz\"}}");
 	}
-
 
 	@Test // DATAMONGO-2077
 	void shouldRenderConvertWithoutOptionalParameters() {

@@ -137,7 +137,9 @@ public class MethodReferenceNode extends ExpressionNode {
 		map.put("concatArrays", arrayArgRef().forOperator("$concatArrays"));
 		map.put("filter", mapArgRef().forOperator("$filter") //
 				.mappingParametersTo("input", "as", "cond"));
+		map.put("first", singleArgRef().forOperator("$first"));
 		map.put("isArray", singleArgRef().forOperator("$isArray"));
+		map.put("last", singleArgRef().forOperator("$last"));
 		map.put("size", singleArgRef().forOperator("$size"));
 		map.put("slice", arrayArgRef().forOperator("$slice"));
 		map.put("reverseArray", singleArgRef().forOperator("$reverseArray"));

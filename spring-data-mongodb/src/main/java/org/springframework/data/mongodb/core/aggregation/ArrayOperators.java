@@ -35,6 +35,7 @@ import org.springframework.util.Assert;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Shashank Sharma
+ * @author Divya Srivastava
  * @since 1.0
  */
 public class ArrayOperators {
@@ -364,10 +365,11 @@ public class ArrayOperators {
 		}
 		
 		/**
-		 * Creates new {@link AggregationExpression} that return the first element in the given array.
+		 * Creates new {@link AggregationExpression} that return the first element in the associated array.
 		 * <strong>NOTE:</strong> Requires MongoDB 4.4 or later.
 		 *
 		 * @return new instance of {@link First}.
+		 * @since 3.4
 		 */
 		public First first() {
 
@@ -382,7 +384,8 @@ public class ArrayOperators {
 		 * Creates new {@link AggregationExpression} that return the last element in the given array.
 		 * <strong>NOTE:</strong> Requires MongoDB 4.4 or later.
 		 *
-		 * @return new instance of {@link First}.
+		 * @return new instance of {@link Last}.
+		 * @since 3.4
 		 */
 		public Last last() {
 
@@ -1847,6 +1850,9 @@ public class ArrayOperators {
 	 * {@link AggregationExpression} for {@code $first} that returns the first element in an array. <br />
 	 * <strong>NOTE:</strong> Requires MongoDB 4.4 or later.
 	 *
+	 * @author Divya Srivastava
+	 * @author Christoph Strobl
+	 * @since 3.4
 	 */
 	public static class First extends AbstractAggregationExpression {
 
@@ -1875,7 +1881,7 @@ public class ArrayOperators {
 		}
 
 		/**
-		 * Returns the first element of the array of the given {@link AggregationExpression expression}.
+		 * Returns the first element of the array computed by the given {@link AggregationExpression expression}.
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link First}.
@@ -1898,6 +1904,9 @@ public class ArrayOperators {
 	 * {@link AggregationExpression} for {@code $last} that returns the last element in an array. <br />
 	 * <strong>NOTE:</strong> Requires MongoDB 4.4 or later.
 	 *
+	 * @author Divya Srivastava
+	 * @author Christoph Strobl
+	 * @since 3.4
 	 */
 	public static class Last extends AbstractAggregationExpression {
 
@@ -1906,7 +1915,7 @@ public class ArrayOperators {
 		}
 
 		/**
-		 * Returns the first element in the given array.
+		 * Returns the last element in the given array.
 		 *
 		 * @param array must not be {@literal null}.
 		 * @return new instance of {@link Last}.
@@ -1926,7 +1935,7 @@ public class ArrayOperators {
 		}
 
 		/**
-		 * Returns the last element of the array of the given {@link AggregationExpression expression}.
+		 * Returns the last element of the array computed buy the given {@link AggregationExpression expression}.
 		 *
 		 * @param expression must not be {@literal null}.
 		 * @return new instance of {@link Last}.
@@ -1944,5 +1953,4 @@ public class ArrayOperators {
 			return "$last";
 		}
 	}
-
 }

@@ -23,7 +23,6 @@ import java.util.List;
 
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.data.mongodb.core.aggregation.ArrayOperators.ArrayToObject;
 
 /**
@@ -31,6 +30,7 @@ import org.springframework.data.mongodb.core.aggregation.ArrayOperators.ArrayToO
  *
  * @author Christoph Strobl
  * @author Shashank Sharma
+ * @author Divya Srivastava
  * @currentRead Royal Assassin - Robin Hobb
  */
 public class ArrayOperatorsUnitTests {
@@ -130,46 +130,45 @@ public class ArrayOperatorsUnitTests {
 				.isEqualTo("{ \"$in\" : [\"$userName\", " + VALUE_LIST_STRING + "] }");
 	}
 
-	@Test
+	@Test // GH-3694
 	public void firstWithValueList() {
 
 		assertThat(ArrayOperators.arrayOf(VALUE_LIST).first().toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo("{ \"$first\" : " + VALUE_LIST_STRING + "}");
 	}
 
-	@Test
+	@Test // GH-3694
 	public void firstWithExpression() {
 
 		assertThat(ArrayOperators.arrayOf(EXPRESSION).first().toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo("{ \"$first\" : " + EXPRESSION_STRING + "}");
 	}
 
-	@Test
+	@Test // GH-3694
 	public void firstWithFieldReference() {
 
 		assertThat(ArrayOperators.arrayOf("field").first().toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo("{ $first : \"$field\" }");
 	}
 
-	@Test
+	@Test // GH-3694
 	public void lastWithValueList() {
 
 		assertThat(ArrayOperators.arrayOf(VALUE_LIST).last().toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo("{ \"$last\" : " + VALUE_LIST_STRING + "}");
 	}
 
-	@Test
+	@Test // GH-3694
 	public void lastWithExpression() {
 
 		assertThat(ArrayOperators.arrayOf(EXPRESSION).last().toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo("{ \"$last\" : " + EXPRESSION_STRING + "}");
 	}
 
-	@Test
+	@Test // GH-3694
 	public void lastWithFieldReference() {
 
 		assertThat(ArrayOperators.arrayOf("field").last().toDocument(Aggregation.DEFAULT_CONTEXT))
 				.isEqualTo("{ $last : \"$field\" }");
 	}
-
 }
