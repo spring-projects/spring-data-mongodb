@@ -120,7 +120,7 @@ public class StringBasedAggregation extends AbstractMongoQuery {
 
 		if (method.isStreamQuery()) {
 
-			Stream<?> stream = mongoOperations.aggregateStream(aggregation, targetType).stream();
+			Stream<?> stream = mongoOperations.aggregateStream(aggregation, targetType);
 
 			if (isSimpleReturnType) {
 				return stream.map(it -> AggregationUtils.extractSimpleTypeResult((Document) it, typeToRead, mongoConverter));

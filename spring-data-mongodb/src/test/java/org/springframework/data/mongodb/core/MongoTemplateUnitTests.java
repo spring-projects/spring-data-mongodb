@@ -803,7 +803,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1518
 	void streamQueryShouldUseCollationWhenPresent() {
 
-		template.stream(new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class).next();
+		template.stream(new BasicQuery("{}").collation(Collation.of("fr")), AutogenerateableId.class);
 
 		verify(findIterable).collation(eq(com.mongodb.client.model.Collation.builder().locale("fr").build()));
 	}
@@ -1221,7 +1221,7 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 	@Test // DATAMONGO-1854
 	void streamQueryShouldUseDefaultCollationWhenPresent() {
 
-		template.stream(new BasicQuery("{}"), Sith.class).next();
+		template.stream(new BasicQuery("{}"), Sith.class);
 
 		verify(findIterable).collation(eq(com.mongodb.client.model.Collation.builder().locale("de_AT").build()));
 	}

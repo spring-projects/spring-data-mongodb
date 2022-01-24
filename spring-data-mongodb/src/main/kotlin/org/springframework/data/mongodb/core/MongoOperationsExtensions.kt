@@ -30,7 +30,7 @@ import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.NearQuery
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.Update
-import org.springframework.data.util.CloseableIterator
+import java.util.stream.Stream
 import kotlin.reflect.KClass
 
 /**
@@ -67,8 +67,8 @@ inline fun <reified T : Any> MongoOperations.execute(action: CollectionCallback<
  * @author Sebastien Deleuze
  * @since 2.0
  */
-inline fun <reified T : Any> MongoOperations.stream(query: Query): CloseableIterator<T> =
-		stream(query, T::class.java)
+inline fun <reified T : Any> MongoOperations.stream(query: Query): Stream<T> =
+	stream(query, T::class.java)
 
 /**
  * Extension for [MongoOperations.stream] leveraging reified type parameters.
@@ -76,9 +76,12 @@ inline fun <reified T : Any> MongoOperations.stream(query: Query): CloseableIter
  * @author Sebastien Deleuze
  * @since 2.0
  */
-inline fun <reified T : Any> MongoOperations.stream(query: Query, collectionName: String? = null): CloseableIterator<T> =
-		if (collectionName != null) stream(query, T::class.java, collectionName)
-		else stream(query, T::class.java)
+inline fun <reified T : Any> MongoOperations.stream(
+	query: Query,
+	collectionName: String? = null
+): Stream<T> =
+	if (collectionName != null) stream(query, T::class.java, collectionName)
+	else stream(query, T::class.java)
 
 /**
  * Extension for [MongoOperations.createCollection] providing a [KClass] based variant.
@@ -264,7 +267,7 @@ inline fun <reified O : Any> MongoOperations.aggregate(
 inline fun <reified O : Any> MongoOperations.aggregateStream(
 	aggregation: Aggregation,
 	inputType: KClass<*>
-): CloseableIterator<O> =
+): Stream<O> =
 	aggregateStream(aggregation, inputType.java, O::class.java)
 
 /**
@@ -273,7 +276,7 @@ inline fun <reified O : Any> MongoOperations.aggregateStream(
  * @author Mark Paluch
  * @since 3.2
  */
-inline fun <reified I : Any, reified O : Any> MongoOperations.aggregateStream(aggregation: Aggregation): CloseableIterator<O> =
+inline fun <reified I : Any, reified O : Any> MongoOperations.aggregateStream(aggregation: Aggregation): Stream<O> =
 	aggregateStream(aggregation, I::class.java, O::class.java)
 
 /**
@@ -285,7 +288,7 @@ inline fun <reified I : Any, reified O : Any> MongoOperations.aggregateStream(ag
 inline fun <reified O : Any> MongoOperations.aggregateStream(
 	aggregation: Aggregation,
 	collectionName: String
-): CloseableIterator<O> =
+): Stream<O> =
 	aggregateStream(aggregation, collectionName, O::class.java)
 
 /**

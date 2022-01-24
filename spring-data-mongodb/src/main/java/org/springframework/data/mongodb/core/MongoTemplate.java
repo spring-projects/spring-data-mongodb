@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2021 the original author or authors.
+ * Copyright 2010-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -375,17 +376,17 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	@Override
-	public <T> CloseableIterator<T> stream(Query query, Class<T> entityType) {
+	public <T> Stream<T> stream(Query query, Class<T> entityType) {
 		return stream(query, entityType, getCollectionName(entityType));
 	}
 
 	@Override
-	public <T> CloseableIterator<T> stream(Query query, Class<T> entityType, String collectionName) {
+	public <T> Stream<T> stream(Query query, Class<T> entityType, String collectionName) {
 		return doStream(query, entityType, collectionName, entityType);
 	}
 
 	@SuppressWarnings("ConstantConditions")
-	protected <T> CloseableIterator<T> doStream(Query query, Class<?> entityType, String collectionName,
+	protected <T> Stream<T> doStream(Query query, Class<?> entityType, String collectionName,
 			Class<T> returnType) {
 
 		Assert.notNull(query, "Query must not be null!");
@@ -393,7 +394,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
 		Assert.notNull(returnType, "ReturnType must not be null!");
 
-		return execute(collectionName, (CollectionCallback<CloseableIterator<T>>) collection -> {
+		return execute(collectionName, (CollectionCallback<Stream<T>>) collection -> {
 
 			MongoPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(entityType);
 
@@ -408,7 +409,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					col -> col.find(mappedQuery, Document.class).projection(mappedFields));
 
 			return new CloseableIterableCursorAdapter<>(cursor, exceptionTranslator,
-					new ProjectingReadCallback<>(mongoConverter, projection, collectionName));
+					new ProjectingReadCallback<>(mongoConverter, projection, collectionName)).stream();
 		});
 	}
 
@@ -1860,7 +1861,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	@Override
-	public <O> CloseableIterator<O> aggregateStream(TypedAggregation<?> aggregation, String inputCollectionName,
+	public <O> Stream<O> aggregateStream(TypedAggregation<?> aggregation, String inputCollectionName,
 			Class<O> outputType) {
 
 		Assert.notNull(aggregation, "Aggregation pipeline must not be null!");
@@ -1871,19 +1872,19 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	@Override
-	public <O> CloseableIterator<O> aggregateStream(TypedAggregation<?> aggregation, Class<O> outputType) {
+	public <O> Stream<O> aggregateStream(TypedAggregation<?> aggregation, Class<O> outputType) {
 		return aggregateStream(aggregation, getCollectionName(aggregation.getInputType()), outputType);
 	}
 
 	@Override
-	public <O> CloseableIterator<O> aggregateStream(Aggregation aggregation, Class<?> inputType, Class<O> outputType) {
+	public <O> Stream<O> aggregateStream(Aggregation aggregation, Class<?> inputType, Class<O> outputType) {
 
 		return aggregateStream(aggregation, getCollectionName(inputType), outputType,
 				new TypeBasedAggregationOperationContext(inputType, mappingContext, queryMapper));
 	}
 
 	@Override
-	public <O> CloseableIterator<O> aggregateStream(Aggregation aggregation, String collectionName, Class<O> outputType) {
+	public <O> Stream<O> aggregateStream(Aggregation aggregation, String collectionName, Class<O> outputType) {
 		return aggregateStream(aggregation, collectionName, outputType, null);
 	}
 
@@ -2021,7 +2022,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	@SuppressWarnings("ConstantConditions")
-	protected <O> CloseableIterator<O> aggregateStream(Aggregation aggregation, String collectionName,
+	protected <O> Stream<O> aggregateStream(Aggregation aggregation, String collectionName,
 			Class<O> outputType, @Nullable AggregationOperationContext context) {
 
 		Assert.hasText(collectionName, "Collection name must not be null or empty!");
@@ -2041,7 +2042,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		ReadDocumentCallback<O> readCallback = new ReadDocumentCallback<>(mongoConverter, outputType, collectionName);
 
-		return execute(collectionName, (CollectionCallback<CloseableIterator<O>>) collection -> {
+		return execute(collectionName, (CollectionCallback<Stream<O>>) collection -> {
 
 			AggregateIterable<Document> cursor = collection.aggregate(pipeline, Document.class) //
 					.allowDiskUse(options.isAllowDiskUse());
@@ -2061,7 +2062,7 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					.map(Collation::toMongoCollation) //
 					.ifPresent(cursor::collation);
 
-			return new CloseableIterableCursorAdapter<>(cursor, exceptionTranslator, readCallback);
+			return new CloseableIterableCursorAdapter<>(cursor, exceptionTranslator, readCallback).stream();
 		});
 	}
 
@@ -3204,6 +3205,23 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 	}
 
 	/**
+	 * @deprecated since 3.1.4. Use {@link #getMongoDatabaseFactory()} instead.
+	 * @return the {@link MongoDatabaseFactory} in use.
+	 */
+	@Deprecated
+	public MongoDatabaseFactory getMongoDbFactory() {
+		return getMongoDatabaseFactory();
+	}
+
+	/**
+	 * @return the {@link MongoDatabaseFactory} in use.
+	 * @since 3.1.4
+	 */
+	public MongoDatabaseFactory getMongoDatabaseFactory() {
+		return mongoDbFactory;
+	}
+
+	/**
 	 * A {@link CloseableIterator} that is backed by a MongoDB {@link MongoCollection}.
 	 *
 	 * @author Thomas Darimont
@@ -3284,23 +3302,6 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 				objectReadCallback = null;
 			}
 		}
-	}
-
-	/**
-	 * @deprecated since 3.1.4. Use {@link #getMongoDatabaseFactory()} instead.
-	 * @return the {@link MongoDatabaseFactory} in use.
-	 */
-	@Deprecated
-	public MongoDatabaseFactory getMongoDbFactory() {
-		return getMongoDatabaseFactory();
-	}
-
-	/**
-	 * @return the {@link MongoDatabaseFactory} in use.
-	 * @since 3.1.4
-	 */
-	public MongoDatabaseFactory getMongoDatabaseFactory() {
-		return mongoDbFactory;
 	}
 
 	/**

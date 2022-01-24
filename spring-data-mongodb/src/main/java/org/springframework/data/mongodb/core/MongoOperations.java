@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2021 the original author or authors.
+ * Copyright 2011-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import org.bson.Document;
+
 import org.springframework.data.geo.GeoResults;
 import org.springframework.data.mongodb.core.BulkOperations.BulkMode;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -42,7 +44,6 @@ import org.springframework.data.mongodb.core.query.NearQuery;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.core.query.UpdateDefinition;
-import org.springframework.data.util.CloseableIterator;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -225,34 +226,34 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * Executes the given {@link Query} on the entity collection of the specified {@code entityType} backed by a Mongo DB
 	 * {@link com.mongodb.client.FindIterable}.
 	 * <p>
-	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.client.FindIterable} that needs to
-	 * be closed.
+	 * Returns a {@link String} that wraps the Mongo DB {@link com.mongodb.client.FindIterable} that needs to be closed.
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification. Must not be {@literal null}.
 	 * @param entityType must not be {@literal null}.
 	 * @param <T> element return type
-	 * @return will never be {@literal null}.
+	 * @return the result {@link Stream}, containing mapped objects, needing to be closed once fully processed (e.g.
+	 *         through a try-with-resources clause).
 	 * @since 1.7
 	 */
-	<T> CloseableIterator<T> stream(Query query, Class<T> entityType);
+	<T> Stream<T> stream(Query query, Class<T> entityType);
 
 	/**
 	 * Executes the given {@link Query} on the entity collection of the specified {@code entityType} and collection backed
 	 * by a Mongo DB {@link com.mongodb.client.FindIterable}.
 	 * <p>
-	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.client.FindIterable} that needs to
-	 * be closed.
+	 * Returns a {@link Stream} that wraps the Mongo DB {@link com.mongodb.client.FindIterable} that needs to be closed.
 	 *
 	 * @param query the query class that specifies the criteria used to find a record and also an optional fields
 	 *          specification. Must not be {@literal null}.
 	 * @param entityType must not be {@literal null}.
 	 * @param collectionName must not be {@literal null} or empty.
 	 * @param <T> element return type
-	 * @return will never be {@literal null}.
+	 * @return the result {@link Stream}, containing mapped objects, needing to be closed once fully processed (e.g.
+	 *         through a try-with-resources clause).
 	 * @since 1.10
 	 */
-	<T> CloseableIterator<T> stream(Query query, Class<T> entityType, String collectionName);
+	<T> Stream<T> stream(Query query, Class<T> entityType, String collectionName);
 
 	/**
 	 * Create an uncapped collection with a name based on the provided entity class.
@@ -521,9 +522,9 @@ public interface MongoOperations extends FluentMongoOperations {
 	/**
 	 * Execute an aggregation operation backed by a Mongo DB {@link com.mongodb.client.AggregateIterable}.
 	 * <p>
-	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.client.AggregateIterable} that
-	 * needs to be closed. The raw results will be mapped to the given entity class. The name of the inputCollection is
-	 * derived from the inputType of the aggregation.
+	 * Returns a {@link Stream} that wraps the Mongo DB {@link com.mongodb.client.AggregateIterable} that needs to be
+	 * closed. The raw results will be mapped to the given entity class. The name of the inputCollection is derived from
+	 * the inputType of the aggregation.
 	 * <p>
 	 * Aggregation streaming can't be used with {@link AggregationOptions#isExplain() aggregation explain}. Enabling
 	 * explanation mode will throw an {@link IllegalArgumentException}.
@@ -532,35 +533,37 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *          {@literal null}.
 	 * @param collectionName The name of the input collection to use for the aggreation.
 	 * @param outputType The parametrized type of the returned list, must not be {@literal null}.
-	 * @return The results of the aggregation operation.
+	 * @return the result {@link Stream}, containing mapped objects, needing to be closed once fully processed (e.g.
+	 *         through a try-with-resources clause).
 	 * @since 2.0
 	 */
-	<O> CloseableIterator<O> aggregateStream(TypedAggregation<?> aggregation, String collectionName, Class<O> outputType);
+	<O> Stream<O> aggregateStream(TypedAggregation<?> aggregation, String collectionName, Class<O> outputType);
 
 	/**
 	 * Execute an aggregation operation backed by a Mongo DB {@link com.mongodb.client.AggregateIterable}.
-	 * <br />
-	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.client.AggregateIterable} that
-	 * needs to be closed. The raw results will be mapped to the given entity class and are returned as stream. The name
-	 * of the inputCollection is derived from the inputType of the aggregation.
-	 * <br />
+	 * <p>
+	 * Returns a {@link Stream} that wraps the Mongo DB {@link com.mongodb.client.AggregateIterable} that needs to be
+	 * closed. The raw results will be mapped to the given entity class and are returned as stream. The name of the
+	 * inputCollection is derived from the inputType of the aggregation.
+	 * <p>
 	 * Aggregation streaming can't be used with {@link AggregationOptions#isExplain() aggregation explain}. Enabling
 	 * explanation mode will throw an {@link IllegalArgumentException}.
 	 *
 	 * @param aggregation The {@link TypedAggregation} specification holding the aggregation operations, must not be
 	 *          {@literal null}.
 	 * @param outputType The parametrized type of the returned list, must not be {@literal null}.
-	 * @return The results of the aggregation operation.
+	 * @return the result {@link Stream}, containing mapped objects, needing to be closed once fully processed (e.g.
+	 *         through a try-with-resources clause).
 	 * @since 2.0
 	 */
-	<O> CloseableIterator<O> aggregateStream(TypedAggregation<?> aggregation, Class<O> outputType);
+	<O> Stream<O> aggregateStream(TypedAggregation<?> aggregation, Class<O> outputType);
 
 	/**
 	 * Execute an aggregation operation backed by a Mongo DB {@link com.mongodb.client.AggregateIterable}.
-	 * <br />
-	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.client.AggregateIterable} that
-	 * needs to be closed. The raw results will be mapped to the given entity class.
-	 * <br />
+	 * <p>
+	 * Returns a {@link Stream} that wraps the Mongo DB {@link com.mongodb.client.AggregateIterable} that needs to be
+	 * closed. The raw results will be mapped to the given entity class.
+	 * <p>
 	 * Aggregation streaming can't be used with {@link AggregationOptions#isExplain() aggregation explain}. Enabling
 	 * explanation mode will throw an {@link IllegalArgumentException}.
 	 *
@@ -569,17 +572,18 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param inputType the inputType where the aggregation operation will read from, must not be {@literal null} or
 	 *          empty.
 	 * @param outputType The parametrized type of the returned list, must not be {@literal null}.
-	 * @return The results of the aggregation operation.
+	 * @return the result {@link Stream}, containing mapped objects, needing to be closed once fully processed (e.g.
+	 *         through a try-with-resources clause).
 	 * @since 2.0
 	 */
-	<O> CloseableIterator<O> aggregateStream(Aggregation aggregation, Class<?> inputType, Class<O> outputType);
+	<O> Stream<O> aggregateStream(Aggregation aggregation, Class<?> inputType, Class<O> outputType);
 
 	/**
 	 * Execute an aggregation operation backed by a Mongo DB {@link com.mongodb.client.AggregateIterable}.
-	 * <br />
-	 * Returns a {@link CloseableIterator} that wraps the a Mongo DB {@link com.mongodb.client.AggregateIterable} that
-	 * needs to be closed. The raw results will be mapped to the given entity class.
-	 * <br />
+	 * <p>
+	 * Returns a {@link Stream} that wraps the Mongo DB {@link com.mongodb.client.AggregateIterable} that needs to be
+	 * closed. The raw results will be mapped to the given entity class.
+	 * <p>
 	 * Aggregation streaming can't be used with {@link AggregationOptions#isExplain() aggregation explain}. Enabling
 	 * explanation mode will throw an {@link IllegalArgumentException}.
 	 *
@@ -588,10 +592,11 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * @param collectionName the collection where the aggregation operation will read from, must not be {@literal null} or
 	 *          empty.
 	 * @param outputType The parametrized type of the returned list, must not be {@literal null}.
-	 * @return The results of the aggregation operation.
+	 * @return the result {@link Stream}, containing mapped objects, needing to be closed once fully processed (e.g.
+	 *         through a try-with-resources clause).
 	 * @since 2.0
 	 */
-	<O> CloseableIterator<O> aggregateStream(Aggregation aggregation, String collectionName, Class<O> outputType);
+	<O> Stream<O> aggregateStream(Aggregation aggregation, String collectionName, Class<O> outputType);
 
 	/**
 	 * Execute a map-reduce operation. The map-reduce operation will be formed with an output type of INLINE

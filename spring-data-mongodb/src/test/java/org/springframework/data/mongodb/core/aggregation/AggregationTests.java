@@ -40,6 +40,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Stream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -49,6 +50,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.annotation.Id;
@@ -63,7 +65,6 @@ import org.springframework.data.mongodb.core.TestEntities;
 import org.springframework.data.mongodb.core.Venue;
 import org.springframework.data.mongodb.core.aggregation.AggregationTests.CarDescriptor.Entry;
 import org.springframework.data.mongodb.core.aggregation.BucketAutoOperation.Granularities;
-import org.springframework.data.mongodb.core.aggregation.DateOperators.TemporalUnits;
 import org.springframework.data.mongodb.core.aggregation.VariableOperators.Let.ExpressionVariable;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.data.mongodb.core.index.GeoSpatialIndexType;
@@ -76,7 +77,6 @@ import org.springframework.data.mongodb.test.util.MongoTemplateExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.MongoVersion;
 import org.springframework.data.mongodb.test.util.Template;
-import org.springframework.data.util.CloseableIterator;
 
 import com.mongodb.MongoException;
 import com.mongodb.client.MongoCollection;
@@ -234,18 +234,17 @@ public class AggregationTests {
 				sort(DESC, "n") //
 		).withOptions(new AggregationOptions(true, false, 1));
 
-		CloseableIterator<TagCount> iterator = mongoTemplate.aggregateStream(agg, INPUT_COLLECTION, TagCount.class);
+		try (Stream<TagCount> stream = mongoTemplate.aggregateStream(agg, INPUT_COLLECTION, TagCount.class)) {
 
-		assertThat(iterator).isNotNull();
-		List<TagCount> tagCount = toList(iterator);
-		iterator.close();
+			List<TagCount> tagCount = stream.toList();
 
-		assertThat(tagCount).isNotNull();
-		assertThat(tagCount.size()).isEqualTo(3);
+			assertThat(tagCount).isNotNull();
+			assertThat(tagCount.size()).isEqualTo(3);
 
-		assertTagCount("spring", 3, tagCount.get(0));
-		assertTagCount("mongodb", 2, tagCount.get(1));
-		assertTagCount("nosql", 1, tagCount.get(2));
+			assertTagCount("spring", 3, tagCount.get(0));
+			assertTagCount("mongodb", 2, tagCount.get(1));
+			assertTagCount("nosql", 1, tagCount.get(2));
+		}
 	}
 
 	@Test // DATAMONGO-586
@@ -284,14 +283,12 @@ public class AggregationTests {
 				sort(DESC, "n") //
 		);
 
-		CloseableIterator<TagCount> results = mongoTemplate.aggregateStream(aggregation, INPUT_COLLECTION, TagCount.class);
+		try (Stream<TagCount> stream = mongoTemplate.aggregateStream(aggregation, INPUT_COLLECTION, TagCount.class)) {
 
-		assertThat(results).isNotNull();
+			List<TagCount> tagCount = stream.toList();
 
-		List<TagCount> tagCount = toList(results);
-		results.close();
-
-		assertThat(tagCount.size()).isEqualTo(0);
+			assertThat(tagCount.size()).isEqualTo(0);
+		}
 	}
 
 	@Test // DATAMONGO-1391
@@ -384,16 +381,14 @@ public class AggregationTests {
 				limit(2) //
 		);
 
-		CloseableIterator<TagCount> results = mongoTemplate.aggregateStream(aggregation, INPUT_COLLECTION, TagCount.class);
+		try (Stream<TagCount> stream = mongoTemplate.aggregateStream(aggregation, INPUT_COLLECTION, TagCount.class)) {
 
-		assertThat(results).isNotNull();
+			List<TagCount> tagCount = stream.toList();
 
-		List<TagCount> tagCount = toList(results);
-		results.close();
-
-		assertThat(tagCount.size()).isEqualTo(2);
-		assertTagCount(null, 0, tagCount.get(0));
-		assertTagCount(null, 0, tagCount.get(1));
+			assertThat(tagCount.size()).isEqualTo(2);
+			assertTagCount(null, 0, tagCount.get(0));
+			assertTagCount(null, 0, tagCount.get(1));
+		}
 	}
 
 	@Test // DATAMONGO-586
@@ -1280,19 +1275,18 @@ public class AggregationTests {
 		assertThat(agg).isNotNull();
 		assertThat(agg.toString()).isNotNull();
 
-		CloseableIterator<LikeStats> iterator = mongoTemplate.aggregateStream(agg, LikeStats.class);
-		List<LikeStats> result = toList(iterator);
-		iterator.close();
+		try (Stream<LikeStats> stream = mongoTemplate.aggregateStream(agg, LikeStats.class)) {
 
-		assertThat(result).isNotNull();
-		assertThat(result).isNotNull();
-		assertThat(result.size()).isEqualTo(5);
+			List<LikeStats> result = stream.toList();
 
-		assertLikeStats(result.get(0), "a", 4);
-		assertLikeStats(result.get(1), "b", 2);
-		assertLikeStats(result.get(2), "c", 4);
-		assertLikeStats(result.get(3), "d", 2);
-		assertLikeStats(result.get(4), "e", 3);
+			assertThat(result.size()).isEqualTo(5);
+
+			assertLikeStats(result.get(0), "a", 4);
+			assertLikeStats(result.get(1), "b", 2);
+			assertLikeStats(result.get(2), "c", 4);
+			assertLikeStats(result.get(3), "d", 2);
+			assertLikeStats(result.get(4), "e", 3);
+		}
 	}
 
 	@Test // DATAMONGO-960
@@ -1606,13 +1600,14 @@ public class AggregationTests {
 				sort(DESC, "count"), //
 				out(tempOutCollection));
 
-		CloseableIterator<Document> iterator = mongoTemplate.aggregateStream(agg, Document.class);
+		try (Stream<Document> stream = mongoTemplate.aggregateStream(agg, Document.class)) {
 
-		List<Document> result = toList(iterator);
+			List<Document> result = stream.toList();
 
-		assertThat(result).hasSize(2);
-		assertThat(result.get(0)).containsEntry("_id", "MALE").containsEntry("count", 3);
-		assertThat(result.get(1)).containsEntry("_id", "FEMALE").containsEntry("count", 2);
+			assertThat(result).hasSize(2);
+			assertThat(result.get(0)).containsEntry("_id", "MALE").containsEntry("count", 3);
+			assertThat(result.get(1)).containsEntry("_id", "FEMALE").containsEntry("count", 2);
+		}
 
 		mongoTemplate.dropCollection(tempOutCollection);
 	}
@@ -2011,16 +2006,6 @@ public class AggregationTests {
 
 		assertThat(tagCount.getTag()).isEqualTo(tag);
 		assertThat(tagCount.getN()).isEqualTo(n);
-	}
-
-	private static <T> List<T> toList(CloseableIterator<? extends T> results) {
-
-		List<T> result = new ArrayList<T>();
-		while (results.hasNext()) {
-			result.add(results.next());
-		}
-
-		return result;
 	}
 
 	static class DATAMONGO753 {

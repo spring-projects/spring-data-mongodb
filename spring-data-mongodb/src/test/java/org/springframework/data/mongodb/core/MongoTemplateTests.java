@@ -40,6 +40,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.AfterEach;
@@ -85,7 +86,6 @@ import org.springframework.data.mongodb.test.util.Client;
 import org.springframework.data.mongodb.test.util.MongoClientExtension;
 import org.springframework.data.mongodb.test.util.MongoTestTemplate;
 import org.springframework.data.mongodb.test.util.MongoVersion;
-import org.springframework.data.util.CloseableIterator;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
@@ -3044,10 +3044,9 @@ public class MongoTemplateTests {
 
 		Query q = new Query();
 		q.with(Sort.by(Direction.ASC, "age"));
-		CloseableIterator<Person> stream = template.stream(q, Person.class);
+		List<Integer> streamResults = template.stream(q, Person.class).map(Person::getAge).toList();
 
-		assertThat(stream.next().getAge()).isEqualTo(youngestPerson.getAge());
-		assertThat(stream.next().getAge()).isEqualTo(oldestPerson.getAge());
+		assertThat(streamResults).containsExactly(youngestPerson.getAge(), oldestPerson.getAge());
 	}
 
 	@Test // DATAMONGO-1208
@@ -3060,7 +3059,7 @@ public class MongoTemplateTests {
 
 		Query q = new Query();
 		q.with(PageRequest.of(0, 1, Sort.by(Direction.ASC, "age")));
-		CloseableIterator<Person> stream = template.stream(q, Person.class);
+		Iterator<Person> stream = template.stream(q, Person.class).iterator();
 
 		assertThat(stream.next().getAge()).isEqualTo(youngestPerson.getAge());
 		assertThat(stream.hasNext()).isFalse();
@@ -3332,11 +3331,11 @@ public class MongoTemplateTests {
 
 		template.insert(document, "some_special_collection");
 
-		CloseableIterator<Document> stream = template.stream(new Query(), Document.class);
-		assertThat(stream.hasNext()).isFalse();
+		Stream<Document> stream = template.stream(new Query(), Document.class);
+		assertThat(stream).isEmpty();
 
-		CloseableIterator<org.bson.Document> stream2 = template.stream(new Query(where("_id").is(document.id)),
-				org.bson.Document.class, "some_special_collection");
+		Iterator<org.bson.Document> stream2 = template
+				.stream(new Query(where("_id").is(document.id)), org.bson.Document.class, "some_special_collection").iterator();
 
 		assertThat(stream2.hasNext()).isTrue();
 		assertThat(stream2.next().get("_id")).isEqualTo(new ObjectId(document.id));
