@@ -1,4 +1,7 @@
-FROM adoptopenjdk/openjdk8:latest
+ARG BASE
+FROM ${BASE}
+# Any ARG statements before FROM are cleared.
+ARG MONGODB
 
 ENV TZ=Etc/UTC
 ENV DEBIAN_FRONTEND=noninteractive
@@ -15,6 +18,6 @@ RUN set -eux; \
 	echo ${TZ} > /etc/timezone;
 
 RUN apt-get update; \
-	apt-get install -y mongodb-org=5.0.3 mongodb-org-server=5.0.3 mongodb-org-shell=5.0.3 mongodb-org-mongos=5.0.3 mongodb-org-tools=5.0.3; \
+	apt-get install -y mongodb-org=${MONGODB} mongodb-org-server=${MONGODB} mongodb-org-shell=${MONGODB} mongodb-org-mongos=${MONGODB} mongodb-org-tools=${MONGODB} ; \
 	apt-get clean; \
 	rm -rf /var/lib/apt/lists/*;
