@@ -283,8 +283,8 @@ lower / upper bounds (`$gt` / `$gte` & `$lt` / `$lte`) according to `Range`
 | `{"location" : {"$exists" : exists }}`
 
 | `IgnoreCase`
-| `findByFirstnameIgnoreCase(String firstname)`
-| `{"firstname" : {"$strcasecmp" : firstname }}`
+| `findByUsernameIgnoreCase(String username)`
+| `{"username" : {"$strcasecmp" : username }}`
 |===
 
 NOTE: If the property criterion compares a document, the order of the fields and exact equality in the document matters.
