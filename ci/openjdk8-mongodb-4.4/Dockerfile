@@ -1,4 +1,7 @@
-FROM adoptopenjdk/openjdk8:latest
+ARG BASE
+FROM ${BASE}
+# Any ARG statements before FROM are cleared.
+ARG MONGODB
 
 ENV TZ=Etc/UTC
 ENV DEBIAN_FRONTEND=noninteractive
@@ -11,7 +14,7 @@ RUN set -eux; \
 
 RUN apt-get update ; \
 	ln -T /bin/true /usr/bin/systemctl ; \
-	apt-get install -y mongodb-org=4.4.4 mongodb-org-server=4.4.4 mongodb-org-shell=4.4.4 mongodb-org-mongos=4.4.4 mongodb-org-tools=4.4.4 ; \
-	rm /usr/bin/systemctl ; \
-	apt-get clean; \
-	rm -rf /var/lib/apt/lists/*;
+	apt-get install -y mongodb-org=${MONGODB} mongodb-org-server=${MONGODB} mongodb-org-shell=${MONGODB} mongodb-org-mongos=${MONGODB} mongodb-org-tools=${MONGODB} ; \
+    rm /usr/bin/systemctl ; \
+	apt-get clean ; \
+	rm -rf /var/lib/apt/lists/* ;
