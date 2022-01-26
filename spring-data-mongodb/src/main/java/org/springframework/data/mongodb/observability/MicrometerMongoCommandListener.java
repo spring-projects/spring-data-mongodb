@@ -119,7 +119,7 @@ public final class MicrometerMongoCommandListener implements CommandListener {
 		String commandName = event.getCommandName();
 		BsonDocument command = event.getCommand();
 		String collectionName = getCollectionName(command, commandName);
-		Timer.Builder timerBuilder = Timer.builder("mongodb.command");
+		Timer.Builder timerBuilder = MongoSample.MONGODB_COMMAND.toBuilder();
 		MongoHandlerContext mongoHandlerContext = new MongoHandlerContext(event) {
 			@Override public String getContextualName() {
 				return getMetricName(commandName, collectionName);
@@ -128,7 +128,7 @@ public final class MicrometerMongoCommandListener implements CommandListener {
 			@Override public Tags getLowCardinalityTags() {
 				Tags tags = Tags.empty();
 				if (collectionName != null) {
-					tags = tags.and(Tag.of("mongodb.collection", collectionName));
+					tags = tags.and(MongoSample.LowCardinalityCommandTags.MONGODB_COLLECTION.of(collectionName));
 				}
 				Tag tag = connectionTag(event);
 				if (tag == null) {
@@ -138,7 +138,7 @@ public final class MicrometerMongoCommandListener implements CommandListener {
 			}
 
 			@Override public Tags getHighCardinalityTags() {
-				return Tags.of(Tag.of("mongodb.command", commandName));
+				return Tags.of(MongoSample.HighCardinalityCommandTags.MONGODB_COMMAND.of(commandName));
 			}
 		};
 		Timer.Sample child = Timer.start(this.registry, mongoHandlerContext);
@@ -155,7 +155,7 @@ public final class MicrometerMongoCommandListener implements CommandListener {
 		if (connectionDescription != null) {
 			ConnectionId connectionId = connectionDescription.getConnectionId();
 			if (connectionId != null) {
-				return Tag.of("mongodb.cluster_id", connectionId.getServerId().getClusterId().getValue());
+				return MongoSample.LowCardinalityCommandTags.MONGODB_CLUSTER_ID.of(connectionId.getServerId().getClusterId().getValue());
 			}
 		}
 		return null;

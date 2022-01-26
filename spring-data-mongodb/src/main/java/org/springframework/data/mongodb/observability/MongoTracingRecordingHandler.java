@@ -84,7 +84,7 @@ public class MongoTracingRecordingHandler implements TracingRecordingHandler<Mon
 	@Override public void onStop(Timer.Sample sample, MongoHandlerContext context, Timer timer, Duration duration) {
 		TracingContext tracingContext = getTracingContext(context);
 		Span span = tracingContext.getSpan();
-		span.name(context.getContextualName());
+		span.name(MongoSpan.MONGODB_COMMAND_SPAN.getName(context.getContextualName()));
 		tagSpan(context, timer.getId(), span);
 		span.end();
 	}
