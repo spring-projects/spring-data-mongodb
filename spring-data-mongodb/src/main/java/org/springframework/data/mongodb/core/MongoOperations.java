@@ -1179,8 +1179,11 @@ public interface MongoOperations extends FluentMongoOperations {
 	 *          {@literal null}.
 	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
 	 * @return the count of matching documents.
+	 * @since 3.4
 	 */
-	long count(Query query, Class<?> entityClass);
+	default long preciseCount(Query query, Class<?> entityClass) {
+		return preciseCount(query, entityClass, getCollectionName(entityClass));
+	}
 
 	/**
 	 * Returns the number of documents for the given {@link Query} querying the given collection. The given {@link Query}
@@ -1196,6 +1199,71 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * aggregation execution} even for empty {@link Query queries} which may have an impact on performance, but guarantees
 	 * shard, session and transaction compliance. In case an inaccurate count satisfies the applications needs use
 	 * {@link #estimatedCount(String)} for empty queries instead.
+	 *
+	 * @param query the {@link Query} class that specifies the criteria used to find documents.
+	 * @param collectionName must not be {@literal null} or empty.
+	 * @return the count of matching documents.
+	 * @see #count(Query, Class, String)
+	 * @since 3.4
+	 */
+	default long preciseCount(Query query, String collectionName) {
+		return preciseCount(query, null, collectionName);
+	}
+
+	/**
+	 * Returns the number of documents for the given {@link Query} by querying the given collection using the given entity
+	 * class to map the given {@link Query}. <br />
+	 * <strong>NOTE:</strong> Query {@link Query#getSkip() offset} and {@link Query#getLimit() limit} can have direct
+	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
+	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
+	 * count all matches.
+	 * <br />
+	 * This method uses an
+	 * {@link com.mongodb.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
+	 * aggregation execution} even for empty {@link Query queries} which may have an impact on performance, but guarantees
+	 * shard, session and transaction compliance. In case an inaccurate count satisfies the applications needs use
+	 * {@link #estimatedCount(String)} for empty queries instead.
+	 *
+	 * @param query the {@link Query} class that specifies the criteria used to find documents. Must not be
+	 *          {@literal null}.
+	 * @param entityClass the parametrized type. Can be {@literal null}.
+	 * @param collectionName must not be {@literal null} or empty.
+	 * @return the count of matching documents.
+	 * @since 3.4
+	 */
+	long preciseCount(Query query, @Nullable Class<?> entityClass, String collectionName);
+
+	/**
+	 * Returns the number of documents for the given {@link Query} by querying the collection of the given entity class.
+	 * <br />
+	 * <strong>NOTE:</strong> Query {@link Query#getSkip() offset} and {@link Query#getLimit() limit} can have direct
+	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
+	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
+	 * count all matches.
+	 * <br />
+	 * This method may choose to use {@link #estimatedCount(Class)} for empty queries instead of running an
+	 * {@link com.mongodb.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
+	 * aggregation execution} which may have an impact on performance.
+	 *
+	 * @param query the {@link Query} class that specifies the criteria used to find documents. Must not be
+	 *          {@literal null}.
+	 * @param entityClass class that determines the collection to use. Must not be {@literal null}.
+	 * @return the count of matching documents.
+	 */
+	long count(Query query, Class<?> entityClass);
+
+	/**
+	 * Returns the number of documents for the given {@link Query} querying the given collection. The given {@link Query}
+	 * must solely consist of document field references as we lack type information to map potential property references
+	 * onto document fields. Use {@link #count(Query, Class, String)} to get full type specific support. <br />
+	 * <strong>NOTE:</strong> Query {@link Query#getSkip() offset} and {@link Query#getLimit() limit} can have direct
+	 * influence on the resulting number of documents found as those values are passed on to the server and potentially
+	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
+	 * count all matches.
+	 * <br />
+	 * This method may choose to use {@link #estimatedCount(Class)} for empty queries instead of running an
+	 * {@link com.mongodb.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
+	 * aggregation execution} which may have an impact on performance.
 	 *
 	 * @param query the {@link Query} class that specifies the criteria used to find documents.
 	 * @param collectionName must not be {@literal null} or empty.
@@ -1241,11 +1309,9 @@ public interface MongoOperations extends FluentMongoOperations {
 	 * limit the range and order within which the server performs the count operation. Use an {@literal unpaged} query to
 	 * count all matches.
 	 * <br />
-	 * This method uses an
+	 * This method may choose to use {@link #estimatedCount(Class)} for empty queries instead of running an
 	 * {@link com.mongodb.client.MongoCollection#countDocuments(org.bson.conversions.Bson, com.mongodb.client.model.CountOptions)
-	 * aggregation execution} even for empty {@link Query queries} which may have an impact on performance, but guarantees
-	 * shard, session and transaction compliance. In case an inaccurate count satisfies the applications needs use
-	 * {@link #estimatedCount(String)} for empty queries instead.
+	 * aggregation execution} which may have an impact on performance.
 	 *
 	 * @param query the {@link Query} class that specifies the criteria used to find documents. Must not be
 	 *          {@literal null}.

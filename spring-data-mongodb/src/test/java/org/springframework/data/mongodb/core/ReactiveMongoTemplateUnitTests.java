@@ -1424,6 +1424,34 @@ public class ReactiveMongoTemplateUnitTests {
 		verify(collection).estimatedDocumentCount(any());
 	}
 
+	@Test // GH-3522
+	void usedCountDocumentsForEmptyQueryByDefault() {
+
+		template.count(new Query(), Person.class).subscribe();
+
+		verify(collection).countDocuments(any(Document.class), any());
+	}
+
+	@Test // GH-3522
+	void delegatesToEstimatedCountForEmptyQueryIfEnabled() {
+
+		template.useEstimatedCount(true);
+
+		template.count(new Query(), Person.class).subscribe();
+
+		verify(collection).estimatedDocumentCount(any());
+	}
+
+	@Test // GH-3522
+	void stillUsesCountDocumentsForNonEmptyQueryEvenIfEstimationEnabled() {
+
+		template.useEstimatedCount(true);
+
+		template.count(new BasicQuery("{ 'spring' : 'data-mongodb' }"), Person.class).subscribe();
+
+		verify(collection).countDocuments(any(Document.class), any());
+	}
+
 	@Test // GH-2911
 	void insertErrorsOnPublisher() {
 
