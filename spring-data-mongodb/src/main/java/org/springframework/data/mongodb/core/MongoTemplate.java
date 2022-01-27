@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -185,6 +186,8 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 	private SessionSynchronization sessionSynchronization = SessionSynchronization.ON_ACTUAL_TRANSACTION;
 
+	private CountExecution countExecution = this::doExactCount;
+
 	/**
 	 * Constructor used for a basic template configuration.
 	 *
@@ -336,6 +339,47 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 
 		Assert.notNull(entityCallbacks, "EntityCallbacks must not be null!");
 		this.entityCallbacks = entityCallbacks;
+	}
+
+	/**
+	 * En-/Disable usage of estimated count.
+	 *
+	 * @param enabled if {@literal true} {@link MongoCollection#estimatedDocumentCount()} ()} will we used for unpaged,
+	 *          empty {@link Query queries}.
+	 * @since 3.4
+	 */
+	public void useEstimatedCount(boolean enabled) {
+		useEstimatedCount(enabled, this::countCanBeEstimated);
+	}
+
+	/**
+	 * En-/Disable usage of estimated count based on the given {@link BiPredicate estimationFilter}.
+	 *
+	 * @param enabled if {@literal true} {@link MongoCollection#estimatedDocumentCount()} will we used for {@link Document
+	 *          filter queries} that pass the given {@link BiPredicate estimationFilter}.
+	 * @param estimationFilter the {@link BiPredicate filter}.
+	 * @since 3.4
+	 */
+	private void useEstimatedCount(boolean enabled, BiPredicate<Document, CountOptions> estimationFilter) {
+
+		if (enabled) {
+
+			this.countExecution = (collectionName, filter, options) -> {
+
+				if (!estimationFilter.test(filter, options)) {
+					return doExactCount(collectionName, filter, options);
+				}
+
+				EstimatedDocumentCountOptions estimatedDocumentCountOptions = new EstimatedDocumentCountOptions();
+				if (options.getMaxTime(TimeUnit.MILLISECONDS) > 0) {
+					estimatedDocumentCountOptions.maxTime(options.getMaxTime(TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS);
+				}
+
+				return doEstimatedCount(collectionName, estimatedDocumentCountOptions);
+			};
+		} else {
+			this.countExecution = this::doExactCount;
+		}
 	}
 
 	/**
@@ -969,6 +1013,21 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 		return count(query, null, collectionName);
 	}
 
+	@Override
+	public long exactCount(Query query, @Nullable Class<?> entityClass, String collectionName) {
+
+		CountContext countContext = queryOperations.countQueryContext(query);
+
+		CountOptions options = countContext.getCountOptions(entityClass);
+		Document mappedQuery = countContext.getMappedQuery(entityClass, mappingContext::getPersistentEntity);
+
+		return doExactCount(collectionName, mappedQuery, options);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#count(org.springframework.data.mongodb.core.query.Query, java.lang.Class, java.lang.String)
+	 */
 	public long count(Query query, @Nullable Class<?> entityClass, String collectionName) {
 
 		Assert.notNull(query, "Query must not be null!");
@@ -990,10 +1049,33 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 					.debug(String.format("Executing count: %s in collection: %s", serializeToJsonSafely(filter), collectionName));
 		}
 
+		return countExecution.countDocuments(collectionName, filter, options);
+	}
+
+	protected long doExactCount(String collectionName, Document filter, CountOptions options) {
 		return execute(collectionName,
 				collection -> collection.countDocuments(CountQuery.of(filter).toQueryDocument(), options));
 	}
 
+	protected boolean countCanBeEstimated(Document filter, CountOptions options) {
+
+		return
+		// only empty filter for estimatedCount
+		filter.isEmpty() &&
+		// no skip, no limit,...
+				isEmptyOptions(options) &&
+				// transaction active?
+				!MongoDatabaseUtils.isTransactionActive(getMongoDatabaseFactory());
+	}
+
+	private boolean isEmptyOptions(CountOptions options) {
+		return options.getLimit() <= 0 && options.getSkip() <= 0;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.mongodb.core.MongoOperations#estimatedCount(java.lang.String)
+	 */
 	@Override
 	public long estimatedCount(String collectionName) {
 		return doEstimatedCount(collectionName, new EstimatedDocumentCountOptions());
@@ -3225,5 +3307,15 @@ public class MongoTemplate implements MongoOperations, ApplicationContextAware, 
 			// native MongoDB objects that offer methods with ClientSession must not be proxied.
 			return delegate.getDb();
 		}
+
+		@Override
+		protected boolean countCanBeEstimated(Document filter, CountOptions options) {
+			return false;
+		}
+	}
+
+	@FunctionalInterface
+	interface CountExecution {
+		long countDocuments(String collection, Document filter, CountOptions options);
 	}
 }

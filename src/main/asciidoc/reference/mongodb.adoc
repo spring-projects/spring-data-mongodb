@@ -2158,6 +2158,12 @@ So in version 2.x `MongoOperations.count()` would use the collection statistics 
 As of Spring Data MongoDB 3.x any `count` operation uses regardless the existence of filter criteria the aggregation-based count approach via MongoDBs `countDocuments`.
 If the application is fine with the limitations of working upon collection statistics `MongoOperations.estimatedCount()` offers an alternative.
 
+[TIP]
+====
+By setting `MongoTemplate#useEstimatedCount(...)` to `true` _MongoTemplate#count(...)_ operations, that use an empty filter query, will be delegated to `estimatedCount`, as long as there is no transaction active and the template is not bound to a <<mongo.sessions,session>>.
+It will still be possible to obtain exact numbers via `MongoTemplate#exactCount`, but may speed up things.
+====
+
 [NOTE]
 ====
 MongoDBs native `countDocuments` method and the `$match` aggregation, do not support `$near` and `$nearSphere` but require `$geoWithin` along with `$center` or `$centerSphere` which does not support `$minDistance` (see https://jira.mongodb.org/browse/SERVER-37043).
