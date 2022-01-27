@@ -2289,6 +2289,34 @@ public class MongoTemplateUnitTests extends MongoOperationsUnitTests {
 						.granularity(TimeSeriesGranularity.HOURS).toString());
 	}
 
+	@Test // GH-3522
+	void usedCountDocumentsForEmptyQueryByDefault() {
+
+		template.count(new Query(), Human.class);
+
+		verify(collection).countDocuments(any(Document.class), any());
+	}
+
+	@Test // GH-3522
+	void delegatesToEstimatedCountForEmptyQueryIfEnabled() {
+
+		template.useEstimatedCount(true);
+
+		template.count(new Query(), Human.class);
+
+		verify(collection).estimatedDocumentCount(any());
+	}
+
+	@Test // GH-3522
+	void stillUsesCountDocumentsForNonEmptyQueryEvenIfEstimationEnabled() {
+
+		template.useEstimatedCount(true);
+
+		template.count(new BasicQuery("{ 'spring' : 'data-mongodb' }"), Human.class);
+
+		verify(collection).countDocuments(any(Document.class), any());
+	}
+
 	class AutogenerateableId {
 
 		@Id BigInteger id;

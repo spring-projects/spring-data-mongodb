@@ -220,9 +220,18 @@ public class SessionBoundMongoTemplateUnitTests {
 		verify(database).listCollectionNames(eq(clientSession));
 	}
 
-	@Test // DATAMONGO-1880
+	@Test // DATAMONGO-1880, GH-3522
 	public void countShouldUseProxiedCollection() {
 
+		template.count(new Query(), Person.class);
+
+		verify(collection).countDocuments(eq(clientSession), any(), any(CountOptions.class));
+	}
+
+	@Test // DATAMONGO-1880, GH-3522
+	public void countShouldDelegateToExactCountNoMatterWhat() {
+
+		template.useEstimatedCount(true);
 		template.count(new Query(), Person.class);
 
 		verify(collection).countDocuments(eq(clientSession), any(), any(CountOptions.class));

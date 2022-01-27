@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -189,6 +190,8 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	private @Nullable ReactiveMongoPersistentEntityIndexCreator indexCreator;
 
 	private SessionSynchronization sessionSynchronization = SessionSynchronization.ON_ACTUAL_TRANSACTION;
+
+	private CountExecution countExecution = this::doExactCount;
 
 	/**
 	 * Constructor used for a basic template configuration.
@@ -367,6 +370,49 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 
 		Assert.notNull(entityCallbacks, "EntityCallbacks must not be null!");
 		this.entityCallbacks = entityCallbacks;
+	}
+
+	/**
+	 * En-/Disable usage of estimated count.
+	 *
+	 * @param enabled if {@literal true} {@link com.mongodb.client.MongoCollection#estimatedDocumentCount()} ()} will we used for unpaged,
+	 *          empty {@link Query queries}.
+	 * @since 3.4
+	 */
+	public void useEstimatedCount(boolean enabled) {
+		useEstimatedCount(enabled, this::countCanBeEstimated);
+	}
+
+	/**
+	 * En-/Disable usage of estimated count based on the given {@link BiFunction estimationFilter}.
+	 *
+	 * @param enabled if {@literal true} {@link com.mongodb.client.MongoCollection#estimatedDocumentCount()} will we used for {@link Document
+	 *          filter queries} that pass the given {@link BiFunction estimationFilter}.
+	 * @param estimationFilter the {@link BiFunction filter}.
+	 * @since 3.4
+	 */
+	private void useEstimatedCount(boolean enabled, BiFunction<Document, CountOptions, Mono<Boolean>> estimationFilter) {
+
+		if (enabled) {
+
+			this.countExecution = (collectionName, filter, options) -> {
+
+				return estimationFilter.apply(filter, options).flatMap(canEstimate -> {
+					if (!canEstimate) {
+						return doExactCount(collectionName, filter, options);
+					}
+
+					EstimatedDocumentCountOptions estimatedDocumentCountOptions = new EstimatedDocumentCountOptions();
+					if (options.getMaxTime(TimeUnit.MILLISECONDS) > 0) {
+						estimatedDocumentCountOptions.maxTime(options.getMaxTime(TimeUnit.MILLISECONDS), TimeUnit.MILLISECONDS);
+					}
+
+					return doEstimatedCount(collectionName, estimatedDocumentCountOptions);
+				});
+			};
+		} else {
+			this.countExecution = this::doExactCount;
+		}
 	}
 
 	/**
@@ -1189,6 +1235,17 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 				entityClass);
 	}
 
+	@Override
+	public Mono<Long> exactCount(Query query, @Nullable Class<?> entityClass, String collectionName) {
+
+		CountContext countContext = queryOperations.countQueryContext(query);
+
+		CountOptions options = countContext.getCountOptions(entityClass);
+		Document mappedQuery = countContext.getMappedQuery(entityClass, mappingContext::getPersistentEntity);
+
+		return doExactCount(collectionName, mappedQuery, options);
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mongodb.core.ReactiveMongoOperations#count(org.springframework.data.mongodb.core.query.Query, java.lang.Class)
@@ -1252,13 +1309,34 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 	 */
 	protected Mono<Long> doCount(String collectionName, Document filter, CountOptions options) {
 
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER
+					.debug(String.format("Executing count: %s in collection: %s", serializeToJsonSafely(filter), collectionName));
+		}
+
+		return countExecution.countDocuments(collectionName, filter, options);
+	}
+
+	protected Mono<Long> doExactCount(String collectionName, Document filter, CountOptions options) {
+
 		return createMono(collectionName,
 				collection -> collection.countDocuments(CountQuery.of(filter).toQueryDocument(), options));
 	}
 
 	protected Mono<Long> doEstimatedCount(String collectionName, EstimatedDocumentCountOptions options) {
-
 		return createMono(collectionName, collection -> collection.estimatedDocumentCount(options));
+	}
+
+	protected Mono<Boolean> countCanBeEstimated(Document filter, CountOptions options) {
+
+		if(!filter.isEmpty() || !isEmptyOptions(options)) {
+			return Mono.just(false);
+		}
+		return ReactiveMongoDatabaseUtils.isTransactionActive(getMongoDatabaseFactory()).map(it -> !it);
+	}
+
+	private boolean isEmptyOptions(CountOptions options) {
+		return options.getLimit() <= 0 && options.getSkip() <= 0;
 	}
 
 	/*
@@ -3444,6 +3522,11 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 			// native MongoDB objects that offer methods with ClientSession must not be proxied.
 			return delegate.getMongoDatabase();
 		}
+
+		@Override
+		protected Mono<Boolean> countCanBeEstimated(Document filter, CountOptions options) {
+			return Mono.just(false);
+		}
 	}
 
 	class IndexCreatorEventListener implements ApplicationListener<MappingContextEvent<?, ?>> {
@@ -3520,5 +3603,10 @@ public class ReactiveMongoTemplate implements ReactiveMongoOperations, Applicati
 		String getCollection() {
 			return collection;
 		}
+	}
+
+	@FunctionalInterface
+	interface CountExecution {
+		Mono<Long> countDocuments(String collection, Document filter, CountOptions options);
 	}
 }
