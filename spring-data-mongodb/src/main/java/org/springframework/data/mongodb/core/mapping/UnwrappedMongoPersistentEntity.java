@@ -104,7 +104,12 @@ class UnwrappedMongoPersistentEntity<T> implements MongoPersistentEntity<T> {
 	}
 
 	@Override
-	public boolean isConstructorArgument(PersistentProperty<?> property) {
+	public InstanceCreatorMetadata<MongoPersistentProperty> getInstanceCreatorMetadata() {
+		return delegate.getInstanceCreatorMetadata();
+	}
+
+	@Override
+	public boolean isCreatorArgument(PersistentProperty<?> property) {
 		return delegate.isConstructorArgument(property);
 	}
 

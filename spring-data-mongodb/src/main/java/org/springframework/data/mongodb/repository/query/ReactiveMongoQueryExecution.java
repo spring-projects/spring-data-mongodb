@@ -20,6 +20,7 @@ import reactor.core.publisher.Mono;
 
 import org.reactivestreams.Publisher;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.data.convert.DtoInstantiatingConverter;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Range;
 import org.springframework.data.geo.Distance;
@@ -104,7 +105,7 @@ interface ReactiveMongoQueryExecution {
 			}
 
 			TypeInformation<?> componentType = returnType.getComponentType();
-			return componentType != null && GeoResult.class.equals(componentType.getType());
+			return (componentType != null) && GeoResult.class.equals(componentType.getType());
 		}
 	}
 
