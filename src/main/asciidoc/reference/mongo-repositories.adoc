@@ -284,7 +284,7 @@ lower / upper bounds (`$gt` / `$gte` & `$lt` / `$lte`) according to `Range`
 
 | `IgnoreCase`
 | `findByUsernameIgnoreCase(String username)`
-| `{"username" : {"$strcasecmp" : username }}`
+| `{"username" : {"$regex" : "^username$", "$options" : "i" }}`
 |===
 
 NOTE: If the property criterion compares a document, the order of the fields and exact equality in the document matters.
